@@ -1,0 +1,18 @@
+(library
+ (name protocol_test_lib)
+ (modules
+  (:standard \ Test_runner))
+ (library_flags
+  (-linkall -g))
+ (libraries rely.lib protocol))
+
+(executable
+ (name Test_runner)
+ (modules Test_runner)
+ (libraries protocol_test_lib mirage-crypto-rng.unix))
+
+(rule
+ (alias runtest)
+ (deps Test_runner.exe)
+ (action
+  (run %{deps})))
