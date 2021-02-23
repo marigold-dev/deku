@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "ocaml": "*",
+    "@opam/dune": "*",
+    "@esy-ocaml/reason": "^3.6.2",
+    "@opam/ppx_deriving": "*",
+    "@opam/ppx_deriving_yojson": "*",
+    "@opam/ocamlformat": "*",
+    "@reason-native/console": "*",
+    "@opam/lwt": "*",
+    "@opam/mirage-crypto": "*",
+    "@opam/mirage-crypto-pk": "*",
+    "@opam/opium": "*",
+    "@opam/piaf": "*",
+    "@opam/cohttp": "*",
+    "@opam/cohttp-lwt": "*",
+    "@opam/cohttp-lwt-unix": "*",
+    "@reason-native/rely": "*"
+  },
+  "devDependencies": {
+    "ocaml": "4.10.2000",
+    "@opam/ocaml-lsp-server": "*"
+  }
+}
