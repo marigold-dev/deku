@@ -26,11 +26,5 @@ module Side_chain = {
     amount: Amount.t,
     kind,
   };
-
-  module Set =
-    Set.Make({
-      type nonrec t = t;
-      let compare = compare;
-    });
   // TODO: Signed that ensures source
 };

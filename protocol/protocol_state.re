@@ -21,10 +21,18 @@ module Block = {
   };
 };
 
+module Operation_side_chain_set = {
+  include Set.Make(Operation.Side_chain);
+  let to_yojson = t =>
+    t |> to_seq |> List.of_seq |> [%to_yojson: list(Operation.Side_chain.t)];
+  let of_yojson = json =>
+    json |> [%of_yojson: list(Operation.Side_chain.t)] |> Result.map(of_list);
+};
+[@deriving yojson]
 type t = {
   ledger: Ledger.t,
   // TODO: more efficient lookup on included_operations
-  included_operations: Operation.Side_chain.Set.t,
+  included_operations: Operation_side_chain_set.t,
   validators: list(Address.t),
   current_block_producer: int,
   block_height: int64,
@@ -32,7 +40,7 @@ type t = {
 
 let empty = {
   ledger: Ledger.empty,
-  included_operations: Operation.Side_chain.Set.empty,
+  included_operations: Operation_side_chain_set.empty,
   validators: [],
   current_block_producer: 0,
   block_height: 0L,
@@ -55,6 +63,7 @@ let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
 
 let apply_side_chain = (state: t, signed_operation) => {
   open Operation.Side_chain;
+  module Set = Operation_side_chain_set;
 
   // validate operation
   let operation = signed_operation.Signed.data;
@@ -119,7 +128,7 @@ let apply_block = (state, block) => {
     ...state,
     included_operations:
       state.included_operations
-      |> Operation.Side_chain.Set.filter(op =>
+      |> Operation_side_chain_set.filter(op =>
            Int64.sub(state.block_height, op.block_height)
            <= maximum_stored_block_height
          ),
