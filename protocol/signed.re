@@ -17,5 +17,11 @@ let sign = (~key, data) => {
 let verify = (~key, ~signature, data) => {
   let message = `Message(Cstruct.of_string(Marshal.to_string(data, [])));
   Rsa_sha256.verify(~key, ~signature=Cstruct.of_string(signature), message)
-    ? Some({key, signature, data}) : None;
+    ? Ok({key, signature, data}) : Error("invalid signature");
+};
+
+let of_yojson = (f, json) => {
+  open Helpers;
+  let.ok {key, signature, data} = of_yojson(f, json);
+  verify(~key, ~signature, data);
 };

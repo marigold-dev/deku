@@ -8,4 +8,5 @@ type t('a) =
 
 // TODO: accept a hash function
 let sign: (~key: Address.key, 'a) => t('a);
-let verify: (~key: Address.t, ~signature: string, 'a) => option(t('a));
+let verify:
+  (~key: Address.t, ~signature: string, 'a) => result(t('a), string);
