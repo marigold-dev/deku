@@ -36,9 +36,9 @@ describe("protocol state", ({test, _}) => {
         let expect_amount = (left, right) =>
           expect.int(Amount.to_int(left)).toBe(right);
         // TODO: use random wallet with random amount
-        let (old_state, _, wallet_a) = make_state();
-        let (_, wallet_b) = make_wallet();
-        let new_state = f(old_state, wallet_a, wallet_b);
+        let (old_state, key_a, wallet_a) = make_state();
+        let (key_b, wallet_b) = make_wallet();
+        let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
 
         expect_amount(Ledger.get_free(wallet_a, old_state.ledger), 500);
         expect_amount(Ledger.get_frozen(wallet_a, old_state.ledger), 500);
@@ -71,74 +71,91 @@ describe("protocol state", ({test, _}) => {
         let _state = f(state, wallet_a, wallet_b);
         assert(false);
       }) {
-      | Noop(message) =>
+      | Protocol.Exn_noop.Noop(message) =>
         assert(message == expected_message);
         state;
       }
     );
   // TODO: should deposit add to frozen?
-  test_wallet_offset("deposit", ~frozen_diff_a=3, (state, wallet, _) =>
+  test_wallet_offset("deposit", ~frozen_diff_a=3, (state, (wallet, _), _) =>
     apply_main_chain(
       state,
       Deposit({destination: wallet, amount: Amount.of_int(3)}),
     )
   );
   // withdraw
-  test_wallet_offset("withdraw", ~frozen_diff_a=-4, (state, source, _) =>
+  test_wallet_offset("withdraw", ~frozen_diff_a=-4, (state, (source, _), _) =>
     apply_main_chain(state, Withdraw({source, amount: Amount.of_int(4)}))
   );
   test_failed_wallet_offset(
-    "withdraw", "not enough funds", (state, source, _) =>
+    "withdraw", "not enough funds", (state, (source, _), _) =>
     apply_main_chain(state, Withdraw({source, amount: Amount.of_int(501)}))
   );
   // freeze
   test_wallet_offset(
-    "freeze", ~free_diff_a=-5, ~frozen_diff_a=5, (state, wallet, _) =>
+    "freeze", ~free_diff_a=-5, ~frozen_diff_a=5, (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Freeze({
-        nonce: 0l,
-        block_height: 0L,
-        wallet,
-        amount: Amount.of_int(5),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(5),
+          kind: Freeze,
+        },
+      ),
     )
   );
-  test_failed_wallet_offset("freeze", "not enough funds", (state, wallet, _) =>
+  test_failed_wallet_offset(
+    "freeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Freeze({
-        nonce: 0l,
-        block_height: 0L,
-        wallet,
-        amount: Amount.of_int(501),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(501),
+          kind: Freeze,
+        },
+      ),
     )
   );
   // unfreeze
   // TODO: is unfreeze a good idea?
   test_wallet_offset(
-    "unfreeze", ~free_diff_a=6, ~frozen_diff_a=-6, (state, wallet, _) => {
+    "unfreeze", ~free_diff_a=6, ~frozen_diff_a=-6, (state, (source, key), _) => {
     apply_side_chain(
       state,
-      Unfreeze({
-        nonce: 0l,
-        block_height: 0L,
-        wallet,
-        amount: Amount.of_int(6),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(6),
+          kind: Unfreeze,
+        },
+      ),
     )
   });
   test_failed_wallet_offset(
-    "unfreeze", "not enough funds", (state, wallet, _) =>
+    "unfreeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Unfreeze({
-        nonce: 0l,
-        block_height: 0L,
-        wallet,
-        amount: Amount.of_int(501),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(501),
+          kind: Unfreeze,
+        },
+      ),
     )
   );
   // transaction
@@ -146,29 +163,55 @@ describe("protocol state", ({test, _}) => {
     "transaction",
     ~free_diff_a=-7,
     ~free_diff_b=7,
-    (state, source, destination) => {
+    (state, (source, key), (destination, _)) => {
     apply_side_chain(
       state,
-      Transaction({
-        nonce: 0l,
-        block_height: 0L,
-        source,
-        destination,
-        amount: Amount.of_int(7),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(7),
+          kind: Transaction({destination: destination}),
+        },
+      ),
     )
   });
   test_failed_wallet_offset(
-    "transaction", "not enough funds", (state, source, destination) =>
+    "transaction",
+    "not enough funds",
+    (state, (source, key), (destination, _)) =>
     apply_side_chain(
       state,
-      Transaction({
-        nonce: 0l,
-        block_height: 0L,
-        source,
-        destination,
-        amount: Amount.of_int(501),
-      }),
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(501),
+          kind: Transaction({destination: destination}),
+        },
+      ),
+    )
+  );
+  test_failed_wallet_offset(
+    "transaction",
+    "invalid key signed the operation",
+    (state, (source, _), (destination, key)) =>
+    apply_side_chain(
+      state,
+      Signed.sign(
+        ~key,
+        Operation.Side_chain.{
+          nonce: 0l,
+          block_height: 0L,
+          source,
+          amount: Amount.of_int(501),
+          kind: Transaction({destination: destination}),
+        },
+      ),
     )
   );
 });
