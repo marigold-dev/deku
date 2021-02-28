@@ -4,6 +4,11 @@ open Protocol;
 describe("protocol state", ({test, _}) => {
   open Protocol_state;
 
+  let make_address = () => {
+    open Mirage_crypto_pk;
+    let key = Rsa.generate(~bits=2048, ());
+    Rsa.pub_of_priv(key);
+  };
   let make_wallet = () => {
     open Mirage_crypto_pk;
     let key = Rsa.generate(~bits=2048, ());
@@ -214,4 +219,95 @@ describe("protocol state", ({test, _}) => {
       ),
     )
   );
+
+  test("validators", ({expect, _}) => {
+    // TODO: this clearly should be splitten and properly automated
+    let (state, _, _) = make_state();
+    let validators = state.validators;
+    expect.option(Validators.current(validators)).toBeNone();
+    expect.list(Validators.validators(validators)).toBeEmpty();
+
+    let new_validator =
+      Validators.{
+        address: make_address(),
+        uri: Uri.of_string("http://localhost:1234"),
+      };
+    let state =
+      apply_main_chain(
+        state,
+        Operation.Main_chain.Add_validator(new_validator),
+      );
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(new_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([new_validator]);
+
+    // duplicated is a noop
+    let state =
+      apply_main_chain(
+        state,
+        Operation.Main_chain.Add_validator(new_validator),
+      );
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(new_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([new_validator]);
+
+    // additional shouldn't move current
+    let another_validator =
+      Validators.{
+        address: make_address(),
+        uri: Uri.of_string("http://localhost:12345"),
+      };
+    let state =
+      apply_main_chain(
+        state,
+        Operation.Main_chain.Add_validator(another_validator),
+      );
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(new_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([
+      new_validator,
+      another_validator,
+    ]);
+
+    // next
+    let state = Protocol_state.next(state);
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(another_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([
+      new_validator,
+      another_validator,
+    ]);
+
+    // remove current validator
+    let state =
+      apply_main_chain(
+        state,
+        Operation.Main_chain.Remove_validator(another_validator),
+      );
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(new_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([new_validator]);
+
+    // next
+    let state = Protocol_state.next(state);
+    let validators = state.validators;
+    expect.bool(Validators.current(validators) == Some(new_validator)).
+      toBeTrue();
+    expect.list(Validators.validators(validators)).toEqual([new_validator]);
+
+    // remove all validators
+    let state =
+      apply_main_chain(
+        state,
+        Operation.Main_chain.Remove_validator(new_validator),
+      );
+    let validators = state.validators;
+    expect.option(Validators.current(validators)).toBeNone();
+    expect.list(Validators.validators(validators)).toBeEmpty();
+  });
 });

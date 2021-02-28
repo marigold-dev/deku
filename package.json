@@ -15,7 +15,8 @@
     "@opam/cohttp": "*",
     "@opam/cohttp-lwt": "*",
     "@opam/cohttp-lwt-unix": "*",
-    "@reason-native/rely": "*"
+    "@reason-native/rely": "*",
+    "@opam/utop": "*"
   },
   "devDependencies": {
     "ocaml": "4.10.2000",

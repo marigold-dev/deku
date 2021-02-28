@@ -1,5 +1,5 @@
 {
-  "checksum": "c26df032ea52a51aecac3591b8a12902",
+  "checksum": "168f14d521d8b0156e0d7295463208e8",
   "root": "what@link-dev:./package.json",
   "node": {
     "what@link-dev:./package.json": {
@@ -15,6 +15,7 @@
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
+        "@opam/utop@opam:2.7.0@163ac7ce",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
         "@opam/ppx_deriving@opam:5.2.1@479736f0",
         "@opam/piaf@opam:0.1.0@3b02c13f", "@opam/opium@opam:0.20.0@c4f81623",
@@ -167,6 +168,39 @@
         "@esy-ocaml/reason@3.6.2@d41d8cd9"
       ],
       "devDependencies": []
+    },
+    "@opam/zed@opam:3.1.0@86c55416": {
+      "id": "@opam/zed@opam:3.1.0@86c55416",
+      "name": "@opam/zed",
+      "version": "opam:3.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/51/51e8676ba972e5ad727633c161e404b1#md5:51e8676ba972e5ad727633c161e404b1",
+          "archive:https://github.com/ocaml-community/zed/archive/3.1.0.tar.gz#md5:51e8676ba972e5ad727633c161e404b1"
+        ],
+        "opam": {
+          "name": "zed",
+          "version": "3.1.0",
+          "path": "esy.lock/opam/zed.3.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@opam/base-bytes@opam:base@19d0c2ff",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@opam/base-bytes@opam:base@19d0c2ff"
+      ]
     },
     "@opam/zarith@opam:1.11@6b66cdc1": {
       "id": "@opam/zarith@opam:1.11@6b66cdc1",
@@ -412,6 +446,47 @@
       ],
       "devDependencies": [ "ocaml@4.10.2000@d41d8cd9" ]
     },
+    "@opam/utop@opam:2.7.0@163ac7ce": {
+      "id": "@opam/utop@opam:2.7.0@163ac7ce",
+      "name": "@opam/utop",
+      "version": "opam:2.7.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/e0/e068ac53df267c3cc0f2f69bbc204404f0362cc4e6472a1fc547e326a63c3fdd#sha256:e068ac53df267c3cc0f2f69bbc204404f0362cc4e6472a1fc547e326a63c3fdd",
+          "archive:https://github.com/ocaml-community/utop/releases/download/2.7.0/utop-2.7.0.tbz#sha256:e068ac53df267c3cc0f2f69bbc204404f0362cc4e6472a1fc547e326a63c3fdd"
+        ],
+        "opam": {
+          "name": "utop",
+          "version": "2.7.0",
+          "path": "esy.lock/opam/utop.2.7.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/ocamlfind@opam:1.8.1@b7dc3072",
+        "@opam/lwt_react@opam:1.1.4@7d2054d1",
+        "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/lambda-term@opam:3.1.0@8adc2660",
+        "@opam/dune@opam:2.8.2@3d714e5f", "@opam/cppo@opam:1.6.7@c28ac3ae",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@opam/base-unix@opam:base@87d0b2eb",
+        "@opam/base-threads@opam:base@36803084",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/ocamlfind@opam:1.8.1@b7dc3072",
+        "@opam/lwt_react@opam:1.1.4@7d2054d1",
+        "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/lambda-term@opam:3.1.0@8adc2660",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@opam/base-unix@opam:base@87d0b2eb",
+        "@opam/base-threads@opam:base@36803084"
+      ]
+    },
     "@opam/uri-sexp@opam:4.1.0@2904c202": {
       "id": "@opam/uri-sexp@opam:4.1.0@2904c202",
       "name": "@opam/uri-sexp",
@@ -549,6 +624,31 @@
         "ocaml@4.10.2000@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
         "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
+    },
+    "@opam/trie@opam:1.0.0@d2efc587": {
+      "id": "@opam/trie@opam:1.0.0@d2efc587",
+      "name": "@opam/trie",
+      "version": "opam:1.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/84/84519b5f8bd92490bfc68a52f706ba14#md5:84519b5f8bd92490bfc68a52f706ba14",
+          "archive:https://github.com/kandu/trie/archive/1.0.0.tar.gz#md5:84519b5f8bd92490bfc68a52f706ba14"
+        ],
+        "opam": {
+          "name": "trie",
+          "version": "1.0.0",
+          "path": "esy.lock/opam/trie.1.0.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.8.2@3d714e5f"
       ]
     },
     "@opam/topkg@opam:1.0.3@e4e10f1c": {
@@ -929,6 +1029,31 @@
       "devDependencies": [
         "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.8.2@3d714e5f"
       ]
+    },
+    "@opam/react@opam:1.2.1@0e11855f": {
+      "id": "@opam/react@opam:1.2.1@0e11855f",
+      "name": "@opam/react",
+      "version": "opam:1.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/ce/ce1454438ce4e9d2931248d3abba1fcc#md5:ce1454438ce4e9d2931248d3abba1fcc",
+          "archive:http://erratique.ch/software/react/releases/react-1.2.1.tbz#md5:ce1454438ce4e9d2931248d3abba1fcc"
+        ],
+        "opam": {
+          "name": "react",
+          "version": "1.2.1",
+          "path": "esy.lock/opam/react.1.2.1"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/topkg@opam:1.0.3@e4e10f1c",
+        "@opam/ocamlfind@opam:1.8.1@b7dc3072",
+        "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.10.2000@d41d8cd9" ]
     },
     "@opam/re@opam:1.9.0@d4d5e13d": {
       "id": "@opam/re@opam:1.9.0@d4d5e13d",
@@ -2025,6 +2150,60 @@
         "@opam/dune@opam:2.8.2@3d714e5f", "@opam/cstruct@opam:6.0.0@a7534811"
       ]
     },
+    "@opam/mew_vi@opam:0.5.0@cf66c299": {
+      "id": "@opam/mew_vi@opam:0.5.0@cf66c299",
+      "name": "@opam/mew_vi",
+      "version": "opam:0.5.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/34/341e9a9a20383641015bf503952906bc#md5:341e9a9a20383641015bf503952906bc",
+          "archive:https://github.com/kandu/mew_vi/archive/0.5.0.tar.gz#md5:341e9a9a20383641015bf503952906bc"
+        ],
+        "opam": {
+          "name": "mew_vi",
+          "version": "0.5.0",
+          "path": "esy.lock/opam/mew_vi.0.5.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/mew@opam:0.1.0@a74f69d6", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/mew@opam:0.1.0@a74f69d6", "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
+    },
+    "@opam/mew@opam:0.1.0@a74f69d6": {
+      "id": "@opam/mew@opam:0.1.0@a74f69d6",
+      "name": "@opam/mew",
+      "version": "opam:0.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/22/2298149d1415cd804ab4e01f01ea10a0#md5:2298149d1415cd804ab4e01f01ea10a0",
+          "archive:https://github.com/kandu/mew/archive/0.1.0.tar.gz#md5:2298149d1415cd804ab4e01f01ea10a0"
+        ],
+        "opam": {
+          "name": "mew",
+          "version": "0.1.0",
+          "path": "esy.lock/opam/mew.0.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/trie@opam:1.0.0@d2efc587",
+        "@opam/result@opam:1.5@6b753c82", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/trie@opam:1.0.0@d2efc587",
+        "@opam/result@opam:1.5@6b753c82", "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
+    },
     "@opam/merlin-extend@opam:0.6@404f814c": {
       "id": "@opam/merlin-extend@opam:0.6@404f814c",
       "name": "@opam/merlin-extend",
@@ -2207,6 +2386,33 @@
         "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
+    "@opam/lwt_react@opam:1.1.4@7d2054d1": {
+      "id": "@opam/lwt_react@opam:1.1.4@7d2054d1",
+      "name": "@opam/lwt_react",
+      "version": "opam:1.1.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/fc/fc4721bdb1a01225b96e3a2debde95fa#md5:fc4721bdb1a01225b96e3a2debde95fa",
+          "archive:https://github.com/ocsigen/lwt/archive/5.4.0.zip#md5:fc4721bdb1a01225b96e3a2debde95fa"
+        ],
+        "opam": {
+          "name": "lwt_react",
+          "version": "1.1.4",
+          "path": "esy.lock/opam/lwt_react.1.1.4"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
+    },
     "@opam/lwt_ppx@opam:2.0.2@d18729de": {
       "id": "@opam/lwt_ppx@opam:2.0.2@d18729de",
       "name": "@opam/lwt_ppx",
@@ -2231,6 +2437,31 @@
       ],
       "devDependencies": [
         "ocaml@4.10.2000@d41d8cd9", "@opam/ppxlib@opam:0.22.0@d2d2223a",
+        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
+    },
+    "@opam/lwt_log@opam:1.1.1@2d7a797f": {
+      "id": "@opam/lwt_log@opam:1.1.1@2d7a797f",
+      "name": "@opam/lwt_log",
+      "version": "opam:1.1.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/02/02e93be62288037870ae5b1ce099fe59#md5:02e93be62288037870ae5b1ce099fe59",
+          "archive:https://github.com/aantron/lwt_log/archive/1.1.1.tar.gz#md5:02e93be62288037870ae5b1ce099fe59"
+        ],
+        "opam": {
+          "name": "lwt_log",
+          "version": "1.1.1",
+          "path": "esy.lock/opam/lwt_log.1.1.1"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
         "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/dune@opam:2.8.2@3d714e5f"
       ]
     },
@@ -2301,6 +2532,43 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.10.2000@d41d8cd9" ]
+    },
+    "@opam/lambda-term@opam:3.1.0@8adc2660": {
+      "id": "@opam/lambda-term@opam:3.1.0@8adc2660",
+      "name": "@opam/lambda-term",
+      "version": "opam:3.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/78/78180c04ecfc8060b23d7d0014f24196#md5:78180c04ecfc8060b23d7d0014f24196",
+          "archive:https://github.com/ocaml-community/lambda-term/archive/3.1.0.tar.gz#md5:78180c04ecfc8060b23d7d0014f24196"
+        ],
+        "opam": {
+          "name": "lambda-term",
+          "version": "3.1.0",
+          "path": "esy.lock/opam/lambda-term.3.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/zed@opam:3.1.0@86c55416",
+        "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/mew_vi@opam:0.5.0@cf66c299",
+        "@opam/lwt_react@opam:1.1.4@7d2054d1",
+        "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/zed@opam:3.1.0@86c55416",
+        "@opam/react@opam:1.2.1@0e11855f",
+        "@opam/mew_vi@opam:0.5.0@cf66c299",
+        "@opam/lwt_react@opam:1.1.4@7d2054d1",
+        "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:5.4.0@1ec6dbfd",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/camomile@opam:1.0.2@40411a6b"
+      ]
     },
     "@opam/ke@opam:0.4@882968e4": {
       "id": "@opam/ke@opam:0.4@882968e4",
@@ -3773,6 +4041,60 @@
         "ocaml@4.10.2000@d41d8cd9", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.10.2000@d41d8cd9" ]
+    },
+    "@opam/charInfo_width@opam:1.1.0@4296bdfe": {
+      "id": "@opam/charInfo_width@opam:1.1.0@4296bdfe",
+      "name": "@opam/charInfo_width",
+      "version": "opam:1.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/a5/a539436d1da4aeb93711303f107bec7e#md5:a539436d1da4aeb93711303f107bec7e",
+          "archive:https://github.com/kandu/charInfo_width/archive/1.1.0.tar.gz#md5:a539436d1da4aeb93711303f107bec7e"
+        ],
+        "opam": {
+          "name": "charInfo_width",
+          "version": "1.1.0",
+          "path": "esy.lock/opam/charInfo_width.1.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/camomile@opam:1.0.2@40411a6b",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.8.2@3d714e5f",
+        "@opam/camomile@opam:1.0.2@40411a6b"
+      ]
+    },
+    "@opam/camomile@opam:1.0.2@40411a6b": {
+      "id": "@opam/camomile@opam:1.0.2@40411a6b",
+      "name": "@opam/camomile",
+      "version": "opam:1.0.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/f0/f0a419b0affc36500f83b086ffaa36c545560cee5d57e84b729e8f851b3d1632#sha256:f0a419b0affc36500f83b086ffaa36c545560cee5d57e84b729e8f851b3d1632",
+          "archive:https://github.com/yoriyuki/Camomile/releases/download/1.0.2/camomile-1.0.2.tbz#sha256:f0a419b0affc36500f83b086ffaa36c545560cee5d57e84b729e8f851b3d1632"
+        ],
+        "opam": {
+          "name": "camomile",
+          "version": "1.0.2",
+          "path": "esy.lock/opam/camomile.1.0.2"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.8.2@3d714e5f",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.8.2@3d714e5f"
+      ]
     },
     "@opam/ca-certs@opam:0.1.3@1bb4b61d": {
       "id": "@opam/ca-certs@opam:0.1.3@1bb4b61d",

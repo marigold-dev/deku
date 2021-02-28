@@ -8,7 +8,11 @@ module Main_chain = {
     | Withdraw({
         source: Wallet.t,
         amount: Amount.t,
-      });
+      })
+    // TODO: can a validator uses the same key in different nodes?
+    // If so the ordering in the list must never use the same key two times in sequence
+    | Add_validator(Validators.validator)
+    | Remove_validator(Validators.validator);
 };
 
 module Side_chain = {

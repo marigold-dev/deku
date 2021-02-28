@@ -1,5 +1,5 @@
 (library
  (name protocol)
- (libraries mirage-crypto-pk)
+ (libraries helpers mirage-crypto-pk)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord)))

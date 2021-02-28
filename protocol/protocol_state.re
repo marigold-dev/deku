@@ -1,16 +1,5 @@
+open Helpers;
 open Exn_noop;
-
-module Z = {
-  include Z;
-  let to_yojson = z => `String(Z.to_string(z));
-  let of_yojson =
-    fun
-    | `String(string) =>
-      try(Ok(Z.of_string(string))) {
-      | _ => Error("failed to parse")
-      }
-    | _ => Error("invalid type");
-};
 
 module Block = {
   open Operation;
@@ -21,19 +10,13 @@ module Block = {
   };
 };
 
-module Operation_side_chain_set = {
-  include Set.Make(Operation.Side_chain);
-  let to_yojson = t =>
-    t |> to_seq |> List.of_seq |> [%to_yojson: list(Operation.Side_chain.t)];
-  let of_yojson = json =>
-    json |> [%of_yojson: list(Operation.Side_chain.t)] |> Result.map(of_list);
-};
+module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
 [@deriving yojson]
 type t = {
   ledger: Ledger.t,
   // TODO: more efficient lookup on included_operations
   included_operations: Operation_side_chain_set.t,
-  validators: list(Address.t),
+  validators: Validators.t,
   current_block_producer: int,
   block_height: int64,
 };
@@ -41,22 +24,33 @@ type t = {
 let empty = {
   ledger: Ledger.empty,
   included_operations: Operation_side_chain_set.empty,
-  validators: [],
+  validators: Validators.empty,
   current_block_producer: 0,
   block_height: 0L,
 };
 
 let apply_main_chain = (state, op) => {
-  open Operation.Main_chain;
-  let ledger =
+  Operation.Main_chain.(
     switch (op) {
+    // funds management
     | Deposit({destination, amount}) =>
-      Ledger.deposit(~destination, ~amount, state.ledger)
+      let ledger = Ledger.deposit(~destination, ~amount, state.ledger);
+      {...state, ledger};
     | Withdraw({source, amount}) =>
-      Ledger.withdraw(~source, ~amount, state.ledger)
-    };
-  {...state, ledger};
+      let ledger = Ledger.withdraw(~source, ~amount, state.ledger);
+      {...state, ledger};
+    // validators management
+    | Add_validator({address, uri}) =>
+      let validators = Validators.add({address, uri}, state.validators);
+      {...state, validators};
+    | Remove_validator({address, uri}) =>
+      let validators = Validators.remove({address, uri}, state.validators);
+      {...state, validators};
+    }
+  );
 };
+
+// TODO: what should happen if nodes disagree on who should be the current validator?
 
 let maximum_old_block_height_operation = 60L;
 let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
@@ -124,6 +118,8 @@ let apply_block = (state, block) => {
       state,
       block.Block.side_chain_ops,
     );
+
+  // TODO: move to function trim state
   let state = {
     ...state,
     included_operations:
@@ -135,3 +131,5 @@ let apply_block = (state, block) => {
   };
   {...state, block_height: Int64.add(state.block_height, 1L)};
 };
+
+let next = t => {...t, validators: Validators.next(t.validators)};
