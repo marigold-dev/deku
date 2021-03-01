@@ -1,3 +1,4 @@
+open Helpers;
 open Mirage_crypto;
 open Mirage_crypto_pk;
 module Rsa_sha256 = Rsa.PSS(Hash.SHA256);
@@ -16,8 +17,16 @@ let sign = (~key, data) => {
 };
 let verify = (~key, ~signature, data) => {
   let message = `Message(Cstruct.of_string(Marshal.to_string(data, [])));
-  Rsa_sha256.verify(~key, ~signature=Cstruct.of_string(signature), message)
-    ? Ok({key, signature, data}) : Error("invalid signature");
+  let.assert () = (
+    "invalid signature",
+    Rsa_sha256.verify(
+      ~key,
+      ~signature=Cstruct.of_string(signature),
+      message,
+    ),
+  );
+
+  Ok({key, signature, data});
 };
 
 let of_yojson = (f, json) => {
