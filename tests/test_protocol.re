@@ -2,8 +2,6 @@ open Setup;
 open Protocol;
 
 describe("protocol state", ({test, _}) => {
-  open Protocol_state;
-
   let make_address = () => {
     open Mirage_crypto_pk;
     let key = Rsa.generate(~bits=2048, ());
@@ -18,13 +16,22 @@ describe("protocol state", ({test, _}) => {
   let make_state = () => {
     let (key_wallet, wallet) = make_wallet();
     let state = {
-      ...Protocol_state.empty,
+      ...empty,
       ledger:
         Ledger.empty
         |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
         |> Ledger.unfreeze(~wallet, ~amount=Amount.of_int(500)),
     };
     (state, key_wallet, wallet);
+  };
+  let apply_block = (~block_height=1, ~main=[], ~side=[], state) => {
+    let block =
+      Block.{
+        block_height: Int64.of_int(block_height),
+        main_chain_ops: main,
+        side_chain_ops: side,
+      };
+    apply_block(state, block);
   };
   let test_wallet_offset =
       (
@@ -76,7 +83,7 @@ describe("protocol state", ({test, _}) => {
         let _state = f(state, wallet_a, wallet_b);
         assert(false);
       }) {
-      | Protocol.Exn_noop.Noop(message) =>
+      | Noop(message) =>
         assert(message == expected_message);
         state;
       }
@@ -224,6 +231,7 @@ describe("protocol state", ({test, _}) => {
     // TODO: this clearly should be splitten and properly automated
     let (state, _, _) = make_state();
     let validators = state.validators;
+
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.validators(validators)).toBeEmpty();
 
@@ -273,7 +281,7 @@ describe("protocol state", ({test, _}) => {
     ]);
 
     // next
-    let state = Protocol_state.next(state);
+    let state = Protocol.next(state);
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(another_validator)).
       toBeTrue();
@@ -294,7 +302,7 @@ describe("protocol state", ({test, _}) => {
     expect.list(Validators.validators(validators)).toEqual([new_validator]);
 
     // next
-    let state = Protocol_state.next(state);
+    let state = Protocol.next(state);
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
@@ -309,5 +317,16 @@ describe("protocol state", ({test, _}) => {
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.validators(validators)).toBeEmpty();
+  });
+
+  test("invalid block height", _ => {
+    let (state, _, _) = make_state();
+    let state = apply_block(~block_height=1, state);
+    try({
+      let _ = apply_block(~block_height=1, state);
+      assert(false);
+    }) {
+    | Invalid_argument(msg) => assert(msg == "invalid block height")
+    };
   });
 });

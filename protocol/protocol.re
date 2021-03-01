@@ -1,14 +1,14 @@
 open Helpers;
-open Exn_noop;
+include Exn_noop;
 
-module Block = {
-  open Operation;
-  type t = {
-    block_height: int,
-    main_chain_ops: list(Main_chain.t),
-    side_chain_ops: list(Signed.t(Side_chain.t)),
-  };
-};
+module Signed = Signed;
+module Address = Address;
+module Wallet = Wallet;
+module Ledger = Ledger;
+module Validators = Validators;
+module Amount = Amount;
+module Block = Block;
+module Operation = Operation;
 
 module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
 [@deriving yojson]
@@ -19,6 +19,7 @@ type t = {
   validators: Validators.t,
   current_block_producer: int,
   block_height: int64,
+  blocks: list(Block.t),
 };
 
 let empty = {
@@ -27,6 +28,7 @@ let empty = {
   validators: Validators.empty,
   current_block_producer: 0,
   block_height: 0L,
+  blocks: [],
 };
 
 let apply_main_chain = (state, op) => {
@@ -94,6 +96,10 @@ let apply_side_chain = (state: t, signed_operation) => {
   {...state, ledger, included_operations};
 };
 let apply_block = (state, block) => {
+  if (Int64.add(state.block_height, 1L) != block.Block.block_height) {
+    raise(Invalid_argument("invalid block height"));
+  };
+
   let fold_left_noop_when_exception = (f, state, list) =>
     List.fold_left(
       (state, op) =>
@@ -129,7 +135,7 @@ let apply_block = (state, block) => {
            <= maximum_stored_block_height
          ),
   };
-  {...state, block_height: Int64.add(state.block_height, 1L)};
+  {...state, block_height: block.block_height};
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};
