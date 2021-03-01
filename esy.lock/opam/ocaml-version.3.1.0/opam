@@ -9,6 +9,7 @@ bug-reports: "https://github.com/ocurrent/ocaml-version/issues"
 depends: [
   "ocaml" {>= "4.07.0"}
   "dune"
+  "alcotest" {with-test}
 ]
 build: [
   ["dune" "subst"] {pinned}
@@ -37,12 +38,12 @@ functionality:
 - **Bugs:** <https://github.com/ocurrent/ocaml-version/issues>
 - **Docs:** <http://docs.mirage.io/ocaml-version>
 """
-x-commit-hash: "35c6f2d3793a6c050833e86fbfb12e13b14709ac"
+x-commit-hash: "eb14804dbf9424c27c8d14fce19b3243f80a69fa"
 url {
   src:
-    "https://github.com/ocurrent/ocaml-version/releases/download/v3.0.0/ocaml-version-v3.0.0.tbz"
+    "https://github.com/ocurrent/ocaml-version/releases/download/v3.1.0/ocaml-version-v3.1.0.tbz"
   checksum: [
-    "sha256=24b2f324ea91cff98bb8790a6746ccce3173bac5f57cb457156e5c50a0467397"
-    "sha512=a1936198e6e563ed703c8cd9d481394660fb25e9e700ea481e5326536c2734d9356c99750ae3ef8a55614776cc040c05cbcf2e03f609ab1f78c34aab0c5de830"
+    "sha256=ac7ba16a09d8f72212742f3936980fbfaebb698c7bbf625182af7d6b2c3cde5f"
+    "sha512=6e11823531f1f70b5d4b90ed9f2fcc22cbf83924a7a0ef40eebc4b80598db6acdaca97f1d379e01860513d5dda492f5bc4d944f0c1dd7df491b2f36a0f729bb5"
   ]
 }
