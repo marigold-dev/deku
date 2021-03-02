@@ -24,6 +24,11 @@ describe("protocol state", ({test, _}) => {
     };
     (state, key_wallet, wallet);
   };
+  let self_sign_side = (~key, op) => {
+    let Signed.{key, signature, data} = Signed.sign(~key, op);
+    Operation.Side_chain.Self_signed.verify(~key, ~signature, data)
+    |> Result.get_ok;
+  };
   let apply_block =
       (~author=make_address(), ~block_height=1, ~main=[], ~side=[], state) => {
     let block =
@@ -110,9 +115,9 @@ describe("protocol state", ({test, _}) => {
     "freeze", ~free_diff_a=-5, ~frozen_diff_a=5, (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,
@@ -126,9 +131,9 @@ describe("protocol state", ({test, _}) => {
     "freeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,
@@ -144,9 +149,9 @@ describe("protocol state", ({test, _}) => {
     "unfreeze", ~free_diff_a=6, ~frozen_diff_a=-6, (state, (source, key), _) => {
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,
@@ -160,9 +165,9 @@ describe("protocol state", ({test, _}) => {
     "unfreeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,
@@ -180,9 +185,9 @@ describe("protocol state", ({test, _}) => {
     (state, (source, key), (destination, _)) => {
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,
@@ -198,27 +203,9 @@ describe("protocol state", ({test, _}) => {
     (state, (source, key), (destination, _)) =>
     apply_side_chain(
       state,
-      Signed.sign(
+      self_sign_side(
         ~key,
-        Operation.Side_chain.{
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(501),
-          kind: Transaction({destination: destination}),
-        },
-      ),
-    )
-  );
-  test_failed_wallet_offset(
-    "transaction",
-    "invalid key signed the operation",
-    (state, (source, _), (destination, key)) =>
-    apply_side_chain(
-      state,
-      Signed.sign(
-        ~key,
-        Operation.Side_chain.{
+        {
           nonce: 0l,
           block_height: 0L,
           source,

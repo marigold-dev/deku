@@ -62,7 +62,7 @@ let apply_side_chain = (state: t, signed_operation) => {
   module Set = Operation_side_chain_set;
 
   // validate operation
-  let operation = signed_operation.Signed.data;
+  let operation = signed_operation.Self_signed.data;
   let block_height = operation.block_height;
   if (block_height > state.block_height) {
     raise(Noop("block in the future"));
