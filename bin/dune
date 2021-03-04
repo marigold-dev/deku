@@ -1,0 +1,5 @@
+(executable
+ (name node)
+ (libraries opium node mirage-crypto-pk helpers)
+ (preprocess
+  (pps ppx_deriving_yojson)))

@@ -54,6 +54,25 @@ module Set_with_yojson_make =
 };
 
 // TODO: this shouldn't be here
+
+module Map_with_yojson_make =
+       (
+         K: {
+           include Map.OrderedType;
+           let to_yojson: t => Yojson.Safe.t;
+           let of_yojson: Yojson.Safe.t => result(t, string);
+         },
+       ) => {
+  include Map.Make(K);
+  let to_yojson = (f, t) =>
+    t |> to_seq |> List.of_seq |> [%to_yojson: list((K.t, 'a))](f);
+  let of_yojson = (f, json) =>
+    json
+    |> [%of_yojson: list((K.t, 'a))](f)
+    |> Result.map(l => l |> List.to_seq |> of_seq);
+};
+
+// TODO: this shouldn't be here
 module Z = {
   include Z;
   let to_yojson = z => `String(Z.to_string(z));

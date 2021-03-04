@@ -15,14 +15,14 @@ let verify:
 module Make:
   (
     F: {
-      [@deriving yojson]
+      [@deriving (yojson, ord)]
       type t;
       let verify: (~key: Address.t, ~signature: string, t) => bool;
     },
   ) =>
    {
     // TODO: is this pri here meaningful?
-    [@deriving yojson]
+    [@deriving (yojson, ord)]
     type t =
       pri {
         key: Address.t,

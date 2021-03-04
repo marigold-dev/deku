@@ -35,6 +35,7 @@ module Side_chain = {
   module Self_signed =
     Signed.Make({
       type nonrec t = t;
+      let compare = compare;
       let to_yojson = to_yojson;
       let of_yojson = of_yojson;
       let verify = (~key, ~signature as _, data) =>

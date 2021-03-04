@@ -4,7 +4,7 @@
   (:standard \ Test_runner))
  (library_flags
   (-linkall -g))
- (libraries rely.lib protocol))
+ (libraries rely.lib protocol node))
 
 (executable
  (name Test_runner)

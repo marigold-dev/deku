@@ -17,7 +17,8 @@
     "@opam/cohttp-lwt-unix": "*",
     "@reason-native/rely": "*",
     "@opam/utop": "*",
-    "@opam/bisect_ppx": "*"
+    "@opam/bisect_ppx": "*",
+    "@opam/base64": "*"
   },
   "devDependencies": {
     "ocaml": "4.10.2000",
