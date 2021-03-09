@@ -28,6 +28,11 @@ let next_proposer = t =>
   };
 let next = t => {...t, current: next_proposer(t)};
 
+let update_current = (address, t) => {
+  let validator =
+    t.validators |> List.find(validator => validator.address == address);
+  {...t, current: Some(validator)};
+};
 let empty = {current: None, validators: []};
 // TODO: this is only okay if the number of validators is small, because, it's clearly not fast
 let add = (validator, t) => {

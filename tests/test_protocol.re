@@ -32,12 +32,12 @@ describe("protocol state", ({test, _}) => {
   let apply_block =
       (~author=make_address(), ~block_height=1, ~main=[], ~side=[], state) => {
     let block =
-      Block.{
-        author,
-        block_height: Int64.of_int(block_height),
-        main_chain_ops: main,
-        side_chain_ops: side,
-      };
+      Block.make(
+        ~author,
+        ~block_height=Int64.of_int(block_height),
+        ~main_chain_ops=main,
+        ~side_chain_ops=side,
+      );
     apply_block(state, block);
   };
   let test_wallet_offset =

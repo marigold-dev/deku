@@ -1,5 +1,13 @@
 (executable
- (name node)
+ (name server)
  (libraries opium node mirage-crypto-pk helpers)
+ (modules Server)
+ (preprocess
+  (pps ppx_deriving_yojson)))
+
+(executable
+ (name genesis_helper)
+ (libraries opium node mirage-crypto-pk helpers)
+ (modules Genesis_helper)
  (preprocess
   (pps ppx_deriving_yojson)))

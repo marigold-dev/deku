@@ -1,5 +1,4 @@
 open Helpers;
-open Protocol;
 
 [@deriving (yojson, ord)]
 type signature = {

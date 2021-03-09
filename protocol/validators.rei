@@ -12,6 +12,7 @@ type t;
 let current: t => option(validator);
 let validators: t => list(validator);
 let next: t => t;
+let update_current: (Address.t, t) => t;
 
 let empty: t;
 let add: (validator, t) => t;

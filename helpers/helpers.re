@@ -22,10 +22,14 @@ let await = Lwt.return;
 let (let.await) = Lwt.bind;
 
 // TODO: this concurrency number yeah don't like it
-let filter_p_limited_concurrency = (~concurrency=20, f) => {
+let list_p_limited_concurrency = (~concurrency=20, op, f) => {
   let queue = Lwt_pool.create(concurrency, () => Lwt.return());
-  Lwt_list.filter_map_p(x => Lwt_pool.use(queue, () => f(x)));
+  op(x => Lwt_pool.use(queue, () => f(x)));
 };
+let filter_p_limited_concurrency = (~concurrency=20, f) =>
+  list_p_limited_concurrency(~concurrency, Lwt_list.filter_p, f);
+let map_p_limited_concurrency = (~concurrency=20, f) =>
+  list_p_limited_concurrency(~concurrency, Lwt_list.map_p, f);
 
 // TODO: this shouldn't be here
 module Uri = {

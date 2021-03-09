@@ -2,6 +2,7 @@ open Helpers;
 include Exn_noop;
 
 module Signed = Signed;
+module Multisig = Multisig;
 module Address = Address;
 module Wallet = Wallet;
 module Ledger = Ledger;
@@ -19,7 +20,7 @@ type t = {
   validators: Validators.t,
   current_block_producer: int,
   block_height: int64,
-  blocks: list(Block.t),
+  blocks: list(Multisig.t(Block.t)),
 };
 
 let empty = {
@@ -99,6 +100,7 @@ let apply_block = (state, block) => {
   if (Int64.add(state.block_height, 1L) != block.Block.block_height) {
     raise(Invalid_argument("invalid block height"));
   };
+  Printf.printf("lol apply block: %Ld\n%!", block.block_height);
 
   let fold_left_noop_when_exception = (f, state, list) =>
     List.fold_left(
@@ -135,7 +137,12 @@ let apply_block = (state, block) => {
            <= maximum_stored_block_height
          ),
   };
-  {...state, block_height: block.block_height};
+
+  {
+    ...state,
+    block_height: block.block_height,
+    validators: state.validators |> Validators.update_current(block.author),
+  };
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};

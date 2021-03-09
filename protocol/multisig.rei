@@ -1,10 +1,9 @@
-open Protocol;
-
 [@deriving (yojson, ord)]
-type signature = {
-  key: Address.t,
-  signature: string,
-};
+type signature =
+  pri {
+    key: Address.t,
+    signature: string,
+  };
 
 [@deriving (yojson, ord)]
 type t('a);
