@@ -38,6 +38,19 @@ let of_yojson = (f, json) => {
   verify(~key, ~signature, data);
 };
 
+module type S = {
+  [@deriving (yojson, ord)]
+  type data;
+  [@deriving (yojson, ord)]
+  type t =
+    pri {
+      key: Address.t,
+      signature: string,
+      data,
+    };
+  let verify:
+    (~key: Address.t, ~signature: string, data) => result(t, string);
+};
 module Make =
        (
          F: {
@@ -47,10 +60,12 @@ module Make =
          },
        ) => {
   [@deriving (yojson, ord)]
+  type data = F.t;
+  [@deriving (yojson, ord)]
   type t = {
     key: Address.t,
     signature: string,
-    data: F.t,
+    data,
   };
 
   let of_yojson = json => {

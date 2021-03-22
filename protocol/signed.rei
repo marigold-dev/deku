@@ -12,6 +12,19 @@ let sign: (~key: Address.key, 'a) => t('a);
 let verify:
   (~key: Address.t, ~signature: string, 'a) => result(t('a), string);
 
+module type S = {
+  [@deriving (yojson, ord)]
+  type data;
+  [@deriving (yojson, ord)]
+  type t =
+    pri {
+      key: Address.t,
+      signature: string,
+      data,
+    };
+  let verify:
+    (~key: Address.t, ~signature: string, data) => result(t, string);
+};
 module Make:
   (
     F: {
@@ -20,15 +33,4 @@ module Make:
       let verify: (~key: Address.t, ~signature: string, t) => bool;
     },
   ) =>
-   {
-    // TODO: is this pri here meaningful?
-    [@deriving (yojson, ord)]
-    type t =
-      pri {
-        key: Address.t,
-        signature: string,
-        data: F.t,
-      };
-    let verify:
-      (~key: Address.t, ~signature: string, F.t) => result(t, string);
-  };
+   S with type data = F.t;
