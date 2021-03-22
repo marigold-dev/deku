@@ -1,5 +1,6 @@
 open Helpers;
 open Node;
+open State;
 open Protocol;
 
 let gen_credentials = () => {
@@ -46,7 +47,7 @@ let inject_genesis = () => {
   let read_identity_file = file => {
     let file_buffer = read_file(file);
     let json = Yojson.Safe.from_string(file_buffer);
-    Node.identity_of_yojson(json) |> Result.get_ok;
+    identity_of_yojson(json) |> Result.get_ok;
   };
   // let read_validators_file = file => {
   //   let file_buffer = read_file(file);
@@ -65,13 +66,42 @@ let inject_genesis = () => {
     let signatures =
       validators
       |> List.map(validator => {
-           Multisig.signatures(
-             Signed.sign(~key=validator.key, block) |> Multisig.of_signed,
-           )
-           |> List.nth(_, 0)
+           let multisig =
+             Multisig.signatures(
+               Signed.sign(~key=validator.key, block.hash)
+               |> Multisig.of_signed,
+             )
+             |> List.nth(_, 0);
+           Networking.{key: multisig.key, signature: multisig.signature};
          });
-    post((module Signed_block), {block, signatures}, first.uri)
-    |> Lwt_main.run;
+
+    let.await () =
+      validators
+      |> Lwt_list.iter_p(validator =>
+           Networking.post(
+             (module Networking.Block_and_signature_spec),
+             {block, signature: List.nth(signatures, 0)},
+             validator.uri,
+           )
+         );
+    validators
+    |> Lwt_list.iter_p(validator =>
+         signatures
+         |> Lwt_list.iter_p(signature => {
+              Lwt.catch(
+                () =>
+                  Networking.post(
+                    (module Networking.Signature_spec),
+                    Networking.Signature_spec.{
+                      hash: block.Block.hash,
+                      signature,
+                    },
+                    validator.uri,
+                  ),
+                _exn => Lwt.return_unit,
+              )
+            })
+       );
   };
 
   let validators = [
@@ -83,9 +113,9 @@ let inject_genesis = () => {
   make_genesis(validators);
 };
 
+Mirage_crypto_rng_unix.initialize();
 if (Sys.argv[1] == "make-credentials") {
   gen_credentials();
 } else if (Sys.argv[1] == "inject-genesis") {
-  inject_genesis();
+  inject_genesis() |> Lwt_main.run;
 };
-assert(false);

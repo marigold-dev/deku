@@ -165,11 +165,110 @@
  otherwise it needs to lock the state
  */
 
+/*
+
+ how to mitigate a 2/3 attack:
+
+ to add an remove a validator, it expects a master chain finality
+ if 1/3 of the chain is corrupted at same time, then it stales, no money loss
+ if a validator stops,
+
+ if someone votes 2 times, it gets slashed
+ if 2/3 votes 2 times, then all the validators that voted 2/3 loose their money and
+   everyone that did a double spend looses all their money
+ if 2/3 of the chain is corrupted
+ */
+
+// TODO: does computers have multiple RTC nowadays?
+// Can a core send a message and the other receive it in the past?
+// TODO: should start signing before being in sync?
+
+Mirage_crypto_rng_unix.initialize();
+
 open Opium;
 open Helpers;
 open Protocol;
 open Node;
 
+let ignore_some_errors =
+  fun
+  | Error(#Flows.ignore) => Ok()
+  | v => v;
+let log_errors = f =>
+  fun
+  | Ok(_) => ()
+  | Error(err) => print_endline(f(err));
+let handle_received_block_and_signature = request => {
+  open Flows;
+  open Networking.Block_and_signature_spec;
+
+  let update_state = state => {
+    Server.set_state(state);
+    state;
+  };
+  let.await json = Request.to_json_exn(request);
+  let req = {
+    let.ok req =
+      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
+    let.ok () =
+      received_block(Server.get_state(), update_state, req.block)
+      |> ignore_some_errors;
+
+    let.ok () =
+      received_signature(
+        Server.get_state(),
+        update_state,
+        ~hash=req.block.hash,
+        ~signature=req.signature,
+      )
+      |> ignore_some_errors;
+    Ok();
+  };
+  let status =
+    switch (req) {
+    | Ok () => `OK
+    | Error(_err) =>
+      // print_endline(err);
+      `Internal_server_error
+    };
+  await(Response.make(~status, ()));
+};
+let handle_received_block_and_signature =
+  App.post(
+    Networking.Block_and_signature_spec.path,
+    handle_received_block_and_signature,
+  );
+let handle_received_signature = request => {
+  open Flows;
+  open Networking.Signature_spec;
+
+  let update_state = state' => {
+    Server.set_state(state');
+    state';
+  };
+  let.await json = Request.to_json_exn(request);
+  let req = {
+    let.ok req =
+      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
+    let.ok () =
+      received_signature(
+        Server.get_state(),
+        update_state,
+        ~hash=req.hash,
+        ~signature=req.signature,
+      )
+      |> ignore_some_errors;
+    Ok();
+  };
+  let status =
+    switch (req) {
+    | Ok () => `OK
+    | Error(_err) => `Internal_server_error
+    };
+  await(Response.make(~status, ()));
+};
+let handle_received_signature =
+  App.post(Networking.Signature_spec.path, handle_received_signature);
 module Utils = {
   let read_file = file => {
     let.await ic = Lwt_io.open_file(~mode=Input, file);
@@ -183,7 +282,7 @@ module Utils = {
     await(
       try({
         let json = Yojson.Safe.from_string(file_buffer);
-        Node.identity_of_yojson(json);
+        State.identity_of_yojson(json);
       }) {
       | _ => Error("failed to parse json")
       },
@@ -203,22 +302,17 @@ module Utils = {
   };
 };
 
-// TODO: load snapshot
-type server = {
-  // TODO: lock state
-  mutable state: t,
-  mutable timeout: Lwt.t(unit),
-};
-
 let node = {
   open Utils;
-  let.await identity = read_identity_file("identity.json");
+  let identity_file =
+    Array.length(Sys.argv) >= 2 ? Sys.argv[1] : "identity.json";
+  let.await identity = read_identity_file(identity_file);
   let identity = Result.get_ok(identity);
 
   let.await validators = read_validators("validators.json");
   let validators = Result.get_ok(validators);
 
-  let node = Node.make(~identity);
+  let node = State.make(~identity);
   let node = {
     ...node,
     protocol: {
@@ -230,83 +324,15 @@ let node = {
   await(node);
 };
 let node = node |> Lwt_main.run;
-let server = {state: node, timeout: Lwt.return_unit};
+let server = Node.Server.start(~initial=node);
 
-let timeout_happened = () => {
-  let _x = assert(false);
-  ();
-};
-let reset_block_timeout = () => {
-  Lwt.cancel(server.timeout);
-  server.timeout = Lwt_unix.sleep(10.0) |> Lwt.map(timeout_happened);
-};
-
-let produce_block = state => {
-  let (signatures, block) = make_block(state);
-  Lwt.async(() => {
-    let.await () = Lwt_unix.sleep(1.0);
-    broadcast(state, (module Signed_block), {signatures, block});
-  });
-};
-
-let dispatch_side_effect = (state, side_effect) => {
-  switch (side_effect) {
-  | Main_operation => ()
-  | Side_operation({signature, operation}) =>
-    Lwt.async(() =>
-      broadcast(state, (module Side_chain_operation), {operation, signature})
-    )
-  | Valid_block({signatures, block}) =>
-    reset_block_timeout();
-    Lwt.async(() =>
-      broadcast(state, (module Signed_block), {signatures, block})
-    );
-    if (is_time_to_make_block(state)) {
-      produce_block(state);
-    };
-  };
-};
-
-exception Invalid_request_json;
-let post_request =
-  [
-    ((module Side_chain_operation): (module Side_effect_endpoint)),
-    ((module Main_chain_operation): (module Side_effect_endpoint)),
-    ((module Signed_block): (module Side_effect_endpoint)),
-  ]
-  |> List.map((module E: Side_effect_endpoint) => {
-       App.post(
-         E.path,
-         request => {
-           let.await json = Request.to_json_exn(request);
-           let req = {
-             let.ok req = E.request_of_yojson(json);
-             let.ok {state: new_state, side_effect} =
-               E.handle_request(server.state, req);
-             switch (side_effect) {
-             | Some(side_effect) =>
-               dispatch_side_effect(new_state, side_effect)
-             | _ => ()
-             };
-             server.state = new_state;
-             Ok();
-           };
-           let status =
-             switch (req) {
-             | Ok () => `OK
-             | Error(err) =>
-               print_endline(err);
-               `Internal_server_error;
-             };
-           await(Response.make(~status, ()));
-         },
-       )
-     });
-let () =
+let _server =
   App.empty
-  |> App.port(server.state.identity.uri |> Uri.port |> Option.get)
-  |> App.get("/", _request =>
-       Response.of_json(`String("lol")) |> Lwt.return
-     )
-  |> List.fold_left((|>), _, post_request)
-  |> App.run_command;
+  |> App.port(Node.Server.get_port() |> Option.get)
+  |> handle_received_block_and_signature
+  |> handle_received_signature
+  |> App.start
+  |> Lwt_main.run;
+
+let (forever, _) = Lwt.wait();
+let () = Lwt_main.run(forever);

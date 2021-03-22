@@ -109,3 +109,10 @@ module List = {
        )
     |> List.rev;
 };
+
+module String_map =
+  Map_with_yojson_make({
+    [@deriving yojson]
+    type t = string;
+    let compare = String.compare;
+  });
