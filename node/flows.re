@@ -18,9 +18,8 @@ type ignore = [
 let reset_timeout: ref(unit => unit) = ref(() => assert(false));
 
 let request_block = (~hash as _) => assert(false);
-let request_previous_blocks = () =>
-  // TODO: implement
-  assert(false);
+let request_previous_blocks = () => assert(false);
+// TODO: implement
 
 let try_to_produce_block = (state, update_state) => {
   let.assert () = (
@@ -68,13 +67,14 @@ let block_added_to_the_pool = (state, update_state, block) =>
   };
 
 let received_block = (state, update_state, block) => {
+  let.ok () =
+    is_valid_block(state, block)
+    |> Result.map_error(msg => `Invalid_block(msg));
+
   let.assert () = (
     `Already_known_block,
     !is_known_block(state, ~hash=block.Block.hash),
   );
-  let.ok () =
-    is_valid_block(state, block)
-    |> Result.map_error(msg => `Invalid_block(msg));
 
   let.ok state = add_block_to_pool(state, update_state, block);
 
