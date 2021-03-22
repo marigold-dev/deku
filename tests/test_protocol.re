@@ -136,13 +136,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(5),
-          kind: Freeze,
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(5),
+          ~kind=Freeze,
+        ),
       ),
     )
   );
@@ -152,13 +152,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(501),
-          kind: Freeze,
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(501),
+          ~kind=Freeze,
+        ),
       ),
     )
   );
@@ -170,13 +170,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(6),
-          kind: Unfreeze,
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(6),
+          ~kind=Unfreeze,
+        ),
       ),
     )
   });
@@ -186,13 +186,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(501),
-          kind: Unfreeze,
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(501),
+          ~kind=Unfreeze,
+        ),
       ),
     )
   );
@@ -206,13 +206,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(7),
-          kind: Transaction({destination: destination}),
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(7),
+          ~kind=Transaction({destination: destination}),
+        ),
       ),
     )
   });
@@ -224,13 +224,13 @@ describe("protocol state", ({test, _}) => {
       state,
       self_sign_side(
         ~key,
-        {
-          nonce: 0l,
-          block_height: 0L,
-          source,
-          amount: Amount.of_int(501),
-          kind: Transaction({destination: destination}),
-        },
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(501),
+          ~kind=Transaction({destination: destination}),
+        ),
       ),
     )
   );

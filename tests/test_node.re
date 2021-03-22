@@ -8,13 +8,13 @@ describe("protocol state", ({test: _, _}) => {
   };
   let (key, address) = make_address();
   let Signed.{key, signature, data} =
-    Operation.Side_chain.{
-      nonce: 0l,
-      block_height: 1L,
-      source: Wallet.of_address(address),
-      amount: Amount.of_int(10),
-      kind: Freeze,
-    }
+    Operation.Side_chain.make(
+      ~nonce=0l,
+      ~block_height=1L,
+      ~source=Wallet.of_address(address),
+      ~amount=Amount.of_int(10),
+      ~kind=Freeze,
+    )
     |> Signed.sign(~key);
   let _signed_operation =
     Operation.Side_chain.Self_signed.verify(~key, ~signature, data)

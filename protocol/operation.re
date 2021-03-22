@@ -1,3 +1,5 @@
+open Helpers;
+
 module Main_chain = {
   [@deriving (ord, yojson)]
   type t =
@@ -24,11 +26,26 @@ module Side_chain = {
     | Unfreeze;
   [@deriving (ord, yojson)]
   type t = {
+    hash: string,
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
     amount: Amount.t,
     kind,
+  };
+
+  let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
+    let Hash.{hash, _} =
+      Hash.SHA256.hash((nonce, block_height, source, amount, kind));
+    {hash, nonce, block_height, source, kind, amount};
+  };
+
+  let of_yojson = json => {
+    let.ok {hash, nonce, block_height, source, kind, amount} =
+      of_yojson(json);
+    let.ok Hash.{hash, _} =
+      Hash.SHA256.verify(~hash, (nonce, block_height, source, kind, amount));
+    Ok({hash, nonce, block_height, source, kind, amount});
   };
 
   // TODO: maybe use GADT for this?
