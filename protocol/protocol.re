@@ -96,12 +96,14 @@ let apply_side_chain = (state: t, signed_operation) => {
 
   {...state, ledger, included_operations};
 };
-let apply_block = (state, block) => {
-  if (Int64.add(state.block_height, 1L) != block.Block.block_height) {
-    raise(Invalid_argument("invalid block height"));
-  };
-  Printf.printf("lol apply block: %Ld\n%!", block.block_height);
 
+let is_next = (state, block) =>
+  Int64.add(state.block_height, 1L) == block.Block.block_height;
+
+let apply_block = (state, block) => {
+  let.ok () =
+    is_next(state, block)
+      ? Ok() : Error(`Invalid_block_height_when_applying);
   let fold_left_noop_when_exception = (f, state, list) =>
     List.fold_left(
       (state, op) =>
@@ -138,11 +140,11 @@ let apply_block = (state, block) => {
          ),
   };
 
-  {
+  Ok({
     ...state,
     block_height: block.block_height,
     validators: state.validators |> Validators.update_current(block.author),
-  };
+  });
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};

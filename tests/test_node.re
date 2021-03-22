@@ -16,11 +16,11 @@ describe("protocol state", ({test: _, _}) => {
       kind: Freeze,
     }
     |> Signed.sign(~key);
-  let signed_operation =
+  let _signed_operation =
     Operation.Side_chain.Self_signed.verify(~key, ~signature, data)
     |> Result.get_ok;
-  Operation.Side_chain.Self_signed.to_yojson(signed_operation)
-  |> Yojson.Safe.pretty_print(Format.std_formatter);
+  // Operation.Side_chain.Self_signed.to_yojson(signed_operation)
+  // |> Yojson.Safe.pretty_print(Format.std_formatter);
   // let x = {|{
   //   "key":
   // }|};

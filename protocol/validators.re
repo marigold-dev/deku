@@ -30,7 +30,13 @@ let next = t => {...t, current: next_proposer(t)};
 
 let update_current = (address, t) => {
   let validator =
-    t.validators |> List.find(validator => validator.address == address);
+    t.validators |> List.find_opt(validator => validator.address == address);
+  let validator =
+    switch (validator) {
+    | Some(validator) => validator
+    // TODO: what in hell should happens here?
+    | None => failwith("signed block not made by a validator")
+    };
   {...t, current: Some(validator)};
 };
 let empty = {current: None, validators: []};

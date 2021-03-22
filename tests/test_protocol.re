@@ -1,3 +1,4 @@
+[@warning "-26"];
 open Setup;
 open Protocol;
 
@@ -13,7 +14,7 @@ describe("protocol state", ({test, _}) => {
     let t = Rsa.pub_of_priv(key);
     (key, Wallet.of_address(t));
   };
-  let make_state = () => {
+  let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = make_wallet();
     let state = {
       ...empty,
@@ -22,6 +23,17 @@ describe("protocol state", ({test, _}) => {
         |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
         |> Ledger.unfreeze(~wallet, ~amount=Amount.of_int(500)),
     };
+    let validators = {
+      open Helpers;
+      let.default () =
+        state.validators
+        |> Validators.add({
+             address: Wallet.get_address(wallet),
+             uri: Uri.of_string("http://localhost:8080"),
+           });
+      validators;
+    };
+    let state = {...state, validators};
     (state, key_wallet, wallet);
   };
   let self_sign_side = (~key, op) => {
@@ -29,8 +41,15 @@ describe("protocol state", ({test, _}) => {
     Operation.Side_chain.Self_signed.verify(~key, ~signature, data)
     |> Result.get_ok;
   };
-  let apply_block =
-      (~author=make_address(), ~block_height=1, ~main=[], ~side=[], state) => {
+  let apply_block = (~author=?, ~block_height=1, ~main=[], ~side=[], state) => {
+    let author = {
+      open Helpers;
+      let.default () = {
+        let validator = state.validators |> Validators.current |> Option.get;
+        validator.address;
+      };
+      author;
+    };
     let block =
       Block.make(
         ~author,
@@ -215,15 +234,12 @@ describe("protocol state", ({test, _}) => {
       ),
     )
   );
-
   test("validators", ({expect, _}) => {
     // TODO: this clearly should be splitten and properly automated
-    let (state, _, _) = make_state();
+    let (state, _, _) = make_state(~validators=Validators.empty, ());
     let validators = state.validators;
-
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.validators(validators)).toBeEmpty();
-
     let new_validator =
       Validators.{
         address: make_address(),
@@ -238,7 +254,6 @@ describe("protocol state", ({test, _}) => {
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
     expect.list(Validators.validators(validators)).toEqual([new_validator]);
-
     // duplicated is a noop
     let state =
       apply_main_chain(
@@ -249,7 +264,6 @@ describe("protocol state", ({test, _}) => {
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
     expect.list(Validators.validators(validators)).toEqual([new_validator]);
-
     // additional shouldn't move current
     let another_validator =
       Validators.{
@@ -268,7 +282,6 @@ describe("protocol state", ({test, _}) => {
       new_validator,
       another_validator,
     ]);
-
     // next
     let state = Protocol.next(state);
     let validators = state.validators;
@@ -278,7 +291,6 @@ describe("protocol state", ({test, _}) => {
       new_validator,
       another_validator,
     ]);
-
     // remove current validator
     let state =
       apply_main_chain(
@@ -289,14 +301,12 @@ describe("protocol state", ({test, _}) => {
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
     expect.list(Validators.validators(validators)).toEqual([new_validator]);
-
     // next
     let state = Protocol.next(state);
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
     expect.list(Validators.validators(validators)).toEqual([new_validator]);
-
     // remove all validators
     let state =
       apply_main_chain(
@@ -307,15 +317,16 @@ describe("protocol state", ({test, _}) => {
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.validators(validators)).toBeEmpty();
   });
-
   test("invalid block height", _ => {
     let (state, _, _) = make_state();
-    let state = apply_block(~block_height=1, state);
-    try({
-      let _ = apply_block(~block_height=1, state);
-      assert(false);
-    }) {
-    | Invalid_argument(msg) => assert(msg == "invalid block height")
+    let state =
+      switch (apply_block(~block_height=1, state)) {
+      | Ok(state) => state
+      | Error(`Invalid_block_height_when_applying) => assert(false)
+      };
+    switch (apply_block(~block_height=1, state)) {
+    | Ok(_) => assert(false)
+    | Error(`Invalid_block_height_when_applying) => ()
     };
   });
 });

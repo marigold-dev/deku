@@ -1,7 +1,7 @@
 open Operation;
 open Helpers;
 
-[@deriving (yojson, ord)]
+[@deriving yojson]
 type t = {
   hash: string,
   author: Address.t,
@@ -26,3 +26,5 @@ let of_yojson = json => {
     );
   Ok({hash, author, block_height, main_chain_ops, side_chain_ops});
 };
+
+let compare = (a, b) => String.compare(a.hash, b.hash);
