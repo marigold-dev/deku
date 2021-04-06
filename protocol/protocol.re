@@ -18,7 +18,6 @@ type t = {
   // TODO: more efficient lookup on included_operations
   included_operations: Operation_side_chain_set.t,
   validators: Validators.t,
-  current_block_producer: int,
   block_height: int64,
   blocks: list(Multisig.t(Block.t)),
 };
@@ -27,7 +26,6 @@ let empty = {
   ledger: Ledger.empty,
   included_operations: Operation_side_chain_set.empty,
   validators: Validators.empty,
-  current_block_producer: 0,
   block_height: 0L,
   blocks: [],
 };
