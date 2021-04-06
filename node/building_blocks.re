@@ -37,16 +37,37 @@ let is_valid_block = (state, block) => {
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
 let is_signed_enough = (state, ~hash) => {
+  let check_block_and_signature = block_and_signature => {
+    let signatures = block_and_signature.Node.signatures;
+    let number_of_validators =
+      Validators.validators(state.Node.protocol.validators) |> List.length;
+    let needed_signatures =
+      Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
+    // TODO: properly filter and check signatures
+    List.length(signatures) >= needed_signatures;
+  };
+
+  let rec check_if_is_signed_enough = block_and_signature =>
+    // TODO: this will blownup if there is a cycle
+    if (check_block_and_signature(block_and_signature)) {
+      Some(true);
+    } else {
+      let.some pending_parent_blocks =
+        String_map.find_opt(hash, state.Node.pending_blocks_by_previous);
+      // TODO: didn't like this code
+      Some(
+        pending_parent_blocks
+        |> List.exists(block_and_signature => {
+             let.default () = false;
+             check_if_is_signed_enough(block_and_signature);
+           }),
+      );
+    };
+
   let.default () = false;
   let.some block_and_signature =
     String_map.find_opt(hash, state.Node.pending_blocks);
-  let signatures = block_and_signature.signatures;
-  let number_of_validators =
-    Validators.validators(state.protocol.validators) |> List.length;
-  let needed_signatures =
-    Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
-  // TODO: properly filter and check signatures
-  Some(List.length(signatures) >= needed_signatures);
+  check_if_is_signed_enough(block_and_signature);
 };
 
 let find_block_in_pool = (state, ~hash) => {
@@ -136,6 +157,16 @@ let add_block_to_pool = (state, update_state, block) => {
     Error(`Block_already_in_the_pool);
   } else {
     let block_and_signatures = {...block_and_signatures, block: Some(block)};
+    let pending_blocks_by_previous =
+      switch (
+        String_map.find_opt(
+          block.previous_hash,
+          state.pending_blocks_by_previous,
+        )
+      ) {
+      | Some(pending_blocks_by_previous) => pending_blocks_by_previous
+      | None => []
+      };
     let state = {
       ...state,
       pending_blocks:
@@ -143,6 +174,12 @@ let add_block_to_pool = (state, update_state, block) => {
           block.hash,
           block_and_signatures,
           state.pending_blocks,
+        ),
+      pending_blocks_by_previous:
+        String_map.add(
+          block.previous_hash,
+          pending_blocks_by_previous,
+          state.pending_blocks_by_previous,
         ),
     };
     Ok(update_state(state));
