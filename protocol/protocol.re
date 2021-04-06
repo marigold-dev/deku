@@ -148,3 +148,13 @@ let apply_block = (state, block) => {
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};
+
+let last_block_hash = t =>
+  List.find_map(
+    block =>
+      Multisig.data(block).Block.block_height == t.block_height
+        ? Some(Multisig.data(block).Block.hash) : None,
+    t.blocks,
+  )
+  // TODO: is this okay?
+  |> Option.get;

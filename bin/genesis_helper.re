@@ -58,6 +58,7 @@ let inject_genesis = () => {
     let first = List.nth(validators, 0);
     let block =
       Block.make(
+        ~previous_hash="tuturu",
         ~author=first.t,
         ~block_height=1L,
         ~main_chain_ops=[],

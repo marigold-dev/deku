@@ -100,6 +100,7 @@ let sign = (~key, ~hash) =>
 
 let produce_block = state =>
   Block.make(
+    ~previous_hash=last_block_hash(state.Node.protocol),
     ~author=state.Node.identity.t,
     ~block_height=Int64.add(state.protocol.block_height, 1L),
     ~main_chain_ops=state.pending_main_ops,

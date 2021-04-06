@@ -4,6 +4,7 @@ open Operation;
 type t =
   pri {
     hash: string,
+    previous_hash: string,
     author: Address.t,
     block_height: int64,
     main_chain_ops: list(Main_chain.t),
@@ -12,6 +13,7 @@ type t =
 
 let make:
   (
+    ~previous_hash: string,
     ~author: Address.t,
     ~block_height: int64,
     ~main_chain_ops: list(Main_chain.t),

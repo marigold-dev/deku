@@ -52,6 +52,7 @@ describe("protocol state", ({test, _}) => {
     };
     let block =
       Block.make(
+        ~previous_hash="tuturu",
         ~author,
         ~block_height=Int64.of_int(block_height),
         ~main_chain_ops=main,
