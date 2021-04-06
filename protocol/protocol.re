@@ -19,7 +19,7 @@ type t = {
   included_operations: Operation_side_chain_set.t,
   validators: Validators.t,
   block_height: int64,
-  blocks: list(Multisig.t(Block.t)),
+  last_block: option(Multisig.t(Block.t)),
 };
 
 let empty = {
@@ -27,7 +27,7 @@ let empty = {
   included_operations: Operation_side_chain_set.empty,
   validators: Validators.empty,
   block_height: 0L,
-  blocks: [],
+  last_block: None,
 };
 
 let apply_main_chain = (state, op) => {
@@ -147,12 +147,4 @@ let apply_block = (state, block) => {
 
 let next = t => {...t, validators: Validators.next(t.validators)};
 
-let last_block_hash = t =>
-  List.find_map(
-    block =>
-      Multisig.data(block).Block.block_height == t.block_height
-        ? Some(Multisig.data(block).Block.hash) : None,
-    t.blocks,
-  )
-  // TODO: is this okay?
-  |> Option.get;
+let last_block_hash = t => (Option.get(t.last_block) |> Multisig.data).hash;
