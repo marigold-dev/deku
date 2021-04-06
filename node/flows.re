@@ -30,7 +30,8 @@ let try_to_produce_block = (state, update_state) => {
   // TODO: avoid spam? how?
   let block = produce_block(state);
   let signature = sign(~key=state.identity.key, ~hash=block.hash);
-  let state = append(state, update_state, ~signature, ~hash=block.hash);
+  let state =
+    append_signature(state, update_state, ~signature, ~hash=block.hash);
   broadcast_block_and_signature(state, ~block, ~signature);
   Ok();
 };
@@ -53,7 +54,7 @@ let block_added_to_the_pool = (state, update_state, block) =>
           && is_current_producer(state, ~key=block.author)) {
         let signature = sign(~key=state.identity.key, ~hash=block.hash);
         broadcast_signature(state, ~hash=block.hash, ~signature);
-        append(state, update_state, ~hash=block.hash, ~signature);
+        append_signature(state, update_state, ~hash=block.hash, ~signature);
       } else {
         state;
       };
@@ -88,7 +89,7 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
     !is_known_signature(state, ~hash, ~signature),
   );
 
-  let state = append(state, update_state, ~hash, ~signature);
+  let state = append_signature(state, update_state, ~hash, ~signature);
 
   let.assert () = (
     `Added_signature_not_signed_enough_to_request,

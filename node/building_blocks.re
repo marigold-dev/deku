@@ -108,7 +108,7 @@ let produce_block = state =>
   );
 
 // mutations
-let append = (state, update_state, ~hash, ~signature) => {
+let append_signature = (state, update_state, ~hash, ~signature) => {
   let block_and_signature =
     switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
     | Some(block_and_signatures) => block_and_signatures
