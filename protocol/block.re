@@ -37,7 +37,7 @@ let of_yojson = json => {
   let.ok Hash.{hash, _} =
     Hash.SHA256.verify(
       ~hash,
-      (author, previous_hash, block_height, main_chain_ops, side_chain_ops),
+      (previous_hash, author, block_height, main_chain_ops, side_chain_ops),
     );
   Ok({
     hash,
