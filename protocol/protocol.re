@@ -19,7 +19,7 @@ type t = {
   included_operations: Operation_side_chain_set.t,
   validators: Validators.t,
   block_height: int64,
-  last_block: option(Multisig.t(Block.t)),
+  last_block: option(Block.t),
 };
 
 let empty = {
@@ -142,9 +142,10 @@ let apply_block = (state, block) => {
     ...state,
     block_height: block.block_height,
     validators: state.validators |> Validators.update_current(block.author),
+    last_block: Some(block),
   });
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};
 
-let last_block_hash = t => (Option.get(t.last_block) |> Multisig.data).hash;
+let last_block_hash = t => Option.get(t.last_block).hash;
