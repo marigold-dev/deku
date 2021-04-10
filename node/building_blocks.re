@@ -36,7 +36,7 @@ let is_valid_block = (state, block) => {
 
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
-let check_block_and_signature_is_enough = (state, block_and_signature) => {
+let check_block_and_signature_is_self_signed = (state, block_and_signature) => {
   let signatures = block_and_signature.Node.signatures;
   let number_of_validators =
     Validators.validators(state.Node.protocol.validators) |> List.length;
@@ -45,36 +45,56 @@ let check_block_and_signature_is_enough = (state, block_and_signature) => {
   // TODO: properly filter and check signatures
   List.length(signatures) >= needed_signatures;
 };
+let rec check_block_and_signature_is_enough = (state, block_and_signature) => {
+  // TODO: this will blownup if there is a cycle
+  let.default () = false;
+  if (check_block_and_signature_is_self_signed(state, block_and_signature)) {
+    Some(true);
+  } else {
+    let.some pending_parent_blocks =
+      String_map.find_opt(
+        block_and_signature.hash,
+        state.Node.pending_blocks_by_previous,
+      );
+    // TODO: didn't like this code
+    Some(
+      List.exists(
+        check_block_and_signature_is_enough(state),
+        pending_parent_blocks,
+      ),
+    );
+  };
+};
+
 let is_self_signed_block = (state, ~hash) => {
+  let.default () = false;
+  let.some block_and_signature =
+    String_map.find_opt(hash, state.Node.pending_blocks);
+  Some(check_block_and_signature_is_self_signed(state, block_and_signature));
+};
+let is_signed_enough = (state, ~hash) => {
   let.default () = false;
   let.some block_and_signature =
     String_map.find_opt(hash, state.Node.pending_blocks);
   Some(check_block_and_signature_is_enough(state, block_and_signature));
 };
-let is_signed_enough = (state, ~hash) => {
-  let rec check_if_is_signed_enough = block_and_signature =>
-    // TODO: this will blownup if there is a cycle
-    if (check_block_and_signature_is_enough(state, block_and_signature)) {
-      Some(true);
-    } else {
-      let.some pending_parent_blocks =
-        String_map.find_opt(hash, state.Node.pending_blocks_by_previous);
-      // TODO: didn't like this code
-      Some(
-        pending_parent_blocks
-        |> List.exists(block_and_signature => {
-             let.default () = false;
-             check_if_is_signed_enough(block_and_signature);
-           }),
-      );
-    };
 
-  let.default () = false;
-  let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.pending_blocks);
-  check_if_is_signed_enough(block_and_signature);
+// TODO: bad naming
+let is_latest = (state, block) =>
+  state.Node.last_signed_block == Some(block);
+let find_next_block_to_apply = (state, block) => {
+  let.some pending_parent_blocks =
+    String_map.find_opt(
+      block.Block.hash,
+      state.Node.pending_blocks_by_previous,
+    );
+  pending_parent_blocks
+  |> List.find_map(block_and_sigs => {
+       let.some block = block_and_sigs.Node.block;
+       check_block_and_signature_is_enough(state, block_and_sigs)
+         ? Some(block) : None;
+     });
 };
-
 // TODO: bad naming
 let is_signable = (state, block) =>
   switch (state.Node.last_signed_block) {
