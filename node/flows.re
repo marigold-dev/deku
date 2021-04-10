@@ -50,7 +50,8 @@ let try_to_apply_block = (state, update_state, block) => {
 let block_added_to_the_pool = (state, update_state, block) =>
   if (is_next(state, block)) {
     let state =
-      if (!is_signed_by_self(state, ~hash=block.hash)
+      if (is_signable(state, block)
+          && !is_signed_by_self(state, ~hash=block.hash)
           && is_current_producer(state, ~key=block.author)) {
         let signature = sign(~key=state.identity.key, ~hash=block.hash);
         broadcast_signature(state, ~hash=block.hash, ~signature);

@@ -75,6 +75,15 @@ let is_signed_enough = (state, ~hash) => {
   check_if_is_signed_enough(block_and_signature);
 };
 
+// TODO: bad naming
+let is_signable = (state, block) =>
+  switch (state.Node.last_signed_block) {
+  | Some(last_signed_block) =>
+    last_signed_block.hash == block.Block.previous_hash
+    && Int64.add(last_signed_block.block_height, 1L) == block.block_height
+  | None => false
+  };
+
 // TODO: maybe should_be_last_signed_block
 let is_last_signed_block = (state, block) =>
   switch (state.Node.last_signed_block) {
