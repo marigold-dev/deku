@@ -158,7 +158,7 @@ let append_signature = (state, update_state, ~hash, ~signature) => {
   let block_and_signature =
     switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
     | Some(block_and_signatures) => block_and_signatures
-    | None => {signatures: [], block: None}
+    | None => {signatures: [], block: None, hash}
     };
   let pending_blocks =
     String_map.add(
@@ -182,7 +182,7 @@ let add_block_to_pool = (state, update_state, block) => {
   let block_and_signatures =
     switch (String_map.find_opt(block.Block.hash, state.Node.pending_blocks)) {
     | Some(block_and_signatures) => block_and_signatures
-    | None => {signatures: [], block: None}
+    | None => {signatures: [], block: None, hash: block.hash}
     };
   if (Option.is_some(block_and_signatures.block)) {
     Error(`Block_already_in_the_pool);

@@ -13,6 +13,7 @@ type block_and_signatures = {
   // TODO: this should probably be a set
   signatures: list(Multisig.signature),
   block: option(Block.t),
+  hash: string,
 };
 
 [@deriving yojson]
