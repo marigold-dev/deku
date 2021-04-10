@@ -36,20 +36,25 @@ let is_valid_block = (state, block) => {
 
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
+let check_block_and_signature_is_enough = (state, block_and_signature) => {
+  let signatures = block_and_signature.Node.signatures;
+  let number_of_validators =
+    Validators.validators(state.Node.protocol.validators) |> List.length;
+  let needed_signatures =
+    Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
+  // TODO: properly filter and check signatures
+  List.length(signatures) >= needed_signatures;
+};
+let is_self_signed_block = (state, ~hash) => {
+  let.default () = false;
+  let.some block_and_signature =
+    String_map.find_opt(hash, state.Node.pending_blocks);
+  Some(check_block_and_signature_is_enough(state, block_and_signature));
+};
 let is_signed_enough = (state, ~hash) => {
-  let check_block_and_signature = block_and_signature => {
-    let signatures = block_and_signature.Node.signatures;
-    let number_of_validators =
-      Validators.validators(state.Node.protocol.validators) |> List.length;
-    let needed_signatures =
-      Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
-    // TODO: properly filter and check signatures
-    List.length(signatures) >= needed_signatures;
-  };
-
   let rec check_if_is_signed_enough = block_and_signature =>
     // TODO: this will blownup if there is a cycle
-    if (check_block_and_signature(block_and_signature)) {
+    if (check_block_and_signature_is_enough(state, block_and_signature)) {
       Some(true);
     } else {
       let.some pending_parent_blocks =
@@ -69,6 +74,17 @@ let is_signed_enough = (state, ~hash) => {
     String_map.find_opt(hash, state.Node.pending_blocks);
   check_if_is_signed_enough(block_and_signature);
 };
+
+// TODO: maybe should_be_last_signed_block
+let is_last_signed_block = (state, block) =>
+  switch (state.Node.last_signed_block) {
+  | Some(last_signed_block) when last_signed_block.hash == block.Block.hash =>
+    true
+  | Some(last_signed_block) =>
+    block.Block.block_height > last_signed_block.block_height
+    && is_self_signed_block(state, ~hash=block.hash)
+  | None => true
+  };
 
 let find_block_in_pool = (state, ~hash) => {
   let.some block_and_signatures =
@@ -144,7 +160,13 @@ let append_signature = (state, update_state, ~hash, ~signature) => {
       },
       state.Node.pending_blocks,
     );
-  update_state({...state, pending_blocks});
+  let state = {...state, pending_blocks};
+  let last_signed_block =
+    switch (block_and_signature.block) {
+    | Some(block) when is_last_signed_block(state, block) => Some(block)
+    | _ => state.last_signed_block
+    };
+  update_state({...state, last_signed_block});
 };
 
 let add_block_to_pool = (state, update_state, block) => {
@@ -181,6 +203,9 @@ let add_block_to_pool = (state, update_state, block) => {
           pending_blocks_by_previous,
           state.pending_blocks_by_previous,
         ),
+      last_signed_block:
+        is_last_signed_block(state, block)
+          ? Some(block) : state.last_signed_block,
     };
     Ok(update_state(state));
   };
