@@ -28,6 +28,7 @@ type t = {
   last_applied_block: option(Block.t),
   last_signed_block: option(Block.t),
   applied_blocks: String_map.t(Block.t),
+  applied_blocks_by_height: Int64_map.t(Block.t),
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
 };
@@ -40,7 +41,17 @@ let make = (~identity) => {
   pending_blocks_by_previous: String_map.empty,
   last_signed_block: None,
   applied_blocks: String_map.empty,
+  applied_blocks_by_height: Int64_map.empty,
   last_applied_block: None,
   last_applied_block_timestamp: 0.0,
   protocol: Protocol.empty,
+};
+
+let append_applied_block = (state, block) => {
+  ...state,
+  applied_blocks:
+    state.applied_blocks |> String_map.add(block.Block.hash, block),
+  applied_blocks_by_height:
+    state.applied_blocks_by_height
+    |> Int64_map.add(block.Block.block_height, block),
 };

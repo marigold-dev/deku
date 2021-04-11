@@ -243,13 +243,7 @@ let add_block_to_pool = (state, update_state, block) => {
 let apply_block = (state, update_state, block) => {
   let.ok protocol = apply_block(state.Node.protocol, block);
   let state = update_state({...state, protocol});
-  Ok(
-    update_state({
-      ...state,
-      applied_blocks:
-        state.Node.applied_blocks |> String_map.add(block.hash, block),
-    }),
-  );
+  Ok(block |> Node.append_applied_block(state) |> update_state);
 };
 
 let clean = (state, update_state, block) => {

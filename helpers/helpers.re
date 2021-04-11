@@ -116,3 +116,10 @@ module String_map =
     type t = string;
     let compare = String.compare;
   });
+
+module Int64_map =
+  Map_with_yojson_make({
+    [@deriving yojson]
+    type t = int64;
+    let compare = Int64.compare;
+  });
