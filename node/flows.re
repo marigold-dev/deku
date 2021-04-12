@@ -120,3 +120,6 @@ let requested_block_by_height = (state, block_height) => {
   find_applied_block_by_height(state, block_height)
   |> Option.to_result(~none=`Unknown_block_height);
 };
+
+let is_applied_hash = (state, hash) =>
+  String_map.mem(hash, state.Node.applied_blocks);

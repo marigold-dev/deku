@@ -76,11 +76,14 @@ module Block_by_height_spec = {
   let path = "/block-by-height";
 };
 
-// module Send_me_block_spec = {
-//   [@deriving yojson]
-//   type request = {hash: string};
-//   let path = "/send-me-block";
-// };
+module Is_applied_block_hash_spec = {
+  [@deriving yojson]
+  type request = {hash: string};
+  [@deriving yojson]
+  type response = {is_valid: bool};
+  let path = "/is-applied-block-hash";
+};
+
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast((module Block_and_signature_spec));
