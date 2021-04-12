@@ -13,8 +13,6 @@ let is_valid_signature = (~hash, ~signature) => {
   signed |> Multisig.of_signed |> Multisig.signatures |> List.nth(_, 0) |> ok;
 };
 
-let is_valid_block_height = (state, block) =>
-  block.Block.block_height >= state.Node.protocol.block_height;
 let is_valid_block = (state, block) => {
   // TODO: check if it's made by a known validator?
   let is_all_operations_properly_signed = _block =>
@@ -22,7 +20,7 @@ let is_valid_block = (state, block) => {
     true;
   let.assert () = (
     "new block has a lower block height",
-    is_valid_block_height(state, block),
+    block.Block.block_height >= state.Node.protocol.block_height,
   );
 
   // TODO: should we just ignore this operations?
@@ -172,6 +170,19 @@ let produce_block = state =>
     ~main_chain_ops=state.pending_main_ops,
     ~side_chain_ops=state.pending_side_ops,
   );
+
+let is_valid_block_height = (state, block_height) =>
+  block_height >= 1L
+  && (
+    switch (state.Node.last_signed_block) {
+    | Some(block) => block_height <= block.block_height
+    | None => true
+    }
+  );
+
+// TODO: should also support valid blocks that were not applied yet
+let find_applied_block_by_height = (state, block_height) =>
+  Int64_map.find_opt(block_height, state.Node.applied_blocks_by_height);
 
 // mutations
 let append_signature = (state, update_state, ~hash, ~signature) => {

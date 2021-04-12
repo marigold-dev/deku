@@ -111,3 +111,12 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   | None => request_block(~hash)
   };
 };
+
+let requested_block_by_height = (state, block_height) => {
+  let.assert () = (
+    `Invalid_block_height,
+    is_valid_block_height(state, block_height),
+  );
+  find_applied_block_by_height(state, block_height)
+  |> Option.to_result(~none=`Unknown_block_height);
+};

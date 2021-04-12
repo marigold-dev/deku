@@ -67,6 +67,15 @@ module Block_and_signature_spec = {
   let path = "/append-block-and-signature";
 };
 
+module Block_by_height_spec = {
+  [@deriving yojson]
+  type request = {block_height: int64};
+  [@deriving yojson]
+  type response = {block: option(Block.t)};
+
+  let path = "/block-by-height";
+};
+
 // module Send_me_block_spec = {
 //   [@deriving yojson]
 //   type request = {hash: string};
