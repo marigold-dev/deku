@@ -28,6 +28,7 @@ let get_state = () => get().state;
 let set_state = state => get().state = state;
 let reset_timeout = server => {
   Lwt.cancel(server.timeout);
+  // TODO: this is dumb, should be frequent operation
   server.timeout = {
     let.await () = Lwt_unix.sleep(10.0);
     switch (
@@ -46,3 +47,5 @@ let reset_timeout = server => {
 };
 
 Flows.reset_timeout := (() => reset_timeout(get()));
+Flows.get_state := get_state;
+Flows.set_state := set_state;

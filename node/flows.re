@@ -17,8 +17,9 @@ type ignore = [
 
 // TODO: set this by server
 let reset_timeout: ref(unit => unit) = ref(() => assert(false));
+let get_state: ref(unit => State.t) = ref(() => assert(false));
+let set_state: ref(State.t => unit) = ref(_ => assert(false));
 
-let request_block = (~hash as _) => assert(false);
 let request_previous_blocks = () => assert(false);
 // TODO: implement
 
