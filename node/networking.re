@@ -76,6 +76,15 @@ module Block_by_height_spec = {
   let path = "/block-by-height";
 };
 
+module Block_by_hash_spec = {
+  [@deriving yojson]
+  type request = {hash: string};
+  [@deriving yojson]
+  type response = {block: option(Block.t)};
+
+  let path = "/block-by-hash";
+};
+
 module Is_applied_block_hash_spec = {
   [@deriving yojson]
   type request = {hash: string};

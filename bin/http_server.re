@@ -318,6 +318,26 @@ let handle_is_applied_block_hash =
     Networking.Is_applied_block_hash_spec.path,
     handle_is_applied_block_hash,
   );
+let handle_block_by_hash = request => {
+  open Flows;
+  open Networking.Block_by_hash_spec;
+  let.await json = Request.to_json_exn(request);
+  let response = {
+    let.ok req =
+      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
+    let of_hex = str => Hex.to_string(`Hex(str));
+    let block = find_block_by_hash(Server.get_state(), of_hex(req.hash));
+    Ok({block: block});
+  };
+  switch (response) {
+  | Ok(response) =>
+    let response = response_to_yojson(response);
+    await(Response.of_json(~status=`OK, response));
+  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
+  };
+};
+let handle_block_by_hash =
+  App.post(Networking.Block_by_hash_spec.path, handle_block_by_hash);
 
 module Utils = {
   let read_file = file => {
@@ -383,6 +403,7 @@ let _server =
   |> handle_received_signature
   |> handle_requested_block_by_height
   |> handle_is_applied_block_hash
+  |> handle_block_by_hash
   |> App.start
   |> Lwt_main.run;
 

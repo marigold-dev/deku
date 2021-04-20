@@ -124,3 +124,9 @@ let requested_block_by_height = (state, block_height) => {
 
 let is_applied_hash = (state, hash) =>
   String_map.mem(hash, state.Node.applied_blocks);
+
+let find_block_by_hash = (state, hash) => {
+  let.none () = String_map.find_opt(hash, state.Node.applied_blocks);
+  let.some {block, _} = String_map.find_opt(hash, state.Node.pending_blocks);
+  block;
+};
