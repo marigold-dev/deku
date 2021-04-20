@@ -326,8 +326,7 @@ let handle_block_by_hash = request => {
   let response = {
     let.ok req =
       request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let of_hex = str => Hex.to_string(`Hex(str));
-    let block = find_block_by_hash(Server.get_state(), of_hex(req.hash));
+    let block = find_block_by_hash(Server.get_state(), req.hash);
     Ok({block: block});
   };
   switch (response) {
