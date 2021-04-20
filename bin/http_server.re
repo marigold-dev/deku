@@ -297,14 +297,15 @@ let handle_requested_block_by_height =
   );
 let handle_is_applied_block_hash = request => {
   open Flows;
-  open Networking.Is_applied_block_hash_spec;
+  open Networking.Is_signed_block_hash_spec;
   let.await json = Request.to_json_exn(request);
   let response = {
     let.ok req =
       request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
     let of_hex = str => Hex.to_string(`Hex(str));
-    let is_valid = is_applied_hash(Server.get_state(), of_hex(req.hash));
-    Ok({is_valid: is_valid});
+    let is_signed =
+      is_signed_block_hash(Server.get_state(), of_hex(req.hash));
+    Ok({is_signed: is_signed});
   };
   switch (response) {
   | Ok(response) =>
@@ -315,7 +316,7 @@ let handle_is_applied_block_hash = request => {
 };
 let handle_is_applied_block_hash =
   App.post(
-    Networking.Is_applied_block_hash_spec.path,
+    Networking.Is_signed_block_hash_spec.path,
     handle_is_applied_block_hash,
   );
 let handle_block_by_hash = request => {

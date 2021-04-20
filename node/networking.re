@@ -111,12 +111,12 @@ module Block_by_hash_spec = {
   let path = "/block-by-hash";
 };
 
-module Is_applied_block_hash_spec = {
+module Is_signed_block_hash_spec = {
   [@deriving yojson]
   type request = {hash: string};
   [@deriving yojson]
-  type response = {is_valid: bool};
-  let path = "/is-applied-block-hash";
+  type response = {is_signed: bool};
+  let path = "/is-signed-block-hash";
 };
 
 let request_block_by_height = request((module Block_by_height_spec));

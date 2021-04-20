@@ -130,3 +130,19 @@ let find_block_by_hash = (state, hash) => {
   let.some {block, _} = String_map.find_opt(hash, state.Node.pending_blocks);
   block;
 };
+
+let find_block_by_hash = (state, hash) => {
+  let.none () = String_map.find_opt(hash, state.Node.applied_blocks);
+  let.some {block, _} = String_map.find_opt(hash, state.Node.pending_blocks);
+  block;
+};
+
+let is_signed_block_hash = (state, hash) => {
+  let.default () = false;
+  let.none () =
+    String_map.find_opt(hash, state.Node.applied_blocks)
+    |> Option.map(_ => true);
+  let.some block_and_signature =
+    String_map.find_opt(hash, state.Node.pending_blocks);
+  Some(check_block_and_signature_is_enough(state, block_and_signature));
+};
