@@ -7,8 +7,26 @@ module type Side_effect_endpoint = {
   type request;
   let path: string;
 };
+module type Request_endpoint = {
+  [@deriving yojson]
+  type request;
+  [@deriving yojson]
+  type response;
+  let path: string;
+};
 
 exception Error_status;
+let request = (request_to_yojson, path, data, uri) => {
+  open Cohttp;
+  open Cohttp_lwt_unix;
+  let body = request_to_yojson(data) |> Yojson.Safe.to_string;
+  let uri = Uri.with_path(uri, path);
+  let.await (response, body) = Client.post(~body=`String(body), uri);
+  let.await body = Cohttp_lwt.Body.to_string(body);
+  Code.code_of_status(response.status) |> Code.is_success
+    ? await(body) : Lwt.fail(Error_status);
+};
+
 let post =
     (
       type req,
@@ -16,14 +34,22 @@ let post =
       data,
       uri,
     ) => {
-  open Cohttp;
-  open Cohttp_lwt_unix;
-  let body = E.request_to_yojson(data) |> Yojson.Safe.to_string;
-  let uri = Uri.with_path(uri, E.path);
-  let.await (response, body) = Client.post(~body=`String(body), uri);
-  let.await _ = Cohttp_lwt.Body.to_string(body);
-  Code.code_of_status(response.status) |> Code.is_success
-    ? await() : Lwt.fail(Error_status);
+  let.await _body = request(E.request_to_yojson, E.path, data, uri);
+  await();
+};
+let request =
+    (
+      type req,
+      type res,
+      module E:
+        Request_endpoint with type request = req and type response = res,
+      data,
+      uri,
+    ) => {
+  let.await body = request(E.request_to_yojson, E.path, data, uri);
+  let response =
+    Yojson.Safe.from_string(body) |> E.response_of_yojson |> Result.get_ok;
+  await(response);
 };
 
 let broadcast = (endpoint, state, data) =>
@@ -93,6 +119,8 @@ module Is_applied_block_hash_spec = {
   let path = "/is-applied-block-hash";
 };
 
+let request_block_by_height = request((module Block_by_height_spec));
+let request_block_by_hash = request((module Block_by_hash_spec));
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast((module Block_and_signature_spec));
