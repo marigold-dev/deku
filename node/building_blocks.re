@@ -229,6 +229,10 @@ let add_block_to_pool = (state, update_state, block) => {
       | Some(pending_blocks_by_previous) => pending_blocks_by_previous
       | None => []
       };
+    let pending_blocks_by_previous = [
+      block_and_signatures,
+      ...pending_blocks_by_previous,
+    ];
     let state = {
       ...state,
       pending_blocks:
