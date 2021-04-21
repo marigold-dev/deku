@@ -26,7 +26,7 @@ let get_port = () => get().state.identity.uri |> Uri.port;
 
 let get_state = () => get().state;
 let set_state = state => get().state = state;
-let reset_timeout = server => {
+let rec reset_timeout = server => {
   Lwt.cancel(server.timeout);
   // TODO: this is dumb, should be frequent operation
   server.timeout = {
@@ -40,9 +40,11 @@ let reset_timeout = server => {
         },
       )
     ) {
-    | Ok () => await()
-    | Error(`Not_current_block_producer) => await()
+    | Ok () => ()
+    | Error(`Not_current_block_producer) => ()
     };
+    reset_timeout(server);
+    Lwt.return_unit;
   };
 };
 
