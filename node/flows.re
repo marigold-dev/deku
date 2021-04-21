@@ -20,7 +20,75 @@ let reset_timeout: ref(unit => unit) = ref(() => assert(false));
 let get_state: ref(unit => State.t) = ref(() => assert(false));
 let set_state: ref(State.t => unit) = ref(_ => assert(false));
 
-let request_previous_blocks = () => assert(false);
+// TODO: poor man recursion
+let received_block':
+  ref(
+    (Node.t, Node.t => Node.t, Block.t) =>
+    result(
+      unit,
+      [
+        | `Added_block_not_signed_enough_to_desync
+        | `Already_known_block
+        | `Block_already_in_the_pool
+        | `Block_not_signed_enough_to_apply
+        | `Invalid_block(string)
+        | `Invalid_block_height_when_applying
+        | `Not_current_block_producer
+        | `Pending_blocks
+      ],
+    ),
+  ) =
+  ref(_ => assert(false));
+
+let rec request_block_by_hash = (tries, ~hash) => {
+  // TODO: magic number
+  if (tries > 20) {
+    raise(Not_found);
+  };
+  Lwt.catch(
+    () => {
+      let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
+      let state = get_state^();
+      let validators = Validators.validators(state.protocol.validators);
+      let validator =
+        List.nth(validators, random_int(List.length(validators)));
+
+      let.await {block} =
+        Networking.request_block_by_hash({hash: hash}, validator.uri);
+      // TODO: validate hash
+      await(Option.get(block));
+    },
+    _exn => {
+      Printexc.print_backtrace(stdout);
+      request_block_by_hash(tries + 1, ~hash);
+    },
+  );
+};
+
+let request_block = (~hash) =>
+  Lwt.async(() => {
+    // TODO: check if block was already requested
+    let.await block = request_block_by_hash(0, ~hash);
+    let state = get_state^();
+    switch (
+      received_block'^(
+        state,
+        state => {
+          set_state^(state);
+          state;
+        },
+        block,
+      )
+    ) {
+    | Ok () => await()
+    // TODO: error?
+    | Error(_err) => await()
+    };
+  });
+
+let request_previous_blocks = block =>
+  request_block(~hash=block.Block.previous_hash);
+
 // TODO: implement
 
 let try_to_produce_block = (state, update_state) => {
@@ -75,7 +143,8 @@ and block_added_to_the_pool = (state, update_state, block) =>
       `Added_block_not_signed_enough_to_desync,
       is_signed_enough(state, ~hash=block.hash),
     );
-    request_previous_blocks();
+    request_previous_blocks(block);
+    Ok();
   };
 
 let received_block = (state, update_state, block) => {
@@ -93,6 +162,11 @@ let received_block = (state, update_state, block) => {
   block_added_to_the_pool(state, update_state, block);
 };
 
+let () = received_block' := received_block;
+
+let received_block = (state, update_state, block) =>
+  received_block(state, update_state, block);
+
 let received_signature = (state, update_state, ~hash, ~signature) => {
   let.ok signature = is_valid_signature(~hash, ~signature);
   let.assert () = (
@@ -109,7 +183,9 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 
   switch (find_block_in_pool(state, ~hash)) {
   | Some(block) => block_added_to_the_pool(state, update_state, block)
-  | None => request_block(~hash)
+  | None =>
+    request_block(~hash);
+    Ok();
   };
 };
 
@@ -120,15 +196,6 @@ let requested_block_by_height = (state, block_height) => {
   );
   find_applied_block_by_height(state, block_height)
   |> Option.to_result(~none=`Unknown_block_height);
-};
-
-let is_applied_hash = (state, hash) =>
-  String_map.mem(hash, state.Node.applied_blocks);
-
-let find_block_by_hash = (state, hash) => {
-  let.none () = String_map.find_opt(hash, state.Node.applied_blocks);
-  let.some {block, _} = String_map.find_opt(hash, state.Node.pending_blocks);
-  block;
 };
 
 let find_block_by_hash = (state, hash) => {

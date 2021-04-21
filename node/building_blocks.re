@@ -143,9 +143,9 @@ let get_current_block_producer = state =>
   } else {
     // TODO: this is clearly dumb
     let rec next_until = (validators, diff) =>
-      diff < 10.0
+      diff <= 10.0
         ? validators : next_until(Validators.next(validators), diff -. 10.0);
-    let diff = state.Node.last_applied_block_timestamp -. Unix.time();
+    let diff = Unix.time() -. state.Node.last_applied_block_timestamp;
     let validators = next_until(state.protocol.validators, diff);
     Validators.current(validators);
   };
@@ -191,15 +191,12 @@ let append_signature = (state, update_state, ~hash, ~signature) => {
     | Some(block_and_signatures) => block_and_signatures
     | None => {signatures: [], block: None, hash}
     };
+  block_and_signature.signatures = [
+    signature,
+    ...block_and_signature.signatures,
+  ];
   let pending_blocks =
-    String_map.add(
-      hash,
-      {
-        ...block_and_signature,
-        signatures: [signature, ...block_and_signature.signatures],
-      },
-      state.Node.pending_blocks,
-    );
+    String_map.add(hash, block_and_signature, state.Node.pending_blocks);
   let state = {...state, pending_blocks};
   let last_signed_block =
     switch (block_and_signature.block) {
@@ -229,10 +226,9 @@ let add_block_to_pool = (state, update_state, block) => {
       | Some(pending_blocks_by_previous) => pending_blocks_by_previous
       | None => []
       };
-    let pending_blocks_by_previous = [
-      block_and_signatures,
-      ...pending_blocks_by_previous,
-    ];
+    let pending_blocks_by_previous =
+      [block_and_signatures, ...pending_blocks_by_previous]
+      |> List.sort_uniq((a, b) => String.compare(a.Node.hash, b.Node.hash));
     let state = {
       ...state,
       pending_blocks:
