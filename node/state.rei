@@ -31,6 +31,7 @@ type t = {
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
   last_snapshot: option(string),
+  additional_blocks: list(Block.t),
 };
 
 let make: (~identity: identity) => t;
