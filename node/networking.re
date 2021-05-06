@@ -119,8 +119,20 @@ module Is_signed_block_hash_spec = {
   let path = "/is-signed-block-hash";
 };
 
+module Protocol_snapshot = {
+  [@deriving yojson]
+  type request = unit;
+  [@deriving yojson]
+  type response = {
+    snapshot: string,
+    additional_blocks: list(Block.t),
+  };
+  let path = "/protocol-snapshot";
+};
+
 let request_block_by_height = request((module Block_by_height_spec));
 let request_block_by_hash = request((module Block_by_hash_spec));
+let request_protocol_snapshot = request((module Protocol_snapshot));
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast((module Block_and_signature_spec));

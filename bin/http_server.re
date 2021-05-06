@@ -338,6 +338,28 @@ let handle_block_by_hash = request => {
 };
 let handle_block_by_hash =
   App.post(Networking.Block_by_hash_spec.path, handle_block_by_hash);
+let handle_protocol_snapshot = request => {
+  open Networking.Protocol_snapshot;
+  let.await json = Request.to_json_exn(request);
+  let response = {
+    let.ok () =
+      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
+    let state = Server.get_state();
+    switch (state.last_snapshot) {
+    | Some(snapshot) =>
+      Ok({snapshot, additional_blocks: state.additional_blocks})
+    | None => Error(`Not_found)
+    };
+  };
+  switch (response) {
+  | Ok(response) =>
+    let response = response_to_yojson(response);
+    await(Response.of_json(~status=`OK, response));
+  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
+  };
+};
+let handle_protocol_snapshot =
+  App.post(Networking.Protocol_snapshot.path, handle_protocol_snapshot);
 
 module Utils = {
   let read_file = file => {
@@ -404,6 +426,7 @@ let _server =
   |> handle_requested_block_by_height
   |> handle_is_applied_block_hash
   |> handle_block_by_hash
+  |> handle_protocol_snapshot
   |> App.start
   |> Lwt_main.run;
 
