@@ -113,7 +113,6 @@ let rec try_to_apply_block = (state, update_state, block) => {
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
-  let state = update_state({...state, last_applied_block: Some(block)});
   if (is_latest(state, block)) {
     try_to_produce_block(state, update_state);
   } else {

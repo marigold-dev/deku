@@ -25,7 +25,6 @@ type t = {
   pending_blocks_by_previous: String_map.t(list(block_and_signatures)),
   // TODO: make so that genesis happens through a different pipeline
   // TODO: then the CLI can inject block 2 instead, like if that was a stale
-  last_applied_block: option(Block.t),
   last_signed_block: option(Block.t),
   applied_blocks: String_map.t(Block.t),
   applied_blocks_by_height: Int64_map.t(Block.t),
@@ -42,7 +41,6 @@ let make = (~identity) => {
   last_signed_block: None,
   applied_blocks: String_map.empty,
   applied_blocks_by_height: Int64_map.empty,
-  last_applied_block: None,
   last_applied_block_timestamp: 0.0,
   protocol: Protocol.empty,
 };
