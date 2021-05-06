@@ -30,6 +30,7 @@ type t = {
   applied_blocks_by_height: Int64_map.t(Block.t),
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
+  protocol_snapshots: Helpers.Int64_map.t(string),
 };
 
 let make: (~identity: identity) => t;

@@ -30,6 +30,7 @@ type t = {
   applied_blocks_by_height: Int64_map.t(Block.t),
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
+  protocol_snapshots: Int64_map.t(string),
 };
 
 let make = (~identity) => {
@@ -43,6 +44,7 @@ let make = (~identity) => {
   applied_blocks_by_height: Int64_map.empty,
   last_applied_block_timestamp: 0.0,
   protocol: Protocol.empty,
+  protocol_snapshots: Int64_map.empty,
 };
 
 let append_applied_block = (state, block) => {
@@ -53,10 +55,25 @@ let append_applied_block = (state, block) => {
     state.applied_blocks_by_height
     |> Int64_map.add(block.Block.block_height, block),
 };
-
+let append_snapshot = state => {
+  let protocol = state.protocol;
+  let snapshot =
+    // TODO: this clearly is dumb and slow;
+    SHA256.hash(protocol)
+    |> SHA256.to_yojson(Protocol.to_yojson)
+    |> Yojson.Safe.pretty_to_string;
+  let protocol_snapshots =
+    state.protocol_snapshots |> Int64_map.add(protocol.block_height, snapshot);
+  {...state, protocol_snapshots};
+};
 let apply_block = (state, block) => {
   let.ok protocol = apply_block(state.protocol, block);
   let state = {...state, protocol};
   let state = append_applied_block(state, block);
+  // TODO: magic number
+  let state =
+    Int64.rem(protocol.block_height, 600L) == 0L
+      ? append_snapshot(state) : state;
+
   Ok(state);
 };
