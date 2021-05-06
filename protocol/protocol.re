@@ -19,7 +19,7 @@ type t = {
   included_operations: Operation_side_chain_set.t,
   validators: Validators.t,
   block_height: int64,
-  last_block: option(Block.t),
+  last_block_hash: option(string),
 };
 
 let empty = {
@@ -27,7 +27,7 @@ let empty = {
   included_operations: Operation_side_chain_set.empty,
   validators: Validators.empty,
   block_height: 0L,
-  last_block: None,
+  last_block_hash: None,
 };
 
 let apply_main_chain = (state, op) => {
@@ -142,10 +142,10 @@ let apply_block = (state, block) => {
     ...state,
     block_height: block.block_height,
     validators: state.validators |> Validators.update_current(block.author),
-    last_block: Some(block),
+    last_block_hash: Some(block.hash),
   });
 };
 
 let next = t => {...t, validators: Validators.next(t.validators)};
 
-let last_block_hash = t => Option.get(t.last_block).hash;
+let last_block_hash = t => Option.get(t.last_block_hash);
