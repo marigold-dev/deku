@@ -34,8 +34,8 @@ let of_yojson = str => {
 
 let make =
     (~previous_hash, ~author, ~block_height, ~main_chain_ops, ~side_chain_ops) => {
-  let Hash.{hash, _} =
-    Hash.SHA256.hash((
+  let SHA256.{hash, _} =
+    SHA256.hash((
       previous_hash,
       author,
       block_height,
@@ -55,8 +55,8 @@ let of_yojson = json => {
     side_chain_ops,
   } =
     of_yojson(json);
-  let.ok Hash.{hash, _} =
-    Hash.SHA256.verify(
+  let.ok {hash, _} =
+    SHA256.verify(
       ~hash,
       (previous_hash, author, block_height, main_chain_ops, side_chain_ops),
     );

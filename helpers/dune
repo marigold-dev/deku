@@ -1,5 +1,5 @@
 (library
  (name helpers)
- (libraries lwt uri zarith)
+ (libraries lwt uri zarith hex mirage-crypto)
  (preprocess
   (pps ppx_deriving_yojson)))

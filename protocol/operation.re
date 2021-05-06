@@ -35,16 +35,16 @@ module Side_chain = {
   };
 
   let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
-    let Hash.{hash, _} =
-      Hash.SHA256.hash((nonce, block_height, source, amount, kind));
+    let SHA256.{hash, _} =
+      SHA256.hash((nonce, block_height, source, amount, kind));
     {hash, nonce, block_height, source, kind, amount};
   };
 
   let of_yojson = json => {
     let.ok {hash, nonce, block_height, source, kind, amount} =
       of_yojson(json);
-    let.ok Hash.{hash, _} =
-      Hash.SHA256.verify(~hash, (nonce, block_height, source, kind, amount));
+    let.ok {hash, _} =
+      SHA256.verify(~hash, (nonce, block_height, source, kind, amount));
     Ok({hash, nonce, block_height, source, kind, amount});
   };
 

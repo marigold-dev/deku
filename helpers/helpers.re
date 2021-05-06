@@ -128,3 +128,5 @@ module Int64_map =
     type t = int64;
     let compare = Int64.compare;
   });
+
+module SHA256 = SHA256;
