@@ -34,19 +34,13 @@ let is_valid_block = (state, block) => {
 
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
-let check_block_and_signature_is_self_signed = (state, block_and_signature) => {
-  let signatures = block_and_signature.Node.signatures;
-  let number_of_validators =
-    Validators.validators(state.Node.protocol.validators) |> List.length;
-  let needed_signatures =
-    Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
-  // TODO: properly filter and check signatures
-  List.length(signatures) >= needed_signatures;
-};
+let check_block_and_signature_is_self_signed = block_and_signature =>
+  Signatures.is_signed(block_and_signature.Node.signatures);
+
 let rec check_block_and_signature_is_enough = (state, block_and_signature) => {
   // TODO: this will blownup if there is a cycle
   let.default () = false;
-  if (check_block_and_signature_is_self_signed(state, block_and_signature)) {
+  if (check_block_and_signature_is_self_signed(block_and_signature)) {
     Some(true);
   } else {
     let.some pending_parent_blocks =
@@ -68,7 +62,7 @@ let is_self_signed_block = (state, ~hash) => {
   let.default () = false;
   let.some block_and_signature =
     String_map.find_opt(hash, state.Node.pending_blocks);
-  Some(check_block_and_signature_is_self_signed(state, block_and_signature));
+  Some(check_block_and_signature_is_self_signed(block_and_signature));
 };
 let is_signed_enough = (state, ~hash) => {
   let.default () = false;
@@ -124,19 +118,16 @@ let is_known_signature = (state, ~hash, ~signature) => {
   let.default () = false;
   let.some block_and_signatures =
     String_map.find_opt(hash, state.Node.pending_blocks);
-  Some(List.mem(signature, block_and_signatures.signatures));
+  Some(Signatures.mem(signature, block_and_signatures.signatures));
 };
 
-let is_signed_by_key = (state, ~key, ~hash) => {
+let is_signed_by_self = (state, ~hash) => {
+  // TODO: for the name of this function being correct we shuold check it recursively
   let.default () = false;
   let.some block_and_signature =
     String_map.find_opt(hash, state.Node.pending_blocks);
-  let signatures = block_and_signature.signatures;
-  Some(signatures |> List.exists(signature => signature.Multisig.key == key));
+  Some(Signatures.is_self_signed(block_and_signature.signatures));
 };
-
-let is_signed_by_self = (state, ~hash) =>
-  is_signed_by_key(state, ~key=state.Node.identity.t, ~hash);
 let get_current_block_producer = state =>
   if (state.Node.last_applied_block_timestamp == 0.0) {
     None;
@@ -185,16 +176,24 @@ let find_applied_block_by_height = (state, block_height) =>
   Int64_map.find_opt(block_height, state.Node.applied_blocks_by_height);
 
 // mutations
+let find_block_and_signature_or_return_empty = (state, hash) =>
+  switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
+  | Some(block_and_signatures) => block_and_signatures
+  | None =>
+    let signatures_required = {
+      let number_of_validators =
+        Validators.validators(state.Node.protocol.validators) |> List.length;
+      // TODO: properly filter and check signatures
+      Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
+    };
+    let signatures =
+      Signatures.make(~self_key=state.Node.identity.t, ~signatures_required);
+    {signatures, block: None, hash};
+  };
 let append_signature = (state, update_state, ~hash, ~signature) => {
   let block_and_signature =
-    switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
-    | Some(block_and_signatures) => block_and_signatures
-    | None => {signatures: [], block: None, hash}
-    };
-  block_and_signature.signatures = [
-    signature,
-    ...block_and_signature.signatures,
-  ];
+    find_block_and_signature_or_return_empty(state, hash);
+  Signatures.add(signature, block_and_signature.signatures);
   let pending_blocks =
     String_map.add(hash, block_and_signature, state.Node.pending_blocks);
   let state = {...state, pending_blocks};
@@ -208,10 +207,7 @@ let append_signature = (state, update_state, ~hash, ~signature) => {
 
 let add_block_to_pool = (state, update_state, block) => {
   let block_and_signatures =
-    switch (String_map.find_opt(block.Block.hash, state.Node.pending_blocks)) {
-    | Some(block_and_signatures) => block_and_signatures
-    | None => {signatures: [], block: None, hash: block.hash}
-    };
+    find_block_and_signature_or_return_empty(state, block.Block.hash);
   if (Option.is_some(block_and_signatures.block)) {
     Error(`Block_already_in_the_pool);
   } else {

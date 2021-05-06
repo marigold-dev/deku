@@ -11,7 +11,7 @@ type identity = {
 [@deriving yojson]
 type block_and_signatures = {
   // TODO: this should probably be a set
-  mutable signatures: list(Multisig.signature),
+  signatures: Signatures.t,
   block: option(Block.t),
   hash: string,
 };
