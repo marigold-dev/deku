@@ -34,4 +34,5 @@ type t = {
 };
 
 let make: (~identity: identity) => t;
-let append_applied_block: (t, Block.t) => t;
+let apply_block:
+  (t, Block.t) => result(t, [> | `Invalid_block_height_when_applying]);

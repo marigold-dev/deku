@@ -248,9 +248,8 @@ let add_block_to_pool = (state, update_state, block) => {
 };
 
 let apply_block = (state, update_state, block) => {
-  let.ok protocol = apply_block(state.Node.protocol, block);
-  let state = update_state({...state, protocol});
-  Ok(block |> Node.append_applied_block(state) |> update_state);
+  let.ok state = Node.apply_block(state, block);
+  Ok(update_state(state));
 };
 
 let clean = (state, update_state, block) => {

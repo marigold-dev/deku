@@ -55,3 +55,10 @@ let append_applied_block = (state, block) => {
     state.applied_blocks_by_height
     |> Int64_map.add(block.Block.block_height, block),
 };
+
+let apply_block = (state, block) => {
+  let.ok protocol = apply_block(state.protocol, block);
+  let state = {...state, protocol};
+  let state = append_applied_block(state, block);
+  Ok(state);
+};
