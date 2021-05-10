@@ -122,6 +122,13 @@ module String_map =
     let compare = String.compare;
   });
 
+module String_set =
+  Set_with_yojson_make({
+    [@deriving yojson]
+    type t = string;
+    let compare = String.compare;
+  });
+
 module Int64_map =
   Map_with_yojson_make({
     [@deriving yojson]

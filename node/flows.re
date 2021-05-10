@@ -108,18 +108,21 @@ let try_to_produce_block = (state, update_state) => {
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
-    is_signed_enough(state, ~hash=block.Block.hash),
+    Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
-  if (is_latest(state, block)) {
-    try_to_produce_block(state, update_state);
-  } else {
-    switch (find_next_block_to_apply(state, block)) {
-    | Some(block) => block_added_to_the_pool(state, update_state, block)
-    | None => Error(`Pending_blocks)
-    };
+  switch (
+    Block_pool.find_next_block_to_apply(
+      ~hash=block.Block.hash,
+      state.block_pool,
+    )
+  ) {
+  | Some(block) => block_added_to_the_pool(state, update_state, block)
+  | None =>
+    // TODO: should I try even if not in sync?
+    try_to_produce_block(state, update_state)
   };
 }
 
@@ -140,7 +143,7 @@ and block_added_to_the_pool = (state, update_state, block) =>
   } else {
     let.assert () = (
       `Added_block_not_signed_enough_to_desync,
-      is_signed_enough(state, ~hash=block.hash),
+      Block_pool.is_signed(~hash=block.hash, state.block_pool),
     );
     request_previous_blocks(block);
     Ok();
@@ -177,10 +180,10 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 
   let.assert () = (
     `Added_signature_not_signed_enough_to_request,
-    is_signed_enough(state, ~hash),
+    Block_pool.is_signed(~hash, state.Node.block_pool),
   );
 
-  switch (find_block_in_pool(state, ~hash)) {
+  switch (Block_pool.find_block(~hash, state.Node.block_pool)) {
   | Some(block) => block_added_to_the_pool(state, update_state, block)
   | None =>
     request_block(~hash);
@@ -197,11 +200,8 @@ let requested_block_by_height = (state, block_height) => {
   |> Option.to_result(~none=`Unknown_block_height);
 };
 
-let find_block_by_hash = (state, hash) => {
-  let.some {block, _} =
-    String_map.find_opt(hash, state.Node.block_pool.available);
-  block;
-};
+let find_block_by_hash = (state, hash) =>
+  Block_pool.find_block(~hash, state.Node.block_pool);
 
 let is_signed_block_hash = (state, hash) =>
-  String_map.mem(hash, state.Node.block_pool.signed);
+  Block_pool.is_signed(~hash, state.Node.block_pool);

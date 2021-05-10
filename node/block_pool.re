@@ -16,7 +16,6 @@ type t = {
   signed: String_map.t(block_and_signatures),
   // TODO: is it possible to have two signed blocks at same level?
   signed_by_previous: String_map.t(block_and_signatures),
-  last_signed_block: option(Block.t),
 };
 
 let update_block_and_signatures = (block_and_signatures, t) => {
@@ -39,15 +38,6 @@ let update_block_and_signatures = (block_and_signatures, t) => {
       | (true, Some(block)) =>
         add_to_map(block.previous_hash, t.signed_by_previous)
       | _ => t.signed_by_previous
-      },
-    last_signed_block:
-      switch (t.last_signed_block, block_and_signatures.block) {
-      | (Some(old_block), Some(block))
-          when block.block_height > old_block.block_height =>
-        Some(block)
-      | (None, Some(block)) => Some(block)
-      | (_, None)
-      | (Some(_), Some(_)) => t.last_signed_block
       },
   };
 };
@@ -87,7 +77,6 @@ let make = (~self_key) => {
   available_by_previous: String_map.empty,
   signed: String_map.empty,
   signed_by_previous: String_map.empty,
-  last_signed_block: None,
 };
 let append_block = (block, t) => {
   let block_and_signatures =
@@ -114,4 +103,19 @@ let append_signature = (~signatures_required, ~hash, signature, t) => {
   } else {
     t;
   };
+};
+
+let is_signed = (~hash, t) => String_map.mem(hash, t.signed);
+let find_block = (~hash, t) => {
+  let.some {block, _} = String_map.find_opt(hash, t.available);
+  block;
+};
+let find_signatures = (~hash, t) => {
+  let.some {signatures, _} = String_map.find_opt(hash, t.available);
+  Some(signatures);
+};
+// TODO: bad naming, means like, block_height + 1
+let find_next_block_to_apply = (~hash, t) => {
+  let.some {block, _} = String_map.find_opt(hash, t.signed_by_previous);
+  block;
 };

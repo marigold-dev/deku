@@ -33,67 +33,25 @@ let is_valid_block = (state, block) => {
 
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
-let is_signed_enough = (state, ~hash) =>
-  String_map.mem(hash, state.Node.block_pool.signed);
-
-// TODO: bad naming
-let is_latest = (state, block) =>
-  state.Node.block_pool.last_signed_block == Some(block);
-let find_next_block_to_apply = (state, block) => {
-  let.some block_and_signatures =
-    String_map.find_opt(
-      block.Block.hash,
-      state.Node.block_pool.signed_by_previous,
-    );
-  block_and_signatures.block;
-};
-
 let has_next_block_to_apply = (state, ~hash) =>
-  String_map.mem(hash, state.Node.block_pool.signed_by_previous);
+  Block_pool.find_next_block_to_apply(~hash, state.Node.block_pool)
+  |> Option.is_some;
 
-// TODO: bad naming
-let is_signable = (state, block) =>
-  switch (state.Node.block_pool.last_signed_block) {
-  | Some(last_signed_block) =>
-    last_signed_block == block
-    || last_signed_block.hash == block.Block.previous_hash
-    && Int64.add(last_signed_block.block_height, 1L) == block.block_height
-
-  | None => false
-  };
-
-// TODO: maybe should_be_last_signed_block
-let is_last_signed_block = (state, block) =>
-  switch (state.Node.block_pool.last_signed_block) {
-  | Some(last_signed_block) when last_signed_block.hash == block.Block.hash =>
-    true
-  | Some(last_signed_block) =>
-    block.Block.block_height > last_signed_block.block_height
-    && is_signed_enough(state, ~hash=block.hash)
-    && !has_next_block_to_apply(state, ~hash=block.hash)
-  | None => true
-  };
-
-let find_block_in_pool = (state, ~hash) => {
-  let.some block_and_signatures =
-    String_map.find_opt(hash, state.Node.block_pool.available);
-  block_and_signatures.block;
-};
 let is_known_block = (state, ~hash) =>
-  Option.is_some(find_block_in_pool(state, ~hash));
+  Option.is_some(Block_pool.find_block(state.Node.block_pool, ~hash));
 let is_known_signature = (state, ~hash, ~signature) => {
   let.default () = false;
-  let.some block_and_signatures =
-    String_map.find_opt(hash, state.Node.block_pool.available);
-  Some(Signatures.mem(signature, block_and_signatures.signatures));
+  let.some signatures =
+    Block_pool.find_signatures(~hash, state.Node.block_pool);
+  Some(Signatures.mem(signature, signatures));
 };
 
 let is_signed_by_self = (state, ~hash) => {
   // TODO: for the name of this function being correct we shuold check it recursively
   let.default () = false;
-  let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.block_pool.available);
-  Some(Signatures.is_self_signed(block_and_signature.signatures));
+  let.some signatures =
+    Block_pool.find_signatures(~hash, state.Node.block_pool);
+  Some(Signatures.is_self_signed(signatures));
 };
 let get_current_block_producer = state =>
   if (state.Node.last_applied_block_timestamp == 0.0) {
@@ -114,6 +72,13 @@ let is_current_producer = (state, ~key) => {
   Some(current_producer.address == key);
 };
 
+// TODO: bad naming
+let is_signable = (state, block) =>
+  Int64.add(state.Node.protocol.block_height, 1L) == block.Block.block_height
+  && !is_signed_by_self(state, ~hash=block.hash)
+  && is_current_producer(state, ~key=block.author)
+  && !has_next_block_to_apply(state, ~hash=block.hash);
+
 let sign = (~key, ~hash) =>
   Signed.sign(~key, hash)
   |> Multisig.of_signed
@@ -130,13 +95,7 @@ let produce_block = state =>
   );
 
 let is_valid_block_height = (state, block_height) =>
-  block_height >= 1L
-  && (
-    switch (state.Node.block_pool.last_signed_block) {
-    | Some(block) => block_height <= block.block_height
-    | None => true
-    }
-  );
+  block_height >= 1L && block_height <= state.Node.protocol.block_height;
 
 // TODO: should also support valid blocks that were not applied yet
 let find_applied_block_by_height = (state, block_height) =>

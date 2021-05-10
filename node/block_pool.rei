@@ -1,4 +1,3 @@
-open Helpers;
 open Protocol;
 
 [@deriving yojson]
@@ -10,18 +9,14 @@ type block_and_signatures =
   };
 
 [@deriving yojson]
-type t =
-  pri {
-    self_key: Address.t,
-    available: String_map.t(block_and_signatures),
-    available_by_previous: String_map.t(block_and_signatures),
-    signed: String_map.t(block_and_signatures),
-    // TODO: is it possible to have two signed blocks at same level?
-    signed_by_previous: String_map.t(block_and_signatures),
-    last_signed_block: option(Block.t),
-  };
+type t;
 
 let make: (~self_key: Address.t) => t;
 let append_block: (Block.t, t) => t;
 let append_signature:
   (~signatures_required: int, ~hash: string, Multisig.signature, t) => t;
+
+let is_signed: (~hash: string, t) => bool;
+let find_block: (~hash: string, t) => option(Block.t);
+let find_signatures: (~hash: string, t) => option(Signatures.t);
+let find_next_block_to_apply: (~hash: string, t) => option(Block.t);
