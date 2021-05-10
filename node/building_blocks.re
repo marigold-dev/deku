@@ -2,8 +2,7 @@ open Helpers;
 open Protocol;
 
 module Node = State;
-let is_known = (state, block) =>
-  String_map.mem(block.Block.hash, state.Node.pending_blocks);
+
 let is_valid_signature = (~hash, ~signature) => {
   // TODO: check if it's made by a known validator, avoid noise
   let Networking.{key, signature} = signature;
@@ -34,82 +33,50 @@ let is_valid_block = (state, block) => {
 
 let is_next = (state, block) => Protocol.is_next(state.Node.protocol, block);
 
-let check_block_and_signature_is_self_signed = block_and_signature =>
-  Signatures.is_signed(block_and_signature.Node.signatures);
-
-let rec check_block_and_signature_is_enough = (state, block_and_signature) => {
-  // TODO: this will blownup if there is a cycle
-  let.default () = false;
-  if (check_block_and_signature_is_self_signed(block_and_signature)) {
-    Some(true);
-  } else {
-    let.some pending_parent_blocks =
-      String_map.find_opt(
-        block_and_signature.hash,
-        state.Node.pending_blocks_by_previous,
-      );
-    // TODO: didn't like this code
-    Some(
-      List.exists(
-        check_block_and_signature_is_enough(state),
-        pending_parent_blocks,
-      ),
-    );
-  };
-};
-
-let is_self_signed_block = (state, ~hash) => {
-  let.default () = false;
-  let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.pending_blocks);
-  Some(check_block_and_signature_is_self_signed(block_and_signature));
-};
-let is_signed_enough = (state, ~hash) => {
-  let.default () = false;
-  let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.pending_blocks);
-  Some(check_block_and_signature_is_enough(state, block_and_signature));
-};
+let is_signed_enough = (state, ~hash) =>
+  String_map.mem(hash, state.Node.block_pool.signed);
 
 // TODO: bad naming
 let is_latest = (state, block) =>
-  state.Node.last_signed_block == Some(block);
+  state.Node.block_pool.last_signed_block == Some(block);
 let find_next_block_to_apply = (state, block) => {
-  let.some pending_parent_blocks =
+  let.some block_and_signatures =
     String_map.find_opt(
       block.Block.hash,
-      state.Node.pending_blocks_by_previous,
+      state.Node.block_pool.signed_by_previous,
     );
-  pending_parent_blocks
-  |> List.find_map(block_and_sigs => {
-       let.some block = block_and_sigs.Node.block;
-       check_block_and_signature_is_enough(state, block_and_sigs)
-         ? Some(block) : None;
-     });
+  block_and_signatures.block;
 };
+
+let has_next_block_to_apply = (state, ~hash) =>
+  String_map.mem(hash, state.Node.block_pool.signed_by_previous);
+
 // TODO: bad naming
 let is_signable = (state, block) =>
-  switch (state.Node.last_signed_block) {
+  switch (state.Node.block_pool.last_signed_block) {
   | Some(last_signed_block) =>
-    last_signed_block.hash == block.Block.previous_hash
+    last_signed_block == block
+    || last_signed_block.hash == block.Block.previous_hash
     && Int64.add(last_signed_block.block_height, 1L) == block.block_height
+
   | None => false
   };
 
 // TODO: maybe should_be_last_signed_block
 let is_last_signed_block = (state, block) =>
-  switch (state.Node.last_signed_block) {
+  switch (state.Node.block_pool.last_signed_block) {
   | Some(last_signed_block) when last_signed_block.hash == block.Block.hash =>
     true
   | Some(last_signed_block) =>
     block.Block.block_height > last_signed_block.block_height
-    && is_self_signed_block(state, ~hash=block.hash)
+    && is_signed_enough(state, ~hash=block.hash)
+    && !has_next_block_to_apply(state, ~hash=block.hash)
   | None => true
   };
 
 let find_block_in_pool = (state, ~hash) => {
   let.some block_and_signatures =
-    String_map.find_opt(hash, state.Node.pending_blocks);
+    String_map.find_opt(hash, state.Node.block_pool.available);
   block_and_signatures.block;
 };
 let is_known_block = (state, ~hash) =>
@@ -117,7 +84,7 @@ let is_known_block = (state, ~hash) =>
 let is_known_signature = (state, ~hash, ~signature) => {
   let.default () = false;
   let.some block_and_signatures =
-    String_map.find_opt(hash, state.Node.pending_blocks);
+    String_map.find_opt(hash, state.Node.block_pool.available);
   Some(Signatures.mem(signature, block_and_signatures.signatures));
 };
 
@@ -125,7 +92,7 @@ let is_signed_by_self = (state, ~hash) => {
   // TODO: for the name of this function being correct we shuold check it recursively
   let.default () = false;
   let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.pending_blocks);
+    String_map.find_opt(hash, state.Node.block_pool.available);
   Some(Signatures.is_self_signed(block_and_signature.signatures));
 };
 let get_current_block_producer = state =>
@@ -165,7 +132,7 @@ let produce_block = state =>
 let is_valid_block_height = (state, block_height) =>
   block_height >= 1L
   && (
-    switch (state.Node.last_signed_block) {
+    switch (state.Node.block_pool.last_signed_block) {
     | Some(block) => block_height <= block.block_height
     | None => true
     }
@@ -183,72 +150,20 @@ let signatures_required = state => {
 };
 
 // mutations
-let find_block_and_signature_or_return_empty = (state, hash) =>
-  switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
-  | Some(block_and_signatures) => block_and_signatures
-  | None =>
-    let signatures = Signatures.make(~self_key=state.Node.identity.t);
-    {signatures, block: None, hash};
-  };
 let append_signature = (state, update_state, ~hash, ~signature) => {
-  let block_and_signature =
-    find_block_and_signature_or_return_empty(state, hash);
-  Signatures.add(
-    ~signatures_required=signatures_required(state),
-    signature,
-    block_and_signature.signatures,
-  );
-  let pending_blocks =
-    String_map.add(hash, block_and_signature, state.Node.pending_blocks);
-  let state = {...state, pending_blocks};
-  let last_signed_block =
-    switch (block_and_signature.block) {
-    | Some(block) when is_last_signed_block(state, block) => Some(block)
-    | _ => state.last_signed_block
-    };
-  update_state({...state, last_signed_block});
+  let block_pool =
+    Block_pool.append_signature(
+      ~signatures_required=signatures_required(state),
+      ~hash,
+      signature,
+      state.Node.block_pool,
+    );
+  update_state({...state, block_pool});
 };
 
 let add_block_to_pool = (state, update_state, block) => {
-  let block_and_signatures =
-    find_block_and_signature_or_return_empty(state, block.Block.hash);
-  if (Option.is_some(block_and_signatures.block)) {
-    Error(`Block_already_in_the_pool);
-  } else {
-    let block_and_signatures = {...block_and_signatures, block: Some(block)};
-    let pending_blocks_by_previous =
-      switch (
-        String_map.find_opt(
-          block.previous_hash,
-          state.pending_blocks_by_previous,
-        )
-      ) {
-      | Some(pending_blocks_by_previous) => pending_blocks_by_previous
-      | None => []
-      };
-    let pending_blocks_by_previous =
-      [block_and_signatures, ...pending_blocks_by_previous]
-      |> List.sort_uniq((a, b) => String.compare(a.Node.hash, b.Node.hash));
-    let state = {
-      ...state,
-      pending_blocks:
-        String_map.add(
-          block.hash,
-          block_and_signatures,
-          state.pending_blocks,
-        ),
-      pending_blocks_by_previous:
-        String_map.add(
-          block.previous_hash,
-          pending_blocks_by_previous,
-          state.pending_blocks_by_previous,
-        ),
-      last_signed_block:
-        is_last_signed_block(state, block)
-          ? Some(block) : state.last_signed_block,
-    };
-    Ok(update_state(state));
-  };
+  let block_pool = Block_pool.append_block(block, state.Node.block_pool);
+  update_state({...state, block_pool});
 };
 
 let apply_block = (state, update_state, block) => {

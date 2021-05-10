@@ -156,7 +156,7 @@ let received_block = (state, update_state, block) => {
     !is_known_block(state, ~hash=block.Block.hash),
   );
 
-  let.ok state = add_block_to_pool(state, update_state, block);
+  let state = add_block_to_pool(state, update_state, block);
 
   block_added_to_the_pool(state, update_state, block);
 };
@@ -198,17 +198,10 @@ let requested_block_by_height = (state, block_height) => {
 };
 
 let find_block_by_hash = (state, hash) => {
-  let.none () = String_map.find_opt(hash, state.Node.applied_blocks);
-  let.some {block, _} = String_map.find_opt(hash, state.Node.pending_blocks);
+  let.some {block, _} =
+    String_map.find_opt(hash, state.Node.block_pool.available);
   block;
 };
 
-let is_signed_block_hash = (state, hash) => {
-  let.default () = false;
-  let.none () =
-    String_map.find_opt(hash, state.Node.applied_blocks)
-    |> Option.map(_ => true);
-  let.some block_and_signature =
-    String_map.find_opt(hash, state.Node.pending_blocks);
-  Some(check_block_and_signature_is_enough(state, block_and_signature));
-};
+let is_signed_block_hash = (state, hash) =>
+  String_map.mem(hash, state.Node.block_pool.signed);
