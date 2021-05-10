@@ -175,25 +175,29 @@ let is_valid_block_height = (state, block_height) =>
 let find_applied_block_by_height = (state, block_height) =>
   Int64_map.find_opt(block_height, state.Node.applied_blocks_by_height);
 
+let signatures_required = state => {
+  let number_of_validators =
+    Validators.validators(state.Node.protocol.validators) |> List.length;
+  // TODO: properly filter and check signatures
+  Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
+};
+
 // mutations
 let find_block_and_signature_or_return_empty = (state, hash) =>
   switch (String_map.find_opt(hash, state.Node.pending_blocks)) {
   | Some(block_and_signatures) => block_and_signatures
   | None =>
-    let signatures_required = {
-      let number_of_validators =
-        Validators.validators(state.Node.protocol.validators) |> List.length;
-      // TODO: properly filter and check signatures
-      Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
-    };
-    let signatures =
-      Signatures.make(~self_key=state.Node.identity.t, ~signatures_required);
+    let signatures = Signatures.make(~self_key=state.Node.identity.t);
     {signatures, block: None, hash};
   };
 let append_signature = (state, update_state, ~hash, ~signature) => {
   let block_and_signature =
     find_block_and_signature_or_return_empty(state, hash);
-  Signatures.add(signature, block_and_signature.signatures);
+  Signatures.add(
+    ~signatures_required=signatures_required(state),
+    signature,
+    block_and_signature.signatures,
+  );
   let pending_blocks =
     String_map.add(hash, block_and_signature, state.Node.pending_blocks);
   let state = {...state, pending_blocks};
