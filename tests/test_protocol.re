@@ -17,7 +17,7 @@ describe("protocol state", ({test, _}) => {
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = make_wallet();
     let state = {
-      ...empty,
+      ...make(~last_block_hash="tuturu"),
       ledger:
         Ledger.empty
         |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
