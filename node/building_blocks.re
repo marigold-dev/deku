@@ -59,7 +59,7 @@ let get_current_block_producer = state =>
   } else {
     // TODO: this is clearly dumb
     let rec next_until = (validators, diff) =>
-      diff <= 10.0
+      diff < 10.0
         ? validators : next_until(Validators.next(validators), diff -. 10.0);
     let diff = Unix.time() -. state.Node.last_applied_block_timestamp;
     let validators = next_until(state.protocol.validators, diff);
