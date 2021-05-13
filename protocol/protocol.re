@@ -22,14 +22,6 @@ type t = {
   last_block_hash: string,
 };
 
-let make = (~last_block_hash) => {
-  ledger: Ledger.empty,
-  included_operations: Operation_side_chain_set.empty,
-  validators: Validators.empty,
-  block_height: 0L,
-  last_block_hash,
-};
-
 let apply_main_chain = (state, op) => {
   Operation.Main_chain.(
     switch (op) {
@@ -99,9 +91,6 @@ let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height;
 
 let apply_block = (state, block) => {
-  let.ok () =
-    is_next(state, block)
-      ? Ok() : Error(`Invalid_block_height_when_applying);
   let fold_left_noop_when_exception = (f, state, list) =>
     List.fold_left(
       (state, op) =>
@@ -138,14 +127,31 @@ let apply_block = (state, block) => {
          ),
   };
 
-  Ok({
+  {
     ...state,
     block_height: block.block_height,
     validators: state.validators |> Validators.update_current(block.author),
     last_block_hash: block.hash,
-  });
+  };
 };
 
+let make = (~initial_block) => {
+  let empty = {
+    ledger: Ledger.empty,
+    included_operations: Operation_side_chain_set.empty,
+    validators: Validators.empty,
+    block_height: Int64.sub(initial_block.Block.block_height, 1L),
+    last_block_hash: initial_block.Block.previous_hash,
+  };
+  apply_block(empty, initial_block);
+};
+let apply_block = (state, block) => {
+  let.assert () = (
+    `Invalid_block_height_when_applying,
+    is_next(state, block),
+  );
+  Ok(apply_block(state, block));
+};
 let next = t => {...t, validators: Validators.next(t.validators)};
 
 let last_block_hash = t => t.last_block_hash;

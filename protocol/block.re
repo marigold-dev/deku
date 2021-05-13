@@ -71,3 +71,12 @@ let of_yojson = json => {
 };
 
 let compare = (a, b) => String.compare(a.hash, b.hash);
+
+let genesis =
+  make(
+    ~previous_hash="tuturu",
+    ~block_height=1L,
+    ~main_chain_ops=[],
+    ~side_chain_ops=[],
+    ~author=Address.genesis_address,
+  );

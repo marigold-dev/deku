@@ -32,7 +32,7 @@ let make = (~identity) => {
   applied_blocks: String_map.empty,
   applied_blocks_by_height: Int64_map.empty,
   last_applied_block_timestamp: 0.0,
-  protocol: Protocol.make(~last_block_hash="tuturu"),
+  protocol: Protocol.make(~initial_block=Block.genesis),
   last_snapshot: None,
   additional_blocks: [],
 };
