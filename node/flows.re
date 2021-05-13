@@ -32,7 +32,7 @@ let received_block':
         | `Block_already_in_the_pool
         | `Block_not_signed_enough_to_apply
         | `Invalid_block(string)
-        | `Invalid_block_height_when_applying
+        | `Invalid_block_when_applying
         | `Not_current_block_producer
         | `Pending_blocks
       ],

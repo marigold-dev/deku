@@ -20,10 +20,8 @@ type t = {
   applied_blocks_by_height: Int64_map.t(Block.t),
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
-  last_snapshot: option(string),
-  additional_blocks: list(Block.t),
 };
 
 let make: (~identity: identity) => t;
 let apply_block:
-  (t, Block.t) => result(t, [> | `Invalid_block_height_when_applying]);
+  (t, Block.t) => result(t, [> | `Invalid_block_when_applying]);

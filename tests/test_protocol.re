@@ -323,11 +323,11 @@ describe("protocol state", ({test, _}) => {
     let state =
       switch (apply_block(~block_height=1, state)) {
       | Ok(state) => state
-      | Error(`Invalid_block_height_when_applying) => assert(false)
+      | Error(`Invalid_block_when_applying) => assert(false)
       };
     switch (apply_block(~block_height=1, state)) {
     | Ok(_) => assert(false)
-    | Error(`Invalid_block_height_when_applying) => ()
+    | Error(`Invalid_block_when_applying) => ()
     };
   });
 });

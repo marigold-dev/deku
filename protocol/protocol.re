@@ -88,7 +88,8 @@ let apply_side_chain = (state: t, signed_operation) => {
 };
 
 let is_next = (state, block) =>
-  Int64.add(state.block_height, 1L) == block.Block.block_height;
+  Int64.add(state.block_height, 1L) == block.Block.block_height
+  && state.last_block_hash == block.previous_hash;
 
 let apply_block = (state, block) => {
   let fold_left_noop_when_exception = (f, state, list) =>
@@ -146,10 +147,7 @@ let make = (~initial_block) => {
   apply_block(empty, initial_block);
 };
 let apply_block = (state, block) => {
-  let.assert () = (
-    `Invalid_block_height_when_applying,
-    is_next(state, block),
-  );
+  let.assert () = (`Invalid_block_when_applying, is_next(state, block));
   Ok(apply_block(state, block));
 };
 let next = t => {...t, validators: Validators.next(t.validators)};
