@@ -5,6 +5,7 @@ open Helpers;
 type t = {
   hash: string,
   previous_hash: string,
+  state_root_hash: string,
   author: Address.t,
   block_height: int64,
   main_chain_ops: list(Main_chain.t),
@@ -32,23 +33,41 @@ let of_yojson = str => {
      );
 };
 
+// if needed we can export this, it's safe
 let make =
-    (~previous_hash, ~author, ~block_height, ~main_chain_ops, ~side_chain_ops) => {
+    (
+      ~previous_hash,
+      ~state_root_hash,
+      ~author,
+      ~block_height,
+      ~main_chain_ops,
+      ~side_chain_ops,
+    ) => {
   let SHA256.{hash, _} =
     SHA256.hash((
       previous_hash,
+      state_root_hash,
       author,
       block_height,
       main_chain_ops,
       side_chain_ops,
     ));
-  {hash, previous_hash, author, block_height, main_chain_ops, side_chain_ops};
+  {
+    hash,
+    previous_hash,
+    state_root_hash,
+    author,
+    block_height,
+    main_chain_ops,
+    side_chain_ops,
+  };
 };
 
 let of_yojson = json => {
   let.ok {
     hash,
     previous_hash,
+    state_root_hash,
     author,
     block_height,
     main_chain_ops,
@@ -58,11 +77,19 @@ let of_yojson = json => {
   let.ok {hash, _} =
     SHA256.verify(
       ~hash,
-      (previous_hash, author, block_height, main_chain_ops, side_chain_ops),
+      (
+        previous_hash,
+        state_root_hash,
+        author,
+        block_height,
+        main_chain_ops,
+        side_chain_ops,
+      ),
     );
   Ok({
     hash,
     previous_hash,
+    state_root_hash,
     author,
     block_height,
     main_chain_ops,
@@ -74,9 +101,18 @@ let compare = (a, b) => String.compare(a.hash, b.hash);
 
 let genesis =
   make(
+    // TODO: probably hash should be a valid hash
     ~previous_hash="tuturu",
+    ~state_root_hash="mayuushi-desu",
     ~block_height=1L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
     ~author=Address.genesis_address,
+  );
+
+let produce = (~state) =>
+  make(
+    ~previous_hash=state.State.last_block_hash,
+    ~state_root_hash=state.state_root_hash,
+    ~block_height=state.block_height,
   );

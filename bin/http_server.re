@@ -344,12 +344,14 @@ let handle_protocol_snapshot = request => {
   let response = {
     let.ok () =
       request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let state = Server.get_state();
-    switch (state.last_snapshot) {
-    | Some(snapshot) =>
-      Ok({snapshot, additional_blocks: state.additional_blocks})
-    | None => Error(`Not_found)
-    };
+    let State.{snapshots, _} = Server.get_state();
+    Ok({
+      snapshot: snapshots.Snapshots.last_snapshot.state,
+      snapshot_hash: snapshots.last_snapshot.hash,
+      additional_blocks: snapshots.additional_blocks,
+      last_block: snapshots.last_block,
+      last_block_signatures: snapshots.last_block_signatures,
+    });
   };
   switch (response) {
   | Ok(response) =>

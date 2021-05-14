@@ -86,10 +86,9 @@ let sign = (~key, ~hash) =>
   |> List.nth(_, 0);
 
 let produce_block = state =>
-  Block.make(
-    ~previous_hash=last_block_hash(state.Node.protocol),
-    ~author=state.Node.identity.t,
-    ~block_height=Int64.add(state.protocol.block_height, 1L),
+  Block.produce(
+    ~state=state.Node.protocol,
+    ~author=state.identity.t,
     ~main_chain_ops=state.pending_main_ops,
     ~side_chain_ops=state.pending_side_ops,
   );

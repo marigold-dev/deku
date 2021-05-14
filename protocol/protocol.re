@@ -11,17 +11,7 @@ module Amount = Amount;
 module Block = Block;
 module Operation = Operation;
 
-module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
-[@deriving yojson]
-type t = {
-  ledger: Ledger.t,
-  // TODO: more efficient lookup on included_operations
-  included_operations: Operation_side_chain_set.t,
-  validators: Validators.t,
-  block_height: int64,
-  last_block_hash: string,
-};
-
+include State;
 let apply_main_chain = (state, op) => {
   Operation.Main_chain.(
     switch (op) {
@@ -143,6 +133,7 @@ let make = (~initial_block) => {
     validators: Validators.empty,
     block_height: Int64.sub(initial_block.Block.block_height, 1L),
     last_block_hash: initial_block.Block.previous_hash,
+    state_root_hash: initial_block.Block.state_root_hash,
   };
   apply_block(empty, initial_block);
 };
