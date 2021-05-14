@@ -8,7 +8,6 @@ type identity = {
   uri: Uri.t,
 };
 
-[@deriving yojson]
 type t = {
   identity,
   pending_side_ops: list(Operation.Side_chain.Self_signed.t),
@@ -20,6 +19,7 @@ type t = {
   applied_blocks_by_height: Int64_map.t(Block.t),
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
+  snapshots: Snapshots.t,
 };
 
 let make: (~identity: identity) => t;

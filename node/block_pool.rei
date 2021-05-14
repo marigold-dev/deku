@@ -20,3 +20,6 @@ let is_signed: (~hash: string, t) => bool;
 let find_block: (~hash: string, t) => option(Block.t);
 let find_signatures: (~hash: string, t) => option(Signatures.t);
 let find_next_block_to_apply: (~hash: string, t) => option(Block.t);
+let find_all_signed_blocks_above:
+  ((Block.t, Signatures.t), t) => (list(Block.t), (Block.t, Signatures.t));
+

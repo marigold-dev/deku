@@ -105,6 +105,18 @@ let try_to_produce_block = (state, update_state) => {
   broadcast_block_and_signature(state, ~block, ~signature);
   Ok();
 };
+
+let try_to_sign_block = (state, update_state, block) =>
+  if (is_signable(state, block)
+      && !is_signed_by_self(state, ~hash=block.hash)
+      && is_current_producer(state, ~key=block.author)) {
+    let signature = sign(~key=state.identity.key, ~hash=block.hash);
+    broadcast_signature(state, ~hash=block.hash, ~signature);
+    append_signature(state, update_state, ~hash=block.hash, ~signature);
+  } else {
+    state;
+  };
+
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
@@ -119,7 +131,9 @@ let rec try_to_apply_block = (state, update_state, block) => {
       state.block_pool,
     )
   ) {
-  | Some(block) => block_added_to_the_pool(state, update_state, block)
+  | Some(block) =>
+    let state = try_to_sign_block(state, update_state, block);
+    try_to_apply_block(state, update_state, block);
   | None =>
     // TODO: should I try even if not in sync?
     try_to_produce_block(state, update_state)
@@ -127,18 +141,30 @@ let rec try_to_apply_block = (state, update_state, block) => {
 }
 
 // TODO: this function has a bad name
-and block_added_to_the_pool = (state, update_state, block) =>
+and block_added_to_the_pool = (state, update_state, block) => {
+  let state =
+    // TODO: we could receive signatures as parameters
+    switch (
+      Block_pool.find_signatures(
+        ~hash=block.Block.hash,
+        state.Node.block_pool,
+      )
+    ) {
+    | Some(signatures) when Signatures.is_signed(signatures) =>
+      let snapshots =
+        Snapshots.append_block(
+          ~pool=state.Node.block_pool,
+          (block, signatures),
+          state.snapshots,
+        );
+      {...state, snapshots};
+    | Some(_signatures) => state
+    | None =>
+      // TODO: this will never happen but meeh
+      state
+    };
   if (is_next(state, block)) {
-    let state =
-      if (is_signable(state, block)
-          && !is_signed_by_self(state, ~hash=block.hash)
-          && is_current_producer(state, ~key=block.author)) {
-        let signature = sign(~key=state.identity.key, ~hash=block.hash);
-        broadcast_signature(state, ~hash=block.hash, ~signature);
-        append_signature(state, update_state, ~hash=block.hash, ~signature);
-      } else {
-        state;
-      };
+    let state = try_to_sign_block(state, update_state, block);
     try_to_apply_block(state, update_state, block);
   } else {
     let.assert () = (
@@ -148,6 +174,7 @@ and block_added_to_the_pool = (state, update_state, block) =>
     request_previous_blocks(block);
     Ok();
   };
+};
 
 let received_block = (state, update_state, block) => {
   let.ok () =
@@ -160,7 +187,6 @@ let received_block = (state, update_state, block) => {
   );
 
   let state = add_block_to_pool(state, update_state, block);
-
   block_added_to_the_pool(state, update_state, block);
 };
 

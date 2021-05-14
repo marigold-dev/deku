@@ -125,7 +125,10 @@ module Protocol_snapshot = {
   [@deriving yojson]
   type response = {
     snapshot: string,
+    snapshot_hash: string,
     additional_blocks: list(Block.t),
+    last_block: Block.t,
+    last_block_signatures: Signatures.t,
   };
   let path = "/protocol-snapshot";
 };
@@ -135,6 +138,4 @@ let request_block_by_hash = request((module Block_by_hash_spec));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
-  broadcast((module Block_and_signature_spec));
-
-// let send_block = post((module Block_spec));
+  broadcast((module Block_and_signature_spec)) /* let send_block = post((module Block_spec))*/;
