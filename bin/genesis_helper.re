@@ -54,13 +54,13 @@ let inject_genesis = () => {
   //   let json = Yojson.Safe.from_string(file_buffer);
   //   [%of_yojson: list(Validators.validator)](json) |> Result.get_ok;
   // };
-  let make_genesis = validators => {
+  let make_new_block = (~block_height, ~previous_hash, validators) => {
     let first = List.nth(validators, 0);
     let block =
       Block.make(
-        ~previous_hash="tuturu",
+        ~previous_hash,
         ~author=first.t,
-        ~block_height=1L,
+        ~block_height,
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
@@ -111,7 +111,13 @@ let inject_genesis = () => {
     read_identity_file("identity_2.json"),
     // read_identity_file("identity_3.json"),
   ];
-  make_genesis(validators);
+  let block_height = Block.genesis.block_height;
+  let previous_hash = Block.genesis.hash;
+  make_new_block(
+    ~previous_hash,
+    ~block_height=Int64.add(block_height, 1L),
+    validators,
+  );
 };
 
 Mirage_crypto_rng_unix.initialize();
