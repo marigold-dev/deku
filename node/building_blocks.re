@@ -73,8 +73,9 @@ let is_current_producer = (state, ~key) => {
 };
 
 // TODO: bad naming
+// TODO: check if block must have published a new snapshot
 let is_signable = (state, block) =>
-  Int64.add(state.Node.protocol.block_height, 1L) == block.Block.block_height
+  is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash);

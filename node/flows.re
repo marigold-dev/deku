@@ -107,9 +107,7 @@ let try_to_produce_block = (state, update_state) => {
 };
 
 let try_to_sign_block = (state, update_state, block) =>
-  if (is_signable(state, block)
-      && !is_signed_by_self(state, ~hash=block.hash)
-      && is_current_producer(state, ~key=block.author)) {
+  if (is_signable(state, block)) {
     let signature = sign(~key=state.identity.key, ~hash=block.hash);
     broadcast_signature(state, ~hash=block.hash, ~signature);
     append_signature(state, update_state, ~hash=block.hash, ~signature);
