@@ -101,10 +101,9 @@ let compare = (a, b) => String.compare(a.hash, b.hash);
 
 let genesis =
   make(
-    // TODO: probably hash should be a valid hash
-    ~previous_hash="tuturu",
-    ~state_root_hash="mayuushi-desu",
-    ~block_height=1L,
+    ~previous_hash=SHA256.hash("tuturu").hash,
+    ~state_root_hash=SHA256.hash("mayuushi-desu").hash,
+    ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
     ~author=Address.genesis_address,
