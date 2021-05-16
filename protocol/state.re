@@ -10,11 +10,26 @@ type t = {
   validators: Validators.t,
   block_height: int64,
   last_block_hash: string,
+  /* TODO: I really don't like this field here, as it means protocol
+     state data will be different across nodes, of course we can just
+     ignore like on the hashing function, but it still bothers me */
+  last_state_root_update: float,
   state_root_hash: string,
   pending_state_root_hash: string,
 };
 
 let hash = t => {
-  let state = t |> to_yojson |> Yojson.Safe.to_string;
-  SHA256.hash(state);
+  // state_root_hash is part of last_block_hash
+  let to_yojson = [%to_yojson:
+    (Ledger.t, Operation_side_chain_set.t, Validators.t, int64, string)
+  ];
+  let json =
+    to_yojson((
+      t.ledger,
+      t.included_operations,
+      t.validators,
+      t.block_height,
+      t.last_block_hash,
+    ));
+  SHA256.hash(Yojson.Safe.to_string(json));
 };

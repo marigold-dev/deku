@@ -109,9 +109,25 @@ let genesis =
     ~author=Address.genesis_address,
   );
 
+// TODO: move this to a global module
+let state_root_hash_epoch = 6.0;
+/** to prevent changing the validator just because of network jittering
+    this introduce a delay between can receive a block with new state
+    root hash and can produce that block
+
+    10s choosen here but any reasonable time will make it */
+let avoid_jitter = 1.0;
+let _can_update_state_root_hash = state =>
+  Unix.time() -. state.State.last_state_root_update >= state_root_hash_epoch;
+let can_produce_with_new_state_root_hash = state =>
+  Unix.time()
+  -. state.State.last_state_root_update
+  -. avoid_jitter >= state_root_hash_epoch;
 let produce = (~state) =>
   make(
     ~previous_hash=state.State.last_block_hash,
-    ~state_root_hash=state.state_root_hash,
+    ~state_root_hash=
+      can_produce_with_new_state_root_hash(state)
+        ? state.pending_state_root_hash : state.state_root_hash,
     ~block_height=Int64.add(state.block_height, 1L),
   );
