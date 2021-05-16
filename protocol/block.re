@@ -114,5 +114,5 @@ let produce = (~state) =>
   make(
     ~previous_hash=state.State.last_block_hash,
     ~state_root_hash=state.state_root_hash,
-    ~block_height=state.block_height,
+    ~block_height=Int64.add(state.block_height, 1L),
   );
