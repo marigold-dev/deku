@@ -33,6 +33,7 @@ let received_block':
         | `Block_not_signed_enough_to_apply
         | `Invalid_block(string)
         | `Invalid_block_when_applying
+        | `Invalid_state_root_hash
         | `Not_current_block_producer
         | `Pending_blocks
       ],

@@ -346,7 +346,7 @@ let handle_protocol_snapshot = request => {
       request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
     let State.{snapshots, _} = Server.get_state();
     Ok({
-      snapshot: snapshots.Snapshots.last_snapshot.state,
+      snapshot: snapshots.Snapshots.last_snapshot.data,
       snapshot_hash: snapshots.last_snapshot.hash,
       additional_blocks: snapshots.additional_blocks,
       last_block: snapshots.last_block,

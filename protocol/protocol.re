@@ -123,23 +123,49 @@ let apply_block = (state, block) => {
     block_height: block.block_height,
     validators: state.validators |> Validators.update_current(block.author),
     last_block_hash: block.hash,
+    state_root_hash: block.state_root_hash,
   };
 };
 
+let update_pending_state_root_hash = (old_state, new_state) => {
+  let hash = hash(old_state);
+  ({...new_state, pending_state_root_hash: hash.hash}, hash);
+};
 let make = (~initial_block) => {
   let empty = {
     ledger: Ledger.empty,
     included_operations: Operation_side_chain_set.empty,
     validators: Validators.empty,
     block_height: Int64.sub(initial_block.Block.block_height, 1L),
+    /* because this calls apply_block internally
+       it requires some care to ensure all fields
+       are in the right place, otherwise invariants
+       can be broken */
     last_block_hash: initial_block.Block.previous_hash,
-    state_root_hash: initial_block.Block.state_root_hash,
+    state_root_hash: "",
+    /* TODO: this a problem because if the state_root_hash is invalid
+       that would the hash would still be invalid, so to preserve
+       the invariant we need to hash empty */
+    pending_state_root_hash: initial_block.Block.state_root_hash,
   };
-  apply_block(empty, initial_block);
+  let state = apply_block(empty, initial_block);
+  update_pending_state_root_hash(empty, state);
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  Ok(apply_block(state, block));
+  let.assert () = (
+    `Invalid_state_root_hash,
+    block.state_root_hash == state.state_root_hash
+    || block.state_root_hash == state.pending_state_root_hash,
+  );
+  // TODO: check snapshot state
+  let new_state = apply_block(state, block);
+  if (state.pending_state_root_hash == block.state_root_hash) {
+    let (new_state, hash) = update_pending_state_root_hash(state, new_state);
+    Ok((new_state, Some(hash)));
+  } else {
+    Ok((new_state, None));
+  };
 };
 let next = t => {...t, validators: Validators.next(t.validators)};
 

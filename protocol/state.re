@@ -11,5 +11,10 @@ type t = {
   block_height: int64,
   last_block_hash: string,
   state_root_hash: string,
+  pending_state_root_hash: string,
 };
 
+let hash = t => {
+  let state = t |> to_yojson |> Yojson.Safe.to_string;
+  SHA256.hash(state);
+};

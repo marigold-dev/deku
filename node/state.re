@@ -24,7 +24,7 @@ type t = {
 
 let make = (~identity) => {
   let initial_block = Block.genesis;
-  let initial_protocol = Protocol.make(~initial_block);
+  let (initial_protocol, initial_snapshot) = Protocol.make(~initial_block);
   let initial_signatures = Signatures.make(~self_key=identity.t);
   Signatures.set_signed(initial_signatures);
 
@@ -32,7 +32,7 @@ let make = (~identity) => {
     Block_pool.make(~self_key=identity.t)
     |> Block_pool.append_block(initial_block);
   let initial_snapshots =
-    Snapshots.make(~initial_protocol, ~initial_block, ~initial_signatures);
+    Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
   {
     identity,
     pending_side_ops: [],
@@ -47,6 +47,17 @@ let make = (~identity) => {
 };
 
 let apply_block = (state, block) => {
-  let.ok protocol = apply_block(state.protocol, block);
-  Ok({...state, protocol});
+  let.ok (protocol, new_snapshot) = apply_block(state.protocol, block);
+  let state = {...state, protocol};
+  switch (new_snapshot) {
+  | Some(new_snapshot) =>
+    let snapshots =
+      Snapshots.update(
+        ~new_snapshot,
+        ~applied_block_height=state.protocol.block_height,
+        state.snapshots,
+      );
+    Ok({...state, snapshots});
+  | None => Ok(state)
+  };
 };

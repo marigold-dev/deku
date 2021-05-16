@@ -17,7 +17,7 @@ describe("protocol state", ({test, _}) => {
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = make_wallet();
     let state = {
-      ...make(~initial_block=Block.genesis),
+      ...make(~initial_block=Block.genesis) |> fst,
       ledger:
         Ledger.empty
         |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
@@ -50,7 +50,7 @@ describe("protocol state", ({test, _}) => {
       };
       author;
     };
-    let state = Protocol.make(~initial_block=Block.genesis);
+    let state = Protocol.make(~initial_block=Block.genesis) |> fst;
     let block =
       Block.produce(
         ~state,

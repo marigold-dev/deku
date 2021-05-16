@@ -56,7 +56,7 @@ let inject_genesis = () => {
   // };
   let make_new_block = validators => {
     let first = List.nth(validators, 0);
-    let state = Protocol.make(~initial_block=Block.genesis);
+    let state = Protocol.make(~initial_block=Block.genesis) |> fst;
     let block =
       Block.produce(
         ~state,

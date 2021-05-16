@@ -24,4 +24,5 @@ type t = {
 
 let make: (~identity: identity) => t;
 let apply_block:
-  (t, Block.t) => result(t, [> | `Invalid_block_when_applying]);
+  (t, Block.t) =>
+  result(t, [> | `Invalid_block_when_applying | `Invalid_state_root_hash]);
