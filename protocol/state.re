@@ -21,7 +21,15 @@ type t = {
 let hash = t => {
   // state_root_hash is part of last_block_hash
   let to_yojson = [%to_yojson:
-    (Ledger.t, Operation_side_chain_set.t, Validators.t, int64, string)
+    (
+      Ledger.t,
+      Operation_side_chain_set.t,
+      Validators.t,
+      int64,
+      string,
+      string,
+      string,
+    )
   ];
   let json =
     to_yojson((
@@ -30,6 +38,8 @@ let hash = t => {
       t.validators,
       t.block_height,
       t.last_block_hash,
+      t.state_root_hash,
+      t.pending_state_root_hash,
     ));
   SHA256.hash(Yojson.Safe.to_string(json));
 };
