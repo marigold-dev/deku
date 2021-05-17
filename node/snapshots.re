@@ -31,7 +31,7 @@ let append_block = (~pool, (block, signatures), t) =>
       last_snapshot: t.last_snapshot,
       last_block: block,
       last_block_signatures: signatures,
-      additional_blocks: blocks @ t.additional_blocks,
+      additional_blocks: blocks @ [t.last_block] @ t.additional_blocks,
     };
   };
 let update = (~new_snapshot, ~applied_block_height, t) => {
