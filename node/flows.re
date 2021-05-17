@@ -40,6 +40,21 @@ let received_block':
     ),
   ) =
   ref(_ => assert(false));
+let block_added_to_the_pool':
+  ref(
+    (Node.t, Node.t => Node.t, Block.t) =>
+    result(
+      unit,
+      [
+        | `Added_block_not_signed_enough_to_desync
+        | `Block_not_signed_enough_to_apply
+        | `Invalid_block_when_applying
+        | `Invalid_state_root_hash
+        | `Not_current_block_producer
+      ],
+    ),
+  ) =
+  ref(_ => assert(false));
 
 let rec request_block_by_hash = (tries, ~hash) => {
   // TODO: magic number
@@ -86,9 +101,98 @@ let request_block = (~hash) =>
     | Error(_err) => await()
     };
   });
+Random.self_init();
+let rec request_protocol_snapshot = tries => {
+  // TODO: magic number
+  if (tries > 20) {
+    raise(Not_found);
+  };
+  Lwt.catch(
+    () => {
+      let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
+      let state = get_state^();
+      let validators = Validators.validators(state.protocol.validators);
+      let validator =
+        List.nth(validators, random_int(List.length(validators)));
+      // TODO: validate hash and signatures
+      Networking.request_protocol_snapshot((), validator.uri);
+    },
+    _exn => {
+      Printexc.print_backtrace(stdout);
+      request_protocol_snapshot(tries + 1);
+    },
+  );
+};
+Lwt.async_exception_hook :=
+  (
+    _exn => {
+      print_endline("global exception");
+    }
+  );
+let pending = ref(false);
+let request_protocol_snapshot = () =>
+  Lwt.async(() => {
+    let.await snapshot = request_protocol_snapshot(0);
+    let of_yojson = [%of_yojson:
+      (
+        Ledger.t,
+        Operation_side_chain_set.t,
+        Validators.t,
+        int64,
+        string,
+        string,
+        string,
+      )
+    ];
+    let (
+      ledger,
+      included_operations,
+      validators,
+      block_height,
+      last_block_hash,
+      state_root_hash,
+      pending_state_root_hash,
+    ) =
+      snapshot.snapshot
+      |> Yojson.Safe.from_string
+      |> of_yojson
+      |> Result.get_ok;
+    let protocol =
+      Protocol.{
+        ledger,
+        included_operations,
+        validators,
+        block_height,
+        last_block_hash,
+        last_state_root_update: 0.0,
+        state_root_hash,
+        pending_state_root_hash,
+      };
+    set_state^({...get_state^(), protocol});
+    let update_state = state => {
+      set_state^(state);
+      state;
+    };
+    let () =
+      List.iter(
+        block => {
+          let _ = add_block_to_pool(get_state^(), update_state, block);
+          let _ =
+            block_added_to_the_pool'^(get_state^(), update_state, block);
+          ();
+        },
+        List.rev([snapshot.last_block, ...snapshot.additional_blocks]),
+      );
+    await();
+  });
 
-let request_previous_blocks = block =>
-  request_block(~hash=block.Block.previous_hash);
+let request_previous_blocks = (state, block) =>
+  if (block.Block.state_root_hash == state.Node.protocol.state_root_hash) {
+    request_block(~hash=block.Block.previous_hash);
+  } else if (! pending^) {
+    pending := true;
+    request_protocol_snapshot();
+  };
 
 // TODO: implement
 
@@ -170,10 +274,12 @@ and block_added_to_the_pool = (state, update_state, block) => {
       `Added_block_not_signed_enough_to_desync,
       Block_pool.is_signed(~hash=block.hash, state.block_pool),
     );
-    request_previous_blocks(block);
+    request_previous_blocks(state, block);
     Ok();
   };
 };
+
+block_added_to_the_pool' := block_added_to_the_pool;
 
 let received_block = (state, update_state, block) => {
   let.ok () =
