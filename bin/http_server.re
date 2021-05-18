@@ -268,16 +268,6 @@ let handle_received_signature =
       Ok();
     },
   );
-let handle_is_applied_block_hash =
-  handle_request(
-    (module Is_signed_block_hash_spec),
-    (_update_state, request) => {
-      let of_hex = str => Hex.to_string(`Hex(str));
-      let is_signed =
-        Flows.is_signed_block_hash(Server.get_state(), of_hex(request.hash));
-      Ok({is_signed: is_signed});
-    },
-  );
 let handle_block_by_hash =
   handle_request(
     (module Block_by_hash_spec),
@@ -363,7 +353,6 @@ let _server =
   |> App.port(Node.Server.get_port() |> Option.get)
   |> handle_received_block_and_signature
   |> handle_received_signature
-  |> handle_is_applied_block_hash
   |> handle_block_by_hash
   |> handle_protocol_snapshot
   |> App.start

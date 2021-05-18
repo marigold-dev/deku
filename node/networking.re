@@ -96,14 +96,6 @@ module Block_by_hash_spec = {
   let path = "/block-by-hash";
 };
 
-module Is_signed_block_hash_spec = {
-  [@deriving yojson]
-  type request = {hash: string};
-  [@deriving yojson]
-  type response = {is_signed: bool};
-  let path = "/is-signed-block-hash";
-};
-
 module Protocol_snapshot = {
   [@deriving yojson]
   type request = unit;
