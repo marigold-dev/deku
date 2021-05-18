@@ -183,6 +183,7 @@
 // Can a core send a message and the other receive it in the past?
 // TODO: should start signing before being in sync?
 
+Random.self_init();
 Mirage_crypto_rng_unix.initialize();
 
 open Opium;

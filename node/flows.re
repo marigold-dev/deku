@@ -101,7 +101,6 @@ let request_block = (~hash) =>
     | Error(_err) => await()
     };
   });
-Random.self_init();
 let rec request_protocol_snapshot = tries => {
   // TODO: magic number
   if (tries > 20) {
