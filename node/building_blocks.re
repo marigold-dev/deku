@@ -97,10 +97,6 @@ let produce_block = state =>
 let is_valid_block_height = (state, block_height) =>
   block_height >= 1L && block_height <= state.Node.protocol.block_height;
 
-// TODO: should also support valid blocks that were not applied yet
-let find_applied_block_by_height = (state, block_height) =>
-  Int64_map.find_opt(block_height, state.Node.applied_blocks_by_height);
-
 let signatures_required = state => {
   let number_of_validators =
     Validators.validators(state.Node.protocol.validators) |> List.length;

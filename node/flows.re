@@ -322,15 +322,6 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   };
 };
 
-let requested_block_by_height = (state, block_height) => {
-  let.assert () = (
-    `Invalid_block_height,
-    is_valid_block_height(state, block_height),
-  );
-  find_applied_block_by_height(state, block_height)
-  |> Option.to_result(~none=`Unknown_block_height);
-};
-
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
 

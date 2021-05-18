@@ -174,5 +174,3 @@ let apply_block = (state, block) => {
   Ok((state, hash));
 };
 let next = t => {...t, validators: Validators.next(t.validators)};
-
-let last_block_hash = t => t.last_block_hash;

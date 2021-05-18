@@ -267,34 +267,6 @@ let handle_received_signature = request => {
 };
 let handle_received_signature =
   App.post(Networking.Signature_spec.path, handle_received_signature);
-let handle_requested_block_by_height = request => {
-  open Flows;
-  open Networking.Block_by_height_spec;
-
-  let.await json = Request.to_json_exn(request);
-  let response = {
-    let.ok req =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let.ok block =
-      switch (requested_block_by_height(Server.get_state(), req.block_height)) {
-      | Ok(block) => Ok(Some(block))
-      | Error(`Unknown_block_height) => Ok(None)
-      | Error(err) => Error(err)
-      };
-    Ok({block: block});
-  };
-  switch (response) {
-  | Ok(response) =>
-    let response = response_to_yojson(response);
-    await(Response.of_json(~status=`OK, response));
-  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
-  };
-};
-let handle_requested_block_by_height =
-  App.post(
-    Networking.Block_by_height_spec.path,
-    handle_requested_block_by_height,
-  );
 let handle_is_applied_block_hash = request => {
   open Flows;
   open Networking.Is_signed_block_hash_spec;
@@ -345,6 +317,10 @@ let handle_protocol_snapshot = request => {
     let.ok () =
       request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
     let State.{snapshots, _} = Server.get_state();
+    Printf.printf(
+      "length: %d\n%!",
+      List.length(snapshots.Snapshots.additional_blocks),
+    );
     Ok({
       snapshot: snapshots.Snapshots.last_snapshot.data,
       snapshot_hash: snapshots.last_snapshot.hash,
@@ -425,7 +401,6 @@ let _server =
   |> App.port(Node.Server.get_port() |> Option.get)
   |> handle_received_block_and_signature
   |> handle_received_signature
-  |> handle_requested_block_by_height
   |> handle_is_applied_block_hash
   |> handle_block_by_hash
   |> handle_protocol_snapshot
