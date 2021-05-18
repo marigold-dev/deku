@@ -2,11 +2,6 @@ open Helpers;
 open Protocol;
 open State;
 
-module type Side_effect_endpoint = {
-  [@deriving yojson]
-  type request;
-  let path: string;
-};
 module type Request_endpoint = {
   [@deriving yojson]
   type request;
@@ -28,12 +23,7 @@ let request = (request_to_yojson, path, data, uri) => {
 };
 
 let post =
-    (
-      type req,
-      module E: Side_effect_endpoint with type request = req,
-      data,
-      uri,
-    ) => {
+    (type req, module E: Request_endpoint with type request = req, data, uri) => {
   let.await _body = request(E.request_to_yojson, E.path, data, uri);
   await();
 };
@@ -75,6 +65,8 @@ module Signature_spec = {
     hash: string,
     signature,
   };
+  [@deriving yojson]
+  type response = unit;
   let path = "/append-signature";
 };
 
@@ -90,6 +82,8 @@ module Block_and_signature_spec = {
     block: Block.t,
     signature,
   };
+  [@deriving yojson]
+  type response = unit;
   let path = "/append-block-and-signature";
 };
 
@@ -128,4 +122,4 @@ let request_block_by_hash = request((module Block_by_hash_spec));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
-  broadcast((module Block_and_signature_spec)) /* let send_block = post((module Block_spec))*/;
+  broadcast((module Block_and_signature_spec));

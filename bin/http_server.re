@@ -190,6 +190,7 @@ open Opium;
 open Helpers;
 open Protocol;
 open Node;
+open Networking;
 
 let ignore_some_errors =
   fun
@@ -199,146 +200,106 @@ let log_errors = f =>
   fun
   | Ok(_) => ()
   | Error(err) => print_endline(f(err));
-let handle_received_block_and_signature = request => {
-  open Flows;
-  open Networking.Block_and_signature_spec;
-
-  let update_state = state => {
-    Server.set_state(state);
-    state;
-  };
-  let.await json = Request.to_json_exn(request);
-  let req = {
-    let.ok req =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let.ok () =
-      received_block(Server.get_state(), update_state, req.block)
-      |> ignore_some_errors;
-
-    let.ok () =
-      received_signature(
-        Server.get_state(),
-        update_state,
-        ~hash=req.block.hash,
-        ~signature=req.signature,
-      )
-      |> ignore_some_errors;
-    Ok();
-  };
-  let status =
-    switch (req) {
-    | Ok () => `OK
-    | Error(_err) => `Internal_server_error
-    };
-  await(Response.make(~status, ()));
-};
+let handle_request =
+    (
+      type req,
+      type res,
+      module E:
+        Request_endpoint with type request = req and type response = res,
+      f,
+    ) =>
+  App.post(
+    E.path,
+    request => {
+      let update_state = state => {
+        Server.set_state(state);
+        state;
+      };
+      let.await json = Request.to_json(request);
+      let response = {
+        let.ok json = Option.to_result(~none=`Not_a_json, json);
+        let.ok request =
+          E.request_of_yojson(json)
+          |> Result.map_error(err => `Not_a_valid_request(err));
+        f(update_state, request);
+      };
+      switch (response) {
+      | Ok(response) =>
+        let response = E.response_to_yojson(response);
+        await(Response.of_json(~status=`OK, response));
+      | Error(_err) =>
+        await(Response.make(~status=`Internal_server_error, ()))
+      };
+    },
+  );
 let handle_received_block_and_signature =
-  App.post(
-    Networking.Block_and_signature_spec.path,
-    handle_received_block_and_signature,
-  );
-let handle_received_signature = request => {
-  open Flows;
-  open Networking.Signature_spec;
+  handle_request(
+    (module Block_and_signature_spec),
+    (update_state, request) => {
+      open Flows;
+      let.ok () =
+        received_block(Server.get_state(), update_state, request.block)
+        |> ignore_some_errors;
 
-  let update_state = state' => {
-    Server.set_state(state');
-    state';
-  };
-  let.await json = Request.to_json_exn(request);
-  let req = {
-    let.ok req =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let.ok () =
-      received_signature(
-        Server.get_state(),
-        update_state,
-        ~hash=req.hash,
-        ~signature=req.signature,
-      )
-      |> ignore_some_errors;
-    Ok();
-  };
-  let status =
-    switch (req) {
-    | Ok () => `OK
-    | Error(_err) => `Internal_server_error
-    };
-  await(Response.make(~status, ()));
-};
-let handle_received_signature =
-  App.post(Networking.Signature_spec.path, handle_received_signature);
-let handle_is_applied_block_hash = request => {
-  open Flows;
-  open Networking.Is_signed_block_hash_spec;
-  let.await json = Request.to_json_exn(request);
-  let response = {
-    let.ok req =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let of_hex = str => Hex.to_string(`Hex(str));
-    let is_signed =
-      is_signed_block_hash(Server.get_state(), of_hex(req.hash));
-    Ok({is_signed: is_signed});
-  };
-  switch (response) {
-  | Ok(response) =>
-    let response = response_to_yojson(response);
-    await(Response.of_json(~status=`OK, response));
-  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
-  };
-};
-let handle_is_applied_block_hash =
-  App.post(
-    Networking.Is_signed_block_hash_spec.path,
-    handle_is_applied_block_hash,
+      let.ok () =
+        received_signature(
+          Server.get_state(),
+          update_state,
+          ~hash=request.block.hash,
+          ~signature=request.signature,
+        )
+        |> ignore_some_errors;
+      Ok();
+    },
   );
-let handle_block_by_hash = request => {
-  open Flows;
-  open Networking.Block_by_hash_spec;
-  let.await json = Request.to_json_exn(request);
-  let response = {
-    let.ok req =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let block = find_block_by_hash(Server.get_state(), req.hash);
-    Ok({block: block});
-  };
-  switch (response) {
-  | Ok(response) =>
-    let response = response_to_yojson(response);
-    await(Response.of_json(~status=`OK, response));
-  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
-  };
-};
+let handle_received_signature =
+  handle_request(
+    (module Signature_spec),
+    (update_state, request) => {
+      open Flows;
+      let.ok () =
+        received_signature(
+          Server.get_state(),
+          update_state,
+          ~hash=request.hash,
+          ~signature=request.signature,
+        )
+        |> ignore_some_errors;
+      Ok();
+    },
+  );
+let handle_is_applied_block_hash =
+  handle_request(
+    (module Is_signed_block_hash_spec),
+    (_update_state, request) => {
+      let of_hex = str => Hex.to_string(`Hex(str));
+      let is_signed =
+        Flows.is_signed_block_hash(Server.get_state(), of_hex(request.hash));
+      Ok({is_signed: is_signed});
+    },
+  );
 let handle_block_by_hash =
-  App.post(Networking.Block_by_hash_spec.path, handle_block_by_hash);
-let handle_protocol_snapshot = request => {
-  open Networking.Protocol_snapshot;
-  let.await json = Request.to_json_exn(request);
-  let response = {
-    let.ok () =
-      request_of_yojson(json) |> Result.map_error(err => `Parsing(err));
-    let State.{snapshots, _} = Server.get_state();
-    Printf.printf(
-      "length: %d\n%!",
-      List.length(snapshots.Snapshots.additional_blocks),
-    );
-    Ok({
-      snapshot: snapshots.Snapshots.last_snapshot.data,
-      snapshot_hash: snapshots.last_snapshot.hash,
-      additional_blocks: snapshots.additional_blocks,
-      last_block: snapshots.last_block,
-      last_block_signatures: snapshots.last_block_signatures,
-    });
-  };
-  switch (response) {
-  | Ok(response) =>
-    let response = response_to_yojson(response);
-    await(Response.of_json(~status=`OK, response));
-  | Error(_err) => await(Response.make(~status=`Internal_server_error, ()))
-  };
-};
+  handle_request(
+    (module Block_by_hash_spec),
+    (_update_state, request) => {
+      let block = Flows.find_block_by_hash(Server.get_state(), request.hash);
+      Ok({block: block});
+    },
+  );
 let handle_protocol_snapshot =
-  App.post(Networking.Protocol_snapshot.path, handle_protocol_snapshot);
+  handle_request(
+    (module Protocol_snapshot),
+    (_update_state, ()) => {
+      let State.{snapshots, _} = Server.get_state();
+      Ok({
+        snapshot: snapshots.Snapshots.last_snapshot.data,
+        snapshot_hash: snapshots.last_snapshot.hash,
+        additional_blocks: snapshots.additional_blocks,
+        last_block: snapshots.last_block,
+        last_block_signatures: snapshots.last_block_signatures,
+      });
+    },
+  );
 
 module Utils = {
   let read_file = file => {
