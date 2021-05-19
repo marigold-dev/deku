@@ -146,7 +146,7 @@ let make = (~initial_block) => {
        can be broken */
     last_block_hash: initial_block.Block.previous_hash,
     last_state_root_update: 0.0,
-    state_root_hash: "",
+    state_root_hash: SHA256.hash("").hash,
     /* TODO: this a problem because if the state_root_hash is invalid
        that would the hash would still be invalid, so to preserve
        the invariant we need to hash empty */

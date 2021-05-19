@@ -1,11 +1,12 @@
+open Helpers;
 open Operation;
 
 [@deriving (yojson, ord)]
 type t =
   pri {
-    hash: string,
-    previous_hash: string,
-    state_root_hash: string,
+    hash: SHA256.hash,
+    previous_hash: SHA256.hash,
+    state_root_hash: SHA256.hash,
     author: Address.t,
     block_height: int64,
     main_chain_ops: list(Main_chain.t),

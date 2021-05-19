@@ -62,7 +62,7 @@ type signature = {
 module Signature_spec = {
   [@deriving yojson]
   type request = {
-    hash: string,
+    hash: SHA256.hash,
     signature,
   };
   [@deriving yojson]
@@ -89,7 +89,7 @@ module Block_and_signature_spec = {
 
 module Block_by_hash_spec = {
   [@deriving yojson]
-  type request = {hash: string};
+  type request = {hash: SHA256.hash};
   [@deriving yojson]
   type response = {block: option(Block.t)};
 
@@ -102,7 +102,7 @@ module Protocol_snapshot = {
   [@deriving yojson]
   type response = {
     snapshot: string,
-    snapshot_hash: string,
+    snapshot_hash: SHA256.hash,
     additional_blocks: list(Block.t),
     last_block: Block.t,
     last_block_signatures: Signatures.t,

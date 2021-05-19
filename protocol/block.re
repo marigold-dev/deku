@@ -3,34 +3,14 @@ open Helpers;
 
 [@deriving yojson]
 type t = {
-  hash: string,
-  previous_hash: string,
-  state_root_hash: string,
+  // TODO: validate this hash on yojson
+  hash: SHA256.hash,
+  previous_hash: SHA256.hash,
+  state_root_hash: SHA256.hash,
   author: Address.t,
   block_height: int64,
   main_chain_ops: list(Main_chain.t),
   side_chain_ops: list(Side_chain.Self_signed.t),
-};
-
-let to_yojson = t => {
-  let to_hex = str => {
-    let `Hex(str) = Hex.of_string(str);
-    str;
-  };
-  to_yojson({
-    ...t,
-    hash: to_hex(t.hash),
-    previous_hash: to_hex(t.previous_hash),
-  });
-};
-
-let of_yojson = str => {
-  let of_hex = str => Hex.to_string(`Hex(str));
-  // TODO: validate this hash
-  of_yojson(str)
-  |> Result.map(t =>
-       {...t, hash: of_hex(t.hash), previous_hash: of_hex(t.previous_hash)}
-     );
 };
 
 // if needed we can export this, it's safe
@@ -97,7 +77,7 @@ let of_yojson = json => {
   });
 };
 
-let compare = (a, b) => String.compare(a.hash, b.hash);
+let compare = (a, b) => SHA256.compare_hash(a.hash, b.hash);
 
 let genesis =
   make(

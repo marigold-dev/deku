@@ -1,25 +1,31 @@
 open Helpers;
 open Protocol;
 
+// TODO: THE FAMOUS HASH MAP, maybe SHA256_map?
+module Hash_map =
+  Map_with_yojson_make({
+    [@deriving (ord, yojson)]
+    type t = SHA256.hash;
+  });
 [@deriving yojson]
 type block_and_signatures = {
   signatures: Signatures.t,
   block: option(Block.t),
-  hash: string,
+  hash: SHA256.hash,
 };
 
 [@deriving yojson]
 type t = {
   self_key: Address.t,
-  available: String_map.t(block_and_signatures),
-  available_by_previous: String_map.t(block_and_signatures),
-  signed: String_map.t(block_and_signatures),
+  available: Hash_map.t(block_and_signatures),
+  available_by_previous: Hash_map.t(block_and_signatures),
+  signed: Hash_map.t(block_and_signatures),
   // TODO: is it possible to have two signed blocks at same level?
-  signed_by_previous: String_map.t((Block.t, Signatures.t)),
+  signed_by_previous: Hash_map.t((Block.t, Signatures.t)),
 };
 
 let update_block_and_signatures = (block_and_signatures, t) => {
-  let add_to_map = String_map.add(_, block_and_signatures);
+  let add_to_map = Hash_map.add(_, block_and_signatures);
   let hash = block_and_signatures.hash;
   let is_signed = Signatures.is_signed(block_and_signatures.signatures);
 
@@ -36,7 +42,7 @@ let update_block_and_signatures = (block_and_signatures, t) => {
     signed_by_previous:
       switch (is_signed, block_and_signatures.block) {
       | (true, Some(block)) =>
-        String_map.add(
+        Hash_map.add(
           block.previous_hash,
           (block, block_and_signatures.signatures),
           t.signed_by_previous,
@@ -47,7 +53,7 @@ let update_block_and_signatures = (block_and_signatures, t) => {
 };
 
 let find_block_and_signature_or_return_empty = (~hash, t) =>
-  switch (String_map.find_opt(hash, t.available)) {
+  switch (Hash_map.find_opt(hash, t.available)) {
   | Some(block_and_signatures) => block_and_signatures
   | None =>
     let signatures = Signatures.make(~self_key=t.self_key);
@@ -74,13 +80,12 @@ and ensure_previous_is_signed = (block_and_signatures, t) =>
     };
   | None => t
   };
-
 let make = (~self_key) => {
   self_key,
-  available: String_map.empty,
-  available_by_previous: String_map.empty,
-  signed: String_map.empty,
-  signed_by_previous: String_map.empty,
+  available: Hash_map.empty,
+  available_by_previous: Hash_map.empty,
+  signed: Hash_map.empty,
+  signed_by_previous: Hash_map.empty,
 };
 
 let append_block = (block, t) => {
@@ -114,23 +119,23 @@ let append_signature = (~signatures_required, ~hash, signature, t) => {
   };
 };
 
-let is_signed = (~hash, t) => String_map.mem(hash, t.signed);
+let is_signed = (~hash, t) => Hash_map.mem(hash, t.signed);
 let find_block = (~hash, t) => {
-  let.some {block, _} = String_map.find_opt(hash, t.available);
+  let.some {block, _} = Hash_map.find_opt(hash, t.available);
   block;
 };
 let find_signatures = (~hash, t) => {
-  let.some {signatures, _} = String_map.find_opt(hash, t.available);
+  let.some {signatures, _} = Hash_map.find_opt(hash, t.available);
   Some(signatures);
 };
 // TODO: bad naming, means like, block_height + 1
 let find_next_block_to_apply = (~hash, t) => {
-  let.some (block, _) = String_map.find_opt(hash, t.signed_by_previous);
+  let.some (block, _) = Hash_map.find_opt(hash, t.signed_by_previous);
   Some(block);
 };
 let rec find_all_signed_blocks_above = (blocks, (block, signatures), t) => {
   // TODO: maybe just keep a list of signed_blocks sorted by the height
-  switch (String_map.find_opt(block.Block.hash, t.signed_by_previous)) {
+  switch (Hash_map.find_opt(block.Block.hash, t.signed_by_previous)) {
   | Some((another_block, signatures)) =>
     find_all_signed_blocks_above(
       [block, ...blocks],

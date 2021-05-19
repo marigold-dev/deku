@@ -138,9 +138,9 @@ let request_protocol_snapshot = () =>
         Operation_side_chain_set.t,
         Validators.t,
         int64,
-        string,
-        string,
-        string,
+        SHA256.hash,
+        SHA256.hash,
+        SHA256.hash,
       )
     ];
     let (

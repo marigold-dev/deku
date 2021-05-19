@@ -1,3 +1,4 @@
+open Helpers;
 open Protocol;
 
 [@deriving yojson]
@@ -5,7 +6,7 @@ type block_and_signatures =
   pri {
     signatures: Signatures.t,
     block: option(Block.t),
-    hash: string,
+    hash: SHA256.hash,
   };
 
 [@deriving yojson]
@@ -14,12 +15,12 @@ type t;
 let make: (~self_key: Address.t) => t;
 let append_block: (Block.t, t) => t;
 let append_signature:
-  (~signatures_required: int, ~hash: string, Multisig.signature, t) => t;
+  (~signatures_required: int, ~hash: SHA256.hash, Multisig.signature, t) => t;
 
-let is_signed: (~hash: string, t) => bool;
-let find_block: (~hash: string, t) => option(Block.t);
-let find_signatures: (~hash: string, t) => option(Signatures.t);
-let find_next_block_to_apply: (~hash: string, t) => option(Block.t);
+let is_signed: (~hash: SHA256.hash, t) => bool;
+let find_block: (~hash: SHA256.hash, t) => option(Block.t);
+let find_signatures: (~hash: SHA256.hash, t) => option(Signatures.t);
+let find_next_block_to_apply: (~hash: SHA256.hash, t) => option(Block.t);
 let find_all_signed_blocks_above:
   ((Block.t, Signatures.t), t) => (list(Block.t), (Block.t, Signatures.t));
 

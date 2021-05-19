@@ -1,3 +1,4 @@
+open Helpers;
 module Main_chain: {
   [@deriving (ord, yojson)]
   type t =
@@ -25,7 +26,7 @@ module Side_chain: {
   [@deriving (ord, yojson)]
   type t =
     pri {
-      hash: string,
+      hash: SHA256.hash,
       nonce: int32,
       block_height: int64,
       source: Wallet.t,

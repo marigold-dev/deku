@@ -1,9 +1,14 @@
 [@deriving yojson]
+type hash;
+
+let compare_hash: (hash, hash) => int;
+
+[@deriving yojson]
 type t('a) =
   pri {
-    hash: string,
+    hash,
     data: 'a,
   };
 
 let hash: 'a => t('a);
-let verify: (~hash: string, 'a) => result(t('a), string);
+let verify: (~hash: hash, 'a) => result(t('a), string);

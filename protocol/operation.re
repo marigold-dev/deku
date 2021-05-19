@@ -26,7 +26,7 @@ module Side_chain = {
     | Unfreeze;
   [@deriving (ord, yojson)]
   type t = {
-    hash: string,
+    hash: SHA256.hash,
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
