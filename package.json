@@ -5,23 +5,19 @@
     "@esy-ocaml/reason": "^3.7.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
-    "@opam/ocamlformat": "*",
-    "@reason-native/console": "*",
     "@opam/lwt": "*",
     "@opam/mirage-crypto": "*",
     "@opam/mirage-crypto-pk": "*",
     "@opam/mirage-crypto-rng": "*",
     "@opam/opium": "*",
-    "@opam/piaf": "*",
     "@opam/cohttp": "*",
     "@opam/cohttp-lwt": "*",
     "@opam/cohttp-lwt-unix": "*",
-    "@reason-native/rely": "*",
-    "@opam/base64": "*",
     "@opam/hex": "*"
   },
   "devDependencies": {
-    "@opam/ocaml-lsp-server": "*"
+    "@opam/ocaml-lsp-server": "*",
+    "@reason-native/rely": "*"
   },
   "resolutions": {
     "ocaml": "github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9"
