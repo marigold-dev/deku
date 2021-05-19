@@ -296,9 +296,6 @@ let received_block = (state, update_state, block) => {
 
 let () = received_block' := received_block;
 
-let received_block = (state, update_state, block) =>
-  received_block(state, update_state, block);
-
 let received_signature = (state, update_state, ~hash, ~signature) => {
   let.ok signature = is_valid_signature(~hash, ~signature);
   let.assert () = (
