@@ -7,14 +7,12 @@ module Hash_map =
     [@deriving (ord, yojson)]
     type t = SHA256.hash;
   });
-[@deriving yojson]
 type block_and_signatures = {
   signatures: Signatures.t,
   block: option(Block.t),
   hash: SHA256.hash,
 };
 
-[@deriving yojson]
 type t = {
   self_key: Address.t,
   available: Hash_map.t(block_and_signatures),

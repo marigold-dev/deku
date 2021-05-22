@@ -1,7 +1,6 @@
 open Helpers;
 open Protocol;
 
-[@deriving yojson]
 type block_and_signatures =
   pri {
     signatures: Signatures.t,
@@ -9,7 +8,6 @@ type block_and_signatures =
     hash: SHA256.hash,
   };
 
-[@deriving yojson]
 type t;
 
 let make: (~self_key: Address.t) => t;
