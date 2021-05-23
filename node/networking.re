@@ -53,12 +53,6 @@ let broadcast = (endpoint, state, data) =>
        )
      );
 
-[@deriving yojson]
-type signature = {
-  key: Address.t,
-  signature: string,
-};
-
 module Signature_spec = {
   [@deriving yojson]
   type request = {
@@ -69,12 +63,6 @@ module Signature_spec = {
   type response = unit;
   let path = "/append-signature";
 };
-
-// module Block_spec = {
-//   [@deriving yojson]
-//   type request = Block.t;
-//   let path = "/append-block";
-// };
 
 module Block_and_signature_spec = {
   [@deriving yojson]
