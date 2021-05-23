@@ -12,14 +12,28 @@ module type Request_endpoint = {
 
 exception Error_status;
 let request = (request_to_yojson, path, data, uri) => {
-  open Cohttp;
-  open Cohttp_lwt_unix;
-  let body = request_to_yojson(data) |> Yojson.Safe.to_string;
-  let uri = Uri.with_path(uri, path);
-  let.await (response, body) = Client.post(~body=`String(body), uri);
-  let.await body = Cohttp_lwt.Body.to_string(body);
-  Code.code_of_status(response.status) |> Code.is_success
-    ? await(body) : Lwt.fail(Error_status);
+  open Piaf;
+  let (let.await_ok) = (promise, f) => {
+    let.await value = promise;
+    switch (value) {
+    | Ok(value) => f(value)
+    // TODO: handle this properly
+    | Error(_err) => Lwt.fail(Error_status)
+    };
+  };
+  let.await_ok response = {
+    let uri = Uri.with_path(uri, path);
+    let body =
+      request_to_yojson(data) |> Yojson.Safe.to_string |> Body.of_string;
+    Client.Oneshot.post(~body, uri);
+  };
+
+  if (Status.is_successful(response.status)) {
+    let.await_ok body = Piaf.Body.to_string(response.body);
+    await(body);
+  } else {
+    Lwt.fail(Error_status);
+  };
 };
 
 let post =
