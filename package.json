@@ -10,6 +10,8 @@
     "@opam/mirage-crypto-pk": "*",
     "@opam/mirage-crypto-rng": "*",
     "@opam/opium": "*",
+    "@opam/piaf": "*",
+    "@opam/mrmime": "0.3.2",
     "@opam/cohttp": "*",
     "@opam/cohttp-lwt": "*",
     "@opam/cohttp-lwt-unix": "*",
@@ -20,6 +22,13 @@
     "@reason-native/rely": "*"
   },
   "resolutions": {
-    "ocaml": "github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9"
+    "ocaml": "github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9",
+    "@opam/httpaf": "github:anmonteiro/httpaf:httpaf.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
+    "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
+    "@opam/httpaf-lwt-unix": "github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
+    "@opam/piaf": "github:EduardoRFS/piaf:piaf.opam#b93282e9c60d193d5c3572009d71b2cf3e4b81ca",
+    "@opam/ssl": "github:Firgeis/ocaml-ssl:ssl.opam#f7524f7b6db756ce4097dea7fa4e1c4f4f2832a9",
+    "@opam/opium": "github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
+    "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1"
   }
 }
