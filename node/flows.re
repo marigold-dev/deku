@@ -326,5 +326,3 @@ let find_block_by_hash = (state, hash) =>
 let is_signed_block_hash = (state, hash) =>
   Block_pool.is_signed(~hash, state.Node.block_pool);
 
-let x = 0b00001000_00000000_00000000_00000000;
-
