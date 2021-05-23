@@ -66,15 +66,7 @@ let inject_genesis = () => {
       );
     let signatures =
       validators
-      |> List.map(validator => {
-           let multisig =
-             Multisig.signatures(
-               Signed.sign(~key=validator.key, block.hash)
-               |> Multisig.of_signed,
-             )
-             |> List.nth(_, 0);
-           Networking.{key: multisig.key, signature: multisig.signature};
-         });
+      |> List.map(validator => Block.sign(~key=validator.key, block));
 
     let.await () =
       validators

@@ -69,7 +69,7 @@ let rec request_block_by_hash = (tries, ~hash) => {
       let validator =
         List.nth(validators, random_int(List.length(validators)));
 
-      let.await {block} =
+      let.await block =
         Networking.request_block_by_hash({hash: hash}, validator.uri);
       // TODO: validate hash
       await(Option.get(block));

@@ -273,7 +273,7 @@ let handle_block_by_hash =
     (module Block_by_hash_spec),
     (_update_state, request) => {
       let block = Flows.find_block_by_hash(Server.get_state(), request.hash);
-      Ok({block: block});
+      Ok(block);
     },
   );
 let handle_protocol_snapshot =

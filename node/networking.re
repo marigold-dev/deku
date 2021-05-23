@@ -91,7 +91,7 @@ module Block_by_hash_spec = {
   [@deriving yojson]
   type request = {hash: SHA256.hash};
   [@deriving yojson]
-  type response = {block: option(Block.t)};
+  type response = option(Block.t);
 
   let path = "/block-by-hash";
 };
@@ -105,6 +105,7 @@ module Protocol_snapshot = {
     snapshot_hash: SHA256.hash,
     additional_blocks: list(Block.t),
     last_block: Block.t,
+    // TODO: this is bad, Signatures.t is a private type and not a network one
     last_block_signatures: Signatures.t,
   };
   let path = "/protocol-snapshot";
