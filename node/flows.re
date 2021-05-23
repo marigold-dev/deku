@@ -193,8 +193,6 @@ let request_previous_blocks = (state, block) =>
     request_protocol_snapshot();
   };
 
-// TODO: implement
-
 let try_to_produce_block = (state, update_state) => {
   let.assert () = (
     `Not_current_block_producer,
@@ -203,7 +201,7 @@ let try_to_produce_block = (state, update_state) => {
 
   // TODO: avoid spam? how?
   let block = produce_block(state);
-  let signature = sign(~key=state.identity.key, ~hash=block.hash);
+  let signature = sign(~key=state.identity.key, block);
   let state =
     append_signature(state, update_state, ~signature, ~hash=block.hash);
   broadcast_block_and_signature(state, ~block, ~signature);
@@ -212,7 +210,7 @@ let try_to_produce_block = (state, update_state) => {
 
 let try_to_sign_block = (state, update_state, block) =>
   if (is_signable(state, block)) {
-    let signature = sign(~key=state.identity.key, ~hash=block.hash);
+    let signature = sign(~key=state.identity.key, block);
     broadcast_signature(state, ~hash=block.hash, ~signature);
     append_signature(state, update_state, ~hash=block.hash, ~signature);
   } else {
@@ -297,7 +295,11 @@ let received_block = (state, update_state, block) => {
 let () = received_block' := received_block;
 
 let received_signature = (state, update_state, ~hash, ~signature) => {
-  let.ok signature = is_valid_signature(~hash, ~signature);
+  let.assert () = (
+    `Invalid_signature_for_this_hash,
+    // TODO: check if it's made by a known validator, avoid spam
+    Signature.verify(~signature, hash),
+  );
   let.assert () = (
     `Already_known_signature,
     !is_known_signature(state, ~hash, ~signature),
@@ -323,3 +325,6 @@ let find_block_by_hash = (state, hash) =>
 
 let is_signed_block_hash = (state, hash) =>
   Block_pool.is_signed(~hash, state.Node.block_pool);
+
+let x = 0b00001000_00000000_00000000_00000000;
+

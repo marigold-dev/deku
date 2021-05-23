@@ -63,7 +63,7 @@ module Signature_spec = {
   [@deriving yojson]
   type request = {
     hash: SHA256.hash,
-    signature,
+    signature: Signature.t,
   };
   [@deriving yojson]
   type response = unit;
@@ -80,7 +80,7 @@ module Block_and_signature_spec = {
   [@deriving yojson]
   type request = {
     block: Block.t,
-    signature,
+    signature: Signature.t,
   };
   [@deriving yojson]
   type response = unit;

@@ -4,7 +4,7 @@ open Protocol;
 module Signature_set =
   Set_with_yojson_make({
     [@deriving (yojson, ord)]
-    type t = Multisig.signature;
+    type t = Signature.t;
   });
 // TODO: what if I think it is signed, but other nodes disagree on this?
 [@deriving yojson]
@@ -27,7 +27,8 @@ let add = (~signatures_required, signature, t) =>
   // TODO: do I need to hold the signatures after it is already signed?
   if (!Signature_set.mem(signature, t.signatures)) {
     // TODO: curious, does OCaml optimize this?
-    t.self_signed = t.self_signed || signature.key == t.self_key;
+    t.self_signed =
+      t.self_signed || Signature.public_key(signature) == t.self_key;
     t.signatures = Signature_set.add(signature, t.signatures);
     t.length = t.length + 1;
     t.signed = t.length >= signatures_required;

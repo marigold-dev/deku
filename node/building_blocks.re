@@ -3,15 +3,6 @@ open Protocol;
 
 module Node = State;
 
-let is_valid_signature = (~hash, ~signature) => {
-  // TODO: check if it's made by a known validator, avoid noise
-  let Networking.{key, signature} = signature;
-  let.ok signed =
-    Signed.verify(~key, ~signature, hash)
-    |> Result.map_error(_ => `Invalid_signature);
-  signed |> Multisig.of_signed |> Multisig.signatures |> List.nth(_, 0) |> ok;
-};
-
 let is_valid_block = (state, block) => {
   // TODO: check if it's made by a known validator?
   let is_all_operations_properly_signed = _block =>
@@ -80,11 +71,7 @@ let is_signable = (state, block) =>
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash);
 
-let sign = (~key, ~hash) =>
-  Signed.sign(~key, hash)
-  |> Multisig.of_signed
-  |> Multisig.signatures
-  |> List.nth(_, 0);
+let sign = (~key, block) => Block.sign(~key, block);
 
 let produce_block = state =>
   Block.produce(
@@ -151,25 +138,9 @@ let clean = (state, update_state, block) => {
 // TODO: maybe send to some specific nodes so that they should broadcast it?
 // maybe have a random chance of re-broadcasting it to the network
 let broadcast_signature = (state, ~hash, ~signature) =>
-  Lwt.async(() =>
-    Networking.broadcast_signature(
-      state,
-      {
-        hash,
-        signature:
-          Multisig.{key: signature.key, signature: signature.signature},
-      },
-    )
-  );
+  Lwt.async(() => Networking.broadcast_signature(state, {hash, signature}));
 let broadcast_block_and_signature = (state, ~block, ~signature) =>
   Lwt.async(() => {
     let.await () = Lwt_unix.sleep(1.0);
-    Networking.broadcast_block_and_signature(
-      state,
-      {
-        block,
-        signature:
-          Multisig.{key: signature.key, signature: signature.signature},
-      },
-    );
+    Networking.broadcast_block_and_signature(state, {block, signature});
   });

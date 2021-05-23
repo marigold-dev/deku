@@ -3,7 +3,6 @@ open Mirage_crypto.Hash.SHA256;
 let (let.ok) = Result.bind;
 
 type hash = string;
-let compare_hash = String.compare;
 let to_hex = str => {
   let `Hex(str) = Hex.of_string(str);
   str;
@@ -26,7 +25,8 @@ let hash_of_yojson = json => {
   let.ok hex = [%of_yojson: string](json);
   of_hex(hex);
 };
-
+let hash_to_string = to_hex;
+let compare_hash = String.compare;
 [@deriving yojson]
 type t('a) = {
   hash,

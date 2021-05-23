@@ -13,7 +13,7 @@ type t;
 let make: (~self_key: Address.t) => t;
 let append_block: (Block.t, t) => t;
 let append_signature:
-  (~signatures_required: int, ~hash: SHA256.hash, Multisig.signature, t) => t;
+  (~signatures_required: int, ~hash: SHA256.hash, Signature.t, t) => t;
 
 let is_signed: (~hash: SHA256.hash, t) => bool;
 let find_block: (~hash: SHA256.hash, t) => option(Block.t);

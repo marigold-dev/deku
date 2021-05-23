@@ -1,6 +1,6 @@
 [@deriving yojson]
 type hash;
-
+let hash_to_string: hash => string;
 let compare_hash: (hash, hash) => int;
 
 [@deriving yojson]
