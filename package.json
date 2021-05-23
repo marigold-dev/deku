@@ -12,9 +12,6 @@
     "@opam/opium": "*",
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
-    "@opam/cohttp": "*",
-    "@opam/cohttp-lwt": "*",
-    "@opam/cohttp-lwt-unix": "*",
     "@opam/hex": "*"
   },
   "devDependencies": {
