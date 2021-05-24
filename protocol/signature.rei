@@ -6,7 +6,7 @@ type t;
 let compare: (t, t) => int;
 let public_key: t => Address.t;
 
-let verify: (~signature: t, SHA256.hash) => bool;
+let verify: (~signature: t, SHA256.t) => bool;
 
 module type S = {
   type value;
@@ -23,6 +23,5 @@ module type S = {
 module Make:
   (P: {
      type t;
-     let hash: t => SHA256.hash;
+     let hash: t => SHA256.t;
    }) => S with type value = P.t;
-

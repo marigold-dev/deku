@@ -5,12 +5,12 @@ open Protocol;
 module Hash_map =
   Map_with_yojson_make({
     [@deriving (ord, yojson)]
-    type t = SHA256.hash;
+    type t = SHA256.t;
   });
 type block_and_signatures = {
   signatures: Signatures.t,
   block: option(Block.t),
-  hash: SHA256.hash,
+  hash: SHA256.t,
 };
 
 type t = {

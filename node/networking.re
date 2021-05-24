@@ -70,7 +70,7 @@ let broadcast = (endpoint, state, data) =>
 module Signature_spec = {
   [@deriving yojson]
   type request = {
-    hash: SHA256.hash,
+    hash: SHA256.t,
     signature: Signature.t,
   };
   [@deriving yojson]
@@ -91,7 +91,7 @@ module Block_and_signature_spec = {
 
 module Block_by_hash_spec = {
   [@deriving yojson]
-  type request = {hash: SHA256.hash};
+  type request = {hash: SHA256.t};
   [@deriving yojson]
   type response = option(Block.t);
 
@@ -104,7 +104,7 @@ module Protocol_snapshot = {
   [@deriving yojson]
   type response = {
     snapshot: string,
-    snapshot_hash: SHA256.hash,
+    snapshot_hash: SHA256.t,
     additional_blocks: list(Block.t),
     last_block: Block.t,
     // TODO: this is bad, Signatures.t is a private type and not a network one

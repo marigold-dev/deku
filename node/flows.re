@@ -138,9 +138,9 @@ let request_protocol_snapshot = () =>
         Operation_side_chain_set.t,
         Validators.t,
         int64,
-        SHA256.hash,
-        SHA256.hash,
-        SHA256.hash,
+        SHA256.t,
+        SHA256.t,
+        SHA256.t,
       )
     ];
     let (
@@ -325,4 +325,3 @@ let find_block_by_hash = (state, hash) =>
 
 let is_signed_block_hash = (state, hash) =>
   Block_pool.is_signed(~hash, state.Node.block_pool);
-

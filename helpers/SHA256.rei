@@ -1,9 +1,14 @@
 [@deriving yojson]
-type hash;
-let hash_to_string: hash => string;
-let compare_hash: (hash, hash) => int;
+type t;
+let to_string: t => string;
+let compare: (t, t) => int;
+
+let hash: string => t;
+let hash_both: (t, t) => t;
+let verify: (~hash: t, string) => bool;
 
 module Magic: {
+  type hash = t;
   [@deriving yojson]
   type t('a) =
     pri {

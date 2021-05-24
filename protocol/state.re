@@ -9,13 +9,13 @@ type t = {
   included_operations: Operation_side_chain_set.t,
   validators: Validators.t,
   block_height: int64,
-  last_block_hash: SHA256.hash,
+  last_block_hash: SHA256.t,
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just
      ignore like on the hashing function, but it still bothers me */
   last_state_root_update: float,
-  state_root_hash: SHA256.hash,
-  pending_state_root_hash: SHA256.hash,
+  state_root_hash: SHA256.t,
+  pending_state_root_hash: SHA256.t,
 };
 
 let hash = t => {
@@ -26,9 +26,9 @@ let hash = t => {
       Operation_side_chain_set.t,
       Validators.t,
       int64,
-      SHA256.hash,
-      SHA256.hash,
-      SHA256.hash,
+      SHA256.t,
+      SHA256.t,
+      SHA256.t,
     )
   ];
   let json =

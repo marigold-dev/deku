@@ -14,7 +14,7 @@ let compare = (a, b) => String.compare(a.signature, b.signature);
 let public_key = t => t.public_key;
 let sign = (~key, hash) => {
   let signature =
-    `Message(Cstruct.of_string(SHA256.hash_to_string(hash)))
+    `Message(Cstruct.of_string(SHA256.to_string(hash)))
     // TODO: isn't this double hashing? Seems weird
     |> Rsa_sha256.sign(~key)
     |> Cstruct.to_string;
@@ -25,7 +25,7 @@ let verify = (~signature, hash) =>
   Rsa_sha256.verify(
     ~key=signature.public_key,
     ~signature=Cstruct.of_string(signature.signature),
-    `Message(Cstruct.of_string(SHA256.hash_to_string(hash))),
+    `Message(Cstruct.of_string(SHA256.to_string(hash))),
   );
 module type S = {
   type value;
@@ -40,7 +40,7 @@ module type S = {
 };
 module Make = (P: {
                  type t;
-                 let hash: t => SHA256.hash;
+                 let hash: t => SHA256.t;
                }) => {
   type value = P.t;
   type signature = t;
