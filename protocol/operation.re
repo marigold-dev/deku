@@ -35,8 +35,8 @@ module Side_chain = {
   };
 
   let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
-    let SHA256.{hash, _} =
-      SHA256.hash((nonce, block_height, source, amount, kind));
+    let SHA256.Magic.{hash, _} =
+      SHA256.Magic.hash((nonce, block_height, source, amount, kind));
     {hash, nonce, block_height, source, kind, amount};
   };
 
@@ -44,7 +44,10 @@ module Side_chain = {
     let.ok {hash, nonce, block_height, source, kind, amount} =
       of_yojson(json);
     let.ok {hash, _} =
-      SHA256.verify(~hash, (nonce, block_height, source, kind, amount));
+      SHA256.Magic.verify(
+        ~hash,
+        (nonce, block_height, source, kind, amount),
+      );
     Ok({hash, nonce, block_height, source, kind, amount});
   };
 

@@ -27,23 +27,27 @@ let hash_of_yojson = json => {
 };
 let hash_to_string = to_hex;
 let compare_hash = String.compare;
-[@deriving yojson]
-type t('a) = {
-  hash,
-  data: 'a,
-};
 
-let hash = data => {
-  let hash = {
-    let data = Marshal.to_string(data, []);
-    Cstruct.of_string(data) |> feed(empty) |> get |> Cstruct.to_string;
+let hash = data =>
+  Cstruct.of_string(data) |> feed(empty) |> get |> Cstruct.to_string;
+let _verify = (~hash as expected_hash, data) => expected_hash == hash(data);
+
+// TODO: magic means evil
+module Magic = {
+  [@deriving yojson]
+  type t('a) = {
+    hash,
+    data: 'a,
   };
-  {hash, data};
-};
-let verify = (~hash as expected_hash, data) => {
-  let t = hash(data);
-  t.hash == expected_hash ? Ok(t) : Error("Invalid hash");
-};
+  let hash = data => {
+    let hash = hash(Marshal.to_string(data, []));
+    {hash, data};
+  };
+  let verify = (~hash as expected_hash, data) => {
+    let t = hash(data);
+    t.hash == expected_hash ? Ok(t) : Error("Invalid hash");
+  };
 
-let of_yojson = (f, json) =>
-  Result.bind(of_yojson(f, json), ({hash, data}) => verify(~hash, data));
+  let of_yojson = (f, json) =>
+    Result.bind(of_yojson(f, json), ({hash, data}) => verify(~hash, data));
+};

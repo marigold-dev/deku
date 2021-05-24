@@ -34,8 +34,8 @@ let make =
       ~main_chain_ops,
       ~side_chain_ops,
     ) => {
-  let SHA256.{hash, _} =
-    SHA256.hash((
+  let SHA256.Magic.{hash, _} =
+    SHA256.Magic.hash((
       previous_hash,
       state_root_hash,
       author,
@@ -67,7 +67,7 @@ let of_yojson = json => {
   } =
     of_yojson(json);
   let.ok {hash, _} =
-    SHA256.verify(
+    SHA256.Magic.verify(
       ~hash,
       (
         previous_hash,
@@ -93,8 +93,8 @@ let compare = (a, b) => SHA256.compare_hash(a.hash, b.hash);
 
 let genesis =
   make(
-    ~previous_hash=SHA256.hash("tuturu").hash,
-    ~state_root_hash=SHA256.hash("mayuushi-desu").hash,
+    ~previous_hash=SHA256.Magic.hash("tuturu").hash,
+    ~state_root_hash=SHA256.Magic.hash("mayuushi-desu").hash,
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
@@ -125,4 +125,3 @@ let produce = (~state) =>
   );
 let sign = (~key, t) => sign(~key, t).signature;
 let verify = (~signature, t) => verify(~signature, t);
-

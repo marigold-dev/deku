@@ -41,5 +41,5 @@ let hash = t => {
       t.state_root_hash,
       t.pending_state_root_hash,
     ));
-  SHA256.hash(Yojson.Safe.to_string(json));
+  SHA256.Magic.hash(Yojson.Safe.to_string(json));
 };
