@@ -82,6 +82,7 @@ let is_next = (state, block) =>
   && state.last_block_hash == block.previous_hash;
 
 let apply_block = (state, block) => {
+  Printf.printf("%Ld\n%!", block.Block.block_height);
   let fold_left_noop_when_exception = (f, state, list) =>
     List.fold_left(
       (state, op) =>
