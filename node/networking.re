@@ -108,7 +108,7 @@ module Protocol_snapshot = {
     additional_blocks: list(Block.t),
     last_block: Block.t,
     // TODO: this is bad, Signatures.t is a private type and not a network one
-    last_block_signatures: Signatures.t,
+    last_block_signatures: list(Signature.t),
   };
   let path = "/protocol-snapshot";
 };

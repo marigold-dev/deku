@@ -9,3 +9,4 @@ let is_signed: t => bool;
 let set_signed: t => unit;
 let add: (~signatures_required: int, Signature.t, t) => unit;
 let mem: (Signature.t, t) => bool;
+let to_list: t => List.t(Signature.t);

@@ -37,3 +37,4 @@ let mem = (signature, t) => Signature_set.mem(signature, t.signatures);
 let is_signed = t => t.signed;
 let is_self_signed = t => t.self_signed;
 let set_signed = t => t.signed = true;
+let to_list = t => Signature_set.to_seq(t.signatures) |> List.of_seq;

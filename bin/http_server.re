@@ -286,7 +286,8 @@ let handle_protocol_snapshot =
         snapshot_hash: snapshots.last_snapshot.hash,
         additional_blocks: snapshots.additional_blocks,
         last_block: snapshots.last_block,
-        last_block_signatures: snapshots.last_block_signatures,
+        last_block_signatures:
+          Signatures.to_list(snapshots.last_block_signatures),
       });
     },
   );
