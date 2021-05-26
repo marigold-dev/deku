@@ -111,8 +111,16 @@ let rec request_protocol_snapshot = tries => {
       let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
       let validators = Validators.validators(state.protocol.validators);
-      let validator =
-        List.nth(validators, random_int(List.length(validators)));
+      let rec safe_validator = () => {
+        let validator =
+          List.nth(validators, random_int(List.length(validators)));
+        if (state.Node.identity.uri == validator.uri) {
+          safe_validator();
+        } else {
+          validator;
+        };
+      };
+      let validator = safe_validator();
       // TODO: validate hash and signatures
       Networking.request_protocol_snapshot((), validator.uri);
     },
