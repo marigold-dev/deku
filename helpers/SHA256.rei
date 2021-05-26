@@ -4,7 +4,6 @@ let to_string: t => string;
 let compare: (t, t) => int;
 
 let hash: string => t;
-let hash_both: (t, t) => t;
 let verify: (~hash: t, string) => bool;
 
 module Magic: {

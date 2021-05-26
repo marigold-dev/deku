@@ -30,7 +30,6 @@ let compare = String.compare;
 
 let hash = data =>
   Cstruct.of_string(data) |> feed(empty) |> get |> Cstruct.to_string;
-let hash_both = (a, b) => hash(a ++ b);
 let verify = (~hash as expected_hash, data) => expected_hash == hash(data);
 
 // TODO: magic means evil
