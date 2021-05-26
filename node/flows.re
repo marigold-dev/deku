@@ -276,8 +276,18 @@ and block_added_to_the_pool = (state, update_state, block) => {
       `Added_block_not_signed_enough_to_desync,
       Block_pool.is_signed(~hash=block.hash, state.block_pool),
     );
-    request_previous_blocks(state, block);
-    Ok();
+    switch (
+      // TODO: this breaks request recursion
+      Block_pool.find_block(
+        ~hash=block.previous_hash,
+        state.block_pool,
+      )
+    ) {
+    | Some(block) => block_added_to_the_pool(state, update_state, block)
+    | None =>
+      request_previous_blocks(state, block);
+      Ok();
+    };
   };
 };
 
