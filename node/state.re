@@ -57,3 +57,110 @@ let apply_block = (state, block) => {
   | None => Ok(state)
   };
 };
+
+// TODO: duplicated code
+let signatures_required = state => {
+  let number_of_validators =
+    Validators.validators(state.protocol.validators) |> List.length;
+  // TODO: properly filter and check signatures
+  Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
+};
+let load_snapshot =
+    (
+      ~state_root_hash,
+      ~state_root,
+      ~additional_blocks,
+      ~last_block,
+      // TODO: this is bad, Signatures.t is a private type and not a network one
+      ~last_block_signatures,
+      t,
+    ) => {
+  let all_blocks =
+    [last_block, ...additional_blocks]
+    |> List.sort((a, b) =>
+         Int64.(to_int(sub(a.Block.block_height, b.Block.block_height)))
+       );
+  let block_pool = {
+    let block_pool =
+      List.fold_left(
+        (block_pool, block) => Block_pool.append_block(block, block_pool),
+        t.block_pool,
+        all_blocks,
+      );
+    let signatures_required = signatures_required(t);
+    List.fold_left(
+      (block_pool, signature) =>
+        Block_pool.append_signature(
+          ~signatures_required,
+          ~hash=last_block.Block.hash,
+          signature,
+          block_pool,
+        ),
+      block_pool,
+      last_block_signatures,
+    );
+  };
+  let.assert () = (
+    `Not_all_blocks_are_signed,
+    List.for_all(
+      block => Block_pool.is_signed(~hash=block.Block.hash, block_pool),
+      all_blocks,
+    ),
+  );
+  let.assert () = (
+    `State_root_not_the_expected,
+    // TODO: this List.hd will not fail, but it makes me anxious
+    state_root_hash == List.hd(all_blocks).state_root_hash,
+  );
+  let.assert () = (
+    `Snapshots_with_invalid_hash,
+    // TODO: stop using magic on both sides
+    SHA256.Magic.verify(~hash=state_root_hash, state_root) |> Result.is_ok,
+  );
+
+  let of_yojson = [%of_yojson:
+    (
+      Ledger.t,
+      Operation_side_chain_set.t,
+      Validators.t,
+      int64,
+      SHA256.t,
+      SHA256.t,
+    )
+  ];
+  let (
+    ledger,
+    included_operations,
+    validators,
+    block_height,
+    last_block_hash,
+    state_root_hash,
+  ) =
+    // TODO: verify the hash
+    state_root |> Yojson.Safe.from_string |> of_yojson |> Result.get_ok;
+
+  // TODO: this is clearly an abstraction leak
+
+  let protocol =
+    Protocol.{
+      ledger,
+      included_operations,
+      validators,
+      block_height,
+      last_block_hash,
+      state_root_hash,
+      last_state_root_update: 0.0,
+    };
+  let.ok protocol =
+    fold_left_ok(
+      (protocol, block) => {
+        // TODO: ignore this may be really bad for snapshots
+        let.ok (protocol, _new_hash) = Protocol.apply_block(protocol, block);
+        Ok(protocol);
+      },
+      protocol,
+      all_blocks,
+    );
+  //TODO: snapshots?
+  Ok({...t, block_pool, protocol});
+};

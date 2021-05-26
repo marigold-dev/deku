@@ -22,3 +22,23 @@ let make: (~identity: identity) => t;
 let apply_block:
   (t, Block.t) =>
   result(t, [> | `Invalid_block_when_applying | `Invalid_state_root_hash]);
+
+let load_snapshot:
+  (
+    ~state_root_hash: SHA256.t,
+    ~state_root: string,
+    ~additional_blocks: list(Block.t),
+    ~last_block: Block.t,
+    ~last_block_signatures: list(Signature.t),
+    t
+  ) =>
+  result(
+    t,
+    [>
+      | `Invalid_block_when_applying
+      | `Invalid_state_root_hash
+      | `Not_all_blocks_are_signed
+      | `Snapshots_with_invalid_hash
+      | `State_root_not_the_expected
+    ],
+  );
