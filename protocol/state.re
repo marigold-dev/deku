@@ -1,7 +1,7 @@
 open Helpers;
 
 module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
-[@deriving yojson]
+
 type t = {
   // state machine data
   ledger: Ledger.t,
@@ -17,7 +17,6 @@ type t = {
      state data will be different across nodes, of course we can just
      ignore like on the hashing function, but it still bothers me */
   // local consensus(not hashed)
-  pending_state_root_hash: SHA256.t,
   last_state_root_update: float,
 };
 

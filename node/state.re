@@ -20,15 +20,17 @@ type t = {
 
 let make = (~identity) => {
   let initial_block = Block.genesis;
-  let (initial_protocol, initial_snapshot) = Protocol.make(~initial_block);
+  let initial_protocol = Protocol.make(~initial_block);
   let initial_signatures = Signatures.make(~self_key=identity.t);
   Signatures.set_signed(initial_signatures);
 
   let initial_block_pool =
     Block_pool.make(~self_key=identity.t)
     |> Block_pool.append_block(initial_block);
-  let initial_snapshots =
+  let initial_snapshots = {
+    let initial_snapshot = Protocol.hash(initial_protocol);
     Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
+  };
   {
     identity,
     pending_side_ops: [],

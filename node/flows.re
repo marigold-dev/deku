@@ -140,7 +140,6 @@ let request_protocol_snapshot = () =>
         int64,
         SHA256.t,
         SHA256.t,
-        SHA256.t,
       )
     ];
     let (
@@ -150,7 +149,6 @@ let request_protocol_snapshot = () =>
       block_height,
       last_block_hash,
       state_root_hash,
-      pending_state_root_hash,
     ) =
       snapshot.snapshot
       |> Yojson.Safe.from_string
@@ -165,7 +163,6 @@ let request_protocol_snapshot = () =>
         last_block_hash,
         last_state_root_update: 0.0,
         state_root_hash,
-        pending_state_root_hash,
       };
     set_state^({...get_state^(), protocol});
     let update_state = state => {

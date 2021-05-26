@@ -3,6 +3,24 @@ open Node;
 open State;
 open Protocol;
 
+let read_file = file => {
+  let.await ic = Lwt_io.open_file(~mode=Input, file);
+  let.await lines = Lwt_io.read_lines(ic) |> Lwt_stream.to_list;
+  let.await () = Lwt_io.close(ic);
+  await(lines |> String.concat("\n"));
+};
+let read_validators = file => {
+  let.await file_buffer = read_file(file);
+  await(
+    try({
+      let json = Yojson.Safe.from_string(file_buffer);
+      [%of_yojson: list(Validators.validator)](json);
+    }) {
+    | _ => Error("failed to parse json")
+    },
+  );
+};
+
 let gen_credentials = () => {
   let write_file = (~file, string) => {
     let oc = open_out(file);
@@ -56,7 +74,16 @@ let inject_genesis = () => {
   // };
   let make_new_block = validators => {
     let first = List.nth(validators, 0);
-    let state = Protocol.make(~initial_block=Block.genesis) |> fst;
+    let state = Protocol.make(~initial_block=Block.genesis);
+    let.await state = {
+      let.await validators = read_validators("validators.json");
+      let validators = Result.get_ok(validators);
+      Lwt.return({
+        ...state,
+        validators:
+          List.fold_right(Validators.add, validators, state.validators),
+      });
+    };
     let block =
       Block.produce(
         ~state,
@@ -64,6 +91,7 @@ let inject_genesis = () => {
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
+    Printf.printf("block: %s\n%!", SHA256.to_string(block.state_root_hash));
     let signatures =
       validators
       |> List.map(validator => Block.sign(~key=validator.key, block));

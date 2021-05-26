@@ -340,7 +340,7 @@ let node = {
     protocol: {
       ...node.protocol,
       validators:
-        List.fold_right(Validators.add, validators, node.protocol.validators),
+        List.fold_right(Validators.add, validators, Validators.empty),
     },
   };
   await(node);

@@ -134,7 +134,7 @@ let produce = (~state) =>
     ~previous_hash=state.State.last_block_hash,
     ~state_root_hash=
       can_produce_with_new_state_root_hash(state)
-        ? state.pending_state_root_hash : state.state_root_hash,
+        ? State.hash(state).hash : state.state_root_hash,
     ~block_height=Int64.add(state.block_height, 1L),
   );
 

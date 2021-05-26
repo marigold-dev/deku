@@ -13,6 +13,7 @@ type block_and_signatures = {
   hash: SHA256.t,
 };
 
+// TODO: clean all blocks older than the current state root hash
 type t = {
   self_key: Address.t,
   available: Hash_map.t(block_and_signatures),
@@ -95,6 +96,7 @@ let append_block = (block, t) => {
     Signatures.set_signed(block_and_signatures.signatures);
   };
   let t = update_block_and_signatures(block_and_signatures, t);
+  // TODO: this doesn't work if you receive the blocks in a different order
   if (is_signed(block_and_signatures)) {
     ensure_previous_is_signed(block_and_signatures, t);
   } else {

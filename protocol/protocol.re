@@ -131,10 +131,6 @@ let apply_block = (state, block) => {
   };
 };
 
-let update_pending_state_root_hash = state => {
-  let hash = hash(state);
-  ({...state, pending_state_root_hash: hash.hash}, hash);
-};
 let make = (~initial_block) => {
   let empty = {
     ledger: Ledger.empty,
@@ -146,32 +142,24 @@ let make = (~initial_block) => {
        are in the right place, otherwise invariants
        can be broken */
     last_block_hash: initial_block.Block.previous_hash,
+    state_root_hash: initial_block.Block.state_root_hash,
     last_state_root_update: 0.0,
-    state_root_hash: SHA256.Magic.hash("").hash,
-    /* TODO: this a problem because if the state_root_hash is invalid
-       that would the hash would still be invalid, so to preserve
-       the invariant we need to hash empty */
-    pending_state_root_hash: initial_block.Block.state_root_hash,
   };
-  let (state, hash) = update_pending_state_root_hash(empty);
-  (apply_block(state, initial_block), hash);
+  apply_block(empty, initial_block);
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let.assert () = (
-    `Invalid_state_root_hash,
-    block.state_root_hash == state.state_root_hash
-    || block.state_root_hash == state.pending_state_root_hash,
-  );
-  // TODO: maybe check if the state root hash could be updated?
-  let (state, hash) =
-    if (state.pending_state_root_hash == block.state_root_hash) {
-      let (state, hash) = update_pending_state_root_hash(state);
-      (state, Some(hash));
+  let (valid_hash, hash) =
+    if (block.state_root_hash == state.state_root_hash) {
+      (true, None);
     } else {
-      (state, None);
+      // TODO: pipeline this
+      let hash = hash(state);
+      (block.state_root_hash == hash.hash, Some(hash));
     };
+  let.assert () = (`Invalid_state_root_hash, valid_hash);
   let state = apply_block(state, block);
   Ok((state, hash));
 };
+// TODO: this changes the state root hash so bad
 let next = t => {...t, validators: Validators.next(t.validators)};
