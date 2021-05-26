@@ -1,6 +1,5 @@
 open Protocol;
 
-[@deriving yojson]
 type t;
 // self_key should be the node public key
 let make: (~self_key: Address.t) => t;

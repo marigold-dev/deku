@@ -7,7 +7,6 @@ module Signature_set =
     type t = Signature.t;
   });
 // TODO: what if I think it is signed, but other nodes disagree on this?
-[@deriving yojson]
 type t = {
   self_key: Address.t,
   mutable self_signed: bool,
