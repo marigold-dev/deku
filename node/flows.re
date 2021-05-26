@@ -137,56 +137,25 @@ Lwt.async_exception_hook :=
     }
   );
 let pending = ref(false);
+let load_snapshot = snapshot => {
+  open Networking.Protocol_snapshot;
+
+  let.ok state =
+    Node.load_snapshot(
+      ~state_root_hash=snapshot.snapshot_hash,
+      ~state_root=snapshot.snapshot,
+      ~additional_blocks=snapshot.additional_blocks,
+      ~last_block=snapshot.last_block,
+      ~last_block_signatures=snapshot.last_block_signatures,
+      get_state^(),
+    );
+  Ok(set_state^(state));
+};
 let request_protocol_snapshot = () =>
   Lwt.async(() => {
     let.await snapshot = request_protocol_snapshot(0);
-    let of_yojson = [%of_yojson:
-      (
-        Ledger.t,
-        Operation_side_chain_set.t,
-        Validators.t,
-        int64,
-        SHA256.t,
-        SHA256.t,
-      )
-    ];
-    let (
-      ledger,
-      included_operations,
-      validators,
-      block_height,
-      last_block_hash,
-      state_root_hash,
-    ) =
-      snapshot.snapshot
-      |> Yojson.Safe.from_string
-      |> of_yojson
-      |> Result.get_ok;
-    let protocol =
-      Protocol.{
-        ledger,
-        included_operations,
-        validators,
-        block_height,
-        last_block_hash,
-        last_state_root_update: 0.0,
-        state_root_hash,
-      };
-    set_state^({...get_state^(), protocol});
-    let update_state = state => {
-      set_state^(state);
-      state;
-    };
-    let () =
-      List.iter(
-        block => {
-          let _ = add_block_to_pool(get_state^(), update_state, block);
-          let _ =
-            block_added_to_the_pool'^(get_state^(), update_state, block);
-          ();
-        },
-        List.rev([snapshot.last_block, ...snapshot.additional_blocks]),
-      );
+    let _result = load_snapshot(snapshot);
+    // TODO: log this
     await();
   });
 
