@@ -6,7 +6,11 @@ type t = {
   // TODO: validate this hash on yojson
   // TODO: what if block hash was a merkle tree of previous_hash + state_root_hash + block_data
   // block header
+  // sha256(state_root_hash, payload_hash)
   hash: SHA256.t,
+  // TODO: is it okay to payload_hash to appears on both sides?
+  // sha256(json of all fields including payload hash)
+  payload_hash: SHA256.t,
   state_root_hash: SHA256.t,
   previous_hash: SHA256.t,
   // block data
@@ -19,6 +23,9 @@ type t = {
 };
 
 let (hash, verify) = {
+  /* TODO: this is bad name, it exists like this to prevent
+     duplicating all this name parameters */
+
   let apply =
       (
         f,
@@ -50,10 +57,22 @@ let (hash, verify) = {
         side_chain_ops,
       ));
     let payload = Yojson.Safe.to_string(json);
-    f(payload);
+    let payload_hash = SHA256.hash(payload);
+    // TODO: is it okay to have this string concatened here?
+    // TODO: maybe should also be previous?
+
+    let data_to_hash =
+      SHA256.(to_string(state_root_hash) ++ to_string(payload_hash));
+    f(data_to_hash, payload_hash);
   };
-  let hash = apply(SHA256.hash);
-  let verify = (~hash) => apply(SHA256.verify(~hash));
+  let hash =
+    apply((data_to_hash, payload_hash) =>
+      (SHA256.hash(data_to_hash), payload_hash)
+    );
+  let verify = (~hash) =>
+    apply((data_to_hash, _payload_hash) =>
+      SHA256.verify(~hash, data_to_hash)
+    );
   (hash, verify);
 };
 // if needed we can export this, it's safe
@@ -66,7 +85,7 @@ let make =
       ~main_chain_ops,
       ~side_chain_ops,
     ) => {
-  let hash =
+  let (hash, payload_hash) =
     hash(
       ~state_root_hash,
       ~previous_hash,
@@ -77,6 +96,7 @@ let make =
     );
   {
     hash,
+    payload_hash,
     previous_hash,
 
     state_root_hash,
@@ -143,7 +163,7 @@ open Signature.Make({
        type nonrec t = t;
        let hash = t => t.hash;
      });
-module Signature = Signature;
 
 let sign = (~key, t) => sign(~key, t).signature;
 let verify = (~signature, t) => verify(~signature, t);
+let verify_hash = (~signature, hash) => Signature.verify(~signature, hash);

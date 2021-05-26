@@ -5,6 +5,7 @@ open Operation;
 type t =
   pri {
     hash: SHA256.t,
+    payload_hash: SHA256.t,
     state_root_hash: SHA256.t,
     previous_hash: SHA256.t,
     author: Address.t,
@@ -15,7 +16,7 @@ type t =
 
 let sign: (~key: Address.key, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
-
+let verify_hash: (~signature: Signature.t, SHA256.t) => bool;
 let genesis: t;
 let produce:
   (
