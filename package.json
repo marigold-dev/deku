@@ -9,6 +9,7 @@
     "@opam/mirage-crypto": "*",
     "@opam/mirage-crypto-pk": "*",
     "@opam/mirage-crypto-rng": "*",
+    "@opam/mirage-crypto-ec": "*",
     "@opam/opium": "*",
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
