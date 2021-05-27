@@ -179,3 +179,19 @@ if 2/3 of the chain is corrupted
 Because we have multicore we can compute in parallel, and assume that a block will be signed, so applying it in parallel and switching if it actually get's signed.
 
 The same is valid for the block producer, who can produce and apply a new block because if he is not doing anything wrong, it's quite likely to be the signed block.
+
+This also allows to reduce the latency as the block is sent faster, care on the interaction with the flag mechanism.
+
+## Validators
+
+Because the validators are handled off chain we need a way for new validators, to ensure that at any time everyone agrees on the validators, the list can only change when a state root is changed.
+
+But we need a way to proof to the new validator what is the current list of validators, to achieve this we have two options
+
+- Allow nodes who download a snapshot to self validate it by making so that all the blocks changing validators must be self signed, meaning that it contains the needed signatures at the time when it was merged.
+
+Disadvantages is that we need to request signatures, which is something never needed in the current protocol
+
+- The node asks for a snapshot and keep listening to blocks until block X gets accepted on tezos and because he knows all blocks that happened since X he is already in sync.
+
+Disadvantages needs to wait stuff happening on the main chain, which means waiting a finality to happens on tezos, not fun ;/
