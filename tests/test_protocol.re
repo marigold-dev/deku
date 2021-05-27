@@ -4,15 +4,14 @@ open Protocol;
 
 describe("protocol state", ({test, _}) => {
   let make_address = () => {
-    open Mirage_crypto_pk;
-    let key = Rsa.generate(~bits=2048, ());
-    Rsa.pub_of_priv(key);
+    open Mirage_crypto_ec;
+    let (_key, pub_) = Ed25519.generate();
+    pub_;
   };
   let make_wallet = () => {
-    open Mirage_crypto_pk;
-    let key = Rsa.generate(~bits=2048, ());
-    let t = Rsa.pub_of_priv(key);
-    (key, Wallet.of_address(t));
+    open Mirage_crypto_ec;
+    let (key, pub_) = Ed25519.generate();
+    (key, Wallet.of_address(pub_));
   };
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = make_wallet();

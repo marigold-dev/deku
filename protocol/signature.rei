@@ -1,5 +1,5 @@
 open Helpers;
-open Mirage_crypto_pk;
+open Mirage_crypto_ec;
 
 [@deriving yojson]
 type t;
@@ -16,7 +16,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Rsa.priv, value) => t;
+  let sign: (~key: Ed25519.priv, value) => t;
   // TODO: maybe it should be something else?
   let verify: (~signature: signature, value) => bool;
 };

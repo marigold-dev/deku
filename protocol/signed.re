@@ -1,7 +1,5 @@
 open Helpers;
-open Mirage_crypto;
-open Mirage_crypto_pk;
-module Rsa_sha256 = Rsa.PSS(Hash.SHA256);
+open Mirage_crypto_ec;
 
 [@deriving (yojson, ord)]
 type t('a) = {
@@ -14,18 +12,17 @@ type t('a) = {
 type signed('a) = t('a);
 
 let sign = (~key, data) => {
-  let message = `Message(Cstruct.of_string(Marshal.to_string(data, [])));
-  let `Hex(signature) = Rsa_sha256.sign(~key, message) |> Hex.of_cstruct;
-  {key: Rsa.pub_of_priv(key), signature, data};
+  let message = Cstruct.of_string(Marshal.to_string(data, []));
+  let `Hex(signature) = Ed25519.sign(~key, message) |> Hex.of_cstruct;
+  {key: Address.of_key(key), signature, data};
 };
 let verify = (~key, ~signature, data) => {
-  let message = `Message(Cstruct.of_string(Marshal.to_string(data, [])));
   let.assert () = (
     "invalid signature",
-    Rsa_sha256.verify(
+    Ed25519.verify(
       ~key,
-      ~signature=`Hex(signature) |> Hex.to_cstruct,
-      message,
+      ~msg=Cstruct.of_string(Marshal.to_string(data, [])),
+      `Hex(signature) |> Hex.to_cstruct,
     ),
   );
 

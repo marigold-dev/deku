@@ -1,7 +1,5 @@
 open Helpers;
-open Mirage_crypto;
-open Mirage_crypto_pk;
-module Rsa_sha256 = Rsa.PSS(Hash.SHA256);
+open Mirage_crypto_ec;
 
 [@deriving yojson]
 type t = {
@@ -14,18 +12,18 @@ let compare = (a, b) => String.compare(a.signature, b.signature);
 let public_key = t => t.public_key;
 let sign = (~key, hash) => {
   let signature =
-    `Message(Cstruct.of_string(SHA256.to_string(hash)))
+    Cstruct.of_string(SHA256.to_string(hash))
     // TODO: isn't this double hashing? Seems weird
-    |> Rsa_sha256.sign(~key)
+    |> Ed25519.sign(~key)
     |> Cstruct.to_string;
-  let public_key = Rsa.pub_of_priv(key);
+  let public_key = Ed25519.pub_of_priv(key);
   {signature, public_key};
 };
 let verify = (~signature, hash) =>
-  Rsa_sha256.verify(
+  Ed25519.verify(
     ~key=signature.public_key,
-    ~signature=Cstruct.of_string(signature.signature),
-    `Message(Cstruct.of_string(SHA256.to_string(hash))),
+    ~msg=Cstruct.of_string(SHA256.to_string(hash)),
+    Cstruct.of_string(signature.signature),
   );
 module type S = {
   type value;
@@ -35,7 +33,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Rsa.priv, value) => t;
+  let sign: (~key: Ed25519.priv, value) => t;
   let verify: (~signature: signature, value) => bool;
 };
 module Make = (P: {

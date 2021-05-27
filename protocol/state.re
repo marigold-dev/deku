@@ -41,5 +41,6 @@ let hash = t => {
       t.last_block_hash,
       t.state_root_hash,
     ));
+  // TODO: this probably should not be here
   SHA256.Magic.hash(Yojson.Safe.to_string(json));
 };

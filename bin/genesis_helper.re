@@ -29,10 +29,9 @@ let gen_credentials = () => {
   };
 
   let make_identity_file = (~file, ~uri) => {
-    open Mirage_crypto_pk;
+    open Mirage_crypto_ec;
     let uri = Uri.of_string(uri);
-    let key = Rsa.generate(~bits=2048, ());
-    let t = Rsa.pub_of_priv(key);
+    let (key, t) = Ed25519.generate();
     let identity = {key, t, uri};
     identity_to_yojson(identity)
     |> Yojson.Safe.pretty_to_string

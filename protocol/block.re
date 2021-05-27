@@ -6,7 +6,7 @@ type t = {
   // TODO: validate this hash on yojson
   // TODO: what if block hash was a merkle tree of previous_hash + state_root_hash + block_data
   // block header
-  // sha256(state_root_hash, payload_hash)
+  // sha256(state_root_hash + payload_hash)
   hash: SHA256.t,
   // TODO: is it okay to payload_hash to appears on both sides?
   // sha256(json of all fields including payload hash)
