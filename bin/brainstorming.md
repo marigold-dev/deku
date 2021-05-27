@@ -190,6 +190,8 @@ But we need a way to proof to the new validator what is the current list of vali
 
 - Allow nodes who download a snapshot to self validate it by making so that all the blocks changing validators must be self signed, meaning that it contains the needed signatures at the time when it was merged.
 
+**this probably is bad because people can lie and change the history with this, imagine 2/3 of old validators are upset, they can make themselves the new validators**
+
 Disadvantages is that we need to request signatures, which is something never needed in the current protocol
 
 - The node asks for a snapshot and keep listening to blocks until block X gets accepted on tezos and because he knows all blocks that happened since X he is already in sync.
