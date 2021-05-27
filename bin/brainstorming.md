@@ -169,3 +169,13 @@ if someone votes 2 times, it gets slashed
 if 2/3 votes 2 times, then all the validators that voted 2/3 loose their money and
 everyone that did a double spend looses all their money
 if 2/3 of the chain is corrupted
+
+---
+
+## Out of order execution
+
+**caution**
+
+Because we have multicore we can compute in parallel, and assume that a block will be signed, so applying it in parallel and switching if it actually get's signed.
+
+The same is valid for the block producer, who can produce and apply a new block because if he is not doing anything wrong, it's quite likely to be the signed block.
