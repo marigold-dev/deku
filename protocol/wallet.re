@@ -1,12 +1,25 @@
-[@deriving (ord, yojson)]
-type t = Address.t;
+open Helpers;
+open Mirage_crypto_ec;
 
-let of_address = t => t;
-let get_address = t => t;
+[@deriving (ord, yojson)]
+type t = SHA256.t;
+
+let to_string = v => v |> to_yojson |> Yojson.Safe.to_string;
+
+let of_address = pubkey => {
+  let to_yojson = [%to_yojson: Address.t];
+  pubkey |> to_yojson |> Yojson.Safe.to_string |> SHA256.hash;
+};
+let pubkey_matches_wallet = (key, wallet) => {
+  of_address(key) == wallet;
+};
+let get_pub_key = Ed25519.pub_of_priv;
+
+//let get_address = t => t;
 
 module Map = {
   include Map.Make({
-    type t = Address.t;
+    type t = SHA256.t;
     let compare = compare;
   });
   let to_yojson = (f, t) =>
