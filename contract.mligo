@@ -35,19 +35,18 @@ let check_hash
 let rec check_signatures
   (validators, signatures, block_hash, remaining:
    validators * signatures * bytes * int) : unit =
-    match (validators, signatures) with
-    | ([], []) ->
-        if remaining > 0
-        then failwith "not enough sig"
-        else ()
-    | ((v_hd :: v_tl), (sig_hd :: sig_tl)) ->
+    match (remaining, validators, signatures) with
+    (* already signed *)
+    | (0, _, _) -> ()
+    | (_, [], []) -> failwith "not enough sig"
+    | (_, (v_hd :: v_tl), (sig_hd :: sig_tl)) ->
       (match sig_hd with
       | Some signature ->
         if Crypto.check v_hd.key signature block_hash
         then check_signatures (v_tl, sig_tl, block_hash, (remaining - 1))
         else failwith "bad sig"
       | None -> check_signatures (v_tl, sig_tl, block_hash, remaining))
-    | (_, _) -> failwith "validators and sigs have diff size"
+    | (_, _, _) -> failwith "validators and sigs have diff size"
 
 let check_storage_signatures
   (storage: storage)
