@@ -23,7 +23,8 @@ type t = {
   validators_uri: Address_map.t(Uri.t),
 };
 
-let make: (~identity: identity) => t;
+let make:
+  (~identity: identity, ~initial_validators_uri: Address_map.t(Uri.t)) => t;
 let apply_block:
   (t, Block.t) =>
   result(t, [> | `Invalid_block_when_applying | `Invalid_state_root_hash]);

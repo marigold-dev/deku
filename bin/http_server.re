@@ -169,8 +169,18 @@ let node = {
 
   let.await validators = read_validators("validators.json");
   let validators = Result.get_ok(validators);
-
-  let node = State.make(~identity);
+  let initial_validators_uri =
+    List.fold_left(
+      (validators_uri, validator) =>
+        State.Address_map.add(
+          validator.Validators.address,
+          validator.uri,
+          validators_uri,
+        ),
+      State.Address_map.empty,
+      validators,
+    );
+  let node = State.make(~identity, ~initial_validators_uri);
   let node = {
     ...node,
     protocol: {

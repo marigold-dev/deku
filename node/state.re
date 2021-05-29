@@ -27,7 +27,7 @@ type t = {
   validators_uri: Address_map.t(Uri.t),
 };
 
-let make = (~identity) => {
+let make = (~identity, ~initial_validators_uri) => {
   let initial_block = Block.genesis;
   let initial_protocol = Protocol.make(~initial_block);
   let initial_signatures = Signatures.make(~self_key=identity.t);
@@ -50,7 +50,7 @@ let make = (~identity) => {
     snapshots: initial_snapshots,
     // networking
     uri_state: Uri_map.empty,
-    validators_uri: Address_map.empty,
+    validators_uri: initial_validators_uri,
   };
 };
 
