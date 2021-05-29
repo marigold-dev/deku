@@ -114,6 +114,18 @@ let handle_protocol_snapshot =
       });
     },
   );
+let handle_request_nonce =
+  handle_request(
+    (module Request_nonce),
+    (update_state, {uri}) => {
+      let nonce = Flows.request_nonce(Server.get_state(), update_state, uri);
+      Ok({nonce: nonce});
+    },
+  );
+let handle_register_uri =
+  handle_request((module Register_uri), (update_state, {uri, signature}) =>
+    Flows.register_uri(Server.get_state(), update_state, ~uri, ~signature)
+  );
 
 module Utils = {
   let read_file = file => {
@@ -179,6 +191,8 @@ let _server =
   |> handle_received_signature
   |> handle_block_by_hash
   |> handle_protocol_snapshot
+  |> handle_request_nonce
+  |> handle_register_uri
   |> App.start
   |> Lwt_main.run;
 

@@ -67,6 +67,7 @@ let broadcast = (endpoint, state, data) =>
        )
      );
 
+// protocol endpoints
 module Signature_spec = {
   [@deriving yojson]
   type request = {
@@ -113,8 +114,30 @@ module Protocol_snapshot = {
   let path = "/protocol-snapshot";
 };
 
+// networking endpoints
+module Request_nonce = {
+  [@deriving yojson]
+  type request = {uri: Uri.t};
+  [@deriving yojson]
+  type response = {nonce: SHA256.t};
+  let path = "/request-nonce";
+};
+
+module Register_uri = {
+  [@deriving yojson]
+  type request = {
+    uri: Uri.t,
+    signature: Signature.t,
+  };
+  [@deriving yojson]
+  type response = unit;
+  let path = "/register-uri";
+};
+
 let request_block_by_hash = request((module Block_by_hash_spec));
 let request_protocol_snapshot = request((module Protocol_snapshot));
+let request_nonce = request((module Request_nonce));
+let request_register_uri = request((module Register_uri));
 let broadcast_signature = broadcast((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast((module Block_and_signature_spec));

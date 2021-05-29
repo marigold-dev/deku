@@ -8,6 +8,8 @@ type identity = {
   uri: Uri.t,
 };
 
+module Address_map: Map.S with type key = Address.t;
+module Uri_map: Map.S with type key = Uri.t;
 type t = {
   identity,
   pending_side_ops: list(Operation.Side_chain.Self_signed.t),
@@ -16,6 +18,9 @@ type t = {
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
   snapshots: Snapshots.t,
+  // networking
+  uri_state: Uri_map.t(string),
+  validators_uri: Address_map.t(Uri.t),
 };
 
 let make: (~identity: identity) => t;

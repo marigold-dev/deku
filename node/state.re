@@ -8,6 +8,9 @@ type identity = {
   uri: Uri.t,
 };
 
+module Address_map = Map.Make(Address);
+module Uri_map = Map.Make(Uri);
+
 type t = {
   identity,
   pending_side_ops: list(Operation.Side_chain.Self_signed.t),
@@ -16,6 +19,12 @@ type t = {
   protocol: Protocol.t,
   last_applied_block_timestamp: float,
   snapshots: Snapshots.t,
+  // networking
+  // TODO: move this to somewhere else but the string means the nonce needed
+  // TODO: someone right now can spam the network to prevent uri changes
+  // TODO: clean this once in a while
+  uri_state: Uri_map.t(string),
+  validators_uri: Address_map.t(Uri.t),
 };
 
 let make = (~identity) => {
@@ -39,6 +48,9 @@ let make = (~identity) => {
     last_applied_block_timestamp: 0.0,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    // networking
+    uri_state: Uri_map.empty,
+    validators_uri: Address_map.empty,
   };
 };
 

@@ -306,3 +306,39 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
+
+let request_nonce = (state, update_state, uri) => {
+  // TODO: nonce size, think about this, 32 is just magic because of SHA256
+  let nonce = Mirage_crypto_rng.generate(32) |> Cstruct.to_string;
+  let _state =
+    update_state(
+      Node.{
+        ...state,
+        uri_state: Node.Uri_map.add(uri, nonce, state.uri_state),
+      },
+    );
+  SHA256.hash(nonce);
+};
+
+let register_uri = (state, update_state, ~uri, ~signature) => {
+  // TODO: check if it's a validator
+  let.ok nonce =
+    Node.Uri_map.find_opt(uri, state.Node.uri_state)
+    |> Option.to_result(~none=`Unknown_uri);
+  let.assert () = (
+    `Invalid_nonce_signature,
+    Signature.verify(~signature, SHA256.hash(nonce)),
+  );
+
+  let _state =
+    update_state({
+      ...state,
+      validators_uri:
+        Node.Address_map.add(
+          Signature.public_key(signature),
+          uri,
+          state.validators_uri,
+        ),
+    });
+  Ok();
+};
