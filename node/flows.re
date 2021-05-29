@@ -306,6 +306,3 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
-
-let is_signed_block_hash = (state, hash) =>
-  Block_pool.is_signed(~hash, state.Node.block_pool);
