@@ -58,7 +58,9 @@ let request =
 
 let broadcast = (endpoint, state, data) =>
   Validators.validators(state.protocol.validators)
-  |> List.map((Validators.{uri, _}) => uri)
+  |> List.filter_map((Validators.{address, _}) =>
+       State.Address_map.find_opt(address, state.validators_uri)
+     )
   |> Lwt_list.iter_s(uri =>
        Lwt.catch(
          () => post(endpoint, data, uri),

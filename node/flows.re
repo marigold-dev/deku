@@ -111,18 +111,24 @@ let rec request_protocol_snapshot = tries => {
       let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
       let validators = Validators.validators(state.protocol.validators);
-      let rec safe_validator = () => {
+      let rec safe_validator_uri = () => {
         let validator =
           List.nth(validators, random_int(List.length(validators)));
-        if (state.Node.identity.uri == validator.uri) {
-          safe_validator();
+        if (state.Node.identity.t == validator.address) {
+          safe_validator_uri();
         } else {
-          validator;
+          // TODO: this blown up if there is no validator uri registered
+          switch (
+            Node.Address_map.find_opt(validator.address, state.validators_uri)
+          ) {
+          | Some(uri) => uri
+          | None => safe_validator_uri()
+          };
         };
       };
-      let validator = safe_validator();
+      let validator_uri = safe_validator_uri();
       // TODO: validate hash and signatures
-      Networking.request_protocol_snapshot((), validator.uri);
+      Networking.request_protocol_snapshot((), validator_uri);
     },
     _exn => {
       Printexc.print_backtrace(stdout);
