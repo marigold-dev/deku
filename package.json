@@ -13,7 +13,8 @@
     "@opam/opium": "*",
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
-    "@opam/hex": "*"
+    "@opam/hex": "*",
+    "@opam/tezos-micheline": "*"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
