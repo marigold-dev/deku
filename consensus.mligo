@@ -1,3 +1,4 @@
+(* store hash *)
 type validator = key
 type validators = validator list
 
@@ -27,7 +28,7 @@ type root_hash_update = {
   signatures: signatures;
 }
 
-(* (pair (pair (pair int bytes) bytes) bytes) *)
+(* (pair (pair int bytes) (pair bytes validators)) *)
 (* TODO: performance, put this structures in an optimized way *)
 type block_hash_structure = {
   block_height: int;
@@ -52,9 +53,9 @@ let check_hash (root_hash_update: root_hash_update) =
     block_payload_hash = root_hash_update.block_payload_hash;
     state_hash = root_hash_update.state_hash;
     (* TODO: should we do pack of list? *)
-    validators_hash = Crypto.sha256 (Bytes.pack root_hash_update.validators)
+    validators_hash = Crypto.blake2b (Bytes.pack root_hash_update.validators)
   } in
-  let calculated_hash = Crypto.sha256 (Bytes.pack block_hash_structure) in
+  let calculated_hash = Crypto.blake2b (Bytes.pack block_hash_structure) in
   assert_msg (
     "invalid block hash",
     root_hash_update.block_hash = calculated_hash
