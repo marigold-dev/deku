@@ -11,7 +11,9 @@ describe("protocol state", ({test, _}) => {
   let make_wallet = () => {
     open Mirage_crypto_ec;
     let (key, pub_) = Ed25519.generate();
-    (key, Wallet.of_address(pub_));
+    let wallet_address = Wallet.of_address(pub_);
+
+    (key, wallet_address);
   };
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = make_wallet();
@@ -27,7 +29,7 @@ describe("protocol state", ({test, _}) => {
       let.default () =
         state.validators
         |> Validators.add({
-             address: Wallet.get_address(wallet),
+             address: Wallet.get_pub_key(key_wallet),
              uri: Uri.of_string("http://localhost:8080"),
            });
       validators;

@@ -54,7 +54,7 @@ let apply_side_chain = (state: t, signed_operation) => {
     raise(Noop("really old operation"));
   };
 
-  if (signed_operation.key != Wallet.get_address(operation.source)) {
+  if (!Wallet.pubkey_matches_wallet(signed_operation.key, operation.source)) {
     raise(Noop("invalid key signed the operation"));
   };
 
