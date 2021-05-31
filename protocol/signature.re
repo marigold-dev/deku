@@ -12,7 +12,7 @@ let compare = (a, b) => String.compare(a.signature, b.signature);
 let public_key = t => t.public_key;
 let sign = (~key, hash) => {
   let signature =
-    Cstruct.of_string(BLAKE2B.to_string(hash))
+    Cstruct.of_string(BLAKE2B.to_raw_string(hash))
     // TODO: isn't this double hashing? Seems weird
     |> Ed25519.sign(~key)
     |> Cstruct.to_string;
@@ -22,7 +22,7 @@ let sign = (~key, hash) => {
 let verify = (~signature, hash) =>
   Ed25519.verify(
     ~key=signature.public_key,
-    ~msg=Cstruct.of_string(BLAKE2B.to_string(hash)),
+    ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
     Cstruct.of_string(signature.signature),
   );
 module type S = {
