@@ -61,13 +61,18 @@ let (hash, verify) = {
         side_chain_ops,
       ));
     let payload = Yojson.Safe.to_string(json);
-    let payload_hash = BLAKE2B.hash(payload);
+    let block_payload_hash = BLAKE2B.hash(payload);
     // TODO: is it okay to have this string concatened here?
     // TODO: maybe should also be previous?
 
     let data_to_hash =
-      BLAKE2B.(to_string(state_root_hash) ++ to_string(payload_hash));
-    f(data_to_hash, payload_hash);
+      Talk_tezos.Consensus.data_to_hash_block(
+        ~block_height,
+        ~block_payload_hash,
+        ~state_root_hash,
+        ~validators_hash,
+      );
+    f(data_to_hash, block_payload_hash);
   };
   let hash =
     apply((data_to_hash, payload_hash) =>

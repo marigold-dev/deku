@@ -15,10 +15,10 @@ let list = l => Seq(-1, l);
 let pair = (l, r) => Prim(-1, D_Pair, [l, r], []);
 let key = k => Bytes(-1, Ed25519.Public_key.to_tezos_bytes(k));
 let block_hash_structure =
-    (~block_height, ~block_payload_hash, ~state_hash, ~validators_hash) =>
+    (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
   pair(
     pair(int(block_height), hash(block_payload_hash)),
-    pair(hash(state_hash), hash(validators_hash)),
+    pair(hash(state_root_hash), hash(validators_hash)),
   );
 
 let pack = data =>
@@ -29,14 +29,13 @@ let pack = data =>
 let hash_validators = validators =>
   BLAKE2B.hash(pack(list(List.map(key, validators))));
 
-let hash_block =
-    (~block_height, ~block_payload_hash, ~state_hash, ~validators_hash) =>
+let data_to_hash_block =
+    (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
   pack(
     block_hash_structure(
       ~block_height,
       ~block_payload_hash,
-      ~state_hash,
+      ~state_root_hash,
       ~validators_hash,
     ),
-  )
-  |> BLAKE2B.hash;
+  );
