@@ -20,6 +20,7 @@ type t = {
      ignore like on the hashing function, but it still bothers me */
   // local consensus(not hashed)
   last_state_root_update: float,
+  last_applied_block_timestamp: float,
 };
 
 let hash = t => {

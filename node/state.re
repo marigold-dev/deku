@@ -17,7 +17,6 @@ type t = {
   pending_main_ops: list(Operation.Main_chain.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
-  last_applied_block_timestamp: float,
   snapshots: Snapshots.t,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
@@ -45,7 +44,6 @@ let make = (~identity, ~initial_validators_uri) => {
     pending_side_ops: [],
     pending_main_ops: [],
     block_pool: initial_block_pool,
-    last_applied_block_timestamp: 0.0,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
     // networking
@@ -165,6 +163,7 @@ let load_snapshot =
       last_block_hash,
       state_root_hash,
       last_state_root_update: 0.0,
+      last_applied_block_timestamp: 0.0,
     };
   let.ok protocol =
     fold_left_ok(

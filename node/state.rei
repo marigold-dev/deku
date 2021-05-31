@@ -16,7 +16,6 @@ type t = {
   pending_main_ops: list(Operation.Main_chain.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
-  last_applied_block_timestamp: float,
   snapshots: Snapshots.t,
   // networking
   uri_state: Uri_map.t(string),

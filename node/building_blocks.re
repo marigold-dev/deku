@@ -44,22 +44,10 @@ let is_signed_by_self = (state, ~hash) => {
     Block_pool.find_signatures(~hash, state.Node.block_pool);
   Some(Signatures.is_self_signed(signatures));
 };
-let get_current_block_producer = state =>
-  if (state.Node.last_applied_block_timestamp == 0.0) {
-    None;
-  } else {
-    // TODO: this is clearly dumb
-    let rec next_until = (validators, diff) =>
-      diff < 10.0
-        ? validators : next_until(Validators.next(validators), diff -. 10.0);
-    let diff = Unix.time() -. state.Node.last_applied_block_timestamp;
-    let validators = next_until(state.protocol.validators, diff);
-    Validators.current(validators);
-  };
 
 let is_current_producer = (state, ~key) => {
   let.default () = false;
-  let.some current_producer = get_current_block_producer(state);
+  let.some current_producer = get_current_block_producer(state.Node.protocol);
   Some(current_producer.address == key);
 };
 
@@ -125,12 +113,7 @@ let clean = (state, update_state, block) => {
   let pending_side_ops =
     state.pending_side_ops |> List.filter(side_is_in_block);
   // TODO: clean old blocks and old signatures
-  update_state({
-    ...state,
-    pending_main_ops,
-    pending_side_ops,
-    last_applied_block_timestamp: Unix.time(),
-  });
+  update_state({...state, pending_main_ops, pending_side_ops});
 };
 
 // networking functions

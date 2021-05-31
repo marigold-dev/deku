@@ -127,6 +127,7 @@ let apply_block = (state, block) => {
     last_state_root_update:
       block.state_root_hash != state.state_root_hash
         ? Unix.time() : state.last_state_root_update,
+    last_applied_block_timestamp: Unix.time(),
     state_root_hash: block.state_root_hash,
     validators_hash: block.validators_hash,
   };
@@ -146,6 +147,7 @@ let make = (~initial_block) => {
     last_block_hash: initial_block.Block.previous_hash,
     state_root_hash: initial_block.Block.state_root_hash,
     last_state_root_update: 0.0,
+    last_applied_block_timestamp: 0.0,
   };
   apply_block(empty, initial_block);
 };
@@ -165,3 +167,16 @@ let apply_block = (state, block) => {
 };
 // TODO: this changes the state root hash so bad
 let next = t => {...t, validators: Validators.next(t.validators)};
+
+let get_current_block_producer = state =>
+  if (state.last_applied_block_timestamp == 0.0) {
+    None;
+  } else {
+    // TODO: this is clearly dumb
+    let rec next_until = (validators, diff) =>
+      diff < 10.0
+        ? validators : next_until(Validators.next(validators), diff -. 10.0);
+    let diff = Unix.time() -. state.last_applied_block_timestamp;
+    let validators = next_until(state.validators, diff);
+    Validators.current(validators);
+  };
