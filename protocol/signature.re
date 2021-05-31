@@ -11,6 +11,8 @@ type t = {
 let compare = (a, b) => String.compare(a.signature, b.signature);
 let public_key = t => t.public_key;
 let sign = (~key, hash) => {
+  // double hash because tezos always uses blake2b on CHECK_SIGNATURE
+  let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   let signature =
     Cstruct.of_string(BLAKE2B.to_raw_string(hash))
     // TODO: isn't this double hashing? Seems weird
@@ -19,12 +21,14 @@ let sign = (~key, hash) => {
   let public_key = Ed25519.pub_of_priv(key);
   {signature, public_key};
 };
-let verify = (~signature, hash) =>
+let verify = (~signature, hash) => {
+  let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
     ~key=signature.public_key,
     ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
     Cstruct.of_string(signature.signature),
   );
+};
 module type S = {
   type value;
   type signature = t;
