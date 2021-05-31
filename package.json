@@ -14,7 +14,8 @@
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
     "@opam/hex": "*",
-    "@opam/tezos-micheline": "*"
+    "@opam/tezos-micheline": "8.3",
+    "@opam/digestif": "*"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
