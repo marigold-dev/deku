@@ -67,7 +67,7 @@ let rec check_signatures
     match (validators, signatures) with
     (* already signed *)
     | ([], []) ->
-      if not remaining = 0 then
+      if remaining > 0 then
         failwith "not enough signatures"
     | ((_ :: v_tl), (None :: sig_tl)) ->
       check_signatures (v_tl, sig_tl, block_hash, remaining)
