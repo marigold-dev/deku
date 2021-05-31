@@ -8,7 +8,9 @@ type t = {
   // TODO: more efficient lookup on included_operations
   // TODO: is this part of the protocol?
   included_operations: Operation_side_chain_set.t,
+  // consensus
   validators: Validators.t,
+  validators_hash: BLAKE2B.t,
   // shared consensus
   block_height: int64,
   last_block_hash: BLAKE2B.t,
@@ -27,6 +29,7 @@ let hash = t => {
       Ledger.t,
       Operation_side_chain_set.t,
       Validators.t,
+      BLAKE2B.t,
       int64,
       BLAKE2B.t,
       BLAKE2B.t,
@@ -37,6 +40,7 @@ let hash = t => {
       t.ledger,
       t.included_operations,
       t.validators,
+      t.validators_hash,
       t.block_height,
       t.last_block_hash,
       t.state_root_hash,

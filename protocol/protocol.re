@@ -128,6 +128,7 @@ let apply_block = (state, block) => {
       block.state_root_hash != state.state_root_hash
         ? Unix.time() : state.last_state_root_update,
     state_root_hash: block.state_root_hash,
+    validators_hash: block.validators_hash,
   };
 };
 
@@ -136,6 +137,7 @@ let make = (~initial_block) => {
     ledger: Ledger.empty,
     included_operations: Operation_side_chain_set.empty,
     validators: Validators.empty,
+    validators_hash: Validators.hash(Validators.empty),
     block_height: Int64.sub(initial_block.Block.block_height, 1L),
     /* because this calls apply_block internally
        it requires some care to ensure all fields

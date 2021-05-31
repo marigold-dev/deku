@@ -12,6 +12,7 @@ type t = {
   // sha256(json of all fields including payload hash)
   payload_hash: BLAKE2B.t,
   state_root_hash: BLAKE2B.t,
+  validators_hash: BLAKE2B.t,
   previous_hash: BLAKE2B.t,
   // block data
   author: Address.t,
@@ -30,6 +31,7 @@ let (hash, verify) = {
       (
         f,
         ~state_root_hash,
+        ~validators_hash,
         ~previous_hash,
         ~author,
         ~block_height,
@@ -38,6 +40,7 @@ let (hash, verify) = {
       ) => {
     let to_yojson = [%to_yojson:
       (
+        BLAKE2B.t,
         BLAKE2B.t,
         BLAKE2B.t,
         // block data
@@ -50,6 +53,7 @@ let (hash, verify) = {
     let json =
       to_yojson((
         state_root_hash,
+        validators_hash,
         previous_hash,
         author,
         block_height,
@@ -79,6 +83,7 @@ let (hash, verify) = {
 let make =
     (
       ~state_root_hash,
+      ~validators_hash,
       ~previous_hash,
       ~author,
       ~block_height,
@@ -88,6 +93,7 @@ let make =
   let (hash, payload_hash) =
     hash(
       ~state_root_hash,
+      ~validators_hash,
       ~previous_hash,
       ~author,
       ~block_height,
@@ -100,6 +106,7 @@ let make =
     previous_hash,
 
     state_root_hash,
+    validators_hash,
     author,
     block_height,
     main_chain_ops,
@@ -113,6 +120,7 @@ let of_yojson = json => {
     verify(
       ~hash=block.hash,
       ~state_root_hash=block.state_root_hash,
+      ~validators_hash=block.validators_hash,
       ~previous_hash=block.previous_hash,
       ~author=block.author,
       ~block_height=block.block_height,
@@ -128,7 +136,8 @@ let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 let genesis =
   make(
     ~previous_hash=BLAKE2B.Magic.hash("tuturu").hash,
-    ~state_root_hash=BLAKE2B.Magic.hash("mayuushi-desu").hash,
+    ~state_root_hash=BLAKE2B.Magic.hash("mayuushi").hash,
+    ~validators_hash=BLAKE2B.Magic.hash("desu").hash,
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
@@ -149,14 +158,18 @@ let can_produce_with_new_state_root_hash = state =>
   Unix.time()
   -. state.State.last_state_root_update
   -. avoid_jitter >= state_root_hash_epoch;
-let produce = (~state) =>
+let produce = (~state) => {
+  let update_state_hashes = can_produce_with_new_state_root_hash(state);
   make(
     ~previous_hash=state.State.last_block_hash,
     ~state_root_hash=
-      can_produce_with_new_state_root_hash(state)
-        ? State.hash(state).hash : state.state_root_hash,
+      update_state_hashes ? State.hash(state).hash : state.state_root_hash,
+    ~validators_hash=
+      update_state_hashes
+        ? Validators.hash(state.validators) : state.validators_hash,
     ~block_height=Int64.add(state.block_height, 1L),
   );
+};
 
 // TODO: this shouldn't be an open
 open Signature.Make({

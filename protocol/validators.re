@@ -48,3 +48,8 @@ let remove = (validator, t) => {
 
   {current: new_proposer, validators: new_validators};
 };
+
+let hash = t => {
+  let validators = List.map(t => t.address, t.validators);
+  Talk_tezos.Consensus.hash_validators(validators);
+};
