@@ -151,6 +151,7 @@ let make = (~initial_block) => {
   };
   apply_block(empty, initial_block);
 };
+let folder = ref(None);
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
   let (valid_hash, hash) =
@@ -163,6 +164,14 @@ let apply_block = (state, block) => {
     };
   let.assert () = (`Invalid_state_root_hash, valid_hash);
   let state = apply_block(state, block);
+  switch (folder^) {
+  | Some(folder) =>
+    let oc = open_out_bin(folder ++ "/state.bin");
+    Marshal.to_channel(oc, state, []);
+    Stdlib.flush(oc);
+    close_out(oc);
+  | None => ()
+  };
   Ok((state, hash));
 };
 // TODO: this changes the state root hash so bad

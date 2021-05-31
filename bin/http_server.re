@@ -135,8 +135,8 @@ module Utils = {
     await(lines |> String.concat("\n"));
   };
 
-  let read_identity_file = file => {
-    let.await file_buffer = read_file(file);
+  let read_identity_file = folder => {
+    let.await file_buffer = read_file(folder ++ "/identity.json");
     await(
       try({
         let json = Yojson.Safe.from_string(file_buffer);
@@ -147,8 +147,8 @@ module Utils = {
     );
   };
   // TODO: write only file system signed by identity key and in binary identity key
-  let read_validators = file => {
-    let.await file_buffer = read_file(file);
+  let read_validators = folder => {
+    let.await file_buffer = read_file(folder ++ "/validators.json");
     await(
       try({
         let json = Yojson.Safe.from_string(file_buffer);
@@ -162,12 +162,10 @@ module Utils = {
 
 let node = {
   open Utils;
-  let identity_file =
-    Array.length(Sys.argv) >= 2 ? Sys.argv[1] : "identity.json";
-  let.await identity = read_identity_file(identity_file);
+  let folder = Sys.argv[1];
+  let.await identity = read_identity_file(folder);
   let identity = Result.get_ok(identity);
-
-  let.await validators = read_validators("validators.json");
+  let.await validators = read_validators(folder);
   let validators = Result.get_ok(validators);
   let initial_validators_uri =
     List.fold_left(
@@ -189,6 +187,19 @@ let node = {
         List.fold_right(Validators.add, validators, Validators.empty),
     },
   };
+  let state_bin = folder ++ "/state.bin";
+  let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
+  let protocol =
+    if (state_bin_exists) {
+      let ic = open_in_bin(state_bin);
+      let protocol = Marshal.from_channel(ic);
+      close_in(ic);
+      protocol;
+    } else {
+      node.protocol;
+    };
+  let node = {...node, protocol};
+  Protocol.folder := Some(folder);
   await(node);
 };
 let node = node |> Lwt_main.run;
