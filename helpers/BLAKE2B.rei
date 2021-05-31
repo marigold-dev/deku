@@ -1,6 +1,8 @@
 [@deriving yojson]
 type t;
 let to_string: t => string;
+/** this is a leaky abstraction */
+let to_raw_string: t => string;
 let compare: (t, t) => int;
 
 let hash: string => t;

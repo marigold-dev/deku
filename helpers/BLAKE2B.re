@@ -1,8 +1,8 @@
-open Digestif.BLAKE2B;
-
+include Digestif.Make_BLAKE2B({
+  let digest_size = 32;
+});
 let (let.ok) = Result.bind;
 
-type t = Keyed.t;
 let to_yojson = str => `String(to_hex(str));
 let of_yojson = json => {
   let.ok hex = [%of_yojson: string](json);
@@ -10,6 +10,7 @@ let of_yojson = json => {
   | Invalid_argument(invalid) => Error(invalid)
   };
 };
+let to_raw_string = to_raw_string;
 let to_string = to_hex;
 // TODO: check the unsafe here
 let compare = unsafe_compare;
