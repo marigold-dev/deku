@@ -136,6 +136,21 @@ module Register_uri = {
   let path = "/register-uri";
 };
 
+module Data_to_smart_contract = {
+  [@deriving yojson]
+  type request = unit;
+  [@deriving yojson]
+  type response = {
+    block_hash: BLAKE2B.t,
+    block_height: int64,
+    block_payload_hash: BLAKE2B.t,
+    state_hash: BLAKE2B.t,
+    validators: list(string),
+    signatures: list(string),
+  };
+  let path = "/data-to-smart-contract";
+};
+
 let request_block_by_hash = request((module Block_by_hash_spec));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let request_nonce = request((module Request_nonce));

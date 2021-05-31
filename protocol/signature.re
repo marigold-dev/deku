@@ -21,6 +21,12 @@ let sign = (~key, hash) => {
   let public_key = Ed25519.pub_of_priv(key);
   {signature, public_key};
 };
+let signature_to_b58check = t => {
+  open Talk_tezos;
+  let prefix = Base58.Prefix.ed25519_signature;
+  let to_raw = t => t.signature;
+  Base58.simple_encode(~prefix, ~to_raw, t);
+};
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(

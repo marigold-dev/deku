@@ -8,6 +8,7 @@ let public_key: t => Address.t;
 
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
+let signature_to_b58check: t => string;
 module type S = {
   type value;
   type signature = t;

@@ -126,7 +126,32 @@ let handle_register_uri =
   handle_request((module Register_uri), (update_state, {uri, signature}) =>
     Flows.register_uri(Server.get_state(), update_state, ~uri, ~signature)
   );
+let handle_data_to_smart_contract =
+  handle_request(
+    (module Data_to_smart_contract),
+    (_, ()) => {
+      let state = Server.get_state();
+      let block = state.snapshots.last_block;
+      let validators =
+        state.protocol.validators
+        |> Validators.validators
+        |> List.map(validator => validator.Validators.address)
+        |> List.map(Talk_tezos.Ed25519.Public_key.to_b58check);
+      let signatures =
+        state.snapshots.last_block_signatures
+        |> Signatures.to_list
+        |> List.map(Signature.signature_to_b58check);
 
+      Ok({
+        block_hash: block.hash,
+        block_height: block.block_height,
+        block_payload_hash: block.payload_hash,
+        state_hash: block.state_root_hash,
+        validators,
+        signatures,
+      });
+    },
+  );
 module Utils = {
   let read_file = file => {
     let.await ic = Lwt_io.open_file(~mode=Input, file);
@@ -214,6 +239,7 @@ let _server =
   |> handle_protocol_snapshot
   |> handle_request_nonce
   |> handle_register_uri
+  |> handle_data_to_smart_contract
   |> App.start
   |> Lwt_main.run;
 
