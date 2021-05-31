@@ -150,12 +150,12 @@ let genesis =
   );
 
 // TODO: move this to a global module
-let state_root_hash_epoch = 6.0;
+let state_root_hash_epoch = 60.0;
 /** to prevent changing the validator just because of network jittering
     this introduce a delay between can receive a block with new state
     root hash and can produce that block
 
-    10s choosen here but any reasonable time will make it */
+    1s choosen here but any reasonable time will make it */
 let avoid_jitter = 1.0;
 let _can_update_state_root_hash = state =>
   Unix.time() -. state.State.last_state_root_update >= state_root_hash_epoch;
