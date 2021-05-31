@@ -67,6 +67,7 @@ let rec check_signatures
     match (validators, signatures) with
     (* already signed *)
     | ([], []) ->
+      (* TODO: this can be short circuited *)
       if remaining > 0 then
         failwith "not enough signatures"
     | ((_ :: v_tl), (None :: sig_tl)) ->
