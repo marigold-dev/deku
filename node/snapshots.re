@@ -7,7 +7,7 @@ open Protocol;
  this ensures that if last_block is signed the
  state snapshot will also be signed */
 type t = {
-  last_snapshot: SHA256.Magic.t(string),
+  last_snapshot: BLAKE2B.Magic.t(string),
   last_block: Block.t,
   last_block_signatures: Signatures.t,
   additional_blocks: list(Block.t),

@@ -127,7 +127,7 @@ let load_snapshot =
   let.assert () = (
     `Snapshots_with_invalid_hash,
     // TODO: stop using magic on both sides
-    SHA256.Magic.verify(~hash=state_root_hash, state_root) |> Result.is_ok,
+    BLAKE2B.Magic.verify(~hash=state_root_hash, state_root) |> Result.is_ok,
   );
 
   let of_yojson = [%of_yojson:
@@ -136,8 +136,8 @@ let load_snapshot =
       Operation_side_chain_set.t,
       Validators.t,
       int64,
-      SHA256.t,
-      SHA256.t,
+      BLAKE2B.t,
+      BLAKE2B.t,
     )
   ];
   let (

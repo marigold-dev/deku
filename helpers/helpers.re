@@ -136,4 +136,4 @@ module Int64_map =
     let compare = Int64.compare;
   });
 
-module SHA256 = SHA256;
+module BLAKE2B = BLAKE2B;

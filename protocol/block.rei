@@ -4,10 +4,10 @@ open Operation;
 [@deriving (yojson, ord)]
 type t =
   pri {
-    hash: SHA256.t,
-    payload_hash: SHA256.t,
-    state_root_hash: SHA256.t,
-    previous_hash: SHA256.t,
+    hash: BLAKE2B.t,
+    payload_hash: BLAKE2B.t,
+    state_root_hash: BLAKE2B.t,
+    previous_hash: BLAKE2B.t,
     author: Address.t,
     block_height: int64,
     main_chain_ops: list(Main_chain.t),
@@ -16,7 +16,7 @@ type t =
 
 let sign: (~key: Address.key, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
-let verify_hash: (~signature: Signature.t, SHA256.t) => bool;
+let verify_hash: (~signature: Signature.t, BLAKE2B.t) => bool;
 let genesis: t;
 let produce:
   (

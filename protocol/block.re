@@ -7,12 +7,12 @@ type t = {
   // TODO: what if block hash was a merkle tree of previous_hash + state_root_hash + block_data
   // block header
   // sha256(state_root_hash + payload_hash)
-  hash: SHA256.t,
+  hash: BLAKE2B.t,
   // TODO: is it okay to payload_hash to appears on both sides?
   // sha256(json of all fields including payload hash)
-  payload_hash: SHA256.t,
-  state_root_hash: SHA256.t,
-  previous_hash: SHA256.t,
+  payload_hash: BLAKE2B.t,
+  state_root_hash: BLAKE2B.t,
+  previous_hash: BLAKE2B.t,
   // block data
   author: Address.t,
   // TODO: do we need a block_height? What is the tradeoffs?
@@ -38,8 +38,8 @@ let (hash, verify) = {
       ) => {
     let to_yojson = [%to_yojson:
       (
-        SHA256.t,
-        SHA256.t,
+        BLAKE2B.t,
+        BLAKE2B.t,
         // block data
         Address.t,
         int64,
@@ -57,21 +57,21 @@ let (hash, verify) = {
         side_chain_ops,
       ));
     let payload = Yojson.Safe.to_string(json);
-    let payload_hash = SHA256.hash(payload);
+    let payload_hash = BLAKE2B.hash(payload);
     // TODO: is it okay to have this string concatened here?
     // TODO: maybe should also be previous?
 
     let data_to_hash =
-      SHA256.(to_string(state_root_hash) ++ to_string(payload_hash));
+      BLAKE2B.(to_string(state_root_hash) ++ to_string(payload_hash));
     f(data_to_hash, payload_hash);
   };
   let hash =
     apply((data_to_hash, payload_hash) =>
-      (SHA256.hash(data_to_hash), payload_hash)
+      (BLAKE2B.hash(data_to_hash), payload_hash)
     );
   let verify = (~hash) =>
     apply((data_to_hash, _payload_hash) =>
-      SHA256.verify(~hash, data_to_hash)
+      BLAKE2B.verify(~hash, data_to_hash)
     );
   (hash, verify);
 };
@@ -123,12 +123,12 @@ let of_yojson = json => {
   Ok(block);
 };
 
-let compare = (a, b) => SHA256.compare(a.hash, b.hash);
+let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
 let genesis =
   make(
-    ~previous_hash=SHA256.Magic.hash("tuturu").hash,
-    ~state_root_hash=SHA256.Magic.hash("mayuushi-desu").hash,
+    ~previous_hash=BLAKE2B.Magic.hash("tuturu").hash,
+    ~state_root_hash=BLAKE2B.Magic.hash("mayuushi-desu").hash,
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],

@@ -90,7 +90,7 @@ let inject_genesis = () => {
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
-    Printf.printf("block: %s\n%!", SHA256.to_string(block.state_root_hash));
+    Printf.printf("block: %s\n%!", BLAKE2B.to_string(block.state_root_hash));
     let signatures =
       validators
       |> List.map(validator => Block.sign(~key=validator.key, block));

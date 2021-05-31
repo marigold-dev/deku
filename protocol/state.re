@@ -11,8 +11,8 @@ type t = {
   validators: Validators.t,
   // shared consensus
   block_height: int64,
-  last_block_hash: SHA256.t,
-  state_root_hash: SHA256.t,
+  last_block_hash: BLAKE2B.t,
+  state_root_hash: BLAKE2B.t,
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just
      ignore like on the hashing function, but it still bothers me */
@@ -28,8 +28,8 @@ let hash = t => {
       Operation_side_chain_set.t,
       Validators.t,
       int64,
-      SHA256.t,
-      SHA256.t,
+      BLAKE2B.t,
+      BLAKE2B.t,
     )
   ];
   let json =
@@ -42,5 +42,5 @@ let hash = t => {
       t.state_root_hash,
     ));
   // TODO: this probably should not be here
-  SHA256.Magic.hash(Yojson.Safe.to_string(json));
+  BLAKE2B.Magic.hash(Yojson.Safe.to_string(json));
 };

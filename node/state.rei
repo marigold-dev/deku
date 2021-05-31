@@ -31,7 +31,7 @@ let apply_block:
 
 let load_snapshot:
   (
-    ~state_root_hash: SHA256.t,
+    ~state_root_hash: BLAKE2B.t,
     ~state_root: string,
     ~additional_blocks: list(Block.t),
     ~last_block: Block.t,

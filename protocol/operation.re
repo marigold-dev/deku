@@ -26,7 +26,7 @@ module Side_chain = {
     | Unfreeze;
   [@deriving (ord, yojson)]
   type t = {
-    hash: SHA256.t,
+    hash: BLAKE2B.t,
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
@@ -35,8 +35,8 @@ module Side_chain = {
   };
 
   let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
-    let SHA256.Magic.{hash, _} =
-      SHA256.Magic.hash((nonce, block_height, source, amount, kind));
+    let BLAKE2B.Magic.{hash, _} =
+      BLAKE2B.Magic.hash((nonce, block_height, source, amount, kind));
     {hash, nonce, block_height, source, kind, amount};
   };
 
@@ -44,7 +44,7 @@ module Side_chain = {
     let.ok {hash, nonce, block_height, source, kind, amount} =
       of_yojson(json);
     let.ok {hash, _} =
-      SHA256.Magic.verify(
+      BLAKE2B.Magic.verify(
         ~hash,
         (nonce, block_height, source, kind, amount),
       );

@@ -1,5 +1,5 @@
 {
-  "checksum": "a4156dd0ec7ca27a52bee261f051a73a",
+  "checksum": "9367d9d4dc2d77b0f1953bde29eb74c1",
   "root": "what@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -41,7 +41,9 @@
         "@opam/mirage-crypto-ec@opam:0.10.1@e7444039",
         "@opam/mirage-crypto@opam:0.10.1@6896a533",
         "@opam/lwt@opam:5.4.0@1ec6dbfd", "@opam/hex@opam:1.4.0@41725494",
-        "@opam/dune@opam:2.8.5@01003f12", "@esy-ocaml/reason@3.7.0@d41d8cd9"
+        "@opam/dune@opam:2.8.5@01003f12",
+        "@opam/digestif@opam:1.0.0@ce08dfe9",
+        "@esy-ocaml/reason@3.7.0@d41d8cd9"
       ],
       "devDependencies": [
         "@reason-native/rely@3.2.1@d41d8cd9",
@@ -3050,6 +3052,40 @@
         "ocaml@github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9@d41d8cd9",
         "@opam/fmt@opam:0.8.9@e0843a5b", "@opam/dune@opam:2.8.5@01003f12",
         "@opam/astring@opam:0.8.5@1300cee8"
+      ]
+    },
+    "@opam/digestif@opam:1.0.0@ce08dfe9": {
+      "id": "@opam/digestif@opam:1.0.0@ce08dfe9",
+      "name": "@opam/digestif",
+      "version": "opam:1.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/29/29450c1fecb93b3c5c19588f8abcbf4891ddf1f84a1bbd3fb860e96994472884#sha256:29450c1fecb93b3c5c19588f8abcbf4891ddf1f84a1bbd3fb860e96994472884",
+          "archive:https://github.com/mirage/digestif/releases/download/v1.0.0/digestif-v1.0.0.tbz#sha256:29450c1fecb93b3c5c19588f8abcbf4891ddf1f84a1bbd3fb860e96994472884"
+        ],
+        "opam": {
+          "name": "digestif",
+          "version": "1.0.0",
+          "path": "esy.lock/opam/digestif.1.0.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9@d41d8cd9",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/eqaf@opam:0.7@5e2a7277", "@opam/dune@opam:2.8.5@01003f12",
+        "@opam/conf-pkg-config@opam:2@de102891",
+        "@opam/bigarray-compat@opam:1.0.0@951830c6",
+        "@opam/base-bytes@opam:base@19d0c2ff",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9@d41d8cd9",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/eqaf@opam:0.7@5e2a7277", "@opam/dune@opam:2.8.5@01003f12",
+        "@opam/bigarray-compat@opam:1.0.0@951830c6",
+        "@opam/base-bytes@opam:base@19d0c2ff"
       ]
     },
     "@opam/data-encoding@opam:0.2@0868556b": {

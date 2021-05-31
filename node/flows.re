@@ -323,7 +323,7 @@ let request_nonce = (state, update_state, uri) => {
         uri_state: Node.Uri_map.add(uri, nonce, state.uri_state),
       },
     );
-  SHA256.hash(nonce);
+  BLAKE2B.hash(nonce);
 };
 
 let register_uri = (state, update_state, ~uri, ~signature) => {
@@ -333,7 +333,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     |> Option.to_result(~none=`Unknown_uri);
   let.assert () = (
     `Invalid_nonce_signature,
-    Signature.verify(~signature, SHA256.hash(nonce)),
+    Signature.verify(~signature, BLAKE2B.hash(nonce)),
   );
 
   let _state =
