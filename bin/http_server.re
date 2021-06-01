@@ -19,10 +19,6 @@ let ignore_some_errors =
   fun
   | Error(#Flows.ignore) => Ok()
   | v => v;
-let log_errors = f =>
-  fun
-  | Ok(_) => ()
-  | Error(err) => print_endline(f(err));
 let handle_request =
     (
       type req,
@@ -236,7 +232,7 @@ let node = {
   await(node);
 };
 let node = node |> Lwt_main.run;
-let server = Node.Server.start(~initial=node);
+let () = Node.Server.start(~initial=node);
 
 let _server =
   App.empty

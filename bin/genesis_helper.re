@@ -75,7 +75,7 @@ let inject_genesis = () => {
     let first = List.nth(validators, 0);
     let state = Protocol.make(~initial_block=Block.genesis);
     let.await state = {
-      let.await validators = read_validators("validators.json");
+      let.await validators = read_validators("0/validators.json");
       let validators = Result.get_ok(validators);
       Lwt.return({
         ...state,
@@ -90,7 +90,17 @@ let inject_genesis = () => {
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
-    Printf.printf("block: %s\n%!", BLAKE2B.to_string(block.state_root_hash));
+    Printf.printf(
+      "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
+      BLAKE2B.to_string(block.hash),
+      BLAKE2B.to_string(block.state_root_hash),
+      block.block_height,
+      state.validators
+      |> Validators.validators
+      |> List.map(validator => validator.Validators.address)
+      |> List.map(Talk_tezos.Ed25519.Public_key.to_b58check)
+      |> String.concat(","),
+    );
     let signatures =
       validators
       |> List.map(validator => Block.sign(~key=validator.key, block));
@@ -125,9 +135,9 @@ let inject_genesis = () => {
   };
 
   let validators = [
-    read_identity_file("identity_0.json"),
-    read_identity_file("identity_1.json"),
-    read_identity_file("identity_2.json"),
+    read_identity_file("0/identity.json"),
+    read_identity_file("1/identity.json"),
+    read_identity_file("2/identity.json"),
     // read_identity_file("identity_3.json"),
   ];
   make_new_block(validators);
