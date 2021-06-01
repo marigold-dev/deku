@@ -44,7 +44,7 @@ let assert_msg ((message, condition): (string * bool)) =
 let check_block_height (storage: storage) (block_height: int) =
   assert_msg (
     "old block height",
-    storage.current_block_height >= block_height
+    block_height > storage.current_block_height
   )
 
 let check_hash (root_hash_update: root_hash_update) =
