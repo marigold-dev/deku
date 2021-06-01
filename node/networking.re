@@ -146,7 +146,7 @@ module Data_to_smart_contract = {
     block_payload_hash: BLAKE2B.t,
     state_hash: BLAKE2B.t,
     validators: list(string),
-    signatures: list(string),
+    signatures: list(option(string)),
   };
   let path = "/data-to-smart-contract";
 };

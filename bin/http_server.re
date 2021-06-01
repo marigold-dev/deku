@@ -132,15 +132,23 @@ let handle_data_to_smart_contract =
     (_, ()) => {
       let state = Server.get_state();
       let block = state.snapshots.last_block;
-      let validators =
+      let signatures_map =
+        state.snapshots.last_block_signatures
+        |> Signatures.to_list
+        |> List.map(Signature.signature_to_b58check_by_address)
+        |> List.to_seq
+        |> State.Address_map.of_seq;
+      let (validators, signatures) =
         state.protocol.validators
         |> Validators.validators
         |> List.map(validator => validator.Validators.address)
-        |> List.map(Talk_tezos.Ed25519.Public_key.to_b58check);
-      let signatures =
-        state.snapshots.last_block_signatures
-        |> Signatures.to_list
-        |> List.map(Signature.signature_to_b58check);
+        |> List.map(address =>
+             (
+               Talk_tezos.Ed25519.Public_key.to_b58check(address),
+               State.Address_map.find_opt(address, signatures_map),
+             )
+           )
+        |> List.split;
 
       Ok({
         block_hash: block.hash,

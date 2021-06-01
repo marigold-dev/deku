@@ -27,6 +27,9 @@ let signature_to_b58check = t => {
   let to_raw = t => t.signature;
   Base58.simple_encode(~prefix, ~to_raw, t);
 };
+let signature_to_b58check_by_address = t => {
+  (t.public_key, signature_to_b58check(t));
+};
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
