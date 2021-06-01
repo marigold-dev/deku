@@ -9,11 +9,3 @@ let get_pub_key: Address.key => Address.t;
 
 // for testing
 let to_string: t => string;
-
-module Map: {
-  include Map.S with type key = t;
-  let to_yojson: ('a => Yojson.Safe.t, t('a)) => Yojson.Safe.t;
-  let of_yojson:
-    (Yojson.Safe.t => result('a, string), Yojson.Safe.t) =>
-    result(t('a), string);
-};
