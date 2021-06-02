@@ -207,7 +207,8 @@ let node = {
       State.Address_map.empty,
       validators,
     );
-  let node = State.make(~identity, ~initial_validators_uri);
+  let node =
+    State.make(~identity, ~data_folder=folder, ~initial_validators_uri);
   let node = {
     ...node,
     protocol: {
@@ -227,9 +228,7 @@ let node = {
     } else {
       node.protocol;
     };
-  let node = {...node, protocol};
-  Protocol.folder := Some(folder);
-  await(node);
+  await({...node, protocol});
 };
 let node = node |> Lwt_main.run;
 let () = Node.Server.start(~initial=node);

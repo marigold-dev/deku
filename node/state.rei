@@ -12,6 +12,7 @@ module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
 type t = {
   identity,
+  data_folder: string,
   pending_side_ops: list(Operation.Side_chain.Self_signed.t),
   pending_main_ops: list(Operation.Main_chain.t),
   block_pool: Block_pool.t,
@@ -23,7 +24,12 @@ type t = {
 };
 
 let make:
-  (~identity: identity, ~initial_validators_uri: Address_map.t(Uri.t)) => t;
+  (
+    ~identity: identity,
+    ~data_folder: string,
+    ~initial_validators_uri: Address_map.t(Uri.t)
+  ) =>
+  t;
 let apply_block:
   (t, Block.t) =>
   result(t, [> | `Invalid_block_when_applying | `Invalid_state_root_hash]);
