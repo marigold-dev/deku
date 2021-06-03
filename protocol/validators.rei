@@ -10,8 +10,15 @@ type validator = {
 type t;
 
 let current: t => option(validator);
-let validators: t => list(validator);
-let next: t => t;
+/* TODO: is to_list ok? It looses data(current) */
+let to_list: t => list(validator);
+let length: t => int;
+
+// TODO: this function needs a better name
+/** [after_current(n, t)] cycle validators starting after the current one
+  best: O(1)
+  worst: O(n) */
+let after_current: (int, t) => option(validator);
 let update_current: (Address.t, t) => t;
 
 let empty: t;

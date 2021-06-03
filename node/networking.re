@@ -57,7 +57,7 @@ let request =
 };
 
 let broadcast = (endpoint, state, data) =>
-  Validators.validators(state.protocol.validators)
+  Validators.to_list(state.protocol.validators)
   |> List.filter_map((Validators.{address, _}) =>
        State.Address_map.find_opt(address, state.validators_uri)
      )

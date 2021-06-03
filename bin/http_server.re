@@ -136,7 +136,7 @@ let handle_data_to_smart_contract =
         |> State.Address_map.of_seq;
       let (validators, signatures) =
         state.protocol.validators
-        |> Validators.validators
+        |> Validators.to_list
         |> List.map(validator => validator.Validators.address)
         |> List.map(address =>
              (

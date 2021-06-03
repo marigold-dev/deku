@@ -165,18 +165,13 @@ let apply_block = (state, block) => {
   let state = apply_block(state, block);
   Ok((state, hash));
 };
-// TODO: this changes the state root hash so bad
-let next = t => {...t, validators: Validators.next(t.validators)};
 
 let get_current_block_producer = state =>
   if (state.last_applied_block_timestamp == 0.0) {
     None;
   } else {
-    // TODO: this is clearly dumb
-    let rec next_until = (validators, diff) =>
-      diff < 10.0
-        ? validators : next_until(Validators.next(validators), diff -. 10.0);
     let diff = Unix.time() -. state.last_applied_block_timestamp;
-    let validators = next_until(state.validators, diff);
-    Validators.current(validators);
+    // TODO: I'm really into magic numbers
+    let skips = Float.to_int(diff /. 10.0);
+    Validators.after_current(skips, state.validators);
   };

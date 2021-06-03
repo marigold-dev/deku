@@ -96,7 +96,7 @@ let inject_genesis = () => {
       BLAKE2B.to_string(block.state_root_hash),
       block.block_height,
       state.validators
-      |> Validators.validators
+      |> Validators.to_list
       |> List.map(validator => validator.Validators.address)
       |> List.map(Talk_tezos.Ed25519.Public_key.to_b58check)
       |> String.concat(","),

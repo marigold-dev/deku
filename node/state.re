@@ -83,8 +83,7 @@ let apply_block = (state, block) => {
 
 // TODO: duplicated code
 let signatures_required = state => {
-  let number_of_validators =
-    Validators.validators(state.protocol.validators) |> List.length;
+  let number_of_validators = Validators.length(state.protocol.validators);
   // TODO: properly filter and check signatures
   Float.(to_int(ceil(of_int(number_of_validators) *. (2.0 /. 3.0))));
 };

@@ -65,7 +65,7 @@ let rec request_block_by_hash = (tries, ~hash) => {
     () => {
       let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
-      let validators = Validators.validators(state.protocol.validators);
+      let validators = Validators.to_list(state.protocol.validators);
       let validator =
         List.nth(validators, random_int(List.length(validators)));
 
@@ -110,7 +110,7 @@ let rec request_protocol_snapshot = tries => {
     () => {
       let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
-      let validators = Validators.validators(state.protocol.validators);
+      let validators = Validators.to_list(state.protocol.validators);
       let rec safe_validator_uri = () => {
         let validator =
           List.nth(validators, random_int(List.length(validators)));
@@ -336,6 +336,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     Signature.verify(~signature, BLAKE2B.hash(nonce)),
   );
 
+  // TODO: broadcast this to other nodes? Maybe even to main chain
   let _state =
     update_state({
       ...state,
