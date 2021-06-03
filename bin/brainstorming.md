@@ -197,3 +197,88 @@ Disadvantages is that we need to request signatures, which is something never ne
 - The node asks for a snapshot and keep listening to blocks until block X gets accepted on tezos and because he knows all blocks that happened since X he is already in sync.
 
 Disadvantages needs to wait stuff happening on the main chain, which means waiting a finality to happens on tezos, not fun ;/
+
+## Hashing
+
+
+TODO: how to make the contract upgradable
+
+H(consensus) = H(
+  H(block_height) +
+  last_block_hash +
+  previous_state_hash +
+  H(validators)
+)
+TODO: maybe each ledger cell should have more values?
+      Is this worth in performance and gas cost on chain?
+H(ledger) =
+  if empty then
+    H(nil)
+  else
+    H(H(left) + H(right))
+)
+H(data) = H(ledger)
+H(protocol) = H(consensus) + H(data)
+
+### Goals
+
+H(consensus)
+
+H(block_height) prevents reply attacks, as a block height must always increase
+last_block_hash guarantees that this state was created by this chain
+previous_state_hash mostly guarantees the initial state hash,
+H(validators) defines who are the validators when this state hash was commited
+              important, a node need to follow the chain until it sees a known
+              block hash being merged on tezos, this ensures that we know who
+              are the current validators at any point without needing to rely
+              on asking for old signatures.
+
+Note that we don't enforce on mainchain the previous_state_hash,
+this allows to skip state hashes and also allows to change the past
+
+H(data)
+
+This is the data that will be validated by the data contract
+
+H(ledger) the goal here is to make so that we don't need to keep the data on
+          tezos but when needed any user can get the needed hashes and submit
+          a proof to tezos that during state hash X he holds funds
+
+## Withdraw
+
+Problems the state hash is commited async, so we cannot simply say "you have a state epoch to withdraw your funds" as you will be in a racing condition against the sidechain. 
+
+### Direct Withdraw
+
+Collect all the ledger hashes needed
+  -> send a tezos op
+
+Pros:
+  Simple, can be used even if the sidechain stales
+Cons:
+  Racing condition against the sidechain
+
+It may be possible to ensure a withdraw window
+Ideas:
+  Ensure no operation in the recent sidechain blocks 
+get all hashes -> send tezos op -> withdraw
+
+Scheduled:
+
+send tezos op -> request_funds_contract -> sidechain see and includes on root
+update, after updating the hash the consensus contract triggers subsequenct
+operations on the same block, ensuring that you can always withdraw.
+flow can be, you do an operation on tezos asking for 10 funds,
+
+Same will probably be valid when we start doing smart contract
+
+## Optimistic rollups funds
+
+It may be desirable to integrate optimistic rollups logic so that we can
+validate funds transfer on sidechain on the mainchain if needed. This
+would allow an additional level of confidence as even if all nodes
+decide to break the sidechain guarantees users will not loose funds.
+
+This would freeze the consensus contract in the non disputed state,
+and because the contract is frozen all balances are also considered
+frozen, so users can just do direct withdraw.
