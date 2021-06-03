@@ -63,7 +63,8 @@ let find_block_and_signature_or_return_empty = (~hash, t) =>
 let is_signed = block_and_signatures =>
   Signatures.is_signed(block_and_signatures.signatures);
 let rec set_signed = (block_and_signatures, t) => {
-  Signatures.set_signed(block_and_signatures.signatures);
+  let signatures = Signatures.set_signed(block_and_signatures.signatures);
+  let block_and_signatures = {...block_and_signatures, signatures};
   let t = update_block_and_signatures(block_and_signatures, t);
   ensure_previous_is_signed(block_and_signatures, t);
 }
@@ -92,8 +93,14 @@ let append_block = (block, t) => {
     find_block_and_signature_or_return_empty(~hash=block.Block.hash, t);
   let block_and_signatures = {...block_and_signatures, block: Some(block)};
   // TODO: this is not general
-  if (block.hash == Block.genesis.hash) {
-    Signatures.set_signed(block_and_signatures.signatures);
+  let block_and_signatures = {
+    ...block_and_signatures,
+    signatures:
+      if (block.hash == Block.genesis.hash) {
+        Signatures.set_signed(block_and_signatures.signatures);
+      } else {
+        block_and_signatures.signatures;
+      },
   };
   let t = update_block_and_signatures(block_and_signatures, t);
   // TODO: this doesn't work if you receive the blocks in a different order
@@ -106,11 +113,15 @@ let append_block = (block, t) => {
 let append_signature = (~signatures_required, ~hash, signature, t) => {
   let block_and_signatures =
     find_block_and_signature_or_return_empty(~hash, t);
-  Signatures.add(
-    ~signatures_required,
-    signature,
-    block_and_signatures.signatures,
-  );
+  let block_and_signatures = {
+    ...block_and_signatures,
+    signatures:
+      Signatures.add(
+        ~signatures_required,
+        signature,
+        block_and_signatures.signatures,
+      ),
+  };
   let t = update_block_and_signatures(block_and_signatures, t);
   if (is_signed(block_and_signatures)) {
     ensure_previous_is_signed(block_and_signatures, t);

@@ -30,8 +30,8 @@ type t = {
 let make = (~identity, ~data_folder, ~initial_validators_uri) => {
   let initial_block = Block.genesis;
   let initial_protocol = Protocol.make(~initial_block);
-  let initial_signatures = Signatures.make(~self_key=identity.t);
-  Signatures.set_signed(initial_signatures);
+  let initial_signatures =
+    Signatures.make(~self_key=identity.t) |> Signatures.set_signed;
 
   let initial_block_pool =
     Block_pool.make(~self_key=identity.t)
