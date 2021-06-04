@@ -127,3 +127,24 @@ let broadcast_block_and_signature = (state, ~block, ~signature) =>
     let.await () = Lwt_unix.sleep(1.0);
     Networking.broadcast_block_and_signature(state, {block, signature});
   });
+
+let find_random_validator_uri = state => {
+  let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
+  let validators = Validators.to_list(state.Node.protocol.validators);
+  let rec safe_validator_uri = () => {
+    let validator =
+      List.nth(validators, random_int(List.length(validators)));
+    if (state.Node.identity.t == validator.address) {
+      safe_validator_uri();
+    } else {
+      // TODO: this blown up if there is no validator uri registered
+      switch (
+        Node.Address_map.find_opt(validator.address, state.validators_uri)
+      ) {
+      | Some(uri) => uri
+      | None => safe_validator_uri()
+      };
+    };
+  };
+  safe_validator_uri();
+};

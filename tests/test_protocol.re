@@ -28,10 +28,7 @@ describe("protocol state", ({test, _}) => {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({
-             address: Wallet.get_pub_key(key_wallet),
-             uri: Uri.of_string("http://localhost:8080"),
-           });
+        |> Validators.add({address: Wallet.get_pub_key(key_wallet)});
       validators;
     };
     let state = {...state, validators};
@@ -242,11 +239,7 @@ describe("protocol state", ({test, _}) => {
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
-    let new_validator =
-      Validators.{
-        address: make_address(),
-        uri: Uri.of_string("http://localhost:1234"),
-      };
+    let new_validator = Validators.{address: make_address()};
     let state =
       apply_main_chain(
         state,
@@ -267,11 +260,7 @@ describe("protocol state", ({test, _}) => {
       toBeTrue();
     expect.list(Validators.to_list(validators)).toEqual([new_validator]);
     // additional shouldn't move current
-    let another_validator =
-      Validators.{
-        address: make_address(),
-        uri: Uri.of_string("http://localhost:12345"),
-      };
+    let another_validator = Validators.{address: make_address()};
     let state =
       apply_main_chain(
         state,

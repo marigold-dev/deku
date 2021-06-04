@@ -1,10 +1,7 @@
 open Helpers;
 
 [@deriving (yojson, ord)]
-type validator = {
-  address: Address.t,
-  uri: Uri.t,
-};
+type validator = {address: Address.t};
 
 [@deriving yojson]
 type t;

@@ -181,7 +181,15 @@ module Utils = {
     await(
       try({
         let json = Yojson.Safe.from_string(file_buffer);
-        [%of_yojson: list(Validators.validator)](json);
+        module T = {
+          [@deriving of_yojson]
+          type t = {
+            address: Address.t,
+            uri: Uri.t,
+          };
+        };
+        let.ok validators = [%of_yojson: list(T.t)](json);
+        Ok(List.map((T.{address, uri}) => (address, uri), validators));
       }) {
       | _ => Error("failed to parse json")
       },
@@ -198,12 +206,8 @@ let node = {
   let validators = Result.get_ok(validators);
   let initial_validators_uri =
     List.fold_left(
-      (validators_uri, validator) =>
-        State.Address_map.add(
-          validator.Validators.address,
-          validator.uri,
-          validators_uri,
-        ),
+      (validators_uri, (address, uri)) =>
+        State.Address_map.add(address, uri, validators_uri),
       State.Address_map.empty,
       validators,
     );
@@ -214,7 +218,11 @@ let node = {
     protocol: {
       ...node.protocol,
       validators:
-        List.fold_right(Validators.add, validators, Validators.empty),
+        List.fold_right(
+          ((address, _)) => Validators.add({address: address}),
+          validators,
+          Validators.empty,
+        ),
     },
   };
   let state_bin = folder ++ "/state.bin";

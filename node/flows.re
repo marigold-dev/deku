@@ -63,14 +63,11 @@ let rec request_block_by_hash = (tries, ~hash) => {
   };
   Lwt.catch(
     () => {
-      let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
-      let validators = Validators.to_list(state.protocol.validators);
-      let validator =
-        List.nth(validators, random_int(List.length(validators)));
+      let validator_uri = find_random_validator_uri(state);
 
       let.await block =
-        Networking.request_block_by_hash({hash: hash}, validator.uri);
+        Networking.request_block_by_hash({hash: hash}, validator_uri);
       // TODO: validate hash
       await(Option.get(block));
     },
@@ -108,25 +105,8 @@ let rec request_protocol_snapshot = tries => {
   };
   Lwt.catch(
     () => {
-      let random_int = v => v |> Int32.of_int |> Random.int32 |> Int32.to_int;
       let state = get_state^();
-      let validators = Validators.to_list(state.protocol.validators);
-      let rec safe_validator_uri = () => {
-        let validator =
-          List.nth(validators, random_int(List.length(validators)));
-        if (state.Node.identity.t == validator.address) {
-          safe_validator_uri();
-        } else {
-          // TODO: this blown up if there is no validator uri registered
-          switch (
-            Node.Address_map.find_opt(validator.address, state.validators_uri)
-          ) {
-          | Some(uri) => uri
-          | None => safe_validator_uri()
-          };
-        };
-      };
-      let validator_uri = safe_validator_uri();
+      let validator_uri = find_random_validator_uri(state);
       // TODO: validate hash and signatures
       Networking.request_protocol_snapshot((), validator_uri);
     },

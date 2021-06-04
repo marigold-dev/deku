@@ -14,7 +14,15 @@ let read_validators = file => {
   await(
     try({
       let json = Yojson.Safe.from_string(file_buffer);
-      [%of_yojson: list(Validators.validator)](json);
+      module T = {
+        [@deriving of_yojson]
+        type t = {
+          address: Address.t,
+          uri: Uri.t,
+        };
+      };
+      let.ok validators = [%of_yojson: list(T.t)](json);
+      Ok(List.map((T.{address, uri}) => (address, uri), validators));
     }) {
     | _ => Error("failed to parse json")
     },
@@ -36,13 +44,23 @@ let gen_credentials = () => {
     identity_to_yojson(identity)
     |> Yojson.Safe.pretty_to_string
     |> write_file(~file);
-    Validators.{address: t, uri};
+    (t, uri);
   };
 
-  let make_validators_file = (~file, ~validators) =>
-    [%to_yojson: list(Validators.validator)](validators)
+  let make_validators_file = (~file, ~validators) => {
+    module T = {
+      [@deriving to_yojson]
+      type t = {
+        address: Address.t,
+        uri: Uri.t,
+      };
+    };
+    validators
+    |> List.map(((address, uri)) => T.{address, uri})
+    |> [%to_yojson: list(T.t)]
     |> Yojson.Safe.pretty_to_string
     |> write_file(~file);
+  };
 
   let validators = [
     make_identity_file(~file="identity_0.json", ~uri="http://localhost:4440"),
@@ -80,7 +98,11 @@ let inject_genesis = () => {
       Lwt.return({
         ...state,
         validators:
-          List.fold_right(Validators.add, validators, state.validators),
+          List.fold_right(
+            ((address, _)) => Validators.add({address: address}),
+            validators,
+            Validators.empty,
+          ),
       });
     };
     let block =

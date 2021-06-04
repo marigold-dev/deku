@@ -23,11 +23,11 @@ let apply_main_chain = (state, op) => {
       let ledger = Ledger.withdraw(~source, ~amount, state.ledger);
       {...state, ledger};
     // validators management
-    | Add_validator({address, uri}) =>
-      let validators = Validators.add({address, uri}, state.validators);
+    | Add_validator(validator) =>
+      let validators = Validators.add(validator, state.validators);
       {...state, validators};
-    | Remove_validator({address, uri}) =>
-      let validators = Validators.remove({address, uri}, state.validators);
+    | Remove_validator(validator) =>
+      let validators = Validators.remove(validator, state.validators);
       {...state, validators};
     }
   );
