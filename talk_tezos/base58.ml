@@ -24,12 +24,23 @@
 (*                                                                           *)
 (*****************************************************************************)
 
+module Prefix = struct
+  (* 20 *)
+  let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
+
+  (* 32 *)
+  let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
+
+  (* 64 *)
+  let ed25519_signature = "\009\245\205\134\018" (* edsig(99) *)
+end
+
 let base = 58
 
 let zbase = Z.of_int base
 
 module Alphabet = struct
-  type t = {encode : string}
+  type t = {encode : string; decode : string}
 
   let make alphabet =
     if String.length alphabet <> base then
@@ -46,7 +57,7 @@ module Alphabet = struct
           i ;
       Bytes.set str char (char_of_int i)
     done ;
-    {encode = alphabet}
+    {encode = alphabet; decode = Bytes.to_string str}
 
   let bitcoin =
     make "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -98,13 +109,58 @@ let safe_encode ?alphabet s = raw_encode ?alphabet (s ^ checksum s)
 let simple_encode ?alphabet ~prefix ~to_raw d =
   safe_encode ?alphabet (prefix ^ to_raw d)
 
-module Prefix = struct
-  (* 20 *)
-  let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
+module TzString = struct
+  let fold_left f init s =
+    let acc = ref init in
+    String.iter (fun c -> acc := f !acc c) s;
+    !acc
 
-  (* 32 *)
-  let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
-
-  (* 64 *)
-  let ed25519_signature = "\009\245\205\134\018" (* edsig(99) *)
+  let remove_prefix ~prefix s =
+    let x = String.length prefix in
+    let n = String.length s in
+    if n >= x && String.sub s 0 x = prefix then Some (String.sub s x (n - x))
+    else None
 end
+
+let count_leading_char s c =
+  let len = String.length s in
+  let rec loop i =
+    if i = len then len else if s.[i] <> c then i else loop (i + 1)
+  in
+  loop 0
+
+let of_char ?(alphabet = Alphabet.default) x =
+  let pos = alphabet.decode.[int_of_char x] in
+  match pos with '\255' -> None | _ -> Some (int_of_char pos)
+
+let raw_decode ?(alphabet = Alphabet.default) s =
+  TzString.fold_left
+    (fun a c ->
+      match (a, of_char ~alphabet c) with
+      | (Some a, Some i) ->
+          Some Z.(add (of_int i) (mul a zbase))
+      | _ ->
+          None)
+    (Some Z.zero)
+    s
+  |> Option.map (fun res ->
+         let res = Z.to_bits res in
+         let res_tzeros = count_trailing_char res '\000' in
+         let len = String.length res - res_tzeros in
+         let zeros = count_leading_char s alphabet.encode.[0] in
+         String.make zeros '\000'
+         ^ String.init len (fun i -> res.[len - i - 1]))
+
+let safe_decode ?alphabet s =
+  Option.bind (raw_decode ?alphabet s) (fun s ->
+    let len = String.length s in
+    if len < 4 then None
+    else
+      (* only if the string is long enough to extract a checksum do we check it *)
+      let msg = String.sub s 0 (len - 4) in
+      let msg_hash = String.sub s (len - 4) 4 in
+      if msg_hash <> checksum msg then None else Some msg)
+  
+let simple_decode ?alphabet ~prefix ~of_raw s =
+  let ( >?? ) = Option.bind in
+  safe_decode ?alphabet s >?? TzString.remove_prefix ~prefix >?? of_raw

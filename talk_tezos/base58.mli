@@ -51,3 +51,12 @@ val simple_encode :
   to_raw:('a -> string) ->
   'a ->
   string
+
+(** Decoder for a given kind of data. It returns [None] when
+  the decoded data does not start with the expected prefix. *)
+val simple_decode :
+  ?alphabet:Alphabet.t ->
+  prefix:string ->
+  of_raw:(string -> 'a option) ->
+  string ->
+  'a option
