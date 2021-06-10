@@ -1,4 +1,11 @@
 {
+  "name": "sidechain",
+  "esy": {
+    "build": "dune build -p sidechain"
+  },
+  "scripts": {
+    "test": "dune test"
+  },
   "dependencies": {
     "ocaml": "4.12.",
     "@opam/dune": "*",
