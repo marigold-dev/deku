@@ -6,6 +6,7 @@ module Make =
          type t;
          let to_string: t => string;
          /** this is a leaky abstraction */
+         let of_raw_string: string => option(t);
          let to_raw_string: t => string;
          let compare: (t, t) => int;
 
@@ -39,7 +40,7 @@ module Make =
     | Invalid_argument(invalid) => Error(invalid)
     };
   };
-  let to_raw_string = to_raw_string;
+  let of_raw_string = of_raw_string_opt;
   let to_string = to_hex;
   // TODO: check the unsafe here
   let compare = unsafe_compare;

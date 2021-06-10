@@ -32,6 +32,20 @@ module Ed25519 = {
     Ed25519.pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
   let to_string = Base58.simple_encode(~prefix, ~to_raw);
   let of_string = Base58.simple_decode(~prefix, ~of_raw);
+
+  module Hash = {
+    type t = BLAKE2B_20.t;
+
+    let prefix = Base58.Prefix.ed25519_public_key_hash;
+    let hash_key = t =>
+      BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
+
+    // TODO: hash encoding
+    let to_raw = BLAKE2B_20.to_raw_string;
+    let of_raw = BLAKE2B_20.of_raw_string;
+    let to_string = Base58.simple_encode(~prefix, ~to_raw);
+    let of_string = Base58.simple_decode(~prefix, ~of_raw);
+  };
 };
 
 module Key = {
@@ -65,6 +79,27 @@ module Key = {
   let of_string = {
     let ed25519 = string => {
       let.some key = Ed25519.of_string(string);
+      Some(Ed25519(key));
+    };
+    try_decode_list([ed25519]);
+  };
+};
+
+module Key_hash = {
+  type t =
+    | Ed25519(Ed25519.Hash.t);
+
+  let of_key = t =>
+    switch (t) {
+    | Key.Ed25519(pub_) => Ed25519(Ed25519.Hash.hash_key(pub_))
+    };
+
+  let to_string =
+    fun
+    | Ed25519(hash) => Ed25519.Hash.to_string(hash);
+  let of_string = {
+    let ed25519 = string => {
+      let.some key = Ed25519.Hash.of_string(string);
       Some(Ed25519(key));
     };
     try_decode_list([ed25519]);

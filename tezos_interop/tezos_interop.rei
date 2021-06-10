@@ -6,3 +6,12 @@ module Key: {
   let to_string: t => string;
   let of_string: string => option(t);
 };
+
+module Key_hash: {
+  type t =
+    | Ed25519(Helpers.BLAKE2B_20.t);
+
+  let of_key: Key.t => t;
+  let to_string: t => string;
+  let of_string: string => option(t);
+};

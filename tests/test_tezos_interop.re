@@ -43,3 +43,33 @@ describe("key", ({test, _}) => {
       toBeNone()
   });
 });
+
+describe("key_hash", ({test, _}) => {
+  open Key_hash;
+
+  // TODO: proper test of_key
+  let tz1 = of_key(Ed25519(Address.genesis_address));
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(tz1)).toEqual(
+      "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBe(
+      // TODO: proper equals
+      ~equals=(==),
+      Some(tz1),
+    )
+  });
+  test("invalid prefix", ({expect, _}) => {
+    // TODO: when this test fails it segfaults
+    // see https://github.com/reasonml/reason-native/pull/263
+    expect.option(of_string("tzaLzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBeNone()
+  });
+  test("invalid checksum", ({expect, _}) => {
+    expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLA")).toBeNone()
+  });
+  test("invalid size", ({expect, _}) => {
+    expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCL")).toBeNone()
+  });
+});
