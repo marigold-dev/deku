@@ -1,10 +1,15 @@
 module Public_key = {
   open Mirage_crypto_ec.Ed25519;
   type t = pub_;
-  let to_b58check = t => {
-    let prefix = Base58.Prefix.ed25519_public_key;
+  let (to_b58check, of_b58check) = {
+    let prefix = Base58.Prefix.ed25519_public_key_hash;
     let to_raw = t => Cstruct.to_string(pub_to_cstruct(t));
-    Base58.simple_encode(~prefix, ~to_raw, t);
+    let of_raw = str =>
+      pub_of_cstruct(Cstruct.of_string(str)) |> Result.to_option;
+    (
+      Base58.simple_encode(~prefix, ~to_raw),
+      Base58.simple_decode(~prefix, ~of_raw),
+    );
   };
 
   let encoding = {
@@ -38,9 +43,15 @@ module Public_key = {
 module Public_key_hash = {
   open Mirage_crypto_ec.Ed25519;
   type t = pub_;
-  let to_b58check = t => {
+
+  let (to_b58check, of_b58check) = {
     let prefix = Base58.Prefix.ed25519_public_key_hash;
     let to_raw = t => Cstruct.to_string(pub_to_cstruct(t));
-    Base58.simple_encode(~prefix, ~to_raw, t);
+    let of_raw = str =>
+      pub_of_cstruct(Cstruct.of_string(str)) |> Result.to_option;
+    (
+      Base58.simple_encode(~prefix, ~to_raw),
+      Base58.simple_decode(~prefix, ~of_raw),
+    );
   };
 };
