@@ -2,7 +2,7 @@ module Public_key = {
   open Mirage_crypto_ec.Ed25519;
   type t = pub_;
   let (to_b58check, of_b58check) = {
-    let prefix = Base58.Prefix.ed25519_public_key_hash;
+    let prefix = Base58.Prefix.ed25519_public_key;
     let to_raw = t => Cstruct.to_string(pub_to_cstruct(t));
     let of_raw = str =>
       pub_of_cstruct(Cstruct.of_string(str)) |> Result.to_option;
