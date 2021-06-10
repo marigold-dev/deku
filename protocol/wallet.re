@@ -4,8 +4,6 @@ open Mirage_crypto_ec;
 [@deriving (ord, yojson)]
 type t = BLAKE2B.t;
 
-let to_string = v => v |> to_yojson |> Yojson.Safe.to_string;
-
 let of_address = pubkey => {
   let to_yojson = [%to_yojson: Address.t];
   pubkey |> to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
