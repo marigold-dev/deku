@@ -30,6 +30,7 @@ module Prefix = struct
 
   (* 32 *)
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
+  let ed25519_seed = "\013\015\058\007" (* edsk(54) *)
 
   (* 64 *)
   let ed25519_signature = "\009\245\205\134\018" (* edsig(99) *)

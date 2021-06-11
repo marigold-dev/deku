@@ -31,6 +31,8 @@ module Prefix : sig
 
   val ed25519_public_key : string
 
+  val ed25519_seed : string
+
   val ed25519_signature : string
 end
 

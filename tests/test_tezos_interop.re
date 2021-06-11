@@ -23,6 +23,8 @@ describe("key", ({test, _}) => {
     )
   });
   test("invalid prefix", ({expect, _}) => {
+    // TODO: this test would fail anyway becose of the checksum
+    //       craft an example with different prefix and valid checksum
     // TODO: when this test fails it segfaults
     // see https://github.com/reasonml/reason-native/pull/263
     expect.option(
@@ -37,6 +39,8 @@ describe("key", ({test, _}) => {
       toBeNone()
   });
   test("invalid size", ({expect, _}) => {
+    // TODO: this test would fail anyway becose of the checksum
+    //       craft an example with different size but valid checksum
     expect.option(
       of_string("edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT"),
     ).
@@ -71,5 +75,45 @@ describe("key_hash", ({test, _}) => {
   });
   test("invalid size", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCL")).toBeNone()
+  });
+});
+describe("secret", ({test, _}) => {
+  open Secret;
+
+  let edsk = Ed25519(Address.genesis_key);
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(edsk)).toEqual(
+      "edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd",
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(
+      of_string("edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd"),
+    ).
+      toBe(
+      // TODO: proper equals
+      ~equals=(==),
+      Some(edsk),
+    )
+  });
+  test("invalid prefix", ({expect, _}) => {
+    // TODO: when this test fails it segfaults
+    // see https://github.com/reasonml/reason-native/pull/263
+    expect.option(
+      of_string("edsa4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd"),
+    ).
+      toBeNone()
+  });
+  test("invalid checksum", ({expect, _}) => {
+    expect.option(
+      of_string("edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVb"),
+    ).
+      toBeNone()
+  });
+  test("invalid size", ({expect, _}) => {
+    expect.option(
+      of_string("edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSV"),
+    ).
+      toBeNone()
   });
 });

@@ -17,14 +17,14 @@ module Ed25519 = {
 
   type t = pub_;
 
-  let sk_size = 32;
+  let size = 32;
   let prefix = Base58.Prefix.ed25519_public_key;
   let encoding = {
     // TODO: in tezos this is splitted json is not same as binary
     let to_bytes = t => pub_to_cstruct(t) |> Cstruct.to_bytes;
     let of_bytes_exn = b =>
       Cstruct.of_bytes(b) |> pub_of_cstruct |> Result.get_ok;
-    Data_encoding.(conv(to_bytes, of_bytes_exn, Fixed.bytes(sk_size)));
+    Data_encoding.(conv(to_bytes, of_bytes_exn, Fixed.bytes(size)));
   };
 
   let to_raw = t => Cstruct.to_string(Ed25519.pub_to_cstruct(t));
@@ -36,13 +36,27 @@ module Ed25519 = {
   module Hash = {
     type t = BLAKE2B_20.t;
 
-    let prefix = Base58.Prefix.ed25519_public_key_hash;
     let hash_key = t =>
       BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
 
-    // TODO: hash encoding
+    // TODO: encoding
+
+    let prefix = Base58.Prefix.ed25519_public_key_hash;
     let to_raw = BLAKE2B_20.to_raw_string;
     let of_raw = BLAKE2B_20.of_raw_string;
+    let to_string = Base58.simple_encode(~prefix, ~to_raw);
+    let of_string = Base58.simple_decode(~prefix, ~of_raw);
+  };
+
+  module Secret = {
+    type t = priv;
+
+    let _size = 32;
+    let prefix = Base58.Prefix.ed25519_seed;
+    let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
+    let of_raw = string =>
+      Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+
     let to_string = Base58.simple_encode(~prefix, ~to_raw);
     let of_string = Base58.simple_decode(~prefix, ~of_raw);
   };
@@ -101,6 +115,21 @@ module Key_hash = {
     let ed25519 = string => {
       let.some key = Ed25519.Hash.of_string(string);
       Some(Ed25519(key));
+    };
+    try_decode_list([ed25519]);
+  };
+};
+module Secret = {
+  type t =
+    | Ed25519(Ed25519.Secret.t);
+
+  let to_string =
+    fun
+    | Ed25519(secret) => Ed25519.Secret.to_string(secret);
+  let of_string = {
+    let ed25519 = string => {
+      let.some secret = Ed25519.Secret.of_string(string);
+      Some(Ed25519(secret));
     };
     try_decode_list([ed25519]);
   };

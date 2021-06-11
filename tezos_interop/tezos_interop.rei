@@ -15,3 +15,11 @@ module Key_hash: {
   let to_string: t => string;
   let of_string: string => option(t);
 };
+
+module Secret: {
+  type t =
+    | Ed25519(Mirage_crypto_ec.Ed25519.priv);
+
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
