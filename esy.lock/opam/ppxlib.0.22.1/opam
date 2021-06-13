@@ -12,8 +12,8 @@ OCaml syntax directly and `ppxlib.traverse` which provides various
 ways of automatically traversing values of a given type, in particular
 allowing to inject a complex structured value into generated code.
 """
-maintainer: ["Jane Street developers"]
-authors: ["Jane Street Group, LLC"]
+maintainer: ["opensource@janestreet.com"]
+authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
 license: "MIT"
 homepage: "https://github.com/ocaml-ppx/ppxlib"
 doc: "https://ocaml-ppx.github.io/ppxlib/"
@@ -48,12 +48,12 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/ocaml-ppx/ppxlib.git"
-x-commit-hash: "06a2c9bdad8c1d3361a3d9430e9bf58476b08590"
+x-commit-hash: "5830d89a7cbe3a683a5d7d9948e2d14cffffa8d3"
 url {
   src:
-    "https://github.com/ocaml-ppx/ppxlib/releases/download/0.22.0/ppxlib-0.22.0.tbz"
+    "https://github.com/ocaml-ppx/ppxlib/releases/download/0.22.1/ppxlib-0.22.1.tbz"
   checksum: [
-    "sha256=3eeb91e03966662284a3222e612dee7f4fa2b7637c53d9572d2a74134bb96d7a"
-    "sha512=425051dff9df53579a6edd17369d66c10f87a78daeddf1691e50997990ed643e874fcc6a30112a4dacbfd2d0097a19445354e04cd920d9522f76c51cdbc7f1db"
+    "sha256=216c802ee606c9d9f0d1e60dfe29bb69b9ae0bf12828cb148e9867abf568c5f7"
+    "sha512=3a35c3638316ee7c3acfa2e3ffbe1f7d17687e2eb1cfea6461e1be140498515d3593b5f2bf2517d5f231f214414f7cbec761403b459a7f147dcf713bf3f78106"
   ]
 }
