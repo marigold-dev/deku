@@ -1,5 +1,7 @@
 open Helpers;
 
+module Base58 = Base58;
+
 module Key: {
   type t =
     | Ed25519(Mirage_crypto_ec.Ed25519.pub_);

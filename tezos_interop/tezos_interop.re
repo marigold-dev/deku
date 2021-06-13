@@ -1,5 +1,4 @@
 open Helpers;
-open Talk_tezos;
 open Mirage_crypto_ec;
 
 let rec try_decode_list = (l, string) =>
@@ -11,6 +10,8 @@ let rec try_decode_list = (l, string) =>
     }
   | [] => None
   };
+
+module Base58 = Base58;
 
 module Ed25519 = {
   open Ed25519;
@@ -188,7 +189,6 @@ module Signature = {
 };
 
 module Pack = {
-  open Talk_tezos;
   open Tezos_micheline;
   open Micheline;
   open Michelson_v1_primitives;

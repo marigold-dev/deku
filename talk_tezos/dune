@@ -1,9 +1,0 @@
-(library
- (name talk_tezos)
- (libraries
-  helpers
-  zarith
-  mirage-crypto
-  mirage-crypto-ec
-  digestif
-  tezos-micheline))
