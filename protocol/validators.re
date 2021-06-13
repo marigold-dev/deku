@@ -53,6 +53,7 @@ let remove = (validator, t) => {
 };
 
 let hash = t => {
-  let validators = List.map(t => t.address, t.validators);
-  Talk_tezos.Consensus.hash_validators(validators);
+  open Tezos_interop;
+  let validators = List.map(t => Key.Ed25519(t.address), t.validators);
+  Consensus.hash_validators(validators);
 };

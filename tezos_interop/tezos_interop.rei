@@ -50,7 +50,7 @@ module Pack: {
 
 module Consensus: {
   let hash_validators: list(Key.t) => BLAKE2B.t;
-  let hash_block_data:
+  let hash_block:
     (
       ~block_height: int64,
       ~block_payload_hash: BLAKE2B.t,

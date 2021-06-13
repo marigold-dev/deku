@@ -140,7 +140,8 @@ let handle_data_to_smart_contract =
         |> List.map(validator => validator.Validators.address)
         |> List.map(address =>
              (
-               Talk_tezos.Ed25519.Public_key.to_b58check(address),
+               Tezos_interop.Key.Ed25519(address)
+               |> Tezos_interop.Key.to_string,
                State.Address_map.find_opt(address, signatures_map),
              )
            )

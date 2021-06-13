@@ -119,8 +119,10 @@ let inject_genesis = () => {
       block.block_height,
       state.validators
       |> Validators.to_list
-      |> List.map(validator => validator.Validators.address)
-      |> List.map(Talk_tezos.Ed25519.Public_key.to_b58check)
+      |> List.map(validator =>
+           Tezos_interop.Key.Ed25519(validator.Validators.address)
+         )
+      |> List.map(Tezos_interop.Key.to_string)
       |> String.concat(","),
     );
     let signatures =

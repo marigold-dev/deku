@@ -240,9 +240,9 @@ describe("consensus", ({test, _}) => {
       "546d2bb2375cc919efc81a103a7ad3bd1227546b320f275e357bd9a5d5eef946",
     );
   });
-  test("hash_block_data", ({expect, _}) => {
+  test("hash_block", ({expect, _}) => {
     let hash =
-      hash_block_data(
+      hash_block(
         ~block_height=179842L,
         ~block_payload_hash=
           hash_exn(

@@ -219,7 +219,7 @@ module Consensus = {
     |> Bytes.to_string
     |> BLAKE2B.hash;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
-  let hash_block_data =
+  let hash_block =
       (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
     to_bytes(
       pair(

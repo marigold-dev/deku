@@ -65,23 +65,20 @@ let (hash, verify) = {
     // TODO: is it okay to have this string concatened here?
     // TODO: maybe should also be previous?
 
-    let data_to_hash =
-      Talk_tezos.Consensus.data_to_hash_block(
+    let hash =
+      Tezos_interop.Consensus.hash_block(
         ~block_height,
         ~block_payload_hash,
         ~state_root_hash,
         ~validators_hash,
       );
-    f(data_to_hash, block_payload_hash);
+    f((hash, block_payload_hash));
   };
-  let hash =
-    apply((data_to_hash, payload_hash) =>
-      (BLAKE2B.hash(data_to_hash), payload_hash)
-    );
-  let verify = (~hash) =>
-    apply((data_to_hash, _payload_hash) =>
-      BLAKE2B.verify(~hash, data_to_hash)
-    );
+  let hash = apply(Fun.id);
+  let verify = (~hash as expected_hash) =>
+    apply(((hash, _payload_hash))
+      // TODO: this logic is duplicated from BLAKE2B.verify
+      => hash == expected_hash);
   (hash, verify);
 };
 // if needed we can export this, it's safe

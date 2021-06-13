@@ -1,3 +1,6 @@
+let (let.ok) = Result.bind;
+let (let.some) = Option.bind;
+
 // TODO: this is bad, size shuold be a detail in a function
 module Make =
        (P: {let size: int;})
@@ -5,6 +8,7 @@ module Make =
          [@deriving yojson]
          type t;
          let to_string: t => string;
+         let of_string: string => option(t);
          /** this is a leaky abstraction */
          let of_raw_string: string => option(t);
          let to_raw_string: t => string;
@@ -31,17 +35,17 @@ module Make =
     let digest_size = P.size;
   });
 
-  let (let.ok) = Result.bind;
-
+  let of_raw_string = of_raw_string_opt;
+  let to_string = to_hex;
+  let of_string = string => {
+    let.some () = String.length(string) == size * 2 ? Some() : None;
+    of_hex_opt(string);
+  };
   let to_yojson = str => `String(to_hex(str));
   let of_yojson = json => {
     let.ok hex = [%of_yojson: string](json);
-    try(Ok(of_hex(hex))) {
-    | Invalid_argument(invalid) => Error(invalid)
-    };
+    of_string(hex) |> Option.to_result(~none="Invalid hex");
   };
-  let of_raw_string = of_raw_string_opt;
-  let to_string = to_hex;
   // TODO: check the unsafe here
   let compare = unsafe_compare;
 
