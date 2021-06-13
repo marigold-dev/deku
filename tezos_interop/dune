@@ -1,3 +1,3 @@
 (library
  (name tezos_interop)
- (libraries talk_tezos))
+ (libraries talk_tezos tezos-micheline))

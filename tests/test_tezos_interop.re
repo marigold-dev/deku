@@ -182,3 +182,41 @@ describe("signature", ({test, _}) => {
       toBeNone()
   });
 });
+describe("pack", ({test, _}) => {
+  open Pack;
+
+  let test = (name, input, output) =>
+    test(
+      name,
+      ({expect, _}) => {
+        let `Hex(result) = to_bytes(input) |> Hex.of_bytes;
+        expect.string(result).toEqual(output);
+      },
+    );
+
+  let int = n => int(Z.of_int(n));
+  let bytes = s => bytes(Bytes.of_string(Hex.to_string(`Hex(s))));
+
+  test("int(1)", int(1), "050001");
+  test("int(-1)", int(-1), "050041");
+  test("bytes(0x)", bytes(""), "050a00000000");
+  test("bytes(0x050001)", bytes("050001"), "050a00000003050001");
+  test("pair(1, 0x)", pair(int(1), bytes("")), "05070700010a00000000");
+  test(
+    "pair(1, (0xAA, -1))",
+    pair(int(1), pair(bytes("AA"), int(-1))),
+    "050707000107070a00000001aa0041",
+  );
+  test("list([])", list([]), "050200000000");
+  test("list([1])", list([int(1)]), "0502000000020001");
+  test(
+    "list([(1, (0x, -1))])",
+    list([pair(int(1), pair(bytes(""), int(-1)))]),
+    "05020000000d0707000107070a000000000041",
+  );
+  test(
+    "key(\"edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6\")",
+    key(Ed25519(Address.genesis_address)),
+    "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
+  );
+});

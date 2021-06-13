@@ -33,3 +33,15 @@ module Signature: {
   let to_string: t => string;
   let of_string: string => option(t);
 };
+
+module Pack: {
+  type t;
+
+  let int: Z.t => t;
+  let bytes: bytes => t;
+  let pair: (t, t) => t;
+  let list: list(t) => t;
+  let key: Key.t => t;
+
+  let to_bytes: t => bytes;
+};
