@@ -211,3 +211,22 @@ module Pack = {
     Data_encoding.Binary.to_bytes_exn(expr_encoding, strip_locations(data))
     |> Bytes.cat(Bytes.of_string("\005"));
 };
+
+module Consensus = {
+  open Pack;
+  let hash_validators = validators =>
+    to_bytes(list(List.map(key, validators)))
+    |> Bytes.to_string
+    |> BLAKE2B.hash;
+  let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
+  let hash_block_data =
+      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
+    to_bytes(
+      pair(
+        pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
+        pair(hash(state_root_hash), hash(validators_hash)),
+      ),
+    )
+    |> Bytes.to_string
+    |> BLAKE2B.hash;
+};

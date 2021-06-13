@@ -1,3 +1,5 @@
+open Helpers;
+
 module Key: {
   type t =
     | Ed25519(Mirage_crypto_ec.Ed25519.pub_);
@@ -44,4 +46,16 @@ module Pack: {
   let key: Key.t => t;
 
   let to_bytes: t => bytes;
+};
+
+module Consensus: {
+  let hash_validators: list(Key.t) => BLAKE2B.t;
+  let hash_block_data:
+    (
+      ~block_height: int64,
+      ~block_payload_hash: BLAKE2B.t,
+      ~state_root_hash: BLAKE2B.t,
+      ~validators_hash: BLAKE2B.t
+    ) =>
+    BLAKE2B.t;
 };

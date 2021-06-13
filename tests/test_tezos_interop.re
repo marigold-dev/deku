@@ -220,3 +220,46 @@ describe("pack", ({test, _}) => {
     "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
   );
 });
+describe("consensus", ({test, _}) => {
+  open Helpers;
+  open Consensus;
+
+  let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
+  let key_exn = s => Key.of_string(s) |> Option.get;
+
+  test("hash_validators", ({expect, _}) => {
+    let hash =
+      hash_validators([
+        key_exn("edpkvQuAn9BeaDQLzudrPL2zigNRQSmFvKJ7xWN1QmjDjQHj3dBrEZ"),
+        key_exn("edpkvE3Ysq17HFzBBSQeAX87RE3smYZf1rHHpKu1LJdaFAhW8G7SNu"),
+        key_exn("edpktq5HiqUkHTyoBQETvzbyaiwtKQkaBEPkwgZyfMqhRajRuLpWR7"),
+        key_exn("edpkuNpThN8QeagEdvjN3o5R7PSic85cwiXHa61vNpRAE65FNV5mJH"),
+      ]);
+    let hash = BLAKE2B.to_string(hash);
+    expect.string(hash).toEqual(
+      "546d2bb2375cc919efc81a103a7ad3bd1227546b320f275e357bd9a5d5eef946",
+    );
+  });
+  test("hash_block_data", ({expect, _}) => {
+    let hash =
+      hash_block_data(
+        ~block_height=179842L,
+        ~block_payload_hash=
+          hash_exn(
+            "e2b8630f4dbda366f4c5e781e9c421780580566c2b7076f9cff142e58cbad972",
+          ),
+        ~state_root_hash=
+          hash_exn(
+            "7b54374657fc7b0e681ee618d4a13129b2d0c47e8ffb0460f02ac8d324c0b134",
+          ),
+        ~validators_hash=
+          hash_exn(
+            "546d2bb2375cc919efc81a103a7ad3bd1227546b320f275e357bd9a5d5eef946",
+          ),
+      );
+    let hash = BLAKE2B.to_string(hash);
+    expect.string(hash).toEqual(
+      "58b39faab167d45a69a0cf126bade7fd23932b2c48684adfbd164281ca2cc5ff",
+    );
+  });
+});
