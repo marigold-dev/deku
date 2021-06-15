@@ -49,9 +49,9 @@ windows:
       # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
       # synchronize: after
       panes:
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe identity_0.json
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe identity_1.json
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe identity_2.json
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe identity_3.json
+        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 0
+        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 1
+        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 2
+        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 3
         - $cur__target_dir/default/bin/genesis_helper.exe make-credentials && sleep 3 && $cur__target_dir/default/bin/genesis_helper.exe inject-genesis
 
