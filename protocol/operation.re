@@ -36,7 +36,7 @@ module Side_chain = {
 
   let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
     let BLAKE2B.Magic.{hash, _} =
-      BLAKE2B.Magic.hash((nonce, block_height, source, amount, kind));
+      BLAKE2B.Magic.hash((nonce, block_height, source, kind, amount));
     {hash, nonce, block_height, source, kind, amount};
   };
 
