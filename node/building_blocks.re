@@ -10,10 +10,10 @@ let is_valid_block = (state, block) => {
     true;
   let.assert () = (
     Printf.sprintf(
-      "new block has a lower block height (%Ld) than the current state(%Ld)",
+      "new block has a lower block height (%Ld) than the current state (%Ld)",
       block.Block.block_height,
-      state.Node.protocol.block_height
-    )
+      state.Node.protocol.block_height,
+    ),
     block.Block.block_height >= state.Node.protocol.block_height,
   );
 
