@@ -9,16 +9,11 @@ let is_valid_block = (state, block) => {
     // TODO: move this out from of_yojson
     true;
   let.assert () = (
-    String.concat(
-      "",
-      [
-        "new block has a lower block height (",
-        Int64.to_string(block.Block.block_height),
-        ") than the current state (",
-        Int64.to_string(state.Node.protocol.block_height),
-        ").",
-      ],
-    ),
+    Printf.sprintf(
+      "new block has a lower block height (%Ld) than the current state(%Ld)",
+      block.Block.block_height,
+      state.Node.protocol.block_height
+    )
     block.Block.block_height >= state.Node.protocol.block_height,
   );
 
