@@ -61,3 +61,5 @@ module Consensus: {
     ) =>
     BLAKE2B.t;
 };
+
+module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};

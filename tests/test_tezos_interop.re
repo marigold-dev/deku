@@ -263,3 +263,15 @@ describe("consensus", ({test, _}) => {
     );
   });
 });
+describe("discovery", ({test, _}) => {
+  open Discovery;
+
+  let secret = Secret.Ed25519(Address.genesis_key);
+  test("sign", ({expect, _}) => {
+    let signature =
+      sign(secret, ~nonce=1L, Uri.of_string("http://localhost"));
+    expect.string(Signature.to_string(signature)).toEqual(
+      "edsigtpGEA7XKPKMFkFiEA6SfJaaha4Ai2XbteJG5FYvuMtMRyPnXRuZNi54P7BWvV6GaWTijf8EBjGb8MZZvdTrWCGFCVCXL7r",
+    );
+  });
+});

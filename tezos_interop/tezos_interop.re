@@ -230,3 +230,20 @@ module Consensus = {
     |> Bytes.to_string
     |> BLAKE2B.hash;
 };
+
+module Discovery = {
+  open Pack;
+
+  let sign = (secret, ~nonce, uri) =>
+    Signature.sign(
+      secret,
+      Bytes.to_string(
+        to_bytes(
+          pair(
+            int(Z.of_int64(nonce)),
+            bytes(Bytes.of_string(Uri.to_string(uri))),
+          ),
+        ),
+      ),
+    );
+};
