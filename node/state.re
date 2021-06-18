@@ -136,7 +136,6 @@ let load_snapshot =
   );
   let.assert () = (
     `Snapshots_with_invalid_hash,
-    // TODO: stop using magic on both sides
     BLAKE2B.verify(~hash=state_root_hash, state_root),
   );
 
