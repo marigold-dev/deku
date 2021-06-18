@@ -137,9 +137,9 @@ let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
 let genesis =
   make(
-    ~previous_hash=BLAKE2B.Magic.hash("tuturu").hash,
-    ~state_root_hash=BLAKE2B.Magic.hash("mayuushi").hash,
-    ~validators_hash=BLAKE2B.Magic.hash("desu").hash,
+    ~previous_hash=BLAKE2B.hash("tuturu"),
+    ~state_root_hash=BLAKE2B.hash("mayuushi"),
+    ~validators_hash=BLAKE2B.hash("desu"),
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
