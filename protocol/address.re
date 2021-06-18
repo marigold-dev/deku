@@ -25,7 +25,8 @@ let key_of_yojson =
   | _ => Error("invalid type");
 
 type t = Ed25519.pub_; // TODO: is okay to have this public
-let compare = compare;
+let compare = (a, b) =>
+  Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
 let to_yojson = t =>
   `String(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string |> to_hex);
 let of_yojson =
