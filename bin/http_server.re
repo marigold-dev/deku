@@ -157,6 +157,14 @@ let handle_data_to_smart_contract =
       });
     },
   );
+let handle_receive_operation_gossip =
+  handle_request(
+    (module Operation_gossip),
+    (update_state, request) => {
+      Flows.received_operation(Server.get_state(), update_state, request);
+      Ok();
+    },
+  );
 module Utils = {
   let read_file = file => {
     let.await ic = Lwt_io.open_file(~mode=Input, file);
@@ -252,6 +260,7 @@ let _server =
   |> handle_request_nonce
   |> handle_register_uri
   |> handle_data_to_smart_contract
+  |> handle_receive_operation_gossip
   |> App.start
   |> Lwt_main.run;
 

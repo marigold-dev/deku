@@ -22,7 +22,8 @@
     "@opam/mrmime": "0.3.2",
     "@opam/hex": "*",
     "@opam/tezos-micheline": "8.3",
-    "@opam/digestif": "*"
+    "@opam/digestif": "*",
+    "@opam/cmdliner": "1.0.4"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",

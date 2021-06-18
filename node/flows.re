@@ -290,6 +290,27 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   };
 };
 
+open Networking;
+
+let received_operation =
+    (state, update_state, request: Operation_gossip.request) =>
+  if (!List.mem(request.operation, state.Node.pending_side_ops)) {
+    Lwt.async(() => {
+      let _state =
+        update_state(
+          Node.{
+            ...state,
+            pending_side_ops:
+              [request.operation] @ state.Node.pending_side_ops,
+          },
+        );
+      let.await () = broadcast_operation_gossip(state, request);
+      Lwt.return();
+    });
+  } else {
+    ();
+  };
+
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
 

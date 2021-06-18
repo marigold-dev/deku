@@ -56,11 +56,8 @@ let request =
   await(response);
 };
 
-let broadcast = (endpoint, state, data) =>
-  Validators.to_list(state.protocol.validators)
-  |> List.filter_map((Validators.{address, _}) =>
-       State.Address_map.find_opt(address, state.validators_uri)
-     )
+let broadcast_to_list = (endpoint, uris, data) =>
+  uris
   |> Lwt_list.iter_s(uri =>
        Lwt.catch(
          () => post(endpoint, data, uri),
@@ -68,6 +65,13 @@ let broadcast = (endpoint, state, data) =>
          _exn => await(),
        )
      );
+
+let broadcast_to_validators = (endpoint, state, data) =>
+  Validators.to_list(state.protocol.validators)
+  |> List.filter_map((Validators.{address, _}) =>
+       State.Address_map.find_opt(address, state.validators_uri)
+     )
+  |> (uris => broadcast_to_list(endpoint, uris, data));
 
 // protocol endpoints
 module Signature_spec = {
@@ -136,6 +140,14 @@ module Register_uri = {
   let path = "/register-uri";
 };
 
+module Operation_gossip = {
+  [@deriving yojson]
+  type request = {operation: Operation.Side_chain.Self_signed.t};
+  [@deriving yojson]
+  type response = unit;
+  let path = "/operation-gossip";
+};
+
 module Data_to_smart_contract = {
   [@deriving yojson]
   type request = unit;
@@ -155,6 +167,10 @@ let request_block_by_hash = request((module Block_by_hash_spec));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let request_nonce = request((module Request_nonce));
 let request_register_uri = request((module Register_uri));
-let broadcast_signature = broadcast((module Signature_spec));
+let broadcast_signature = broadcast_to_validators((module Signature_spec));
 let broadcast_block_and_signature =
-  broadcast((module Block_and_signature_spec));
+  broadcast_to_validators((module Block_and_signature_spec));
+let broadcast_operation_gossip =
+  broadcast_to_validators((module Operation_gossip));
+let broadcast_operation_gossip_to_list =
+  broadcast_to_list((module Operation_gossip));

@@ -12,3 +12,18 @@ let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;
 };
 let get_pub_key = Ed25519.pub_of_priv;
+
+let make_address = () => {
+  let (_key, pub_) = Ed25519.generate();
+  pub_ |> of_address;
+};
+let make_wallet = () => {
+  let (key, pub_) = Ed25519.generate();
+  let wallet_address = of_address(pub_);
+
+  (key, wallet_address);
+};
+let address_to_blake = t => t;
+let address_of_blake = t => t;
+let address_to_string = wallet =>
+  wallet |> address_to_blake |> BLAKE2B.to_string;
