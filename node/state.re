@@ -137,7 +137,7 @@ let load_snapshot =
   let.assert () = (
     `Snapshots_with_invalid_hash,
     // TODO: stop using magic on both sides
-    BLAKE2B.Magic.verify(~hash=state_root_hash, state_root) |> Result.is_ok,
+    BLAKE2B.verify(~hash=state_root_hash, state_root),
   );
 
   let of_yojson = [%of_yojson:

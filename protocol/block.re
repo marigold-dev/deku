@@ -165,7 +165,7 @@ let produce = (~state) => {
   make(
     ~previous_hash=state.State.last_block_hash,
     ~state_root_hash=
-      update_state_hashes ? State.hash(state).hash : state.state_root_hash,
+      update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
     ~validators_hash=
       update_state_hashes
         ? Validators.hash(state.validators) : state.validators_hash,

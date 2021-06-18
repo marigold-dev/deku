@@ -158,8 +158,8 @@ let apply_block = (state, block) => {
       (true, None);
     } else {
       // TODO: pipeline this
-      let hash = hash(state);
-      (block.state_root_hash == hash.hash, Some(hash));
+      let (hash, data) = hash(state);
+      (block.state_root_hash == hash, Some((hash, data)));
     };
   let.assert () = (`Invalid_state_root_hash, valid_hash);
   let state = apply_block(state, block);
