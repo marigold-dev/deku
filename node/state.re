@@ -23,6 +23,7 @@ type t = {
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
   // TODO: clean this once in a while
+  // TODO: clean after nonce is used
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
 };
