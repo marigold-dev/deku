@@ -16,19 +16,6 @@ module Make =
 
          let hash: string => t;
          let verify: (~hash: t, string) => bool;
-
-         module Magic: {
-           type hash = t;
-           [@deriving yojson]
-           type t('a) =
-             pri {
-               hash,
-               data: 'a,
-             };
-
-           let hash: 'a => t('a);
-           let verify: (~hash: hash, 'a) => result(t('a), string);
-         };
        } => {
   include P;
   include Digestif.Make_BLAKE2B({
@@ -51,29 +38,6 @@ module Make =
 
   let hash = data => digest_string(data);
   let verify = (~hash as expected_hash, data) => expected_hash == hash(data);
-
-  // TODO: magic means evil
-  module Magic = {
-    [@deriving yojson]
-    type hash = t;
-    [@deriving yojson]
-    type t('a) = {
-      hash,
-      data: 'a,
-    };
-    let hash = data => {
-      let hash = hash(Marshal.to_string(data, []));
-      {hash, data};
-    };
-    let verify = (~hash as expected_hash, data) => {
-      let t = hash(data);
-      t.hash == expected_hash ? Ok(t) : Error("Invalid hash");
-    };
-    let of_yojson = (f, json) =>
-      Result.bind(of_yojson(f, json), ({hash, data}) =>
-        verify(~hash, data)
-      );
-  };
 };
 
 module BLAKE2B_20 =
