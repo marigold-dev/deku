@@ -34,21 +34,32 @@ module Side_chain = {
     kind,
   };
 
+  let (hash, verify) = {
+    /* TODO: this is bad name, it exists like this to prevent
+       duplicating all this name parameters */
+    let apply = (f, ~nonce, ~block_height, ~source, ~kind, ~amount) => {
+      let to_yojson = [%to_yojson: (int32, int64, Wallet.t, Amount.t, kind)];
+      let json = to_yojson((nonce, block_height, source, amount, kind));
+      let payload = Yojson.Safe.to_string(json);
+      f(payload);
+    };
+    let hash = apply(BLAKE2B.hash);
+    let verify = (~hash) => apply(BLAKE2B.verify(~hash));
+    (hash, verify);
+  };
+
   let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
-    let BLAKE2B.Magic.{hash, _} =
-      BLAKE2B.Magic.hash((nonce, block_height, source, kind, amount));
-    {hash, nonce, block_height, source, kind, amount};
+    let hash = hash(~nonce, ~block_height, ~source, ~amount, ~kind);
+    {hash, nonce, block_height, source, amount, kind};
   };
 
   let of_yojson = json => {
     let.ok {hash, nonce, block_height, source, kind, amount} =
       of_yojson(json);
-    let.ok {hash, _} =
-      BLAKE2B.Magic.verify(
-        ~hash,
-        (nonce, block_height, source, kind, amount),
-      );
-    Ok({hash, nonce, block_height, source, kind, amount});
+    let.ok () =
+      verify(~hash, ~nonce, ~block_height, ~source, ~amount, ~kind)
+        ? Ok() : Error("Invalid hash");
+    Ok({hash, nonce, block_height, source, amount, kind});
   };
 
   // TODO: maybe use GADT for this?
