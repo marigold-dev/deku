@@ -25,6 +25,12 @@ let key_of_yojson =
   | _ => Error("invalid type");
 
 type t = Ed25519.pub_; // TODO: is okay to have this public
+
+let make_pubkey = () => {
+  let (_priv, pub_) = Ed25519.generate();
+  pub_;
+};
+
 let compare = (a, b) =>
   Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
 let to_yojson = t =>

@@ -47,3 +47,6 @@ module Side_chain: {
   // TODO: maybe use GADT for this?
   module Self_signed: Signed.S with type data = t;
 };
+
+let self_sign_side:
+  (~key: Address.key, Side_chain.t) => Side_chain.Self_signed.t;

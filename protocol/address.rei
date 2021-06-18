@@ -10,3 +10,5 @@ let of_key: key => t;
 
 let genesis_key: key;
 let genesis_address: t;
+
+let make_pubkey: unit => t;

@@ -3,20 +3,8 @@ open Setup;
 open Protocol;
 
 describe("protocol state", ({test, _}) => {
-  let make_address = () => {
-    open Mirage_crypto_ec;
-    let (_key, pub_) = Ed25519.generate();
-    pub_;
-  };
-  let make_wallet = () => {
-    open Mirage_crypto_ec;
-    let (key, pub_) = Ed25519.generate();
-    let wallet_address = Wallet.of_address(pub_);
-
-    (key, wallet_address);
-  };
   let make_state = (~validators=?, ()) => {
-    let (key_wallet, wallet) = make_wallet();
+    let (key_wallet, wallet) = Wallet.make_wallet();
     let state = {
       ...make(~initial_block=Block.genesis),
       ledger:
@@ -34,11 +22,7 @@ describe("protocol state", ({test, _}) => {
     let state = {...state, validators};
     (state, key_wallet, wallet);
   };
-  let self_sign_side = (~key, op) => {
-    let Signed.{key, signature, data} = Signed.sign(~key, op);
-    Operation.Side_chain.Self_signed.verify(~key, ~signature, data)
-    |> Result.get_ok;
-  };
+
   let apply_block = (~author=?, ~main=[], ~side=[], state) => {
     let author = {
       open Helpers;
@@ -74,7 +58,7 @@ describe("protocol state", ({test, _}) => {
           expect.int(Amount.to_int(left)).toBe(right);
         // TODO: use random wallet with random amount
         let (old_state, key_a, wallet_a) = make_state();
-        let (key_b, wallet_b) = make_wallet();
+        let (key_b, wallet_b) = Wallet.make_wallet();
         let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
 
         expect_amount(Ledger.get_free(wallet_a, old_state.ledger), 500);
@@ -133,7 +117,7 @@ describe("protocol state", ({test, _}) => {
     "freeze", ~free_diff_a=-5, ~frozen_diff_a=5, (state, (source, key), _) =>
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -149,7 +133,7 @@ describe("protocol state", ({test, _}) => {
     "freeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -167,7 +151,7 @@ describe("protocol state", ({test, _}) => {
     "unfreeze", ~free_diff_a=6, ~frozen_diff_a=-6, (state, (source, key), _) => {
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -183,7 +167,7 @@ describe("protocol state", ({test, _}) => {
     "unfreeze", "not enough funds", (state, (source, key), _) =>
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -203,7 +187,7 @@ describe("protocol state", ({test, _}) => {
     (state, (source, key), (destination, _)) => {
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -221,7 +205,7 @@ describe("protocol state", ({test, _}) => {
     (state, (source, key), (destination, _)) =>
     apply_side_chain(
       state,
-      self_sign_side(
+      Operation.self_sign_side(
         ~key,
         Operation.Side_chain.make(
           ~nonce=0l,
@@ -239,7 +223,7 @@ describe("protocol state", ({test, _}) => {
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
-    let new_validator = Validators.{address: make_address()};
+    let new_validator = Validators.{address: Address.make_pubkey()};
     let state =
       apply_main_chain(
         state,
@@ -260,7 +244,7 @@ describe("protocol state", ({test, _}) => {
       toBeTrue();
     expect.list(Validators.to_list(validators)).toEqual([new_validator]);
     // additional shouldn't move current
-    let another_validator = Validators.{address: make_address()};
+    let another_validator = Validators.{address: Address.make_pubkey()};
     let state =
       apply_main_chain(
         state,

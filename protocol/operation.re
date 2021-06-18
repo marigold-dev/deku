@@ -73,3 +73,8 @@ module Side_chain = {
         Wallet.of_address(key) == data.source;
     });
 };
+
+let self_sign_side = (~key, op) => {
+  let Signed.{key, signature, data} = Signed.sign(~key, op);
+  Side_chain.Self_signed.verify(~key, ~signature, data) |> Result.get_ok;
+};
