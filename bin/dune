@@ -14,13 +14,7 @@
 
 (executable
  (name sidecli)
- (libraries
-  opium
-  node
-  mirage-crypto-ec
-  mirage-crypto-rng.unix
-  helpers
-  cmdliner)
+ (libraries node mirage-crypto-ec mirage-crypto-rng.unix helpers cmdliner)
  (modules Sidecli)
  (preprocess
   (pps ppx_deriving_yojson)))
