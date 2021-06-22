@@ -167,9 +167,10 @@ let handle_receive_operation_gossip =
   );
 module Utils = {
   let read_file = file => {
-    let.await ic = Lwt_io.open_file(~mode=Input, file);
-    let.await lines = Lwt_io.read_lines(ic) |> Lwt_stream.to_list;
-    let.await () = Lwt_io.close(ic);
+    let.await lines =
+      Lwt_io.with_file(~mode=Input, file, ic =>
+        Lwt_io.read_lines(ic) |> Lwt_stream.to_list
+      );
     await(lines |> String.concat("\n"));
   };
 
