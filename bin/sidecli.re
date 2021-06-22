@@ -177,6 +177,8 @@ let create_transaction = (address_sender_str, address_receiver_str, amount) =>
     };
   };
 
+let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
+
 let create_transaction_t = {
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
@@ -200,14 +202,7 @@ let create_transaction_t = {
   };
 
   Term.(
-    ret(
-      const((addr_from, addr_to, amount) =>
-        create_transaction(addr_from, addr_to, amount) |> Lwt_main.run
-      )
-      $ address_from
-      $ address_to
-      $ amount,
-    )
+    lwt_ret(const(create_transaction) $ address_from $ address_to $ amount)
   );
 };
 
