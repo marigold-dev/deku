@@ -181,4 +181,3 @@ open Signature.Make({
 
 let sign = (~key, t) => sign(~key, t).signature;
 let verify = (~signature, t) => verify(~signature, t);
-let verify_hash = (~signature, hash) => Signature.verify(~signature, hash);

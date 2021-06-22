@@ -17,7 +17,6 @@ type t =
 
 let sign: (~key: Address.key, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
-let verify_hash: (~signature: Signature.t, BLAKE2B.t) => bool;
 let genesis: t;
 let produce:
   (
