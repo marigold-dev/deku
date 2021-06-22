@@ -63,12 +63,10 @@ let info_create_wallet = {
 let create_wallet = () => {
   let (key, wallet) = Wallet.make_wallet();
 
-  let swallet: Serializable.wallet_file = {priv_key: key, address: wallet};
-  let to_yojson = Serializable.wallet_file_to_yojson;
-  let wallet_json = swallet |> to_yojson;
+  let wallet_json =
+    Serializable.wallet_file_to_yojson({priv_key: key, address: wallet});
 
   let wallet_addr_str = Wallet.address_to_string(wallet);
-
   let filename = make_filename_from_address(wallet_addr_str);
 
   try(`Ok(Yojson.Safe.to_file(filename, wallet_json))) {
@@ -76,9 +74,49 @@ let create_wallet = () => {
   };
 };
 
-let create_wallet_t = Term.(ret(const(create_wallet) $ const()));
+let create_wallet = Term.(ret(const(create_wallet) $ const()));
 
 // Transactions
+
+let address = {
+  let parser = string =>
+    BLAKE2B.of_string(string)
+    |> Option.map(Wallet.address_of_blake)
+    |> Option.to_result(~none=`Msg("Expected a wallet address."));
+  let printer = (fmt, wallet) =>
+    Format.fprintf(fmt, "%s", Wallet.address_to_string(wallet));
+  Arg.(conv((parser, printer)));
+};
+let amount = {
+  let parser = string => {
+    let.ok int =
+      int_of_string_opt(string)
+      |> Option.to_result(~none=`Msg("Expected an amount"));
+    // TODO: probably of_int should be option
+    try(Ok(Amount.of_int(int))) {
+    | _exn => Error(`Msg("Expected an amount above zero"))
+    };
+  };
+  let printer = (fmt, amount) =>
+    Format.fprintf(fmt, "%d", Amount.to_int(amount));
+  Arg.(conv(~docv="A positive amount", (parser, printer)));
+};
+// TODO: Wallet.t
+let wallet = {
+  let parser = file => {
+    let non_dir_file = Arg.(conv_parser(non_dir_file));
+    switch (
+      non_dir_file(file),
+      non_dir_file(make_filename_from_address(file)),
+    ) {
+    | (Ok(file), _)
+    | (_, Ok(file)) => Ok(file)
+    | _ => Error(`Msg("Expected path to wallet"))
+    };
+  };
+  let printer = Arg.(conv_printer(non_dir_file));
+  Arg.(conv((parser, printer)));
+};
 
 let info_create_transaction = {
   let doc =
@@ -99,106 +137,83 @@ let info_create_transaction = {
   );
 };
 
-let create_transaction = (address_sender_str, address_receiver_str, amount) =>
-  switch (
-    address_sender_str == "",
-    address_receiver_str == "",
-    amount <= 0,
-    address_receiver_str
-    |> BLAKE2B.of_string
-    |> Option.map(Wallet.address_of_blake),
-  ) {
-  | (true, _, _, _) =>
-    Lwt.return(
-      `Error((
-        false,
-        "Must provide a sender wallet address, or a path to a wallet file.",
-      )),
-    )
-  | (_, true, _, _) =>
-    Lwt.return(`Error((false, "Must provide a destination wallet address.")))
-  | (_, _, true, _) =>
-    Lwt.return(
-      `Error((false, "Must provide a transaction amount above zero.")),
-    )
-  | (_, _, _, None) =>
-    Lwt.return(
-      `Error((false, "Transaction destination must be a valid address.")),
-    )
-  | (_, _, _, Some(address_to)) =>
-    let transaction = {
-      let input_file =
-        switch (
-          address_sender_str
-          |> BLAKE2B.of_string
-          |> Option.map(Wallet.address_of_blake)
-        ) {
-        | Some(_) => address_sender_str |> make_filename_from_address
-        | None => address_sender_str
-        };
-
-      let.ok wallet_yojson =
-        try(Ok(input_file |> Yojson.Safe.from_file)) {
-        | _ =>
-          Error(
-            Printf.sprintf("failed to read JSON from file %s", input_file),
-          )
-        };
-
-      let.ok wallet = Serializable.wallet_file_of_yojson(wallet_yojson);
-
-      Ok(
-        Operation.self_sign_side(
-          ~key=wallet.priv_key,
-          Operation.Side_chain.make(
-            ~nonce=0l,
-            ~block_height=0L,
-            ~source=wallet.address,
-            ~amount=Amount.of_int(amount),
-            ~kind=Transaction({destination: address_to}),
+let create_transaction = (sender_wallet_file, received_address, amount) => {
+  let transaction = {
+    let.ok wallet_yojson =
+      try(Ok(sender_wallet_file |> Yojson.Safe.from_file)) {
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "failed to read JSON from file %s",
+            sender_wallet_file,
           ),
+        )
+      };
+    let.ok wallet = Serializable.wallet_file_of_yojson(wallet_yojson);
+
+    Ok(
+      Operation.self_sign_side(
+        ~key=wallet.priv_key,
+        Operation.Side_chain.make(
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source=wallet.address,
+          ~amount,
+          ~kind=Transaction({destination: received_address}),
         ),
-      );
-    };
-    switch (transaction) {
-    | Ok(transaction) =>
-      let validators_uris =
-        List.map(validator => validator.uri, validators());
-
-      // Broadcast transaction
-      let.await () =
-        Networking.broadcast_operation_gossip_to_list(
-          validators_uris,
-          Networking.Operation_gossip.{operation: transaction},
-        );
-
-      Lwt.return(`Ok());
-    | Error(err) => Lwt.return(`Error((false, err)))
-    };
+      ),
+    );
   };
+  switch (transaction) {
+  | Ok(transaction) =>
+    let validators_uris = List.map(validator => validator.uri, validators());
+
+    // Broadcast transaction
+    let.await () =
+      Networking.broadcast_operation_gossip_to_list(
+        validators_uris,
+        Networking.Operation_gossip.{operation: transaction},
+      );
+
+    Lwt.return(`Ok());
+  | Error(err) => Lwt.return(`Error((false, err)))
+  };
+};
 
 let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 
-let create_transaction_t = {
+let create_transaction = {
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
     let env = Arg.env_var("SENDER", ~doc);
     let doc = "The message to print.";
-    Arg.(value & pos(0, string, "") & info([], ~env, ~docv="MSG", ~doc));
+    Arg.(
+      required
+      & pos(0, some(wallet), None)
+      & info([], ~env, ~docv="MSG", ~doc)
+    );
   };
 
   let address_to = {
     let doc = "The receiving address.";
     let env = Arg.env_var("RECEIVER", ~doc);
     let doc = "The message to print.";
-    Arg.(value & pos(1, string, "") & info([], ~env, ~docv="MSG", ~doc));
+    Arg.(
+      required
+      & pos(1, some(address), None)
+      & info([], ~env, ~docv="MSG", ~doc)
+    );
   };
 
   let amount = {
     let doc = "The amount to be transacted.";
     let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
     let doc = "The message to print.";
-    Arg.(value & pos(2, int, 0) & info([], ~env, ~docv="MSG", ~doc));
+    Arg.(
+      required
+      & pos(2, some(amount), None)
+      & info([], ~env, ~docv="MSG", ~doc)
+    );
   };
 
   Term.(
@@ -217,7 +232,7 @@ let show_help = {
     `P("Email bug reports to <contact@marigold.dev>."),
   ];
   (
-    Term.(ret(const(() => `Help((`Pager, None))) $ const())),
+    Term.(ret(const(`Help((`Pager, None))))),
     Term.info("sidecli", ~version="v0.0.1", ~doc, ~sdocs, ~exits, ~man),
   );
 };
@@ -230,8 +245,8 @@ let () = {
   Term.eval_choice(
     show_help,
     [
-      (create_wallet_t, info_create_wallet),
-      (create_transaction_t, info_create_transaction),
+      (create_wallet, info_create_wallet),
+      (create_transaction, info_create_transaction),
     ],
   );
 };
