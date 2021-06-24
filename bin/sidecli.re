@@ -26,10 +26,11 @@ let read_identity_file = file => {
 // I don't know anything about that, except for having played with hyperswarm.
 let validators = () => [
   read_identity_file("0/identity.json"),
-  // read_identity_file("1/identity.json"),
+  read_identity_file("1/identity.json"),
   read_identity_file("2/identity.json"),
-  // read_identity_file("identity_3.json"),
+  read_identity_file("3/identity.json"),
 ];
+let validators_uris = List.map(validator => validator.uri, validators());
 
 let make_filename_from_address = wallet_addr_str => {
   Printf.sprintf("%s.tzsidewallet", wallet_addr_str);
@@ -50,7 +51,7 @@ let exits =
 // Commands
 // ========
 
-// Create wallet
+// create-wallet
 
 let info_create_wallet = {
   let doc = "Creates a wallet file. The wallet file's filename is its address. The wallet file contains the private key corresponding to that address.";
@@ -77,7 +78,7 @@ let create_wallet = () => {
 
 let create_wallet = Term.(ret(const(create_wallet) $ const()));
 
-// Transactions
+// create-transaction
 
 let address = {
   let parser = string =>
@@ -119,6 +120,13 @@ let wallet = {
   Arg.(conv((parser, printer)));
 };
 
+let load_wallet_file = file => {
+  let.ok wallet_yojson =
+    try(Ok(file |> Yojson.Safe.from_file)) {
+    | _ => Error(Printf.sprintf("failed to read JSON from file %s", file))
+    };
+  Serializable.wallet_file_of_yojson(wallet_yojson);
+};
 let info_create_transaction = {
   let doc =
     Printf.sprintf(
@@ -140,17 +148,7 @@ let info_create_transaction = {
 
 let create_transaction = (sender_wallet_file, received_address, amount) => {
   let transaction = {
-    let.ok wallet_yojson =
-      try(Ok(sender_wallet_file |> Yojson.Safe.from_file)) {
-      | _ =>
-        Error(
-          Printf.sprintf(
-            "failed to read JSON from file %s",
-            sender_wallet_file,
-          ),
-        )
-      };
-    let.ok wallet = Serializable.wallet_file_of_yojson(wallet_yojson);
+    let.ok wallet = load_wallet_file(sender_wallet_file);
 
     Ok(
       Operation.self_sign_side(
@@ -167,8 +165,6 @@ let create_transaction = (sender_wallet_file, received_address, amount) => {
   };
   switch (transaction) {
   | Ok(transaction) =>
-    let validators_uris = List.map(validator => validator.uri, validators());
-
     // Broadcast transaction
     let.await () =
       Networking.broadcast_operation_gossip_to_list(
@@ -222,6 +218,53 @@ let create_transaction = {
   );
 };
 
+// sign-block
+let hash = {
+  let parser = string =>
+    BLAKE2B.of_string(string)
+    |> Option.to_result(~none=`Msg("Expected a 256bits BLAKE2b hash."));
+  let printer = (fmt, wallet) =>
+    Format.fprintf(fmt, "%s", BLAKE2B.to_string(wallet));
+  Arg.(conv((parser, printer)));
+};
+
+let info_sign_block = {
+  let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
+  let man = [
+    `S(Manpage.s_bugs),
+    `P("Email bug reports to <contact@marigold.dev>."),
+  ];
+  Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let sign_block = (key, block_hash) =>
+  switch (load_wallet_file(key)) {
+  | Ok(wallet) =>
+    let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+    let.await () =
+      Networking.(
+        broadcast_to_list(
+          (module Signature_spec),
+          validators_uris,
+          {hash: block_hash, signature},
+        )
+      );
+    Lwt.return(`Ok());
+  | Error(err) => Lwt.return(`Error((false, err)))
+  };
+let sign_block = {
+  let key_wallet = {
+    let doc = "The validator key that will sign the block address.";
+    Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
+  };
+
+  let block_hash = {
+    let doc = "The block hash to be signed.";
+    Arg.(required & pos(1, some(hash), None) & info([], ~doc));
+  };
+
+  Term.(lwt_ret(const(sign_block) $ key_wallet $ block_hash));
+};
+
 // Term that just shows the help command, to use when no arguments are passed
 
 let show_help = {
@@ -248,6 +291,7 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
+      (sign_block, info_sign_block),
     ],
   );
 };

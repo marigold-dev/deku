@@ -6,6 +6,7 @@ type t;
 let compare: (t, t) => int;
 let public_key: t => Address.t;
 
+let sign: (~key: Ed25519.priv, BLAKE2B.t) => t;
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
 let signature_to_b58check: t => string;
