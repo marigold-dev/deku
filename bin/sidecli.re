@@ -265,6 +265,55 @@ let sign_block = {
   Term.(lwt_ret(const(sign_block) $ key_wallet $ block_hash));
 };
 
+// produce-block
+let info_produce_block = {
+  let doc = "Produce and sign a block and broadcast to the network manually, useful when the chain is stale.";
+  let man = [
+    `S(Manpage.s_bugs),
+    `P("Email bug reports to <contact@marigold.dev>."),
+  ];
+  Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let produce_block = (key, state_bin) =>
+  switch (load_wallet_file(key)) {
+  | Ok(wallet) =>
+    let.await state: Protocol.t =
+      Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
+    let address = Address.of_key(wallet.priv_key);
+    let block =
+      Block.produce(
+        ~state,
+        ~author=address,
+        ~main_chain_ops=[],
+        ~side_chain_ops=[],
+      );
+    let signature = Block.sign(~key=wallet.priv_key, block);
+    let.await () =
+      Networking.(
+        broadcast_to_list(
+          (module Block_and_signature_spec),
+          validators_uris,
+          {block, signature},
+        )
+      );
+    Lwt.return(`Ok());
+  | Error(err) => Lwt.return(`Error((false, err)))
+  };
+
+let produce_block = {
+  let key_wallet = {
+    let doc = "The validator key that will sign the block address.";
+    Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
+  };
+
+  let state_bin = {
+    let doc = "Last known serialized state.";
+    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc));
+  };
+
+  Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
+};
+
 // Term that just shows the help command, to use when no arguments are passed
 
 let show_help = {
@@ -292,6 +341,7 @@ let () = {
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
       (sign_block, info_sign_block),
+      (produce_block, info_produce_block),
     ],
   );
 };
