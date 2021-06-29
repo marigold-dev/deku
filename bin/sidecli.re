@@ -272,7 +272,7 @@ let info_produce_block = {
     `S(Manpage.s_bugs),
     `P("Email bug reports to <contact@marigold.dev>."),
   ];
-  Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+  Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 let produce_block = (key, state_bin) =>
   switch (load_wallet_file(key)) {
