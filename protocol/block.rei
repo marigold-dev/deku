@@ -15,7 +15,7 @@ type t =
     side_chain_ops: list(Side_chain.Self_signed.t),
   };
 
-let sign: (~key: Address.key, t) => Signature.t;
+let sign: (~key: Wallet.t, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
 let genesis: t;
 let produce:

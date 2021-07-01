@@ -3,6 +3,11 @@ open Mirage_crypto_ec;
 type t = Ed25519.priv;
 type pub_ = Ed25519.pub_;
 
+let wallet_of_privkey = priv => priv; 
+let wallet_to_privkey = priv => priv; 
+
+let pub_of_Ed25519pub = pub_ => pub_; 
+let pub_to_Ed25519pub = pub_ => pub_; 
 
 let pubkey_of_wallet = Ed25519.pub_of_priv;
 

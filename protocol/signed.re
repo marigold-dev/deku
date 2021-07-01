@@ -41,26 +41,26 @@ module type S = {
   [@deriving (yojson, ord)]
   type t =
     pri {
-      key: Address.t,
+      key: Wallet.pub_,
       signature: string,
       data,
     };
   let verify:
-    (~key: Address.t, ~signature: string, data) => result(t, string);
+    (~key: Wallet.pub_, ~signature: string, data) => result(t, string);
 };
 module Make =
        (
          F: {
            [@deriving (yojson, ord)]
            type t;
-           let verify: (~key: Address.t, ~signature: string, t) => bool;
+           let verify: (~key: Wallet.pub_, ~signature: string, t) => bool;
          },
        ) => {
   [@deriving (yojson, ord)]
   type data = F.t;
   [@deriving (yojson, ord)]
   type t = {
-    key: Address.t,
+    key: Wallet.pub_,
     signature: string,
     data,
   };

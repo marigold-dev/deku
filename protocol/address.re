@@ -10,7 +10,7 @@ let of_pubkey = pubkey => {
 };
 let of_wallet = privkey => {
   let pubkey = Wallet.pubkey_of_wallet(privkey);
-  of_pubkey(pubkey)
+  of_pubkey(pubkey);
 };
 
 let address_matches_pubkey = (address, pubkey) => {
@@ -24,17 +24,17 @@ let make_wallet = () => {
   (key, address);
 };
 
-
 let address_to_blake = t => t;
 let address_of_blake = t => t;
 
 let address_to_string = wallet =>
   wallet |> address_to_blake |> BLAKE2B.to_string;
 
-
 let make_address = () => {
-  snd(make_wallet())
+  snd(make_wallet());
 };
 
-
 let genesis_address = of_wallet(Wallet.genesis_key);
+
+let compare = (a, b) =>
+  String.compare(BLAKE2B.to_string(a), BLAKE2B.to_string(b));

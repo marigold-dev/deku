@@ -3,11 +3,11 @@ module Main_chain: {
   [@deriving (ord, yojson)]
   type t =
     | Deposit({
-        destination: Wallet.t,
+        destination: Address.t,
         amount: Amount.t,
       })
     | Withdraw({
-        source: Wallet.t,
+        source: Address.t,
         amount: Amount.t,
       })
     // TODO: can a validator uses the same key in different nodes?
@@ -20,7 +20,7 @@ module Side_chain: {
   // TODO: I don't like this structure model
   [@deriving (ord, yojson)]
   type kind =
-    | Transaction({destination: Wallet.t})
+    | Transaction({destination: Address.t})
     | Freeze
     | Unfreeze;
   [@deriving (ord, yojson)]
@@ -29,7 +29,7 @@ module Side_chain: {
       hash: BLAKE2B.t,
       nonce: int32,
       block_height: int64,
-      source: Wallet.t,
+      source: Address.t,
       amount: Amount.t,
       kind,
     };
@@ -38,7 +38,7 @@ module Side_chain: {
     (
       ~nonce: int32,
       ~block_height: int64,
-      ~source: Wallet.t,
+      ~source: Address.t,
       ~amount: Amount.t,
       ~kind: kind
     ) =>
@@ -48,5 +48,4 @@ module Side_chain: {
   module Self_signed: Signed.S with type data = t;
 };
 
-let self_sign_side:
-  (~key: Address.key, Side_chain.t) => Side_chain.Self_signed.t;
+let self_sign_side: (~key: Wallet.t, Side_chain.t) => Side_chain.Self_signed.t;

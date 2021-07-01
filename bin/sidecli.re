@@ -40,7 +40,7 @@ module Serializable = {
   [@deriving yojson]
   type wallet_file = {
     address: Wallet.t,
-    priv_key: Address.key,
+    priv_key: Wallet.t,
   };
 };
 

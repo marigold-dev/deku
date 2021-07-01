@@ -29,7 +29,7 @@ module Side_chain = {
     hash: BLAKE2B.t,
     nonce: int32,
     block_height: int64,
-    source: Wallet.t,
+    source: Address.t,
     amount: Amount.t,
     kind,
   };
@@ -38,7 +38,7 @@ module Side_chain = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
     let apply = (f, ~nonce, ~block_height, ~source, ~kind, ~amount) => {
-      let to_yojson = [%to_yojson: (int32, int64, Wallet.t, Amount.t, kind)];
+      let to_yojson = [%to_yojson: (int32, int64, Address.t, Amount.t, kind)];
       let json = to_yojson((nonce, block_height, source, amount, kind));
       let payload = Yojson.Safe.to_string(json);
       f(payload);
@@ -70,7 +70,7 @@ module Side_chain = {
       let to_yojson = to_yojson;
       let of_yojson = of_yojson;
       let verify = (~key, ~signature as _, data) =>
-        Wallet.of_address(key) == data.source;
+        Address.of_pubkey(key) == data.source;
     });
 };
 
