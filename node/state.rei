@@ -8,7 +8,7 @@ type identity = {
   uri: Uri.t,
 };
 
-module Address_map: Map.S with type key = Wallet.pub_;
+module Pubkey_map: Map.S with type key = Wallet.pub_;
 module Uri_map: Map.S with type key = Uri.t;
 type t = {
   identity,
@@ -20,14 +20,14 @@ type t = {
   snapshots: Snapshots.t,
   // networking
   uri_state: Uri_map.t(string),
-  validators_uri: Address_map.t(Uri.t),
+  validators_uri: Pubkey_map.t(Uri.t),
 };
 
 let make:
   (
     ~identity: identity,
     ~data_folder: string,
-    ~initial_validators_uri: Address_map.t(Uri.t)
+    ~initial_validators_uri: Pubkey_map.t(Uri.t)
   ) =>
   t;
 let apply_block:

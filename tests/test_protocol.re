@@ -4,23 +4,23 @@ open Protocol;
 
 describe("protocol state", ({test, _}) => {
   let make_state = (~validators=?, ()) => {
-    let (key_wallet, wallet) = Wallet.make_wallet();
+    let (wallet, address) = Address.make_wallet();
     let state = {
       ...make(~initial_block=Block.genesis),
       ledger:
         Ledger.empty
-        |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
-        |> Ledger.unfreeze(~wallet, ~amount=Amount.of_int(500)),
+        |> Ledger.deposit(~destination=address, ~amount=Amount.of_int(1000))
+        |> Ledger.unfreeze(~address, ~amount=Amount.of_int(500)),
     };
     let validators = {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({address: Wallet.get_pub_key(key_wallet)});
+        |> Validators.add({address: wallet |> Wallet.pubkey_of_wallet});
       validators;
     };
     let state = {...state, validators};
-    (state, key_wallet, wallet);
+    (state, wallet, address);
   };
 
   let apply_block = (~author=?, ~main=[], ~side=[], state) => {
@@ -58,7 +58,7 @@ describe("protocol state", ({test, _}) => {
           expect.int(Amount.to_int(left)).toBe(right);
         // TODO: use random wallet with random amount
         let (old_state, key_a, wallet_a) = make_state();
-        let (key_b, wallet_b) = Wallet.make_wallet();
+        let (key_b, wallet_b) = Address.make_wallet();
         let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
 
         expect_amount(Ledger.get_free(wallet_a, old_state.ledger), 500);
@@ -223,7 +223,7 @@ describe("protocol state", ({test, _}) => {
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
-    let new_validator = Validators.{address: Address.make_pubkey()};
+    let new_validator = Validators.{address: Wallet.make_pubkey()};
     let state =
       apply_main_chain(
         state,
@@ -244,7 +244,7 @@ describe("protocol state", ({test, _}) => {
       toBeTrue();
     expect.list(Validators.to_list(validators)).toEqual([new_validator]);
     // additional shouldn't move current
-    let another_validator = Validators.{address: Address.make_pubkey()};
+    let another_validator = Validators.{address: Wallet.make_pubkey()};
     let state =
       apply_main_chain(
         state,

@@ -143,7 +143,7 @@ let genesis =
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
-    ~author=Address.genesis_address,
+    ~author=Wallet.genesis_pubkey,
   );
 
 // TODO: move this to a global module
@@ -179,5 +179,6 @@ open Signature.Make({
        let hash = t => t.hash;
      });
 
-let sign = (~key, t) => sign(~key, t).signature;
+let sign = (~key, t) =>
+  sign(~key=key |> Wallet.wallet_to_privkey, t).signature;
 let verify = (~signature, t) => verify(~signature, t);

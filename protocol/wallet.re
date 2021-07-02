@@ -12,6 +12,7 @@ let pub_to_Ed25519pub = pub_ => pub_;
 let pubkey_of_wallet = Ed25519.pub_of_priv;
 
 let make_pair = () => Ed25519.generate();
+let make_pubkey = () => make_pair() |> snd;
 
 let to_hex = str => {
   let `Hex(str) = Hex.of_string(str);
@@ -55,6 +56,8 @@ let genesis_key =
   | Ok(key) => key
   | Error(error) => failwith(error)
   };
+
+let genesis_pubkey = pubkey_of_wallet(genesis_key);
 
 let compare_pub = (a, b) =>
   Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));

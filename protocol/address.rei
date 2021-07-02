@@ -6,6 +6,8 @@ type t;
 let of_wallet: Wallet.t => t;
 let of_pubkey: Wallet.pub_ => t;
 
+let make_wallet: unit => (Wallet.t, t);
+
 let genesis_address: t;
 
 let address_to_blake: t => BLAKE2B.t;

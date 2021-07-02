@@ -1,17 +1,17 @@
 open Helpers;
 open Exn_noop;
 
-module Wallet_map = Map_with_yojson_make(Wallet);
+module Address_map = Map_with_yojson_make(Address);
 [@deriving yojson]
 type t = {
-  free: Wallet_map.t(Amount.t),
-  frozen: Wallet_map.t(Amount.t),
+  free: Address_map.t(Amount.t),
+  frozen: Address_map.t(Amount.t),
 };
 
-let empty = {free: Wallet_map.empty, frozen: Wallet_map.empty};
+let empty = {free: Address_map.empty, frozen: Address_map.empty};
 
 let get = (address, map) =>
-  Wallet_map.find_opt(address, map) |> Option.value(~default=Amount.zero);
+  Address_map.find_opt(address, map) |> Option.value(~default=Amount.zero);
 
 let get_free = (address, t) => get(address, t.free);
 let get_frozen = (address, t) => get(address, t.frozen);
@@ -31,36 +31,37 @@ let transfer = (~source, ~destination, ~amount, t) => {
   {
     free:
       t.free
-      |> Wallet_map.add(source, source_balance - amount)
-      |> Wallet_map.add(destination, destination_balance + amount),
+      |> Address_map.add(source, source_balance - amount)
+      |> Address_map.add(destination, destination_balance + amount),
     frozen: t.frozen,
   };
 };
 
-let freeze = (~wallet, ~amount, t) => {
+let freeze = (~address, ~amount, t) => {
   open Amount;
 
-  let source_balance = get_free(wallet, t);
+  let source_balance = get_free(address, t);
   assert_available(~source=source_balance, ~amount);
 
-  let destination_balance = get_frozen(wallet, t);
+  let destination_balance = get_frozen(address, t);
   {
-    free: t.free |> Wallet_map.add(wallet, source_balance - amount),
-    frozen: t.frozen |> Wallet_map.add(wallet, destination_balance + amount),
+    free: t.free |> Address_map.add(address, source_balance - amount),
+    frozen:
+      t.frozen |> Address_map.add(address, destination_balance + amount),
   };
 };
 // TODO: avoid this duplicated code
-let unfreeze = (~wallet, ~amount, t) => {
+let unfreeze = (~address, ~amount, t) => {
   open Amount;
 
-  let source_balance = get_frozen(wallet, t);
+  let source_balance = get_frozen(address, t);
   assert_available(~source=source_balance, ~amount);
 
-  let destination_balance = get_free(wallet, t);
+  let destination_balance = get_free(address, t);
 
   {
-    free: t.free |> Wallet_map.add(wallet, destination_balance + amount),
-    frozen: t.frozen |> Wallet_map.add(wallet, source_balance - amount),
+    free: t.free |> Address_map.add(address, destination_balance + amount),
+    frozen: t.frozen |> Address_map.add(address, source_balance - amount),
   };
 };
 
@@ -71,7 +72,7 @@ let deposit = (~destination, ~amount, t) => {
   {
     free: t.free,
     frozen:
-      t.frozen |> Wallet_map.add(destination, destination_balance + amount),
+      t.frozen |> Address_map.add(destination, destination_balance + amount),
   };
 };
 let withdraw = (~source, ~amount, t) => {
@@ -81,6 +82,6 @@ let withdraw = (~source, ~amount, t) => {
 
   {
     free: t.free,
-    frozen: t.frozen |> Wallet_map.add(source, source_balance - amount),
+    frozen: t.frozen |> Address_map.add(source, source_balance - amount),
   };
 };

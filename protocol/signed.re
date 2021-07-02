@@ -3,7 +3,7 @@ open Mirage_crypto_ec;
 
 [@deriving (yojson, ord)]
 type t('a) = {
-  key: Wallet.pub_,
+  key: Wallet.pub_, // TODO: rename to pubkey
   signature: string,
   data: 'a,
 };
@@ -13,14 +13,17 @@ type signed('a) = t('a);
 
 let sign = (~key, data) => {
   let message = Cstruct.of_string(Marshal.to_string(data, []));
-  let `Hex(signature) = Ed25519.sign(~key, message) |> Hex.of_cstruct;
-  {key: Address.of_key(key), signature, data};
+  let `Hex(signature) =
+    Ed25519.sign(~key=key |> Wallet.wallet_to_privkey, message)
+    |> Hex.of_cstruct;
+  let pubkey = key |> Wallet.pubkey_of_wallet;
+  {key: pubkey, signature, data};
 };
 let verify = (~key, ~signature, data) => {
   let.assert () = (
     "invalid signature",
     Ed25519.verify(
-      ~key,
+      ~key=key |> Wallet.pub_to_Ed25519pub,
       ~msg=Cstruct.of_string(Marshal.to_string(data, [])),
       `Hex(signature) |> Hex.to_cstruct,
     ),

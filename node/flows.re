@@ -342,7 +342,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     update_state({
       ...state,
       validators_uri:
-        Node.Address_map.add(
+        Node.Pubkey_map.add(
           Signature.public_key(signature),
           uri,
           state.validators_uri,

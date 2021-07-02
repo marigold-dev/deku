@@ -143,7 +143,7 @@ let find_random_validator_uri = state => {
     } else {
       // TODO: this blown up if there is no validator uri registered
       switch (
-        Node.Address_map.find_opt(validator.address, state.validators_uri)
+        Node.Pubkey_map.find_opt(validator.address, state.validators_uri)
       ) {
       | Some(uri) => uri
       | None => safe_validator_uri()

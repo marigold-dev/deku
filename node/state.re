@@ -8,7 +8,12 @@ type identity = {
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Address);
+module Pub_mod = {
+  type t = Wallet.pub_;
+  let compare = Wallet.compare_pub;
+};
+
+module Pubkey_map = Map.Make(Pub_mod);
 module Uri_map = Map.Make(Uri);
 
 type t = {
@@ -25,7 +30,7 @@ type t = {
   // TODO: clean this once in a while
   // TODO: clean after nonce is used
   uri_state: Uri_map.t(string),
-  validators_uri: Address_map.t(Uri.t),
+  validators_uri: Pubkey_map.t(Uri.t),
 };
 
 let make = (~identity, ~data_folder, ~initial_validators_uri) => {

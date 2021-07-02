@@ -69,7 +69,7 @@ let broadcast_to_list = (endpoint, uris, data) =>
 let broadcast_to_validators = (endpoint, state, data) =>
   Validators.to_list(state.protocol.validators)
   |> List.filter_map((Validators.{address, _}) =>
-       State.Address_map.find_opt(address, state.validators_uri)
+       State.Pubkey_map.find_opt(address, state.validators_uri)
      )
   |> (uris => broadcast_to_list(endpoint, uris, data));
 

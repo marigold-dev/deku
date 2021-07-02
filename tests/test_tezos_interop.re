@@ -9,7 +9,7 @@ describe("key", ({test, _}) => {
 
   // TODO: test encoding
 
-  let edpk = Ed25519(Address.genesis_address);
+  let edpk = Ed25519(Wallet.genesis_pubkey |> Wallet.pub_to_Ed25519pub);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edpk)).toEqual(
       "edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6",
@@ -54,7 +54,8 @@ describe("key_hash", ({test, _}) => {
   open Key_hash;
 
   // TODO: proper test of_key
-  let tz1 = of_key(Ed25519(Address.genesis_address));
+  let tz1 =
+    of_key(Ed25519(Wallet.genesis_pubkey |> Wallet.pub_to_Ed25519pub));
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
@@ -80,7 +81,7 @@ describe("key_hash", ({test, _}) => {
 describe("secret", ({test, _}) => {
   open Secret;
 
-  let edsk = Ed25519(Address.genesis_key);
+  let edsk = Ed25519(Wallet.genesis_key |> Wallet.wallet_to_privkey);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edsk)).toEqual(
       "edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd",
@@ -118,8 +119,8 @@ describe("secret", ({test, _}) => {
 describe("signature", ({test, _}) => {
   open Signature;
 
-  let edpk = Key.Ed25519(Address.genesis_address);
-  let edsk = Secret.Ed25519(Address.genesis_key);
+  let edpk = Key.Ed25519(Wallet.genesis_pubkey |> Wallet.pub_to_Ed25519pub);
+  let edsk = Secret.Ed25519(Wallet.genesis_key |> Wallet.wallet_to_privkey);
 
   // TODO: proper test for sign
   let edsig = sign(edsk, "tuturu");
@@ -216,7 +217,7 @@ describe("pack", ({test, _}) => {
   );
   test(
     "key(\"edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6\")",
-    key(Ed25519(Address.genesis_address)),
+    key(Ed25519(Wallet.genesis_pubkey |> Wallet.pub_to_Ed25519pub)),
     "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
   );
 });
@@ -266,7 +267,7 @@ describe("consensus", ({test, _}) => {
 describe("discovery", ({test, _}) => {
   open Discovery;
 
-  let secret = Secret.Ed25519(Address.genesis_key);
+  let secret = Secret.Ed25519(Wallet.genesis_key |> Wallet.wallet_to_privkey);
   test("sign", ({expect, _}) => {
     let signature =
       sign(secret, ~nonce=1L, Uri.of_string("http://localhost"));

@@ -4,8 +4,7 @@ open Validators;
 
 describe("validators", ({test, _}) => {
   let make_validator = () => {
-    open Mirage_crypto_ec;
-    let (_key, address) = Ed25519.generate();
+    let (_key, address) = Wallet.make_pair();
     Validators.{address: address};
   };
   let setup_two = () => {

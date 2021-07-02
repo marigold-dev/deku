@@ -70,7 +70,7 @@ module Side_chain = {
       let to_yojson = to_yojson;
       let of_yojson = of_yojson;
       let verify = (~key, ~signature as _, data) =>
-        Wallet.of_address(key) == data.source;
+        Address.of_pubkey(key) == data.source;
     });
 };
 
