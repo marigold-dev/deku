@@ -39,8 +39,8 @@ let make_filename_from_address = wallet_addr_str => {
 module Serializable = {
   [@deriving yojson]
   type wallet_file = {
-    address: Wallet.t,
-    priv_key: Address.key,
+    address: Address.t,
+    priv_key: Wallet.t,
   };
 };
 
@@ -103,7 +103,7 @@ let amount = {
     Format.fprintf(fmt, "%d", Amount.to_int(amount));
   Arg.(conv(~docv="A positive amount", (parser, printer)));
 };
-// TODO: Wallet.t
+// TODO: Address.t
 let wallet = {
   let parser = file => {
     let non_dir_file = Arg.(conv_parser(non_dir_file));

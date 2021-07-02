@@ -18,7 +18,7 @@ let read_validators = file => {
       module T = {
         [@deriving of_yojson]
         type t = {
-          address: Address.t,
+          address: Wallet.pub_,
           uri: Uri.t,
         };
       };
@@ -52,7 +52,7 @@ let gen_credentials = () => {
     module T = {
       [@deriving to_yojson]
       type t = {
-        address: Address.t,
+        address: Wallet.pub_,
         uri: Uri.t,
       };
     };

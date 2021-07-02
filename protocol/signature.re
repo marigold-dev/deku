@@ -5,7 +5,7 @@ open Mirage_crypto_ec;
 type t = {
   // TODO: what is the name of a signature?
   signature: string,
-  public_key: Address.t,
+  public_key: Wallet.pub_,
 };
 // TODO: is it safe to compare only the signature?
 let compare = (a, b) => String.compare(a.signature, b.signature);

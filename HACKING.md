@@ -10,6 +10,6 @@ Sometimes you will see it being used even for single cases `v |> f`, this is mor
 
 ### t
 
-A type named t means the main type of a module so, `Validators.t` can be read as `validators` and `Wallet.t` as `wallet`.
+A type named t means the main type of a module so, `Validators.t` can be read as `validators` and `Address.t` as `wallet`.
 
 An identifier named t on a module will always have type t, so under `Validators.re` `let t = empty` is the same as `let validators = empty`

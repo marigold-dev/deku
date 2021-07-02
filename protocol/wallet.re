@@ -1,29 +1,63 @@
-open Helpers;
 open Mirage_crypto_ec;
 
-[@deriving (ord, yojson)]
-type t = BLAKE2B.t;
+type t = Ed25519.priv;
+type pub_ = Ed25519.pub_;
 
-let of_address = pubkey => {
-  let to_yojson = [%to_yojson: Address.t];
-  pubkey |> to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
-};
-let pubkey_matches_wallet = (key, wallet) => {
-  of_address(key) == wallet;
-};
-let get_pub_key = Ed25519.pub_of_priv;
+let wallet_of_privkey = priv => priv;
+let wallet_to_privkey = priv => priv;
 
-let make_address = () => {
-  let (_key, pub_) = Ed25519.generate();
-  pub_ |> of_address;
-};
-let make_wallet = () => {
-  let (key, pub_) = Ed25519.generate();
-  let wallet_address = of_address(pub_);
+let pub_of_Ed25519pub = pub_ => pub_;
+let pub_to_Ed25519pub = pub_ => pub_;
 
-  (key, wallet_address);
+let pubkey_of_wallet = Ed25519.pub_of_priv;
+
+let make_pair = () => Ed25519.generate();
+
+let to_hex = str => {
+  let `Hex(str) = Hex.of_string(str);
+  str;
 };
-let address_to_blake = t => t;
-let address_of_blake = t => t;
-let address_to_string = wallet =>
-  wallet |> address_to_blake |> BLAKE2B.to_string;
+let of_hex = hex => Hex.to_string(`Hex(hex));
+
+let to_yojson = t =>
+  `String(Ed25519.priv_to_cstruct(t) |> Cstruct.to_string |> to_hex);
+let of_yojson =
+  fun
+  | `String(key) =>
+    // TODO: this raises an exception
+    try(
+      of_hex(key)
+      |> Cstruct.of_string
+      |> Ed25519.priv_of_cstruct
+      |> Result.map_error(Format.asprintf("%a", Mirage_crypto_ec.pp_error))
+    ) {
+    | _ => Error("failed to parse")
+    }
+  | _ => Error("invalid type");
+let pub_to_yojson = t =>
+  `String(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string |> to_hex);
+let pub_of_yojson =
+  fun
+  | `String(key) =>
+    try(
+      of_hex(key)
+      |> Cstruct.of_string
+      |> Ed25519.pub_of_cstruct
+      |> Result.map_error(Format.asprintf("%a", Mirage_crypto_ec.pp_error))
+    ) {
+    | _ => Error("failed to parse")
+    }
+  | _ => Error("invalid type");
+
+let genesis_key = {|fdc6199df66d421df1496785497b3974b36862beac7c543a9c77b99ccf168f02|};
+let genesis_key =
+  switch (of_yojson(`String(genesis_key))) {
+  | Ok(key) => key
+  | Error(error) => failwith(error)
+  };
+
+let compare_pub = (a, b) =>
+  Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
+
+let compare = (a, b) =>
+  Cstruct.compare(Ed25519.priv_to_cstruct(a), Ed25519.priv_to_cstruct(b));

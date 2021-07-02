@@ -1,14 +1,20 @@
-open Mirage_crypto_ec;
+open Helpers;
 
 [@deriving yojson]
-type key = Ed25519.priv;
+type t;
 
-[@deriving (yojson, ord)]
-type t = Ed25519.pub_;
+let of_wallet: Wallet.t => t;
+let of_pubkey: Wallet.pub_ => t;
 
-let of_key: key => t;
-
-let genesis_key: key;
 let genesis_address: t;
 
-let make_pubkey: unit => t;
+let address_to_blake: t => BLAKE2B.t;
+let address_of_blake: BLAKE2B.t => t;
+
+let address_to_string: t => string;
+
+let address_matches_pubkey: (t, Wallet.pub_) => bool;
+
+let make_address: unit => t;
+
+let compare: (t, t) => int;

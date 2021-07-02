@@ -4,11 +4,11 @@ module Main_chain = {
   [@deriving (ord, yojson)]
   type t =
     | Deposit({
-        destination: Wallet.t,
+        destination: Address.t,
         amount: Amount.t,
       })
     | Withdraw({
-        source: Wallet.t,
+        source: Address.t,
         amount: Amount.t,
       })
     // TODO: can a validator uses the same key in different nodes?
@@ -21,7 +21,7 @@ module Side_chain = {
   // TODO: I don't like this structure model
   [@deriving (ord, yojson)]
   type kind =
-    | Transaction({destination: Wallet.t})
+    | Transaction({destination: Address.t})
     | Freeze
     | Unfreeze;
   [@deriving (ord, yojson)]
@@ -29,7 +29,7 @@ module Side_chain = {
     hash: BLAKE2B.t,
     nonce: int32,
     block_height: int64,
-    source: Wallet.t,
+    source: Address.t,
     amount: Amount.t,
     kind,
   };
@@ -38,7 +38,7 @@ module Side_chain = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
     let apply = (f, ~nonce, ~block_height, ~source, ~kind, ~amount) => {
-      let to_yojson = [%to_yojson: (int32, int64, Wallet.t, Amount.t, kind)];
+      let to_yojson = [%to_yojson: (int32, int64, Address.t, Amount.t, kind)];
       let json = to_yojson((nonce, block_height, source, amount, kind));
       let payload = Yojson.Safe.to_string(json);
       f(payload);

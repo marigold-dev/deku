@@ -2,7 +2,7 @@ open Helpers;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (yojson, ord)]
-type validator = {address: Address.t};
+type validator = {address: Wallet.pub_};
 
 [@deriving yojson]
 type t = {

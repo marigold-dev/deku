@@ -194,7 +194,7 @@ module Utils = {
         module T = {
           [@deriving of_yojson]
           type t = {
-            address: Address.t,
+            address: Wallet.pub_,
             uri: Uri.t,
           };
         };
