@@ -15,13 +15,6 @@ include State;
 let apply_main_chain = (state, op) => {
   Operation.Main_chain.(
     switch (op) {
-    // funds management
-    | Deposit({destination, amount}) =>
-      let ledger = Ledger.deposit(~destination, ~amount, state.ledger);
-      {...state, ledger};
-    | Withdraw({source, amount}) =>
-      let ledger = Ledger.withdraw(~source, ~amount, state.ledger);
-      {...state, ledger};
     // validators management
     | Add_validator(validator) =>
       let validators = Validators.add(validator, state.validators);
@@ -70,8 +63,6 @@ let apply_side_chain = (state: t, signed_operation) => {
     switch (operation.kind) {
     | Transaction({destination}) =>
       Ledger.transfer(~source, ~destination, ~amount, state.ledger)
-    | Freeze => Ledger.freeze(~wallet=source, ~amount, state.ledger)
-    | Unfreeze => Ledger.unfreeze(~wallet=source, ~amount, state.ledger)
     };
 
   {...state, ledger, included_operations};
