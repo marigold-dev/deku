@@ -26,6 +26,7 @@
 
 module Prefix = struct
   (* 20 *)
+  let contract_hash = "\002\090\121" (* KT1(36) *)
   let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
 
   (* 32 *)

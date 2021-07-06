@@ -37,9 +37,17 @@ module Signature: {
   let of_string: string => option(t);
 };
 
+module Contract_hash: {
+  type t = BLAKE2B_20.t;
+
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
+
 module Address: {
   type t =
-    | Implicit(Key_hash.t);
+    | Implicit(Key_hash.t)
+    | Originated(Contract_hash.t);
 
   let to_string: t => string;
   let of_string: string => option(t);

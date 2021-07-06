@@ -197,9 +197,22 @@ module Secret = {
     try_decode_list([ed25519]);
   };
 };
+module Contract_hash = {
+  type t = BLAKE2B_20.t;
+
+  let name = "Contract_hash";
+  let encoding = Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+  let to_raw = BLAKE2B_20.to_raw_string;
+  let of_raw = BLAKE2B_20.of_raw_string;
+  let prefix = Base58.Prefix.contract_hash;
+  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
 module Address = {
+  // TODO: there is also contract_hash with entrypoint
   type t =
-    | Implicit(Key_hash.t);
+    | Implicit(Key_hash.t)
+    | Originated(Contract_hash.t);
 
   let encoding =
     Data_encoding.(
@@ -217,9 +230,20 @@ module Address = {
             ~title="Implicit",
             Key_hash.encoding,
             fun
-            | Implicit(k) => Some(k),
+            | Implicit(k) => Some(k)
+            | _ => None,
             k =>
             Implicit(k)
+          ),
+          case(
+            Tag(1),
+            Fixed.add_padding(Contract_hash.encoding, 1),
+            ~title="Originated",
+            fun
+            | Originated(k) => Some(k)
+            | _ => None,
+            k =>
+            Originated(k)
           ),
         ],
       )
@@ -227,13 +251,18 @@ module Address = {
 
   let to_string =
     fun
-    | Implicit(key_hash) => Key_hash.to_string(key_hash);
+    | Implicit(key_hash) => Key_hash.to_string(key_hash)
+    | Originated(contract_hash) => Contract_hash.to_string(contract_hash);
   let of_string = {
     let implicit = string => {
       let.some implicit = Key_hash.of_string(string);
       Some(Implicit(implicit));
     };
-    try_decode_list([implicit]);
+    let originated = string => {
+      let.some originated = Contract_hash.of_string(string);
+      Some(Originated(originated));
+    };
+    try_decode_list([implicit, originated]);
   };
 };
 
