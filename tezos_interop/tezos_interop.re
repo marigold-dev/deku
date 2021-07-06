@@ -197,6 +197,45 @@ module Secret = {
     try_decode_list([ed25519]);
   };
 };
+module Address = {
+  type t =
+    | Implicit(Key_hash.t);
+
+  let encoding =
+    Data_encoding.(
+      def(
+        "contract_id",
+        ~title="A contract handle",
+        ~description=
+          "A contract notation as given to an RPC or inside scripts. Can be a base58 implicit contract hash or a base58 originated contract hash.",
+      ) @@
+      union(
+        ~tag_size=`Uint8,
+        [
+          case(
+            Tag(0),
+            ~title="Implicit",
+            Key_hash.encoding,
+            fun
+            | Implicit(k) => Some(k),
+            k =>
+            Implicit(k)
+          ),
+        ],
+      )
+    );
+
+  let to_string =
+    fun
+    | Implicit(key_hash) => Key_hash.to_string(key_hash);
+  let of_string = {
+    let implicit = string => {
+      let.some implicit = Key_hash.of_string(string);
+      Some(Implicit(implicit));
+    };
+    try_decode_list([implicit]);
+  };
+};
 
 module Signature = {
   type t =
@@ -239,7 +278,14 @@ module Pack = {
     Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key.encoding, k));
   let key_hash = h =>
     Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key_hash.encoding, h));
-
+  let address = addr =>
+    Bytes(
+      -1,
+      Data_encoding.Binary.to_bytes_exn(
+        Data_encoding.(tup2(Address.encoding, Variable.string)),
+        (addr, ""),
+      ),
+    );
   let expr_encoding =
     Micheline.canonical_encoding_v1(
       ~variant="michelson_v1",

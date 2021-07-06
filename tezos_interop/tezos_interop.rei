@@ -6,7 +6,6 @@ module Key: {
   type t =
     | Ed25519(Mirage_crypto_ec.Ed25519.pub_);
 
-  let encoding: Data_encoding.t(t);
   let to_string: t => string;
   let of_string: string => option(t);
 };
@@ -38,6 +37,14 @@ module Signature: {
   let of_string: string => option(t);
 };
 
+module Address: {
+  type t =
+    | Implicit(Key_hash.t);
+
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
+
 module Pack: {
   type t;
 
@@ -47,6 +54,7 @@ module Pack: {
   let list: list(t) => t;
   let key: Key.t => t;
   let key_hash: Key_hash.t => t;
+  let address: Address.t => t;
 
   let to_bytes: t => bytes;
 };
