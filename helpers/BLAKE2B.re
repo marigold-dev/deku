@@ -16,6 +16,8 @@ module Make =
 
          let hash: string => t;
          let verify: (~hash: t, string) => bool;
+
+         let both: (t, t) => t;
        } => {
   include P;
   include Digestif.Make_BLAKE2B({
@@ -38,6 +40,8 @@ module Make =
 
   let hash = data => digest_string(data);
   let verify = (~hash as expected_hash, data) => expected_hash == hash(data);
+
+  let both = (a, b) => hash(to_raw_string(a) ++ to_raw_string(b));
 };
 
 module BLAKE2B_20 =
