@@ -11,6 +11,16 @@ let rec try_decode_list = (l, string) =>
   | [] => None
   };
 
+let blake2b_20_encoding =
+  Data_encoding.(
+    conv(
+      hash => BLAKE2B_20.to_raw_string(hash) |> Bytes.of_string,
+      // TODO: I don't like this exception below
+      bytes =>
+        Bytes.to_string(bytes) |> BLAKE2B_20.of_raw_string |> Option.get,
+      Fixed.bytes(20),
+    )
+  );
 module Base58 = Base58;
 
 module Ed25519 = {
@@ -40,7 +50,11 @@ module Ed25519 = {
     let hash_key = t =>
       BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
 
-    // TODO: encoding
+    let encoding = {
+      let name = "Ed25519.Public_key_hash";
+      // TODO: in tezos this is splitted json is not same as bin
+      Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+    };
 
     let prefix = Base58.Prefix.ed25519_public_key_hash;
     let to_raw = BLAKE2B_20.to_raw_string;
@@ -131,6 +145,27 @@ module Key_hash = {
   type t =
     | Ed25519(Ed25519.Hash.t);
 
+  let name = "Signature.Public_key_hash";
+
+  let title = "A Ed25519, Secp256k1, or P256 public key hash";
+  let encoding = {
+    open Data_encoding;
+    let raw_encoding =
+      def("public_key_hash", ~description=title) @@
+      union([
+        case(
+          Tag(0),
+          Ed25519.Hash.encoding,
+          ~title="Ed25519",
+          fun
+          | Ed25519(x) => Some(x),
+          x =>
+          Ed25519(x)
+        ),
+      ]);
+    obj1(req(name, raw_encoding));
+  };
+
   let of_key = t =>
     switch (t) {
     | Key.Ed25519(pub_) => Ed25519(Ed25519.Hash.hash_key(pub_))
@@ -162,6 +197,7 @@ module Secret = {
     try_decode_list([ed25519]);
   };
 };
+
 module Signature = {
   type t =
     | Ed25519(Ed25519.Signature.t);
@@ -201,6 +237,8 @@ module Pack = {
   let list = l => Seq(-1, l);
   let key = k =>
     Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key.encoding, k));
+  let key_hash = h =>
+    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key_hash.encoding, h));
 
   let expr_encoding =
     Micheline.canonical_encoding_v1(
