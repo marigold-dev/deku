@@ -14,5 +14,5 @@ let key_of_Ed25519pub: Ed25519.pub_ => key;
 let key_to_Ed25519pub: key => Ed25519.pub_;
 
 let to_key: t => key;
-let make_pair: unit => (t, key);
-let make_pubkey: unit => key;
+let make_wallet: unit => (t, key);
+let make_key: unit => key;

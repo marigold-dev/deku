@@ -222,7 +222,7 @@ describe("protocol state", ({test, _}) => {
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
-    let new_validator = Validators.{address: Wallet.make_pubkey()};
+    let new_validator = Validators.{address: Wallet.make_key()};
     let state =
       apply_main_chain(
         state,
@@ -243,7 +243,7 @@ describe("protocol state", ({test, _}) => {
       toBeTrue();
     expect.list(Validators.to_list(validators)).toEqual([new_validator]);
     // additional shouldn't move current
-    let another_validator = Validators.{address: Wallet.make_pubkey()};
+    let another_validator = Validators.{address: Wallet.make_key()};
     let state =
       apply_main_chain(
         state,

@@ -4,7 +4,7 @@ open Validators;
 
 describe("validators", ({test, _}) => {
   let make_validator = () => {
-    let (_key, address) = Wallet.make_pair();
+    let (_key, address) = Wallet.make_wallet();
     Validators.{address: address};
   };
   let setup_two = () => {

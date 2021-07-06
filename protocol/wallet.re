@@ -11,8 +11,8 @@ let key_to_Ed25519pub = pub_ => pub_;
 
 let to_key = Ed25519.pub_of_priv;
 
-let make_pair = () => Ed25519.generate();
-let make_pubkey = () => make_pair() |> snd;
+let make_wallet = () => Ed25519.generate();
+let make_key = () => make_wallet() |> snd;
 
 let to_hex = str => {
   let `Hex(str) = Hex.of_string(str);

@@ -39,7 +39,7 @@ let gen_credentials = () => {
 
   let make_identity_file = (~file, ~uri) => {
     let uri = Uri.of_string(uri);
-    let (key, t) = Wallet.make_pair();
+    let (key, t) = Wallet.make_wallet();
     let identity = {key, t, uri};
     identity_to_yojson(identity)
     |> Yojson.Safe.pretty_to_string

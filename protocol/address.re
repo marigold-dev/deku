@@ -18,7 +18,7 @@ let address_matches_pubkey = (address, pubkey) => {
 };
 
 let make_wallet = () => {
-  let (key, pub_) = Wallet.make_pair();
+  let (key, pub_) = Wallet.make_wallet();
   let address = of_pubkey(pub_);
 
   (key, address);

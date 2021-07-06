@@ -63,7 +63,7 @@ let info_create_wallet = {
 };
 
 let create_wallet = () => {
-  let (wallet, pubkey) = Wallet.make_pair();
+  let (wallet, pubkey) = Wallet.make_wallet();
   let address = pubkey |> Address.of_pubkey;
 
   let wallet_json = Serializable.wallet_file_to_yojson({wallet, address});
