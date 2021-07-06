@@ -5,11 +5,11 @@ open Helpers;
 type t = BLAKE2B.t;
 
 let of_pubkey = pubkey => {
-  let to_yojson = [%to_yojson: Wallet.pub_];
+  let to_yojson = [%to_yojson: Wallet.key];
   pubkey |> to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
 };
 let of_wallet = privkey => {
-  let pubkey = Wallet.pubkey_of_wallet(privkey);
+  let pubkey = Wallet.to_key(privkey);
   of_pubkey(pubkey);
 };
 
@@ -34,7 +34,7 @@ let make_address = () => {
   snd(make_wallet());
 };
 
-let genesis_address = of_wallet(Wallet.genesis_key);
+let genesis_address = of_wallet(Wallet.genesis_secret);
 
 let compare = (a, b) =>
   String.compare(BLAKE2B.to_string(a), BLAKE2B.to_string(b));

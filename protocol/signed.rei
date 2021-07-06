@@ -1,7 +1,7 @@
 [@deriving (yojson, ord)]
 type t('a) =
   pri {
-    key: Wallet.pub_,
+    key: Wallet.key,
     signature: string,
     data: 'a,
   };
@@ -10,7 +10,7 @@ type signed('a) = t('a);
 // TODO: accept a hash function
 let sign: (~key: Wallet.t, 'a) => t('a);
 let verify:
-  (~key: Wallet.pub_, ~signature: string, 'a) => result(t('a), string);
+  (~key: Wallet.key, ~signature: string, 'a) => result(t('a), string);
 
 module type S = {
   [@deriving (yojson, ord)]
@@ -18,19 +18,19 @@ module type S = {
   [@deriving (yojson, ord)]
   type t =
     pri {
-      key: Wallet.pub_,
+      key: Wallet.key,
       signature: string,
       data,
     };
   let verify:
-    (~key: Wallet.pub_, ~signature: string, data) => result(t, string);
+    (~key: Wallet.key, ~signature: string, data) => result(t, string);
 };
 module Make:
   (
     F: {
       [@deriving (yojson, ord)]
       type t;
-      let verify: (~key: Wallet.pub_, ~signature: string, t) => bool;
+      let verify: (~key: Wallet.key, ~signature: string, t) => bool;
     },
   ) =>
    S with type data = F.t;

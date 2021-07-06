@@ -140,7 +140,7 @@ let handle_data_to_smart_contract =
         |> List.map(validator => validator.Validators.address)
         |> List.map(address =>
              (
-               Tezos_interop.Key.Ed25519(address |> Wallet.pub_to_Ed25519pub)
+               Tezos_interop.Key.Ed25519(address |> Wallet.key_to_Ed25519pub)
                |> Tezos_interop.Key.to_string,
                State.Pubkey_map.find_opt(address, signatures_map),
              )
@@ -194,7 +194,7 @@ module Utils = {
         module T = {
           [@deriving of_yojson]
           type t = {
-            address: Wallet.pub_,
+            address: Wallet.key,
             uri: Uri.t,
           };
         };

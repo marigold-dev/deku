@@ -18,7 +18,7 @@ let read_validators = file => {
       module T = {
         [@deriving of_yojson]
         type t = {
-          address: Wallet.pub_,
+          address: Wallet.key,
           uri: Uri.t,
         };
       };
@@ -51,7 +51,7 @@ let gen_credentials = () => {
     module T = {
       [@deriving to_yojson]
       type t = {
-        address: Wallet.pub_,
+        address: Wallet.key,
         uri: Uri.t,
       };
     };
@@ -122,7 +122,7 @@ let inject_genesis = () => {
       |> Validators.to_list
       |> List.map(validator =>
            Tezos_interop.Key.Ed25519(
-             validator.Validators.address |> Wallet.pub_to_Ed25519pub,
+             validator.Validators.address |> Wallet.key_to_Ed25519pub,
            )
          )
       |> List.map(Tezos_interop.Key.to_string)

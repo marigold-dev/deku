@@ -5,7 +5,7 @@ open Mirage_crypto_ec;
 type t = {
   // TODO: what is the name of a signature?
   signature: string,
-  public_key: Wallet.pub_,
+  public_key: Wallet.key,
 };
 // TODO: is it safe to compare only the signature?
 let compare = (a, b) => String.compare(a.signature, b.signature);
@@ -19,7 +19,7 @@ let sign = (~key, hash) => {
     |> Ed25519.sign(~key)
     |> Cstruct.to_string;
   let public_key = Ed25519.pub_of_priv(key);
-  {signature, public_key: public_key |> Wallet.pub_of_Ed25519pub};
+  {signature, public_key: public_key |> Wallet.key_of_Ed25519pub};
 };
 let signature_to_b58check = t => {
   open Tezos_interop;
@@ -33,7 +33,7 @@ let signature_to_b58check_by_address = t => {
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
-    ~key=signature.public_key |> Wallet.pub_to_Ed25519pub,
+    ~key=signature.public_key |> Wallet.key_to_Ed25519pub,
     ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
     Cstruct.of_string(signature.signature),
   );

@@ -4,13 +4,13 @@ open Mirage_crypto_ec;
 [@deriving yojson]
 type t;
 let compare: (t, t) => int;
-let public_key: t => Wallet.pub_;
+let public_key: t => Wallet.key;
 
 let sign: (~key: Ed25519.priv, BLAKE2B.t) => t;
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
 let signature_to_b58check: t => string;
-let signature_to_b58check_by_address: t => (Wallet.pub_, string);
+let signature_to_b58check_by_address: t => (Wallet.key, string);
 module type S = {
   type value;
   type signature = t;

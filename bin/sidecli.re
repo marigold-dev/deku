@@ -240,10 +240,7 @@ let sign_block = (key, block_hash) =>
   switch (load_wallet_file(key)) {
   | Ok(wallet) =>
     let signature =
-      Signature.sign(
-        ~key=wallet.wallet |> Wallet.wallet_to_privkey,
-        block_hash,
-      );
+      Signature.sign(~key=wallet.wallet |> Wallet.to_privkey, block_hash);
     let.await () =
       Networking.(
         broadcast_to_list(
@@ -283,7 +280,7 @@ let produce_block = (key, state_bin) =>
   | Ok(wallet) =>
     let.await state: Protocol.t =
       Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
-    let address = wallet.wallet |> Wallet.pubkey_of_wallet;
+    let address = wallet.wallet |> Wallet.to_key;
     let block =
       Block.produce(
         ~state,

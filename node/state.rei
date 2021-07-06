@@ -4,11 +4,11 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   key: Wallet.t,
-  t: Wallet.pub_,
+  t: Wallet.key,
   uri: Uri.t,
 };
 
-module Pubkey_map: Map.S with type key = Wallet.pub_;
+module Pubkey_map: Map.S with type key = Wallet.key;
 module Uri_map: Map.S with type key = Uri.t;
 type t = {
   identity,

@@ -2,7 +2,7 @@ open Helpers;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (yojson, ord)]
-type validator = {address: Wallet.pub_}; // TODO: rename `address` to `pubkey`
+type validator = {address: Wallet.key}; // TODO: rename `address` to `pubkey`
 
 [@deriving yojson]
 type t = {
@@ -56,7 +56,7 @@ let hash = t => {
   open Tezos_interop;
   let validators =
     List.map(
-      t => Key.Ed25519(Wallet.pub_to_Ed25519pub(t.address)),
+      t => Key.Ed25519(Wallet.key_to_Ed25519pub(t.address)),
       t.validators,
     );
   Consensus.hash_validators(validators);

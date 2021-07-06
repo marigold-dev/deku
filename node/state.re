@@ -4,13 +4,13 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   key: Wallet.t,
-  t: Wallet.pub_,
+  t: Wallet.key,
   uri: Uri.t,
 };
 
 module Pub_mod = {
-  type t = Wallet.pub_;
-  let compare = Wallet.compare_pub;
+  type t = Wallet.key;
+  let compare = Wallet.compare_key;
 };
 
 module Pubkey_map = Map.Make(Pub_mod);

@@ -4,7 +4,7 @@ open Helpers;
 type t;
 
 let of_wallet: Wallet.t => t;
-let of_pubkey: Wallet.pub_ => t;
+let of_pubkey: Wallet.key => t;
 
 let make_wallet: unit => (Wallet.t, t);
 
@@ -15,7 +15,7 @@ let address_of_blake: BLAKE2B.t => t;
 
 let address_to_string: t => string;
 
-let address_matches_pubkey: (t, Wallet.pub_) => bool;
+let address_matches_pubkey: (t, Wallet.key) => bool;
 
 let make_address: unit => t;
 

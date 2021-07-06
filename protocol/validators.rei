@@ -1,7 +1,7 @@
 open Helpers;
 
 [@deriving (yojson, ord)]
-type validator = {address: Wallet.pub_};
+type validator = {address: Wallet.key};
 
 [@deriving yojson]
 type t;
@@ -16,7 +16,7 @@ let length: t => int;
   best: O(1)
   worst: O(n) */
 let after_current: (int, t) => option(validator);
-let update_current: (Wallet.pub_, t) => t;
+let update_current: (Wallet.key, t) => t;
 
 let empty: t;
 let add: (validator, t) => t;

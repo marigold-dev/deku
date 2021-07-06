@@ -1,15 +1,15 @@
 open Mirage_crypto_ec;
 
 type t = Ed25519.priv;
-type pub_ = Ed25519.pub_;
+type key = Ed25519.pub_;
 
-let wallet_of_privkey = priv => priv;
-let wallet_to_privkey = priv => priv;
+let of_privkey = priv => priv;
+let to_privkey = priv => priv;
 
-let pub_of_Ed25519pub = pub_ => pub_;
-let pub_to_Ed25519pub = pub_ => pub_;
+let key_of_Ed25519pub = pub_ => pub_;
+let key_to_Ed25519pub = pub_ => pub_;
 
-let pubkey_of_wallet = Ed25519.pub_of_priv;
+let to_key = Ed25519.pub_of_priv;
 
 let make_pair = () => Ed25519.generate();
 let make_pubkey = () => make_pair() |> snd;
@@ -35,9 +35,9 @@ let of_yojson =
     | _ => Error("failed to parse")
     }
   | _ => Error("invalid type");
-let pub_to_yojson = t =>
+let key_to_yojson = t =>
   `String(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string |> to_hex);
-let pub_of_yojson =
+let key_of_yojson =
   fun
   | `String(key) =>
     try(
@@ -50,16 +50,16 @@ let pub_of_yojson =
     }
   | _ => Error("invalid type");
 
-let genesis_key = {|fdc6199df66d421df1496785497b3974b36862beac7c543a9c77b99ccf168f02|};
-let genesis_key =
-  switch (of_yojson(`String(genesis_key))) {
+let genesis_secret = {|fdc6199df66d421df1496785497b3974b36862beac7c543a9c77b99ccf168f02|};
+let genesis_secret =
+  switch (of_yojson(`String(genesis_secret))) {
   | Ok(key) => key
   | Error(error) => failwith(error)
   };
 
-let genesis_pubkey = pubkey_of_wallet(genesis_key);
+let genesis_key = to_key(genesis_secret);
 
-let compare_pub = (a, b) =>
+let compare_key = (a, b) =>
   Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
 
 let compare = (a, b) =>
