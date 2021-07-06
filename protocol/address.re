@@ -27,8 +27,8 @@ let make_wallet = () => {
 let address_to_blake = t => t;
 let address_of_blake = t => t;
 
-let address_to_string = wallet =>
-  wallet |> address_to_blake |> BLAKE2B.to_string;
+let address_to_string = address =>
+  address |> address_to_blake |> BLAKE2B.to_string;
 
 let make_address = () => {
   snd(make_wallet());

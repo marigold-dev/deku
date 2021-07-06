@@ -38,9 +38,8 @@ let gen_credentials = () => {
   };
 
   let make_identity_file = (~file, ~uri) => {
-    open Mirage_crypto_ec;
     let uri = Uri.of_string(uri);
-    let (key, t) = Ed25519.generate();
+    let (key, t) = Wallet.make_pair();
     let identity = {key, t, uri};
     identity_to_yojson(identity)
     |> Yojson.Safe.pretty_to_string
@@ -122,7 +121,9 @@ let inject_genesis = () => {
       state.validators
       |> Validators.to_list
       |> List.map(validator =>
-           Tezos_interop.Key.Ed25519(validator.Validators.address)
+           Tezos_interop.Key.Ed25519(
+             validator.Validators.address |> Wallet.pub_to_Ed25519pub,
+           )
          )
       |> List.map(Tezos_interop.Key.to_string)
       |> String.concat(","),

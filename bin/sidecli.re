@@ -40,7 +40,7 @@ module Serializable = {
   [@deriving yojson]
   type wallet_file = {
     address: Address.t,
-    priv_key: Wallet.t,
+    wallet: Wallet.t,
   };
 };
 
@@ -63,12 +63,12 @@ let info_create_wallet = {
 };
 
 let create_wallet = () => {
-  let (key, wallet) = Wallet.make_wallet();
+  let (wallet, pubkey) = Wallet.make_pair();
+  let address = pubkey |> Address.of_pubkey;
 
-  let wallet_json =
-    Serializable.wallet_file_to_yojson({priv_key: key, address: wallet});
+  let wallet_json = Serializable.wallet_file_to_yojson({wallet, address});
 
-  let wallet_addr_str = Wallet.address_to_string(wallet);
+  let wallet_addr_str = Address.address_to_string(address);
   let filename = make_filename_from_address(wallet_addr_str);
 
   try(`Ok(Yojson.Safe.to_file(filename, wallet_json))) {
@@ -83,10 +83,10 @@ let create_wallet = Term.(ret(const(create_wallet) $ const()));
 let address = {
   let parser = string =>
     BLAKE2B.of_string(string)
-    |> Option.map(Wallet.address_of_blake)
+    |> Option.map(Address.address_of_blake)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
-    Format.fprintf(fmt, "%s", Wallet.address_to_string(wallet));
+    Format.fprintf(fmt, "%s", Address.address_to_string(wallet));
   Arg.(conv((parser, printer)));
 };
 let amount = {
@@ -152,7 +152,7 @@ let create_transaction = (sender_wallet_file, received_address, amount) => {
 
     Ok(
       Operation.self_sign_side(
-        ~key=wallet.priv_key,
+        ~key=wallet.wallet,
         Operation.Side_chain.make(
           ~nonce=0l,
           ~block_height=0L,
@@ -239,7 +239,11 @@ let info_sign_block = {
 let sign_block = (key, block_hash) =>
   switch (load_wallet_file(key)) {
   | Ok(wallet) =>
-    let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+    let signature =
+      Signature.sign(
+        ~key=wallet.wallet |> Wallet.wallet_to_privkey,
+        block_hash,
+      );
     let.await () =
       Networking.(
         broadcast_to_list(
@@ -279,7 +283,7 @@ let produce_block = (key, state_bin) =>
   | Ok(wallet) =>
     let.await state: Protocol.t =
       Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
-    let address = Address.of_key(wallet.priv_key);
+    let address = wallet.wallet |> Wallet.pubkey_of_wallet;
     let block =
       Block.produce(
         ~state,
@@ -287,7 +291,7 @@ let produce_block = (key, state_bin) =>
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
-    let signature = Block.sign(~key=wallet.priv_key, block);
+    let signature = Block.sign(~key=wallet.wallet, block);
     let.await () =
       Networking.(
         broadcast_to_list(
