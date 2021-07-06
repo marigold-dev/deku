@@ -46,6 +46,7 @@ module Pack: {
   let pair: (t, t) => t;
   let list: list(t) => t;
   let key: Key.t => t;
+  let key_hash: Key_hash.t => t;
 
   let to_bytes: t => bytes;
 };
