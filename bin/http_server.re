@@ -133,7 +133,7 @@ let handle_data_to_smart_contract =
         |> Signatures.to_list
         |> List.map(Signature.signature_to_b58check_by_address)
         |> List.to_seq
-        |> State.Pubkey_map.of_seq;
+        |> State.Key_map.of_seq;
       let (validators, signatures) =
         state.protocol.validators
         |> Validators.to_list
@@ -142,7 +142,7 @@ let handle_data_to_smart_contract =
              (
                Tezos_interop.Key.Ed25519(address |> Wallet.key_to_Ed25519pub)
                |> Tezos_interop.Key.to_string,
-               State.Pubkey_map.find_opt(address, signatures_map),
+               State.Key_map.find_opt(address, signatures_map),
              )
            )
         |> List.split;
@@ -217,8 +217,8 @@ let node = {
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
-        State.Pubkey_map.add(address, uri, validators_uri),
-      State.Pubkey_map.empty,
+        State.Key_map.add(address, uri, validators_uri),
+      State.Key_map.empty,
       validators,
     );
   let node =
