@@ -82,7 +82,7 @@ let create_wallet = Term.(ret(const(create_wallet) $ const()));
 
 let address = {
   let parser = string =>
-    BLAKE2B.of_string(string)
+    BLAKE2B_20.of_string(string)
     |> Option.map(Wallet.address_of_blake)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
