@@ -1,5 +1,4 @@
 open Helpers;
-open Exn_noop;
 
 module Wallet_map = Map_with_yojson_make(Wallet);
 [@deriving yojson]
@@ -7,35 +6,36 @@ type t = {free: Wallet_map.t(Amount.t)};
 
 let empty = {free: Wallet_map.empty};
 
-let get = (address, map) =>
-  Wallet_map.find_opt(address, map) |> Option.value(~default=Amount.zero);
-
-let get_free = (address, t) => get(address, t.free);
+let balance = (address, t) =>
+  Wallet_map.find_opt(address, t.free) |> Option.value(~default=Amount.zero);
 
 let assert_available = (~source, ~amount: Amount.t) =>
-  if (source < amount) {
-    raise(Noop("not enough funds"));
+  if (source >= amount) {
+    Ok();
+  } else {
+    Error(`Not_enough_funds);
   };
-let transfer = (~source, ~destination, ~amount, t) => {
+
+let transfer = (~source, ~destination, amount, t) => {
   open Amount;
 
-  let source_balance = get_free(source, t);
-  assert_available(~source=source_balance, ~amount);
+  let source_balance = balance(source, t);
+  let.ok () = assert_available(~source=source_balance, ~amount);
 
-  let destination_balance = get_free(destination, t);
+  let destination_balance = balance(destination, t);
 
-  {
+  Ok({
     free:
       t.free
       |> Wallet_map.add(source, source_balance - amount)
       |> Wallet_map.add(destination, destination_balance + amount),
-  };
+  });
 };
 
 // tezos operations
-let deposit = (~destination, ~amount, t) => {
+let deposit = (destination, amount, t) => {
   open Amount;
-  let destination_balance = get_free(destination, t);
+  let destination_balance = balance(destination, t);
   {
     free: t.free |> Wallet_map.add(destination, destination_balance + amount),
   };
