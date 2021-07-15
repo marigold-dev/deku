@@ -1,7 +1,14 @@
 {
   "name": "sidechain",
   "esy": {
-    "build": "dune build -p sidechain"
+    "build": "dune build -p #{self.name}",
+    "release": {
+      "rewritePrefix": true,
+      "bin": [
+        "genesis_helper",
+        "sidecli"
+      ]
+    }
   },
   "scripts": {
     "test": "dune test"
