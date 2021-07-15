@@ -29,7 +29,6 @@ let read_validators = file => {
     },
   );
 };
-
 let gen_credentials = () => {
   let write_file = (~file, string) => {
     let oc = open_out(file);
@@ -37,8 +36,12 @@ let gen_credentials = () => {
     close_out(oc);
   };
 
-  let make_identity_file = (~file, ~uri) => {
+  let make_identity_file = (file, index) => {
     open Mirage_crypto_ec;
+    Sys.mkdir(Printf.sprintf("./%d/", index), 0o700);
+    let file = Printf.sprintf("./%d/%s", index, file);
+    let uri = Printf.sprintf("http://localhost:%d", 4440 + index);
+
     let uri = Uri.of_string(uri);
     let (key, t) = Ed25519.generate();
     let identity = {key, t, uri};
@@ -48,7 +51,7 @@ let gen_credentials = () => {
     (t, uri);
   };
 
-  let make_validators_file = (~file, ~validators) => {
+  let make_validators_files = (file, validators, to_make) => {
     module T = {
       [@deriving to_yojson]
       type t = {
@@ -56,20 +59,25 @@ let gen_credentials = () => {
         uri: Uri.t,
       };
     };
-    validators
-    |> List.map(((address, uri)) => T.{address, uri})
-    |> [%to_yojson: list(T.t)]
-    |> Yojson.Safe.pretty_to_string
-    |> write_file(~file);
+
+    let validator_mapping = List.map(((address, uri)) => T.{address, uri});
+
+    List.iter(
+      i => {
+        validators
+        |> validator_mapping
+        |> [%to_yojson: list(T.t)]
+        |> Yojson.Safe.pretty_to_string
+        |> write_file(~file=Printf.sprintf("./%d/%s", i, file))
+      },
+      to_make,
+    );
   };
 
-  let validators = [
-    make_identity_file(~file="identity_0.json", ~uri="http://localhost:4440"),
-    make_identity_file(~file="identity_1.json", ~uri="http://localhost:4441"),
-    make_identity_file(~file="identity_2.json", ~uri="http://localhost:4442"),
-    make_identity_file(~file="identity_3.json", ~uri="http://localhost:4443"),
-  ];
-  make_validators_file(~file="validators.json", ~validators);
+  let to_make = [0, 1, 2, 3];
+
+  let validators = List.map(make_identity_file("identity.json"), to_make);
+  make_validators_files("validators.json", validators, to_make);
 };
 
 let inject_genesis = () => {
