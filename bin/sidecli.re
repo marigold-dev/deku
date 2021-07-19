@@ -183,33 +183,30 @@ let create_transaction = {
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
     let env = Arg.env_var("SENDER", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(0, some(wallet), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="sender", ~doc)
     );
   };
 
   let address_to = {
     let doc = "The receiving address.";
     let env = Arg.env_var("RECEIVER", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(1, some(address), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="receiver", ~doc)
     );
   };
 
   let amount = {
     let doc = "The amount to be transacted.";
     let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(2, some(amount), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="amount", ~doc)
     );
   };
 
