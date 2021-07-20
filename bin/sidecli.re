@@ -299,13 +299,15 @@ let produce_block = (key, state_bin) =>
 
 let produce_block = {
   let key_wallet = {
+    let docv = "key_wallet";
     let doc = "The validator key that will sign the block address.";
-    Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
+    Arg.(required & pos(0, some(wallet), None) & info([], ~doc, ~docv));
   };
 
   let state_bin = {
-    let doc = "Last known serialized state.";
-    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc));
+    let docv = "state_bin";
+    let doc = "Path to last known serialized state.";
+    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv));
   };
 
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
