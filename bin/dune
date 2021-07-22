@@ -6,14 +6,6 @@
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
- (name genesis_helper)
- (libraries opium node mirage-crypto-ec mirage-crypto-rng.unix helpers)
- (modules Genesis_helper)
- (public_name genesis_helper)
- (preprocess
-  (pps ppx_deriving_yojson)))
-
-(executable
  (name sidecli)
  (libraries node mirage-crypto-ec mirage-crypto-rng.unix helpers cmdliner)
  (modules Sidecli)
