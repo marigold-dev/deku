@@ -3,7 +3,6 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
-      "rewritePrefix": true,
       "bin": [
         "genesis_helper",
         "sidecli"
