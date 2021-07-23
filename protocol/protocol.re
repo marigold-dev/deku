@@ -31,12 +31,11 @@ let apply_main_chain = (state, op) => {
 let maximum_old_block_height_operation = 60L;
 let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
 
-let apply_side_chain = (state: t, signed_operation) => {
+let apply_side_chain = (state: t, operation) => {
   open Operation.Side_chain;
   module Set = Operation_side_chain_set;
 
   // validate operation
-  let operation = signed_operation.Self_signed.data;
   let block_height = operation.block_height;
   if (block_height > state.block_height) {
     raise(Noop("block in the future"));
@@ -45,10 +44,6 @@ let apply_side_chain = (state: t, signed_operation) => {
   if (Int64.add(block_height, maximum_old_block_height_operation)
       < state.block_height) {
     raise(Noop("really old operation"));
-  };
-
-  if (!Wallet.pubkey_matches_wallet(signed_operation.key, operation.source)) {
-    raise(Noop("invalid key signed the operation"));
   };
 
   if (Set.mem(operation, state.included_operations)) {

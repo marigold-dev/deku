@@ -14,7 +14,7 @@ module Uri_map = Map.Make(Uri);
 type t = {
   identity,
   data_folder: string,
-  pending_side_ops: list(Operation.Side_chain.Self_signed.t),
+  pending_side_ops: list(Operation.Side_chain.t),
   pending_main_ops: list(Operation.Main_chain.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
