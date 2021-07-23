@@ -121,21 +121,17 @@ describe("protocol state", ({test, _}) => {
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
     let new_validator = Validators.{address: Address.make_pubkey()};
+    let main_op = kind =>
+      Operation.Main_chain.make(~tezos_hash=Helpers.BLAKE2B.hash(""), ~kind);
     let state =
-      apply_main_chain(
-        state,
-        Operation.Main_chain.Add_validator(new_validator),
-      );
+      apply_main_chain(state, main_op(Add_validator(new_validator)));
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
     expect.list(Validators.to_list(validators)).toEqual([new_validator]);
     // duplicated is a noop
     let state =
-      apply_main_chain(
-        state,
-        Operation.Main_chain.Add_validator(new_validator),
-      );
+      apply_main_chain(state, main_op(Add_validator(new_validator)));
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
@@ -143,10 +139,7 @@ describe("protocol state", ({test, _}) => {
     // additional shouldn't move current
     let another_validator = Validators.{address: Address.make_pubkey()};
     let state =
-      apply_main_chain(
-        state,
-        Operation.Main_chain.Add_validator(another_validator),
-      );
+      apply_main_chain(state, main_op(Add_validator(another_validator)));
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
@@ -165,10 +158,7 @@ describe("protocol state", ({test, _}) => {
     // ]);
     // remove current validator
     let state =
-      apply_main_chain(
-        state,
-        Operation.Main_chain.Remove_validator(another_validator),
-      );
+      apply_main_chain(state, main_op(Remove_validator(another_validator)));
     let validators = state.validators;
     expect.bool(Validators.current(validators) == Some(new_validator)).
       toBeTrue();
@@ -181,10 +171,7 @@ describe("protocol state", ({test, _}) => {
     // expect.list(Validators.validators(validators)).toEqual([new_validator]);
     // remove all validators
     let state =
-      apply_main_chain(
-        state,
-        Operation.Main_chain.Remove_validator(new_validator),
-      );
+      apply_main_chain(state, main_op(Remove_validator(new_validator)));
     let validators = state.validators;
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
