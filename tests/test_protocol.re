@@ -7,10 +7,7 @@ describe("protocol state", ({test, _}) => {
     let (key_wallet, wallet) = Wallet.make_wallet();
     let state = {
       ...make(~initial_block=Block.genesis),
-      ledger:
-        Ledger.empty
-        |> Ledger.deposit(~destination=wallet, ~amount=Amount.of_int(1000))
-        |> Ledger.unfreeze(~wallet, ~amount=Amount.of_int(500)),
+      ledger: Ledger.empty |> Ledger.deposit(wallet, Amount.of_int(500)),
     };
     let validators = {
       open Helpers;
@@ -42,15 +39,7 @@ describe("protocol state", ({test, _}) => {
       );
     apply_block(state, block);
   };
-  let test_wallet_offset =
-      (
-        name,
-        ~free_diff_a=0,
-        ~frozen_diff_a=0,
-        ~free_diff_b=0,
-        ~frozen_diff_b=0,
-        f,
-      ) =>
+  let test_wallet_offset = (name, ~free_diff_a=0, ~free_diff_b=0, f) =>
     test(
       name,
       ({expect, _}) => {
@@ -61,27 +50,17 @@ describe("protocol state", ({test, _}) => {
         let (key_b, wallet_b) = Wallet.make_wallet();
         let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
 
-        expect_amount(Ledger.get_free(wallet_a, old_state.ledger), 500);
-        expect_amount(Ledger.get_frozen(wallet_a, old_state.ledger), 500);
-        expect_amount(Ledger.get_free(wallet_b, old_state.ledger), 0);
-        expect_amount(Ledger.get_frozen(wallet_b, old_state.ledger), 0);
+        expect_amount(Ledger.balance(wallet_a, old_state.ledger), 500);
+        expect_amount(Ledger.balance(wallet_b, old_state.ledger), 0);
 
         // TODO: test that it changes only the target wallet
         expect_amount(
-          Ledger.get_free(wallet_a, new_state.ledger),
+          Ledger.balance(wallet_a, new_state.ledger),
           500 + free_diff_a,
         );
         expect_amount(
-          Ledger.get_frozen(wallet_a, new_state.ledger),
-          500 + frozen_diff_a,
-        );
-        expect_amount(
-          Ledger.get_free(wallet_b, new_state.ledger),
+          Ledger.balance(wallet_b, new_state.ledger),
           0 + free_diff_b,
-        );
-        expect_amount(
-          Ledger.get_frozen(wallet_b, new_state.ledger),
-          0 + frozen_diff_b,
         );
       },
     );

@@ -62,7 +62,12 @@ let apply_side_chain = (state: t, signed_operation) => {
   let ledger =
     switch (operation.kind) {
     | Transaction({destination}) =>
-      Ledger.transfer(~source, ~destination, ~amount, state.ledger)
+      Ledger.transfer(~source, ~destination, amount, state.ledger)
+    };
+  let ledger =
+    switch (ledger) {
+    | Ok(ledger) => ledger
+    | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
     };
 
   {...state, ledger, included_operations};
