@@ -183,33 +183,30 @@ let create_transaction = {
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
     let env = Arg.env_var("SENDER", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(0, some(wallet), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="sender", ~doc)
     );
   };
 
   let address_to = {
     let doc = "The receiving address.";
     let env = Arg.env_var("RECEIVER", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(1, some(address), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="receiver", ~doc)
     );
   };
 
   let amount = {
     let doc = "The amount to be transacted.";
     let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
-    let doc = "The message to print.";
     Arg.(
       required
       & pos(2, some(amount), None)
-      & info([], ~env, ~docv="MSG", ~doc)
+      & info([], ~env, ~docv="amount", ~doc)
     );
   };
 
@@ -302,13 +299,15 @@ let produce_block = (key, state_bin) =>
 
 let produce_block = {
   let key_wallet = {
+    let docv = "key_wallet";
     let doc = "The validator key that will sign the block address.";
-    Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
+    Arg.(required & pos(0, some(wallet), None) & info([], ~doc, ~docv));
   };
 
   let state_bin = {
-    let doc = "Last known serialized state.";
-    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc));
+    let docv = "state_bin";
+    let doc = "Path to last known serialized state.";
+    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv));
   };
 
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
