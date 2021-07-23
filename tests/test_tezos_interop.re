@@ -4,7 +4,9 @@ open Address;
 open Tezos_interop;
 
 // TODO: maybe fuzz testing or any other cool testing magic?
-
+let some_contract_hash =
+  Contract_hash.of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")
+  |> Option.get;
 describe("key", ({test, _}) => {
   open Key;
 
@@ -183,21 +185,55 @@ describe("signature", ({test, _}) => {
       toBeNone()
   });
 });
+describe("contract_hash", ({test, _}) => {
+  open Contract_hash;
+  let kt1 = some_contract_hash;
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(kt1)).toEqual(
+      "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc",
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBe(
+      // TODO: proper equals
+      ~equals=(==),
+      Some(kt1),
+    )
+  });
+  test("invalid prefix", ({expect, _}) => {
+    expect.option(of_string("KT2Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBeNone()
+  });
+  test("invalid checksum", ({expect, _}) => {
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTd")).toBeNone()
+  });
+  test("invalid size", ({expect, _}) => {
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABT")).toBeNone()
+  });
+});
 describe("address", ({test, _}) => {
   open Address;
 
   let tz1 = Implicit(Key_hash.of_key(Ed25519(genesis_address)));
+  let kt1 = Originated(some_contract_hash);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
-    )
+    );
+    expect.string(to_string(kt1)).toEqual(
+      "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc",
+    );
   });
   test("of_string", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBe(
       // TODO: proper equals
       ~equals=(==),
       Some(tz1),
-    )
+    );
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBe(
+      // TODO: proper equals
+      ~equals=(==),
+      Some(kt1),
+    );
   });
   test("invalid prefix", ({expect, _}) => {
     expect.option(of_string("tz4LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBeNone()
@@ -257,6 +293,11 @@ describe("pack", ({test, _}) => {
     "address(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
     address(Implicit(Key_hash.of_key(Ed25519(genesis_address)))),
     "050a0000001600000ec89608700c0414159d93552ef9361cea96da13",
+  );
+  test(
+    "address(\"KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc\")",
+    address(Originated(some_contract_hash)),
+    "050a0000001601370027c6c8f3fbafda4f9bfd08b14f45e6a29ce300",
   );
 });
 describe("consensus", ({test, _}) => {

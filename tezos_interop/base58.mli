@@ -27,6 +27,8 @@
 (** {1 Prefixed Base58Check encodings} *)
 
 module Prefix : sig
+  val contract_hash : string
+
   val ed25519_public_key_hash : string
 
   val ed25519_public_key : string
