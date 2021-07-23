@@ -138,3 +138,4 @@ module Int64_map =
 
 module BLAKE2B = BLAKE2B;
 module BLAKE2B_20 = BLAKE2B.BLAKE2B_20;
+module Incremental_patricia = Incremental_patricia;
