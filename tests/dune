@@ -4,7 +4,9 @@
   (:standard \ Test_runner))
  (library_flags
   (-linkall -g))
- (libraries rely.lib tezos_interop protocol node mirage-crypto-rng.unix))
+ (libraries rely.lib tezos_interop protocol node mirage-crypto-rng.unix)
+ (preprocess
+  (pps ppx_deriving_yojson)))
 
 (executable
  (name Test_runner)
