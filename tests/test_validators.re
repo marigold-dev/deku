@@ -56,6 +56,12 @@ describe("validators", ({test, _}) => {
       let t = t |> remove(b);
       expect.equal(t, empty);
     };
+    {
+      // remove unknown
+      let (t, _, _) = setup_two();
+      let unknown = make_validator();
+      expect.equal(remove(unknown, t), t);
+    };
     ();
   });
   test("after_current", ({expect, _}) => {
@@ -90,6 +96,12 @@ describe("validators", ({test, _}) => {
 
     // ensure this is a noop
     expect.equal(update_current(b.address, t), t);
+
+    // ensure it is None when not a validator
+    // TODO: is this a good behavior?
+    let unknown = make_validator();
+    expect.equal(update_current(unknown.address, t) |> current, None);
+    ();
   });
   // TODO: hash
 });
