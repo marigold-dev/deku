@@ -14,7 +14,7 @@ module Operation = Operation;
 include State;
 let apply_main_chain = (state, op) => {
   Operation.Main_chain.(
-    switch (op) {
+    switch (op.kind) {
     // validators management
     | Add_validator(validator) =>
       let validators = Validators.add(validator, state.validators);

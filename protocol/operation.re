@@ -2,11 +2,21 @@ open Helpers;
 
 module Main_chain = {
   [@deriving (ord, yojson)]
-  type t =
+  type kind =
     // TODO: can a validator uses the same key in different nodes?
     // If so the ordering in the list must never use the same key two times in sequence
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator);
+  [@deriving yojson]
+  type t = {
+    tezos_hash: BLAKE2B.t,
+    kind,
+  };
+  let compare = (a, b) => BLAKE2B.compare(a.tezos_hash, b.tezos_hash);
+
+  let make = (~tezos_hash, ~kind) => {
+    {tezos_hash, kind};
+  };
 };
 
 module Side_chain = {
