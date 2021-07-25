@@ -15,6 +15,7 @@ module Key_hash: {
     | Ed25519(Helpers.BLAKE2B_20.t);
 
   let of_key: Key.t => t;
+
   let to_string: t => string;
   let of_string: string => option(t);
 };
@@ -53,6 +54,15 @@ module Address: {
   let of_string: string => option(t);
 };
 
+module Ticket: {
+  type t = {
+    ticketer: Address.t,
+    data: bytes,
+  };
+
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
 module Pack: {
   type t;
 

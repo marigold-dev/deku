@@ -245,6 +245,39 @@ describe("address", ({test, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCL")).toBeNone()
   });
 });
+describe("ticket", ({test, _}) => {
+  open Ticket;
+
+  let kt1 = Address.Originated(some_contract_hash);
+  let ticket = {ticketer: kt1, data: Bytes.of_string("a")};
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(ticket)).toEqual(
+      {|(Pair "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|},
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(
+      of_string({|(Pair "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|}),
+    ).
+      toBe(
+      ~equals=(==),
+      Some(ticket),
+    )
+  });
+
+  test("invalid address", ({expect, _}) => {
+    expect.option(
+      of_string({|(Pair "BT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|}),
+    ).
+      toBeNone()
+  });
+  test("invalid bytes", ({expect, _}) => {
+    expect.option(
+      of_string({|(Pair "BT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x6Z)|}),
+    ).
+      toBeNone()
+  });
+});
 describe("pack", ({test, _}) => {
   open Pack;
 
