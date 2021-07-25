@@ -4,10 +4,8 @@ open Mirage_crypto_ec;
 [@deriving (ord, yojson)]
 type t = BLAKE2B_20.t;
 
-let of_address = pubkey => {
-  let to_yojson = [%to_yojson: Address.t];
-  pubkey |> to_yojson |> Yojson.Safe.to_string |> BLAKE2B_20.hash;
-};
+let of_address = pubkey =>
+  Ed25519.pub_to_cstruct(pubkey) |> Cstruct.to_string |> BLAKE2B_20.hash;
 let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;
 };
