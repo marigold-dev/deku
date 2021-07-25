@@ -36,7 +36,7 @@
     "@reason-native/rely": "*"
   },
   "resolutions": {
-    "ocaml": "github:esy-ocaml/ocaml#2e2269f94f3d2b5f9dfa36c1ebcea814f0911ab9",
+    "ocaml": "github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae",
     "@opam/httpaf": "github:anmonteiro/httpaf:httpaf.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt-unix": "github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
