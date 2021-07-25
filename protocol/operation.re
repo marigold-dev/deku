@@ -17,6 +17,7 @@ module Side_chain = {
   [@deriving (ord, yojson)]
   type t = {
     hash: BLAKE2B.t,
+    signature: Signature.t,
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
@@ -38,33 +39,30 @@ module Side_chain = {
     (hash, verify);
   };
 
-  let make = (~nonce, ~block_height, ~source, ~amount, ~kind) => {
+  let verify =
+      (~hash, ~signature, ~nonce, ~block_height, ~source, ~amount, ~kind) => {
+    let.ok () =
+      verify(~hash, ~nonce, ~block_height, ~source, ~amount, ~kind)
+        ? Ok() : Error("Side operation invalid hash");
+    let.ok () =
+      Signature.verify(~signature, hash)
+      && Wallet.pubkey_matches_wallet(
+           Signature.public_key(signature),
+           source,
+         )
+        ? Ok() : Error("Side operation invalid signature");
+    Ok({hash, signature, nonce, block_height, source, amount, kind});
+  };
+
+  let sign = (~secret, ~nonce, ~block_height, ~source, ~amount, ~kind) => {
     let hash = hash(~nonce, ~block_height, ~source, ~amount, ~kind);
-    {hash, nonce, block_height, source, amount, kind};
+    let signature = Signature.sign(~key=secret, hash);
+    {hash, signature, nonce, block_height, source, amount, kind};
   };
 
   let of_yojson = json => {
-    let.ok {hash, nonce, block_height, source, kind, amount} =
+    let.ok {hash, signature, nonce, block_height, source, kind, amount} =
       of_yojson(json);
-    let.ok () =
-      verify(~hash, ~nonce, ~block_height, ~source, ~amount, ~kind)
-        ? Ok() : Error("Invalid hash");
-    Ok({hash, nonce, block_height, source, amount, kind});
+    verify(~hash, ~signature, ~nonce, ~block_height, ~source, ~kind, ~amount);
   };
-
-  // TODO: maybe use GADT for this?
-  module Self_signed =
-    Signed.Make({
-      type nonrec t = t;
-      let compare = compare;
-      let to_yojson = to_yojson;
-      let of_yojson = of_yojson;
-      let verify = (~key, ~signature as _, data) =>
-        Wallet.of_address(key) == data.source;
-    });
-};
-
-let self_sign_side = (~key, op) => {
-  let Signed.{key, signature, data} = Signed.sign(~key, op);
-  Side_chain.Self_signed.verify(~key, ~signature, data) |> Result.get_ok;
 };

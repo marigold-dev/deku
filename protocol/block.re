@@ -20,7 +20,7 @@ type t = {
   // TODO: maybe it should be only for internal pagination and stuff like this
   block_height: int64,
   main_chain_ops: list(Main_chain.t),
-  side_chain_ops: list(Side_chain.Self_signed.t),
+  side_chain_ops: list(Side_chain.t),
 };
 
 let (hash, verify) = {
@@ -47,7 +47,7 @@ let (hash, verify) = {
         Address.t,
         int64,
         list(Main_chain.t),
-        list(Side_chain.Self_signed.t),
+        list(Side_chain.t),
       )
     ];
     let json =

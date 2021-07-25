@@ -81,36 +81,32 @@ describe("protocol state", ({test, _}) => {
     "transaction",
     ~free_diff_a=-7,
     ~free_diff_b=7,
-    (state, (source, key), (destination, _)) => {
+    (state, (source, secret), (destination, _)) => {
     apply_side_chain(
       state,
-      Operation.self_sign_side(
-        ~key,
-        Operation.Side_chain.make(
-          ~nonce=0l,
-          ~block_height=0L,
-          ~source,
-          ~amount=Amount.of_int(7),
-          ~kind=Transaction({destination: destination}),
-        ),
+      Operation.Side_chain.sign(
+        ~secret,
+        ~nonce=0l,
+        ~block_height=0L,
+        ~source,
+        ~amount=Amount.of_int(7),
+        ~kind=Transaction({destination: destination}),
       ),
     )
   });
   test_failed_wallet_offset(
     "transaction",
     "not enough funds",
-    (state, (source, key), (destination, _)) =>
+    (state, (source, secret), (destination, _)) =>
     apply_side_chain(
       state,
-      Operation.self_sign_side(
-        ~key,
-        Operation.Side_chain.make(
-          ~nonce=0l,
-          ~block_height=0L,
-          ~source,
-          ~amount=Amount.of_int(501),
-          ~kind=Transaction({destination: destination}),
-        ),
+      Operation.Side_chain.sign(
+        ~secret,
+        ~nonce=0l,
+        ~block_height=0L,
+        ~source,
+        ~amount=Amount.of_int(501),
+        ~kind=Transaction({destination: destination}),
       ),
     )
   );

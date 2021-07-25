@@ -142,7 +142,7 @@ module Register_uri = {
 
 module Operation_gossip = {
   [@deriving yojson]
-  type request = {operation: Operation.Side_chain.Self_signed.t};
+  type request = {operation: Operation.Side_chain.t};
   [@deriving yojson]
   type response = unit;
   let path = "/operation-gossip";
