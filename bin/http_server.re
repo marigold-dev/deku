@@ -171,6 +171,8 @@ let node = {
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
   let.await validators =
     Files.Validators.read(~file=folder ++ "/validators.json");
+  let.await interop_context =
+    Files.Interop_context.read(~file=folder ++ "/tezos.json");
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
@@ -179,7 +181,12 @@ let node = {
       validators,
     );
   let node =
-    State.make(~identity, ~data_folder=folder, ~initial_validators_uri);
+    State.make(
+      ~identity,
+      ~interop_context,
+      ~data_folder=folder,
+      ~initial_validators_uri,
+    );
   let node = {
     ...node,
     protocol: {
