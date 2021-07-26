@@ -17,9 +17,9 @@ let read_file = file => {
 };
 
 let read_identity_file = file => {
-  let file_buffer = read_file(file) |> Lwt_main.run;
+  let.await file_buffer = read_file(file);
   let json = Yojson.Safe.from_string(file_buffer);
-  identity_of_yojson(json) |> Result.get_ok;
+  identity_of_yojson(json) |> Result.get_ok |> Lwt.return;
 };
 
 let write_file = (~file, string) => {
@@ -49,14 +49,17 @@ let read_validators = file => {
 };
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
-let validators = () => [
-  read_identity_file("0/identity.json"),
-  read_identity_file("1/identity.json"),
-  read_identity_file("2/identity.json"),
-  read_identity_file("3/identity.json"),
-];
+let validators = () =>
+  [
+    read_identity_file("0/identity.json"),
+    read_identity_file("1/identity.json"),
+    read_identity_file("2/identity.json"),
+    read_identity_file("3/identity.json"),
+  ]
+  |> Lwt.all;
+
 let validators_uris = () =>
-  List.map(validator => validator.uri, validators());
+  Lwt.map(List.map(validator => validator.uri), validators());
 
 let make_filename_from_address = wallet_addr_str => {
   Printf.sprintf("%s.tzsidewallet", wallet_addr_str);
@@ -192,9 +195,10 @@ let create_transaction = (sender_wallet_file, received_address, amount) => {
   switch (transaction) {
   | Ok(transaction) =>
     // Broadcast transaction
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.broadcast_operation_gossip_to_list(
-        validators_uris(),
+        validators_uris,
         Networking.Operation_gossip.{operation: transaction},
       );
 
@@ -263,18 +267,19 @@ let sign_block = (key, block_hash) =>
   switch (load_wallet_file(key)) {
   | Ok(wallet) =>
     let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.(
         broadcast_to_list(
           (module Signature_spec),
-          validators_uris(),
+          validators_uris,
           {hash: block_hash, signature},
         )
       );
     Lwt.return(`Ok());
   | Error(err) => Lwt.return(`Error((false, err)))
   };
-let sign_block = {
+let sign_block_term = {
   let key_wallet = {
     let doc = "The validator key that will sign the block address.";
     Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
@@ -312,11 +317,12 @@ let produce_block = (key, state_bin) =>
         ~side_chain_ops=[],
       );
     let signature = Block.sign(~key=wallet.priv_key, block);
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.(
         broadcast_to_list(
           (module Block_and_signature_spec),
-          validators_uris(),
+          validators_uris,
           {block, signature},
         )
       );
@@ -334,7 +340,9 @@ let produce_block = {
   let state_bin = {
     let docv = "state_bin";
     let doc = "Path to last known serialized state.";
-    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv));
+    Arg.(
+      required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv)
+    );
   };
 
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
@@ -413,36 +421,12 @@ let info_inject_genesis = {
     `S(Manpage.s_bugs),
     `P("Email bug reports to <contact@marigold.dev>."),
   ];
-  Term.info(
-    "inject-genesis",
-    ~version="%‌%VERSION%%",
-    ~doc,
-    ~exits,
-    ~man,
-  );
+  Term.info("inject-genesis", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
 let inject_genesis = {
-  let read_file = file => {
-    let.await lines =
-      Lwt_io.with_file(~mode=Input, file, ic =>
-        Lwt_io.read_lines(ic) |> Lwt_stream.to_list
-      );
-    await(lines |> String.concat("\n"));
-  };
-  let read_file = file => read_file(file) |> Lwt_main.run;
-  let read_identity_file = file => {
-    let file_buffer = read_file(file);
-    let json = Yojson.Safe.from_string(file_buffer);
-    identity_of_yojson(json) |> Result.get_ok;
-  };
-  // let read_validators_file = file => {
-  //   let file_buffer = read_file(file);
-  //   let json = Yojson.Safe.from_string(file_buffer);
-  //   [%of_yojson: list(Validators.validator)](json) |> Result.get_ok;
-  // };
   let make_new_block = validators => {
-    let first = List.nth(validators, 0);
+    let first = List.hd(validators);
     let state = Protocol.make(~initial_block=Block.genesis);
     let.await state = {
       let.await validators = read_validators("0/validators.json");
@@ -477,50 +461,29 @@ let inject_genesis = {
       |> List.map(Tezos_interop.Key.to_string)
       |> String.concat(","),
     );
-    let signatures =
-      validators
-      |> List.map(validator => Block.sign(~key=validator.key, block));
 
+    let signature = Block.sign(~key=first.key, block);
+    let.await validators_uris = validators_uris();
     let.await () =
-      validators
-      |> Lwt_list.iter_p(validator =>
-           Networking.post(
-             (module Networking.Block_and_signature_spec),
-             {block, signature: List.nth(signatures, 0)},
-             validator.uri,
-           )
-         );
-    validators
-    |> Lwt_list.iter_p(validator =>
-         signatures
-         |> Lwt_list.iter_p(signature => {
-              Lwt.catch(
-                () =>
-                  Networking.post(
-                    (module Networking.Signature_spec),
-                    Networking.Signature_spec.{
-                      hash: block.Block.hash,
-                      signature,
-                    },
-                    validator.uri,
-                  ),
-                _exn => Lwt.return_unit,
-              )
-            })
-       );
+      Networking.(
+        broadcast_to_list(
+          (module Block_and_signature_spec),
+          validators_uris,
+          {block, signature},
+        )
+      );
+    Lwt.return();
   };
 
   Term.(
+    lwt_ret(
       const(() => {
-        let validators = [
-          read_identity_file("0/identity.json"),
-          read_identity_file("1/identity.json"),
-          read_identity_file("2/identity.json"),
-          // read_identity_file("identity_3.json"),
-        ];
-        Lwt_main.run @@ make_new_block(validators);
+        let.await validators = validators();
+        let.await () = make_new_block(validators);
+        Lwt.return(`Ok());
       })
       $ const(),
+    )
   );
 };
 
@@ -550,7 +513,7 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
-      (sign_block, info_sign_block),
+      (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
       (inject_genesis, info_inject_genesis),
