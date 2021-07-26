@@ -15,22 +15,51 @@ let read_file = file => {
     );
   await(lines |> String.concat("\n"));
 };
-let read_file = file => read_file(file) |> Lwt_main.run;
+
 let read_identity_file = file => {
-  let file_buffer = read_file(file);
+  let.await file_buffer = read_file(file);
   let json = Yojson.Safe.from_string(file_buffer);
-  identity_of_yojson(json) |> Result.get_ok;
+  identity_of_yojson(json) |> Result.get_ok |> Lwt.return;
 };
 
+let write_file = (~file, string) => {
+  let oc = open_out(file);
+  output_string(oc, string);
+  close_out(oc);
+};
+
+let read_validators = file => {
+  let.await file_buffer = read_file(file);
+  await(
+    try({
+      let json = Yojson.Safe.from_string(file_buffer);
+      module T = {
+        [@deriving of_yojson]
+        type t = {
+          address: Address.t,
+          uri: Uri.t,
+        };
+      };
+      let.ok validators = [%of_yojson: list(T.t)](json);
+      Ok(List.map((T.{address, uri}) => (address, uri), validators));
+    }) {
+    | _ => Error("failed to parse json")
+    },
+  );
+};
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
-let validators = () => [
-  read_identity_file("0/identity.json"),
-  read_identity_file("1/identity.json"),
-  read_identity_file("2/identity.json"),
-  read_identity_file("3/identity.json"),
-];
-let validators_uris = List.map(validator => validator.uri, validators());
+let validators = () =>
+  [
+    read_identity_file("0/identity.json"),
+    read_identity_file("1/identity.json"),
+    read_identity_file("2/identity.json"),
+    read_identity_file("3/identity.json"),
+  ]
+  |> Lwt.all;
+
+let validators_uris = () =>
+  Lwt.map(List.map(validator => validator.uri), validators());
 
 let make_filename_from_address = wallet_addr_str => {
   Printf.sprintf("%s.tzsidewallet", wallet_addr_str);
@@ -164,6 +193,7 @@ let create_transaction = (sender_wallet_file, received_address, amount) => {
   switch (transaction) {
   | Ok(transaction) =>
     // Broadcast transaction
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.broadcast_operation_gossip_to_list(
         validators_uris,
@@ -235,6 +265,7 @@ let sign_block = (key, block_hash) =>
   switch (load_wallet_file(key)) {
   | Ok(wallet) =>
     let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.(
         broadcast_to_list(
@@ -246,7 +277,7 @@ let sign_block = (key, block_hash) =>
     Lwt.return(`Ok());
   | Error(err) => Lwt.return(`Error((false, err)))
   };
-let sign_block = {
+let sign_block_term = {
   let key_wallet = {
     let doc = "The validator key that will sign the block address.";
     Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
@@ -269,6 +300,7 @@ let info_produce_block = {
   ];
   Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
+
 let produce_block = (key, state_bin) =>
   switch (load_wallet_file(key)) {
   | Ok(wallet) =>
@@ -283,6 +315,7 @@ let produce_block = (key, state_bin) =>
         ~side_chain_ops=[],
       );
     let signature = Block.sign(~key=wallet.priv_key, block);
+    let.await validators_uris = validators_uris();
     let.await () =
       Networking.(
         broadcast_to_list(
@@ -305,10 +338,151 @@ let produce_block = {
   let state_bin = {
     let docv = "state_bin";
     let doc = "Path to last known serialized state.";
-    Arg.(required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv));
+    Arg.(
+      required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv)
+    );
   };
 
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
+};
+
+// gen credentials
+let info_gen_credentials = {
+  let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
+  let man = [
+    `S(Manpage.s_bugs),
+    `P("Email bug reports to <contact@marigold.dev>."),
+  ];
+  Term.info(
+    "make-credentials",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+let gen_credentials = {
+  let make_identity_file = (file, index) => {
+    open Mirage_crypto_ec;
+    Sys.mkdir(Printf.sprintf("./%d/", index), 0o700);
+    let file = Printf.sprintf("./%d/%s", index, file);
+    let uri = Printf.sprintf("http://localhost:%d", 4440 + index);
+
+    let uri = Uri.of_string(uri);
+    let (key, t) = Ed25519.generate();
+    let identity = {key, t, uri};
+    identity_to_yojson(identity)
+    |> Yojson.Safe.pretty_to_string
+    |> write_file(~file);
+    (t, uri);
+  };
+
+  let make_validators_files = (file, validators, to_make) => {
+    module T = {
+      [@deriving to_yojson]
+      type t = {
+        address: Address.t,
+        uri: Uri.t,
+      };
+    };
+
+    let validator_mapping = List.map(((address, uri)) => T.{address, uri});
+
+    List.iter(
+      i => {
+        validators
+        |> validator_mapping
+        |> [%to_yojson: list(T.t)]
+        |> Yojson.Safe.pretty_to_string
+        |> write_file(~file=Printf.sprintf("./%d/%s", i, file))
+      },
+      to_make,
+    );
+  };
+
+  let to_make = [0, 1, 2, 3];
+
+  Term.(
+    const(() => {
+      let validators =
+        List.map(make_identity_file("identity.json"), to_make);
+      make_validators_files("validators.json", validators, to_make);
+    })
+    $ const()
+  );
+};
+
+// inject genesis block
+let info_inject_genesis = {
+  let doc = "Injects the genesis block";
+  let man = [
+    `S(Manpage.s_bugs),
+    `P("Email bug reports to <contact@marigold.dev>."),
+  ];
+  Term.info("inject-genesis", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let inject_genesis = {
+  let make_new_block = validators => {
+    let first = List.hd(validators);
+    let state = Protocol.make(~initial_block=Block.genesis);
+    let.await state = {
+      let.await validators = read_validators("0/validators.json");
+      let validators = Result.get_ok(validators);
+      Lwt.return({
+        ...state,
+        validators:
+          List.fold_right(
+            ((address, _)) => Validators.add({address: address}),
+            validators,
+            Validators.empty,
+          ),
+      });
+    };
+    let block =
+      Block.produce(
+        ~state,
+        ~author=first.t,
+        ~main_chain_ops=[],
+        ~side_chain_ops=[],
+      );
+    Printf.printf(
+      "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
+      BLAKE2B.to_string(block.hash),
+      BLAKE2B.to_string(block.state_root_hash),
+      block.block_height,
+      state.validators
+      |> Validators.to_list
+      |> List.map(validator =>
+           Tezos_interop.Key.Ed25519(validator.Validators.address)
+         )
+      |> List.map(Tezos_interop.Key.to_string)
+      |> String.concat(","),
+    );
+
+    let signature = Block.sign(~key=first.key, block);
+    let.await validators_uris = validators_uris();
+    let.await () =
+      Networking.(
+        broadcast_to_list(
+          (module Block_and_signature_spec),
+          validators_uris,
+          {block, signature},
+        )
+      );
+    Lwt.return();
+  };
+
+  Term.(
+    lwt_ret(
+      const(() => {
+        let.await validators = validators();
+        let.await () = make_new_block(validators);
+        Lwt.return(`Ok());
+      })
+      $ const(),
+    )
+  );
 };
 
 // Term that just shows the help command, to use when no arguments are passed
@@ -337,8 +511,10 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
-      (sign_block, info_sign_block),
+      (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
+      (gen_credentials, info_gen_credentials),
+      (inject_genesis, info_inject_genesis),
     ],
   );
 };

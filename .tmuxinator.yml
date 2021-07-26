@@ -53,5 +53,5 @@ windows:
         - sleep 1 && $cur__target_dir/default/bin/http_server.exe 1
         - sleep 1 && $cur__target_dir/default/bin/http_server.exe 2
         - sleep 1 && $cur__target_dir/default/bin/http_server.exe 3
-        - $cur__target_dir/default/bin/genesis_helper.exe make-credentials && sleep 3 && $cur__target_dir/default/bin/genesis_helper.exe inject-genesis
+        - $cur__target_dir/default/bin/sidecli.exe make-credentials && sleep 3 && $cur__target_dir/default/bin/sidecli.exe inject-genesis
 
