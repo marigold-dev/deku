@@ -165,55 +165,12 @@ let handle_receive_operation_gossip =
       Ok();
     },
   );
-module Utils = {
-  let read_file = file => {
-    let.await lines =
-      Lwt_io.with_file(~mode=Input, file, ic =>
-        Lwt_io.read_lines(ic) |> Lwt_stream.to_list
-      );
-    await(lines |> String.concat("\n"));
-  };
-
-  let read_identity_file = folder => {
-    let.await file_buffer = read_file(folder ++ "/identity.json");
-    await(
-      try({
-        let json = Yojson.Safe.from_string(file_buffer);
-        State.identity_of_yojson(json);
-      }) {
-      | _ => Error("failed to parse json")
-      },
-    );
-  };
-  // TODO: write only file system signed by identity key and in binary identity key
-  let read_validators = folder => {
-    let.await file_buffer = read_file(folder ++ "/validators.json");
-    await(
-      try({
-        let json = Yojson.Safe.from_string(file_buffer);
-        module T = {
-          [@deriving of_yojson]
-          type t = {
-            address: Address.t,
-            uri: Uri.t,
-          };
-        };
-        let.ok validators = [%of_yojson: list(T.t)](json);
-        Ok(List.map((T.{address, uri}) => (address, uri), validators));
-      }) {
-      | _ => Error("failed to parse json")
-      },
-    );
-  };
-};
 
 let node = {
-  open Utils;
   let folder = Sys.argv[1];
-  let.await identity = read_identity_file(folder);
-  let identity = Result.get_ok(identity);
-  let.await validators = read_validators(folder);
-  let validators = Result.get_ok(validators);
+  let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
+  let.await validators =
+    Files.Validators.read(~file=folder ++ "/validators.json");
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
