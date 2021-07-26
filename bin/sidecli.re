@@ -6,55 +6,14 @@ open Cmdliner;
 
 Printexc.record_backtrace(true);
 
-// Helpers
-
-let read_file = file => {
-  let.await lines =
-    Lwt_io.with_file(~mode=Input, file, ic =>
-      Lwt_io.read_lines(ic) |> Lwt_stream.to_list
-    );
-  await(lines |> String.concat("\n"));
-};
-
-let read_identity_file = file => {
-  let.await file_buffer = read_file(file);
-  let json = Yojson.Safe.from_string(file_buffer);
-  identity_of_yojson(json) |> Result.get_ok |> Lwt.return;
-};
-
-let write_file = (~file, string) => {
-  let oc = open_out(file);
-  output_string(oc, string);
-  close_out(oc);
-};
-
-let read_validators = file => {
-  let.await file_buffer = read_file(file);
-  await(
-    try({
-      let json = Yojson.Safe.from_string(file_buffer);
-      module T = {
-        [@deriving of_yojson]
-        type t = {
-          address: Address.t,
-          uri: Uri.t,
-        };
-      };
-      let.ok validators = [%of_yojson: list(T.t)](json);
-      Ok(List.map((T.{address, uri}) => (address, uri), validators));
-    }) {
-    | _ => Error("failed to parse json")
-    },
-  );
-};
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
 let validators = () =>
   [
-    read_identity_file("0/identity.json"),
-    read_identity_file("1/identity.json"),
-    read_identity_file("2/identity.json"),
-    read_identity_file("3/identity.json"),
+    Files.Identity.read(~file="0/identity.json"),
+    Files.Identity.read(~file="1/identity.json"),
+    Files.Identity.read(~file="2/identity.json"),
+    Files.Identity.read(~file="3/identity.json"),
   ]
   |> Lwt.all;
 
@@ -65,17 +24,11 @@ let make_filename_from_address = wallet_addr_str => {
   Printf.sprintf("%s.tzsidewallet", wallet_addr_str);
 };
 
-module Serializable = {
-  [@deriving yojson]
-  type wallet_file = {
-    address: Wallet.t,
-    priv_key: Address.key,
-  };
-};
-
 let exits =
   Term.default_exits
   @ Term.[exit_info(1, ~doc="expected failure (might not be a bug)")];
+
+let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 
 // Commands
 // ========
@@ -94,18 +47,14 @@ let info_create_wallet = {
 let create_wallet = () => {
   let (key, wallet) = Wallet.make_wallet();
 
-  let wallet_json =
-    Serializable.wallet_file_to_yojson({priv_key: key, address: wallet});
-
   let wallet_addr_str = Wallet.address_to_string(wallet);
-  let filename = make_filename_from_address(wallet_addr_str);
+  let file = make_filename_from_address(wallet_addr_str);
 
-  try(`Ok(Yojson.Safe.to_file(filename, wallet_json))) {
-  | _ => `Error((false, "Error writing JSON to file."))
-  };
+  let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
+  await(`Ok());
 };
 
-let create_wallet = Term.(ret(const(create_wallet) $ const()));
+let create_wallet = Term.(lwt_ret(const(create_wallet) $ const()));
 
 // create-transaction
 
@@ -149,13 +98,6 @@ let wallet = {
   Arg.(conv((parser, printer)));
 };
 
-let load_wallet_file = file => {
-  let.ok wallet_yojson =
-    try(Ok(file |> Yojson.Safe.from_file)) {
-    | _ => Error(Printf.sprintf("failed to read JSON from file %s", file))
-    };
-  Serializable.wallet_file_of_yojson(wallet_yojson);
-};
 let info_create_transaction = {
   let doc =
     Printf.sprintf(
@@ -176,36 +118,27 @@ let info_create_transaction = {
 };
 
 let create_transaction = (sender_wallet_file, received_address, amount) => {
-  let transaction = {
-    let.ok wallet = load_wallet_file(sender_wallet_file);
-
-    Ok(
-      Operation.Side_chain.sign(
-        ~secret=wallet.priv_key,
-        ~nonce=0l,
-        ~block_height=0L,
-        ~source=wallet.address,
-        ~amount,
-        ~kind=Transaction({destination: received_address}),
-      ),
+  let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
+  let transaction =
+    Operation.Side_chain.sign(
+      ~secret=wallet.priv_key,
+      ~nonce=0l,
+      ~block_height=0L,
+      ~source=wallet.address,
+      ~amount,
+      ~kind=Transaction({destination: received_address}),
     );
-  };
-  switch (transaction) {
-  | Ok(transaction) =>
-    // Broadcast transaction
-    let.await validators_uris = validators_uris();
-    let.await () =
-      Networking.broadcast_operation_gossip_to_list(
-        validators_uris,
-        Networking.Operation_gossip.{operation: transaction},
-      );
 
-    Lwt.return(`Ok());
-  | Error(err) => Lwt.return(`Error((false, err)))
-  };
+  // Broadcast transaction
+  let.await validators_uris = validators_uris();
+  let.await () =
+    Networking.broadcast_operation_gossip_to_list(
+      validators_uris,
+      Networking.Operation_gossip.{operation: transaction},
+    );
+
+  Lwt.return(`Ok());
 };
-
-let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 
 let create_transaction = {
   let address_from = {
@@ -261,22 +194,20 @@ let info_sign_block = {
   ];
   Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
-let sign_block = (key, block_hash) =>
-  switch (load_wallet_file(key)) {
-  | Ok(wallet) =>
-    let signature = Signature.sign(~key=wallet.priv_key, block_hash);
-    let.await validators_uris = validators_uris();
-    let.await () =
-      Networking.(
-        broadcast_to_list(
-          (module Signature_spec),
-          validators_uris,
-          {hash: block_hash, signature},
-        )
-      );
-    Lwt.return(`Ok());
-  | Error(err) => Lwt.return(`Error((false, err)))
-  };
+let sign_block = (wallet_file, block_hash) => {
+  let.await wallet = Files.Wallet.read(~file=wallet_file);
+  let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+  let.await validators_uris = validators_uris();
+  let.await () =
+    Networking.(
+      broadcast_to_list(
+        (module Signature_spec),
+        validators_uris,
+        {hash: block_hash, signature},
+      )
+    );
+  Lwt.return(`Ok());
+};
 let sign_block_term = {
   let key_wallet = {
     let doc = "The validator key that will sign the block address.";
@@ -301,32 +232,30 @@ let info_produce_block = {
   Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
-let produce_block = (key, state_bin) =>
-  switch (load_wallet_file(key)) {
-  | Ok(wallet) =>
-    let.await state: Protocol.t =
-      Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
-    let address = Address.of_key(wallet.priv_key);
-    let block =
-      Block.produce(
-        ~state,
-        ~author=address,
-        ~main_chain_ops=[],
-        ~side_chain_ops=[],
-      );
-    let signature = Block.sign(~key=wallet.priv_key, block);
-    let.await validators_uris = validators_uris();
-    let.await () =
-      Networking.(
-        broadcast_to_list(
-          (module Block_and_signature_spec),
-          validators_uris,
-          {block, signature},
-        )
-      );
-    Lwt.return(`Ok());
-  | Error(err) => Lwt.return(`Error((false, err)))
-  };
+let produce_block = (wallet_file, state_bin) => {
+  let.await wallet = Files.Wallet.read(~file=wallet_file);
+  let.await state: Protocol.t =
+    Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
+  let address = Address.of_key(wallet.priv_key);
+  let block =
+    Block.produce(
+      ~state,
+      ~author=address,
+      ~main_chain_ops=[],
+      ~side_chain_ops=[],
+    );
+  let signature = Block.sign(~key=wallet.priv_key, block);
+  let.await validators_uris = validators_uris();
+  let.await () =
+    Networking.(
+      broadcast_to_list(
+        (module Block_and_signature_spec),
+        validators_uris,
+        {block, signature},
+      )
+    );
+  Lwt.return(`Ok());
+};
 
 let produce_block = {
   let key_wallet = {
@@ -364,17 +293,15 @@ let info_gen_credentials = {
 let gen_credentials = {
   let make_identity_file = (file, index) => {
     open Mirage_crypto_ec;
-    Sys.mkdir(Printf.sprintf("./%d/", index), 0o700);
+    let.await () = Lwt_unix.mkdir(Printf.sprintf("./%d/", index), 0o700);
     let file = Printf.sprintf("./%d/%s", index, file);
     let uri = Printf.sprintf("http://localhost:%d", 4440 + index);
 
     let uri = Uri.of_string(uri);
     let (key, t) = Ed25519.generate();
     let identity = {key, t, uri};
-    identity_to_yojson(identity)
-    |> Yojson.Safe.pretty_to_string
-    |> write_file(~file);
-    (t, uri);
+    let.await () = Files.Identity.write(identity, ~file);
+    await((t, uri));
   };
 
   let make_validators_files = (file, validators, to_make) => {
@@ -386,16 +313,12 @@ let gen_credentials = {
       };
     };
 
-    let validator_mapping = List.map(((address, uri)) => T.{address, uri});
-
-    List.iter(
-      i => {
-        validators
-        |> validator_mapping
-        |> [%to_yojson: list(T.t)]
-        |> Yojson.Safe.pretty_to_string
-        |> write_file(~file=Printf.sprintf("./%d/%s", i, file))
-      },
+    Lwt_list.iter_p(
+      i =>
+        Files.Validators.write(
+          validators,
+          ~file=Printf.sprintf("./%d/%s", i, file),
+        ),
       to_make,
     );
   };
@@ -403,12 +326,16 @@ let gen_credentials = {
   let to_make = [0, 1, 2, 3];
 
   Term.(
-    const(() => {
-      let validators =
-        List.map(make_identity_file("identity.json"), to_make);
-      make_validators_files("validators.json", validators, to_make);
-    })
-    $ const()
+    lwt_ret(
+      const(() => {
+        let.await validators =
+          Lwt_list.map_p(make_identity_file("identity.json"), to_make);
+        let.await () =
+          make_validators_files("validators.json", validators, to_make);
+        await(`Ok());
+      })
+      $ const(),
+    )
   );
 };
 
@@ -427,8 +354,7 @@ let inject_genesis = {
     let first = List.hd(validators);
     let state = Protocol.make(~initial_block=Block.genesis);
     let.await state = {
-      let.await validators = read_validators("0/validators.json");
-      let validators = Result.get_ok(validators);
+      let.await validators = Files.Validators.read(~file="0/validators.json");
       Lwt.return({
         ...state,
         validators:
