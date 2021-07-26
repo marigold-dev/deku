@@ -12,3 +12,10 @@
  (public_name sidecli)
  (preprocess
   (pps ppx_deriving_yojson)))
+
+(library
+ (name files)
+ (modules Files)
+ (libraries lwt lwt.unix node)
+ (preprocess
+  (pps ppx_deriving_yojson)))
