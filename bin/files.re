@@ -47,3 +47,36 @@ module Validators = {
       |> [%to_yojson: list(t)]
     );
 };
+
+module Interop_context = {
+  module Address = {
+    include Tezos_interop.Address;
+    let of_yojson =
+      fun
+      | `String(string) =>
+        of_string(string) |> Option.to_result(~none="invalid address")
+      | _ => Error("expected a string");
+    let to_yojson = t => `String(to_string(t));
+  };
+  module Secret = {
+    include Tezos_interop.Secret;
+    let of_yojson =
+      fun
+      | `String(string) =>
+        of_string(string) |> Option.to_result(~none="invalid secret")
+      | _ => Error("expected a string");
+    let to_yojson = t => `String(to_string(t));
+  };
+
+  [@deriving yojson]
+  type t =
+    Tezos_interop.Context.t = {
+      rpc_node: Uri.t,
+      secret: Secret.t,
+      consensus_contract: Address.t,
+      required_confirmations: int,
+    };
+
+  let read = read_json(of_yojson);
+  let write = write_json(to_yojson);
+};
