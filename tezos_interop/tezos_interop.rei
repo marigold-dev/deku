@@ -77,6 +77,14 @@ module Pack: {
   let to_bytes: t => bytes;
 };
 
+module Context: {
+  type t = {
+    rpc_node: Uri.t,
+    secret: Secret.t,
+    consensus_contract: Address.t,
+    required_confirmations: int,
+  };
+};
 module Consensus: {
   let hash_validators: list(Key.t) => BLAKE2B.t;
   let hash_block:
