@@ -1,3 +1,5 @@
+type blake2b = bytes
+
 (* store hash *)
 type validator = key
 type validators = validator list
@@ -5,9 +7,9 @@ type validators = validator list
 type storage = {
   (* TODO: is having current_block_hash even useful? *)
   (* consensus proof *)
-  current_block_hash: bytes;
+  current_block_hash: blake2b;
   current_block_height: int;
-  current_state_hash: bytes;
+  current_state_hash: blake2b;
   current_validators: validators;
 }
 
@@ -17,11 +19,11 @@ type signatures = signature option list
 
 (* TODO: this is a bad name *)
 type root_hash_update = {
-  block_hash: bytes;
+  block_hash: blake2b;
   block_height: int;
-  block_payload_hash: bytes;
+  block_payload_hash: blake2b;
 
-  state_hash: bytes;
+  state_hash: blake2b;
   (* TODO: performance, can this blown up? *)
   validators: validators;
 
@@ -32,9 +34,9 @@ type root_hash_update = {
 (* TODO: performance, put this structures in an optimized way *)
 type block_hash_structure = {
   block_height: int;
-  block_payload_hash: bytes;
-  state_hash: bytes;
-  validators_hash: bytes;
+  block_payload_hash: blake2b;
+  state_hash: blake2b;
+  validators_hash: blake2b;
 }
 
 let assert_msg ((message, condition): (string * bool)) =
@@ -63,7 +65,7 @@ let check_hash (root_hash_update: root_hash_update) =
 
 let rec check_signatures
   (validators, signatures, block_hash, remaining:
-   validators * signatures * bytes * int) : unit =
+   validators * signatures * blake2b * int) : unit =
     match (validators, signatures) with
     (* already signed *)
     | ([], []) ->
@@ -82,7 +84,7 @@ let rec check_signatures
 let check_signatures
   (storage: storage)
   (signatures: signatures)
-  (block_hash: bytes) =
+  (block_hash: blake2b) =
     let validators_length = (int (List.length storage.current_validators)) in
     let required_validators = (validators_length * 2) / 3 in
     check_signatures (
