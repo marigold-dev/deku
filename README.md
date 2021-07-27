@@ -85,6 +85,10 @@ Please consider the following,
 1. Using `<your username>/<branchname>` format for the branches
 2. Opening follow up posts on the issue tracker for non-critical
    issues observed during reviews of critical PRs.
+3. Specify the problem description along the with proposed solution 
+   in the PR description. Refer merged PRs to get an idea of what is 
+   considered a good PR description.
+4. Specify if a PR depends on another PR before it can be merged.
    
 ### Conventions
 
