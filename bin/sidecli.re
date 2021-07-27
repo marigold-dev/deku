@@ -81,6 +81,14 @@ let amount = {
     Format.fprintf(fmt, "%d", Amount.to_int(amount));
   Arg.(conv(~docv="A positive amount", (parser, printer)));
 };
+let ticket = {
+  let parser = string =>
+    Tezos_interop.Ticket.of_string(string)
+    |> Option.to_result(~none=`Msg("Expected a ticket"));
+  let printer = (fmt, ticket) =>
+    Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
+  Arg.(conv(~docv="A ticket", (parser, printer)));
+};
 // TODO: Wallet.t
 let wallet = {
   let parser = file => {
@@ -117,7 +125,8 @@ let info_create_transaction = {
   );
 };
 
-let create_transaction = (sender_wallet_file, received_address, amount) => {
+let create_transaction =
+    (sender_wallet_file, received_address, amount, ticket) => {
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let transaction =
     Operation.Side_chain.sign(
@@ -126,6 +135,7 @@ let create_transaction = (sender_wallet_file, received_address, amount) => {
       ~block_height=0L,
       ~source=wallet.address,
       ~amount,
+      ~ticket,
       ~kind=Transaction({destination: received_address}),
     );
 
@@ -171,8 +181,17 @@ let create_transaction = {
     );
   };
 
+  let ticket = {
+    let doc = "The ticket to be trasnsacted.";
+    Arg.(
+      required & pos(3, some(ticket), None) & info([], ~docv="MSG", ~doc)
+    );
+  };
+
   Term.(
-    lwt_ret(const(create_transaction) $ address_from $ address_to $ amount)
+    lwt_ret(
+      const(create_transaction) $ address_from $ address_to $ amount $ ticket,
+    )
   );
 };
 

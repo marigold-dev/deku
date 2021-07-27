@@ -53,11 +53,11 @@ let apply_side_chain = (state: t, operation) => {
   // apply operation
   let included_operations = Set.add(operation, state.included_operations);
 
-  let {source, amount, _} = operation;
+  let {source, amount, ticket, _} = operation;
   let ledger =
     switch (operation.kind) {
     | Transaction({destination}) =>
-      Ledger.transfer(~source, ~destination, amount, state.ledger)
+      Ledger.transfer(~source, ~destination, amount, ticket, state.ledger)
     };
   let ledger =
     switch (ledger) {
