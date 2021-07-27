@@ -1,14 +1,27 @@
 (executable
  (name http_server)
- (libraries opium node mirage-crypto-ec mirage-crypto-rng.unix helpers)
+ (libraries opium files node mirage-crypto-ec mirage-crypto-rng.unix helpers)
  (modules Http_server)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
  (name sidecli)
- (libraries node mirage-crypto-ec mirage-crypto-rng.unix helpers cmdliner)
+ (libraries
+  node
+  files
+  mirage-crypto-ec
+  mirage-crypto-rng.unix
+  helpers
+  cmdliner)
  (modules Sidecli)
  (public_name sidecli)
+ (preprocess
+  (pps ppx_deriving_yojson)))
+
+(library
+ (name files)
+ (modules Files)
+ (libraries lwt lwt.unix node)
  (preprocess
   (pps ppx_deriving_yojson)))
