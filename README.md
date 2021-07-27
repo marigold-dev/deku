@@ -88,6 +88,7 @@ Please consider the following,
 3. Specify the problem description along the with proposed solution 
    in the PR description. Refer merged PRs to get an idea of what is 
    considered a good PR description.
+4. Specify if a PR depends on another PR before it can be merged.
    
 ### Conventions
 
