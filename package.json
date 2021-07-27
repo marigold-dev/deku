@@ -9,6 +9,7 @@
       ]
     }
   },
+  "license": "MIT",
   "scripts": {
     "test": "dune test"
   },
