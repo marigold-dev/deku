@@ -46,7 +46,12 @@ let handle_request =
       | Ok(response) =>
         let response = E.response_to_yojson(response);
         await(Response.of_json(~status=`OK, response));
-      | Error(_err) =>
+      | Error(err) =>
+        switch(err) {
+        | `Not_a_json => print_endline("Invalid json");
+        | `Not_a_valid_request(err) => print_endline("Invalid request:"  ++ err);
+          | _ => print_endline("unhandled");
+        }
         await(Response.make(~status=`Internal_server_error, ()))
       };
     },
@@ -95,6 +100,12 @@ let handle_block_by_hash =
       Ok(block);
     },
   );
+
+let handle_block_level =
+  handle_request((module Block_level), (_update_state, _request) => {
+    Ok({ level : Flows.find_block_level(Server.get_state()) })
+  });
+
 let handle_protocol_snapshot =
   handle_request(
     (module Protocol_snapshot),
@@ -218,6 +229,7 @@ let () = Node.Server.start(~initial=node);
 let _server =
   App.empty
   |> App.port(Node.Server.get_port() |> Option.get)
+  |> handle_block_level
   |> handle_received_block_and_signature
   |> handle_received_signature
   |> handle_block_by_hash

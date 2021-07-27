@@ -105,6 +105,15 @@ module Block_by_hash_spec = {
   let path = "/block-by-hash";
 };
 
+/* Endpoint to return latest block's level */
+module Block_level = {
+  [@deriving yojson]
+  type request = unit;
+  [@deriving yojson]
+  type response = { level: int64 };
+  let path = "/block-level";
+};
+
 module Protocol_snapshot = {
   [@deriving yojson]
   type request = unit;
