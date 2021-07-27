@@ -124,12 +124,28 @@ let info_create_transaction = {
 
 let create_transaction =
     (sender_wallet_file, received_address, amount, ticket) => {
+  open Networking;
+  let.await validators_uris = validators_uris();
+  let validator_uri = List.hd(validators_uris);
+  let.await block_level_response = request_block_level((), validator_uri);
+  let block_level_yojson =
+    block_level_response
+    |> Block_level.response_to_yojson
+    |> Yojson.Safe.to_basic;
+  let block_level =
+    switch (Yojson.Basic.Util.(member("level", block_level_yojson))) {
+    | `Int(block_level) => block_level
+    | _ =>
+      failwith(
+        "JSON returned from /block-level was expected to have field block_level",
+      )
+    };
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let transaction =
     Operation.Side_chain.sign(
       ~secret=wallet.priv_key,
       ~nonce=0l,
-      ~block_height=0L,
+      ~block_height=Int64.of_int(block_level + 1),
       ~source=wallet.address,
       ~amount,
       ~ticket,
@@ -137,7 +153,6 @@ let create_transaction =
     );
 
   // Broadcast transaction
-  let.await validators_uris = validators_uris();
   let.await () =
     Networking.broadcast_operation_gossip_to_list(
       validators_uris,
