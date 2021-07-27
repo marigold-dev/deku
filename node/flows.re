@@ -314,7 +314,7 @@ let received_operation =
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
 
-let find_block_level = (state) => {
+let find_block_level = state => {
   state.State.protocol.block_height;
 };
 

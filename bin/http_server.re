@@ -47,12 +47,13 @@ let handle_request =
         let response = E.response_to_yojson(response);
         await(Response.of_json(~status=`OK, response));
       | Error(err) =>
-        switch(err) {
-        | `Not_a_json => print_endline("Invalid json");
-        | `Not_a_valid_request(err) => print_endline("Invalid request:"  ++ err);
-          | _ => print_endline("unhandled");
-        }
-        await(Response.make(~status=`Internal_server_error, ()))
+        switch (err) {
+        | `Not_a_json => print_endline("Invalid json")
+        | `Not_a_valid_request(err) =>
+          print_endline("Invalid request:" ++ err)
+        | _ => print_endline("unhandled")
+        };
+        await(Response.make(~status=`Internal_server_error, ()));
       };
     },
   );
@@ -103,7 +104,7 @@ let handle_block_by_hash =
 
 let handle_block_level =
   handle_request((module Block_level), (_update_state, _request) => {
-    Ok({ level : Flows.find_block_level(Server.get_state()) })
+    Ok({level: Flows.find_block_level(Server.get_state())})
   });
 
 let handle_protocol_snapshot =

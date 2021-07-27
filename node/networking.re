@@ -110,7 +110,7 @@ module Block_level = {
   [@deriving yojson]
   type request = unit;
   [@deriving yojson]
-  type response = { level: int64 };
+  type response = {level: int64};
   let path = "/block-level";
 };
 
