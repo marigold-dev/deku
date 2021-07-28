@@ -4,7 +4,8 @@ type blake2b = bytes
 type validator = key
 type validators = validator list
 
-type storage = {
+(* Root_hash_update contract *)
+type root_hash_storage = {
   (* TODO: is having current_block_hash even useful? *)
   (* consensus proof *)
   current_block_hash: blake2b;
@@ -15,10 +16,7 @@ type storage = {
 
 type signatures = signature option list
 
-(* Root_hash_update *)
-
-(* TODO: this is a bad name *)
-type root_hash_update = {
+type root_hash_action = {
   block_hash: blake2b;
   block_height: int;
   block_payload_hash: blake2b;
@@ -42,14 +40,16 @@ type block_hash_structure = {
 let assert_msg ((message, condition): (string * bool)) =
   if not condition then
     failwith message
-  
-let check_block_height (storage: storage) (block_height: int) =
-  assert_msg (
-    "old block height",
-    block_height > storage.current_block_height
-  )
 
-let check_hash (root_hash_update: root_hash_update) =
+let root_hash_check_block_height
+  (storage: root_hash_storage)
+  (block_height: int) =
+    assert_msg (
+      "old block height",
+      block_height > storage.current_block_height
+    )
+
+let root_hash_check_hash (root_hash_update: root_hash_action) =
   let block_hash_structure = {
     block_height = root_hash_update.block_height;
     block_payload_hash = root_hash_update.block_payload_hash;
@@ -63,9 +63,9 @@ let check_hash (root_hash_update: root_hash_update) =
     root_hash_update.block_hash = calculated_hash
   )
 
-let rec check_signatures
+let rec root_hash_check_signatures
   (validators, signatures, block_hash, remaining:
-   validators * signatures * blake2b * int) : unit =
+    validators * signatures * blake2b * int) : unit =
     match (validators, signatures) with
     (* already signed *)
     | ([], []) ->
@@ -73,43 +73,58 @@ let rec check_signatures
       if remaining > 0 then
         failwith "not enough signatures"
     | ((_ :: v_tl), (None :: sig_tl)) ->
-      check_signatures (v_tl, sig_tl, block_hash, remaining)
+      root_hash_check_signatures (v_tl, sig_tl, block_hash, remaining)
     | ((validator :: v_tl), (Some signature :: sig_tl)) ->
       if Crypto.check validator signature block_hash
-      then check_signatures (v_tl, sig_tl, block_hash, (remaining - 1))
+      then
+        root_hash_check_signatures (v_tl, sig_tl, block_hash, (remaining - 1))
       else failwith "bad signature"
     | (_, _) ->
       failwith "validators and signatures have different size"
 
-let check_signatures
-  (storage: storage)
+let root_hash_check_signatures
+  (storage: root_hash_storage)
   (signatures: signatures)
   (block_hash: blake2b) =
     let validators_length = (int (List.length storage.current_validators)) in
     let required_validators = (validators_length * 2) / 3 in
-    check_signatures (
+    root_hash_check_signatures (
       storage.current_validators,
       signatures,
       block_hash,
       required_validators
     )
 
-let main (root_hash_update, storage : root_hash_update * storage) =
-  let block_hash = root_hash_update.block_hash in
-  let block_height = root_hash_update.block_height in
-  let state_hash = root_hash_update.state_hash in
-  let validators = root_hash_update.validators in
-  let signatures = root_hash_update.signatures in
+let root_hash_main
+  (root_hash_update: root_hash_action)
+  (storage: root_hash_storage) =
+    let block_hash = root_hash_update.block_hash in
+    let block_height = root_hash_update.block_height in
+    let state_hash = root_hash_update.state_hash in
+    let validators = root_hash_update.validators in
+    let signatures = root_hash_update.signatures in
 
-  let () = check_block_height storage block_height in
-  let () = check_hash root_hash_update in
-  let () = check_signatures storage signatures block_hash in
+    let () = root_hash_check_block_height storage block_height in
+    let () = root_hash_check_hash root_hash_update in
+    let () = root_hash_check_signatures storage signatures block_hash in
 
-  let storage = {
-    storage with
-    current_block_hash = block_hash;
-    current_block_height = block_height;
-    current_state_hash = state_hash;
-    current_validators = validators;
-  } in
-  (([] : operation list), storage)
+    {
+      storage with
+      current_block_hash = block_hash;
+      current_block_height = block_height;
+      current_state_hash = state_hash;
+      current_validators = validators;
+    }
+
+(* main contract *)
+type storage = {
+  root_hash: root_hash_storage;
+}
+type action =
+  | Update_root_hash of root_hash_action
+
+let main (action, storage : action * storage) =
+  match action with
+  | Update_root_hash root_hash_update ->
+    let root_hash = root_hash_main root_hash_update storage.root_hash in
+    (([] : operation list), { root_hash = root_hash })
