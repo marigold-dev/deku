@@ -373,6 +373,15 @@ module Pack = {
     |> Bytes.cat(Bytes.of_string("\005"));
 };
 
+module Context = {
+  type t = {
+    rpc_node: Uri.t,
+    secret: Secret.t,
+    consensus_contract: Address.t,
+    required_confirmations: int,
+  };
+};
+
 module Consensus = {
   open Pack;
   let hash_validators = validators =>

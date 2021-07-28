@@ -22,3 +22,7 @@ module Validators: {
   let read: (~file: string) => Lwt.t(list((Address.t, Uri.t)));
   let write: (list((Address.t, Uri.t)), ~file: string) => Lwt.t(unit);
 };
+module Interop_context: {
+  let read: (~file: string) => Lwt.t(Tezos_interop.Context.t);
+  let write: (Tezos_interop.Context.t, ~file: string) => Lwt.t(unit);
+};
