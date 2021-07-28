@@ -372,7 +372,7 @@ describe("consensus", ({test, _}) => {
       );
     let hash = BLAKE2B.to_string(hash);
     expect.string(hash).toEqual(
-      "58b39faab167d45a69a0cf126bade7fd23932b2c48684adfbd164281ca2cc5ff",
+      "23cdb9e9ffef6dd17553b622af0c043f544daa18430dff295d04a9d46b3e5267",
     );
   });
 });
