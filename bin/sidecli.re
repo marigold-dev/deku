@@ -6,6 +6,11 @@ open Cmdliner;
 
 Printexc.record_backtrace(true);
 
+let man = [
+  `S(Manpage.s_bugs),
+  `P("Email bug reports to <contact@marigold.dev>."),
+];
+
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
 let validators = () =>
@@ -37,10 +42,6 @@ let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 
 let info_create_wallet = {
   let doc = "Creates a wallet file. The wallet file's filename is its address. The wallet file contains the private key corresponding to that address.";
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info("create-wallet", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
@@ -104,10 +105,6 @@ let info_create_transaction = {
       "Submits a transaction to the sidechain. The transaction will be communicated to all known validators to be included in the next block. If the path to the wallet file corresponding to the sending address is not provided, a wallet file with the correct filename (%s) must be present in the current working directory",
       make_filename_from_address("address"),
     );
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info(
     "create-transaction",
     ~version="%‌%VERSION%%",
@@ -188,10 +185,6 @@ let hash = {
 
 let info_sign_block = {
   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 let sign_block = (wallet_file, block_hash) => {
@@ -225,10 +218,6 @@ let sign_block_term = {
 // produce-block
 let info_produce_block = {
   let doc = "Produce and sign a block and broadcast to the network manually, useful when the chain is stale.";
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
@@ -278,10 +267,6 @@ let produce_block = {
 // gen credentials
 let info_gen_credentials = {
   let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info(
     "make-credentials",
     ~version="%‌%VERSION%%",
@@ -342,10 +327,6 @@ let gen_credentials = {
 // inject genesis block
 let info_inject_genesis = {
   let doc = "Injects the genesis block";
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   Term.info("inject-genesis", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
@@ -417,10 +398,6 @@ let show_help = {
   let doc = "a tool for interacting with the WIP Tezos Sidechain";
   let sdocs = Manpage.s_common_options;
   let exits = Term.default_exits;
-  let man = [
-    `S(Manpage.s_bugs),
-    `P("Email bug reports to <contact@marigold.dev>."),
-  ];
   (
     Term.(ret(const(`Help((`Pager, None))))),
     Term.info("sidecli", ~version="v0.0.1", ~doc, ~sdocs, ~exits, ~man),
