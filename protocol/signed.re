@@ -14,7 +14,8 @@ type signed('a) = t('a);
 let sign = (~key, data) => {
   let message = Cstruct.of_string(Marshal.to_string(data, []));
   let key_ed25519 = key |> Address.key_to_ed25519;
-  let `Hex(signature) = Ed25519.sign(~key=key_ed25519, message) |> Hex.of_cstruct;
+  let `Hex(signature) =
+    Ed25519.sign(~key=key_ed25519, message) |> Hex.of_cstruct;
   {key: key |> Address.of_key, signature, data};
 };
 let verify = (~key, ~signature, data) => {

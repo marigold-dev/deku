@@ -13,7 +13,10 @@ describe("protocol state", ({test, _}) => {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({address: Wallet.get_pub_key(key_wallet |> Address.key_of_ed25519)});
+        |> Validators.add({
+             address:
+               Wallet.get_pub_key(key_wallet |> Address.key_of_ed25519),
+           });
       validators;
     };
     let state = {...state, validators};

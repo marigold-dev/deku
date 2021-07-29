@@ -55,6 +55,10 @@ let remove = (validator, t) => {
 let hash = t => {
   module ProtocolAddress = Address;
   open Tezos_interop;
-  let validators = List.map(t => Key.Ed25519(t.address |> ProtocolAddress.to_ed25519), t.validators);
+  let validators =
+    List.map(
+      t => Key.Ed25519(t.address |> ProtocolAddress.to_ed25519),
+      t.validators,
+    );
   Consensus.hash_validators(validators);
 };
