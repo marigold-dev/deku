@@ -95,6 +95,15 @@ module Consensus: {
       ~validators_hash: BLAKE2B.t
     ) =>
     BLAKE2B.t;
+  let hash_withdraw_handle:
+    (
+      ~id: Z.t,
+      ~owner: Address.t,
+      ~amount: Z.t,
+      ~ticketer: Address.t,
+      ~data: bytes
+    ) =>
+    BLAKE2B.t;
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};
