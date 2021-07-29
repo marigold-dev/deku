@@ -32,12 +32,12 @@ Mirage-crypto-rng provides a random number generator interface, and
 implementations: Fortuna, HMAC-DRBG, getrandom/getentropy based (in the unix
 sublibrary)
 """
-x-commit-hash: "e5509dee20aa862ca817c1c4e10460421efc7c27"
+x-commit-hash: "e5d38d9c3777ce7821ae208087315e76a3a246d9"
 url {
   src:
-    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.2/mirage-crypto-v0.10.2.tbz"
+    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.3/mirage-crypto-v0.10.3.tbz"
   checksum: [
-    "sha256=96c4826fa3532c9d2ba21cd5fa25df003be3df20b2cc01068b60d59e0222d906"
-    "sha512=4ff95ce88686220a0cf5705bd938ac067d64521ed31cb316141190b662c1bbc92b49abd5244895f59724ba068f963002df00820ab1fb2677dc4132a94657d78b"
+    "sha256=a27910365d59b02c3f0e8a40d93a5b81835acf832e1ffa596ee772b41e8a900b"
+    "sha512=eb0d5a947649d6d9d55b8f5d5ea624e7b2b969baf7b855bf86b46cfadf9312e42e9caea479eb9c364a3c9cd4b3aa56f3a6a1b0cc20e022fdbd82bdb722df1198"
   ]
 }

@@ -25,5 +25,8 @@ jobs:
         with:
           cache-key: ${{ matrix.system }}-${{ hashFiles('esy.lock/index.json') }}
 
+      - name: Run Code formatter
+        run: esy b dune build @fmt
+
       - name: Run tests
         run: esy test
