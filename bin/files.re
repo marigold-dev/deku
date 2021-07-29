@@ -49,15 +49,6 @@ module Validators = {
 };
 
 module Interop_context = {
-  module Address = {
-    include Tezos_interop.Address;
-    let of_yojson =
-      fun
-      | `String(string) =>
-        of_string(string) |> Option.to_result(~none="invalid address")
-      | _ => Error("expected a string");
-    let to_yojson = t => `String(to_string(t));
-  };
   module Secret = {
     include Tezos_interop.Secret;
     let of_yojson =
@@ -73,7 +64,7 @@ module Interop_context = {
     Tezos_interop.Context.t = {
       rpc_node: Uri.t,
       secret: Secret.t,
-      consensus_contract: Address.t,
+      consensus_contract: Tezos_interop.Address.t,
       required_confirmations: int,
     };
 
