@@ -22,6 +22,9 @@ let apply_main_chain = (state, op) => {
     | Remove_validator(validator) =>
       let validators = Validators.remove(validator, state.validators);
       {...state, validators};
+    | Deposit({destination, amount, ticket}) =>
+      let ledger = Ledger.deposit(destination, amount, ticket, state.ledger);
+      {...state, ledger};
     }
   );
 };
