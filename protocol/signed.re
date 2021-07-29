@@ -13,19 +13,20 @@ type signed('a) = t('a);
 
 let sign = (~key, data) => {
   let message = Cstruct.of_string(Marshal.to_string(data, []));
-  let `Hex(signature) = Ed25519.sign(~key, message) |> Hex.of_cstruct;
-  {key: Address.of_key(key), signature, data};
+  let key_ed25519 = key |> Address.key_to_ed25519;
+  let `Hex(signature) = Ed25519.sign(~key=key_ed25519, message) |> Hex.of_cstruct;
+  {key: key |> Address.of_key, signature, data};
 };
 let verify = (~key, ~signature, data) => {
+  let ed25519_key = Address.to_ed25519(key);
   let.assert () = (
     "invalid signature",
     Ed25519.verify(
-      ~key,
+      ~key=ed25519_key,
       ~msg=Cstruct.of_string(Marshal.to_string(data, [])),
       `Hex(signature) |> Hex.to_cstruct,
     ),
   );
-
   Ok({key, signature, data});
 };
 

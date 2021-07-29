@@ -179,5 +179,5 @@ open Signature.Make({
        let hash = t => t.hash;
      });
 
-let sign = (~key, t) => sign(~key, t).signature;
+let sign = (~key, t) => sign(~key=Address.key_to_ed25519(key), t).signature;
 let verify = (~signature, t) => verify(~signature, t);

@@ -18,7 +18,7 @@ let sign = (~key, hash) => {
     // TODO: isn't this double hashing? Seems weird
     |> Ed25519.sign(~key)
     |> Cstruct.to_string;
-  let public_key = Ed25519.pub_of_priv(key);
+  let public_key = Ed25519.pub_of_priv(key) |> Address.of_ed25519;
   {signature, public_key};
 };
 let signature_to_b58check = t => {
@@ -33,7 +33,7 @@ let signature_to_b58check_by_address = t => {
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
-    ~key=signature.public_key,
+    ~key=signature.public_key |> Address.to_ed25519,
     ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
     Cstruct.of_string(signature.signature),
   );

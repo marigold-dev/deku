@@ -51,7 +51,7 @@ let create_wallet = () => {
   let wallet_addr_str = Wallet.address_to_string(wallet);
   let file = make_filename_from_address(wallet_addr_str);
 
-  let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
+  let.await () = Files.Wallet.write({priv_key: Address.key_of_ed25519(key), address: wallet}, ~file);
   await(`Ok());
 };
 
@@ -189,7 +189,7 @@ let info_sign_block = {
 };
 let sign_block = (wallet_file, block_hash) => {
   let.await wallet = Files.Wallet.read(~file=wallet_file);
-  let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+  let signature = Signature.sign(~key=Address.key_to_ed25519(wallet.priv_key), block_hash);
   let.await validators_uris = validators_uris();
   let.await () =
     Networking.(
@@ -284,6 +284,8 @@ let gen_credentials = {
 
     let uri = Uri.of_string(uri);
     let (key, t) = Ed25519.generate();
+    let key = Address.key_of_ed25519(key);
+    let t = Address.of_ed25519(t);
     let identity = {key, t, uri};
     let.await () = Files.Identity.write(identity, ~file);
     await((t, uri));
@@ -361,7 +363,7 @@ let inject_genesis = {
       state.validators
       |> Validators.to_list
       |> List.map(validator =>
-           Tezos_interop.Key.Ed25519(validator.Validators.address)
+           Tezos_interop.Key.Ed25519(validator.Validators.address |> Address.to_ed25519)
          )
       |> List.map(Tezos_interop.Key.to_string)
       |> String.concat(","),

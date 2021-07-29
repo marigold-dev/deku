@@ -66,7 +66,7 @@ module Side_chain = {
 
   let sign = (~secret, ~nonce, ~block_height, ~source, ~amount, ~kind) => {
     let hash = hash(~nonce, ~block_height, ~source, ~amount, ~kind);
-    let signature = Signature.sign(~key=secret, hash);
+    let signature = Signature.sign(~key=secret |> Address.key_to_ed25519, hash);
     {hash, signature, nonce, block_height, source, amount, kind};
   };
 

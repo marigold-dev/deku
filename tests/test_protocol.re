@@ -13,7 +13,7 @@ describe("protocol state", ({test, _}) => {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({address: Wallet.get_pub_key(key_wallet)});
+        |> Validators.add({address: Wallet.get_pub_key(key_wallet |> Address.key_of_ed25519)});
       validators;
     };
     let state = {...state, validators};
@@ -85,7 +85,7 @@ describe("protocol state", ({test, _}) => {
     apply_side_chain(
       state,
       Operation.Side_chain.sign(
-        ~secret,
+        ~secret=Address.key_of_ed25519(secret),
         ~nonce=0l,
         ~block_height=0L,
         ~source,
@@ -101,7 +101,7 @@ describe("protocol state", ({test, _}) => {
     apply_side_chain(
       state,
       Operation.Side_chain.sign(
-        ~secret,
+        ~secret=Protocol.Address.key_of_ed25519(secret),
         ~nonce=0l,
         ~block_height=0L,
         ~source,

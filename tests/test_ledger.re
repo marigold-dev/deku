@@ -7,7 +7,7 @@ describe("ledger", ({test, _}) => {
   let make_wallet = () => {
     open Mirage_crypto_ec;
     let (_key, address) = Ed25519.generate();
-    Wallet.of_address(address);
+    Wallet.of_address(address |> Address.of_ed25519);
   };
   let setup_two = () => {
     let a = make_wallet();
