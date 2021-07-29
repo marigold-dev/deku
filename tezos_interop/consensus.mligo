@@ -116,15 +116,45 @@ let root_hash_main
       current_validators = validators;
     }
 
+(* vault contract *)
+type vault_storage = (address * bytes, bytes ticket) big_map
+type vault_deposit = {
+  ticket: bytes ticket;
+  (* WARNING: deposit address should be a valid sidechain address *)
+  address: address
+}
+let vault_deposit (deposit: vault_deposit) (vault: vault_storage) =
+  let (content, ticket) =  Tezos.read_ticket deposit.ticket in
+  let (ticketer, (data, _)) = content in
+  let (ticket, vault) =
+    match
+      Big_map.get_and_update
+        (ticketer, data)
+        (None: bytes ticket option)
+        vault
+    with
+    | (None, vault) -> (ticket, vault)
+    | (Some old_ticket, vault) ->
+      (match Tezos.join_tickets (old_ticket, ticket) with
+      | Some ticket -> (ticket, vault)
+      | None -> ((failwith "unreachable"): (bytes ticket * vault_storage))) in
+  Big_map.add (ticketer, data) ticket vault
+
 (* main contract *)
 type storage = {
   root_hash: root_hash_storage;
+  vault: vault_storage;
 }
 type action =
   | Update_root_hash of root_hash_action
+  | Deposit of vault_deposit
 
 let main (action, storage : action * storage) =
+  let { root_hash; vault } = storage in
   match action with
   | Update_root_hash root_hash_update ->
-    let root_hash = root_hash_main root_hash_update storage.root_hash in
-    (([] : operation list), { root_hash = root_hash })
+    let root_hash = root_hash_main root_hash_update root_hash in
+    (([] : operation list), { root_hash = root_hash; vault = vault })
+  | Deposit deposit ->
+      let vault = vault_deposit deposit vault in
+      (([] : operation list), { root_hash = root_hash; vault = vault; })
