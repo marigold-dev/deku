@@ -26,7 +26,8 @@ module Side_chain: {
   // TODO: I don't like this structure model
   [@deriving yojson]
   type kind =
-    | Transaction({destination: Wallet.t});
+    | Transaction({destination: Wallet.t})
+    | Withdraw({owner: Tezos_interop.Address.t});
   [@deriving (ord, yojson)]
   type t =
     pri {
