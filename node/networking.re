@@ -105,6 +105,15 @@ module Block_by_hash_spec = {
   let path = "/block-by-hash";
 };
 
+/* Endpoint to return latest block's level */
+module Block_level = {
+  [@deriving yojson]
+  type request = unit;
+  [@deriving yojson]
+  type response = {level: int64};
+  let path = "/block-level";
+};
+
 module Protocol_snapshot = {
   [@deriving yojson]
   type request = unit;
@@ -164,6 +173,7 @@ module Data_to_smart_contract = {
 };
 
 let request_block_by_hash = request((module Block_by_hash_spec));
+let request_block_level = request((module Block_level));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let request_nonce = request((module Request_nonce));
 let request_register_uri = request((module Register_uri));

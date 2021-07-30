@@ -314,6 +314,10 @@ let received_operation =
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);
 
+let find_block_level = state => {
+  state.State.protocol.block_height;
+};
+
 let request_nonce = (state, update_state, uri) => {
   // TODO: nonce size, think about this, 32 is just magic because of SHA256
   let nonce = Mirage_crypto_rng.generate(32) |> Cstruct.to_string;
