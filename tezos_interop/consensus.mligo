@@ -11,6 +11,7 @@ type root_hash_storage = {
   current_block_hash: blake2b;
   current_block_height: int;
   current_state_hash: blake2b;
+  current_handles_hash: blake2b;
   current_validators: validators;
 }
 
@@ -22,6 +23,7 @@ type root_hash_action = {
   block_payload_hash: blake2b;
 
   state_hash: blake2b;
+  handles_hash: blake2b;
   (* TODO: performance, can this blown up? *)
   validators: validators;
 
@@ -34,6 +36,7 @@ type block_hash_structure = {
   block_height: int;
   block_payload_hash: blake2b;
   state_hash: blake2b;
+  handles_hash: blake2b;
   validators_hash: blake2b;
 }
 
@@ -54,6 +57,7 @@ let root_hash_check_hash (root_hash_update: root_hash_action) =
     block_height = root_hash_update.block_height;
     block_payload_hash = root_hash_update.block_payload_hash;
     state_hash = root_hash_update.state_hash;
+    handles_hash = root_hash_update.handles_hash;
     (* TODO: should we do pack of list? *)
     validators_hash = Crypto.blake2b (Bytes.pack root_hash_update.validators)
   } in
@@ -101,6 +105,7 @@ let root_hash_main
     let block_hash = root_hash_update.block_hash in
     let block_height = root_hash_update.block_height in
     let state_hash = root_hash_update.state_hash in
+    let handles_hash = root_hash_update.handles_hash in
     let validators = root_hash_update.validators in
     let signatures = root_hash_update.signatures in
 
@@ -109,10 +114,10 @@ let root_hash_main
     let () = root_hash_check_signatures storage signatures block_hash in
 
     {
-      storage with
       current_block_hash = block_hash;
       current_block_height = block_height;
       current_state_hash = state_hash;
+      current_handles_hash = handles_hash;
       current_validators = validators;
     }
 
