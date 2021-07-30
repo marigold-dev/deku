@@ -1,5 +1,5 @@
 {
-  "checksum": "c95887a15c60b768ecdf636377d6c25a",
+  "checksum": "961787d2abfcfb599ccae2acb23baada",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -18,6 +18,146 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "xhr2-cookies@1.1.0@d41d8cd9": {
+      "id": "xhr2-cookies@1.1.0@d41d8cd9",
+      "name": "xhr2-cookies",
+      "version": "1.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/xhr2-cookies/-/xhr2-cookies-1.1.0.tgz#sha1:7d77449d0999197f155cb73b23df72505ed89d48"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "cookiejar@2.1.2@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "util-deprecate@1.0.2@d41d8cd9": {
+      "id": "util-deprecate@1.0.2@d41d8cd9",
+      "name": "util-deprecate",
+      "version": "1.0.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz#sha1:450d4dc9fa70de732762fbd2d4a28981419a0ccf"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "typedarray-to-buffer@4.0.0@d41d8cd9": {
+      "id": "typedarray-to-buffer@4.0.0@d41d8cd9",
+      "name": "typedarray-to-buffer",
+      "version": "4.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/typedarray-to-buffer/-/typedarray-to-buffer-4.0.0.tgz#sha1:cdd2933c61dd3f5f02eda5d012d441f95bfeb50a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "tslib@1.14.1@d41d8cd9": {
+      "id": "tslib@1.14.1@d41d8cd9",
+      "name": "tslib",
+      "version": "1.14.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/tslib/-/tslib-1.14.1.tgz#sha1:cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "to-regex-range@5.0.1@d41d8cd9": {
+      "id": "to-regex-range@5.0.1@d41d8cd9",
+      "name": "to-regex-range",
+      "version": "5.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/to-regex-range/-/to-regex-range-5.0.1.tgz#sha1:1648c44aae7c8d988a326018ed72f5b4dd0392e4"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "is-number@7.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "supports-color@7.2.0@d41d8cd9": {
+      "id": "supports-color@7.2.0@d41d8cd9",
+      "name": "supports-color",
+      "version": "7.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz#sha1:1b7dcdcb32b8138801b3e478ba6a51caa89648da"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "has-flag@4.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "supports-color@5.5.0@d41d8cd9": {
+      "id": "supports-color@5.5.0@d41d8cd9",
+      "name": "supports-color",
+      "version": "5.5.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/supports-color/-/supports-color-5.5.0.tgz#sha1:e2e69a44ac8772f78a1ec0b35b689df6530efc8f"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "has-flag@3.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "string_decoder@1.3.0@d41d8cd9": {
+      "id": "string_decoder@1.3.0@d41d8cd9",
+      "name": "string_decoder",
+      "version": "1.3.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/string_decoder/-/string_decoder-1.3.0.tgz#sha1:42f114594a46cf1a8e30b0a84f56c78c3edac21e"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "safe-buffer@5.2.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "stack-utils@2.0.3@d41d8cd9": {
+      "id": "stack-utils@2.0.3@d41d8cd9",
+      "name": "stack-utils",
+      "version": "2.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/stack-utils/-/stack-utils-2.0.3.tgz#sha1:cd5f030126ff116b78ccb3c027fe302713b61277"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "escape-string-regexp@2.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "slash@3.0.0@d41d8cd9": {
+      "id": "slash@3.0.0@d41d8cd9",
+      "name": "slash",
+      "version": "3.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/slash/-/slash-3.0.0.tgz#sha1:6539be870c165adbd5240220dbe361f1bc4d4634"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "sidechain@link-dev:./package.json": {
       "id": "sidechain@link-dev:./package.json",
       "name": "sidechain",
@@ -30,6 +170,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@taquito/taquito@9.2.0@d41d8cd9", "@taquito/signer@9.2.0@d41d8cd9",
         "@opam/tezos-micheline@opam:8.3@f8cfe30f",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
@@ -42,7 +183,7 @@
         "@opam/mirage-crypto@opam:0.10.3@8d7e3bbf",
         "@opam/lwt@opam:5.4.1@37ffbe37", "@opam/hex@opam:1.4.0@41725494",
         "@opam/dune@opam:2.9.0@489e77a9",
-        "@opam/digestif@opam:1.0.0@ce08dfe9",
+        "@opam/digestif@opam:1.0.0@0a47b68c",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@esy-ocaml/reason@3.7.0@d41d8cd9"
       ],
@@ -51,6 +192,177 @@
         "@opam/ocamlformat@opam:0.19.0@25e59922",
         "@opam/ocaml-lsp-server@opam:1.7.0@2cdbe0ed"
       ]
+    },
+    "sha.js@2.4.11@d41d8cd9": {
+      "id": "sha.js@2.4.11@d41d8cd9",
+      "name": "sha.js",
+      "version": "2.4.11",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/sha.js/-/sha.js-2.4.11.tgz#sha1:37a5cf0b81ecbc6943de109ba2960d1b26584ae7"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "safe-buffer@5.2.1@d41d8cd9", "inherits@2.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "safe-buffer@5.2.1@d41d8cd9": {
+      "id": "safe-buffer@5.2.1@d41d8cd9",
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz#sha1:1eaf9fa9bdb1fdd4ec75f58f9cdb4e6b7827eec6"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "rxjs@6.6.7@d41d8cd9": {
+      "id": "rxjs@6.6.7@d41d8cd9",
+      "name": "rxjs",
+      "version": "6.6.7",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/rxjs/-/rxjs-6.6.7.tgz#sha1:90ac018acabf491bf65044235d5863c4dab804c9"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "tslib@1.14.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "rx-sandbox@1.0.4@d41d8cd9": {
+      "id": "rx-sandbox@1.0.4@d41d8cd9",
+      "name": "rx-sandbox",
+      "version": "1.0.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/rx-sandbox/-/rx-sandbox-1.0.4.tgz#sha1:821a1d64e5f0d88658da7a5dbbd735b13277648b"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "rxjs@6.6.7@d41d8cd9", "jest-matcher-utils@26.6.2@d41d8cd9",
+        "expect@26.6.2@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "ripemd160@2.0.2@d41d8cd9": {
+      "id": "ripemd160@2.0.2@d41d8cd9",
+      "name": "ripemd160",
+      "version": "2.0.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/ripemd160/-/ripemd160-2.0.2.tgz#sha1:a1c1a6f624751577ba5d07914cbc92850585890c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "inherits@2.0.4@d41d8cd9", "hash-base@3.1.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "readable-stream@3.6.0@d41d8cd9": {
+      "id": "readable-stream@3.6.0@d41d8cd9",
+      "name": "readable-stream",
+      "version": "3.6.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.0.tgz#sha1:337bbda3adc0706bd3e024426a286d4b4b2c9198"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "util-deprecate@1.0.2@d41d8cd9", "string_decoder@1.3.0@d41d8cd9",
+        "inherits@2.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "react-is@17.0.2@d41d8cd9": {
+      "id": "react-is@17.0.2@d41d8cd9",
+      "name": "react-is",
+      "version": "17.0.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/react-is/-/react-is-17.0.2.tgz#sha1:e691d4a8e9c789365655539ab372762b0efb54f0"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "randombytes@2.1.0@d41d8cd9": {
+      "id": "randombytes@2.1.0@d41d8cd9",
+      "name": "randombytes",
+      "version": "2.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/randombytes/-/randombytes-2.1.0.tgz#sha1:df6f84372f0270dc65cdf6291349ab7a473d4f2a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "safe-buffer@5.2.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "pretty-format@26.6.2@d41d8cd9": {
+      "id": "pretty-format@26.6.2@d41d8cd9",
+      "name": "pretty-format",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/pretty-format/-/pretty-format-26.6.2.tgz#sha1:e35c2705f14cb7fe2fe94fa078345b444120fc93"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "react-is@17.0.2@d41d8cd9", "ansi-styles@4.3.0@d41d8cd9",
+        "ansi-regex@5.0.0@d41d8cd9", "@jest/types@26.6.2@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "picomatch@2.3.0@d41d8cd9": {
+      "id": "picomatch@2.3.0@d41d8cd9",
+      "name": "picomatch",
+      "version": "2.3.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/picomatch/-/picomatch-2.3.0.tgz#sha1:f1f061de8f6a4bf022892e2d128234fb98302972"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "pbkdf2@3.1.2@d41d8cd9": {
+      "id": "pbkdf2@3.1.2@d41d8cd9",
+      "name": "pbkdf2",
+      "version": "3.1.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/pbkdf2/-/pbkdf2-3.1.2.tgz#sha1:dd822aa0887580e52f1a039dc3eda108efae3075"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "sha.js@2.4.11@d41d8cd9", "safe-buffer@5.2.1@d41d8cd9",
+        "ripemd160@2.0.2@d41d8cd9", "create-hmac@1.1.7@d41d8cd9",
+        "create-hash@1.2.0@d41d8cd9"
+      ],
+      "devDependencies": []
     },
     "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9": {
       "id":
@@ -66,6 +378,385 @@
       },
       "overrides": [],
       "dependencies": [],
+      "devDependencies": []
+    },
+    "minimalistic-crypto-utils@1.0.1@d41d8cd9": {
+      "id": "minimalistic-crypto-utils@1.0.1@d41d8cd9",
+      "name": "minimalistic-crypto-utils",
+      "version": "1.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/minimalistic-crypto-utils/-/minimalistic-crypto-utils-1.0.1.tgz#sha1:f6c00c1c0b082246e5c4d99dfb8c7c083b2b582a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "minimalistic-assert@1.0.1@d41d8cd9": {
+      "id": "minimalistic-assert@1.0.1@d41d8cd9",
+      "name": "minimalistic-assert",
+      "version": "1.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/minimalistic-assert/-/minimalistic-assert-1.0.1.tgz#sha1:2e194de044626d4a10e7f7fbc00ce73e83e4d5c7"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "micromatch@4.0.4@d41d8cd9": {
+      "id": "micromatch@4.0.4@d41d8cd9",
+      "name": "micromatch",
+      "version": "4.0.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/micromatch/-/micromatch-4.0.4.tgz#sha1:896d519dfe9db25fce94ceb7a500919bf881ebf9"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "picomatch@2.3.0@d41d8cd9", "braces@3.0.2@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "md5.js@1.3.5@d41d8cd9": {
+      "id": "md5.js@1.3.5@d41d8cd9",
+      "name": "md5.js",
+      "version": "1.3.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/md5.js/-/md5.js-1.3.5.tgz#sha1:b5d07b8e3216e3e27cd728d72f70d1e6a342005f"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "safe-buffer@5.2.1@d41d8cd9", "inherits@2.0.4@d41d8cd9",
+        "hash-base@3.1.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "lodash@4.17.21@d41d8cd9": {
+      "id": "lodash@4.17.21@d41d8cd9",
+      "name": "lodash",
+      "version": "4.17.21",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz#sha1:679591c564c3bffaae8454cf0b3df370c3d6911c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "libsodium-wrappers@0.7.8@d41d8cd9": {
+      "id": "libsodium-wrappers@0.7.8@d41d8cd9",
+      "name": "libsodium-wrappers",
+      "version": "0.7.8",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/libsodium-wrappers/-/libsodium-wrappers-0.7.8.tgz#sha1:d95cdf3e7236c2aef76844bf8e1929ba9eef3e9e"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "libsodium@0.7.8@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "libsodium@0.7.8@d41d8cd9": {
+      "id": "libsodium@0.7.8@d41d8cd9",
+      "name": "libsodium",
+      "version": "0.7.8",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/libsodium/-/libsodium-0.7.8.tgz#sha1:fbd12247b7b1353f88d8de1cbc66bc1a07b2e008"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "js-tokens@4.0.0@d41d8cd9": {
+      "id": "js-tokens@4.0.0@d41d8cd9",
+      "name": "js-tokens",
+      "version": "4.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/js-tokens/-/js-tokens-4.0.0.tgz#sha1:19203fb59991df98e3a287050d4647cdeaf32499"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "jest-regex-util@26.0.0@d41d8cd9": {
+      "id": "jest-regex-util@26.0.0@d41d8cd9",
+      "name": "jest-regex-util",
+      "version": "26.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/jest-regex-util/-/jest-regex-util-26.0.0.tgz#sha1:d25e7184b36e39fd466c3bc41be0971e821fee28"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "jest-message-util@26.6.2@d41d8cd9": {
+      "id": "jest-message-util@26.6.2@d41d8cd9",
+      "name": "jest-message-util",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/jest-message-util/-/jest-message-util-26.6.2.tgz#sha1:58173744ad6fc0506b5d21150b9be56ef001ca07"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "stack-utils@2.0.3@d41d8cd9", "slash@3.0.0@d41d8cd9",
+        "pretty-format@26.6.2@d41d8cd9", "micromatch@4.0.4@d41d8cd9",
+        "graceful-fs@4.2.6@d41d8cd9", "chalk@4.1.2@d41d8cd9",
+        "@types/stack-utils@2.0.1@d41d8cd9", "@jest/types@26.6.2@d41d8cd9",
+        "@babel/code-frame@7.14.5@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "jest-matcher-utils@26.6.2@d41d8cd9": {
+      "id": "jest-matcher-utils@26.6.2@d41d8cd9",
+      "name": "jest-matcher-utils",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/jest-matcher-utils/-/jest-matcher-utils-26.6.2.tgz#sha1:8e6fd6e863c8b2d31ac6472eeb237bc595e53e7a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "pretty-format@26.6.2@d41d8cd9", "jest-get-type@26.3.0@d41d8cd9",
+        "jest-diff@26.6.2@d41d8cd9", "chalk@4.1.2@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "jest-get-type@26.3.0@d41d8cd9": {
+      "id": "jest-get-type@26.3.0@d41d8cd9",
+      "name": "jest-get-type",
+      "version": "26.3.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/jest-get-type/-/jest-get-type-26.3.0.tgz#sha1:e97dc3c3f53c2b406ca7afaed4493b1d099199e0"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "jest-diff@26.6.2@d41d8cd9": {
+      "id": "jest-diff@26.6.2@d41d8cd9",
+      "name": "jest-diff",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/jest-diff/-/jest-diff-26.6.2.tgz#sha1:1aa7468b52c3a68d7d5c5fdcdfcd5e49bd164394"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "pretty-format@26.6.2@d41d8cd9", "jest-get-type@26.3.0@d41d8cd9",
+        "diff-sequences@26.6.2@d41d8cd9", "chalk@4.1.2@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "is-number@7.0.0@d41d8cd9": {
+      "id": "is-number@7.0.0@d41d8cd9",
+      "name": "is-number",
+      "version": "7.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz#sha1:7535345b896734d5f80c4d06c50955527a14f12b"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "inherits@2.0.4@d41d8cd9": {
+      "id": "inherits@2.0.4@d41d8cd9",
+      "name": "inherits",
+      "version": "2.0.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz#sha1:0fa2c64f932917c3433a0ded55363aae37416b7c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "ieee754@1.2.1@d41d8cd9": {
+      "id": "ieee754@1.2.1@d41d8cd9",
+      "name": "ieee754",
+      "version": "1.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz#sha1:8eb7a10a63fff25d15a57b001586d177d1b0d352"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "hmac-drbg@1.0.1@d41d8cd9": {
+      "id": "hmac-drbg@1.0.1@d41d8cd9",
+      "name": "hmac-drbg",
+      "version": "1.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/hmac-drbg/-/hmac-drbg-1.0.1.tgz#sha1:d2745701025a6c775a6c545793ed502fc0c649a1"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "minimalistic-crypto-utils@1.0.1@d41d8cd9",
+        "minimalistic-assert@1.0.1@d41d8cd9", "hash.js@1.1.7@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "hash.js@1.1.7@d41d8cd9": {
+      "id": "hash.js@1.1.7@d41d8cd9",
+      "name": "hash.js",
+      "version": "1.1.7",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/hash.js/-/hash.js-1.1.7.tgz#sha1:0babca538e8d4ee4a0f8988d68866537a003cf42"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "minimalistic-assert@1.0.1@d41d8cd9", "inherits@2.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "hash-base@3.1.0@d41d8cd9": {
+      "id": "hash-base@3.1.0@d41d8cd9",
+      "name": "hash-base",
+      "version": "3.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/hash-base/-/hash-base-3.1.0.tgz#sha1:55c381d9e06e1d2997a883b4a3fddfe7f0d3af33"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "safe-buffer@5.2.1@d41d8cd9", "readable-stream@3.6.0@d41d8cd9",
+        "inherits@2.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "has-flag@4.0.0@d41d8cd9": {
+      "id": "has-flag@4.0.0@d41d8cd9",
+      "name": "has-flag",
+      "version": "4.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz#sha1:944771fd9c81c81265c4d6941860da06bb59479b"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "has-flag@3.0.0@d41d8cd9": {
+      "id": "has-flag@3.0.0@d41d8cd9",
+      "name": "has-flag",
+      "version": "3.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/has-flag/-/has-flag-3.0.0.tgz#sha1:b5d454dc2199ae225699f3467e5a07f3b955bafd"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "graceful-fs@4.2.6@d41d8cd9": {
+      "id": "graceful-fs@4.2.6@d41d8cd9",
+      "name": "graceful-fs",
+      "version": "4.2.6",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.6.tgz#sha1:ff040b2b0853b23c3d31027523706f1885d76bee"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "fill-range@7.0.1@d41d8cd9": {
+      "id": "fill-range@7.0.1@d41d8cd9",
+      "name": "fill-range",
+      "version": "7.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/fill-range/-/fill-range-7.0.1.tgz#sha1:1919a6a7c75fe38b2c7c77e5198535da9acdda40"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "to-regex-range@5.0.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "fast-json-stable-stringify@2.1.0@d41d8cd9": {
+      "id": "fast-json-stable-stringify@2.1.0@d41d8cd9",
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/fast-json-stable-stringify/-/fast-json-stable-stringify-2.1.0.tgz#sha1:874bf69c6f404c2b5d99c481341399fd55892633"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "expect@26.6.2@d41d8cd9": {
+      "id": "expect@26.6.2@d41d8cd9",
+      "name": "expect",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/expect/-/expect-26.6.2.tgz#sha1:c6b996bf26bf3fe18b67b2d0f51fc981ba934417"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "jest-regex-util@26.0.0@d41d8cd9",
+        "jest-message-util@26.6.2@d41d8cd9",
+        "jest-matcher-utils@26.6.2@d41d8cd9",
+        "jest-get-type@26.3.0@d41d8cd9", "ansi-styles@4.3.0@d41d8cd9",
+        "@jest/types@26.6.2@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "esy-openssl@archive:https://github.com/openssl/openssl/archive/OpenSSL_1_1_1g.tar.gz#sha1:33324ff957edaae8ae575817b456320378da46ff@41b6fb3d": {
@@ -117,6 +808,644 @@
       },
       "overrides": [ "esy.lock/overrides/d3dc108f8f9f64699d29c9c180f20b50" ],
       "dependencies": [],
+      "devDependencies": []
+    },
+    "escape-string-regexp@2.0.0@d41d8cd9": {
+      "id": "escape-string-regexp@2.0.0@d41d8cd9",
+      "name": "escape-string-regexp",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-2.0.0.tgz#sha1:a30304e99daa32e23b2fd20f51babd07cffca344"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "escape-string-regexp@1.0.5@d41d8cd9": {
+      "id": "escape-string-regexp@1.0.5@d41d8cd9",
+      "name": "escape-string-regexp",
+      "version": "1.0.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-1.0.5.tgz#sha1:1b61c0562190a8dff6ae3bb2cf0200ca130b86d4"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "elliptic@6.5.4@d41d8cd9": {
+      "id": "elliptic@6.5.4@d41d8cd9",
+      "name": "elliptic",
+      "version": "6.5.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/elliptic/-/elliptic-6.5.4.tgz#sha1:da37cebd31e79a1367e941b592ed1fbebd58abbb"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "minimalistic-crypto-utils@1.0.1@d41d8cd9",
+        "minimalistic-assert@1.0.1@d41d8cd9", "inherits@2.0.4@d41d8cd9",
+        "hmac-drbg@1.0.1@d41d8cd9", "hash.js@1.1.7@d41d8cd9",
+        "brorand@1.1.0@d41d8cd9", "bn.js@4.12.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "diff-sequences@26.6.2@d41d8cd9": {
+      "id": "diff-sequences@26.6.2@d41d8cd9",
+      "name": "diff-sequences",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/diff-sequences/-/diff-sequences-26.6.2.tgz#sha1:48ba99157de1923412eed41db6b6d4aa9ca7c0b1"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "create-hmac@1.1.7@d41d8cd9": {
+      "id": "create-hmac@1.1.7@d41d8cd9",
+      "name": "create-hmac",
+      "version": "1.1.7",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/create-hmac/-/create-hmac-1.1.7.tgz#sha1:69170c78b3ab957147b2b8b04572e47ead2243ff"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "sha.js@2.4.11@d41d8cd9", "safe-buffer@5.2.1@d41d8cd9",
+        "ripemd160@2.0.2@d41d8cd9", "inherits@2.0.4@d41d8cd9",
+        "create-hash@1.2.0@d41d8cd9", "cipher-base@1.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "create-hash@1.2.0@d41d8cd9": {
+      "id": "create-hash@1.2.0@d41d8cd9",
+      "name": "create-hash",
+      "version": "1.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/create-hash/-/create-hash-1.2.0.tgz#sha1:889078af11a63756bcfb59bd221996be3a9ef196"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "sha.js@2.4.11@d41d8cd9", "ripemd160@2.0.2@d41d8cd9",
+        "md5.js@1.3.5@d41d8cd9", "inherits@2.0.4@d41d8cd9",
+        "cipher-base@1.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "cookiejar@2.1.2@d41d8cd9": {
+      "id": "cookiejar@2.1.2@d41d8cd9",
+      "name": "cookiejar",
+      "version": "2.1.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/cookiejar/-/cookiejar-2.1.2.tgz#sha1:dd8a235530752f988f9a0844f3fc589e3111125c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "color-name@1.1.4@d41d8cd9": {
+      "id": "color-name@1.1.4@d41d8cd9",
+      "name": "color-name",
+      "version": "1.1.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz#sha1:c2a09a87acbde69543de6f63fa3995c826c536a2"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "color-name@1.1.3@d41d8cd9": {
+      "id": "color-name@1.1.3@d41d8cd9",
+      "name": "color-name",
+      "version": "1.1.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/color-name/-/color-name-1.1.3.tgz#sha1:a7d0558bd89c42f795dd42328f740831ca53bc25"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "color-convert@2.0.1@d41d8cd9": {
+      "id": "color-convert@2.0.1@d41d8cd9",
+      "name": "color-convert",
+      "version": "2.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz#sha1:72d3a68d598c9bdb3af2ad1e84f21d896abd4de3"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "color-name@1.1.4@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "color-convert@1.9.3@d41d8cd9": {
+      "id": "color-convert@1.9.3@d41d8cd9",
+      "name": "color-convert",
+      "version": "1.9.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/color-convert/-/color-convert-1.9.3.tgz#sha1:bb71850690e1f136567de629d2d5471deda4c1e8"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "color-name@1.1.3@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "cipher-base@1.0.4@d41d8cd9": {
+      "id": "cipher-base@1.0.4@d41d8cd9",
+      "name": "cipher-base",
+      "version": "1.0.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/cipher-base/-/cipher-base-1.0.4.tgz#sha1:8760e4ecc272f4c363532f926d874aae2c1397de"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "safe-buffer@5.2.1@d41d8cd9", "inherits@2.0.4@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "chalk@4.1.2@d41d8cd9": {
+      "id": "chalk@4.1.2@d41d8cd9",
+      "name": "chalk",
+      "version": "4.1.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz#sha1:aac4e2b7734a740867aeb16bf02aad556a1e7a01"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "supports-color@7.2.0@d41d8cd9", "ansi-styles@4.3.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "chalk@2.4.2@d41d8cd9": {
+      "id": "chalk@2.4.2@d41d8cd9",
+      "name": "chalk",
+      "version": "2.4.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz#sha1:cd42541677a54333cf541a49108c1432b44c9424"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "supports-color@5.5.0@d41d8cd9",
+        "escape-string-regexp@1.0.5@d41d8cd9", "ansi-styles@3.2.1@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "buffer@6.0.3@d41d8cd9": {
+      "id": "buffer@6.0.3@d41d8cd9",
+      "name": "buffer",
+      "version": "6.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz#sha1:2ace578459cc8fbe2a70aaa8f52ee63b6a74c6c6"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ieee754@1.2.1@d41d8cd9", "base64-js@1.5.1@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "bs58check@2.1.2@d41d8cd9": {
+      "id": "bs58check@2.1.2@d41d8cd9",
+      "name": "bs58check",
+      "version": "2.1.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/bs58check/-/bs58check-2.1.2.tgz#sha1:53b018291228d82a5aa08e7d796fdafda54aebfc"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "safe-buffer@5.2.1@d41d8cd9", "create-hash@1.2.0@d41d8cd9",
+        "bs58@4.0.1@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "bs58@4.0.1@d41d8cd9": {
+      "id": "bs58@4.0.1@d41d8cd9",
+      "name": "bs58",
+      "version": "4.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/bs58/-/bs58-4.0.1.tgz#sha1:be161e76c354f6f788ae4071f63f34e8c4f0a42a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "base-x@3.0.8@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "brorand@1.1.0@d41d8cd9": {
+      "id": "brorand@1.1.0@d41d8cd9",
+      "name": "brorand",
+      "version": "1.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/brorand/-/brorand-1.1.0.tgz#sha1:12c25efe40a45e3c323eb8675a0a0ce57b22371f"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "braces@3.0.2@d41d8cd9": {
+      "id": "braces@3.0.2@d41d8cd9",
+      "name": "braces",
+      "version": "3.0.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/braces/-/braces-3.0.2.tgz#sha1:3454e1a462ee8d599e236df336cd9ea4f8afe107"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "fill-range@7.0.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "bn.js@4.12.0@d41d8cd9": {
+      "id": "bn.js@4.12.0@d41d8cd9",
+      "name": "bn.js",
+      "version": "4.12.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/bn.js/-/bn.js-4.12.0.tgz#sha1:775b3f278efbb9718eec7361f483fb36fbbfea88"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "blakejs@1.1.1@d41d8cd9": {
+      "id": "blakejs@1.1.1@d41d8cd9",
+      "name": "blakejs",
+      "version": "1.1.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/blakejs/-/blakejs-1.1.1.tgz#sha1:bf313053978b2cd4c444a48795710be05c785702"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "bip39@3.0.4@d41d8cd9": {
+      "id": "bip39@3.0.4@d41d8cd9",
+      "name": "bip39",
+      "version": "3.0.4",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/bip39/-/bip39-3.0.4.tgz#sha1:5b11fed966840b5e1b8539f0f54ab6392969b2a0"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "randombytes@2.1.0@d41d8cd9", "pbkdf2@3.1.2@d41d8cd9",
+        "create-hash@1.2.0@d41d8cd9", "@types/node@11.11.6@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "bignumber.js@9.0.1@d41d8cd9": {
+      "id": "bignumber.js@9.0.1@d41d8cd9",
+      "name": "bignumber.js",
+      "version": "9.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/bignumber.js/-/bignumber.js-9.0.1.tgz#sha1:8d7ba124c882bfd8e43260c67475518d0689e4e5"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "base64-js@1.5.1@d41d8cd9": {
+      "id": "base64-js@1.5.1@d41d8cd9",
+      "name": "base64-js",
+      "version": "1.5.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz#sha1:1b1b440160a5bf7ad40b650f095963481903930a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "base-x@3.0.8@d41d8cd9": {
+      "id": "base-x@3.0.8@d41d8cd9",
+      "name": "base-x",
+      "version": "3.0.8",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/base-x/-/base-x-3.0.8.tgz#sha1:1e1106c2537f0162e8b52474a557ebb09000018d"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "safe-buffer@5.2.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "ansi-styles@4.3.0@d41d8cd9": {
+      "id": "ansi-styles@4.3.0@d41d8cd9",
+      "name": "ansi-styles",
+      "version": "4.3.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz#sha1:edd803628ae71c04c85ae7a0906edad34b648937"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "color-convert@2.0.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "ansi-styles@3.2.1@d41d8cd9": {
+      "id": "ansi-styles@3.2.1@d41d8cd9",
+      "name": "ansi-styles",
+      "version": "3.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/ansi-styles/-/ansi-styles-3.2.1.tgz#sha1:41fbb20243e50b12be0f04b8dedbf07520ce841d"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "color-convert@1.9.3@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "ansi-regex@5.0.0@d41d8cd9": {
+      "id": "ansi-regex@5.0.0@d41d8cd9",
+      "name": "ansi-regex",
+      "version": "5.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.0.tgz#sha1:388539f55179bf39339c81af30a654d69f87cb75"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@types/yargs-parser@20.2.1@d41d8cd9": {
+      "id": "@types/yargs-parser@20.2.1@d41d8cd9",
+      "name": "@types/yargs-parser",
+      "version": "20.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-20.2.1.tgz#sha1:3b9ce2489919d9e4fea439b76916abc34b2df129"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@types/yargs@15.0.14@d41d8cd9": {
+      "id": "@types/yargs@15.0.14@d41d8cd9",
+      "name": "@types/yargs",
+      "version": "15.0.14",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/yargs/-/yargs-15.0.14.tgz#sha1:26d821ddb89e70492160b66d10a0eb6df8f6fb06"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "@types/yargs-parser@20.2.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "@types/stack-utils@2.0.1@d41d8cd9": {
+      "id": "@types/stack-utils@2.0.1@d41d8cd9",
+      "name": "@types/stack-utils",
+      "version": "2.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/stack-utils/-/stack-utils-2.0.1.tgz#sha1:20f18294f797f2209b5f65c8e3b5c8e8261d127c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@types/node@11.11.6@d41d8cd9": {
+      "id": "@types/node@11.11.6@d41d8cd9",
+      "name": "@types/node",
+      "version": "11.11.6",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/node/-/node-11.11.6.tgz#sha1:df929d1bb2eee5afdda598a41930fe50b43eaa6a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@types/istanbul-reports@3.0.1@d41d8cd9": {
+      "id": "@types/istanbul-reports@3.0.1@d41d8cd9",
+      "name": "@types/istanbul-reports",
+      "version": "3.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/istanbul-reports/-/istanbul-reports-3.0.1.tgz#sha1:9153fe98bba2bd565a63add9436d6f0d7f8468ff"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "@types/istanbul-lib-report@3.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "@types/istanbul-lib-report@3.0.0@d41d8cd9": {
+      "id": "@types/istanbul-lib-report@3.0.0@d41d8cd9",
+      "name": "@types/istanbul-lib-report",
+      "version": "3.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/istanbul-lib-report/-/istanbul-lib-report-3.0.0.tgz#sha1:c14c24f18ea8190c118ee7562b7ff99a36552686"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "@types/istanbul-lib-coverage@2.0.3@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "@types/istanbul-lib-coverage@2.0.3@d41d8cd9": {
+      "id": "@types/istanbul-lib-coverage@2.0.3@d41d8cd9",
+      "name": "@types/istanbul-lib-coverage",
+      "version": "2.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.3.tgz#sha1:4ba8ddb720221f432e443bd5f9117fd22cfd4762"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@taquito/utils@9.2.0@d41d8cd9": {
+      "id": "@taquito/utils@9.2.0@d41d8cd9",
+      "name": "@taquito/utils",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/utils/-/utils-9.2.0.tgz#sha1:6c9cde66aea30ffd069a02eacc3a3e946bd3eb27"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "buffer@6.0.3@d41d8cd9", "bs58check@2.1.2@d41d8cd9",
+        "blakejs@1.1.1@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@taquito/taquito@9.2.0@d41d8cd9": {
+      "id": "@taquito/taquito@9.2.0@d41d8cd9",
+      "name": "@taquito/taquito",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/taquito/-/taquito-9.2.0.tgz#sha1:3337e0132f6764cccc1c0acf224f7e2b470a9f63"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "rxjs@6.6.7@d41d8cd9", "rx-sandbox@1.0.4@d41d8cd9",
+        "bignumber.js@9.0.1@d41d8cd9", "@taquito/utils@9.2.0@d41d8cd9",
+        "@taquito/rpc@9.2.0@d41d8cd9",
+        "@taquito/michelson-encoder@9.2.0@d41d8cd9",
+        "@taquito/michel-codec@9.2.0@d41d8cd9",
+        "@taquito/http-utils@9.2.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@taquito/signer@9.2.0@d41d8cd9": {
+      "id": "@taquito/signer@9.2.0@d41d8cd9",
+      "name": "@taquito/signer",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/signer/-/signer-9.2.0.tgz#sha1:0b5954918cfa10ca034fbb16ee4cfd9fcc26e865"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "typedarray-to-buffer@4.0.0@d41d8cd9", "pbkdf2@3.1.2@d41d8cd9",
+        "libsodium-wrappers@0.7.8@d41d8cd9", "elliptic@6.5.4@d41d8cd9",
+        "bip39@3.0.4@d41d8cd9", "bignumber.js@9.0.1@d41d8cd9",
+        "@taquito/utils@9.2.0@d41d8cd9", "@taquito/taquito@9.2.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@taquito/rpc@9.2.0@d41d8cd9": {
+      "id": "@taquito/rpc@9.2.0@d41d8cd9",
+      "name": "@taquito/rpc",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/rpc/-/rpc-9.2.0.tgz#sha1:ba50e0bef86470616abd4d77130daea9018465fa"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "lodash@4.17.21@d41d8cd9", "bignumber.js@9.0.1@d41d8cd9",
+        "@taquito/http-utils@9.2.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@taquito/michelson-encoder@9.2.0@d41d8cd9": {
+      "id": "@taquito/michelson-encoder@9.2.0@d41d8cd9",
+      "name": "@taquito/michelson-encoder",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/michelson-encoder/-/michelson-encoder-9.2.0.tgz#sha1:f7cf65218593e55444d101e7770443997c3ce970"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "fast-json-stable-stringify@2.1.0@d41d8cd9",
+        "bignumber.js@9.0.1@d41d8cd9", "@taquito/utils@9.2.0@d41d8cd9",
+        "@taquito/rpc@9.2.0@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@taquito/michel-codec@9.2.0@d41d8cd9": {
+      "id": "@taquito/michel-codec@9.2.0@d41d8cd9",
+      "name": "@taquito/michel-codec",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/michel-codec/-/michel-codec-9.2.0.tgz#sha1:f469b775090094545920c69703e13586c7b2b3b7"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@taquito/http-utils@9.2.0@d41d8cd9": {
+      "id": "@taquito/http-utils@9.2.0@d41d8cd9",
+      "name": "@taquito/http-utils",
+      "version": "9.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@taquito/http-utils/-/http-utils-9.2.0.tgz#sha1:bab774bb4d2d65756cd91403c5700abe01d96422"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "xhr2-cookies@1.1.0@d41d8cd9" ],
       "devDependencies": []
     },
     "@reason-native/rely@3.2.1@d41d8cd9": {
@@ -3290,8 +4619,8 @@
         "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
-    "@opam/digestif@opam:1.0.0@ce08dfe9": {
-      "id": "@opam/digestif@opam:1.0.0@ce08dfe9",
+    "@opam/digestif@opam:1.0.0@0a47b68c": {
+      "id": "@opam/digestif@opam:1.0.0@0a47b68c",
       "name": "@opam/digestif",
       "version": "opam:1.0.0",
       "source": {
@@ -3894,6 +5223,25 @@
         "@opam/bigstringaf@opam:0.8.0@6a362afb"
       ]
     },
+    "@jest/types@26.6.2@d41d8cd9": {
+      "id": "@jest/types@26.6.2@d41d8cd9",
+      "name": "@jest/types",
+      "version": "26.6.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@jest/types/-/types-26.6.2.tgz#sha1:bef5a532030e1d88a2f5a6d933f84e97226ed48e"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "chalk@4.1.2@d41d8cd9", "@types/yargs@15.0.14@d41d8cd9",
+        "@types/node@11.11.6@d41d8cd9",
+        "@types/istanbul-reports@3.0.1@d41d8cd9",
+        "@types/istanbul-lib-coverage@2.0.3@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
     "@esy-ocaml/substs@0.0.1@d41d8cd9": {
       "id": "@esy-ocaml/substs@0.0.1@d41d8cd9",
       "name": "@esy-ocaml/substs",
@@ -3928,6 +5276,51 @@
         "@opam/menhir@opam:20210419@11c42419",
         "@opam/fix@opam:20201120@0b212fb9", "@opam/dune@opam:2.9.0@489e77a9"
       ],
+      "devDependencies": []
+    },
+    "@babel/highlight@7.14.5@d41d8cd9": {
+      "id": "@babel/highlight@7.14.5@d41d8cd9",
+      "name": "@babel/highlight",
+      "version": "7.14.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@babel/highlight/-/highlight-7.14.5.tgz#sha1:6861a52f03966405001f6aa534a01a24d99e8cd9"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "js-tokens@4.0.0@d41d8cd9", "chalk@2.4.2@d41d8cd9",
+        "@babel/helper-validator-identifier@7.14.8@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
+    "@babel/helper-validator-identifier@7.14.8@d41d8cd9": {
+      "id": "@babel/helper-validator-identifier@7.14.8@d41d8cd9",
+      "name": "@babel/helper-validator-identifier",
+      "version": "7.14.8",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.14.8.tgz#sha1:32be33a756f29e278a0d644fa08a2c9e0f88a34c"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "@babel/code-frame@7.14.5@d41d8cd9": {
+      "id": "@babel/code-frame@7.14.5@d41d8cd9",
+      "name": "@babel/code-frame",
+      "version": "7.14.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.14.5.tgz#sha1:23b08d740e83f49c5e59945fbf1b43e80bbf4edb"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "@babel/highlight@7.14.5@d41d8cd9" ],
       "devDependencies": []
     }
   }
