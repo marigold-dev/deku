@@ -139,3 +139,9 @@ module Int64_map =
 module BLAKE2B = BLAKE2B;
 module BLAKE2B_20 = BLAKE2B.BLAKE2B_20;
 module Incremental_patricia = Incremental_patricia;
+
+let with_yojson_string = (from, to_) => (
+  (json: Yojson.Safe.t) =>
+    [%of_yojson: string](json) |> Result.bind(_, from),
+  (t) => (`String(to_(t)): Yojson.Safe.t),
+);

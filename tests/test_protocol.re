@@ -3,11 +3,19 @@ open Setup;
 open Protocol;
 
 describe("protocol state", ({test, _}) => {
+  let ticket = {
+    open Tezos_interop;
+    let key_hash =
+      Key_hash.of_key(Key.Ed25519(Protocol.Address.genesis_address));
+    let ticketer = Address.Implicit(key_hash);
+    Ticket.{ticketer, data: Bytes.of_string("")};
+  };
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = Wallet.make_wallet();
     let state = {
       ...make(~initial_block=Block.genesis),
-      ledger: Ledger.empty |> Ledger.deposit(wallet, Amount.of_int(500)),
+      ledger:
+        Ledger.empty |> Ledger.deposit(wallet, Amount.of_int(500), ticket),
     };
     let validators = {
       open Helpers;
@@ -50,16 +58,19 @@ describe("protocol state", ({test, _}) => {
         let (key_b, wallet_b) = Wallet.make_wallet();
         let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
 
-        expect_amount(Ledger.balance(wallet_a, old_state.ledger), 500);
-        expect_amount(Ledger.balance(wallet_b, old_state.ledger), 0);
+        expect_amount(
+          Ledger.balance(wallet_a, ticket, old_state.ledger),
+          500,
+        );
+        expect_amount(Ledger.balance(wallet_b, ticket, old_state.ledger), 0);
 
         // TODO: test that it changes only the target wallet
         expect_amount(
-          Ledger.balance(wallet_a, new_state.ledger),
+          Ledger.balance(wallet_a, ticket, new_state.ledger),
           500 + free_diff_a,
         );
         expect_amount(
-          Ledger.balance(wallet_b, new_state.ledger),
+          Ledger.balance(wallet_b, ticket, new_state.ledger),
           0 + free_diff_b,
         );
       },
@@ -90,6 +101,7 @@ describe("protocol state", ({test, _}) => {
         ~block_height=0L,
         ~source,
         ~amount=Amount.of_int(7),
+        ~ticket,
         ~kind=Transaction({destination: destination}),
       ),
     )
@@ -106,6 +118,7 @@ describe("protocol state", ({test, _}) => {
         ~block_height=0L,
         ~source,
         ~amount=Amount.of_int(501),
+        ~ticket,
         ~kind=Transaction({destination: destination}),
       ),
     )
