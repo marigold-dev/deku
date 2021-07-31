@@ -348,6 +348,7 @@ module Pack = {
   type t = node(canonical_location, prim);
 
   let int = n => Int(-1, n);
+  let nat = n => Int(-1, n);
   let bytes = b => Bytes(-1, b);
   let pair = (l, r) => Prim(-1, D_Pair, [l, r], []);
   let list = l => Seq(-1, l);
@@ -384,27 +385,34 @@ module Context = {
 
 module Consensus = {
   open Pack;
+
+  let hash_packed_data = data =>
+    data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
   let hash_validators = validators =>
-    to_bytes(list(List.map(key, validators)))
-    |> Bytes.to_string
-    |> BLAKE2B.hash;
+    list(List.map(key, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
       (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) => {
     // TODO: this should come from the block in the future
     let handles_hash = BLAKE2B.hash("");
-    to_bytes(
+    pair(
       pair(
-        pair(
-          pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
-          pair(hash(handles_hash), hash(state_root_hash)),
-        ),
-        hash(validators_hash),
+        pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
+        pair(hash(handles_hash), hash(state_root_hash)),
       ),
+      hash(validators_hash),
     )
-    |> Bytes.to_string
-    |> BLAKE2B.hash;
+    |> hash_packed_data;
   };
+  let hash_withdraw_handle = (~id, ~owner, ~amount, ~ticketer, ~data) =>
+    pair(
+      pair(
+        pair(nat(amount), bytes(data)),
+        pair(nat(id), address(owner)),
+      ),
+      address(ticketer),
+    )
+    |> hash_packed_data;
 };
 
 module Discovery = {

@@ -339,6 +339,7 @@ describe("consensus", ({test, _}) => {
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
   let key_exn = s => Key.of_string(s) |> Option.get;
+  let address_exn = s => Address.of_string(s) |> Option.get;
 
   test("hash_validators", ({expect, _}) => {
     let hash =
@@ -373,6 +374,20 @@ describe("consensus", ({test, _}) => {
     let hash = BLAKE2B.to_string(hash);
     expect.string(hash).toEqual(
       "23cdb9e9ffef6dd17553b622af0c043f544daa18430dff295d04a9d46b3e5267",
+    );
+  });
+  test("hash_withdraw_handle", ({expect, _}) => {
+    let hash =
+      hash_withdraw_handle(
+        ~id=Z.of_int(0),
+        ~owner=address_exn("tz1YywYq77UAMbVgoYndnZLkRawjUhX3nVh4"),
+        ~amount=Z.of_int(10),
+        ~ticketer=address_exn("KT1AS9rCk1wpybsvZ5Tnd4yRxDvtN39uxMoq"),
+        ~data=Bytes.of_string(""),
+      );
+    let hash = BLAKE2B.to_string(hash);
+    expect.string(hash).toEqual(
+      "63dfd90ec7be98a9c23bf374692de4d36f41fe03c4c768fc0c650641d3ed4f86",
     );
   });
 });
