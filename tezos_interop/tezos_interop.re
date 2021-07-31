@@ -391,6 +391,73 @@ module Context = {
     required_confirmations: int,
   };
 };
+module Run_contract = {
+  [@deriving to_yojson]
+  type input = {
+    rpc_node: string,
+    secret: string,
+    confirmation: int,
+    destination: string,
+    entrypoint: string,
+    payload: Yojson.Safe.t,
+  };
+  type output =
+    | Applied({hash: string})
+    | Failed({hash: string})
+    | Skipped({hash: string})
+    | Backtracked({hash: string})
+    | Unknown({hash: string})
+    | Error(string);
+
+  let output_of_yojson = json => {
+    module T = {
+      [@deriving of_yojson({strict: false})]
+      type t = {status: string}
+      and finished = {hash: string}
+      and error = {error: string};
+    };
+    let finished = make => {
+      let.ok {hash} = T.finished_of_yojson(json);
+      Ok(make(hash));
+    };
+    let.ok {status} = T.of_yojson(json);
+    switch (status) {
+    | "applied" => finished(hash => Applied({hash: hash}))
+    | "failed" => finished(hash => Failed({hash: hash}))
+    | "skipped" => finished(hash => Skipped({hash: hash}))
+    | "backtracked" => finished(hash => Backtracked({hash: hash}))
+    | "unknown" => finished(hash => Unknown({hash: hash}))
+    | "error" =>
+      let.ok {error} = T.error_of_yojson(json);
+      Ok(Error(error));
+    | _ => Error("invalid status")
+    };
+  };
+
+  // TODO: probably we should add a ppx to load this file in the bundle
+  let file = Sys.executable_name ++ "/../tezos_interop/run_entrypoint.js";
+  let run = (~context, ~destination, ~entrypoint, ~payload) => {
+    let input = {
+      rpc_node: context.Context.rpc_node |> Uri.to_string,
+      secret: context.secret |> Secret.to_string,
+      confirmation: context.required_confirmations,
+      destination: Address.to_string(destination),
+      entrypoint,
+      payload,
+    };
+    // TODO: stop hard coding this
+    let command = "node";
+    let.await output =
+      Lwt_process.pmap(
+        (command, [|command, file|]),
+        Yojson.Safe.to_string(input_to_yojson(input)),
+      );
+    switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
+    | Ok(data) => await(data)
+    | Error(error) => await(Error(error))
+    };
+  };
+};
 
 module Consensus = {
   open Pack;
