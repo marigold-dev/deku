@@ -18,23 +18,11 @@ module Wallet_and_ticket_map = {
   let add = (address, ticket) => Map.add({address, ticket});
 };
 module Handle = {
-  module Address = {
-    include Tezos_interop.Address;
-    // TODO: this duplicated from Ticket.re and should be cleaned
-    let with_yojson_string = (name, of_string, to_string) =>
-      Helpers.with_yojson_string(
-        string =>
-          of_string(string) |> Option.to_result(~none="invalid " ++ name),
-        to_string,
-      );
-    let (of_yojson, to_yojson) =
-      with_yojson_string("address", of_string, to_string);
-  };
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
     id: int,
-    owner: Address.t,
+    owner: Tezos_interop.Address.t,
     amount: Amount.t,
     ticket: Ticket.t,
   };
