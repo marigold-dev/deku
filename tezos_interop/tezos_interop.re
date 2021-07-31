@@ -464,13 +464,14 @@ module Consensus = {
 
   let hash_packed_data = data =>
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
+  // TODO: this should come from the block in the future
+  let handles_hash = BLAKE2B.hash("");
+
   let hash_validators = validators =>
     list(List.map(key, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
-      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) => {
-    // TODO: this should come from the block in the future
-    let handles_hash = BLAKE2B.hash("");
+      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
     pair(
       pair(
         pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
@@ -479,7 +480,6 @@ module Consensus = {
       hash(validators_hash),
     )
     |> hash_packed_data;
-  };
   let hash_withdraw_handle = (~id, ~owner, ~amount, ~ticketer, ~data) =>
     pair(
       pair(
@@ -489,6 +489,59 @@ module Consensus = {
       address(ticketer),
     )
     |> hash_packed_data;
+
+  // TODO: how to test this?
+  let commit_state_hash =
+      (
+        ~context,
+        ~block_hash,
+        ~block_height,
+        ~block_payload_hash,
+        ~state_hash,
+        ~validators,
+        ~signatures,
+      ) => {
+    module Payload = {
+      [@deriving to_yojson]
+      type t = {
+        block_hash: BLAKE2B.t,
+        block_height: int64,
+        block_payload_hash: BLAKE2B.t,
+        signatures: list(option(string)),
+        handles_hash: BLAKE2B.t,
+        state_hash: BLAKE2B.t,
+        validators: list(string),
+      };
+    };
+    open Payload;
+    let signatures =
+      // TODO: we should sort the map using the keys
+      List.map(
+        ((_key, signature)) =>
+          Option.map(signature => Signature.to_string(signature), signature),
+        signatures,
+      );
+    let validators = List.map(Key.to_string, validators);
+    let payload = {
+      block_hash,
+      block_height,
+      block_payload_hash,
+      signatures,
+      handles_hash,
+      state_hash,
+      validators,
+    };
+    // TODO: what should this code do with the output? Retry?
+    //      return back that it was a failure?
+    let.await _ =
+      Run_contract.run(
+        ~context,
+        ~destination=context.Context.consensus_contract,
+        ~entrypoint="default",
+        ~payload=Payload.to_yojson(payload),
+      );
+    await();
+  };
 };
 
 module Discovery = {

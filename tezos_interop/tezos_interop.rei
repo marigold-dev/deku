@@ -107,6 +107,19 @@ module Consensus: {
       ~data: bytes
     ) =>
     BLAKE2B.t;
+
+  /** ~signatures should be in the same order as the old validators */
+  let commit_state_hash:
+    (
+      ~context: Context.t,
+      ~block_hash: BLAKE2B.t,
+      ~block_height: int64,
+      ~block_payload_hash: BLAKE2B.t,
+      ~state_hash: BLAKE2B.t,
+      ~validators: list(Key.t),
+      ~signatures: list((Key.t, option(Signature.t)))
+    ) =>
+    Lwt.t(unit);
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};
