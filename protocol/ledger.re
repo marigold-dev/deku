@@ -17,10 +17,51 @@ module Wallet_and_ticket_map = {
   let find_opt = (address, ticket) => Map.find_opt({address, ticket});
   let add = (address, ticket) => Map.add({address, ticket});
 };
+module Handle = {
+  module Address = {
+    include Tezos_interop.Address;
+    // TODO: this duplicated from Ticket.re and should be cleaned
+    let with_yojson_string = (name, of_string, to_string) =>
+      Helpers.with_yojson_string(
+        string =>
+          of_string(string) |> Option.to_result(~none="invalid " ++ name),
+        to_string,
+      );
+    let (of_yojson, to_yojson) =
+      with_yojson_string("address", of_string, to_string);
+  };
+  [@deriving yojson]
+  type t = {
+    hash: BLAKE2B.t,
+    id: int,
+    owner: Address.t,
+    amount: Amount.t,
+    ticket: Ticket.t,
+  };
+  let hash = (~id, ~owner, ~amount, ~ticket) => {
+    let Ticket.{ticketer, data} = ticket;
+    Tezos_interop.Consensus.hash_withdraw_handle(
+      ~id=Z.of_int(id),
+      ~owner,
+      ~amount=Z.of_int(Amount.to_int(amount)),
+      ~ticketer,
+      ~data,
+    );
+  };
+};
+module Handle_tree =
+  Incremental_patricia.Make({
+    [@deriving yojson]
+    type t = Handle.t;
+    let hash = t => t.Handle.hash;
+  });
 [@deriving yojson]
-type t = {ledger: Wallet_and_ticket_map.t};
+type t = {
+  ledger: Wallet_and_ticket_map.t,
+  handles: Handle_tree.t,
+};
 
-let empty = {ledger: Wallet_and_ticket_map.empty};
+let empty = {ledger: Wallet_and_ticket_map.empty, handles: Handle_tree.empty};
 
 let balance = (address, ticket, t) =>
   Wallet_and_ticket_map.find_opt(address, ticket, t.ledger)
@@ -50,6 +91,7 @@ let transfer = (~source, ~destination, amount, ticket, t) => {
            ticket,
            destination_balance + amount,
          ),
+    handles: t.handles,
   });
 };
 
@@ -65,5 +107,31 @@ let deposit = (destination, amount, ticket, t) => {
            ticket,
            destination_balance + amount,
          ),
+    handles: t.handles,
   };
 };
+let withdraw = (~source, ~destination, amount, ticket, t) => {
+  open Amount;
+  let owner = destination;
+  let source_balance = balance(source, ticket, t);
+  let.ok () = assert_available(~source=source_balance, ~amount);
+
+  let (handles, handle) =
+    Handle_tree.add(
+      id => {
+        let hash = Handle.hash(~id, ~owner, ~amount, ~ticket);
+        {id, hash, owner, amount, ticket};
+      },
+      t.handles,
+    );
+  let t = {
+    ledger:
+      t.ledger
+      |> Wallet_and_ticket_map.add(source, ticket, source_balance - amount),
+    handles,
+  };
+  Ok((t, handle));
+};
+
+let handles_find_proof = (key, t) => Handle_tree.find(key, t.handles);
+let handles_root_hash = t => Handle_tree.hash(t.handles);
