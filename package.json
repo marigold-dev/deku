@@ -31,7 +31,9 @@
     "@opam/hex": "*",
     "@opam/tezos-micheline": "8.3",
     "@opam/digestif": "*",
-    "@opam/cmdliner": "1.0.4"
+    "@opam/cmdliner": "1.0.4",
+    "@taquito/taquito": "^9.0.1",
+    "@taquito/signer": "^9.0.1"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
