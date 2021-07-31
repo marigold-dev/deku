@@ -35,29 +35,47 @@ let exits =
 
 let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 
-// Commands
-// ========
+// Arguments
+// ==========
 
-// create-wallet
-
-let info_create_wallet = {
-  let doc = "Creates a wallet file. The wallet file's filename is its address. The wallet file contains the private key corresponding to that address.";
-  Term.info("create-wallet", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+// TODO: Wallet.t
+let wallet = {
+  let parser = file => {
+    let non_dir_file = Arg.(conv_parser(non_dir_file));
+    switch (
+      non_dir_file(file),
+      non_dir_file(make_filename_from_address(file)),
+    ) {
+    | (Ok(file), _)
+    | (_, Ok(file)) => Ok(file)
+    | _ => Error(`Msg("Expected path to wallet"))
+    };
+  };
+  let printer = Arg.(conv_printer(non_dir_file));
+  Arg.(conv((parser, printer)));
 };
 
-let create_wallet = () => {
-  let (key, wallet) = Wallet.make_wallet();
-
-  let wallet_addr_str = Wallet.address_to_string(wallet);
-  let file = make_filename_from_address(wallet_addr_str);
-
-  let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
-  await(`Ok());
+let edsk_secret_key = {
+  let parser = key => {
+    switch (Tezos_interop.Secret.of_string(key)) {
+    | Some(key) => Ok(key)
+    | _ => Error(`Msg("Expected EDSK secret key"))
+    };
+  };
+  let printer = (ppf, key) => {
+    Format.fprintf(ppf, "%s", Tezos_interop.Secret.to_string(key));
+  };
+  Arg.(conv((parser, printer)));
 };
 
-let create_wallet = Term.(lwt_ret(const(create_wallet) $ const()));
-
-// create-transaction
+let uri = {
+  // TODO: check that uri is valid
+  let parser = uri => Ok(uri |> Uri.of_string);
+  let printer = (ppf, uri) => {
+    Format.fprintf(ppf, "%s", uri |> Uri.to_string);
+  };
+  Arg.(conv((parser, printer)));
+};
 
 let address = {
   let parser = string =>
@@ -66,6 +84,15 @@ let address = {
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
     Format.fprintf(fmt, "%s", Wallet.address_to_string(wallet));
+  Arg.(conv((parser, printer)));
+};
+let address_tezos_interop = {
+  let parser = string =>
+    string
+    |> Tezos_interop.Address.of_string
+    |> Option.to_result(~none=`Msg("Expected a wallet address."));
+  let printer = (fmt, address) =>
+    Format.fprintf(fmt, "%s", Tezos_interop.Address.to_string(address));
   Arg.(conv((parser, printer)));
 };
 let amount = {
@@ -106,6 +133,30 @@ let wallet = {
   let printer = Arg.(conv_printer(non_dir_file));
   Arg.(conv((parser, printer)));
 };
+
+// Commands
+// ========
+
+// create-wallet
+
+let info_create_wallet = {
+  let doc = "Creates a wallet file. The wallet file's filename is its address. The wallet file contains the private uri corresponding to that address.";
+  Term.info("create-wallet", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let create_wallet = () => {
+  let (key, wallet) = Wallet.make_wallet();
+
+  let wallet_addr_str = Wallet.address_to_string(wallet);
+  let file = make_filename_from_address(wallet_addr_str);
+
+  let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
+  await(`Ok());
+};
+
+let create_wallet = Term.(lwt_ret(const(create_wallet) $ const()));
+
+// create-transaction
 
 let info_create_transaction = {
   let doc =
@@ -415,6 +466,146 @@ let inject_genesis = {
   );
 };
 
+// Create files needed for the node's operation
+let info_setup_node = {
+  let doc = "Creates the files needed to setup a node.";
+  Term.info("setup-node", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let setup_node =
+    (
+      folder,
+      secret,
+      uri,
+      tezos_rpc_node,
+      tezos_secret,
+      tezos_consensus_contract,
+    ) => {
+  let in_folder = Filename.concat(folder);
+
+  let secret = {
+    switch (secret) {
+    | Tezos_interop.Secret.Ed25519(secret) => secret
+    };
+  };
+  let address = Address.of_key(secret);
+  let (identity, identity_path) = (
+    State.{key: secret, uri, t: address},
+    "identity.json" |> in_folder,
+  );
+
+  let (wallet, wallet_path) = (
+    Files.Wallet.{address: Wallet.of_address(address), priv_key: secret},
+    "wallet.json" |> in_folder,
+  );
+
+  let (validators, validators_path) = ([], "validators.json" |> in_folder); // TODO: Populate validators
+  let (interop_context, interop_context_path) = (
+    Tezos_interop.Context.{
+      rpc_node: tezos_rpc_node,
+      secret: tezos_secret,
+      consensus_contract: tezos_consensus_contract,
+      required_confirmations: 10,
+    },
+    "interop_context.json" |> in_folder,
+  );
+
+  let create_files = () => {
+    let.await () = Files.Identity.write(identity, ~file=identity_path);
+    let.await () = Files.Validators.write(validators, ~file=validators_path);
+    let.await () = Files.Wallet.write(wallet, ~file=wallet_path);
+    let.await () =
+      Files.Interop_context.write(
+        interop_context,
+        ~file=interop_context_path,
+      );
+    Lwt.return(`Ok());
+  };
+
+  if (Sys.file_exists(folder)) {
+    if (Sys.is_directory(folder)) {
+      if (Sys.readdir(folder) == [||]
+          || Sys.readdir(folder) == [|".gitkeep"|]) {
+        create_files();
+      } else {
+        Lwt.return(`Error((false, folder ++ " is not empty.")));
+      };
+    } else {
+      Lwt.return(`Error((false, folder ++ " is not a directory.")));
+    };
+  } else {
+    let.await () = Lwt_unix.mkdir(folder, 0o700);
+    create_files();
+  };
+};
+
+let setup_node = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  // TODO: figure out how to make the rest of these required named arguments so people don't get the order confused.
+  let secret = {
+    let docv = "secret";
+    let doc = "The secret key used by the validator.";
+    Arg.(
+      required
+      & opt(some(edsk_secret_key), None)
+      & info(["secret"], ~doc, ~docv)
+    );
+  };
+
+  let self_uri = {
+    let docv = "self_uri";
+    let doc = "The uri that other nodes should use to connect to this node.";
+    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+  };
+
+  let tezos_node_uri = {
+    let docv = "tezos_node_uri";
+    let doc = "The uri of the tezos node.";
+    Arg.(
+      required
+      & opt(some(uri), None)
+      & info(["tezos_rpc_node"], ~doc, ~docv)
+    );
+  };
+
+  let tezos_secret = {
+    let docv = "tezos_secret";
+    let doc = "The Tezos secret key.";
+    Arg.(
+      required
+      & opt(some(edsk_secret_key), None)
+      & info(["tezos_secret"], ~doc, ~docv)
+    );
+  };
+
+  let tezos_consensus_contract_address = {
+    let docv = "tezos_consensus_contract_address";
+    let doc = "The address of the Tezos consensus contract.";
+    Arg.(
+      required
+      & opt(some(address_tezos_interop), None)
+      & info(["tezos_consensus_contract"], ~doc, ~docv)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(setup_node)
+      $ folder_dest
+      $ secret
+      $ self_uri
+      $ tezos_node_uri
+      $ tezos_secret
+      $ tezos_consensus_contract_address,
+    )
+  );
+};
+
 // Term that just shows the help command, to use when no arguments are passed
 
 let show_help = {
@@ -441,6 +632,7 @@ let () = {
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
       (inject_genesis, info_inject_genesis),
+      (setup_node, info_setup_node),
     ],
   );
 };

@@ -66,6 +66,21 @@ This identity folder can now be passed to the node.
 esy b dune exec ./bin/http_server.exe 0
 ```
 
+### Creating files needed to run the node
+
+4 files are needed to set up the node. Creating them manually is inconvenient and error-prone, so sidecli has a convenience subcommand `setup-node` that takes all the information needed to create a node and creates the necessary files in a folder you specify.
+
+Example usage:
+
+```
+esy x sidecli setup-node ./data/ \
+   --secret edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd \
+   --uri self_uri \
+   --tezos_rpc_node tezos_node_uri \
+   --tezos_secret edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd \
+   --tezos_consensus_contract KT1DMCGGiHT2dgjjXHG7qh1C1maFchrLNphx
+```
+
 #### Running multiple nodes
 Note that, due to a bug in esy, it isn't currently possible to run two
 `esy b dune exec ./bin/http_server.exe ...` simultaneously. To
