@@ -117,22 +117,6 @@ let ticket = {
     Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
   Arg.(conv(~docv="A ticket", (parser, printer)));
 };
-// TODO: Wallet.t
-let wallet = {
-  let parser = file => {
-    let non_dir_file = Arg.(conv_parser(non_dir_file));
-    switch (
-      non_dir_file(file),
-      non_dir_file(make_filename_from_address(file)),
-    ) {
-    | (Ok(file), _)
-    | (_, Ok(file)) => Ok(file)
-    | _ => Error(`Msg("Expected path to wallet"))
-    };
-  };
-  let printer = Arg.(conv_printer(non_dir_file));
-  Arg.(conv((parser, printer)));
-};
 
 // Commands
 // ========
