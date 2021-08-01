@@ -357,14 +357,18 @@ describe("consensus", ({test, _}) => {
   test("hash_block", ({expect, _}) => {
     let hash =
       hash_block(
-        ~block_height=179842L,
+        ~block_height=121L,
         ~block_payload_hash=
           hash_exn(
-            "e2b8630f4dbda366f4c5e781e9c421780580566c2b7076f9cff142e58cbad972",
+            "2d92960a592c56de3046e200969c230a2eda71fc4b775e0cc09a189e5ddc5dbd",
           ),
         ~state_root_hash=
           hash_exn(
-            "7b54374657fc7b0e681ee618d4a13129b2d0c47e8ffb0460f02ac8d324c0b134",
+            "bdd051ddb07925a0d88dc27583e38ae560aa1b4429cc93b9ec35dacdbd74ffb2",
+          ),
+        ~handles_hash=
+          hash_exn(
+            "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8",
           ),
         ~validators_hash=
           hash_exn(
@@ -373,7 +377,7 @@ describe("consensus", ({test, _}) => {
       );
     let hash = BLAKE2B.to_string(hash);
     expect.string(hash).toEqual(
-      "23cdb9e9ffef6dd17553b622af0c043f544daa18430dff295d04a9d46b3e5267",
+      "7cb600c19817b899d4c28c521dd9ebf95f688e1444afe7d0e7740bebe848b030",
     );
   });
   test("hash_withdraw_handle", ({expect, _}) => {

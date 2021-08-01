@@ -464,14 +464,18 @@ module Consensus = {
 
   let hash_packed_data = data =>
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
-  // TODO: this should come from the block in the future
-  let handles_hash = BLAKE2B.hash("");
 
   let hash_validators = validators =>
     list(List.map(key, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
-      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
+      (
+        ~block_height,
+        ~block_payload_hash,
+        ~state_root_hash,
+        ~handles_hash,
+        ~validators_hash,
+      ) =>
     pair(
       pair(
         pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
@@ -498,6 +502,7 @@ module Consensus = {
         ~block_height,
         ~block_payload_hash,
         ~state_hash,
+        ~handles_hash,
         ~validators,
         ~signatures,
       ) => {
