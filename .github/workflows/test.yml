@@ -27,6 +27,9 @@ jobs:
 
       - name: Run Code formatter
         run: esy b dune build @fmt
+      
+      - name: Run Check
+        run: esy b dune build @check
 
       - name: Run tests
         run: esy test
