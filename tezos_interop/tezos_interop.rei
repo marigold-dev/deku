@@ -36,6 +36,9 @@ module Signature: {
 
   let to_string: t => string;
   let of_string: string => option(t);
+
+  // TODO: this is a leaky abstraction
+  let of_raw_string: [ | `Ed25519(string)] => t;
 };
 
 module Contract_hash: {
