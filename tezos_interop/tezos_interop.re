@@ -391,19 +391,87 @@ module Context = {
     required_confirmations: int,
   };
 };
+module Run_contract = {
+  [@deriving to_yojson]
+  type input = {
+    rpc_node: string,
+    secret: string,
+    confirmation: int,
+    destination: string,
+    entrypoint: string,
+    payload: Yojson.Safe.t,
+  };
+  type output =
+    | Applied({hash: string})
+    | Failed({hash: string})
+    | Skipped({hash: string})
+    | Backtracked({hash: string})
+    | Unknown({hash: string})
+    | Error(string);
+
+  let output_of_yojson = json => {
+    module T = {
+      [@deriving of_yojson({strict: false})]
+      type t = {status: string}
+      and finished = {hash: string}
+      and error = {error: string};
+    };
+    let finished = make => {
+      let.ok {hash} = T.finished_of_yojson(json);
+      Ok(make(hash));
+    };
+    let.ok {status} = T.of_yojson(json);
+    switch (status) {
+    | "applied" => finished(hash => Applied({hash: hash}))
+    | "failed" => finished(hash => Failed({hash: hash}))
+    | "skipped" => finished(hash => Skipped({hash: hash}))
+    | "backtracked" => finished(hash => Backtracked({hash: hash}))
+    | "unknown" => finished(hash => Unknown({hash: hash}))
+    | "error" =>
+      let.ok {error} = T.error_of_yojson(json);
+      Ok(Error(error));
+    | _ => Error("invalid status")
+    };
+  };
+
+  // TODO: probably we should add a ppx to load this file in the bundle
+  let file = Sys.executable_name ++ "/../tezos_interop/run_entrypoint.js";
+  let run = (~context, ~destination, ~entrypoint, ~payload) => {
+    let input = {
+      rpc_node: context.Context.rpc_node |> Uri.to_string,
+      secret: context.secret |> Secret.to_string,
+      confirmation: context.required_confirmations,
+      destination: Address.to_string(destination),
+      entrypoint,
+      payload,
+    };
+    // TODO: stop hard coding this
+    let command = "node";
+    let.await output =
+      Lwt_process.pmap(
+        (command, [|command, file|]),
+        Yojson.Safe.to_string(input_to_yojson(input)),
+      );
+    switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
+    | Ok(data) => await(data)
+    | Error(error) => await(Error(error))
+    };
+  };
+};
 
 module Consensus = {
   open Pack;
 
   let hash_packed_data = data =>
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
+  // TODO: this should come from the block in the future
+  let handles_hash = BLAKE2B.hash("");
+
   let hash_validators = validators =>
     list(List.map(key, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
-      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) => {
-    // TODO: this should come from the block in the future
-    let handles_hash = BLAKE2B.hash("");
+      (~block_height, ~block_payload_hash, ~state_root_hash, ~validators_hash) =>
     pair(
       pair(
         pair(int(Z.of_int64(block_height)), hash(block_payload_hash)),
@@ -412,7 +480,6 @@ module Consensus = {
       hash(validators_hash),
     )
     |> hash_packed_data;
-  };
   let hash_withdraw_handle = (~id, ~owner, ~amount, ~ticketer, ~data) =>
     pair(
       pair(
@@ -422,6 +489,59 @@ module Consensus = {
       address(ticketer),
     )
     |> hash_packed_data;
+
+  // TODO: how to test this?
+  let commit_state_hash =
+      (
+        ~context,
+        ~block_hash,
+        ~block_height,
+        ~block_payload_hash,
+        ~state_hash,
+        ~validators,
+        ~signatures,
+      ) => {
+    module Payload = {
+      [@deriving to_yojson]
+      type t = {
+        block_hash: BLAKE2B.t,
+        block_height: int64,
+        block_payload_hash: BLAKE2B.t,
+        signatures: list(option(string)),
+        handles_hash: BLAKE2B.t,
+        state_hash: BLAKE2B.t,
+        validators: list(string),
+      };
+    };
+    open Payload;
+    let signatures =
+      // TODO: we should sort the map using the keys
+      List.map(
+        ((_key, signature)) =>
+          Option.map(signature => Signature.to_string(signature), signature),
+        signatures,
+      );
+    let validators = List.map(Key.to_string, validators);
+    let payload = {
+      block_hash,
+      block_height,
+      block_payload_hash,
+      signatures,
+      handles_hash,
+      state_hash,
+      validators,
+    };
+    // TODO: what should this code do with the output? Retry?
+    //      return back that it was a failure?
+    let.await _ =
+      Run_contract.run(
+        ~context,
+        ~destination=context.Context.consensus_contract,
+        ~entrypoint="default",
+        ~payload=Payload.to_yojson(payload),
+      );
+    await();
+  };
 };
 
 module Discovery = {
