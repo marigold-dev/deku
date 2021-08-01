@@ -439,6 +439,7 @@ module Run_contract = {
   };
 
   // TODO: probably we should add a ppx to load this file in the bundle
+  let _ = [%blob "run_entrypoint.bundle.js"];
   let file = Sys.executable_name ++ "/../tezos_interop/run_entrypoint.js";
   let run = (~context, ~destination, ~entrypoint, ~payload) => {
     let input = {
