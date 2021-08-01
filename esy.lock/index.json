@@ -1,5 +1,5 @@
 {
-  "checksum": "202de74e166ed04e8badbb51e70100a7",
+  "checksum": "41a3676ed7f27e8413521ecd8f207b69",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -479,6 +479,7 @@
         "@opam/tezos-micheline@opam:8.3@f8cfe30f",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
+        "@opam/ppx_blob@opam:0.7.2@f89ed130",
         "@opam/piaf@github:EduardoRFS/piaf:piaf.opam#8e4eeb916aef8e95f04d98eef57c43f07008b631@d41d8cd9",
         "@opam/opium@github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1@d41d8cd9",
         "@opam/mrmime@opam:0.3.2@2b4fe265",
@@ -4247,6 +4248,33 @@
       "devDependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@opam/dune@opam:2.9.0@489e77a9"
+      ]
+    },
+    "@opam/ppx_blob@opam:0.7.2@f89ed130": {
+      "id": "@opam/ppx_blob@opam:0.7.2@f89ed130",
+      "name": "@opam/ppx_blob",
+      "version": "opam:0.7.2",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/bc/bcb9dcab18a3b40b5d6d9656575001c6379abf29461aa87d9263d25b59f80a02#sha256:bcb9dcab18a3b40b5d6d9656575001c6379abf29461aa87d9263d25b59f80a02",
+          "archive:https://github.com/johnwhitington/ppx_blob/releases/download/0.7.2/ppx_blob-0.7.2.tbz#sha256:bcb9dcab18a3b40b5d6d9656575001c6379abf29461aa87d9263d25b59f80a02"
+        ],
+        "opam": {
+          "name": "ppx_blob",
+          "version": "0.7.2",
+          "path": "esy.lock/opam/ppx_blob.0.7.2"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/ppxlib@opam:0.22.2@61009929",
+        "@opam/dune@opam:2.9.0@489e77a9", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/ppxlib@opam:0.22.2@61009929", "@opam/dune@opam:2.9.0@489e77a9"
       ]
     },
     "@opam/pp@opam:1.1.2@89ad03b5": {
