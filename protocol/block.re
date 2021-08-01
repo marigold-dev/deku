@@ -12,6 +12,7 @@ type t = {
   // sha256(json of all fields including payload hash)
   payload_hash: BLAKE2B.t,
   state_root_hash: BLAKE2B.t,
+  handles_hash: BLAKE2B.t,
   validators_hash: BLAKE2B.t,
   previous_hash: BLAKE2B.t,
   // block data
@@ -31,6 +32,7 @@ let (hash, verify) = {
       (
         f,
         ~state_root_hash,
+        ~handles_hash,
         ~validators_hash,
         ~previous_hash,
         ~author,
@@ -40,6 +42,7 @@ let (hash, verify) = {
       ) => {
     let to_yojson = [%to_yojson:
       (
+        BLAKE2B.t,
         BLAKE2B.t,
         BLAKE2B.t,
         BLAKE2B.t,
@@ -53,6 +56,7 @@ let (hash, verify) = {
     let json =
       to_yojson((
         state_root_hash,
+        handles_hash,
         validators_hash,
         previous_hash,
         author,
@@ -70,6 +74,7 @@ let (hash, verify) = {
         ~block_height,
         ~block_payload_hash,
         ~state_root_hash,
+        ~handles_hash,
         ~validators_hash,
       );
     f((hash, block_payload_hash));
@@ -85,6 +90,7 @@ let (hash, verify) = {
 let make =
     (
       ~state_root_hash,
+      ~handles_hash,
       ~validators_hash,
       ~previous_hash,
       ~author,
@@ -95,6 +101,7 @@ let make =
   let (hash, payload_hash) =
     hash(
       ~state_root_hash,
+      ~handles_hash,
       ~validators_hash,
       ~previous_hash,
       ~author,
@@ -108,6 +115,7 @@ let make =
     previous_hash,
 
     state_root_hash,
+    handles_hash,
     validators_hash,
     author,
     block_height,
@@ -122,6 +130,7 @@ let of_yojson = json => {
     verify(
       ~hash=block.hash,
       ~state_root_hash=block.state_root_hash,
+      ~handles_hash=block.handles_hash,
       ~validators_hash=block.validators_hash,
       ~previous_hash=block.previous_hash,
       ~author=block.author,
@@ -139,7 +148,8 @@ let genesis =
   make(
     ~previous_hash=BLAKE2B.hash("tuturu"),
     ~state_root_hash=BLAKE2B.hash("mayuushi"),
-    ~validators_hash=BLAKE2B.hash("desu"),
+    ~handles_hash=BLAKE2B.hash("desu"),
+    ~validators_hash=Validators.hash(Validators.empty),
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
@@ -166,6 +176,7 @@ let produce = (~state) => {
     ~previous_hash=state.State.last_block_hash,
     ~state_root_hash=
       update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
+    ~handles_hash=Ledger.handles_root_hash(state.ledger),
     ~validators_hash=
       update_state_hashes
         ? Validators.hash(state.validators) : state.validators_hash,

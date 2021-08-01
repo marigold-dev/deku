@@ -166,6 +166,7 @@ module Data_to_smart_contract = {
     block_height: int64,
     block_payload_hash: BLAKE2B.t,
     state_hash: BLAKE2B.t,
+    handles_hash: BLAKE2B.t,
     validators: list(string),
     signatures: list(option(string)),
   };

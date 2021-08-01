@@ -164,6 +164,7 @@ let handle_data_to_smart_contract =
         block_height: block.block_height,
         block_payload_hash: block.payload_hash,
         state_hash: block.state_root_hash,
+        handles_hash: block.handles_hash,
         validators,
         signatures,
       });
