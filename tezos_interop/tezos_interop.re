@@ -301,6 +301,10 @@ module Signature = {
     };
     try_decode_list([ed25519]);
   };
+  // TODO: this is a leaky abstraction
+  let of_raw_string =
+    fun
+    | `Ed25519(data) => Ed25519(data);
 };
 
 module Ticket = {
