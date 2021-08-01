@@ -100,6 +100,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
       ~block_hash=block.hash,
       ~block_height=block.block_height,
       ~block_payload_hash=block.payload_hash,
+      ~handles_hash=block.handles_hash,
       ~state_hash=block.state_root_hash,
       ~validators,
       ~signatures,
