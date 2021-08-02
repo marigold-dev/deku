@@ -48,7 +48,7 @@ const error = (error) =>
   Tezos.setProvider({ signer });
 
   const contract = await Tezos.contract.at(destination);
-  const operation = await contract.methods[entrypoint](args).send();
+  const operation = await contract.methods[entrypoint](...args).send();
   await operation.confirmation(confirmation);
 
   finished(operation.status, operation.hash);
