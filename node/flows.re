@@ -118,8 +118,9 @@ let rec request_protocol_snapshot = tries => {
 };
 Lwt.async_exception_hook :=
   (
-    _exn => {
-      print_endline("global exception");
+    exn => {
+      Printexc.to_string(exn) |> Format.eprintf("global_exception: %s\n%!");
+      Printexc.print_backtrace(stderr);
     }
   );
 let pending = ref(false);

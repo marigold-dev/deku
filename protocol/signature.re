@@ -30,6 +30,10 @@ let signature_to_b58check = t => {
 let signature_to_b58check_by_address = t => {
   (t.public_key, signature_to_b58check(t));
 };
+let signature_to_tezos_signature_by_address = t => (
+  t.public_key,
+  Tezos_interop.Signature.of_raw_string(`Ed25519(t.signature)),
+);
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
