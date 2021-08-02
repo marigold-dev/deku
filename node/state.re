@@ -64,7 +64,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let signatures_map =
     signatures
     |> Signatures.to_list
-    |> List.map(Signature.signature_to_b58check_by_address)
+    |> List.map(Signature.signature_to_tezos_signature_by_address)
     |> List.to_seq
     |> Address_map.of_seq;
 
@@ -81,10 +81,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     |> List.map(address =>
          (
            Tezos_interop.Key.Ed25519(address),
-           Address_map.find_opt(address, signatures_map)
-           |> Option.map(signature =>
-                Tezos_interop.Signature.of_raw_string(`Ed25519(signature))
-              ),
+           Address_map.find_opt(address, signatures_map),
          )
        );
 
