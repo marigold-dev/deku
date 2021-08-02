@@ -301,6 +301,7 @@ let produce_block = (wallet_file, state_bin) => {
         {block, signature},
       )
     );
+  Format.printf("block.hash: %s\n%!", BLAKE2B.to_string(block.hash));
   Lwt.return(`Ok());
 };
 
