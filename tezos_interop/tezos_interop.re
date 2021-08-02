@@ -438,8 +438,13 @@ module Run_contract = {
     };
   };
 
-  // TODO: probably we should add a ppx to load this file in the bundle
-  let file = Sys.executable_name ++ "/../tezos_interop/run_entrypoint.js";
+  // TODO: this leaks the file as it needs to be removed when the app closes
+  let file = {
+    let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
+    let.await () = Lwt_io.write(oc, [%blob "run_entrypoint.bundle.js"]);
+    await(file);
+  };
+  let file = Lwt_main.run(file);
   let run = (~context, ~destination, ~entrypoint, ~payload) => {
     let input = {
       rpc_node: context.Context.rpc_node |> Uri.to_string,
@@ -546,7 +551,7 @@ module Consensus = {
       Run_contract.run(
         ~context,
         ~destination=context.Context.consensus_contract,
-        ~entrypoint="default",
+        ~entrypoint="update_root_hash",
         ~payload=Payload.to_yojson(payload),
       );
     await();

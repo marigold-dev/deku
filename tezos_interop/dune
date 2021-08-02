@@ -2,4 +2,13 @@
  (name tezos_interop)
  (libraries helpers lwt.unix mirage-crypto-ec tezos-micheline)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps ppx_deriving_yojson ppx_blob))
+ (preprocessor_deps
+  (file ./run_entrypoint.bundle.js)))
+
+(rule
+ (deps ./webpack.config.js ./run_entrypoint.js)
+ (targets ./run_entrypoint.bundle.js)
+ (mode fallback)
+ (action
+  (run webpack --env=%{profile})))
