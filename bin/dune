@@ -1,5 +1,6 @@
 (executable
  (name http_server)
+ (public_name http_server)
  (libraries opium files node mirage-crypto-ec mirage-crypto-rng.unix helpers)
  (modules Http_server)
  (preprocess
