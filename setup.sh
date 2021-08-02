@@ -18,7 +18,6 @@ do
     mkdir -p "$data_directory/$validator"
     esy x sidecli generate-identity | jq . > "$data_directory/$validator/identity.json"
     validator_secrets[$i]=$(jq -r .public_key "$data_directory/$validator/identity.json")
-    
 done
 
 
@@ -49,6 +48,18 @@ cat <<EOF
 }
 EOF
 
-    # esy x sidecli setup-node "$data_directory/$validator" \
-    # 	--secret=$(jq -r .secret_key "$data_directory/$validator/identity.json") \
-    # 	--tezos_consensus_contract "KT1Q4G47qEuuo4U9QuXJ3WMVHBv3cwaFDPzG"
+# "KT1Q4G47qEuuo4U9QuXJ3WMVHBv3cwaFDPzG"
+read -p "Enter address of the deployed contract: " contract_address
+read -p "Enter secret key of wallet from https://faucet.tzalpha.net: " test_net_wallet_secret
+
+
+for i in ${validators[@]}
+do
+    uri=$(jq -r .uri "$data_directory/$validator/identity.json")
+    esy x sidecli setup-node "$data_directory/$validator" \
+	--secret=$(jq -r .secret_key "$data_directory/$validator/identity.json") \
+	--tezos_consensus_contract $contract_address \
+	--tezos_rpc_node https://testnet-tezos.giganode.io \
+	--tezos_secret $test_net_wallet_secret \
+	--uri=$uri
+done
