@@ -323,6 +323,40 @@ let produce_block = {
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
 };
 
+let info_gen_identity = {
+  let doc = "Create a public-private key pair for a validator";
+  Term.info(
+    "generate-identity",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let gen_identity = {
+  let f = () => {
+    open Mirage_crypto_ec;
+    let (sk, pk) = Ed25519.generate();
+    module Identity = {
+      [@deriving yojson]
+      type t = {
+        secret_key: string,
+        public_key: string,
+      };
+    };
+    open Tezos_interop;
+    print_endline(
+      Identity.to_yojson({
+        secret_key: Secret.(Ed25519(sk) |> to_string),
+        public_key: Key.(Ed25519(pk) |> to_string) //"edpk" ++ (pk |> Ed25519.pub_to_cstruct |> Cstruct.to_string |> Helpers.to_hex),
+      })
+      |> Yojson.Safe.to_string,
+    );
+  };
+  Term.(const(f) $ const());
+};
+
 // gen credentials
 let info_gen_credentials = {
   let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
@@ -334,6 +368,7 @@ let info_gen_credentials = {
     ~man,
   );
 };
+
 let gen_credentials = {
   let make_identity_file = (file, index) => {
     open Mirage_crypto_ec;
@@ -616,6 +651,7 @@ let () = {
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
+      (gen_identity, info_gen_identity),
       (inject_genesis, info_inject_genesis),
       (setup_node, info_setup_node),
     ],
