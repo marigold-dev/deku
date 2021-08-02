@@ -517,7 +517,6 @@ let setup_node = {
     Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
-  // TODO: figure out how to make the rest of these required named arguments so people don't get the order confused.
   let secret = {
     let docv = "secret";
     let doc = "The secret key used by the validator.";
