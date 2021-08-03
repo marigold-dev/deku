@@ -2,18 +2,6 @@ open Helpers;
 
 module Base58 = Base58;
 
-module Ed25519: {
-  type t = Mirage_crypto_ec.Ed25519.pub_;
-  let of_string: (~alphabet: Base58.Alphabet.t=?, string) => option(t);
-  let to_string: (~alphabet: Base58.Alphabet.t=?, t) => string;
-
-  module Secret: {
-    type t = Mirage_crypto_ec.Ed25519.priv;
-    let of_string: (~alphabet: Base58.Alphabet.t=?, string) => option(t);
-    let to_string: (~alphabet: Base58.Alphabet.t=?, t) => string;
-  };
-};
-
 module Key: {
   type t =
     | Ed25519(Mirage_crypto_ec.Ed25519.pub_);

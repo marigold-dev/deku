@@ -145,10 +145,3 @@ let with_yojson_string = (from, to_) => (
     [%of_yojson: string](json) |> Result.bind(_, from),
   (t) => (`String(to_(t)): Yojson.Safe.t),
 );
-
-let to_hex = str => {
-  let `Hex(str) = Hex.of_string(str);
-  str;
-};
-
-let of_hex = hex => Hex.to_string(`Hex(hex));
