@@ -1,6 +1,6 @@
 # Marigold Sidechain
 
-A sidechain to Tezos by Marigold focussed on higher throughput.
+A sidechain to Tezos by Marigold focused on higher throughput.
 
 ## Getting started
 
