@@ -68,21 +68,6 @@ let edsk_secret_key = {
   Arg.(conv((parser, printer)));
 };
 
-let ed25519_key = {
-  open Tezos_interop;
-  let parser = key => {
-    key
-    |> Ed25519.Secret.of_string
-    |> Option.to_result(
-         ~none=`Msg("Expected Ed25519 secret key (base58 encoded)"),
-       );
-  };
-  let printer = (ppf, key) => {
-    Format.fprintf(ppf, "%s", Ed25519.Secret.to_string(key));
-  };
-  Arg.(conv((parser, printer)));
-};
-
 let uri = {
   // TODO: check that uri is valid
   let parser = uri => Ok(uri |> Uri.of_string);
