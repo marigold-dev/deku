@@ -103,6 +103,8 @@ The secret key can be found in `~/.tezos-client/secret_keys`
 esy x http_server $data_directory
 ```
 
+There's a `.tmuxinator.yml` that can be used to open pre-configured tmux screen with multiple instances of the node running, for convenience.
+
 ##### Testing the node - producing a block
 
   To see the chain in action, blocks can be produced by hand with the following steps
