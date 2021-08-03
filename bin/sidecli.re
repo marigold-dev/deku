@@ -489,11 +489,11 @@ let setup_node =
   let (interop_context, interop_context_path) = (
     Tezos_interop.Context.{
       rpc_node: tezos_rpc_node,
-      secret: Tezos_interop.Secret.Ed25519(tezos_secret),
+      secret: tezos_secret,
       consensus_contract: tezos_consensus_contract,
       required_confirmations: 10,
     },
-    "interop_context.json" |> in_folder,
+    "tezos.json" |> in_folder,
   );
 
   let create_files = () => {
@@ -542,12 +542,6 @@ let setup_node = {
     );
   };
 
-  let self_uri = {
-    let docv = "self_uri";
-    let doc = "The uri that other nodes should use to connect to this node.";
-    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
-  };
-
   let tezos_node_uri = {
     let docv = "tezos_node_uri";
     let doc = "The uri of the tezos node.";
@@ -563,7 +557,7 @@ let setup_node = {
     let doc = "The Tezos secret key.";
     Arg.(
       required
-      & opt(some(ed25519_key), None)
+      & opt(some(edsk_secret_key), None)
       & info(["tezos_secret"], ~doc, ~docv)
     );
   };

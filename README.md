@@ -84,6 +84,19 @@ To configure and setup the node,
 	--uri=$uri
 ```
 
+**Obtaining the `tezos_secret` key
+This option takes the private key of the wallet to (TODO: do what?). While working with the test network, one needs to import the `secret` from the activate code JSON downloaded from [faucet.tzalpha.net](https://faucet.tzalpha.net) and activate the address.
+
+```sh
+# To import the keys obtained from faucet
+tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io import keys from mnemonic <any alias here>
+
+# To activate the address
+tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io activate account alice with "json-file-downloaded-from-faucet.json"
+```
+
+The secret key can be found in `~/.tezos-client/secret_keys`
+
 4. Run the node
 
 ```sh
