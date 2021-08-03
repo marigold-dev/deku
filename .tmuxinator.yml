@@ -22,7 +22,7 @@ root: ./data
 # on_project_stop: command
 
 # Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
-pre_window: esy shell
+# pre_window: esy shell
 
 # Pass command line options to tmux. Useful for specifying a different tmux.conf.
 # tmux_options: -f ~/.tmux.mac.conf
@@ -49,9 +49,8 @@ windows:
       # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
       # synchronize: after
       panes:
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 0
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 1
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 2
-        - sleep 1 && $cur__target_dir/default/bin/http_server.exe 3
-        - $cur__target_dir/default/bin/sidecli.exe make-credentials && sleep 3 && $cur__target_dir/default/bin/sidecli.exe inject-genesis
+        - sleep 1 && esy x http_server 0
+        - sleep 2 && esy x http_server 1
+        - sleep 3 && esy x http_server 2
+        - sleep 4 && esy x sidecli inject-genesis
 
