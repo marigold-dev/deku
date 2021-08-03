@@ -349,28 +349,36 @@ let info_gen_identity = {
   );
 };
 
+let self_uri = {
+  let docv = "self_uri";
+  let doc = "The uri that other nodes should use to connect to this node.";
+  Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+};
+
 let gen_identity = {
-  let f = () => {
-    open Mirage_crypto_ec;
-    let (sk, pk) = Ed25519.generate();
+  let f = uri => {
+    open Tezos_interop;
+    let (sk, pk) = Mirage_crypto_ec.Ed25519.generate();
     module Identity = {
       [@deriving yojson]
       type t = {
         secret_key: string,
         public_key: string,
+        uri: Uri.t,
       };
     };
-    Tezos_interop.(
-      print_endline(
-        Identity.to_yojson({
-          secret_key: Secret.(Ed25519(sk) |> to_string),
-          public_key: Key.(Ed25519(pk) |> to_string) //"edpk" ++ (pk |> Ed25519.pub_to_cstruct |> Cstruct.to_string |> Helpers.to_hex),
-        })
-        |> Yojson.Safe.to_string,
-      )
+    let secret_key = Secret.(Ed25519(sk) |> to_string);
+    let public_key = Key.(Ed25519(pk) |> to_string);
+    print_endline(
+      Identity.to_yojson({
+        secret_key,
+        public_key,
+        uri,
+      })
+      |> Yojson.Safe.to_string,
     );
   };
-  Term.(const(f) $ const());
+  Term.(const(f) $ self_uri);
 };
 
 // gen credentials
@@ -539,11 +547,11 @@ let setup_node =
   let (interop_context, interop_context_path) = (
     Tezos_interop.Context.{
       rpc_node: tezos_rpc_node,
-      secret: Tezos_interop.Secret.Ed25519(tezos_secret),
+      secret: tezos_secret,
       consensus_contract: tezos_consensus_contract,
       required_confirmations: 10,
     },
-    "interop_context.json" |> in_folder,
+    "tezos.json" |> in_folder,
   );
 
   let create_files = () => {
@@ -592,12 +600,6 @@ let setup_node = {
     );
   };
 
-  let self_uri = {
-    let docv = "self_uri";
-    let doc = "The uri that other nodes should use to connect to this node.";
-    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
-  };
-
   let tezos_node_uri = {
     let docv = "tezos_node_uri";
     let doc = "The uri of the tezos node.";
@@ -613,7 +615,7 @@ let setup_node = {
     let doc = "The Tezos secret key.";
     Arg.(
       required
-      & opt(some(ed25519_key), None)
+      & opt(some(edsk_secret_key), None)
       & info(["tezos_secret"], ~doc, ~docv)
     );
   };

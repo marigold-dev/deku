@@ -15,9 +15,9 @@ declare -a validator_secrets validator_secrets_quoted validator_secrets_quoted_a
 echo "Creating validator identities. Use them to create the contract on Florencenet."
 for i in ${validators[@]}
 do
-    mkdir -p "$data_directory/$validator"
-    esy x sidecli generate-identity | jq . > "$data_directory/$validator/identity.json"
-    validator_secrets[$i]=$(jq -r .public_key "$data_directory/$validator/identity.json")
+    mkdir -p "$data_directory/tmp/$i"
+    esy x sidecli generate-identity --uri "http://localhost:444$i" | jq . > "$data_directory/tmp/$i/identity.json"
+    validator_secrets[$i]=$(jq -r .public_key "$data_directory/tmp/$i/identity.json")
 done
 
 
@@ -50,16 +50,19 @@ EOF
 
 # "KT1Q4G47qEuuo4U9QuXJ3WMVHBv3cwaFDPzG"
 read -p "Enter address of the deployed contract: " contract_address
-read -p "Enter secret key of wallet from https://faucet.tzalpha.net: " test_net_wallet_secret
+read -p "Download wallet from https://faucet.tzalpha.net and enter the path to the json file: " account_json_path
 
+tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io import keys from mnemonic alice
+
+tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io activate account alice with "$account_json_path"
 
 for i in ${validators[@]}
 do
-    uri=$(jq -r .uri "$data_directory/$validator/identity.json")
-    esy x sidecli setup-node "$data_directory/$validator" \
-	--secret=$(jq -r .secret_key "$data_directory/$validator/identity.json") \
+    uri=$(jq -r .uri "$data_directory/tmp/$i/identity.json")
+    esy x sidecli setup-node "$data_directory/$i" \
+	--secret=$(jq -r .secret_key "$data_directory/tmp/$i/identity.json") \
 	--tezos_consensus_contract $contract_address \
 	--tezos_rpc_node https://testnet-tezos.giganode.io \
-	--tezos_secret $test_net_wallet_secret \
-	--uri=$uri
+	--tezos_secret=$(jq -c '.[] | select(.name | contains("alice"))' ~/.tezos-client/secret_keys | jq -r .value | sed s/unencrypted://) \
+	--uri=$uri 
 done
