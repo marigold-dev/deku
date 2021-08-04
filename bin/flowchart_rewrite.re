@@ -40,7 +40,7 @@ module Received_block {
 }
 
 
-// ... etc. for all other parts of the flowchart
+// ... etc. for all other parts of the flowchart, including definitions for what to do when encountering `Should_add_to_pool(block) etc.
 
 
 type state = [Received_signature.state | Received_block.state];
@@ -48,7 +48,7 @@ type state = [Received_signature.state | Received_block.state];
 
 let advance: state => monad(state) = (state) => switch (state) {
   // in here is a giant bit of code that advances the state machine one step, by calling the functions defined above. 
-  // it could be automatically generated in the future
+  // it could be automatically generated in the future but writing it by hand wouldn't be so bad
 };
 
 // this just repeatedly calls advance until a function returns `Done
