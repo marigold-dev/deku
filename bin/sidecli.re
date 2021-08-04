@@ -342,6 +342,45 @@ let produce_block = {
   Term.(lwt_ret(const_log(produce_block) $ key_wallet $ state_bin));
 };
 
+let info_gen_identity = {
+  let doc = "Create a public-private key pair for a validator";
+  Term.info(
+    "generate-identity",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let self_uri = {
+  let docv = "self_uri";
+  let doc = "The uri that other nodes should use to connect to this node.";
+  Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+};
+
+let gen_identity = {
+  let f = uri => {
+    open Tezos_interop;
+    let (sk, pk) = Mirage_crypto_ec.Ed25519.generate();
+    module Identity = {
+      [@deriving yojson]
+      type t = {
+        secret_key: string,
+        public_key: string,
+        uri: Uri.t,
+      };
+    };
+    let secret_key = Secret.(Ed25519(sk) |> to_string);
+    let public_key = Key.(Ed25519(pk) |> to_string);
+    print_endline(
+      Identity.to_yojson({secret_key, public_key, uri})
+      |> Yojson.Safe.to_string,
+    );
+  };
+  Term.(const(f) $ self_uri);
+};
+
 // gen credentials
 let info_gen_credentials = {
   let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
@@ -353,6 +392,7 @@ let info_gen_credentials = {
     ~man,
   );
 };
+
 let gen_credentials = {
   let make_identity_file = (file, index) => {
     open Mirage_crypto_ec;
@@ -521,7 +561,7 @@ let setup_node =
       consensus_contract: tezos_consensus_contract,
       required_confirmations: 10,
     },
-    "interop_context.json" |> in_folder,
+    "tezos.json" |> in_folder,
   );
 
   let create_files = () => {
@@ -560,7 +600,6 @@ let setup_node = {
     Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
-  // TODO: figure out how to make the rest of these required named arguments so people don't get the order confused.
   let secret = {
     let docv = "secret";
     let doc = "The secret key used by the validator.";
@@ -569,12 +608,6 @@ let setup_node = {
       & opt(some(edsk_secret_key), None)
       & info(["secret"], ~doc, ~docv)
     );
-  };
-
-  let self_uri = {
-    let docv = "self_uri";
-    let doc = "The uri that other nodes should use to connect to this node.";
-    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
   };
 
   let tezos_node_uri = {
@@ -646,6 +679,7 @@ let main = () => {
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
+      (gen_identity, info_gen_identity),
       (inject_genesis, info_inject_genesis),
       (setup_node, info_setup_node),
     ],
