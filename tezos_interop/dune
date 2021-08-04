@@ -1,6 +1,6 @@
 (library
  (name tezos_interop)
- (libraries helpers lwt.unix mirage-crypto-ec tezos-micheline)
+ (libraries helpers lwt.unix mirage-crypto-ec tezos-micheline logs logs.lwt)
  (preprocess
   (pps ppx_deriving_yojson ppx_blob))
  (preprocessor_deps

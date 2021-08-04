@@ -6,6 +6,19 @@ open Cmdliner;
 
 Printexc.record_backtrace(true);
 
+let setup_log = (style_renderer, level) => {
+  switch (style_renderer) {
+  | Some(style_renderer) => Fmt_tty.setup_std_outputs(~style_renderer, ())
+  | None => Fmt_tty.setup_std_outputs()
+  };
+
+  Logs.set_level(level);
+  Logs.set_reporter(Logs_fmt.reporter());
+  ();
+};
+let setup_log =
+  Term.(const(setup_log) $ Fmt_cli.style_renderer() $ Logs_cli.level());
+
 let man = [
   `S(Manpage.s_bugs),
   `P("Email bug reports to <contact@marigold.dev>."),
@@ -34,6 +47,8 @@ let exits =
   @ Term.[exit_info(1, ~doc="expected failure (might not be a bug)")];
 
 let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
+
+let const_log = p => Term.(const(() => p) $ setup_log);
 
 // Arguments
 // ==========
@@ -138,7 +153,7 @@ let create_wallet = () => {
   await(`Ok());
 };
 
-let create_wallet = Term.(lwt_ret(const(create_wallet) $ const()));
+let create_wallet = Term.(lwt_ret(const_log(create_wallet) $ const()));
 
 // create-transaction
 
@@ -226,7 +241,11 @@ let create_transaction = {
 
   Term.(
     lwt_ret(
-      const(create_transaction) $ address_from $ address_to $ amount $ ticket,
+      const_log(create_transaction)
+      $ address_from
+      $ address_to
+      $ amount
+      $ ticket,
     )
   );
 };
@@ -270,7 +289,7 @@ let sign_block_term = {
     Arg.(required & pos(1, some(hash), None) & info([], ~doc));
   };
 
-  Term.(lwt_ret(const(sign_block) $ key_wallet $ block_hash));
+  Term.(lwt_ret(const_log(sign_block) $ key_wallet $ block_hash));
 };
 
 // produce-block
@@ -320,7 +339,7 @@ let produce_block = {
     );
   };
 
-  Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
+  Term.(lwt_ret(const_log(produce_block) $ key_wallet $ state_bin));
 };
 
 // gen credentials
@@ -371,7 +390,7 @@ let gen_credentials = {
 
   Term.(
     lwt_ret(
-      const(() => {
+      const_log(() => {
         let.await validators =
           Lwt_list.map_p(make_identity_file("identity.json"), to_make);
         let.await () =
@@ -412,22 +431,32 @@ let inject_genesis = {
         ~main_chain_ops=[],
         ~side_chain_ops=[],
       );
-    Printf.printf(
-      "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
-      BLAKE2B.to_string(block.hash),
-      BLAKE2B.to_string(block.state_root_hash),
-      block.block_height,
-      state.validators
-      |> Validators.to_list
-      |> List.map(validator =>
-           Tezos_interop.Key.Ed25519(validator.Validators.address)
-         )
-      |> List.map(Tezos_interop.Key.to_string)
-      |> String.concat(","),
-    );
+    let.await () =
+      Logs_lwt.info(m =>
+        m(
+          "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
+          BLAKE2B.to_string(block.hash),
+          BLAKE2B.to_string(block.state_root_hash),
+          block.block_height,
+          state.validators
+          |> Validators.to_list
+          |> List.map(validator =>
+               Tezos_interop.Key.Ed25519(validator.Validators.address)
+             )
+          |> List.map(Tezos_interop.Key.to_string)
+          |> String.concat(","),
+        )
+      );
 
     let signature = Block.sign(~key=first.key, block);
     let.await validators_uris = validators_uris();
+    let.await () =
+      Logs_lwt.info(m =>
+        m(
+          "Broadcasting to validators: %s",
+          Yojson.Safe.to_string([%to_yojson: list(Uri.t)](validators_uris)),
+        )
+      );
     let.await () =
       Networking.(
         broadcast_to_list(
@@ -441,7 +470,7 @@ let inject_genesis = {
 
   Term.(
     lwt_ret(
-      const(() => {
+      const_log(() => {
         let.await validators = validators();
         let.await () = make_new_block(validators);
         Lwt.return(`Ok());
@@ -580,7 +609,7 @@ let setup_node = {
 
   Term.(
     lwt_ret(
-      const(setup_node)
+      const_log(setup_node)
       $ folder_dest
       $ secret
       $ self_uri
@@ -605,8 +634,9 @@ let show_help = {
 
 // Run the CLI
 
-let () = {
+let main = () => {
   Mirage_crypto_rng_unix.initialize();
+
   Term.exit @@
   Term.eval_choice(
     show_help,
@@ -621,3 +651,5 @@ let () = {
     ],
   );
 };
+
+let () = main();

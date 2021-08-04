@@ -15,6 +15,9 @@ open Protocol;
 open Node;
 open Networking;
 
+Logs.set_reporter(Logs_fmt.reporter());
+Logs.set_level(Some(Logs.Debug));
+
 let ignore_some_errors =
   fun
   | Error(#Flows.ignore) => Ok()
@@ -37,6 +40,13 @@ let handle_request =
       let.await json = Request.to_json(request);
       let response = {
         let.ok json = Option.to_result(~none=`Not_a_json, json);
+        Logs.debug(m =>
+          m(
+            "Received request to %s containing %s",
+            E.path,
+            Yojson.Safe.to_string(json),
+          )
+        );
         let.ok request =
           E.request_of_yojson(json)
           |> Result.map_error(err => `Not_a_valid_request(err));
@@ -180,7 +190,17 @@ let handle_receive_operation_gossip =
   );
 
 let node = {
-  let folder = Sys.argv[1];
+  let folder =
+    switch (Sys.argv) {
+    | [|_, folder|] => folder
+    | [||] =>
+      Logs.err(m => m("Expected one argument, got none")); // TODO: should this be Logs_lwt?
+      assert(false);
+    | _ =>
+      Logs.err(m => m("Expected one argument, got more"));
+      assert(false);
+    };
+
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
   let.await validators =
     Files.Validators.read(~file=folder ++ "/validators.json");
@@ -228,9 +248,12 @@ let node = {
 let node = node |> Lwt_main.run;
 let () = Node.Server.start(~initial=node);
 
+let port = Node.Server.get_port() |> Option.get;
+Logs.app(e => e("Running on port %d\n", port));
+
 let _server =
   App.empty
-  |> App.port(Node.Server.get_port() |> Option.get)
+  |> App.port(port)
   |> handle_block_level
   |> handle_received_block_and_signature
   |> handle_received_signature

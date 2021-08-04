@@ -39,7 +39,8 @@
     "@taquito/signer": "^9.0.1",
     "webpack": "^5.47.1",
     "webpack-cli": "^4.7.1",
-    "@opam/ppx_blob": "*"
+    "@opam/ppx_blob": "*",
+    "@opam/logs": "*"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
