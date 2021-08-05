@@ -624,6 +624,23 @@ let setup_node = {
   );
 };
 
+// Create edsk secret
+let info_generate_edsk = {
+  let doc = "Generate a random edsk secret key.";
+  Term.info("generate-edsk", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let generate_edsk = () => {
+  let (priv, pub_) = Wallet.make_wallet();
+  let edsk = Tezos_interop.Secret.Ed25519(priv);
+  print_endline(Tezos_interop.Secret.to_string(edsk));
+  Lwt.return(`Ok());
+};
+
+let generate_edsk = {
+  Term.(lwt_ret(const(generate_edsk) $ const()));
+};
+
 // Term that just shows the help command, to use when no arguments are passed
 
 let show_help = {
@@ -652,6 +669,7 @@ let () = {
       (gen_identity, info_gen_identity),
       (inject_genesis, info_inject_genesis),
       (setup_node, info_setup_node),
+      (generate_edsk, info_generate_edsk),
     ],
   );
 };
