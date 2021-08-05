@@ -631,7 +631,7 @@ let info_generate_edsk = {
 };
 
 let generate_edsk = () => {
-  let (priv, pub_) = Wallet.make_wallet();
+  let (priv, _) = Wallet.make_wallet();
   let edsk = Tezos_interop.Secret.Ed25519(priv);
   print_endline(Tezos_interop.Secret.to_string(edsk));
   Lwt.return(`Ok());
