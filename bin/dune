@@ -39,3 +39,10 @@
  (libraries lwt lwt.unix node)
  (preprocess
   (pps ppx_deriving_yojson)))
+
+(library
+ (name flowchart_rewrite)
+ (modules Flowchart_rewrite)
+ (libraries lwt lwt.unix node)
+ (preprocess
+  (pps ppx_deriving_yojson)))
