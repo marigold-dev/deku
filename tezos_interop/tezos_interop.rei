@@ -51,7 +51,10 @@ module Contract_hash: {
 module Address: {
   type t =
     | Implicit(Key_hash.t)
-    | Originated(Contract_hash.t);
+    | Originated({
+        contract: Contract_hash.t,
+        entrypoint: option(string),
+      });
 
   let to_string: t => string;
   let of_string: string => option(t);

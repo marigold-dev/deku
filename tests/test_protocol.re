@@ -5,10 +5,15 @@ open Protocol;
 describe("protocol state", ({test, _}) => {
   let ticket = {
     open Tezos_interop;
-    let key_hash =
-      Key_hash.of_key(Key.Ed25519(Protocol.Address.genesis_address));
-    let ticketer = Address.Implicit(key_hash);
-    Ticket.{ticketer, data: Bytes.of_string("")};
+    let random_hash =
+      Mirage_crypto_rng.generate(20)
+      |> Cstruct.to_string
+      |> Helpers.BLAKE2B_20.of_raw_string
+      |> Option.get;
+    Ticket.{
+      ticketer: Originated({contract: random_hash, entrypoint: None}),
+      data: Bytes.of_string(""),
+    };
   };
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = Wallet.make_wallet();
