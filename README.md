@@ -64,6 +64,7 @@ To configure and setup the node,
     current_block_height = 0;
     current_state_hash = 0x;
     current_handles_hash = 0x;
+    // https://ligolang.org/docs/advanced/timestamps-addresses/#keys
     current_validators = ([("edpk...": key)]: validators);
   };
   vault = {
