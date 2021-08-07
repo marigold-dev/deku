@@ -383,74 +383,6 @@ let gen_credentials = {
   );
 };
 
-// inject genesis block
-let info_inject_genesis = {
-  let doc = "Injects the genesis block";
-  Term.info("inject-genesis", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
-};
-
-let inject_genesis = {
-  let make_new_block = validators => {
-    let first = List.hd(validators);
-    let state = Protocol.make(~initial_block=Block.genesis);
-    let.await state = {
-      let.await validators = Files.Validators.read(~file="0/validators.json");
-      Lwt.return({
-        ...state,
-        validators:
-          List.fold_right(
-            ((address, _)) => Validators.add({address: address}),
-            validators,
-            Validators.empty,
-          ),
-      });
-    };
-    let block =
-      Block.produce(
-        ~state,
-        ~author=first.t,
-        ~main_chain_ops=[],
-        ~side_chain_ops=[],
-      );
-    Printf.printf(
-      "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
-      BLAKE2B.to_string(block.hash),
-      BLAKE2B.to_string(block.state_root_hash),
-      block.block_height,
-      state.validators
-      |> Validators.to_list
-      |> List.map(validator =>
-           Tezos_interop.Key.Ed25519(validator.Validators.address)
-         )
-      |> List.map(Tezos_interop.Key.to_string)
-      |> String.concat(","),
-    );
-
-    let signature = Block.sign(~key=first.key, block);
-    let.await validators_uris = validators_uris();
-    let.await () =
-      Networking.(
-        broadcast_to_list(
-          (module Block_and_signature_spec),
-          validators_uris,
-          {block, signature},
-        )
-      );
-    Lwt.return();
-  };
-
-  Term.(
-    lwt_ret(
-      const(() => {
-        let.await validators = validators();
-        let.await () = make_new_block(validators);
-        Lwt.return(`Ok());
-      })
-      $ const(),
-    )
-  );
-};
-
 let ensure_folder = folder => {
   let.await exists = Lwt_unix.file_exists(folder);
   if (exists) {
@@ -664,7 +596,6 @@ let () = {
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
       (setup_identity, info_setup_identity),
-      (inject_genesis, info_inject_genesis),
       (setup_node, info_setup_node),
     ],
   );
