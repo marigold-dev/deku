@@ -430,6 +430,73 @@ let setup_identity = {
   Term.(lwt_ret(const(setup_identity) $ folder_dest $ self_uri));
 };
 
+let info_setup_tezos = {
+  let doc = "Setup Tezos identity";
+  Term.info("setup-tezos", ~version="%%VERSION%%", ~doc, ~exits, ~man);
+};
+let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
+  let.await () = ensure_folder(folder);
+
+  let file = folder ++ "/tezos.json";
+  let context =
+    Tezos_interop.Context.{
+      rpc_node,
+      secret,
+      consensus_contract,
+      required_confirmations: 10,
+    };
+  let.await () = Files.Interop_context.write(context, ~file);
+
+  await(`Ok());
+};
+let setup_tezos = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  let tezos_node_uri = {
+    let docv = "tezos_node_uri";
+    let doc = "The uri of the tezos node.";
+    Arg.(
+      required
+      & opt(some(uri), None)
+      & info(["tezos_rpc_node"], ~doc, ~docv)
+    );
+  };
+
+  let tezos_secret = {
+    let docv = "tezos_secret";
+    let doc = "The Tezos secret key.";
+    Arg.(
+      required
+      & opt(some(edsk_secret_key), None)
+      & info(["tezos_secret"], ~doc, ~docv)
+    );
+  };
+
+  let tezos_consensus_contract_address = {
+    let docv = "tezos_consensus_contract_address";
+    let doc = "The address of the Tezos consensus contract.";
+    Arg.(
+      required
+      & opt(some(address_tezos_interop), None)
+      & info(["tezos_consensus_contract"], ~doc, ~docv)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(setup_tezos)
+      $ folder_dest
+      $ tezos_node_uri
+      $ tezos_secret
+      $ tezos_consensus_contract_address,
+    )
+  );
+};
+
 // Create files needed for the node's operation
 let info_setup_node = {
   let doc = "Creates the files needed to setup a node.";
@@ -596,6 +663,7 @@ let () = {
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
       (setup_identity, info_setup_identity),
+      (setup_tezos, info_setup_tezos),
       (setup_node, info_setup_node),
     ],
   );
