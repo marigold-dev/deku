@@ -451,6 +451,53 @@ let inject_genesis = {
   );
 };
 
+let ensure_folder = folder => {
+  let.await exists = Lwt_unix.file_exists(folder);
+  if (exists) {
+    let.await stat = Lwt_unix.stat(folder);
+    // TODO: check permissions
+    if (stat.st_kind == Lwt_unix.S_DIR) {
+      await();
+    } else {
+      raise(Invalid_argument(folder ++ " is not a folder"));
+    };
+  } else {
+    Lwt_unix.mkdir(folder, 0o700);
+  };
+};
+let setup_identity = (folder, uri) => {
+  open Mirage_crypto_ec;
+
+  let.await () = ensure_folder(folder);
+
+  let file = folder ++ "/identity.json";
+  let identity = {
+    let (key, t) = Ed25519.generate();
+    {uri, t, key};
+  };
+  let.await () = Files.Identity.write(identity, ~file);
+  await(`Ok());
+};
+let info_setup_identity = {
+  let doc = "Create a validator identity";
+  Term.info("setup-identity", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let setup_identity = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  let self_uri = {
+    let docv = "self_uri";
+    let doc = "The uri that other nodes should use to connect to this node.";
+    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+  };
+
+  Term.(lwt_ret(const(setup_identity) $ folder_dest $ self_uri));
+};
+
 // Create files needed for the node's operation
 let info_setup_node = {
   let doc = "Creates the files needed to setup a node.";
@@ -616,6 +663,7 @@ let () = {
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (gen_credentials, info_gen_credentials),
+      (setup_identity, info_setup_identity),
       (inject_genesis, info_inject_genesis),
       (setup_node, info_setup_node),
     ],
