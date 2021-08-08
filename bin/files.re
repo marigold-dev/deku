@@ -71,3 +71,10 @@ module Interop_context = {
   let read = read_json(of_yojson);
   let write = write_json(to_yojson);
 };
+
+module State_bin = {
+  let read = (~file) =>
+    Lwt_io.with_file(~mode=Input, file, Lwt_io.read_value);
+  let write = (protocol, ~file) =>
+    Lwt_io.with_file(~mode=Output, file, Lwt_io.write_value(_, protocol));
+};

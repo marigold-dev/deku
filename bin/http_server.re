@@ -234,14 +234,12 @@ let node = {
   };
   let state_bin = folder ++ "/state.bin";
   let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let protocol =
+  let.await protocol =
     if (state_bin_exists) {
-      let ic = open_in_bin(state_bin);
-      let protocol = Marshal.from_channel(ic);
-      close_in(ic);
-      protocol;
+      Files.State_bin.read(~file=state_bin);
     } else {
-      node.protocol;
+      let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
+      await(node.protocol);
     };
   await({...node, protocol});
 };
