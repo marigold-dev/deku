@@ -12,13 +12,15 @@ describe("ledger", ({test, _}) => {
       |> Cstruct.to_string
       |> BLAKE2B_20.of_raw_string
       |> Option.get;
-    let ticketer = Address.Originated(random_hash);
     let data =
       switch (data) {
       | Some(data) => data
       | None => Mirage_crypto_rng.generate(256) |> Cstruct.to_bytes
       };
-    Ticket.{ticketer, data};
+    Ticket.{
+      ticketer: Originated({contract: random_hash, entrypoint: None}),
+      data,
+    };
   };
   let make_wallet = () => {
     open Mirage_crypto_ec;

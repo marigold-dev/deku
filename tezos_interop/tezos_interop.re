@@ -210,13 +210,16 @@ module Contract_hash = {
   let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
 };
+
 module Address = {
-  // TODO: there is also contract_hash with entrypoint
   type t =
     | Implicit(Key_hash.t)
-    | Originated(Contract_hash.t);
+    | Originated({
+        contract: Contract_hash.t,
+        entrypoint: option(string),
+      });
 
-  let encoding =
+  let contract_encoding =
     Data_encoding.(
       def(
         "contract_id",
@@ -242,10 +245,10 @@ module Address = {
             Fixed.add_padding(Contract_hash.encoding, 1),
             ~title="Originated",
             fun
-            | Originated(k) => Some(k)
+            | Originated({contract, _}) => Some(contract)
             | _ => None,
-            k =>
-            Originated(k)
+            contract =>
+            Originated({contract, entrypoint: None})
           ),
         ],
       )
@@ -254,18 +257,49 @@ module Address = {
   let to_string =
     fun
     | Implicit(key_hash) => Key_hash.to_string(key_hash)
-    | Originated(contract_hash) => Contract_hash.to_string(contract_hash);
+    | Originated({contract, entrypoint: None}) =>
+      Contract_hash.to_string(contract)
+    | Originated({contract, entrypoint: Some(entrypoint)}) =>
+      Contract_hash.to_string(contract) ++ "%" ++ entrypoint;
   let of_string = {
     let implicit = string => {
       let.some implicit = Key_hash.of_string(string);
       Some(Implicit(implicit));
     };
     let originated = string => {
-      let.some originated = Contract_hash.of_string(string);
-      Some(Originated(originated));
+      let.some (contract, entrypoint) =
+        switch (String.split_on_char('%', string)) {
+        | [contract] => Some((contract, None))
+        | [contract, entrypoint]
+            when String.length(entrypoint) < 32 && entrypoint != "default" =>
+          Some((contract, Some(entrypoint)))
+        | _ => None
+        };
+      let.some contract = Contract_hash.of_string(contract);
+      Some(Originated({contract, entrypoint}));
     };
     try_decode_list([implicit, originated]);
   };
+  let encoding =
+    Data_encoding.(
+      conv(
+        t =>
+          switch (t) {
+          | Implicit(_) as t => (t, "")
+          | Originated({contract: _, entrypoint}) as t =>
+            let entrypoint = Option.value(~default="", entrypoint);
+            (t, entrypoint);
+          },
+        fun
+        // TODO: should we just discard entrypoint of implicit?
+        | (Implicit(_) as t, _) => t
+        | (Originated({contract, _}), "" | "default") =>
+          Originated({contract, entrypoint: None})
+        | (Originated({contract, _}), entrypoint) =>
+          Originated({contract, entrypoint: Some(entrypoint)}),
+        tup2(contract_encoding, Variable.string),
+      )
+    );
 
   let with_yojson_string = (name, of_string, to_string) =>
     Helpers.with_yojson_string(
@@ -311,6 +345,7 @@ module Ticket = {
   open Tezos_micheline;
 
   type t = {
+    // TODO: should we allow implicit contracts here?
     ticketer: Address.t,
     data: bytes,
   };
@@ -353,6 +388,16 @@ module Ticket = {
   };
 };
 
+module Operation_hash = {
+  type t = BLAKE2B.t;
+
+  let prefix = Base58.Prefix.operation_hash;
+  let to_raw = BLAKE2B.to_raw_string;
+  let of_raw = BLAKE2B.of_raw_string;
+  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
+
 module Pack = {
   open Tezos_micheline;
   open Micheline;
@@ -370,13 +415,7 @@ module Pack = {
   let key_hash = h =>
     Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key_hash.encoding, h));
   let address = addr =>
-    Bytes(
-      -1,
-      Data_encoding.Binary.to_bytes_exn(
-        Data_encoding.(tup2(Address.encoding, Variable.string)),
-        (addr, ""),
-      ),
-    );
+    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Address.encoding, addr));
   let expr_encoding =
     Micheline.canonical_encoding_v1(
       ~variant="michelson_v1",

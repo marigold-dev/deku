@@ -214,13 +214,18 @@ describe("address", ({test, _}) => {
   open Address;
 
   let tz1 = Implicit(Key_hash.of_key(Ed25519(genesis_address)));
-  let kt1 = Originated(some_contract_hash);
+  let kt1 = Originated({contract: some_contract_hash, entrypoint: None});
+  let kt1_tuturu =
+    Originated({contract: some_contract_hash, entrypoint: Some("tuturu")});
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
     );
     expect.string(to_string(kt1)).toEqual(
       "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc",
+    );
+    expect.string(to_string(kt1_tuturu)).toEqual(
+      "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc%tuturu",
     );
   });
   test("of_string", ({expect, _}) => {
@@ -229,11 +234,26 @@ describe("address", ({test, _}) => {
       ~equals=(==),
       Some(tz1),
     );
+    // TODO: should we accept tz1 with entrypoint?
+    // expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC%tuturu")).
+    //   toBe(
+    //   // TODO: proper equals
+    //   ~equals=(==),
+    //   Some(tz1),
+    // );
     expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBe(
       // TODO: proper equals
       ~equals=(==),
       Some(kt1),
     );
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc%tuturu")).
+      toBe(
+      // TODO: proper equals
+      ~equals=(==),
+      Some(kt1_tuturu),
+    );
+    expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc%default")).
+      toBeNone();
   });
   test("invalid prefix", ({expect, _}) => {
     expect.option(of_string("tz4LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBeNone()
@@ -248,7 +268,8 @@ describe("address", ({test, _}) => {
 describe("ticket", ({test, _}) => {
   open Ticket;
 
-  let kt1 = Address.Originated(some_contract_hash);
+  let kt1 =
+    Address.Originated({contract: some_contract_hash, entrypoint: None});
   let ticket = {ticketer: kt1, data: Bytes.of_string("a")};
   test("to_string", ({expect, _}) => {
     expect.string(to_string(ticket)).toEqual(
@@ -274,6 +295,45 @@ describe("ticket", ({test, _}) => {
   test("invalid bytes", ({expect, _}) => {
     expect.option(
       of_string({|(Pair "BT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x6Z)|}),
+    ).
+      toBeNone()
+  });
+});
+describe("operation_hash", ({test, _}) => {
+  open Operation_hash;
+
+  let op =
+    of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4")
+    |> Option.get;
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(op)).toEqual(
+      "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4",
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(
+      of_string({|opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4|}),
+    ).
+      toBe(
+      ~equals=(==),
+      Some(op),
+    )
+  });
+  test("invalid prefix", ({expect, _}) => {
+    expect.option(
+      of_string("obCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"),
+    ).
+      toBeNone()
+  });
+  test("invalid checksum", ({expect, _}) => {
+    expect.option(
+      of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW5"),
+    ).
+      toBeNone()
+  });
+  test("invalid size", ({expect, _}) => {
+    expect.option(
+      of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW"),
     ).
       toBeNone()
   });
@@ -329,7 +389,7 @@ describe("pack", ({test, _}) => {
   );
   test(
     "address(\"KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc\")",
-    address(Originated(some_contract_hash)),
+    address(Originated({contract: some_contract_hash, entrypoint: None})),
     "050a0000001601370027c6c8f3fbafda4f9bfd08b14f45e6a29ce300",
   );
 });

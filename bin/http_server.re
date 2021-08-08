@@ -19,6 +19,31 @@ let ignore_some_errors =
   fun
   | Error(#Flows.ignore) => Ok()
   | v => v;
+let print_error = err => {
+  open Format;
+  switch (err) {
+  | `Not_a_json => eprintf("Invalid json")
+  | `Not_a_valid_request(err) => eprintf("Invalid request: %s", err)
+  | `Added_signature_not_signed_enough_to_request =>
+    eprintf("Added_signature_not_signed_enough_to_request")
+  | `Already_known_block => eprintf("Already_known_block")
+  | `Already_known_signature => eprintf("Already_known_signature")
+  | `Block_not_signed_enough_to_apply =>
+    eprintf("Block_not_signed_enough_to_apply")
+  | `Invalid_block(string) => eprintf("Invalid_block(%s)", string)
+  | `Invalid_block_when_applying => eprintf("Invalid_block_when_applying")
+  | `Invalid_signature_for_this_hash =>
+    eprintf("Invalid_signature_for_this_hash")
+  | `Invalid_state_root_hash => eprintf("Invalid_state_root_hash")
+  | `Not_current_block_producer => eprintf("Not_current_block_producer")
+  | `Pending_blocks => eprintf("Pending_blocks")
+  | `Added_block_not_signed_enough_to_desync =>
+    eprintf("Added_block_not_signed_enough_to_desync")
+  | `Invalid_nonce_signature => eprintf("Invalid_nonce_signature")
+  | `Unknown_uri => eprintf("Unknown_uri")
+  };
+  eprintf("\n%!");
+};
 let handle_request =
     (
       type req,
@@ -47,12 +72,7 @@ let handle_request =
         let response = E.response_to_yojson(response);
         await(Response.of_json(~status=`OK, response));
       | Error(err) =>
-        switch (err) {
-        | `Not_a_json => print_endline("Invalid json")
-        | `Not_a_valid_request(err) =>
-          print_endline("Invalid request:" ++ err)
-        | _ => print_endline("unhandled")
-        };
+        print_error(err);
         await(Response.make(~status=`Internal_server_error, ()));
       };
     },
@@ -214,14 +234,12 @@ let node = {
   };
   let state_bin = folder ++ "/state.bin";
   let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let protocol =
+  let.await protocol =
     if (state_bin_exists) {
-      let ic = open_in_bin(state_bin);
-      let protocol = Marshal.from_channel(ic);
-      close_in(ic);
-      protocol;
+      Files.State_bin.read(~file=state_bin);
     } else {
-      node.protocol;
+      let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
+      await(node.protocol);
     };
   await({...node, protocol});
 };
