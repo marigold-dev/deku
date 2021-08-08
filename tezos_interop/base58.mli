@@ -29,6 +29,8 @@
 module Prefix : sig
   val contract_hash : string
 
+  val operation_hash : string
+
   val ed25519_public_key_hash : string
 
   val ed25519_public_key : string

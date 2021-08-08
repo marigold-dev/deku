@@ -278,6 +278,45 @@ describe("ticket", ({test, _}) => {
       toBeNone()
   });
 });
+describe("operation_hash", ({test, _}) => {
+  open Operation_hash;
+
+  let op =
+    of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4")
+    |> Option.get;
+  test("to_string", ({expect, _}) => {
+    expect.string(to_string(op)).toEqual(
+      "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4",
+    )
+  });
+  test("of_string", ({expect, _}) => {
+    expect.option(
+      of_string({|opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4|}),
+    ).
+      toBe(
+      ~equals=(==),
+      Some(op),
+    )
+  });
+  test("invalid prefix", ({expect, _}) => {
+    expect.option(
+      of_string("obCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"),
+    ).
+      toBeNone()
+  });
+  test("invalid checksum", ({expect, _}) => {
+    expect.option(
+      of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW5"),
+    ).
+      toBeNone()
+  });
+  test("invalid size", ({expect, _}) => {
+    expect.option(
+      of_string("opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW"),
+    ).
+      toBeNone()
+  });
+});
 describe("pack", ({test, _}) => {
   open Pack;
 
