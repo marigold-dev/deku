@@ -1,7 +1,10 @@
 module.exports = env => ({
-  entry: ['./run_entrypoint.js'],
+  entry: {
+    run_entrypoint: './run_entrypoint.js',
+    listen_transactions: "./listen_transactions.js"
+  },
   output: {
-    filename: 'run_entrypoint.bundle.js',
+    filename: '[name].bundle.js',
     path: __dirname,
   },
   mode: env.dev ? 'development' : 'production',

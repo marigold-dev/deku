@@ -37,6 +37,7 @@
     "@opam/cmdliner": "1.0.4",
     "@taquito/taquito": "^9.0.1",
     "@taquito/signer": "^9.0.1",
+    "@taquito/rpc": "^9.0.1",
     "webpack": "^5.47.1",
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*"
