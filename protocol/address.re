@@ -3,12 +3,6 @@ open Mirage_crypto_ec;
 
 type key = Ed25519.priv;
 
-// TODO: both functions are duplicated
-let to_hex = str => {
-  let `Hex(str) = Hex.of_string(str);
-  str;
-};
-let of_hex = hex => Hex.to_string(`Hex(hex));
 let key_to_yojson = key =>
   `String(Tezos_interop.Secret.to_string(Ed25519(key)));
 let key_of_yojson = json => {
@@ -28,20 +22,14 @@ let make_pubkey = () => {
 
 let compare = (a, b) =>
   Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
-let to_yojson = t =>
-  `String(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string |> to_hex);
-let of_yojson =
-  fun
-  | `String(key) =>
-    try(
-      of_hex(key)
-      |> Cstruct.of_string
-      |> Ed25519.pub_of_cstruct
-      |> Result.map_error(Format.asprintf("%a", Mirage_crypto_ec.pp_error))
-    ) {
-    | _ => Error("failed to parse")
-    }
-  | _ => Error("invalid type");
+let to_yojson = t => `String(Tezos_interop.Key.to_string(Ed25519(t)));
+let of_yojson = json => {
+  let.ok string = [%of_yojson: string](json);
+  let.ok Ed25519(t) =
+    Tezos_interop.Key.of_string(string)
+    |> Option.to_result(~none="failed to parse");
+  ok(t);
+};
 
 let of_key = Ed25519.pub_of_priv;
 
