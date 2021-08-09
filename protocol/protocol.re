@@ -12,9 +12,17 @@ module Block = Block;
 module Operation = Operation;
 
 include State;
-let apply_main_chain = (state, op) => {
-  Operation.Main_chain.(
-    switch (op.kind) {
+let apply_main_chain = (state, operation) => {
+  open Operation.Main_chain;
+  module Set = Operation_main_chain_set;
+  if (Set.mem(operation, state.included_main_operations)) {
+    raise(Noop("duplicated operation"));
+  };
+
+  let included_main_operations =
+    Set.add(operation, state.included_main_operations);
+  let state =
+    switch (operation.kind) {
     // validators management
     | Add_validator(validator) =>
       let validators = Validators.add(validator, state.validators);
@@ -25,8 +33,8 @@ let apply_main_chain = (state, op) => {
     | Deposit({destination, amount, ticket}) =>
       let ledger = Ledger.deposit(destination, amount, ticket, state.ledger);
       {...state, ledger};
-    }
-  );
+    };
+  {...state, included_main_operations};
 };
 
 // TODO: what should happen if nodes disagree on who should be the current validator?
@@ -142,6 +150,7 @@ let make = (~initial_block) => {
   let empty = {
     ledger: Ledger.empty,
     included_operations: Operation_side_chain_set.empty,
+    included_main_operations: Operation_main_chain_set.empty,
     validators: Validators.empty,
     validators_hash: Validators.hash(Validators.empty),
     block_height: Int64.sub(initial_block.Block.block_height, 1L),
