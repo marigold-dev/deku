@@ -506,7 +506,98 @@ module Run_contract = {
     };
   };
 };
+module Listen_transactions = {
+  open Tezos_micheline;
+  type michelson = Micheline.node(int, Michelson_v1_primitives.prim);
+  let michelson_of_yojson = json => {
+    // TODO: do this without serializing
+    let.ok json =
+      Yojson.Safe.to_string(json) |> Data_encoding.Json.from_string;
+    try(
+      Ok(
+        Micheline.root(
+          Data_encoding.Json.destruct(Pack.expr_encoding, json),
+        ),
+      )
+    ) {
+    | _ => Error("invalid json")
+    };
+  };
 
+  [@deriving of_yojson]
+  type output = {
+    hash: string,
+    index: int,
+    entrypoint: string,
+    value: michelson,
+  };
+  module CLI = {
+    [@deriving to_yojson]
+    type input = {
+      rpc_node: string,
+      confirmation: int,
+      destination: string,
+    };
+    let file = {
+      let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
+      let.await () =
+        Lwt_io.write(oc, [%blob "listen_transactions.bundle.js"]);
+      await(file);
+    };
+    let file = Lwt_main.run(file);
+
+    let node = "node";
+    let run = (~context, ~destination, ~on_message, ~on_fail) => {
+      let send = (f, pr, data) => {
+        let oc = pr#stdin;
+        Lwt.finalize(() => f(oc, data), () => Lwt_io.close(oc));
+      };
+
+      let process = Lwt_process.open_process((node, [|node, file|]));
+      let input =
+        {
+          rpc_node: Uri.to_string(context.Context.rpc_node),
+          confirmation: context.required_confirmations,
+          destination: Address.to_string(destination),
+        }
+        |> input_to_yojson
+        |> Yojson.Safe.to_string;
+      let on_fail = _exn => {
+        // TODO: what to do with this exception
+        // TODO: what to do with this status
+        let.await _status = process#close;
+        on_fail();
+      };
+      let.await () = send(Lwt_io.write, process, input);
+
+      let rec read_line_until_fails = () =>
+        Lwt.catch(
+          () => {
+            let.await line = Lwt_io.read_line(process#stdout);
+            print_endline(line);
+            Yojson.Safe.from_string(line)
+            |> output_of_yojson
+            |> Result.get_ok
+            |> on_message;
+            read_line_until_fails();
+          },
+          on_fail,
+        );
+      read_line_until_fails();
+    };
+  };
+
+  let listen = (~context, ~destination, ~on_message) => {
+    let rec start = () =>
+      Lwt.catch(
+        () => CLI.run(~context, ~destination, ~on_message, ~on_fail),
+        // TODO: what to do with this exception?
+        _exn => on_fail(),
+      )
+    and on_fail = () => start();
+    Lwt.async(start);
+  };
+};
 module Consensus = {
   open Pack;
 
@@ -594,6 +685,68 @@ module Consensus = {
         ~payload=Payload.to_yojson(payload),
       );
     await();
+  };
+
+  type parameters =
+    | Deposit({
+        ticket: Ticket.t,
+        // TODO: proper type for amounts
+        amount: Z.t,
+        destination: Address.t,
+      });
+  type operation = {
+    hash: BLAKE2B.t,
+    index: int,
+    parameters,
+  };
+
+  let parse_parameters = (entrypoint, micheline) =>
+    switch (entrypoint, micheline) {
+    | (
+        "deposit",
+        Tezos_micheline.Micheline.Prim(
+          _,
+          Michelson_v1_primitives.D_Pair,
+          [
+            Bytes(_, destination),
+            Prim(
+              _,
+              D_Pair,
+              [
+                Bytes(_, ticketer),
+                Prim(_, D_Pair, [Bytes(_, data), Int(_, amount)], _),
+              ],
+              _,
+            ),
+          ],
+          _,
+        ),
+      ) =>
+      let.some destination =
+        Data_encoding.Binary.of_bytes_opt(Address.encoding, destination);
+      let.some ticketer =
+        Data_encoding.Binary.of_bytes_opt(Address.encoding, ticketer);
+      let ticket = Ticket.{ticketer, data};
+      Some(Deposit({ticket, destination, amount}));
+    | _ => None
+    };
+  let parse_operation = output => {
+    let.some parameters =
+      parse_parameters(output.Listen_transactions.entrypoint, output.value);
+    let.some hash = Operation_hash.of_string(output.hash);
+    Some({hash, index: output.index, parameters});
+  };
+  let listen_operations = (~context, ~on_operation) => {
+    let on_message = output =>
+      switch (parse_operation(output)) {
+      | Some(operation) => on_operation(operation)
+      | None => ()
+      };
+    Listen_transactions.listen(
+      ~context,
+      ~destination=context.consensus_contract,
+      ~on_message,
+    );
   };
 };
 

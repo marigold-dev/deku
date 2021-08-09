@@ -136,6 +136,21 @@ module Consensus: {
       ~signatures: list((Key.t, option(Signature.t)))
     ) =>
     Lwt.t(unit);
+
+  type parameters =
+    | Deposit({
+        ticket: Ticket.t,
+        // TODO: proper type for amounts
+        amount: Z.t,
+        destination: Address.t,
+      });
+  type operation = {
+    hash: Operation_hash.t,
+    index: int,
+    parameters,
+  };
+  let listen_operations:
+    (~context: Context.t, ~on_operation: operation => unit) => unit;
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};
