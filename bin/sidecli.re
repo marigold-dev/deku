@@ -323,66 +323,6 @@ let produce_block = {
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
 };
 
-// gen credentials
-let info_gen_credentials = {
-  let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
-  Term.info(
-    "make-credentials",
-    ~version="%‌%VERSION%%",
-    ~doc,
-    ~exits,
-    ~man,
-  );
-};
-let gen_credentials = {
-  let make_identity_file = (file, index) => {
-    open Mirage_crypto_ec;
-    let.await () = Lwt_unix.mkdir(Printf.sprintf("./%d/", index), 0o700);
-    let file = Printf.sprintf("./%d/%s", index, file);
-    let uri = Printf.sprintf("http://localhost:%d", 4440 + index);
-
-    let uri = Uri.of_string(uri);
-    let (key, t) = Ed25519.generate();
-    let identity = {key, t, uri};
-    let.await () = Files.Identity.write(identity, ~file);
-    await((t, uri));
-  };
-
-  let make_validators_files = (file, validators, to_make) => {
-    module T = {
-      [@deriving to_yojson]
-      type t = {
-        address: Address.t,
-        uri: Uri.t,
-      };
-    };
-
-    Lwt_list.iter_p(
-      i =>
-        Files.Validators.write(
-          validators,
-          ~file=Printf.sprintf("./%d/%s", i, file),
-        ),
-      to_make,
-    );
-  };
-
-  let to_make = [0, 1, 2, 3];
-
-  Term.(
-    lwt_ret(
-      const(() => {
-        let.await validators =
-          Lwt_list.map_p(make_identity_file("identity.json"), to_make);
-        let.await () =
-          make_validators_files("validators.json", validators, to_make);
-        await(`Ok());
-      })
-      $ const(),
-    )
-  );
-};
-
 let ensure_folder = folder => {
   let.await exists = Lwt_unix.file_exists(folder);
   if (exists) {
@@ -661,7 +601,6 @@ let () = {
       (create_transaction, info_create_transaction),
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
-      (gen_credentials, info_gen_credentials),
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),
       (setup_node, info_setup_node),
