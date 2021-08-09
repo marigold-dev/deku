@@ -15,11 +15,27 @@ module Main_chain: {
   [@deriving (ord, yojson)]
   type t =
     pri {
-      tezos_hash: BLAKE2B.t,
+      hash: BLAKE2B.t,
+      tezos_hash: Tezos_interop.Operation_hash.t,
+      tezos_index: int,
       kind,
     };
 
-  let make: (~tezos_hash: BLAKE2B.t, ~kind: kind) => t;
+  let make:
+    (
+      ~tezos_hash: Tezos_interop.Operation_hash.t,
+      ~tezos_index: int,
+      ~kind: kind
+    ) =>
+    t;
+  let verify:
+    (
+      ~hash: BLAKE2B.t,
+      ~tezos_hash: Tezos_interop.Operation_hash.t,
+      ~tezos_index: int,
+      ~kind: kind
+    ) =>
+    result(t, string);
 };
 
 module Side_chain: {
