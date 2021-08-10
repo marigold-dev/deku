@@ -1,5 +1,13 @@
-#! /bin/bash
+#! /bin/sh
+tezos_client_command="tezos_client"
 
+TZC="$tezos_client_command --protocol PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i --endpoint https://testnet-tezos.giganode.io "
+
+# How to use with docker script:
+# You probably want to create a mockup client to avoid running a full node. 
+# To create a mockup client using the tezos docker script (assuming it's located at `/mainnet.sh`), run:
+#     $ /mainnet.sh client --protocol PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i  --base-dir /tmp/mockup --mode mockup create mockup 
+# Then change tezos_client_command's value from `tezos-client` to `/mainnet.sh client --mode mockup --base-dir /tmp/mockup`.
 
 # join
 # @param separator
@@ -79,11 +87,15 @@ read -p "Enter address of the deployed contract: " contract_address
 #    the address. 
 read -p "Download wallet from https://faucet.tzalpha.net and enter the path to the json file: " account_json_path
 
+account_alias="tmp_for_sidechain_$(openssl rand -base64 12)"
+
 # To import the keys obtained from faucet
-tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io import keys from mnemonic alice
+$TZC import keys from mnemonic $account_alias
 
 # To activate the address
-tezos-client -p "PsFLorenaUUuikDWvMDr6fGBRG8kt3e3D3fHoXK1j1BFRxeSH4i" --endpoint https://testnet-tezos.giganode.io activate account alice with "$account_json_path"
+$TZC activate account $account_alias with "$account_json_path"
+
+tezos_secret=$($TZC show address $account_alias --show-secret | sed -n -e '/^Secret Key: unencrypted:/p' | sed 's/Secret Key: unencrypted://' | sed -z '$ s/\n$//')
 
 # With all the inputs ready, we can now run the `setup-node` command
 # for each node.
@@ -94,6 +106,6 @@ do
 	--secret=$(jq -r .secret_key "$data_directory/tmp/$i/identity.json") \
 	--tezos_consensus_contract $contract_address \
 	--tezos_rpc_node https://testnet-tezos.giganode.io \
-	--tezos_secret=$(jq -c '.[] | select(.name | contains("alice"))' ~/.tezos-client/secret_keys | jq -r .value | sed s/unencrypted://) \
+	--tezos_secret=${tezos_secret%$'\r'*} \
 	--uri=$uri 
 done
