@@ -350,21 +350,23 @@ let setup_identity = (folder, uri) => {
   let.await () = Files.Identity.write(identity, ~file);
   await(`Ok());
 };
+
+let self_uri = {
+  let docv = "self_uri";
+  let doc = "The uri that other nodes should use to connect to this node.";
+  Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+};
+
 let info_setup_identity = {
   let doc = "Create a validator identity";
   Term.info("setup-identity", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
+
 let setup_identity = {
   let folder_dest = {
     let docv = "folder_dest";
     let doc = "The folder the files will be created in. The folder must exist and be empty.";
     Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-  };
-
-  let self_uri = {
-    let docv = "self_uri";
-    let doc = "The uri that other nodes should use to connect to this node.";
-    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
   };
 
   Term.(lwt_ret(const(setup_identity) $ folder_dest $ self_uri));
@@ -374,6 +376,7 @@ let info_setup_tezos = {
   let doc = "Setup Tezos identity";
   Term.info("setup-tezos", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
+
 let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
   let.await () = ensure_folder(folder);
 
@@ -389,6 +392,7 @@ let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
 
   await(`Ok());
 };
+
 let setup_tezos = {
   let folder_dest = {
     let docv = "folder_dest";
