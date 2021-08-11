@@ -210,13 +210,16 @@ module Contract_hash = {
   let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
 };
+
 module Address = {
-  // TODO: there is also contract_hash with entrypoint
   type t =
     | Implicit(Key_hash.t)
-    | Originated(Contract_hash.t);
+    | Originated({
+        contract: Contract_hash.t,
+        entrypoint: option(string),
+      });
 
-  let encoding =
+  let contract_encoding =
     Data_encoding.(
       def(
         "contract_id",
@@ -242,10 +245,10 @@ module Address = {
             Fixed.add_padding(Contract_hash.encoding, 1),
             ~title="Originated",
             fun
-            | Originated(k) => Some(k)
+            | Originated({contract, _}) => Some(contract)
             | _ => None,
-            k =>
-            Originated(k)
+            contract =>
+            Originated({contract, entrypoint: None})
           ),
         ],
       )
@@ -254,18 +257,49 @@ module Address = {
   let to_string =
     fun
     | Implicit(key_hash) => Key_hash.to_string(key_hash)
-    | Originated(contract_hash) => Contract_hash.to_string(contract_hash);
+    | Originated({contract, entrypoint: None}) =>
+      Contract_hash.to_string(contract)
+    | Originated({contract, entrypoint: Some(entrypoint)}) =>
+      Contract_hash.to_string(contract) ++ "%" ++ entrypoint;
   let of_string = {
     let implicit = string => {
       let.some implicit = Key_hash.of_string(string);
       Some(Implicit(implicit));
     };
     let originated = string => {
-      let.some originated = Contract_hash.of_string(string);
-      Some(Originated(originated));
+      let.some (contract, entrypoint) =
+        switch (String.split_on_char('%', string)) {
+        | [contract] => Some((contract, None))
+        | [contract, entrypoint]
+            when String.length(entrypoint) < 32 && entrypoint != "default" =>
+          Some((contract, Some(entrypoint)))
+        | _ => None
+        };
+      let.some contract = Contract_hash.of_string(contract);
+      Some(Originated({contract, entrypoint}));
     };
     try_decode_list([implicit, originated]);
   };
+  let encoding =
+    Data_encoding.(
+      conv(
+        t =>
+          switch (t) {
+          | Implicit(_) as t => (t, "")
+          | Originated({contract: _, entrypoint}) as t =>
+            let entrypoint = Option.value(~default="", entrypoint);
+            (t, entrypoint);
+          },
+        fun
+        // TODO: should we just discard entrypoint of implicit?
+        | (Implicit(_) as t, _) => t
+        | (Originated({contract, _}), "" | "default") =>
+          Originated({contract, entrypoint: None})
+        | (Originated({contract, _}), entrypoint) =>
+          Originated({contract, entrypoint: Some(entrypoint)}),
+        tup2(contract_encoding, Variable.string),
+      )
+    );
 
   let with_yojson_string = (name, of_string, to_string) =>
     Helpers.with_yojson_string(
@@ -311,6 +345,7 @@ module Ticket = {
   open Tezos_micheline;
 
   type t = {
+    // TODO: should we allow implicit contracts here?
     ticketer: Address.t,
     data: bytes,
   };
@@ -353,6 +388,16 @@ module Ticket = {
   };
 };
 
+module Operation_hash = {
+  type t = BLAKE2B.t;
+
+  let prefix = Base58.Prefix.operation_hash;
+  let to_raw = BLAKE2B.to_raw_string;
+  let of_raw = BLAKE2B.of_raw_string;
+  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
+
 module Pack = {
   open Tezos_micheline;
   open Micheline;
@@ -370,13 +415,7 @@ module Pack = {
   let key_hash = h =>
     Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key_hash.encoding, h));
   let address = addr =>
-    Bytes(
-      -1,
-      Data_encoding.Binary.to_bytes_exn(
-        Data_encoding.(tup2(Address.encoding, Variable.string)),
-        (addr, ""),
-      ),
-    );
+    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Address.encoding, addr));
   let expr_encoding =
     Micheline.canonical_encoding_v1(
       ~variant="michelson_v1",
@@ -467,7 +506,98 @@ module Run_contract = {
     };
   };
 };
+module Listen_transactions = {
+  open Tezos_micheline;
+  type michelson = Micheline.node(int, Michelson_v1_primitives.prim);
+  let michelson_of_yojson = json => {
+    // TODO: do this without serializing
+    let.ok json =
+      Yojson.Safe.to_string(json) |> Data_encoding.Json.from_string;
+    try(
+      Ok(
+        Micheline.root(
+          Data_encoding.Json.destruct(Pack.expr_encoding, json),
+        ),
+      )
+    ) {
+    | _ => Error("invalid json")
+    };
+  };
 
+  [@deriving of_yojson]
+  type output = {
+    hash: string,
+    index: int,
+    entrypoint: string,
+    value: michelson,
+  };
+  module CLI = {
+    [@deriving to_yojson]
+    type input = {
+      rpc_node: string,
+      confirmation: int,
+      destination: string,
+    };
+    let file = {
+      let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
+      let.await () =
+        Lwt_io.write(oc, [%blob "listen_transactions.bundle.js"]);
+      await(file);
+    };
+    let file = Lwt_main.run(file);
+
+    let node = "node";
+    let run = (~context, ~destination, ~on_message, ~on_fail) => {
+      let send = (f, pr, data) => {
+        let oc = pr#stdin;
+        Lwt.finalize(() => f(oc, data), () => Lwt_io.close(oc));
+      };
+
+      let process = Lwt_process.open_process((node, [|node, file|]));
+      let input =
+        {
+          rpc_node: Uri.to_string(context.Context.rpc_node),
+          confirmation: context.required_confirmations,
+          destination: Address.to_string(destination),
+        }
+        |> input_to_yojson
+        |> Yojson.Safe.to_string;
+      let on_fail = _exn => {
+        // TODO: what to do with this exception
+        // TODO: what to do with this status
+        let.await _status = process#close;
+        on_fail();
+      };
+      let.await () = send(Lwt_io.write, process, input);
+
+      let rec read_line_until_fails = () =>
+        Lwt.catch(
+          () => {
+            let.await line = Lwt_io.read_line(process#stdout);
+            print_endline(line);
+            Yojson.Safe.from_string(line)
+            |> output_of_yojson
+            |> Result.get_ok
+            |> on_message;
+            read_line_until_fails();
+          },
+          on_fail,
+        );
+      read_line_until_fails();
+    };
+  };
+
+  let listen = (~context, ~destination, ~on_message) => {
+    let rec start = () =>
+      Lwt.catch(
+        () => CLI.run(~context, ~destination, ~on_message, ~on_fail),
+        // TODO: what to do with this exception?
+        _exn => on_fail(),
+      )
+    and on_fail = () => start();
+    Lwt.async(start);
+  };
+};
 module Consensus = {
   open Pack;
 
@@ -555,6 +685,68 @@ module Consensus = {
         ~payload=Payload.to_yojson(payload),
       );
     await();
+  };
+
+  type parameters =
+    | Deposit({
+        ticket: Ticket.t,
+        // TODO: proper type for amounts
+        amount: Z.t,
+        destination: Address.t,
+      });
+  type operation = {
+    hash: BLAKE2B.t,
+    index: int,
+    parameters,
+  };
+
+  let parse_parameters = (entrypoint, micheline) =>
+    switch (entrypoint, micheline) {
+    | (
+        "deposit",
+        Tezos_micheline.Micheline.Prim(
+          _,
+          Michelson_v1_primitives.D_Pair,
+          [
+            Bytes(_, destination),
+            Prim(
+              _,
+              D_Pair,
+              [
+                Bytes(_, ticketer),
+                Prim(_, D_Pair, [Bytes(_, data), Int(_, amount)], _),
+              ],
+              _,
+            ),
+          ],
+          _,
+        ),
+      ) =>
+      let.some destination =
+        Data_encoding.Binary.of_bytes_opt(Address.encoding, destination);
+      let.some ticketer =
+        Data_encoding.Binary.of_bytes_opt(Address.encoding, ticketer);
+      let ticket = Ticket.{ticketer, data};
+      Some(Deposit({ticket, destination, amount}));
+    | _ => None
+    };
+  let parse_operation = output => {
+    let.some parameters =
+      parse_parameters(output.Listen_transactions.entrypoint, output.value);
+    let.some hash = Operation_hash.of_string(output.hash);
+    Some({hash, index: output.index, parameters});
+  };
+  let listen_operations = (~context, ~on_operation) => {
+    let on_message = output =>
+      switch (parse_operation(output)) {
+      | Some(operation) => on_operation(operation)
+      | None => ()
+      };
+    Listen_transactions.listen(
+      ~context,
+      ~destination=context.consensus_contract,
+      ~on_message,
+    );
   };
 };
 

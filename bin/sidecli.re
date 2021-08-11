@@ -323,130 +323,116 @@ let produce_block = {
   Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
 };
 
-// gen credentials
-let info_gen_credentials = {
-  let doc = "Generate initial set of validator credentials. Note: Doesn't create a wallet. See create-wallet for more info.";
-  Term.info(
-    "make-credentials",
-    ~version="%‌%VERSION%%",
-    ~doc,
-    ~exits,
-    ~man,
-  );
+let ensure_folder = folder => {
+  let.await exists = Lwt_unix.file_exists(folder);
+  if (exists) {
+    let.await stat = Lwt_unix.stat(folder);
+    // TODO: check permissions
+    if (stat.st_kind == Lwt_unix.S_DIR) {
+      await();
+    } else {
+      raise(Invalid_argument(folder ++ " is not a folder"));
+    };
+  } else {
+    Lwt_unix.mkdir(folder, 0o700);
+  };
 };
-let gen_credentials = {
-  let make_identity_file = (file, index) => {
-    open Mirage_crypto_ec;
-    let.await () = Lwt_unix.mkdir(Printf.sprintf("./%d/", index), 0o700);
-    let file = Printf.sprintf("./%d/%s", index, file);
-    let uri = Printf.sprintf("http://localhost:%d", 4440 + index);
+let setup_identity = (folder, uri) => {
+  open Mirage_crypto_ec;
 
-    let uri = Uri.of_string(uri);
+  let.await () = ensure_folder(folder);
+
+  let file = folder ++ "/identity.json";
+  let identity = {
     let (key, t) = Ed25519.generate();
-    let identity = {key, t, uri};
-    let.await () = Files.Identity.write(identity, ~file);
-    await((t, uri));
+    {uri, t, key};
+  };
+  let.await () = Files.Identity.write(identity, ~file);
+  await(`Ok());
+};
+let info_setup_identity = {
+  let doc = "Create a validator identity";
+  Term.info("setup-identity", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let setup_identity = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
-  let make_validators_files = (file, validators, to_make) => {
-    module T = {
-      [@deriving to_yojson]
-      type t = {
-        address: Address.t,
-        uri: Uri.t,
-      };
-    };
+  let self_uri = {
+    let docv = "self_uri";
+    let doc = "The uri that other nodes should use to connect to this node.";
+    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
+  };
 
-    Lwt_list.iter_p(
-      i =>
-        Files.Validators.write(
-          validators,
-          ~file=Printf.sprintf("./%d/%s", i, file),
-        ),
-      to_make,
+  Term.(lwt_ret(const(setup_identity) $ folder_dest $ self_uri));
+};
+
+let info_setup_tezos = {
+  let doc = "Setup Tezos identity";
+  Term.info("setup-tezos", ~version="%%VERSION%%", ~doc, ~exits, ~man);
+};
+let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
+  let.await () = ensure_folder(folder);
+
+  let file = folder ++ "/tezos.json";
+  let context =
+    Tezos_interop.Context.{
+      rpc_node,
+      secret,
+      consensus_contract,
+      required_confirmations: 10,
+    };
+  let.await () = Files.Interop_context.write(context, ~file);
+
+  await(`Ok());
+};
+let setup_tezos = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  let tezos_node_uri = {
+    let docv = "tezos_node_uri";
+    let doc = "The uri of the tezos node.";
+    Arg.(
+      required
+      & opt(some(uri), None)
+      & info(["tezos_rpc_node"], ~doc, ~docv)
     );
   };
 
-  let to_make = [0, 1, 2, 3];
-
-  Term.(
-    lwt_ret(
-      const(() => {
-        let.await validators =
-          Lwt_list.map_p(make_identity_file("identity.json"), to_make);
-        let.await () =
-          make_validators_files("validators.json", validators, to_make);
-        await(`Ok());
-      })
-      $ const(),
-    )
-  );
-};
-
-// inject genesis block
-let info_inject_genesis = {
-  let doc = "Injects the genesis block";
-  Term.info("inject-genesis", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
-};
-
-let inject_genesis = {
-  let make_new_block = validators => {
-    let first = List.hd(validators);
-    let state = Protocol.make(~initial_block=Block.genesis);
-    let.await state = {
-      let.await validators = Files.Validators.read(~file="0/validators.json");
-      Lwt.return({
-        ...state,
-        validators:
-          List.fold_right(
-            ((address, _)) => Validators.add({address: address}),
-            validators,
-            Validators.empty,
-          ),
-      });
-    };
-    let block =
-      Block.produce(
-        ~state,
-        ~author=first.t,
-        ~main_chain_ops=[],
-        ~side_chain_ops=[],
-      );
-    Printf.printf(
-      "block_hash: %s, state_hash: %s, block_height: %Ld, validators: %s%!",
-      BLAKE2B.to_string(block.hash),
-      BLAKE2B.to_string(block.state_root_hash),
-      block.block_height,
-      state.validators
-      |> Validators.to_list
-      |> List.map(validator =>
-           Tezos_interop.Key.Ed25519(validator.Validators.address)
-         )
-      |> List.map(Tezos_interop.Key.to_string)
-      |> String.concat(","),
+  let tezos_secret = {
+    let docv = "tezos_secret";
+    let doc = "The Tezos secret key.";
+    Arg.(
+      required
+      & opt(some(edsk_secret_key), None)
+      & info(["tezos_secret"], ~doc, ~docv)
     );
+  };
 
-    let signature = Block.sign(~key=first.key, block);
-    let.await validators_uris = validators_uris();
-    let.await () =
-      Networking.(
-        broadcast_to_list(
-          (module Block_and_signature_spec),
-          validators_uris,
-          {block, signature},
-        )
-      );
-    Lwt.return();
+  let tezos_consensus_contract_address = {
+    let docv = "tezos_consensus_contract_address";
+    let doc = "The address of the Tezos consensus contract.";
+    Arg.(
+      required
+      & opt(some(address_tezos_interop), None)
+      & info(["tezos_consensus_contract"], ~doc, ~docv)
+    );
   };
 
   Term.(
     lwt_ret(
-      const(() => {
-        let.await validators = validators();
-        let.await () = make_new_block(validators);
-        Lwt.return(`Ok());
-      })
-      $ const(),
+      const(setup_tezos)
+      $ folder_dest
+      $ tezos_node_uri
+      $ tezos_secret
+      $ tezos_consensus_contract_address,
     )
   );
 };
@@ -603,6 +589,31 @@ let show_help = {
   );
 };
 
+let info_self = {
+  let doc = "Shows identity key and address of the node.";
+  Term.info("self", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let self = folder => {
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  Format.printf("key: %s\n", Address.to_string(identity.t));
+  Format.printf(
+    "address: %s\n",
+    Wallet.(of_address(identity.t) |> address_to_string),
+  );
+  Format.printf("uri: %s\n", Uri.to_string(identity.uri));
+  await(`Ok());
+};
+let self = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder of the node.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  Term.(lwt_ret(const(self) $ folder_dest));
+};
+
 // Run the CLI
 
 let () = {
@@ -615,9 +626,10 @@ let () = {
       (create_transaction, info_create_transaction),
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
-      (gen_credentials, info_gen_credentials),
-      (inject_genesis, info_inject_genesis),
+      (setup_identity, info_setup_identity),
+      (setup_tezos, info_setup_tezos),
       (setup_node, info_setup_node),
+      (self, info_self),
     ],
   );
 };

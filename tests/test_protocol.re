@@ -5,10 +5,15 @@ open Protocol;
 describe("protocol state", ({test, _}) => {
   let ticket = {
     open Tezos_interop;
-    let key_hash =
-      Key_hash.of_key(Key.Ed25519(Protocol.Address.genesis_address));
-    let ticketer = Address.Implicit(key_hash);
-    Ticket.{ticketer, data: Bytes.of_string("")};
+    let random_hash =
+      Mirage_crypto_rng.generate(20)
+      |> Cstruct.to_string
+      |> Helpers.BLAKE2B_20.of_raw_string
+      |> Option.get;
+    Ticket.{
+      ticketer: Originated({contract: random_hash, entrypoint: None}),
+      data: Bytes.of_string(""),
+    };
   };
   let make_state = (~validators=?, ()) => {
     let (key_wallet, wallet) = Wallet.make_wallet();
@@ -130,8 +135,17 @@ describe("protocol state", ({test, _}) => {
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
     let new_validator = Validators.{address: Address.make_pubkey()};
-    let main_op = kind =>
-      Operation.Main_chain.make(~tezos_hash=Helpers.BLAKE2B.hash(""), ~kind);
+    let main_op = {
+      let accu = ref(0);
+      kind => {
+        incr(accu);
+        Operation.Main_chain.make(
+          ~tezos_hash=Helpers.BLAKE2B.hash(""),
+          ~tezos_index=accu^,
+          ~kind,
+        );
+      };
+    };
     let state =
       apply_main_chain(state, main_op(Add_validator(new_validator)));
     let validators = state.validators;

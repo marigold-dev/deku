@@ -199,6 +199,7 @@ let load_snapshot =
     (
       Ledger.t,
       Operation_side_chain_set.t,
+      Operation_main_chain_set.t,
       Validators.t,
       BLAKE2B.t,
       int64,
@@ -209,6 +210,7 @@ let load_snapshot =
   let (
     ledger,
     included_operations,
+    included_main_operations,
     validators,
     validators_hash,
     block_height,
@@ -224,6 +226,7 @@ let load_snapshot =
     Protocol.{
       ledger,
       included_operations,
+      included_main_operations,
       validators,
       validators_hash,
       block_height,

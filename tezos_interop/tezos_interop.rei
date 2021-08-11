@@ -51,7 +51,10 @@ module Contract_hash: {
 module Address: {
   type t =
     | Implicit(Key_hash.t)
-    | Originated(Contract_hash.t);
+    | Originated({
+        contract: Contract_hash.t,
+        entrypoint: option(string),
+      });
 
   let to_string: t => string;
   let of_string: string => option(t);
@@ -69,6 +72,14 @@ module Ticket: {
   let to_string: t => string;
   let of_string: string => option(t);
 };
+
+module Operation_hash: {
+  type t = BLAKE2B.t;
+
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
+
 module Pack: {
   type t;
 
@@ -125,6 +136,21 @@ module Consensus: {
       ~signatures: list((Key.t, option(Signature.t)))
     ) =>
     Lwt.t(unit);
+
+  type parameters =
+    | Deposit({
+        ticket: Ticket.t,
+        // TODO: proper type for amounts
+        amount: Z.t,
+        destination: Address.t,
+      });
+  type operation = {
+    hash: Operation_hash.t,
+    index: int,
+    parameters,
+  };
+  let listen_operations:
+    (~context: Context.t, ~on_operation: operation => unit) => unit;
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};

@@ -37,6 +37,7 @@
     "@opam/cmdliner": "1.0.4",
     "@taquito/taquito": "^9.0.1",
     "@taquito/signer": "^9.0.1",
+    "@taquito/rpc": "^9.0.1",
     "webpack": "^5.47.1",
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*"
@@ -44,9 +45,13 @@
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
     "@opam/ocamlformat": "0.19.0",
+    "@opam/utop": "*",
+    "@opam/menhir": "20210419",
+    "@esy-ocaml/rtop": "*",
     "@reason-native/rely": "*"
   },
   "resolutions": {
+    "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
     "ocaml": "github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae",
     "@opam/httpaf": "github:anmonteiro/httpaf:httpaf.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
