@@ -1,6 +1,7 @@
 open Helpers;
 
 module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
+module Operation_main_chain_set = Set_with_yojson_make(Operation.Main_chain);
 
 type t = {
   // state machine data
@@ -8,6 +9,7 @@ type t = {
   // TODO: more efficient lookup on included_operations
   // TODO: is this part of the protocol?
   included_operations: Operation_side_chain_set.t,
+  included_main_operations: Operation_main_chain_set.t,
   // consensus
   validators: Validators.t,
   validators_hash: BLAKE2B.t,
@@ -29,6 +31,7 @@ let hash = t => {
     (
       Ledger.t,
       Operation_side_chain_set.t,
+      Operation_main_chain_set.t,
       Validators.t,
       BLAKE2B.t,
       int64,
@@ -40,6 +43,7 @@ let hash = t => {
     to_yojson((
       t.ledger,
       t.included_operations,
+      t.included_main_operations,
       t.validators,
       t.validators_hash,
       t.block_height,

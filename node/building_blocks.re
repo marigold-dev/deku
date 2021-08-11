@@ -57,11 +57,18 @@ let is_current_producer = (state, ~key) => {
 
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
-let is_signable = (state, block) =>
+let is_signable = (state, block) => {
+  // TODO: this is O(n*m) which is bad
+  let is_known_main = main_op =>
+    state.State.pending_main_ops |> List.exists(op => op == main_op);
+  let all_main_ops_are_known =
+    List.for_all(is_known_main, block.Block.main_chain_ops);
   is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
-  && !has_next_block_to_apply(state, ~hash=block.hash);
+  && !has_next_block_to_apply(state, ~hash=block.hash)
+  && all_main_ops_are_known;
+};
 
 let sign = (~key, block) => Block.sign(~key, block);
 
@@ -107,15 +114,15 @@ let apply_block = (state, update_state, block) => {
 
 let clean = (state, update_state, block) => {
   // TODO: this is the dumbest piece of code that I could write
-  let main_is_in_block = side_op =>
-    block.Block.main_chain_ops |> List.exists(op => side_op == op);
-  let side_is_in_block = side_op =>
-    block.side_chain_ops |> List.exists(op => side_op == op);
-
+  //       but now it should work
+  let main_op_not_in_block = main_op =>
+    !List.mem(main_op, block.Block.main_chain_ops);
+  let side_op_not_in_block = side_op =>
+    !List.mem(side_op, block.side_chain_ops);
   let pending_main_ops =
-    state.Node.pending_main_ops |> List.filter(main_is_in_block);
+    state.Node.pending_main_ops |> List.find_all(main_op_not_in_block);
   let pending_side_ops =
-    state.pending_side_ops |> List.filter(side_is_in_block);
+    state.pending_side_ops |> List.find_all(side_op_not_in_block);
   // TODO: clean old blocks and old signatures
   update_state({...state, pending_main_ops, pending_side_ops});
 };

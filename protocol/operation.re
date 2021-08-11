@@ -14,13 +14,41 @@ module Main_chain = {
       });
   [@deriving yojson]
   type t = {
+    hash: BLAKE2B.t,
     tezos_hash: BLAKE2B.t,
+    tezos_index: int,
     kind,
   };
-  let compare = (a, b) => BLAKE2B.compare(a.tezos_hash, b.tezos_hash);
+  let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
-  let make = (~tezos_hash, ~kind) => {
-    {tezos_hash, kind};
+  let (hash, verify) = {
+    /* TODO: this is bad name, it exists like this to prevent
+       duplicating all this name parameters */
+    let apply = (f, ~tezos_hash, ~tezos_index, ~kind) => {
+      let to_yojson = [%to_yojson: (BLAKE2B.t, int, kind)];
+      let json = to_yojson((tezos_hash, tezos_index, kind));
+      let payload = Yojson.Safe.to_string(json);
+      f(payload);
+    };
+    let hash = apply(BLAKE2B.hash);
+    let verify = (~hash) => apply(BLAKE2B.verify(~hash));
+    (hash, verify);
+  };
+
+  let make = (~tezos_hash, ~tezos_index, ~kind) => {
+    let hash = hash(~tezos_hash, ~tezos_index, ~kind);
+    {hash, tezos_hash, tezos_index, kind};
+  };
+  let verify = (~hash, ~tezos_hash, ~tezos_index, ~kind) => {
+    let.ok () =
+      verify(~hash, ~tezos_hash, ~tezos_index, ~kind)
+        ? Ok() : Error("Main operation invalid hash");
+    Ok({hash, tezos_hash, tezos_index, kind});
+  };
+
+  let of_yojson = json => {
+    let.ok {hash, tezos_hash, tezos_index, kind} = of_yojson(json);
+    verify(~hash, ~tezos_hash, ~tezos_index, ~kind);
   };
 };
 

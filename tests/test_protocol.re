@@ -135,8 +135,17 @@ describe("protocol state", ({test, _}) => {
     expect.option(Validators.current(validators)).toBeNone();
     expect.list(Validators.to_list(validators)).toBeEmpty();
     let new_validator = Validators.{address: Address.make_pubkey()};
-    let main_op = kind =>
-      Operation.Main_chain.make(~tezos_hash=Helpers.BLAKE2B.hash(""), ~kind);
+    let main_op = {
+      let accu = ref(0);
+      kind => {
+        incr(accu);
+        Operation.Main_chain.make(
+          ~tezos_hash=Helpers.BLAKE2B.hash(""),
+          ~tezos_index=accu^,
+          ~kind,
+        );
+      };
+    };
     let state =
       apply_main_chain(state, main_op(Add_validator(new_validator)));
     let validators = state.validators;

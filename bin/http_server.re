@@ -41,9 +41,16 @@ let print_error = err => {
     eprintf("Added_block_not_signed_enough_to_desync")
   | `Invalid_nonce_signature => eprintf("Invalid_nonce_signature")
   | `Unknown_uri => eprintf("Unknown_uri")
+  | `Invalid_address_on_main_operation =>
+    eprintf("Invalid_address_on_main_operation")
   };
   eprintf("\n%!");
 };
+let update_state = state => {
+  Server.set_state(state);
+  state;
+};
+
 let handle_request =
     (
       type req,
@@ -55,10 +62,6 @@ let handle_request =
   App.post(
     E.path,
     request => {
-      let update_state = state => {
-        Server.set_state(state);
-        state;
-      };
       let.await json = Request.to_json(request);
       let response = {
         let.ok json = Option.to_result(~none=`Not_a_json, json);
@@ -154,42 +157,6 @@ let handle_register_uri =
   handle_request((module Register_uri), (update_state, {uri, signature}) =>
     Flows.register_uri(Server.get_state(), update_state, ~uri, ~signature)
   );
-let handle_data_to_smart_contract =
-  handle_request(
-    (module Data_to_smart_contract),
-    (_, ()) => {
-      let state = Server.get_state();
-      let block = state.snapshots.last_block;
-      let signatures_map =
-        state.snapshots.last_block_signatures
-        |> Signatures.to_list
-        |> List.map(Signature.signature_to_b58check_by_address)
-        |> List.to_seq
-        |> State.Address_map.of_seq;
-      let (validators, signatures) =
-        state.protocol.validators
-        |> Validators.to_list
-        |> List.map(validator => validator.Validators.address)
-        |> List.map(address =>
-             (
-               Tezos_interop.Key.Ed25519(address)
-               |> Tezos_interop.Key.to_string,
-               State.Address_map.find_opt(address, signatures_map),
-             )
-           )
-        |> List.split;
-
-      Ok({
-        block_hash: block.hash,
-        block_height: block.block_height,
-        block_payload_hash: block.payload_hash,
-        state_hash: block.state_root_hash,
-        handles_hash: block.handles_hash,
-        validators,
-        signatures,
-      });
-    },
-  );
 let handle_receive_operation_gossip =
   handle_request(
     (module Operation_gossip),
@@ -241,6 +208,19 @@ let node = {
       let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
       await(node.protocol);
     };
+  Tezos_interop.Consensus.listen_operations(
+    ~context=interop_context, ~on_operation=operation =>
+    switch (
+      Flows.received_main_operation(
+        Server.get_state(),
+        update_state,
+        operation,
+      )
+    ) {
+    | Ok () => ()
+    | Error(err) => print_error(err)
+    }
+  );
   await({...node, protocol});
 };
 let node = node |> Lwt_main.run;
@@ -256,7 +236,6 @@ let _server =
   |> handle_protocol_snapshot
   |> handle_request_nonce
   |> handle_register_uri
-  |> handle_data_to_smart_contract
   |> handle_receive_operation_gossip
   |> App.start
   |> Lwt_main.run;
