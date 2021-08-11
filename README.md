@@ -81,15 +81,6 @@ esy x sidecli setup-node ./data/ \
    --tezos_consensus_contract KT1DMCGGiHT2dgjjXHG7qh1C1maFchrLNphx
 ```
 
-#### Running multiple nodes
-Note that, due to a bug in esy, it isn't currently possible to run two
-`esy b dune exec ./bin/http_server.exe ...` simultaneously. To
-workaround this, use the full path, after entering `esy shell`, to the binary for now.
-
-```
-esy shell
-$cur__target_dir/default/bin/http_server.exe ...
-```
 
 ## Contributing
 
