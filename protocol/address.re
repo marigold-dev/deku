@@ -22,13 +22,16 @@ let make_pubkey = () => {
 
 let compare = (a, b) =>
   Cstruct.compare(Ed25519.pub_to_cstruct(a), Ed25519.pub_to_cstruct(b));
-let to_yojson = t => `String(Tezos_interop.Key.to_string(Ed25519(t)));
+let to_string = t => Tezos_interop.Key.to_string(Ed25519(t));
+let of_string = string => {
+  let.some Ed25519(t) = Tezos_interop.Key.of_string(string);
+  Some(t);
+};
+
+let to_yojson = t => `String(to_string(t));
 let of_yojson = json => {
   let.ok string = [%of_yojson: string](json);
-  let.ok Ed25519(t) =
-    Tezos_interop.Key.of_string(string)
-    |> Option.to_result(~none="failed to parse");
-  ok(t);
+  of_string(string) |> Option.to_result(~none="failed to parse");
 };
 
 let of_key = Ed25519.pub_of_priv;
