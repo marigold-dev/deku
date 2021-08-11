@@ -279,11 +279,12 @@ let info_produce_block = {
   Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
-let produce_block = (wallet_file, state_bin) => {
-  let.await wallet = Files.Wallet.read(~file=wallet_file);
+let produce_block = folder => {
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
   let.await state: Protocol.t =
-    Lwt_io.with_file(~mode=Input, state_bin, Lwt_io.read_value);
-  let address = Address.of_key(wallet.priv_key);
+    Lwt_io.with_file(~mode=Input, folder ++ "/state.bin", Lwt_io.read_value);
+  let address = Address.of_key(identity.key);
   let block =
     Block.produce(
       ~state,
@@ -291,7 +292,7 @@ let produce_block = (wallet_file, state_bin) => {
       ~main_chain_ops=[],
       ~side_chain_ops=[],
     );
-  let signature = Block.sign(~key=wallet.priv_key, block);
+  let signature = Block.sign(~key=identity.key, block);
   let.await validators_uris = validators_uris();
   let.await () =
     Networking.(
@@ -306,21 +307,13 @@ let produce_block = (wallet_file, state_bin) => {
 };
 
 let produce_block = {
-  let key_wallet = {
-    let docv = "key_wallet";
-    let doc = "The validator key that will sign the block address.";
-    Arg.(required & pos(0, some(wallet), None) & info([], ~doc, ~docv));
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
-  let state_bin = {
-    let docv = "state_bin";
-    let doc = "Path to last known serialized state.";
-    Arg.(
-      required & pos(1, some(non_dir_file), None) & info([], ~doc, ~docv)
-    );
-  };
-
-  Term.(lwt_ret(const(produce_block) $ key_wallet $ state_bin));
+  Term.(lwt_ret(const(produce_block) $ folder_node));
 };
 
 let ensure_folder = folder => {
