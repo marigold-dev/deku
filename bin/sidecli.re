@@ -589,6 +589,31 @@ let show_help = {
   );
 };
 
+let info_self = {
+  let doc = "Shows identity key and address of the node.";
+  Term.info("self", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let self = folder => {
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  Format.printf("key: %s\n", Address.to_string(identity.t));
+  Format.printf(
+    "address: %s\n",
+    Wallet.(of_address(identity.t) |> address_to_string),
+  );
+  Format.printf("uri: %s\n", Uri.to_string(identity.uri));
+  await(`Ok());
+};
+let self = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder of the node.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  Term.(lwt_ret(const(self) $ folder_dest));
+};
+
 // Run the CLI
 
 let () = {
@@ -604,6 +629,7 @@ let () = {
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),
       (setup_node, info_setup_node),
+      (self, info_self),
     ],
   );
 };
