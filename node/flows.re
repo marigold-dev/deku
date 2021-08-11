@@ -301,16 +301,48 @@ let received_operation =
         update_state(
           Node.{
             ...state,
-            pending_side_ops:
-              [request.operation] @ state.Node.pending_side_ops,
+            pending_side_ops: [
+              request.operation,
+              ...state.Node.pending_side_ops,
+            ],
           },
         );
       let.await () = broadcast_operation_gossip(state, request);
       Lwt.return();
     });
-  } else {
+  };
+
+let received_main_operation = (state, update_state, operation) => {
+  let.ok kind =
+    switch (operation.Tezos_interop.Consensus.parameters) {
+    | Deposit({ticket, amount, destination}) =>
+      let.ok destination =
+        switch (destination) {
+        | Tezos_interop.Address.Implicit(Ed25519(destination)) =>
+          Ok(Wallet.address_of_blake(destination))
+        | _ => Error(`Invalid_address_on_main_operation)
+        };
+      let amount = Amount.of_int(Z.to_int(amount));
+      Ok(Operation.Main_chain.Deposit({ticket, amount, destination}));
+    };
+  let operation =
+    Operation.Main_chain.make(
+      ~tezos_hash=operation.Tezos_interop.Consensus.hash,
+      ~tezos_index=operation.index,
+      ~kind,
+    );
+  if (!List.mem(operation, state.Node.pending_main_ops)) {
+    let _ =
+      update_state(
+        Node.{
+          ...state,
+          pending_main_ops: [operation, ...state.Node.pending_main_ops],
+        },
+      );
     ();
   };
+  Ok();
+};
 
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);

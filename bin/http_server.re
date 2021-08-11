@@ -41,9 +41,16 @@ let print_error = err => {
     eprintf("Added_block_not_signed_enough_to_desync")
   | `Invalid_nonce_signature => eprintf("Invalid_nonce_signature")
   | `Unknown_uri => eprintf("Unknown_uri")
+  | `Invalid_address_on_main_operation =>
+    eprintf("Invalid_address_on_main_operation")
   };
   eprintf("\n%!");
 };
+let update_state = state => {
+  Server.set_state(state);
+  state;
+};
+
 let handle_request =
     (
       type req,
@@ -55,10 +62,6 @@ let handle_request =
   App.post(
     E.path,
     request => {
-      let update_state = state => {
-        Server.set_state(state);
-        state;
-      };
       let.await json = Request.to_json(request);
       let response = {
         let.ok json = Option.to_result(~none=`Not_a_json, json);
@@ -241,6 +244,19 @@ let node = {
       let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
       await(node.protocol);
     };
+  Tezos_interop.Consensus.listen_operations(
+    ~context=interop_context, ~on_operation=operation =>
+    switch (
+      Flows.received_main_operation(
+        Server.get_state(),
+        update_state,
+        operation,
+      )
+    ) {
+    | Ok () => ()
+    | Error(err) => print_error(err)
+    }
+  );
   await({...node, protocol});
 };
 let node = node |> Lwt_main.run;
