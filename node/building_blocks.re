@@ -57,11 +57,18 @@ let is_current_producer = (state, ~key) => {
 
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
-let is_signable = (state, block) =>
+let is_signable = (state, block) => {
+  // TODO: this is O(n*m) which is bad
+  let is_known_main = main_op =>
+    state.State.pending_main_ops |> List.exists(op => op == main_op);
+  let all_main_ops_are_known =
+    List.for_all(is_known_main, block.Block.main_chain_ops);
   is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
-  && !has_next_block_to_apply(state, ~hash=block.hash);
+  && !has_next_block_to_apply(state, ~hash=block.hash)
+  && all_main_ops_are_known;
+};
 
 let sign = (~key, block) => Block.sign(~key, block);
 
