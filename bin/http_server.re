@@ -165,7 +165,15 @@ let handle_receive_operation_gossip =
       Ok();
     },
   );
-
+let handle_ticket_balance =
+  handle_request(
+    (module Ticket_balance),
+    (_update_state, {ticket, address}) => {
+      let state = Server.get_state();
+      let amount = Flows.request_ticket_balance(state, ~ticket, ~address);
+      Ok({amount: amount});
+    },
+  );
 let node = {
   let folder = Sys.argv[1];
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
@@ -237,6 +245,7 @@ let _server =
   |> handle_request_nonce
   |> handle_register_uri
   |> handle_receive_operation_gossip
+  |> handle_ticket_balance
   |> App.start
   |> Lwt_main.run;
 

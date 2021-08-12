@@ -157,6 +157,17 @@ module Operation_gossip = {
   let path = "/operation-gossip";
 };
 
+module Ticket_balance = {
+  [@deriving yojson]
+  type request = {
+    address: Wallet.t,
+    ticket: Ticket.t,
+  };
+  [@deriving yojson]
+  type response = {amount: Amount.t};
+  let path = "/ticket-balance";
+};
+
 let request_block_by_hash = request((module Block_by_hash_spec));
 let request_block_level = request((module Block_level));
 let request_protocol_snapshot = request((module Protocol_snapshot));
