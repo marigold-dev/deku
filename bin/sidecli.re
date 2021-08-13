@@ -245,9 +245,10 @@ let info_sign_block = {
   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
   Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
-let sign_block = (wallet_file, block_hash) => {
-  let.await wallet = Files.Wallet.read(~file=wallet_file);
-  let signature = Signature.sign(~key=wallet.priv_key, block_hash);
+let sign_block = (folder, block_hash) => {
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  let signature = Signature.sign(~key=identity.key, block_hash);
   let.await validators_uris = validators_uris();
   let.await () =
     Networking.(
@@ -260,9 +261,10 @@ let sign_block = (wallet_file, block_hash) => {
   Lwt.return(`Ok());
 };
 let sign_block_term = {
-  let key_wallet = {
-    let doc = "The validator key that will sign the block address.";
-    Arg.(required & pos(0, some(wallet), None) & info([], ~doc));
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
   let block_hash = {
@@ -270,7 +272,7 @@ let sign_block_term = {
     Arg.(required & pos(1, some(hash), None) & info([], ~doc));
   };
 
-  Term.(lwt_ret(const(sign_block) $ key_wallet $ block_hash));
+  Term.(lwt_ret(const(sign_block) $ folder_node $ block_hash));
 };
 
 // produce-block
