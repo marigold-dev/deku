@@ -387,3 +387,6 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     });
   Ok();
 };
+
+let request_ticket_balance = (state, ~ticket, ~address) =>
+  state.Node.protocol.ledger |> Ledger.balance(address, ticket);
