@@ -1,7 +1,7 @@
 open Helpers;
 open Mirage_crypto_ec;
 
-[@deriving (ord, yojson)]
+[@deriving ord]
 type t = BLAKE2B_20.t;
 
 let of_address = pubkey =>
@@ -24,4 +24,14 @@ let make_wallet = () => {
 let address_to_blake = t => t;
 let address_of_blake = t => t;
 let address_to_string = wallet =>
-  wallet |> address_to_blake |> BLAKE2B_20.to_string;
+  Tezos_interop.Key_hash.(Ed25519(wallet |> address_to_blake) |> to_string);
+let address_of_string = string =>
+  switch (Tezos_interop.Key_hash.of_string(string)) {
+  | Some(Ed25519(key)) => Some(key)
+  | None => None
+  };
+let to_yojson = t => `String(address_to_string(t));
+let of_yojson = json => {
+  let.ok string = [%of_yojson: string](json);
+  address_of_string(string) |> Option.to_result(~none="invalid address");
+};
