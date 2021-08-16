@@ -200,10 +200,11 @@ let node = {
     protocol: {
       ...node.protocol,
       validators:
-        List.fold_right(
-          ((address, _)) => Validators.add({address: address}),
-          validators,
+        List.fold_left(
+          (validators, (address, _)) =>
+            Validators.add({address: address}, validators),
           Validators.empty,
+          validators,
         ),
     },
   };
