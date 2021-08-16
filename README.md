@@ -38,49 +38,41 @@ tests. These can be run with,
 esy test
 ```
 
-### Running the node
+### Running a sidechain
 
-The node binary is `http_server.exe` present in `bin/` folder. One way
-to execute it would be,
+#### Requirements
 
-```
-esy b dune exec ./bin/http_server.exe <args>
-```
+To run a sidechain you will need to have a Tezos node that you control and a Tezos Secret Key(edsk).
 
-(`http_server` because the node uses HTTP for p2p communication)
+You can run a Tezos node on a testnet and use the faucet to acquire a key with funds, as described in the following link:
 
-However, every node needs an identity before it can join or start a
-network. Identities can be created with the CLI tool, `sidecli`
+- https://tezos.b9lab.com/tezos-basics/testnet-1
 
-```
-esy x sidecli make-credentials
+To find out your `edsk` you can run
+
+```shell
+./tezos-client show address <ADDRESS-NAME> -S
 ```
 
-`make-credentials` meant for quick development - it creates a couple
-of identities to setup a local test network. They're store in folders
-`0`, `1`, `2` and `3`.
+#### Setup
 
-This identity folder can now be passed to the node.
+To run chain you will need to run a couple of commands, as those are currently unstable, this repo provide a guided script to setup.
 
-```
-esy b dune exec ./bin/http_server.exe 0
+```shell
+./setup.sh
 ```
 
-### Creating files needed to run the node
+You will be prompted to deploy a smart contract and to inform the KT1 address to the deployed contract, the URL to your Tezos Node and your `edsk` key.
 
-4 files are needed to set up the node. Creating them manually is inconvenient and error-prone, so sidecli has a convenience subcommand `setup-node` that takes all the information needed to create a node and creates the necessary files in a folder you specify.
+#### Start
 
-Example usage:
+As starting a local chain means running multiple commands locally we also provide a script to do it.
 
-```
-esy x sidecli setup-node ./data/ \
-   --secret edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd \
-   --uri self_uri \
-   --tezos_rpc_node tezos_node_uri \
-   --tezos_secret edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd \
-   --tezos_consensus_contract KT1DMCGGiHT2dgjjXHG7qh1C1maFchrLNphx
+```shell
+./start.sh
 ```
 
+It will start all your nodes, produce a block and sign it, this will start the chain, if everything did go well you should be seeing the block height being displayed on the command line.
 
 ## Contributing
 
