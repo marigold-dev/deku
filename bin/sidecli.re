@@ -13,17 +13,11 @@ let man = [
 
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
-let validators = () =>
-  [
-    Files.Identity.read(~file="0/identity.json"),
-    Files.Identity.read(~file="1/identity.json"),
-    Files.Identity.read(~file="2/identity.json"),
-    Files.Identity.read(~file="3/identity.json"),
-  ]
-  |> Lwt.all;
-
-let validators_uris = () =>
-  Lwt.map(List.map(validator => validator.uri), validators());
+let validators_uris = folder => {
+  let.await validators =
+    Files.Validators.read(~file=folder ++ "/validators.json");
+  validators |> List.map(snd) |> await;
+};
 
 let make_filename_from_address = wallet_addr_str => {
   Printf.sprintf("%s.tzsidewallet", wallet_addr_str);
@@ -158,9 +152,9 @@ let info_create_transaction = {
 };
 
 let create_transaction =
-    (sender_wallet_file, received_address, amount, ticket) => {
+    (folder_node, sender_wallet_file, received_address, amount, ticket) => {
   open Networking;
-  let.await validators_uris = validators_uris();
+  let.await validators_uris = validators_uris(folder_node);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);
   let block_level = block_level_response.level;
@@ -187,6 +181,12 @@ let create_transaction =
 };
 
 let create_transaction = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
     let env = Arg.env_var("SENDER", ~doc);
@@ -226,7 +226,12 @@ let create_transaction = {
 
   Term.(
     lwt_ret(
-      const(create_transaction) $ address_from $ address_to $ amount $ ticket,
+      const(create_transaction)
+      $ folder_node
+      $ address_from
+      $ address_to
+      $ amount
+      $ ticket,
     )
   );
 };
@@ -249,7 +254,7 @@ let sign_block = (folder, block_hash) => {
   let file = folder ++ "/identity.json";
   let.await identity = Files.Identity.read(~file);
   let signature = Signature.sign(~key=identity.key, block_hash);
-  let.await validators_uris = validators_uris();
+  let.await validators_uris = validators_uris(folder);
   let.await () =
     Networking.(
       broadcast_to_list(
@@ -295,7 +300,7 @@ let produce_block = folder => {
       ~side_chain_ops=[],
     );
   let signature = Block.sign(~key=identity.key, block);
-  let.await validators_uris = validators_uris();
+  let.await validators_uris = validators_uris(folder);
   let.await () =
     Networking.(
       broadcast_to_list(
