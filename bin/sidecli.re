@@ -72,12 +72,19 @@ let uri = {
 };
 
 let address = {
+  open Tezos_interop.Key_hash;
   let parser = string =>
-    BLAKE2B_20.of_string(string)
-    |> Option.map(Wallet.address_of_blake)
+    Tezos_interop.Key_hash.of_string(string)
+    |> Option.map((Ed25519(hash)) => Wallet.address_of_blake(hash))
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
-    Format.fprintf(fmt, "%s", Wallet.address_to_string(wallet));
+    Format.fprintf(
+      fmt,
+      "%s",
+      wallet
+      |> Wallet.address_to_blake
+      |> (hash => Ed25519(hash) |> Tezos_interop.Key_hash.to_string),
+    );
   Arg.(conv((parser, printer)));
 };
 let address_tezos_interop = {
@@ -192,7 +199,7 @@ let create_transaction = {
     let env = Arg.env_var("SENDER", ~doc);
     Arg.(
       required
-      & pos(0, some(wallet), None)
+      & pos(1, some(wallet), None)
       & info([], ~env, ~docv="sender", ~doc)
     );
   };
@@ -202,7 +209,7 @@ let create_transaction = {
     let env = Arg.env_var("RECEIVER", ~doc);
     Arg.(
       required
-      & pos(1, some(address), None)
+      & pos(2, some(address), None)
       & info([], ~env, ~docv="receiver", ~doc)
     );
   };
@@ -212,7 +219,7 @@ let create_transaction = {
     let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
     Arg.(
       required
-      & pos(2, some(amount), None)
+      & pos(3, some(amount), None)
       & info([], ~env, ~docv="amount", ~doc)
     );
   };
@@ -220,7 +227,7 @@ let create_transaction = {
   let ticket = {
     let doc = "The ticket to be trasnsacted.";
     Arg.(
-      required & pos(3, some(ticket), None) & info([], ~docv="MSG", ~doc)
+      required & pos(4, some(ticket), None) & info([], ~docv="MSG", ~doc)
     );
   };
 
