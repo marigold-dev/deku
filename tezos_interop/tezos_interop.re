@@ -480,7 +480,8 @@ module Run_contract = {
   // TODO: this leaks the file as it needs to be removed when the app closes
   let file = {
     let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
-    let.await () = Lwt_io.write(oc, [%blob "run_entrypoint.bundle.js"]);
+    let.await () =
+      Lwt_io.write(oc, [%blob "./tezos_interop/run_entrypoint.bundle.js"]);
     await(file);
   };
   let file = Lwt_main.run(file);
@@ -541,7 +542,10 @@ module Listen_transactions = {
     let file = {
       let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
       let.await () =
-        Lwt_io.write(oc, [%blob "listen_transactions.bundle.js"]);
+        Lwt_io.write(
+          oc,
+          [%blob "./tezos_interop/listen_transactions.bundle.js"],
+        );
       await(file);
     };
     let file = Lwt_main.run(file);
