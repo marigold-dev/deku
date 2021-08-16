@@ -1,5 +1,4 @@
 open Helpers;
-
 module Base58 = Base58;
 
 module Key: {
@@ -102,6 +101,7 @@ module Context: {
     required_confirmations: int,
   };
 };
+
 module Consensus: {
   let hash_validators: list(Key.t) => BLAKE2B.t;
   let hash_block:
@@ -151,6 +151,8 @@ module Consensus: {
   };
   let listen_operations:
     (~context: Context.t, ~on_operation: operation => unit) => unit;
+  let fetch_validators:
+    (~context: Context.t) => Lwt.t(result(list(Key.t), string));
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};

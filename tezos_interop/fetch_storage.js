@@ -60,5 +60,7 @@ const error = (error) =>
     } else {
       error({ message: "Not in current Branch" });
     }
+  } else {
+    error({ message: "Internal error: operationFromHead was undefined" });
   }
 })().catch(error);
