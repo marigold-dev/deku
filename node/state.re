@@ -27,6 +27,10 @@ type t = {
   // TODO: clean after nonce is used
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
+  // TODO: use proper variants in the future
+  // TODO: this also needs to be cleaned in the future
+  recent_operation_results:
+    BLAKE2B.Map.t([ | `Transaction | `Withdraw(Ledger.Handle.t)]),
 };
 
 let make =
@@ -55,6 +59,7 @@ let make =
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
+    recent_operation_results: BLAKE2B.Map.empty,
   };
 };
 
@@ -106,9 +111,16 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
 };
 let apply_block = (state, block) => {
   let old_state = state;
-  let.ok (protocol, new_snapshot, _result) =
+  let.ok (protocol, new_snapshot, results) =
     apply_block(state.protocol, block);
-  let state = {...state, protocol};
+  let recent_operation_results =
+    List.fold_left(
+      (results, (op, result)) =>
+        BLAKE2B.Map.add(op.Operation.Side_chain.hash, result, results),
+      state.recent_operation_results,
+      results,
+    );
+  let state = {...state, protocol, recent_operation_results};
   Lwt.async(() =>
     Lwt_io.with_file(
       ~mode=Output,
