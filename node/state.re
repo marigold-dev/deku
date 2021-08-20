@@ -106,7 +106,8 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
 };
 let apply_block = (state, block) => {
   let old_state = state;
-  let.ok (protocol, new_snapshot) = apply_block(state.protocol, block);
+  let.ok (protocol, new_snapshot, _result) =
+    apply_block(state.protocol, block);
   let state = {...state, protocol};
   Lwt.async(() =>
     Lwt_io.with_file(
@@ -239,7 +240,9 @@ let load_snapshot =
     fold_left_ok(
       (protocol, block) => {
         // TODO: ignore this may be really bad for snapshots
-        let.ok (protocol, _new_hash) = Protocol.apply_block(protocol, block);
+        // TODO: ignore the result is also really bad
+        let.ok (protocol, _new_hash, _result) =
+          Protocol.apply_block(protocol, block);
         Ok(protocol);
       },
       protocol,
