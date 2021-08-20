@@ -1,7 +1,3 @@
-/*
-
- */
-
 // TODO: does computers have multiple RTC nowadays?
 // Can a core send a message and the other receive it in the past?
 // TODO: should start signing before being in sync?

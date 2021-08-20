@@ -243,6 +243,98 @@ let create_transaction = {
   );
 };
 
+// withdraw
+
+let info_withdraw = {
+  let doc = Printf.sprintf("Submits a withdraw to the sidechain.");
+  Term.info("withdraw", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let withdraw =
+    (folder_node, sender_wallet_file, tezos_address, amount, ticket) => {
+  open Networking;
+  let.await validators_uris = validators_uris(folder_node);
+  let validator_uri = List.hd(validators_uris);
+  let.await block_level_response = request_block_level((), validator_uri);
+  let block_level = block_level_response.level;
+  let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
+  let operation =
+    Operation.Side_chain.sign(
+      ~secret=wallet.priv_key,
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~source=wallet.address,
+      ~amount,
+      ~ticket,
+      ~kind=Withdraw({owner: tezos_address}),
+    );
+
+  // Broadcast transaction
+  let.await () =
+    Networking.broadcast_operation_gossip_to_list(
+      validators_uris,
+      Networking.Operation_gossip.{operation: operation},
+    );
+
+  Format.printf("operation.hash: %s\n%!", BLAKE2B.to_string(operation.hash));
+  Lwt.return(`Ok());
+};
+
+let withdraw = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  let address_from = {
+    let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
+    let env = Arg.env_var("SENDER", ~doc);
+    Arg.(
+      required
+      & pos(1, some(wallet), None)
+      & info([], ~env, ~docv="sender", ~doc)
+    );
+  };
+
+  let tezos_address = {
+    let doc = "The address that will be used to withdraw the ticket at Tezos **only KT1 and tz1**";
+    Arg.(
+      required
+      & pos(2, some(address_tezos_interop), None)
+      & info([], ~docv="tezos_address", ~doc)
+    );
+  };
+
+  let amount = {
+    let doc = "The amount to be transacted.";
+    let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
+    Arg.(
+      required
+      & pos(3, some(amount), None)
+      & info([], ~env, ~docv="amount", ~doc)
+    );
+  };
+
+  let ticket = {
+    let doc = "The ticket to be trasnsacted.";
+    Arg.(
+      required & pos(4, some(ticket), None) & info([], ~docv="MSG", ~doc)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(withdraw)
+      $ folder_node
+      $ address_from
+      $ tezos_address
+      $ amount
+      $ ticket,
+    )
+  );
+};
+
 // sign-block
 let hash = {
   let parser = string =>
@@ -631,6 +723,7 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
+      (withdraw, info_withdraw),
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (setup_identity, info_setup_identity),
