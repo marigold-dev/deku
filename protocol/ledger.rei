@@ -32,7 +32,8 @@ let withdraw:
   ) =>
   result((t, Handle.t), [> | `Not_enough_funds]);
 
+let handles_find_proof: (Handle.t, t) => list((BLAKE2B.t, BLAKE2B.t));
 // TODO: I don't like this API
-let handles_find_proof:
+let handles_find_proof_by_id:
   (int, t) => option((list((BLAKE2B.t, BLAKE2B.t)), Handle.t));
 let handles_root_hash: t => BLAKE2B.t;
