@@ -157,6 +157,22 @@ module Operation_gossip = {
   let path = "/operation-gossip";
 };
 
+module Withdraw_proof = {
+  [@deriving yojson]
+  type request = {operation_hash: BLAKE2B.t};
+
+  [@deriving yojson]
+  type response =
+    | Ok({
+        handles_hash: BLAKE2B.t,
+        handle: Ledger.Handle.t,
+        proof: list((BLAKE2B.t, BLAKE2B.t)),
+      })
+    | Unknown_operation
+    | Operation_is_not_a_withdraw;
+
+  let path = "/withdraw-proof";
+};
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
@@ -173,6 +189,7 @@ let request_block_level = request((module Block_level));
 let request_protocol_snapshot = request((module Protocol_snapshot));
 let request_nonce = request((module Request_nonce));
 let request_register_uri = request((module Register_uri));
+let request_withdraw_proof = request((module Withdraw_proof));
 let broadcast_signature = broadcast_to_validators((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast_to_validators((module Block_and_signature_spec));

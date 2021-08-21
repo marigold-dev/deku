@@ -161,6 +161,12 @@ let handle_receive_operation_gossip =
       Ok();
     },
   );
+let handle_withdraw_proof =
+  handle_request((module Withdraw_proof), (_, {operation_hash}) =>
+    Ok(
+      Flows.request_withdraw_proof(Server.get_state(), ~hash=operation_hash),
+    )
+  );
 let handle_ticket_balance =
   handle_request(
     (module Ticket_balance),
@@ -242,6 +248,7 @@ let _server =
   |> handle_request_nonce
   |> handle_register_uri
   |> handle_receive_operation_gossip
+  |> handle_withdraw_proof
   |> handle_ticket_balance
   |> App.start
   |> Lwt_main.run;
