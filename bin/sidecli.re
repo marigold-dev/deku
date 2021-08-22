@@ -118,6 +118,14 @@ let ticket = {
     Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
   Arg.(conv(~docv="A ticket", (parser, printer)));
 };
+let hash = {
+  let parser = string =>
+    BLAKE2B.of_string(string)
+    |> Option.to_result(~none=`Msg("Expected a 256bits BLAKE2b hash."));
+  let printer = (fmt, wallet) =>
+    Format.fprintf(fmt, "%s", BLAKE2B.to_string(wallet));
+  Arg.(conv((parser, printer)));
+};
 
 // Commands
 // ========
@@ -183,6 +191,10 @@ let create_transaction =
       validators_uris,
       Networking.Operation_gossip.{operation: transaction},
     );
+  Format.printf(
+    "operation.hash: %s\n%!",
+    BLAKE2B.to_string(transaction.hash),
+  );
 
   Lwt.return(`Ok());
 };
@@ -335,15 +347,88 @@ let withdraw = {
   );
 };
 
-// sign-block
-let hash = {
-  let parser = string =>
-    BLAKE2B.of_string(string)
-    |> Option.to_result(~none=`Msg("Expected a 256bits BLAKE2b hash."));
-  let printer = (fmt, wallet) =>
-    Format.fprintf(fmt, "%s", BLAKE2B.to_string(wallet));
-  Arg.(conv((parser, printer)));
+// withdraw-proof
+
+let withdraw_proof = (folder, operation_hash, callback) => {
+  open Networking;
+
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+
+  let.await result =
+    request_withdraw_proof({operation_hash: operation_hash}, identity.uri);
+  switch (result) {
+  | Unknown_operation =>
+    let message = BLAKE2B.to_string(operation_hash) ++ " is unknown";
+    await(`Error((false, message)));
+  | Operation_is_not_a_withdraw =>
+    let message = BLAKE2B.to_string(operation_hash) ++ " is not a withdraw";
+    await(`Error((false, message)));
+  | Ok({handles_hash, handle, proof}) =>
+    let to_hex = bytes => Hex.show(Hex.of_bytes(bytes));
+    Format.printf(
+      {|(Pair (Pair %S
+            (Pair (Pair %d 0x%s) %d %S)
+            %S)
+      0x%s
+      { %s })|},
+      Tezos_interop.Address.to_string(callback),
+      Amount.to_int(handle.amount),
+      to_hex(handle.ticket.data),
+      handle.id,
+      Tezos_interop.Address.to_string(handle.owner),
+      Tezos_interop.Address.to_string(handle.ticket.ticketer),
+      BLAKE2B.to_string(handles_hash),
+      List.map(
+        ((left, right)) =>
+          Format.sprintf(
+            "        Pair 0x%s\n             0x%s",
+            BLAKE2B.to_string(left),
+            BLAKE2B.to_string(right),
+          ),
+        proof,
+      )
+      |> String.concat(" ;\n")
+      |> String.trim,
+    );
+    await(`Ok());
+  };
 };
+let info_withdraw_proof = {
+  let doc = "Find withdraw proof from operation hash";
+  Term.info("withdraw-proof", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let withdraw_proof = {
+  let folder_dest = {
+    let docv = "folder_dest";
+    let doc = "The folder the files will be created in. The folder must exist and be empty.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  let operation_hash = {
+    let docv = "operation_hash";
+    let doc = "The operation hash used on the withdraw.";
+    Arg.(required & pos(1, some(hash), None) & info([], ~doc, ~docv));
+  };
+
+  let contract_callback = {
+    let docv = "contract_callback";
+    let doc = "Contract callback to be used on the withdraw";
+    Arg.(
+      required
+      & pos(2, some(address_tezos_interop), None)
+      & info([], ~doc, ~docv)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(withdraw_proof) $ folder_dest $ operation_hash $ contract_callback,
+    )
+  );
+};
+
+// sign-block
 
 let info_sign_block = {
   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
@@ -724,6 +809,7 @@ let () = {
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
       (withdraw, info_withdraw),
+      (withdraw_proof, info_withdraw_proof),
       (sign_block_term, info_sign_block),
       (produce_block, info_produce_block),
       (setup_identity, info_setup_identity),
