@@ -2,7 +2,7 @@ open Helpers;
 open Protocol;
 
 module Signature_set =
-  Set_with_yojson_make({
+  Set.Make_with_yojson({
     [@deriving (yojson, ord)]
     type t = Signature.t;
   });

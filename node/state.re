@@ -265,7 +265,7 @@ let load_snapshot =
       last_seen_membership_change_timestamp: 0.0,
     };
   let.ok protocol =
-    fold_left_ok(
+    List.fold_left_ok(
       (protocol, block) => {
         // TODO: ignore this may be really bad for snapshots
         // TODO: ignore the result is also really bad
