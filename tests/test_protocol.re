@@ -98,36 +98,43 @@ describe("protocol state", ({test, _}) => {
     ~free_diff_a=-7,
     ~free_diff_b=7,
     (state, (source, secret), (destination, _)) => {
-    apply_side_chain(
-      state,
-      Operation.Side_chain.sign(
-        ~secret,
-        ~nonce=0l,
-        ~block_height=0L,
-        ~source,
-        ~amount=Amount.of_int(7),
-        ~ticket,
-        ~kind=Transaction({destination: destination}),
-      ),
-    )
-  });
+      let (state, result) =
+        apply_side_chain(
+          state,
+          Operation.Side_chain.sign(
+            ~secret,
+            ~nonce=0l,
+            ~block_height=0L,
+            ~source,
+            ~amount=Amount.of_int(7),
+            ~ticket,
+            ~kind=Transaction({destination: destination}),
+          ),
+        );
+      assert(result == `Transaction);
+      state;
+    },
+  );
   test_failed_wallet_offset(
     "transaction",
     "not enough funds",
-    (state, (source, secret), (destination, _)) =>
-    apply_side_chain(
-      state,
-      Operation.Side_chain.sign(
-        ~secret,
-        ~nonce=0l,
-        ~block_height=0L,
-        ~source,
-        ~amount=Amount.of_int(501),
-        ~ticket,
-        ~kind=Transaction({destination: destination}),
-      ),
-    )
-  );
+    (state, (source, secret), (destination, _)) => {
+    let (state, result) =
+      apply_side_chain(
+        state,
+        Operation.Side_chain.sign(
+          ~secret,
+          ~nonce=0l,
+          ~block_height=0L,
+          ~source,
+          ~amount=Amount.of_int(501),
+          ~ticket,
+          ~kind=Transaction({destination: destination}),
+        ),
+      );
+    assert(result == `Transaction);
+    state;
+  });
   test("validators", ({expect, _}) => {
     // TODO: this clearly should be splitten and properly automated
     let (state, _, _) = make_state(~validators=Validators.empty, ());

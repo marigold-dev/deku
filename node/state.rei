@@ -22,6 +22,8 @@ type t = {
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
+  recent_operation_results:
+    BLAKE2B.Map.t([ | `Transaction | `Withdraw(Ledger.Handle.t)]),
 };
 
 let make:

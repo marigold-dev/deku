@@ -66,12 +66,14 @@ let apply_side_chain = (state: t, operation) => {
   let included_operations = Set.add(operation, state.included_operations);
 
   let {source, amount, ticket, _} = operation;
-  let ledger =
+  let.ok (ledger, result) =
     switch (operation.kind) {
     | Transaction({destination}) =>
-      Ledger.transfer(~source, ~destination, amount, ticket, state.ledger)
+      let.ok ledger =
+        Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
+      Ok((ledger, `Transaction));
     | Withdraw({owner}) =>
-      let.ok (ledger, _handle) =
+      let.ok (ledger, handle) =
         Ledger.withdraw(
           ~source,
           ~destination=owner,
@@ -80,17 +82,16 @@ let apply_side_chain = (state: t, operation) => {
           state.ledger,
         );
       // TODO: publish the handle somewhere
-      Ok(ledger);
-    };
-  let ledger =
-    switch (ledger) {
-    | Ok(ledger) => ledger
-    | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
+      Ok((ledger, `Withdraw(handle)));
     };
 
-  {...state, ledger, included_operations};
+  Ok(({...state, ledger, included_operations}, result));
 };
-
+let apply_side_chain = (state, operation) =>
+  switch (apply_side_chain(state, operation)) {
+  | Ok((state, result)) => (state, result)
+  | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
+  };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height
   && state.last_block_hash == block.previous_hash;
@@ -115,10 +116,13 @@ let apply_block = (state, block) => {
       state,
       block.Block.main_chain_ops,
     );
-  let state =
+  let (state, side_chain_operation_results) =
     fold_left_noop_when_exception(
-      apply_side_chain,
-      state,
+      ((state, results), operation) => {
+        let (state, result) = apply_side_chain(state, operation);
+        (state, [(operation, result), ...results]);
+      },
+      (state, []),
       block.Block.side_chain_ops,
     );
 
@@ -133,18 +137,21 @@ let apply_block = (state, block) => {
          ),
   };
 
-  {
-    ...state,
-    block_height: block.block_height,
-    validators: state.validators |> Validators.update_current(block.author),
-    last_block_hash: block.hash,
-    last_state_root_update:
-      block.state_root_hash != state.state_root_hash
-        ? Unix.time() : state.last_state_root_update,
-    last_applied_block_timestamp: Unix.time(),
-    state_root_hash: block.state_root_hash,
-    validators_hash: block.validators_hash,
-  };
+  (
+    {
+      ...state,
+      block_height: block.block_height,
+      validators: state.validators |> Validators.update_current(block.author),
+      last_block_hash: block.hash,
+      last_state_root_update:
+        block.state_root_hash != state.state_root_hash
+          ? Unix.time() : state.last_state_root_update,
+      last_applied_block_timestamp: Unix.time(),
+      state_root_hash: block.state_root_hash,
+      validators_hash: block.validators_hash,
+    },
+    side_chain_operation_results,
+  );
 };
 
 let make = (~initial_block) => {
@@ -164,7 +171,7 @@ let make = (~initial_block) => {
     last_state_root_update: 0.0,
     last_applied_block_timestamp: 0.0,
   };
-  apply_block(empty, initial_block);
+  apply_block(empty, initial_block) |> fst;
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
@@ -177,8 +184,8 @@ let apply_block = (state, block) => {
       (block.state_root_hash == hash, Some((hash, data)));
     };
   let.assert () = (`Invalid_state_root_hash, valid_hash);
-  let state = apply_block(state, block);
-  Ok((state, hash));
+  let (state, result) = apply_block(state, block);
+  Ok((state, hash, result));
 };
 
 let get_current_block_producer = state =>

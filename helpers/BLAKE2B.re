@@ -18,6 +18,8 @@ module Make =
          let verify: (~hash: t, string) => bool;
 
          let both: (t, t) => t;
+
+         module Map: Map.S with type key = t;
        } => {
   include P;
   include Digestif.Make_BLAKE2B({
@@ -42,6 +44,12 @@ module Make =
   let verify = (~hash as expected_hash, data) => expected_hash == hash(data);
 
   let both = (a, b) => hash(to_raw_string(a) ++ to_raw_string(b));
+
+  module Map =
+    Map.Make({
+      type nonrec t = t;
+      let compare = compare;
+    });
 };
 
 module BLAKE2B_20 =
