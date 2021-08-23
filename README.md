@@ -76,23 +76,4 @@ It will start all your nodes, produce a block and sign it, this will start the c
 
 ## Contributing
 
-### Guidelines
-
-Please consider the following,
-
-1. Using `<your username>/<branchname>` format for the branches
-2. Opening follow up posts on the issue tracker for non-critical
-   issues observed during reviews of critical PRs.
-3. Specify the problem description along the with proposed solution 
-   in the PR description. Refer merged PRs to get an idea of what is 
-   considered a good PR description.
-4. Specify if a PR depends on another PR before it can be merged.
-   
-### Conventions
-
-See [Hacking](./HACKING.md)
-
-### Resources
-
-1. [Whimsical Diagrams](https://whimsical.com/sidechain-Hn48PizK75qk4weaU1GuVA)
-2. [Notes](./notes)
+Please refer the developer wiki [here](https://github.com/marigold-dev/sidechain/wiki)
