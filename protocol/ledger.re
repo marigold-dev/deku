@@ -121,5 +121,12 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
   Ok((t, handle));
 };
 
-let handles_find_proof = (key, t) => Handle_tree.find(key, t.handles);
+let handles_find_proof = (handle, t) =>
+  switch (Handle_tree.find(handle.Handle.id, t.handles)) {
+  // TODO: enforce this unreachability on the type system
+  // the only way to have a Handle.t is to do a withdraw
+  | None => assert(false)
+  | Some((proof, _)) => proof
+  };
+let handles_find_proof_by_id = (key, t) => Handle_tree.find(key, t.handles);
 let handles_root_hash = t => Handle_tree.hash(t.handles);

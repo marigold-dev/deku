@@ -387,6 +387,27 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     });
   Ok();
 };
-
+let request_withdraw_proof = (state, ~hash) =>
+  switch (state.Node.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
+  | None => Networking.Withdraw_proof.Unknown_operation
+  | Some(`Transaction) => Operation_is_not_a_withdraw
+  | Some(`Withdraw(handle)) =>
+    let last_block_hash = state.Node.protocol.last_block_hash;
+    /* TODO: possible problem with this solution
+       if this specific handles_hash was never commited to Tezos
+       then the withdraw will fail at Tezos */
+    let handles_hash =
+      switch (
+        Block_pool.find_block(~hash=last_block_hash, state.Node.block_pool)
+      ) {
+      // this branch is unreachable
+      // TODO: make this unreachable through the typesystem
+      | None => assert(false)
+      | Some(block) => block.Block.handles_hash
+      };
+    let proof =
+      state.Node.protocol.ledger |> Ledger.handles_find_proof(handle);
+    Ok({handles_hash, handle, proof});
+  };
 let request_ticket_balance = (state, ~ticket, ~address) =>
   state.Node.protocol.ledger |> Ledger.balance(address, ticket);
