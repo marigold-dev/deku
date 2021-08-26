@@ -754,7 +754,8 @@ module Consensus = {
         // TODO: proper type for amounts
         amount: Z.t,
         destination: Address.t,
-      });
+      })
+    | Update_root_hash(BLAKE2B.t);
   type operation = {
     hash: BLAKE2B.t,
     index: int,
@@ -763,6 +764,47 @@ module Consensus = {
 
   let parse_parameters = (entrypoint, micheline) =>
     switch (entrypoint, micheline) {
+    | (
+        "update_root_hash",
+        Tezos_micheline.Micheline.Prim(
+          _,
+          Michelson_v1_primitives.D_Pair,
+          [
+            Prim(
+              _,
+              D_Pair,
+              [
+                Prim(
+                  _,
+                  D_Pair,
+                  [Bytes(_, _block_hash), Int(_, _block_height)],
+                  _,
+                ),
+                Prim(
+                  _,
+                  D_Pair,
+                  [Bytes(_, _block_payload_hash), Int(_, _handles_hash)],
+                  _,
+                ),
+              ],
+              _,
+            ),
+            Prim(
+              _,
+              D_Pair,
+              [
+                Prim(_, D_Pair, [_signatures, Bytes(_, state_root_hash)], _),
+                _,
+              ],
+              _,
+            ),
+          ],
+          _,
+        ),
+      ) =>
+      let.some state_root_hash =
+        state_root_hash |> Bytes.to_string |> BLAKE2B.of_raw_string;
+      Some(Update_root_hash(state_root_hash));
     | (
         "deposit",
         Micheline.Prim(

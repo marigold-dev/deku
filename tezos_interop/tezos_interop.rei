@@ -143,7 +143,8 @@ module Consensus: {
         // TODO: proper type for amounts
         amount: Z.t,
         destination: Address.t,
-      });
+      })
+    | Update_root_hash(BLAKE2B.t);
   type operation = {
     hash: Operation_hash.t,
     index: int,
