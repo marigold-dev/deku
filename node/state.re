@@ -235,6 +235,7 @@ let load_snapshot =
 
   // TODO: this is clearly an abstraction leak
 
+  let past_state_root_hashes = [];
   let protocol =
     Protocol.{
       ledger,
@@ -244,6 +245,7 @@ let load_snapshot =
       validators_hash,
       block_height,
       last_block_hash,
+      past_state_root_hashes,
       state_root_hash,
       last_state_root_update: 0.0,
       last_applied_block_timestamp: 0.0,

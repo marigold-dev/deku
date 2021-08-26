@@ -16,6 +16,9 @@ type t = {
   // shared consensus
   block_height: int64,
   last_block_hash: BLAKE2B.t,
+  // List of state_root_hash'es computed by this node from a last known good state
+  // This will later be validated against the main chain
+  past_state_root_hashes: list(BLAKE2B.t),
   state_root_hash: BLAKE2B.t,
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just
@@ -36,6 +39,7 @@ let hash = t => {
       BLAKE2B.t,
       int64,
       BLAKE2B.t,
+      list(BLAKE2B.t),
       BLAKE2B.t,
     )
   ];
@@ -48,6 +52,7 @@ let hash = t => {
       t.validators_hash,
       t.block_height,
       t.last_block_hash,
+      t.past_state_root_hashes,
       t.state_root_hash,
     ));
 

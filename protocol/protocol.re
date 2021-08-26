@@ -147,6 +147,12 @@ let apply_block = (state, block) => {
         block.state_root_hash != state.state_root_hash
           ? Unix.time() : state.last_state_root_update,
       last_applied_block_timestamp: Unix.time(),
+      past_state_root_hashes:
+        if (state.state_root_hash != block.state_root_hash) {
+          [state.state_root_hash, ...state.past_state_root_hashes];
+        } else {
+          state.past_state_root_hashes;
+        },
       state_root_hash: block.state_root_hash,
       validators_hash: block.validators_hash,
     },
@@ -167,6 +173,7 @@ let make = (~initial_block) => {
        are in the right place, otherwise invariants
        can be broken */
     last_block_hash: initial_block.Block.previous_hash,
+    past_state_root_hashes: [],
     state_root_hash: initial_block.Block.state_root_hash,
     last_state_root_update: 0.0,
     last_applied_block_timestamp: 0.0,
