@@ -506,24 +506,82 @@ module Run_contract = {
     };
   };
 };
-module Listen_transactions = {
-  open Tezos_micheline;
-  type michelson = Micheline.node(int, Michelson_v1_primitives.prim);
-  let michelson_of_yojson = json => {
-    // TODO: do this without serializing
-    let.ok json =
-      Yojson.Safe.to_string(json) |> Data_encoding.Json.from_string;
-    try(
-      Ok(
-        Micheline.root(
-          Data_encoding.Json.destruct(Pack.expr_encoding, json),
-        ),
+
+type michelson =
+  Tezos_micheline.Micheline.node(int, Michelson_v1_primitives.prim);
+let michelson_of_yojson = json => {
+  // TODO: do this without serializing
+  let.ok json = Yojson.Safe.to_string(json) |> Data_encoding.Json.from_string;
+  try(
+    Ok(
+      Tezos_micheline.Micheline.root(
+        Data_encoding.Json.destruct(Pack.expr_encoding, json),
+      ),
+    )
+  ) {
+  | _ => Error("invalid json")
+  };
+};
+
+module Fetch_storage: {
+  let _run:
+    (~rpc_node: Uri.t, ~confirmation: int, ~contract_address: Address.t) =>
+    Lwt.t(result(michelson, string));
+} = {
+  [@deriving to_yojson]
+  type input = {
+    rpc_node: string,
+    confirmation: int,
+    contract_address: string,
+  };
+  let output_of_yojson = json => {
+    module T = {
+      [@deriving of_yojson({strict: false})]
+      type t = {status: string}
+      and finished = {storage: michelson}
+      and error = {error: string};
+    };
+    let.ok {status} = T.of_yojson(json);
+    switch (status) {
+    | "success" =>
+      let.ok {storage} = T.finished_of_yojson(json);
+      Ok(storage);
+    | "error" =>
+      let.ok T.{error: errorMessage} = T.error_of_yojson(json);
+      Error(errorMessage);
+    | _ =>
+      Error(
+        "JSON output %s did not contain 'success' or 'error' for field `status`",
       )
-    ) {
-    | _ => Error("invalid json")
     };
   };
 
+  let _run = (~rpc_node, ~confirmation, ~contract_address) => {
+    let input = {
+      rpc_node: Uri.to_string(rpc_node),
+      confirmation,
+      contract_address: Address.to_string(contract_address),
+    };
+    // TODO: stop hard coding this
+    let command = "node";
+    let.await file =
+      Lwt_io.with_temp_file(~suffix=".js", ((file, oc)) => {
+        let.await () = Lwt_io.write(oc, [%blob "fetch_storage.bundle.js"]);
+        await(file);
+      });
+    let.await output =
+      Lwt_process.pmap(
+        (command, [|command, file|]),
+        Yojson.Safe.to_string(input_to_yojson(input)),
+      );
+    switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
+    | Ok(storage) => await(Ok(storage))
+    | Error(error) => await(Error(error))
+    };
+  };
+};
+
+module Listen_transactions = {
   [@deriving of_yojson]
   type output = {
     hash: string,

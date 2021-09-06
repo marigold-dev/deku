@@ -47,8 +47,10 @@ operationStream.on("error", error);
 operationStream.on("data", async (content) => {
   /** @type {rpc.OperationContentsAndResultMetadataTransaction} */
   const metadata = content.metadata;
-  if (content.kind !== taquito.OpKind.TRANSACTION
-    || metadata.operation_result.status !== "applied") {
+  if (
+    content.kind !== taquito.OpKind.TRANSACTION ||
+    metadata.operation_result.status !== "applied"
+  ) {
     return;
   }
   try {

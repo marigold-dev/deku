@@ -5,11 +5,19 @@
   (pps ppx_deriving_yojson ppx_blob))
  (preprocessor_deps
   (file ./run_entrypoint.bundle.js)
+  (file ./fetch_storage.bundle.js)
   (file ./listen_transactions.bundle.js)))
 
 (rule
- (deps ./webpack.config.js ./listen_transactions.js ./run_entrypoint.js)
- (targets ./listen_transactions.bundle.js ./run_entrypoint.bundle.js)
+ (deps
+  ./webpack.config.js
+  ./listen_transactions.js
+  ./fetch_storage.js
+  ./run_entrypoint.js)
+ (targets
+  ./listen_transactions.bundle.js
+  ./fetch_storage.bundle.js
+  ./run_entrypoint.bundle.js)
  (mode fallback)
  (action
   (run webpack --env=%{profile})))
