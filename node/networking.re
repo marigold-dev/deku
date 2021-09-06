@@ -197,3 +197,4 @@ let broadcast_operation_gossip =
   broadcast_to_validators((module Operation_gossip));
 let broadcast_operation_gossip_to_list =
   broadcast_to_list((module Operation_gossip));
+let request_operation_gossip = request((module Operation_gossip));

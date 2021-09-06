@@ -184,12 +184,14 @@ let create_transaction =
       ~ticket,
       ~kind=Transaction({destination: received_address}),
     );
+  let file = folder_node ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
 
   // Broadcast transaction
   let.await () =
-    Networking.broadcast_operation_gossip_to_list(
-      validators_uris,
+    Networking.request_operation_gossip(
       Networking.Operation_gossip.{operation: transaction},
+      identity.uri,
     );
   Format.printf(
     "operation.hash: %s\n%!",
@@ -265,9 +267,9 @@ let info_withdraw = {
 let withdraw =
     (folder_node, sender_wallet_file, tezos_address, amount, ticket) => {
   open Networking;
-  let.await validators_uris = validators_uris(folder_node);
-  let validator_uri = List.hd(validators_uris);
-  let.await block_level_response = request_block_level((), validator_uri);
+  let file = folder_node ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  let.await block_level_response = request_block_level((), identity.uri);
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let operation =
@@ -283,9 +285,9 @@ let withdraw =
 
   // Broadcast transaction
   let.await () =
-    Networking.broadcast_operation_gossip_to_list(
-      validators_uris,
+    Networking.request_operation_gossip(
       Networking.Operation_gossip.{operation: operation},
+      identity.uri,
     );
 
   Format.printf("operation.hash: %s\n%!", BLAKE2B.to_string(operation.hash));
