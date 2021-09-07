@@ -556,19 +556,21 @@ module Fetch_storage: {
     };
   };
 
+  // TODO: stop hard coding this
+  let command = "node";
+  let file = {
+    let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
+    let.await () = Lwt_io.write(oc, [%blob "fetch_storage.bundle.js"]);
+    await(file);
+  };
+  let file = Lwt_main.run(file);
+
   let _run = (~rpc_node, ~confirmation, ~contract_address) => {
     let input = {
       rpc_node: Uri.to_string(rpc_node),
       confirmation,
       contract_address: Address.to_string(contract_address),
     };
-    // TODO: stop hard coding this
-    let command = "node";
-    let.await file =
-      Lwt_io.with_temp_file(~suffix=".js", ((file, oc)) => {
-        let.await () = Lwt_io.write(oc, [%blob "fetch_storage.bundle.js"]);
-        await(file);
-      });
     let.await output =
       Lwt_process.pmap(
         (command, [|command, file|]),
