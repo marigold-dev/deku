@@ -12,6 +12,7 @@ module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
 type t = {
   identity,
+  trusted_validators: Validators.t,
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
   pending_side_ops: list(Operation.Side_chain.t),
@@ -29,6 +30,7 @@ type t = {
 let make:
   (
     ~identity: identity,
+    ~trusted_validators: Validators.t,
     ~interop_context: Tezos_interop.Context.t,
     ~data_folder: string,
     ~initial_validators_uri: Address_map.t(Uri.t)

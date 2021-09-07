@@ -179,6 +179,15 @@ let handle_ticket_balance =
 let node = {
   let folder = Sys.argv[1];
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
+  let.await trusted_validators =
+    Files.Validators.read(~file=folder ++ "/trusted-validators.json")
+    |> Lwt.map(
+         List.fold_left(
+           (acc, (validator_key, _uri)) =>
+             Validators.(add({address: validator_key}, acc)),
+           Validators.empty,
+         ),
+       ); // Expected to contain validator keys that a node operation has verified off-chain
   let.await validators =
     Files.Validators.read(~file=folder ++ "/validators.json");
   let.await interop_context =
@@ -193,6 +202,7 @@ let node = {
   let node =
     State.make(
       ~identity,
+      ~trusted_validators,
       ~interop_context,
       ~data_folder=folder,
       ~initial_validators_uri,

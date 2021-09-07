@@ -13,6 +13,7 @@ module Uri_map = Map.Make(Uri);
 
 type t = {
   identity,
+  trusted_validators: Validators.t,
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
   pending_side_ops: list(Operation.Side_chain.t),
@@ -34,7 +35,13 @@ type t = {
 };
 
 let make =
-    (~identity, ~interop_context, ~data_folder, ~initial_validators_uri) => {
+    (
+      ~identity,
+      ~trusted_validators,
+      ~interop_context,
+      ~data_folder,
+      ~initial_validators_uri,
+    ) => {
   let initial_block = Block.genesis;
   let initial_protocol = Protocol.make(~initial_block);
   let initial_signatures =
@@ -49,6 +56,7 @@ let make =
   };
   {
     identity,
+    trusted_validators,
     interop_context,
     data_folder,
     pending_side_ops: [],
