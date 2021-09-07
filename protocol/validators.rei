@@ -20,6 +20,7 @@ let update_current: (Address.t, t) => t;
 
 let empty: t;
 let add: (validator, t) => t;
+let mem: (validator, t) => bool;
 let remove: (validator, t) => t;
 
 let hash: t => BLAKE2B.t;

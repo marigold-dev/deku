@@ -58,6 +58,22 @@ let is_current_producer = (state, ~key) => {
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
 let is_signable = (state, block) => {
+  open Protocol.Operation.Side_chain;
+  let trusted_validators = state.Node.trusted_validators;
+  let rec contains_only_trusted_add_validator_op = result_so_far =>
+    fun
+    | [] => result_so_far
+    | [h, ...t] =>
+      switch (h.kind) {
+      | Add_validator(validator) =>
+        if (Validators.mem(validator, trusted_validators)) {
+          contains_only_trusted_add_validator_op(result_so_far, t);
+        } else {
+          false;
+        }
+      | _ => contains_only_trusted_add_validator_op(result_so_far, t)
+      };
+
   // TODO: this is O(n*m) which is bad
   let is_known_main = main_op =>
     state.State.pending_main_ops |> List.exists(op => op == main_op);
@@ -67,7 +83,11 @@ let is_signable = (state, block) => {
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
-  && all_main_ops_are_known;
+  && all_main_ops_are_known
+  && contains_only_trusted_add_validator_op(
+       true,
+       state.State.pending_side_ops,
+     );
 };
 
 let sign = (~key, block) => Block.sign(~key, block);

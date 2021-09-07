@@ -39,6 +39,7 @@ let add = (validator, t) => {
   let new_proposer = t.current == None ? Some(validator) : t.current;
   {current: new_proposer, validators, length: List.length(validators)};
 };
+let mem = (validator, t) => List.mem(validator, t.validators);
 let remove = (validator, t) => {
   let validators = t.validators |> List.filter((!=)(validator));
   let length = List.length(validators);
