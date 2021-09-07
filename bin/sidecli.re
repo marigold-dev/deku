@@ -676,6 +676,12 @@ let setup_node =
         interop_context,
         ~file=interop_context_path,
       );
+    let.await () =
+      Files.Trusted_validators_membership_change.write(
+        [],
+        ~file=in_folder("trusted-validator-membership-change.json"),
+      );
+
     Lwt.return(`Ok());
   };
 

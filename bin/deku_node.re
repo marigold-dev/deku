@@ -179,6 +179,14 @@ let handle_ticket_balance =
 let node = {
   let folder = Sys.argv[1];
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
+  let.await trusted_validator_membership_change_list =
+    Files.Trusted_validators_membership_change.read(
+      ~file=folder ++ "/trusted-validator-membership-change.json",
+    );
+  let trusted_validator_membership_change =
+    Trusted_validators_membership_change.Set.of_list(
+      trusted_validator_membership_change_list,
+    );
   let.await interop_context =
     Files.Interop_context.read(~file=folder ++ "/tezos.json");
   let.await validator_res =
@@ -207,6 +215,7 @@ let node = {
   let node =
     State.make(
       ~identity,
+      ~trusted_validator_membership_change,
       ~interop_context,
       ~data_folder=folder,
       ~initial_validators_uri,
