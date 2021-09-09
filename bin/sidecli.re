@@ -227,7 +227,7 @@ let create_transaction = {
   };
 
   let amount = {
-    let doc = "The amount to be transacted.";
+    let doc = "The amount to be transferred.";
     let env = Arg.env_var("TRANSFER_AMOUNT", ~doc);
     Arg.(
       required
@@ -237,7 +237,7 @@ let create_transaction = {
   };
 
   let ticket = {
-    let doc = "The ticket to be trasnsacted.";
+    let doc = "The ticket to be transferred.";
     Arg.(
       required & pos(4, some(ticket), None) & info([], ~docv="MSG", ~doc)
     );
