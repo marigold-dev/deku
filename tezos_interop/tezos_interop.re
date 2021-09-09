@@ -507,8 +507,6 @@ module Run_contract = {
   };
 };
 
-type michelson =
-  Tezos_micheline.Micheline.node(int, Michelson_v1_primitives.prim);
 let michelson_of_yojson = json => {
   // TODO: do this without serializing
   let.ok json = Yojson.Safe.to_string(json) |> Data_encoding.Json.from_string;
@@ -523,8 +521,10 @@ let michelson_of_yojson = json => {
   };
 };
 
+type michelson =
+  Tezos_micheline.Micheline.node(int, Michelson_v1_primitives.prim);
 module Fetch_storage: {
-  let _run:
+  let run:
     (~rpc_node: Uri.t, ~confirmation: int, ~contract_address: Address.t) =>
     Lwt.t(result(michelson, string));
 } = {
@@ -565,7 +565,7 @@ module Fetch_storage: {
   };
   let file = Lwt_main.run(file);
 
-  let _run = (~rpc_node, ~confirmation, ~contract_address) => {
+  let run = (~rpc_node, ~confirmation, ~contract_address) => {
     let input = {
       rpc_node: Uri.to_string(rpc_node),
       confirmation,
@@ -660,6 +660,7 @@ module Listen_transactions = {
 };
 module Consensus = {
   open Pack;
+  open Tezos_micheline;
 
   let hash_packed_data = data =>
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
@@ -764,7 +765,7 @@ module Consensus = {
     switch (entrypoint, micheline) {
     | (
         "deposit",
-        Tezos_micheline.Micheline.Prim(
+        Micheline.Prim(
           _,
           Michelson_v1_primitives.D_Pair,
           [
@@ -807,6 +808,42 @@ module Consensus = {
       ~destination=context.consensus_contract,
       ~on_message,
     );
+  };
+  let fetch_validators = (~context) => {
+    let Context.{rpc_node, required_confirmations, consensus_contract, _} = context;
+    let micheline_to_validators =
+      fun
+      | Ok(
+          Micheline.Prim(
+            _,
+            Michelson_v1_primitives.D_Pair,
+            [Prim(_, D_Pair, [_, Seq(_, keys)], _), _, _],
+            _,
+          ),
+        ) => {
+          fold_left_ok(
+            (acc, k) =>
+              switch (k) {
+              | Micheline.String(_, k) =>
+                switch (Key.of_string(k)) {
+                | Some(k) => Ok([k, ...acc])
+                | None => Error("Failed to parse " ++ k)
+                }
+              | _ => Error("Keys weren't of type string")
+              },
+            [],
+            List.rev(keys),
+          );
+        }
+      | Ok(_) => Error("Failed to parse storage micheline expression")
+      | Error(msg) => Error(msg);
+    let.await micheline_storage =
+      Fetch_storage.run(
+        ~confirmation=required_confirmations,
+        ~rpc_node,
+        ~contract_address=consensus_contract,
+      );
+    Lwt.return(micheline_to_validators(micheline_storage));
   };
 };
 

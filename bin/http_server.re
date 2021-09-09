@@ -179,10 +179,24 @@ let handle_ticket_balance =
 let node = {
   let folder = Sys.argv[1];
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
-  let.await validators =
-    Files.Validators.read(~file=folder ++ "/validators.json");
   let.await interop_context =
     Files.Interop_context.read(~file=folder ++ "/tezos.json");
+  let.await validator_res =
+    Tezos_interop.Consensus.fetch_validators(~context=interop_context);
+  let validators =
+    switch (validator_res) {
+    | Ok(current_validators) =>
+      current_validators
+      |> List.mapi((i, validator) => {
+           (
+             switch (validator) {
+             | Tezos_interop.Key.Ed25519(k) => k
+             },
+             Printf.sprintf("https://localhost:444%d", i) |> Uri.of_string,
+           )
+         })
+    | Error(err) => failwith(err)
+    };
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
