@@ -8,16 +8,16 @@ sidecli () {
   eval $SIDECLI '"$@"'
 }
 
-HTTP_SERVER=$(esy x which http_server)
-http_server () {
-  eval $HTTP_SERVER '"$@"'
+DEKU_NODE=$(esy x which deku-node)
+deku_node () {
+  eval $DEKU_NODE '"$@"'
 }
 
 VALIDATORS=(0 1 2)
 SERVERS=()
 echo "Starting nodes."
 for i in ${VALIDATORS[@]}; do
-  http_server "$data_directory/$i" &
+  deku_node "$data_directory/$i" &
   SERVERS+=($!)
 done
 

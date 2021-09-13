@@ -1,8 +1,8 @@
 (executable
- (name http_server)
- (public_name http_server)
+ (name deku_node)
+ (public_name deku-node)
  (libraries opium files node mirage-crypto-ec mirage-crypto-rng.unix helpers)
- (modules Http_server)
+ (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
