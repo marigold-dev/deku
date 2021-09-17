@@ -1,0 +1,56 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/javascript-node
+{
+	"name": "Node.js",
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick a Node version: 12, 14, 16
+		"args": {
+			"VARIANT": "16"
+		}
+	},
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"files.autoSave": "onFocusChange",
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": true,
+		"editor.tabSize": 2,
+		"git.autofetch": true,
+		"ocaml.sandbox": {
+			"kind": "esy",
+			"root": "${containerWorkspaceFolder}"
+		},
+		"indentRainbow.ignoreErrorLanguages": [
+			"*"
+		],
+		"files.insertFinalNewline": true,
+		"terminal.integrated.commandsToSkipShell": [
+			"-workbench.action.toggleSidebarVisibility"
+		],
+		"terminal.integrated.defaultProfile.linux": "zsh"
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"dbaeumer.vscode-eslint",
+		"oderwat.indent-rainbow",
+		"ocamllabs.ocaml-platform",
+		"mhutchie.git-graph",
+		"github.vscode-pull-request-github",
+		"ms-vsliveshare.vsliveshare-pack",
+		"ms-vscode-remote.remote-containers",
+		"wayou.vscode-todo-highlight"
+	],
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "yarn install",
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "node",
+	// Docker in docker
+	"runArgs": [
+		"--init",
+		"--privileged"
+	],
+	"overrideCommand": false,
+	"postCreateCommand": "esy",
+}
