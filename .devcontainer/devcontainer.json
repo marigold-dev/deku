@@ -53,4 +53,7 @@
 	],
 	"overrideCommand": false,
 	"postCreateCommand": "esy",
+	"mounts": [
+		"source=projectname-bashhistory,target=/commandhistory,type=volume"
+	]
 }
