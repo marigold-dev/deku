@@ -291,10 +291,8 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   };
 };
 
-open Networking;
-
 let received_operation =
-    (state, update_state, request: Operation_gossip.request) =>
+    (state, update_state, request: Networking.Operation_gossip.request) =>
   if (!List.mem(request.operation, state.Node.pending_side_ops)) {
     Lwt.async(() => {
       let _state =
@@ -307,7 +305,7 @@ let received_operation =
             ],
           },
         );
-      let.await () = broadcast_operation_gossip(state, request);
+      let.await () = Networking.broadcast_operation_gossip(state, request);
       Lwt.return();
     });
   };
@@ -412,3 +410,40 @@ let request_withdraw_proof = (state, ~hash) =>
   };
 let request_ticket_balance = (state, ~ticket, ~address) =>
   state.Node.protocol.ledger |> Ledger.balance(address, ticket);
+
+let trusted_validators_membership =
+    (~file, ~persist, state, update_state, request) => {
+  open Networking.Trusted_validators_membership_change;
+  let {signature, payload: {address, action} as payload} = request;
+  let payload_hash =
+    payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
+  let.assert () = (
+    `Failed_to_verify_payload,
+    payload_hash |> Signature.verify(~signature),
+  );
+  let new_validators =
+    switch (action) {
+    | Add =>
+      Trusted_validators_membership_change.Set.add(
+        {action: Add, address},
+        state.Node.trusted_validator_membership_change,
+      )
+    | Remove =>
+      Trusted_validators_membership_change.Set.remove(
+        {action: Remove, address},
+        state.Node.trusted_validator_membership_change,
+      )
+    };
+  let _: State.t =
+    update_state({
+      ...state,
+      trusted_validator_membership_change: new_validators,
+    });
+  Lwt.async(() =>
+    persist(
+      new_validators |> Trusted_validators_membership_change.Set.elements,
+      ~file,
+    )
+  );
+  Ok();
+};
