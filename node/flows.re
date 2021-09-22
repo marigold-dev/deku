@@ -2,8 +2,6 @@ open Helpers;
 open Protocol;
 open Building_blocks;
 
-module Node = State;
-
 type flag_node = [ | `Invalid_block | `Invalid_signature];
 type ignore = [
   | `Already_known_block
@@ -17,13 +15,13 @@ type ignore = [
 
 // TODO: set this by server
 let reset_timeout: ref(unit => unit) = ref(() => assert(false));
-let get_state: ref(unit => State.t) = ref(() => assert(false));
-let set_state: ref(State.t => unit) = ref(_ => assert(false));
+let get_state: ref(unit => Node_state.t) = ref(() => assert(false));
+let set_state: ref(Node_state.t => unit) = ref(_ => assert(false));
 
 // TODO: poor man recursion
 let received_block':
   ref(
-    (Node.t, Node.t => Node.t, Block.t) =>
+    (Node_state.t, Node_state.t => Node_state.t, Block.t) =>
     result(
       unit,
       [
@@ -42,7 +40,7 @@ let received_block':
   ref(_ => assert(false));
 let block_added_to_the_pool':
   ref(
-    (Node.t, Node.t => Node.t, Block.t) =>
+    (Node_state.t, Node_state.t => Node_state.t, Block.t) =>
     result(
       unit,
       [
@@ -128,7 +126,7 @@ let load_snapshot = snapshot => {
   open Networking.Protocol_snapshot;
 
   let.ok state =
-    Node.load_snapshot(
+    Node_state.load_snapshot(
       ~state_root_hash=snapshot.snapshot_hash,
       ~state_root=snapshot.snapshot,
       ~additional_blocks=snapshot.additional_blocks,
@@ -146,8 +144,8 @@ let request_protocol_snapshot = () =>
     await();
   });
 
-let request_previous_blocks = (state, block) =>
-  if (block.Block.state_root_hash == state.Node.protocol.state_root_hash) {
+let request_previous_blocks = (state: Node_state.t, block) =>
+  if (block.Block.state_root_hash == state.protocol.state_root_hash) {
     request_block(~hash=block.Block.previous_hash);
   } else if (! pending^) {
     pending := true;
@@ -178,10 +176,10 @@ let try_to_sign_block = (state, update_state, block) =>
     state;
   };
 
-let rec try_to_apply_block = (state, update_state, block) => {
+let rec try_to_apply_block = (state: Node_state.t, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
-    Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
+    Block_pool.is_signed(~hash=block.Block.hash, state.block_pool),
   );
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
@@ -202,19 +200,16 @@ let rec try_to_apply_block = (state, update_state, block) => {
 }
 
 // TODO: this function has a bad name
-and block_added_to_the_pool = (state, update_state, block) => {
+and block_added_to_the_pool = (state: Node_state.t, update_state, block) => {
   let state =
     // TODO: we could receive signatures as parameters
     switch (
-      Block_pool.find_signatures(
-        ~hash=block.Block.hash,
-        state.Node.block_pool,
-      )
+      Block_pool.find_signatures(~hash=block.Block.hash, state.block_pool)
     ) {
     | Some(signatures) when Signatures.is_signed(signatures) =>
       let snapshots =
         Snapshots.append_block(
-          ~pool=state.Node.block_pool,
+          ~pool=state.block_pool,
           (block, signatures),
           state.snapshots,
         );
@@ -265,7 +260,8 @@ let received_block = (state, update_state, block) => {
 
 let () = received_block' := received_block;
 
-let received_signature = (state, update_state, ~hash, ~signature) => {
+let received_signature =
+    (state: Node_state.t, update_state, ~hash, ~signature) => {
   let.assert () = (
     `Invalid_signature_for_this_hash,
     // TODO: check if it's made by a known validator, avoid spam
@@ -276,14 +272,15 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
     !is_known_signature(state, ~hash, ~signature),
   );
 
-  let state = append_signature(state, update_state, ~hash, ~signature);
+  let state: Node_state.t =
+    append_signature(state, update_state, ~hash, ~signature);
 
   let.assert () = (
     `Added_signature_not_signed_enough_to_request,
-    Block_pool.is_signed(~hash, state.Node.block_pool),
+    Block_pool.is_signed(~hash, state.block_pool),
   );
 
-  switch (Block_pool.find_block(~hash, state.Node.block_pool)) {
+  switch (Block_pool.find_block(~hash, state.block_pool)) {
   | Some(block) => block_added_to_the_pool(state, update_state, block)
   | None =>
     request_block(~hash);
@@ -292,17 +289,18 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 };
 
 let received_operation =
-    (state, update_state, request: Networking.Operation_gossip.request) =>
-  if (!List.mem(request.operation, state.Node.pending_side_ops)) {
+    (
+      state: Node_state.t,
+      update_state,
+      request: Networking.Operation_gossip.request,
+    ) =>
+  if (!List.mem(request.operation, state.pending_side_ops)) {
     Lwt.async(() => {
       let _state =
         update_state(
-          Node.{
+          Node_state.{
             ...state,
-            pending_side_ops: [
-              request.operation,
-              ...state.Node.pending_side_ops,
-            ],
+            pending_side_ops: [request.operation, ...state.pending_side_ops],
           },
         );
       let.await () = Networking.broadcast_operation_gossip(state, request);
@@ -310,7 +308,7 @@ let received_operation =
     });
   };
 
-let received_main_operation = (state, update_state, operation) => {
+let received_main_operation = (state: Node_state.t, update_state, operation) => {
   switch (operation.Tezos_interop.Consensus.parameters) {
   // TODO: handle this properly
   | Update_root_hash(_) => Ok()
@@ -329,12 +327,12 @@ let received_main_operation = (state, update_state, operation) => {
         ~tezos_index=operation.index,
         ~kind,
       );
-    if (!List.mem(operation, state.Node.pending_main_ops)) {
+    if (!List.mem(operation, state.pending_main_ops)) {
       let _ =
         update_state(
-          Node.{
+          Node_state.{
             ...state,
-            pending_main_ops: [operation, ...state.Node.pending_main_ops],
+            pending_main_ops: [operation, ...state.pending_main_ops],
           },
         );
       ();
@@ -343,11 +341,11 @@ let received_main_operation = (state, update_state, operation) => {
   };
 };
 
-let find_block_by_hash = (state, hash) =>
-  Block_pool.find_block(~hash, state.Node.block_pool);
+let find_block_by_hash = (state: Node_state.t, hash) =>
+  Block_pool.find_block(~hash, state.block_pool);
 
 let find_block_level = state => {
-  state.State.protocol.block_height;
+  state.Node_state.protocol.block_height;
 };
 
 let request_nonce = (state, update_state, uri) => {
@@ -355,18 +353,18 @@ let request_nonce = (state, update_state, uri) => {
   let nonce = Mirage_crypto_rng.generate(32) |> Cstruct.to_string;
   let _state =
     update_state(
-      Node.{
+      Node_state.{
         ...state,
-        uri_state: Node.Uri_map.add(uri, nonce, state.uri_state),
+        uri_state: Node_state.Uri_map.add(uri, nonce, state.uri_state),
       },
     );
   BLAKE2B.hash(nonce);
 };
 
-let register_uri = (state, update_state, ~uri, ~signature) => {
+let register_uri = (state: Node_state.t, update_state, ~uri, ~signature) => {
   // TODO: check if it's a validator
   let.ok nonce =
-    Node.Uri_map.find_opt(uri, state.Node.uri_state)
+    Node_state.Uri_map.find_opt(uri, state.uri_state)
     |> Option.to_result(~none=`Unknown_uri);
   let.assert () = (
     `Invalid_nonce_signature,
@@ -378,7 +376,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     update_state({
       ...state,
       validators_uri:
-        Node.Address_map.add(
+        Node_state.Address_map.add(
           Signature.public_key(signature),
           uri,
           state.validators_uri,
@@ -386,33 +384,30 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
     });
   Ok();
 };
-let request_withdraw_proof = (state, ~hash) =>
-  switch (state.Node.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
+let request_withdraw_proof = (state: Node_state.t, ~hash) =>
+  switch (state.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
   | None => Networking.Withdraw_proof.Unknown_operation
   | Some(`Transaction) => Operation_is_not_a_withdraw
   | Some(`Withdraw(handle)) =>
-    let last_block_hash = state.Node.protocol.last_block_hash;
+    let last_block_hash = state.protocol.last_block_hash;
     /* TODO: possible problem with this solution
        if this specific handles_hash was never commited to Tezos
        then the withdraw will fail at Tezos */
     let handles_hash =
-      switch (
-        Block_pool.find_block(~hash=last_block_hash, state.Node.block_pool)
-      ) {
+      switch (Block_pool.find_block(~hash=last_block_hash, state.block_pool)) {
       // this branch is unreachable
       // TODO: make this unreachable through the typesystem
       | None => assert(false)
       | Some(block) => block.Block.handles_hash
       };
-    let proof =
-      state.Node.protocol.ledger |> Ledger.handles_find_proof(handle);
+    let proof = state.protocol.ledger |> Ledger.handles_find_proof(handle);
     Ok({handles_hash, handle, proof});
   };
 let request_ticket_balance = (state, ~ticket, ~address) =>
-  state.Node.protocol.ledger |> Ledger.balance(address, ticket);
+  state.Node_state.protocol.ledger |> Ledger.balance(address, ticket);
 
 let trusted_validators_membership =
-    (~file, ~persist, state, update_state, request) => {
+    (~file, ~persist, state: Node_state.t, update_state, request) => {
   open Networking.Trusted_validators_membership_change;
   let {signature, payload: {address, action} as payload} = request;
   let payload_hash =
@@ -426,15 +421,15 @@ let trusted_validators_membership =
     | Add =>
       Trusted_validators_membership_change.Set.add(
         {action: Add, address},
-        state.Node.trusted_validator_membership_change,
+        state.trusted_validator_membership_change,
       )
     | Remove =>
       Trusted_validators_membership_change.Set.remove(
         {action: Remove, address},
-        state.Node.trusted_validator_membership_change,
+        state.trusted_validator_membership_change,
       )
     };
-  let _: State.t =
+  let _: Node_state.t =
     update_state({
       ...state,
       trusted_validator_membership_change: new_validators,

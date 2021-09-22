@@ -165,17 +165,19 @@ let state_root_hash_epoch = 60.0;
     1s choosen here but any reasonable time will make it */
 let avoid_jitter = 1.0;
 let _can_update_state_root_hash = state =>
-  Unix.time() -. state.State.last_state_root_update >= state_root_hash_epoch;
+  Unix.time()
+  -. state.Protocol_state.last_state_root_update >= state_root_hash_epoch;
 let can_produce_with_new_state_root_hash = state =>
   Unix.time()
-  -. state.State.last_state_root_update
+  -. state.Protocol_state.last_state_root_update
   -. avoid_jitter >= state_root_hash_epoch;
 let produce = (~state) => {
   let update_state_hashes = can_produce_with_new_state_root_hash(state);
   make(
-    ~previous_hash=state.State.last_block_hash,
+    ~previous_hash=state.Protocol_state.last_block_hash,
     ~state_root_hash=
-      update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
+      update_state_hashes
+        ? fst(Protocol_state.hash(state)) : state.state_root_hash,
     ~handles_hash=Ledger.handles_root_hash(state.ledger),
     ~validators_hash=
       update_state_hashes

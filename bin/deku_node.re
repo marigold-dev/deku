@@ -132,7 +132,7 @@ let handle_protocol_snapshot =
   handle_request(
     (module Networking.Protocol_snapshot),
     (_update_state, ()) => {
-      let State.{snapshots, _} = Server.get_state();
+      let Node_state.{snapshots, _} = Server.get_state();
       Ok({
         snapshot: snd(snapshots.Snapshots.last_snapshot),
         snapshot_hash: fst(snapshots.last_snapshot),
@@ -235,12 +235,12 @@ let node = {
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
-        State.Address_map.add(address, uri, validators_uri),
-      State.Address_map.empty,
+        Node_state.Address_map.add(address, uri, validators_uri),
+      Node_state.Address_map.empty,
       validators,
     );
   let node =
-    State.make(
+    Node_state.make(
       ~identity,
       ~trusted_validator_membership_change,
       ~interop_context,

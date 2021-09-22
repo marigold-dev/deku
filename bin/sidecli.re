@@ -1,6 +1,6 @@
 open Helpers;
 open Node;
-open State;
+open Node_state;
 open Protocol;
 open Cmdliner;
 
@@ -647,7 +647,7 @@ let setup_node =
   };
   let address = Address.of_key(secret);
   let (identity, identity_path) = (
-    State.{key: secret, uri, t: address},
+    Node_state.{key: secret, uri, t: address},
     "identity.json" |> in_folder,
   );
 

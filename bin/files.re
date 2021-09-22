@@ -1,6 +1,6 @@
 open Helpers;
 open Node;
-open State;
+open Node_state;
 open Protocol;
 
 exception Invalid_json(string);

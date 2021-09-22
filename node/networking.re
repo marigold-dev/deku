@@ -1,6 +1,6 @@
 open Helpers;
 open Protocol;
-open State;
+open Node_state;
 
 module type Request_endpoint = {
   [@deriving yojson]
@@ -69,7 +69,7 @@ let broadcast_to_list = (endpoint, uris, data) =>
 let broadcast_to_validators = (endpoint, state, data) =>
   Validators.to_list(state.protocol.validators)
   |> List.filter_map((Validators.{address, _}) =>
-       State.Address_map.find_opt(address, state.validators_uri)
+       Address_map.find_opt(address, state.validators_uri)
      )
   |> (uris => broadcast_to_list(endpoint, uris, data));
 

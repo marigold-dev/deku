@@ -12,7 +12,7 @@ module Amount = Amount;
 module Block = Block;
 module Operation = Operation;
 
-include State;
+include Protocol_state;
 let apply_main_chain = (state, operation) => {
   open Operation.Main_chain;
   module Set = Operation_main_chain_set;

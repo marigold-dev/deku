@@ -21,7 +21,7 @@ let verify: (~signature: Signature.t, t) => bool;
 let genesis: t;
 let produce:
   (
-    ~state: State.t,
+    ~state: Protocol_state.t,
     ~author: Address.t,
     ~main_chain_ops: list(Main_chain.t),
     ~side_chain_ops: list(Side_chain.t)

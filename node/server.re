@@ -5,7 +5,7 @@ open Flows;
 // TODO: load snapshot
 type t = {
   // TODO: lock state
-  mutable state: State.t,
+  mutable state: Node_state.t,
   mutable timeout: Lwt.t(unit),
 };
 
