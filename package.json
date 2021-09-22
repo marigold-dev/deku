@@ -45,10 +45,10 @@
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
     "@opam/ocamlformat": "0.19.0",
-    "@opam/utop": "*",
+    "@opam/utop": "^2.8.0",
     "@opam/menhir": "20210419",
-    "@esy-ocaml/rtop": "*",
-    "@reason-native/rely": "*"
+    "@esy-ocaml/rtop": "^3.3.3",
+    "@reason-native/rely": "^3.2.1"
   },
   "resolutions": {
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
