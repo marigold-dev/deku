@@ -13,3 +13,9 @@ Sometimes you will see it being used even for single cases `v |> f`, this is mor
 A type named t means the main type of a module so, `Validators.t` can be read as `validators` and `Wallet.t` as `wallet`.
 
 An identifier named t on a module will always have type t, so under `Validators.re` `let t = empty` is the same as `let validators = empty`
+
+## Code Organization
+
+While file are organized into folders, every filename should be unique (excepting files that are required to have the same
+name, such as `dune` files). For example, having two files `./a/x.re` and `./b/x.re` would bad - prefer instead
+`./a/a_x.re` and `./b/b_x.re`.
