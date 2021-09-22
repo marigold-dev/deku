@@ -41,12 +41,12 @@ build: [
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 dev-repo: "git+https://github.com/mirage/ocaml-ipaddr.git"
-x-commit-hash: "2a851641fc0fcdb553879a909ab0e8bad1b86f29"
 url {
   src:
-    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.1.0/ipaddr-v5.1.0.tbz"
+    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.2.0/ipaddr-v5.2.0.tbz"
   checksum: [
-    "sha256=7e9328222c1a5f39b0751baecd7e27a842bdb0082fd48126eacbbad8816fbf5a"
-    "sha512=ff02662864a2cc8db0c64dcd3bbf3d958bcd5ffff6e80ce73e0913b9fcb3e3b3f491e0ae2aa86cd1e3c56c12c3e46a3559a4c5e8169b2fffb7390322610802f2"
+    "sha256=f98d237cc1f783a0ba7dff0c6c69b5f519fec056950e3e3e7c15e5511ee5b7ec"
+    "sha512=28c8c4d525c2ab13e8561de5dfdb8922227ce652cd3c02e78c60daf2ba6844960864027c803f11fc3d1991a18ef864d8a0b95cd99e5f5d8452d3f66541367bd2"
   ]
 }
+x-commit-hash: "7745ea4be2c1c5a7ab95908b26a6ed81a0947ab5"
