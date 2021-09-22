@@ -12,14 +12,17 @@ let read_json = (of_yojson, ~file) => {
   | Error(error) => raise(Invalid_json(error))
   };
 };
+
 let write_json = (to_yojson, data, ~file) =>
   Lwt_io.with_file(~mode=Output, file, oc =>
     Lwt_io.write(oc, Yojson.Safe.pretty_to_string(to_yojson(data)))
   );
+
 module Identity = {
   let read = read_json(identity_of_yojson);
   let write = write_json(identity_to_yojson);
 };
+
 module Wallet = {
   [@deriving yojson]
   type t = {
@@ -77,4 +80,12 @@ module State_bin = {
     Lwt_io.with_file(~mode=Input, file, Lwt_io.read_value);
   let write = (protocol, ~file) =>
     Lwt_io.with_file(~mode=Output, file, Lwt_io.write_value(_, protocol));
+};
+
+module Trusted_validators_membership_change = {
+  [@deriving yojson]
+  type t = Node.Trusted_validators_membership_change.t;
+
+  let read = read_json([%of_yojson: list(t)]);
+  let write = write_json([%to_yojson: list(t)]);
 };

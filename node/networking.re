@@ -173,6 +173,7 @@ module Withdraw_proof = {
 
   let path = "/withdraw-proof";
 };
+
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
@@ -182,6 +183,26 @@ module Ticket_balance = {
   [@deriving yojson]
   type response = {amount: Amount.t};
   let path = "/ticket-balance";
+};
+
+module Trusted_validators_membership_change = {
+  [@deriving yojson]
+  type action =
+    | Add
+    | Remove;
+  [@deriving yojson]
+  type payload = {
+    action,
+    address: Address.t,
+  };
+  [@deriving yojson]
+  type request = {
+    signature: Signature.t,
+    payload,
+  };
+  [@deriving yojson]
+  type response = unit;
+  let path = "/trusted-validators-membership";
 };
 
 let request_block_by_hash = request((module Block_by_hash_spec));
@@ -198,3 +219,5 @@ let broadcast_operation_gossip =
 let broadcast_operation_gossip_to_list =
   broadcast_to_list((module Operation_gossip));
 let request_operation_gossip = request((module Operation_gossip));
+let request_trusted_validator_membership =
+  request((module Trusted_validators_membership_change));
