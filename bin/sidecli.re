@@ -430,6 +430,30 @@ let withdraw_proof = {
   );
 };
 
+// to remove
+/*
+     let.await output =
+       Lwt_process.pmap(
+         (command, [|command, file|]),
+         Yojson.Safe.to_string(input_to_yojson(input)),
+       );
+ */
+
+let info_tmp_for_testing = {
+  let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
+  Term.info("tmp", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
+};
+let tmp_for_testing = () => {
+  let command = "sh";
+  let.await output =
+    Lwt_process.pmap((command, [|command, "-c", "$hello"|]), "");
+  print_string(output);
+  Lwt.return(`Ok());
+};
+let tmp_for_testing_term = {
+  Term.(lwt_ret(const(tmp_for_testing) $ const()));
+};
+
 // sign-block
 
 let info_sign_block = {
@@ -819,6 +843,7 @@ let () = {
       (withdraw, info_withdraw),
       (withdraw_proof, info_withdraw_proof),
       (sign_block_term, info_sign_block),
+      (tmp_for_testing_term, info_tmp_for_testing),
       (produce_block, info_produce_block),
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),
