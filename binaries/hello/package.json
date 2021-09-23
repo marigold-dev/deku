@@ -1,12 +1,10 @@
 {
-  "name": "binaries",
+  "name": "hello-reason",
   "version": "0.1.0",
   "description": "Example Reason Esy Project",
   "license": "MIT",
   "esy": {
-    "build": [
-      "dune build -p #{self.name}"
-    ],
+    "build": "dune build -p #{self.name}",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "NOTE": "Optional release Section. Customizes result of `esy release`",
     "release": {
@@ -31,10 +29,11 @@
     "doc": "esy dune build @doc"
   },
   "dependencies": {
-    "ocaml": "~4.10.0",
     "@opam/dune": ">=2.6",
+    "@reason-native/console": "*",
+    "@reason-native/pastel": "*",
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
-    "lwt": "*"
+    "ocaml": "~4.10.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",
