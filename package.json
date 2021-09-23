@@ -40,7 +40,8 @@
     "@taquito/rpc": "^9.0.1",
     "webpack": "^5.47.1",
     "webpack-cli": "^4.7.1",
-    "@opam/ppx_blob": "*"
+    "@opam/ppx_blob": "*",
+    "binaries": "*"
   },
   "devDependencies": {
     "@opam/ocaml-lsp-server": "*",
@@ -59,6 +60,7 @@
     "@opam/piaf": "github:EduardoRFS/piaf:piaf.opam#8e4eeb916aef8e95f04d98eef57c43f07008b631",
     "@opam/ssl": "github:Firgeis/ocaml-ssl:ssl.opam#f7524f7b6db756ce4097dea7fa4e1c4f4f2832a9",
     "@opam/opium": "github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
-    "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1"
+    "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
+    "binaries": "link:binaries/"
   }
 }

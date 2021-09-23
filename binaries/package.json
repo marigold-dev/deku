@@ -19,7 +19,7 @@
     "exportedEnv": {
       "hello": {
         "scope": "global",
-        "val": "$cur__bin/Hello"
+        "val": "#{self.bin / 'Hello'}"
       }
     }
   },
