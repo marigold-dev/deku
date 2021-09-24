@@ -444,10 +444,11 @@ let info_tmp_for_testing = {
   Term.info("tmp", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 let tmp_for_testing = () => {
-  let command = "sh";
-  let.await output =
-    Lwt_process.pmap((command, [|command, "-c", "$hello"|]), "");
-  print_string(output);
+  let.await hello_msg = Binaries.Hello.call();
+  switch (hello_msg) {
+  | Ok(msg) => print_string(msg)
+  | Error(_) => ()
+  };
   Lwt.return(`Ok());
 };
 let tmp_for_testing_term = {

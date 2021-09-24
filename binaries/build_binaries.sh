@@ -2,5 +2,5 @@ cd to_build
 
 cd hello
 
-esy
-mv -nf Hello $1
+#esy
+cp -nf Hello $1

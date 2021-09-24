@@ -14,7 +14,8 @@
   mirage-crypto-ec
   mirage-crypto-rng.unix
   helpers
-  cmdliner)
+  cmdliner
+  binaries)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
