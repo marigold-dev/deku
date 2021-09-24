@@ -13,3 +13,14 @@ Sometimes you will see it being used even for single cases `v |> f`, this is mor
 A type named t means the main type of a module so, `Validators.t` can be read as `validators` and `Wallet.t` as `wallet`.
 
 An identifier named t on a module will always have type t, so under `Validators.re` `let t = empty` is the same as `let validators = empty`
+
+## OCaml Style Guide
+
+### OCaml Basics
+- Never use the `ignore` function. Instead prefer `let _ = ...`
+- Never use the `@@` operator.
+- Never add extraneous type annotations.
+
+### LWT
+- Never use `Lwt`'s infix operators. Instead use the `let` syntax.
+- Never ignore the result of an `Lwt` promise. Instead (FIXME: what to do instead?)
