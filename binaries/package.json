@@ -7,7 +7,9 @@
     "build": [
       "dune build -p #{self.name}"
     ],
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "buildDev": [
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}"
+    ],
     "NOTE": "Optional release Section. Customizes result of `esy release`",
     "release": {
       "rewritePrefix": true,
@@ -15,6 +17,7 @@
         "Hello"
       ]
     },
+    "install": "bash ./build_binaries.sh #{self.bin}",
     "buildEnv": {
       "ODOC_SYNTAX": "re"
     },
@@ -31,9 +34,9 @@
     "doc": "esy dune build @doc"
   },
   "dependencies": {
-    "ocaml": "4.12.",
-    "@opam/dune": ">=2.6",
-    "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
+    "ocaml": "*",
+    "@opam/dune": "*",
+    "@esy-ocaml/reason": "*",
     "@opam/lwt": "*"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 {
-  "checksum": "f364c2d7a3c4a2e7f504861174ae9a55",
+  "checksum": "b5ee4df3e32154ac6c498a983855ea27",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
