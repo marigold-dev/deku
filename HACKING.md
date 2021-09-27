@@ -20,7 +20,8 @@ An identifier named t on a module will always have type t, so under `Validators.
 - Never use the `ignore` function. Instead prefer `let _ = ...`
 - Never use the `@@` operator.
 - Never add extraneous type annotations.
+- Never use infix operators to chain monads together. Instead use `let` syntax.
 
 ### LWT
-- Never use `Lwt`'s infix operators. Instead use the `let` syntax.
-- Never ignore the result of an `Lwt` promise. Instead (FIXME: what to do instead?)
+- Never ignore the result of an `Lwt` promise. Instead, if a promise is
+  executed for side-effects only, use `Lwt.async` or just return the `Lwt.t`.
