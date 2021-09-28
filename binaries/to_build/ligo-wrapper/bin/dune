@@ -1,0 +1,4 @@
+(executable
+ (name Ligo_wrapper)
+ (public_name Ligo_wrapper)
+ (libraries console.lib lib))

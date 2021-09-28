@@ -1,0 +1,49 @@
+{
+  "name": "ligo-wrapper",
+  "version": "0.1.0",
+  "description": "Example Reason Esy Project",
+  "license": "MIT",
+  "esy": {
+    "build": [
+      "dune build -p #{self.name}",
+      "cp -nf #{self.target_dir / 'install' / 'default' / 'bin' / 'Ligo_wrapper'} #{self.root}/"
+    ],
+    "buildDev": [
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+      "cp -nf #{self.target_dir / 'install' / 'default' / 'bin' / 'Ligo_wrapper'} #{self.root}/"
+    ],
+    "NOTE": "Optional release Section. Customizes result of `esy release`",
+    "release": {
+      "rewritePrefix": true,
+      "bin": [
+        "Ligo_wrapper"
+      ]
+    },
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
+    }
+  },
+  "scripts": {
+    "test": "esy x Ligo_wrapper",
+    "format": "esy dune build @fmt --auto-promote",
+    "doc": "esy dune build @doc"
+  },
+  "dependencies": {
+    "@opam/dune": ">=2.6",
+    "@reason-native/console": "*",
+    "@reason-native/pastel": "*",
+    "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
+    "ocaml": "~4.10.0",
+    "@opam/ligo": "*"
+  },
+  "devDependencies": {
+    "@opam/merlin": "*",
+    "@reason-native/rely": "*",
+    "refmterr": "*",
+    "@opam/odoc": "*"
+  },
+  "resolutions": {
+    "@opam/ligo-types": "github:anchpop/ligolang:ligo-types.opam#7dee617edeff9240daced4fb78330904f8f49492",
+    "@opam/ligo": "github:anchpop/ligolang:ligo.opam#7dee617edeff9240daced4fb78330904f8f49492"
+  }
+}

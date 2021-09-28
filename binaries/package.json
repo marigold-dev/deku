@@ -25,9 +25,13 @@
       "ODOC_SYNTAX": "re"
     },
     "exportedEnv": {
-      "hello": {
+      "Hello": {
         "scope": "global",
         "val": "#{self.bin / 'Hello'}"
+      },
+      "Ligo_wrapper": {
+        "scope": "global",
+        "val": "#{self.bin / 'Ligo_wrapper'}"
       }
     }
   },
