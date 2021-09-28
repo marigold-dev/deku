@@ -40,7 +40,8 @@
     "ocaml": "*",
     "@opam/dune": "*",
     "@esy-ocaml/reason": "*",
-    "@opam/lwt": "*"
+    "@opam/lwt": "*",
+    "@opam/ligo-types": "*"
   },
   "devDependencies": {
     "@opam/merlin": "*",
