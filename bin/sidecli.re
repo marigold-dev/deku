@@ -87,6 +87,7 @@ let address = {
     );
   Arg.(conv((parser, printer)));
 };
+
 let address_tezos_interop = {
   let parser = string =>
     string
@@ -201,13 +202,13 @@ let create_transaction =
   Lwt.return(`Ok());
 };
 
-let create_transaction = {
-  let folder_node = {
-    let docv = "folder_node";
-    let doc = "The folder where the node lives.";
-    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-  };
+let folder_node = {
+  let docv = "folder_node";
+  let doc = "The folder where the node lives.";
+  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+};
 
+let create_transaction = {
   let address_from = {
     let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
     let env = Arg.env_var("SENDER", ~doc);
@@ -806,6 +807,97 @@ let self = {
   Term.(lwt_ret(const(self) $ folder_dest));
 };
 
+let info_add_trusted_validator = {
+  let doc = "Helps node operators maintain a list of trusted validators they verified off-chain which can later be used to make sure only trusted validators are added as new validators in the network.";
+  Term.info(
+    "add-trusted-validator",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let add_trusted_validator = (folder, address) => {
+  open Networking;
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  let payload = Trusted_validators_membership_change.{address, action: Add};
+  let payload_json_str =
+    payload
+    |> Trusted_validators_membership_change.payload_to_yojson
+    |> Yojson.Safe.to_string;
+  let payload_hash = BLAKE2B.hash(payload_json_str);
+  let signature = Signature.sign(~key=identity.key, payload_hash);
+  let.await () =
+    Networking.request_trusted_validator_membership(
+      {signature, payload},
+      identity.uri,
+    );
+  await(`Ok());
+};
+
+let address_t = {
+  let parser = string =>
+    string
+    |> Protocol.Address.of_string
+    |> Option.to_result(~none=`Msg("Expected a validator address."));
+  let printer = (fmt, address) =>
+    Format.fprintf(fmt, "%s", Protocol.Address.to_string(address));
+  Arg.(conv((parser, printer)));
+};
+
+let validator_address = {
+  let docv = "validator_address";
+  let doc = "The validator address to be added/removed as trusted";
+  Arg.(required & pos(2, some(address_t), None) & info([], ~docv, ~doc));
+};
+
+let add_trusted_validator = {
+  Term.(
+    lwt_ret(const(add_trusted_validator) $ folder_node $ validator_address)
+  );
+};
+
+let info_remove_trusted_validator = {
+  let doc = "Helps node operators maintain a list of trusted validators they verified off-chain which can later be used to make sure only trusted validators are added as new validators in the network.";
+  Term.info(
+    "remove-trusted-validator",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let remove_trusted_validator = (folder, address) => {
+  open Networking;
+  let file = folder ++ "/identity.json";
+  let.await identity = Files.Identity.read(~file);
+  let payload =
+    Trusted_validators_membership_change.{address, action: Remove};
+  let payload_json_str =
+    payload
+    |> Trusted_validators_membership_change.payload_to_yojson
+    |> Yojson.Safe.to_string;
+  let payload_hash = BLAKE2B.hash(payload_json_str);
+  let signature = Signature.sign(~key=identity.key, payload_hash);
+  let.await () =
+    Networking.request_trusted_validator_membership(
+      {signature, payload},
+      identity.uri,
+    );
+  await(`Ok());
+};
+
+let remove_trusted_validator = {
+  Term.(
+    lwt_ret(
+      const(remove_trusted_validator) $ folder_node $ validator_address,
+    )
+  );
+};
+
 // Run the CLI
 
 let () = {
@@ -823,6 +915,8 @@ let () = {
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),
       (setup_node, info_setup_node),
+      (add_trusted_validator, info_add_trusted_validator),
+      (remove_trusted_validator, info_remove_trusted_validator),
       (self, info_self),
     ],
   );
