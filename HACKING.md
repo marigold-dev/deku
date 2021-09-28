@@ -17,7 +17,7 @@ An identifier named t on a module will always have type t, so under `Validators.
 ## OCaml Style Guide
 
 ### OCaml Basics
-- Never use the `ignore` function. Instead prefer `let _ = ...`
+- Never use the `ignore` function. Instead prefer `let (_: typ) = ...`
 - Never use the `@@` operator.
 - Never add extraneous type annotations.
 - Never use infix operators to chain monads together. Instead use `let` syntax.
