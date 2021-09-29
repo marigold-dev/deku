@@ -1,5 +1,5 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.187.0/containers/javascript-node
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.192.0/containers/javascript-node
 {
 	"name": "Node.js",
 	"build": {
@@ -46,14 +46,8 @@
 	// "postCreateCommand": "yarn install",
 	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "node",
-	// Docker in docker
-	"runArgs": [
-		"--init",
-		"--privileged"
-	],
-	"overrideCommand": false,
 	"postCreateCommand": "esy",
 	"mounts": [
 		"source=projectname-bashhistory,target=/commandhistory,type=volume"
-	]
+	],
 }
