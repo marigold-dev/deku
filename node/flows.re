@@ -389,7 +389,9 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
 let request_withdraw_proof = (state, ~hash) =>
   switch (state.Node.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
   | None => Networking.Withdraw_proof.Unknown_operation
-  | Some(`Transaction) => Operation_is_not_a_withdraw
+  | Some(`Transaction)
+  | Some(`Add_validator)
+  | Some(`Remove_validator) => Operation_is_not_a_withdraw
   | Some(`Withdraw(handle)) =>
     let last_block_hash = state.Node.protocol.last_block_hash;
     /* TODO: possible problem with this solution

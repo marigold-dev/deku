@@ -55,7 +55,10 @@ module Side_chain = {
   [@deriving yojson]
   type kind =
     | Transaction({destination: Wallet.t})
-    | Withdraw({owner: Tezos_interop.Address.t});
+    | Withdraw({owner: Tezos_interop.Address.t})
+    | Add_validator(Validators.validator)
+    | Remove_validator(Validators.validator);
+
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
