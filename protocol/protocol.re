@@ -58,28 +58,36 @@ let apply_side_chain = (state: t, operation) => {
 
   // apply operation
   let included_operations = Set.add(operation, state.included_operations);
+  let state = {...state, included_operations};
 
   let {source, amount, ticket, _} = operation;
-  let.ok (ledger, result) =
-    switch (operation.kind) {
-    | Transaction({destination}) =>
-      let.ok ledger =
-        Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
-      Ok((ledger, `Transaction));
-    | Withdraw({owner}) =>
-      let.ok (ledger, handle) =
-        Ledger.withdraw(
-          ~source,
-          ~destination=owner,
-          amount,
-          ticket,
-          state.ledger,
-        );
-      // TODO: publish the handle somewhere
-      Ok((ledger, `Withdraw(handle)));
-    };
-
-  Ok(({...state, ledger, included_operations}, result));
+  let update_validators = validators => {
+    let last_seen_membership_change_timestamp = Unix.time();
+    {...state, validators, last_seen_membership_change_timestamp};
+  };
+  switch (operation.kind) {
+  | Transaction({destination}) =>
+    let.ok ledger =
+      Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
+    Ok(({...state, ledger}, `Transaction));
+  | Withdraw({owner}) =>
+    let.ok (ledger, handle) =
+      Ledger.withdraw(
+        ~source,
+        ~destination=owner,
+        amount,
+        ticket,
+        state.ledger,
+      );
+    // TODO: publish the handle somewhere
+    Ok(({...state, ledger}, `Withdraw(handle)));
+  | Add_validator(validator) =>
+    let validators = Validators.add(validator, state.validators);
+    Ok((update_validators(validators), `Add_validator));
+  | Remove_validator(validator) =>
+    let validators = Validators.remove(validator, state.validators);
+    Ok((update_validators(validators), `Remove_validator));
+  };
 };
 let apply_side_chain = (state, operation) =>
   switch (apply_side_chain(state, operation)) {
@@ -164,6 +172,7 @@ let make = (~initial_block) => {
     state_root_hash: initial_block.Block.state_root_hash,
     last_state_root_update: 0.0,
     last_applied_block_timestamp: 0.0,
+    last_seen_membership_change_timestamp: 0.0,
   };
   apply_block(empty, initial_block) |> fst;
 };

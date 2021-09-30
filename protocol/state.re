@@ -20,9 +20,11 @@ type t = {
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just
      ignore like on the hashing function, but it still bothers me */
-  // local consensus(not hashed)
+  // local consensus(not hashed) ie any part of consensus that you
+  // cannot agree with other nodes, because it depends on something local
   last_state_root_update: float,
   last_applied_block_timestamp: float,
+  last_seen_membership_change_timestamp: float,
 };
 
 let hash = t => {
