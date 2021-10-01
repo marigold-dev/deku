@@ -181,9 +181,7 @@ let create_transaction =
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~amount,
-      ~ticket,
-      ~kind=Transaction({destination: received_address}),
+      ~kind=Transaction({destination: received_address, amount, ticket}),
     );
   let file = folder_node ++ "/identity.json";
   let.await identity = Files.Identity.read(~file);
@@ -279,9 +277,7 @@ let withdraw =
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~amount,
-      ~ticket,
-      ~kind=Withdraw({owner: tezos_address}),
+      ~kind=Withdraw({owner: tezos_address, amount, ticket}),
     );
 
   // Broadcast transaction

@@ -60,17 +60,17 @@ let apply_side_chain = (state: t, operation) => {
   let included_operations = Set.add(operation, state.included_operations);
   let state = {...state, included_operations};
 
-  let {source, amount, ticket, _} = operation;
+  let {source, _} = operation;
   let update_validators = validators => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
   switch (operation.kind) {
-  | Transaction({destination}) =>
+  | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
       Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
     Ok(({...state, ledger}, `Transaction));
-  | Withdraw({owner}) =>
+  | Withdraw({owner, amount, ticket}) =>
     let.ok (ledger, handle) =
       Ledger.withdraw(
         ~source,
