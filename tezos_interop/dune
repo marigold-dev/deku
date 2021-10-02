@@ -2,7 +2,7 @@
  (name tezos_interop)
  (libraries helpers lwt.unix mirage-crypto-ec tezos-micheline)
  (preprocess
-  (pps ppx_deriving_yojson ppx_blob))
+  (pps ppx_deriving_yojson ppx_deriving.eq ppx_blob))
  (preprocessor_deps
   (file ./run_entrypoint.bundle.js)
   (file ./fetch_storage.bundle.js)

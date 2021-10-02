@@ -12,6 +12,7 @@ module Make =
          /** this is a leaky abstraction */
          let of_raw_string: string => option(t);
          let to_raw_string: t => string;
+         let equal: (t, t) => bool;
          let compare: (t, t) => int;
 
          let hash: string => t;
@@ -37,6 +38,7 @@ module Make =
     let.ok hex = [%of_yojson: string](json);
     of_string(hex) |> Option.to_result(~none="Invalid hex");
   };
+  let equal = equal;
   // TODO: check the unsafe here
   let compare = unsafe_compare;
 
