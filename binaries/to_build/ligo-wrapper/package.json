@@ -29,22 +29,39 @@
     "doc": "esy dune build @doc"
   },
   "dependencies": {
-    "@opam/dune": ">=2.6",
-    "@reason-native/console": "*",
-    "@reason-native/pastel": "*",
-    "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
-    "ocaml": "~4.10.0",
-    "@opam/ligo": "*"
+    "@opam/dune": "*",
+    "ocaml": "4.10.x",
+    "@opam/ligo": "*",
+    "@opam/ctypes": "*"
   },
   "devDependencies": {
-    "@opam/merlin": "*",
-    "@reason-native/rely": "*",
+    "@opam/ocaml-lsp-server": "*",
     "refmterr": "*",
     "@opam/odoc": "*"
   },
   "resolutions": {
     "@opam/ligo-types": "github:anchpop/ligolang:ligo-types.opam#7dee617edeff9240daced4fb78330904f8f49492",
-    "@opam/ligo": "github:anchpop/ligolang:ligo.opam#7dee617edeff9240daced4fb78330904f8f49492",
+    "@opam/ligo": {
+      "source": "github:anchpop/ligolang:ligo.opam#7dee617edeff9240daced4fb78330904f8f49492",
+      "override": {
+        "dependencies": {
+          "@opam/coq": null
+        }
+      }
+    },
+    "@opam/bls12-381-unix": {
+      "source": "@",
+      "override": {
+        "buildEnv": {
+          "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
+        },
+        "dependencies": {
+          "@opam/bls12-381": "0.4.3",
+          "@opam/bls12-381-gen": "0.4.3",
+          "@opam/ctypes": "*"
+        }
+      }
+    },
     "@opam/ctypes-foreign": {
       "source": "ocamllabs/ocaml-ctypes:ctypes-foreign.opam#15c225ea4f3efd1936fb045494a6b1803f42f594",
       "override": {
@@ -77,82 +94,6 @@
         ],
         "dependencies": {
           "@opam/conf-libffi": "*"
-        }
-      }
-    },
-    "@opam/tezos-sapling": {
-      "source": "https://gitlab.com/tezos/tezos/-/archive/v8.3/tezos-v8.3.tar.bz2#16e984fa8f377f6c55543c30117f211fdcd7f44b",
-      "override": {
-        "buildsInSource": true,
-        "buildEnvOverride": {
-          "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
-        },
-        "build": [
-          [
-            "rm",
-            "-r",
-            "vendors"
-          ],
-          "dune build -j 4 -p tezos-sapling @install",
-          [
-            "mv",
-            "src/lib_sapling/tezos-sapling.install",
-            "./"
-          ]
-        ],
-        "install": [
-          [
-            "esy-installer",
-            "./tezos-sapling.install"
-          ]
-        ],
-        "dependencies": {
-          "@opam/dune": "*",
-          "@opam/hex": "*",
-          "@opam/ctypes": "*",
-          "@opam/ctypes-foreign": "*",
-          "@opam/data-encoding": "*",
-          "@opam/tezos-crypto": "*",
-          "@opam/tezos-stdlib": "*",
-          "@opam/tezos-error-monad": "*",
-          "@opam/tezos-rust-libs": "*"
-        }
-      }
-    },
-    "@opam/tezos-crypto": {
-      "source": "https://gitlab.com/tezos/tezos/-/archive/v8.3/tezos-v8.3.tar.bz2#16e984fa8f377f6c55543c30117f211fdcd7f44b",
-      "override": {
-        "buildsInSource": true,
-        "buildEnvOverride": {
-          "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
-        },
-        "build": [
-          "rm -r vendors",
-          "dune build -j 4 -p tezos-crypto @install",
-          [
-            "mv",
-            "src/lib_crypto/tezos-crypto.install",
-            "./"
-          ]
-        ],
-        "install": [
-          [
-            "esy-installer",
-            "./tezos-crypto.install"
-          ]
-        ],
-        "dependencies": {
-          "@opam/dune": "*",
-          "@opam/tezos-stdlib": "8.3",
-          "@opam/tezos-rust-libs": "*",
-          "@opam/tezos-clic": "*",
-          "@opam/tezos-rpc": "*",
-          "@opam/bls12-381": "0.3.15",
-          "@opam/hacl-star": "*",
-          "@opam/secp256k1-internal": "*",
-          "@opam/tezos-lwt-result-stdlib": "*",
-          "@opam/uecc": ">=0.3",
-          "@opam/ringo": "0.5"
         }
       }
     }
