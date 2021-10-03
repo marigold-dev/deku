@@ -1,0 +1,10 @@
+(lang dune 2.8)
+(name ligo_wrapper)
+(implicit_transitive_deps false)
+(generate_opam_files true)
+
+
+(package
+ (name ligo_wrapper)
+ (description "A small wrapper for some important ligo functions")
+ (depends ppx_inline_test cmdliner))
