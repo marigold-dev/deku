@@ -1,0 +1,9 @@
+(lang dune 2.8)
+(generate_opam_files true)
+
+(package
+ (name foo_types))
+
+(package
+ (name foo)
+ (depends foo_types))

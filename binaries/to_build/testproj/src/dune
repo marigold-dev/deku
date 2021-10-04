@@ -1,0 +1,5 @@
+(library (name foo) (public_name foo)
+  (libraries bar foo_types) (modules foo))
+
+(library (name foo_types) (public_name foo_types)
+  (libraries bar) (modules foo_types))

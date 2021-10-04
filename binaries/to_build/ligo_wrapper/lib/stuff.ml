@@ -1,3 +1,3 @@
 open Ligo
 
-let a = 0
+let a = Ligo_compile.protocol_to_variant
