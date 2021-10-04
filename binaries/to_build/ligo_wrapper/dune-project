@@ -7,4 +7,4 @@
 (package
  (name ligo_wrapper)
  (description "A small CLI for some important ligo functions")
- (depends ppx_inline_test cmdliner))
+ (depends ppx_inline_test cmdliner ligo))
