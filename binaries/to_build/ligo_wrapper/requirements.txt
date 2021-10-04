@@ -1,0 +1,318 @@
+opam-version: "2.0"
+compiler: [
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "ocaml.4.10.2"
+  "ocaml-base-compiler.4.10.2"
+  "ocaml-config.1"
+]
+roots: ["dune.2.9.1" "ligo-types.0.0.1" "ocaml-base-compiler.4.10.2"]
+installed: [
+  "alcotest.1.4.0"
+  "alcotest-lwt.1.4.0"
+  "angstrom.0.15.0"
+  "asn1-combinators.0.2.6"
+  "astring.0.8.5"
+  "base.v0.14.1"
+  "base-bigarray.base"
+  "base-bytes.base"
+  "base-threads.base"
+  "base-unix.base"
+  "base64.3.5.0"
+  "bheap.2.0.0"
+  "bigarray-compat.1.0.0"
+  "bigstring.0.3"
+  "bigstringaf.0.8.0"
+  "biniou.1.2.1"
+  "bisect_ppx.2.6.0"
+  "bls12-381.0.4.3"
+  "bls12-381-gen.0.4.3"
+  "bls12-381-unix.0.4.3"
+  "bos.0.2.0"
+  "ca-certs.0.2.1"
+  "cmdliner.1.0.4"
+  "cohttp.4.0.0"
+  "cohttp-lwt.4.0.0"
+  "cohttp-lwt-unix.4.0.0"
+  "conduit.2.3.0"
+  "conduit-lwt.2.3.0"
+  "conduit-lwt-unix.2.3.0"
+  "conf-findutils.1"
+  "conf-gmp.3"
+  "conf-gmp-powm-sec.3"
+  "conf-libev.4-12"
+  "conf-libffi.2.0.0"
+  "conf-perl.1"
+  "conf-pkg-config.2"
+  "conf-rust.0.1"
+  "conf-which.1"
+  "coq.8.13.2"
+  "cppo.1.6.8"
+  "csexp.1.5.1"
+  "cstruct.6.0.1"
+  "ctypes.0.18.0"
+  "ctypes-foreign.0.18.0"
+  "data-encoding.0.3"
+  "digestif.1.0.1"
+  "domain-name.0.3.0"
+  "dune.2.9.1"
+  "dune-configurator.2.9.1"
+  "duration.0.2.0"
+  "easy-format.1.3.2"
+  "either.1.0.0"
+  "eqaf.0.8"
+  "ezjsonm.1.2.0"
+  "ff-sig.0.6.2"
+  "fmt.0.8.9"
+  "fpath.0.7.3"
+  "getopt.20120615"
+  "gmap.0.3.0"
+  "hacl-star.0.3.2"
+  "hacl-star-raw.0.3.2"
+  "hex.1.4.0"
+  "index.1.4.1"
+  "integers.0.5.1"
+  "ipaddr.5.2.0"
+  "ipaddr-sexp.5.2.0"
+  "irmin.2.7.2"
+  "irmin-layers.2.7.2"
+  "irmin-pack.2.7.2"
+  "jane-street-headers.v0.14.0"
+  "json-data-encoding.0.9.1"
+  "json-data-encoding-bson.0.9.1"
+  "jsonm.1.0.1"
+  "jst-config.v0.14.1"
+  "ligo-types.0.0.1"
+  "linenoise.1.3.1"
+  "logs.0.7.0"
+  "lwt.5.4.2"
+  "lwt-canceler.0.3"
+  "lwt_log.1.1.1"
+  "macaddr.5.2.0"
+  "magic-mime.1.2.0"
+  "menhir.20210419"
+  "menhirLib.20210419"
+  "menhirSdk.20210419"
+  "mirage-crypto.0.10.3"
+  "mirage-crypto-ec.0.10.3"
+  "mirage-crypto-pk.0.10.3"
+  "mirage-crypto-rng.0.10.3"
+  "mirage-no-solo5.1"
+  "mirage-no-xen.1"
+  "mmap.1.1.0"
+  "mtime.1.2.0"
+  "num.1.4"
+  "ocaml.4.10.2"
+  "ocaml-base-compiler.4.10.2"
+  "ocaml-compiler-libs.v0.12.4"
+  "ocaml-config.1"
+  "ocaml-migrate-parsetree.2.2.0"
+  "ocaml-syntax-shims.1.0.0"
+  "ocamlbuild.0.14.0"
+  "ocamlfind.1.9.1"
+  "ocamlgraph.2.0.0"
+  "ocp-ocamlres.0.4"
+  "ocplib-endian.1.1"
+  "octavius.1.2.2"
+  "optint.0.1.0"
+  "ounit2.2.2.4"
+  "parsexp.v0.14.1"
+  "pbkdf.1.2.0"
+  "pprint.20200410"
+  "ppx_assert.v0.14.0"
+  "ppx_base.v0.14.0"
+  "ppx_cold.v0.14.0"
+  "ppx_compare.v0.14.0"
+  "ppx_derivers.1.2.1"
+  "ppx_deriving.5.2.1"
+  "ppx_deriving_yojson.3.6.1"
+  "ppx_enumerate.v0.14.0"
+  "ppx_expect.v0.14.1"
+  "ppx_hash.v0.14.0"
+  "ppx_here.v0.14.0"
+  "ppx_inline_test.v0.14.1"
+  "ppx_irmin.2.7.2"
+  "ppx_js_style.v0.14.1"
+  "ppx_optcomp.v0.14.3"
+  "ppx_repr.0.4.0"
+  "ppx_sexp_conv.v0.14.3"
+  "ppx_yojson_conv.v0.14.0"
+  "ppx_yojson_conv_lib.v0.14.0"
+  "ppxlib.0.23.0"
+  "progress.0.2.1"
+  "ptime.0.8.5"
+  "qcheck.0.18"
+  "qcheck-core.0.18"
+  "qcheck-ounit.0.18"
+  "re.1.10.3"
+  "repr.0.4.0"
+  "resto.0.6.1"
+  "resto-acl.0.6.1"
+  "resto-cohttp.0.6.1"
+  "resto-cohttp-client.0.6.1"
+  "resto-cohttp-self-serving-client.0.6.1"
+  "resto-cohttp-server.0.6.1"
+  "resto-directory.0.6.1"
+  "result.1.5"
+  "ringo.0.5"
+  "ringo-lwt.0.5"
+  "rresult.0.6.0"
+  "secp256k1-internal.0.2.0"
+  "semaphore-compat.1.0.1"
+  "seq.base"
+  "sexplib.v0.14.0"
+  "sexplib0.v0.14.0"
+  "stdio.v0.14.0"
+  "stdlib-shims.0.3.0"
+  "stringext.1.6.0"
+  "terminal.0.2.1"
+  "terminal_size.0.1.4"
+  "tezos-010-PtGRANAD-test-helpers.10.2"
+  "tezos-base.10.2"
+  "tezos-clic.10.2"
+  "tezos-client-010-PtGRANAD.10.2"
+  "tezos-client-base.10.2"
+  "tezos-context.10.2"
+  "tezos-crypto.10.2"
+  "tezos-error-monad.10.2"
+  "tezos-event-logging.10.2"
+  "tezos-hacl-glue.10.2"
+  "tezos-hacl-glue-unix.10.2"
+  "tezos-lwt-result-stdlib.10.2"
+  "tezos-micheline.10.2"
+  "tezos-mockup-proxy.10.2"
+  "tezos-mockup-registration.10.2"
+  "tezos-p2p-services.10.2"
+  "tezos-protocol-010-PtGRANAD.10.2"
+  "tezos-protocol-010-PtGRANAD-parameters.10.2"
+  "tezos-protocol-compiler.10.2"
+  "tezos-protocol-environment.10.2"
+  "tezos-protocol-environment-packer.10.2"
+  "tezos-protocol-environment-sigs.10.2"
+  "tezos-protocol-environment-structs.10.2"
+  "tezos-protocol-plugin-010-PtGRANAD.10.2"
+  "tezos-proxy.10.2"
+  "tezos-rpc.10.2"
+  "tezos-rpc-http.10.2"
+  "tezos-rpc-http-client.10.2"
+  "tezos-rpc-http-client-unix.10.2"
+  "tezos-rust-libs.1.1"
+  "tezos-sapling.10.2"
+  "tezos-shell-services.10.2"
+  "tezos-signer-backends.10.2"
+  "tezos-signer-services.10.2"
+  "tezos-stdlib.10.2"
+  "tezos-stdlib-unix.10.2"
+  "tezos-version.10.2"
+  "time_now.v0.14.0"
+  "topkg.1.0.3"
+  "uchar.0.0.2"
+  "uri.4.2.0"
+  "uri-sexp.4.2.0"
+  "uucp.14.0.0"
+  "uuidm.0.9.7"
+  "uutf.1.0.2"
+  "vector.1.0.0"
+  "x509.0.14.1"
+  "yojson.1.7.0"
+  "zarith.1.11"
+]
+pinned: ["ligo.0.0.1" "ligo-types.0.0.1"]
+package "ligo" {
+  opam-version: "2.0"
+  version: "0.0.1"
+  synopsis: "A high-level language which compiles to Michelson"
+  maintainer: "contact@ligolang.org"
+  authors: "Galfour"
+  license: "MIT"
+  homepage: "https://github.com/anchpop/ligolang"
+  bug-reports: "https://github.com/anchpop/ligolang/issues"
+  depends: [
+    "dune" {>= "2.8"}
+    "hex" {>= "1.4.0"}
+    "menhir" {>= "20200624"}
+    "ocamlgraph" {>= "2.0.0"}
+    "ppx_yojson_conv" {>= "0.14.0"}
+    "coq" {build & >= "8.12" & < "8.13"}
+    "ppx_deriving" {>= "5.2.1"}
+    "ppx_deriving_yojson" {>= "3.6.1"}
+    "ppx_expect" {>= "0.14.1"}
+    "tezos-010-PtGRANAD-test-helpers" {>= "10.2"}
+    "yojson" {>= "1.7.0"}
+    "alcotest" {with-test & >= "1.0" & < "1.1"}
+    "getopt" {>= "20120615"}
+    "terminal_size" {>= "0.1.4"}
+    "pprint" {>= "20200410"}
+    "linenoise" {>= "1.3.1"}
+    "qcheck" {>= "0.17"}
+    "ocaml-migrate-parsetree" {= "2.1.0"}
+    "lwt" {>= "5.3.0"}
+    "bisect_ppx" {dev & >= "2.5.0"}
+    "tezos-base" {>= "10.2"}
+    "tezos-crypto" {>= "10.2"}
+    "tezos-micheline" {>= "10.2"}
+    "odoc" {with-doc}
+  ]
+  build: [
+    ["dune" "subst"] {dev}
+    [
+      "dune"
+      "build"
+      "-p"
+      name
+      "-j"
+      jobs
+      "@install"
+      "@runtest" {with-test}
+      "@doc" {with-doc}
+    ]
+  ]
+  dev-repo: "git+https://github.com/anchpop/ligolang.git"
+  url {
+    src: "git+https://github.com/anchpop/ligolang.git#zinc_work"
+  }
+}
+package "ligo-types" {
+  opam-version: "2.0"
+  version: "0.0.1"
+  synopsis: "A high-level language which compiles to Michelson"
+  maintainer: "contact@ligolang.org"
+  authors: "Galfour"
+  license: "MIT"
+  homepage: "https://github.com/anchpop/ligolang"
+  bug-reports: "https://github.com/anchpop/ligolang/issues"
+  depends: [
+    "dune" {>= "2.8"}
+    "hex" {>= "1.4.0"}
+    "ppx_deriving" {>= "5.2.1"}
+    "ppx_deriving_yojson" {>= "3.6.1"}
+    "ppx_expect" {>= "0.14.1"}
+    "ppx_yojson_conv" {>= "0.14.0"}
+    "yojson" {>= "1.7.0"}
+    "alcotest" {with-test & >= "1.0" & < "1.1"}
+    "pprint" {>= "20200410"}
+    "zarith" {>= "1.11"}
+    "digestif" {>= "1.0.1"}
+    "tezos-micheline" {>= "8.0"}
+    "odoc" {with-doc}
+  ]
+  build: [
+    ["dune" "subst"] {dev}
+    [
+      "dune"
+      "build"
+      "-p"
+      name
+      "-j"
+      jobs
+      "@install"
+      "@runtest" {with-test}
+      "@doc" {with-doc}
+    ]
+  ]
+  dev-repo: "git+https://github.com/anchpop/ligolang.git"
+  url {
+    src: "git+https://github.com/anchpop/ligolang.git#zinc_work"
+  }
+}
