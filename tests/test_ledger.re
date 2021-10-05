@@ -5,22 +5,26 @@ open Ledger;
 
 describe("ledger", ({test, _}) => {
   // TODO: maybe have a "total amount" function to ensure invariant?
-  let make_ticket = (~data=?, ()) => {
+  let make_ticket = (~ticketer=?, ~data=?, ()) => {
     open Tezos_interop;
-    let random_hash =
-      Mirage_crypto_rng.generate(20)
-      |> Cstruct.to_string
-      |> BLAKE2B_20.of_raw_string
-      |> Option.get;
+
+    let ticketer =
+      switch (ticketer) {
+      | Some(ticketer) => ticketer
+      | None =>
+        let random_hash =
+          Mirage_crypto_rng.generate(20)
+          |> Cstruct.to_string
+          |> BLAKE2B_20.of_raw_string
+          |> Option.get;
+        Address.Originated({contract: random_hash, entrypoint: None});
+      };
     let data =
       switch (data) {
       | Some(data) => data
       | None => Mirage_crypto_rng.generate(256) |> Cstruct.to_bytes
       };
-    Ticket.{
-      ticketer: Originated({contract: random_hash, entrypoint: None}),
-      data,
-    };
+    Ticket.{ticketer, data};
   };
   let make_wallet = () => {
     open Mirage_crypto_ec;
@@ -108,14 +112,7 @@ describe("ledger", ({test, _}) => {
     expect_balance(c, t1, 0, t);
     expect_balance(c, t2, 5, t);
 
-    let t =
-      transfer(
-        ~source=a,
-        ~destination=c,
-        Amount.of_int(99),
-        make_ticket(~data=t1.data, ()),
-        t,
-      );
+    let t = transfer(~source=a, ~destination=c, Amount.of_int(99), t1, t);
     expect.result(t).toBeOk();
     let t = Result.get_ok(t);
     expect_balance(a, t1, 0, t);
@@ -209,6 +206,25 @@ describe("ledger", ({test, _}) => {
 
       let t = withdraw(~source=c, ~destination, Amount.of_int(1), t1, t);
       expect.result(t).toBeError();
+    };
+    ();
+  });
+  test("compare", (expect, _) => {
+    let (t, (t1, _), (a, b)) = setup_two();
+
+    {
+      // two tickets with same data
+      let t1' = make_ticket(~data=t1.data, ());
+      let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1', t);
+      expect.result(t).toBeError();
+      expect.equal(Result.get_error(t), `Not_enough_funds);
+    };
+    {
+      // two tickets with same ticketer
+      let t1' = make_ticket(~ticketer=t1.ticketer, ());
+      let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1', t);
+      expect.result(t).toBeError();
+      expect.equal(Result.get_error(t), `Not_enough_funds);
     };
     ();
   });
