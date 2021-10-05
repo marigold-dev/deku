@@ -48,7 +48,8 @@
     "@opam/utop": "*",
     "@opam/menhir": "20210419",
     "@esy-ocaml/rtop": "*",
-    "@reason-native/rely": "*"
+    "@reason-native/rely": "*",
+    "@opam/ocamlformat-rpc": "*"
   },
   "resolutions": {
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
