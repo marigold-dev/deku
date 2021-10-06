@@ -45,6 +45,7 @@
     "@opam/bigstring": "*"
   },
   "devDependencies": {
+    "prettier": "^2.3.2",
     "@opam/ocaml-lsp-server": "*",
     "@opam/ocamlformat": "0.19.0",
     "@opam/utop": "^2.8.0",
