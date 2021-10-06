@@ -32,12 +32,17 @@ module Prefix : sig
   val operation_hash : string
 
   val ed25519_public_key_hash : string
+  val secp256k1_public_key_hash: string
 
   val ed25519_public_key : string
+  val secp256k1_public_key: string
 
   val ed25519_seed : string
 
+  val secp256k1_secret_key: string
+
   val ed25519_signature : string
+  val secp256k1_signature: string
 end
 
 module Alphabet : sig

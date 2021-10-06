@@ -30,6 +30,7 @@ module type S = {
     let of_string: t => option(t);
   };
 };
+module Secp256k1 = Libsecp256k1.External;
 module type Intf = {
   open Helpers;
   open Mirage_crypto_ec;
@@ -39,5 +40,11 @@ module type Intf = {
       type Key.t = Ed25519.pub_ and
       type Key_hash.t = BLAKE2B_20.t and
       type Secret.t = Ed25519.priv and
+      type Signature.t = string;
+  module Secp256k1:
+    S with
+      type Key.t = Secp256k1.Key.t(Secp256k1.Key.public) and
+      type Key_hash.t = BLAKE2B_20.t and
+      type Secret.t = Secp256k1.Key.t(Secp256k1.Key.secret) and
       type Signature.t = string;
 };
