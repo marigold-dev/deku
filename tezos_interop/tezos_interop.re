@@ -29,7 +29,10 @@ module Ed25519 = {
   open Ed25519;
 
   type t = pub_;
-
+  let equal = (a, b) => {
+    let (a, b) = (pub_to_cstruct(a), pub_to_cstruct(b));
+    Cstruct.equal(a, b);
+  };
   let size = 32;
   let prefix = Base58.Prefix.ed25519_public_key;
   let encoding = {
@@ -47,6 +50,7 @@ module Ed25519 = {
   let of_string = Base58.simple_decode(~prefix, ~of_raw);
 
   module Hash = {
+    [@deriving eq]
     type t = BLAKE2B_20.t;
 
     let hash_key = t =>
@@ -69,6 +73,10 @@ module Ed25519 = {
     type t = priv;
 
     let _size = 32;
+    let equal = (a, b) => {
+      let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
+      Cstruct.equal(a, b);
+    };
     let prefix = Base58.Prefix.ed25519_seed;
     let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
     let of_raw = string =>
@@ -78,6 +86,7 @@ module Ed25519 = {
     let of_string = Base58.simple_decode(~prefix, ~of_raw);
   };
   module Signature = {
+    [@deriving eq]
     type t = string;
     let sign = (secret, message) => {
       // double hash because tezos always uses blake2b on CHECK_SIGNATURE
@@ -107,6 +116,7 @@ module Ed25519 = {
 };
 
 module Key = {
+  [@deriving eq]
   type t =
     | Ed25519(Ed25519.t);
 
@@ -131,6 +141,7 @@ module Key = {
     // TODO: move this to a functor
     obj1(req(name, raw_encoding));
   };
+
   let to_string =
     fun
     | Ed25519(key) => Ed25519.to_string(key);
@@ -144,6 +155,7 @@ module Key = {
 };
 
 module Key_hash = {
+  [@deriving eq]
   type t =
     | Ed25519(Ed25519.Hash.t);
 
@@ -172,7 +184,6 @@ module Key_hash = {
     switch (t) {
     | Key.Ed25519(pub_) => Ed25519(Ed25519.Hash.hash_key(pub_))
     };
-
   let to_string =
     fun
     | Ed25519(hash) => Ed25519.Hash.to_string(hash);
@@ -185,9 +196,9 @@ module Key_hash = {
   };
 };
 module Secret = {
+  [@deriving eq]
   type t =
     | Ed25519(Ed25519.Secret.t);
-
   let to_string =
     fun
     | Ed25519(secret) => Ed25519.Secret.to_string(secret);
@@ -200,8 +211,8 @@ module Secret = {
   };
 };
 module Contract_hash = {
+  [@deriving eq]
   type t = BLAKE2B_20.t;
-
   let name = "Contract_hash";
   let encoding = Data_encoding.(obj1(req(name, blake2b_20_encoding)));
   let to_raw = BLAKE2B_20.to_raw_string;
@@ -212,6 +223,7 @@ module Contract_hash = {
 };
 
 module Address = {
+  [@deriving eq]
   type t =
     | Implicit(Key_hash.t)
     | Originated({
@@ -312,9 +324,9 @@ module Address = {
 };
 
 module Signature = {
+  [@deriving eq]
   type t =
     | Ed25519(Ed25519.Signature.t);
-
   let sign = (secret, message) =>
     switch (secret) {
     | Secret.Ed25519(secret) =>
@@ -344,6 +356,7 @@ module Signature = {
 module Ticket = {
   open Tezos_micheline;
 
+  [@deriving eq]
   type t = {
     // TODO: should we allow implicit contracts here?
     ticketer: Address.t,
@@ -389,6 +402,7 @@ module Ticket = {
 };
 
 module Operation_hash = {
+  [@deriving eq]
   type t = BLAKE2B.t;
 
   let prefix = Base58.Prefix.operation_hash;

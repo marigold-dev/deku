@@ -23,8 +23,7 @@ describe("key", ({test, _}) => {
       of_string("edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6"),
     ).
       toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Key.equal,
       Some(edpk),
     )
   });
@@ -65,8 +64,7 @@ describe("key_hash", ({test, _}) => {
   });
   test("of_string", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Key_hash.equal,
       Some(tz1),
     )
   });
@@ -94,8 +92,7 @@ describe("secret", ({test, _}) => {
       of_string("edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd"),
     ).
       toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Secret.equal,
       Some(edsk),
     )
   });
@@ -155,8 +152,7 @@ describe("signature", ({test, _}) => {
       ),
     ).
       toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Signature.equal,
       Some(edsig),
     )
   });
@@ -195,8 +191,7 @@ describe("contract_hash", ({test, _}) => {
   });
   test("of_string", ({expect, _}) => {
     expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Contract_hash.equal,
       Some(kt1),
     )
   });
@@ -230,26 +225,23 @@ describe("address", ({test, _}) => {
   });
   test("of_string", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Address.equal,
       Some(tz1),
     );
     // TODO: should we accept tz1 with entrypoint?
     // expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC%tuturu")).
     //   toBe(
-    //   // TODO: proper equals
+    //
     //   ~equals=(==),
     //   Some(tz1),
     // );
     expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")).toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Address.equal,
       Some(kt1),
     );
     expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc%tuturu")).
       toBe(
-      // TODO: proper equals
-      ~equals=(==),
+      ~equals=Address.equal,
       Some(kt1_tuturu),
     );
     expect.option(of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc%default")).
@@ -281,7 +273,7 @@ describe("ticket", ({test, _}) => {
       of_string({|(Pair "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|}),
     ).
       toBe(
-      ~equals=(==),
+      ~equals=Ticket.equal,
       Some(ticket),
     )
   });
@@ -315,7 +307,7 @@ describe("operation_hash", ({test, _}) => {
       of_string({|opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4|}),
     ).
       toBe(
-      ~equals=(==),
+      ~equals=Operation_hash.equal,
       Some(op),
     )
   });
