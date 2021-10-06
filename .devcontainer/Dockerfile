@@ -6,7 +6,9 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
 # Install basic packages useful for development 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends cargo rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam jq zlib1g-dev inotify-tools tmuxinator
+    && apt-get -y install --no-install-recommends \
+    cargo rsync git m4 build-essential patch unzip wget pkg-config libgmp-dev libev-dev libhidapi-dev libffi-dev opam \
+    jq zlib1g-dev inotify-tools tmuxinator magic-wormhole
 
 # [Optional] Uncomment if you want to install an additional version of node using nvm
 #ARG EXTRA_NODE_VERSION=10
@@ -33,7 +35,7 @@ ARG USE_MOBY="true"
 
 # Install needed packages and setup non-root user. Use a separate RUN statement to add your
 # own dependencies. A user of "automatic" attempts to reuse an user ID if one already exists.
-#ARG USERNAME=node
+ARG USERNAME=node
 #ARG USER_UID=1000
 #ARG USER_GID=$USER_UID
 #COPY library-scripts/*.sh /tmp/library-scripts/
@@ -46,11 +48,11 @@ ARG USE_MOBY="true"
 
 #VOLUME [ "/var/lib/docker" ]
 
-#RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
-#    && mkdir /commandhistory \
-#    && touch /commandhistory/.bash_history \
-#    && chown -R $USERNAME /commandhistory \
-#    && echo $SNIPPET >> "/home/$USERNAME/.bashrc"
+RUN SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/commandhistory/.bash_history" \
+    && mkdir /commandhistory \
+    && touch /commandhistory/.bash_history \
+    && chown -R $USERNAME /commandhistory \
+    && echo $SNIPPET >> "/home/$USERNAME/.bashrc"
 
 # Setting the ENTRYPOINT to docker-init.sh will start up the Docker Engine 
 # inside the container "overrideCommand": false is set in devcontainer.json. 
