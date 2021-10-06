@@ -420,6 +420,11 @@ let trusted_validators_membership =
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
+    `Invalid_signature_author,
+    Address.compare(state.Node.identity.t, Signature.public_key(signature))
+    == 0,
+  );
+  let.assert () = (
     `Failed_to_verify_payload,
     payload_hash |> Signature.verify(~signature),
   );
