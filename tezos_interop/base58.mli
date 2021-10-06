@@ -33,11 +33,19 @@ module Prefix : sig
 
   val ed25519_public_key_hash : string
 
+  val p256_public_key_hash: string
+
   val ed25519_public_key : string
+
+  val p256_public_key: string
 
   val ed25519_seed : string
 
+  val p256_secret_key: string
+
   val ed25519_signature : string
+
+  val p256_signature: string
 end
 
 module Alphabet : sig
