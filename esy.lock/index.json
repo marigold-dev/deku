@@ -1,5 +1,5 @@
 {
-  "checksum": "b155dcee85638ce4661d2f891f77b02f",
+  "checksum": "868adaca6d29d9d00801600cb1fc51aa",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -43,7 +43,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "cookiejar@2.1.2@d41d8cd9" ],
+      "dependencies": [ "cookiejar@2.1.3@d41d8cd9" ],
       "devDependencies": []
     },
     "wildcard@2.0.0@d41d8cd9": {
@@ -116,9 +116,9 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.55.0@d41d8cd9",
+        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.57.1@d41d8cd9",
         "v8-compile-cache@2.3.0@d41d8cd9", "rechoir@0.7.1@d41d8cd9",
-        "interpret@2.2.0@d41d8cd9", "import-local@3.0.2@d41d8cd9",
+        "interpret@2.2.0@d41d8cd9", "import-local@3.0.3@d41d8cd9",
         "fastest-levenshtein@1.0.12@d41d8cd9", "execa@5.1.1@d41d8cd9",
         "commander@7.2.0@d41d8cd9", "colorette@1.4.0@d41d8cd9",
         "@webpack-cli/serve@1.5.2@d41d8cd9",
@@ -128,14 +128,14 @@
       ],
       "devDependencies": []
     },
-    "webpack@5.55.0@d41d8cd9": {
-      "id": "webpack@5.55.0@d41d8cd9",
+    "webpack@5.57.1@d41d8cd9": {
+      "id": "webpack@5.57.1@d41d8cd9",
       "name": "webpack",
-      "version": "5.55.0",
+      "version": "5.57.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/webpack/-/webpack-5.55.0.tgz#sha1:77e4d90c6db6764623f91cb1549cdcda9b9f8a84"
+          "archive:https://registry.npmjs.org/webpack/-/webpack-5.57.1.tgz#sha1:ead5ace2c17ecef2ae8126f143bfeaa7f55eab44"
         ]
       },
       "overrides": [],
@@ -143,13 +143,13 @@
         "webpack-sources@3.2.1@d41d8cd9", "watchpack@2.2.0@d41d8cd9",
         "terser-webpack-plugin@5.2.4@d41d8cd9", "tapable@2.2.1@d41d8cd9",
         "schema-utils@3.1.1@d41d8cd9", "neo-async@2.6.2@d41d8cd9",
-        "mime-types@2.1.32@d41d8cd9", "loader-runner@4.2.0@d41d8cd9",
+        "mime-types@2.1.33@d41d8cd9", "loader-runner@4.2.0@d41d8cd9",
         "json-parse-better-errors@1.0.2@d41d8cd9",
         "graceful-fs@4.2.8@d41d8cd9", "glob-to-regexp@0.4.1@d41d8cd9",
         "events@3.3.0@d41d8cd9", "eslint-scope@5.1.1@d41d8cd9",
-        "es-module-lexer@0.9.1@d41d8cd9", "enhanced-resolve@5.8.3@d41d8cd9",
-        "chrome-trace-event@1.0.3@d41d8cd9", "browserslist@4.17.1@d41d8cd9",
-        "acorn-import-assertions@1.7.6@d41d8cd9", "acorn@8.5.0@d41d8cd9",
+        "es-module-lexer@0.9.2@d41d8cd9", "enhanced-resolve@5.8.3@d41d8cd9",
+        "chrome-trace-event@1.0.3@d41d8cd9", "browserslist@4.17.3@d41d8cd9",
+        "acorn-import-assertions@1.8.0@d41d8cd9", "acorn@8.5.0@d41d8cd9",
         "@webassemblyjs/wasm-parser@1.11.1@d41d8cd9",
         "@webassemblyjs/wasm-edit@1.11.1@d41d8cd9",
         "@webassemblyjs/ast@1.11.1@d41d8cd9",
@@ -269,10 +269,10 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack@5.55.0@d41d8cd9", "terser@5.9.0@d41d8cd9",
+        "webpack@5.57.1@d41d8cd9", "terser@5.9.0@d41d8cd9",
         "source-map@0.6.1@d41d8cd9", "serialize-javascript@6.0.0@d41d8cd9",
         "schema-utils@3.1.1@d41d8cd9", "p-limit@3.1.0@d41d8cd9",
-        "jest-worker@27.2.3@d41d8cd9"
+        "jest-worker@27.2.4@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -449,14 +449,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "signal-exit@3.0.4@d41d8cd9": {
-      "id": "signal-exit@3.0.4@d41d8cd9",
+    "signal-exit@3.0.5@d41d8cd9": {
+      "id": "signal-exit@3.0.5@d41d8cd9",
       "name": "signal-exit",
-      "version": "3.0.4",
+      "version": "3.0.5",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.4.tgz#sha1:366a4684d175b9cab2081e3681fda3747b6c51d7"
+          "archive:https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.5.tgz#sha1:9e3e8cc0c75a99472b44321033a7702e7738252f"
         ]
       },
       "overrides": [],
@@ -474,7 +474,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.8.0@d41d8cd9", "webpack@5.55.0@d41d8cd9",
+        "webpack-cli@4.8.0@d41d8cd9", "webpack@5.57.1@d41d8cd9",
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "binaries@link:binaries", "@taquito/taquito@9.2.0@d41d8cd9",
         "@taquito/signer@9.2.0@d41d8cd9", "@taquito/rpc@9.2.0@d41d8cd9",
@@ -499,7 +499,7 @@
         "@reason-native/rely@3.2.1@d41d8cd9",
         "@opam/utop@opam:2.8.0@76625c33",
         "@opam/ocamlformat@opam:0.19.0@25e59922",
-        "@opam/ocaml-lsp-server@opam:1.8.2@f070db74",
+        "@opam/ocaml-lsp-server@opam:1.8.3@b64dff17",
         "@opam/menhir@opam:20210419@462bec41",
         "@esy-ocaml/rtop@github:ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa@d41d8cd9"
       ]
@@ -816,6 +816,20 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "picocolors@0.2.1@d41d8cd9": {
+      "id": "picocolors@0.2.1@d41d8cd9",
+      "name": "picocolors",
+      "version": "0.2.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/picocolors/-/picocolors-0.2.1.tgz#sha1:570670f793646851d1ba135996962abad587859f"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "pbkdf2@3.1.2@d41d8cd9": {
       "id": "pbkdf2@3.1.2@d41d8cd9",
       "name": "pbkdf2",
@@ -976,14 +990,14 @@
       "dependencies": [ "path-key@3.1.1@d41d8cd9" ],
       "devDependencies": []
     },
-    "node-releases@1.1.76@d41d8cd9": {
-      "id": "node-releases@1.1.76@d41d8cd9",
+    "node-releases@1.1.77@d41d8cd9": {
+      "id": "node-releases@1.1.77@d41d8cd9",
       "name": "node-releases",
-      "version": "1.1.76",
+      "version": "1.1.77",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/node-releases/-/node-releases-1.1.76.tgz#sha1:df245b062b0cafbd5282ab6792f7dccc2d97f36e"
+          "archive:https://registry.npmjs.org/node-releases/-/node-releases-1.1.77.tgz#sha1:50b0cfede855dd374e7585bf228ff34e57c1c32e"
         ]
       },
       "overrides": [],
@@ -998,20 +1012,6 @@
         "type": "install",
         "source": [
           "archive:https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz#sha1:b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
-      "devDependencies": []
-    },
-    "nanocolors@0.1.12@d41d8cd9": {
-      "id": "nanocolors@0.1.12@d41d8cd9",
-      "name": "nanocolors",
-      "version": "0.1.12",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/nanocolors/-/nanocolors-0.1.12.tgz#sha1:8577482c58cbd7b5bb1681db4cf48f11a87fd5f6"
         ]
       },
       "overrides": [],
@@ -1060,28 +1060,28 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "mime-types@2.1.32@d41d8cd9": {
-      "id": "mime-types@2.1.32@d41d8cd9",
+    "mime-types@2.1.33@d41d8cd9": {
+      "id": "mime-types@2.1.33@d41d8cd9",
       "name": "mime-types",
-      "version": "2.1.32",
+      "version": "2.1.33",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/mime-types/-/mime-types-2.1.32.tgz#sha1:1d00e89e7de7fe02008db61001d9e02852670fd5"
+          "archive:https://registry.npmjs.org/mime-types/-/mime-types-2.1.33.tgz#sha1:1fa12a904472fafd068e48d9e8401f74d3f70edb"
         ]
       },
       "overrides": [],
-      "dependencies": [ "mime-db@1.49.0@d41d8cd9" ],
+      "dependencies": [ "mime-db@1.50.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "mime-db@1.49.0@d41d8cd9": {
-      "id": "mime-db@1.49.0@d41d8cd9",
+    "mime-db@1.50.0@d41d8cd9": {
+      "id": "mime-db@1.50.0@d41d8cd9",
       "name": "mime-db",
-      "version": "1.49.0",
+      "version": "1.50.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/mime-db/-/mime-db-1.49.0.tgz#sha1:f3dfde60c99e9cf3bc9701d687778f537001cbed"
+          "archive:https://registry.npmjs.org/mime-db/-/mime-db-1.50.0.tgz#sha1:abd4ac94e98d3c0e185016c67ab45d5fde40c11f"
         ]
       },
       "overrides": [],
@@ -1259,14 +1259,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "jest-worker@27.2.3@d41d8cd9": {
-      "id": "jest-worker@27.2.3@d41d8cd9",
+    "jest-worker@27.2.4@d41d8cd9": {
+      "id": "jest-worker@27.2.4@d41d8cd9",
       "name": "jest-worker",
-      "version": "27.2.3",
+      "version": "27.2.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/jest-worker/-/jest-worker-27.2.3.tgz#sha1:396e83d04ca575230a9bcb255c2b66aec07cb931"
+          "archive:https://registry.npmjs.org/jest-worker/-/jest-worker-27.2.4.tgz#sha1:881455df75e22e7726a53f43703ab74d6b36f82d"
         ]
       },
       "overrides": [],
@@ -1470,14 +1470,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "import-local@3.0.2@d41d8cd9": {
-      "id": "import-local@3.0.2@d41d8cd9",
+    "import-local@3.0.3@d41d8cd9": {
+      "id": "import-local@3.0.3@d41d8cd9",
       "name": "import-local",
-      "version": "3.0.2",
+      "version": "3.0.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/import-local/-/import-local-3.0.2.tgz#sha1:a8cfd0431d1de4a2199703d003e3e62364fa6db6"
+          "archive:https://registry.npmjs.org/import-local/-/import-local-3.0.3.tgz#sha1:4d51c2c495ca9393da259ec66b62e022920211e0"
         ]
       },
       "overrides": [],
@@ -1766,7 +1766,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "strip-final-newline@2.0.0@d41d8cd9", "signal-exit@3.0.4@d41d8cd9",
+        "strip-final-newline@2.0.0@d41d8cd9", "signal-exit@3.0.5@d41d8cd9",
         "onetime@5.1.2@d41d8cd9", "npm-run-path@4.0.1@d41d8cd9",
         "merge-stream@2.0.0@d41d8cd9", "is-stream@2.0.1@d41d8cd9",
         "human-signals@2.1.0@d41d8cd9", "get-stream@6.0.1@d41d8cd9",
@@ -1939,14 +1939,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "es-module-lexer@0.9.1@d41d8cd9": {
-      "id": "es-module-lexer@0.9.1@d41d8cd9",
+    "es-module-lexer@0.9.2@d41d8cd9": {
+      "id": "es-module-lexer@0.9.2@d41d8cd9",
       "name": "es-module-lexer",
-      "version": "0.9.1",
+      "version": "0.9.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-0.9.1.tgz#sha1:f203bf394a630a552d381acf01a17ef08843b140"
+          "archive:https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-0.9.2.tgz#sha1:d0a8c72c5d904014111fac7fab4c92b9ac545564"
         ]
       },
       "overrides": [],
@@ -2002,14 +2002,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.3.852@d41d8cd9": {
-      "id": "electron-to-chromium@1.3.852@d41d8cd9",
+    "electron-to-chromium@1.3.860@d41d8cd9": {
+      "id": "electron-to-chromium@1.3.860@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.3.852",
+      "version": "1.3.860",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.852.tgz#sha1:04091fd848b38e7248e4eb70c05e1f9befd2671b"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.860.tgz#sha1:d612e54ed75fa524c12af8da3ad8121ebfe2802b"
         ]
       },
       "overrides": [],
@@ -2083,14 +2083,14 @@
       ],
       "devDependencies": []
     },
-    "cookiejar@2.1.2@d41d8cd9": {
-      "id": "cookiejar@2.1.2@d41d8cd9",
+    "cookiejar@2.1.3@d41d8cd9": {
+      "id": "cookiejar@2.1.3@d41d8cd9",
       "name": "cookiejar",
-      "version": "2.1.2",
+      "version": "2.1.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/cookiejar/-/cookiejar-2.1.2.tgz#sha1:dd8a235530752f988f9a0844f3fc589e3111125c"
+          "archive:https://registry.npmjs.org/cookiejar/-/cookiejar-2.1.3.tgz#sha1:fc7a6216e408e74414b90230050842dacda75acc"
         ]
       },
       "overrides": [],
@@ -2275,14 +2275,14 @@
       ],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001261@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001261@d41d8cd9",
+    "caniuse-lite@1.0.30001264@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001264@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001261",
+      "version": "1.0.30001264",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001261.tgz#sha1:96d89813c076ea061209a4e040d8dcf0c66a1d01"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001264.tgz#sha1:88f625a60efb6724c7c62ac698bc8dbd9757e55b"
         ]
       },
       "overrides": [],
@@ -2350,21 +2350,21 @@
       "dependencies": [ "base-x@3.0.8@d41d8cd9" ],
       "devDependencies": []
     },
-    "browserslist@4.17.1@d41d8cd9": {
-      "id": "browserslist@4.17.1@d41d8cd9",
+    "browserslist@4.17.3@d41d8cd9": {
+      "id": "browserslist@4.17.3@d41d8cd9",
       "name": "browserslist",
-      "version": "4.17.1",
+      "version": "4.17.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/browserslist/-/browserslist-4.17.1.tgz#sha1:a98d104f54af441290b7d592626dd541fa642eb9"
+          "archive:https://registry.npmjs.org/browserslist/-/browserslist-4.17.3.tgz#sha1:2844cd6eebe14d12384b0122d217550160d2d624"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "node-releases@1.1.76@d41d8cd9", "nanocolors@0.1.12@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.852@d41d8cd9",
-        "caniuse-lite@1.0.30001261@d41d8cd9"
+        "picocolors@0.2.1@d41d8cd9", "node-releases@1.1.77@d41d8cd9",
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.860@d41d8cd9",
+        "caniuse-lite@1.0.30001264@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -2449,6 +2449,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/stringext@opam:1.6.0@d9079793",
         "@opam/lwt@opam:5.4.2@f5e79982",
         "@opam/ligo-types@github:anchpop/ligolang:ligo-types.opam#7dee617edeff9240daced4fb78330904f8f49492@d41d8cd9",
         "@opam/dune@opam:2.9.1@1e504822", "@esy-ocaml/reason@3.7.0@d41d8cd9"
@@ -2571,14 +2572,14 @@
       ],
       "devDependencies": []
     },
-    "acorn-import-assertions@1.7.6@d41d8cd9": {
-      "id": "acorn-import-assertions@1.7.6@d41d8cd9",
+    "acorn-import-assertions@1.8.0@d41d8cd9": {
+      "id": "acorn-import-assertions@1.8.0@d41d8cd9",
       "name": "acorn-import-assertions",
-      "version": "1.7.6",
+      "version": "1.8.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/acorn-import-assertions/-/acorn-import-assertions-1.7.6.tgz#sha1:580e3ffcae6770eebeec76c3b9723201e9d01f78"
+          "archive:https://registry.npmjs.org/acorn-import-assertions/-/acorn-import-assertions-1.8.0.tgz#sha1:ba2b5939ce62c238db6d93d81c9b111b29b855e9"
         ]
       },
       "overrides": [],
@@ -2669,7 +2670,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.8.0@d41d8cd9", "webpack@5.55.0@d41d8cd9"
+        "webpack-cli@4.8.0@d41d8cd9", "webpack@5.57.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -5368,20 +5369,20 @@
         "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
-    "@opam/ocaml-lsp-server@opam:1.8.2@f070db74": {
-      "id": "@opam/ocaml-lsp-server@opam:1.8.2@f070db74",
+    "@opam/ocaml-lsp-server@opam:1.8.3@b64dff17": {
+      "id": "@opam/ocaml-lsp-server@opam:1.8.3@b64dff17",
       "name": "@opam/ocaml-lsp-server",
-      "version": "opam:1.8.2",
+      "version": "opam:1.8.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/42/420dfd5897d2a1da92e5d6a6c562d0f733871f711666c1741c00f57ef77dbd82#sha256:420dfd5897d2a1da92e5d6a6c562d0f733871f711666c1741c00f57ef77dbd82",
-          "archive:https://github.com/ocaml/ocaml-lsp/releases/download/1.8.2/jsonrpc-1.8.2.tbz#sha256:420dfd5897d2a1da92e5d6a6c562d0f733871f711666c1741c00f57ef77dbd82"
+          "archive:https://opam.ocaml.org/cache/sha256/58/58ef5aa7bf176712428b4e0b1015feaf6d677cbd9474f8822d132b25223b14e9#sha256:58ef5aa7bf176712428b4e0b1015feaf6d677cbd9474f8822d132b25223b14e9",
+          "archive:https://github.com/ocaml/ocaml-lsp/releases/download/1.8.3/jsonrpc-1.8.3.tbz#sha256:58ef5aa7bf176712428b4e0b1015feaf6d677cbd9474f8822d132b25223b14e9"
         ],
         "opam": {
           "name": "ocaml-lsp-server",
-          "version": "1.8.2",
-          "path": "esy.lock/opam/ocaml-lsp-server.1.8.2"
+          "version": "1.8.3",
+          "path": "esy.lock/opam/ocaml-lsp-server.1.8.3"
         }
       },
       "overrides": [],

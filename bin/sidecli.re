@@ -444,10 +444,14 @@ let info_tmp_for_testing = {
   Term.info("tmp", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 let tmp_for_testing = () => {
-  let.await hello_msg = Binaries.Hello.call();
+  let.await hello_msg = Binaries.Ligo_wrapper.call("test.religo");
   switch (hello_msg) {
-  | Ok(msg) => print_string(msg)
-  | Error(_) => ()
+  | Ok(msg) =>
+    print_endline("ok!");
+    print_string(msg);
+  | Error(msg) =>
+    print_endline("error!");
+    print_string(msg);
   };
   Lwt.return(`Ok());
 };
