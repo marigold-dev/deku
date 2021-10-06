@@ -1,5 +1,5 @@
 {
-  "checksum": "c9e532bc2397bb9be7ec641c7ae6e68d",
+  "checksum": "97180a34b190459e4856e857634754c4",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -494,6 +494,7 @@
         "@opam/dune@opam:2.9.1@1e504822",
         "@opam/digestif@opam:1.0.1@6b318b0d",
         "@opam/cmdliner@opam:1.0.4@93208aac",
+        "@opam/bigstring@opam:0.3@3fa3c6dc",
         "@esy-ocaml/reason@3.7.0@d41d8cd9"
       ],
       "devDependencies": [
@@ -2004,14 +2005,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.3.859@d41d8cd9": {
-      "id": "electron-to-chromium@1.3.859@d41d8cd9",
+    "electron-to-chromium@1.3.860@d41d8cd9": {
+      "id": "electron-to-chromium@1.3.860@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.3.859",
+      "version": "1.3.860",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.859.tgz#sha1:4e0abc918e1c22b306ba13b4c3649f78295f5937"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.860.tgz#sha1:d612e54ed75fa524c12af8da3ad8121ebfe2802b"
         ]
       },
       "overrides": [],
@@ -2277,14 +2278,14 @@
       ],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001264@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001264@d41d8cd9",
+    "caniuse-lite@1.0.30001265@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001265@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001264",
+      "version": "1.0.30001265",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001264.tgz#sha1:88f625a60efb6724c7c62ac698bc8dbd9757e55b"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001265.tgz#sha1:0613c9e6c922e422792e6fcefdf9a3afeee4f8c3"
         ]
       },
       "overrides": [],
@@ -2365,8 +2366,8 @@
       "overrides": [],
       "dependencies": [
         "picocolors@0.2.1@d41d8cd9", "node-releases@1.1.77@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.859@d41d8cd9",
-        "caniuse-lite@1.0.30001264@d41d8cd9"
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.860@d41d8cd9",
+        "caniuse-lite@1.0.30001265@d41d8cd9"
       ],
       "devDependencies": []
     },
