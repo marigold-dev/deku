@@ -30,19 +30,21 @@ asynchronously.
 To state it concisely, we need an algorithm for block producers and validators
 such that:
 
-- The block producer is forced to produce state root hash updates on time.
-  - 1a. Validators reject blocks with state root hash changes that occur too
+1. If an honest node hashes a particular state, every other node will either
+  eventually hash that same state or has already hashed that state.
+2. The block producer is forced to produce state root hash updates on time.
+  - 2a. Validators reject blocks with state root hash changes that occur too
     early.
-  - 1b. Validators reject blocks with a state root hash that is too old.
-- The state root hash can only advance forward - that is, when a validator sees
+  - 2b. Validators reject blocks with a state root hash that is too old.
+3 The state root hash can only advance forward - that is, when a validator sees
   a block with state root hash h, and then a subsequent block with state root
   hash h', the validator rejects any subsequent blocks with state root hash h.
-- Honest validators that are in sync and have sufficient hashing power always
+4. Honest validators that are in sync and have sufficient hashing power always
   have the next state root hash before it is needed (i.e, hashing is no longer a
   bottleneck).
-- Honest validators that are behind in hashing mark themselves as out of sync
+5. Honest validators that are behind in hashing mark themselves as out of sync
   and continue to follow but don't sign blocks.
-- honest validators can get back in sync when finished hashing (assuming they
+6. Honest validators can get back in sync when finished hashing (assuming they
   were in sync before they fell behind).
 
 ## Definitions
