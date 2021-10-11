@@ -59,6 +59,11 @@
     "@opam/httpaf": "github:anmonteiro/httpaf:httpaf.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt-unix": "github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
+    "@opam/lwt": "github:Sudha247/lwt-multicore:lwt.opam#321081dcc8dc359bb45d71847c70e01e78a74d02",
+    "@opam/base-domains": {
+      "source": "no-source:",
+      "override": {}
+    },
     "@opam/piaf": "github:EduardoRFS/piaf:piaf.opam#8e4eeb916aef8e95f04d98eef57c43f07008b631",
     "@opam/ssl": "github:Firgeis/ocaml-ssl:ssl.opam#f7524f7b6db756ce4097dea7fa4e1c4f4f2832a9",
     "@opam/opium": "github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
