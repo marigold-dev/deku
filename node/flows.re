@@ -294,20 +294,42 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 let received_operation =
     (state, update_state, request: Networking.Operation_gossip.request) =>
   if (!List.mem(request.operation, state.Node.pending_side_ops)) {
-    Lwt.async(() => {
-      let _state =
-        update_state(
-          Node.{
-            ...state,
-            pending_side_ops: [
-              request.operation,
-              ...state.Node.pending_side_ops,
-            ],
-          },
-        );
-      let.await () = Networking.broadcast_operation_gossip(state, request);
-      Lwt.return();
-    });
+    let.ok () =
+      Operation.Side_chain.(
+        switch (request.operation.kind) {
+        | Add_validator(_)
+        | Remove_validator(_) =>
+          let.assert () = (
+            `Invalid_signature_author,
+            Address.compare(
+              state.Node.identity.t,
+              Signature.public_key(
+                request.operation.Operation.Side_chain.signature,
+              ),
+            )
+            == 0,
+          );
+          Ok();
+        | _ =>
+          Lwt.async(() => {
+            Networking.broadcast_operation_gossip(state, request)
+          });
+          Ok();
+        }
+      );
+    let _: State.t =
+      update_state(
+        Node.{
+          ...state,
+          pending_side_ops: [
+            request.operation,
+            ...state.Node.pending_side_ops,
+          ],
+        },
+      );
+    Ok();
+  } else {
+    Ok();
   };
 
 let received_main_operation = (state, update_state, operation) => {
