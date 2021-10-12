@@ -19,10 +19,16 @@ type t =
 let sign: (~key: Address.key, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
 let genesis: t;
+
+type next_hashes = {
+  state_root: BLAKE2B.t,
+  validators: BLAKE2B.t,
+};
+
 let produce:
   (
     ~state: State.t,
-    ~next_state_root_hash: option(BLAKE2B.t),
+    ~next_hashes: option(next_hashes),
     ~author: Address.t,
     ~main_chain_ops: list(Main_chain.t),
     ~side_chain_ops: list(Side_chain.t)

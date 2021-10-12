@@ -46,7 +46,7 @@ describe("protocol state", ({test, _}) => {
     let block =
       Block.produce(
         ~state,
-        ~next_state_root_hash=None,
+        ~next_hashes=None,
         ~author,
         ~main_chain_ops=main,
         ~side_chain_ops=side,
