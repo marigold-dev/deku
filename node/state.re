@@ -21,6 +21,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  next_state_root_hash: BLAKE2B.t,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -71,6 +72,7 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    next_state_root_hash: initial_block.state_root_hash,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -264,18 +266,19 @@ let load_snapshot =
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
-  let.ok protocol =
+  let.ok (protocol, new_hash) =
     fold_left_ok(
-      (protocol, block) => {
+      ((protocol, _), block) => {
         // TODO: ignore this may be really bad for snapshots
         // TODO: ignore the result is also really bad
-        let.ok (protocol, _new_hash, _result) =
+        let.ok (protocol, new_hash, _result) =
           Protocol.apply_block(protocol, block);
-        Ok(protocol);
+        Ok((protocol, new_hash |> Option.map(fst)));
       },
-      protocol,
+      (protocol, None),
       all_blocks,
     );
+  let next_state_root_hash = Option.value(~default=t.next_state_root_hash, new_hash)
   //TODO: snapshots?
-  Ok({...t, block_pool, protocol});
+  Ok({...t, block_pool, protocol, next_state_root_hash});
 };

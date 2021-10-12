@@ -169,7 +169,12 @@ let make = (~initial_block) => {
        are in the right place, otherwise invariants
        can be broken */
     last_block_hash: initial_block.Block.previous_hash,
-    state_root_hash: initial_block.Block.state_root_hash,
+    // The initial protocol state includes an unreachable
+    // hash as the first state root hash. When the genesis
+    // block is applied, the the state root hash of the block
+    // will be different, triggering the creation of the next hash.
+    // See [FIXME: add ref].
+    state_root_hash: BLAKE2B.hash("Tetsutetsu Tetsutetsu"),
     last_state_root_update: 0.0,
     last_applied_block_timestamp: 0.0,
     last_seen_membership_change_timestamp: 0.0,
@@ -178,15 +183,17 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let (valid_hash, hash) =
+  let hash =
     if (block.state_root_hash == state.state_root_hash) {
-      (true, None);
+      None;
     } else {
-      // TODO: pipeline this
-      let (hash, data) = hash(state);
-      (block.state_root_hash == hash, Some((hash, data)));
+      // In the case where the epoch has changed, we
+      // hash the new state to determine what the state
+      // root hash of the next epoch will be, which we set
+      // appropriately in the resulting state.
+      let (next_state_root_hash, next_state_root_data) = State.hash(state);
+      Some((next_state_root_hash, next_state_root_data));
     };
-  let.assert () = (`Invalid_state_root_hash, valid_hash);
   let (state, result) = apply_block(state, block);
   Ok((state, hash, result));
 };

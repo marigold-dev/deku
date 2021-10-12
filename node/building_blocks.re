@@ -55,6 +55,47 @@ let is_current_producer = (state, ~key) => {
   Some(current_producer.address == key);
 };
 
+/** Blocks that change the state root epoch before
+    this interval in seconds has passed are not signable.
+
+    TODO: verify reasonable times for this with benchmarking.
+          currently set to [state_root_min_timeout] as a reasonable
+          default. */
+let minimum_signable_time_between_epochs = 60.0;
+/** Blocks that do not change the state root epoch after
+    this interval has passed are not signable.
+
+    TODO: verify reasonable times for this with benchmarking.
+    Currently set to [minimum_signable_time_between_epochs] + 10
+    as a reasonable default. */
+let maximum_signable_time_between_epochs = 70.0;
+
+/* Returns true if the block's state root hash and has not
+    changed too early or too late. Specifically, either:
+   - The block has the same state root hash as the current
+      state root hash and the maximum_signable_time_between_epochs
+      has not elapsed.
+   - Or the block has the same state root hash as [next_state_root_hash]
+     and the minimum_signable_time_between_epochs as elapsed.
+   */
+let block_has_signable_state_root_hash = (~current_time, state, block) => {
+  let protocol = state.Node.protocol;
+  let time_since_last_epoch = protocol.last_state_root_update -. current_time;
+
+  let same_epoch = protocol.state_root_hash == block.Block.state_root_hash;
+  let next_epoch = state.next_state_root_hash == block.state_root_hash;
+  let min_epoch_timeout =
+    time_since_last_epoch >= minimum_signable_time_between_epochs;
+  let max_epoch_timeout =
+    time_since_last_epoch <= maximum_signable_time_between_epochs;
+  switch (same_epoch, next_epoch, min_epoch_timeout, max_epoch_timeout) {
+  | (true, false, _, false) => true
+  | (false, true, true, _) => true
+  | (true, true, _, _) => failwith("unrecheable")
+  | _ => false
+  };
+};
+
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
 let is_signable = (state, block) => {
@@ -96,18 +137,62 @@ let is_signable = (state, block) => {
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
   && all_main_ops_are_known
-  && contains_only_trusted_add_validator_op(block.side_chain_ops);
+  && contains_only_trusted_add_validator_op(block.side_chain_ops)
+  && block_has_signable_state_root_hash(~current_time, state, block);
 };
 
 let sign = (~key, block) => Block.sign(~key, block);
 
-let produce_block = state =>
+/** The state_root_min_timeout determines how often the block producer
+    starts hashing a new state root. It is closely related to the
+    state root epoch (see notes in [should_start_new_epoch]]).
+
+    The faster hashing is, the shorter this time should be. Faster updates
+    to the state root hash means shorter times to join the network, since a
+    node only needs to download and apply the blocks from the previous state root
+    update to the current block.
+*/
+let state_root_min_timeout = 60.0;
+
+/** Calculates whether to start sending a new state root hash.
+
+    The state root epoch is the interval (in blocks) between state root
+    hash updates. Thus, a new epoch is triggered by applying a block with
+    a new state root hash. The block producer decides when to send
+    blocks with new state root hashes. To enforce that he does so on time,
+    validators reject blocks with updates that occur to soon or too late
+    (see [Protocol.apply]).
+
+    The block producer uses this function to determine when to send a
+    block with an updated state root hash.
+*/
+let should_start_new_epoch = (last_state_root_update, current_time) => {
+  /** To prevent changing the validator just because of network jittering,
+      a short margin of error is introduced, allowing the block producer to start
+      hashing slightly before the state_root_min_timeout. We arbitrarily chose 1s,
+      but any reasonable time will do.*/
+  let avoid_jitter = 1.0;
+  current_time
+  -. last_state_root_update
+  -. avoid_jitter >= state_root_min_timeout;
+};
+
+let produce_block = state => {
+  let start_new_epoch =
+    should_start_new_epoch(
+      state.Node.protocol.last_state_root_update,
+      Unix.time(),
+    );
+  let next_state_root_hash =
+    start_new_epoch ? Some(state.Node.next_state_root_hash) : None;
   Block.produce(
     ~state=state.Node.protocol,
+    ~next_state_root_hash,
     ~author=state.identity.t,
     ~main_chain_ops=state.pending_main_ops,
     ~side_chain_ops=state.pending_side_ops,
   );
+};
 
 let is_valid_block_height = (state, block_height) =>
   block_height >= 1L && block_height <= state.Node.protocol.block_height;
