@@ -22,6 +22,7 @@ let genesis: t;
 let produce:
   (
     ~state: State.t,
+    ~next_state_root_hash: option(BLAKE2B.t),
     ~author: Address.t,
     ~main_chain_ops: list(Main_chain.t),
     ~side_chain_ops: list(Side_chain.t)
