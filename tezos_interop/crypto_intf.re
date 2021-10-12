@@ -24,10 +24,10 @@ module type S = {
   module Signature: {
     type t;
     let equal: (t, t) => bool;
-    let sign: (Secret.t, t) => t;
-    let check: (Key.t, t, t) => bool;
-    let to_string: t => t;
-    let of_string: t => option(t);
+    let sign: (Secret.t, string) => t;
+    let check: (Key.t, t, string) => bool;
+    let to_string: t => string;
+    let of_string: string => option(t);
   };
 };
 module Secp256k1 = Libsecp256k1.External;
@@ -46,5 +46,5 @@ module type Intf = {
       type Key.t = Secp256k1.Key.t(Secp256k1.Key.public) and
       type Key_hash.t = BLAKE2B_20.t and
       type Secret.t = Secp256k1.Key.t(Secp256k1.Key.secret) and
-      type Signature.t = string;
+      type Signature.t = Secp256k1.Sign.t(Secp256k1.Sign.plain);
 };

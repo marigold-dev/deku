@@ -116,7 +116,7 @@ module Secp256k1 = {
   module Key = {
     type t = K.t(K.public);
     let equal = (a, b) => {
-      Bigstring.equal(K.to_bytes(context, a), K.to_bytes(context, b));
+      K.equal(a, b);
     };
     let size = K.compressed_pk_bytes;
     let prefix = Base58.Prefix.secp256k1_public_key;
@@ -156,7 +156,7 @@ module Secp256k1 = {
     type t = K.t(K.secret);
 
     let equal = (a, b) => {
-      Bigstring.equal(K.to_bytes(context, a), K.to_bytes(context, b));
+      K.equal(a, b);
     };
     let _size = K.secret_bytes;
     let prefix = Base58.Prefix.secp256k1_secret_key;
@@ -169,18 +169,17 @@ module Secp256k1 = {
     let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
   };
   module Signature = {
-    [@deriving eq]
-    type t = string;
+    type t = Sign.t(Sign.plain);
     let sign = (secret, message) => {
       let hash = BLAKE2B.hash(message);
       Bigstring.of_string(BLAKE2B.to_raw_string(hash))
-      |> Sign.sign_exn(context, ~sk=secret)
-      |> Sign.to_bytes(~der=false, context)
-      |> Bigstring.to_string;
+      |> Sign.sign_exn(context, ~sk=secret);
+    };
+    let equal = (a, b) => {
+      Sign.equal(a, b);
     };
     let check = (public, signature, message) => {
       let hash = BLAKE2B.hash(message);
-      let signature = Sign.read_exn(context, Bigstring.of_string(signature));
       Sign.verify_exn(
         context,
         ~pk=public,
@@ -189,12 +188,14 @@ module Secp256k1 = {
       );
     };
 
-    let size = Sign.plain_bytes;
+    let _size = Sign.plain_bytes;
     let prefix = Base58.Prefix.secp256k1_signature;
-    let to_raw = Fun.id;
+    let to_raw = t =>
+      Sign.to_bytes(~der=false, context, t) |> Bigstring.to_string;
     let of_raw = string =>
-      String.length(string) == size ? Some(string) : None;
-    let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+      Sign.read(context, string |> Bigstring.of_string) |> Result.to_option;
+    let to_string = (t: t): string =>
+      Base58.simple_encode(~prefix, ~to_raw, t);
     let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
   };
 };
