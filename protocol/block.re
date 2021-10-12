@@ -156,14 +156,25 @@ let genesis =
     ~author=Address.genesis_address,
   );
 
-let produce = (~state, ~next_state_root_hash) => {
-  let state_root_hash =
-    Option.value(~default=state.State.state_root_hash, next_state_root_hash);
+type next_hashes = {
+  state_root: BLAKE2B.t,
+  validators: BLAKE2B.t,
+};
+
+let produce = (~state, ~next_hashes) => {
+  let next_hashes =
+    Option.value(
+      ~default={
+        state_root: state.State.state_root_hash,
+        validators: state.State.validators_hash,
+      },
+      next_hashes,
+    );
   make(
     ~previous_hash=state.State.last_block_hash,
-    ~state_root_hash,
+    ~state_root_hash=next_hashes.state_root,
     ~handles_hash=Ledger.handles_root_hash(state.ledger),
-    ~validators_hash=state.validators_hash,
+    ~validators_hash=next_hashes.validators,
     ~block_height=Int64.add(state.block_height, 1L),
   );
 };

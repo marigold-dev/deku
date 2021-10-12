@@ -183,11 +183,16 @@ let produce_block = state => {
       state.Node.protocol.last_state_root_update,
       Unix.time(),
     );
-  let next_state_root_hash =
-    start_new_epoch ? Some(state.Node.next_state_root_hash) : None;
+  let next_hashes =
+    start_new_epoch
+      ? Some(Block.({
+          state_root: state.Node.next_state_root_hash,
+          validators: Validators.hash(state.Node.protocol.validators),
+      }))
+      : None;
   Block.produce(
     ~state=state.Node.protocol,
-    ~next_state_root_hash,
+    ~next_hashes,
     ~author=state.identity.t,
     ~main_chain_ops=state.pending_main_ops,
     ~side_chain_ops=state.pending_side_ops,
