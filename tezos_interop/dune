@@ -21,3 +21,10 @@
  (mode fallback)
  (action
   (run webpack --env=%{profile})))
+
+(rule
+ (deps ./webpack.config.js ./listen_transactions.js ./run_entrypoint.js)
+ (alias fmt)
+ (mode fallback)
+ (action
+  (run prettier -c %{deps})))

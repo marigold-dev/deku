@@ -38,14 +38,8 @@ const error = (error) =>
   output({ status: "error", error: JSON.stringify(error) });
 
 (async () => {
-  const {
-    rpc_node,
-    secret,
-    confirmation,
-    destination,
-    entrypoint,
-    payload,
-  } = input();
+  const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
+    input();
   const args = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([_, value]) => value);
