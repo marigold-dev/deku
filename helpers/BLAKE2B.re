@@ -1,6 +1,5 @@
-let (let.ok) = Result.bind;
-let (let.some) = Option.bind;
-
+open Option_ext.Let_syntax;
+open Result_ext.Let_syntax;
 // TODO: this is bad, size shuold be a detail in a function
 module Make =
        (P: {let size: int;})

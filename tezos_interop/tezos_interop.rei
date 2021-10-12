@@ -11,7 +11,7 @@ module Key: {
 
 module Key_hash: {
   type t =
-    | Ed25519(Helpers.BLAKE2B_20.t);
+    | Ed25519(BLAKE2B_20.t);
 
   let of_key: Key.t => t;
   let equal: (t, t) => bool;
