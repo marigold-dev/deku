@@ -212,7 +212,7 @@ module Address = {
     );
 
   let with_yojson_string = (name, of_string, to_string) =>
-    Helpers.with_yojson_string(
+    Yojson_ext.with_yojson_string(
       string =>
         of_string(string) |> Option.to_result(~none="invalid " ++ name),
       to_string,
@@ -775,7 +775,7 @@ module Consensus = {
             _,
           ),
         ) => {
-          fold_left_ok(
+          List.fold_left_ok(
             (acc, k) =>
               switch (k) {
               | Micheline.String(_, k) =>

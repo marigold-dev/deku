@@ -6,6 +6,23 @@ open Cmdliner;
 
 Printexc.record_backtrace(true);
 
+// file helpers
+
+let read_validators = (~node_folder) =>
+  Files.Validators.read(~file=node_folder ++ "/validators.json");
+let read_identity = (~node_folder) =>
+  Files.Identity.read(~file=node_folder ++ "/identity.json");
+let write_identity = (~node_folder) =>
+  Files.Identity.write(~file=node_folder ++ "/identity.json");
+let write_interop_context = (~node_folder) =>
+  Files.Interop_context.write(~file=node_folder ++ "/tezos.json");
+let read_state = (~node_folder): Lwt.t(Protocol.t) =>
+  Lwt_io.with_file(
+    ~mode=Input,
+    node_folder ++ "/state.bin",
+    Lwt_io.read_value,
+  );
+
 let man = [
   `S(Manpage.s_bugs),
   `P("Email bug reports to <contact@marigold.dev>."),
@@ -13,9 +30,8 @@ let man = [
 
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
-let validators_uris = folder => {
-  let.await validators =
-    Files.Validators.read(~file=folder ++ "/validators.json");
+let validators_uris = node_folder => {
+  let.await validators = read_validators(~node_folder);
   validators |> List.map(snd) |> await;
 };
 
@@ -168,9 +184,9 @@ let info_create_transaction = {
 };
 
 let create_transaction =
-    (folder_node, sender_wallet_file, received_address, amount, ticket) => {
+    (node_folder, sender_wallet_file, received_address, amount, ticket) => {
   open Networking;
-  let.await validators_uris = validators_uris(folder_node);
+  let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);
   let block_level = block_level_response.level;
@@ -183,8 +199,7 @@ let create_transaction =
       ~source=wallet.address,
       ~kind=Transaction({destination: received_address, amount, ticket}),
     );
-  let file = folder_node ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+  let.await identity = read_identity(~node_folder);
 
   // Broadcast transaction
   let.await () =
@@ -264,10 +279,9 @@ let info_withdraw = {
 };
 
 let withdraw =
-    (folder_node, sender_wallet_file, tezos_address, amount, ticket) => {
+    (node_folder, sender_wallet_file, tezos_address, amount, ticket) => {
   open Networking;
-  let file = folder_node ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+  let.await identity = read_identity(~node_folder);
   let.await block_level_response = request_block_level((), identity.uri);
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
@@ -348,11 +362,10 @@ let withdraw = {
 
 // withdraw-proof
 
-let withdraw_proof = (folder, operation_hash, callback) => {
+let withdraw_proof = (node_folder, operation_hash, callback) => {
   open Networking;
 
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+  let.await identity = read_identity(~node_folder);
 
   let.await result =
     request_withdraw_proof({operation_hash: operation_hash}, identity.uri);
@@ -433,11 +446,10 @@ let info_sign_block = {
   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
   Term.info("sign-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
-let sign_block = (folder, block_hash) => {
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+let sign_block = (node_folder, block_hash) => {
+  let.await identity = read_identity(~node_folder);
   let signature = Signature.sign(~key=identity.key, block_hash);
-  let.await validators_uris = validators_uris(folder);
+  let.await validators_uris = validators_uris(node_folder);
   let.await () =
     Networking.(
       broadcast_to_list(
@@ -469,11 +481,9 @@ let info_produce_block = {
   Term.info("produce-block", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
 
-let produce_block = folder => {
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
-  let.await state: Protocol.t =
-    Lwt_io.with_file(~mode=Input, folder ++ "/state.bin", Lwt_io.read_value);
+let produce_block = node_folder => {
+  let.await identity = read_identity(~node_folder);
+  let.await state = read_state(~node_folder);
   let address = Address.of_key(identity.key);
   let block =
     Block.produce(
@@ -483,7 +493,7 @@ let produce_block = folder => {
       ~side_chain_ops=[],
     );
   let signature = Block.sign(~key=identity.key, block);
-  let.await validators_uris = validators_uris(folder);
+  let.await validators_uris = validators_uris(node_folder);
   let.await () =
     Networking.(
       broadcast_to_list(
@@ -520,17 +530,16 @@ let ensure_folder = folder => {
     Lwt_unix.mkdir(folder, 0o700);
   };
 };
-let setup_identity = (folder, uri) => {
+let setup_identity = (node_folder, uri) => {
   open Mirage_crypto_ec;
 
-  let.await () = ensure_folder(folder);
+  let.await () = ensure_folder(node_folder);
 
-  let file = folder ++ "/identity.json";
   let identity = {
     let (key, t) = Ed25519.generate();
     {uri, t, key};
   };
-  let.await () = Files.Identity.write(identity, ~file);
+  let.await () = write_identity(~node_folder, identity);
   await(`Ok());
 };
 let info_setup_identity = {
@@ -557,10 +566,9 @@ let info_setup_tezos = {
   let doc = "Setup Tezos identity";
   Term.info("setup-tezos", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
-let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
-  let.await () = ensure_folder(folder);
+let setup_tezos = (node_folder, rpc_node, secret, consensus_contract) => {
+  let.await () = ensure_folder(node_folder);
 
-  let file = folder ++ "/tezos.json";
   let context =
     Tezos_interop.Context.{
       rpc_node,
@@ -568,7 +576,7 @@ let setup_tezos = (folder, rpc_node, secret, consensus_contract) => {
       consensus_contract,
       required_confirmations: 10,
     };
-  let.await () = Files.Interop_context.write(context, ~file);
+  let.await () = write_interop_context(~node_folder, context);
 
   await(`Ok());
 };
@@ -620,152 +628,6 @@ let setup_tezos = {
   );
 };
 
-// Create files needed for the node's operation
-let info_setup_node = {
-  let doc = "Creates the files needed to setup a node.";
-  Term.info("setup-node", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
-};
-
-let setup_node =
-    (
-      folder,
-      secret,
-      uri,
-      tezos_rpc_node,
-      tezos_secret,
-      tezos_consensus_contract,
-    ) => {
-  let in_folder = Filename.concat(folder);
-
-  let secret = {
-    switch (secret) {
-    | Tezos_interop.Secret.Ed25519(secret) => secret
-    };
-  };
-  let address = Address.of_key(secret);
-  let (identity, identity_path) = (
-    State.{key: secret, uri, t: address},
-    "identity.json" |> in_folder,
-  );
-
-  let (wallet, wallet_path) = (
-    Files.Wallet.{address: Wallet.of_address(address), priv_key: secret},
-    "wallet.json" |> in_folder,
-  );
-
-  let (validators, validators_path) = ([], "validators.json" |> in_folder); // TODO: Populate validators
-  let (interop_context, interop_context_path) = (
-    Tezos_interop.Context.{
-      rpc_node: tezos_rpc_node,
-      secret: tezos_secret,
-      consensus_contract: tezos_consensus_contract,
-      required_confirmations: 10,
-    },
-    "interop_context.json" |> in_folder,
-  );
-
-  let create_files = () => {
-    let.await () = Files.Identity.write(identity, ~file=identity_path);
-    let.await () = Files.Validators.write(validators, ~file=validators_path);
-    let.await () = Files.Wallet.write(wallet, ~file=wallet_path);
-    let.await () =
-      Files.Interop_context.write(
-        interop_context,
-        ~file=interop_context_path,
-      );
-    let.await () =
-      Files.Trusted_validators_membership_change.write(
-        [],
-        ~file=in_folder("trusted-validator-membership-change.json"),
-      );
-
-    Lwt.return(`Ok());
-  };
-
-  if (Sys.file_exists(folder)) {
-    if (Sys.is_directory(folder)) {
-      if (Sys.readdir(folder) == [||]
-          || Sys.readdir(folder) == [|".gitkeep"|]) {
-        create_files();
-      } else {
-        Lwt.return(`Error((false, folder ++ " is not empty.")));
-      };
-    } else {
-      Lwt.return(`Error((false, folder ++ " is not a directory.")));
-    };
-  } else {
-    let.await () = Lwt_unix.mkdir(folder, 0o700);
-    create_files();
-  };
-};
-
-let setup_node = {
-  let folder_dest = {
-    let docv = "folder_dest";
-    let doc = "The folder the files will be created in. The folder must exist and be empty.";
-    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-  };
-
-  // TODO: figure out how to make the rest of these required named arguments so people don't get the order confused.
-  let secret = {
-    let docv = "secret";
-    let doc = "The secret key used by the validator.";
-    Arg.(
-      required
-      & opt(some(edsk_secret_key), None)
-      & info(["secret"], ~doc, ~docv)
-    );
-  };
-
-  let self_uri = {
-    let docv = "self_uri";
-    let doc = "The uri that other nodes should use to connect to this node.";
-    Arg.(required & opt(some(uri), None) & info(["uri"], ~doc, ~docv));
-  };
-
-  let tezos_node_uri = {
-    let docv = "tezos_node_uri";
-    let doc = "The uri of the tezos node.";
-    Arg.(
-      required
-      & opt(some(uri), None)
-      & info(["tezos_rpc_node"], ~doc, ~docv)
-    );
-  };
-
-  let tezos_secret = {
-    let docv = "tezos_secret";
-    let doc = "The Tezos secret key.";
-    Arg.(
-      required
-      & opt(some(edsk_secret_key), None)
-      & info(["tezos_secret"], ~doc, ~docv)
-    );
-  };
-
-  let tezos_consensus_contract_address = {
-    let docv = "tezos_consensus_contract_address";
-    let doc = "The address of the Tezos consensus contract.";
-    Arg.(
-      required
-      & opt(some(address_tezos_interop), None)
-      & info(["tezos_consensus_contract"], ~doc, ~docv)
-    );
-  };
-
-  Term.(
-    lwt_ret(
-      const(setup_node)
-      $ folder_dest
-      $ secret
-      $ self_uri
-      $ tezos_node_uri
-      $ tezos_secret
-      $ tezos_consensus_contract_address,
-    )
-  );
-};
-
 // Term that just shows the help command, to use when no arguments are passed
 
 let show_help = {
@@ -782,9 +644,8 @@ let info_self = {
   let doc = "Shows identity key and address of the node.";
   Term.info("self", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
-let self = folder => {
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+let self = node_folder => {
+  let.await identity = read_identity(~node_folder);
   Format.printf("key: %s\n", Address.to_string(identity.t));
   Format.printf(
     "address: %s\n",
@@ -814,10 +675,9 @@ let info_add_trusted_validator = {
   );
 };
 
-let add_trusted_validator = (folder, address) => {
+let add_trusted_validator = (node_folder, address) => {
   open Networking;
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+  let.await identity = read_identity(~node_folder);
   let payload = Trusted_validators_membership_change.{address, action: Add};
   let payload_json_str =
     payload
@@ -866,10 +726,9 @@ let info_remove_trusted_validator = {
   );
 };
 
-let remove_trusted_validator = (folder, address) => {
+let remove_trusted_validator = (node_folder, address) => {
   open Networking;
-  let file = folder ++ "/identity.json";
-  let.await identity = Files.Identity.read(~file);
+  let.await identity = read_identity(~node_folder);
   let payload =
     Trusted_validators_membership_change.{address, action: Remove};
   let payload_json_str =
@@ -910,7 +769,6 @@ let () = {
       (produce_block, info_produce_block),
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),
-      (setup_node, info_setup_node),
       (add_trusted_validator, info_add_trusted_validator),
       (remove_trusted_validator, info_remove_trusted_validator),
       (self, info_self),

@@ -34,7 +34,8 @@ let update_current = (address, t) => {
 let empty = {current: None, validators: [], length: 0};
 // TODO: this is only okay if the number of validators is small, because, it's clearly not fast
 let add = (validator, t) => {
-  let validators = t.validators @ [validator] |> List.dumb_uniq((==));
+  let validators =
+    t.validators @ [validator] |> List.in_order_uniq(compare_validator);
   // TODO: is this even a good idea?
   let new_proposer = t.current == None ? Some(validator) : t.current;
   {current: new_proposer, validators, length: List.length(validators)};

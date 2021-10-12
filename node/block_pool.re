@@ -3,7 +3,7 @@ open Protocol;
 
 // TODO: THE FAMOUS HASH MAP, maybe SHA256_map?
 module Hash_map =
-  Map_with_yojson_make({
+  Map.Make_with_yojson({
     [@deriving (ord, yojson)]
     type t = BLAKE2B.t;
   });

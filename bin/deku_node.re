@@ -38,6 +38,7 @@ let print_error = err => {
   | `Unknown_uri => eprintf("Unknown_uri")
   | `Invalid_address_on_main_operation =>
     eprintf("Invalid_address_on_main_operation")
+  | `Invalid_signature_author => eprintf("Invalid_signature_author")
   | `Failed_to_verify_payload => eprintf("Failed to verify payload signature")
   };
   eprintf("\n%!");
