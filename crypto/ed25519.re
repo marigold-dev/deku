@@ -73,22 +73,6 @@ module Secret = {
 module Signature = {
   [@deriving eq]
   type t = string;
-  let sign = (secret, message) => {
-    // double hash because tezos always uses blake2b on CHECK_SIGNATURE
-    let hash = BLAKE2B.hash(message);
-    Cstruct.of_string(BLAKE2B.to_raw_string(hash))
-    // TODO: isn't this double hashing? Seems weird
-    |> Ed25519.sign(~key=secret)
-    |> Cstruct.to_string;
-  };
-  let check = (public, signature, message) => {
-    let hash = BLAKE2B.hash(message);
-    verify(
-      ~key=public,
-      ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
-      Cstruct.of_string(signature),
-    );
-  };
 
   let size = 64;
   let prefix = Base58.Prefix.ed25519_signature;
@@ -96,4 +80,21 @@ module Signature = {
   let of_raw = string => String.length(string) == size ? Some(string) : None;
   let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
+
+let sign = (secret, message) => {
+  // double hash because tezos always uses blake2b on CHECK_SIGNATURE
+  let hash = BLAKE2B.hash(message);
+  Cstruct.of_string(BLAKE2B.to_raw_string(hash))
+  // TODO: isn't this double hashing? Seems weird
+  |> Ed25519.sign(~key=secret)
+  |> Cstruct.to_string;
+};
+let verify = (public, signature, message) => {
+  let hash = BLAKE2B.hash(message);
+  verify(
+    ~key=public,
+    ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
+    Cstruct.of_string(signature),
+  );
 };
