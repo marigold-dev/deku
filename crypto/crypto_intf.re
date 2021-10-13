@@ -34,6 +34,7 @@ module type Intf = {
   open Helpers;
   open Mirage_crypto_ec;
   module type S = S;
+  module Base58 = Base58;
   module Ed25519:
     S with
       type Key.t = Ed25519.pub_ and

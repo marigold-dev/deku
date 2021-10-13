@@ -1,6 +1,8 @@
 open Helpers;
 open Mirage_crypto_ec;
 include Crypto_intf;
+
+module Base58 = Base58;
 let blake2b_20_encoding =
   Data_encoding.(
     conv(

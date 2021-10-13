@@ -22,10 +22,9 @@ let sign = (~key, hash) => {
   {signature, public_key};
 };
 let signature_to_b58check = t => {
-  open Tezos_interop;
-  let prefix = Base58.Prefix.ed25519_signature;
+  let prefix = Crypto.Base58.Prefix.ed25519_signature;
   let to_raw = t => t.signature;
-  Base58.simple_encode(~prefix, ~to_raw, t);
+  Crypto.Base58.simple_encode(~prefix, ~to_raw, t);
 };
 let signature_to_b58check_by_address = t => {
   (t.public_key, signature_to_b58check(t));
