@@ -2,7 +2,7 @@ module type S = {
   module Secret: {
     type t;
     let equal: (t, t) => bool;
-
+    let compare: (t, t) => int;
     let to_string: t => string;
     let of_string: string => option(t);
   };
@@ -13,6 +13,7 @@ module type S = {
 
     let encoding: Data_encoding.t(t);
     let equal: (t, t) => bool;
+    let compare: (t, t) => int;
     let to_string: t => string;
     let of_string: string => option(t);
   };
@@ -21,6 +22,7 @@ module type S = {
     let hash_key: Key.t => t;
     let encoding: Data_encoding.t(t);
     let equal: (t, t) => bool;
+    let compare: (t, t) => int;
     let to_string: t => string;
     let of_string: string => option(t);
   };
@@ -28,6 +30,7 @@ module type S = {
   module Signature: {
     type t;
     let equal: (t, t) => bool;
+    let compare: (t, t) => int;
     let to_string: t => string;
     let of_string: string => option(t);
   };

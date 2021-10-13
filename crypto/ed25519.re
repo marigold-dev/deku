@@ -18,6 +18,9 @@ module Secret = {
     let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
     Cstruct.equal(a, b);
   };
+  let compare = (a, b) =>
+    Cstruct.compare(priv_to_cstruct(a), priv_to_cstruct(b));
+
   let _size = 32;
   let prefix = Base58.Prefix.ed25519_seed;
   let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
@@ -38,6 +41,9 @@ module Key = {
     let (a, b) = (pub_to_cstruct(a), pub_to_cstruct(b));
     Cstruct.equal(a, b);
   };
+  let compare = (a, b) =>
+    Cstruct.compare(pub_to_cstruct(a), pub_to_cstruct(b));
+
   let encoding = {
     // TODO: in tezos this is splitted json is not same as binary
     let to_bytes = t => pub_to_cstruct(t) |> Cstruct.to_bytes;
@@ -53,7 +59,7 @@ module Key = {
 };
 
 module Key_hash = {
-  [@deriving eq]
+  [@deriving (ord, eq)]
   type t = BLAKE2B_20.t;
 
   let hash_key = t =>
@@ -73,7 +79,7 @@ module Key_hash = {
 };
 
 module Signature = {
-  [@deriving eq]
+  [@deriving (ord, eq)]
   type t = string;
 
   let size = 64;
