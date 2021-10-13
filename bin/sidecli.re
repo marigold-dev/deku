@@ -28,6 +28,20 @@ let man = [
   `P("Email bug reports to <contact@marigold.dev>."),
 ];
 
+// logger helpers
+let setup_log = (style_renderer, level) => {
+  switch (style_renderer) {
+  | Some(style_renderer) => Fmt_tty.setup_std_outputs(~style_renderer, ())
+  | None => Fmt_tty.setup_std_outputs()
+  };
+
+  Logs.set_level(level);
+  Logs.set_reporter(Logs_fmt.reporter());
+  ();
+};
+let setup_log =
+  Term.(const(setup_log) $ Fmt_cli.style_renderer() $ Logs_cli.level());
+
 // Todo from Andre: we may have to do peer discovery?
 // I don't know anything about that, except for having played with hyperswarm.
 let validators_uris = node_folder => {
@@ -44,6 +58,8 @@ let exits =
   @ Term.[exit_info(1, ~doc="expected failure (might not be a bug)")];
 
 let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
+
+let const_log = p => Term.(const(() => p) $ setup_log);
 
 // Arguments
 // ==========
@@ -164,7 +180,7 @@ let create_wallet = () => {
   await(`Ok());
 };
 
-let create_wallet = Term.(lwt_ret(const(create_wallet) $ const()));
+let create_wallet = Term.(lwt_ret(const_log(create_wallet) $ const()));
 
 // create-transaction
 
@@ -350,7 +366,7 @@ let withdraw = {
 
   Term.(
     lwt_ret(
-      const(withdraw)
+      const_log(withdraw)
       $ folder_node
       $ address_from
       $ tezos_address
@@ -472,7 +488,7 @@ let sign_block_term = {
     Arg.(required & pos(1, some(hash), None) & info([], ~doc));
   };
 
-  Term.(lwt_ret(const(sign_block) $ folder_node $ block_hash));
+  Term.(lwt_ret(const_log(sign_block) $ folder_node $ block_hash));
 };
 
 // produce-block
@@ -513,7 +529,7 @@ let produce_block = {
     Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
   };
 
-  Term.(lwt_ret(const(produce_block) $ folder_node));
+  Term.(lwt_ret(const_log(produce_block) $ folder_node));
 };
 
 let ensure_folder = folder => {
@@ -619,7 +635,7 @@ let setup_tezos = {
 
   Term.(
     lwt_ret(
-      const(setup_tezos)
+      const_log(setup_tezos)
       $ folder_dest
       $ tezos_node_uri
       $ tezos_secret
@@ -755,8 +771,9 @@ let remove_trusted_validator = {
 
 // Run the CLI
 
-let () = {
+let main = () => {
   Mirage_crypto_rng_unix.initialize();
+
   Term.exit @@
   Term.eval_choice(
     show_help,
@@ -775,3 +792,5 @@ let () = {
     ],
   );
 };
+
+let () = main();

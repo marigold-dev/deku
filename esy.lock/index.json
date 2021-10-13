@@ -1,5 +1,5 @@
 {
-  "checksum": "019bd6945a55c5ee594414f401a8596b",
+  "checksum": "663e11588e138d4cca1c3bf41dba4012",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -116,7 +116,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.58.1@d41d8cd9",
+        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.58.2@d41d8cd9",
         "v8-compile-cache@2.3.0@d41d8cd9", "rechoir@0.7.1@d41d8cd9",
         "interpret@2.2.0@d41d8cd9", "import-local@3.0.3@d41d8cd9",
         "fastest-levenshtein@1.0.12@d41d8cd9", "execa@5.1.1@d41d8cd9",
@@ -128,14 +128,14 @@
       ],
       "devDependencies": []
     },
-    "webpack@5.58.1@d41d8cd9": {
-      "id": "webpack@5.58.1@d41d8cd9",
+    "webpack@5.58.2@d41d8cd9": {
+      "id": "webpack@5.58.2@d41d8cd9",
       "name": "webpack",
-      "version": "5.58.1",
+      "version": "5.58.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/webpack/-/webpack-5.58.1.tgz#sha1:df8aad72b617a9d0db8c89d4f410784ee93320d7"
+          "archive:https://registry.npmjs.org/webpack/-/webpack-5.58.2.tgz#sha1:6b4af12fc9bd5cbedc00dc0a2fc2b9592db16b44"
         ]
       },
       "overrides": [],
@@ -148,7 +148,7 @@
         "graceful-fs@4.2.8@d41d8cd9", "glob-to-regexp@0.4.1@d41d8cd9",
         "events@3.3.0@d41d8cd9", "eslint-scope@5.1.1@d41d8cd9",
         "es-module-lexer@0.9.3@d41d8cd9", "enhanced-resolve@5.8.3@d41d8cd9",
-        "chrome-trace-event@1.0.3@d41d8cd9", "browserslist@4.17.3@d41d8cd9",
+        "chrome-trace-event@1.0.3@d41d8cd9", "browserslist@4.17.4@d41d8cd9",
         "acorn-import-assertions@1.8.0@d41d8cd9", "acorn@8.5.0@d41d8cd9",
         "@webassemblyjs/wasm-parser@1.11.1@d41d8cd9",
         "@webassemblyjs/wasm-edit@1.11.1@d41d8cd9",
@@ -269,7 +269,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack@5.58.1@d41d8cd9", "terser@5.9.0@d41d8cd9",
+        "webpack@5.58.2@d41d8cd9", "terser@5.9.0@d41d8cd9",
         "source-map@0.6.1@d41d8cd9", "serialize-javascript@6.0.0@d41d8cd9",
         "schema-utils@3.1.1@d41d8cd9", "p-limit@3.1.0@d41d8cd9",
         "jest-worker@27.2.5@d41d8cd9"
@@ -474,7 +474,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.9.0@d41d8cd9", "webpack@5.58.1@d41d8cd9",
+        "webpack-cli@4.9.0@d41d8cd9", "webpack@5.58.2@d41d8cd9",
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@taquito/taquito@9.2.0@d41d8cd9", "@taquito/signer@9.2.0@d41d8cd9",
         "@taquito/rpc@9.2.0@d41d8cd9",
@@ -487,12 +487,13 @@
         "@opam/opium@github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1@d41d8cd9",
         "@opam/mrmime@opam:0.3.2@7389649b",
         "@opam/mirage-crypto-rng@opam:0.10.3@64ff50ec",
-        "@opam/mirage-crypto-pk@opam:0.10.3@8109ddfe",
+        "@opam/mirage-crypto-pk@opam:0.10.3@dcb6a6ee",
         "@opam/mirage-crypto-ec@opam:0.10.3@321b3976",
         "@opam/mirage-crypto@opam:0.10.3@8d7e3bbf",
         "@opam/lwt@github:Sudha247/lwt-multicore:lwt.opam#321081dcc8dc359bb45d71847c70e01e78a74d02@d41d8cd9",
-        "@opam/hex@opam:1.4.0@41725494", "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/digestif@opam:1.0.1@6b318b0d",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/hex@opam:1.4.0@41725494",
+        "@opam/dune@opam:2.9.1@1e504822",
+        "@opam/digestif@opam:1.1.0@a8d16625",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/bigstring@opam:0.3@3fa3c6dc",
         "@esy-ocaml/reason@3.7.0@d41d8cd9"
@@ -500,8 +501,8 @@
       "devDependencies": [
         "prettier@2.4.1@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@opam/utop@opam:2.8.0@76625c33",
-        "@opam/ocamlformat-rpc@opam:0.19.0@a59d592e",
-        "@opam/ocamlformat@opam:0.19.0@25e59922",
+        "@opam/ocamlformat-rpc@opam:0.19.0@f32c0739",
+        "@opam/ocamlformat@opam:0.19.0@d7e55490",
         "@opam/ocaml-lsp-server@opam:1.8.3@b64dff17",
         "@opam/menhir@opam:20210419@462bec41",
         "@esy-ocaml/rtop@github:ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa@d41d8cd9"
@@ -833,14 +834,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "picocolors@0.2.1@d41d8cd9": {
-      "id": "picocolors@0.2.1@d41d8cd9",
+    "picocolors@1.0.0@d41d8cd9": {
+      "id": "picocolors@1.0.0@d41d8cd9",
       "name": "picocolors",
-      "version": "0.2.1",
+      "version": "1.0.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/picocolors/-/picocolors-0.2.1.tgz#sha1:570670f793646851d1ba135996962abad587859f"
+          "archive:https://registry.npmjs.org/picocolors/-/picocolors-1.0.0.tgz#sha1:cb5bdc74ff3f51892236eaf79d68bc44564ab81c"
         ]
       },
       "overrides": [],
@@ -1007,14 +1008,14 @@
       "dependencies": [ "path-key@3.1.1@d41d8cd9" ],
       "devDependencies": []
     },
-    "node-releases@1.1.77@d41d8cd9": {
-      "id": "node-releases@1.1.77@d41d8cd9",
+    "node-releases@2.0.0@d41d8cd9": {
+      "id": "node-releases@2.0.0@d41d8cd9",
       "name": "node-releases",
-      "version": "1.1.77",
+      "version": "2.0.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/node-releases/-/node-releases-1.1.77.tgz#sha1:50b0cfede855dd374e7585bf228ff34e57c1c32e"
+          "archive:https://registry.npmjs.org/node-releases/-/node-releases-2.0.0.tgz#sha1:67dc74903100a7deb044037b8a2e5f453bb05400"
         ]
       },
       "overrides": [],
@@ -2019,14 +2020,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.3.866@d41d8cd9": {
-      "id": "electron-to-chromium@1.3.866@d41d8cd9",
+    "electron-to-chromium@1.3.867@d41d8cd9": {
+      "id": "electron-to-chromium@1.3.867@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.3.866",
+      "version": "1.3.867",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.866.tgz#sha1:d446338f5ad6948b27a50739760e7b0b5cc5032f"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.867.tgz#sha1:7cb484db4b57c28da0b65c51e434c3a1f3f9aa0d"
         ]
       },
       "overrides": [],
@@ -2367,20 +2368,20 @@
       "dependencies": [ "base-x@3.0.8@d41d8cd9" ],
       "devDependencies": []
     },
-    "browserslist@4.17.3@d41d8cd9": {
-      "id": "browserslist@4.17.3@d41d8cd9",
+    "browserslist@4.17.4@d41d8cd9": {
+      "id": "browserslist@4.17.4@d41d8cd9",
       "name": "browserslist",
-      "version": "4.17.3",
+      "version": "4.17.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/browserslist/-/browserslist-4.17.3.tgz#sha1:2844cd6eebe14d12384b0122d217550160d2d624"
+          "archive:https://registry.npmjs.org/browserslist/-/browserslist-4.17.4.tgz#sha1:72e2508af2a403aec0a49847ef31bd823c57ead4"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "picocolors@0.2.1@d41d8cd9", "node-releases@1.1.77@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.866@d41d8cd9",
+        "picocolors@1.0.0@d41d8cd9", "node-releases@2.0.0@d41d8cd9",
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.867@d41d8cd9",
         "caniuse-lite@1.0.30001265@d41d8cd9"
       ],
       "devDependencies": []
@@ -2672,7 +2673,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.9.0@d41d8cd9", "webpack@5.58.1@d41d8cd9"
+        "webpack-cli@4.9.0@d41d8cd9", "webpack@5.58.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -4797,8 +4798,8 @@
         "@opam/dune@opam:2.9.1@1e504822", "@opam/csexp@opam:1.5.1@8a8fb3a7"
       ]
     },
-    "@opam/ocamlformat-rpc@opam:0.19.0@a59d592e": {
-      "id": "@opam/ocamlformat-rpc@opam:0.19.0@a59d592e",
+    "@opam/ocamlformat-rpc@opam:0.19.0@f32c0739": {
+      "id": "@opam/ocamlformat-rpc@opam:0.19.0@f32c0739",
       "name": "@opam/ocamlformat-rpc",
       "version": "opam:0.19.0",
       "source": {
@@ -4852,8 +4853,8 @@
         "@opam/base@opam:v0.14.1@9b424fee"
       ]
     },
-    "@opam/ocamlformat@opam:0.19.0@25e59922": {
-      "id": "@opam/ocamlformat@opam:0.19.0@25e59922",
+    "@opam/ocamlformat@opam:0.19.0@d7e55490": {
+      "id": "@opam/ocamlformat@opam:0.19.0@d7e55490",
       "name": "@opam/ocamlformat",
       "version": "opam:0.19.0",
       "source": {
@@ -5314,8 +5315,8 @@
         "@opam/dune@opam:2.9.1@1e504822", "@opam/cstruct@opam:6.0.1@69eae449"
       ]
     },
-    "@opam/mirage-crypto-pk@opam:0.10.3@8109ddfe": {
-      "id": "@opam/mirage-crypto-pk@opam:0.10.3@8109ddfe",
+    "@opam/mirage-crypto-pk@opam:0.10.3@dcb6a6ee": {
+      "id": "@opam/mirage-crypto-pk@opam:0.10.3@dcb6a6ee",
       "name": "@opam/mirage-crypto-pk",
       "version": "opam:0.10.3",
       "source": {
@@ -6815,20 +6816,20 @@
         "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
-    "@opam/digestif@opam:1.0.1@6b318b0d": {
-      "id": "@opam/digestif@opam:1.0.1@6b318b0d",
+    "@opam/digestif@opam:1.1.0@a8d16625": {
+      "id": "@opam/digestif@opam:1.1.0@a8d16625",
       "name": "@opam/digestif",
-      "version": "opam:1.0.1",
+      "version": "opam:1.1.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/cd/cd7d6e706ce3592fd80c57f241a09f565bd71fecbf730c3611c33a6b3803a2b8#sha256:cd7d6e706ce3592fd80c57f241a09f565bd71fecbf730c3611c33a6b3803a2b8",
-          "archive:https://github.com/mirage/digestif/releases/download/v1.0.1/digestif-v1.0.1.tbz#sha256:cd7d6e706ce3592fd80c57f241a09f565bd71fecbf730c3611c33a6b3803a2b8"
+          "archive:https://opam.ocaml.org/cache/sha256/65/654b195c668f2d1e35b8b06a8932d058fcc8f4d39e70be58eb2432fbf39afc05#sha256:654b195c668f2d1e35b8b06a8932d058fcc8f4d39e70be58eb2432fbf39afc05",
+          "archive:https://github.com/mirage/digestif/releases/download/v1.1.0/digestif-v1.1.0.tbz#sha256:654b195c668f2d1e35b8b06a8932d058fcc8f4d39e70be58eb2432fbf39afc05"
         ],
         "opam": {
           "name": "digestif",
-          "version": "1.0.1",
-          "path": "esy.lock/opam/digestif.1.0.1"
+          "version": "1.1.0",
+          "path": "esy.lock/opam/digestif.1.1.0"
         }
       },
       "overrides": [],
