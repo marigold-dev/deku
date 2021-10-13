@@ -29,6 +29,7 @@ module type S = {
   };
   let sign: (Secret.t, string) => Signature.t;
   let verify: (Key.t, Signature.t, string) => bool;
+  let generate: unit => (Secret.t, Key.t);
 };
 module type Intf = {
   open Helpers;

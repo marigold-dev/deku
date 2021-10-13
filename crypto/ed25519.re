@@ -98,3 +98,4 @@ let verify = (public, signature, message) => {
     Cstruct.of_string(signature),
   );
 };
+let generate = () => Ed25519.generate();
