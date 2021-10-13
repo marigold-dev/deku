@@ -1,5 +1,5 @@
 {
-  "checksum": "663e11588e138d4cca1c3bf41dba4012",
+  "checksum": "131dc1a60c411abb6bb398b0d950d8b1",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -491,6 +491,7 @@
         "@opam/mirage-crypto-ec@opam:0.10.3@321b3976",
         "@opam/mirage-crypto@opam:0.10.3@8d7e3bbf",
         "@opam/lwt@github:Sudha247/lwt-multicore:lwt.opam#321081dcc8dc359bb45d71847c70e01e78a74d02@d41d8cd9",
+        "@opam/logs-ppx@opam:0.2.0@aa47c3a8",
         "@opam/logs@opam:0.7.0@1d03143e", "@opam/hex@opam:1.4.0@41725494",
         "@opam/dune@opam:2.9.1@1e504822",
         "@opam/digestif@opam:1.1.0@a8d16625",
@@ -5834,6 +5835,33 @@
         "@opam/dune-configurator@opam:2.9.1@b7cf7a02",
         "@opam/dune@opam:2.9.1@1e504822",
         "@opam/domainslib@opam:0.3.1@5578a36c"
+      ]
+    },
+    "@opam/logs-ppx@opam:0.2.0@aa47c3a8": {
+      "id": "@opam/logs-ppx@opam:0.2.0@aa47c3a8",
+      "name": "@opam/logs-ppx",
+      "version": "opam:0.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/05/053f043ef959d6dc079503eab482e91ac1509685d393c4b51f6991c210c0bfb1#sha256:053f043ef959d6dc079503eab482e91ac1509685d393c4b51f6991c210c0bfb1",
+          "archive:https://github.com/ulrikstrid/logs-ppx/releases/download/v0.2.0/logs-ppx-0.2.0.tbz#sha256:053f043ef959d6dc079503eab482e91ac1509685d393c4b51f6991c210c0bfb1"
+        ],
+        "opam": {
+          "name": "logs-ppx",
+          "version": "0.2.0",
+          "path": "esy.lock/opam/logs-ppx.0.2.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/ppxlib@opam:0.23.0@b29cda02",
+        "@opam/dune@opam:2.9.1@1e504822", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/ppxlib@opam:0.23.0@b29cda02", "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
     "@opam/logs@opam:0.7.0@1d03143e": {

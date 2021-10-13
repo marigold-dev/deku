@@ -42,7 +42,8 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
     "@opam/bigstring": "*",
-    "@opam/logs": "*"
+    "@opam/logs": "*",
+    "@opam/logs-ppx": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",

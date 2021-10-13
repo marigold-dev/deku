@@ -12,7 +12,7 @@
   logs.fmt)
  (modules Deku_node)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson)))
+  (pps ppx_deriving.show ppx_deriving_yojson logs-ppx)))
 
 (executable
  (name sidecli)
