@@ -24,8 +24,8 @@ module type S = {
   module Signature: {
     type t;
     let equal: (t, t) => bool;
-    let to_string: t => t;
-    let of_string: t => option(t);
+    let to_string: t => string;
+    let of_string: string => option(t);
   };
   let sign: (Secret.t, string) => Signature.t;
   let verify: (Key.t, Signature.t, string) => bool;
