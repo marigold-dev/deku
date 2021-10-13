@@ -1,5 +1,4 @@
 open Helpers;
-module Base58 = Base58;
 
 module Key: {
   type t =
