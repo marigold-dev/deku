@@ -187,10 +187,13 @@ let rec try_to_apply_block = (state, update_state, block) => {
     `Block_not_signed_enough_to_apply,
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
+  let new_epoch = state.protocol.state_root_hash == block.state_root_hash;
   let.assert () = (
     `Invalid_state_root_hash,
-    state.protocol.state_root_hash == block.state_root_hash
-    || state.next_state_root_hash == block.state_root_hash,
+    !new_epoch
+    || State.get_next_hash(state)
+    |> Option.map(((next_hash, _)) => block.state_root_hash == next_hash)
+    |> Option.value(~default=false),
   );
 
   let.ok state = apply_block(state, update_state, block);

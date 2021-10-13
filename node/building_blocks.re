@@ -82,17 +82,21 @@ let block_has_signable_state_root_hash = (~current_time, state, block) => {
   let protocol = state.Node.protocol;
   let time_since_last_epoch = protocol.last_state_root_update -. current_time;
 
-  let same_epoch = protocol.state_root_hash == block.Block.state_root_hash;
-  let next_epoch = state.next_state_root_hash == block.state_root_hash;
-  let min_epoch_timeout =
-    time_since_last_epoch >= minimum_signable_time_between_epochs;
-  let max_epoch_timeout =
+  if (protocol.state_root_hash == block.Block.state_root_hash) {
+    // In this case, we must check that the current epoch
+    // is not expired.
     time_since_last_epoch <= maximum_signable_time_between_epochs;
-  switch (same_epoch, next_epoch, min_epoch_timeout, max_epoch_timeout) {
-  | (true, false, _, false) => true
-  | (false, true, true, _) => true
-  | (true, true, _, _) => failwith("unrecheable")
-  | _ => false
+  } else {
+    // In this case, a new epoch is starting. We must check
+    // both that it is not starting too early and that it
+    // has the expected hash.
+    let next_state_root = State.get_next_hash(state);
+    switch (next_state_root) {
+    | Some((next_state_root_hash, _)) =>
+      block.state_root_hash == next_state_root_hash
+      && time_since_last_epoch >= minimum_signable_time_between_epochs
+    | None => false
+    };
   };
 };
 
@@ -184,14 +188,17 @@ let produce_block = state => {
       Unix.time(),
     );
   let next_hashes =
-    start_new_epoch
-      ? Some(
-          Block.{
-            state_root: state.Node.next_state_root_hash,
-            validators: Validators.hash(state.Node.protocol.validators),
-          },
-        )
-      : None;
+    if (start_new_epoch) {
+      let.some (state_root, _) = State.get_next_hash(state);
+      Some(
+        Block.{
+          state_root,
+          validators: Validators.hash(state.Node.protocol.validators),
+        },
+      );
+    } else {
+      None;
+    };
   Block.produce(
     ~state=state.Node.protocol,
     ~next_hashes,
