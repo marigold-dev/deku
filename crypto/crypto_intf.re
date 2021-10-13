@@ -1,4 +1,11 @@
 module type S = {
+  module Secret: {
+    type t;
+    let equal: (t, t) => bool;
+
+    let to_string: t => string;
+    let of_string: string => option(t);
+  };
   module Key: {
     type t;
     let encoding: Data_encoding.t(t);
@@ -14,13 +21,7 @@ module type S = {
     let to_string: t => string;
     let of_string: string => option(t);
   };
-  module Secret: {
-    type t;
-    let equal: (t, t) => bool;
 
-    let to_string: t => string;
-    let of_string: string => option(t);
-  };
   module Signature: {
     type t;
     let equal: (t, t) => bool;

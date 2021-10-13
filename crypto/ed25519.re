@@ -12,6 +12,22 @@ let blake2b_20_encoding =
       Fixed.bytes(20),
     )
   );
+module Secret = {
+  type t = priv;
+  let equal = (a, b) => {
+    let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
+    Cstruct.equal(a, b);
+  };
+  let _size = 32;
+  let prefix = Base58.Prefix.ed25519_seed;
+  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
+  let of_raw = string =>
+    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+
+  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
+
 module Key = {
   type t = pub_;
 
@@ -55,21 +71,6 @@ module Key_hash = {
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
 };
 
-module Secret = {
-  type t = priv;
-  let equal = (a, b) => {
-    let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
-    Cstruct.equal(a, b);
-  };
-  let _size = 32;
-  let prefix = Base58.Prefix.ed25519_seed;
-  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
-
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
-};
 module Signature = {
   [@deriving eq]
   type t = string;
