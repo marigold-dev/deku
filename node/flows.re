@@ -158,6 +158,52 @@ let request_previous_blocks = (state, block) =>
     request_protocol_snapshot();
   };
 
+/** Starts asynchronously hashing a new state.
+    FIXME: fix this comment
+
+    Side-effectfully updates the current [next_state_root_hash] and
+    [last_state_root_update] when done.
+    TODO: Note that it is possible for multliple executions of this function
+    to be running concurrently, resulting in nondeterministic update
+    of [next_state_root_hash]. This needs to replaced by more sophisticated
+    mechanism when we implement async state hashing for validators per #147.
+
+    Why this exists:
+    Each block is associated with a particular state root hash.
+    The state root starts with genesis, and then updates periodically.
+    This means you don't have to download the entire history of the chain
+    to derive the state corresponding to a given block - only the state
+    corresponding to its state root hash is required.
+
+    Because hashing a state is an expensive operation, we do it in parallel
+    on a separate thread. This allows the block producer to continue
+    producing blocks even while the state root is being updated.
+    We spawn these jobs on an interval determined by
+    [should_start_hashing_new_state]).
+ */
+let hash_new_state_root = (state, update_state) => {
+  let current_epoch = state.Node.current_epoch;
+  Lwt.async(() => {
+    // Lwt_domain.detach causes the function to run in a separate thread.
+    // When the promise resolves, the rest of the function is run in main thread.
+    let.await (hash, _) =
+      Lwt_domain.detach((s: Node.t) => Protocol.hash(s.protocol), state);
+    // The state passed to this function may be stale so we get the current state.
+    let current_state = get_state^();
+    let _ =
+      update_state({
+        ...current_state,
+        finished_state_root_hashes:
+          State.Int_map.add(
+            current_epoch,
+            hash,
+            current_state.finished_state_root_hashes,
+          ),
+      });
+    Lwt.return();
+  });
+};
+
 let try_to_produce_block = (state, update_state) => {
   let.assert () = (
     `Not_current_block_producer,
@@ -193,7 +239,38 @@ let rec try_to_apply_block = (state, update_state, block) => {
     || state.next_state_root_hash == block.state_root_hash,
   );
 
+  let current_state_root_hash = state.Node.protocol.state_root_hash;
   let.ok state = apply_block(state, update_state, block);
+
+ // If the state root hash has changed by application of the block,
+ // then, by definition, the state root epoch has changed. If
+ // that's the case we increment the current_epoch and start
+ // hashing a new state
+  let new_epoch =
+    state.Node.protocol.state_root_hash != current_state_root_hash;
+
+  let state =
+    new_epoch
+      ? {
+        ...state,
+        current_epoch: state.current_epoch + 1,
+        finished_state_root_hashes:
+          // We remove the hash of the previous epoch to prevent
+          // the map from growing indefinitely. Additionally, this
+          // guarantees the state root epoch can only move forward.
+          // FIXME:
+          // State.Int_map.remove(
+          //   state.current_epoch,
+          //   state.finished_state_root_hashes,
+          // ),
+          state.finished_state_root_hashes
+      }
+      : state;
+
+  if (new_epoch) {
+    hash_new_state_root(state, update_state);
+  };
+
   reset_timeout^();
   let state = clean(state, update_state, block);
   switch (

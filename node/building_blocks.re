@@ -184,12 +184,21 @@ let produce_block = state => {
       Unix.time(),
     );
   let next_hashes =
-    start_new_epoch
-      ? Some(Block.({
-          state_root: state.Node.next_state_root_hash,
-          validators: Validators.hash(state.Node.protocol.validators),
-      }))
-      : None;
+    if (start_new_epoch) {
+      // We can only produce a block in the next epoch
+      // if we've finished the state root hash for that 
+      // epoch.
+      let.some state_root = State.Int_map.find_opt(
+          state.current_epoch + 1,
+          state.finished_state_root_hashes,
+        );
+      Some(Block.{
+            state_root,
+            validators: Validators.hash(state.Node.protocol.validators),
+          });
+    } else {
+      None;
+    };
   Block.produce(
     ~state=state.Node.protocol,
     ~next_hashes,

@@ -10,6 +10,7 @@ type identity = {
 
 module Address_map = Map.Make(Address);
 module Uri_map = Map.Make(Uri);
+module Int_map = Map.Make(Int);
 
 type t = {
   identity,
@@ -22,6 +23,8 @@ type t = {
   protocol: Protocol.t,
   snapshots: Snapshots.t,
   next_state_root_hash: BLAKE2B.t,
+  finished_state_root_hashes: Int_map.t((BLAKE2B.t, string)),
+  current_epoch: int,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -73,6 +76,8 @@ let make =
     protocol: initial_protocol,
     snapshots: initial_snapshots,
     next_state_root_hash: initial_block.state_root_hash,
+    finished_state_root_hashes: Int_map.empty,
+    current_epoch: -1,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -128,8 +133,9 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
 };
 let apply_block = (state, block) => {
   let old_state = state;
+  let next_state_root = assert(false);
   let.ok (protocol, new_snapshot, results) =
-    apply_block(state.protocol, block);
+    apply_block(~next_state_root, state.protocol, block);
   let recent_operation_results =
     List.fold_left(
       (results, (op, result)) =>
@@ -269,10 +275,11 @@ let load_snapshot =
   let.ok (protocol, new_hash) =
     fold_left_ok(
       ((protocol, _), block) => {
+        let next_state_root = assert(false);
         // TODO: ignore this may be really bad for snapshots
         // TODO: ignore the result is also really bad
         let.ok (protocol, new_hash, _result) =
-          Protocol.apply_block(protocol, block);
+          Protocol.apply_block(~next_state_root, protocol, block);
         Ok((protocol, new_hash |> Option.map(fst)));
       },
       (protocol, None),

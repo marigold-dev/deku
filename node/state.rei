@@ -10,6 +10,8 @@ type identity = {
 
 module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
+module Int_map: Map.S with type key = int;
+
 type t = {
   identity,
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
@@ -21,6 +23,12 @@ type t = {
   protocol: Protocol.t,
   snapshots: Snapshots.t,
   next_state_root_hash: BLAKE2B.t,
+  // A list of state root hashes paired with their
+  // respective epoch.
+  finished_state_root_hashes: Int_map.t(BLAKE2B.t),
+  // The current state root epoch. See notes in
+  // [Building_blocks.should_start_new_epoch].
+  current_epoch: int,
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
