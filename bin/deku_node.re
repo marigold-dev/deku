@@ -228,7 +228,7 @@ let node = {
              switch (validator) {
              | Tezos_interop.Key.Ed25519(k) => k
              },
-             Printf.sprintf("https://localhost:444%d", i) |> Uri.of_string,
+             Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
     | Error(err) => failwith(err)
