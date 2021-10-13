@@ -62,6 +62,6 @@
     "@opam/opium": "github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
     "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
     "binaries": "link:binaries/",
-    "@opam/ligo-types": "github:anchpop/ligolang:ligo-types.opam#7dee617edeff9240daced4fb78330904f8f49492"
+    "@opam/zinc-types": "github:anchpop/zinc_types#e0afd3c2a72536fdbae2de7476130f989fe810e5"
   }
 }

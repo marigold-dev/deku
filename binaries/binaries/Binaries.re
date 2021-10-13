@@ -64,11 +64,11 @@ module Ligo_wrapper = {
       Lwt.return(
         zinc_str
         |> Yojson.Safe.from_string
-        |> Zinc.Types.program_of_yojson
-        |> Result.map_error("error parsing zinc program"),
+        |> Zinc_types.Types.program_of_yojson
+        |> Result.map_error((_) => "error parsing zinc program"),
       )
 
-    | err => err
+    | Error (err) => Lwt.return(Error(err))
     };
   };
 };

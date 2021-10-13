@@ -448,7 +448,6 @@ let tmp_for_testing = () => {
   switch (hello_msg) {
   | Ok(msg) =>
     print_endline("ok!");
-    print_string(msg);
   | Error(msg) =>
     print_endline("error!");
     print_string(msg);

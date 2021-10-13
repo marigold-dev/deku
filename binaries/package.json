@@ -45,7 +45,7 @@
     "@opam/dune": "*",
     "@esy-ocaml/reason": "*",
     "@opam/lwt": "*",
-    "@opam/ligo-types": "*",
+    "@opam/zinc-types": "*",
     "@opam/stringext": "*"
   },
   "devDependencies": {
