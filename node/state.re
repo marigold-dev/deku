@@ -183,7 +183,12 @@ let apply_block = (state, block) => {
     | _ => ()
     };
     let new_snap_shot_epoch = old_state.current_epoch + 1;
-    let new_snapshot = Protocol.hash(state.protocol);
+    let new_snapshot =
+      get_next_hash(old_state)
+      // We only hash the protocol if we don't already have the
+      // hash for the new epoch in [finished_hashes] (i.e produced
+      // by async state hashing).
+      |> Option.value(~default=Protocol.hash(state.protocol));
     let snapshots =
       Snapshots.update(
         ~new_snapshot,

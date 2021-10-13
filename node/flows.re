@@ -182,6 +182,34 @@ let try_to_sign_block = (state, update_state, block) =>
     state;
   };
 
+/** Starts asynchronously hashing a new state. Side-effectfully updates
+    the map of epoches to hashes when done.
+
+    Each block is associated with a particular state root hash.
+    The state root starts with genesis, and then updates periodically.
+    This means you don't have to download the entire history of the chain
+    to derive the state corresponding to a given block - only the state
+    corresponding to its state root hash is required.
+    Because hashing a state is an expensive operation, we do it in parallel
+    on a separate thread. This allows the block producer to continue
+    producing blocks even while the state root is being updated.
+ */
+let hash_new_state_root = (state, update_state) => {
+  let next_epoch = state.Node.current_epoch + 1;
+  Lwt.async(() => {
+    // Lwt_domain.detach causes the function to run in a separate thread.
+    // When the promise resolves, the rest of the function is run in main thread.
+    let.await next_state_root =
+      Lwt_domain.detach((s: Node.t) => Protocol.hash(s.protocol), state);
+    let _ =
+      update_state(
+        // The state may be stale so we must retrieve the current state again.
+        State.add_finished_hash(next_epoch, next_state_root, get_state^()),
+      );
+    Lwt.return();
+  });
+};
+
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
@@ -199,6 +227,11 @@ let rec try_to_apply_block = (state, update_state, block) => {
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
+
+  if (new_epoch) {
+    hash_new_state_root(state, update_state);
+  };
+
   switch (
     Block_pool.find_next_block_to_apply(
       ~hash=block.Block.hash,
