@@ -8,6 +8,9 @@ module type S = {
   };
   module Key: {
     type t;
+
+    let of_secret: Secret.t => t;
+
     let encoding: Data_encoding.t(t);
     let equal: (t, t) => bool;
     let to_string: t => string;

@@ -31,6 +31,7 @@ module Secret = {
 module Key = {
   type t = pub_;
 
+  let of_secret = Ed25519.pub_of_priv;
   let size = 32;
   let prefix = Base58.Prefix.ed25519_public_key;
   let equal = (a, b) => {
