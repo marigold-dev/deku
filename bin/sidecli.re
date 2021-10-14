@@ -754,7 +754,6 @@ let remove_trusted_validator = {
 // Run the CLI
 
 let () = {
-  Mirage_crypto_rng_unix.initialize();
   Term.exit @@
   Term.eval_choice(
     show_help,
