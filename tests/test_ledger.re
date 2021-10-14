@@ -27,16 +27,15 @@ describe("ledger", ({test, _}) => {
     Ticket.{ticketer, data};
   };
   let make_wallet = () => {
-    open Mirage_crypto_ec;
+    open Crypto;
     let (_key, address) = Ed25519.generate();
     Wallet.of_address(address);
   };
   let make_tezos_address = () => {
-    open Mirage_crypto_ec;
+    open Crypto;
     open Tezos_interop;
     let (_key, address) = Ed25519.generate();
-    let hash =
-      BLAKE2B_20.hash(Ed25519.pub_to_cstruct(address) |> Cstruct.to_string);
+    let hash = Ed25519.Key_hash.hash_key(address);
     Address.Implicit(Key_hash.Ed25519(hash));
   };
   let setup_two = () => {

@@ -1,5 +1,5 @@
 open Helpers;
-open Mirage_crypto_ec;
+open Crypto;
 
 [@deriving yojson]
 type t = {
@@ -14,11 +14,10 @@ let sign = (~key, hash) => {
   // double hash because tezos always uses blake2b on CHECK_SIGNATURE
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   let signature =
-    Cstruct.of_string(BLAKE2B.to_raw_string(hash))
+    BLAKE2B.to_raw_string(hash)
     // TODO: isn't this double hashing? Seems weird
-    |> Ed25519.sign(~key)
-    |> Cstruct.to_string;
-  let public_key = Ed25519.pub_of_priv(key);
+    |> Ed25519.sign(key);
+  let public_key = Ed25519.Key.of_secret(key);
   {signature, public_key};
 };
 let signature_to_b58check = t => {
@@ -36,9 +35,9 @@ let signature_to_tezos_signature_by_address = t => (
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   Ed25519.verify(
-    ~key=signature.public_key,
-    ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
-    Cstruct.of_string(signature.signature),
+    signature.public_key,
+    signature.signature,
+    BLAKE2B.to_raw_string(hash),
   );
 };
 module type S = {
@@ -49,7 +48,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Ed25519.priv, value) => t;
+  let sign: (~key: Ed25519.Secret.t, value) => t;
   let verify: (~signature: signature, value) => bool;
 };
 module Make = (P: {

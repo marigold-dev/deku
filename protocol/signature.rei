@@ -1,12 +1,12 @@
 open Helpers;
-open Mirage_crypto_ec;
+open Crypto;
 
 [@deriving yojson]
 type t;
 let compare: (t, t) => int;
 let public_key: t => Address.t;
 
-let sign: (~key: Ed25519.priv, BLAKE2B.t) => t;
+let sign: (~key: Ed25519.Secret.t, BLAKE2B.t) => t;
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
 let signature_to_b58check: t => string;
@@ -22,7 +22,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Ed25519.priv, value) => t;
+  let sign: (~key: Ed25519.Secret.t, value) => t;
   // TODO: maybe it should be something else?
   let verify: (~signature: signature, value) => bool;
 };

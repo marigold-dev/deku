@@ -531,12 +531,10 @@ let ensure_folder = folder => {
   };
 };
 let setup_identity = (node_folder, uri) => {
-  open Mirage_crypto_ec;
-
   let.await () = ensure_folder(node_folder);
 
   let identity = {
-    let (key, t) = Ed25519.generate();
+    let (key, t) = Crypto.Ed25519.generate();
     {uri, t, key};
   };
   let.await () = write_identity(~node_folder, identity);
