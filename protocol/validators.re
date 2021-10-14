@@ -10,6 +10,7 @@ type t = {
   current: option(validator),
   validators: list(validator),
   length: int,
+  hash: BLAKE2B.t,
 };
 
 let current = t => t.current;
@@ -31,14 +32,28 @@ let update_current = (address, t) => {
     t.validators |> List.find_opt(validator => validator.address == address);
   {...t, current: validator};
 };
-let empty = {current: None, validators: [], length: 0};
+
+let hash_validators = validators => {
+  open Tezos_interop;
+  let keys =
+    validators |> List.map(validator => Key.Ed25519(validator.address));
+  Consensus.hash_validators(keys);
+};
+let empty = {
+  current: None,
+  validators: [],
+  length: 0,
+  hash: hash_validators([]),
+};
+
 // TODO: this is only okay if the number of validators is small, because, it's clearly not fast
 let add = (validator, t) => {
   let validators =
     t.validators @ [validator] |> List.in_order_uniq(compare_validator);
   // TODO: is this even a good idea?
   let new_proposer = t.current == None ? Some(validator) : t.current;
-  {current: new_proposer, validators, length: List.length(validators)};
+  let hash = hash_validators(validators);
+  {current: new_proposer, validators, length: List.length(validators), hash};
 };
 let remove = (validator, t) => {
   let validators = t.validators |> List.filter((!=)(validator));
@@ -50,11 +65,8 @@ let remove = (validator, t) => {
       after_current(1, t)
     | _ => t.current
     };
-  {current, validators, length};
+  let hash = hash_validators(validators);
+  {current, validators, length, hash};
 };
 
-let hash = t => {
-  open Tezos_interop;
-  let validators = List.map(t => Key.Ed25519(t.address), t.validators);
-  Consensus.hash_validators(validators);
-};
+let hash = t => t.hash;
