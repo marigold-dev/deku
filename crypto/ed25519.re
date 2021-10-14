@@ -12,15 +12,38 @@ let blake2b_20_encoding =
       Fixed.bytes(20),
     )
   );
+module Secret = {
+  type t = priv;
+  let equal = (a, b) => {
+    let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
+    Cstruct.equal(a, b);
+  };
+  let compare = (a, b) =>
+    Cstruct.compare(priv_to_cstruct(a), priv_to_cstruct(b));
+
+  let _size = 32;
+  let prefix = Base58.Prefix.ed25519_seed;
+  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
+  let of_raw = string =>
+    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+
+  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
+  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+};
+
 module Key = {
   type t = pub_;
 
+  let of_secret = Ed25519.pub_of_priv;
   let size = 32;
   let prefix = Base58.Prefix.ed25519_public_key;
   let equal = (a, b) => {
     let (a, b) = (pub_to_cstruct(a), pub_to_cstruct(b));
     Cstruct.equal(a, b);
   };
+  let compare = (a, b) =>
+    Cstruct.compare(pub_to_cstruct(a), pub_to_cstruct(b));
+
   let encoding = {
     // TODO: in tezos this is splitted json is not same as binary
     let to_bytes = t => pub_to_cstruct(t) |> Cstruct.to_bytes;
@@ -36,7 +59,7 @@ module Key = {
 };
 
 module Key_hash = {
-  [@deriving eq]
+  [@deriving (ord, eq)]
   type t = BLAKE2B_20.t;
 
   let hash_key = t =>
@@ -55,23 +78,8 @@ module Key_hash = {
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
 };
 
-module Secret = {
-  type t = priv;
-  let equal = (a, b) => {
-    let (a, b) = (priv_to_cstruct(a), priv_to_cstruct(b));
-    Cstruct.equal(a, b);
-  };
-  let _size = 32;
-  let prefix = Base58.Prefix.ed25519_seed;
-  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
-
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
-};
 module Signature = {
-  [@deriving eq]
+  [@deriving (ord, eq)]
   type t = string;
 
   let size = 64;
@@ -98,3 +106,4 @@ let verify = (public, signature, message) => {
     Cstruct.of_string(signature),
   );
 };
+let generate = () => Ed25519.generate();
