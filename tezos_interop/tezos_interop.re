@@ -227,13 +227,12 @@ module Signature = {
     | Ed25519(Ed25519.Signature.t);
   let sign = (secret, message) =>
     switch (secret) {
-    | Secret.Ed25519(secret) =>
-      Ed25519(Ed25519.Signature.sign(secret, message))
+    | Secret.Ed25519(secret) => Ed25519(Ed25519.sign(secret, message))
     };
   let check = (key, signature, message) =>
     switch (key, signature) {
     | (Key.Ed25519(key), Ed25519(signature)) =>
-      Ed25519.Signature.check(key, signature, message)
+      Ed25519.verify(key, signature, message)
     };
   let to_string =
     fun
