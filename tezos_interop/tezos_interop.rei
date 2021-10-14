@@ -27,7 +27,8 @@ module Secret: {
 };
 
 module Signature: {
-  type t = pri | Ed25519(string);
+  type t =
+    | Ed25519(Crypto.Ed25519.Signature.t);
 
   let equal: (t, t) => bool;
 
@@ -36,9 +37,6 @@ module Signature: {
 
   let to_string: t => string;
   let of_string: string => option(t);
-
-  // TODO: this is a leaky abstraction
-  let of_raw_string: [ | `Ed25519(string)] => t;
 };
 
 module Contract_hash: {
