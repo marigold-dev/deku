@@ -1,7 +1,6 @@
 open Helpers;
 include Exn_noop;
 
-module Signed = Signed;
 module Signature = Signature;
 module Address = Address;
 module Wallet = Wallet;
