@@ -159,12 +159,9 @@ let handle_register_uri =
   );
 let handle_receive_operation_gossip =
   handle_request(
-    (module Networking.Operation_gossip),
-    (update_state, request) => {
-      Flows.received_operation(Server.get_state(), update_state, request);
-      Ok();
-    },
-  );
+    (module Networking.Operation_gossip), (update_state, request) => {
+    Flows.received_operation(Server.get_state(), update_state, request)
+  });
 
 let handle_trusted_validators_membership =
     (
