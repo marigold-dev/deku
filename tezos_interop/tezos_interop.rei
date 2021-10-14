@@ -2,7 +2,7 @@ open Helpers;
 
 module Key: {
   type t =
-    | Ed25519(Mirage_crypto_ec.Ed25519.pub_);
+    | Ed25519(Crypto.Ed25519.Key.t);
   let equal: (t, t) => bool;
   let to_string: t => string;
   let of_string: string => option(t);
@@ -20,7 +20,7 @@ module Key_hash: {
 
 module Secret: {
   type t =
-    | Ed25519(Mirage_crypto_ec.Ed25519.priv);
+    | Ed25519(Crypto.Ed25519.Secret.t);
   let equal: (t, t) => bool;
   let to_string: t => string;
   let of_string: string => option(t);
