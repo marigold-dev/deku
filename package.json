@@ -4,7 +4,8 @@
     "build": "dune build -p #{self.name}",
     "release": {
       "bin": [
-        "sidecli"
+        "sidecli",
+        "deku-node"
       ]
     },
     "buildEnv": {
