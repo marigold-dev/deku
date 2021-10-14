@@ -54,6 +54,7 @@
     "@opam/ocamlformat-rpc": "*"
   },
   "resolutions": {
+    "xhr2-cookies": "link:./vendor/xhr2-cookies",
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
     "ocaml": "github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae",
     "@opam/httpaf": "github:anmonteiro/httpaf:httpaf.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
