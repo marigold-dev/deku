@@ -183,7 +183,7 @@ let try_to_sign_block = (state, update_state, block) =>
   };
 
 /** Starts asynchronously hashing a new state. Side-effectfully updates
-    the map of epoches to hashes when done.
+    the state with the results.
 
     Each block is associated with a particular state root hash.
     The state root starts with genesis, and then updates periodically.
@@ -199,13 +199,22 @@ let hash_new_state_root = (state, update_state) => {
   Lwt.async(() => {
     // Lwt_domain.detach causes the function to run in a separate thread.
     // When the promise resolves, the rest of the function is run in main thread.
-    let.await next_state_root =
+    let.await new_snapshot =
       Lwt_domain.detach((s: Node.t) => Protocol.hash(s.protocol), state);
-    let _ =
-      update_state(
-        // The state may be stale so we must retrieve the current state again.
-        State.add_finished_hash(next_epoch, next_state_root, get_state^()),
+    let state =
+      State.add_finished_hash(next_epoch, new_snapshot, get_state^());
+    let snapshots =
+      Snapshots.update(
+        ~new_snapshot,
+        ~applied_block_height=state.protocol.block_height,
+        state.snapshots,
       );
+    let _ =
+      update_state({
+        // The state may be stale so we must retrieve the current state again.
+        ...state,
+        snapshots,
+      });
     Lwt.return();
   });
 };

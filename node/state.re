@@ -182,25 +182,7 @@ let apply_block = (state, block) => {
       try_to_commit_state_hash(~old_state, state, block, signatures)
     | _ => ()
     };
-    let new_snap_shot_epoch = old_state.current_epoch + 1;
-    let new_snapshot =
-      get_next_hash(old_state)
-      // We only hash the protocol if we don't already have the
-      // hash for the new epoch in [finished_hashes] (i.e produced
-      // by async state hashing).
-      |> Option.value(~default=Protocol.hash(state.protocol));
-    let snapshots =
-      Snapshots.update(
-        ~new_snapshot,
-        ~applied_block_height=state.protocol.block_height,
-        state.snapshots,
-      );
-    let state =
-      state
-      |> add_finished_hash(new_snap_shot_epoch, new_snapshot)
-      |> increment_epoch;
-
-    Ok({...state, snapshots});
+    Ok(increment_epoch(state));
   };
 };
 
