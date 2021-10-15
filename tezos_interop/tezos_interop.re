@@ -774,7 +774,7 @@ module Consensus = {
             (acc, k) =>
               switch (k) {
               | Micheline.String(_, k) =>
-                switch (Key.of_string(k)) {
+                switch (Ed25519.Key.of_string(k)) {
                 | Some(k) => Ok([k, ...acc])
                 | None => Error("Failed to parse " ++ k)
                 }
