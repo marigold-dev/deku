@@ -100,6 +100,17 @@ let block_has_signable_state_root_hash = (~current_time, state, block) => {
   };
 };
 
+/** The possibile return values of [is_signable]. */
+type signability =
+/** The block would be signable, except the state root hash is unknown.
+    (perhaps we'll finish it soon). */
+| Signable_with_state_root_hash(BLAKE2B.t)
+/** The block is signable as is. */
+| Signable
+/** The block is not signable for some reason other than a missing state
+    root hash. */
+| Not_signable
+
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
 let is_signable = (state, block) => {
@@ -136,13 +147,20 @@ let is_signable = (state, block) => {
       | _ => true
       }
     });
-  is_next(state, block)
+  if(is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
   && all_main_ops_are_known
-  && contains_only_trusted_add_validator_op(block.side_chain_ops)
-  && block_has_signable_state_root_hash(~current_time, state, block);
+  && contains_only_trusted_add_validator_op(block.side_chain_ops)) {
+    if(block_has_signable_state_root_hash(~current_time, state, block)) {
+      Signable
+    } else {
+      Signable_with_state_root_hash(block.state_root_hash)
+    }
+  } else {
+    Not_signable
+  }
 };
 
 let sign = (~key, block) => Block.sign(~key, block);

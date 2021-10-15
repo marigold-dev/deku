@@ -24,6 +24,7 @@ type t = {
   snapshots: Snapshots.t,
   current_epoch: int,
   finished_hashes: Int_map.t((BLAKE2B.t, string)),
+  blocks_with_unknown_hash: BLAKE2B.Map.t(list(Block.t)),
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -96,6 +97,7 @@ let make =
     protocol: initial_protocol,
     snapshots: initial_snapshots,
     finished_hashes: Int_map.empty,
+    blocks_with_unknown_hash: BLAKE2B.Map.empty,
     current_epoch: (-1),
     // networking
     uri_state: Uri_map.empty,

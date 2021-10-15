@@ -174,12 +174,23 @@ let try_to_produce_block = (state, update_state) => {
 };
 
 let try_to_sign_block = (state, update_state, block) =>
-  if (is_signable(state, block)) {
+  switch (is_signable(state, block)) {
+  | Signable =>
     let signature = sign(~key=state.identity.key, block);
     broadcast_signature(state, ~hash=block.hash, ~signature);
     append_signature(state, update_state, ~hash=block.hash, ~signature);
-  } else {
-    state;
+  | Signable_with_state_root_hash(hash) =>
+    // If the block would be signable except that its state root hash
+    // isn't currently known, we store it for later in case we finish
+    // that hash.
+    let {Node.blocks_with_unknown_hash, _} = state;
+    let blocks_with_this_hash =
+      BLAKE2B.Map.find_opt(hash, blocks_with_unknown_hash)
+      |> Option.value(~default=[]);
+    let blocks_with_unknown_hash =
+      BLAKE2B.Map.add(hash, blocks_with_this_hash, blocks_with_unknown_hash);
+    {...state, blocks_with_unknown_hash};
+  | Not_signable => state
   };
 
 /** Starts asynchronously hashing a new state. Side-effectfully updates
@@ -203,6 +214,24 @@ let hash_new_state_root = (state, update_state) => {
       Lwt_domain.detach((s: Node.t) => Protocol.hash(s.protocol), state);
     let state =
       State.add_finished_hash(next_epoch, new_snapshot, get_state^());
+    let hash = fst(new_snapshot);
+    let blocks_with_unknown_hash =
+      BLAKE2B.Map.find_opt(hash, state.blocks_with_unknown_hash)
+      |> Option.value(~default=[]);
+    // Watch out for the side-effect update to state! [try_to_sign_block]
+    // also returns the state. If it didn't, we'd have to call [get_state]
+    // to get a fresh copy.
+    let state =
+      List.fold_left(
+        // TODO: This could be refactored to bypass [try_to_sign_block]
+        // because we already know the block is signable.
+        // FIXME: this should eventually to apply the block if it becomes
+        // applicable by signing, right? But I don't see how that could
+        // happen.
+        (state, block) => try_to_sign_block(state, update_state, block),
+        state,
+        blocks_with_unknown_hash,
+      );
     let snapshots =
       Snapshots.update(
         ~new_snapshot,
@@ -214,6 +243,24 @@ let hash_new_state_root = (state, update_state) => {
         // The state may be stale so we must retrieve the current state again.
         ...state,
         snapshots,
+        blocks_with_unknown_hash:
+          // Lest the map grow indefinitely, we filter out any blocks that
+          // have block height lower than the current one.
+          BLAKE2B.Map.fold(
+            (hash, blocks, map) => {
+              let candidate_blocks =
+                List.filter(
+                  b => b.Block.block_height > state.protocol.block_height,
+                  blocks,
+                );
+              switch (candidate_blocks) {
+              | [] => map
+              | _ => BLAKE2B.Map.add(hash, candidate_blocks, map)
+              };
+            },
+            BLAKE2B.Map.empty,
+            state.blocks_with_unknown_hash,
+          ),
       });
     Lwt.return();
   });

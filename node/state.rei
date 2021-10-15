@@ -24,6 +24,7 @@ type t = {
   snapshots: Snapshots.t,
   current_epoch: int,
   finished_hashes: Int_map.t((BLAKE2B.t, string)),
+  blocks_with_unknown_hash: BLAKE2B.Map.t(list(Block.t)),
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
