@@ -28,14 +28,20 @@ module Prefix = struct
   (* 20 *)
   let contract_hash = "\002\090\121" (* KT1(36) *)
   let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
+  let secp256k1_public_key_hash = "\006\161\161" (* tz2(36) *)
 
   (* 32 *)
   let operation_hash = "\005\116" (* o(51) *)
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
   let ed25519_seed = "\013\015\058\007" (* edsk(54) *)
+  let secp256k1_secret_key = "\017\162\224\201" (* spsk(54) *)
 
+   (* 33 *)
+   let secp256k1_public_key = "\003\254\226\086" (* sppk(55) *)
+   
   (* 64 *)
   let ed25519_signature = "\009\245\205\134\018" (* edsig(99) *)
+  let secp256k1_signature = "\013\115\101\019\063" (* spsig1(99) *)
 end
 
 let base = 58
