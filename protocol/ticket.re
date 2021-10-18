@@ -9,7 +9,16 @@ type t =
 
 // TODO: should we expose to_yojson here?
 let compare = (a, b) => {
-  let to_string = a =>
-    Bytes.to_string(a.data) ++ Tezos_interop.Address.to_string(b.ticketer);
-  String.compare(to_string(a), to_string(b));
+  module T = {
+    [@deriving ord]
+    type t = {
+      ticketer: string,
+      data: bytes,
+    };
+    let of_t = (Ticket.{ticketer, data}) => {
+      ticketer: Address.to_string(ticketer),
+      data,
+    };
+  };
+  T.(compare(of_t(a), of_t(b)));
 };

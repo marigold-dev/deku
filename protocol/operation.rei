@@ -40,8 +40,19 @@ module Side_chain: {
   // TODO: I don't like this structure model
   [@deriving yojson]
   type kind =
-    | Transaction({destination: Wallet.t})
-    | Withdraw({owner: Tezos_interop.Address.t});
+    | Transaction({
+        destination: Wallet.t,
+        amount: Amount.t,
+        ticket: Ticket.t,
+      })
+    | Withdraw({
+        owner: Tezos_interop.Address.t,
+        amount: Amount.t,
+        ticket: Ticket.t,
+      })
+    | Add_validator(Validators.validator)
+    | Remove_validator(Validators.validator);
+
   [@deriving (ord, yojson)]
   type t =
     pri {
@@ -50,8 +61,6 @@ module Side_chain: {
       nonce: int32,
       block_height: int64,
       source: Wallet.t,
-      amount: Amount.t,
-      ticket: Ticket.t,
       kind,
     };
 
@@ -61,8 +70,6 @@ module Side_chain: {
       ~nonce: int32,
       ~block_height: int64,
       ~source: Wallet.t,
-      ~amount: Amount.t,
-      ~ticket: Ticket.t,
       ~kind: kind
     ) =>
     t;
@@ -74,8 +81,6 @@ module Side_chain: {
       ~nonce: int32,
       ~block_height: int64,
       ~source: Wallet.t,
-      ~amount: Amount.t,
-      ~ticket: Ticket.t,
       ~kind: kind
     ) =>
     result(t, string);

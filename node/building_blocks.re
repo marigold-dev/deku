@@ -63,11 +63,40 @@ let is_signable = (state, block) => {
     state.State.pending_main_ops |> List.exists(op => op == main_op);
   let all_main_ops_are_known =
     List.for_all(is_known_main, block.Block.main_chain_ops);
+  let {
+    Node.trusted_validator_membership_change,
+    protocol: {last_seen_membership_change_timestamp, _},
+    _,
+  } = state;
+  let current_time = Unix.time();
+  // TODO: this should not be hard coded here
+  let next_allowed_membership_change_timestamp =
+    last_seen_membership_change_timestamp +. 24. *. 60. *. 60.;
+
+  let contains_only_trusted_add_validator_op =
+    List.for_all(h => {
+      switch (h.Operation.Side_chain.kind) {
+      | Add_validator(validator) =>
+        Trusted_validators_membership_change.Set.mem(
+          {address: validator.address, action: Add},
+          trusted_validator_membership_change,
+        )
+        && current_time > next_allowed_membership_change_timestamp
+      | Remove_validator(validator) =>
+        Trusted_validators_membership_change.Set.mem(
+          {address: validator.address, action: Remove},
+          trusted_validator_membership_change,
+        )
+        && current_time > next_allowed_membership_change_timestamp
+      | _ => true
+      }
+    });
   is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
-  && all_main_ops_are_known;
+  && all_main_ops_are_known
+  && contains_only_trusted_add_validator_op(block.side_chain_ops);
 };
 
 let sign = (~key, block) => Block.sign(~key, block);

@@ -24,7 +24,14 @@ type t = {
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
   recent_operation_results:
-    BLAKE2B.Map.t([ | `Transaction | `Withdraw(Ledger.Handle.t)]),
+    BLAKE2B.Map.t(
+      [
+        | `Add_validator
+        | `Remove_validator
+        | `Transaction
+        | `Withdraw(Ledger.Handle.t)
+      ],
+    ),
 };
 
 let make:

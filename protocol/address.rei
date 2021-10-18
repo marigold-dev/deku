@@ -1,10 +1,10 @@
-open Mirage_crypto_ec;
+open Crypto;
 
 [@deriving yojson]
-type key = Ed25519.priv;
+type key = Ed25519.Secret.t;
 
 [@deriving (yojson, ord)]
-type t = Ed25519.pub_;
+type t = Ed25519.Key.t;
 
 let of_key: key => t;
 

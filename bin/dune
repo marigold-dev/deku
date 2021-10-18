@@ -1,21 +1,14 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries opium files node mirage-crypto-ec mirage-crypto-rng.unix helpers)
+ (libraries opium files node mirage-crypto-rng.unix helpers)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
  (name sidecli)
- (libraries
-  node
-  files
-  mirage-crypto-ec
-  mirage-crypto-rng.unix
-  helpers
-  cmdliner
-  binaries)
+ (libraries node files mirage-crypto-rng.unix helpers cmdliner binaries)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess

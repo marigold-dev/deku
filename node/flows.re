@@ -294,20 +294,42 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 let received_operation =
     (state, update_state, request: Networking.Operation_gossip.request) =>
   if (!List.mem(request.operation, state.Node.pending_side_ops)) {
-    Lwt.async(() => {
-      let _state =
-        update_state(
-          Node.{
-            ...state,
-            pending_side_ops: [
-              request.operation,
-              ...state.Node.pending_side_ops,
-            ],
-          },
-        );
-      let.await () = Networking.broadcast_operation_gossip(state, request);
-      Lwt.return();
-    });
+    let.ok () =
+      Operation.Side_chain.(
+        switch (request.operation.kind) {
+        | Add_validator(_)
+        | Remove_validator(_) =>
+          let.assert () = (
+            `Invalid_signature_author,
+            Address.compare(
+              state.Node.identity.t,
+              Signature.public_key(
+                request.operation.Operation.Side_chain.signature,
+              ),
+            )
+            == 0,
+          );
+          Ok();
+        | _ =>
+          Lwt.async(() => {
+            Networking.broadcast_operation_gossip(state, request)
+          });
+          Ok();
+        }
+      );
+    let _: State.t =
+      update_state(
+        Node.{
+          ...state,
+          pending_side_ops: [
+            request.operation,
+            ...state.Node.pending_side_ops,
+          ],
+        },
+      );
+    Ok();
+  } else {
+    Ok();
   };
 
 let received_main_operation = (state, update_state, operation) => {
@@ -389,7 +411,9 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
 let request_withdraw_proof = (state, ~hash) =>
   switch (state.Node.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
   | None => Networking.Withdraw_proof.Unknown_operation
-  | Some(`Transaction) => Operation_is_not_a_withdraw
+  | Some(`Transaction)
+  | Some(`Add_validator)
+  | Some(`Remove_validator) => Operation_is_not_a_withdraw
   | Some(`Withdraw(handle)) =>
     let last_block_hash = state.Node.protocol.last_block_hash;
     /* TODO: possible problem with this solution
@@ -417,6 +441,11 @@ let trusted_validators_membership =
   let {signature, payload: {address, action} as payload} = request;
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
+  let.assert () = (
+    `Invalid_signature_author,
+    Address.compare(state.Node.identity.t, Signature.public_key(signature))
+    == 0,
+  );
   let.assert () = (
     `Failed_to_verify_payload,
     payload_hash |> Signature.verify(~signature),

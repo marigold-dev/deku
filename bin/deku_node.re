@@ -38,6 +38,7 @@ let print_error = err => {
   | `Unknown_uri => eprintf("Unknown_uri")
   | `Invalid_address_on_main_operation =>
     eprintf("Invalid_address_on_main_operation")
+  | `Invalid_signature_author => eprintf("Invalid_signature_author")
   | `Failed_to_verify_payload => eprintf("Failed to verify payload signature")
   };
   eprintf("\n%!");
@@ -158,12 +159,9 @@ let handle_register_uri =
   );
 let handle_receive_operation_gossip =
   handle_request(
-    (module Networking.Operation_gossip),
-    (update_state, request) => {
-      Flows.received_operation(Server.get_state(), update_state, request);
-      Ok();
-    },
-  );
+    (module Networking.Operation_gossip), (update_state, request) => {
+    Flows.received_operation(Server.get_state(), update_state, request)
+  });
 
 let handle_trusted_validators_membership =
     (
@@ -227,7 +225,7 @@ let node = {
              switch (validator) {
              | Tezos_interop.Key.Ed25519(k) => k
              },
-             Printf.sprintf("https://localhost:444%d", i) |> Uri.of_string,
+             Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
     | Error(err) => failwith(err)

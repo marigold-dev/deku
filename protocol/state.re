@@ -1,7 +1,7 @@
 open Helpers;
 
-module Operation_side_chain_set = Set_with_yojson_make(Operation.Side_chain);
-module Operation_main_chain_set = Set_with_yojson_make(Operation.Main_chain);
+module Operation_side_chain_set = Set.Make_with_yojson(Operation.Side_chain);
+module Operation_main_chain_set = Set.Make_with_yojson(Operation.Main_chain);
 
 type t = {
   // state machine data
@@ -20,9 +20,11 @@ type t = {
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just
      ignore like on the hashing function, but it still bothers me */
-  // local consensus(not hashed)
+  // local consensus(not hashed) ie any part of consensus that you
+  // cannot agree with other nodes, because it depends on something local
   last_state_root_update: float,
   last_applied_block_timestamp: float,
+  last_seen_membership_change_timestamp: float,
 };
 
 let hash = t => {

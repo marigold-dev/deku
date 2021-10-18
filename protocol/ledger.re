@@ -7,7 +7,7 @@ module Wallet_and_ticket_map = {
     ticket: Ticket.t,
   };
   module Map =
-    Map_with_yojson_make({
+    Map.Make_with_yojson({
       [@deriving (ord, yojson)]
       type t = key;
     });

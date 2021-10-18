@@ -31,7 +31,14 @@ type t = {
   // TODO: use proper variants in the future
   // TODO: this also needs to be cleaned in the future
   recent_operation_results:
-    BLAKE2B.Map.t([ | `Transaction | `Withdraw(Ledger.Handle.t)]),
+    BLAKE2B.Map.t(
+      [
+        | `Add_validator
+        | `Remove_validator
+        | `Transaction
+        | `Withdraw(Ledger.Handle.t)
+      ],
+    ),
 };
 
 let make =
@@ -255,9 +262,10 @@ let load_snapshot =
       state_root_hash,
       last_state_root_update: 0.0,
       last_applied_block_timestamp: 0.0,
+      last_seen_membership_change_timestamp: 0.0,
     };
   let.ok protocol =
-    fold_left_ok(
+    List.fold_left_ok(
       (protocol, block) => {
         // TODO: ignore this may be really bad for snapshots
         // TODO: ignore the result is also really bad

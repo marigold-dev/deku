@@ -54,8 +54,19 @@ module Side_chain = {
   // TODO: I don't like this structure model
   [@deriving yojson]
   type kind =
-    | Transaction({destination: Wallet.t})
-    | Withdraw({owner: Tezos_interop.Address.t});
+    | Transaction({
+        destination: Wallet.t,
+        amount: Amount.t,
+        ticket: Ticket.t,
+      })
+    | Withdraw({
+        owner: Tezos_interop.Address.t,
+        amount: Amount.t,
+        ticket: Ticket.t,
+      })
+    | Add_validator(Validators.validator)
+    | Remove_validator(Validators.validator);
+
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
@@ -63,8 +74,6 @@ module Side_chain = {
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
-    amount: Amount.t,
-    ticket: Ticket.t,
     kind,
   };
   let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
@@ -72,12 +81,9 @@ module Side_chain = {
   let (hash, verify) = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
-    let apply = (f, ~nonce, ~block_height, ~source, ~amount, ~ticket, ~kind) => {
-      let to_yojson = [%to_yojson:
-        (int32, int64, Wallet.t, Amount.t, Ticket.t, kind)
-      ];
-      let json =
-        to_yojson((nonce, block_height, source, amount, ticket, kind));
+    let apply = (f, ~nonce, ~block_height, ~source, ~kind) => {
+      let to_yojson = [%to_yojson: (int32, int64, Wallet.t, kind)];
+      let json = to_yojson((nonce, block_height, source, kind));
       let payload = Yojson.Safe.to_string(json);
       f(payload);
     };
@@ -86,19 +92,9 @@ module Side_chain = {
     (hash, verify);
   };
 
-  let verify =
-      (
-        ~hash,
-        ~signature,
-        ~nonce,
-        ~block_height,
-        ~source,
-        ~amount,
-        ~ticket,
-        ~kind,
-      ) => {
+  let verify = (~hash, ~signature, ~nonce, ~block_height, ~source, ~kind) => {
     let.ok () =
-      verify(~hash, ~nonce, ~block_height, ~source, ~amount, ~ticket, ~kind)
+      verify(~hash, ~nonce, ~block_height, ~source, ~kind)
         ? Ok() : Error("Side operation invalid hash");
     let.ok () =
       Signature.verify(~signature, hash)
@@ -107,37 +103,18 @@ module Side_chain = {
            source,
          )
         ? Ok() : Error("Side operation invalid signature");
-    Ok({hash, signature, nonce, block_height, source, amount, ticket, kind});
+    Ok({hash, signature, nonce, block_height, source, kind});
   };
 
-  let sign =
-      (~secret, ~nonce, ~block_height, ~source, ~amount, ~ticket, ~kind) => {
-    let hash = hash(~nonce, ~block_height, ~source, ~amount, ~ticket, ~kind);
+  let sign = (~secret, ~nonce, ~block_height, ~source, ~kind) => {
+    let hash = hash(~nonce, ~block_height, ~source, ~kind);
     let signature = Signature.sign(~key=secret, hash);
-    {hash, signature, nonce, block_height, source, amount, ticket, kind};
+    {hash, signature, nonce, block_height, source, kind};
   };
 
   let of_yojson = json => {
-    let.ok {
-      hash,
-      signature,
-      nonce,
-      block_height,
-      source,
-      amount,
-      ticket,
-      kind,
-    } =
+    let.ok {hash, signature, nonce, block_height, source, kind} =
       of_yojson(json);
-    verify(
-      ~hash,
-      ~signature,
-      ~nonce,
-      ~block_height,
-      ~source,
-      ~kind,
-      ~ticket,
-      ~amount,
-    );
+    verify(~hash, ~signature, ~nonce, ~block_height, ~source, ~kind);
   };
 };
