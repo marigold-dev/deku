@@ -456,8 +456,7 @@ let info_tmp_for_testing = {
 let tmp_for_testing = () => {
   let.await hello_msg = Binaries.Ligo_wrapper.call("test.religo");
   switch (hello_msg) {
-  | Ok(msg) =>
-    print_endline("ok!");
+  | Ok(_) => print_endline("ok!")
   | Error(msg) =>
     print_endline("error!");
     print_string(msg);
