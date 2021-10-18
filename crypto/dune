@@ -1,5 +1,5 @@
 (library
  (name crypto)
- (libraries data-encoding mirage-crypto-ec helpers)
+ (libraries data-encoding mirage-crypto-ec mirage-crypto-rng.unix helpers)
  (preprocess
   (pps ppx_deriving.ord ppx_deriving.eq)))
