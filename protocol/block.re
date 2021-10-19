@@ -177,9 +177,7 @@ let produce = (~state) => {
     ~state_root_hash=
       update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
     ~handles_hash=Ledger.handles_root_hash(state.ledger),
-    ~validators_hash=
-      update_state_hashes
-        ? Validators.hash(state.validators) : state.validators_hash,
+    ~validators_hash=Validators.hash(state.validators),
     ~block_height=Int64.add(state.block_height, 1L),
   );
 };
