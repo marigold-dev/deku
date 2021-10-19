@@ -156,30 +156,25 @@ let genesis =
     ~author=Address.genesis_address,
   );
 
-// TODO: move this to a global module
-let state_root_hash_epoch = 60.0;
-/** to prevent changing the validator just because of network jittering
-    this introduce a delay between can receive a block with new state
-    root hash and can produce that block
+type next_hashes = {
+  state_root: BLAKE2B.t,
+  validators: BLAKE2B.t,
+};
 
-    1s choosen here but any reasonable time will make it */
-let avoid_jitter = 1.0;
-let _can_update_state_root_hash = state =>
-  Unix.time() -. state.State.last_state_root_update >= state_root_hash_epoch;
-let can_produce_with_new_state_root_hash = state =>
-  Unix.time()
-  -. state.State.last_state_root_update
-  -. avoid_jitter >= state_root_hash_epoch;
-let produce = (~state) => {
-  let update_state_hashes = can_produce_with_new_state_root_hash(state);
+let produce = (~state, ~next_hashes) => {
+  let next_hashes =
+    Option.value(
+      ~default={
+        state_root: state.State.state_root_hash,
+        validators: state.State.validators_hash,
+      },
+      next_hashes,
+    );
   make(
     ~previous_hash=state.State.last_block_hash,
-    ~state_root_hash=
-      update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
+    ~state_root_hash=next_hashes.state_root,
     ~handles_hash=Ledger.handles_root_hash(state.ledger),
-    ~validators_hash=
-      update_state_hashes
-        ? Validators.hash(state.validators) : state.validators_hash,
+    ~validators_hash=next_hashes.validators,
     ~block_height=Int64.add(state.block_height, 1L),
   );
 };

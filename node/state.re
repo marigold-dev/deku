@@ -10,6 +10,7 @@ type identity = {
 
 module Address_map = Map.Make(Address);
 module Uri_map = Map.Make(Uri);
+module Int_map = Map.Make(Int);
 
 type t = {
   identity,
@@ -21,6 +22,9 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  current_epoch: int,
+  finished_hashes: Int_map.t((BLAKE2B.t, string)),
+  blocks_with_unknown_hash: BLAKE2B.Map.t(list(Block.t)),
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -38,6 +42,27 @@ type t = {
         | `Transaction
         | `Withdraw(Ledger.Handle.t)
       ],
+    ),
+};
+
+let add_finished_hash = (epoch, (hash, data), state) => {
+  ...state,
+  finished_hashes: Int_map.add(epoch, (hash, data), state.finished_hashes),
+};
+
+let get_next_hash = state =>
+  Int_map.find_opt(state.current_epoch + 1, state.finished_hashes);
+
+/** Increments the [current_epoch]. Additionally,
+    removes any [finished_hashes] from previous epochs.
+    This ensures the state root hash only moves forward in time. */
+let increment_epoch = state => {
+  ...state,
+  current_epoch: state.current_epoch + 1,
+  finished_hashes:
+    Int_map.filter(
+      (epoch, _) => epoch > state.current_epoch,
+      state.finished_hashes,
     ),
 };
 
@@ -71,6 +96,9 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    finished_hashes: Int_map.empty,
+    blocks_with_unknown_hash: BLAKE2B.Map.empty,
+    current_epoch: (-1),
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -124,10 +152,10 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     );
   });
 };
+
 let apply_block = (state, block) => {
   let old_state = state;
-  let.ok (protocol, new_snapshot, results) =
-    apply_block(state.protocol, block);
+  let.ok (protocol, results) = apply_block(state.protocol, block);
   let recent_operation_results =
     List.fold_left(
       (results, (op, result)) =>
@@ -135,6 +163,7 @@ let apply_block = (state, block) => {
       state.recent_operation_results,
       results,
     );
+
   let state = {...state, protocol, recent_operation_results};
   Lwt.async(() =>
     Lwt_io.with_file(
@@ -147,21 +176,15 @@ let apply_block = (state, block) => {
       },
     )
   );
-  switch (new_snapshot) {
-  | Some(new_snapshot) =>
+  if (block.state_root_hash == old_state.protocol.state_root_hash) {
+    Ok(state);
+  } else {
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
     | Some(signatures) when Signatures.is_self_signed(signatures) =>
       try_to_commit_state_hash(~old_state, state, block, signatures)
     | _ => ()
     };
-    let snapshots =
-      Snapshots.update(
-        ~new_snapshot,
-        ~applied_block_height=state.protocol.block_height,
-        state.snapshots,
-      );
-    Ok({...state, snapshots});
-  | None => Ok(state)
+    Ok(increment_epoch(state));
   };
 };
 
@@ -267,15 +290,18 @@ let load_snapshot =
   let.ok protocol =
     List.fold_left_ok(
       (protocol, block) => {
-        // TODO: ignore this may be really bad for snapshots
-        // TODO: ignore the result is also really bad
-        let.ok (protocol, _new_hash, _result) =
-          Protocol.apply_block(protocol, block);
+        // TODO: ignore the result is really bad
+        let.ok (protocol, _result) = Protocol.apply_block(protocol, block);
         Ok(protocol);
       },
       protocol,
       all_blocks,
     );
   //TODO: snapshots?
+  // It's ok for the [next_state_root_hash] to be incorrect
+  // here, because by definition when we load a snapshot we're
+  // out of sync and can't sign blocks anyway. On the next state
+  // root epoch, we'll update the [next_state_root_hash] to the
+  // correct value, at which point we'll also be in sync.
   Ok({...t, block_pool, protocol});
 };

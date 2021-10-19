@@ -10,6 +10,8 @@ type identity = {
 
 module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
+module Int_map: Map.S with type key = int;
+
 type t = {
   identity,
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
@@ -20,6 +22,9 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  current_epoch: int,
+  finished_hashes: Int_map.t((BLAKE2B.t, string)),
+  blocks_with_unknown_hash: BLAKE2B.Map.t(list(Block.t)),
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
@@ -33,6 +38,14 @@ type t = {
       ],
     ),
 };
+
+/** Adds a (hash, data) pair to the map of finished hashes,
+    indexed by epoch. */
+let add_finished_hash: (int, (BLAKE2B.t, string), t) => t;
+
+/** Gets the hash corresponding to the [current_epoch]
+    Returns [None] if it is not known. */
+let get_next_hash: t => option((BLAKE2B.t, string));
 
 let make:
   (

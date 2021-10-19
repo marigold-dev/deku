@@ -36,6 +36,8 @@ let received_block':
         | `Invalid_state_root_hash
         | `Not_current_block_producer
         | `Pending_blocks
+        | `State_root_hash_update_is_early
+        | `State_root_hash_update_is_late
       ],
     ),
   ) =
@@ -51,6 +53,8 @@ let block_added_to_the_pool':
         | `Invalid_block_when_applying
         | `Invalid_state_root_hash
         | `Not_current_block_producer
+        | `State_root_hash_update_is_early
+        | `State_root_hash_update_is_late
       ],
     ),
   ) =
@@ -170,22 +174,120 @@ let try_to_produce_block = (state, update_state) => {
 };
 
 let try_to_sign_block = (state, update_state, block) =>
-  if (is_signable(state, block)) {
+  switch (is_signable(state, block)) {
+  | Signable =>
     let signature = sign(~key=state.identity.key, block);
     broadcast_signature(state, ~hash=block.hash, ~signature);
     append_signature(state, update_state, ~hash=block.hash, ~signature);
-  } else {
-    state;
+  | Signable_with_state_root_hash(hash) =>
+    // If the block would be signable except that its state root hash
+    // isn't currently known, we store it for later in case we finish
+    // that hash.
+    let {Node.blocks_with_unknown_hash, _} = state;
+    let blocks_with_this_hash =
+      BLAKE2B.Map.find_opt(hash, blocks_with_unknown_hash)
+      |> Option.value(~default=[]);
+    let blocks_with_unknown_hash =
+      BLAKE2B.Map.add(hash, blocks_with_this_hash, blocks_with_unknown_hash);
+    {...state, blocks_with_unknown_hash};
+  | Not_signable => state
   };
+
+/** Starts asynchronously hashing a new state. Side-effectfully updates
+    the state with the results.
+
+    Each block is associated with a particular state root hash.
+    The state root starts with genesis, and then updates periodically.
+    This means you don't have to download the entire history of the chain
+    to derive the state corresponding to a given block - only the state
+    corresponding to its state root hash is required.
+    Because hashing a state is an expensive operation, we do it in parallel
+    on a separate thread. This allows the block producer to continue
+    producing blocks even while the state root is being updated.
+ */
+let hash_new_state_root = (state, update_state) => {
+  let next_epoch = state.Node.current_epoch + 1;
+  Lwt.async(() => {
+    // Lwt_domain.detach causes the function to run in a separate thread.
+    // When the promise resolves, the rest of the function is run in main thread.
+    let.await new_snapshot =
+      Lwt_domain.detach((s: Node.t) => Protocol.hash(s.protocol), state);
+    let state =
+      State.add_finished_hash(next_epoch, new_snapshot, get_state^());
+    let hash = fst(new_snapshot);
+    let blocks_with_unknown_hash =
+      BLAKE2B.Map.find_opt(hash, state.blocks_with_unknown_hash)
+      |> Option.value(~default=[]);
+    // Watch out for the side-effect update to state! [try_to_sign_block]
+    // also returns the state. If it didn't, we'd have to call [get_state]
+    // to get a fresh copy.
+    let state =
+      List.fold_left(
+        // TODO: This could be refactored to bypass [try_to_sign_block]
+        // because we already know the block is signable.
+        // FIXME: this should eventually to apply the block if it becomes
+        // applicable by signing, right? But I don't see how that could
+        // happen.
+        (state, block) => try_to_sign_block(state, update_state, block),
+        state,
+        blocks_with_unknown_hash,
+      );
+    let snapshots =
+      Snapshots.update(
+        ~new_snapshot,
+        ~applied_block_height=state.protocol.block_height,
+        state.snapshots,
+      );
+    let _ =
+      update_state({
+        // The state may be stale so we must retrieve the current state again.
+        ...state,
+        snapshots,
+        blocks_with_unknown_hash:
+          // Lest the map grow indefinitely, we filter out any blocks that
+          // have block height lower than the current one.
+          BLAKE2B.Map.fold(
+            (hash, blocks, map) => {
+              let candidate_blocks =
+                List.filter(
+                  b => b.Block.block_height > state.protocol.block_height,
+                  blocks,
+                );
+              switch (candidate_blocks) {
+              | [] => map
+              | _ => BLAKE2B.Map.add(hash, candidate_blocks, map)
+              };
+            },
+            BLAKE2B.Map.empty,
+            state.blocks_with_unknown_hash,
+          ),
+      });
+    Lwt.return();
+  });
+};
 
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
+  let new_epoch = state.protocol.state_root_hash == block.state_root_hash;
+  let.assert () = (
+    `Invalid_state_root_hash,
+    !new_epoch
+    || State.get_next_hash(state)
+    |> Option.map(((next_hash, _)) => block.state_root_hash == next_hash)
+    |> Option.value(~default=false),
+  );
+
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
+
+  if (new_epoch) {
+    hash_new_state_root(state, update_state);
+  };
+
   switch (
     Block_pool.find_next_block_to_apply(
       ~hash=block.Block.hash,
