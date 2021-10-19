@@ -39,7 +39,6 @@ module type S = {
   let generate: unit => (Secret.t, Key.t);
 };
 module type Intf = {
-  module type S = S;
   module Base58 = Base58;
   module Ed25519: S with type Key_hash.t = Helpers.BLAKE2B_20.t;
 };
