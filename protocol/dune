@@ -1,5 +1,5 @@
 (library
  (name protocol)
- (libraries helpers tezos_interop mirage-crypto-rng.unix)
+ (libraries binaries helpers tezos_interop mirage-crypto-rng.unix)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord)))

@@ -64,6 +64,9 @@ let apply_side_chain = (state: t, operation) => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
+  let invoke_contract = () => {
+    state
+  }
   switch (operation.kind) {
   | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
@@ -86,6 +89,7 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
+  | Invoke_contract => Ok((invoke_contract(), `Invoke_contract));
   };
 };
 let apply_side_chain = (state, operation) =>
