@@ -1,30 +1,24 @@
 open Helpers;
 open Crypto;
 
-type key = Ed25519.Secret.t;
+type key = Tezos.Secret.t;
 
-let key_to_yojson = key => `String(Tezos.Secret.to_string(Ed25519(key)));
+let key_to_yojson = key => `String(Tezos.Secret.to_string(key));
 let key_of_yojson = json => {
   let.ok string = [%of_yojson: string](json);
-  let.ok Ed25519(key) =
-    Tezos.Secret.of_string(string)
-    |> Option.to_result(~none="failed to parse");
-  ok(key);
+  Tezos.Secret.of_string(string) |> Option.to_result(~none="failed to parse");
 };
 
-type t = Ed25519.Key.t; // TODO: is okay to have this public
+type t = Tezos.Key.t; // TODO: is okay to have this public
 
 let make_pubkey = () => {
   let (_priv, pub_) = Ed25519.generate();
-  pub_;
+  Tezos.Key.Ed25519(pub_);
 };
 
-let compare = Ed25519.Key.compare;
-let to_string = t => Tezos.Key.to_string(Ed25519(t));
-let of_string = string => {
-  let.some Ed25519(t) = Tezos.Key.of_string(string);
-  Some(t);
-};
+let compare = Tezos.Key.compare;
+let to_string = t => Tezos.Key.to_string(t);
+let of_string = Tezos.Key.of_string;
 
 let to_yojson = t => `String(to_string(t));
 let of_yojson = json => {
@@ -32,7 +26,7 @@ let of_yojson = json => {
   of_string(string) |> Option.to_result(~none="failed to parse");
 };
 
-let of_key = Ed25519.Key.of_secret;
+let of_key = Tezos.Key.of_secret;
 
 let genesis_key = {|edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd|};
 let genesis_key =

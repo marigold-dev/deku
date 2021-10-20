@@ -1,7 +1,7 @@
 open Helpers;
 open Crypto;
 
-[@deriving eq]
+[@deriving (eq, ord)]
 type t =
   | Ed25519(Ed25519.Signature.t);
 let sign = (secret, message) =>

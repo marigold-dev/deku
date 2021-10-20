@@ -1,7 +1,7 @@
 open Helpers;
 open Crypto;
 
-[@deriving eq]
+[@deriving (eq, ord)]
 type t =
   | Ed25519(Ed25519.Key.t);
 
@@ -26,7 +26,9 @@ let encoding = {
   // TODO: move this to a functor
   obj1(req(name, raw_encoding));
 };
-
+let of_secret =
+  fun
+  | Secret.Ed25519(key) => Ed25519(Ed25519.Key.of_secret(key));
 let to_string =
   fun
   | Ed25519(key) => Ed25519.Key.to_string(key);

@@ -91,16 +91,10 @@ let address = {
   open Tezos.Key_hash;
   let parser = string =>
     of_string(string)
-    |> Option.map((Ed25519(hash)) => Wallet.address_of_blake(hash))
+    |> Option.map(hash => Wallet.of_address_hash(hash))
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
-    Format.fprintf(
-      fmt,
-      "%s",
-      wallet
-      |> Wallet.address_to_blake
-      |> (hash => Ed25519(hash) |> to_string),
-    );
+    Format.fprintf(fmt, "%s", wallet |> Wallet.address_to_string);
   Arg.(conv((parser, printer)));
 };
 
@@ -535,7 +529,7 @@ let setup_identity = (node_folder, uri) => {
 
   let identity = {
     let (key, t) = Crypto.Ed25519.generate();
-    {uri, t, key};
+    {uri, t: Tezos.Key.Ed25519(t), key: Tezos.Secret.Ed25519(key)};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());

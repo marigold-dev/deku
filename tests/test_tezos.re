@@ -11,7 +11,7 @@ describe("key", ({test, _}) => {
 
   // TODO: test encoding
 
-  let edpk = Ed25519(genesis_address);
+  let edpk = genesis_address;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edpk)).toEqual(
       "edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6",
@@ -55,7 +55,7 @@ describe("key_hash", ({test, _}) => {
   open Key_hash;
 
   // TODO: proper test of_key
-  let tz1 = of_key(Ed25519(genesis_address));
+  let tz1 = of_key(genesis_address);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
@@ -80,7 +80,7 @@ describe("key_hash", ({test, _}) => {
 describe("secret", ({test, _}) => {
   open Secret;
 
-  let edsk = Ed25519(genesis_key);
+  let edsk = genesis_key;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edsk)).toEqual(
       "edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd",
@@ -117,8 +117,8 @@ describe("secret", ({test, _}) => {
 describe("signature", ({test, _}) => {
   open Signature;
 
-  let edpk = Key.Ed25519(genesis_address);
-  let edsk = Secret.Ed25519(genesis_key);
+  let edpk = genesis_address;
+  let edsk = genesis_key;
 
   // TODO: proper test for sign
   let edsig = sign(edsk, "tuturu");
@@ -207,7 +207,7 @@ describe("contract_hash", ({test, _}) => {
 describe("address", ({test, _}) => {
   open Address;
 
-  let tz1 = Implicit(Key_hash.of_key(Ed25519(genesis_address)));
+  let tz1 = Implicit(Key_hash.of_key(genesis_address));
   let kt1 = Originated({contract: some_contract_hash, entrypoint: None});
   let kt1_tuturu =
     Originated({contract: some_contract_hash, entrypoint: Some("tuturu")});

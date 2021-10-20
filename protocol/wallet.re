@@ -2,31 +2,29 @@ open Helpers;
 open Crypto;
 
 [@deriving ord]
-type t = BLAKE2B_20.t;
+type t = Tezos.Key_hash.t;
 
-let of_address = pubkey => Ed25519.Key_hash.hash_key(pubkey);
+let of_address = pubkey => Tezos.Key_hash.of_key(pubkey);
 let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;
 };
-let get_pub_key = Ed25519.Key.of_secret;
+let get_pub_key = Tezos.Key.of_secret;
 
 let make_address = () => {
   let (_key, pub_) = Ed25519.generate();
-  pub_ |> of_address;
+  Tezos.Key.Ed25519(pub_) |> of_address;
 };
 let make_wallet = () => {
   let (key, pub_) = Ed25519.generate();
-  let wallet_address = of_address(pub_);
+  let wallet_address = of_address(Tezos.Key.Ed25519(pub_));
 
-  (key, wallet_address);
+  (Tezos.Secret.Ed25519(key), wallet_address);
 };
-let address_to_blake = t => t;
-let address_of_blake = t => t;
-let address_to_string = wallet =>
-  Tezos.Key_hash.(Ed25519(wallet |> address_to_blake) |> to_string);
+let of_address_hash = t => t;
+let address_to_string = Tezos.Key_hash.to_string;
 let address_of_string = string =>
   switch (Tezos.Key_hash.of_string(string)) {
-  | Some(Ed25519(key)) => Some(key)
+  | Some(key) => Some(key)
   | None => None
   };
 let to_yojson = t => `String(address_to_string(t));

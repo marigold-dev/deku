@@ -1,10 +1,8 @@
-open Crypto;
-
 [@deriving yojson]
-type key = Ed25519.Secret.t;
+type key = Tezos.Secret.t;
 
 [@deriving (yojson, ord)]
-type t = Ed25519.Key.t;
+type t = Tezos.Key.t;
 
 let of_key: key => t;
 

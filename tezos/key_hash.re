@@ -1,6 +1,6 @@
 open Helpers;
 open Crypto;
-[@deriving eq]
+[@deriving (eq, ord)]
 type t =
   | Ed25519(Ed25519.Key_hash.t);
 

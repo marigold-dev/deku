@@ -43,17 +43,17 @@ describe("pack", ({test, _}) => {
   );
   test(
     "key(\"edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6\")",
-    key(Ed25519(genesis_address)),
+    key(genesis_address),
     "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
   );
   test(
     "key_hash(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    key_hash(Key_hash.of_key(Ed25519(genesis_address))),
+    key_hash(Key_hash.of_key(genesis_address)),
     "050a00000015000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
     "address(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    address(Implicit(Key_hash.of_key(Ed25519(genesis_address)))),
+    address(Implicit(Key_hash.of_key(genesis_address))),
     "050a0000001600000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
@@ -127,7 +127,7 @@ describe("consensus", ({test, _}) => {
 describe("discovery", ({test, _}) => {
   open Discovery;
 
-  let secret = Secret.Ed25519(genesis_key);
+  let secret = genesis_key;
   test("sign", ({expect, _}) => {
     let signature =
       sign(secret, ~nonce=1L, Uri.of_string("http://localhost"));

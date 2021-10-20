@@ -1,12 +1,11 @@
 open Helpers;
-open Crypto;
 
 [@deriving yojson]
 type t;
 let compare: (t, t) => int;
 let public_key: t => Address.t;
 
-let sign: (~key: Ed25519.Secret.t, BLAKE2B.t) => t;
+let sign: (~key: Tezos.Secret.t, BLAKE2B.t) => t;
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
 let signature_to_b58check: t => string;
@@ -22,7 +21,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Ed25519.Secret.t, value) => t;
+  let sign: (~key: Tezos.Secret.t, value) => t;
   // TODO: maybe it should be something else?
   let verify: (~signature: signature, value) => bool;
 };

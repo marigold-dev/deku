@@ -35,8 +35,7 @@ let update_current = (address, t) => {
 
 let hash_validators = validators => {
   open Tezos_interop;
-  let keys =
-    validators |> List.map(validator => Tezos.Key.Ed25519(validator.address));
+  let keys = validators |> List.map(validator => validator.address);
   Consensus.hash_validators(keys);
 };
 let empty = {

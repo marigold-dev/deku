@@ -6,7 +6,7 @@ describe("validators", ({test, _}) => {
   let make_validator = () => {
     open Crypto;
     let (_key, address) = Ed25519.generate();
-    Validators.{address: address};
+    Validators.{address: Tezos.Key.Ed25519(address)};
   };
   let setup_two = () => {
     let a = make_validator();

@@ -219,9 +219,7 @@ let node = {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             switch (validator) {
-             | Tezos.Key.Ed25519(k) => k
-             },
+             validator,
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
