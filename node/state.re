@@ -91,16 +91,14 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let validators =
     state.protocol.validators
     |> Validators.to_list
-    |> List.map(validator =>
-         Tezos_interop.Key.Ed25519(validator.Validators.address)
-       );
+    |> List.map(validator => Tezos.Key.Ed25519(validator.Validators.address));
   let signatures =
     old_state.protocol.validators
     |> Validators.to_list
     |> List.map(validator => validator.Validators.address)
     |> List.map(address =>
          (
-           Tezos_interop.Key.Ed25519(address),
+           Tezos.Key.Ed25519(address),
            Address_map.find_opt(address, signatures_map),
          )
        );

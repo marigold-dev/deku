@@ -65,15 +65,15 @@ let wallet = {
   Arg.(conv((parser, printer)));
 };
 
-let edsk_secret_key = {
+let secret_key = {
   let parser = key => {
-    switch (Tezos_interop.Secret.of_string(key)) {
+    switch (Tezos.Secret.of_string(key)) {
     | Some(key) => Ok(key)
     | _ => Error(`Msg("Expected EDSK secret key"))
     };
   };
   let printer = (ppf, key) => {
-    Format.fprintf(ppf, "%s", Tezos_interop.Secret.to_string(key));
+    Format.fprintf(ppf, "%s", Tezos.Secret.to_string(key));
   };
   Arg.(conv((parser, printer)));
 };
@@ -88,9 +88,9 @@ let uri = {
 };
 
 let address = {
-  open Tezos_interop.Key_hash;
+  open Tezos.Key_hash;
   let parser = string =>
-    Tezos_interop.Key_hash.of_string(string)
+    of_string(string)
     |> Option.map((Ed25519(hash)) => Wallet.address_of_blake(hash))
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
@@ -99,7 +99,7 @@ let address = {
       "%s",
       wallet
       |> Wallet.address_to_blake
-      |> (hash => Ed25519(hash) |> Tezos_interop.Key_hash.to_string),
+      |> (hash => Ed25519(hash) |> to_string),
     );
   Arg.(conv((parser, printer)));
 };
@@ -107,10 +107,10 @@ let address = {
 let address_tezos_interop = {
   let parser = string =>
     string
-    |> Tezos_interop.Address.of_string
+    |> Tezos.Address.of_string
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, address) =>
-    Format.fprintf(fmt, "%s", Tezos_interop.Address.to_string(address));
+    Format.fprintf(fmt, "%s", Tezos.Address.to_string(address));
   Arg.(conv((parser, printer)));
 };
 let amount = {
@@ -129,10 +129,10 @@ let amount = {
 };
 let ticket = {
   let parser = string =>
-    Tezos_interop.Ticket.of_string(string)
+    Tezos.Ticket.of_string(string)
     |> Option.to_result(~none=`Msg("Expected a ticket"));
   let printer = (fmt, ticket) =>
-    Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
+    Format.fprintf(fmt, "%S", Tezos.Ticket.to_string(ticket));
   Arg.(conv(~docv="A ticket", (parser, printer)));
 };
 let hash = {
@@ -384,12 +384,12 @@ let withdraw_proof = (node_folder, operation_hash, callback) => {
             %S)
       0x%s
       { %s })|},
-      Tezos_interop.Address.to_string(callback),
+      Tezos.Address.to_string(callback),
       Amount.to_int(handle.amount),
       to_hex(handle.ticket.data),
       handle.id,
-      Tezos_interop.Address.to_string(handle.owner),
-      Tezos_interop.Address.to_string(handle.ticket.ticketer),
+      Tezos.Address.to_string(handle.owner),
+      Tezos.Address.to_string(handle.ticket.ticketer),
       BLAKE2B.to_string(handles_hash),
       List.map(
         ((left, right)) =>
@@ -600,7 +600,7 @@ let setup_tezos = {
     let doc = "The Tezos secret key.";
     Arg.(
       required
-      & opt(some(edsk_secret_key), None)
+      & opt(some(secret_key), None)
       & info(["tezos_secret"], ~doc, ~docv)
     );
   };

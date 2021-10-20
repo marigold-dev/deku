@@ -35,7 +35,7 @@ let signature_to_b58check_by_address = t => {
 };
 let signature_to_tezos_signature_by_address = t => (
   t.public_key,
-  Tezos_interop.Signature.Ed25519(t.signature),
+  Tezos.Signature.Ed25519(t.signature),
 );
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;

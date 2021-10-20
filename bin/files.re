@@ -53,7 +53,7 @@ module Validators = {
 
 module Interop_context = {
   module Secret = {
-    include Tezos_interop.Secret;
+    include Tezos.Secret;
     let of_yojson =
       fun
       | `String(string) =>
@@ -67,7 +67,7 @@ module Interop_context = {
     Tezos_interop.Context.t = {
       rpc_node: Uri.t,
       secret: Secret.t,
-      consensus_contract: Tezos_interop.Address.t,
+      consensus_contract: Tezos.Address.t,
       required_confirmations: int,
     };
 

@@ -1,5 +1,4 @@
-open Tezos_interop;
-
+open Tezos;
 [@deriving yojson]
 type t =
   Ticket.t = {

@@ -5,3 +5,4 @@ let in_order_uniq: (('a, 'a) => int, t('a)) => t('a);
 
 let fold_left_ok:
   (('a, 'b) => result('a, 'c), 'a, list('b)) => result('a, 'c);
+let try_decode_list: (t('a => option('b)), 'a) => option('b);

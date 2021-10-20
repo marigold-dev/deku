@@ -3,12 +3,11 @@ open Crypto;
 
 type key = Ed25519.Secret.t;
 
-let key_to_yojson = key =>
-  `String(Tezos_interop.Secret.to_string(Ed25519(key)));
+let key_to_yojson = key => `String(Tezos.Secret.to_string(Ed25519(key)));
 let key_of_yojson = json => {
   let.ok string = [%of_yojson: string](json);
   let.ok Ed25519(key) =
-    Tezos_interop.Secret.of_string(string)
+    Tezos.Secret.of_string(string)
     |> Option.to_result(~none="failed to parse");
   ok(key);
 };
@@ -21,9 +20,9 @@ let make_pubkey = () => {
 };
 
 let compare = Ed25519.Key.compare;
-let to_string = t => Tezos_interop.Key.to_string(Ed25519(t));
+let to_string = t => Tezos.Key.to_string(Ed25519(t));
 let of_string = string => {
-  let.some Ed25519(t) = Tezos_interop.Key.of_string(string);
+  let.some Ed25519(t) = Tezos.Key.of_string(string);
   Some(t);
 };
 

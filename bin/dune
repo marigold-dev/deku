@@ -1,14 +1,14 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries opium files node helpers)
+ (libraries opium files node helpers tezos)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
  (name sidecli)
- (libraries node files helpers cmdliner)
+ (libraries node files helpers cmdliner tezos)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
@@ -17,6 +17,6 @@
 (library
  (name files)
  (modules Files)
- (libraries lwt lwt.unix node)
+ (libraries lwt lwt.unix node tezos)
  (preprocess
   (pps ppx_deriving_yojson)))

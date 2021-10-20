@@ -42,3 +42,12 @@ let rec fold_left_ok = (f, state) =>
     | Ok(state) => fold_left_ok(f, state, tl)
     | Error(error) => Error(error)
     };
+let rec try_decode_list = (l, string) =>
+  switch (l) {
+  | [of_string, ...l] =>
+    switch (of_string(string)) {
+    | Some(v) => Some(v)
+    | None => try_decode_list(l, string)
+    }
+  | [] => None
+  };
