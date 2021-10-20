@@ -152,8 +152,44 @@ let clean = (state, update_state, block) => {
     state.Node.pending_main_ops |> List.find_all(main_op_not_in_block);
   let pending_side_ops =
     state.pending_side_ops |> List.find_all(side_op_not_in_block);
+
+  let trusted_validator_membership_change =
+    List.fold_left(
+      (
+        acc_trusted_validator_membership_change,
+        operation: Operation.Side_chain.t,
+      ) => {
+        switch (operation.Operation.Side_chain.kind) {
+        | Add_validator(validator) =>
+          Trusted_validators_membership_change.Set.remove(
+            {address: validator.address, action: Add},
+            acc_trusted_validator_membership_change,
+          )
+        | Remove_validator(validator) =>
+          Trusted_validators_membership_change.Set.remove(
+            {address: validator.address, action: Remove},
+            state.Node.trusted_validator_membership_change,
+          )
+        | _ => acc_trusted_validator_membership_change
+        }
+      },
+      state.Node.trusted_validator_membership_change,
+      block.side_chain_ops,
+    );
+
+  Lwt.async(() =>
+    trusted_validator_membership_change
+    |> Trusted_validators_membership_change.Set.elements
+    |> state.persist_trusted_membership_change
+  );
+
   // TODO: clean old blocks and old signatures
-  update_state({...state, pending_main_ops, pending_side_ops});
+  update_state({
+    ...state,
+    trusted_validator_membership_change,
+    pending_main_ops,
+    pending_side_ops,
+  });
 };
 
 // networking functions
