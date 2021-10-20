@@ -1,0 +1,5 @@
+(library
+ (name tezos)
+ (libraries helpers crypto tezos-micheline data-encoding)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.eq)))
