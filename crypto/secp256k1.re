@@ -5,13 +5,18 @@ let context = {
   let rand_value =
     Random.generate(32) |> Cstruct.to_bytes |> Bigstring.of_bytes;
   let randomized = Context.randomize(c, rand_value);
-  randomized
-    ? c : failwith("Secp256k1 context randomization failed. Aborting.");
+
+  if (randomized) {
+    c;
+  } else {
+    failwith("Secp256k1 context randomization failed. Aborting.");
+  };
 };
 
 module Key = {
   type t = Libsecp256k1.Key.t(Libsecp256k1.Key.public);
-  let equal = (a, b) => Libsecp256k1.Key.equal(a, b);
+  let equal = Libsecp256k1.Key.equal;
+
   let compare = (a, b) =>
     Bigstring.compare(
       Libsecp256k1.Key.buffer(a),
@@ -29,7 +34,10 @@ module Key = {
 
     let to_raw = to_raw;
     let of_raw = string =>
-      Key.read_pk(context, string |> Bigstring.of_string) |> Result.to_option;
+      string
+      |> Bigstring.of_string
+      |> Key.read_pk(context)
+      |> Result.to_option;
   });
 };
 module Key_hash = {
@@ -53,7 +61,8 @@ module Key_hash = {
 module Secret = {
   type t = Libsecp256k1.Key.t(Libsecp256k1.Key.secret);
 
-  let equal = (a, b) => Libsecp256k1.Key.equal(a, b);
+  let equal = Libsecp256k1.Key.equal;
+
   let compare = (a, b) =>
     Bigstring.compare(
       Libsecp256k1.Key.buffer(a),
@@ -79,7 +88,7 @@ module Secret = {
 module Signature = {
   type t = Sign.t(Sign.plain);
 
-  let equal = (a, b) => Sign.equal(a, b);
+  let equal = Sign.equal;
   let compare = (a, b) =>
     Bigstring.compare(Sign.buffer(a), Sign.buffer(b));
 
@@ -94,7 +103,7 @@ module Signature = {
     let to_raw = t =>
       Sign.to_bytes(~der=false, context, t) |> Bigstring.to_string;
     let of_raw = string =>
-      Sign.read(context, string |> Bigstring.of_string) |> Result.to_option;
+      string |> Bigstring.of_string |> Sign.read(context) |> Result.to_option;
   });
 };
 let generate = () => {
