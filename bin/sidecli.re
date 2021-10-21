@@ -482,7 +482,7 @@ let info_produce_block = {
 let produce_block = node_folder => {
   let.await identity = read_identity(~node_folder);
   let.await state = read_state(~node_folder);
-  let address = Wallet.of_key(identity.key);
+  let address = identity.t;
   let block =
     Block.produce(
       ~state,
@@ -532,8 +532,11 @@ let setup_identity = (node_folder, uri) => {
   let.await () = ensure_folder(node_folder);
 
   let identity = {
-    let (key, t) = Crypto.Ed25519.generate();
-    {uri, t: Ed25519(t), key: Ed25519(key)};
+    let (key, t) =
+      Crypto.Ed25519.generate()
+      |> (((k, t)) => (Secret.Ed25519(k), Key.Ed25519(t)));
+    let t = Address.of_wallet(t);
+    {uri, t, key};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());
@@ -625,7 +628,6 @@ let setup_tezos = {
 };
 
 // Term that just shows the help command, to use when no arguments are passed
-
 let show_help = {
   let doc = "a tool for interacting with the WIP Tezos Sidechain";
   let sdocs = Manpage.s_common_options;
@@ -640,16 +642,15 @@ let info_self = {
   let doc = "Shows identity key and address of the node.";
   Term.info("self", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
 };
+
 let self = node_folder => {
   let.await identity = read_identity(~node_folder);
-  Format.printf("key: %s\n", Wallet.to_string(identity.t));
-  Format.printf(
-    "address: %s\n",
-    Address.(of_wallet(identity.t) |> to_string),
-  );
+  Format.printf("key: %s\n", Wallet.(of_key(identity.key) |> to_string));
+  Format.printf("address: %s\n", Address.to_string(identity.t));
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());
 };
+
 let self = {
   let folder_dest = {
     let docv = "folder_dest";
@@ -692,16 +693,16 @@ let add_trusted_validator = (node_folder, address) => {
 let address_t = {
   let parser = string =>
     string
-    |> Protocol.Wallet.of_string
+    |> Address.of_string
     |> Option.to_result(~none=`Msg("Expected a validator address."));
   let printer = (fmt, address) =>
-    Format.fprintf(fmt, "%s", Protocol.Wallet.to_string(address));
+    Format.fprintf(fmt, "%s", Address.to_string(address));
   Arg.(conv((parser, printer)));
 };
 
 let validator_address = {
-  let docv = "validator_address";
-  let doc = "The validator address to be added/removed as trusted";
+  let docv = "validator_wallet";
+  let doc = "The validator wallet to be added/removed as trusted";
   Arg.(required & pos(2, some(address_t), None) & info([], ~docv, ~doc));
 };
 
