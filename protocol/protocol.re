@@ -65,6 +65,8 @@ let apply_side_chain = (state: t, operation) => {
     {...state, validators, last_seen_membership_change_timestamp};
   };
   let invoke_contract = () => {
+    let contract_code = Binaries.Ligo_wrapper.ligo_to_zinc("test.religo");
+    let contract_output = Binaries.Ligo_wrapper.interpret_zinc(([], [], []));
     state
   }
   switch (operation.kind) {

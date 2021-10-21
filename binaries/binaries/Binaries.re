@@ -57,7 +57,7 @@ module Hello = {
 };
 
 module Ligo_wrapper = {
-  let call = ligo => {
+  let ligo_to_zinc = ligo => {
     let* zinc_str = invoke("Ligo_wrapper", [|"ligo-to-zinc", ligo|]);
     switch (zinc_str) {
     | Ok(zinc_str) =>
@@ -65,10 +65,33 @@ module Ligo_wrapper = {
         zinc_str
         |> Yojson.Safe.from_string
         |> Zinc_types.Types.program_of_yojson
-        |> Result.map_error((_) => "error parsing zinc program"),
+        |> Result.map_error(_ => "error parsing zinc program"),
       )
 
-    | Error (err) => Lwt.return(Error(err))
+    | Error(err) => Lwt.return(Error(err))
+    };
+  };
+  let interpret_zinc = zinc_state => {
+    let* zinc_str =
+      invoke(
+        "Ligo_wrapper",
+        [|
+          "interpret-zinc",
+          zinc_state
+          |> Zinc_types.Types.zinc_state_to_yojson
+          |> Yojson.Safe.to_string,
+        |],
+      );
+    switch (zinc_str) {
+    | Ok(zinc_str) =>
+      Lwt.return(
+        zinc_str
+        |> Yojson.Safe.from_string
+        |> Zinc_types.Types.program_of_yojson
+        |> Result.map_error(_ => "error parsing zinc program"),
+      )
+
+    | Error(err) => Lwt.return(Error(err))
     };
   };
 };
