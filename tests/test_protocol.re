@@ -6,7 +6,7 @@ describe("protocol state", ({test, _}) => {
   let ticket = {
     open Tezos_interop;
     let random_hash =
-      Mirage_crypto_rng.generate(20)
+      Crypto.Random.generate(20)
       |> Cstruct.to_string
       |> Crypto.BLAKE2B_20.of_raw_string
       |> Option.get;

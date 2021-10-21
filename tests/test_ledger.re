@@ -14,7 +14,7 @@ describe("ledger", ({test, _}) => {
       | Some(ticketer) => ticketer
       | None =>
         let random_hash =
-          Mirage_crypto_rng.generate(20)
+          Random.generate(20)
           |> Cstruct.to_string
           |> BLAKE2B_20.of_raw_string
           |> Option.get;
@@ -23,7 +23,7 @@ describe("ledger", ({test, _}) => {
     let data =
       switch (data) {
       | Some(data) => data
-      | None => Mirage_crypto_rng.generate(256) |> Cstruct.to_bytes
+      | None => Random.generate(256) |> Cstruct.to_bytes
       };
     Ticket.{ticketer, data};
   };
