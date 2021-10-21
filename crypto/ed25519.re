@@ -25,8 +25,6 @@ module Key = {
   type t = pub_;
 
   let of_secret = Ed25519.pub_of_priv;
-  let size = 32;
-  let prefix = Base58.Prefix.ed25519_public_key;
   let equal = (a, b) => {
     let (a, b) = (pub_to_cstruct(a), pub_to_cstruct(b));
     Cstruct.equal(a, b);
@@ -34,18 +32,18 @@ module Key = {
   let compare = (a, b) =>
     Cstruct.compare(pub_to_cstruct(a), pub_to_cstruct(b));
 
-  let encoding = {
-    // TODO: in tezos this is splitted json is not same as binary
-    let to_bytes = t => pub_to_cstruct(t) |> Cstruct.to_bytes;
-    let of_bytes_exn = b =>
-      Cstruct.of_bytes(b) |> pub_of_cstruct |> Result.get_ok;
-    Data_encoding.(conv(to_bytes, of_bytes_exn, Fixed.bytes(size)));
-  };
-  let to_raw = t => Cstruct.to_string(Ed25519.pub_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519.Public_key";
+    let title = "Ed25519 public key";
+
+    let size = 32;
+    let prefix = Base58.Prefix.ed25519_public_key;
+
+    let to_raw = t => Cstruct.to_string(Ed25519.pub_to_cstruct(t));
+    let of_raw = string =>
+      Ed25519.pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  });
 };
 
 module Key_hash = {
