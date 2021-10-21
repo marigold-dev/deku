@@ -74,12 +74,18 @@ module Signature = {
   [@deriving (ord, eq)]
   type t = string;
 
-  let size = 64;
-  let prefix = Base58.Prefix.ed25519_signature;
-  let to_raw = Fun.id;
-  let of_raw = string => String.length(string) == size ? Some(string) : None;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519";
+    let title = "An Ed25519 signature";
+
+    let size = 64;
+    let prefix = Base58.Prefix.ed25519_signature;
+
+    let to_raw = Fun.id;
+    let of_raw = string =>
+      String.length(string) == size ? Some(string) : None;
+  });
 };
 
 let sign = (secret, message) => {
