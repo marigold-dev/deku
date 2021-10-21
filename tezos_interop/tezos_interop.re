@@ -445,7 +445,7 @@ module Consensus = {
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
 
   let hash_validators = validators =>
-    list(List.map(key, validators)) |> hash_packed_data;
+    list(List.map(key_hash, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
       (
@@ -505,7 +505,7 @@ module Consensus = {
           Option.map(signature => Signature.to_string(signature), signature),
         signatures,
       );
-    let validators = List.map(Key.to_string, validators);
+    let validators = List.map(Key_hash.to_string, validators);
     let payload = {
       block_hash,
       block_height,

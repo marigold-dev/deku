@@ -65,7 +65,7 @@ module Context: {
 };
 
 module Consensus: {
-  let hash_validators: list(Key.t) => BLAKE2B.t;
+  let hash_validators: list(Key_hash.t) => BLAKE2B.t;
   let hash_block:
     (
       ~block_height: int64,
@@ -94,8 +94,8 @@ module Consensus: {
       ~block_payload_hash: BLAKE2B.t,
       ~state_hash: BLAKE2B.t,
       ~handles_hash: BLAKE2B.t,
-      ~validators: list(Key.t),
-      ~signatures: list((Key.t, option(Signature.t)))
+      ~validators: list(Key_hash.t),
+      ~signatures: list((Key_hash.t, option(Signature.t)))
     ) =>
     Lwt.t(unit);
 

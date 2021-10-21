@@ -3,7 +3,7 @@ open Crypto;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (yojson, ord)]
-type validator = {address: Wallet.t};
+type validator = {address: Address.t};
 
 [@deriving yojson]
 type t = {
@@ -28,6 +28,7 @@ let after_current = (n, t) => {
   let index = relative_index < 0 ? t.length + relative_index : relative_index;
   List.nth_opt(t.validators, index);
 };
+
 let update_current = (address, t) => {
   let validator =
     t.validators |> List.find_opt(validator => validator.address == address);
@@ -35,9 +36,9 @@ let update_current = (address, t) => {
 };
 
 let hash_validators = validators => {
-  open Tezos_interop;
-  let keys = validators |> List.map(validator => validator.address);
-  Consensus.hash_validators(keys);
+  validators
+  |> List.map(validator => validator.address |> Address.to_key_hash)
+  |> Tezos_interop.Consensus.hash_validators;
 };
 let empty = {
   current: None,
