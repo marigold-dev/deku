@@ -7,6 +7,9 @@ open Helpers;
 open Protocol;
 open Node;
 
+Logs.set_reporter(Logs_fmt.reporter());
+Logs.set_level(Some(Logs.Debug));
+
 let ignore_some_errors =
   fun
   | Error(#Flows.ignore) => Ok()

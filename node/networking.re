@@ -38,6 +38,15 @@ let request = (request_to_yojson, path, data, uri) => {
 
 let post =
     (type req, module E: Request_endpoint with type request = req, data, uri) => {
+  let.await () =
+    Logs_lwt.debug(m =>
+      m(
+        "Posting to %s/%s the data %s",
+        Uri.to_string(uri),
+        E.path,
+        Yojson.Safe.to_string(E.request_to_yojson(data)),
+      )
+    );
   let.await _body = request(E.request_to_yojson, E.path, data, uri);
   await();
 };
@@ -56,16 +65,21 @@ let request =
   await(response);
 };
 
-let broadcast_to_list = (endpoint, uris, data) =>
+let broadcast_to_list = (endpoint, uris, data) => {
   uris
   |> Lwt_list.iter_s(uri =>
        Lwt.catch(
          () => post(endpoint, data, uri),
-         // TODO: log exception
-         _exn => await(),
+         _exn => {
+           let.await () =
+             Logs_lwt.warn(m =>
+               m("Error broadcasting to %s", Uri.to_string(uri))
+             );
+           await();
+         },
        )
      );
-
+};
 let broadcast_to_validators = (endpoint, state, data) =>
   Validators.to_list(state.protocol.validators)
   |> List.filter_map((Validators.{address, _}) =>

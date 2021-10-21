@@ -1,14 +1,23 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries opium files node helpers)
+ (libraries opium files node helpers logs logs.fmt)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
  (name sidecli)
- (libraries node files helpers cmdliner)
+ (libraries
+  node
+  files
+  helpers
+  cmdliner
+  logs
+  logs.fmt
+  fmt.cli
+  logs.cli
+  fmt.tty)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess

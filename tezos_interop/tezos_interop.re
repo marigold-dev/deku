@@ -400,6 +400,14 @@ module Run_contract = {
       entrypoint,
       payload,
     };
+    let.await () =
+      Logs_lwt.info(m =>
+        m(
+          "Calling run_entrypoint.js with argument %s",
+          Yojson.Safe.to_string(input_to_yojson(input)),
+        )
+      );
+
     // TODO: stop hard coding this
     let command = "node";
     let.await output =

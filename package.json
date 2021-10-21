@@ -42,7 +42,8 @@
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
-    "@opam/bigstring": "*"
+    "@opam/bigstring": "*",
+    "@opam/logs": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
