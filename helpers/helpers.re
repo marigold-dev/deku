@@ -1,6 +1,3 @@
-module BLAKE2B = BLAKE2B;
-module BLAKE2B_20 = BLAKE2B.BLAKE2B_20;
-
 module List = List_ext;
 module Z = Zarith_ext;
 module Uri = Uri_ext;

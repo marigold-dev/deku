@@ -1,5 +1,6 @@
 open Operation;
 open Helpers;
+open Crypto;
 
 [@deriving yojson]
 type t = {

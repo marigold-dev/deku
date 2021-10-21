@@ -8,7 +8,7 @@ describe("protocol state", ({test, _}) => {
     let random_hash =
       Mirage_crypto_rng.generate(20)
       |> Cstruct.to_string
-      |> Helpers.BLAKE2B_20.of_raw_string
+      |> Crypto.BLAKE2B_20.of_raw_string
       |> Option.get;
     Ticket.{
       ticketer: Originated({contract: random_hash, entrypoint: None}),

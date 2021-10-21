@@ -387,6 +387,7 @@ describe("pack", ({test, _}) => {
 });
 describe("consensus", ({test, _}) => {
   open Helpers;
+  open Crypto;
   open Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;

@@ -1,5 +1,6 @@
 open Setup;
 open Helpers;
+open Crypto;
 open Protocol;
 open Ledger;
 

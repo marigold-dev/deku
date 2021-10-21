@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 open Protocol;
 
 // TODO: THE FAMOUS HASH MAP, maybe SHA256_map?

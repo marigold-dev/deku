@@ -1,5 +1,3 @@
-open Helpers;
-
 module Make:
   (
     V: {

@@ -1,4 +1,4 @@
-open Helpers;
+open Crypto;
 
 [@deriving (yojson, ord)]
 type validator = {address: Address.t};
