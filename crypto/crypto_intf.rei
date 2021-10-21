@@ -1,6 +1,7 @@
 module type S = {
   module Secret: {
     type t;
+    let encoding: Data_encoding.t(t);
     let equal: (t, t) => bool;
     let compare: (t, t) => int;
     let to_string: t => string;

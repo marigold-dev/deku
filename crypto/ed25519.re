@@ -11,14 +11,18 @@ module Secret = {
   let compare = (a, b) =>
     Cstruct.compare(priv_to_cstruct(a), priv_to_cstruct(b));
 
-  let _size = 32;
-  let prefix = Base58.Prefix.ed25519_seed;
-  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519.Secret_key";
+    let title = "An Ed25519 secret key";
 
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+    let size = 32;
+    let prefix = Base58.Prefix.ed25519_seed;
+
+    let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
+    let of_raw = string =>
+      Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  });
 };
 
 module Key = {
