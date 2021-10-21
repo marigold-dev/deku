@@ -112,7 +112,7 @@ module Contract_hash = {
   [@deriving eq]
   type t = BLAKE2B_20.t;
   let name = "Contract_hash";
-  let encoding = Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+  let encoding = Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
   let to_raw = BLAKE2B_20.to_raw_string;
   let of_raw = BLAKE2B_20.of_raw_string;
   let prefix = Crypto.Base58.Prefix.contract_hash;

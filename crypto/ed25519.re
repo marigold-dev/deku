@@ -1,7 +1,7 @@
 open Mirage_crypto_ec;
 open Ed25519;
 open Helpers;
-open Blake2b_helpers;
+
 module Secret = {
   type t = priv;
   let equal = (a, b) => {
@@ -60,7 +60,7 @@ module Key_hash = {
   let encoding = {
     let name = "Ed25519.Public_key_hash";
     // TODO: in tezos this is splitted json is not same as bin
-    Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+    Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
   };
 
   let prefix = Base58.Prefix.ed25519_public_key_hash;
