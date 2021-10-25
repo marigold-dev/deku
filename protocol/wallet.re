@@ -6,7 +6,7 @@ type t = BLAKE2B_20.t;
 
 let of_address = pubkey => {
   let Key.Ed25519(pubkey) = pubkey;
-  Ed25519.Key_hash.hash_key(pubkey);
+  Ed25519.Key_hash.of_key(pubkey);
 };
 let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;

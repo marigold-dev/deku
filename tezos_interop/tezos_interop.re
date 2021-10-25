@@ -41,7 +41,7 @@ module Key_hash = {
 
   let of_key = t =>
     switch (t) {
-    | Key.Ed25519(pub_) => Ed25519(Ed25519.Key_hash.hash_key(pub_))
+    | Key.Ed25519(pub_) => Ed25519(Ed25519.Key_hash.of_key(pub_))
     };
   let to_string =
     fun
