@@ -1,7 +1,7 @@
 open Helpers;
 include Exn_noop;
 
-module Signature = Signature;
+module Signature = Protocol_signature;
 module Address = Address;
 module Wallet = Wallet;
 module Ledger = Ledger;

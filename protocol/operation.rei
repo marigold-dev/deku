@@ -57,7 +57,7 @@ module Side_chain: {
   type t =
     pri {
       hash: BLAKE2B.t,
-      signature: Signature.t,
+      signature: Protocol_signature.t,
       nonce: int32,
       block_height: int64,
       source: Wallet.t,
@@ -77,7 +77,7 @@ module Side_chain: {
   let verify:
     (
       ~hash: BLAKE2B.t,
-      ~signature: Signature.t,
+      ~signature: Protocol_signature.t,
       ~nonce: int32,
       ~block_height: int64,
       ~source: Wallet.t,

@@ -71,7 +71,7 @@ module Side_chain = {
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
-    signature: Signature.t,
+    signature: Protocol_signature.t,
     nonce: int32,
     block_height: int64,
     source: Wallet.t,
@@ -98,9 +98,9 @@ module Side_chain = {
       verify(~hash, ~nonce, ~block_height, ~source, ~kind)
         ? Ok() : Error("Side operation invalid hash");
     let.ok () =
-      Signature.verify(~signature, hash)
+      Protocol_signature.verify(~signature, hash)
       && Wallet.pubkey_matches_wallet(
-           Signature.public_key(signature),
+           Protocol_signature.public_key(signature),
            source,
          )
         ? Ok() : Error("Side operation invalid signature");
@@ -109,7 +109,7 @@ module Side_chain = {
 
   let sign = (~secret, ~nonce, ~block_height, ~source, ~kind) => {
     let hash = hash(~nonce, ~block_height, ~source, ~kind);
-    let signature = Signature.sign(~key=secret, hash);
+    let signature = Protocol_signature.sign(~key=secret, hash);
     {hash, signature, nonce, block_height, source, kind};
   };
 
