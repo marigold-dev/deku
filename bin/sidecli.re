@@ -88,7 +88,7 @@ let uri = {
   Arg.(conv((parser, printer)));
 };
 
-let address = {
+let wallet_address = {
   let parser = string =>
     Key_hash.of_string(string)
     |> Option.map(Address.of_key_hash)
@@ -111,6 +111,17 @@ let address_tezos_interop = {
     Format.fprintf(fmt, "%s", Tezos.Address.to_string(address));
   Arg.(conv((parser, printer)));
 };
+
+let address = {
+  let parser = string =>
+    string
+    |> Address.of_string
+    |> Option.to_result(~none=`Msg("Expected a public_key"));
+  let printer = (fmt, address) =>
+    Format.fprintf(fmt, "%s", Address.to_string(address));
+  Arg.(conv((parser, printer)));
+};
+
 let amount = {
   let parser = string => {
     let.ok int =
@@ -248,7 +259,7 @@ let create_transaction = {
     let env = Arg.env_var("RECEIVER", ~doc);
     Arg.(
       required
-      & pos(2, some(address), None)
+      & pos(2, some(wallet_address), None)
       & info([], ~env, ~docv="receiver", ~doc)
     );
   };
@@ -779,8 +790,119 @@ let remove_trusted_validator = {
   );
 };
 
-// Run the CLI
+// add/remove validator
 
+let info_propose_new_validator = {
+  let doc = "Propose adding new validator to the network";
+  Term.info(
+    "propose-new-validator",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let propose_new_validator = (folder_node, validator_address) => {
+  open Networking;
+  let.await identity = read_identity(~node_folder=folder_node);
+  let.await block_level_response = request_block_level((), identity.uri);
+  let block_level = block_level_response.level;
+  let membership_change =
+    Operation.Side_chain.sign(
+      ~secret=identity.secret,
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~source=identity.t,
+      ~kind=Add_validator({address: validator_address}),
+    );
+
+  let.await () =
+    Networking.request_operation_gossip(
+      Networking.Operation_gossip.{operation: membership_change},
+      identity.uri,
+    );
+  Format.printf(
+    "operation.hash: %s\n%!",
+    BLAKE2B.to_string(membership_change.hash),
+  );
+
+  Lwt.return(`Ok());
+};
+
+let propose_new_validator = {
+  let validator_address = {
+    let doc = "Address of the proposed validator being added to the network";
+    let env = Arg.env_var("NEW_VALIDATOR_ADDRESS", ~doc);
+    Arg.(
+      required
+      & pos(1, some(address), None)
+      & info([], ~env, ~docv="new_validator_address", ~doc)
+    );
+  };
+
+  Term.(
+    lwt_ret(const(propose_new_validator) $ folder_node $ validator_address)
+  );
+};
+
+let info_propose_validator_removal = {
+  let doc = "Propose removing a validator from the network.";
+  Term.info(
+    "propose-validator-removal",
+    ~version="%‌%VERSION%%",
+    ~doc,
+    ~exits,
+    ~man,
+  );
+};
+
+let propose_validator_removal = (folder_node, validator_address) => {
+  open Networking;
+  let.await identity = read_identity(~node_folder=folder_node);
+  let.await block_level_response = request_block_level((), identity.uri);
+  let block_level = block_level_response.level;
+  let membership_change =
+    Operation.Side_chain.sign(
+      ~secret=identity.secret,
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~source=identity.t,
+      ~kind=Remove_validator({address: validator_address}),
+    );
+
+  let.await () =
+    Networking.request_operation_gossip(
+      Networking.Operation_gossip.{operation: membership_change},
+      identity.uri,
+    );
+  Format.printf(
+    "operation.hash: %s\n%!",
+    BLAKE2B.to_string(membership_change.hash),
+  );
+
+  Lwt.return(`Ok());
+};
+
+let propose_validator_removal = {
+  let validator_address = {
+    let doc = "Address of the proposed validator being removed from the network";
+    let env = Arg.env_var("REMOVED_VALIDATOR_ADDRESS", ~doc);
+    Arg.(
+      required
+      & pos(1, some(address), None)
+      & info([], ~env, ~docv="removed_validator_address", ~doc)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(propose_validator_removal) $ folder_node $ validator_address,
+    )
+  );
+};
+
+// Run the CLI
 let () = {
   Term.exit @@
   Term.eval_choice(
@@ -796,6 +918,8 @@ let () = {
       (setup_tezos, info_setup_tezos),
       (add_trusted_validator, info_add_trusted_validator),
       (remove_trusted_validator, info_remove_trusted_validator),
+      (propose_new_validator, info_propose_new_validator),
+      (propose_validator_removal, info_propose_validator_removal),
       (self, info_self),
     ],
   );
