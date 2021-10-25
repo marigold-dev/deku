@@ -21,6 +21,7 @@ type t = {
 let public_key = t => t.public_key;
 let sign = (~key, hash) => {
   // double hash because tezos always uses blake2b on CHECK_SIGNATURE
+  let Secret.Ed25519(key) = key;
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
   let signature =
     BLAKE2B.to_raw_string(hash)
@@ -53,7 +54,7 @@ module type S = {
       value,
       signature,
     };
-  let sign: (~key: Ed25519.Secret.t, value) => t;
+  let sign: (~key: Secret.t, value) => t;
   let verify: (~signature: signature, value) => bool;
 };
 module Make = (P: {

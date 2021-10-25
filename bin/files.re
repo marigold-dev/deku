@@ -27,7 +27,7 @@ module Wallet = {
   [@deriving yojson]
   type t = {
     address: Wallet.t,
-    priv_key: Address.key,
+    priv_key: Crypto.Secret.t,
   };
   let read = read_json(of_yojson);
   let write = write_json(to_yojson);
