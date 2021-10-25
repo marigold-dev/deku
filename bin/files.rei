@@ -1,6 +1,6 @@
+open Protocol;
 open Node;
 open State;
-open Protocol;
 
 exception Invalid_json(string);
 
@@ -35,7 +35,7 @@ module State_bin: {
 
 module Trusted_validators_membership_change: {
   [@deriving yojson]
-  type t = Node.Trusted_validators_membership_change.t;
+  type t = Trusted_validators_membership_change.t;
 
   let read: (~file: string) => Lwt.t(list(t));
   let write: (list(t), ~file: string) => Lwt.t(unit);

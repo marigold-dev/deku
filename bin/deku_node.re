@@ -161,18 +161,10 @@ let handle_receive_operation_gossip =
   });
 
 let handle_trusted_validators_membership =
-    (
-      ~file,
-      ~persist:
-         (list(Trusted_validators_membership_change.t), ~file: string) =>
-         Lwt.t(unit),
-    ) =>
   handle_request(
     (module Networking.Trusted_validators_membership_change),
     (update_state, request) => {
     Flows.trusted_validators_membership(
-      ~file,
-      ~persist,
       Server.get_state(),
       update_state,
       request,
@@ -196,7 +188,7 @@ let handle_ticket_balance =
   );
 
 let folder = Sys.argv[1];
-let trusted_validator_membership_change =
+let trusted_validator_membership_change_file =
   folder ++ "/trusted-validator-membership-change.json";
 
 let node = {
@@ -232,6 +224,10 @@ let node = {
       State.Address_map.empty,
       validators,
     );
+  let persist_trusted_membership_change =
+    Files.Trusted_validators_membership_change.write(
+      ~file=trusted_validator_membership_change_file,
+    );
   let node =
     State.make(
       ~identity,
@@ -239,6 +235,7 @@ let node = {
       ~interop_context,
       ~data_folder=folder,
       ~initial_validators_uri,
+      ~persist_trusted_membership_change,
     );
   let node = {
     ...node,
@@ -293,10 +290,7 @@ let _server =
   |> handle_receive_operation_gossip
   |> handle_withdraw_proof
   |> handle_ticket_balance
-  |> handle_trusted_validators_membership(
-       ~persist=Files.Trusted_validators_membership_change.write,
-       ~file=trusted_validator_membership_change,
-     )
+  |> handle_trusted_validators_membership
   |> App.start
   |> Lwt_main.run;
 

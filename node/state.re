@@ -40,12 +40,15 @@ type t = {
         | `Withdraw(Ledger.Handle.t)
       ],
     ),
+  persist_trusted_membership_change:
+    list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
 
 let make =
     (
       ~identity,
       ~trusted_validator_membership_change,
+      ~persist_trusted_membership_change,
       ~interop_context,
       ~data_folder,
       ~initial_validators_uri,
@@ -76,6 +79,7 @@ let make =
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
     recent_operation_results: BLAKE2B.Map.empty,
+    persist_trusted_membership_change,
   };
 };
 

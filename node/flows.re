@@ -435,8 +435,7 @@ let request_withdraw_proof = (state, ~hash) =>
 let request_ticket_balance = (state, ~ticket, ~address) =>
   state.Node.protocol.ledger |> Ledger.balance(address, ticket);
 
-let trusted_validators_membership =
-    (~file, ~persist, state, update_state, request) => {
+let trusted_validators_membership = (state, update_state, request) => {
   open Networking.Trusted_validators_membership_change;
   let {signature, payload: {address, action} as payload} = request;
   let payload_hash =
@@ -469,9 +468,8 @@ let trusted_validators_membership =
       trusted_validator_membership_change: new_validators,
     });
   Lwt.async(() =>
-    persist(
+    state.persist_trusted_membership_change(
       new_validators |> Trusted_validators_membership_change.Set.elements,
-      ~file,
     )
   );
   Ok();
