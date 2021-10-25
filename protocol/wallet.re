@@ -26,9 +26,9 @@ let make_wallet = () => {
 let address_to_blake = t => t;
 let address_of_blake = t => t;
 let address_to_string = wallet =>
-  Tezos_interop.Key_hash.(Ed25519(wallet |> address_to_blake) |> to_string);
+  Key_hash.(Ed25519(wallet |> address_to_blake) |> to_string);
 let address_of_string = string =>
-  switch (Tezos_interop.Key_hash.of_string(string)) {
+  switch (Key_hash.of_string(string)) {
   | Some(Ed25519(key)) => Some(key)
   | None => None
   };

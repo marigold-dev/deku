@@ -89,9 +89,9 @@ let uri = {
 };
 
 let address = {
-  open Tezos_interop.Key_hash;
+  open Key_hash;
   let parser = string =>
-    Tezos_interop.Key_hash.of_string(string)
+    Key_hash.of_string(string)
     |> Option.map((Ed25519(hash)) => Wallet.address_of_blake(hash))
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
@@ -100,7 +100,7 @@ let address = {
       "%s",
       wallet
       |> Wallet.address_to_blake
-      |> (hash => Ed25519(hash) |> Tezos_interop.Key_hash.to_string),
+      |> (hash => Ed25519(hash) |> Key_hash.to_string),
     );
   Arg.(conv((parser, printer)));
 };
