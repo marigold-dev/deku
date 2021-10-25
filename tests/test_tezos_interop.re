@@ -133,7 +133,7 @@ describe("signature", ({test, _}) => {
   });
   test("invalid key", ({expect, _}) => {
     let (secret, key) = {
-      let (secret, key) = Crypto.Ed25519.generate();
+      let (secret, key) = Ed25519.generate();
       (Secret.Ed25519(secret), Key.Ed25519(key));
     };
     let edsig_from_key = sign(secret, "tuturu");

@@ -66,7 +66,7 @@ module Side_chain: {
 
   let sign:
     (
-      ~secret: Crypto.Secret.t,
+      ~secret: Secret.t,
       ~nonce: int32,
       ~block_height: int64,
       ~source: Wallet.t,

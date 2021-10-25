@@ -13,7 +13,7 @@ module Key_hash: {
 
 module Signature: {
   type t =
-    | Ed25519(Crypto.Ed25519.Signature.t);
+    | Ed25519(Ed25519.Signature.t);
 
   let equal: (t, t) => bool;
 

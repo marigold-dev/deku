@@ -4,11 +4,11 @@ open Protocol;
 
 describe("protocol state", ({test, _}) => {
   let ticket = {
-    open Tezos_interop;
+    open Crypto;
     let random_hash =
-      Crypto.Random.generate(20)
+      Random.generate(20)
       |> Cstruct.to_string
-      |> Crypto.BLAKE2B_20.of_raw_string
+      |> BLAKE2B_20.of_raw_string
       |> Option.get;
     Ticket.{
       ticketer: Originated({contract: random_hash, entrypoint: None}),

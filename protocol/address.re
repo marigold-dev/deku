@@ -15,13 +15,12 @@ let of_yojson = Key.of_yojson;
 
 let of_key = secret =>
   switch (secret) {
-  | Secret.Ed25519(secret) =>
-    Crypto.Key.Ed25519(Ed25519.Key.of_secret(secret))
+  | Secret.Ed25519(secret) => Key.Ed25519(Ed25519.Key.of_secret(secret))
   };
 
 let genesis_key = {|edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd|};
 let genesis_key =
-  switch (Crypto.Secret.of_yojson(`String(genesis_key))) {
+  switch (Secret.of_yojson(`String(genesis_key))) {
   | Ok(key) => key
   | Error(error) => failwith(error)
   };

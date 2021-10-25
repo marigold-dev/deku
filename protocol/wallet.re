@@ -21,7 +21,7 @@ let make_wallet = () => {
   let (key, pub_) = Ed25519.generate();
   let wallet_address = of_address(Ed25519(pub_));
 
-  (Crypto.Secret.Ed25519(key), wallet_address);
+  (Secret.Ed25519(key), wallet_address);
 };
 let address_to_blake = t => t;
 let address_of_blake = t => t;
