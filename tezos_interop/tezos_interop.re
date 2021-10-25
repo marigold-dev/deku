@@ -211,14 +211,8 @@ module Address = {
       )
     );
 
-  let with_yojson_string = (name, of_string, to_string) =>
-    Yojson_ext.with_yojson_string(
-      string =>
-        of_string(string) |> Option.to_result(~none="invalid " ++ name),
-      to_string,
-    );
-  let (of_yojson, to_yojson) =
-    with_yojson_string("address", of_string, to_string);
+  let (to_yojson, of_yojson) =
+    Yojson_ext.with_yojson_string("address", to_string, of_string);
 };
 
 module Signature = {
