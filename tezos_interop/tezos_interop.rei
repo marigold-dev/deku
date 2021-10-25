@@ -1,14 +1,6 @@
 open Helpers;
 open Crypto;
 
-module Key: {
-  type t =
-    | Ed25519(Crypto.Ed25519.Key.t);
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
 module Key_hash: {
   type t =
     | Ed25519(BLAKE2B_20.t);

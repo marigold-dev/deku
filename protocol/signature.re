@@ -27,7 +27,7 @@ let sign = (~key, hash) => {
     BLAKE2B.to_raw_string(hash)
     // TODO: isn't this double hashing? Seems weird
     |> Ed25519.sign(key);
-  let public_key = Ed25519.Key.of_secret(key);
+  let public_key = Key.Ed25519(Ed25519.Key.of_secret(key));
   {signature, public_key};
 };
 let signature_to_b58check = t => Ed25519.Signature.to_string(t.signature);
@@ -40,8 +40,9 @@ let signature_to_tezos_signature_by_address = t => (
 );
 let verify = (~signature, hash) => {
   let hash = BLAKE2B.to_raw_string(hash) |> BLAKE2B.hash;
+  let Key.Ed25519(public_key) = signature.public_key;
   Ed25519.verify(
-    signature.public_key,
+    public_key,
     signature.signature,
     BLAKE2B.to_raw_string(hash),
   );

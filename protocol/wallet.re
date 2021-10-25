@@ -4,7 +4,10 @@ open Crypto;
 [@deriving ord]
 type t = BLAKE2B_20.t;
 
-let of_address = pubkey => Ed25519.Key_hash.hash_key(pubkey);
+let of_address = pubkey => {
+  let Key.Ed25519(pubkey) = pubkey;
+  Ed25519.Key_hash.hash_key(pubkey);
+};
 let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;
 };
@@ -12,11 +15,11 @@ let get_pub_key = Address.of_key;
 
 let make_address = () => {
   let (_key, pub_) = Ed25519.generate();
-  pub_ |> of_address;
+  of_address(Ed25519(pub_));
 };
 let make_wallet = () => {
   let (key, pub_) = Ed25519.generate();
-  let wallet_address = of_address(pub_);
+  let wallet_address = of_address(Ed25519(pub_));
 
   (Crypto.Secret.Ed25519(key), wallet_address);
 };
