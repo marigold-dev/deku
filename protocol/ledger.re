@@ -39,7 +39,7 @@ module Handle = {
   };
 };
 module Handle_tree =
-  Crypto.Incremental_patricia.Make({
+  Incremental_patricia.Make({
     [@deriving yojson]
     type t = Handle.t;
     let hash = t => t.Handle.hash;

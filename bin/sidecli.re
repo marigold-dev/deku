@@ -536,7 +536,7 @@ let setup_identity = (node_folder, uri) => {
 
   let identity = {
     let (key, t) = Crypto.Ed25519.generate();
-    {uri, t, key: Ed25519(key)};
+    {uri, t: Ed25519(t), key: Ed25519(key)};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());

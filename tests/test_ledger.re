@@ -30,7 +30,7 @@ describe("ledger", ({test, _}) => {
   let make_wallet = () => {
     open Crypto;
     let (_key, address) = Ed25519.generate();
-    Wallet.of_address(address);
+    Wallet.of_address(Ed25519(address));
   };
   let make_tezos_address = () => {
     open Crypto;
