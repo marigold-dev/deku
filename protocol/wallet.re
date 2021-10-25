@@ -8,7 +8,7 @@ let of_address = pubkey => Ed25519.Key_hash.hash_key(pubkey);
 let pubkey_matches_wallet = (key, wallet) => {
   of_address(key) == wallet;
 };
-let get_pub_key = Ed25519.Key.of_secret;
+let get_pub_key = Address.of_key;
 
 let make_address = () => {
   let (_key, pub_) = Ed25519.generate();
@@ -18,7 +18,7 @@ let make_wallet = () => {
   let (key, pub_) = Ed25519.generate();
   let wallet_address = of_address(pub_);
 
-  (key, wallet_address);
+  (Crypto.Secret.Ed25519(key), wallet_address);
 };
 let address_to_blake = t => t;
 let address_of_blake = t => t;

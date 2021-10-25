@@ -93,21 +93,6 @@ module Key_hash = {
     try_decode_list([ed25519]);
   };
 };
-module Secret = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Secret.t);
-  let to_string =
-    fun
-    | Ed25519(secret) => Ed25519.Secret.to_string(secret);
-  let of_string = {
-    let ed25519 = string => {
-      let.some secret = Ed25519.Secret.of_string(string);
-      Some(Ed25519(secret));
-    };
-    try_decode_list([ed25519]);
-  };
-};
 module Contract_hash = {
   [@deriving eq]
   type t = BLAKE2B_20.t;
@@ -211,14 +196,8 @@ module Address = {
       )
     );
 
-  let with_yojson_string = (name, of_string, to_string) =>
-    Yojson_ext.with_yojson_string(
-      string =>
-        of_string(string) |> Option.to_result(~none="invalid " ++ name),
-      to_string,
-    );
-  let (of_yojson, to_yojson) =
-    with_yojson_string("address", of_string, to_string);
+  let (to_yojson, of_yojson) =
+    Yojson_ext.with_yojson_string("address", to_string, of_string);
 };
 
 module Signature = {

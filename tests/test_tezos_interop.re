@@ -1,6 +1,7 @@
 open Setup;
 open Protocol;
 open Address;
+open Crypto;
 open Tezos_interop;
 
 // TODO: maybe fuzz testing or any other cool testing magic?
@@ -81,7 +82,7 @@ describe("key_hash", ({test, _}) => {
 describe("secret", ({test, _}) => {
   open Secret;
 
-  let edsk = Ed25519(genesis_key);
+  let edsk = genesis_key;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edsk)).toEqual(
       "edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd",
@@ -119,7 +120,7 @@ describe("signature", ({test, _}) => {
   open Signature;
 
   let edpk = Key.Ed25519(genesis_address);
-  let edsk = Secret.Ed25519(genesis_key);
+  let edsk = genesis_key;
 
   // TODO: proper test for sign
   let edsig = sign(edsk, "tuturu");
@@ -387,7 +388,6 @@ describe("pack", ({test, _}) => {
 });
 describe("consensus", ({test, _}) => {
   open Helpers;
-  open Crypto;
   open Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
@@ -451,7 +451,7 @@ describe("consensus", ({test, _}) => {
 describe("discovery", ({test, _}) => {
   open Discovery;
 
-  let secret = Secret.Ed25519(genesis_key);
+  let secret = genesis_key;
   test("sign", ({expect, _}) => {
     let signature =
       sign(secret, ~nonce=1L, Uri.of_string("http://localhost"));

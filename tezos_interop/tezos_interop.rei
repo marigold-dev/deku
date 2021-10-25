@@ -19,14 +19,6 @@ module Key_hash: {
   let of_string: string => option(t);
 };
 
-module Secret: {
-  type t =
-    | Ed25519(Crypto.Ed25519.Secret.t);
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
 module Signature: {
   type t =
     | Ed25519(Crypto.Ed25519.Signature.t);

@@ -8,6 +8,11 @@ let make_encoding:
   ) =>
   Data_encoding.t('a);
 
+/** [parse_string_variant of_string_list string] try to parse the string
+    using every of_string in the list, returns [Some 'a] when one matches */
+let parse_string_variant:
+  (list(string => option('a)), string) => option('a);
+
 module Make_b58:
   (
     H: {
