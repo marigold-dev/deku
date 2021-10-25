@@ -375,7 +375,7 @@ let find_block_level = state => {
 
 let request_nonce = (state, update_state, uri) => {
   // TODO: nonce size, think about this, 32 is just magic because of SHA256
-  let nonce = Mirage_crypto_rng.generate(32) |> Cstruct.to_string;
+  let nonce = Random.generate(32) |> Cstruct.to_string;
   let _state =
     update_state(
       Node.{
