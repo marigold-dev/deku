@@ -18,6 +18,16 @@ let make_encoding = (~name, ~title, ~to_string, ~of_string, ~raw_encoding) => {
   );
 };
 
+let rec parse_string_variant = (l, string) =>
+  switch (l) {
+  | [of_string, ...l] =>
+    switch (of_string(string)) {
+    | Some(v) => Some(v)
+    | None => parse_string_variant(l, string)
+    }
+  | [] => None
+  };
+
 module Make_b58 =
        (
          H: {
