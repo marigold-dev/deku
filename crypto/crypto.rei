@@ -5,3 +5,4 @@ module BLAKE2B = BLAKE2B;
 module BLAKE2B_20 = BLAKE2B_20;
 module Random = Random;
 module Secret = Secret;
+module Key = Key;
