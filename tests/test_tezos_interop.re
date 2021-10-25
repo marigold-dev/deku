@@ -1,6 +1,7 @@
 open Setup;
 open Protocol;
 open Address;
+open Crypto;
 open Tezos_interop;
 
 // TODO: maybe fuzz testing or any other cool testing magic?

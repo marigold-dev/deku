@@ -68,13 +68,13 @@ let wallet = {
 
 let edsk_secret_key = {
   let parser = key => {
-    switch (Tezos_interop.Secret.of_string(key)) {
+    switch (Crypto.Secret.of_string(key)) {
     | Some(key) => Ok(key)
     | _ => Error(`Msg("Expected EDSK secret key"))
     };
   };
   let printer = (ppf, key) => {
-    Format.fprintf(ppf, "%s", Tezos_interop.Secret.to_string(key));
+    Format.fprintf(ppf, "%s", Crypto.Secret.to_string(key));
   };
   Arg.(conv((parser, printer)));
 };

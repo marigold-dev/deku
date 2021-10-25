@@ -3,12 +3,11 @@ open Crypto;
 
 type key = Ed25519.Secret.t;
 
-let key_to_yojson = key =>
-  `String(Tezos_interop.Secret.to_string(Ed25519(key)));
+let key_to_yojson = key => `String(Crypto.Secret.to_string(Ed25519(key)));
 let key_of_yojson = json => {
   let.ok string = [%of_yojson: string](json);
   let.ok Ed25519(key) =
-    Tezos_interop.Secret.of_string(string)
+    Crypto.Secret.of_string(string)
     |> Option.to_result(~none="failed to parse");
   ok(key);
 };

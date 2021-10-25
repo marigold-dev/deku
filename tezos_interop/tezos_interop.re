@@ -93,21 +93,6 @@ module Key_hash = {
     try_decode_list([ed25519]);
   };
 };
-module Secret = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Secret.t);
-  let to_string =
-    fun
-    | Ed25519(secret) => Ed25519.Secret.to_string(secret);
-  let of_string = {
-    let ed25519 = string => {
-      let.some secret = Ed25519.Secret.of_string(string);
-      Some(Ed25519(secret));
-    };
-    try_decode_list([ed25519]);
-  };
-};
 module Contract_hash = {
   [@deriving eq]
   type t = BLAKE2B_20.t;

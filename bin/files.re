@@ -53,7 +53,7 @@ module Validators = {
 
 module Interop_context = {
   module Secret = {
-    include Tezos_interop.Secret;
+    include Crypto.Secret;
     let of_yojson =
       fun
       | `String(string) =>
