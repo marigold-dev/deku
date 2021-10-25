@@ -1,5 +1,4 @@
 open Crypto;
-open Helpers;
 
 [@deriving (ord, yojson)]
 type t;

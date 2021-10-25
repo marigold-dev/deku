@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 
 module Wallet_and_ticket_map = {
   [@deriving (ord, yojson)]
@@ -38,7 +39,7 @@ module Handle = {
   };
 };
 module Handle_tree =
-  Incremental_patricia.Make({
+  Crypto.Incremental_patricia.Make({
     [@deriving yojson]
     type t = Handle.t;
     let hash = t => t.Handle.hash;

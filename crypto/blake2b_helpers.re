@@ -1,4 +1,3 @@
-open Helpers;
 let blake2b_20_encoding =
   Data_encoding.(
     conv(

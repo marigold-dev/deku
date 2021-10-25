@@ -1,5 +1,5 @@
 open Setup;
-open Helpers;
+open Crypto;
 
 module M = {
   [@deriving yojson]
@@ -11,7 +11,7 @@ module M = {
   let make = key => {key, hash: BLAKE2B.hash(string_of_int(key))};
 };
 open M;
-open Incremental_patricia.Make(M);
+open Crypto.Incremental_patricia.Make(M);
 
 describe("incremental Patricia", ({test, _}) => {
   test("add and find", ({expect, _}) => {

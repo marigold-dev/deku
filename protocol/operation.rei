@@ -1,4 +1,4 @@
-open Helpers;
+open Crypto;
 module Main_chain: {
   [@deriving yojson]
   type kind =

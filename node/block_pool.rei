@@ -1,4 +1,4 @@
-open Helpers;
+open Crypto;
 open Protocol;
 
 type block_and_signatures =

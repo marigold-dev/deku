@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 
 module Key: {
   type t =
