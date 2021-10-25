@@ -340,8 +340,7 @@ let received_main_operation = (state, update_state, operation) => {
   | Deposit({ticket, amount, destination}) =>
     let.ok destination =
       switch (destination) {
-      | Tezos_interop.Address.Implicit(Ed25519(destination)) =>
-        Ok(Wallet.address_of_blake(destination))
+      | Implicit(destination) => Ok(Wallet.of_key_hash(destination))
       | _ => Error(`Invalid_address_on_main_operation)
       };
     let amount = Amount.of_int(Z.to_int(amount));

@@ -20,7 +20,9 @@ module type S = {
   };
   module Key_hash: {
     type t;
-    let hash_key: Key.t => t;
+
+    let of_key: Key.t => t;
+
     let encoding: Data_encoding.t(t);
     let equal: (t, t) => bool;
     let compare: (t, t) => int;

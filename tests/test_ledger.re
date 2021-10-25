@@ -36,8 +36,8 @@ describe("ledger", ({test, _}) => {
     open Crypto;
     open Tezos_interop;
     let (_key, address) = Ed25519.generate();
-    let hash = Ed25519.Key_hash.hash_key(address);
-    Address.Implicit(Key_hash.Ed25519(hash));
+    let hash = Ed25519.Key_hash.of_key(address);
+    Address.Implicit(Ed25519(hash));
   };
   let setup_two = () => {
     let t1 = make_ticket();

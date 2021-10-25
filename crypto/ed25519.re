@@ -54,7 +54,7 @@ module Key_hash = {
   [@deriving (ord, eq)]
   type t = BLAKE2B_20.t;
 
-  let hash_key = t =>
+  let of_key = t =>
     BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
 
   let encoding = {

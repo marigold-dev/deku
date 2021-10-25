@@ -6,3 +6,4 @@ module BLAKE2B_20 = BLAKE2B_20;
 module Random = Random;
 module Secret = Secret;
 module Key = Key;
+module Key_hash = Key_hash;
