@@ -1,3 +1,6 @@
+Random.self_init();
+Mirage_crypto_rng_unix.initialize();
+
 include Crypto_intf;
 
 module Base58 = Base58;
