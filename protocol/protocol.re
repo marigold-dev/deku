@@ -36,7 +36,7 @@ let apply_main_chain = (state, operation) => {
 let maximum_old_block_height_operation = 60L;
 let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
 
-let rec apply_side_chain = (state: t, operation) => {
+let apply_side_chain = (state: t, operation) => {
   open Operation.Side_chain;
   module Set = Operation_side_chain_set;
 
@@ -88,7 +88,7 @@ let rec apply_side_chain = (state: t, operation) => {
     let interpreted =
       Interpreter.(
         interpret_zinc(
-          {get_contract_opt: address => None},
+          {get_contract_opt: _address => None},
           initial_state(zinc),
         )
       );
