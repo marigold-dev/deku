@@ -36,7 +36,7 @@ let apply_main_chain = (state, operation) => {
 let maximum_old_block_height_operation = 60L;
 let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
 
-let apply_side_chain = (state: t, operation) => {
+let rec apply_side_chain = (state: t, operation) => {
   open Operation.Side_chain;
   module Set = Operation_side_chain_set;
 
@@ -85,7 +85,40 @@ let apply_side_chain = (state: t, operation) => {
         MakeTransaction,
         Return,
       ];
-    state;
+    let interpreted =
+      Interpreter.(
+        interpret_zinc(
+          {get_contract_opt: address => None},
+          initial_state(zinc),
+        )
+      );
+    switch (interpreted) {
+    | Success(
+        _,
+        [
+          `Z(
+            Extensions(
+              Operation(Transaction(amount, (destination, None))),
+            ),
+          ),
+          ..._,
+        ],
+      ) =>
+      let.ok ledger =
+        Ledger.transfer(
+          ~source,
+          ~destination=
+            destination
+            |> failwith(
+                 "what type to represent addresses with? ideally would be able to use it in zinc library",
+               ),
+          Amount.of_int(Z.to_int(amount)),
+          failwith("no idea what ticket to use"),
+          state.ledger,
+        );
+      Ok({...state, ledger});
+    | _ => Ok(state)
+    };
   };
   switch (operation.kind) {
   | Transaction({destination, amount, ticket}) =>
@@ -109,7 +142,9 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
-  | Invoke_contract => Ok((invoke_contract(), `Invoke_contract))
+  | Invoke_contract =>
+    let.ok ledger = invoke_contract();
+    Ok((ledger, `Invoke_contract));
   };
 };
 let apply_side_chain = (state, operation) =>
