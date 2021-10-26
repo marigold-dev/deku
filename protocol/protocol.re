@@ -106,6 +106,8 @@ let apply_side_chain = (state: t, operation) => {
       ) =>
       let.ok ledger =
         Ledger.transfer(
+          // should actually send from smart contract instead of from invoker's address
+          // just not sure yet how smart contract addresses should work
           ~source,
           ~destination=
             destination
