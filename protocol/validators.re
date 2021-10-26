@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (yojson, ord)]
@@ -35,8 +36,7 @@ let update_current = (address, t) => {
 
 let hash_validators = validators => {
   open Tezos_interop;
-  let keys =
-    validators |> List.map(validator => Key.Ed25519(validator.address));
+  let keys = validators |> List.map(validator => validator.address);
   Consensus.hash_validators(keys);
 };
 let empty = {

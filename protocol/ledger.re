@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 
 module Wallet_and_ticket_map = {
   [@deriving (ord, yojson)]

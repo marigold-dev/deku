@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 open Protocol;
 open Building_blocks;
 
@@ -339,8 +340,7 @@ let received_main_operation = (state, update_state, operation) => {
   | Deposit({ticket, amount, destination}) =>
     let.ok destination =
       switch (destination) {
-      | Tezos_interop.Address.Implicit(Ed25519(destination)) =>
-        Ok(Wallet.address_of_blake(destination))
+      | Implicit(destination) => Ok(Wallet.of_key_hash(destination))
       | _ => Error(`Invalid_address_on_main_operation)
       };
     let amount = Amount.of_int(Z.to_int(amount));
@@ -374,7 +374,7 @@ let find_block_level = state => {
 
 let request_nonce = (state, update_state, uri) => {
   // TODO: nonce size, think about this, 32 is just magic because of SHA256
-  let nonce = Mirage_crypto_rng.generate(32) |> Cstruct.to_string;
+  let nonce = Random.generate(32) |> Cstruct.to_string;
   let _state =
     update_state(
       Node.{

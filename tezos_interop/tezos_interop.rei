@@ -1,34 +1,9 @@
 open Helpers;
-
-module Key: {
-  type t =
-    | Ed25519(Crypto.Ed25519.Key.t);
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
-module Key_hash: {
-  type t =
-    | Ed25519(BLAKE2B_20.t);
-
-  let of_key: Key.t => t;
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
-module Secret: {
-  type t =
-    | Ed25519(Crypto.Ed25519.Secret.t);
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
+open Crypto;
 
 module Signature: {
   type t =
-    | Ed25519(Crypto.Ed25519.Signature.t);
+    | Ed25519(Ed25519.Signature.t);
 
   let equal: (t, t) => bool;
 

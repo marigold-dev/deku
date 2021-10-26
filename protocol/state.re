@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 
 module Operation_side_chain_set = Set.Make_with_yojson(Operation.Side_chain);
 module Operation_main_chain_set = Set.Make_with_yojson(Operation.Main_chain);

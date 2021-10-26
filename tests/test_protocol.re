@@ -4,11 +4,11 @@ open Protocol;
 
 describe("protocol state", ({test, _}) => {
   let ticket = {
-    open Tezos_interop;
+    open Crypto;
     let random_hash =
-      Mirage_crypto_rng.generate(20)
+      Random.generate(20)
       |> Cstruct.to_string
-      |> Helpers.BLAKE2B_20.of_raw_string
+      |> BLAKE2B_20.of_raw_string
       |> Option.get;
     Ticket.{
       ticketer: Originated({contract: random_hash, entrypoint: None}),
@@ -26,7 +26,7 @@ describe("protocol state", ({test, _}) => {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({address: Wallet.get_pub_key(key_wallet)});
+        |> Validators.add({address: Address.of_key(key_wallet)});
       validators;
     };
     let state = {...state, validators};

@@ -1,7 +1,7 @@
 open Mirage_crypto_ec;
 open Ed25519;
 open Helpers;
-open Blake2b_helpers;
+
 module Secret = {
   type t = priv;
   let equal = (a, b) => {
@@ -11,22 +11,24 @@ module Secret = {
   let compare = (a, b) =>
     Cstruct.compare(priv_to_cstruct(a), priv_to_cstruct(b));
 
-  let _size = 32;
-  let prefix = Base58.Prefix.ed25519_seed;
-  let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519.Secret_key";
+    let title = "An Ed25519 secret key";
 
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+    let size = 32;
+    let prefix = Base58.Prefix.ed25519_seed;
+
+    let to_raw = t => Cstruct.to_string(Ed25519.priv_to_cstruct(t));
+    let of_raw = string =>
+      Ed25519.priv_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  });
 };
 
 module Key = {
   type t = pub_;
 
   let of_secret = Ed25519.pub_of_priv;
-  let size = 32;
-  let prefix = Base58.Prefix.ed25519_public_key;
   let equal = (a, b) => {
     let (a, b) = (pub_to_cstruct(a), pub_to_cstruct(b));
     Cstruct.equal(a, b);
@@ -34,31 +36,31 @@ module Key = {
   let compare = (a, b) =>
     Cstruct.compare(pub_to_cstruct(a), pub_to_cstruct(b));
 
-  let encoding = {
-    // TODO: in tezos this is splitted json is not same as binary
-    let to_bytes = t => pub_to_cstruct(t) |> Cstruct.to_bytes;
-    let of_bytes_exn = b =>
-      Cstruct.of_bytes(b) |> pub_of_cstruct |> Result.get_ok;
-    Data_encoding.(conv(to_bytes, of_bytes_exn, Fixed.bytes(size)));
-  };
-  let to_raw = t => Cstruct.to_string(Ed25519.pub_to_cstruct(t));
-  let of_raw = string =>
-    Ed25519.pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519.Public_key";
+    let title = "Ed25519 public key";
+
+    let size = 32;
+    let prefix = Base58.Prefix.ed25519_public_key;
+
+    let to_raw = t => Cstruct.to_string(Ed25519.pub_to_cstruct(t));
+    let of_raw = string =>
+      Ed25519.pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
+  });
 };
 
 module Key_hash = {
   [@deriving (ord, eq)]
   type t = BLAKE2B_20.t;
 
-  let hash_key = t =>
+  let of_key = t =>
     BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
 
   let encoding = {
     let name = "Ed25519.Public_key_hash";
     // TODO: in tezos this is splitted json is not same as bin
-    Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+    Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
   };
 
   let prefix = Base58.Prefix.ed25519_public_key_hash;
@@ -72,12 +74,18 @@ module Signature = {
   [@deriving (ord, eq)]
   type t = string;
 
-  let size = 64;
-  let prefix = Base58.Prefix.ed25519_signature;
-  let to_raw = Fun.id;
-  let of_raw = string => String.length(string) == size ? Some(string) : None;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
+    let name = "Ed25519";
+    let title = "An Ed25519 signature";
+
+    let size = 64;
+    let prefix = Base58.Prefix.ed25519_signature;
+
+    let to_raw = Fun.id;
+    let of_raw = string =>
+      String.length(string) == size ? Some(string) : None;
+  });
 };
 
 let sign = (secret, message) => {

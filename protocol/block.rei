@@ -1,4 +1,4 @@
-open Helpers;
+open Crypto;
 open Operation;
 
 [@deriving (yojson, ord)]
@@ -16,7 +16,7 @@ type t =
     side_chain_ops: list(Side_chain.t),
   };
 
-let sign: (~key: Address.key, t) => Signature.t;
+let sign: (~key: Secret.t, t) => Signature.t;
 let verify: (~signature: Signature.t, t) => bool;
 let genesis: t;
 let produce:

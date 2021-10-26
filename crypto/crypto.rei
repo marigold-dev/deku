@@ -1,4 +1,9 @@
-open Helpers;
-let blake2b_20_encoding: Data_encoding.t(BLAKE2B_20.t);
-
-include Crypto_intf.Intf;
+module Base58 = Base58;
+module Ed25519 = Ed25519;
+module Incremental_patricia = Incremental_patricia;
+module BLAKE2B = BLAKE2B;
+module BLAKE2B_20 = BLAKE2B_20;
+module Random = Random;
+module Secret = Secret;
+module Key = Key;
+module Key_hash = Key_hash;

@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 open Node;
 open State;
 open Protocol;
@@ -67,13 +68,13 @@ let wallet = {
 
 let edsk_secret_key = {
   let parser = key => {
-    switch (Tezos_interop.Secret.of_string(key)) {
+    switch (Crypto.Secret.of_string(key)) {
     | Some(key) => Ok(key)
     | _ => Error(`Msg("Expected EDSK secret key"))
     };
   };
   let printer = (ppf, key) => {
-    Format.fprintf(ppf, "%s", Tezos_interop.Secret.to_string(key));
+    Format.fprintf(ppf, "%s", Crypto.Secret.to_string(key));
   };
   Arg.(conv((parser, printer)));
 };
@@ -88,18 +89,15 @@ let uri = {
 };
 
 let address = {
-  open Tezos_interop.Key_hash;
   let parser = string =>
-    Tezos_interop.Key_hash.of_string(string)
-    |> Option.map((Ed25519(hash)) => Wallet.address_of_blake(hash))
+    Key_hash.of_string(string)
+    |> Option.map(Wallet.of_key_hash)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
     Format.fprintf(
       fmt,
       "%s",
-      wallet
-      |> Wallet.address_to_blake
-      |> (hash => Ed25519(hash) |> Tezos_interop.Key_hash.to_string),
+      wallet |> Wallet.to_key_hash |> Key_hash.to_string,
     );
   Arg.(conv((parser, printer)));
 };
@@ -157,7 +155,7 @@ let info_create_wallet = {
 let create_wallet = () => {
   let (key, wallet) = Wallet.make_wallet();
 
-  let wallet_addr_str = Wallet.address_to_string(wallet);
+  let wallet_addr_str = Wallet.to_string(wallet);
   let file = make_filename_from_address(wallet_addr_str);
 
   let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
@@ -562,7 +560,7 @@ let setup_identity = (node_folder, uri) => {
 
   let identity = {
     let (key, t) = Crypto.Ed25519.generate();
-    {uri, t, key};
+    {uri, t: Ed25519(t), key: Ed25519(key)};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());
@@ -674,7 +672,7 @@ let self = node_folder => {
   Format.printf("key: %s\n", Address.to_string(identity.t));
   Format.printf(
     "address: %s\n",
-    Wallet.(of_address(identity.t) |> address_to_string),
+    Wallet.(of_address(identity.t) |> to_string),
   );
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());

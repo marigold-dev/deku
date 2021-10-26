@@ -1,5 +1,6 @@
 open Setup;
 open Helpers;
+open Crypto;
 open Protocol;
 open Ledger;
 
@@ -13,7 +14,7 @@ describe("ledger", ({test, _}) => {
       | Some(ticketer) => ticketer
       | None =>
         let random_hash =
-          Mirage_crypto_rng.generate(20)
+          Random.generate(20)
           |> Cstruct.to_string
           |> BLAKE2B_20.of_raw_string
           |> Option.get;
@@ -22,21 +23,21 @@ describe("ledger", ({test, _}) => {
     let data =
       switch (data) {
       | Some(data) => data
-      | None => Mirage_crypto_rng.generate(256) |> Cstruct.to_bytes
+      | None => Random.generate(256) |> Cstruct.to_bytes
       };
     Ticket.{ticketer, data};
   };
   let make_wallet = () => {
     open Crypto;
     let (_key, address) = Ed25519.generate();
-    Wallet.of_address(address);
+    Wallet.of_address(Ed25519(address));
   };
   let make_tezos_address = () => {
     open Crypto;
     open Tezos_interop;
     let (_key, address) = Ed25519.generate();
-    let hash = Ed25519.Key_hash.hash_key(address);
-    Address.Implicit(Key_hash.Ed25519(hash));
+    let hash = Ed25519.Key_hash.of_key(address);
+    Address.Implicit(Ed25519(hash));
   };
   let setup_two = () => {
     let t1 = make_ticket();

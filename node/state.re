@@ -1,9 +1,10 @@
 open Helpers;
+open Crypto;
 open Protocol;
 
 [@deriving yojson]
 type identity = {
-  key: Address.key,
+  key: Secret.t,
   t: Address.t,
   uri: Uri.t,
 };
@@ -92,18 +93,13 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let validators =
     state.protocol.validators
     |> Validators.to_list
-    |> List.map(validator =>
-         Tezos_interop.Key.Ed25519(validator.Validators.address)
-       );
+    |> List.map(validator => validator.Validators.address);
   let signatures =
     old_state.protocol.validators
     |> Validators.to_list
     |> List.map(validator => validator.Validators.address)
     |> List.map(address =>
-         (
-           Tezos_interop.Key.Ed25519(address),
-           Address_map.find_opt(address, signatures_map),
-         )
+         (address, Address_map.find_opt(address, signatures_map))
        );
 
   Lwt.async(() => {

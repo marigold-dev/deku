@@ -1,4 +1,4 @@
-open Helpers;
+open Crypto;
 module Main_chain: {
   [@deriving yojson]
   type kind =
@@ -67,7 +67,7 @@ module Side_chain: {
 
   let sign:
     (
-      ~secret: Address.key,
+      ~secret: Secret.t,
       ~nonce: int32,
       ~block_height: int64,
       ~source: Wallet.t,

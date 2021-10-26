@@ -1,5 +1,5 @@
-open Option_ext.Let_syntax;
-open Result_ext.Let_syntax;
+open Helpers;
+
 // TODO: this is bad, size shuold be a detail in a function
 module Make =
        (P: {let size: int;})
@@ -20,6 +20,8 @@ module Make =
          let both: (t, t) => t;
 
          module Map: Map.S with type key = t;
+
+         let encoding: Data_encoding.t(t);
        } => {
   include P;
   include Digestif.Make_BLAKE2B({
@@ -51,6 +53,16 @@ module Make =
       type nonrec t = t;
       let compare = compare;
     });
+
+  let encoding =
+    Data_encoding.(
+      conv(
+        hash => to_raw_string(hash),
+        // TODO: I don't like this exception below
+        string => string |> of_raw_string |> Option.get,
+        Fixed.string(size),
+      )
+    );
 };
 
 module BLAKE2B_20 =

@@ -1,3 +1,3 @@
 let with_yojson_string:
-  (string => result('a, string), 'b => string) =>
-  (Yojson.Safe.t => result('a, string), 'b => Yojson.Safe.t);
+  (string, 'a => string, string => option('a)) =>
+  ('a => Yojson.Safe.t, Yojson.Safe.t => result('a, string));

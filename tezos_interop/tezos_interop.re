@@ -11,111 +11,16 @@ let rec try_decode_list = (l, string) =>
   | [] => None
   };
 module Base58 = Base58;
-module Ed25519 = Crypto.Ed25519;
+module Ed25519 = Ed25519;
 
-module Key = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Key.t);
-
-  let name = "Signature.Public_key";
-  let title = "A Ed25519, Secp256k1, or P256 public key";
-  let encoding = {
-    open Data_encoding;
-    let raw_encoding =
-      def("public_key", ~description=title) @@
-      union([
-        case(
-          Tag(0),
-          Ed25519.Key.encoding,
-          ~title="Ed25519",
-          fun
-          | Ed25519(x) => Some(x),
-          x =>
-          Ed25519(x)
-        ),
-      ]);
-
-    // TODO: move this to a functor
-    obj1(req(name, raw_encoding));
-  };
-
-  let to_string =
-    fun
-    | Ed25519(key) => Ed25519.Key.to_string(key);
-  let of_string = {
-    let ed25519 = string => {
-      let.some key = Ed25519.Key.of_string(string);
-      Some(Ed25519(key));
-    };
-    try_decode_list([ed25519]);
-  };
-};
-
-module Key_hash = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Key_hash.t);
-
-  let name = "Signature.Public_key_hash";
-
-  let title = "A Ed25519, Secp256k1, or P256 public key hash";
-  let encoding = {
-    open Data_encoding;
-    let raw_encoding =
-      def("public_key_hash", ~description=title) @@
-      union([
-        case(
-          Tag(0),
-          Ed25519.Key_hash.encoding,
-          ~title="Ed25519",
-          fun
-          | Ed25519(x) => Some(x),
-          x =>
-          Ed25519(x)
-        ),
-      ]);
-    obj1(req(name, raw_encoding));
-  };
-
-  let of_key = t =>
-    switch (t) {
-    | Key.Ed25519(pub_) => Ed25519(Ed25519.Key_hash.hash_key(pub_))
-    };
-  let to_string =
-    fun
-    | Ed25519(hash) => Ed25519.Key_hash.to_string(hash);
-  let of_string = {
-    let ed25519 = string => {
-      let.some key = Ed25519.Key_hash.of_string(string);
-      Some(Ed25519(key));
-    };
-    try_decode_list([ed25519]);
-  };
-};
-module Secret = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Secret.t);
-  let to_string =
-    fun
-    | Ed25519(secret) => Ed25519.Secret.to_string(secret);
-  let of_string = {
-    let ed25519 = string => {
-      let.some secret = Ed25519.Secret.of_string(string);
-      Some(Ed25519(secret));
-    };
-    try_decode_list([ed25519]);
-  };
-};
 module Contract_hash = {
   [@deriving eq]
   type t = BLAKE2B_20.t;
   let name = "Contract_hash";
-  let encoding = Data_encoding.(obj1(req(name, blake2b_20_encoding)));
+  let encoding = Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
   let to_raw = BLAKE2B_20.to_raw_string;
   let of_raw = BLAKE2B_20.of_raw_string;
-  let prefix = Crypto.Base58.Prefix.contract_hash;
+  let prefix = Base58.Prefix.contract_hash;
   let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
   let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
 };
@@ -211,14 +116,8 @@ module Address = {
       )
     );
 
-  let with_yojson_string = (name, of_string, to_string) =>
-    Yojson_ext.with_yojson_string(
-      string =>
-        of_string(string) |> Option.to_result(~none="invalid " ++ name),
-      to_string,
-    );
-  let (of_yojson, to_yojson) =
-    with_yojson_string("address", of_string, to_string);
+  let (to_yojson, of_yojson) =
+    Yojson_ext.with_yojson_string("address", to_string, of_string);
 };
 
 module Signature = {

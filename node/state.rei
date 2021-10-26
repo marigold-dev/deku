@@ -1,9 +1,9 @@
-open Helpers;
+open Crypto;
 open Protocol;
 
 [@deriving yojson]
 type identity = {
-  key: Address.key,
+  key: Secret.t,
   t: Address.t,
   uri: Uri.t,
 };

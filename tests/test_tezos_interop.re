@@ -1,6 +1,7 @@
 open Setup;
 open Protocol;
 open Address;
+open Crypto;
 open Tezos_interop;
 
 // TODO: maybe fuzz testing or any other cool testing magic?
@@ -12,7 +13,7 @@ describe("key", ({test, _}) => {
 
   // TODO: test encoding
 
-  let edpk = Ed25519(genesis_address);
+  let edpk = genesis_address;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edpk)).toEqual(
       "edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6",
@@ -56,7 +57,7 @@ describe("key_hash", ({test, _}) => {
   open Key_hash;
 
   // TODO: proper test of_key
-  let tz1 = of_key(Ed25519(genesis_address));
+  let tz1 = of_key(genesis_address);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
@@ -81,7 +82,7 @@ describe("key_hash", ({test, _}) => {
 describe("secret", ({test, _}) => {
   open Secret;
 
-  let edsk = Ed25519(genesis_key);
+  let edsk = genesis_key;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edsk)).toEqual(
       "edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd",
@@ -118,8 +119,8 @@ describe("secret", ({test, _}) => {
 describe("signature", ({test, _}) => {
   open Signature;
 
-  let edpk = Key.Ed25519(genesis_address);
-  let edsk = Secret.Ed25519(genesis_key);
+  let edpk = genesis_address;
+  let edsk = genesis_key;
 
   // TODO: proper test for sign
   let edsig = sign(edsk, "tuturu");
@@ -132,7 +133,7 @@ describe("signature", ({test, _}) => {
   });
   test("invalid key", ({expect, _}) => {
     let (secret, key) = {
-      let (secret, key) = Crypto.Ed25519.generate();
+      let (secret, key) = Ed25519.generate();
       (Secret.Ed25519(secret), Key.Ed25519(key));
     };
     let edsig_from_key = sign(secret, "tuturu");
@@ -208,7 +209,7 @@ describe("contract_hash", ({test, _}) => {
 describe("address", ({test, _}) => {
   open Address;
 
-  let tz1 = Implicit(Key_hash.of_key(Ed25519(genesis_address)));
+  let tz1 = Implicit(Key_hash.of_key(genesis_address));
   let kt1 = Originated({contract: some_contract_hash, entrypoint: None});
   let kt1_tuturu =
     Originated({contract: some_contract_hash, entrypoint: Some("tuturu")});
@@ -366,17 +367,17 @@ describe("pack", ({test, _}) => {
   );
   test(
     "key(\"edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6\")",
-    key(Ed25519(genesis_address)),
+    key(genesis_address),
     "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
   );
   test(
     "key_hash(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    key_hash(Key_hash.of_key(Ed25519(genesis_address))),
+    key_hash(Key_hash.of_key(genesis_address)),
     "050a00000015000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
     "address(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    address(Implicit(Key_hash.of_key(Ed25519(genesis_address)))),
+    address(Implicit(Key_hash.of_key(genesis_address))),
     "050a0000001600000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
@@ -450,7 +451,7 @@ describe("consensus", ({test, _}) => {
 describe("discovery", ({test, _}) => {
   open Discovery;
 
-  let secret = Secret.Ed25519(genesis_key);
+  let secret = genesis_key;
   test("sign", ({expect, _}) => {
     let signature =
       sign(secret, ~nonce=1L, Uri.of_string("http://localhost"));
