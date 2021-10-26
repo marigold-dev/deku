@@ -1,5 +1,0 @@
-(test
- (name ligo_wrapper)
- (libraries base cmdliner)
- (preprocess
-  (pps ppx_inline_test)))

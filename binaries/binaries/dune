@@ -1,6 +1,0 @@
-(library
- (name binaries)
- (flags
-  (-w -40 -w +26))
- (public_name binaries)
- (libraries lwt lwt.unix stringext yojson zinc.types))

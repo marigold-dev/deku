@@ -8,7 +8,7 @@
 
 (executable
  (name sidecli)
- (libraries node files mirage-crypto-rng.unix helpers cmdliner binaries)
+ (libraries node files mirage-crypto-rng.unix helpers cmdliner)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess

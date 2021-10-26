@@ -1,6 +1,0 @@
-(executable
- (public_name ligo_wrapper)
- (name main)
- (libraries ligo_wrapper base cmdliner)
- (preprocess
-  (pps ppx_inline_test)))

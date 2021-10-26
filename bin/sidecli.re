@@ -447,7 +447,6 @@ let withdraw_proof = {
          (command, [|command, file|]),
          Yojson.Safe.to_string(input_to_yojson(input)),
        );
- */
 
 let info_tmp_for_testing = {
   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
@@ -466,6 +465,7 @@ let tmp_for_testing = () => {
 let tmp_for_testing_term = {
   Term.(lwt_ret(const(tmp_for_testing) $ const()));
 };
+ */
 
 // sign-block
 
@@ -791,7 +791,6 @@ let () = {
       (withdraw, info_withdraw),
       (withdraw_proof, info_withdraw_proof),
       (sign_block_term, info_sign_block),
-      (tmp_for_testing_term, info_tmp_for_testing),
       (produce_block, info_produce_block),
       (setup_identity, info_setup_identity),
       (setup_tezos, info_setup_tezos),

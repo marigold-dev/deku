@@ -65,10 +65,28 @@ let apply_side_chain = (state: t, operation) => {
     {...state, validators, last_seen_membership_change_timestamp};
   };
   let invoke_contract = () => {
-    let contract_code = Binaries.Ligo_wrapper.ligo_to_zinc("test.religo");
-    let contract_output = Binaries.Ligo_wrapper.interpret_zinc(([], [], []));
-    state
-  }
+    let zinc = Types.[
+          Address ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
+          Grab,
+          Access (0),
+          Contract_opt,
+          Grab,
+          Access (9),
+          MatchVariant
+            ([
+              (Label( "Some"), [ Grab, Access (0) ]),
+              (Label ("None"), [ Grab, String ("Not a contract"), Failwith ]),
+            ]),
+          EndLet,
+          Grab,
+          Access (0),
+          Mutez (Z.of_int (10)),
+          MakeRecord ([]),
+          MakeTransaction,
+          Return,
+        ]
+    state;
+  };
   switch (operation.kind) {
   | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
@@ -91,7 +109,7 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
-  | Invoke_contract => Ok((invoke_contract(), `Invoke_contract));
+  | Invoke_contract => Ok((invoke_contract(), `Invoke_contract))
   };
 };
 let apply_side_chain = (state, operation) =>
