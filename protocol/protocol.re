@@ -65,26 +65,26 @@ let apply_side_chain = (state: t, operation) => {
     {...state, validators, last_seen_membership_change_timestamp};
   };
   let invoke_contract = () => {
-    let zinc = Types.[
-          Address ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
-          Grab,
-          Access (0),
-          Contract_opt,
-          Grab,
-          Access (9),
-          MatchVariant
-            ([
-              (Label( "Some"), [ Grab, Access (0) ]),
-              (Label ("None"), [ Grab, String ("Not a contract"), Failwith ]),
-            ]),
-          EndLet,
-          Grab,
-          Access (0),
-          Mutez (Z.of_int (10)),
-          MakeRecord ([]),
-          MakeTransaction,
-          Return,
-        ]
+    let zinc =
+      Types.[
+        Address("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
+        Grab,
+        Access(0),
+        Contract_opt,
+        Grab,
+        Access(9),
+        MatchVariant([
+          (Label("Some"), [Grab, Access(0)]),
+          (Label("None"), [Grab, String("Not a contract"), Failwith]),
+        ]),
+        EndLet,
+        Grab,
+        Access(0),
+        Mutez(Z.of_int(10)),
+        MakeRecord([]),
+        MakeTransaction,
+        Return,
+      ];
     state;
   };
   switch (operation.kind) {
