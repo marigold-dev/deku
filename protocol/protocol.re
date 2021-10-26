@@ -64,6 +64,64 @@ let apply_side_chain = (state: t, operation) => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
+  let invoke_contract = () => {
+    let zinc =
+      Types.[
+        Address("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
+        Grab,
+        Access(0),
+        Contract_opt,
+        Grab,
+        Access(9),
+        MatchVariant([
+          (Label("Some"), [Grab, Access(0)]),
+          (Label("None"), [Grab, String("Not a contract"), Failwith]),
+        ]),
+        EndLet,
+        Grab,
+        Access(0),
+        Mutez(Z.of_int(10)),
+        MakeRecord([]),
+        MakeTransaction,
+        Return,
+      ];
+    let interpreted =
+      Interpreter.(
+        interpret_zinc(
+          {get_contract_opt: _address => None},
+          initial_state(zinc),
+        )
+      );
+    switch (interpreted) {
+    | Success(
+        _,
+        [
+          `Z(
+            Extensions(
+              Operation(Transaction(amount, (destination, None))),
+            ),
+          ),
+          ..._,
+        ],
+      ) =>
+      switch (destination |> Wallet.of_string) {
+      | Some(destination) =>
+        let.ok ledger =
+          Ledger.transfer(
+            // should actually send from smart contract instead of from invoker's address
+            // just not sure yet how smart contract addresses should work
+            ~source,
+            ~destination,
+            Amount.of_int(Z.to_int(amount)),
+            failwith("no idea what ticket to use"),
+            state.ledger,
+          );
+        Ok({...state, ledger});
+      | None => Ok(state)
+      }
+    | _ => Ok(state)
+    };
+  };
   switch (operation.kind) {
   | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
@@ -86,6 +144,9 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
+  | Invoke_contract =>
+    let.ok ledger = invoke_contract();
+    Ok((ledger, `Invoke_contract));
   };
 };
 let apply_side_chain = (state, operation) =>

@@ -1,5 +1,5 @@
 (library
  (name protocol)
- (libraries helpers tezos_interop)
+ (libraries zinc.types zinc.interpreter helpers tezos_interop)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord)))
