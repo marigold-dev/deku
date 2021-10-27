@@ -155,22 +155,19 @@ let clean = (state, update_state, block) => {
 
   let trusted_validator_membership_change =
     List.fold_left(
-      (
-        acc_trusted_validator_membership_change,
-        operation: Operation.Side_chain.t,
-      ) => {
+      (trusted_validator_membership_change, operation) => {
         switch (operation.Operation.Side_chain.kind) {
         | Add_validator(validator) =>
           Trusted_validators_membership_change.Set.remove(
             {address: validator.address, action: Add},
-            acc_trusted_validator_membership_change,
+            trusted_validator_membership_change,
           )
         | Remove_validator(validator) =>
           Trusted_validators_membership_change.Set.remove(
             {address: validator.address, action: Remove},
             state.Node.trusted_validator_membership_change,
           )
-        | _ => acc_trusted_validator_membership_change
+        | _ => trusted_validator_membership_change
         }
       },
       state.Node.trusted_validator_membership_change,
