@@ -66,7 +66,7 @@ let apply_side_chain = (state: t, operation) => {
   };
   let invoke_contract = () => {
     let zinc =
-      Types.[
+      Zinc_types.[
         Address("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
         Grab,
         Access(0),
@@ -86,7 +86,7 @@ let apply_side_chain = (state: t, operation) => {
         Return,
       ];
     let interpreted =
-      Interpreter.(
+      Zinc_interpreter.(
         interpret_zinc(
           {get_contract_opt: _address => None},
           initial_state(zinc),

@@ -17,7 +17,7 @@ depends: [
   "dune" {>= "2.6"}
   "dune-configurator" {>= "2.0.0"}
   "duration"
-  "cstruct" {>= "4.0.0"}
+  "cstruct" {>= "6.0.0"}
   "logs"
   "mirage-crypto" {=version}
   "ounit" {with-test}
@@ -32,12 +32,12 @@ Mirage-crypto-rng provides a random number generator interface, and
 implementations: Fortuna, HMAC-DRBG, getrandom/getentropy based (in the unix
 sublibrary)
 """
-x-commit-hash: "e5d38d9c3777ce7821ae208087315e76a3a246d9"
 url {
   src:
-    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.3/mirage-crypto-v0.10.3.tbz"
+    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.4/mirage-crypto-v0.10.4.tbz"
   checksum: [
-    "sha256=a27910365d59b02c3f0e8a40d93a5b81835acf832e1ffa596ee772b41e8a900b"
-    "sha512=eb0d5a947649d6d9d55b8f5d5ea624e7b2b969baf7b855bf86b46cfadf9312e42e9caea479eb9c364a3c9cd4b3aa56f3a6a1b0cc20e022fdbd82bdb722df1198"
+    "sha256=bfd023232b596e2d88b0603c1b234fea2319f86111ae6413d227cf2b555eeefb"
+    "sha512=a5b615ca361f50b4f6b2238e8103d6e23c9d5ba52276a743159ca32458a29fca7858944be642c0670cc067b6a3d09f4160ffecb9d34253462a8359f0e8091075"
   ]
 }
+x-commit-hash: "4c48711a8cb37c8e7b78b4520d9d998388572669"
