@@ -84,7 +84,7 @@ module State_bin = {
 
 module Trusted_validators_membership_change = {
   [@deriving yojson]
-  type t = Node.Trusted_validators_membership_change.t;
+  type t = Trusted_validators_membership_change.t;
 
   let read = read_json([%of_yojson: list(t)]);
   let write = write_json([%to_yojson: list(t)]);

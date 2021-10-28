@@ -10,6 +10,7 @@ type identity = {
 
 module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
+
 type t = {
   identity,
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
@@ -32,12 +33,18 @@ type t = {
         | `Withdraw(Ledger.Handle.t)
       ],
     ),
+  persist_trusted_membership_change:
+    list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
 
 let make:
   (
     ~identity: identity,
     ~trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
+    ~persist_trusted_membership_change: list(
+                                          Trusted_validators_membership_change.t,
+                                        ) =>
+                                        Lwt.t(unit),
     ~interop_context: Tezos_interop.Context.t,
     ~data_folder: string,
     ~initial_validators_uri: Address_map.t(Uri.t)
