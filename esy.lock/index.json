@@ -1,5 +1,5 @@
 {
-  "checksum": "4363d390aaae7920a11fc233c1e9c4e9",
+  "checksum": "2f8862bd4e1c8d2ff36fb54e98071ed4",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yocto-queue@0.1.0@d41d8cd9": {
@@ -463,7 +463,7 @@
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@taquito/taquito@9.2.0@d41d8cd9", "@taquito/signer@9.2.0@d41d8cd9",
         "@taquito/rpc@9.2.0@d41d8cd9",
-        "@opam/zinc@github:anchpop/zinc_types#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9",
+        "@opam/zinc@github:marigold-dev/zinc#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9",
         "@opam/tezos-micheline@opam:8.3@3d86363d",
         "@opam/secp256k1-internal@opam:0.2.0@54945e35",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
@@ -2005,14 +2005,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.3.882@d41d8cd9": {
-      "id": "electron-to-chromium@1.3.882@d41d8cd9",
+    "electron-to-chromium@1.3.884@d41d8cd9": {
+      "id": "electron-to-chromium@1.3.884@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.3.882",
+      "version": "1.3.884",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.882.tgz#sha1:ec57bb0c3a97f0ddfe6e39c5a9655ea9566b2db6"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.3.884.tgz#sha1:0cd8c3a80271fd84a81f284c60fb3c9ecb33c166"
         ]
       },
       "overrides": [],
@@ -2366,7 +2366,7 @@
       "overrides": [],
       "dependencies": [
         "picocolors@1.0.0@d41d8cd9", "node-releases@2.0.1@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.882@d41d8cd9",
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.3.884@d41d8cd9",
         "caniuse-lite@1.0.30001272@d41d8cd9"
       ],
       "devDependencies": []
@@ -3285,16 +3285,16 @@
       ],
       "devDependencies": []
     },
-    "@opam/zinc@github:anchpop/zinc_types#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9": {
+    "@opam/zinc@github:marigold-dev/zinc#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9": {
       "id":
-        "@opam/zinc@github:anchpop/zinc_types#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9",
+        "@opam/zinc@github:marigold-dev/zinc#fa4880e0ced4b0d3c05476e01125689307fc9776@d41d8cd9",
       "name": "@opam/zinc",
       "version":
-        "github:anchpop/zinc_types#fa4880e0ced4b0d3c05476e01125689307fc9776",
+        "github:marigold-dev/zinc#fa4880e0ced4b0d3c05476e01125689307fc9776",
       "source": {
         "type": "install",
         "source": [
-          "github:anchpop/zinc_types#fa4880e0ced4b0d3c05476e01125689307fc9776"
+          "github:marigold-dev/zinc#fa4880e0ced4b0d3c05476e01125689307fc9776"
         ]
       },
       "overrides": [],
@@ -5972,7 +5972,7 @@
         "@opam/stdlib-shims@opam:0.3.0@0d088929",
         "@opam/macaddr@opam:5.2.0@e4a1c0db",
         "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/domain-name@opam:0.3.0@46ccc517",
+        "@opam/domain-name@opam:0.3.1@63e857ee",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -5980,7 +5980,7 @@
         "@opam/stdlib-shims@opam:0.3.0@0d088929",
         "@opam/macaddr@opam:5.2.0@e4a1c0db",
         "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/domain-name@opam:0.3.0@46ccc517"
+        "@opam/domain-name@opam:0.3.1@63e857ee"
       ]
     },
     "@opam/httpaf-lwt-unix@github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd@d41d8cd9": {
@@ -6688,33 +6688,30 @@
         "@opam/base-domains@no-source:@7514068f"
       ]
     },
-    "@opam/domain-name@opam:0.3.0@46ccc517": {
-      "id": "@opam/domain-name@opam:0.3.0@46ccc517",
+    "@opam/domain-name@opam:0.3.1@63e857ee": {
+      "id": "@opam/domain-name@opam:0.3.1@63e857ee",
       "name": "@opam/domain-name",
-      "version": "opam:0.3.0",
+      "version": "opam:0.3.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/4d/4dd9ed1bc619886d1adcaff14edfb503dedb77fc0b7a28d88d213aa1c44d6c8a#sha256:4dd9ed1bc619886d1adcaff14edfb503dedb77fc0b7a28d88d213aa1c44d6c8a",
-          "archive:https://github.com/hannesm/domain-name/releases/download/v0.3.0/domain-name-v0.3.0.tbz#sha256:4dd9ed1bc619886d1adcaff14edfb503dedb77fc0b7a28d88d213aa1c44d6c8a"
+          "archive:https://opam.ocaml.org/cache/sha256/73/73d5d4b64fd7b5350d7d886edc81452b571361ee1997a86cfc0c90a0c0e8f64a#sha256:73d5d4b64fd7b5350d7d886edc81452b571361ee1997a86cfc0c90a0c0e8f64a",
+          "archive:https://github.com/hannesm/domain-name/releases/download/v0.3.1/domain-name-v0.3.1.tbz#sha256:73d5d4b64fd7b5350d7d886edc81452b571361ee1997a86cfc0c90a0c0e8f64a"
         ],
         "opam": {
           "name": "domain-name",
-          "version": "0.3.0",
-          "path": "esy.lock/opam/domain-name.0.3.0"
+          "version": "0.3.1",
+          "path": "esy.lock/opam/domain-name.0.3.1"
         }
       },
       "overrides": [],
       "dependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
-        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/astring@opam:0.8.5@1300cee8",
-        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+        "@opam/dune@opam:2.9.1@1e504822", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
-        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/astring@opam:0.8.5@1300cee8"
+        "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
     "@opam/digestif@opam:1.1.0@a8d16625": {
