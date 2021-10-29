@@ -570,7 +570,7 @@ let setup_tezos = (node_folder, rpc_node, secret, consensus_contract) => {
       rpc_node,
       secret,
       consensus_contract,
-      required_confirmations: 10,
+      required_confirmations: 1,
     };
   let.await () = write_interop_context(~node_folder, context);
 
