@@ -10,8 +10,6 @@ let rec try_decode_list = (l, string) =>
     }
   | [] => None
   };
-module Base58 = Base58;
-module Ed25519 = Ed25519;
 
 module Contract_hash = {
   [@deriving eq]

@@ -1,6 +1,7 @@
 [@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Signature.t);
+  | Ed25519(Ed25519.Signature.t)
+  | Secp256k1(Secp256k1.Signature.t);
 
 let sign: (Secret.t, string) => t;
 let verify: (Key.t, t, string) => bool;
