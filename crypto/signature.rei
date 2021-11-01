@@ -1,10 +1,10 @@
 [@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Key.t);
+  | Ed25519(Ed25519.Signature.t);
 
-let of_secret: Secret.t => t;
+let sign: (Secret.t, string) => t;
+let verify: (Key.t, t, string) => bool;
 
-let encoding: Data_encoding.t(t);
 let to_string: t => string;
 let of_string: string => option(t);
 

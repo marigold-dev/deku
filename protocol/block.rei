@@ -16,8 +16,8 @@ type t =
     side_chain_ops: list(Side_chain.t),
   };
 
-let sign: (~key: Secret.t, t) => Signature.t;
-let verify: (~signature: Signature.t, t) => bool;
+let sign: (~key: Secret.t, t) => Protocol_signature.t;
+let verify: (~signature: Protocol_signature.t, t) => bool;
 let genesis: t;
 let produce:
   (

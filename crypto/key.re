@@ -4,6 +4,9 @@ open Helpers;
 type t =
   | Ed25519(Ed25519.Key.t);
 
+let of_secret = (Secret.Ed25519(secret)) =>
+  Ed25519(Ed25519.Key.of_secret(secret));
+
 let to_string =
   fun
   | Ed25519(key) => Ed25519.Key.to_string(key);

@@ -184,7 +184,7 @@ let produce = (~state) => {
 };
 
 // TODO: this shouldn't be an open
-open Signature.Make({
+open Protocol_signature.Make({
        type nonrec t = t;
        let hash = t => t.hash;
      });
