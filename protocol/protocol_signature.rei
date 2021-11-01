@@ -10,8 +10,7 @@ let verify: (~signature: t, BLAKE2B.t) => bool;
 
 let signature_to_b58check: t => string;
 let signature_to_b58check_by_address: t => (Address.t, string);
-let signature_to_tezos_signature_by_address:
-  t => (Address.t, Tezos_interop.Signature.t);
+let signature_to_signature_by_address: t => (Address.t, Signature.t);
 
 module type S = {
   type value;

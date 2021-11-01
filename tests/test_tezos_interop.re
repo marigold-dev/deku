@@ -126,10 +126,10 @@ describe("signature", ({test, _}) => {
   let edsig = sign(edsk, "tuturu");
 
   test("check", ({expect, _}) => {
-    expect.bool(check(edpk, edsig, "tuturu")).toBeTrue()
+    expect.bool(verify(edpk, edsig, "tuturu")).toBeTrue()
   });
   test("invalid message", ({expect, _}) => {
-    expect.bool(check(edpk, edsig, "tuturu2")).toBeFalse()
+    expect.bool(verify(edpk, edsig, "tuturu2")).toBeFalse()
   });
   test("invalid key", ({expect, _}) => {
     let (secret, key) = {
@@ -137,8 +137,8 @@ describe("signature", ({test, _}) => {
       (Secret.Ed25519(secret), Key.Ed25519(key));
     };
     let edsig_from_key = sign(secret, "tuturu");
-    expect.bool(check(key, edsig_from_key, "tuturu")).toBeTrue();
-    expect.bool(check(edpk, edsig_from_key, "tuturu")).toBeFalse();
+    expect.bool(verify(key, edsig_from_key, "tuturu")).toBeTrue();
+    expect.bool(verify(edpk, edsig_from_key, "tuturu")).toBeFalse();
   });
 
   test("to_string", ({expect, _}) => {

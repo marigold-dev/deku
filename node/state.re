@@ -89,7 +89,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let signatures_map =
     signatures
     |> Signatures.to_list
-    |> List.map(Signature.signature_to_tezos_signature_by_address)
+    |> List.map(Signature.signature_to_signature_by_address)
     |> List.to_seq
     |> Address_map.of_seq;
 
