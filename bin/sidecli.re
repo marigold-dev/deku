@@ -438,33 +438,6 @@ let withdraw_proof = {
   );
 };
 
-// to remove
-/*
-      let.await output =
-        Lwt_process.pmap(
-          (command, [|command, file|]),
-          Yojson.Safe.to_string(input_to_yojson(input)),
-        );
-
- let info_tmp_for_testing = {
-   let doc = "Sign a block hash and broadcast to the network manually, useful when the chain is stale.";
-   Term.info("tmp", ~version="%‌%VERSION%%", ~doc, ~exits, ~man);
- };
- let tmp_for_testing = () => {
-   let.await hello_msg = Binaries.Ligo_wrapper.call("test.religo");
-   switch (hello_msg) {
-   | Ok(_) => print_endline("ok!")
-   | Error(msg) =>
-     print_endline("error!");
-     print_string(msg);
-   };
-   Lwt.return(`Ok());
- };
- let tmp_for_testing_term = {
-   Term.(lwt_ret(const(tmp_for_testing) $ const()));
- };
-  */
-
 // sign-block
 
 let info_sign_block = {
