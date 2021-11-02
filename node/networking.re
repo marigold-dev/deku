@@ -194,7 +194,7 @@ module Trusted_validators_membership_change = {
   [@deriving yojson]
   type payload = {
     action,
-    address: Wallet.t,
+    address: Address.t,
   };
   [@deriving yojson]
   type request = {
