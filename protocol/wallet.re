@@ -2,11 +2,6 @@ open Crypto;
 
 type t = Key.t;
 
-let make_pubkey = () => {
-  let (_priv, pub_) = Ed25519.generate();
-  Key.Ed25519(pub_);
-};
-
 let compare = Key.compare;
 let to_string = Key.to_string;
 let of_string = Key.of_string;
