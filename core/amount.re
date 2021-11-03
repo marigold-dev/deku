@@ -1,4 +1,4 @@
-[@deriving ord]
+[@deriving (eq, ord)]
 type t = int;
 
 let zero = 0;
