@@ -11,7 +11,7 @@ module Identity: {
 
 module Wallet: {
   type t = {
-    address: Wallet.t,
+    address: Address.t,
     priv_key: Crypto.Secret.t,
   };
   let read: (~file: string) => Lwt.t(t);

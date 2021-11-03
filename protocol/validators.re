@@ -3,7 +3,7 @@ open Crypto;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (yojson, ord)]
-type validator = {address: Address.t};
+type validator = {address: Wallet.t};
 
 [@deriving yojson]
 type t = {

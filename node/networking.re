@@ -178,7 +178,7 @@ module Withdraw_proof = {
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
-    address: Wallet.t,
+    address: Address.t,
     ticket: Ticket.t,
   };
   [@deriving yojson]
@@ -194,7 +194,7 @@ module Trusted_validators_membership_change = {
   [@deriving yojson]
   type payload = {
     action,
-    address: Address.t,
+    address: Wallet.t,
   };
   [@deriving yojson]
   type request = {

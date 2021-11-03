@@ -4,7 +4,7 @@ open Crypto;
 type t = {
   // TODO: what is the name of a signature?
   signature: Signature.t,
-  public_key: Address.t,
+  public_key: Wallet.t,
 };
 let public_key = t => t.public_key;
 let sign = (~key as secret, hash) => {

@@ -1,10 +1,10 @@
 open Helpers;
 open Crypto;
 
-module Wallet_and_ticket_map = {
+module Address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
-    address: Wallet.t,
+    address: Address.t,
     ticket: Ticket.t,
   };
   module Map =
@@ -46,14 +46,17 @@ module Handle_tree =
   });
 [@deriving yojson]
 type t = {
-  ledger: Wallet_and_ticket_map.t,
+  ledger: Address_and_ticket_map.t,
   handles: Handle_tree.t,
 };
 
-let empty = {ledger: Wallet_and_ticket_map.empty, handles: Handle_tree.empty};
+let empty = {
+  ledger: Address_and_ticket_map.empty,
+  handles: Handle_tree.empty,
+};
 
 let balance = (address, ticket, t) =>
-  Wallet_and_ticket_map.find_opt(address, ticket, t.ledger)
+  Address_and_ticket_map.find_opt(address, ticket, t.ledger)
   |> Option.value(~default=Amount.zero);
 
 let assert_available = (~source, ~amount: Amount.t) =>
@@ -74,8 +77,8 @@ let transfer = (~source, ~destination, amount, ticket, t) => {
   Ok({
     ledger:
       t.ledger
-      |> Wallet_and_ticket_map.add(source, ticket, source_balance - amount)
-      |> Wallet_and_ticket_map.add(
+      |> Address_and_ticket_map.add(source, ticket, source_balance - amount)
+      |> Address_and_ticket_map.add(
            destination,
            ticket,
            destination_balance + amount,
@@ -91,7 +94,7 @@ let deposit = (destination, amount, ticket, t) => {
   {
     ledger:
       t.ledger
-      |> Wallet_and_ticket_map.add(
+      |> Address_and_ticket_map.add(
            destination,
            ticket,
            destination_balance + amount,
@@ -116,7 +119,7 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
   let t = {
     ledger:
       t.ledger
-      |> Wallet_and_ticket_map.add(source, ticket, source_balance - amount),
+      |> Address_and_ticket_map.add(source, ticket, source_balance - amount),
     handles,
   };
   Ok((t, handle));

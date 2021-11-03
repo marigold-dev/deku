@@ -8,7 +8,7 @@ module Signature_set =
   });
 // TODO: what if I think it is signed, but other nodes disagree on this?
 type t = {
-  self_key: Address.t,
+  self_key: Wallet.t,
   self_signed: bool,
   signed: bool,
   length: int,

@@ -27,11 +27,7 @@ describe("ledger", ({test, _}) => {
       };
     Ticket.{ticketer, data};
   };
-  let make_wallet = () => {
-    open Crypto;
-    let (_key, address) = Ed25519.generate();
-    Wallet.of_address(Ed25519(address));
-  };
+  let make_address = () => snd(Address.make());
   let make_tezos_address = () => {
     open Crypto;
     open Tezos_interop;
@@ -43,8 +39,8 @@ describe("ledger", ({test, _}) => {
     let t1 = make_ticket();
     let t2 = make_ticket();
 
-    let a = make_wallet();
-    let b = make_wallet();
+    let a = make_address();
+    let b = make_address();
     let t =
       empty
       |> deposit(a, Amount.of_int(100), t1)
@@ -73,14 +69,14 @@ describe("ledger", ({test, _}) => {
     expect_balance(b, t1, 200, t);
     expect_balance(b, t2, 400, t);
 
-    expect_balance(make_wallet(), t1, 0, t);
-    expect_balance(make_wallet(), t2, 0, t);
+    expect_balance(make_address(), t1, 0, t);
+    expect_balance(make_address(), t2, 0, t);
     expect_balance(a, make_ticket(), 0, t);
     expect_balance(b, make_ticket(), 0, t);
   });
   test("transfer", (expect, expect_balance) => {
     let (t, (t1, t2), (a, b)) = setup_two();
-    let c = make_wallet();
+    let c = make_address();
 
     let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1, t);
     expect.result(t).toBeOk();
@@ -128,7 +124,7 @@ describe("ledger", ({test, _}) => {
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
     {
-      let d = make_wallet();
+      let d = make_address();
       let t = transfer(~source=d, ~destination=c, Amount.of_int(1), t2, t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
@@ -202,7 +198,7 @@ describe("ledger", ({test, _}) => {
       expect.result(t).toBeError();
     };
     {
-      let c = make_wallet();
+      let c = make_address();
 
       let t = withdraw(~source=c, ~destination, Amount.of_int(1), t1, t);
       expect.result(t).toBeError();

@@ -91,13 +91,13 @@ let uri = {
 let address = {
   let parser = string =>
     Key_hash.of_string(string)
-    |> Option.map(Wallet.of_key_hash)
+    |> Option.map(Address.of_key_hash)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
     Format.fprintf(
       fmt,
       "%s",
-      wallet |> Wallet.to_key_hash |> Key_hash.to_string,
+      wallet |> Address.to_key_hash |> Key_hash.to_string,
     );
   Arg.(conv((parser, printer)));
 };
@@ -153,12 +153,12 @@ let info_create_wallet = {
 };
 
 let create_wallet = () => {
-  let (key, wallet) = Wallet.make_wallet();
+  let (key, address) = Address.make();
 
-  let wallet_addr_str = Wallet.to_string(wallet);
-  let file = make_filename_from_address(wallet_addr_str);
+  let address_string = Address.to_string(address);
+  let file = make_filename_from_address(address_string);
 
-  let.await () = Files.Wallet.write({priv_key: key, address: wallet}, ~file);
+  let.await () = Files.Wallet.write({priv_key: key, address}, ~file);
   await(`Ok());
 };
 
@@ -482,7 +482,7 @@ let info_produce_block = {
 let produce_block = node_folder => {
   let.await identity = read_identity(~node_folder);
   let.await state = read_state(~node_folder);
-  let address = Address.of_key(identity.key);
+  let address = Wallet.of_key(identity.key);
   let block =
     Block.produce(
       ~state,
@@ -642,10 +642,10 @@ let info_self = {
 };
 let self = node_folder => {
   let.await identity = read_identity(~node_folder);
-  Format.printf("key: %s\n", Address.to_string(identity.t));
+  Format.printf("key: %s\n", Wallet.to_string(identity.t));
   Format.printf(
     "address: %s\n",
-    Wallet.(of_address(identity.t) |> to_string),
+    Address.(of_wallet(identity.t) |> to_string),
   );
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());
@@ -692,10 +692,10 @@ let add_trusted_validator = (node_folder, address) => {
 let address_t = {
   let parser = string =>
     string
-    |> Protocol.Address.of_string
+    |> Protocol.Wallet.of_string
     |> Option.to_result(~none=`Msg("Expected a validator address."));
   let printer = (fmt, address) =>
-    Format.fprintf(fmt, "%s", Protocol.Address.to_string(address));
+    Format.fprintf(fmt, "%s", Protocol.Wallet.to_string(address));
   Arg.(conv((parser, printer)));
 };
 

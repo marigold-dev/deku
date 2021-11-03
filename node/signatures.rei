@@ -2,7 +2,7 @@ open Protocol;
 
 type t;
 // self_key should be the node public key
-let make: (~self_key: Address.t) => t;
+let make: (~self_key: Wallet.t) => t;
 let is_self_signed: t => bool;
 let is_signed: t => bool;
 let set_signed: t => t;

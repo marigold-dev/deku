@@ -10,7 +10,7 @@ type t =
     handles_hash: BLAKE2B.t,
     validators_hash: BLAKE2B.t,
     previous_hash: BLAKE2B.t,
-    author: Address.t,
+    author: Wallet.t,
     block_height: int64,
     main_chain_ops: list(Main_chain.t),
     side_chain_ops: list(Side_chain.t),
@@ -22,7 +22,7 @@ let genesis: t;
 let produce:
   (
     ~state: State.t,
-    ~author: Address.t,
+    ~author: Wallet.t,
     ~main_chain_ops: list(Main_chain.t),
     ~side_chain_ops: list(Side_chain.t)
   ) =>
