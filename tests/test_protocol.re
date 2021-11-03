@@ -1,6 +1,7 @@
 [@warning "-26"];
 open Setup;
 open Protocol;
+open Core;
 
 describe("protocol state", ({test, _}) => {
   let ticket = {
