@@ -23,7 +23,8 @@ module Key = {
       Libsecp256k1.Key.buffer(b),
     );
   let of_secret = sk => Libsecp256k1.Key.neuterize_exn(context, sk);
-  let to_raw = t => Key.to_bytes(context, t) |> Bigstring.to_string;
+  let to_raw = t =>
+    Libsecp256k1.Key.to_bytes(context, t) |> Bigstring.to_string;
   include Encoding_helpers.Make_b58({
     type nonrec t = t;
     let name = "Secp256k1.Public_key";
@@ -36,7 +37,7 @@ module Key = {
     let of_raw = string =>
       string
       |> Bigstring.of_string
-      |> Key.read_pk(context)
+      |> Libsecp256k1.Key.read_pk(context)
       |> Result.to_option;
   });
 };

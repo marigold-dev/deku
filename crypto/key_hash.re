@@ -1,18 +1,28 @@
 open Helpers;
+
 [@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Key_hash.t);
+  | Ed25519(Ed25519.Key_hash.t)
+  | Secp256k1(Secp256k1.Key_hash.t);
 
-let of_key = (Key.Ed25519(key)) => Ed25519(Ed25519.Key_hash.of_key(key));
+let of_key =
+  fun
+  | Key.Ed25519(key) => Ed25519(Ed25519.Key_hash.of_key(key))
+  | Key.Secp256k1(key) => Secp256k1(Secp256k1.Key_hash.of_key(key));
 let to_string =
   fun
-  | Ed25519(key_hash) => Ed25519.Key_hash.to_string(key_hash);
+  | Ed25519(key_hash) => Ed25519.Key_hash.to_string(key_hash)
+  | Secp256k1(key_hash) => Secp256k1.Key_hash.to_string(key_hash);
 let of_string = {
   let ed25519 = string => {
     let.some key_hash = Ed25519.Key_hash.of_string(string);
     Some(Ed25519(key_hash));
   };
-  Encoding_helpers.parse_string_variant([ed25519]);
+  let secp256k1 = string => {
+    let.some key = Secp256k1.Key_hash.of_string(string);
+    Some(Secp256k1(key));
+  };
+  Encoding_helpers.parse_string_variant([ed25519, secp256k1]);
 };
 
 let encoding = {
@@ -27,9 +37,20 @@ let encoding = {
         Ed25519.Key_hash.encoding,
         ~title="Ed25519",
         fun
-        | Ed25519(key_hash) => Some(key_hash),
+        | Ed25519(key_hash) => Some(key_hash)
+        | _ => None,
         key_hash =>
         Ed25519(key_hash)
+      ),
+      case(
+        Tag(1),
+        Secp256k1.Key_hash.encoding,
+        ~title="Secp256k1",
+        fun
+        | Secp256k1(x) => Some(x)
+        | _ => None,
+        x =>
+        Secp256k1(x)
       ),
     ]);
   Encoding_helpers.make_encoding(
