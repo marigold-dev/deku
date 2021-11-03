@@ -1,6 +1,7 @@
 open Helpers;
 open Crypto;
 open Protocol;
+open Core;
 open Building_blocks;
 
 module Node = State;
