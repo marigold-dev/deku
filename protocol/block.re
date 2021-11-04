@@ -1,6 +1,7 @@
 open Operation;
 open Helpers;
 open Crypto;
+open Core;
 
 [@deriving yojson]
 type t = {
@@ -159,7 +160,7 @@ let genesis =
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
-    ~author=Address.of_wallet(Wallet.genesis_wallet),
+    ~author=Address.of_key(Wallet.genesis_wallet),
   );
 
 // TODO: move this to a global module

@@ -6,6 +6,7 @@ open Cmdliner;
 open Opium;
 open Helpers;
 open Protocol;
+open Core;
 open Node;
 
 let ignore_some_errors =

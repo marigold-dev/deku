@@ -1,7 +1,7 @@
 open Helpers;
 open Node;
 open State;
-open Protocol;
+open Core;
 
 exception Invalid_json(string);
 let read_json = (of_yojson, ~file) => {

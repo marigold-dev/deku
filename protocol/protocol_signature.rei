@@ -1,4 +1,5 @@
 open Crypto;
+open Core;
 
 [@deriving yojson]
 type t;

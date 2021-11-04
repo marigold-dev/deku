@@ -1,4 +1,4 @@
-open Protocol;
+open Core;
 
 [@deriving (yojson, ord)]
 type action =
