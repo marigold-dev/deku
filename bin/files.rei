@@ -1,4 +1,4 @@
-open Protocol;
+open Core;
 open Node;
 open State;
 

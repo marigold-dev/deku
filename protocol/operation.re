@@ -100,7 +100,7 @@ module Side_chain = {
         ? Ok() : Error("Side operation invalid hash");
     let.ok () =
       Protocol_signature.verify(~signature, hash)
-      && Address.pubkey_matches_wallet(
+      && Address.matches_key(
            Protocol_signature.public_key(signature),
            source,
          )

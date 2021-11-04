@@ -1,6 +1,7 @@
 open Helpers;
 open Crypto;
 open Protocol;
+open Core;
 
 [@deriving yojson]
 type identity = {
