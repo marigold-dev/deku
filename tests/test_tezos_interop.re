@@ -1,6 +1,6 @@
 open Setup;
 open Protocol;
-open Address;
+open Wallet;
 open Crypto;
 open Tezos_interop;
 module TZ2_ex = {

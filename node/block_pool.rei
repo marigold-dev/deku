@@ -10,7 +10,7 @@ type block_and_signatures =
 
 type t;
 
-let make: (~self_key: Address.t) => t;
+let make: (~self_key: Wallet.t) => t;
 let append_block: (Block.t, t) => t;
 let append_signature:
   (~signatures_required: int, ~hash: BLAKE2B.t, Signature.t, t) => t;

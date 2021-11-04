@@ -16,21 +16,21 @@ describe("protocol state", ({test, _}) => {
     };
   };
   let make_state = (~validators=?, ()) => {
-    let (key_wallet, wallet) = Wallet.make_wallet();
+    let (key_wallet, address) = Address.make();
     let state = {
       ...make(~initial_block=Block.genesis),
       ledger:
-        Ledger.empty |> Ledger.deposit(wallet, Amount.of_int(500), ticket),
+        Ledger.empty |> Ledger.deposit(address, Amount.of_int(500), ticket),
     };
     let validators = {
       open Helpers;
       let.default () =
         state.validators
-        |> Validators.add({address: Address.of_key(key_wallet)});
+        |> Validators.add({address: Wallet.of_key(key_wallet)});
       validators;
     };
     let state = {...state, validators};
-    (state, key_wallet, wallet);
+    (state, key_wallet, address);
   };
 
   let apply_block = (~author=?, ~main=[], ~side=[], state) => {
@@ -59,32 +59,36 @@ describe("protocol state", ({test, _}) => {
         let expect_amount = (left, right) =>
           expect.int(Amount.to_int(left)).toBe(right);
         // TODO: use random wallet with random amount
-        let (old_state, key_a, wallet_a) = make_state();
-        let (key_b, wallet_b) = Wallet.make_wallet();
-        let new_state = f(old_state, (wallet_a, key_a), (wallet_b, key_b));
+        let (old_state, key_a, address_a) = make_state();
+        let (key_b, address_b) = Address.make();
+        let new_state =
+          f(old_state, (address_a, key_a), (address_b, key_b));
 
         expect_amount(
-          Ledger.balance(wallet_a, ticket, old_state.ledger),
+          Ledger.balance(address_a, ticket, old_state.ledger),
           500,
         );
-        expect_amount(Ledger.balance(wallet_b, ticket, old_state.ledger), 0);
+        expect_amount(
+          Ledger.balance(address_b, ticket, old_state.ledger),
+          0,
+        );
 
         // TODO: test that it changes only the target wallet
         expect_amount(
-          Ledger.balance(wallet_a, ticket, new_state.ledger),
+          Ledger.balance(address_a, ticket, new_state.ledger),
           500 + free_diff_a,
         );
         expect_amount(
-          Ledger.balance(wallet_b, ticket, new_state.ledger),
+          Ledger.balance(address_b, ticket, new_state.ledger),
           0 + free_diff_b,
         );
       },
     );
   let test_failed_wallet_offset = (name, expected_message, f) =>
     test_wallet_offset(
-      name ++ " " ++ expected_message, (state, wallet_a, wallet_b) =>
+      name ++ " " ++ expected_message, (state, address_a, address_b) =>
       try({
-        let _state = f(state, wallet_a, wallet_b);
+        let _state = f(state, address_a, address_b);
         assert(false);
       }) {
       | Noop(message) =>

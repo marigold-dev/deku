@@ -8,7 +8,7 @@ type action =
 [@deriving (yojson, ord)]
 type t = {
   action,
-  address: Address.t,
+  address: Wallet.t,
 };
 
 module Set =

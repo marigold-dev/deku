@@ -5,11 +5,11 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   key: Secret.t,
-  t: Address.t,
+  t: Wallet.t,
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Address);
+module Address_map = Map.Make(Wallet);
 module Uri_map = Map.Make(Uri);
 
 type t = {

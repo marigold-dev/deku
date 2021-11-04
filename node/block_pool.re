@@ -16,7 +16,7 @@ type block_and_signatures = {
 
 // TODO: clean all blocks older than the current state root hash
 type t = {
-  self_key: Address.t,
+  self_key: Wallet.t,
   available: Hash_map.t(block_and_signatures),
   available_by_previous: Hash_map.t(block_and_signatures),
   signed: Hash_map.t(block_and_signatures),

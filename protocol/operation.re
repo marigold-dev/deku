@@ -7,7 +7,7 @@ module Main_chain = {
     // TODO: can a validator uses the same key in different nodes?
     // If so the ordering in the list must never use the same key two times in sequence
     | Deposit({
-        destination: Wallet.t,
+        destination: Address.t,
         amount: Amount.t,
         ticket: Ticket.t,
       });
@@ -56,7 +56,7 @@ module Side_chain = {
   [@deriving yojson]
   type kind =
     | Transaction({
-        destination: Wallet.t,
+        destination: Address.t,
         amount: Amount.t,
         ticket: Ticket.t,
       })
@@ -74,7 +74,7 @@ module Side_chain = {
     signature: Protocol_signature.t,
     nonce: int32,
     block_height: int64,
-    source: Wallet.t,
+    source: Address.t,
     kind,
   };
   let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
@@ -83,7 +83,7 @@ module Side_chain = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
     let apply = (f, ~nonce, ~block_height, ~source, ~kind) => {
-      let to_yojson = [%to_yojson: (int32, int64, Wallet.t, kind)];
+      let to_yojson = [%to_yojson: (int32, int64, Address.t, kind)];
       let json = to_yojson((nonce, block_height, source, kind));
       let payload = Yojson.Safe.to_string(json);
       f(payload);
@@ -99,7 +99,7 @@ module Side_chain = {
         ? Ok() : Error("Side operation invalid hash");
     let.ok () =
       Protocol_signature.verify(~signature, hash)
-      && Wallet.pubkey_matches_wallet(
+      && Address.pubkey_matches_wallet(
            Protocol_signature.public_key(signature),
            source,
          )

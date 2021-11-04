@@ -1,23 +1,24 @@
 open Crypto;
-open Key_hash;
 
-[@deriving ord]
-type t = Key_hash.t;
+type t = Key.t;
 
-let of_address = of_key;
-let pubkey_matches_wallet = (key, t) => equal(of_key(key), t);
+let compare = Key.compare;
+let to_string = Key.to_string;
+let of_string = Key.of_string;
+let to_yojson = Key.to_yojson;
+let of_yojson = Key.of_yojson;
 
-let make_wallet = () => {
-  let (key, pub_) = Ed25519.generate();
-  let wallet_address = of_address(Ed25519(pub_));
+let of_key = secret =>
+  switch (secret) {
+  | Secret.Ed25519(secret) => Key.Ed25519(Ed25519.Key.of_secret(secret))
+  | Secret.Secp256k1(secret) =>
+    Key.Secp256k1(Secp256k1.Key.of_secret(secret))
+  };
 
-  (Secret.Ed25519(key), wallet_address);
-};
-let to_key_hash = t => t;
-let of_key_hash = t => t;
-
-let to_string = to_string;
-let of_string = of_string;
-
-let to_yojson = to_yojson;
-let of_yojson = of_yojson;
+let genesis_key = {|edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd|};
+let genesis_key =
+  switch (Secret.of_yojson(`String(genesis_key))) {
+  | Ok(key) => key
+  | Error(error) => failwith(error)
+  };
+let genesis_address = of_key(genesis_key);
