@@ -52,7 +52,7 @@ module Key_hash = {
     let name = "Secp256k1.Public_key_hash";
     let title = "A Secp256k1 public key hash";
 
-    let size = 20;
+    let size = BLAKE2B_20.size;
     let prefix = Base58.Prefix.secp256k1_public_key_hash;
 
     let to_raw = BLAKE2B_20.to_raw_string;

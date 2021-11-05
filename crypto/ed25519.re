@@ -57,17 +57,17 @@ module Key_hash = {
   let of_key = t =>
     BLAKE2B_20.hash(Ed25519.pub_to_cstruct(t) |> Cstruct.to_string);
 
-  let encoding = {
+  include Encoding_helpers.Make_b58({
+    type nonrec t = t;
     let name = "Ed25519.Public_key_hash";
-    // TODO: in tezos this is splitted json is not same as bin
-    Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
-  };
+    let title = "An Ed25519 public key hash";
 
-  let prefix = Base58.Prefix.ed25519_public_key_hash;
-  let to_raw = BLAKE2B_20.to_raw_string;
-  let of_raw = BLAKE2B_20.of_raw_string;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
+    let size = BLAKE2B_20.size;
+    let prefix = Base58.Prefix.ed25519_public_key_hash;
+
+    let to_raw = BLAKE2B_20.to_raw_string;
+    let of_raw = BLAKE2B_20.of_raw_string;
+  });
 };
 
 module Signature = {
