@@ -2,7 +2,9 @@ open Setup;
 open Protocol;
 open Wallet;
 open Crypto;
+open Tezos;
 open Tezos_interop;
+
 module TZ2_ex = {
   let sk =
     Secret.of_string("spsk3LfH15rYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy")
