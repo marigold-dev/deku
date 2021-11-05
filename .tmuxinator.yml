@@ -11,7 +11,7 @@ root: ./data
 
 # Project hooks
 # Runs on project start, always
-on_project_start: esy build
+on_project_start: esy && rm $(find ./ -name state.bin) # Make sure the project is built, and delete any `state.bin`s to ensure we're running from a fresh state
 # Run on project start, the first time
 # on_project_first_start: command
 # Run on project start, after the first time
@@ -22,7 +22,7 @@ on_project_start: esy build
 # on_project_stop: command
 
 # Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
-pre_window: esy shell
+# pre_window: command
 
 # Pass command line options to tmux. Useful for specifying a different tmux.conf.
 # tmux_options: -f ~/.tmux.mac.conf
@@ -45,13 +45,11 @@ pre_window: esy shell
 windows:
   - editor:
       layout: tiled
-      # Synchronize all panes of this window, can be enabled before or after the pane commands run.
-      # 'before' represents legacy functionality and will be deprecated in a future release, in favour of 'after'
-      # synchronize: after
+      # Due to an esy bug, multiple `esy x`s can't run at the same time, so we use sleep to space them out
+      # Also, we need to add a delay to the first one to give the `on_project_start` command time to run
       panes:
-        - sleep 1 && $cur__target_dir/default/bin/deku_node.exe 0
-        - sleep 1 && $cur__target_dir/default/bin/deku_node.exe 1
-        - sleep 1 && $cur__target_dir/default/bin/deku_node.exe 2
-        - sleep 1 && $cur__target_dir/default/bin/deku_node.exe 3
-        - $cur__target_dir/default/bin/sidecli.exe make-credentials && sleep 3 && $cur__target_dir/default/bin/sidecli.exe inject-genesis
+        - sleep 1 && esy x deku-node 0
+        - sleep 3 && esy x deku-node 1
+        - sleep 5 && esy x deku-node 2
+        - sleep 7 && esy x sidecli produce-block 0
 
