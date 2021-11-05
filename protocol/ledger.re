@@ -23,7 +23,7 @@ module Handle = {
   type t = {
     hash: BLAKE2B.t,
     id: int,
-    owner: Tezos_interop.Address.t,
+    owner: Tezos.Address.t,
     amount: Amount.t,
     ticket: Ticket.t,
   };

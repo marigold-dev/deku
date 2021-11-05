@@ -2,6 +2,6 @@
 [@deriving (ord, yojson)]
 type t =
   Tezos_interop.Ticket.t = {
-    ticketer: Tezos_interop.Address.t,
+    ticketer: Tezos.Address.t,
     data: bytes,
   };
