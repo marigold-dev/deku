@@ -1,7 +1,7 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries opium files node helpers)
+ (libraries opium files node helpers cmdliner)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))

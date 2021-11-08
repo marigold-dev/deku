@@ -2,6 +2,7 @@
 // Can a core send a message and the other receive it in the past?
 // TODO: should start signing before being in sync?
 
+open Cmdliner;
 open Opium;
 open Helpers;
 open Protocol;
@@ -187,15 +188,11 @@ let handle_ticket_balance =
     },
   );
 
-let folder = Sys.argv[1];
-let trusted_validator_membership_change_file =
-  folder ++ "/trusted-validator-membership-change.json";
-
-let node = {
+let node = (folder, trusted_validator_membership_change_file) => {
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
   let.await trusted_validator_membership_change_list =
     Files.Trusted_validators_membership_change.read(
-      ~file=folder ++ "/trusted-validator-membership-change.json",
+      ~file=folder ++ trusted_validator_membership_change_file,
     );
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.of_list(
@@ -274,25 +271,48 @@ let node = {
   );
   await({...node, protocol});
 };
-let node = node |> Lwt_main.run;
-let () = Node.Server.start(~initial=node);
 
-let _server =
-  App.empty
-  |> App.port(Node.Server.get_port() |> Option.get)
-  |> handle_block_level
-  |> handle_received_block_and_signature
-  |> handle_received_signature
-  |> handle_block_by_hash
-  |> handle_protocol_snapshot
-  |> handle_request_nonce
-  |> handle_register_uri
-  |> handle_receive_operation_gossip
-  |> handle_withdraw_proof
-  |> handle_ticket_balance
-  |> handle_trusted_validators_membership
-  |> App.start
-  |> Lwt_main.run;
+let node = folder => {
+  let trusted_validator_membership_change =
+    folder ++ "/trusted-validator-membership-change.json";
 
-let (forever, _) = Lwt.wait();
-let () = Lwt_main.run(forever);
+  let () =
+    Node.Server.start(
+      ~initial=
+        node(folder, trusted_validator_membership_change) |> Lwt_main.run,
+    );
+
+  let _server =
+    App.empty
+    |> App.port(Node.Server.get_port() |> Option.get)
+    |> handle_block_level
+    |> handle_received_block_and_signature
+    |> handle_received_signature
+    |> handle_block_by_hash
+    |> handle_protocol_snapshot
+    |> handle_request_nonce
+    |> handle_register_uri
+    |> handle_receive_operation_gossip
+    |> handle_withdraw_proof
+    |> handle_ticket_balance
+    |> handle_trusted_validators_membership
+    |> App.start
+    |> Lwt_main.run;
+
+  let (forever, _) = Lwt.wait();
+  Lwt_main.run(forever);
+};
+
+let node = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "Path to the folder containing the node configuration data.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  Term.(const(node) $ folder_node);
+};
+
+let () = {
+  Term.exit @@ Term.eval((node, Term.info("deku-node")));
+};
