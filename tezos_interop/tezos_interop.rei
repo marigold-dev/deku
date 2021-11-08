@@ -2,16 +2,6 @@ open Helpers;
 open Crypto;
 open Tezos;
 
-module Ticket: {
-  type t = {
-    ticketer: Address.t,
-    data: bytes,
-  };
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
 module Operation_hash: {
   type t = BLAKE2B.t;
   let equal: (t, t) => bool;
@@ -79,7 +69,7 @@ module Consensus: {
 
   type parameters =
     | Deposit({
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
         // TODO: proper type for amounts
         amount: Z.t,
         destination: Address.t,

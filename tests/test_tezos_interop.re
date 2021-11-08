@@ -384,7 +384,7 @@ describe("address", ({test, _}) => {
   });
 });
 describe("ticket", ({test, _}) => {
-  open Ticket;
+  open Ticket_id;
 
   let kt1 =
     Address.Originated({contract: some_contract_hash, entrypoint: None});
@@ -399,7 +399,7 @@ describe("ticket", ({test, _}) => {
       of_string({|(Pair "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|}),
     ).
       toBe(
-      ~equals=Ticket.equal,
+      ~equals=equal,
       Some(ticket),
     )
   });
