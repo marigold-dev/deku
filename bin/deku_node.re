@@ -188,11 +188,15 @@ let handle_ticket_balance =
     },
   );
 
-let node = (folder, trusted_validator_membership_change_file) => {
+let node = folder => {
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
+
+  let trusted_validator_membership_change_file =
+    folder ++ "/trusted-validator-membership-change.json";
+
   let.await trusted_validator_membership_change_list =
     Files.Trusted_validators_membership_change.read(
-      ~file=folder ++ trusted_validator_membership_change_file,
+      ~file=trusted_validator_membership_change_file,
     );
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.of_list(
@@ -273,14 +277,7 @@ let node = (folder, trusted_validator_membership_change_file) => {
 };
 
 let node = folder => {
-  let trusted_validator_membership_change =
-    folder ++ "/trusted-validator-membership-change.json";
-
-  let () =
-    Node.Server.start(
-      ~initial=
-        node(folder, trusted_validator_membership_change) |> Lwt_main.run,
-    );
+  let () = Node.Server.start(~initial=node(folder) |> Lwt_main.run);
 
   let _server =
     App.empty
