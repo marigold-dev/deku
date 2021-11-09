@@ -27,7 +27,7 @@ it.
 
 1. Clone the repo
 2. Run `esy`
-3. Run `esy tmuxinator`
+3. Run `tmuxinator`
 
 ### Testing
 
