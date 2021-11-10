@@ -23,12 +23,6 @@ Tmuxinator manages running multiple commands in a terminal session. We
 provide [config file](./.tmuxinator.yml) to help you get started with
 it. 
 
-### Steps
-
-1. Clone the repo
-2. Run `esy`
-3. Run `tmuxinator`
-
 ### Testing
 
 We use [Rely](https://reason-native.com/docs/rely/) to write
@@ -40,39 +34,61 @@ esy test
 
 ### Running a sidechain
 
+For convenient local development, we have a included a script `sandbox.sh` that
+automates the setup of a local Tezos network using [Flextesa](https://tezos.gitlab.io/flextesa/)
+running in Docker. Additionally, the script sets up a identities for a local Deku cluster.
+This script is the easiest way to get started with Deku; however, it uses unsafe
+configuration options to lower the required Tezos confirmations to 1. This setting greatly
+speeds up local development, **but is not at all safe for production**!
+
 #### Requirements
+- The sandbox requires [Docker](https://docs.docker.com/get-docker/) to be installed.
+- Install the Tezos client. The easiest way to do this is by installing the static Tezos binaries
+  if your system package manager supports it. See the [Tezos documentation](https://tezos.gitlab.io/introduction/howtoget.html#getting-static-binaries) for details:
+    ```
+    # On Ubuntu
+    sudo add-apt-repository ppa:serokell/tezos && sudo apt-get update
+    sudo apt-get install -y tezos-client
+    # On Mac
+    brew tap serokell/tezos-packaging https://github.com/serokell/tezos-packaging.git
+    brew install tezos-client
+    ```
 
-To run a sidechain you will need to have a Tezos node that you control and a Tezos Secret Key(edsk).
+    Additionally, there are [instructions for building from source](https://tezos.gitlab.io/introduction/howtoget.html#building-from-sources-via-opam)
+    using OPAM.
 
-You can run a Tezos node on a testnet and use the faucet to acquire a key with funds, as described in the following link:
-
-- https://tezos.b9lab.com/tezos-basics/testnet-1
-
-To find out your `edsk` you can run
-
-```shell
-./tezos-client show address <ADDRESS-NAME> -S
-```
+- Install the Ligo compiler toolchain. There are [instructions](https://ligolang.org/docs/intro/installation) on the Ligo website.
+  Additionally, there is a [Nix](https://nixos.org/) package for Ligo
+    ```
+    nix-env --install ligo
+    ```
 
 #### Setup
 
-To run chain you will need to run a couple of commands, as those are currently unstable, this repo provide a guided script to setup.
+Run `./sandbox.sh start` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
+a Deku consensus contract configured for these validators to the local sandbox.
 
-```shell
-./setup.sh
-```
-
-You will be prompted to deploy a smart contract and to inform the KT1 address to the deployed contract, the URL to your Tezos Node and your `edsk` key.
+Run `./sandbox.sh stop` to kill the Tezos sandbox network.
 
 #### Start
 
-As starting a local chain means running multiple commands locally we also provide a script to do it.
 
-```shell
+If you have tmuxinator installed, simply run:
+```
+tmuxinator
+```
+
+This will open 3 shells for the node and one shell to inject the genesis block. You can stop the session by pressing `CTRL+B`
+and typing `:kill-session`.
+
+Alternatively, to run the nodes as background processes without tmuxinator, simply run
+```
 ./start.sh
 ```
 
-It will start all your nodes, produce a block and sign it, this will start the chain, if everything did go well you should be seeing the block height being displayed on the command line.
+You may have to stop the session with `killall deku-node` to fully shutdown the cluster.
+
+In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
 
 ## Contributing
 
