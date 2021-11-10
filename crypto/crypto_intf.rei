@@ -38,7 +38,7 @@ module type S = {
     let to_string: t => string;
     let of_string: string => option(t);
   };
-  let sign: (Secret.t, string) => Signature.t;
-  let verify: (Key.t, Signature.t, string) => bool;
+  let sign: (Secret.t, BLAKE2B.t) => Signature.t;
+  let verify: (Key.t, Signature.t, BLAKE2B.t) => bool;
   let generate: unit => (Secret.t, Key.t);
 };

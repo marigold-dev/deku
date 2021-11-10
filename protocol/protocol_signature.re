@@ -8,7 +8,7 @@ type t = {
 };
 let public_key = t => t.public_key;
 let sign = (~key as secret, hash) => {
-  let signature = Signature.sign(secret, BLAKE2B.to_raw_string(hash));
+  let signature = Signature.sign(secret, hash);
   let public_key = Key.of_secret(secret);
   {signature, public_key};
 };
@@ -18,11 +18,7 @@ let signature_to_b58check_by_address = t => {
 };
 let signature_to_signature_by_address = t => (t.public_key, t.signature);
 let verify = (~signature, hash) =>
-  Signature.verify(
-    signature.public_key,
-    signature.signature,
-    BLAKE2B.to_raw_string(hash),
-  );
+  Signature.verify(signature.public_key, signature.signature, hash);
 module type S = {
   type value;
   type signature = t;

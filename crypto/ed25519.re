@@ -88,20 +88,14 @@ module Signature = {
   });
 };
 
-let sign = (secret, message) => {
-  // double hash because tezos always uses blake2b on CHECK_SIGNATURE
-  let hash = BLAKE2B.hash(message);
+let sign = (secret, hash) =>
   Cstruct.of_string(BLAKE2B.to_raw_string(hash))
-  // TODO: isn't this double hashing? Seems weird
   |> Ed25519.sign(~key=secret)
   |> Cstruct.to_string;
-};
-let verify = (public, signature, message) => {
-  let hash = BLAKE2B.hash(message);
+let verify = (public, signature, hash) =>
   verify(
     ~key=public,
     ~msg=Cstruct.of_string(BLAKE2B.to_raw_string(hash)),
     Cstruct.of_string(signature),
   );
-};
 let generate = () => Ed25519.generate();

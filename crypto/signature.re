@@ -4,17 +4,17 @@ type t =
   | Ed25519(Ed25519.Signature.t)
   | Secp256k1(Secp256k1.Signature.t);
 
-let sign = (secret, message) =>
+let sign = (secret, hash) =>
   switch (secret) {
-  | Secret.Ed25519(secret) => Ed25519(Ed25519.sign(secret, message))
-  | Secret.Secp256k1(secret) => Secp256k1(Secp256k1.sign(secret, message))
+  | Secret.Ed25519(secret) => Ed25519(Ed25519.sign(secret, hash))
+  | Secret.Secp256k1(secret) => Secp256k1(Secp256k1.sign(secret, hash))
   };
-let verify = (key, signature, message) =>
+let verify = (key, signature, hash) =>
   switch (key, signature) {
   | (Key.Ed25519(key), Ed25519(signature)) =>
-    Ed25519.verify(key, signature, message)
+    Ed25519.verify(key, signature, hash)
   | (Key.Secp256k1(key), Secp256k1(signature)) =>
-    Secp256k1.verify(key, signature, message)
+    Secp256k1.verify(key, signature, hash)
   | (Key.Ed25519(_) | Key.Secp256k1(_), Ed25519(_) | Secp256k1(_)) => false
   };
 
