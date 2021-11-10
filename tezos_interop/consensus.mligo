@@ -3,7 +3,8 @@ type blake2b = bytes
 (* store hash *)
 type validator = key_hash
 type validators = validator list
-type validator_key = key option
+type validator_key = key
+type validator_keys = validator_key option list
 
 (* Root_hash_update contract *)
 type root_hash_storage = {
@@ -28,7 +29,7 @@ type root_hash_action = {
   (* TODO: performance, can this blown up? *)
   validators: validators;
 
-  current_validator_keys: validator_key list;
+  current_validator_keys: validator_keys;
   signatures: signatures;
 }
 
@@ -71,7 +72,7 @@ let root_hash_check_hash (root_hash_update: root_hash_action) =
 
 let rec root_hash_check_keys
   (validator_keys, validators, block_hash, remaining:
-    validator_key list * validators * blake2b * int) : unit =
+    validator_keys * validators * blake2b * int) : unit =
     match (validator_keys, validators) with
     | ([], []) ->
       if remaining > 0 then
@@ -88,7 +89,7 @@ let rec root_hash_check_keys
 
 let rec root_hash_check_signatures
   (validator_keys, signatures, block_hash, remaining:
-    validator_key list * signatures * blake2b * int) : unit =
+    validator_keys * signatures * blake2b * int) : unit =
     match (validator_keys, signatures) with
     (* already signed *)
     | ([], []) ->
