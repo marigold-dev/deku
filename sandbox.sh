@@ -1,7 +1,7 @@
 #! /bin/sh
 
 set -e
-data_directory="data"
+DATA_DIRECTORY="data"
 
 SIDECLI=$(esy x which sidecli)
 sidecli() {
@@ -11,7 +11,7 @@ sidecli() {
 VALIDATORS=(0 1 2)
 echo "Creating validator identities."
 for i in ${VALIDATORS[@]}; do
-  FOLDER="$data_directory/$i"
+  FOLDER="$DATA_DIRECTORY/$i"
   mkdir -p $FOLDER
 
   sidecli setup-identity $FOLDER --uri "http://localhost:444$i"
@@ -96,7 +96,7 @@ EOF
 
 for VALIDATOR in ${VALIDATORS[@]}; do
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-  FOLDER="$data_directory/$i"
+  FOLDER="$DATA_DIRECTORY/$i"
 
   validators_json >"$FOLDER/validators.json"
   trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
@@ -110,7 +110,7 @@ read -p "Enter the secret key of a wallet: " TEZOS_SECRET
 
 for VALIDATOR in ${VALIDATORS[@]}; do
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-  FOLDER="$data_directory/$i"
+  FOLDER="$DATA_DIRECTORY/$i"
 
   sidecli setup-tezos "$FOLDER" \
     --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
