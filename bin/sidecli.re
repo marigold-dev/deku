@@ -699,8 +699,8 @@ let address_t = {
 };
 
 let validator_address = {
-  let docv = "validator_wallet";
-  let doc = "The validator wallet to be added/removed as trusted";
+  let docv = "validator_address";
+  let doc = "The validator address to be added/removed as trusted";
   Arg.(required & pos(2, some(address_t), None) & info([], ~docv, ~doc));
 };
 
