@@ -638,7 +638,7 @@ module Consensus = {
           Micheline.Prim(
             _,
             Michelson_v1_primitives.D_Pair,
-            [Prim(_, D_Pair, [_, Seq(_, keys)], _), _, _],
+            [Prim(_, D_Pair, [_, Seq(_, key_hashes)], _), _, _],
             _,
           ),
         ) => {
@@ -646,14 +646,14 @@ module Consensus = {
             (acc, k) =>
               switch (k) {
               | Micheline.String(_, k) =>
-                switch (Key.of_string(k)) {
+                switch (Key_hash.of_string(k)) {
                 | Some(k) => Ok([k, ...acc])
                 | None => Error("Failed to parse " ++ k)
                 }
-              | _ => Error("Keys weren't of type string")
+              | _ => Error("Some key_hash wasn't of type string")
               },
             [],
-            List.rev(keys),
+            List.rev(key_hashes),
           );
         }
       | Ok(_) => Error("Failed to parse storage micheline expression")

@@ -212,7 +212,7 @@ let node = folder => {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             Address.of_wallet(validator),
+             Address.of_key_hash(validator),
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
@@ -221,8 +221,8 @@ let node = folder => {
 
   let initial_validators_uri =
     List.fold_left(
-      (validators_uri, (wallet, uri)) =>
-        State.Address_map.add(wallet, uri, validators_uri),
+      (validators_uri, (address, uri)) =>
+        State.Address_map.add(address, uri, validators_uri),
       State.Address_map.empty,
       validators,
     );

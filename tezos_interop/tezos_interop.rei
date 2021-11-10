@@ -115,7 +115,7 @@ module Consensus: {
   let listen_operations:
     (~context: Context.t, ~on_operation: operation => unit) => unit;
   let fetch_validators:
-    (~context: Context.t) => Lwt.t(result(list(Key.t), string));
+    (~context: Context.t) => Lwt.t(result(list(Key_hash.t), string));
 };
 
 module Discovery: {let sign: (Secret.t, ~nonce: int64, Uri.t) => Signature.t;};
