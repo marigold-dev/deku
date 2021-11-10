@@ -529,18 +529,17 @@ describe("consensus", ({test, _}) => {
   open Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
-  let key_exn = s => Key.of_string(s) |> Option.get;
+  let key_hash_exn = s => Key_hash.of_string(s) |> Option.get;
   let address_exn = s => Address.of_string(s) |> Option.get;
 
   test("hash_validators", ({expect, _}) => {
     let hash =
       [
-        key_exn("edpkvQuAn9BeaDQLzudrPL2zigNRQSmFvKJ7xWN1QmjDjQHj3dBrEZ"),
-        key_exn("edpkvE3Ysq17HFzBBSQeAX87RE3smYZf1rHHpKu1LJdaFAhW8G7SNu"),
-        key_exn("edpktq5HiqUkHTyoBQETvzbyaiwtKQkaBEPkwgZyfMqhRajRuLpWR7"),
-        key_exn("edpkuNpThN8QeagEdvjN3o5R7PSic85cwiXHa61vNpRAE65FNV5mJH"),
+        key_hash_exn("tz1XoDYhrUJT4HtskbEUrJusHtFHx6ZXcemd"),
+        key_hash_exn("tz1R1XF4NnYkiCxcVphdLTYokQiyL38rtSQF"),
+        key_hash_exn("tz1d6QHk2oFzrYYasZWof8BU26D7jXAXeajv"),
+        key_hash_exn("tz1da6gqyddChGTwzW5aUA3Bia7DaAXmtqAE"),
       ]
-      |> List.map(Key_hash.of_key)
       |> hash_validators;
     let hash = BLAKE2B.to_string(hash);
     expect.string(hash).toEqual(
