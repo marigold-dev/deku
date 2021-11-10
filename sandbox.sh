@@ -1,10 +1,10 @@
 #! /bin/sh
 
-set -e 
+set -e
 data_directory="data"
 
 SIDECLI=$(esy x which sidecli)
-sidecli () {
+sidecli() {
   eval $SIDECLI '"$@"'
 }
 
@@ -52,25 +52,24 @@ cat <<EOF
 EOF
 echo ""
 
-
-validators_json () {
+validators_json() {
   ## most of the noise in this function is because of indentation
   echo "["
-for VALIDATOR in "${VALIDATORS[@]}"; do 
-  i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-  ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
-  URI=$(echo $VALIDATOR | awk -F';' '{ print $3 }')
-  if [ $i != 0 ]; then
-    printf ",
+  for VALIDATOR in "${VALIDATORS[@]}"; do
+    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
+    ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
+    URI=$(echo $VALIDATOR | awk -F';' '{ print $3 }')
+    if [ $i != 0 ]; then
+      printf ",
 "
-  fi
-cat <<EOF
+    fi
+    cat <<EOF
   {
     "address": "$ADDRESS",
     "uri": "$URI"
 EOF
-  printf "  }"
-done
+    printf "  }"
+  done
   echo ""
   echo "]"
 }
@@ -99,7 +98,7 @@ for VALIDATOR in ${VALIDATORS[@]}; do
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
   FOLDER="$data_directory/$i"
 
-  validators_json > "$FOLDER/validators.json"
+  validators_json >"$FOLDER/validators.json"
   trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
 done
 
@@ -109,11 +108,10 @@ read -p "Enter address of the deployed contract: " TEZOS_CONSENSUS_ADDRESS
 read -p "Enter the URI to your Tezos RPC: " TEZOS_RPC_NODE
 read -p "Enter the secret key of a wallet: " TEZOS_SECRET
 
-
 for VALIDATOR in ${VALIDATORS[@]}; do
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
   FOLDER="$data_directory/$i"
-  
+
   sidecli setup-tezos "$FOLDER" \
     --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
     --tezos_rpc_node="$TEZOS_RPC_NODE" \
