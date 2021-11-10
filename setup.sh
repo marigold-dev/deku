@@ -16,8 +16,9 @@ for i in ${VALIDATORS[@]}; do
 
   sidecli setup-identity $FOLDER --uri "http://localhost:444$i"
   KEY=$(sidecli self $FOLDER | grep "key:" | awk '{ print $2 }')
+  ADDRESS=$(sidecli self $FOLDER | grep "address:" | awk '{ print $2 }')
   URI=$(sidecli self $FOLDER | grep "uri:" | awk '{ print $2 }')
-  VALIDATORS[$i]="$i;$KEY;$URI"
+  VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
 done
 
 # To register the validators, run consensus.mligo with the list of
@@ -57,7 +58,7 @@ validators_json () {
   echo "["
 for VALIDATOR in "${VALIDATORS[@]}"; do 
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-  KEY=$(echo $VALIDATOR | awk -F';' '{ print $2 }')
+  ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
   URI=$(echo $VALIDATOR | awk -F';' '{ print $3 }')
   if [ $i != 0 ]; then
     printf ",
@@ -65,7 +66,7 @@ for VALIDATOR in "${VALIDATORS[@]}"; do
   fi
 cat <<EOF
   {
-    "address": "$KEY",
+    "address": "$ADDRESS",
     "uri": "$URI"
 EOF
   printf "  }"
