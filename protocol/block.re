@@ -153,8 +153,11 @@ let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
 let genesis =
   make(
+    // Hash: b55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203
     ~previous_hash=BLAKE2B.hash("tuturu"),
+    // Hash: 5eda8fbfa16cbef410d16ab2ee1d29613b6ecb02e1cb919d7c3e42c830c40b28
     ~state_root_hash=BLAKE2B.hash("mayuushi"),
+    // Hash: 841dac8bea2a4a8501aceb9228837d900eedd8f489ef73958f56a6ef9c7e7e49
     ~handles_hash=BLAKE2B.hash("desu"),
     ~validators_hash=Validators.hash(Validators.empty),
     ~block_height=0L,
