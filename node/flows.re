@@ -158,7 +158,7 @@ let request_previous_blocks = (state, block) =>
 let try_to_produce_block = (state, update_state) => {
   let.assert () = (
     `Not_current_block_producer,
-    is_current_producer(state, ~key=state.identity.t),
+    is_current_producer(state, ~key_hash=state.identity.t),
   );
 
   // TODO: avoid spam? how?
@@ -302,11 +302,12 @@ let received_operation =
         | Remove_validator(_) =>
           let.assert () = (
             `Invalid_signature_author,
-            Wallet.compare(
+            Address.compare(
               state.Node.identity.t,
               Signature.public_key(
                 request.operation.Operation.Side_chain.signature,
-              ),
+              )
+              |> Address.of_wallet,
             )
             == 0,
           );
@@ -401,7 +402,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
       ...state,
       validators_uri:
         Node.Address_map.add(
-          Signature.public_key(signature),
+          Signature.public_key(signature) |> Address.of_wallet,
           uri,
           state.validators_uri,
         ),
@@ -442,7 +443,10 @@ let trusted_validators_membership = (state, update_state, request) => {
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Wallet.compare(state.Node.identity.t, Signature.public_key(signature))
+    Address.compare(
+      state.Node.identity.t,
+      Address.of_wallet(Signature.public_key(signature)),
+    )
     == 0,
   );
   let.assert () = (

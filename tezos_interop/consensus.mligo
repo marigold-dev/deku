@@ -1,8 +1,10 @@
 type blake2b = bytes
 
 (* store hash *)
-type validator = key
+type validator = key_hash
 type validators = validator list
+type validator_key = key
+type validator_keys = validator_key option list
 
 (* Root_hash_update contract *)
 type root_hash_storage = {
@@ -27,6 +29,7 @@ type root_hash_action = {
   (* TODO: performance, can this blown up? *)
   validators: validators;
 
+  current_validator_keys: validator_keys;
   signatures: signatures;
 }
 
@@ -67,33 +70,67 @@ let root_hash_check_hash (root_hash_update: root_hash_action) =
     root_hash_update.block_hash = calculated_hash
   )
 
+let rec root_hash_check_keys
+  (validator_keys, validators, block_hash, remaining:
+    validator_keys * validators * blake2b * int) : unit =
+    match (validator_keys, validators) with
+    | ([], []) ->
+      if remaining > 0 then
+        failwith "not enough keys"
+    | ((Some validator_key :: vk_tl), (validator :: v_tl)) ->
+      if (Crypto.hash_key validator_key) = validator then
+        root_hash_check_keys (vk_tl, v_tl, block_hash, (remaining - 1))
+      else failwith "validator_key does not match validator hash"
+    | ((None :: vk_tl), (_ :: v_tl)) ->
+      root_hash_check_keys (vk_tl, v_tl, block_hash, remaining)
+    | (_, _) ->
+      failwith "validator_keys and validators have different size"
+
+
 let rec root_hash_check_signatures
-  (validators, signatures, block_hash, remaining:
-    validators * signatures * blake2b * int) : unit =
-    match (validators, signatures) with
+  (validator_keys, signatures, block_hash, remaining:
+    validator_keys * signatures * blake2b * int) : unit =
+    match (validator_keys, signatures) with
     (* already signed *)
     | ([], []) ->
       (* TODO: this can be short circuited *)
       if remaining > 0 then
-        failwith "not enough signatures"
-    | ((_ :: v_tl), (None :: sig_tl)) ->
-      root_hash_check_signatures (v_tl, sig_tl, block_hash, remaining)
-    | ((validator :: v_tl), (Some signature :: sig_tl)) ->
-      if Crypto.check validator signature block_hash
+        failwith "not enough key-signature matches"
+    | ((Some validator_key :: vk_tl), (Some signature :: sig_tl)) ->
+      if Crypto.check validator_key signature block_hash
       then
-        root_hash_check_signatures (v_tl, sig_tl, block_hash, (remaining - 1))
+        root_hash_check_signatures (vk_tl, sig_tl, block_hash, (remaining - 1))
       else failwith "bad signature"
+    | ((_ :: vk_tl), (None :: sig_tl)) ->
+      root_hash_check_signatures (vk_tl, sig_tl, block_hash, remaining)
+    | ((None :: vk_tl), (_ :: sig_tl)) ->
+      root_hash_check_signatures (vk_tl, sig_tl, block_hash, remaining)
     | (_, _) ->
       failwith "validators and signatures have different size"
 
+let root_hash_check_keys
+  (action: root_hash_action)
+  (storage: root_hash_storage)
+  (block_hash: blake2b) =
+    let validators_length = (int (List.length storage.current_validators)) in
+    let required_validators = (validators_length * 2) / 3 in
+    root_hash_check_keys (
+      action.current_validator_keys,
+      storage.current_validators,
+      block_hash,
+      required_validators
+    )
+
+
 let root_hash_check_signatures
+  (action: root_hash_action)
   (storage: root_hash_storage)
   (signatures: signatures)
   (block_hash: blake2b) =
     let validators_length = (int (List.length storage.current_validators)) in
     let required_validators = (validators_length * 2) / 3 in
     root_hash_check_signatures (
-      storage.current_validators,
+      action.current_validator_keys,
       signatures,
       block_hash,
       required_validators
@@ -111,7 +148,8 @@ let root_hash_main
 
     let () = root_hash_check_block_height storage block_height in
     let () = root_hash_check_hash root_hash_update in
-    let () = root_hash_check_signatures storage signatures block_hash in
+    let () = root_hash_check_keys root_hash_update storage block_hash in
+    let () = root_hash_check_signatures root_hash_update storage signatures block_hash in
 
     {
       current_block_hash = block_hash;

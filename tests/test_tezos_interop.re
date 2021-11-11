@@ -21,7 +21,7 @@ describe("key", ({test, _}) => {
 
   // TODO: test encoding
 
-  let edpk = genesis_address;
+  let edpk = genesis_wallet;
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edpk)).toEqual(
       "edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6",
@@ -87,7 +87,7 @@ describe("key_hash", ({test, _}) => {
   open Key_hash;
 
   // TODO: proper test of_key
-  let tz1 = of_key(genesis_address);
+  let tz1 = of_key(genesis_wallet);
   let tz2 = of_key(TZ2_ex.pk);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
@@ -185,7 +185,7 @@ describe("signature", ({test, _}) => {
   open BLAKE2B;
   open Signature;
 
-  let edpk = genesis_address;
+  let edpk = genesis_wallet;
   let edsk = genesis_key;
 
   let tuturu = hash("tuturu");
@@ -321,7 +321,7 @@ describe("contract_hash", ({test, _}) => {
 describe("address", ({test, _}) => {
   open Address;
 
-  let tz1 = Implicit(Key_hash.of_key(genesis_address));
+  let tz1 = Implicit(Key_hash.of_key(genesis_wallet));
   let tz2 = Implicit(Key_hash.of_key(TZ2_ex.pk));
   let kt1 = Originated({contract: some_contract_hash, entrypoint: None});
   let kt1_tuturu =
@@ -490,7 +490,7 @@ describe("pack", ({test, _}) => {
   );
   test(
     "key(\"edpkvDqjL7aXdsXSiK5ChCMAfqaqmCFWCv7DaT3dK1egJt136WBiT6\")",
-    key(genesis_address),
+    key(genesis_wallet),
     "050a0000002100d00725159de904a28aaed9adb2320f95bd2117959e41c1c2377ac11045d18bd7",
   );
   test(
@@ -500,7 +500,7 @@ describe("pack", ({test, _}) => {
   );
   test(
     "key_hash(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    key_hash(Key_hash.of_key(genesis_address)),
+    key_hash(Key_hash.of_key(genesis_wallet)),
     "050a00000015000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
@@ -510,7 +510,7 @@ describe("pack", ({test, _}) => {
   );
   test(
     "address(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
-    address(Implicit(Key_hash.of_key(genesis_address))),
+    address(Implicit(Key_hash.of_key(genesis_wallet))),
     "050a0000001600000ec89608700c0414159d93552ef9361cea96da13",
   );
   test(
@@ -529,20 +529,21 @@ describe("consensus", ({test, _}) => {
   open Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
-  let key_exn = s => Key.of_string(s) |> Option.get;
+  let key_hash_exn = s => Key_hash.of_string(s) |> Option.get;
   let address_exn = s => Address.of_string(s) |> Option.get;
 
   test("hash_validators", ({expect, _}) => {
     let hash =
-      hash_validators([
-        key_exn("edpkvQuAn9BeaDQLzudrPL2zigNRQSmFvKJ7xWN1QmjDjQHj3dBrEZ"),
-        key_exn("edpkvE3Ysq17HFzBBSQeAX87RE3smYZf1rHHpKu1LJdaFAhW8G7SNu"),
-        key_exn("edpktq5HiqUkHTyoBQETvzbyaiwtKQkaBEPkwgZyfMqhRajRuLpWR7"),
-        key_exn("edpkuNpThN8QeagEdvjN3o5R7PSic85cwiXHa61vNpRAE65FNV5mJH"),
-      ]);
+      [
+        key_hash_exn("tz1XoDYhrUJT4HtskbEUrJusHtFHx6ZXcemd"),
+        key_hash_exn("tz1R1XF4NnYkiCxcVphdLTYokQiyL38rtSQF"),
+        key_hash_exn("tz1d6QHk2oFzrYYasZWof8BU26D7jXAXeajv"),
+        key_hash_exn("tz1da6gqyddChGTwzW5aUA3Bia7DaAXmtqAE"),
+      ]
+      |> hash_validators;
     let hash = BLAKE2B.to_string(hash);
     expect.string(hash).toEqual(
-      "546d2bb2375cc919efc81a103a7ad3bd1227546b320f275e357bd9a5d5eef946",
+      "6d6ecacbc858e3a89d87f0d9bd76b0c11b07aa95191129104395d17c6c96d36b",
     );
   });
   test("hash_block", ({expect, _}) => {

@@ -212,12 +212,13 @@ let node = folder => {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             validator,
+             Address.of_key_hash(validator),
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
     | Error(err) => failwith(err)
     };
+
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>

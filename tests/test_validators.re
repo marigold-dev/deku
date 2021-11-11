@@ -5,8 +5,9 @@ open Validators;
 describe("validators", ({test, _}) => {
   let make_validator = () => {
     open Crypto;
-    let (_key, address) = Ed25519.generate();
-    Validators.{address: Key.Ed25519(address)};
+    let (_key, wallet) = Ed25519.generate();
+    let address = Address.of_wallet(Ed25519(wallet));
+    Validators.{address: address};
   };
   let setup_two = () => {
     let a = make_validator();

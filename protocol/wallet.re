@@ -21,4 +21,5 @@ let genesis_key =
   | Ok(key) => key
   | Error(error) => failwith(error)
   };
-let genesis_address = of_key(genesis_key);
+
+let genesis_wallet = of_key(genesis_key);

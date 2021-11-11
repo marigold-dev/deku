@@ -445,7 +445,7 @@ module Consensus = {
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
 
   let hash_validators = validators =>
-    list(List.map(key, validators)) |> hash_packed_data;
+    list(List.map(key_hash, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
       (
@@ -505,7 +505,7 @@ module Consensus = {
           Option.map(signature => Signature.to_string(signature), signature),
         signatures,
       );
-    let validators = List.map(Key.to_string, validators);
+    let validators = List.map(Key_hash.to_string, validators);
     let payload = {
       block_hash,
       block_height,
@@ -638,7 +638,7 @@ module Consensus = {
           Micheline.Prim(
             _,
             Michelson_v1_primitives.D_Pair,
-            [Prim(_, D_Pair, [_, Seq(_, keys)], _), _, _],
+            [Prim(_, D_Pair, [_, Seq(_, key_hashes)], _), _, _],
             _,
           ),
         ) => {
@@ -646,14 +646,14 @@ module Consensus = {
             (acc, k) =>
               switch (k) {
               | Micheline.String(_, k) =>
-                switch (Key.of_string(k)) {
+                switch (Key_hash.of_string(k)) {
                 | Some(k) => Ok([k, ...acc])
                 | None => Error("Failed to parse " ++ k)
                 }
-              | _ => Error("Keys weren't of type string")
+              | _ => Error("Some key_hash wasn't of type string")
               },
             [],
-            List.rev(keys),
+            List.rev(key_hashes),
           );
         }
       | Ok(_) => Error("Failed to parse storage micheline expression")

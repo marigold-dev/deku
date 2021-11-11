@@ -1,7 +1,7 @@
 open Crypto;
 
 [@deriving (yojson, ord)]
-type validator = {address: Wallet.t};
+type validator = {address: Address.t};
 
 [@deriving yojson]
 type t;
@@ -16,7 +16,7 @@ let length: t => int;
   best: O(1)
   worst: O(n) */
 let after_current: (int, t) => option(validator);
-let update_current: (Wallet.t, t) => t;
+let update_current: (Address.t, t) => t;
 
 let empty: t;
 let add: (validator, t) => t;

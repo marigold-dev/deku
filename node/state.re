@@ -5,11 +5,11 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   key: Secret.t,
-  t: Wallet.t,
+  t: Address.t,
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Wallet);
+module Address_map = Map.Make(Address);
 module Uri_map = Map.Make(Uri);
 
 type t = {
@@ -56,10 +56,11 @@ let make =
   let initial_block = Block.genesis;
   let initial_protocol = Protocol.make(~initial_block);
   let initial_signatures =
-    Signatures.make(~self_key=identity.t) |> Signatures.set_signed;
+    Signatures.make(~self_key=Wallet.of_key(identity.key))
+    |> Signatures.set_signed;
 
   let initial_block_pool =
-    Block_pool.make(~self_key=identity.t)
+    Block_pool.make(~self_key=Wallet.of_key(identity.key))
     |> Block_pool.append_block(initial_block);
   let initial_snapshots = {
     let initial_snapshot = Protocol.hash(initial_protocol);
@@ -89,20 +90,29 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let signatures_map =
     signatures
     |> Signatures.to_list
-    |> List.map(Signature.signature_to_signature_by_address)
+    |> List.map(signature => {
+         let (wallet, signature) =
+           Signature.signature_to_signature_by_address(signature);
+         (Address.of_wallet(wallet), signature);
+       })
     |> List.to_seq
     |> Address_map.of_seq;
 
   let validators =
     state.protocol.validators
     |> Validators.to_list
-    |> List.map(validator => validator.Validators.address);
+    |> List.map(validator =>
+         Address.to_key_hash(validator.Validators.address)
+       );
   let signatures =
     old_state.protocol.validators
     |> Validators.to_list
     |> List.map(validator => validator.Validators.address)
-    |> List.map(address =>
-         (address, Address_map.find_opt(address, signatures_map))
+    |> List.map(wallet =>
+         (
+           Address.to_key_hash(wallet),
+           Address_map.find_opt(wallet, signatures_map),
+         )
        );
 
   Lwt.async(() => {

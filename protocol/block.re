@@ -17,7 +17,7 @@ type t = {
   validators_hash: BLAKE2B.t,
   previous_hash: BLAKE2B.t,
   // block data
-  author: Wallet.t,
+  author: Address.t,
   // TODO: do we need a block_height? What is the tradeoffs?
   // TODO: maybe it should be only for internal pagination and stuff like this
   block_height: int64,
@@ -48,7 +48,7 @@ let (hash, verify) = {
         BLAKE2B.t,
         BLAKE2B.t,
         // block data
-        Wallet.t,
+        Address.t,
         int64,
         list(Main_chain.t),
         list(Side_chain.t),
@@ -159,7 +159,7 @@ let genesis =
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
-    ~author=Wallet.genesis_address,
+    ~author=Address.of_wallet(Wallet.genesis_wallet),
   );
 
 // TODO: move this to a global module
