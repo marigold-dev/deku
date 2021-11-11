@@ -233,6 +233,11 @@ and block_added_to_the_pool = (state, update_state, block) => {
       `Added_block_not_signed_enough_to_desync,
       Block_pool.is_signed(~hash=block.hash, state.block_pool),
     );
+    // TODO: block.hash == state.protocol.last_block_hash should be Ok()
+    let.assert () = (
+      `Added_block_has_lower_block_height,
+      block.block_height > state.protocol.block_height,
+    );
     switch (
       // TODO: this breaks request recursion
       Block_pool.find_block(
