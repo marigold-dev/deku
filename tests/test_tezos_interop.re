@@ -182,41 +182,45 @@ describe("secret", ({test, _}) => {
   });
 });
 describe("signature", ({test, _}) => {
+  open BLAKE2B;
   open Signature;
 
   let edpk = genesis_address;
   let edsk = genesis_key;
 
+  let tuturu = hash("tuturu");
+  let tuturu2 = hash("tuturu2");
+
   // TODO: proper test for sign
-  let edsig = sign(edsk, "tuturu");
+  let edsig = sign(edsk, tuturu);
 
   let sppk = TZ2_ex.pk;
   let spsk = TZ2_ex.sk;
-  let spsig = sign(spsk, "tuturu");
+  let spsig = sign(spsk, tuturu);
 
   test("check", ({expect, _}) => {
-    expect.bool(verify(edpk, edsig, "tuturu")).toBeTrue();
-    expect.bool(verify(sppk, spsig, "tuturu")).toBeTrue();
+    expect.bool(verify(edpk, edsig, tuturu)).toBeTrue();
+    expect.bool(verify(sppk, spsig, tuturu)).toBeTrue();
   });
   test("invalid message", ({expect, _}) => {
-    expect.bool(verify(edpk, edsig, "tuturu2")).toBeFalse();
-    expect.bool(verify(sppk, spsig, "tuturu2")).toBeFalse();
+    expect.bool(verify(edpk, edsig, tuturu2)).toBeFalse();
+    expect.bool(verify(sppk, spsig, tuturu2)).toBeFalse();
   });
   test("invalid key", ({expect, _}) => {
     let (secret, key) = {
       let (secret, key) = Ed25519.generate();
       (Secret.Ed25519(secret), Key.Ed25519(key));
     };
-    let edsig_from_key = sign(secret, "tuturu");
-    expect.bool(verify(key, edsig_from_key, "tuturu")).toBeTrue();
-    expect.bool(verify(edpk, edsig_from_key, "tuturu")).toBeFalse();
+    let edsig_from_key = sign(secret, tuturu);
+    expect.bool(verify(key, edsig_from_key, tuturu)).toBeTrue();
+    expect.bool(verify(edpk, edsig_from_key, tuturu)).toBeFalse();
     let (secret, key) = {
       let (secret, key) = Crypto.Secp256k1.generate();
       (Secret.Secp256k1(secret), Key.Secp256k1(key));
     };
-    let pksig_from_key = sign(secret, "tuturu");
-    expect.bool(verify(key, pksig_from_key, "tuturu")).toBeTrue();
-    expect.bool(verify(sppk, pksig_from_key, "tuturu")).toBeFalse();
+    let pksig_from_key = sign(secret, tuturu);
+    expect.bool(verify(key, pksig_from_key, tuturu)).toBeTrue();
+    expect.bool(verify(sppk, pksig_from_key, tuturu)).toBeFalse();
   });
 
   test("to_string", ({expect, _}) => {

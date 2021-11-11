@@ -78,6 +78,11 @@ let (hash, verify) = {
         ~handles_hash,
         ~validators_hash,
       );
+    /*
+       double hash because tezos always uses blake2b on CHECK_SIGNATURE
+       https://gitlab.com/tezos/tezos/-/blob/cf95d1507a13efb3ff4fb247aabb44efc0082fa7/src/lib_crypto/ed25519.ml#L338
+     */
+    let hash = BLAKE2B.hash(BLAKE2B.to_raw_string(hash));
     f((hash, block_payload_hash));
   };
   let hash = apply(Fun.id);

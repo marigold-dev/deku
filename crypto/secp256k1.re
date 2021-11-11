@@ -113,17 +113,15 @@ let generate = () => {
   let pk = Libsecp256k1.Key.neuterize_exn(context, sk);
   (sk, pk);
 };
-let sign = (secret, message) => {
-  let hash = BLAKE2B.hash(message);
-  Bigstring.of_string(BLAKE2B.to_raw_string(hash))
+let sign = (secret, hash) => {
+  BLAKE2B.to_raw_string(hash)
+  |> Bigstring.of_string
   |> Sign.sign_exn(context, ~sk=secret);
 };
-let verify = (public, signature, message) => {
-  let hash = BLAKE2B.hash(message);
+let verify = (public, signature, hash) =>
   Sign.verify_exn(
     context,
     ~pk=public,
     ~msg=Bigstring.of_string(BLAKE2B.to_raw_string(hash)),
     ~signature,
   );
-};
