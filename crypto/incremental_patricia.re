@@ -33,6 +33,7 @@ module Make =
 
   let is_set = (bit, number) => 1 lsl bit land number != 0;
 
+  // Hash: 0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8
   let empty_hash = BLAKE2B.hash("");
   let hash_of_t =
     fun
