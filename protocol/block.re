@@ -151,6 +151,7 @@ let of_yojson = json => {
 
 let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
+// Genesis Block Hash: bb796b51b2bcf4c2e799a6ff009b4e37f8dff1c60a9e77fb18aa48fc07c5ef61
 let genesis =
   make(
     // Hash: b55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203
