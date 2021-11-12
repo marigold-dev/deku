@@ -17,6 +17,7 @@ type t = {
   // shared consensus
   block_height: int64,
   last_block_hash: BLAKE2B.t,
+  // The state root hash of the most recent block.
   state_root_hash: BLAKE2B.t,
   /* TODO: I really don't like this field here, as it means protocol
      state data will be different across nodes, of course we can just

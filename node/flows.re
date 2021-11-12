@@ -14,6 +14,7 @@ type ignore = [
   | `Added_signature_not_signed_enough_to_request
   | `Not_current_block_producer
   | `Pending_blocks
+  | `Added_block_has_lower_block_height
 ];
 
 // TODO: set this by server
@@ -37,6 +38,9 @@ let received_block':
         | `Invalid_state_root_hash
         | `Not_current_block_producer
         | `Pending_blocks
+        | `State_root_hash_update_is_early
+        | `State_root_hash_update_is_late
+        | `Added_block_has_lower_block_height
       ],
     ),
   ) =
@@ -52,6 +56,9 @@ let block_added_to_the_pool':
         | `Invalid_block_when_applying
         | `Invalid_state_root_hash
         | `Not_current_block_producer
+        | `State_root_hash_update_is_early
+        | `State_root_hash_update_is_late
+        | `Added_block_has_lower_block_height
       ],
     ),
   ) =
@@ -184,6 +191,12 @@ let rec try_to_apply_block = (state, update_state, block) => {
     `Block_not_signed_enough_to_apply,
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
+  let.assert () = (
+    `Invalid_state_root_hash,
+    state.protocol.state_root_hash == block.state_root_hash
+    || state.next_state_root_hash == block.state_root_hash,
+  );
+
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);

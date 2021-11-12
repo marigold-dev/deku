@@ -38,6 +38,12 @@ let print_error = err => {
     eprintf("Invalid_address_on_main_operation")
   | `Invalid_signature_author => eprintf("Invalid_signature_author")
   | `Failed_to_verify_payload => eprintf("Failed to verify payload signature")
+  | `State_root_hash_update_is_early =>
+    eprintf("State_root_hash_update_is_early")
+  | `State_root_hash_update_is_late =>
+    eprintf("State_root_hash_update_is_late")
+  | `Added_block_has_lower_block_height =>
+    eprintf("Added_block_has_lower_block_height")
   };
   eprintf("\n%!");
 };

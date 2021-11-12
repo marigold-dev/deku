@@ -165,26 +165,12 @@ let genesis =
     ~author=Address.of_wallet(Wallet.genesis_wallet),
   );
 
-// TODO: move this to a global module
-let state_root_hash_epoch = 60.0;
-/** to prevent changing the validator just because of network jittering
-    this introduce a delay between can receive a block with new state
-    root hash and can produce that block
-
-    1s choosen here but any reasonable time will make it */
-let avoid_jitter = 1.0;
-let _can_update_state_root_hash = state =>
-  Unix.time() -. state.State.last_state_root_update >= state_root_hash_epoch;
-let can_produce_with_new_state_root_hash = state =>
-  Unix.time()
-  -. state.State.last_state_root_update
-  -. avoid_jitter >= state_root_hash_epoch;
-let produce = (~state) => {
-  let update_state_hashes = can_produce_with_new_state_root_hash(state);
+let produce = (~state, ~next_state_root_hash) => {
+  let next_state_root_hash =
+    Option.value(~default=state.State.state_root_hash, next_state_root_hash);
   make(
     ~previous_hash=state.State.last_block_hash,
-    ~state_root_hash=
-      update_state_hashes ? fst(State.hash(state)) : state.state_root_hash,
+    ~state_root_hash=next_state_root_hash,
     ~handles_hash=Ledger.handles_root_hash(state.ledger),
     ~validators_hash=Validators.hash(state.validators),
     ~block_height=Int64.add(state.block_height, 1L),

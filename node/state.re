@@ -22,6 +22,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  next_state_root_hash: BLAKE2B.t,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -76,6 +77,7 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    next_state_root_hash: BLAKE2B.hash("Tetsutetsu Tetsutetsu"),
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -134,6 +136,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     );
   });
 };
+
 let apply_block = (state, block) => {
   let old_state = state;
   let.ok (protocol, new_snapshot, results) =
@@ -145,7 +148,17 @@ let apply_block = (state, block) => {
       state.recent_operation_results,
       results,
     );
-  let state = {...state, protocol, recent_operation_results};
+  let next_state_root_hash =
+    Option.value(
+      ~default=state.next_state_root_hash,
+      Option.map(fst, new_snapshot),
+    );
+  let state = {
+    ...state,
+    protocol,
+    next_state_root_hash,
+    recent_operation_results,
+  };
   Lwt.async(() =>
     Lwt_io.with_file(
       ~mode=Output,
@@ -270,7 +283,9 @@ let load_snapshot =
       block_height,
       last_block_hash,
       state_root_hash,
-      last_state_root_update: 0.0,
+      // The node uses this time to check that state root hash updates
+      // are within an acceptable time frame, and thus needs to be current.
+      last_state_root_update: Unix.time(),
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
@@ -287,5 +302,10 @@ let load_snapshot =
       all_blocks,
     );
   //TODO: snapshots?
+  // It's ok for the [next_state_root_hash] to be incorrect
+  // here, because by definition when we load a snapshot we're
+  // out of sync and can't sign blocks anyway. On the next state
+  // root epoch, we'll update the [next_state_root_hash] to the
+  // correct value, at which point we'll also be in sync.
   Ok({...t, block_pool, protocol});
 };
