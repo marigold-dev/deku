@@ -14,6 +14,7 @@ type ignore = [
   | `Block_not_signed_enough_to_apply
   | `Not_current_block_producer
   | `Pending_blocks
+  | `Added_block_has_lower_block_height
 ];
 
 // TODO: set this by server
@@ -37,6 +38,7 @@ let received_block':
         | `Invalid_state_root_hash
         | `Not_current_block_producer
         | `Pending_blocks
+        | `Added_block_has_lower_block_height
       ],
     ),
   ) =
@@ -52,6 +54,7 @@ let block_added_to_the_pool':
         | `Invalid_block_when_applying
         | `Invalid_state_root_hash
         | `Not_current_block_producer
+        | `Added_block_has_lower_block_height
       ],
     ),
   ) =
@@ -232,6 +235,11 @@ and block_added_to_the_pool = (state, update_state, block) => {
     let.assert () = (
       `Added_block_not_signed_enough_to_desync,
       Block_pool.is_signed(~hash=block.hash, state.block_pool),
+    );
+    // TODO: block.hash == state.protocol.last_block_hash should be Ok()
+    let.assert () = (
+      `Added_block_has_lower_block_height,
+      block.block_height > state.protocol.block_height,
     );
     switch (
       // TODO: this breaks request recursion

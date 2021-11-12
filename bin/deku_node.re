@@ -15,6 +15,8 @@ let ignore_some_errors =
 let print_error = err => {
   open Format;
   switch (err) {
+  | `Added_block_has_lower_block_height =>
+    eprintf("Added block has lower block height")
   | `Added_block_not_signed_enough_to_desync =>
     eprintf("Added_block_not_signed_enough_to_desync")
   | `Added_signature_not_signed_enough_to_request =>
