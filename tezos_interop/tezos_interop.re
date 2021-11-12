@@ -332,7 +332,7 @@ module Consensus = {
       })
     | Update_root_hash(BLAKE2B.t);
   type operation = {
-    hash: BLAKE2B.t,
+    hash: Operation_hash.t,
     index: int,
     parameters,
   };
