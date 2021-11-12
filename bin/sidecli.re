@@ -125,6 +125,19 @@ let amount = {
     Format.fprintf(fmt, "%d", Amount.to_int(amount));
   Arg.(conv(~docv="A positive amount", (parser, printer)));
 };
+
+let tezos_required_confirmations = {
+  let msg = "Expected an integer greater than 0";
+  let parser = string =>
+    switch (int_of_string_opt(string)) {
+    | Some(int) when int > 0 => Ok(int)
+    | Some(_)
+    | None => Error(`Msg(msg))
+    };
+  let printer = (fmt, int) => Format.fprintf(fmt, "%d", int);
+  Arg.(conv(~docv="An integer greater than 0", (parser, printer)));
+};
+
 let ticket = {
   let parser = string =>
     Tezos_interop.Ticket.of_string(string)
@@ -563,7 +576,14 @@ let info_setup_tezos = {
   let doc = "Setup Tezos identity";
   Term.info("setup-tezos", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
-let setup_tezos = (node_folder, rpc_node, secret, consensus_contract) => {
+let setup_tezos =
+    (
+      node_folder,
+      rpc_node,
+      secret,
+      consensus_contract,
+      required_confirmations,
+    ) => {
   let.await () = ensure_folder(node_folder);
 
   let context =
@@ -571,7 +591,7 @@ let setup_tezos = (node_folder, rpc_node, secret, consensus_contract) => {
       rpc_node,
       secret,
       consensus_contract,
-      required_confirmations: 10,
+      required_confirmations,
     };
   let.await () = write_interop_context(~node_folder, context);
 
@@ -614,13 +634,24 @@ let setup_tezos = {
     );
   };
 
+  let tezos_required_confirmations = {
+    let docv = "int";
+    let doc = "Set the required confirmations. WARNING: Setting below default of 10 can compromise security of the Deku chain.";
+    Arg.(
+      value
+      & opt(tezos_required_confirmations, 10)
+      & info(["unsafe_tezos_required_confirmations"], ~doc, ~docv)
+    );
+  };
+
   Term.(
     lwt_ret(
       const(setup_tezos)
       $ folder_dest
       $ tezos_node_uri
       $ tezos_secret
-      $ tezos_consensus_contract_address,
+      $ tezos_consensus_contract_address
+      $ tezos_required_confirmations,
     )
   );
 };
