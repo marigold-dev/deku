@@ -128,15 +128,12 @@ let amount = {
 
 let tezos_required_confirmations = {
   let msg = "Expected an integer greater than 0";
-  let parser = string => {
-    let.ok int =
-      int_of_string_opt(string) |> Option.to_result(~none=`Msg(msg));
-    if (int > 0) {
-      Ok(int);
-    } else {
-      Error(`Msg(msg));
+  let parser = string =>
+    switch (int_of_string_opt(string)) {
+    | Some(int) when int > 0 => Ok(int)
+    | Some(_)
+    | None => Error(`Msg(msg))
     };
-  };
   let printer = (fmt, int) => Format.fprintf(fmt, "%d", int);
   Arg.(conv(~docv="An integer greater than 0", (parser, printer)));
 };
