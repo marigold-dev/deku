@@ -139,8 +139,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
 
 let apply_block = (state, block) => {
   let old_state = state;
-  let.ok (protocol, new_snapshot, results) =
-    apply_block(state.protocol, block);
+  let.ok (protocol, results) = apply_block(state.protocol, block);
   let recent_operation_results =
     List.fold_left(
       (results, (op, result)) =>
@@ -148,17 +147,7 @@ let apply_block = (state, block) => {
       state.recent_operation_results,
       results,
     );
-  let next_state_root_hash =
-    Option.value(
-      ~default=state.next_state_root_hash,
-      Option.map(fst, new_snapshot),
-    );
-  let state = {
-    ...state,
-    protocol,
-    next_state_root_hash,
-    recent_operation_results,
-  };
+  let state = {...state, protocol, recent_operation_results};
   Lwt.async(() =>
     Lwt_io.with_file(
       ~mode=Output,
@@ -170,8 +159,10 @@ let apply_block = (state, block) => {
       },
     )
   );
-  switch (new_snapshot) {
-  | Some(new_snapshot) =>
+  if (block.state_root_hash == old_state.protocol.state_root_hash) {
+    Ok(state);
+  } else {
+    let new_snapshot = Protocol.hash(state.protocol);
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
     | Some(signatures) when Signatures.is_self_signed(signatures) =>
       try_to_commit_state_hash(~old_state, state, block, signatures)
@@ -183,8 +174,7 @@ let apply_block = (state, block) => {
         ~applied_block_height=state.protocol.block_height,
         state.snapshots,
       );
-    Ok({...state, snapshots});
-  | None => Ok(state)
+    Ok({...state, snapshots, next_state_root_hash: fst(new_snapshot)});
   };
 };
 
@@ -292,10 +282,8 @@ let load_snapshot =
   let.ok protocol =
     List.fold_left_ok(
       (protocol, block) => {
-        // TODO: ignore this may be really bad for snapshots
-        // TODO: ignore the result is also really bad
-        let.ok (protocol, _new_hash, _result) =
-          Protocol.apply_block(protocol, block);
+        // TODO: ignore the result is really bad
+        let.ok (protocol, _result) = Protocol.apply_block(protocol, block);
         Ok(protocol);
       },
       protocol,

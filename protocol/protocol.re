@@ -183,19 +183,8 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let hash =
-    if (block.state_root_hash == state.state_root_hash) {
-      None;
-    } else {
-      // In the case where the epoch has changed, we
-      // hash the new state to determine what the state
-      // root hash of the next epoch will be, which we set
-      // appropriately in the resulting state.
-      let (next_state_root_hash, next_state_root_data) = State.hash(state);
-      Some((next_state_root_hash, next_state_root_data));
-    };
   let (state, result) = apply_block(state, block);
-  Ok((state, hash, result));
+  Ok((state, result));
 };
 
 let get_current_block_producer = state =>
