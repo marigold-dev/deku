@@ -75,11 +75,32 @@ done
   echo "]"
 }
 
+trusted_validator_membership_change_json() {
+  echo "["
+  for VALIDATOR in "${VALIDATORS[@]}"; do
+    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
+    KEY=$(echo $VALIDATOR | awk -F';' '{ print $2 }')
+    if [ $i != 0 ]; then
+      printf ",
+"
+    fi
+    cat <<EOF
+  {
+    "action": [ "Add" ],
+    "address": "$KEY"
+EOF
+    printf "  }"
+  done
+  echo ""
+  echo "]"
+}
+
 for VALIDATOR in ${VALIDATORS[@]}; do
   i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
   FOLDER="$data_directory/$i"
 
   validators_json > "$FOLDER/validators.json"
+  trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
 done
 
 # With the validators registered, use the address of the originated
