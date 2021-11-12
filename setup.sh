@@ -37,8 +37,8 @@ cat <<EOF
 EOF
 ## this iteration is done here just to ensure the indentation
 for VALIDATOR in ${VALIDATORS[@]}; do
-  KEY=$(echo $VALIDATOR | awk -F';' '{ print $2 }')
-  echo "      (\"$KEY\": key);"
+  ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
+  echo "      (\"$ADDRESS\": key_hash);"
 done
 cat <<EOF
     ];
@@ -79,7 +79,7 @@ trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-    KEY=$(echo $VALIDATOR | awk -F';' '{ print $2 }')
+    ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
     if [ $i != 0 ]; then
       printf ",
 "
@@ -87,7 +87,7 @@ trusted_validator_membership_change_json() {
     cat <<EOF
   {
     "action": [ "Add" ],
-    "address": "$KEY"
+    "address": "$ADDRESS"
 EOF
     printf "  }"
   done
