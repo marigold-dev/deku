@@ -7,11 +7,11 @@ module Node = State;
 
 type flag_node = [ | `Invalid_block | `Invalid_signature];
 type ignore = [
-  | `Already_known_block
   | `Added_block_not_signed_enough_to_desync
-  | `Block_not_signed_enough_to_apply
-  | `Already_known_signature
   | `Added_signature_not_signed_enough_to_request
+  | `Already_known_block
+  | `Already_known_signature
+  | `Block_not_signed_enough_to_apply
   | `Not_current_block_producer
   | `Pending_blocks
 ];
