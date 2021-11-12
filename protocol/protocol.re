@@ -180,15 +180,8 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let hash =
-    if (Crypto.BLAKE2B.equal(block.state_root_hash, state.state_root_hash)) {
-      None;
-    } else {
-      let (next_state_root_hash, next_state_root_data) = State.hash(state);
-      Some((next_state_root_hash, next_state_root_data));
-    };
   let (state, result) = apply_block(state, block);
-  Ok(({...state, state_root_hash: block.state_root_hash}, hash, result));
+  Ok(({...state, state_root_hash: block.state_root_hash}, result));
 };
 
 let get_current_block_producer = state =>
