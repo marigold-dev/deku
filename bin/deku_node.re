@@ -2,6 +2,7 @@
 // Can a core send a message and the other receive it in the past?
 // TODO: should start signing before being in sync?
 
+open Cmdliner;
 open Opium;
 open Helpers;
 open Protocol;
@@ -161,18 +162,10 @@ let handle_receive_operation_gossip =
   });
 
 let handle_trusted_validators_membership =
-    (
-      ~file,
-      ~persist:
-         (list(Trusted_validators_membership_change.t), ~file: string) =>
-         Lwt.t(unit),
-    ) =>
   handle_request(
     (module Networking.Trusted_validators_membership_change),
     (update_state, request) => {
     Flows.trusted_validators_membership(
-      ~file,
-      ~persist,
       Server.get_state(),
       update_state,
       request,
@@ -195,15 +188,15 @@ let handle_ticket_balance =
     },
   );
 
-let folder = Sys.argv[1];
-let trusted_validator_membership_change =
-  folder ++ "/trusted-validator-membership-change.json";
-
-let node = {
+let node = folder => {
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
+
+  let trusted_validator_membership_change_file =
+    folder ++ "/trusted-validator-membership-change.json";
+
   let.await trusted_validator_membership_change_list =
     Files.Trusted_validators_membership_change.read(
-      ~file=folder ++ "/trusted-validator-membership-change.json",
+      ~file=trusted_validator_membership_change_file,
     );
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.of_list(
@@ -219,18 +212,23 @@ let node = {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             validator,
+             Address.of_key_hash(validator),
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })
     | Error(err) => failwith(err)
     };
+
   let initial_validators_uri =
     List.fold_left(
       (validators_uri, (address, uri)) =>
         State.Address_map.add(address, uri, validators_uri),
       State.Address_map.empty,
       validators,
+    );
+  let persist_trusted_membership_change =
+    Files.Trusted_validators_membership_change.write(
+      ~file=trusted_validator_membership_change_file,
     );
   let node =
     State.make(
@@ -239,6 +237,7 @@ let node = {
       ~interop_context,
       ~data_folder=folder,
       ~initial_validators_uri,
+      ~persist_trusted_membership_change,
     );
   let node = {
     ...node,
@@ -277,28 +276,41 @@ let node = {
   );
   await({...node, protocol});
 };
-let node = node |> Lwt_main.run;
-let () = Node.Server.start(~initial=node);
 
-let _server =
-  App.empty
-  |> App.port(Node.Server.get_port() |> Option.get)
-  |> handle_block_level
-  |> handle_received_block_and_signature
-  |> handle_received_signature
-  |> handle_block_by_hash
-  |> handle_protocol_snapshot
-  |> handle_request_nonce
-  |> handle_register_uri
-  |> handle_receive_operation_gossip
-  |> handle_withdraw_proof
-  |> handle_ticket_balance
-  |> handle_trusted_validators_membership(
-       ~persist=Files.Trusted_validators_membership_change.write,
-       ~file=trusted_validator_membership_change,
-     )
-  |> App.start
-  |> Lwt_main.run;
+let node = folder => {
+  let () = Node.Server.start(~initial=node(folder) |> Lwt_main.run);
 
-let (forever, _) = Lwt.wait();
-let () = Lwt_main.run(forever);
+  let _server =
+    App.empty
+    |> App.port(Node.Server.get_port() |> Option.get)
+    |> handle_block_level
+    |> handle_received_block_and_signature
+    |> handle_received_signature
+    |> handle_block_by_hash
+    |> handle_protocol_snapshot
+    |> handle_request_nonce
+    |> handle_register_uri
+    |> handle_receive_operation_gossip
+    |> handle_withdraw_proof
+    |> handle_ticket_balance
+    |> handle_trusted_validators_membership
+    |> App.start
+    |> Lwt_main.run;
+
+  let (forever, _) = Lwt.wait();
+  Lwt_main.run(forever);
+};
+
+let node = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "Path to the folder containing the node configuration data.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
+  Term.(const(node) $ folder_node);
+};
+
+let () = {
+  Term.exit @@ Term.eval((node, Term.info("deku-node")));
+};

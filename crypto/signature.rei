@@ -1,11 +1,11 @@
 [@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Key.t)
-  | Secp256k1(Secp256k1.Key.t);
+  | Ed25519(Ed25519.Signature.t)
+  | Secp256k1(Secp256k1.Signature.t);
 
-let of_secret: Secret.t => t;
+let sign: (Secret.t, BLAKE2B.t) => t;
+let verify: (Key.t, t, BLAKE2B.t) => bool;
 
-let encoding: Data_encoding.t(t);
 let to_string: t => string;
 let of_string: string => option(t);
 

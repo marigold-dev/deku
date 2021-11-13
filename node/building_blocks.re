@@ -49,10 +49,10 @@ let is_signed_by_self = (state, ~hash) => {
   Some(Signatures.is_self_signed(signatures));
 };
 
-let is_current_producer = (state, ~key) => {
+let is_current_producer = (state, ~key_hash) => {
   let.default () = false;
   let.some current_producer = get_current_block_producer(state.Node.protocol);
-  Some(current_producer.address == key);
+  Some(current_producer.address == key_hash);
 };
 
 // TODO: bad naming
@@ -93,7 +93,7 @@ let is_signable = (state, block) => {
     });
   is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
-  && is_current_producer(state, ~key=block.author)
+  && is_current_producer(state, ~key_hash=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
   && all_main_ops_are_known
   && contains_only_trusted_add_validator_op(block.side_chain_ops);
@@ -152,8 +152,41 @@ let clean = (state, update_state, block) => {
     state.Node.pending_main_ops |> List.find_all(main_op_not_in_block);
   let pending_side_ops =
     state.pending_side_ops |> List.find_all(side_op_not_in_block);
+
+  let trusted_validator_membership_change =
+    List.fold_left(
+      (trusted_validator_membership_change, operation) => {
+        switch (operation.Operation.Side_chain.kind) {
+        | Add_validator(validator) =>
+          Trusted_validators_membership_change.Set.remove(
+            {address: validator.address, action: Add},
+            trusted_validator_membership_change,
+          )
+        | Remove_validator(validator) =>
+          Trusted_validators_membership_change.Set.remove(
+            {address: validator.address, action: Remove},
+            state.Node.trusted_validator_membership_change,
+          )
+        | _ => trusted_validator_membership_change
+        }
+      },
+      state.Node.trusted_validator_membership_change,
+      block.side_chain_ops,
+    );
+
+  Lwt.async(() =>
+    trusted_validator_membership_change
+    |> Trusted_validators_membership_change.Set.elements
+    |> state.persist_trusted_membership_change
+  );
+
   // TODO: clean old blocks and old signatures
-  update_state({...state, pending_main_ops, pending_side_ops});
+  update_state({
+    ...state,
+    trusted_validator_membership_change,
+    pending_main_ops,
+    pending_side_ops,
+  });
 };
 
 // networking functions

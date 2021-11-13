@@ -78,6 +78,11 @@ let (hash, verify) = {
         ~handles_hash,
         ~validators_hash,
       );
+    /*
+       double hash because tezos always uses blake2b on CHECK_SIGNATURE
+       https://gitlab.com/tezos/tezos/-/blob/cf95d1507a13efb3ff4fb247aabb44efc0082fa7/src/lib_crypto/ed25519.ml#L338
+     */
+    let hash = BLAKE2B.hash(BLAKE2B.to_raw_string(hash));
     f((hash, block_payload_hash));
   };
   let hash = apply(Fun.id);
@@ -154,7 +159,7 @@ let genesis =
     ~block_height=0L,
     ~main_chain_ops=[],
     ~side_chain_ops=[],
-    ~author=Address.genesis_address,
+    ~author=Address.of_wallet(Wallet.genesis_wallet),
   );
 
 // TODO: move this to a global module
@@ -184,7 +189,7 @@ let produce = (~state) => {
 };
 
 // TODO: this shouldn't be an open
-open Signature.Make({
+open Protocol_signature.Make({
        type nonrec t = t;
        let hash = t => t.hash;
      });

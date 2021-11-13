@@ -10,8 +10,6 @@ let rec try_decode_list = (l, string) =>
     }
   | [] => None
   };
-module Base58 = Base58;
-module Ed25519 = Ed25519;
 
 module Contract_hash = {
   [@deriving eq]
@@ -118,31 +116,6 @@ module Address = {
 
   let (to_yojson, of_yojson) =
     Yojson_ext.with_yojson_string("address", to_string, of_string);
-};
-
-module Signature = {
-  [@deriving eq]
-  type t =
-    | Ed25519(Ed25519.Signature.t);
-  let sign = (secret, message) =>
-    switch (secret) {
-    | Secret.Ed25519(secret) => Ed25519(Ed25519.sign(secret, message))
-    };
-  let check = (key, signature, message) =>
-    switch (key, signature) {
-    | (Key.Ed25519(key), Ed25519(signature)) =>
-      Ed25519.verify(key, signature, message)
-    };
-  let to_string =
-    fun
-    | Ed25519(sign) => Ed25519.Signature.to_string(sign);
-  let of_string = {
-    let ed25519 = string => {
-      let.some sign = Ed25519.Signature.of_string(string);
-      Some(Ed25519(sign));
-    };
-    try_decode_list([ed25519]);
-  };
 };
 
 module Ticket = {
@@ -472,7 +445,7 @@ module Consensus = {
     data |> to_bytes |> Bytes.to_string |> BLAKE2B.hash;
 
   let hash_validators = validators =>
-    list(List.map(key, validators)) |> hash_packed_data;
+    list(List.map(key_hash, validators)) |> hash_packed_data;
   let hash = hash => bytes(BLAKE2B.to_raw_string(hash) |> Bytes.of_string);
   let hash_block =
       (
@@ -532,7 +505,7 @@ module Consensus = {
           Option.map(signature => Signature.to_string(signature), signature),
         signatures,
       );
-    let validators = List.map(Key.to_string, validators);
+    let validators = List.map(Key_hash.to_string, validators);
     let payload = {
       block_hash,
       block_height,
@@ -665,7 +638,7 @@ module Consensus = {
           Micheline.Prim(
             _,
             Michelson_v1_primitives.D_Pair,
-            [Prim(_, D_Pair, [_, Seq(_, keys)], _), _, _],
+            [Prim(_, D_Pair, [_, Seq(_, key_hashes)], _), _, _],
             _,
           ),
         ) => {
@@ -673,14 +646,14 @@ module Consensus = {
             (acc, k) =>
               switch (k) {
               | Micheline.String(_, k) =>
-                switch (Key.of_string(k)) {
+                switch (Key_hash.of_string(k)) {
                 | Some(k) => Ok([k, ...acc])
                 | None => Error("Failed to parse " ++ k)
                 }
-              | _ => Error("Keys weren't of type string")
+              | _ => Error("Some key_hash wasn't of type string")
               },
             [],
-            List.rev(keys),
+            List.rev(key_hashes),
           );
         }
       | Ok(_) => Error("Failed to parse storage micheline expression")
@@ -699,15 +672,13 @@ module Discovery = {
   open Pack;
 
   let sign = (secret, ~nonce, uri) =>
-    Signature.sign(
-      secret,
-      Bytes.to_string(
-        to_bytes(
-          pair(
-            int(Z.of_int64(nonce)),
-            bytes(Bytes.of_string(Uri.to_string(uri))),
-          ),
-        ),
+    to_bytes(
+      pair(
+        int(Z.of_int64(nonce)),
+        bytes(Bytes.of_string(Uri.to_string(uri))),
       ),
-    );
+    )
+    |> Bytes.to_string
+    |> BLAKE2B.hash
+    |> Signature.sign(secret);
 };

@@ -1,6 +1,7 @@
 [@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Secret.t);
+  | Ed25519(Ed25519.Secret.t)
+  | Secp256k1(Secp256k1.Secret.t);
 
 let encoding: Data_encoding.t(t);
 let to_string: t => string;

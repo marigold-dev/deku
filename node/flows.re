@@ -158,7 +158,7 @@ let request_previous_blocks = (state, block) =>
 let try_to_produce_block = (state, update_state) => {
   let.assert () = (
     `Not_current_block_producer,
-    is_current_producer(state, ~key=state.identity.t),
+    is_current_producer(state, ~key_hash=state.identity.t),
   );
 
   // TODO: avoid spam? how?
@@ -306,7 +306,8 @@ let received_operation =
               state.Node.identity.t,
               Signature.public_key(
                 request.operation.Operation.Side_chain.signature,
-              ),
+              )
+              |> Address.of_wallet,
             )
             == 0,
           );
@@ -340,7 +341,7 @@ let received_main_operation = (state, update_state, operation) => {
   | Deposit({ticket, amount, destination}) =>
     let.ok destination =
       switch (destination) {
-      | Implicit(destination) => Ok(Wallet.of_key_hash(destination))
+      | Implicit(destination) => Ok(Address.of_key_hash(destination))
       | _ => Error(`Invalid_address_on_main_operation)
       };
     let amount = Amount.of_int(Z.to_int(amount));
@@ -401,7 +402,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
       ...state,
       validators_uri:
         Node.Address_map.add(
-          Signature.public_key(signature),
+          Signature.public_key(signature) |> Address.of_wallet,
           uri,
           state.validators_uri,
         ),
@@ -436,15 +437,17 @@ let request_withdraw_proof = (state, ~hash) =>
 let request_ticket_balance = (state, ~ticket, ~address) =>
   state.Node.protocol.ledger |> Ledger.balance(address, ticket);
 
-let trusted_validators_membership =
-    (~file, ~persist, state, update_state, request) => {
+let trusted_validators_membership = (state, update_state, request) => {
   open Networking.Trusted_validators_membership_change;
   let {signature, payload: {address, action} as payload} = request;
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Address.compare(state.Node.identity.t, Signature.public_key(signature))
+    Address.compare(
+      state.Node.identity.t,
+      Address.of_wallet(Signature.public_key(signature)),
+    )
     == 0,
   );
   let.assert () = (
@@ -470,9 +473,8 @@ let trusted_validators_membership =
       trusted_validator_membership_change: new_validators,
     });
   Lwt.async(() =>
-    persist(
+    state.persist_trusted_membership_change(
       new_validators |> Trusted_validators_membership_change.Set.elements,
-      ~file,
     )
   );
   Ok();
