@@ -1,0 +1,56 @@
+;; Building the preprocessor as a library
+
+(library
+  (name Preprocessor)
+  (public_name Preprocessor)
+  (wrapped true)
+  (libraries
+    ;; Vendor
+    simple-utils
+    ;; Third party
+    getopt
+    str)
+  (modules Version CLI E_Parser E_Lexer E_AST API PreprocMainGen))
+
+;; Building the lexers of the preprocessor
+
+(ocamllex E_Lexer API)
+
+;; Building the parser of the preprocessor (for boolean expressions)
+
+(menhir
+  (modules E_Parser))
+
+;; Building PreprocMain.exe for a standalone preprocessor
+
+(executable
+  (name PreprocMain)
+  (modules PreprocMain)
+  (libraries Preprocessor))
+
+;; Building E_LexerMain.exe for a standalone lexer of boolean
+;; expressions
+
+(executable
+  (name E_LexerMain)
+  (modules
+    E_LexerMain)
+  (libraries Preprocessor))
+
+;; Building E_ParserMain.exe for a standalone parser of boolean
+;; expressions
+
+(executable
+  (name E_ParserMain)
+  (modules
+    E_ParserMain)
+  (libraries Preprocessor))
+
+;; Building the version source (for the user, as a CLI option)
+
+(rule
+ (targets version.ml)
+ (action (with-stdout-to
+          version.ml
+          (run "sh" "-c"
+               "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))

@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '1102'
+title: Compiler now emits Edo GET k and UPDATE k when [@layout:comb] is used with records
+type: added

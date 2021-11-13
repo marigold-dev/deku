@@ -1,0 +1,4 @@
+[submodule "vendors/tezos"]
+	path = vendors/tezos
+	url = https://gitlab.com/tezos/tezos.git
+	branch = tags/v11.0-rc1

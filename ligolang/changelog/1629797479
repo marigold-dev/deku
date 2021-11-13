@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: add support for tuple assignment"
+  merge_request: "1262"
+  author: "@SanderSpies"
+  type: "fixed"
+

@@ -1,0 +1,9 @@
+type balances = map <address, tez>
+
+let balances_under = (b : balances, threshold:tez) : balances => {
+  let f = (acc : balances, kv :[address , tez] ) : balances => {
+    let [k,v] = kv ;
+    if (v < threshold) { return Map.remove (k,acc) } else {return acc}
+  };
+  return Map.fold (f,b,b);
+};

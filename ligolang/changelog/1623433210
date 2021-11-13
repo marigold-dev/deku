@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1194'
+title: Add support for NEVER instruction as Tezos.never
+type: added

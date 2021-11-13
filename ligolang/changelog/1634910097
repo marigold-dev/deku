@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+title: '[Hangzhou] support for on-chain views. Command line option ''--views'' and
+  top-level declaration ''[@view]'' annotation'
+type: added
+merge_request: '1346'

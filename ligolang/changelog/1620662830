@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '1148'
+title: Constructors without arguments are abstracted to constructor taking unit pattern
+type: fixed

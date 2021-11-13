@@ -1,0 +1,13 @@
+(library
+  (name tezos_utils)
+  (public_name tezos-utils)
+  (libraries
+    tezos-error-monad
+    tezos-stdlib-unix
+    tezos-micheline
+    tezos-base
+    data-encoding
+    simple-utils
+  )
+ (flags (:standard -open Simple_utils ))
+)

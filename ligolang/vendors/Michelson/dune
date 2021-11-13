@@ -1,0 +1,25 @@
+;; Building a lexer for Michelson
+
+(ocamllex Lexer Token)
+
+(library
+  (name Michelson)
+  (public_name Michelson)
+  (modules Comments File Lexer Token Pair Version)
+  (libraries
+    ;; Vendor
+    simple-utils
+    Preprocessor
+    LexerLib
+    ParserLib
+    ;; Third party
+    zarith
+    hex))
+
+;; Build of the version source (for the user, as a CLI option)
+
+(rule
+  (targets version.ml)
+  (action
+    (progn (run "sh" "-c" "printf 'let version = \"%s\"'\\\\n \"$(echo UNKNOWN)\" > version.ml")))
+  (mode (promote (until-clean) (only *))))

@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '864'
+title: add --typer option to choose between 'old' and 'new' typer
+type: added

@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '909'
+title: tuple destructuring are now transformed into nested pattern matches
+type: added

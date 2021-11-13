@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1267'
+title: 'Fix: testing framework checks if current source is an implicit contract'
+type: fixed

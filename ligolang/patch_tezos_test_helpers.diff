@@ -1,0 +1,106 @@
+idiff --git a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.ml b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.ml
+index a48ebea84..0e5691ef5 100644
+--- a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.ml
++++ b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.ml
+@@ -244,7 +244,7 @@ let check_constants_consistency constants =
+          blocks per roll snapshot")
+ 
+ let initial_context ?(with_commitments = false) constants header
+-    initial_accounts =
++    initial_accounts initial_contracts =
+   let open Tezos_protocol_008_PtEdo2Zk_parameters in
+   let bootstrap_accounts =
+     List.map
+@@ -252,9 +252,18 @@ let initial_context ?(with_commitments = false) constants header
+         Default_parameters.make_bootstrap_account (pkh, pk, amount))
+       initial_accounts
+   in
++  let ({Account.pkh;_}, _) = List.hd initial_accounts in
++  let bootstrap_contracts =
++    let open Tezos_protocol_008_PtEdo2Zk.Protocol.Parameters_repr in
++    List.map
++      (fun (amount, script) ->
++        {delegate = pkh;amount;script})
++      initial_contracts
++  in
+   let parameters =
+     Default_parameters.parameters_of_constants
+       ~bootstrap_accounts
++      ~bootstrap_contracts
+       ~with_commitments
+       constants
+   in
+@@ -306,7 +315,7 @@ let genesis_with_parameters parameters =
+ (* if no parameter file is passed we check in the current directory
+    where the test is run *)
+ let genesis ?with_commitments ?endorsers_per_block ?initial_endorsers
+-    ?min_proposal_quorum (initial_accounts : (Account.t * Tez_repr.t) list) =
++    ?min_proposal_quorum (initial_accounts : (Account.t * Tez_repr.t) list) (initial_contracts : (Tez_repr.t * Script_repr.t) list) =
+   if initial_accounts = [] then
+     Stdlib.failwith "Must have one account with a roll to bake" ;
+   let open Tezos_protocol_008_PtEdo2Zk_parameters in
+@@ -356,7 +365,7 @@ let genesis ?with_commitments ?endorsers_per_block ?initial_endorsers
+       ~operations_hash:Operation_list_list_hash.zero
+   in
+   let contents = Forge.make_contents ~priority:0 ~seed_nonce_hash:None () in
+-  initial_context ?with_commitments constants shell initial_accounts
++  initial_context ?with_commitments constants shell initial_accounts initial_contracts
+   >|=? fun context ->
+   {
+     hash;
+diff --git a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.mli b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.mli
+index 059b46762..01c1ddf24 100644
+--- a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.mli
++++ b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/block.mli
+@@ -97,6 +97,7 @@ val genesis :
+   ?initial_endorsers:int ->
+   ?min_proposal_quorum:int32 ->
+   (Account.t * Tez_repr.tez) list ->
++  (Tez_repr.t * Script_repr.t) list ->
+   block tzresult Lwt.t
+ 
+ val genesis_with_parameters : Parameters_repr.t -> block tzresult Lwt.t
+diff --git a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.ml b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.ml
+index 84987952b..7039aa515 100644
+--- a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.ml
++++ b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.ml
+@@ -294,7 +294,7 @@ module Delegate = struct
+ end
+ 
+ let init ?endorsers_per_block ?with_commitments ?(initial_balances = [])
+-    ?initial_endorsers ?min_proposal_quorum n =
++    ?initial_endorsers ?min_proposal_quorum ?(initial_contracts = []) n =
+   let accounts = Account.generate_accounts ~initial_balances n in
+   let contracts =
+     List.map
+@@ -307,4 +307,5 @@ let init ?endorsers_per_block ?with_commitments ?(initial_balances = [])
+     ?initial_endorsers
+     ?min_proposal_quorum
+     accounts
++    initial_contracts
+   >|=? fun blk -> (blk, contracts)
+diff --git a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.mli b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.mli
+index 3b6b66f61..eb4ae3112 100644
+--- a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.mli
++++ b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/context.mli
+@@ -134,5 +134,6 @@ val init :
+   ?initial_balances:int64 list ->
+   ?initial_endorsers:int ->
+   ?min_proposal_quorum:int32 ->
++  ?initial_contracts:(Tez_repr.t * Script_repr.t) list ->
+   int ->
+   (Block.t * Alpha_context.Contract.t list) tzresult Lwt.t
+diff --git a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/account.ml b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/account.ml
+index 2d939c6e3..befac6cbe 100644
+--- a/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/account.ml
++++ b/vendors/ligo-utils/ligo_008_PtEdo2Zk_test_helpers/account.ml
+@@ -78,7 +78,8 @@ let generate_accounts ?(initial_balances = []) n : (t * Tez_repr.t) list =
+   in
+   List.map
+     (fun i ->
+-      let (pkh, pk, sk) = Signature.generate_key () in
++      let seed = Format.asprintf "%32d" i in
++      let (pkh, pk, sk) = Signature.generate_key ~seed:(Bytes.of_string seed) () in
+       let account = {pkh; pk; sk} in
+       Signature.Public_key_hash.Table.add known_accounts pkh account ;
+       (account, amount i))

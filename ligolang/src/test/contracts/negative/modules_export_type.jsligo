@@ -1,0 +1,5 @@
+namespace Bar {
+    type foo = int
+}
+
+type a = Bar.foo

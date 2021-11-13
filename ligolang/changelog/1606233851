@@ -1,0 +1,4 @@
+author: Christian Rinderknecht
+merge_request: '840'
+title: Add missing location to parser error messages in JSON
+type: changed

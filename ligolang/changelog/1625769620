@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1217'
+title: 'Fix #1240: use annotations when checking Tezos.self'
+type: fixed

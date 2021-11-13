@@ -1,0 +1,6 @@
+---
+  title: "Fix issue with JsLIGO sequences"
+  merge_request: "1150"
+  author: "@SanderSpies"
+  type: "fixed"
+

@@ -1,0 +1,27 @@
+(* The rule [series(Item,TERM)] parses a non-empty list of [Item]
+   separated by semicolons and optionally terminated by a semicolon,
+   then the terminal TERM. *)
+
+series(Item,TERM):
+  Item after_item(Item,TERM) { $1,$2 }
+
+after_item(Item,TERM):
+  SEMI item_or_closing(Item,TERM) {
+    match $2 with
+      `Some (item, items, term, closing) ->
+        ($1, item)::items, term, closing
+    | `Closing closing ->
+        [], Some $1, closing
+  }
+| TERM {
+   [], None, $1
+  }
+
+item_or_closing(Item,TERM):
+  TERM {
+   `Closing $1
+  }
+| series(Item,TERM) {
+    let item, (items, term, closing) = $1
+    in `Some (item, items, term, closing)
+  }

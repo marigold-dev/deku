@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/inter-contract-calls/examples/contracts/ligo/CreateAndCall.ligo

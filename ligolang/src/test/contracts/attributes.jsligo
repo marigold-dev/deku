@@ -1,0 +1,21 @@
+// @inline @pleh
+let x = 1;
+
+// @inline
+let foo = (a : int) : int => {
+  // [@inline]
+  let test = 2 + a;
+  return test;
+};
+
+// sfgsff
+let y = 1;
+
+let bar = (b : int) : int => {
+  // @inline @foo @bar
+  let test = (z : int):int => 2 + b + z;
+  return test (b);
+};
+
+// @ 
+let check = 4

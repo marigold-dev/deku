@@ -1,0 +1,6 @@
+---
+  title: "Generate manpages for new-cli & rename `ligo print preprocess` to `ligo print preprocessed`"
+  merge_request: "1304"
+  author: "melwyn95"
+  type: "internal"
+

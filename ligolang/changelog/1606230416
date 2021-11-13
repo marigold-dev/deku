@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+merge_request: '892'
+title: the CLI print-* commands now print proper JSON when --format=json, also removed
+  the sugar field from the core representation
+type: fixed

@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+merge_request: '934'
+title: Support for deep pattern, record pattern, wildcard ("_") pattern and unit pattern
+  in matching expressions
+type: added

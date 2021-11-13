@@ -1,0 +1,4 @@
+author: Suzanne Soy
+merge_request: '918'
+title: use letters instead of numbers for type variables in debug trace
+type: fixed

@@ -1,0 +1,6 @@
+// Test conditional in CameLIGO
+(contract
+  (fun
+    main
+    (type? (tuple? (? a) (? b)) (PROD bool bool))
+    : = (if (a = b) 999 1)))

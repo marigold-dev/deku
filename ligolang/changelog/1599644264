@@ -1,0 +1,6 @@
+---
+  title: "Fixed error message when lexing an odd-lengthed byte sequence."
+  merge_request: "786"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

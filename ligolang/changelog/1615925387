@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '1017'
+title: Some optimizations for Edo, including DUP n
+type: added

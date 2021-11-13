@@ -1,0 +1,28 @@
+(contract
+  (type_decl sum_aggregator (RECORD counter: int sum: int))
+  (fun
+    counter
+    (type? (? n) int)
+    :
+    int
+    =
+    (let
+      (const
+        (? initial) sum_aggregator (record (.= counter 0) (.= sum 0)))
+    (let
+      (const
+        (? aggregate)
+        (sum_aggregator -> int)
+        (lam
+          (type? (? prev) sum_aggregator)
+          :
+          =>
+          (if
+            ((. prev counter) <= n)
+            (apply
+              aggregate
+              (record
+                (.= counter ((. prev counter) + 1))
+                (.= sum ((. prev counter) + (. prev sum)))))
+            (. prev sum))))
+    (apply aggregate initial)))))

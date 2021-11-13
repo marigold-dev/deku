@@ -1,0 +1,11 @@
+(library
+ (name tezos_signer_services)
+ (instrumentation (backend bisect_ppx))
+ (public_name tezos-signer-services)
+ (libraries tezos-base
+            tezos-client-base
+            tezos-rpc)
+ (flags (:standard -open Tezos_base__TzPervasives
+                   -open Tezos_rpc
+                   -open Tezos_client_base
+                   -linkall)))

@@ -1,0 +1,28 @@
+{
+    "name": "@ligo/syntax",
+    "description": "Switch between different syntaxes",
+    "version": "0.0.0",
+    "main": "output/index.js",
+    "peerDependencies": {
+        "@docusaurus/core": "^2.0.0-alpha.43",
+        "@docusaurus/preset-classic": "^2.0.0-alpha.43",
+        "react": "^16.8.4",
+        "react-dom": "^16.8.4",
+        "webpack": "4.41.2"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.8.4",
+        "@babel/core": "^7.8.7",
+        "@babel/preset-env": "^7.8.7",
+        "@babel/preset-react": "^7.8.3",
+        "prism-react-renderer": "^1.0.2"
+    },
+    "babel": {
+        "presets": [
+            "@babel/preset-react"
+        ]
+    },
+    "scripts": {
+        "build": "rm -rf output && mkdir output && node_modules/.bin/babel src/theme/Syntax/*.js -d output/theme/Syntax/ && node_modules/.bin/babel src/theme/SyntaxTitle/*.js -d output/theme/SyntaxTitle/ &&  node_modules/.bin/babel src/*.js -d output/ && cp ./src/theme/Syntax/styles.module.css output/theme/Syntax/"
+    }
+}

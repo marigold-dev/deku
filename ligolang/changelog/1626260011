@@ -1,0 +1,6 @@
+---
+  title: "Trim warnings to not cause accidental error output."
+  merge_request: "1222"
+  author: "@SanderSpies"
+  type: "fixed"
+

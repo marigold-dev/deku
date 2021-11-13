@@ -1,0 +1,6 @@
+---
+  title: "All syntaxes: Removed predefined constructors Some and None."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "internal"
+

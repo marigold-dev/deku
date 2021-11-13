@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '1101'
+title: added variable references support (get-scope)
+type: added

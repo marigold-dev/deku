@@ -1,0 +1,5 @@
+author: er433
+merge_request: '1294'
+title: 'Simple polymorphism: add support for simple polymorphism in the type-checking
+  pass'
+type: added

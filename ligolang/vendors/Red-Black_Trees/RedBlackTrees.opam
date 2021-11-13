@@ -1,0 +1,20 @@
+# NOTE: dependencies added here are ignored in the LIGO build. Add
+# dependencies in /ligo.opam and run [opam lock].
+opam-version : "2.0"
+version      : "1.0"
+synopsis     : "Read-Black trees a la Okasaki and polymorphic sets and maps based on them"
+description  : "This implementation is based on the classic paper by Chris Okasaki, Red-Black Trees in a Functional Setting. J. Funct. Program. 9(4): 471-477 (1999). Note that no removal operation is provided."
+maintainer   : "rinderknecht@free.fr"
+authors      : ["Christian Rinderknecht"]
+homepage     : "https://github.com/rinderknecht/Red-Black_Trees"
+bug-reports  : "https://github.com/rinderknecht/Red-Black_Trees/issues"
+dev-repo     : "git+https://github.com/rinderknecht/Red-Black_Trees.git"
+license      : "MIT"
+# If you change the dependencies, run `opam lock` in the root
+depends      : ["dune"]
+build        : [
+                ["dune" "build" "-p" name "-j" jobs]
+               ]
+url {
+  src: "https://github.com/rinderknecht/Red-Black_Trees/"
+}

@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/ligo/inlining/HelloLigoV1.ligo

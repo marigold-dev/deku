@@ -1,0 +1,18 @@
+(library
+ (name ligo_api)
+ (public_name ligo.api)
+ (instrumentation (backend bisect_ppx))
+ (libraries 
+  simple-utils 
+  ligo
+  build
+  interpreter
+ )
+)
+
+(rule
+ (targets changelog.ml)
+ (deps (env_var CHANGELOG_PATH))
+ (action (with-stdout-to
+          changelog.ml
+          (run "sh" "-c" "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../../gitlab-pages/docs/intro/changelog.md})\""))))

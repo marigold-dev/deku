@@ -1,0 +1,5 @@
+author: Rémi lesénéchal & Gabriel Alfour & Christian Rinderknecht
+merge_request: '809'
+title: 'two new attributes on record and variant types: annot for michelson field
+  annotation and layout (comb or tree) for compilation layout'
+type: added

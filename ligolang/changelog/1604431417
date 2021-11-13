@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '839'
+title: boolean constant to force use of the typer which is not currently in use in
+  the tests
+type: internal

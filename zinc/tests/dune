@@ -1,0 +1,6 @@
+(library
+ (name test_interpret)
+ (libraries zinc.types zinc.utils zinc.interpreter)
+ (inline_tests)
+ (preprocess
+  (pps ppx_inline_test ppx_expect)))

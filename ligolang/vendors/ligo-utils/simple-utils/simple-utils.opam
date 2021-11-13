@@ -1,0 +1,18 @@
+# NOTE: dependencies added here are ignored in the LIGO build. Add
+# dependencies in /ligo.opam and run [opam lock].
+opam-version : "2.0"
+name         : "simple-utils"
+version      : "dev"
+synopsis     : "LIGO utilities"
+maintainer   : "Galfour <contact@ligolang.org>"
+authors      : "Galfour, Christian Rinderknecht"
+license      : "MIT"
+homepage     : "https://gitlab.com/ligolang/ligo-utils"
+bug-reports  : "https://gitlab.com/ligolang/ligo-utils/issues"
+# If you change the dependencies, run `opam lock` in the root
+depends      : ["dune"
+                "base"
+                "yojson"
+                "ppx_deriving"
+                "ppx_deriving_yojson"]
+build        : [["dune" "build" "-p" name]]

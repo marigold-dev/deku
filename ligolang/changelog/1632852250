@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1328'
+title: 'Testing framework: add missing cases for iteration in JsLIGO (C_FOLD)'
+type: internal

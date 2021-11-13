@@ -1,0 +1,5 @@
+author: Andre Popovitch
+title: Add all dependencies to opam.ligo (including dependencies required by vendored
+  dependencies)
+type: internal
+merge_request: '1317'

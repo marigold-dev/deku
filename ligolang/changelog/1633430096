@@ -1,0 +1,6 @@
+---
+  title: "Fix test file names e.g. a.mligo & A.mligo causes issues"
+  merge_request: "1339"
+  author: "melwyn95"
+  type: "internal"
+

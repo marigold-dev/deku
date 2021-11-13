@@ -1,0 +1,118 @@
+{
+    "name": "ligo-vscode",
+    "description": "LIGO VSCode extension includes syntax highlighting, and a language server for LIGO.",
+    "author": "Serokell",
+    "license": "MIT",
+    "version": "0.4.5",
+    "repository": {
+        "type": "git",
+        "url": "https://gitlab.com/ligolang/ligo"
+    },
+    "publisher": "ligolang-publish",
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [],
+    "engines": {
+        "vscode": "^1.57.0"
+    },
+    "activationEvents": [
+        "onLanguage:ligo",
+        "onLanguage:mligo",
+        "onLanguage:religo"
+    ],
+    "icon": "logo.png",
+    "main": "./client/out/extension",
+    "contributes": {
+        "languages": [
+            {
+                "id": "ligo",
+                "aliases": [
+                    "PascaLIGO"
+                ],
+                "extensions": [
+                    "ligo"
+                ],
+                "configuration": "./syntaxes/ligo.configuration.json"
+            },
+            {
+                "id": "mligo",
+                "aliases": [
+                    "CameLIGO"
+                ],
+                "extensions": [
+                    "mligo"
+                ],
+                "configuration": "./syntaxes/mligo.configuration.json"
+            },
+            {
+                "id": "religo",
+                "aliases": [
+                    "ReasonLIGO"
+                ],
+                "extensions": [
+                    "religo"
+                ],
+                "configuration": "./syntaxes/religo.configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "ligo",
+                "scopeName": "source.ligo",
+                "path": "./syntaxes/ligo.tmLanguage.json"
+            },
+            {
+                "language": "mligo",
+                "scopeName": "source.mligo",
+                "path": "./syntaxes/mligo.tmLanguage.json"
+            },
+            {
+                "language": "religo",
+                "scopeName": "source.religo",
+                "path": "./syntaxes/religo.tmLanguage.json"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "LIGO LSP Configuration",
+            "properties": {
+                "ligoLanguageServer.maxNumberOfProblems": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 100,
+                    "description": "Controls the maximum number of problems produced by the server."
+                },
+                "ligoLanguageServer.ligoBinaryPath": {
+                    "scope": "resource",
+                    "type": "string",
+                    "default": "ligo",
+                    "description": "Path to the ligo binary, default one is extracted from $PATH variable."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -b",
+        "watch": "tsc -b -w",
+        "package": "vsce package",
+        "lint": "eslint client/src/*.ts"
+    },
+    "dependencies": {
+        "axios": "^0.21.1",
+        "semver": "^7.3.5",
+        "vscode-languageclient": "^7.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^15.12.2",
+        "@types/vscode": "^1.57.0",
+        "@typescript-eslint/eslint-plugin": "^4.27.0",
+        "@typescript-eslint/parser": "^4.27.0",
+        "eslint": "^7.28.0",
+        "eslint-config-airbnb-base": "^14.2.1",
+        "eslint-plugin-import": "^2.23.4",
+        "typescript": "^4.3.2",
+        "vsce": "^1.93.0"
+    }
+}

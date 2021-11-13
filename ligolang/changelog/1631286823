@@ -1,0 +1,6 @@
+---
+  title: "Change remove_unused of self_ast_typed to search for free variables in module experssions & free module variables in expressions"
+  merge_request: "1295"
+  author: "melwyn95"
+  type: "internal"
+

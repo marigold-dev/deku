@@ -1,0 +1,8 @@
+(library
+  (name memory_proto_alpha)
+  (public_name tezos-memory-proto-alpha)
+  (libraries
+    tezos-protocol-environment
+    tezos-protocol-011-PtHangzH
+  )
+)

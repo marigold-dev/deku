@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '972'
+title: Progress on modular interface for heuristics and abstraction over type_variable,
+  renamed modules, moved files
+type: internal

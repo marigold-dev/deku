@@ -1,0 +1,7 @@
+author: Rémi Lesénéchal
+merge_request: '1253'
+title: 'Deprecates Test.compile_expression Test.compile_expression_subst Test.mutate_expression
+  Test.mutate_count
+
+  '
+type: deprecated

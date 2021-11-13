@@ -1,0 +1,6 @@
+---
+  title: "Fix ReasonLIGO inline tuple function argument"
+  merge_request: "1367"
+  author: "@SanderSpies"
+  type: "fixed"
+

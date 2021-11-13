@@ -1,0 +1,7 @@
+(tests
+ (names test_clic)
+ (libraries tezos-clic
+            alcotest-lwt)
+ (package tezos-clic)
+ (flags (:standard -open Tezos_stdlib
+                   -open Tezos_clic)))

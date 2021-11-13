@@ -1,0 +1,56 @@
+=========
+paren
+=========
+
+const x = (foo (42))
+
+---
+
+(source_file
+  (const_decl
+    (NameDecl)
+    (paren_expr (fun_call (Name) (Int)))))
+
+=========
+tuple
+=========
+
+const x = (1, "foo", 3)
+
+---
+
+(source_file
+  (const_decl
+    (NameDecl)
+    (tuple_expr (Int) (String) (Int))))
+
+=========
+single paren
+=========
+
+const x = (1)
+
+---
+
+(source_file
+  (const_decl
+    (NameDecl)
+    (paren_expr (Int))))
+
+=========
+tuples and parens
+=========
+
+const x = ((1, "foo", 3))
+const y = ((1), ("foo"), 3)
+
+---
+
+(source_file
+  (const_decl
+    (NameDecl)
+    (paren_expr
+      (tuple_expr (Int) (String) (Int))))
+  (const_decl
+    (NameDecl)
+    (tuple_expr (paren_expr (Int)) (paren_expr (String)) (Int))))

@@ -1,0 +1,12 @@
+(library
+ (name main_errors_test)
+ (libraries 
+  simple-utils
+  main_errors
+  cst
+  ast_typed
+  tezos-utils)
+ (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils -open Main_errors -open Tezos_utils ))  
+ (inline_tests)
+ (preprocess (pps ppx_expect))
+)

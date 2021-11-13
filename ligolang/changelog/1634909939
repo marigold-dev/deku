@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+title: '[Hangzhou] support for timelock. Types: chest; chest_key; chest_opening_result.
+  Primitives: Tezos.open_chest'
+type: added
+merge_request: '1346'

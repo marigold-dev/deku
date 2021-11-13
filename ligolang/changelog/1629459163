@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1256'
+title: 'Fix: C_POLYMORPHIC_ADD resolution to C_CONCAT/C_ADD in JsLIGO'
+type: fixed

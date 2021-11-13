@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1195'
+title: 'Fixes #1232 by make self_ast_imperative''s map work with Declaration_module'
+type: fixed

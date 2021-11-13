@@ -1,0 +1,3 @@
+let main = (i : int) : int => {
+  if (((i == 2) as bool)) { return (42 as int); } else { return (0 as int); };
+};

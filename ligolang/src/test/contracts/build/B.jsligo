@@ -1,0 +1,9 @@
+#import "A.jsligo" "A"
+
+let toto = 32;
+let titi = A.toto + 42;
+
+export let f = ([u,x_] : [unit, int]) : [list<operation>, int] => {
+    let x : int = x_ + A.toto + titi;
+    return [list([]) as list<operation>,x];
+};

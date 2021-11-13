@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '909'
+title: linear pattern matching (tuple/record)
+type: added

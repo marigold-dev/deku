@@ -1,0 +1,94 @@
+{
+    "gitignore.nix": {
+        "branch": "master",
+        "description": "Nix function for filtering local git sources",
+        "homepage": "",
+        "owner": "hercules-ci",
+        "repo": "gitignore.nix",
+        "rev": "647d0821b590ee96056f4593640534542d8700e5",
+        "sha256": "0ks37vclz2jww9q0fvkk9jyhscw0ial8yx2fpakra994dm12yy1d",
+        "type": "tarball",
+        "url": "https://github.com/hercules-ci/gitignore.nix/archive/647d0821b590ee96056f4593640534542d8700e5.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nix-npm-buildpackage": {
+        "branch": "balsoft/local-deps",
+        "description": "Build nix packages that use npm/yarn",
+        "homepage": "",
+        "owner": "serokell",
+        "repo": "nix-npm-buildpackage",
+        "rev": "9fd293facc8da7db68618bfe6c81892fb264e863",
+        "sha256": "09zqnibs0yr2smkpkfydx931y6sj9qfyvqrrjpfn5w3c2pcbzf5v",
+        "type": "tarball",
+        "url": "https://github.com/serokell/nix-npm-buildpackage/archive/9fd293facc8da7db68618bfe6c81892fb264e863.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "master",
+        "description": "Pinned Nixpkgs tree (master follows nixos-unstable-small, only tags have stable history)",
+        "homepage": "",
+        "owner": "ligolang",
+        "repo": "nixpkgs",
+        "rev": "2ff2d56aa2978740cb5d4f5a214e183ce3fbd863",
+        "sha256": "0dwbf4h6kz42642crqfkgfg02vmpa000dvfwpwcd5arf69shhm26",
+        "type": "tarball",
+        "url": "https://gitlab.com/ligolang/nixpkgs/-/archive/2ff2d56aa2978740cb5d4f5a214e183ce3fbd863/nixpkgs-2ff2d56aa2978740cb5d4f5a214e183ce3fbd863.tar.gz",
+        "url_template": "https://gitlab.com/<owner>/<repo>/-/archive/<rev>/<repo>-<rev>.tar.gz"
+    },
+    "node-sass-bin": {
+        "sha256": "0dl91l414na44h090cgghd06q0j2whlj9h98im2qb9823glq7xff",
+        "type": "file",
+        "url": "https://github.com/sass/node-sass/releases/download/v4.12.0/linux-x64-64_binding.node",
+        "url_template": "https://github.com/sass/node-sass/releases/download/v<version>/linux-x64-64_binding.node",
+        "version": "4.12.0"
+    },
+    "opam-nix": {
+        "branch": "master",
+        "description": "A handy nix library to package OCaml software from OPAM repositories",
+        "homepage": null,
+        "owner": "balsoft",
+        "repo": "opam-nix",
+        "rev": "a7b8e16ab28c840eab2c3be2f5069524dc87fd58",
+        "sha256": "0ydbwbirz1ag1lprl2mxz3cvzqxn945yfnakhzm19q2qm78zlb37",
+        "type": "tarball",
+        "url": "https://github.com/balsoft/opam-nix/archive/a7b8e16ab28c840eab2c3be2f5069524dc87fd58.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "tezos-packaging": {
+        "branch": "master",
+        "description": "Nix expressions for building tezos-client",
+        "homepage": "",
+        "owner": "serokell",
+        "repo": "tezos-packaging",
+        "rev": "6fd4df2bfe670e04c445ea1b22ad7f38559efca8",
+        "sha256": "11dibxpm6m3fj8g8lfkv9zhjn1lnskpx351a36sb858825nxm6ym",
+        "type": "tarball",
+        "url": "https://github.com/serokell/tezos-packaging/archive/6fd4df2bfe670e04c445ea1b22ad7f38559efca8.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "vscode-vsce": {
+        "branch": "master",
+        "description": "VS Code Extension Manager",
+        "homepage": "https://code.visualstudio.com/",
+        "owner": "microsoft",
+        "repo": "vscode-vsce",
+        "rev": "20378752b7931016bd43886184d623b157703639",
+        "sha256": "0li2d7w1wnhvszx6vavqdbipw0vp9d41ldw0ysw03wj2y98z2llz",
+        "type": "tarball",
+        "url": "https://github.com/microsoft/vscode-vsce/archive/20378752b7931016bd43886184d623b157703639.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz",
+        "version": "v1.83.0"
+    },
+    "xmldiff": {
+        "branch": "master",
+        "description": "Diffs on XML trees",
+        "homepage": "http://zoggy.github.io/xmldiff",
+        "owner": "zoggy",
+        "repo": "xmldiff",
+        "rev": "5873df80c1ba8c79287dc42e5008fac14cefffed",
+        "sha256": "0b92j9j2xdd2gyi9bgp39w0w1lkp0vc2rxq6wx6xdfvvklpprgb4",
+        "type": "tarball",
+        "url": "https://github.com/zoggy/xmldiff/archive/5873df80c1ba8c79287dc42e5008fac14cefffed.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}

@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+merge_request: '849'
+title: Type constant are now loaded into the type environment, they become variables
+  until the typed AST
+type: changed

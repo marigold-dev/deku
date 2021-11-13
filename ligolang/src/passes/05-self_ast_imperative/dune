@@ -1,0 +1,14 @@
+(library
+  (name self_ast_imperative)
+  (public_name ligo.self_ast_imperative)
+  (instrumentation (backend bisect_ppx))
+  (modules_without_implementation syntax)
+  (libraries
+    simple-utils
+    ast_imperative
+    tezos-crypto
+    tezos-base
+    main_warnings
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
+)

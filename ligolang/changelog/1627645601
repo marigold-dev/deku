@@ -1,0 +1,6 @@
+---
+  title: "Removed preprocessing directives #region and #endregion."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "removed"
+

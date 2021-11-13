@@ -1,0 +1,344 @@
+{
+  "name": "ligo",
+  "esy": {
+    "build": "dune build -p #{self.name}",
+    "release": {
+      "bin": [
+        "Ligo_wrapper",
+        "ligo"
+      ],
+      "includePackages": [
+        "root",
+        "@opam/hacl-star-raw",
+        "@opam/conf-libev",
+        "@opam/conf-libffi",
+        "@opam/conf-gmp"
+      ],
+      "rewritePrefix": true
+    },
+    "sandboxEnv": {
+      "DYLD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib : $DYLD_LIBRARY_PATH}",
+      "LD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib : $LD_LIBRARY_PATH}"
+    },
+    "buildEnv": {
+      "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
+    }
+  },
+  "exportedEnv": {
+    "DYLD_LIBRARY_PATH": {
+      "val": "#{@opam/hacl-star-raw.lib / 'hacl-star-raw' : $DYLD_LIBRARY_PATH}",
+      "scope": "global"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "dune build -w @zinctest --no-buffer",
+    "format": "dune build @fmt --auto-promote"
+  },
+  "dependencies": {
+    "ocaml": ">= 4.12.0",
+    "@opam/dune": ">= 2.9.1",
+    "@opam/hex": ">= 1.4.0",
+    "@opam/menhir": "20200624",
+    "@opam/ocamlgraph": ">= 2.0.0",
+    "@opam/coq": "8.13.1",
+    "@opam/ppx_deriving": ">= 5.2.1",
+    "@opam/ppx_deriving_yojson": ">= 3.6.1",
+    "@opam/ppx_expect": "v0.14.1",
+    "@opam/yojson": ">= 1.7.0",
+    "@opam/alcotest": ">= 1.0",
+    "@opam/getopt": "20120615",
+    "@opam/terminal_size": ">= 0.1.4",
+    "@opam/pprint": "20200410",
+    "@opam/linenoise": ">= 1.3.1",
+    "@opam/qcheck": ">= 0.17",
+    "@opam/ocaml-migrate-parsetree": ">= 2.1.0",
+    "@opam/lwt": ">= 5.4.2",
+    "@opam/bisect_ppx": ">= 2.5.0",
+    "@opam/alcotest-lwt": "*",
+    "@opam/data-encoding": "*",
+    "@opam/lwt_log": "*",
+    "@opam/ringo": "*",
+    "@opam/ringo-lwt": "*",
+    "@opam/ipaddr": "*",
+    "@opam/ptime": "*",
+    "@opam/mtime": "*",
+    "@opam/secp256k1-internal": "*",
+    "@opam/resto-directory": "*",
+    "@opam/hacl-star": "0.4.3",
+    "@opam/hacl-star-raw": "*",
+    "@opam/irmin-pack": "*",
+    "@opam/resto-cohttp-self-serving-client": "*",
+    "@opam/tezos-rust-libs": "*",
+    "@opam/sexplib": "v0.14.0",
+    "@opam/irmin": "2.7.2",
+    "@opam/domain-name": "0.3.0",
+    "@opam/qcheck-alcotest": "*",
+    "@opam/lwt-canceler": "*",
+    "@opam/bls12-381": "1.0.1",
+    "@opam/bls12-381-unix": "1.0.1",
+    "@opam/bls12-381-legacy": "0.4.3",
+    "@opam/ocaml-recovery-parser": "0.1",
+    "@opam/zarith": "1.11",
+    "@opam/zinc": "*"
+  },
+  "devDependencies": {
+    "@opam/ocaml-lsp-server": "*",
+    "@opam/ocamlformat": "*"
+  },
+  "resolutions": {
+    "@opam/zinc": "link:../zinc",
+    "@opam/ocaml-recovery-parser": "serokell/ocaml-recovery-parser:ocaml-recovery-parser.opam#7a759aed307f986d43006c50b8ced677e18b5a6d",
+    "@opam/conf-libev": "esy-packages/libev:package.json#0817b2d",
+    "@opam/coq": {
+      "source": "https://github.com/coq/coq/archive/V8.13.2.tar.gz#sha256:1e7793d8483f1e939f62df6749f843df967a15d843a4a5acb024904b76e25a14",
+      "override": {
+        "build": [
+          [
+            "./configure",
+            "-configdir",
+            "#{self.lib}/coq/config",
+            "-prefix",
+            "#{self.install}",
+            "-mandir",
+            "#{self.man}",
+            "-docdir",
+            "#{self.doc}",
+            "-libdir",
+            "#{self.lib}/coq",
+            "-datadir",
+            "#{self.share}/coq",
+            "-coqide",
+            "no",
+            "-camldir",
+            "#{ ocaml.bin }"
+          ],
+          [
+            "make",
+            "-j2"
+          ],
+          [
+            "make",
+            "-j2",
+            "byte"
+          ]
+        ],
+        "dependencies": {
+          "ocaml": "*",
+          "@opam/ocamlfind": "*",
+          "@opam/num": "*",
+          "@opam/conf-findutils": "*",
+          "@opam/zarith": "*"
+        }
+      }
+    },
+    "@opam/nonstd": "git+https://bitbucket.org/smondet/nonstd.git:nonstd.opam#75e06d417730f64e74ec2060d1143e765c68ea1b",
+    "@opam/genspio": "hammerlab/genspio:genspio.opam#f270fb296cebcf25e2ea89a7929a274c03ae9e6e",
+    "@esy-ocaml/libffi": "ManasJayanth/esy-libffi:esy.json#41698aeda66c004df26c0c1d80a191503bada03d",
+    "@opam/conf-libffi": {
+      "source": "no-source:",
+      "override": {
+        "dependencies": {
+          "@esy-ocaml/libffi": "*"
+        }
+      }
+    },
+    "@opam/conf-hidapi": {
+      "source": "no-source:",
+      "override": {
+        "dependencies": {
+          "yarn-pkg-config": "*",
+          "esy-hidapi": "*"
+        }
+      }
+    },
+    "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
+    "esy-hidapi": "esy-packages/esy-hidapi:esy.json#e21f930d6474e460fa5bb955a26505f6c3500c7a",
+    "libtool": "ManasJayanth/esy-libtool:esy.json#d6725b52f8d021539e92d182d29979951e706836",
+    "@opam/ctypes-foreign": {
+      "source": "ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22",
+      "override": {
+        "dependencies": {
+          "@opam/ctypes": null
+        }
+      }
+    },
+    "@opam/ctypes": {
+      "source": "ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22",
+      "override": {
+        "build": [
+          [
+            "make",
+            "libffi.config",
+            "ctypes-base",
+            "ctypes-stubs"
+          ],
+          [
+            "make",
+            "ctypes-foreign"
+          ]
+        ],
+        "dependencies": {
+          "@opam/conf-libffi": "*"
+        }
+      }
+    },
+    "@opam/conduit-lwt-unix": "4.0.1",
+    "@opam/hacl-star-raw": {
+      "source": "https://github.com/project-everest/hacl-star/releases/download/ocaml-v0.4.3/hacl-star.0.4.3.tar.gz#sha512:bfb2ddf125a345deb361483aedf9d79837e9ee18b0bc31644588f8409a0fe0c50db2fc1e6b20a07e02fb9f393d2fc9968fd9d2aa9f506f4e23ca8b6ed4036870",
+      "override": {
+        "exportedEnv": {
+          "DYLD_LIBRARY_PATH": {
+            "scope": "global",
+            "val": "#{self.lib / 'hacl-star-raw'}:$DYLD_LIBRARY_PATH"
+          },
+          "LD_LIBRARY_PATH": {
+            "scope": "global",
+            "val": "#{self.lib / 'hacl-star-raw'}:$LD_LIBRARY_PATH"
+          }
+        },
+        "buildEnv": {
+          "DYLD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib}:$DYLD_LIBRARY_PATH",
+          "LD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib}:$LD_LIBRARY_PATH"
+        },
+        "dependencies": {
+          "@opam/ctypes": "*",
+          "@opam/ctypes-foreign": "*",
+          "@opam/ocamlfind": "*",
+          "@esy-ocaml/libffi": "*"
+        },
+        "buildsInSource": true,
+        "build": [
+          [
+            "sh",
+            "-exc",
+            "cd raw && ./configure"
+          ],
+          [
+            "make",
+            "-C",
+            "raw"
+          ]
+        ],
+        "install": [
+          [
+            "make",
+            "-C",
+            "raw",
+            "install-hacl-star-raw"
+          ]
+        ]
+      }
+    },
+    "@opam/conf-rust": {
+      "source": "no-source:",
+      "override": {
+        "build": [
+          "true"
+        ],
+        "dependencies": {
+          "esy-rustup": "*"
+        }
+      }
+    },
+    "@opam/bls12-381-unix": {
+      "source": "https://gitlab.com/dannywillems/ocaml-bls12-381/-/archive/1.0.1/ocaml-bls12-381-1.0.1.tar.bz2#sha512:f69d611deb6132d07f0a8ecde7bb118f733de802e241056c5e2b194579c5723a12d58e93410bd56f68a608568de035b61f018d1fea52388f54875d77b8f386c2",
+      "override": {
+        "buildsInSource": "_build",
+        "build": [
+          [
+            "dune",
+            "build",
+            "-j",
+            "4",
+            "-p",
+            "bls12-381-unix",
+            "@install"
+          ]
+        ],
+        "install": [
+          [
+            "esy-installer",
+            "bls12-381-unix.install"
+          ]
+        ],
+        "buildEnvOverride": {
+          "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
+        },
+        "dependencies": {
+          "@opam/conf-rust": "*",
+          "@opam/dune": "*",
+          "@opam/ff-sig": ">=0.6.1  < 0.7.0",
+          "@opam/zarith": ">= 1.10  < 2.0",
+          "@opam/ctypes": ">= 0.18.0  < 0.19.0",
+          "@opam/ctypes-foreign": "*",
+          "@opam/bls12-381-gen": "0.4.3",
+          "@opam/bls12-381": "1.0.1",
+          "@opam/hex": "*",
+          "@opam/tezos-rust-libs": "1.1"
+        }
+      }
+    },
+    "@opam/bls12-381-legacy": {
+      "source": "https://gitlab.com/dannywillems/ocaml-bls12-381/-/archive/0.4.3-legacy/ocaml-bls12-381-0.4.3-legacy.tar.bz2#sha512:0102db9dcab07c788291e9f799a4cf7a480716f18da6833587381e88ecc699d6e6bb0f44afef0ec7cd14a742d8ec6efc7900b45b0bcdeba409a89420465c0a25",
+      "override": {
+        "buildsInSource": "_build",
+        "build": [
+          [
+            "dune",
+            "build",
+            "-j",
+            "4",
+            "-p",
+            "bls12-381-legacy",
+            "@install"
+          ]
+        ],
+        "install": [
+          [
+            "esy-installer",
+            "bls12-381-legacy.install"
+          ]
+        ],
+        "buildEnvOverride": {
+          "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
+        },
+        "dependencies": {
+          "@opam/conf-rust": "*",
+          "@opam/dune": "*",
+          "@opam/ff-sig": ">=0.6.1  < 0.7.0",
+          "@opam/zarith": ">= 1.10  < 2.0",
+          "@opam/ctypes": ">= 0.18.0  < 0.19.0",
+          "@opam/ctypes-foreign": "*",
+          "@opam/bls12-381-gen": "0.4.3",
+          "@opam/tezos-rust-libs": "1.1"
+        }
+      }
+    },
+    "esy-rustup": "ManasJayanth/esy-rustup:esy.json#e07d864138ed41c5a151a4065063521d0588eb2a",
+    "@opam/tezos-client": {
+      "source": "./src/bin_client",
+      "override": {
+        "dependencies": {
+          "@opam/dune": "*",
+          "@opam/tezos-base": "*",
+          "@opam/tezos-client-base": "*",
+          "@opam/tezos-client-genesis": "*",
+          "@opam/tezos-client-genesis-carthagenet": "*",
+          "@opam/tezos-client-alpha": "*",
+          "@opam/tezos-client-demo-counter": "*",
+          "@opam/tezos-client-alpha-commands": "*",
+          "@opam/tezos-baking-alpha-commands": "*",
+          "@opam/tezos-client-base-unix": "*",
+          "@opam/tezos-mockup-commands": "*",
+          "@opam/tezos-signer-backends": "*"
+        },
+        "devDependencies": {
+          "tezos-node": "*",
+          "tezos-protocol-compiler": "*",
+          "tezos-protocol-alpha-parameters": "*"
+        }
+      }
+    }
+  }
+}

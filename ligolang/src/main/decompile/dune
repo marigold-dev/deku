@@ -1,0 +1,30 @@
+(library
+  (name decompile)
+  (public_name ligo.decompile)
+  (instrumentation (backend bisect_ppx))
+  (libraries
+    main_errors
+    simple-utils
+    tezos-utils
+    parsing
+    tree_abstraction
+    ast_imperative
+    self_ast_imperative
+    purification
+    ast_sugar
+    self_ast_sugar
+    desugaring
+    ast_core
+    self_ast_core
+    inference
+    checking
+    ast_typed
+    self_ast_typed
+    spilling
+    mini_c
+    self_mini_c
+    stacking
+    self_michelson
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils -open Tezos_utils ))
+)

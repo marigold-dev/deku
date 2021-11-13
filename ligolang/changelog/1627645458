@@ -1,0 +1,6 @@
+---
+  title: "[PascaLIGO/CameLIGO/ReasonLIGO] Removed CST node TWild (standing for _)."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "internal"
+

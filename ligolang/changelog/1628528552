@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1246'
+title: 'Fix: failure in REPL''s exception handling'
+type: fixed

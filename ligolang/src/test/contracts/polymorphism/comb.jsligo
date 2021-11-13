@@ -1,0 +1,36 @@
+type dup<a> = [a, a];
+
+let diag : ((x : _a) => dup<_a>) = (x : _a) => [x, x];
+
+let _rev  : ((p : [list<_a>, list<_a>]) => list<_a>) = ([xs, acc] : [list<_a>, list<_a>]) : list<_a> =>
+  match(xs, list([
+  ([] : list<_a>) => acc,
+  ([x,... xs] : list<_a>) => _rev([xs, list([x,...acc])])
+  ]));
+
+let rev : ((xs : list<_a>) => list<_a>) = (xs : list<_a>) : list<_a> => _rev([xs, (list([]) as list<_a>)]);
+
+
+let _zip : ((p : [list<_a>, list<_b>, list<[_a, _b]>]) => list<[_a, _b]>) = ([xs, ys, acc] : [list<_a>, list<_b>, list<[_a, _b]>]) : list<[_a, _b]> =>
+  match(xs, list([
+  ([] : list<_a>) =>
+       match(ys, list([
+       ([] : list<_b>) => acc,
+       ([_y, ..._ys] : list<_b>)  => (failwith ("oops") as list<[_a, _b]>)
+       ])),
+  ([x, ...xs] : list<_a>) =>
+        match(ys, list([
+        ([] : list<_b>) => (failwith ("oops") as list<[_a, _b]>),
+        ([y, ...ys] : list<_b>) => _zip([xs, ys, list([[x, y], ...acc])])
+        ]))
+  ]));
+
+let zip : ((xs : list<_a>) => ((ys : list<_b>) => list<[_a, _b]>)) = (xs : list<_a>) => ((ys : list<_b>) : list<[_a, _b]> => rev (_zip ([xs, ys, (list([]) as list<[_a, _b]>)])));
+
+let self_zip : ((xs : list<_tau>) => list<[_tau, _tau]>) = (xs : list<_tau>) : list<[_tau, _tau]> => {
+  let [xs, ys] = diag(xs);
+  return (zip(xs))(ys)
+};
+
+let v : list<[string, string]> = self_zip (list(["a","b"]));
+let w : list<[int, nat]> = (zip (list([1,2,3])))(list([(4 as nat),(5 as nat),(6 as nat)]));

@@ -1,0 +1,6 @@
+---
+  title: "Fix wrong error message due to wrong merge"
+  merge_request: "803"
+  author: "SanderSpies"
+  type: "fixed"
+

@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/religo/constants/ConstantsV1.religo

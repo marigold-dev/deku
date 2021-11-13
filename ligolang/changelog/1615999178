@@ -1,0 +1,4 @@
+author: tomjack
+title: fixing nested record update bug by normalizing Edo combs decompilation
+type: fixed
+merge_request: '1047'

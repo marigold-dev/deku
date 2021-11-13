@@ -1,0 +1,162 @@
+(*****************************************************************************)
+(*                                                                           *)
+(* Open Source License                                                       *)
+(* Copyright (c) 2018 Dynamic Ledger Solutions, Inc. <contact@tezos.com>     *)
+(* Copyright (c) 2019-2021 Nomadic Labs, <contact@nomadic-labs.com>          *)
+(*                                                                           *)
+(* Permission is hereby granted, free of charge, to any person obtaining a   *)
+(* copy of this software and associated documentation files (the "Software"),*)
+(* to deal in the Software without restriction, including without limitation *)
+(* the rights to use, copy, modify, merge, publish, distribute, sublicense,  *)
+(* and/or sell copies of the Software, and to permit persons to whom the     *)
+(* Software is furnished to do so, subject to the following conditions:      *)
+(*                                                                           *)
+(* The above copyright notice and this permission notice shall be included   *)
+(* in all copies or substantial portions of the Software.                    *)
+(*                                                                           *)
+(* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR*)
+(* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,  *)
+(* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL   *)
+(* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER*)
+(* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING   *)
+(* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER       *)
+(* DEALINGS IN THE SOFTWARE.                                                 *)
+(*                                                                           *)
+(*****************************************************************************)
+
+type error += Invalid_directory of string
+
+let () =
+  register_error_kind
+    `Permanent
+    ~id:"main.reconstruct.invalid_directory"
+    ~title:"Invalid directory"
+    ~description:"The data directory to upgrade cannot be found."
+    ~pp:(fun ppf path ->
+      Format.fprintf
+        ppf
+        "The data directory to upgrade cannot be found at %s"
+        path)
+    Data_encoding.(obj1 (req "path" string))
+    (function Invalid_directory path -> Some path | _ -> None)
+    (fun path -> Invalid_directory path)
+
+(** Main *)
+
+module Term = struct
+  type upgrade = Storage
+
+  let subcommand_arg =
+    let parser = function
+      | "storage" -> `Ok Storage
+      | s -> `Error ("invalid argument: " ^ s)
+    and printer ppf = function Storage -> Format.fprintf ppf "storage" in
+    let open Cmdliner.Arg in
+    let doc = "Upgrade to perform. Possible values: $(b, storage)." in
+    required
+    & pos 0 (some (parser, printer)) None
+    & info [] ~docv:"UPGRADE" ~doc
+
+  let process subcommand args status sandbox_file =
+    let run =
+      Internal_event_unix.init () >>= fun () ->
+      match subcommand with
+      | Storage -> (
+          Node_config_file.read args.Node_shared_arg.config_file
+          >>=? fun config ->
+          (* Use the command-line argument data-dir if present: the
+             configuration data-dir may be inconsistent if the
+             directory was moved. *)
+          let data_dir = Option.value ~default:config.data_dir args.data_dir in
+          Lwt_lock_file.try_with_lock
+            ~when_locked:(fun () ->
+              failwith
+                "Failed to lock the data directory '%s'. Is a `tezos-node` \
+                 running?"
+                data_dir)
+            ~filename:(Node_data_version.lock_file data_dir)
+            (fun () ->
+              let genesis = config.blockchain_network.genesis in
+              if status then Node_data_version.upgrade_status data_dir
+              else
+                (match
+                   (config.blockchain_network.genesis_parameters, sandbox_file)
+                 with
+                | (None, None) -> return_none
+                | (Some parameters, None) ->
+                    return_some (parameters.context_key, parameters.values)
+                | (_, Some filename) -> (
+                    Lwt_utils_unix.Json.read_file filename >>= function
+                    | Error _err ->
+                        fail (Node_run_command.Invalid_sandbox_file filename)
+                    | Ok json -> return_some ("sandbox_parameter", json)))
+                >>=? fun sandbox_parameters ->
+                Node_data_version.upgrade_data_dir
+                  ~data_dir
+                  genesis
+                  ~chain_name:config.blockchain_network.chain_name
+                  ~sandbox_parameters)
+          >>= function
+          | Error (Exn (Unix.Unix_error (Unix.ENOENT, _, _)) :: _) ->
+              (* The provided data directory to upgrade cannot be
+                 found. *)
+              fail (Invalid_directory data_dir)
+          | Ok v -> Lwt.return (Ok v)
+          | errs -> Lwt.return errs)
+    in
+    match Lwt_main.run @@ Lwt_exit.wrap_and_exit run with
+    | Ok () -> `Ok ()
+    | Error err -> `Error (false, Format.asprintf "%a" pp_print_trace err)
+
+  let status =
+    let open Cmdliner.Arg in
+    let doc = "Displays available upgrades." in
+    value & flag & info ~doc ["status"]
+
+  let sandbox =
+    let open Cmdliner in
+    let doc =
+      "Run the upgrade storage in sandbox mode. P2P to non-localhost addresses \
+       are disabled, and constants of the economic protocol can be altered \
+       with an optional JSON file. $(b,IMPORTANT): Using sandbox mode affects \
+       the node state and subsequent runs of Tezos node must also use sandbox \
+       mode. In order to run the node in normal mode afterwards, a full reset \
+       must be performed (by removing the node's data directory)."
+    in
+    Arg.(
+      value
+      & opt (some non_dir_file) None
+      & info
+          ~docs:Node_shared_arg.Manpage.misc_section
+          ~doc
+          ~docv:"FILE.json"
+          ["sandbox"])
+
+  let term =
+    Cmdliner.Term.(
+      ret
+        (const process $ subcommand_arg $ Node_shared_arg.Term.args $ status
+       $ sandbox))
+end
+
+module Manpage = struct
+  let command_description =
+    "The $(b,upgrade) command is meant to manage upgrades of the node."
+
+  let description =
+    [
+      `S "DESCRIPTION";
+      `P command_description;
+      `P "Available upgrades are:";
+      `P "$(b,storage) will upgrade the node disk storage (if needed).";
+    ]
+
+  let man =
+    description
+    @ (* [ `S misc_docs ] @ *)
+    Node_shared_arg.Manpage.bugs
+
+  let info = Cmdliner.Term.info ~doc:"Manage node upgrades" ~man "upgrade"
+end
+
+let cmd = (Term.term, Manpage.info)

@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1370'
+title: 'Testing framework: support E_raw_code for functions'
+type: fixed

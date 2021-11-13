@@ -1,0 +1,14 @@
+# LIGO Changelog
+
+{{#changelog}}
+## [{{{version}}}](https://gitlab.com/ligolang/ligo/-/releases/{{{version}}})
+Run this release with Docker: `docker run ligolang/ligo:{{{version}}}`
+
+{{#changes}}
+* {{type}}: {{{title}}} ([!{{merge_request}} by {{{author}}}](https://gitlab.com/ligolang/ligo/-/merge_requests/{{merge_request}}))
+{{/changes}}
+{{^changes}}
+_No changes for this version_
+{{/changes}}
+
+{{/changelog}}

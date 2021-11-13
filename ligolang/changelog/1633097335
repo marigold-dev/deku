@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1334'
+title: 'Testing framework: internal replace of compare function'
+type: fixed

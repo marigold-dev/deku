@@ -1,0 +1,289 @@
+
+let if_switch_break = (n : int) : string => {
+    let output = "";
+    if (n >= 0 && n <= 5) {
+        switch (n) {
+            case 1: 
+                output = output + "one ";
+                break;
+            case 2: 
+                output = output + "two ";
+                break;
+            case 3: 
+                output = output + "three ";
+                break;
+            case 4: 
+                output = output + "four ";
+                break;
+            case 5: 
+                output = output + "five ";
+                break;
+            default: output = output + "zero ";
+        };
+    } else {
+        switch (n) {
+            case 6: 
+                output = output + "six ";
+                break;
+            case 7: 
+                output = output + "seven ";
+                break;
+            default:
+                output = output + "more than seven ";
+                break;
+        };
+    };
+    output = output + "end";
+    return output;
+};
+let _test_if_switch_break = () : unit => {
+    assert ("zero end"  == if_switch_break(0));
+    assert ("one end"   == if_switch_break(1));
+    assert ("two end"   == if_switch_break(2));
+    assert ("three end" == if_switch_break(3));
+    assert ("four end"  == if_switch_break(4));
+    assert ("five end"  == if_switch_break(5));
+    assert ("six end"   == if_switch_break(6));
+    assert ("seven end" == if_switch_break(7));
+    assert ("more than seven end" == if_switch_break(8));
+};
+let test_if_switch_break = _test_if_switch_break();
+
+let if_switch_return = (n : int) : string => {
+    let output = "";
+    if (n >= 0 && n <= 5) {
+        switch (n) {
+            case 1: 
+                output = output + "one ";
+                return output;
+            case 2: 
+                output = output + "two ";
+                return output;
+            case 3: 
+                output = output + "three ";
+                return output;
+            case 4: 
+                output = output + "four ";
+                return output;
+            case 5: 
+                output = output + "five ";
+                return output;
+            default: 
+                output = output + "zero ";
+                return output;
+        };
+    } else {
+        switch (n) {
+            case 6: 
+                output = output + "six ";
+                return output;
+            case 7: 
+                output = output + "seven ";
+                return output;
+            default:
+                output = output + "more than seven ";
+                return output;
+        };
+    };
+    output = output + "end";
+    Test.log(output);
+    return output;
+};
+let _test_if_switch_return = () : unit => {
+    assert ("zero "  == if_switch_return(0));
+    assert ("one "   == if_switch_return(1));
+    assert ("two "   == if_switch_return(2));
+    assert ("three " == if_switch_return(3));
+    assert ("four "  == if_switch_return(4));
+    assert ("five "  == if_switch_return(5));
+    assert ("six "   == if_switch_return(6));
+    assert ("seven " == if_switch_return(7));
+    assert ("more than seven " == if_switch_return(8));
+};
+let test_if_switch_return = _test_if_switch_return();
+
+let switch_if_break = (n : int) : string => {
+    let output = "";
+    switch (n) {
+        case 1: 
+            if (output == "") {
+                output = output + ">>> "
+            } else {
+                output = output + "one ";
+            };
+            break;
+        case 2: 
+            output = output + "two ";
+            break;
+        case 3: 
+            output = output + "three ";
+            break;
+        case 4: 
+            output = output + "four ";
+            break;
+        case 5: 
+            output = output + "five ";
+            break;
+        default:
+            if (n == 0) { 
+                output = output + "zero ";
+            } else {
+                output = output + "more than five ";
+            };
+    };
+    output = output + "end";
+    return output;
+};
+let _test_switch_if_break = () : unit => {
+    assert ("zero end"  == switch_if_break(0));
+    assert (">>> end" == switch_if_break(1));
+    assert ("two end"   == switch_if_break(2));
+    assert ("three end" == switch_if_break(3));
+    assert ("four end"  == switch_if_break(4));
+    assert ("five end"  == switch_if_break(5));
+    assert ("more than five end" == switch_if_break(6));
+    assert ("more than five end" == switch_if_break(7));
+    assert ("more than five end" == switch_if_break(8));
+};
+let test_switch_if_break = _test_switch_if_break();
+
+let switch_if_return = (n : int) : string => {
+    let output = "";
+    switch (n) {
+        case 1: 
+            output = output + "<<< ";
+            if (output == "") {
+                output = output + ">>> "
+                return output;
+            } else {
+                output = output + "one ";
+                return output;
+            };
+        case 2: 
+            output = output + "two ";
+            return output;
+        case 3: 
+            output = output + "three ";
+            return output;
+        case 4: 
+            output = output + "four ";
+            return output;
+        case 5: 
+            output = output + "five ";
+            return output;
+        default:
+            if (n == 0) { 
+                output = output + "zero ";
+                return output;
+            } else {
+                output = output + "more than five ";
+                return output;
+            };
+    };
+    output = output + "end";
+    return output;
+};
+let _test_switch_if_return = () : unit => {
+    assert ("zero "  == switch_if_return(0));
+    assert ("<<< one "   == switch_if_return(1));
+    assert ("two "   == switch_if_return(2));
+    assert ("three " == switch_if_return(3));
+    assert ("four "  == switch_if_return(4));
+    assert ("five "  == switch_if_return(5));
+    assert ("more than five " == switch_if_return(6));
+    assert ("more than five " == switch_if_return(7));
+    assert ("more than five " == switch_if_return(8));
+};
+let test_switch_if_return = _test_switch_if_return();
+
+let switch_switch_break = (n : int, m : int) : string => {
+    let output = "";
+    switch (n) {
+        case 1: 
+            switch (m) {
+                case 1:
+                    output = output + "m one";
+                    break;
+                case 2:
+                    output = output + "m two";
+                    break;
+                case 3: 
+                    output = output + "m three";
+                    break;
+                default:
+                    output = output + "m more than three";
+                    break;
+            }
+        default:
+            switch (n) {
+                case 2:
+                    output = output + "n two";
+                    break;
+                case 3:
+                    output = output + "n three";
+                    break;
+                default:
+                    output = output + "n more than three";
+                    break;
+            }
+    };
+    output = output + " end";
+    return output;
+};
+let _test_switch_switch_break = () : unit => {
+    assert ("m one end" == switch_switch_break(1, 1));
+    assert ("m two end" == switch_switch_break(1, 2));
+    assert ("m three end" == switch_switch_break(1, 3));
+    assert ("m more than three end" == switch_switch_break(1, 4));
+    assert ("n two end" == switch_switch_break(2, 2));
+    assert ("n three end" == switch_switch_break(3, 2));
+    assert ("n more than three end" == switch_switch_break(4, 2));
+};
+let test_switch_switch_break = _test_switch_switch_break();
+
+/* TODO: handle this case later...
+let switch_switch_return = (n : int, m : int) : string => {
+    let output = "";
+    switch (n) {
+        case 1: 
+            switch (m) {
+                case 1:
+                    output = output + "m one";
+                    return output;
+                case 2:
+                    output = output + "m two";
+                    return output;
+                case 3: 
+                    output = output + "m three";
+                    return output;
+                default:
+                    output = output + "m more than three";
+                    return output;
+            }
+        default:
+            switch (n) {
+                case 2:
+                    output = output + "n two";
+                    return output;
+                case 3:
+                    output = output + "n three";
+                    return output;
+                default:
+                    output = output + "n more than three";
+                    return output;
+            }
+    };
+    output = output + " end";
+    return output;
+};
+let _test_switch_switch_return = () : unit => {
+    assert ("m one" == switch_switch_return(1, 1));
+    assert ("m two" == switch_switch_return(1, 2));
+    assert ("m three" == switch_switch_return(1, 3));
+    assert ("m more than three" == switch_switch_return(1, 4));
+    assert ("n two" == switch_switch_return(2, 2));
+    assert ("n three" == switch_switch_return(3, 2));
+    assert ("n more than three" == switch_switch_return(4, 2));
+};
+let test_switch_switch_return = _test_switch_switch_return();
+*/

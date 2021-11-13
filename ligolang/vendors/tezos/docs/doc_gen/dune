@@ -1,0 +1,26 @@
+(executables
+ (names rpc_doc
+        p2p_doc)
+ (libraries tezos-base
+            tezos-stdlib-unix
+            tezos-shell
+            tezos-rpc-http-server
+            tezos-protocol-updater
+            ; TODO nomadic-labs/tezos#462: adapt next line(s)
+            tezos-embedded-protocol-010-PtGRANAD
+            tezos-embedded-protocol-011-PtHangzH
+            tezos-embedded-protocol-alpha
+            data-encoding
+            re)
+ (flags (:standard -open Tezos_base__TzPervasives
+                   -open Tezos_stdlib_unix
+                   -open Tezos_shell
+                   -open Tezos_store
+                   -open Tezos_protocol_updater
+                   -linkall)))
+
+(rule
+ (alias buildtest)
+ (deps rpc_doc.exe
+       p2p_doc.exe)
+ (action (progn)))

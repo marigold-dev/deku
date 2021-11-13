@@ -1,0 +1,24 @@
+;; A UTF8-aware lexer library
+
+(ocamllex Core)
+
+(library
+  (name LexerLib)
+  (public_name LexerLib)
+  (wrapped true)
+  (modules CLI Core API Markup Directive Version)
+  (libraries
+    ;; Vendor
+    simple-utils
+    ;; Third party
+    getopt
+    uutf))
+
+;; Build of the version source (for the user, as a CLI option)
+
+(rule
+ (targets version.ml)
+ (action (with-stdout-to
+          version.ml
+          (run "sh" "-c"
+               "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))

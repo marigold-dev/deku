@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1303'
+title: 'Testing framework: add attribute to mark non-mutable declarations'
+type: added

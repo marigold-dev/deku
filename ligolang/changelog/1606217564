@@ -1,0 +1,4 @@
+author: Sander Spies
+merge_request: '876'
+title: Use virtual ES6FUN token for ReasonLIGO to allow for more accurate error messages.
+type: changed

@@ -1,0 +1,4 @@
+author: Pierre-Emmanuel Wulfman
+merge_request: '1300'
+title: Add assert_with_error funciton family
+type: changed

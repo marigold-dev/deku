@@ -1,0 +1,6 @@
+---
+  title: "Use Topological Sort to solve the build dependency graph"
+  merge_request: "1341"
+  author: "melwyn95"
+  type: "internal"
+

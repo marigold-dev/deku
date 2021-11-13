@@ -1,0 +1,6 @@
+---
+  title: "Improve error message when type of contract can't be inferred"
+  merge_request: "1268"
+  author: "melwyn95"
+  type: "internal"
+

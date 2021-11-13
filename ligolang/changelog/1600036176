@@ -1,0 +1,5 @@
+author: Suzanne Soy
+title: In the typer which is not currently in use, heuristics can now request the
+  justified removal of some of the constraints
+type: changed
+merge_request: '801'

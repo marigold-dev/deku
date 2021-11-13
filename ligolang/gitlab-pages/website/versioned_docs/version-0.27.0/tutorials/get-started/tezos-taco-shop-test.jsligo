@@ -1,0 +1,56 @@
+#include "tezos-taco-shop-smart-contract.jsligo"
+
+let assert_string_failure = ([res,expected] : [test_exec_result, string]) : unit => {
+  let expected = Test.eval (expected) ;
+  match (res, {
+    Fail: (x: test_exec_error) => (
+      match (x, {
+        Rejected: (x:[michelson_code,address]) => assert (Test.michelson_equal (x[0], expected)),
+        Other: (_:unit) => failwith ("contract failed for an unknown reason")
+      })),
+    Success: (_:unit) => failwith ("bad price check")
+  } );
+} ;
+
+let _test = (_: unit): unit => {
+  /* Originate the contract with a initial storage */
+  let init_storage = Map.literal (list([
+      [1 as nat, { current_stock : 50 as nat, max_price : 50 as tez }],
+      [2 as nat, { current_stock : 20 as nat, max_price : 75 as tez }] ])) ;
+  let [pedro_taco_shop_ta, _code, _size] = Test.originate (buy_taco, init_storage, 0 as tez) ;
+  /* Convert typed_address to contract */
+  let pedro_taco_shop_ctr = Test.to_contract (pedro_taco_shop_ta);
+  /* Convert contract to address */
+  let pedro_taco_shop = Tezos.address (pedro_taco_shop_ctr);
+
+  /* Test inputs */
+  let classico_kind = (1 as nat) ;
+  let unknown_kind = (3 as nat) ;
+
+  /* Auxiliary function for testing equality in maps */
+  let eq_in_map = ([r, m, k] : [taco_supply, taco_shop_storage, nat]) : bool =>
+    match(Map.find_opt(k, m), {
+     None: () => false,
+     Some: (v : taco_supply) => v.current_stock == r.current_stock && v.max_price == r.max_price }) ;
+
+  /* Purchasing a Taco with 1tez and checking that the stock has been updated */
+  let ok_case : test_exec_result = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 1 as tez) ;
+  let _u = match (ok_case, {
+    Success: (_:unit) => {
+      let storage = Test.get_storage (pedro_taco_shop_ta) ;
+      assert (eq_in_map({ current_stock : 49 as nat, max_price : 50 as tez }, storage, 1 as nat) &&
+              eq_in_map({ current_stock : 20 as nat, max_price : 75 as tez }, storage, 2 as nat)); },
+    Fail: (_: test_exec_error) => failwith ("ok test case failed")
+  }) ;
+
+  /* Purchasing an unregistred Taco */
+  let nok_unknown_kind = Test.transfer_to_contract (pedro_taco_shop_ctr, unknown_kind, 1 as tez) ;
+  let _u = assert_string_failure (nok_unknown_kind, "Unknown kind of taco") ;
+
+  /* Attempting to Purchase a Taco with 2tez */
+  let nok_wrong_price = Test.transfer_to_contract (pedro_taco_shop_ctr, classico_kind, 2 as tez) ;
+  let _u = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price") ;
+  return unit
+}
+
+let test = _test (unit)

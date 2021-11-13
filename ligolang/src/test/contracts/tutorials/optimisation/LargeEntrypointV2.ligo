@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/ligo/large_entrypoint/LargeEntrypointV2.ligo

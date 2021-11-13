@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1142'
+title: 'REPL: fix evaluation of JsLIGO expressions and add test cases'
+type: fixed

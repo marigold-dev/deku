@@ -1,0 +1,23 @@
+# This file contains CI jobs for building and testing the language server. They
+# are shared between ligo and serokell CI
+
+# common conditions for lsp-related jobs
+# (we would want a single alias referencing both rules but gitlab does not allow that)
+.run-on-lsp-label: &run-on-lsp-label
+  # always run on merge requests with "lsp" label
+  if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_LABELS =~ /^lsp$|^lsp,|,lsp$|,lsp,/'
+  when: always
+.run-with-failure-allowed: &run-with-failure-allowed
+  # run on all merge requests and on "dev" branch, but allow the job to fail
+  if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_REF_NAME == "dev"'
+  allow_failure: true
+
+vscode-extension-contracts-tests:
+  stage: tooling
+  rules:
+    # for serokell: all merge requests and "tooling" branch
+    - if: '$CI_PROJECT_PATH == "serokell/ligo/ligo" && ($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_REF_NAME == "tooling")'
+    - *run-on-lsp-label
+    - *run-with-failure-allowed
+  script:
+    - nix-build tools/lsp -A checks.x86_64-linux.ligo-contracts-test

@@ -1,0 +1,7 @@
+author: Suzanne Soy
+merge_request: '853'
+title: Fixed 2 bugs in changelog generator (a shell variable wasn't exported but was
+  used in a subprocess; the evaluation time of some nix expressions seem to have changed
+  so we're invoking a shell command instead of having the nix expression evaluated
+  before its inputs are ready)
+type: fixed

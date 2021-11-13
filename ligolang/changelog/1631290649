@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: improve floating block scope handling"
+  merge_request: "1296"
+  author: "@SanderSpies"
+  type: "fixed"
+

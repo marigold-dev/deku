@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '966'
+title: Refactor & generalize Michelson peephole framework
+type: internal

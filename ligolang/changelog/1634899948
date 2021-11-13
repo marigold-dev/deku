@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1374'
+title: 'Testing framework: fix wrong env. reconstruction on mod. deps.'
+type: fixed

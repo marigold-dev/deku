@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '981'
+title: 'prototype typer: heuristic to inline the definition of type variables used
+  in type classes'
+type: added

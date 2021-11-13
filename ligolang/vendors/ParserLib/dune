@@ -1,0 +1,23 @@
+;; Build of a parser library
+
+(library
+  (name ParserLib)
+  (public_name ParserLib)
+  (wrapped true)
+  (modules CLI API Version)
+  (libraries
+    ;; Vendors
+    simple-utils
+    ocaml-recovery-parser
+    ;; Third party
+    getopt
+    menhirLib))
+
+;; Build of the version source (for the user, as a CLI option)
+
+(rule
+ (targets Version.ml)
+ (action (with-stdout-to
+          Version.ml
+          (run "sh" "-c"
+               "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))

@@ -1,0 +1,6 @@
+---
+  title: "Fix issue where writing multiple ifs could lead to disappearing code"
+  merge_request: "1369"
+  author: "@SanderSpies"
+  type: "fixed"
+

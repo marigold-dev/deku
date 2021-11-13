@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '922'
+title: Uncurry functions only used in full applications
+type: added

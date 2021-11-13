@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+title: improve performance of get-scope --with-types option by re-using the type environment
+  instead of building a partial program
+type: performance
+merge_request: '1286'

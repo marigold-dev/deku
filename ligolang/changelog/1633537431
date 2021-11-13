@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: Add support for assignment operators: += /= *= -= %="
+  merge_request: "1348"
+  author: "@SanderSpies"
+  type: "added"
+

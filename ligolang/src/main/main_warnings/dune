@@ -1,0 +1,10 @@
+(library
+  (name main_warnings)
+  (public_name ligo.main_warnings)
+  (instrumentation (backend bisect_ppx))
+  (libraries
+    simple-utils
+    ast_imperative
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33))
+)

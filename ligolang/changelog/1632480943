@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+title: fix typing error related to Test.to_contract primitive
+type: fixed
+merge_request: '1318'

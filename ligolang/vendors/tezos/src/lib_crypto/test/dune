@@ -1,0 +1,24 @@
+(tests
+ (names
+  test_run
+  test_prop_signature_pk
+  test_prop_signature
+  test_prop_hacl_hash)
+ (package tezos-crypto)
+ (libraries
+  tezos-crypto
+  tezos-stdlib
+  alcotest-glue
+  zarith
+  tezos-hacl-glue-unix
+  data-encoding
+  alcotest-glue-unix
+  alcotest-lwt
+  qcheck-alcotest
+  tezos-test-helpers)
+ (flags
+  (:standard
+   -open Tezos_stdlib
+   -open Tezos_crypto
+   -open Tezos_error_monad.TzLwtreslib
+   -open Data_encoding)))

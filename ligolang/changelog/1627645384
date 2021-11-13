@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: Fixed dangling else in the parser. Fixeds attributes on pattern variables and declarations."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "internal"
+

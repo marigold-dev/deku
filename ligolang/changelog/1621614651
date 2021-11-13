@@ -1,0 +1,5 @@
+author: Pierre-Emmanuel Wulfman
+merge_request: '1172'
+title: Move decompilation of assign to self pass. Prepare pipeline for language specific
+  decompilation
+type: fixed

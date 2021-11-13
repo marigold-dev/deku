@@ -1,0 +1,4 @@
+author: Sander Spies
+merge_request: '935'
+title: 'ReasonLIGO: Allow if without else in more places.'
+type: fixed

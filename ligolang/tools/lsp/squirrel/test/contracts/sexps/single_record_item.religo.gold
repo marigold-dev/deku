@@ -1,0 +1,3 @@
+(contract
+  (type_decl p (RECORD x: int))
+  (const (? o) (lam (parameter (? p) int) : p => (record (.= x p)))))

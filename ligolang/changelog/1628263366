@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '1179'
+title: true/false in pattern matching are now forbidden (use True and False instead)
+type: fixed

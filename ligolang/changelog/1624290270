@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: Don't require 'return' before 'failwith'"
+  merge_request: "1198"
+  author: "@SanderSpies"
+  type: "changed"
+
