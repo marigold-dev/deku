@@ -46,7 +46,7 @@ module Side_chain: {
         ticket: Ticket.t,
       })
     | Withdraw({
-        owner: Tezos_interop.Address.t,
+        owner: Tezos.Address.t,
         amount: Amount.t,
         ticket: Ticket.t,
       })
