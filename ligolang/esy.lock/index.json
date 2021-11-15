@@ -2096,8 +2096,8 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
-    "@opam/odoc@opam:1.5.3@a56545ed": {
-      "id": "@opam/odoc@opam:1.5.3@a56545ed",
+    "@opam/odoc@opam:1.5.3@122d8c31": {
+      "id": "@opam/odoc@opam:1.5.3@122d8c31",
       "name": "@opam/odoc",
       "version": "opam:1.5.3",
       "source": {
@@ -2257,7 +2257,7 @@
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/ppxlib@opam:0.22.2@61009929",
-        "@opam/odoc@opam:1.5.3@a56545ed",
+        "@opam/odoc@opam:1.5.3@122d8c31",
         "@opam/ocaml-version@opam:3.4.0@b6cd49e1",
         "@opam/menhirSdk@opam:20200624@4624a1f4",
         "@opam/menhirLib@opam:20200624@378a35e8",
@@ -2276,7 +2276,7 @@
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/ppxlib@opam:0.22.2@61009929",
-        "@opam/odoc@opam:1.5.3@a56545ed",
+        "@opam/odoc@opam:1.5.3@122d8c31",
         "@opam/ocaml-version@opam:3.4.0@b6cd49e1",
         "@opam/menhirSdk@opam:20200624@4624a1f4",
         "@opam/menhirLib@opam:20200624@378a35e8",
