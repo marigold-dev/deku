@@ -14,22 +14,17 @@ module Main_chain: {
   type t =
     pri {
       hash: BLAKE2B.t,
-      tezos_hash: Tezos_interop.Operation_hash.t,
+      tezos_hash: Tezos.Operation_hash.t,
       tezos_index: int,
       kind,
     };
 
   let make:
-    (
-      ~tezos_hash: Tezos_interop.Operation_hash.t,
-      ~tezos_index: int,
-      ~kind: kind
-    ) =>
-    t;
+    (~tezos_hash: Tezos.Operation_hash.t, ~tezos_index: int, ~kind: kind) => t;
   let verify:
     (
       ~hash: BLAKE2B.t,
-      ~tezos_hash: Tezos_interop.Operation_hash.t,
+      ~tezos_hash: Tezos.Operation_hash.t,
       ~tezos_index: int,
       ~kind: kind
     ) =>

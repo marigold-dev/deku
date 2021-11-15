@@ -14,7 +14,7 @@ module Main_chain = {
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
-    tezos_hash: BLAKE2B.t,
+    tezos_hash: Tezos.Operation_hash.t,
     tezos_index: int,
     kind,
   };
@@ -24,7 +24,7 @@ module Main_chain = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
     let apply = (f, ~tezos_hash, ~tezos_index, ~kind) => {
-      let to_yojson = [%to_yojson: (BLAKE2B.t, int, kind)];
+      let to_yojson = [%to_yojson: (Tezos.Operation_hash.t, int, kind)];
       let json = to_yojson((tezos_hash, tezos_index, kind));
       let payload = Yojson.Safe.to_string(json);
       f(payload);
