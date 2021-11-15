@@ -1,1 +1,1 @@
-(ignored-subdirs ligolang zinc)
+(dirs bin crypto helpers node protocol tests tezos tezos_interop tools)

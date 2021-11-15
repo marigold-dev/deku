@@ -11,11 +11,10 @@ tags: ["org:ocamllabs"]
 depends: [
   "dune" {>= "1.8"}
   "base-domains"
-  "mirage-clock-unix" {with-test}
 ]
 build: ["dune" "build" "-p" name "-j" jobs]
 url {
-  src: "https://github.com/ocaml-multicore/domainslib/archive/0.3.2.tar.gz"
-  checksum: "md5=b4c1ed2ca16b82c40de9a64989094639"
+  src: "https://github.com/ocaml-multicore/domainslib/archive/0.3.1.tar.gz"
+  checksum: "md5=29f8df695dfd8f0b87742c3f45cedecf"
 }
 

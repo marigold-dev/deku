@@ -64,84 +64,6 @@ let apply_side_chain = (state: t, operation) => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
-  let invoke_contract = () => {
-    let zinc =
-      Zinc_types.[
-        Address("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"),
-        Grab,
-        Access(0),
-        Contract_opt,
-        Grab,
-        Access(0),
-        MatchVariant([
-          (Label("Some"), [Grab, Access(0)]),
-          (Label("None"), [Grab, String("Not a contract"), Failwith]),
-        ]),
-        EndLet,
-        Grab,
-        String("my string"),
-        Key("edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"),
-        Access(0),
-        Mutez(Z.of_int(10)),
-        MakeRecord([]),
-        MakeTransaction,
-        MakeRecord([Label("0"), Label("1"), Label("2")]),
-        Return,
-      ];
-    let interpreted =
-      Zinc_interpreter.(
-        interpret_zinc(
-          {get_contract_opt: _address => None},
-          initial_state(zinc),
-        )
-      );
-    switch (interpreted) {
-    | Success(_, [`Record(r), ..._]) =>
-      switch (
-        r |> Zinc_types.LMap.find(Label("0")), // why does this not return an option???,
-        r |> Zinc_types.LMap.find(Label("1")),
-        r |> Zinc_types.LMap.find(Label("2")),
-      ) {
-      | (
-          `Z(
-            Extensions(
-              Operation(Transaction(amount, (destination, None))),
-            ),
-          ),
-          `Z(Hash(key)),
-          `Z(String(data)),
-        ) =>
-        open Tezos_interop;
-
-        let ticketer = {
-          Address.Originated({
-            contract: key |> Crypto.BLAKE2B_20.of_raw_string |> Option.get,
-            entrypoint: None,
-          });
-        };
-        let data = data |> Cstruct.of_string |> Cstruct.to_bytes;
-        let ticket = Ticket.{ticketer, data};
-        let.ok ledger =
-          Ledger.transfer(
-            // should actually send from smart contract instead of from invoker's address
-            // just not sure yet how smart contract addresses should work
-            ~source,
-            ~destination=
-              destination
-              |> failwith(
-                   "what type to represent addresses with? ideally would be able to use it in zinc library",
-                 ),
-            Amount.of_int(Z.to_int(amount)),
-            ticket,
-            state.ledger,
-          );
-        Ok({...state, ledger});
-      | _ => Ok(state)
-      }
-
-    | _ => Ok(state)
-    };
-  };
   switch (operation.kind) {
   | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
@@ -164,9 +86,7 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
-  | Invoke_contract =>
-    let.ok ledger = invoke_contract();
-    Ok((ledger, `Invoke_contract));
+  | Invoke_contract => failwith("Need to implement Invoke_contract!")
   };
 };
 let apply_side_chain = (state, operation) =>
