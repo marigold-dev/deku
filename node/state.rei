@@ -4,6 +4,7 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   secret: Secret.t,
+  key: Key.t,
   t: Address.t,
   uri: Uri.t,
 };

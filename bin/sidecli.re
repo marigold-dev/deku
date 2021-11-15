@@ -545,9 +545,9 @@ let setup_identity = (node_folder, uri) => {
   let.await () = ensure_folder(node_folder);
 
   let identity = {
-    let (key, t) = Crypto.Ed25519.generate();
-    let t = Address.of_wallet(Ed25519(t));
-    {uri, t, secret: Ed25519(key)};
+    let (secret, key) = Crypto.Ed25519.generate();
+    let t = Address.of_wallet(Ed25519(key));
+    {uri, t, key: Ed25519(key), secret: Ed25519(secret)};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());
@@ -674,7 +674,7 @@ let info_self = {
 
 let self = node_folder => {
   let.await identity = read_identity(~node_folder);
-  Format.printf("key: %s\n", Wallet.(of_key(identity.secret) |> to_string));
+  Format.printf("key: %s\n", Wallet.to_string(identity.key));
   Format.printf("address: %s\n", Address.to_string(identity.t));
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());

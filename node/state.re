@@ -5,6 +5,7 @@ open Protocol;
 [@deriving yojson]
 type identity = {
   secret: Secret.t,
+  key: Key.t,
   t: Address.t,
   uri: Uri.t,
 };
@@ -56,11 +57,10 @@ let make =
   let initial_block = Block.genesis;
   let initial_protocol = Protocol.make(~initial_block);
   let initial_signatures =
-    Signatures.make(~self_key=Wallet.of_key(identity.secret))
-    |> Signatures.set_signed;
+    Signatures.make(~self_key=identity.key) |> Signatures.set_signed;
 
   let initial_block_pool =
-    Block_pool.make(~self_key=Wallet.of_key(identity.secret))
+    Block_pool.make(~self_key=identity.key)
     |> Block_pool.append_block(initial_block);
   let initial_snapshots = {
     let initial_snapshot = Protocol.hash(initial_protocol);
