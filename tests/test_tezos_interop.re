@@ -2,7 +2,9 @@ open Setup;
 open Protocol;
 open Wallet;
 open Crypto;
+open Tezos;
 open Tezos_interop;
+
 module TZ2_ex = {
   let sk =
     Secret.of_string("spsk3LfH15rYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy")
@@ -382,7 +384,7 @@ describe("address", ({test, _}) => {
   });
 });
 describe("ticket", ({test, _}) => {
-  open Ticket;
+  open Ticket_id;
 
   let kt1 =
     Address.Originated({contract: some_contract_hash, entrypoint: None});
@@ -397,7 +399,7 @@ describe("ticket", ({test, _}) => {
       of_string({|(Pair "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x61)|}),
     ).
       toBe(
-      ~equals=Ticket.equal,
+      ~equals=equal,
       Some(ticket),
     )
   });

@@ -1,59 +1,6 @@
 open Helpers;
 open Crypto;
-
-module Contract_hash: {
-  type t = BLAKE2B_20.t;
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
-module Address: {
-  type t =
-    | Implicit(Key_hash.t)
-    | Originated({
-        contract: Contract_hash.t,
-        entrypoint: option(string),
-      });
-
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-
-  let to_yojson: t => Yojson.Safe.t;
-  let of_yojson: Yojson.Safe.t => result(t, string);
-};
-
-module Ticket: {
-  type t = {
-    ticketer: Address.t,
-    data: bytes,
-  };
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
-module Operation_hash: {
-  type t = BLAKE2B.t;
-  let equal: (t, t) => bool;
-  let to_string: t => string;
-  let of_string: string => option(t);
-};
-
-module Pack: {
-  type t;
-
-  let int: Z.t => t;
-  let bytes: bytes => t;
-  let pair: (t, t) => t;
-  let list: list(t) => t;
-  let key: Key.t => t;
-  let key_hash: Key_hash.t => t;
-  let address: Address.t => t;
-
-  let to_bytes: t => bytes;
-};
+open Tezos;
 
 module Context: {
   type t = {
@@ -101,7 +48,7 @@ module Consensus: {
 
   type parameters =
     | Deposit({
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
         // TODO: proper type for amounts
         amount: Z.t,
         destination: Address.t,

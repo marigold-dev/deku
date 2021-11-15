@@ -1,209 +1,6 @@
 open Helpers;
 open Crypto;
-
-let rec try_decode_list = (l, string) =>
-  switch (l) {
-  | [of_string, ...l] =>
-    switch (of_string(string)) {
-    | Some(v) => Some(v)
-    | None => try_decode_list(l, string)
-    }
-  | [] => None
-  };
-
-module Contract_hash = {
-  [@deriving eq]
-  type t = BLAKE2B_20.t;
-  let name = "Contract_hash";
-  let encoding = Data_encoding.(obj1(req(name, BLAKE2B_20.encoding)));
-  let to_raw = BLAKE2B_20.to_raw_string;
-  let of_raw = BLAKE2B_20.of_raw_string;
-  let prefix = Base58.Prefix.contract_hash;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
-};
-
-module Address = {
-  [@deriving eq]
-  type t =
-    | Implicit(Key_hash.t)
-    | Originated({
-        contract: Contract_hash.t,
-        entrypoint: option(string),
-      });
-
-  let contract_encoding =
-    Data_encoding.(
-      def(
-        "contract_id",
-        ~title="A contract handle",
-        ~description=
-          "A contract notation as given to an RPC or inside scripts. Can be a base58 implicit contract hash or a base58 originated contract hash.",
-      ) @@
-      union(
-        ~tag_size=`Uint8,
-        [
-          case(
-            Tag(0),
-            ~title="Implicit",
-            Key_hash.encoding,
-            fun
-            | Implicit(k) => Some(k)
-            | _ => None,
-            k =>
-            Implicit(k)
-          ),
-          case(
-            Tag(1),
-            Fixed.add_padding(Contract_hash.encoding, 1),
-            ~title="Originated",
-            fun
-            | Originated({contract, _}) => Some(contract)
-            | _ => None,
-            contract =>
-            Originated({contract, entrypoint: None})
-          ),
-        ],
-      )
-    );
-
-  let to_string =
-    fun
-    | Implicit(key_hash) => Key_hash.to_string(key_hash)
-    | Originated({contract, entrypoint: None}) =>
-      Contract_hash.to_string(contract)
-    | Originated({contract, entrypoint: Some(entrypoint)}) =>
-      Contract_hash.to_string(contract) ++ "%" ++ entrypoint;
-  let of_string = {
-    let implicit = string => {
-      let.some implicit = Key_hash.of_string(string);
-      Some(Implicit(implicit));
-    };
-    let originated = string => {
-      let.some (contract, entrypoint) =
-        switch (String.split_on_char('%', string)) {
-        | [contract] => Some((contract, None))
-        | [contract, entrypoint]
-            when String.length(entrypoint) < 32 && entrypoint != "default" =>
-          Some((contract, Some(entrypoint)))
-        | _ => None
-        };
-      let.some contract = Contract_hash.of_string(contract);
-      Some(Originated({contract, entrypoint}));
-    };
-    try_decode_list([implicit, originated]);
-  };
-  let encoding =
-    Data_encoding.(
-      conv(
-        t =>
-          switch (t) {
-          | Implicit(_) as t => (t, "")
-          | Originated({contract: _, entrypoint}) as t =>
-            let entrypoint = Option.value(~default="", entrypoint);
-            (t, entrypoint);
-          },
-        fun
-        // TODO: should we just discard entrypoint of implicit?
-        | (Implicit(_) as t, _) => t
-        | (Originated({contract, _}), "" | "default") =>
-          Originated({contract, entrypoint: None})
-        | (Originated({contract, _}), entrypoint) =>
-          Originated({contract, entrypoint: Some(entrypoint)}),
-        tup2(contract_encoding, Variable.string),
-      )
-    );
-
-  let (to_yojson, of_yojson) =
-    Yojson_ext.with_yojson_string("address", to_string, of_string);
-};
-
-module Ticket = {
-  open Tezos_micheline;
-
-  [@deriving eq]
-  type t = {
-    // TODO: should we allow implicit contracts here?
-    ticketer: Address.t,
-    data: bytes,
-  };
-
-  let parse_micheline = string => {
-    let (tokens, errors) = Micheline_parser.tokenize(string);
-    switch (errors) {
-    | [] =>
-      let (micheline, errors) = Micheline_parser.parse_expression(tokens);
-      switch (errors) {
-      | [] => Some(micheline)
-      | _ => None
-      };
-    | _ => None
-    };
-  };
-
-  let to_string = t => {
-    let loc = Micheline_printer.{comment: None};
-    let micheline =
-      Micheline.Prim(
-        loc,
-        "Pair",
-        [String(loc, Address.to_string(t.ticketer)), Bytes(loc, t.data)],
-        [],
-      );
-    Format.asprintf("%a", Micheline_printer.print_expr, micheline);
-  };
-  let of_string = string => {
-    let.some micheline = parse_micheline(string);
-    let.some (ticketer, data) =
-      switch (micheline) {
-      // TODO: maybe full Michelson_v1_parser
-      | Prim(_, "Pair", [String(_, ticketer), Bytes(_, data)], []) =>
-        Some((ticketer, data))
-      | _ => None
-      };
-    let.some ticketer = Address.of_string(ticketer);
-    Some({ticketer, data});
-  };
-};
-
-module Operation_hash = {
-  [@deriving eq]
-  type t = BLAKE2B.t;
-
-  let prefix = Base58.Prefix.operation_hash;
-  let to_raw = BLAKE2B.to_raw_string;
-  let of_raw = BLAKE2B.of_raw_string;
-  let to_string = t => Base58.simple_encode(~prefix, ~to_raw, t);
-  let of_string = string => Base58.simple_decode(~prefix, ~of_raw, string);
-};
-
-module Pack = {
-  open Tezos_micheline;
-  open Micheline;
-  open Michelson_v1_primitives;
-
-  type t = node(canonical_location, prim);
-
-  let int = n => Int(-1, n);
-  let nat = n => Int(-1, n);
-  let bytes = b => Bytes(-1, b);
-  let pair = (l, r) => Prim(-1, D_Pair, [l, r], []);
-  let list = l => Seq(-1, l);
-  let key = k =>
-    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key.encoding, k));
-  let key_hash = h =>
-    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Key_hash.encoding, h));
-  let address = addr =>
-    Bytes(-1, Data_encoding.Binary.to_bytes_exn(Address.encoding, addr));
-  let expr_encoding =
-    Micheline.canonical_encoding_v1(
-      ~variant="michelson_v1",
-      Michelson_v1_primitives.prim_encoding,
-    );
-  let to_bytes = data =>
-    Data_encoding.Binary.to_bytes_exn(expr_encoding, strip_locations(data))
-    |> Bytes.cat(Bytes.of_string("\005"));
-};
+open Tezos;
 
 module Context = {
   type t = {
@@ -299,9 +96,8 @@ let michelson_of_yojson = json => {
   | _ => Error("invalid json")
   };
 };
-
 type michelson =
-  Tezos_micheline.Micheline.node(int, Michelson_v1_primitives.prim);
+  Tezos_micheline.Micheline.node(int, Pack.Michelson_v1_primitives.prim);
 module Fetch_storage: {
   let run:
     (~rpc_node: Uri.t, ~confirmation: int, ~contract_address: Address.t) =>
@@ -529,14 +325,14 @@ module Consensus = {
 
   type parameters =
     | Deposit({
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
         // TODO: proper type for amounts
         amount: Z.t,
         destination: Address.t,
       })
     | Update_root_hash(BLAKE2B.t);
   type operation = {
-    hash: BLAKE2B.t,
+    hash: Operation_hash.t,
     index: int,
     parameters,
   };
@@ -608,7 +404,7 @@ module Consensus = {
         Data_encoding.Binary.of_bytes_opt(Address.encoding, destination);
       let.some ticketer =
         Data_encoding.Binary.of_bytes_opt(Address.encoding, ticketer);
-      let ticket = Ticket.{ticketer, data};
+      let ticket = Ticket_id.{ticketer, data};
       Some(Deposit({ticket, destination, amount}));
     | _ => None
     };

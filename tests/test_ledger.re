@@ -7,7 +7,7 @@ open Ledger;
 describe("ledger", ({test, _}) => {
   // TODO: maybe have a "total amount" function to ensure invariant?
   let make_ticket = (~ticketer=?, ~data=?, ()) => {
-    open Tezos_interop;
+    open Tezos;
 
     let ticketer =
       switch (ticketer) {
@@ -30,7 +30,7 @@ describe("ledger", ({test, _}) => {
   let make_address = () => snd(Address.make());
   let make_tezos_address = () => {
     open Crypto;
-    open Tezos_interop;
+    open Tezos;
     let (_key, address) = Ed25519.generate();
     let hash = Ed25519.Key_hash.of_key(address);
     Address.Implicit(Ed25519(hash));

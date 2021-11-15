@@ -105,10 +105,10 @@ let address = {
 let address_tezos_interop = {
   let parser = string =>
     string
-    |> Tezos_interop.Address.of_string
+    |> Tezos.Address.of_string
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, address) =>
-    Format.fprintf(fmt, "%s", Tezos_interop.Address.to_string(address));
+    Format.fprintf(fmt, "%s", Tezos.Address.to_string(address));
   Arg.(conv((parser, printer)));
 };
 let amount = {
@@ -140,10 +140,10 @@ let tezos_required_confirmations = {
 
 let ticket = {
   let parser = string =>
-    Tezos_interop.Ticket.of_string(string)
+    Tezos.Ticket_id.of_string(string)
     |> Option.to_result(~none=`Msg("Expected a ticket"));
   let printer = (fmt, ticket) =>
-    Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
+    Format.fprintf(fmt, "%S", Tezos.Ticket_id.to_string(ticket));
   Arg.(conv(~docv="A ticket", (parser, printer)));
 };
 let hash = {
@@ -395,12 +395,12 @@ let withdraw_proof = (node_folder, operation_hash, callback) => {
             %S)
       0x%s
       { %s })|},
-      Tezos_interop.Address.to_string(callback),
+      Tezos.Address.to_string(callback),
       Amount.to_int(handle.amount),
       to_hex(handle.ticket.data),
       handle.id,
-      Tezos_interop.Address.to_string(handle.owner),
-      Tezos_interop.Address.to_string(handle.ticket.ticketer),
+      Tezos.Address.to_string(handle.owner),
+      Tezos.Address.to_string(handle.ticket.ticketer),
       BLAKE2B.to_string(handles_hash),
       List.map(
         ((left, right)) =>
