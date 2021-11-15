@@ -1,8 +1,6 @@
-open Tezos_interop;
-
-[@deriving (ord, yojson)]
+include Tezos.Ticket_id;
 type t =
-  Ticket.t = {
+  Tezos.Ticket_id.t = {
     ticketer: Tezos.Address.t,
     data: bytes,
   };

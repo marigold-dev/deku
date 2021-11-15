@@ -140,10 +140,10 @@ let tezos_required_confirmations = {
 
 let ticket = {
   let parser = string =>
-    Tezos_interop.Ticket.of_string(string)
+    Tezos.Ticket_id.of_string(string)
     |> Option.to_result(~none=`Msg("Expected a ticket"));
   let printer = (fmt, ticket) =>
-    Format.fprintf(fmt, "%S", Tezos_interop.Ticket.to_string(ticket));
+    Format.fprintf(fmt, "%S", Tezos.Ticket_id.to_string(ticket));
   Arg.(conv(~docv="A ticket", (parser, printer)));
 };
 let hash = {
