@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal and galfour
+merge_request: '1147'
+title: Removed ppx_let dependency, replaced by OCaml built-in let-operators
+type: internal

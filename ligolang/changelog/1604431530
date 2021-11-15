@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '839'
+title: scripts/add-changelog-entry.sh now runs a nested nix-shell if jq or json2yaml
+  aren't installed in the outer nix shell
+type: internal

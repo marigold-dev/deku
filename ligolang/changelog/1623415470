@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '1193'
+title: Fix type-checker bug when using let-destructuring with a unit pattern
+type: fixed

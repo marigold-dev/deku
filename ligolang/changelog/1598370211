@@ -1,0 +1,4 @@
+author: Pierre-Emmanuel
+merge_request: '775'
+title: Add a predifine function 'assert_some'
+type: added

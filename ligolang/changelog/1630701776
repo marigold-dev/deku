@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1285'
+title: 'Testing framework: keep a local store for bigmaps'
+type: internal

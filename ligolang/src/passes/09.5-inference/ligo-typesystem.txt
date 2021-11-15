@@ -1,0 +1,187 @@
+(** Ligo language version ++ 
+
+This file present a formal description of the Ligo language
+
+The typesystem features :
+    - Basic Types
+    - Polymorphism
+    - Records
+    - Variants
+    - Rows and row polymorphism
+    
+* contraintes: prédicat(type, type, type, …) ou type ~ type (qui dit que les deux types doivent être unifiables), pas le même kind que les types
+* typeclasses: (forall alpha, constraint(…) => …`
+* Quand t'as ça, on verra pour avoir un first-class environment, ajouter le kinding, et quelques opérations de rangée 
+
+
+*)
+
+(** Syntax *)
+
+expr(e) = 
+  | value                             (* values *)
+  | built_in                          (* built-in function *)
+  | λx . expr                         (* abstraction *) 
+  | ΛX . expr                         (* type abstraction *) 
+  | expr expr                         (* application *)
+  | { l_i = expr_i }                  (* record *)
+  | { l_i = expr_i }.l_j              (* projection *)
+  | < l = expr >                      (* variant *)
+  | case e of < l_i = x_i > => expr_i (* case *)
+  | expr as type                      (* ascription *)
+
+A program can be seen as a list of expression. In Ligo those expressions takes any of those from :
+- The ascription of a type to an expression which is an indication from the programmer of the type of the expression
+- A variant element writen as above and the case block that adjust the control flow from the element's value.
+- A record element writen as above and the prejection to get the element corresponding to the label.
+- Lambda expression with values (λ) or parametric types (Λ).
+- Application of an expression to another expression.
+- Built-in fonction (mostly imported from libraries).
+- A value, as described below.
+
+value(v) =
+  | b                 (* instance of an element in B *)
+  | λx . expr         (* abstraction value *)
+  | ΛX . expr         (* type abstraction value *) 
+  | {l_i = value_i }  (* record value *)
+  | < l = value_i >   (* variant value *)
+
+Values are distinct from other expressions from not being derivable to another expression.
+In Ligo values are :
+- Lambda expression with parametric types or values that yield a value (contrary to the expression conterpart)
+- Records or variants element define as above.
+- Elements of Basic type (e.g. nat, bool, unit)
+
+type(T) = 
+  | B                (* Basic types *)
+  | X                (* type variabe *)
+  | type -> type     (* type of abstraction *)
+  | forall X.type    (* universal type *)
+  | lambda X.type    (* operator abstraction *)
+  | type type        (* operator application *)
+  | Πρ               (* type of records *)
+  | Σρ               (* type of variants *)
+  
+The projection operator removes unecessary labels. Those labels are determined by the type system
+
+Ligo is a staticaly type language using polymorphisme. Type can be any of:
+- A "Basic" built-in type.
+- A type variable which describe an undefined type for a polymorphic function
+- An arrow type which is the type of a function or lambda expression.
+- An universal type which is the type of a polymorphic fonction 
+(example for the last three : Id: forall X.X->X )
+- Lambda expression of type with parametric type. i.e. when given a type produce a type. These are called operators
+- records of types that is use to type records (e.g. {a = 1, b = true} as type {a : int, b : bool})
+- a list of types in "<>" used to type variant (e.g. <Tuesday=unit> as type <Monday=Unit | Tuesday=Unit | ... | Sunday=Unit>)
+
+kind(K) =
+  | *                (* kind of proper types *)
+  | kind => kind     (* kind of operators *)
+  | Ρ                (* kind of rows *)
+  | Ρ((l_i))         (* kind of rows without label (l_i) *)
+
+Ligo also provide higher order polymorphism. All types are given a kind, which are to types what 
+types are to expressions.
+Kinds are either "*" (the kind assigned to proper types) or double arrow kinds which are the kind of type-level operators (a.k.a type-level functions).
+
+rows (ρ) = 
+  | ( )           (* Empty rows *)
+  | ( l = T | ρ ) (* Extension *)
+  | (ρ1 | ρ2)     (* Rows concatenation *)
+  | prj p         (* Projection *)
+
+Rows lives at the same level as type but are member of the row kind. They represent list of string and types pair and are use to generate types
+of records and variants.
+There are few built-int operation on rows. Concatenation and projection. 
+The projection reduce the fields of the rows to only those necessary in the context.
+Concatenation unite the fileds of both rows into a single rows, these can leads to shadowing when fields are present in both field.
+Extension are special case of concatenation
+
+Γ =
+  | ()         (* empty context *)
+  | Γ, x:type  (* expression variable binding *)
+  | Γ, X::kind (* type variable binding *)
+
+Association between expressions and types, and between types and kinds are store in a context gamma (Γ).
+This context can be empty. Binding between expression variable and type and type variable and kind can be added following the given syntax.
+
+(** Evaluation **)
+
+Evaluation rules define how expression should be derived in the language.
+
+e1 -> e1' ==> e1 e2 -> e1' e2                     (* E-APP1 *)
+e2 -> e2' ==> v1 e2 -> v1 e2'                     (* E-APP2 *)
+In an application expression, the left expression is evaluated until it becomes a value and then the right expression is evaluated
+(λx:T.e) v -> [ x -> v ] e                        (* E-APPABS-VAL *)
+(λX:*.e) Y -> [ X -> Y ] e                        (* E-APPABS-TYPE *)
+When an abstraction is applied to a value, the value parameter in the abstraction is replace by the value it is applied to
+ej -> ej' ==> {vi, ej, ek} -> {vi, ej', ek}       (* E-RECORDS *)
+In a record, the expressions are evaluated from left to right until each reach a value
+e -> e' ==> e.i -> e'.i                           (* E-PROJ *)
+{vi}.j -> vj                                      (* E-PROJTUPLE *)
+In a projection, the record is evaluated first and the the projection is replaced by the corresponding value
+ei -> ei' ==> <li=ei> as T -> <li=ei'> as T       (* E-VARIANT *)
+In a variant element, we evaluate the expression inside the element.
+e0 -> e0' ==> case e0 of <li=xi> => ei 
+                    -> case e0' of <li=xi> => ei  (* E-CASE *)
+case (<lj=vj> as T) of <li=xi> => ei 
+                    -> [ xj => vj ] ej            (* E-CASEVARIANT *)
+In a case construct, the variant element is evaluated first and the appropriate branch of the case is evaluated
+v as T -> v                                       (* E-ASCRIPTION *)
+The ascription is unecessary for evaluation and removed
+
+
+(* Rules above are not 100% up-to-date *)
+
+(** In progress 
+
+(** Kinding **)
+X::K ∈ Γ ==> Γ ⊢ X :: K                                                                (* K-TVAR *)
+Γ,X::K1 ⊢ T2::K2 ==> Γ ⊢ ΛX::K1.T2 :: K1 =>K2                                          (* K-TABS *)
+Γ ⊢ T1 :: K11 => K12 and Γ ⊢ T2 :: K11 ==> Γ ⊢ T1 T2 :: K12                            (* K-TAPP *)
+Γ ⊢ T1 :: * and Γ ⊢ T2 :: * ==> Γ ⊢ T1 -> T2 :: *                                      (* K-ARROW Note: in the implemantation, type constructors take tuples of arguments. *)
+==> identifier_in_source_code :: Label                                                 (* K-LABEL *)
+for each i Γ ⊢ ℓi :: Label and for each i Γ ⊢ Ti :: * ==> Γ ⊢ { ℓi : Ti ; … } :: Row   (* K-ROW *)
+==> Γ ⊢ Π :: Row => *                                                                  (* K-RECORD *)
+==> Γ ⊢ Σ :: Row => *                                                                  (* K-VARIANT *)
+Γ, X :: * ⊢ T :: K ==> Γ ⊢ (∀ X::* . T) :: K                                           (* K-FORALL *)
+
+(** Type equivalence **)
+Γ ⊢ T :: K ==> Γ ⊢ T ≡ T :: K                                                                                 (* Q-REFL *)
+Γ ⊢ T ≡ S :: K ==> Γ ⊢ S ≡ T :: K                                                                             (* Q-SYMM *)
+Γ ⊢ S ≡ U :: K and Γ ⊢ U ≡ T :: K ==> Γ ⊢ S ≡ T :: K                                                          (* Q-TRANS *)
+Γ, X :: K1 ⊢ T2 :: K2 and Γ ⊢ T1 :: K1                                                                        (* Q-BETA *)
+    ==> Γ ⊢ (Λ X :: K1 . T2) T1 ≡ {X ↦ T1}T2 :: K2
+(* The following rule implements observable equality on type constructors, other models of equality on
+   type constructors might be preferable. The LIGO language currently only allows for built-in type
+   constructors (list, map, set, and type constants like int or string which are implemented as 0-aray
+   opaque type constructors), therefore the exact model of equality bears no impact on the type system
+   for now. *)
+Γ ⊢ S :: K1 => K2 and Γ ⊢ T :: K1 => K2 and                                                                   (* Q-EXT *)
+    Γ, X::K1 ⊢ S X ≡ T X::K2 for any X ==> Γ ⊢ S ≡ T : K1 => k2
+Γ,X::K1 ⊢ S2≡T2::K2 ==> Γ ⊢ ΛX::K1.S2 ≡ ΛX::K1.T2 :: K1=>K2                                                   (* Q-TABS *)
+Γ ⊢ S1≡T1::K1 => K2 and Γ ⊢ S2≡T2::K1 ==> Γ ⊢ S1 S2 ≡ T1 T2 :: K2                                             (* Q-TAPP *)
+Γ ⊢ S1 ≡ T1 :: * and Γ ⊢ S2 ≡ T2 :: * ==> Γ ⊢ S1 -> S2 ≡ T1 -> T2 :: *                                        (* Q-Arrow *)
+for each i Γ ⊢ ℓi ≡ ℓ'i :: Label and for each i Γ ⊢ Si ≡ Ti :: * ==> Γ ⊢ { ℓi : Si ; … } ≡ { ℓ'i : Ti ; … }    (* Q-ROW *)
+Γ, X :: * ⊢ T1 :: K and Y :: * ⊢ T2 :: K and {X ↦ Y}T1 ≡ {X ↦ Y}T2                                           (* Q-FORALL-ALPHA-EQV *)
+    ==> Γ ⊢ (∀ X::* . T1) ≡ (∀ Y :: * . T2) :: K
+Γ ⊢ T1 :: * and Γ, X :: * ⊢ T2 :: K2                                                                          (* Q-FORALL-APP *)
+    ==> Γ ⊢ (∀ X::* . T2) T1 ≡ {X ↦ T1}T2 :: K2
+
+(** Typing *)
+
+Γ ⊢ t : S and Γ ⊢ S ≡ T :: * ==> Γ ⊢ t : T                                                            (* T-EQ *)
+x:T ∈ Γ ==> Γ ⊢ x:T                                                                                   (* T-VAR *)
+Γ ⊢ T::* and Γ,x:T ⊢ e : S ==> Γ ⊢ λx:T.e : T -> S                                                    (* T-ABS *)
+Γ ⊢ e1 : T -> S and Γ ⊢ e2 : T ==> Γ ⊢ e1 e2 : S                                                      (* T-APP *)
+for each i, Γ ⊢ ℓi : Label and for each i, Γ ⊢ ei : Ti ==> Γ ⊢ { ℓi = ei ; … } : Π { ℓi : Ti ; … }    (* T-RECORD *)
+Γ ⊢ e : Π { ℓi : Ti ; … } ==> Γ ⊢ e.ℓi : Tj                                                           (* T-PROJ *)
+Γ ⊢ ℓj : Label and Γ ⊢ ej : Tj and ρ : Row and (ℓj : Tj) ∈ ρ
+          ==> Γ ⊢ <ℓj=ej> as Σ ρ : Σ ρ                                                                (* T-CONSTRUCTOR *)
+Γ ⊢ ρ ≡ { ℓi : Ti ; … } : Row and Γ ⊢ e0 : Σ ρ and for each i, Γ,xi:Ti ⊢ ei : T 
+          ==> Γ ⊢ case e0 of <ℓi=xi> => ei:T                                                          (* T-CASE *)
+Γ ⊢ e : T ==> Γ ⊢ e as T : T                                                                          (* T-ASCRIPTION *)
+Γ,X::* ⊢ e : T ==> Γ ⊢ λ X:* . e : (∀ X::* . T)                                                       (* T-FORALL-ABS *)
+Γ ⊢ Y :: * and Γ ⊢ e : (∀ X::* . T) ==> Γ ⊢ (e Y) : [X ↦ Y]T                                         (* T-FORALL-APP *)
+
+*)

@@ -1,0 +1,6 @@
+---
+  title: "ReasonLIGO: support functions without arguments"
+  merge_request: "1292"
+  author: "@SanderSpies"
+  type: "fixed"
+

@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '828'
+title: add the --init-file option to compile-expresssion command
+type: fixed

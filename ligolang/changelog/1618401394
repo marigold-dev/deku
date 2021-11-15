@@ -1,0 +1,6 @@
+---
+  title: "Allow identifiers with underscore and wildcard name"
+  merge_request: "1078"
+  author: "@er433"
+  type: "added"
+

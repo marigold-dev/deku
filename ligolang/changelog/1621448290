@@ -1,0 +1,6 @@
+---
+  title: "Added syntactic support for tuples without parentheses at the top-level of patterns in pattern matchings."
+  merge_request: "1168"
+  author: "Christian Rinderknecht"
+  type: "added"
+

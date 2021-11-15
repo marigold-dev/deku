@@ -1,0 +1,6 @@
+---
+  title: "Add support for chained assignment"
+  merge_request: "1281"
+  author: "@SanderSpies"
+  type: "fixed"
+

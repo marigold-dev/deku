@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1132'
+title: 'New pass enforcing: consts cannot be assigned to, vars cannot be captured.'
+type: added

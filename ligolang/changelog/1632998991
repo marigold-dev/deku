@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1330'
+title: 'Testing framework: add support for missing ops. on tez'
+type: internal

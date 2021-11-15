@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '921'
+title: Remove vendored protocols -- fake origination & bake for proto env setup
+type: internal

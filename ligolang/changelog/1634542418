@@ -1,0 +1,6 @@
+---
+  title: "Make JsLIGO export handling similar to JavaScript"
+  merge_request: "1354"
+  author: "@SanderSpies"
+  type: "fixed"
+

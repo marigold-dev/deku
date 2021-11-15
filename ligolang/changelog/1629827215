@@ -1,0 +1,5 @@
+author: er433
+merge_request: '1269'
+title: 'Testing framework: fix for constant declaration, it does not need to evaluate
+  anymore'
+type: internal

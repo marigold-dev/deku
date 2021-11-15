@@ -1,0 +1,3 @@
+/* Test conditional in JsLIGO */
+
+let main = (i : int) : int => { if (i == 2) { return 42; } else { return 0; }; };

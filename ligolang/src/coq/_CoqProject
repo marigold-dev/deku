@@ -1,0 +1,9 @@
+-R . ligo_coq
+./lemmas.v
+./co_de_bruijn.v
+./bytes.v
+./micheline.v
+./types.v
+./michelson.v
+./ligo.v
+./compiler.v

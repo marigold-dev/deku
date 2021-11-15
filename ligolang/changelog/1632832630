@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+title: 'testing framework: adding timestamp arithmetic in LIGO interpreter'
+type: added
+merge_request: '1322'

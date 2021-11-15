@@ -1,0 +1,4 @@
+author: Suzanne Soy
+merge_request: '1135'
+title: 'Reviewed/refactored scripts/installer.sh: added code quality marker, used /dev/ instead of /master/, deleted stale pointer (branch) to master that we haven'\''t updated in nearly a year, stronger check on arguments, quoted "", Show destination path in success message'
+type: changed

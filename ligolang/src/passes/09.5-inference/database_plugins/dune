@@ -1,0 +1,16 @@
+(library
+  (name database_plugins)
+  (public_name ligo.typer_new.database_plugins)
+  (libraries
+    simple-utils
+    tezos-utils
+    ast_core
+    ast_typed
+    predefined
+    UnionFind
+    environment
+    type_variable_abstraction
+    solver_types
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
+)

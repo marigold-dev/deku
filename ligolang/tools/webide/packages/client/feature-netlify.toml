@@ -1,0 +1,15 @@
+[build]
+  publish = "build"
+
+## This section is for the Netlify redirect. The hostname below points to the alternative server..
+[[redirects]]
+  from = "/api/*"
+  to = "https://temphost.ligopreview.tez.ie/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/p/*"
+  to = "/index.html"
+  status = 200
+  force = true

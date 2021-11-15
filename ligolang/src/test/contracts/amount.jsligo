@@ -1,0 +1,7 @@
+let check_ = (_ : unit) : int => {
+  if (Tezos.amount == (100 as tez)) {
+    return 42;
+  } else {
+    return 0;
+  };
+};

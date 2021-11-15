@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+merge_request: '1182'
+title: fix a bug where Test.get_storage was not usable within a Test.compile_expression_subst
+type: fixed

@@ -1,0 +1,17 @@
+// Test while loops in JsLIGO
+
+let sum = ([n, acc] : [int, int]): int => {
+  if (n < 1) {
+    return acc;
+  } else {
+    return sum ([n-1,acc+n]);
+  };
+};
+
+let fibo = ([n, n_1, n_0] : [int,int,int]): int => {
+    if (n < 2) {
+      return n_1;
+    } else {
+      return fibo ([n-1,n_1+n_0,n_1]);
+    };
+};

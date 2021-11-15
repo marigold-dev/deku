@@ -1,0 +1,6 @@
+---
+  title: "Extended syntax to support 'let x (type a) : 'a = x' etc."
+  merge_request: "1299"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

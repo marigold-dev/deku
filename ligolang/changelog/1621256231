@@ -1,0 +1,5 @@
+author: '@er433'
+merge_request: '1163'
+title: 'Add warning message when layout attribute is present on a constructor for
+  a sum (issue #1104)'
+type: added

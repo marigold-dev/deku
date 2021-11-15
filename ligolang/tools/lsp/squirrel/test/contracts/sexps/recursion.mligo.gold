@@ -1,0 +1,18 @@
+(contract
+  (fun
+    rec
+    sum
+    (type? (?(tuple? (? n) (? acc))) (PROD int int))
+    :
+    int
+    = (if ((n < 1)) acc (apply sum ((tuple (apply n -1) (acc + n))))))
+  (fun
+    rec
+    fibo
+    (type? (?(tuple? (? n) (? n_1) (? n_0))) (PROD int (PROD int int)))
+    :
+    int
+    =
+    (if
+      ((n < 2))
+      n_1 (apply fibo ((tuple (apply n -1) (tuple (n_1 + n_0) n_1)))))))

@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '1025'
+title: Dropped support for pre-Edo protocols (carthage, dalphanet)
+type: removed

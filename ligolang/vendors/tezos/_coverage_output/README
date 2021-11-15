@@ -1,0 +1,5 @@
+NOTE: this file is kept present here to make sure the directory
+      _coverage_output exists.  This is where coverage data will be collected
+      when tests are run.  To clean it use: make coverage-clean
+
+See http://tezos.gitlab.io/developer/testing.html#measuring-test-coverage for how to measure test coverage.

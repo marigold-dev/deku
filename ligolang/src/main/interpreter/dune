@@ -1,0 +1,17 @@
+(library
+  (name interpreter)
+  (public_name ligo.main_interpreter)
+  (instrumentation (backend bisect_ppx))
+  (libraries
+    tezos-011-PtHangzH-test-helpers
+    ast_typed
+    ligo_interpreter
+    main_errors
+    ligo_compile
+    build
+    fuzz
+    ligo_run
+    self_ast_typed
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
+)

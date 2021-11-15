@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '839'
+title: Fixed build issue with dune b inside a nix-shell (thanks Sander for providing
+  the fix)
+type: internal

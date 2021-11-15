@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1402'
+title: 'Profiling and fixes: initialize dummy_environment only when needed'
+type: performance

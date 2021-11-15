@@ -1,0 +1,82 @@
+(ocamllex md)
+
+(executables
+ (names test doc_test repl_test parser_negative_tests mydebugplease)
+ (libraries
+  simple-utils
+  tezos-memory-proto-alpha
+  ligo
+  repl
+  interpreter
+  alcotest
+  tezos-utils
+  tezos-crypto
+  zinc.types
+  zinc.interpreter
+  zinc.utils
+  )
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48@39@33 -open Simple_utils)))
+
+(rule
+ (alias doc-test)
+ (action
+  (run ./doc_test.exe))
+ (deps
+  (source_tree ../../gitlab-pages/docs)))
+
+(rule
+ (alias repl-test)
+ (action
+  (run ./repl_test.exe))
+ (deps
+  (source_tree ../../gitlab-pages/docs)))
+
+(rule
+ (alias parser-negative-tests)
+ (action
+  (run ./parser_negative_tests.exe))
+ (deps
+  ../passes/02-parsing/pascaligo/all.ligo
+  ../passes/02-parsing/cameligo/all.mligo
+  ../passes/02-parsing/reasonligo/all.religo))
+
+(rule
+ (alias ligo-test)
+ (action
+  (setenv
+   POSITIVE_CONTRACTS
+   "%{pos}"
+   (run ./test.exe)))
+ (deps
+  (glob_files contracts/*)
+  (:pos
+   (glob_files contracts/positive/*))
+  (glob_files contracts/negative/*)
+  (glob_files preprocessor/*)))
+
+(alias
+ (name runtest)
+ (deps
+  (alias ligo-test)
+  (alias doc-test)
+  (alias parser-negative-tests)
+  (alias repl-test)))
+
+(rule
+ (alias manual-test)
+ (action
+  (run ./manual_test.exe))
+ (deps
+  (glob_files contracts/*)))
+
+(rule
+ (alias zinctest)
+ (action
+  (run ./test.exe test ".*Zinc.*"))
+ (deps
+  (glob_files contracts/*)
+  (:pos
+   (glob_files contracts/positive/*))
+  (glob_files contracts/negative/*)
+  (glob_files preprocessor/*)))

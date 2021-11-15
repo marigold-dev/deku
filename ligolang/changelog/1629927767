@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1273'
+title: 'Fix: Test.originate now supports recursive functions'
+type: fixed

@@ -1,0 +1,6 @@
+---
+  title: "Rename Comments module to AttachComments"
+  merge_request: "1178"
+  author: "@SanderSpies"
+  type: "internal"
+

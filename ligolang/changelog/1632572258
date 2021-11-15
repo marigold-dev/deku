@@ -1,0 +1,6 @@
+---
+  title: "Add missing API functions to interpreter [List.fold_right, List.fold_left, List.head_opt, List.tail_opt, Set.fold_desc, Set.update, Map.get_and_update]"
+  merge_request: "1319"
+  author: "melwyn95"
+  type: "added"
+

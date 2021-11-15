@@ -1,0 +1,8 @@
+type storage = unit;
+
+/* Not supported yet:
+   let main (p:unit) storage = (fun x -> ()) ()
+   */
+
+let main = ([_unit, _storage] : [unit, storage]) : unit =>
+  ((f : ((a: unit) => unit)) => f (unit)) ((_useless : unit) => unit);

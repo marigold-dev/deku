@@ -1,0 +1,6 @@
+author: '@er433'
+merge_request: '1169'
+title: 'Changes in the testing framework: Test.originate, Test.transfer(_exn), Test.to_contract,
+  Test.to_entrypoint, Test.get_storage, Test.get_balance, Test.eval, initial support
+  for big_maps'
+type: changed

@@ -1,0 +1,149 @@
+;; Build of the parser for CameLIGO
+
+(menhir
+  (merge_into Parser)
+  (modules ParToken Parser)
+  (flags -la 1 --table --strict --explain --inspection --cmly
+         --external-tokens Lexing_cameligo.Token))
+
+(rule
+  (targets RecoverParser.ml)
+  (deps Parser.cmly)
+  (action
+   (with-stdout-to
+     %{targets}
+    (run menhir-recover --external-tokens Lexing_cameligo.Token Parser.cmly))))
+
+;; Build of the CameLIGO parser as a library
+
+(library
+  (name parsing_cameligo)
+  (public_name ligo.parsing.cameligo)
+  (instrumentation (backend bisect_ppx))
+  (modules
+    Parser ParErr Pretty RecoverParser)
+  (libraries
+    ;; LIGO
+    lexing_cameligo
+    lexing_shared
+    cst_cameligo
+    ;; Vendors
+    simple-utils
+    ParserLib
+    ;; Third party
+    pprint
+    terminal_size
+    menhirLib
+    hex)
+  (flags (:standard -open Cst_cameligo     ;; for CST
+                    -open Lexing_shared))) ;; and Wrap in Parser.mli
+
+;; Local build of a standalone parser for CameLIGO
+
+(executable
+  (name ParserMain)
+  (libraries
+    ;; LIGO
+    preprocessing_cameligo
+    lexing_cameligo
+    parsing_shared
+    parsing_cameligo
+    cst_cameligo
+    ;; Third party
+    hex)
+  (modules ParserMain Parser_msg))
+
+;; Build of the covering of error states in the LR automaton
+
+(rule
+  (targets Parser.msg)
+  (deps (:script_messages ../../../../vendors/ligo-utils/simple-utils/messages.sh) Parser.mly ParToken.mly)
+  (action (run %{script_messages} --lex-tokens=Token.mli --par-tokens=ParToken.mly Parser.mly)))
+
+(rule
+ (targets Parser_msg.ml)
+ (deps Parser.mly ParToken.mly Parser.msg)
+ (action
+  (with-stdout-to %{targets}
+   (bash
+     "menhir \
+       --compile-errors Parser.msg \
+       --external-tokens Token \
+       --base Parser \
+       ParToken.mly \
+       Parser.mly"))))
+
+;; Build of all the LIGO source file that cover all error states
+
+(rule
+  (targets all.mligo)
+  (deps (:script_cover ../../../../vendors/ligo-utils/simple-utils/cover.sh) Parser.mly ParToken.mly Parser.msg)
+  (action (run %{script_cover}
+               --lex-tokens=Token.mli
+               --par-tokens=ParToken.mly
+               --ext=mligo
+               --unlexer=%{exe:../../01-lexing/cameligo/Unlexer.exe}
+               --messages=Parser.msg
+               --dir=.
+               --concatenate Parser.mly)))
+
+;; Error messages
+
+(rule
+ (targets errors.msg)
+ (deps Parser.mly ParToken.mly errors.msg.in)
+ (action
+  (with-stdout-to %{targets}
+  (run menhir
+       --unused-tokens
+       --update-errors errors.msg.in
+       --table
+       --strict
+       --external-tokens Lexer_cameligo.Token
+       --base Parser.mly
+       ParToken.mly
+       Parser.mly))))
+
+(rule
+  (target errors.msg.new)
+  (action
+    (with-stdout-to %{target}
+      (run menhir
+           --unused-tokens
+           --list-errors
+           --table
+           --strict
+           --external-tokens Lexer_cameligo.Token
+           --base Parser.mly
+           ParToken.mly
+           Parser.mly))))
+
+(rule
+  (alias runtest)
+  (deps errors.msg errors.msg.new)
+  (action
+    (run menhir
+         --unused-tokens
+         --table
+         --strict
+         --external-tokens Lexer_cameligo.Token
+         --base Parser.mly
+         ParToken.mly
+         Parser.mly
+         --compare-errors errors.msg.new
+         --compare-errors errors.msg)))
+
+(rule
+ (targets ParErr.ml)
+ (deps Parser.mly ParToken.mly errors.msg.in)
+ (action
+  (with-stdout-to %{targets}
+  (run menhir
+       --unused-tokens
+       --table
+       --strict
+       --external-tokens Lexer_cameligo.Token
+       --base Parser.mly
+       ParToken.mly
+       Parser.mly
+       --compile-errors errors.msg.in))))

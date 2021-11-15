@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+title: fix a bug where a wrongly typed pattern was getting through the typechecker
+type: fixed
+merge_request: '1285'

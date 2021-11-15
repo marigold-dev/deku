@@ -1,0 +1,4 @@
+author: Pierre-Emmanuel Wulfman
+merge_request: '871'
+title: Solve warnings during compilation
+type: internal

@@ -1,0 +1,6 @@
+---
+  title: "Added parsing of constant constructors as function arguments."
+  merge_request: "951"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

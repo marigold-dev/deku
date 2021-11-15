@@ -1,0 +1,6 @@
+---
+  title: "Fix error messages snippet printing"
+  merge_request: "824"
+  author: "SanderSpies"
+  type: "fixed"
+

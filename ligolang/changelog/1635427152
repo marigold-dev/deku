@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1375'
+title: 'Testing framework: fix order of receipt processing for big_maps'
+type: fixed

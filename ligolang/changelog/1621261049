@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+merge_request: '1164'
+title: fix a bug in ligo test framework where Test.transfer was returning unit in
+  case of success
+type: fixed

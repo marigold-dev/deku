@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1218'
+title: Clean up error handling in testing framework
+type: internal

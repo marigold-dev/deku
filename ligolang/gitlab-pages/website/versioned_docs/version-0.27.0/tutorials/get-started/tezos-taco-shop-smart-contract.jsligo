@@ -1,0 +1,25 @@
+type taco_supply = { current_stock : nat , max_price : tez } ;
+
+type taco_shop_storage = map <nat, taco_supply> ;
+type return_ = [list <operation>, taco_shop_storage];
+
+let buy_taco = ([taco_kind_index, taco_shop_storage] : [nat, taco_shop_storage]) : return_ => {
+  /* Retrieve the taco_kind from the contracts storage or fail */
+  let taco_kind : taco_supply =
+    match (Map.find_opt (taco_kind_index, taco_shop_storage), {
+      Some: (k:taco_supply) => k,
+      None: (_:unit) => (failwith ("Unknown kind of taco") as taco_supply)
+    }) ;
+  let current_purchase_price : tez = taco_kind.max_price / taco_kind.current_stock ;
+  /* We won't sell tacos if the amount is not correct */
+  if (Tezos.amount != current_purchase_price) {
+    failwith ("Sorry, the taco you are trying to purchase has a different price") as return_
+  } else {
+    /* Update the storage decreasing the stock by 1n */
+    let taco_shop_storage = Map.update (
+      taco_kind_index,
+      (Some (({...taco_kind, current_stock : abs (taco_kind.current_stock - (1 as nat)) }))),
+      taco_shop_storage );
+    return [(list([]) as list <operation>), taco_shop_storage]
+  }
+};

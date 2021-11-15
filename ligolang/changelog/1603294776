@@ -1,0 +1,6 @@
+author: Rémi Lesénéchal
+merge_request: '837'
+title: --protocol preloads types corresponding to a given protocol. use "ligo compile-contract
+  path entrypoint --protocol=X --disable-michelson-typecheking" in combination with
+  michelson_insertion
+type: added

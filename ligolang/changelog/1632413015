@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+title: improves error locations on arguments in JsLigo
+type: fixed
+merge_request: '1315'

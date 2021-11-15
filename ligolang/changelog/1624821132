@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1204'
+title: 'Transpiler: add parenthesis around typed pattern when decompiling CameLIGO'
+type: fixed

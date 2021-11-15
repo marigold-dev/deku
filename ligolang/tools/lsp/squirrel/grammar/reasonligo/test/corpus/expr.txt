@@ -1,0 +1,56 @@
+=========
+paren
+=========
+
+let x = (foo (42))
+
+---
+
+(source_file
+  (let_decl
+    (var_pattern (NameDecl))
+    (paren_expr (apply (Name) (Int)))))
+
+=========
+tuple
+=========
+
+let x = (1, "foo", 3)
+
+---
+
+(source_file
+  (let_decl
+    (var_pattern (NameDecl))
+    (tuple (Int) (String) (Int))))
+
+=========
+single paren
+=========
+
+let x = (1)
+
+---
+
+(source_file
+  (let_decl
+    (var_pattern (NameDecl))
+    (paren_expr (Int))))
+
+=========
+tuples and parens
+=========
+
+let x = ((1, "foo", 3))
+let y = ((1), ("foo"), 3)
+
+---
+
+(source_file
+  (let_decl
+    (var_pattern (NameDecl))
+    (paren_expr
+      (tuple (Int) (String) (Int))))
+  (let_decl
+    (var_pattern (NameDecl))
+    (tuple (paren_expr (Int)) (paren_expr (String)) (Int))))

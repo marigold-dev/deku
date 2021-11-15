@@ -1,0 +1,4 @@
+author: tomjack
+merge_request: '965'
+title: Prevent inappropriate optimisation of %Michelson lambdas
+type: changed

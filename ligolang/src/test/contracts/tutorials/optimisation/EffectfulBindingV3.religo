@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/religo/effectful_binding/EffectfulBindingV3.religo

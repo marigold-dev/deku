@@ -1,0 +1,6 @@
+---
+  title: "Removed syntax of tupls without parentheses as parameters."
+  merge_request: "1299"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

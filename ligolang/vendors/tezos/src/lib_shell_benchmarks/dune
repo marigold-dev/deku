@@ -1,0 +1,17 @@
+(library
+ (name tezos_shell_benchmarks)
+ (instrumentation (backend bisect_ppx))
+ (public_name tezos-shell-benchmarks)
+ (libraries
+  tezos-base
+  tezos-benchmark
+  tezos-context
+  tezos-shell-context
+  tezos-micheline)
+ (library_flags (:standard -linkall))
+ (flags (:standard -open Tezos_stdlib
+                   -open Tezos_base
+                   -open Tezos_base__TzPervasives
+                   -open Tezos_error_monad
+                   -open Tezos_benchmark
+                   -open Tezos_crypto)))

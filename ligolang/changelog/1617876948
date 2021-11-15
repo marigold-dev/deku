@@ -1,0 +1,4 @@
+author: Rémi lesénéchal
+title: fix bug occuring when overriding option type
+type: fixed
+merge_request: '1082'

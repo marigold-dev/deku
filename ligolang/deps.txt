@@ -1,0 +1,2141 @@
+digraph {
+	"exe:./src/bin/dune:2"	 [label=ligo,
+		shape=diamond];
+	"lib:cli"	 [label=cli];
+	"exe:./src/bin/dune:2" -> "lib:cli";
+	"exe:./src/passes/00-preprocessing/cameligo/dune:1"	 [label="PreprocMain<cameligo>",
+		shape=diamond];
+	"lib:preprocessing_cameligo"	 [label=preprocessing_cameligo,
+		style=filled];
+	"exe:./src/passes/00-preprocessing/cameligo/dune:1" -> "lib:preprocessing_cameligo";
+	"lib:preprocessing_shared"	 [label=preprocessing_shared,
+		style=filled];
+	"exe:./src/passes/00-preprocessing/cameligo/dune:1" -> "lib:preprocessing_shared";
+	"exe:./src/passes/00-preprocessing/jsligo/dune:1"	 [label="PreprocMain<jsligo>",
+		shape=diamond];
+	"lib:preprocessing_jsligo"	 [label=preprocessing_jsligo,
+		style=filled];
+	"exe:./src/passes/00-preprocessing/jsligo/dune:1" -> "lib:preprocessing_jsligo";
+	"exe:./src/passes/00-preprocessing/jsligo/dune:1" -> "lib:preprocessing_shared";
+	"exe:./src/passes/00-preprocessing/pascaligo/dune:1"	 [label="PreprocMain<pascaligo>",
+		shape=diamond];
+	"lib:preprocessing_pascaligo"	 [label=preprocessing_pascaligo,
+		style=filled];
+	"exe:./src/passes/00-preprocessing/pascaligo/dune:1" -> "lib:preprocessing_pascaligo";
+	"exe:./src/passes/00-preprocessing/pascaligo/dune:1" -> "lib:preprocessing_shared";
+	"exe:./src/passes/00-preprocessing/reasonligo/dune:1"	 [label="PreprocMain<reasonligo>",
+		shape=diamond];
+	"lib:preprocessing_reasonligo"	 [label=preprocessing_reasonligo,
+		style=filled];
+	"exe:./src/passes/00-preprocessing/reasonligo/dune:1" -> "lib:preprocessing_reasonligo";
+	"exe:./src/passes/00-preprocessing/reasonligo/dune:1" -> "lib:preprocessing_shared";
+	"exe:./src/passes/01-lexing/cameligo/dune:1"	 [label="LexerMain<cameligo>",
+		shape=diamond];
+	"lib:lexing_cameligo"	 [label=lexing_cameligo,
+		style=filled];
+	"exe:./src/passes/01-lexing/cameligo/dune:1" -> "lib:lexing_cameligo";
+	"lib:lexing_shared"	 [label=lexing_shared,
+		style=filled];
+	"exe:./src/passes/01-lexing/cameligo/dune:1" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/cameligo/dune:1" -> "lib:preprocessing_cameligo";
+	"lib:str"	 [label=str,
+		style=filled];
+	"exe:./src/passes/01-lexing/cameligo/dune:1" -> "lib:str";
+	"exe:./src/passes/01-lexing/cameligo/dune:2"	 [label="Unlexer<cameligo>",
+		shape=diamond];
+	"exe:./src/passes/01-lexing/cameligo/dune:2" -> "lib:lexing_cameligo";
+	"exe:./src/passes/01-lexing/cameligo/dune:2" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/cameligo/dune:2" -> "lib:str";
+	"exe:./src/passes/01-lexing/jsligo/dune:1"	 [label="LexerMain<jsligo>",
+		shape=diamond];
+	"lib:lexing_jsligo"	 [label=lexing_jsligo,
+		style=filled];
+	"exe:./src/passes/01-lexing/jsligo/dune:1" -> "lib:lexing_jsligo";
+	"exe:./src/passes/01-lexing/jsligo/dune:1" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/jsligo/dune:1" -> "lib:preprocessing_jsligo";
+	"exe:./src/passes/01-lexing/jsligo/dune:1" -> "lib:str";
+	"exe:./src/passes/01-lexing/jsligo/dune:2"	 [label="Unlexer<jsligo>",
+		shape=diamond];
+	"exe:./src/passes/01-lexing/jsligo/dune:2" -> "lib:lexing_jsligo";
+	"exe:./src/passes/01-lexing/jsligo/dune:2" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/jsligo/dune:2" -> "lib:str";
+	"exe:./src/passes/01-lexing/pascaligo/dune:1"	 [label="LexerMain<pascaligo>",
+		shape=diamond];
+	"lib:lexing_pascaligo"	 [label=lexing_pascaligo,
+		style=filled];
+	"exe:./src/passes/01-lexing/pascaligo/dune:1" -> "lib:lexing_pascaligo";
+	"exe:./src/passes/01-lexing/pascaligo/dune:1" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/pascaligo/dune:1" -> "lib:preprocessing_pascaligo";
+	"exe:./src/passes/01-lexing/pascaligo/dune:1" -> "lib:str";
+	"exe:./src/passes/01-lexing/pascaligo/dune:2"	 [label="Unlexer<pascaligo>",
+		shape=diamond];
+	"exe:./src/passes/01-lexing/pascaligo/dune:2" -> "lib:lexing_pascaligo";
+	"exe:./src/passes/01-lexing/pascaligo/dune:2" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/pascaligo/dune:2" -> "lib:str";
+	"exe:./src/passes/01-lexing/reasonligo/dune:1"	 [label="LexerMain<reasonligo>",
+		shape=diamond];
+	"lib:lexing_reasonligo"	 [label=lexing_reasonligo,
+		style=filled];
+	"exe:./src/passes/01-lexing/reasonligo/dune:1" -> "lib:lexing_reasonligo";
+	"exe:./src/passes/01-lexing/reasonligo/dune:1" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/reasonligo/dune:1" -> "lib:preprocessing_reasonligo";
+	"exe:./src/passes/01-lexing/reasonligo/dune:1" -> "lib:str";
+	"exe:./src/passes/01-lexing/reasonligo/dune:2"	 [label="Unlexer<reasonligo>",
+		shape=diamond];
+	"exe:./src/passes/01-lexing/reasonligo/dune:2" -> "lib:lexing_reasonligo";
+	"exe:./src/passes/01-lexing/reasonligo/dune:2" -> "lib:lexing_shared";
+	"exe:./src/passes/01-lexing/reasonligo/dune:2" -> "lib:str";
+	"exe:./src/passes/02-parsing/cameligo/dune:1"	 [label="ParserMain<cameligo>",
+		shape=diamond];
+	"lib:cst_cameligo"	 [label=cst_cameligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:cst_cameligo";
+	"lib:hex"	 [label=hex,
+		style=filled];
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:hex";
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:lexing_cameligo";
+	"lib:parsing_cameligo"	 [label=parsing_cameligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:parsing_cameligo";
+	"lib:parsing_shared"	 [label=parsing_shared,
+		style=filled];
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:parsing_shared";
+	"exe:./src/passes/02-parsing/cameligo/dune:1" -> "lib:preprocessing_cameligo";
+	"exe:./src/passes/02-parsing/jsligo/dune:1"	 [label="ParserMain<jsligo>",
+		shape=diamond];
+	"lib:cst_jsligo"	 [label=cst_jsligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:cst_jsligo";
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:hex";
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:lexing_jsligo";
+	"lib:parsing_jsligo"	 [label=parsing_jsligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:parsing_jsligo";
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:parsing_shared";
+	"exe:./src/passes/02-parsing/jsligo/dune:1" -> "lib:preprocessing_jsligo";
+	"exe:./src/passes/02-parsing/pascaligo/dune:1"	 [label="ParserMain<pascaligo>",
+		shape=diamond];
+	"lib:cst_pascaligo"	 [label=cst_pascaligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:cst_pascaligo";
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:hex";
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:lexing_pascaligo";
+	"lib:parsing_pascaligo"	 [label=parsing_pascaligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:parsing_pascaligo";
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:parsing_shared";
+	"exe:./src/passes/02-parsing/pascaligo/dune:1" -> "lib:preprocessing_pascaligo";
+	"exe:./src/passes/02-parsing/reasonligo/dune:1"	 [label="ParserMain<reasonligo>",
+		shape=diamond];
+	"lib:cst_reasonligo"	 [label=cst_reasonligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:cst_reasonligo";
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:hex";
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:lexing_reasonligo";
+	"lib:parsing_reasonligo"	 [label=parsing_reasonligo,
+		style=filled];
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:parsing_reasonligo";
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:parsing_shared";
+	"exe:./src/passes/02-parsing/reasonligo/dune:1" -> "lib:preprocessing_reasonligo";
+	"exe:./src/test/dune:1"	 [label=doc_test,
+		shape=diamond];
+	"lib:interpreter"	 [label=interpreter,
+		style=filled];
+	"exe:./src/test/dune:1" -> "lib:interpreter";
+	"lib:repl"	 [label=repl];
+	"exe:./src/test/dune:1" -> "lib:repl";
+	"lib:tezos-memory-proto-alpha"	 [label="tezos-memory-proto-alpha"];
+	"exe:./src/test/dune:1" -> "lib:tezos-memory-proto-alpha";
+	"lib:zinc_test"	 [label=zinc_test];
+	"exe:./src/test/dune:1" -> "lib:zinc_test";
+	"exe:./src/test/dune:4"	 [label=mydebugplease,
+		shape=diamond];
+	"exe:./src/test/dune:4" -> "lib:interpreter";
+	"exe:./src/test/dune:4" -> "lib:repl";
+	"exe:./src/test/dune:4" -> "lib:tezos-memory-proto-alpha";
+	"exe:./src/test/dune:4" -> "lib:zinc_test";
+	"exe:./src/test/dune:3"	 [label=parser_negative_tests,
+		shape=diamond];
+	"exe:./src/test/dune:3" -> "lib:interpreter";
+	"exe:./src/test/dune:3" -> "lib:repl";
+	"exe:./src/test/dune:3" -> "lib:tezos-memory-proto-alpha";
+	"exe:./src/test/dune:3" -> "lib:zinc_test";
+	"exe:./src/test/dune:2"	 [label=repl_test,
+		shape=diamond];
+	"exe:./src/test/dune:2" -> "lib:interpreter";
+	"exe:./src/test/dune:2" -> "lib:repl";
+	"exe:./src/test/dune:2" -> "lib:tezos-memory-proto-alpha";
+	"exe:./src/test/dune:2" -> "lib:zinc_test";
+	"exe:./src/test/dune:0"	 [label="test<src/test>",
+		shape=diamond];
+	"exe:./src/test/dune:0" -> "lib:interpreter";
+	"exe:./src/test/dune:0" -> "lib:repl";
+	"exe:./src/test/dune:0" -> "lib:tezos-memory-proto-alpha";
+	"exe:./src/test/dune:0" -> "lib:zinc_test";
+	"exe:./vendors/Preprocessor/dune:2"	 [label=E_LexerMain,
+		shape=diamond];
+	"lib:Preprocessor"	 [label=Preprocessor];
+	"exe:./vendors/Preprocessor/dune:2" -> "lib:Preprocessor";
+	"exe:./vendors/Preprocessor/dune:3"	 [label=E_ParserMain,
+		shape=diamond];
+	"exe:./vendors/Preprocessor/dune:3" -> "lib:Preprocessor";
+	"exe:./vendors/Preprocessor/dune:1"	 [label="PreprocMain<Preprocessor>",
+		shape=diamond];
+	"exe:./vendors/Preprocessor/dune:1" -> "lib:Preprocessor";
+	"exe:./vendors/tezos/docs/doc_gen/errors/dune:0"	 [label=error_doc,
+		shape=diamond];
+	"lib:tezos-client-alpha"	 [label="tezos-client-alpha"];
+	"exe:./vendors/tezos/docs/doc_gen/errors/dune:0" -> "lib:tezos-client-alpha";
+	"lib:tezos-shell"	 [label="tezos-shell"];
+	"exe:./vendors/tezos/docs/doc_gen/errors/dune:0" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/docs/doc_gen/dune:1"	 [label=p2p_doc,
+		shape=diamond];
+	"lib:tezos-embedded-protocol-010-PtGRANAD"	 [label="tezos-embedded-protocol-010-PtGRANAD",
+		style=filled];
+	"exe:./vendors/tezos/docs/doc_gen/dune:1" -> "lib:tezos-embedded-protocol-010-PtGRANAD";
+	"lib:tezos-embedded-protocol-011-PtHangzH"	 [label="tezos-embedded-protocol-011-PtHangzH",
+		style=filled];
+	"exe:./vendors/tezos/docs/doc_gen/dune:1" -> "lib:tezos-embedded-protocol-011-PtHangzH";
+	"lib:tezos-embedded-protocol-alpha"	 [label="tezos-embedded-protocol-alpha",
+		style=filled];
+	"exe:./vendors/tezos/docs/doc_gen/dune:1" -> "lib:tezos-embedded-protocol-alpha";
+	"lib:tezos-rpc-http-server"	 [label="tezos-rpc-http-server"];
+	"exe:./vendors/tezos/docs/doc_gen/dune:1" -> "lib:tezos-rpc-http-server";
+	"exe:./vendors/tezos/docs/doc_gen/dune:1" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/docs/doc_gen/dune:0"	 [label=rpc_doc,
+		shape=diamond];
+	"exe:./vendors/tezos/docs/doc_gen/dune:0" -> "lib:tezos-embedded-protocol-010-PtGRANAD";
+	"exe:./vendors/tezos/docs/doc_gen/dune:0" -> "lib:tezos-embedded-protocol-011-PtHangzH";
+	"exe:./vendors/tezos/docs/doc_gen/dune:0" -> "lib:tezos-embedded-protocol-alpha";
+	"exe:./vendors/tezos/docs/doc_gen/dune:0" -> "lib:tezos-rpc-http-server";
+	"exe:./vendors/tezos/docs/doc_gen/dune:0" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/scripts/declare-new-protocol-unit-test/dune:0"	 [label="main<declare-new-protocol-unit-test>",
+		shape=diamond];
+	"lib:re"	 [label=re,
+		style=filled];
+	"exe:./vendors/tezos/scripts/declare-new-protocol-unit-test/dune:0" -> "lib:re";
+	"exe:./vendors/tezos/scripts/gen-genesis/dune:0"	 [label=gen_genesis,
+		shape=diamond];
+	"lib:tezos-base.unix"	 [label="tezos-base.unix"];
+	"exe:./vendors/tezos/scripts/gen-genesis/dune:0" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/scripts/yes-wallet/dune:1"	 [label=yes_wallet,
+		shape=diamond];
+	"lib:yes_wallet_lib"	 [label=yes_wallet_lib];
+	"exe:./vendors/tezos/scripts/yes-wallet/dune:1" -> "lib:yes_wallet_lib";
+	"exe:./vendors/tezos/src/bin_client/dune:1"	 [label="tezos-admin-client",
+		shape=diamond];
+	"lib:tezos-client-base-unix"	 [label="tezos-client-base-unix"];
+	"exe:./vendors/tezos/src/bin_client/dune:1" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/bin_client/dune:0"	 [label="tezos-client",
+		shape=diamond];
+	"exe:./vendors/tezos/src/bin_client/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/bin_codec/dune:0"	 [label="tezos-codec",
+		shape=diamond];
+	"exe:./vendors/tezos/src/bin_codec/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/bin_node/dune:0"	 [label="tezos-node",
+		shape=diamond];
+	"lib:cmdliner"	 [label=cmdliner,
+		style=filled];
+	"exe:./vendors/tezos/src/bin_node/dune:0" -> "lib:cmdliner";
+	"exe:./vendors/tezos/src/bin_node/dune:0" -> "lib:tezos-rpc-http-server";
+	"lib:tezos-validator"	 [label="tezos-validator"];
+	"exe:./vendors/tezos/src/bin_node/dune:0" -> "lib:tezos-validator";
+	"lib:tls"	 [label=tls,
+		style=filled];
+	"exe:./vendors/tezos/src/bin_node/dune:0" -> "lib:tls";
+	"exe:./vendors/tezos/src/bin_openapi/dune:0"	 [label=rpc_openapi,
+		shape=diamond];
+	"lib:tezos-openapi"	 [label="tezos-openapi"];
+	"exe:./vendors/tezos/src/bin_openapi/dune:0" -> "lib:tezos-openapi";
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0"	 [label="tezos-proxy-server",
+		shape=diamond];
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:cmdliner";
+	"lib:lwt-exit"	 [label="lwt-exit",
+		style=filled];
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:lwt-exit";
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:tezos-base.unix";
+	"lib:tezos-proxy"	 [label="tezos-proxy"];
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:tezos-proxy";
+	"lib:tezos-proxy-server-config"	 [label="tezos-proxy-server-config"];
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:tezos-proxy-server-config";
+	"lib:tezos-rpc-http-client-unix"	 [label="tezos-rpc-http-client-unix"];
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:tezos-rpc-http-client-unix";
+	"exe:./vendors/tezos/src/bin_proxy_server/dune:0" -> "lib:tezos-rpc-http-server";
+	"exe:./vendors/tezos/src/bin_sandbox/dune:0"	 [label="main<bin_sandbox>",
+		shape=diamond];
+	"lib:flextesa"	 [label=flextesa];
+	"exe:./vendors/tezos/src/bin_sandbox/dune:0" -> "lib:flextesa";
+	"exe:./vendors/tezos/src/bin_sandbox/dune:0" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/src/bin_signer/dune:0"	 [label="tezos-signer",
+		shape=diamond];
+	"exe:./vendors/tezos/src/bin_signer/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/bin_signer/dune:0" -> "lib:tezos-rpc-http-server";
+	"exe:./vendors/tezos/src/bin_snoop/dune:0"	 [label="tezos-snoop",
+		shape=diamond];
+	"lib:ocamlgraph"	 [label=ocamlgraph,
+		style=filled];
+	"exe:./vendors/tezos/src/bin_snoop/dune:0" -> "lib:ocamlgraph";
+	"exe:./vendors/tezos/src/bin_snoop/dune:0" -> "lib:str";
+	"lib:tezos-benchmark-examples"	 [label="tezos-benchmark-examples"];
+	"exe:./vendors/tezos/src/bin_snoop/dune:0" -> "lib:tezos-benchmark-examples";
+	"lib:tezos-benchmarks-proto-alpha"	 [label="tezos-benchmarks-proto-alpha"];
+	"exe:./vendors/tezos/src/bin_snoop/dune:0" -> "lib:tezos-benchmarks-proto-alpha";
+	"exe:./vendors/tezos/src/bin_validation/dune:1"	 [label="tezos-validator",
+		shape=diamond];
+	"lib:tezos_validator"	 [label=tezos_validator,
+		style=filled];
+	"exe:./vendors/tezos/src/bin_validation/dune:1" -> "lib:tezos_validator";
+	"exe:./vendors/tezos/src/lib_client_base/gen/dune:0"	 [label=bip39_generator,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:0"	 [label=bip39_tests,
+		shape=diamond];
+	"lib:alcotest"	 [label=alcotest,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:0" -> "lib:alcotest";
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:0" -> "lib:tezos-base.unix";
+	"lib:tezos-client-base"	 [label="tezos-client-base"];
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:0" -> "lib:tezos-client-base";
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:1"	 [label=pbkdf_tests,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:1" -> "lib:alcotest";
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:1" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/src/lib_client_base/test/dune:1" -> "lib:tezos-client-base";
+	"exe:./vendors/tezos/src/lib_context/memory/test/dune:0"	 [label="test<memory/test>",
+		shape=diamond];
+	"lib:alcotest-lwt"	 [label="alcotest-lwt",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_context/memory/test/dune:0" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_context/memory/test/dune:0" -> "lib:tezos-base.unix";
+	"lib:tezos-context"	 [label="tezos-context"];
+	"exe:./vendors/tezos/src/lib_context/memory/test/dune:0" -> "lib:tezos-context";
+	"lib:tezos-context.memory"	 [label="tezos-context.memory"];
+	"exe:./vendors/tezos/src/lib_context/memory/test/dune:0" -> "lib:tezos-context.memory";
+	"exe:./vendors/tezos/src/lib_hacl_glue/js/test/dune:0"	 [label="test<js/test>",
+		shape=diamond];
+	"lib:js_of_ocaml"	 [label=js_of_ocaml,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_hacl_glue/js/test/dune:0" -> "lib:js_of_ocaml";
+	"lib:js_of_ocaml-compiler"	 [label="js_of_ocaml-compiler",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_hacl_glue/js/test/dune:0" -> "lib:js_of_ocaml-compiler";
+	"lib:tezos-hacl-glue-js"	 [label="tezos-hacl-glue-js"];
+	"exe:./vendors/tezos/src/lib_hacl_glue/js/test/dune:0" -> "lib:tezos-hacl-glue-js";
+	"lib:zarith_stubs_js"	 [label=zarith_stubs_js,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_hacl_glue/js/test/dune:0" -> "lib:zarith_stubs_js";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:5"	 [label=test_p2p_banned_peers,
+		shape=diamond];
+	"lib:astring"	 [label=astring,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:5" -> "lib:astring";
+	"lib:tezos-base-test-helpers"	 [label="tezos-base-test-helpers"];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:5" -> "lib:tezos-base-test-helpers";
+	"lib:tezos-p2p"	 [label="tezos-p2p"];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:5" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:4"	 [label=test_p2p_buffer_reader,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:4" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:4" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:4" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:7"	 [label=test_p2p_connect_handler,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:7" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:7" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:7" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:2"	 [label=test_p2p_io_scheduler,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:2" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:2" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:2" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:6"	 [label=test_p2p_node,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:6" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:6" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:6" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:3"	 [label=test_p2p_peerset,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:3" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:3" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:3" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:1"	 [label=test_p2p_pool,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:1" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:1" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:1" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:0"	 [label=test_p2p_socket,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:0" -> "lib:astring";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_p2p/test/dune:0" -> "lib:tezos-p2p";
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:6"	 [label=replace,
+		shape=diamond];
+	"lib:re.str"	 [label="re.str",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:6" -> "lib:re.str";
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:6" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:5"	 [label="tezos-embedded-protocol-packer",
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:5" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:3"	 [label="tezos-protocol-compiler",
+		shape=diamond];
+	"lib:tezos_protocol_compiler_native"	 [label=tezos_protocol_compiler_native,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:3" -> "lib:tezos_protocol_compiler_native";
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:4"	 [label="tezos-protocol-compiler.tezos-protocol-packer",
+		shape=diamond];
+	"lib:tezos-protocol-compiler"	 [label="tezos-protocol-compiler"];
+	"exe:./vendors/tezos/src/lib_protocol_compiler/dune:4" -> "lib:tezos-protocol-compiler";
+	"exe:./vendors/tezos/src/lib_protocol_environment/s_packer/dune:1"	 [label=s_packer,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_sapling/bindings/dune:0"	 [label=rustzcash_ctypes_gen,
+		shape=diamond];
+	"lib:ctypes"	 [label=ctypes,
+		style=filled];
+	"exe:./vendors/tezos/src/lib_sapling/bindings/dune:0" -> "lib:ctypes";
+	"lib:ctypes.stubs"	 [label="ctypes.stubs",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_sapling/bindings/dune:0" -> "lib:ctypes.stubs";
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:0"	 [label=bench_simple,
+		shape=diamond];
+	"lib:tezos-alpha-test-helpers"	 [label="tezos-alpha-test-helpers"];
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:0" -> "lib:tezos-alpha-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:0" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:1"	 [label=bench_tool,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:1" -> "lib:tezos-alpha-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/bench/dune:1" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:1"	 [label=test_locator,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:1" -> "lib:tezos-base-test-helpers";
+	"lib:tezos-embedded-protocol-demo-noops"	 [label="tezos-embedded-protocol-demo-noops",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:1" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:1" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:3"	 [label=test_prevalidation,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:3" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:3" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:3" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:4"	 [label=test_prevalidator_classification,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:4" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:4" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:4" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:5"	 [label=test_prevalidator_classification_handle_operations,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:5" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:5" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:5" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:0"	 [label=test_shell,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:0" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:0" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:2"	 [label=test_synchronisation_heuristic_fuzzy,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell/test/dune:2" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:2" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_shell/test/dune:2" -> "lib:tezos-shell";
+	"exe:./vendors/tezos/src/lib_shell_services/test/dune:0"	 [label="test<lib_shell_services/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_shell_services/test/dune:0" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_shell_services/test/dune:0" -> "lib:tezos-base.unix";
+	"lib:tezos-shell-services"	 [label="tezos-shell-services"];
+	"exe:./vendors/tezos/src/lib_shell_services/test/dune:0" -> "lib:tezos-shell-services";
+	"exe:./vendors/tezos/src/lib_store/legacy_store/dune:1"	 [label=legacy_store_builder,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_store/legacy_store/dune:1" -> "lib:tezos-embedded-protocol-alpha";
+	"lib:tezos-embedded-protocol-genesis"	 [label="tezos-embedded-protocol-genesis",
+		style=filled];
+	"exe:./vendors/tezos/src/lib_store/legacy_store/dune:1" -> "lib:tezos-embedded-protocol-genesis";
+	"lib:tezos-legacy-store"	 [label="tezos-legacy-store"];
+	"exe:./vendors/tezos/src/lib_store/legacy_store/dune:1" -> "lib:tezos-legacy-store";
+	"exe:./vendors/tezos/src/lib_store/legacy_store/test/dune:0"	 [label="test<legacy_store/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_store/legacy_store/test/dune:0" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_store/legacy_store/test/dune:0" -> "lib:tezos-legacy-store";
+	"exe:./vendors/tezos/src/lib_store/test/dune:2"	 [label=legacy_store_maker,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-embedded-protocol-alpha";
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-embedded-protocol-genesis";
+	"lib:tezos-protocol-alpha-parameters"	 [label="tezos-protocol-alpha-parameters"];
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-protocol-alpha-parameters";
+	"lib:tezos-protocol-plugin-alpha"	 [label="tezos-protocol-plugin-alpha"];
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-protocol-plugin-alpha";
+	"lib:tezos-store"	 [label="tezos-store"];
+	"exe:./vendors/tezos/src/lib_store/test/dune:2" -> "lib:tezos-store";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0"	 [label="test<lib_store/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-embedded-protocol-alpha";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-embedded-protocol-genesis";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-protocol-alpha-parameters";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-protocol-plugin-alpha";
+	"exe:./vendors/tezos/src/lib_store/test/dune:0" -> "lib:tezos-store";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1"	 [label=test_legacy,
+		shape=diamond];
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:alcotest-lwt";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-embedded-protocol-alpha";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-embedded-protocol-demo-noops";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-embedded-protocol-genesis";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-protocol-alpha-parameters";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-protocol-plugin-alpha";
+	"exe:./vendors/tezos/src/lib_store/test/dune:1" -> "lib:tezos-store";
+	"exe:./vendors/tezos/src/proto_008_PtEdo2Zk/lib_parameters/dune:1"	 [label="gen<proto_008_PtEdo2Zk/lib_parameters>",
+		shape=diamond];
+	"lib:tezos-protocol-008-PtEdo2Zk-parameters"	 [label="tezos-protocol-008-PtEdo2Zk-parameters"];
+	"exe:./vendors/tezos/src/proto_008_PtEdo2Zk/lib_parameters/dune:1" -> "lib:tezos-protocol-008-PtEdo2Zk-parameters";
+	"exe:./vendors/tezos/src/proto_009_PsFLoren/lib_parameters/dune:1"	 [label="gen<proto_009_PsFLoren/lib_parameters>",
+		shape=diamond];
+	"lib:tezos-protocol-009-PsFLoren-parameters"	 [label="tezos-protocol-009-PsFLoren-parameters"];
+	"exe:./vendors/tezos/src/proto_009_PsFLoren/lib_parameters/dune:1" -> "lib:tezos-protocol-009-PsFLoren-parameters";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_accuser/dune:0"	 [label="tezos-accuser-010-PtGRANAD",
+		shape=diamond];
+	"lib:tezos-baking-010-PtGRANAD-commands"	 [label="tezos-baking-010-PtGRANAD-commands"];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_accuser/dune:0" -> "lib:tezos-baking-010-PtGRANAD-commands";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_accuser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_baker/dune:0"	 [label="tezos-baker-010-PtGRANAD",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_baker/dune:0" -> "lib:tezos-baking-010-PtGRANAD-commands";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_baker/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_endorser/dune:0"	 [label="tezos-endorser-010-PtGRANAD",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_endorser/dune:0" -> "lib:tezos-baking-010-PtGRANAD-commands";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/bin_endorser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:2"	 [label="test_autocompletion<proto_010_PtGRANAD/lib_benchmark/test>",
+		shape=diamond];
+	"lib:tezos-benchmark-010-PtGRANAD"	 [label="tezos-benchmark-010-PtGRANAD"];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:2" -> "lib:tezos-benchmark-010-PtGRANAD";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:1"	 [label="test_sampling_code<proto_010_PtGRANAD/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:1" -> "lib:tezos-benchmark-010-PtGRANAD";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:0"	 [label="test_sampling_data<proto_010_PtGRANAD/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_benchmark/test/dune:0" -> "lib:tezos-benchmark-010-PtGRANAD";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_parameters/dune:1"	 [label="gen<proto_010_PtGRANAD/lib_parameters>",
+		shape=diamond];
+	"lib:tezos-protocol-010-PtGRANAD-parameters"	 [label="tezos-protocol-010-PtGRANAD-parameters"];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_parameters/dune:1" -> "lib:tezos-protocol-010-PtGRANAD-parameters";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:0"	 [label="main<proto_010_PtGRANAD/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:0" -> "lib:astring";
+	"lib:tezos-010-PtGRANAD-test-helpers"	 [label="tezos-010-PtGRANAD-test-helpers"];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:0" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:1"	 [label="saturation_fuzzing<proto_010_PtGRANAD/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:1" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:1" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:1" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:2"	 [label="test_gas_properties<proto_010_PtGRANAD/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:2" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:2" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:2" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:3"	 [label="test_tez_repr<proto_010_PtGRANAD/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:3" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:3" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/dune:3" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/unit/dune:0"	 [label="main<proto_010_PtGRANAD/lib_protocol/test/unit>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/unit/dune:0" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"exe:./vendors/tezos/src/proto_010_PtGRANAD/lib_protocol/test/unit/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_accuser/dune:0"	 [label="tezos-accuser-011-PtHangzH",
+		shape=diamond];
+	"lib:tezos-baking-011-PtHangzH-commands"	 [label="tezos-baking-011-PtHangzH-commands"];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_accuser/dune:0" -> "lib:tezos-baking-011-PtHangzH-commands";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_accuser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_baker/dune:0"	 [label="tezos-baker-011-PtHangzH",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_baker/dune:0" -> "lib:tezos-baking-011-PtHangzH-commands";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_baker/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_endorser/dune:0"	 [label="tezos-endorser-011-PtHangzH",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_endorser/dune:0" -> "lib:tezos-baking-011-PtHangzH-commands";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/bin_endorser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:2"	 [label="test_autocompletion<proto_011_PtHangzH/lib_benchmark/test>",
+		shape=diamond];
+	"lib:tezos-benchmark-011-PtHangzH"	 [label="tezos-benchmark-011-PtHangzH"];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:2" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:3"	 [label="test_distribution<proto_011_PtHangzH/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:3" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:1"	 [label="test_sampling_code<proto_011_PtHangzH/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:1" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:0"	 [label="test_sampling_data<proto_011_PtHangzH/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_benchmark/test/dune:0" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_parameters/dune:1"	 [label="gen<proto_011_PtHangzH/lib_parameters>",
+		shape=diamond];
+	"lib:tezos-protocol-011-PtHangzH-parameters"	 [label="tezos-protocol-011-PtHangzH-parameters"];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_parameters/dune:1" -> "lib:tezos-protocol-011-PtHangzH-parameters";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:4"	 [label="liquidity_baking_pbt<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:4" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:4" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:4" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:0"	 [label="main<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:0" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:0" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:1"	 [label="saturation_fuzzing<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:1" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:1" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:1" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:2"	 [label="test_gas_properties<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:2" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:2" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:2" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:5"	 [label="test_script_comparison<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:5" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:5" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:5" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:3"	 [label="test_tez_repr<proto_011_PtHangzH/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:3" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:3" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/dune:3" -> "lib:tezos-benchmark-011-PtHangzH";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/unit/dune:0"	 [label="main<proto_011_PtHangzH/lib_protocol/test/unit>",
+		shape=diamond];
+	"lib:tezos-011-PtHangzH-test-helpers"	 [label="tezos-011-PtHangzH-test-helpers"];
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/unit/dune:0" -> "lib:tezos-011-PtHangzH-test-helpers";
+	"exe:./vendors/tezos/src/proto_011_PtHangzH/lib_protocol/test/unit/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/bin_accuser/dune:0"	 [label="tezos-accuser-alpha",
+		shape=diamond];
+	"lib:tezos-baking-alpha-commands"	 [label="tezos-baking-alpha-commands"];
+	"exe:./vendors/tezos/src/proto_alpha/bin_accuser/dune:0" -> "lib:tezos-baking-alpha-commands";
+	"exe:./vendors/tezos/src/proto_alpha/bin_accuser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_alpha/bin_baker/dune:0"	 [label="tezos-baker-alpha",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/bin_baker/dune:0" -> "lib:tezos-baking-alpha-commands";
+	"exe:./vendors/tezos/src/proto_alpha/bin_baker/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_alpha/bin_endorser/dune:0"	 [label="tezos-endorser-alpha",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/bin_endorser/dune:0" -> "lib:tezos-baking-alpha-commands";
+	"exe:./vendors/tezos/src/proto_alpha/bin_endorser/dune:0" -> "lib:tezos-client-base-unix";
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:2"	 [label="test_autocompletion<proto_alpha/lib_benchmark/test>",
+		shape=diamond];
+	"lib:tezos-benchmark-alpha"	 [label="tezos-benchmark-alpha"];
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:2" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:3"	 [label="test_distribution<proto_alpha/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:3" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:1"	 [label="test_sampling_code<proto_alpha/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:1" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:0"	 [label="test_sampling_data<proto_alpha/lib_benchmark/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_benchmark/test/dune:0" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_parameters/dune:1"	 [label="gen<proto_alpha/lib_parameters>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_parameters/dune:1" -> "lib:tezos-protocol-alpha-parameters";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:4"	 [label="liquidity_baking_pbt<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:4" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:4" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:4" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:0"	 [label="main<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:0" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:0" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:1"	 [label="saturation_fuzzing<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:1" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:1" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:1" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:2"	 [label="test_gas_properties<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:2" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:2" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:2" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:5"	 [label="test_script_comparison<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:5" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:5" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:5" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:3"	 [label="test_tez_repr<proto_alpha/lib_protocol/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:3" -> "lib:astring";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:3" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/dune:3" -> "lib:tezos-benchmark-alpha";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/unit/dune:0"	 [label="main<proto_alpha/lib_protocol/test/unit>",
+		shape=diamond];
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/unit/dune:0" -> "lib:tezos-alpha-test-helpers";
+	"exe:./vendors/tezos/src/proto_alpha/lib_protocol/test/unit/dune:0" -> "lib:tezos-base-test-helpers";
+	"exe:./vendors/tezos/src/tooling/tztop/dune:0"	 [label=tztop,
+		shape=diamond];
+	"lib:compiler-libs.toplevel"	 [label="compiler-libs.toplevel",
+		style=filled];
+	"exe:./vendors/tezos/src/tooling/tztop/dune:0" -> "lib:compiler-libs.toplevel";
+	"exe:./vendors/tezos/src/tooling/tztop/dune:0" -> "lib:tezos-protocol-compiler";
+	"exe:./vendors/tezos/tezt/long_tests/dune:0"	 [label="main<long_tests>",
+		shape=diamond];
+	"lib:cohttp-lwt-unix"	 [label="cohttp-lwt-unix",
+		style=filled];
+	"exe:./vendors/tezos/tezt/long_tests/dune:0" -> "lib:cohttp-lwt-unix";
+	"lib:qcheck-core"	 [label="qcheck-core",
+		style=filled];
+	"exe:./vendors/tezos/tezt/long_tests/dune:0" -> "lib:qcheck-core";
+	"exe:./vendors/tezos/tezt/long_tests/dune:0" -> "lib:tezos-alpha-test-helpers";
+	"exe:./vendors/tezos/tezt/long_tests/dune:0" -> "lib:tezos-openapi";
+	"lib:tezt-tezos"	 [label="tezt-tezos"];
+	"exe:./vendors/tezos/tezt/long_tests/dune:0" -> "lib:tezt-tezos";
+	"exe:./vendors/tezos/tezt/manual_tests/dune:0"	 [label="main<manual_tests>",
+		shape=diamond];
+	"exe:./vendors/tezos/tezt/manual_tests/dune:0" -> "lib:tezt-tezos";
+	"exe:./vendors/tezos/tezt/manual_tests/dune:0" -> "lib:yes_wallet_lib";
+	"exe:./vendors/tezos/tezt/remote_tests/dune:0"	 [label="main<remote_tests>",
+		shape=diamond];
+	"exe:./vendors/tezos/tezt/remote_tests/dune:0" -> "lib:tezt-tezos";
+	"exe:./vendors/tezos/tezt/self_tests/dune:0"	 [label="main<self_tests>",
+		shape=diamond];
+	"lib:tezt"	 [label=tezt];
+	"exe:./vendors/tezos/tezt/self_tests/dune:0" -> "lib:tezt";
+	"exe:./vendors/tezos/tezt/tests/dune:0"	 [label="main<tests>",
+		shape=diamond];
+	"exe:./vendors/tezos/tezt/tests/dune:0" -> "lib:str";
+	"exe:./vendors/tezos/tezt/tests/dune:0" -> "lib:tezos-base.unix";
+	"exe:./vendors/tezos/tezt/tests/dune:0" -> "lib:tezt-tezos";
+	"exe:./vendors/tezos/vendors/numerics/lib_test/dune:0"	 [label="test<lib_test>",
+		shape=diamond];
+	"lib:bigarray"	 [label=bigarray,
+		style=filled];
+	"exe:./vendors/tezos/vendors/numerics/lib_test/dune:0" -> "lib:bigarray";
+	"lib:numerics"	 [label=numerics];
+	"exe:./vendors/tezos/vendors/numerics/lib_test/dune:0" -> "lib:numerics";
+	"exe:./vendors/tezos/vendors/ocaml-lmdb/config/dune:0"	 [label=discover,
+		shape=diamond];
+	"exe:./vendors/tezos/vendors/ocaml-lmdb/test/dune:0"	 [label="test<ocaml-lmdb/test>",
+		shape=diamond];
+	"exe:./vendors/tezos/vendors/ocaml-lmdb/test/dune:0" -> "lib:alcotest";
+	"lib:cstruct"	 [label=cstruct,
+		style=filled];
+	"exe:./vendors/tezos/vendors/ocaml-lmdb/test/dune:0" -> "lib:cstruct";
+	"lib:tezos-lmdb"	 [label="tezos-lmdb"];
+	"exe:./vendors/tezos/vendors/ocaml-lmdb/test/dune:0" -> "lib:tezos-lmdb";
+	"exe:./vendors/tezos/vendors/pyml-plot/lib_test/dune:0"	 [label=plot_test,
+		shape=diamond];
+	"lib:pyml-plot"	 [label="pyml-plot"];
+	"exe:./vendors/tezos/vendors/pyml-plot/lib_test/dune:0" -> "lib:pyml-plot";
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:1"	 [label=fourier_test,
+		shape=diamond];
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:1" -> "lib:pyml-plot";
+	"lib:staTz"	 [label=staTz];
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:1" -> "lib:staTz";
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:0"	 [label=mh_test,
+		shape=diamond];
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:0" -> "lib:pyml-plot";
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:0" -> "lib:staTz";
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:2"	 [label=stats_test,
+		shape=diamond];
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:2" -> "lib:pyml-plot";
+	"exe:./vendors/tezos/vendors/statz/lib_test/dune:2" -> "lib:staTz";
+	"lib:LexerLib"	 [label=LexerLib];
+	"lib:getopt"	 [label=getopt,
+		style=filled];
+	"lib:LexerLib" -> "lib:getopt";
+	"lib:simple-utils"	 [label="simple-utils"];
+	"lib:LexerLib" -> "lib:simple-utils";
+	"lib:uutf"	 [label=uutf,
+		style=filled];
+	"lib:LexerLib" -> "lib:uutf";
+	"lib:Michelson"	 [label=Michelson];
+	"lib:Michelson" -> "lib:LexerLib";
+	"lib:ParserLib"	 [label=ParserLib];
+	"lib:Michelson" -> "lib:ParserLib";
+	"lib:Michelson" -> "lib:Preprocessor";
+	"lib:Michelson" -> "lib:hex";
+	"lib:zarith"	 [label=zarith,
+		style=filled];
+	"lib:Michelson" -> "lib:zarith";
+	"lib:ParserLib" -> "lib:getopt";
+	"lib:menhirLib"	 [label=menhirLib,
+		style=filled];
+	"lib:ParserLib" -> "lib:menhirLib";
+	"lib:ParserLib" -> "lib:simple-utils";
+	"lib:Preprocessor" -> "lib:getopt";
+	"lib:Preprocessor" -> "lib:simple-utils";
+	"lib:RedBlackTrees"	 [label=RedBlackTrees];
+	"lib:UnionFind"	 [label=UnionFind];
+	"lib:UnionFind" -> "lib:RedBlackTrees";
+	"lib:alcotest-glue"	 [label="alcotest-glue"];
+	"lib:fmt"	 [label=fmt,
+		style=filled];
+	"lib:alcotest-glue" -> "lib:fmt";
+	"lib:alcotest-glue" -> "lib:re";
+	"lib:alcotest-glue-js"	 [label="alcotest-glue-js"];
+	"lib:alcotest-glue-js" -> "lib:fmt";
+	"lib:alcotest-glue-js" -> "lib:js_of_ocaml";
+	"lib:alcotest-glue-js" -> "lib:js_of_ocaml-compiler";
+	"lib:alcotest-glue-unix"	 [label="alcotest-glue-unix"];
+	"lib:alcotest-glue-unix" -> "lib:alcotest";
+	"lib:ast_core"	 [label=ast_core,
+		style=filled];
+	"lib:ast_imperative"	 [label=ast_imperative,
+		style=filled];
+	"lib:ast_sugar"	 [label=ast_sugar,
+		style=filled];
+	"lib:ast_typed"	 [label=ast_typed,
+		style=filled];
+	"lib:base"	 [label=base,
+		style=filled];
+	"lib:benchmark-utils"	 [label="benchmark-utils"];
+	"lib:bigstringaf"	 [label=bigstringaf,
+		style=filled];
+	"lib:bls12-381"	 [label="bls12-381",
+		style=filled];
+	"lib:bls12-381-legacy"	 [label="bls12-381-legacy",
+		style=filled];
+	"lib:bls12-381-unix"	 [label="bls12-381-unix",
+		style=filled];
+	"lib:build"	 [label=build,
+		style=filled];
+	"lib:cameligo"	 [label=cameligo,
+		style=filled];
+	"lib:camlzip"	 [label=camlzip,
+		style=filled];
+	"lib:checking"	 [label=checking,
+		style=filled];
+	"lib:ligo_api"	 [label=ligo_api,
+		style=filled];
+	"lib:cli" -> "lib:ligo_api";
+	"lib:ligo_compile"	 [label=ligo_compile,
+		style=filled];
+	"lib:cli" -> "lib:ligo_compile";
+	"lib:cli" -> "lib:repl";
+	"lib:cli_expect_tests"	 [label=cli_expect_tests];
+	"lib:cli_expect_tests" -> "lib:cli";
+	"lib:compiler-libs.common"	 [label="compiler-libs.common",
+		style=filled];
+	"lib:compiler-libs.optcomp"	 [label="compiler-libs.optcomp",
+		style=filled];
+	"lib:compiler_options"	 [label=compiler_options,
+		style=filled];
+	"lib:cst"	 [label=cst,
+		style=filled];
+	"lib:ctypes.foreign"	 [label="ctypes.foreign",
+		style=filled];
+	"lib:data-encoding"	 [label="data-encoding",
+		style=filled];
+	"lib:database_plugins"	 [label=database_plugins,
+		style=filled];
+	"lib:decompile"	 [label=decompile,
+		style=filled];
+	"lib:desugaring"	 [label=desugaring,
+		style=filled];
+	"lib:digestif"	 [label=digestif,
+		style=filled];
+	"lib:digestif.c"	 [label="digestif.c",
+		style=filled];
+	"lib:dum"	 [label=dum,
+		style=filled];
+	"lib:dynlink"	 [label=dynlink,
+		style=filled];
+	"lib:easy-format"	 [label="easy-format",
+		style=filled];
+	"lib:environment"	 [label=environment,
+		style=filled];
+	"lib:ezjsonm"	 [label=ezjsonm,
+		style=filled];
+	"lib:flextesa" -> "lib:base";
+	"lib:flextesa" -> "lib:cmdliner";
+	"lib:flextesa" -> "lib:cohttp-lwt-unix";
+	"lib:flextesa" -> "lib:dum";
+	"lib:flextesa" -> "lib:easy-format";
+	"lib:flextesa" -> "lib:fmt";
+	"lib:genspio"	 [label=genspio,
+		style=filled];
+	"lib:flextesa" -> "lib:genspio";
+	"lib:flextesa" -> "lib:tezos-rpc-http-server";
+	"lib:fuzz"	 [label=fuzz,
+		style=filled];
+	"lib:fuzz_shared"	 [label=fuzz_shared,
+		style=filled];
+	"lib:hacl-star"	 [label="hacl-star",
+		style=filled];
+	"lib:hacl-star-raw"	 [label="hacl-star-raw",
+		style=filled];
+	"lib:hacl-star-raw-empty"	 [label="hacl-star-raw-empty"];
+	"lib:hashcons"	 [label=hashcons,
+		style=filled];
+	"lib:hidapi"	 [label=hidapi,
+		style=filled];
+	"lib:index"	 [label=index,
+		style=filled];
+	"lib:inference"	 [label=inference,
+		style=filled];
+	"lib:integers"	 [label=integers,
+		style=filled];
+	"lib:ipaddr"	 [label=ipaddr,
+		style=filled];
+	"lib:ipaddr.unix"	 [label="ipaddr.unix",
+		style=filled];
+	"lib:irmin"	 [label=irmin,
+		style=filled];
+	"lib:irmin-pack"	 [label="irmin-pack",
+		style=filled];
+	"lib:irmin-pack.mem"	 [label="irmin-pack.mem",
+		style=filled];
+	"lib:jsligo"	 [label=jsligo,
+		style=filled];
+	"lib:json-data-encoding"	 [label="json-data-encoding",
+		style=filled];
+	"lib:ledgerwallet"	 [label=ledgerwallet];
+	"lib:ledgerwallet" -> "lib:cstruct";
+	"lib:ledgerwallet" -> "lib:hidapi";
+	"lib:rresult"	 [label=rresult,
+		style=filled];
+	"lib:ledgerwallet" -> "lib:rresult";
+	"lib:ledgerwallet-tezos"	 [label="ledgerwallet-tezos"];
+	"lib:ledgerwallet-tezos" -> "lib:ledgerwallet";
+	"lib:ligo"	 [label=ligo];
+	"lib:ligo" -> "lib:Preprocessor";
+	"lib:ligo_main"	 [label=ligo_main,
+		style=filled];
+	"lib:ligo" -> "lib:ligo_main";
+	"lib:tezos-utils"	 [label="tezos-utils"];
+	"lib:ligo" -> "lib:tezos-utils";
+	"lib:ligo-types"	 [label="ligo-types"];
+	"lib:ligo-types.mini_c_types"	 [label="ligo-types.mini_c_types"];
+	"lib:ligo-types.mini_c_types" -> "lib:digestif";
+	"lib:ligo-types.stage_common_types"	 [label="ligo-types.stage_common_types"];
+	"lib:ligo-types.mini_c_types" -> "lib:ligo-types.stage_common_types";
+	"lib:tezos-micheline"	 [label="tezos-micheline"];
+	"lib:ligo-types.mini_c_types" -> "lib:tezos-micheline";
+	"lib:ligo-types.stage_common_types" -> "lib:hex";
+	"lib:ligo-types.stage_common_types" -> "lib:simple-utils";
+	"lib:ligo-types.stage_common_types" -> "lib:zarith";
+	"lib:ligo-types.zinc"	 [label="ligo-types.zinc"];
+	"lib:ligo-types.zinc" -> "lib:digestif";
+	"lib:ligo-types.zinc" -> "lib:ligo-types.stage_common_types";
+	"lib:mini_c_types"	 [label=mini_c_types,
+		style=filled];
+	"lib:ligo-types.zinc" -> "lib:mini_c_types";
+	"lib:ligo.api"	 [label="ligo.api"];
+	"lib:ligo.api" -> "lib:build";
+	"lib:ligo.api" -> "lib:interpreter";
+	"lib:ligo.api" -> "lib:ligo";
+	"lib:ligo.ast_core"	 [label="ligo.ast_core"];
+	"lib:ligo.ast_core" -> "lib:UnionFind";
+	"lib:ligo.ast_core" -> "lib:ast_sugar";
+	"lib:ligo.ast_core" -> "lib:simple-utils";
+	"lib:stage_common"	 [label=stage_common,
+		style=filled];
+	"lib:ligo.ast_core" -> "lib:stage_common";
+	"lib:ligo.ast_impretative"	 [label="ligo.ast_impretative"];
+	"lib:ligo.ast_impretative" -> "lib:simple-utils";
+	"lib:ligo.ast_impretative" -> "lib:stage_common";
+	"lib:ligo.ast_sugar"	 [label="ligo.ast_sugar"];
+	"lib:ligo.ast_sugar" -> "lib:simple-utils";
+	"lib:ligo.ast_sugar" -> "lib:stage_common";
+	"lib:ligo.ast_typed"	 [label="ligo.ast_typed"];
+	"lib:ligo.ast_typed" -> "lib:UnionFind";
+	"lib:ligo.ast_typed" -> "lib:ast_core";
+	"lib:ligo.ast_typed" -> "lib:simple-utils";
+	"lib:ligo.ast_typed" -> "lib:stage_common";
+	"lib:ligo.build"	 [label="ligo.build"];
+	"lib:ligo.build" -> "lib:ligo_compile";
+	"lib:main_errors"	 [label=main_errors,
+		style=filled];
+	"lib:ligo.build" -> "lib:main_errors";
+	"lib:ligo.build" -> "lib:ocamlgraph";
+	"lib:preprocessing"	 [label=preprocessing,
+		style=filled];
+	"lib:ligo.build" -> "lib:preprocessing";
+	"lib:ligo.build" -> "lib:tezos-utils";
+	"lib:ligo.cameligo"	 [label="ligo.cameligo"];
+	"lib:ligo.cameligo" -> "lib:ast_imperative";
+	"lib:ligo.cameligo" -> "lib:cst";
+	"lib:parsing"	 [label=parsing,
+		style=filled];
+	"lib:ligo.cameligo" -> "lib:parsing";
+	"lib:predefined"	 [label=predefined,
+		style=filled];
+	"lib:ligo.cameligo" -> "lib:predefined";
+	"lib:ligo.cameligo" -> "lib:tezos-utils";
+	"lib:tree_abstraction_shared"	 [label=tree_abstraction_shared,
+		style=filled];
+	"lib:ligo.cameligo" -> "lib:tree_abstraction_shared";
+	"lib:ligo.checking"	 [label="ligo.checking"];
+	"lib:ligo.checking" -> "lib:ast_core";
+	"lib:ligo.checking" -> "lib:ast_typed";
+	"lib:ligo.checking" -> "lib:environment";
+	"lib:ligo.checking" -> "lib:predefined";
+	"lib:self_ast_core"	 [label=self_ast_core,
+		style=filled];
+	"lib:ligo.checking" -> "lib:self_ast_core";
+	"lib:ligo.checking" -> "lib:tezos-utils";
+	"lib:ligo.compiler_options"	 [label="ligo.compiler_options"];
+	"lib:ligo.compiler_options" -> "lib:ast_typed";
+	"lib:ligo.compiler_options" -> "lib:checking";
+	"lib:ligo.compiler_options" -> "lib:environment";
+	"lib:ligo.compiler_options" -> "lib:simple-utils";
+	"lib:ligo.coq_ocaml"	 [label="ligo.coq_ocaml"];
+	"lib:ligo.coq_ocaml" -> "lib:simple-utils";
+	"lib:ligo.coq_ocaml" -> "lib:tezos-micheline";
+	"lib:ligo.cst"	 [label="ligo.cst"];
+	"lib:ligo.cst" -> "lib:cst_cameligo";
+	"lib:ligo.cst" -> "lib:cst_jsligo";
+	"lib:ligo.cst" -> "lib:cst_pascaligo";
+	"lib:ligo.cst" -> "lib:cst_reasonligo";
+	"lib:ligo.cst.cameligo"	 [label="ligo.cst.cameligo"];
+	"lib:ligo.cst.cameligo" -> "lib:LexerLib";
+	"lib:ligo.cst.cameligo" -> "lib:hex";
+	"lib:ligo.cst.cameligo" -> "lib:zarith";
+	"lib:ligo.cst.jsligo"	 [label="ligo.cst.jsligo"];
+	"lib:ligo.cst.jsligo" -> "lib:LexerLib";
+	"lib:ligo.cst.jsligo" -> "lib:hex";
+	"lib:ligo.cst.jsligo" -> "lib:zarith";
+	"lib:ligo.cst.pascaligo"	 [label="ligo.cst.pascaligo"];
+	"lib:ligo.cst.pascaligo" -> "lib:LexerLib";
+	"lib:ligo.cst.pascaligo" -> "lib:hex";
+	"lib:ligo.cst.pascaligo" -> "lib:zarith";
+	"lib:ligo.cst.reasonligo"	 [label="ligo.cst.reasonligo"];
+	"lib:ligo.cst.reasonligo" -> "lib:LexerLib";
+	"lib:ligo.cst.reasonligo" -> "lib:hex";
+	"lib:ligo.cst.reasonligo" -> "lib:zarith";
+	"lib:ligo.decompile"	 [label="ligo.decompile"];
+	"lib:ligo.decompile" -> "lib:ast_core";
+	"lib:ligo.decompile" -> "lib:ast_imperative";
+	"lib:ligo.decompile" -> "lib:ast_sugar";
+	"lib:ligo.decompile" -> "lib:ast_typed";
+	"lib:ligo.decompile" -> "lib:checking";
+	"lib:ligo.decompile" -> "lib:desugaring";
+	"lib:ligo.decompile" -> "lib:inference";
+	"lib:ligo.decompile" -> "lib:main_errors";
+	"lib:mini_c"	 [label=mini_c,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:mini_c";
+	"lib:ligo.decompile" -> "lib:parsing";
+	"lib:purification"	 [label=purification,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:purification";
+	"lib:ligo.decompile" -> "lib:self_ast_core";
+	"lib:self_ast_imperative"	 [label=self_ast_imperative,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:self_ast_imperative";
+	"lib:self_ast_sugar"	 [label=self_ast_sugar,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:self_ast_sugar";
+	"lib:self_ast_typed"	 [label=self_ast_typed,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:self_ast_typed";
+	"lib:self_michelson"	 [label=self_michelson,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:self_michelson";
+	"lib:self_mini_c"	 [label=self_mini_c,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:self_mini_c";
+	"lib:spilling"	 [label=spilling,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:spilling";
+	"lib:stacking"	 [label=stacking,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:stacking";
+	"lib:ligo.decompile" -> "lib:tezos-utils";
+	"lib:tree_abstraction"	 [label=tree_abstraction,
+		style=filled];
+	"lib:ligo.decompile" -> "lib:tree_abstraction";
+	"lib:ligo.desugaring"	 [label="ligo.desugaring"];
+	"lib:ligo.desugaring" -> "lib:ast_core";
+	"lib:ligo.desugaring" -> "lib:ast_sugar";
+	"lib:ligo.desugaring" -> "lib:simple-utils";
+	"lib:ligo.environment"	 [label="ligo.environment"];
+	"lib:ligo.environment" -> "lib:ast_typed";
+	"lib:ligo.environment" -> "lib:stage_common";
+	"lib:ligo.environment" -> "lib:tezos-utils";
+	"lib:typesystem"	 [label=typesystem,
+		style=filled];
+	"lib:ligo.environment" -> "lib:typesystem";
+	"lib:ligo.fuzz"	 [label="ligo.fuzz"];
+	"lib:ligo.fuzz" -> "lib:compiler_options";
+	"lib:ligo.fuzz" -> "lib:ligo.decompile";
+	"lib:ligo.fuzz.cameligo"	 [label="ligo.fuzz.cameligo"];
+	"lib:ligo.fuzz" -> "lib:ligo.fuzz.cameligo";
+	"lib:ligo.fuzz.jsligo"	 [label="ligo.fuzz.jsligo"];
+	"lib:ligo.fuzz" -> "lib:ligo.fuzz.jsligo";
+	"lib:ligo.fuzz.pascaligo"	 [label="ligo.fuzz.pascaligo"];
+	"lib:ligo.fuzz" -> "lib:ligo.fuzz.pascaligo";
+	"lib:ligo.fuzz.reasonligo"	 [label="ligo.fuzz.reasonligo"];
+	"lib:ligo.fuzz" -> "lib:ligo.fuzz.reasonligo";
+	"lib:ligo.fuzz.shared"	 [label="ligo.fuzz.shared"];
+	"lib:ligo.fuzz" -> "lib:ligo.fuzz.shared";
+	"lib:ligo.fuzz.cameligo" -> "lib:fuzz_shared";
+	"lib:ligo.fuzz.cameligo" -> "lib:ligo_compile";
+	"lib:ligo.fuzz.jsligo" -> "lib:fuzz_shared";
+	"lib:ligo.fuzz.jsligo" -> "lib:ligo_compile";
+	"lib:ligo.fuzz.pascaligo" -> "lib:fuzz_shared";
+	"lib:ligo.fuzz.pascaligo" -> "lib:ligo_compile";
+	"lib:ligo.fuzz.reasonligo" -> "lib:fuzz_shared";
+	"lib:ligo.fuzz.reasonligo" -> "lib:ligo_compile";
+	"lib:ligo.fuzz.shared" -> "lib:ligo.ast_typed";
+	"lib:qcheck"	 [label=qcheck,
+		style=filled];
+	"lib:ligo.fuzz.shared" -> "lib:qcheck";
+	"lib:ligo.fuzz.shared" -> "lib:tezos-utils";
+	"lib:ligo.inference"	 [label="ligo.inference"];
+	"lib:ligo.inference" -> "lib:UnionFind";
+	"lib:ligo.inference" -> "lib:ast_core";
+	"lib:ligo.inference" -> "lib:ast_typed";
+	"lib:ligo.inference" -> "lib:database_plugins";
+	"lib:ligo.inference" -> "lib:environment";
+	"lib:ligo.inference" -> "lib:predefined";
+	"lib:ligo.inference" -> "lib:self_ast_core";
+	"lib:ligo.inference" -> "lib:tezos-utils";
+	"lib:type_variable_abstraction"	 [label=type_variable_abstraction,
+		style=filled];
+	"lib:ligo.inference" -> "lib:type_variable_abstraction";
+	"lib:ligo.jsligo"	 [label="ligo.jsligo"];
+	"lib:ligo.jsligo" -> "lib:ast_imperative";
+	"lib:ligo.jsligo" -> "lib:cst";
+	"lib:ligo.jsligo" -> "lib:parsing";
+	"lib:ligo.jsligo" -> "lib:predefined";
+	"lib:ligo.jsligo" -> "lib:tezos-utils";
+	"lib:ligo.lexing"	 [label="ligo.lexing"];
+	"lib:ligo.lexing" -> "lib:lexing_cameligo";
+	"lib:ligo.lexing" -> "lib:lexing_jsligo";
+	"lib:ligo.lexing" -> "lib:lexing_pascaligo";
+	"lib:ligo.lexing" -> "lib:lexing_reasonligo";
+	"lib:ligo.lexing" -> "lib:lexing_shared";
+	"lib:ligo.lexing" -> "lib:preprocessing_cameligo";
+	"lib:ligo.lexing" -> "lib:preprocessing_jsligo";
+	"lib:ligo.lexing" -> "lib:preprocessing_pascaligo";
+	"lib:ligo.lexing" -> "lib:preprocessing_reasonligo";
+	"lib:ligo.lexing" -> "lib:simple-utils";
+	"lib:ligo.lexing.cameligo"	 [label="ligo.lexing.cameligo"];
+	"lib:ligo.lexing.cameligo" -> "lib:hex";
+	"lib:ligo.lexing.cameligo" -> "lib:lexing_shared";
+	"lib:ligo.lexing.cameligo" -> "lib:str";
+	"lib:ligo.lexing.jsligo"	 [label="ligo.lexing.jsligo"];
+	"lib:ligo.lexing.jsligo" -> "lib:hex";
+	"lib:ligo.lexing.jsligo" -> "lib:lexing_shared";
+	"lib:ligo.lexing.jsligo" -> "lib:str";
+	"lib:ligo.lexing.pascaligo"	 [label="ligo.lexing.pascaligo"];
+	"lib:ligo.lexing.pascaligo" -> "lib:hex";
+	"lib:ligo.lexing.pascaligo" -> "lib:lexing_shared";
+	"lib:ligo.lexing.pascaligo" -> "lib:str";
+	"lib:ligo.lexing.reasonligo"	 [label="ligo.lexing.reasonligo"];
+	"lib:ligo.lexing.reasonligo" -> "lib:hex";
+	"lib:ligo.lexing.reasonligo" -> "lib:lexing_shared";
+	"lib:ligo.lexing.reasonligo" -> "lib:str";
+	"lib:ligo.lexing.shared"	 [label="ligo.lexing.shared"];
+	"lib:ligo.lexing.shared" -> "lib:LexerLib";
+	"lib:ligo.lexing.shared" -> "lib:Preprocessor";
+	"lib:ligo.lexing.shared" -> "lib:preprocessing_shared";
+	"lib:ligo.lexing.shared" -> "lib:zarith";
+	"lib:ligo.ligo_compile"	 [label="ligo.ligo_compile"];
+	"lib:ligo.ligo_compile" -> "lib:ast_core";
+	"lib:ligo.ligo_compile" -> "lib:ast_imperative";
+	"lib:ligo.ligo_compile" -> "lib:ast_sugar";
+	"lib:ligo.ligo_compile" -> "lib:ast_typed";
+	"lib:ligo.ligo_compile" -> "lib:checking";
+	"lib:ligo.ligo_compile" -> "lib:compiler_options";
+	"lib:ligo.ligo_compile" -> "lib:cst";
+	"lib:ligo.ligo_compile" -> "lib:desugaring";
+	"lib:ligo.ligo_compile" -> "lib:inference";
+	"lib:ligo.ligo_compile" -> "lib:main_errors";
+	"lib:ligo.ligo_compile" -> "lib:mini_c";
+	"lib:ligo.ligo_compile" -> "lib:parsing";
+	"lib:ligo.ligo_compile" -> "lib:preprocessing";
+	"lib:proto-alpha-utils"	 [label="proto-alpha-utils"];
+	"lib:ligo.ligo_compile" -> "lib:proto-alpha-utils";
+	"lib:ligo.ligo_compile" -> "lib:purification";
+	"lib:scoping"	 [label=scoping,
+		style=filled];
+	"lib:ligo.ligo_compile" -> "lib:scoping";
+	"lib:ligo.ligo_compile" -> "lib:self_ast_core";
+	"lib:ligo.ligo_compile" -> "lib:self_ast_imperative";
+	"lib:ligo.ligo_compile" -> "lib:self_ast_sugar";
+	"lib:ligo.ligo_compile" -> "lib:self_ast_typed";
+	"lib:self_cst"	 [label=self_cst,
+		style=filled];
+	"lib:ligo.ligo_compile" -> "lib:self_cst";
+	"lib:ligo.ligo_compile" -> "lib:self_michelson";
+	"lib:ligo.ligo_compile" -> "lib:self_mini_c";
+	"lib:ligo.ligo_compile" -> "lib:spilling";
+	"lib:ligo.ligo_compile" -> "lib:stacking";
+	"lib:ligo.ligo_compile" -> "lib:tree_abstraction";
+	"lib:zinc"	 [label=zinc,
+		style=filled];
+	"lib:ligo.ligo_compile" -> "lib:zinc";
+	"lib:zincing"	 [label=zincing,
+		style=filled];
+	"lib:ligo.ligo_compile" -> "lib:zincing";
+	"lib:ligo.ligo_interpreter"	 [label="ligo.ligo_interpreter"];
+	"lib:ligo.ligo_interpreter" -> "lib:ast_typed";
+	"lib:ligo.ligo_interpreter" -> "lib:proto-alpha-utils";
+	"lib:ligo.ligo_interpreter" -> "lib:stage_common";
+	"lib:ligo.main"	 [label="ligo.main"];
+	"lib:ligo.main" -> "lib:compiler_options";
+	"lib:ligo.main" -> "lib:decompile";
+	"lib:ligo.main" -> "lib:fuzz";
+	"lib:ligo.main" -> "lib:ligo_compile";
+	"lib:ligo_run"	 [label=ligo_run,
+		style=filled];
+	"lib:ligo.main" -> "lib:ligo_run";
+	"lib:ligo.main" -> "lib:main_errors";
+	"lib:scopes"	 [label=scopes,
+		style=filled];
+	"lib:ligo.main" -> "lib:scopes";
+	"lib:ligo.main_errors"	 [label="ligo.main_errors"];
+	"lib:ligo.main_errors" -> "lib:ast_sugar";
+	"lib:ligo.main_errors" -> "lib:checking";
+	"lib:ligo.main_errors" -> "lib:desugaring";
+	"lib:ligo.main_errors" -> "lib:inference";
+	"lib:ligo_interpreter"	 [label=ligo_interpreter,
+		style=filled];
+	"lib:ligo.main_errors" -> "lib:ligo_interpreter";
+	"lib:ligo.main_errors" -> "lib:parsing";
+	"lib:ligo.main_errors" -> "lib:preprocessing";
+	"lib:ligo.main_errors" -> "lib:purification";
+	"lib:ligo.main_errors" -> "lib:self_ast_core";
+	"lib:ligo.main_errors" -> "lib:self_ast_imperative";
+	"lib:ligo.main_errors" -> "lib:self_ast_sugar";
+	"lib:ligo.main_errors" -> "lib:self_ast_typed";
+	"lib:ligo.main_errors" -> "lib:self_cst";
+	"lib:ligo.main_errors" -> "lib:self_michelson";
+	"lib:ligo.main_errors" -> "lib:self_mini_c";
+	"lib:ligo.main_errors" -> "lib:simple-utils";
+	"lib:ligo.main_errors" -> "lib:spilling";
+	"lib:ligo.main_errors" -> "lib:stacking";
+	"lib:ligo.main_errors" -> "lib:tree_abstraction";
+	"lib:ligo.main_interpreter"	 [label="ligo.main_interpreter"];
+	"lib:ligo.main_interpreter" -> "lib:ast_typed";
+	"lib:ligo.main_interpreter" -> "lib:build";
+	"lib:ligo.main_interpreter" -> "lib:fuzz";
+	"lib:ligo.main_interpreter" -> "lib:ligo_compile";
+	"lib:ligo.main_interpreter" -> "lib:ligo_interpreter";
+	"lib:ligo.main_interpreter" -> "lib:ligo_run";
+	"lib:ligo.main_interpreter" -> "lib:main_errors";
+	"lib:ligo.main_interpreter" -> "lib:self_ast_typed";
+	"lib:ligo.main_interpreter" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"lib:ligo.main_warnings"	 [label="ligo.main_warnings"];
+	"lib:ligo.main_warnings" -> "lib:ast_imperative";
+	"lib:ligo.main_warnings" -> "lib:simple-utils";
+	"lib:ligo.mini_c"	 [label="ligo.mini_c"];
+	"lib:ligo.mini_c" -> "lib:ligo-types.mini_c_types";
+	"lib:ligo.mini_c" -> "lib:stage_common";
+	"lib:tezos-hacl-glue-unix"	 [label="tezos-hacl-glue-unix"];
+	"lib:ligo.mini_c" -> "lib:tezos-hacl-glue-unix";
+	"lib:ligo.mini_c" -> "lib:tezos-utils";
+	"lib:ligo.parsing"	 [label="ligo.parsing"];
+	"lib:ligo.parsing" -> "lib:parsing_cameligo";
+	"lib:ligo.parsing" -> "lib:parsing_jsligo";
+	"lib:ligo.parsing" -> "lib:parsing_pascaligo";
+	"lib:ligo.parsing" -> "lib:parsing_reasonligo";
+	"lib:ligo.parsing" -> "lib:parsing_shared";
+	"lib:ligo.parsing" -> "lib:preprocessing_cameligo";
+	"lib:ligo.parsing" -> "lib:preprocessing_jsligo";
+	"lib:ligo.parsing" -> "lib:preprocessing_pascaligo";
+	"lib:ligo.parsing" -> "lib:preprocessing_reasonligo";
+	"lib:ligo.parsing" -> "lib:simple-utils";
+	"lib:ligo.parsing.cameligo"	 [label="ligo.parsing.cameligo"];
+	"lib:ligo.parsing.cameligo" -> "lib:ParserLib";
+	"lib:ligo.parsing.cameligo" -> "lib:cst_cameligo";
+	"lib:ligo.parsing.cameligo" -> "lib:hex";
+	"lib:ligo.parsing.cameligo" -> "lib:lexing_cameligo";
+	"lib:pprint"	 [label=pprint,
+		style=filled];
+	"lib:ligo.parsing.cameligo" -> "lib:pprint";
+	"lib:terminal_size"	 [label=terminal_size,
+		style=filled];
+	"lib:ligo.parsing.cameligo" -> "lib:terminal_size";
+	"lib:ligo.parsing.jsligo"	 [label="ligo.parsing.jsligo"];
+	"lib:ligo.parsing.jsligo" -> "lib:ParserLib";
+	"lib:ligo.parsing.jsligo" -> "lib:cst_jsligo";
+	"lib:ligo.parsing.jsligo" -> "lib:hex";
+	"lib:ligo.parsing.jsligo" -> "lib:lexing_jsligo";
+	"lib:ligo.parsing.jsligo" -> "lib:pprint";
+	"lib:ligo.parsing.jsligo" -> "lib:terminal_size";
+	"lib:ligo.parsing.pascaligo"	 [label="ligo.parsing.pascaligo"];
+	"lib:ligo.parsing.pascaligo" -> "lib:ParserLib";
+	"lib:ligo.parsing.pascaligo" -> "lib:cst_pascaligo";
+	"lib:ligo.parsing.pascaligo" -> "lib:hex";
+	"lib:ligo.parsing.pascaligo" -> "lib:lexing_pascaligo";
+	"lib:ligo.parsing.pascaligo" -> "lib:pprint";
+	"lib:ligo.parsing.pascaligo" -> "lib:terminal_size";
+	"lib:ligo.parsing.reasonligo"	 [label="ligo.parsing.reasonligo"];
+	"lib:ligo.parsing.reasonligo" -> "lib:ParserLib";
+	"lib:ligo.parsing.reasonligo" -> "lib:cst_reasonligo";
+	"lib:ligo.parsing.reasonligo" -> "lib:hex";
+	"lib:ligo.parsing.reasonligo" -> "lib:lexing_reasonligo";
+	"lib:ligo.parsing.reasonligo" -> "lib:pprint";
+	"lib:ligo.parsing.reasonligo" -> "lib:terminal_size";
+	"lib:ligo.parsing.shared"	 [label="ligo.parsing.shared"];
+	"lib:ligo.parsing.shared" -> "lib:ParserLib";
+	"lib:ligo.parsing.shared" -> "lib:Preprocessor";
+	"lib:ligo.parsing.shared" -> "lib:lexing_shared";
+	"lib:ligo.parsing.shared" -> "lib:pprint";
+	"lib:ligo.parsing.shared" -> "lib:terminal_size";
+	"lib:ligo.pascaligo"	 [label="ligo.pascaligo"];
+	"lib:ligo.pascaligo" -> "lib:ast_imperative";
+	"lib:ligo.pascaligo" -> "lib:cst";
+	"lib:ligo.pascaligo" -> "lib:predefined";
+	"lib:ligo.pascaligo" -> "lib:tezos-utils";
+	"lib:ligo.predefined"	 [label="ligo.predefined"];
+	"lib:ligo.predefined" -> "lib:ast_core";
+	"lib:ligo.predefined" -> "lib:ast_imperative";
+	"lib:ligo.predefined" -> "lib:ast_sugar";
+	"lib:ligo.predefined" -> "lib:ast_typed";
+	"lib:ligo.predefined" -> "lib:environment";
+	"lib:ligo.predefined" -> "lib:mini_c";
+	"lib:ligo.predefined" -> "lib:tezos-utils";
+	"lib:ligo.predefined" -> "lib:typesystem";
+	"lib:ligo.preprocessing"	 [label="ligo.preprocessing"];
+	"lib:ligo.preprocessing" -> "lib:Preprocessor";
+	"lib:ligo.preprocessing" -> "lib:preprocessing_cameligo";
+	"lib:ligo.preprocessing" -> "lib:preprocessing_jsligo";
+	"lib:ligo.preprocessing" -> "lib:preprocessing_pascaligo";
+	"lib:ligo.preprocessing" -> "lib:preprocessing_reasonligo";
+	"lib:ligo.preprocessing" -> "lib:preprocessing_shared";
+	"lib:ligo.preprocessing.cameligo"	 [label="ligo.preprocessing.cameligo"];
+	"lib:ligo.preprocessing.cameligo" -> "lib:Preprocessor";
+	"lib:ligo.preprocessing.jsligo"	 [label="ligo.preprocessing.jsligo"];
+	"lib:ligo.preprocessing.jsligo" -> "lib:Preprocessor";
+	"lib:ligo.preprocessing.pascaligo"	 [label="ligo.preprocessing.pascaligo"];
+	"lib:ligo.preprocessing.pascaligo" -> "lib:Preprocessor";
+	"lib:ligo.preprocessing.reasonligo"	 [label="ligo.preprocessing.reasonligo"];
+	"lib:ligo.preprocessing.reasonligo" -> "lib:Preprocessor";
+	"lib:ligo.preprocessing.shared"	 [label="ligo.preprocessing.shared"];
+	"lib:ligo.preprocessing.shared" -> "lib:Preprocessor";
+	"lib:ligo.purification"	 [label="ligo.purification"];
+	"lib:ligo.purification" -> "lib:ast_imperative";
+	"lib:ligo.purification" -> "lib:ast_sugar";
+	"lib:ligo.purification" -> "lib:self_ast_sugar";
+	"lib:ligo.purification" -> "lib:simple-utils";
+	"lib:ligo.reasonligo"	 [label="ligo.reasonligo"];
+	"lib:ligo.reasonligo" -> "lib:ast_imperative";
+	"lib:ligo.reasonligo" -> "lib:cst";
+	"lib:ligo.reasonligo" -> "lib:parsing";
+	"lib:ligo.reasonligo" -> "lib:predefined";
+	"lib:ligo.reasonligo" -> "lib:tezos-utils";
+	"lib:ligo.reasonligo" -> "lib:tree_abstraction_shared";
+	"lib:ligo.run"	 [label="ligo.run"];
+	"lib:ligo.run" -> "lib:ast_core";
+	"lib:ligo.run" -> "lib:ast_typed";
+	"lib:ligo.run" -> "lib:checking";
+	"lib:ligo.run" -> "lib:desugaring";
+	"lib:ligo.run" -> "lib:inference";
+	"lib:ligo.run" -> "lib:ligo_compile";
+	"lib:ligo.run" -> "lib:mini_c";
+	"lib:ligo.run" -> "lib:parsing";
+	"lib:ligo.run" -> "lib:predefined";
+	"lib:ligo.run" -> "lib:self_ast_imperative";
+	"lib:ligo.run" -> "lib:spilling";
+	"lib:ligo.run" -> "lib:stacking";
+	"lib:ligo.run" -> "lib:tezos-utils";
+	"lib:ligo.run" -> "lib:tree_abstraction";
+	"lib:ligo.scopes"	 [label="ligo.scopes"];
+	"lib:ligo.scopes" -> "lib:ast_typed";
+	"lib:ligo.scopes" -> "lib:compiler_options";
+	"lib:ligo.scopes" -> "lib:ligo_compile";
+	"lib:ligo.scopes" -> "lib:main_errors";
+	"lib:ligo.scopes" -> "lib:self_ast_core";
+	"lib:ligo.scopes" -> "lib:simple-utils";
+	"lib:ligo.scoping"	 [label="ligo.scoping"];
+	"lib:ligo_coq_ocaml"	 [label=ligo_coq_ocaml,
+		style=filled];
+	"lib:ligo.scoping" -> "lib:ligo_coq_ocaml";
+	"lib:ligo.scoping" -> "lib:mini_c";
+	"lib:ligo.scoping" -> "lib:predefined";
+	"lib:ligo.scoping" -> "lib:simple-utils";
+	"lib:ligo.self_ast_core"	 [label="ligo.self_ast_core"];
+	"lib:ligo.self_ast_core" -> "lib:ast_core";
+	"lib:ligo.self_ast_core" -> "lib:simple-utils";
+	"lib:ligo.self_ast_imperative"	 [label="ligo.self_ast_imperative"];
+	"lib:ligo.self_ast_imperative" -> "lib:ast_imperative";
+	"lib:main_warnings"	 [label=main_warnings,
+		style=filled];
+	"lib:ligo.self_ast_imperative" -> "lib:main_warnings";
+	"lib:ligo.self_ast_imperative" -> "lib:simple-utils";
+	"lib:tezos-base"	 [label="tezos-base"];
+	"lib:ligo.self_ast_imperative" -> "lib:tezos-base";
+	"lib:ligo.self_ast_sugar"	 [label="ligo.self_ast_sugar"];
+	"lib:ligo.self_ast_sugar" -> "lib:ast_sugar";
+	"lib:ligo.self_ast_sugar" -> "lib:simple-utils";
+	"lib:ligo.self_ast_typed"	 [label="ligo.self_ast_typed"];
+	"lib:ligo.self_ast_typed" -> "lib:ast_typed";
+	"lib:ligo.self_ast_typed" -> "lib:environment";
+	"lib:ligo.self_ast_typed" -> "lib:simple-utils";
+	"lib:ligo.self_cst"	 [label="ligo.self_cst"];
+	"lib:ligo.self_cst" -> "lib:cst";
+	"lib:self_cst_cameligo"	 [label=self_cst_cameligo,
+		style=filled];
+	"lib:ligo.self_cst" -> "lib:self_cst_cameligo";
+	"lib:self_cst_jsligo"	 [label=self_cst_jsligo,
+		style=filled];
+	"lib:ligo.self_cst" -> "lib:self_cst_jsligo";
+	"lib:self_cst_pascaligo"	 [label=self_cst_pascaligo,
+		style=filled];
+	"lib:ligo.self_cst" -> "lib:self_cst_pascaligo";
+	"lib:self_cst_reasonligo"	 [label=self_cst_reasonligo,
+		style=filled];
+	"lib:ligo.self_cst" -> "lib:self_cst_reasonligo";
+	"lib:ligo.self_cst" -> "lib:simple-utils";
+	"lib:ligo.self_cst" -> "lib:tezos-base";
+	"lib:ligo.self_cst.cameligo"	 [label="ligo.self_cst.cameligo"];
+	"lib:ligo.self_cst.cameligo" -> "lib:cst";
+	"lib:ligo.self_cst.cameligo" -> "lib:simple-utils";
+	"lib:ligo.self_cst.cameligo" -> "lib:tezos-base";
+	"lib:ligo.self_cst.jsligo"	 [label="ligo.self_cst.jsligo"];
+	"lib:ligo.self_cst.jsligo" -> "lib:cst";
+	"lib:ligo.self_cst.jsligo" -> "lib:simple-utils";
+	"lib:ligo.self_cst.jsligo" -> "lib:tezos-base";
+	"lib:ligo.self_cst.pascaligo"	 [label="ligo.self_cst.pascaligo"];
+	"lib:ligo.self_cst.pascaligo" -> "lib:cst";
+	"lib:ligo.self_cst.pascaligo" -> "lib:simple-utils";
+	"lib:ligo.self_cst.pascaligo" -> "lib:tezos-base";
+	"lib:ligo.self_cst.reasonligo"	 [label="ligo.self_cst.reasonligo"];
+	"lib:ligo.self_cst.reasonligo" -> "lib:cst";
+	"lib:ligo.self_cst.reasonligo" -> "lib:simple-utils";
+	"lib:ligo.self_cst.reasonligo" -> "lib:tezos-base";
+	"lib:ligo.self_michelson"	 [label="ligo.self_michelson"];
+	"lib:ligo.self_michelson" -> "lib:bls12-381-unix";
+	"lib:ligo.self_michelson" -> "lib:environment";
+	"lib:ligo.self_michelson" -> "lib:tezos-hacl-glue-unix";
+	"lib:ligo.self_michelson" -> "lib:tezos-utils";
+	"lib:ligo.self_mini_c"	 [label="ligo.self_mini_c"];
+	"lib:ligo.self_mini_c" -> "lib:bls12-381-unix";
+	"lib:ligo.self_mini_c" -> "lib:mini_c";
+	"lib:ligo.self_mini_c" -> "lib:tezos-hacl-glue-unix";
+	"lib:ligo.spilling"	 [label="ligo.spilling"];
+	"lib:ligo.spilling" -> "lib:ast_typed";
+	"lib:ligo.spilling" -> "lib:mini_c";
+	"lib:ligo.spilling" -> "lib:predefined";
+	"lib:ligo.spilling" -> "lib:self_ast_typed";
+	"lib:ligo.spilling" -> "lib:self_mini_c";
+	"lib:ligo.spilling" -> "lib:tezos-utils";
+	"lib:ligo.stacking"	 [label="ligo.stacking"];
+	"lib:ligo.stacking" -> "lib:bls12-381-unix";
+	"lib:ligo.stacking" -> "lib:environment";
+	"lib:ligo.stacking" -> "lib:ligo_coq_ocaml";
+	"lib:ligo.stacking" -> "lib:predefined";
+	"lib:ligo.stacking" -> "lib:self_michelson";
+	"lib:ligo.stacking" -> "lib:tezos-hacl-glue-unix";
+	"lib:ligo.stacking" -> "lib:tezos-utils";
+	"lib:ligo.stage_common"	 [label="ligo.stage_common"];
+	"lib:ligo.stage_common" -> "lib:bls12-381-unix";
+	"lib:ligo.stage_common" -> "lib:ligo-types.stage_common_types";
+	"lib:ligo.stage_common" -> "lib:tezos-hacl-glue-unix";
+	"lib:ligo.stage_common" -> "lib:tezos-utils";
+	"lib:ligo.tree_abstraction"	 [label="ligo.tree_abstraction"];
+	"lib:ligo.tree_abstraction" -> "lib:cameligo";
+	"lib:ligo.tree_abstraction" -> "lib:jsligo";
+	"lib:pascaligo"	 [label=pascaligo,
+		style=filled];
+	"lib:ligo.tree_abstraction" -> "lib:pascaligo";
+	"lib:reasonligo"	 [label=reasonligo,
+		style=filled];
+	"lib:ligo.tree_abstraction" -> "lib:reasonligo";
+	"lib:ligo.tree_abstraction" -> "lib:tree_abstraction_shared";
+	"lib:ligo.tree_abstraction.shared"	 [label="ligo.tree_abstraction.shared"];
+	"lib:ligo.tree_abstraction.shared" -> "lib:ast_imperative";
+	"lib:ligo.tree_abstraction.shared" -> "lib:simple-utils";
+	"lib:ligo.typer_common"	 [label="ligo.typer_common"];
+	"lib:ligo.typer_common" -> "lib:UnionFind";
+	"lib:ligo.typer_common" -> "lib:ast_core";
+	"lib:ligo.typer_common" -> "lib:environment";
+	"lib:ligo.typer_common" -> "lib:predefined";
+	"lib:ligo.typer_common" -> "lib:tezos-utils";
+	"lib:ligo.typer_new.database_plugins"	 [label="ligo.typer_new.database_plugins"];
+	"lib:ligo.typer_new.database_plugins" -> "lib:UnionFind";
+	"lib:ligo.typer_new.database_plugins" -> "lib:ast_core";
+	"lib:ligo.typer_new.database_plugins" -> "lib:ast_typed";
+	"lib:ligo.typer_new.database_plugins" -> "lib:environment";
+	"lib:ligo.typer_new.database_plugins" -> "lib:predefined";
+	"lib:solver_types"	 [label=solver_types,
+		style=filled];
+	"lib:ligo.typer_new.database_plugins" -> "lib:solver_types";
+	"lib:ligo.typer_new.database_plugins" -> "lib:tezos-utils";
+	"lib:ligo.typer_new.database_plugins" -> "lib:type_variable_abstraction";
+	"lib:ligo.typer_new.solver_types"	 [label="ligo.typer_new.solver_types"];
+	"lib:ligo.typer_new.solver_types" -> "lib:UnionFind";
+	"lib:ligo.typer_new.solver_types" -> "lib:ast_core";
+	"lib:ligo.typer_new.solver_types" -> "lib:environment";
+	"lib:ligo.typer_new.solver_types" -> "lib:predefined";
+	"lib:ligo.typer_new.solver_types" -> "lib:tezos-utils";
+	"lib:ligo.typer_new.solver_types" -> "lib:type_variable_abstraction";
+	"lib:typer_common"	 [label=typer_common,
+		style=filled];
+	"lib:ligo.typer_new.solver_types" -> "lib:typer_common";
+	"lib:ligo.typer_new.type_variable_abstraction"	 [label="ligo.typer_new.type_variable_abstraction"];
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:UnionFind";
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:ast_core";
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:environment";
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:predefined";
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:tezos-utils";
+	"lib:ligo.typer_new.type_variable_abstraction" -> "lib:typer_common";
+	"lib:ligo.typesystem"	 [label="ligo.typesystem"];
+	"lib:ligo.typesystem" -> "lib:ast_typed";
+	"lib:ligo.typesystem" -> "lib:mini_c";
+	"lib:ligo.typesystem" -> "lib:simple-utils";
+	"lib:ligo.zincing"	 [label="ligo.zincing"];
+	"lib:ligo.zincing" -> "lib:ast_typed";
+	"lib:ligo.zincing" -> "lib:digestif";
+	"lib:ligo.zincing" -> "lib:simple-utils";
+	"lib:ligo.zincing" -> "lib:spilling";
+	"lib:ligo.zincing" -> "lib:stage_common";
+	"lib:ligo.zincing" -> "lib:zinc";
+	"lib:linenoise"	 [label=linenoise,
+		style=filled];
+	"lib:logs.fmt"	 [label="logs.fmt",
+		style=filled];
+	"lib:lwt"	 [label=lwt,
+		style=filled];
+	"lib:lwt-canceler"	 [label="lwt-canceler",
+		style=filled];
+	"lib:lwt-watcher"	 [label="lwt-watcher",
+		style=filled];
+	"lib:lwt.unix"	 [label="lwt.unix",
+		style=filled];
+	"lib:lwt_log"	 [label=lwt_log,
+		style=filled];
+	"lib:lwt_log.core"	 [label="lwt_log.core",
+		style=filled];
+	"lib:main_errors_test"	 [label=main_errors_test];
+	"lib:main_errors_test" -> "lib:ast_typed";
+	"lib:main_errors_test" -> "lib:cst";
+	"lib:main_errors_test" -> "lib:main_errors";
+	"lib:main_errors_test" -> "lib:tezos-utils";
+	"lib:mtime"	 [label=mtime,
+		style=filled];
+	"lib:mtime.clock.os"	 [label="mtime.clock.os",
+		style=filled];
+	"lib:ocaml-migrate-parsetree"	 [label="ocaml-migrate-parsetree",
+		style=filled];
+	"lib:ocplib-endian.bigstring"	 [label="ocplib-endian.bigstring",
+		style=filled];
+	"lib:ocplib-ocamlres"	 [label="ocplib-ocamlres",
+		style=filled];
+	"lib:ppx_only_interpreter_tags"	 [label=ppx_only_interpreter_tags];
+	"lib:ppxlib"	 [label=ppxlib,
+		style=filled];
+	"lib:ppx_only_interpreter_tags" -> "lib:ppxlib";
+	"lib:tezos-client-010-PtGRANAD"	 [label="tezos-client-010-PtGRANAD"];
+	"lib:proto-alpha-utils" -> "lib:tezos-client-010-PtGRANAD";
+	"lib:proto-alpha-utils" -> "lib:tezos-memory-proto-alpha";
+	"lib:proto-alpha-utils" -> "lib:tezos-utils";
+	"lib:ptime"	 [label=ptime,
+		style=filled];
+	"lib:ptime.clock.os"	 [label="ptime.clock.os",
+		style=filled];
+	"lib:pure-splitmix"	 [label="pure-splitmix",
+		style=filled];
+	"lib:pyml"	 [label=pyml,
+		style=filled];
+	"lib:pyml-plot" -> "lib:bigarray";
+	"lib:pyml-plot" -> "lib:pyml";
+	"lib:qcheck-alcotest"	 [label="qcheck-alcotest",
+		style=filled];
+	"lib:repl" -> "lib:build";
+	"lib:repl" -> "lib:cmdliner";
+	"lib:repl" -> "lib:ligo";
+	"lib:repl" -> "lib:linenoise";
+	"lib:resto"	 [label=resto,
+		style=filled];
+	"lib:resto-acl"	 [label="resto-acl",
+		style=filled];
+	"lib:resto-cohttp"	 [label="resto-cohttp",
+		style=filled];
+	"lib:resto-cohttp-client"	 [label="resto-cohttp-client",
+		style=filled];
+	"lib:resto-cohttp-self-serving-client"	 [label="resto-cohttp-self-serving-client",
+		style=filled];
+	"lib:resto-cohttp-server"	 [label="resto-cohttp-server",
+		style=filled];
+	"lib:resto-directory"	 [label="resto-directory",
+		style=filled];
+	"lib:result"	 [label=result,
+		style=filled];
+	"lib:ringo"	 [label=ringo,
+		style=filled];
+	"lib:ringo-lwt"	 [label="ringo-lwt",
+		style=filled];
+	"lib:secp256k1-internal"	 [label="secp256k1-internal",
+		style=filled];
+	"lib:simple-utils" -> "lib:base";
+	"lib:simple-utils" -> "lib:result";
+	"lib:simple-utils" -> "lib:str";
+	"lib:unix"	 [label=unix,
+		style=filled];
+	"lib:simple-utils" -> "lib:unix";
+	"lib:yojson"	 [label=yojson,
+		style=filled];
+	"lib:simple-utils" -> "lib:yojson";
+	"lib:staTz" -> "lib:numerics";
+	"lib:tar"	 [label=tar,
+		style=filled];
+	"lib:tar-unix"	 [label="tar-unix",
+		style=filled];
+	"lib:test_helpers"	 [label=test_helpers];
+	"lib:test_helpers" -> "lib:alcotest";
+	"lib:test_helpers" -> "lib:ligo";
+	"lib:tezos-010-PtGRANAD-test-helpers" -> "lib:alcotest-lwt";
+	"lib:tezos-010-PtGRANAD-test-helpers" -> "lib:tezos-client-010-PtGRANAD";
+	"lib:tezos-client-011-PtHangzH"	 [label="tezos-client-011-PtHangzH"];
+	"lib:tezos-011-PtHangzH-test-helpers" -> "lib:tezos-client-011-PtHangzH";
+	"lib:tezos-test-helpers"	 [label="tezos-test-helpers"];
+	"lib:tezos-011-PtHangzH-test-helpers" -> "lib:tezos-test-helpers";
+	"lib:tezos-alpha-test-helpers" -> "lib:tezos-client-alpha";
+	"lib:tezos-alpha-test-helpers" -> "lib:tezos-test-helpers";
+	"lib:tezos-baking-010-PtGRANAD"	 [label="tezos-baking-010-PtGRANAD"];
+	"lib:tezos-baking-010-PtGRANAD" -> "lib:lwt-exit";
+	"lib:tezos-baking-010-PtGRANAD" -> "lib:tezos-client-010-PtGRANAD";
+	"lib:tezos-client-commands"	 [label="tezos-client-commands"];
+	"lib:tezos-baking-010-PtGRANAD" -> "lib:tezos-client-commands";
+	"lib:tezos-shell-context"	 [label="tezos-shell-context"];
+	"lib:tezos-baking-010-PtGRANAD" -> "lib:tezos-shell-context";
+	"lib:tezos-baking-010-PtGRANAD-commands" -> "lib:tezos-baking-010-PtGRANAD";
+	"lib:tezos-baking-010-PtGRANAD-commands.registration"	 [label="tezos-baking-010-PtGRANAD-commands.registration"];
+	"lib:tezos-baking-010-PtGRANAD-commands.registration" -> "lib:tezos-baking-010-PtGRANAD-commands";
+	"lib:tezos-baking-011-PtHangzH"	 [label="tezos-baking-011-PtHangzH"];
+	"lib:tezos-baking-011-PtHangzH" -> "lib:lwt-exit";
+	"lib:tezos-baking-011-PtHangzH" -> "lib:tezos-client-011-PtHangzH";
+	"lib:tezos-baking-011-PtHangzH" -> "lib:tezos-client-commands";
+	"lib:tezos-baking-011-PtHangzH" -> "lib:tezos-shell-context";
+	"lib:tezos-baking-011-PtHangzH-commands" -> "lib:tezos-baking-011-PtHangzH";
+	"lib:tezos-baking-011-PtHangzH-commands.registration"	 [label="tezos-baking-011-PtHangzH-commands.registration"];
+	"lib:tezos-baking-011-PtHangzH-commands.registration" -> "lib:tezos-baking-011-PtHangzH-commands";
+	"lib:tezos-baking-alpha"	 [label="tezos-baking-alpha"];
+	"lib:tezos-baking-alpha" -> "lib:lwt-exit";
+	"lib:tezos-baking-alpha" -> "lib:tezos-client-alpha";
+	"lib:tezos-baking-alpha" -> "lib:tezos-client-commands";
+	"lib:tezos-baking-alpha" -> "lib:tezos-shell-context";
+	"lib:tezos-baking-alpha-commands" -> "lib:tezos-baking-alpha";
+	"lib:tezos-baking-alpha-commands.registration"	 [label="tezos-baking-alpha-commands.registration"];
+	"lib:tezos-baking-alpha-commands.registration" -> "lib:tezos-baking-alpha-commands";
+	"lib:tezos-base" -> "lib:ezjsonm";
+	"lib:tezos-base" -> "lib:ipaddr";
+	"lib:tezos-base" -> "lib:ptime";
+	"lib:tezos-clic"	 [label="tezos-clic"];
+	"lib:tezos-base" -> "lib:tezos-clic";
+	"lib:tezos-crypto"	 [label="tezos-crypto"];
+	"lib:tezos-base" -> "lib:tezos-crypto";
+	"lib:tezos-event-logging"	 [label="tezos-event-logging"];
+	"lib:tezos-base" -> "lib:tezos-event-logging";
+	"lib:tezos-base" -> "lib:tezos-micheline";
+	"lib:tezos-base-test-helpers" -> "lib:tezos-base";
+	"lib:tezos-event-logging-test-helpers"	 [label="tezos-event-logging-test-helpers"];
+	"lib:tezos-base-test-helpers" -> "lib:tezos-event-logging-test-helpers";
+	"lib:tezos-stdlib-unix"	 [label="tezos-stdlib-unix"];
+	"lib:tezos-base-test-helpers" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-base.unix" -> "lib:bls12-381-unix";
+	"lib:tezos-base.unix" -> "lib:tezos-base";
+	"lib:tezos-base.unix" -> "lib:tezos-hacl-glue-unix";
+	"lib:tezos-base.unix" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-benchmark"	 [label="tezos-benchmark"];
+	"lib:tezos-benchmark" -> "lib:benchmark-utils";
+	"lib:tezos-benchmark" -> "lib:ocaml-migrate-parsetree";
+	"lib:tezos-benchmark" -> "lib:pyml-plot";
+	"lib:tezos-benchmark" -> "lib:staTz";
+	"lib:tezos-benchmark" -> "lib:tezos-base";
+	"lib:tezos-benchmark" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-benchmark-010-PtGRANAD" -> "lib:tezos-010-PtGRANAD-test-helpers";
+	"lib:tezos-benchmark-010-PtGRANAD" -> "lib:tezos-benchmark";
+	"lib:tezos-benchmark-type-inference-010-PtGRANAD"	 [label="tezos-benchmark-type-inference-010-PtGRANAD"];
+	"lib:tezos-benchmark-010-PtGRANAD" -> "lib:tezos-benchmark-type-inference-010-PtGRANAD";
+	"lib:tezos-benchmark-011-PtHangzH" -> "lib:tezos-011-PtHangzH-test-helpers";
+	"lib:tezos-benchmark-011-PtHangzH" -> "lib:tezos-benchmark";
+	"lib:tezos-benchmark-type-inference-011-PtHangzH"	 [label="tezos-benchmark-type-inference-011-PtHangzH"];
+	"lib:tezos-benchmark-011-PtHangzH" -> "lib:tezos-benchmark-type-inference-011-PtHangzH";
+	"lib:tezos-benchmark-alpha" -> "lib:tezos-alpha-test-helpers";
+	"lib:tezos-benchmark-alpha" -> "lib:tezos-benchmark";
+	"lib:tezos-benchmark-type-inference-alpha"	 [label="tezos-benchmark-type-inference-alpha"];
+	"lib:tezos-benchmark-alpha" -> "lib:tezos-benchmark-type-inference-alpha";
+	"lib:tezos-benchmark-examples" -> "lib:tezos-benchmark";
+	"lib:tezos-benchmark-type-inference-010-PtGRANAD" -> "lib:hashcons";
+	"lib:tezos-benchmark-type-inference-010-PtGRANAD" -> "lib:tezos-crypto";
+	"lib:tezos-micheline-rewriting"	 [label="tezos-micheline-rewriting"];
+	"lib:tezos-benchmark-type-inference-010-PtGRANAD" -> "lib:tezos-micheline-rewriting";
+	"lib:tezos-protocol-010-PtGRANAD"	 [label="tezos-protocol-010-PtGRANAD",
+		style=filled];
+	"lib:tezos-benchmark-type-inference-010-PtGRANAD" -> "lib:tezos-protocol-010-PtGRANAD";
+	"lib:tezos-benchmark-type-inference-011-PtHangzH" -> "lib:hashcons";
+	"lib:tezos-benchmark-type-inference-011-PtHangzH" -> "lib:tezos-crypto";
+	"lib:tezos-benchmark-type-inference-011-PtHangzH" -> "lib:tezos-micheline-rewriting";
+	"lib:tezos-protocol-011-PtHangzH"	 [label="tezos-protocol-011-PtHangzH",
+		style=filled];
+	"lib:tezos-benchmark-type-inference-011-PtHangzH" -> "lib:tezos-protocol-011-PtHangzH";
+	"lib:tezos-benchmark-type-inference-alpha" -> "lib:hashcons";
+	"lib:tezos-benchmark-type-inference-alpha" -> "lib:tezos-crypto";
+	"lib:tezos-benchmark-type-inference-alpha" -> "lib:tezos-micheline-rewriting";
+	"lib:tezos-protocol-alpha"	 [label="tezos-protocol-alpha",
+		style=filled];
+	"lib:tezos-benchmark-type-inference-alpha" -> "lib:tezos-protocol-alpha";
+	"lib:tezos-benchmarks-proto-010-PtGRANAD"	 [label="tezos-benchmarks-proto-010-PtGRANAD"];
+	"lib:tezos-benchmarks-proto-010-PtGRANAD" -> "lib:tezos-benchmark-010-PtGRANAD";
+	"lib:tezos-shell-benchmarks"	 [label="tezos-shell-benchmarks"];
+	"lib:tezos-benchmarks-proto-010-PtGRANAD" -> "lib:tezos-shell-benchmarks";
+	"lib:tezos-benchmarks-proto-011-PtHangzH"	 [label="tezos-benchmarks-proto-011-PtHangzH"];
+	"lib:tezos-benchmarks-proto-011-PtHangzH" -> "lib:tezos-benchmark-011-PtHangzH";
+	"lib:tezos-benchmarks-proto-011-PtHangzH" -> "lib:tezos-shell-benchmarks";
+	"lib:tezos-benchmarks-proto-alpha" -> "lib:tezos-benchmark-alpha";
+	"lib:tezos-benchmarks-proto-alpha" -> "lib:tezos-shell-benchmarks";
+	"lib:tezos-clic" -> "lib:re";
+	"lib:tezos-error-monad"	 [label="tezos-error-monad"];
+	"lib:tezos-clic" -> "lib:tezos-error-monad";
+	"lib:tezos-clic.unix"	 [label="tezos-clic.unix"];
+	"lib:tezos-clic.unix" -> "lib:tezos-clic";
+	"lib:tezos-clic.unix" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-client-000-Ps9mPmXa"	 [label="tezos-client-000-Ps9mPmXa"];
+	"lib:tezos-client-000-Ps9mPmXa" -> "lib:tezos-client-commands";
+	"lib:tezos-protocol-000-Ps9mPmXa"	 [label="tezos-protocol-000-Ps9mPmXa",
+		style=filled];
+	"lib:tezos-client-000-Ps9mPmXa" -> "lib:tezos-protocol-000-Ps9mPmXa";
+	"lib:tezos-protocol-environment"	 [label="tezos-protocol-environment"];
+	"lib:tezos-client-000-Ps9mPmXa" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-001-PtCJ7pwo"	 [label="tezos-client-001-PtCJ7pwo"];
+	"lib:tezos-protocol-001-PtCJ7pwo"	 [label="tezos-protocol-001-PtCJ7pwo",
+		style=filled];
+	"lib:tezos-client-001-PtCJ7pwo" -> "lib:tezos-protocol-001-PtCJ7pwo";
+	"lib:tezos-signer-backends"	 [label="tezos-signer-backends"];
+	"lib:tezos-client-001-PtCJ7pwo" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-001-PtCJ7pwo-commands"	 [label="tezos-client-001-PtCJ7pwo-commands"];
+	"lib:tezos-client-001-PtCJ7pwo-commands" -> "lib:tezos-client-001-PtCJ7pwo";
+	"lib:tezos-client-001-PtCJ7pwo-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-001-PtCJ7pwo-commands" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-001-PtCJ7pwo-commands.registration"	 [label="tezos-client-001-PtCJ7pwo-commands.registration"];
+	"lib:tezos-client-001-PtCJ7pwo-commands.registration" -> "lib:tezos-client-001-PtCJ7pwo-commands";
+	"lib:tezos-client-002-PsYLVpVv"	 [label="tezos-client-002-PsYLVpVv"];
+	"lib:tezos-protocol-002-PsYLVpVv"	 [label="tezos-protocol-002-PsYLVpVv",
+		style=filled];
+	"lib:tezos-client-002-PsYLVpVv" -> "lib:tezos-protocol-002-PsYLVpVv";
+	"lib:tezos-client-002-PsYLVpVv" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-002-PsYLVpVv" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-002-PsYLVpVv-commands"	 [label="tezos-client-002-PsYLVpVv-commands"];
+	"lib:tezos-client-002-PsYLVpVv-commands" -> "lib:tezos-client-002-PsYLVpVv";
+	"lib:tezos-client-002-PsYLVpVv-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-002-PsYLVpVv-commands.registration"	 [label="tezos-client-002-PsYLVpVv-commands.registration"];
+	"lib:tezos-client-002-PsYLVpVv-commands.registration" -> "lib:tezos-client-002-PsYLVpVv-commands";
+	"lib:tezos-client-003-PsddFKi3"	 [label="tezos-client-003-PsddFKi3"];
+	"lib:tezos-protocol-003-PsddFKi3"	 [label="tezos-protocol-003-PsddFKi3",
+		style=filled];
+	"lib:tezos-client-003-PsddFKi3" -> "lib:tezos-protocol-003-PsddFKi3";
+	"lib:tezos-client-003-PsddFKi3" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-003-PsddFKi3-commands"	 [label="tezos-client-003-PsddFKi3-commands"];
+	"lib:tezos-client-003-PsddFKi3-commands" -> "lib:tezos-client-003-PsddFKi3";
+	"lib:tezos-client-003-PsddFKi3-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-003-PsddFKi3-commands" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-003-PsddFKi3-commands.registration"	 [label="tezos-client-003-PsddFKi3-commands.registration"];
+	"lib:tezos-client-003-PsddFKi3-commands.registration" -> "lib:tezos-client-003-PsddFKi3-commands";
+	"lib:tezos-client-004-Pt24m4xi"	 [label="tezos-client-004-Pt24m4xi"];
+	"lib:tezos-protocol-004-Pt24m4xi"	 [label="tezos-protocol-004-Pt24m4xi",
+		style=filled];
+	"lib:tezos-client-004-Pt24m4xi" -> "lib:tezos-protocol-004-Pt24m4xi";
+	"lib:tezos-client-004-Pt24m4xi" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-004-Pt24m4xi-commands"	 [label="tezos-client-004-Pt24m4xi-commands"];
+	"lib:tezos-client-004-Pt24m4xi-commands" -> "lib:tezos-client-004-Pt24m4xi";
+	"lib:tezos-client-004-Pt24m4xi-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-004-Pt24m4xi-commands" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-004-Pt24m4xi-commands.registration"	 [label="tezos-client-004-Pt24m4xi-commands.registration"];
+	"lib:tezos-client-004-Pt24m4xi-commands.registration" -> "lib:tezos-client-004-Pt24m4xi-commands";
+	"lib:tezos-client-005-PsBabyM1"	 [label="tezos-client-005-PsBabyM1"];
+	"lib:tezos-protocol-005-PsBabyM1"	 [label="tezos-protocol-005-PsBabyM1",
+		style=filled];
+	"lib:tezos-client-005-PsBabyM1" -> "lib:tezos-protocol-005-PsBabyM1";
+	"lib:tezos-client-005-PsBabyM1" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-005-PsBabyM1-commands"	 [label="tezos-client-005-PsBabyM1-commands"];
+	"lib:tezos-client-005-PsBabyM1-commands" -> "lib:tezos-client-005-PsBabyM1";
+	"lib:tezos-client-005-PsBabyM1-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-005-PsBabyM1-commands" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-005-PsBabyM1-commands.registration"	 [label="tezos-client-005-PsBabyM1-commands.registration"];
+	"lib:tezos-client-005-PsBabyM1-commands.registration" -> "lib:tezos-client-005-PsBabyM1-commands";
+	"lib:tezos-client-006-PsCARTHA"	 [label="tezos-client-006-PsCARTHA"];
+	"lib:tezos-protocol-006-PsCARTHA"	 [label="tezos-protocol-006-PsCARTHA",
+		style=filled];
+	"lib:tezos-client-006-PsCARTHA" -> "lib:tezos-protocol-006-PsCARTHA";
+	"lib:tezos-client-006-PsCARTHA" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-006-PsCARTHA-commands"	 [label="tezos-client-006-PsCARTHA-commands"];
+	"lib:tezos-client-006-PsCARTHA-commands" -> "lib:tezos-client-006-PsCARTHA";
+	"lib:tezos-client-006-PsCARTHA-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-client-006-PsCARTHA-commands" -> "lib:tezos-protocol-environment";
+	"lib:tezos-client-006-PsCARTHA-commands.registration"	 [label="tezos-client-006-PsCARTHA-commands.registration"];
+	"lib:tezos-client-006-PsCARTHA-commands.registration" -> "lib:tezos-client-006-PsCARTHA-commands";
+	"lib:tezos-client-007-PsDELPH1"	 [label="tezos-client-007-PsDELPH1"];
+	"lib:tezos-mockup-registration"	 [label="tezos-mockup-registration"];
+	"lib:tezos-client-007-PsDELPH1" -> "lib:tezos-mockup-registration";
+	"lib:tezos-protocol-plugin-007-PsDELPH1"	 [label="tezos-protocol-plugin-007-PsDELPH1"];
+	"lib:tezos-client-007-PsDELPH1" -> "lib:tezos-protocol-plugin-007-PsDELPH1";
+	"lib:tezos-client-007-PsDELPH1" -> "lib:tezos-proxy";
+	"lib:tezos-client-007-PsDELPH1" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-007-PsDELPH1-commands"	 [label="tezos-client-007-PsDELPH1-commands"];
+	"lib:tezos-client-007-PsDELPH1-commands" -> "lib:tezos-client-007-PsDELPH1";
+	"lib:tezos-mockup-commands"	 [label="tezos-mockup-commands"];
+	"lib:tezos-client-007-PsDELPH1-commands" -> "lib:tezos-mockup-commands";
+	"lib:tezos-client-007-PsDELPH1-commands-registration"	 [label="tezos-client-007-PsDELPH1-commands-registration"];
+	"lib:tezos-client-007-PsDELPH1-commands-registration" -> "lib:tezos-client-007-PsDELPH1-commands";
+	"lib:tezos-client-008-PtEdo2Zk"	 [label="tezos-client-008-PtEdo2Zk"];
+	"lib:tezos-client-008-PtEdo2Zk" -> "lib:tezos-mockup-registration";
+	"lib:tezos-client-008-PtEdo2Zk" -> "lib:tezos-protocol-008-PtEdo2Zk-parameters";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk"	 [label="tezos-protocol-plugin-008-PtEdo2Zk"];
+	"lib:tezos-client-008-PtEdo2Zk" -> "lib:tezos-protocol-plugin-008-PtEdo2Zk";
+	"lib:tezos-client-008-PtEdo2Zk" -> "lib:tezos-proxy";
+	"lib:tezos-client-008-PtEdo2Zk" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-008-PtEdo2Zk-commands"	 [label="tezos-client-008-PtEdo2Zk-commands"];
+	"lib:tezos-client-008-PtEdo2Zk-commands" -> "lib:tezos-client-008-PtEdo2Zk";
+	"lib:tezos-client-008-PtEdo2Zk-commands" -> "lib:tezos-mockup-commands";
+	"lib:tezos-client-008-PtEdo2Zk-commands-registration"	 [label="tezos-client-008-PtEdo2Zk-commands-registration"];
+	"lib:tezos-client-sapling-008-PtEdo2Zk"	 [label="tezos-client-sapling-008-PtEdo2Zk"];
+	"lib:tezos-client-008-PtEdo2Zk-commands-registration" -> "lib:tezos-client-sapling-008-PtEdo2Zk";
+	"lib:tezos-client-009-PsFLoren"	 [label="tezos-client-009-PsFLoren"];
+	"lib:tezos-client-009-PsFLoren" -> "lib:tezos-mockup-registration";
+	"lib:tezos-client-009-PsFLoren" -> "lib:tezos-protocol-009-PsFLoren-parameters";
+	"lib:tezos-protocol-plugin-009-PsFLoren"	 [label="tezos-protocol-plugin-009-PsFLoren"];
+	"lib:tezos-client-009-PsFLoren" -> "lib:tezos-protocol-plugin-009-PsFLoren";
+	"lib:tezos-client-009-PsFLoren" -> "lib:tezos-proxy";
+	"lib:tezos-client-009-PsFLoren" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-009-PsFLoren-commands"	 [label="tezos-client-009-PsFLoren-commands"];
+	"lib:tezos-client-009-PsFLoren-commands" -> "lib:tezos-client-009-PsFLoren";
+	"lib:tezos-client-009-PsFLoren-commands" -> "lib:tezos-client-base-unix";
+	"lib:tezos-client-009-PsFLoren-commands-registration"	 [label="tezos-client-009-PsFLoren-commands-registration"];
+	"lib:tezos-client-sapling-009-PsFLoren"	 [label="tezos-client-sapling-009-PsFLoren"];
+	"lib:tezos-client-009-PsFLoren-commands-registration" -> "lib:tezos-client-sapling-009-PsFLoren";
+	"lib:tezos-client-010-PtGRANAD" -> "lib:tezos-mockup-registration";
+	"lib:tezos-client-010-PtGRANAD" -> "lib:tezos-protocol-010-PtGRANAD-parameters";
+	"lib:tezos-protocol-plugin-010-PtGRANAD"	 [label="tezos-protocol-plugin-010-PtGRANAD"];
+	"lib:tezos-client-010-PtGRANAD" -> "lib:tezos-protocol-plugin-010-PtGRANAD";
+	"lib:tezos-client-010-PtGRANAD" -> "lib:tezos-proxy";
+	"lib:tezos-client-010-PtGRANAD" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-010-PtGRANAD-commands"	 [label="tezos-client-010-PtGRANAD-commands"];
+	"lib:tezos-client-010-PtGRANAD-commands" -> "lib:tezos-client-010-PtGRANAD";
+	"lib:tezos-client-010-PtGRANAD-commands" -> "lib:tezos-client-base-unix";
+	"lib:tezos-client-010-PtGRANAD-commands-registration"	 [label="tezos-client-010-PtGRANAD-commands-registration"];
+	"lib:tezos-client-sapling-010-PtGRANAD"	 [label="tezos-client-sapling-010-PtGRANAD"];
+	"lib:tezos-client-010-PtGRANAD-commands-registration" -> "lib:tezos-client-sapling-010-PtGRANAD";
+	"lib:tezos-client-011-PtHangzH" -> "lib:tezos-mockup-registration";
+	"lib:tezos-client-011-PtHangzH" -> "lib:tezos-protocol-011-PtHangzH-parameters";
+	"lib:tezos-protocol-plugin-011-PtHangzH"	 [label="tezos-protocol-plugin-011-PtHangzH"];
+	"lib:tezos-client-011-PtHangzH" -> "lib:tezos-protocol-plugin-011-PtHangzH";
+	"lib:tezos-client-011-PtHangzH" -> "lib:tezos-proxy";
+	"lib:tezos-client-011-PtHangzH" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-011-PtHangzH-commands"	 [label="tezos-client-011-PtHangzH-commands"];
+	"lib:tezos-client-011-PtHangzH-commands" -> "lib:tezos-client-011-PtHangzH";
+	"lib:tezos-client-011-PtHangzH-commands" -> "lib:tezos-client-base-unix";
+	"lib:tezos-client-011-PtHangzH-commands-registration"	 [label="tezos-client-011-PtHangzH-commands-registration"];
+	"lib:tezos-client-sapling-011-PtHangzH"	 [label="tezos-client-sapling-011-PtHangzH"];
+	"lib:tezos-client-011-PtHangzH-commands-registration" -> "lib:tezos-client-sapling-011-PtHangzH";
+	"lib:tezos-client-alpha" -> "lib:tezos-mockup-registration";
+	"lib:tezos-client-alpha" -> "lib:tezos-protocol-alpha-parameters";
+	"lib:tezos-client-alpha" -> "lib:tezos-protocol-plugin-alpha";
+	"lib:tezos-client-alpha" -> "lib:tezos-proxy";
+	"lib:tezos-client-alpha" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-alpha-commands"	 [label="tezos-client-alpha-commands"];
+	"lib:tezos-client-alpha-commands" -> "lib:tezos-client-alpha";
+	"lib:tezos-client-alpha-commands" -> "lib:tezos-client-base-unix";
+	"lib:tezos-client-alpha-commands-registration"	 [label="tezos-client-alpha-commands-registration"];
+	"lib:tezos-client-sapling-alpha"	 [label="tezos-client-sapling-alpha"];
+	"lib:tezos-client-alpha-commands-registration" -> "lib:tezos-client-sapling-alpha";
+	"lib:tezos-sapling"	 [label="tezos-sapling"];
+	"lib:tezos-client-base" -> "lib:tezos-sapling";
+	"lib:tezos-client-base" -> "lib:tezos-shell-services";
+	"lib:tezos-client-base-unix" -> "lib:lwt-exit";
+	"lib:tezos-client-base-unix" -> "lib:tezos-mockup-commands";
+	"lib:tezos-client-base-unix" -> "lib:tezos-proxy";
+	"lib:tezos-signer-backends.unix"	 [label="tezos-signer-backends.unix"];
+	"lib:tezos-client-base-unix" -> "lib:tezos-signer-backends.unix";
+	"lib:tezos-client-commands" -> "lib:tezos-clic.unix";
+	"lib:tezos-client-commands" -> "lib:tezos-signer-backends";
+	"lib:tezos-client-demo-counter"	 [label="tezos-client-demo-counter"];
+	"lib:tezos-client-demo-counter" -> "lib:tezos-client-commands";
+	"lib:tezos-protocol-demo-counter"	 [label="tezos-protocol-demo-counter",
+		style=filled];
+	"lib:tezos-client-demo-counter" -> "lib:tezos-protocol-demo-counter";
+	"lib:tezos-client-genesis"	 [label="tezos-client-genesis"];
+	"lib:tezos-client-genesis" -> "lib:tezos-client-commands";
+	"lib:tezos-protocol-genesis"	 [label="tezos-protocol-genesis",
+		style=filled];
+	"lib:tezos-client-genesis" -> "lib:tezos-protocol-genesis";
+	"lib:tezos-client-genesis" -> "lib:tezos-proxy";
+	"lib:tezos-client-genesis-carthagenet"	 [label="tezos-client-genesis-carthagenet"];
+	"lib:tezos-client-genesis-carthagenet" -> "lib:tezos-client-commands";
+	"lib:tezos-client-genesis-carthagenet" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-genesis-carthagenet"	 [label="tezos-protocol-genesis-carthagenet",
+		style=filled];
+	"lib:tezos-client-genesis-carthagenet" -> "lib:tezos-protocol-genesis-carthagenet";
+	"lib:tezos-client-sapling-008-PtEdo2Zk" -> "lib:tezos-client-008-PtEdo2Zk-commands";
+	"lib:tezos-client-sapling-009-PsFLoren" -> "lib:tezos-client-009-PsFLoren-commands";
+	"lib:tezos-client-sapling-010-PtGRANAD" -> "lib:tezos-client-010-PtGRANAD-commands";
+	"lib:tezos-client-sapling-011-PtHangzH" -> "lib:tezos-client-011-PtHangzH-commands";
+	"lib:tezos-client-sapling-alpha" -> "lib:tezos-client-alpha-commands";
+	"lib:tezos-context" -> "lib:bigstringaf";
+	"lib:tezos-context" -> "lib:digestif.c";
+	"lib:tezos-context" -> "lib:logs.fmt";
+	"lib:tezos-context.helpers"	 [label="tezos-context.helpers"];
+	"lib:tezos-context" -> "lib:tezos-context.helpers";
+	"lib:tezos-context" -> "lib:tezos-shell-services";
+	"lib:tezos-context.encoding"	 [label="tezos-context.encoding"];
+	"lib:tezos-context.encoding" -> "lib:irmin";
+	"lib:tezos-context.encoding" -> "lib:irmin-pack";
+	"lib:tezos-context.encoding" -> "lib:tezos-base";
+	"lib:tezos-context.helpers" -> "lib:tezos-context.encoding";
+	"lib:tezos-context.sigs"	 [label="tezos-context.sigs"];
+	"lib:tezos-context.helpers" -> "lib:tezos-context.sigs";
+	"lib:tezos-context.memory" -> "lib:irmin-pack.mem";
+	"lib:tezos-context.memory" -> "lib:tezos-context.helpers";
+	"lib:tezos-context.sigs" -> "lib:tezos-base";
+	"lib:tezos-crypto" -> "lib:ringo";
+	"lib:tezos-crypto" -> "lib:secp256k1-internal";
+	"lib:tezos-hacl-glue"	 [label="tezos-hacl-glue"];
+	"lib:tezos-crypto" -> "lib:tezos-hacl-glue";
+	"lib:tezos-rpc"	 [label="tezos-rpc"];
+	"lib:tezos-crypto" -> "lib:tezos-rpc";
+	"lib:tezos-embedded-protocol-007-PsDELPH1"	 [label="tezos-embedded-protocol-007-PsDELPH1",
+		style=filled];
+	"lib:tezos-embedded-protocol-008-PtEdo2Zk"	 [label="tezos-embedded-protocol-008-PtEdo2Zk",
+		style=filled];
+	"lib:tezos-embedded-protocol-009-PsFLoren"	 [label="tezos-embedded-protocol-009-PsFLoren",
+		style=filled];
+	"lib:tezos-error-monad" -> "lib:data-encoding";
+	"lib:tezos-error-monad" -> "lib:lwt-canceler";
+	"lib:tezos-lwt-result-stdlib"	 [label="tezos-lwt-result-stdlib"];
+	"lib:tezos-error-monad" -> "lib:tezos-lwt-result-stdlib";
+	"lib:tezos-stdlib"	 [label="tezos-stdlib"];
+	"lib:tezos-error-monad" -> "lib:tezos-stdlib";
+	"lib:tezos-event-logging" -> "lib:lwt_log.core";
+	"lib:tezos-event-logging" -> "lib:tezos-error-monad";
+	"lib:tezos-event-logging-test-helpers" -> "lib:tezos-event-logging";
+	"lib:tezos-event-logging-test-helpers" -> "lib:tezos-test-helpers";
+	"lib:tezos-hacl-glue-js" -> "lib:hacl-star-raw-empty";
+	"lib:tezos-hacl-glue-unix" -> "lib:hacl-star";
+	"lib:tezos-hacl-glue-unix" -> "lib:hacl-star-raw";
+	"lib:tezos-legacy-store" -> "lib:lwt-watcher";
+	"lib:tezos-legacy-store" -> "lib:tezos-lmdb";
+	"lib:tezos-validation"	 [label="tezos-validation"];
+	"lib:tezos-legacy-store" -> "lib:tezos-validation";
+	"lib:tezos-lmdb" -> "lib:rresult";
+	"lib:tezos-lwt-result-stdlib.traced.structs"	 [label="tezos-lwt-result-stdlib.traced.structs"];
+	"lib:tezos-lwt-result-stdlib" -> "lib:tezos-lwt-result-stdlib.traced.structs";
+	"lib:tezos-lwt-result-stdlib.bare.functor-outputs"	 [label="tezos-lwt-result-stdlib.bare.functor-outputs"];
+	"lib:tezos-lwt-result-stdlib.bare.functor-outputs" -> "lib:lwt";
+	"lib:tezos-lwt-result-stdlib.bare.sigs"	 [label="tezos-lwt-result-stdlib.bare.sigs"];
+	"lib:tezos-lwt-result-stdlib.bare.sigs" -> "lib:tezos-lwt-result-stdlib.bare.functor-outputs";
+	"lib:tezos-lwt-result-stdlib.bare.structs"	 [label="tezos-lwt-result-stdlib.bare.structs"];
+	"lib:tezos-lwt-result-stdlib.bare.structs" -> "lib:tezos-lwt-result-stdlib.bare.sigs";
+	"lib:tezos-lwt-result-stdlib.examples.traces"	 [label="tezos-lwt-result-stdlib.examples.traces"];
+	"lib:tezos-lwt-result-stdlib.traced.sigs"	 [label="tezos-lwt-result-stdlib.traced.sigs"];
+	"lib:tezos-lwt-result-stdlib.examples.traces" -> "lib:tezos-lwt-result-stdlib.traced.sigs";
+	"lib:tezos-lwt-result-stdlib.traced.functor-outputs"	 [label="tezos-lwt-result-stdlib.traced.functor-outputs"];
+	"lib:tezos-lwt-result-stdlib.traced.functor-outputs" -> "lib:tezos-lwt-result-stdlib.bare.sigs";
+	"lib:tezos-lwt-result-stdlib.traced.sigs" -> "lib:tezos-lwt-result-stdlib.bare.structs";
+	"lib:tezos-lwt-result-stdlib.traced.sigs" -> "lib:tezos-lwt-result-stdlib.traced.functor-outputs";
+	"lib:tezos-lwt-result-stdlib.traced.structs" -> "lib:tezos-lwt-result-stdlib.traced.sigs";
+	"lib:tezos-memory-proto-alpha" -> "lib:tezos-protocol-010-PtGRANAD";
+	"lib:tezos-memory-proto-alpha" -> "lib:tezos-protocol-environment";
+	"lib:tezos-micheline" -> "lib:tezos-error-monad";
+	"lib:tezos-micheline" -> "lib:uutf";
+	"lib:tezos-micheline-rewriting" -> "lib:tezos-micheline";
+	"lib:tezos-mockup"	 [label="tezos-mockup"];
+	"lib:tezos-mockup-proxy"	 [label="tezos-mockup-proxy"];
+	"lib:tezos-mockup" -> "lib:tezos-mockup-proxy";
+	"lib:tezos-mockup" -> "lib:tezos-mockup-registration";
+	"lib:tezos-mockup" -> "lib:tezos-p2p";
+	"lib:tezos-mockup-commands" -> "lib:tezos-client-commands";
+	"lib:tezos-mockup-commands" -> "lib:tezos-mockup";
+	"lib:tezos-mockup-proxy" -> "lib:resto-cohttp-self-serving-client";
+	"lib:tezos-mockup-proxy" -> "lib:tezos-client-base";
+	"lib:tezos-mockup-proxy" -> "lib:tezos-protocol-environment";
+	"lib:tezos-rpc-http-client"	 [label="tezos-rpc-http-client"];
+	"lib:tezos-mockup-proxy" -> "lib:tezos-rpc-http-client";
+	"lib:tezos-mockup-registration" -> "lib:tezos-client-base";
+	"lib:tezos-mockup-registration" -> "lib:tezos-protocol-environment";
+	"lib:tezos-openapi" -> "lib:ezjsonm";
+	"lib:tezos-openapi" -> "lib:json-data-encoding";
+	"lib:tezos-p2p" -> "lib:lwt-watcher";
+	"lib:tezos-p2p" -> "lib:tezos-base.unix";
+	"lib:tezos-p2p-services"	 [label="tezos-p2p-services"];
+	"lib:tezos-p2p" -> "lib:tezos-p2p-services";
+	"lib:tezos-p2p-services" -> "lib:tezos-base";
+	"lib:tezos-protocol-007-PsDELPH1"	 [label="tezos-protocol-007-PsDELPH1",
+		style=filled];
+	"lib:tezos-protocol-008-PtEdo2Zk"	 [label="tezos-protocol-008-PtEdo2Zk",
+		style=filled];
+	"lib:tezos-protocol-008-PtEdo2Zk-parameters" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-008-PtEdo2Zk-parameters" -> "lib:tezos-protocol-008-PtEdo2Zk";
+	"lib:tezos-protocol-008-PtEdo2Zk-parameters" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-009-PsFLoren"	 [label="tezos-protocol-009-PsFLoren",
+		style=filled];
+	"lib:tezos-protocol-009-PsFLoren-parameters" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-009-PsFLoren-parameters" -> "lib:tezos-protocol-009-PsFLoren";
+	"lib:tezos-protocol-009-PsFLoren-parameters" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-010-PtGRANAD-parameters" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-010-PtGRANAD-parameters" -> "lib:tezos-protocol-010-PtGRANAD";
+	"lib:tezos-protocol-010-PtGRANAD-parameters" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-011-PtHangzH-parameters" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-011-PtHangzH-parameters" -> "lib:tezos-protocol-011-PtHangzH";
+	"lib:tezos-protocol-011-PtHangzH-parameters" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-alpha-parameters" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-alpha-parameters" -> "lib:tezos-protocol-alpha";
+	"lib:tezos-protocol-alpha-parameters" -> "lib:tezos-protocol-environment";
+	"lib:tezos-protocol-compiler" -> "lib:compiler-libs.common";
+	"lib:tezos-protocol-compiler" -> "lib:ocplib-ocamlres";
+	"lib:tezos-protocol-compiler" -> "lib:tezos-base.unix";
+	"lib:tezos-protocol-environment-sigs"	 [label="tezos-protocol-environment-sigs"];
+	"lib:tezos-protocol-compiler" -> "lib:tezos-protocol-environment-sigs";
+	"lib:tezos-version"	 [label="tezos-version"];
+	"lib:tezos-protocol-compiler" -> "lib:tezos-version";
+	"lib:tezos-protocol-compiler.native"	 [label="tezos-protocol-compiler.native"];
+	"lib:tezos-protocol-compiler.native" -> "lib:compiler-libs.optcomp";
+	"lib:tezos-protocol-compiler.native" -> "lib:tezos-protocol-compiler";
+	"lib:tezos-protocol-compiler.registerer"	 [label="tezos-protocol-compiler.registerer"];
+	"lib:tezos-protocol-compiler.registerer" -> "lib:tezos-base";
+	"lib:tezos-protocol-compiler.registerer" -> "lib:tezos-protocol-environment-sigs";
+	"lib:tezos-protocol-environment" -> "lib:tezos-context.memory";
+	"lib:tezos-protocol-environment" -> "lib:tezos-protocol-environment-sigs";
+	"lib:tezos-protocol-environment-structs"	 [label="tezos-protocol-environment-structs"];
+	"lib:tezos-protocol-environment" -> "lib:tezos-protocol-environment-structs";
+	"lib:tezos-protocol-environment" -> "lib:tezos-sapling";
+	"lib:tezos-protocol-environment-packer"	 [label="tezos-protocol-environment-packer"];
+	"lib:tezos-protocol-environment-structs" -> "lib:bls12-381";
+	"lib:tezos-protocol-environment-structs" -> "lib:bls12-381-legacy";
+	"lib:tezos-protocol-environment-structs" -> "lib:tezos-crypto";
+	"lib:tezos-protocol-plugin-007-PsDELPH1" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-007-PsDELPH1" -> "lib:tezos-protocol-007-PsDELPH1";
+	"lib:tezos-protocol-plugin-007-PsDELPH1-registerer"	 [label="tezos-protocol-plugin-007-PsDELPH1-registerer"];
+	"lib:tezos-protocol-plugin-007-PsDELPH1-registerer" -> "lib:tezos-embedded-protocol-007-PsDELPH1";
+	"lib:tezos-protocol-plugin-007-PsDELPH1-registerer" -> "lib:tezos-protocol-plugin-007-PsDELPH1";
+	"lib:tezos-protocol-plugin-007-PsDELPH1-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk" -> "lib:tezos-protocol-008-PtEdo2Zk";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk-registerer"	 [label="tezos-protocol-plugin-008-PtEdo2Zk-registerer"];
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk-registerer" -> "lib:tezos-embedded-protocol-008-PtEdo2Zk";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk-registerer" -> "lib:tezos-protocol-plugin-008-PtEdo2Zk";
+	"lib:tezos-protocol-plugin-008-PtEdo2Zk-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-plugin-009-PsFLoren" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-009-PsFLoren" -> "lib:tezos-protocol-009-PsFLoren";
+	"lib:tezos-protocol-plugin-009-PsFLoren-registerer"	 [label="tezos-protocol-plugin-009-PsFLoren-registerer"];
+	"lib:tezos-protocol-plugin-009-PsFLoren-registerer" -> "lib:tezos-embedded-protocol-009-PsFLoren";
+	"lib:tezos-protocol-plugin-009-PsFLoren-registerer" -> "lib:tezos-protocol-plugin-009-PsFLoren";
+	"lib:tezos-protocol-plugin-009-PsFLoren-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-plugin-010-PtGRANAD" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-010-PtGRANAD" -> "lib:tezos-protocol-010-PtGRANAD";
+	"lib:tezos-protocol-plugin-010-PtGRANAD-registerer"	 [label="tezos-protocol-plugin-010-PtGRANAD-registerer"];
+	"lib:tezos-protocol-plugin-010-PtGRANAD-registerer" -> "lib:tezos-embedded-protocol-010-PtGRANAD";
+	"lib:tezos-protocol-plugin-010-PtGRANAD-registerer" -> "lib:tezos-protocol-plugin-010-PtGRANAD";
+	"lib:tezos-protocol-plugin-010-PtGRANAD-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-plugin-011-PtHangzH" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-011-PtHangzH" -> "lib:tezos-protocol-011-PtHangzH";
+	"lib:tezos-protocol-plugin-011-PtHangzH-registerer"	 [label="tezos-protocol-plugin-011-PtHangzH-registerer"];
+	"lib:tezos-protocol-plugin-011-PtHangzH-registerer" -> "lib:tezos-embedded-protocol-011-PtHangzH";
+	"lib:tezos-protocol-plugin-011-PtHangzH-registerer" -> "lib:tezos-protocol-plugin-011-PtHangzH";
+	"lib:tezos-protocol-plugin-011-PtHangzH-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-plugin-alpha" -> "lib:tezos-base";
+	"lib:tezos-protocol-plugin-alpha" -> "lib:tezos-protocol-alpha";
+	"lib:tezos-protocol-plugin-alpha-registerer"	 [label="tezos-protocol-plugin-alpha-registerer"];
+	"lib:tezos-protocol-plugin-alpha-registerer" -> "lib:tezos-embedded-protocol-alpha";
+	"lib:tezos-protocol-plugin-alpha-registerer" -> "lib:tezos-protocol-plugin-alpha";
+	"lib:tezos-protocol-plugin-alpha-registerer" -> "lib:tezos-shell";
+	"lib:tezos-protocol-updater"	 [label="tezos-protocol-updater"];
+	"lib:tezos-protocol-updater" -> "lib:dynlink";
+	"lib:tezos-protocol-updater" -> "lib:lwt-exit";
+	"lib:tezos-protocol-updater" -> "lib:tezos-protocol-compiler.native";
+	"lib:tezos-protocol-updater" -> "lib:tezos-protocol-compiler.registerer";
+	"lib:tezos-protocol-updater" -> "lib:tezos-shell-context";
+	"lib:tezos-proxy" -> "lib:ringo-lwt";
+	"lib:tezos-proxy" -> "lib:tezos-context";
+	"lib:tezos-proxy" -> "lib:tezos-mockup-proxy";
+	"lib:tezos-proxy-server-config" -> "lib:tezos-base";
+	"lib:tezos-proxy-server-config" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-requester"	 [label="tezos-requester"];
+	"lib:tezos-requester" -> "lib:lwt-watcher";
+	"lib:tezos-requester" -> "lib:tezos-base";
+	"lib:tezos-requester" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-rpc" -> "lib:resto";
+	"lib:tezos-rpc" -> "lib:resto-directory";
+	"lib:tezos-rpc" -> "lib:tezos-error-monad";
+	"lib:tezos-rpc-http"	 [label="tezos-rpc-http"];
+	"lib:tezos-rpc-http" -> "lib:resto-cohttp";
+	"lib:tezos-rpc-http" -> "lib:tezos-base";
+	"lib:tezos-rpc-http-client" -> "lib:resto-cohttp-client";
+	"lib:tezos-rpc-http-client" -> "lib:tezos-rpc-http";
+	"lib:tezos-rpc-http-client-unix" -> "lib:cohttp-lwt-unix";
+	"lib:tezos-rpc-http-client-unix" -> "lib:tezos-rpc-http-client";
+	"lib:tezos-rpc-http-client-unix" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-rpc-http-server" -> "lib:resto-acl";
+	"lib:tezos-rpc-http-server" -> "lib:resto-cohttp-server";
+	"lib:tezos-rpc-http-server" -> "lib:tezos-rpc-http";
+	"lib:tezos-rpc-http-server" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-sapling" -> "lib:ctypes";
+	"lib:tezos-sapling" -> "lib:ctypes.foreign";
+	"lib:tezos-sapling" -> "lib:ctypes.stubs";
+	"lib:tezos-sapling" -> "lib:integers";
+	"lib:tezos-sapling" -> "lib:tezos-crypto";
+	"lib:tezos-shell" -> "lib:tezos-p2p";
+	"lib:tezos-shell" -> "lib:tezos-requester";
+	"lib:tezos-shell" -> "lib:tezos-store";
+	"lib:tezos-shell-benchmarks" -> "lib:tezos-benchmark";
+	"lib:tezos-shell-benchmarks" -> "lib:tezos-shell-context";
+	"lib:tezos-shell-context" -> "lib:tezos-context";
+	"lib:tezos-shell-context" -> "lib:tezos-protocol-environment";
+	"lib:tezos-shell-services" -> "lib:tezos-p2p-services";
+	"lib:tezos-shell-services" -> "lib:tezos-version";
+	"lib:tezos-workers"	 [label="tezos-workers"];
+	"lib:tezos-shell-services" -> "lib:tezos-workers";
+	"lib:tezos-shell-services-test-helpers"	 [label="tezos-shell-services-test-helpers"];
+	"lib:tezos-shell-services-test-helpers" -> "lib:qcheck-core";
+	"lib:tezos-shell-services-test-helpers" -> "lib:tezos-shell-services";
+	"lib:tezos-shell-services-test-helpers" -> "lib:tezos-test-helpers";
+	"lib:tezos-signer-backends" -> "lib:tezos-rpc-http-client";
+	"lib:tezos-signer-services"	 [label="tezos-signer-services"];
+	"lib:tezos-signer-backends" -> "lib:tezos-signer-services";
+	"lib:tezos-signer-backends.unix" -> "lib:ocplib-endian.bigstring";
+	"lib:tezos-signer-backends.unix" -> "lib:tezos-base.unix";
+	"lib:tezos-signer-backends.unix" -> "lib:tezos-rpc-http-client-unix";
+	"lib:tezos-signer-backends.unix" -> "lib:tezos-signer-backends";
+	"lib:tezos-signer-services" -> "lib:tezos-client-base";
+	"lib:tezos-stdlib" -> "lib:hex";
+	"lib:tezos-stdlib" -> "lib:lwt";
+	"lib:tezos-stdlib" -> "lib:zarith";
+	"lib:tezos-stdlib-unix" -> "lib:ipaddr.unix";
+	"lib:tezos-stdlib-unix" -> "lib:lwt.unix";
+	"lib:tezos-stdlib-unix" -> "lib:lwt_log";
+	"lib:tezos-stdlib-unix" -> "lib:mtime";
+	"lib:tezos-stdlib-unix" -> "lib:mtime.clock.os";
+	"lib:tezos-stdlib-unix" -> "lib:ptime";
+	"lib:tezos-stdlib-unix" -> "lib:ptime.clock.os";
+	"lib:tezos-stdlib-unix" -> "lib:re";
+	"lib:tezos-stdlib-unix" -> "lib:tezos-event-logging";
+	"lib:tezos-stdlib-unix" -> "lib:unix";
+	"lib:tezos-store" -> "lib:camlzip";
+	"lib:tezos-store" -> "lib:index";
+	"lib:tezos-store" -> "lib:ringo-lwt";
+	"lib:tezos-store" -> "lib:tar";
+	"lib:tezos-store" -> "lib:tar-unix";
+	"lib:tezos-store" -> "lib:tezos-legacy-store";
+	"lib:tezos-test-helpers" -> "lib:alcotest";
+	"lib:tezos-test-helpers" -> "lib:alcotest-lwt";
+	"lib:tezos-test-helpers" -> "lib:pure-splitmix";
+	"lib:tezos-test-helpers" -> "lib:qcheck-alcotest";
+	"lib:uri"	 [label=uri,
+		style=filled];
+	"lib:tezos-test-helpers" -> "lib:uri";
+	"lib:tezos-tooling"	 [label="tezos-tooling"];
+	"lib:tezos-utils" -> "lib:simple-utils";
+	"lib:tezos-utils" -> "lib:tezos-base";
+	"lib:tezos-utils" -> "lib:tezos-stdlib-unix";
+	"lib:tezos-validation" -> "lib:tezos-protocol-updater";
+	"lib:tezos-validator" -> "lib:tezos-shell";
+	"lib:tezos-version" -> "lib:tezos-base";
+	"lib:tezos-workers" -> "lib:tezos-base";
+	"lib:tezos-workers" -> "lib:tezos-stdlib-unix";
+	"lib:tezt" -> "lib:ezjsonm";
+	"lib:tezt" -> "lib:lwt.unix";
+	"lib:tezt" -> "lib:re";
+	"lib:tezt-tezos" -> "lib:hex";
+	"lib:tezt-tezos" -> "lib:tezt";
+	"lib:yes_wallet_lib" -> "lib:tezos-protocol-009-PsFLoren";
+	"lib:yes_wallet_lib" -> "lib:tezos-protocol-010-PtGRANAD";
+	"lib:yes_wallet_lib" -> "lib:tezos-protocol-alpha";
+	"lib:yes_wallet_lib" -> "lib:tezos-store";
+	"lib:zinc_test" -> "lib:digestif";
+	"lib:zinc_test" -> "lib:test_helpers";
+}

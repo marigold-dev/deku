@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal, Tom Jack
+merge_request: '926'
+title: ligo michelson backend now uses the "protocol-*-008-PtEdoTez-*"
+type: changed

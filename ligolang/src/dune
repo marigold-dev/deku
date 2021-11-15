@@ -1,0 +1,17 @@
+(dirs (:standard))
+
+(library
+  (name ligo)
+  (public_name ligo)
+  (instrumentation (backend bisect_ppx))
+  (libraries
+     Preprocessor
+     simple-utils
+     tezos-utils
+     tezos-micheline
+     ligo_main)
+  (modules ligo)
+)
+
+
+(vendored_dirs vendors)

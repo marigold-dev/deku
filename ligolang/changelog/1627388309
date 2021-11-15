@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1238'
+title: 'Fix: top-level underscore "definition" breaks testing framework'
+type: fixed

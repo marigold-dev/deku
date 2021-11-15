@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '915'
+title: Fixed small bug in grouped_by_variable (use a multiset instead of a set, so
+  that double-add and removal don't remove both copies
+type: fixed

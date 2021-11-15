@@ -1,0 +1,19 @@
+(library
+  (name fuzz)
+  (public_name ligo.fuzz)
+  (instrumentation (backend bisect_ppx))
+  (libraries
+    ligo.fuzz.shared
+    ligo.fuzz.cameligo
+    ligo.fuzz.reasonligo
+    ligo.fuzz.pascaligo
+    ligo.fuzz.jsligo
+    main_errors
+    ligo_compile
+    ligo.decompile
+    simple-utils
+    compiler_options
+    qcheck
+  )
+  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils -open Tezos_utils ))
+)

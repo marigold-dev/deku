@@ -1,0 +1,1 @@
+const u : unit = unit

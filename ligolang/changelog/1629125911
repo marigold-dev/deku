@@ -1,0 +1,5 @@
+author: er433
+merge_request: '1252'
+title: 'Sub-command compile-expression: add option for disabling running of compiled
+  code'
+type: added

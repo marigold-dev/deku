@@ -1,0 +1,105 @@
+=========
+Sum
+=========
+
+type test is
+  | Add of int
+  | Sub of int
+
+---
+
+(source_file
+  (type_decl
+    (TypeName)
+    (sum_type
+      (variant (ConstrName) (TypeName))
+      (variant (ConstrName) (TypeName))
+    )
+  )
+)
+
+
+=========
+Nested sum
+=========
+
+type test is
+  | Cond of (True | False)
+  | Sub of int
+
+---
+
+(source_file
+  (type_decl
+    (TypeName)
+    (sum_type
+      (variant (ConstrName)
+        (type_group
+          (sum_type
+            (variant (ConstrName))
+            (variant (ConstrName))
+          )
+        )
+      )
+      (variant (ConstrName)
+        (TypeName)
+      )
+    )
+  )
+)
+
+
+=========
+Product
+=========
+
+type test is int * bool
+
+---
+
+(source_file
+  (type_decl
+    (TypeName)
+    (prod_type (TypeName) (TypeName))
+  )
+)
+
+
+=========
+Nested product
+=========
+
+type test is (((int * (bool * nat))))
+
+---
+
+(source_file
+  (type_decl
+    (TypeName)
+    (type_group (type_group (type_group
+      (prod_type (TypeName) (type_group (prod_type (TypeName) (TypeName))))
+    )))
+  )
+)
+
+
+=========
+Function of products
+=========
+
+type test is a * b -> c * d -> e * f
+
+---
+
+(source_file
+  (type_decl
+    (TypeName)
+    (fun_type
+      (prod_type (TypeName) (TypeName))
+      (fun_type
+        (prod_type (TypeName) (TypeName))
+        (prod_type (TypeName) (TypeName))
+      )
+    )
+  )
+)

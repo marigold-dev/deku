@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/religo/large_entrypoint/LargeEntrypointV1.religo

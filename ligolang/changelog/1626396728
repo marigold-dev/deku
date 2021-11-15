@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1223'
+title: 'Contract pass: check entrypoint syntax in C_CONTRACT_ENTRYPOINT(_OPT)'
+type: added

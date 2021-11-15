@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+title: '[Hangzhou] Command line option ''--protocol hangzhou'' now allow users to
+  use hangzhou specifics'
+type: added
+merge_request: '1346'

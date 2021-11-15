@@ -1,0 +1,6 @@
+author: Rémi Lesénéchal
+title: '[Hangzhou] Testing framework: expose functions ''create_chest_and_chest_key''
+  and ''create_chest_key'' from Tezos crypto library (timelock) as ''Test.create_chest''
+  and ''Test.create_chest_key'' respectively'
+type: added
+merge_request: '1346'

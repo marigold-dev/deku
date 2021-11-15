@@ -1,0 +1,4 @@
+author: Andre Popovitch
+title: Use Dune for vendoring instead of Opam
+type: internal
+merge_request: '1312'

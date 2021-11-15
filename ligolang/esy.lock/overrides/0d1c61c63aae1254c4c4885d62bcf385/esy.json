@@ -1,0 +1,31 @@
+{
+  "name": "esy-rustup",
+  "//": "The version is the rust version",
+  "version": "1.51.0",
+  "description": "Rust toolchain setup for esy",
+  "source": "https://github.com/rust-lang/rustup/archive/refs/tags/1.24.2.tar.gz#979e8139734d39313b0147e0db3bfd2675f49507",
+  "override": {
+    "buildEnvOverride": {
+      "RUSTUP_USE_CURL": "1",
+      "CARGO_HOME": "#{self.install}",
+      "RUSTUP_HOME": "#{self.install / '.rustup'}"
+    },
+    "exportedEnv": {
+      "CARGO_HOME": {
+        "val": "#{self.install}",
+        "scope": "global"
+      },
+      "RUSTUP_HOME": {
+        "val": "#{self.install / '.rustup'}",
+        "scope": "global"
+      }
+    },
+    "build": [
+      [
+        "sh",
+        "-c",
+        "./rustup-init.sh -y --no-modify-path --default-toolchain 1.51 --profile minimal #{os == 'windows' ? '--default-host=x86_64-pc-windows-gnu' : ''}"
+      ]
+    ]
+  }
+}

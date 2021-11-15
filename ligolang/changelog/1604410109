@@ -1,0 +1,4 @@
+author: Pierre-Emmanuel Wulfman
+merge_request: '871'
+title: Add module_access expression and type_expression
+type: internal

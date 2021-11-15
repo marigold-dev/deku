@@ -1,0 +1,6 @@
+---
+  title: "Fix List.fold_left in test interpreter"
+  merge_request: "1338"
+  author: "melwyn95"
+  type: "fixed"
+

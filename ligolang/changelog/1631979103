@@ -1,0 +1,6 @@
+---
+  title: "JsLIGO: disallow variables with the same name in the same block to align with JS/TS"
+  merge_request: "1296"
+  author: "@SanderSpies"
+  type: "fixed"
+

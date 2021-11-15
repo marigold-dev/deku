@@ -1,0 +1,17 @@
+# NOTE: dependencies added here are ignored in the LIGO build. Add
+# dependencies in /ligo.opam and run [opam lock].
+opam-version : "1.0"
+name         : "BuildSystem"
+version      : "1.0"
+synopsis     : "A build  system to solve separate compilation"
+description  : ""
+maintainer   : "pierre-emmanuel@wulfman.fr"
+authors      : "Pierre-Emmanuel Wulfman"
+license      : "MIT"
+homepage     : "https://gitlab.com/ligolang/BuildSystem"
+bug-reports  : "https://gitlab.com/ligolang/BuildSystem/issues"
+# If you change the dependencies, run `opam lock` in the root
+depends      : ["dune" "base" "ocaml" "simple-utils" "ocamlgraph"]
+build        : [
+                [ "dune" "build" "-p" name "-j" jobs ]
+               ]

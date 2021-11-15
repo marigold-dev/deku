@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1254'
+title: 'Ast-typed pass: transform unused rec. to lambda'
+type: internal

@@ -1,0 +1,4 @@
+author: Exequiel Rivas
+merge_request: '1001'
+title: Add a REPL based on linenoise
+type: added

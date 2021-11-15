@@ -1,0 +1,6 @@
+---
+  title: "Fixed bug in preprocessing #import"
+  merge_request: "1282"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

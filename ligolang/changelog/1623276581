@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1192'
+title: Suspend tail recursion analysis in E_module_accessor
+type: fixed

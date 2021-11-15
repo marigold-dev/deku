@@ -1,0 +1,8 @@
+let main = ([p, s] : [bool, unit]):[list<operation>, unit] => {
+  let _ : unit = assert (p);
+  return [(list([]) as list<operation>), s];
+};
+
+let some = (o : option<unit>):unit => {
+  assert_some(o)
+};

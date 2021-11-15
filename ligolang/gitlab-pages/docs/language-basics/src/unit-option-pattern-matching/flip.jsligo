@@ -1,0 +1,7 @@
+type coin = ["Head"] | ["Tail"];
+
+let flip = (c: coin): coin =>
+  match (c, {
+    Head: () => Tail(),
+    Tail: () => Head()
+  });

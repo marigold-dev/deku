@@ -1,0 +1,58 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.192.0/containers/debian
+{
+	"name": "Debian",
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick an Debian version: bullseye, buster, stretch
+		"args": {
+			"VARIANT": "16"
+		}
+	},
+	"settings": {
+		"files.autoSave": "afterDelay",
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": true,
+		"editor.tabSize": 2,
+		"git.autofetch": true,
+		"ocaml.sandbox": {
+			"kind": "opam",
+			"switch": "${containerWorkspaceFolder}"
+		},
+		"indentRainbow.ignoreErrorLanguages": [
+			"*"
+		],
+		"files.insertFinalNewline": true,
+		"terminal.integrated.commandsToSkipShell": [
+			"-workbench.action.toggleSidebarVisibility"
+		],
+		"files.watcherExclude": {
+			"**/_opam/**": true,
+			"**/_build/**": true,
+			"**/changelog/**": true,
+			"**/gitlab-pages/**": true,
+		}
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"dbaeumer.vscode-eslint",
+		"oderwat.indent-rainbow",
+		"ocamllabs.ocaml-platform",
+		"ligolang-publish.ligo-vscode",
+		"mhutchie.git-graph",
+		"github.vscode-pull-request-github",
+		"ms-vsliveshare.vsliveshare-pack",
+		"wayou.vscode-todo-highlight"
+	],
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
+	"mounts": [
+		"source=projectname-bashhistory,target=/commandhistory,type=volume"
+	],
+	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
+	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+	"postCreateCommand": "./.devcontainer/setup_dev_env.sh",
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "node"
+}

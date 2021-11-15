@@ -1,0 +1,6 @@
+---
+  title: "Improve JsLIGO handling of attributes"
+  merge_request: "1199"
+  author: "@SanderSpies"
+  type: "fixed"
+

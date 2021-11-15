@@ -1,0 +1,4 @@
+author: Sander Spies
+merge_request: '820'
+title: 'Documentation of Pascaligo: change deprecated bytes_unpack to Bytes.unpack.'
+type: fixed

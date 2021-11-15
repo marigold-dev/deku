@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1245'
+title: 'Fix: check that Bytes.unpack''s annotated type is an option'
+type: fixed

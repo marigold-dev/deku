@@ -1,0 +1,2 @@
+(contract
+  (fun main (type? (? i) int) : (option $ nat) = (apply is_nat i)))

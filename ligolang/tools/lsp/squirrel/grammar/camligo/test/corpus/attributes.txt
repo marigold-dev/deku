@@ -1,0 +1,157 @@
+=========
+sum
+=========
+
+type foo = [@boom] | True | False
+
+----
+
+(source_file
+  (type_decl
+    (TypeName)
+    (sum_type
+      (attr)
+      (variant (ConstrName))
+      (variant (ConstrName))
+    )
+  )
+)
+
+
+=========
+constr
+=========
+
+type foo = [@boom] True | False
+
+----
+
+(source_file
+  (type_decl
+    (TypeName)
+    (sum_type
+      (variant (attr) (ConstrName))
+      (variant (ConstrName))
+    )
+  )
+)
+
+
+=========
+constr with bar
+=========
+
+type foo = | [@boom] True | False
+
+----
+
+(source_file
+  (type_decl
+    (TypeName)
+    (sum_type
+      (variant (attr) (ConstrName))
+      (variant (ConstrName))
+    )
+  )
+)
+
+
+=========
+record
+=========
+
+type person = [@layout:comb] {
+  name: string;
+}
+
+----
+
+(source_file
+  (type_decl
+    (TypeName)
+    (record_type
+      (attr)
+      (field_decl (FieldName) (TypeName))
+    )
+  )
+)
+
+
+=========
+field twice
+=========
+
+type person = {
+  [@foo][@bar] name: string;
+}
+
+----
+
+(source_file
+  (type_decl
+    (TypeName)
+    (record_type
+      (field_decl (attr) (attr) (FieldName) (TypeName))
+    )
+  )
+)
+
+
+=========
+let decl
+=========
+
+[@annot] let x : int = 1
+
+---
+
+(source_file
+  (let_decl
+    (attr)
+    (var_pattern (NameDecl))
+    (TypeName)
+    (Int)
+  )
+)
+
+
+=========
+let decl twice
+=========
+
+[@annot1][@annot2] let x : int = 1
+
+---
+
+(source_file
+  (let_decl
+    (attr) (attr)
+    (var_pattern (NameDecl))
+    (TypeName)
+    (Int)
+  )
+)
+
+
+=========
+let expr
+=========
+
+let foo (a : int): int =
+  ([@inline] let test = 2 in test)
+
+---
+
+(source_file
+  (fun_decl
+    (NameDecl)
+    (annot_pattern (var_pattern (NameDecl)) (TypeName))
+    (TypeName)
+    (paren_expr
+      (let_in
+        (let_decl (attr) (var_pattern (NameDecl)) (Int))
+        (Name)
+      )
+    )
+  )
+)

@@ -1,0 +1,4 @@
+author: Rémi Lesénéchal
+title: fix a bug where _ patterns where not compiled to fresh variables
+type: fixed
+merge_request: '1359'

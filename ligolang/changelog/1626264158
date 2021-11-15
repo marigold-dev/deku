@@ -1,0 +1,4 @@
+author: er4333
+merge_request: '1209'
+title: 'Testing framework: a call trace is kept for giving context on failure'
+type: added

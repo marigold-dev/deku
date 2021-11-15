@@ -1,0 +1,6 @@
+---
+  title: "Restore earlier fix for lowercase switch cases"
+  merge_request: "1161"
+  author: "@SanderSpies"
+  type: "fixed"
+

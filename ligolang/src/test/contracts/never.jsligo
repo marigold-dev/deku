@@ -1,0 +1,15 @@
+
+type parameter =
+| ["Increment", int]
+| ["Extend", never];
+
+type storage = int;
+
+let main = ([action, store] : [parameter, storage]) : [list<operation>, storage] => {
+  return [
+   (list([]) as list <operation>),
+   (match (action, {
+    Increment: (n : int) => store + n,
+    Extend: (k : never) => (Tezos.never(k) as storage)}))
+  ]
+};

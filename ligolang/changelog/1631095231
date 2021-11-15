@@ -1,0 +1,6 @@
+---
+  title: "Refactor: use Combinators.equal_value to compare record, list, set & map in interpreter"
+  merge_request: "1291"
+  author: "melwyn95"
+  type: "internal"
+

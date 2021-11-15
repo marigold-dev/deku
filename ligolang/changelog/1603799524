@@ -1,0 +1,4 @@
+author: Alexander Bantyev
+merge_request: '852'
+title: 'Fix broken Nix build on MacOS'
+type: fixed

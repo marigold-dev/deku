@@ -1,0 +1,1 @@
+module Pascaligo = CST

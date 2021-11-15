@@ -1,0 +1,9 @@
+{
+  "name": "manpages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "manpages.js",
+  "dependencies": {
+    "jsdom": "^17.0.0"
+  }
+}

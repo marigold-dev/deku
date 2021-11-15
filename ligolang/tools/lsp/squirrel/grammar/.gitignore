@@ -1,0 +1,8 @@
+*/src/binding.cc
+*/src/grammar.json
+*/src/node-types.json
+*/src/parser.c
+*/src/tree_sitter/
+*/Cargo.toml
+*/bindings/
+*/package.json

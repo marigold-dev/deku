@@ -1,0 +1,12 @@
+(library
+  (name BuildSystem)
+  (public_name BuildSystem)
+  (wrapped true)
+  (libraries
+    simple-utils
+    ocamlgraph
+  )
+  (preprocess
+    (pps bisect_ppx --conditional)
+  )
+)

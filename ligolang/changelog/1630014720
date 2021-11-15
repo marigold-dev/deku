@@ -1,0 +1,4 @@
+author: tomjack
+title: Use opam 2.1 in CI
+type: internal
+merge_request: '1278'

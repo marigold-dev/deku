@@ -1,0 +1,42 @@
+{
+  "name": "ligo-website",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "docusaurus start --host 0.0.0.0 --port 3000",
+    "build": "USE_SIMPLE_CSS_MINIFIER=true docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "serve": "docusaurus serve"
+  },
+  "devDependencies": {
+    "@docusaurus/core": "^2.0.0-alpha.70",
+    "@docusaurus/preset-classic": "^2.0.0-alpha.70",
+    "classnames": "^2.2.6",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
+    "webpack": "4.44.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@docusaurus/plugin-client-redirects": "^2.0.0-alpha.70",
+    "@docusaurus/plugin-sitemap": "^2.0.0-alpha.56",
+    "@ligo/syntax": "file:src/@ligo/syntax",
+    "@ligolang/ligo-snippets": "^1.0.1",
+    "axios": "^0.19.2",
+    "caniuse-lite": "^1.0.30001251",
+    "react-codejar": "^1.0.2",
+    "url-loader": "^4.1.1",
+    "yaml": "^1.10.0"
+  }
+}

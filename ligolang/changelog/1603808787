@@ -1,0 +1,6 @@
+---
+  title: "Create polymorphic function and use them in asts and passes to factorize code and simplify maintenance"
+  merge_request: "770"
+  author: "Pierre-Emmanuel Wulfman"
+  type: "internal"
+

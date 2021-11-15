@@ -1,0 +1,6 @@
+---
+  title: "[PascaLIGO/CameLIGO] Rewrite of the parse error messages."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

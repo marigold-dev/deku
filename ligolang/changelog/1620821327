@@ -1,0 +1,5 @@
+author: '@er433'
+merge_request: '1151'
+title: 'vendors/ligo-utils/simple-utils/x_list.ml: added code quality marker, some
+  syntax nits'
+type: changed

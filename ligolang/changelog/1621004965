@@ -1,0 +1,6 @@
+---
+  title: "Improve JsLIGO lexer error messages"
+  merge_request: "1159"
+  author: "@SanderSpies"
+  type: "changed"
+

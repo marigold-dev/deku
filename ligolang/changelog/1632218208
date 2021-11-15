@@ -1,0 +1,5 @@
+author: Rémi Lesénéchal
+title: 'testing framework: deprecates bootstrapped accounts support due to a problem
+  in one of our tezos dependency, this feature will be enabled again in further updates'
+type: removed
+merge_request: '1301'

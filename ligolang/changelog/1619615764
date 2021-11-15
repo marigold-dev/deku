@@ -1,0 +1,4 @@
+author: '@er433'
+merge_request: '1087'
+title: Fix order in which things are evaluated in evaluate-value
+type: fixed

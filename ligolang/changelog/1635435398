@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1390'
+title: 'Fix: add case of GET_AND_UPDATE for Hangzhou'
+type: fixed

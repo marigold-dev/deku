@@ -1,0 +1,12 @@
+(tests
+ (names main_ci)
+ (libraries alcotest-lwt
+            tezos-base
+            tezos-base.unix
+            tezos-stdlib-unix
+            tezos-micheline
+            tezos-crypto
+            tezos-benchmark
+            tezos-benchmark-examples)
+ (package tezos-benchmark-tests)
+ (flags (:standard -open Tezos_base__TzPervasives)))

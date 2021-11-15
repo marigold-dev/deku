@@ -1,0 +1,6 @@
+---
+  title: "[CameLIGO/ReasonLIGO/JsLIGO] Removed predefined constructors true and false."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "internal"
+

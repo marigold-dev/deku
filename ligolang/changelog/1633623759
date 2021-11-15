@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1350'
+title: 'CLI: add a wrapper message for failures'
+type: changed

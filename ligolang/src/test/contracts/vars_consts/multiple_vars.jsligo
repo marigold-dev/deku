@@ -1,0 +1,14 @@
+let foo = (_ : unit) : int =>
+  {
+    let [x,y] = [4,5];
+    x = 2;
+    y = 3;
+    return (x + y);
+  };
+
+let bar = (_ : unit) : int =>
+  {
+    const [x,y] = [4,5];
+    let add = (_ : unit) : int => { return (x + y); };
+    return add();
+  };

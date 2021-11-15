@@ -1,0 +1,4 @@
+author: Tom Jack
+merge_request: '783'
+title: Removed dependencies on the Tezos protocol from compiler stages and passes.
+type: changed

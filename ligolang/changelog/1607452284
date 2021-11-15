@@ -1,0 +1,5 @@
+author: Suzanne Soy
+merge_request: '910'
+title: 'prototype typer: added a separate constraint checking routine which will be
+  executed after type inference'
+type: added

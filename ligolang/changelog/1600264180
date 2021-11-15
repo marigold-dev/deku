@@ -1,0 +1,4 @@
+author: balsoft
+merge_request: '804'
+title: Redeploy website on release to update the changelog
+type: fixed

@@ -1,0 +1,9 @@
+type fooBarBaz =
+  ["Bar", int]
+| ["Baz"];
+
+let main = (f : fooBarBaz) : int =>
+  match(f, {
+    Bar: (i: int) => i,
+    Baz: () => -1
+  });

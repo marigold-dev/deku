@@ -1,0 +1,6 @@
+---
+  title: "Deprecated evaluate-value (now evaluate-expr) and run-function (now evaluate-call)"
+  merge_request: "1131"
+  author: "Suzanne Soy"
+  type: "deprecated"
+

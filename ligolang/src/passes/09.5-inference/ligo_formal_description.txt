@@ -1,0 +1,155 @@
+(** Syntax **)
+The following describe the syntax of the simplify AST which is an internal of LIGO. The concrete syntax will be different depending of the choosen one but all the caterogies are present and the corresponding evaluation are the same
+
+A LIGO program is a succession of declarations and expressions. Declarations add bindings to the environment while expressions are evaluated and yield values
+
+variables (x,X)
+
+Variable are the key to access elements in the environments. They are store with element they refers to at creation.
+label (l)
+
+Label identifies field in records, label always start with a letter
+constructor (C)
+
+Constructor creates custom type's literals for built-in types literals
+declaration (d) = 
+  | type  X is te                       (* Type variable declaration *)
+  | const x (: te)? = e                 (* Term Constant variable declaration *)
+  | var   x (: te)? = e                 (* Term Mutable variable declaration *)
+
+declaration adds binding to the environment i.e. a pair of the variable and the expression it corresponds to
+type expression (te) =
+  | te (* te_i)+                       (* type of tuple *)
+  | (| C_i of te_i)                    (* type of sum *)
+  | { l_i : te_i }                     (* type of record *)
+  | te1 -> te2                         (* type of function *)
+  | X                                  (* type variable *)
+  | Operator (te_i)                    (* built in function on type *)
+
+The above describres all expression that are valid at the level of types
+\newpage
+term expression (e) = 
+  | value                              (* values *)
+  | built-in (e_i)                     (* built-in function *)
+  | x                                  (* variables *)
+  | λx . expr                          (* lambda absctraction *)
+  | e_1 e_2                            (* application *)
+  | let x = e_1 in e_2                 (* let in *)
+  | ( e_i )                            (* tuple *)
+  | { l_i = e_i }                      (* record *)
+  | e(.a_i)                            (* accessor *)
+  | [ e1_i = e2_i ]                    (* map *)
+  | [[ e1_i = e2_i ]]                  (* big map *)
+  | e1[e2]                             (* look up *)
+  | { e_i }                            (* set *)
+  | [ e_i ]                            (* list *)
+  | C e                                (* constructor *)
+  | match e with matching              (* matching *)
+  | e1; e2                             (* sequence *)
+  | while e1 do e2                     (* loop *)
+  | x(.a_i) = e                        (* assign *)
+  | SKIP                               (* skip *)
+  | e as T                             (* ascription *)
+
+The above describes all expression that are valid at the level of terms
+value (v) = 
+  | literal                            (* values of built-in types *)
+  | C v                                (* values of construct types *)
+  | λx . expr                          (* lambda abstraction values *)
+  | ( v_i )                            (* tuple values *)
+  | { l_i = v_i }                      (* record values *)
+  | [ v1_i = v2_i ]                    (* map values *)
+  | [[ v1_i = v2_i ]]                  (* big map values *)
+  | { v_i }                            (* set values *)
+  | [ v_i ]                            (* list values *)
+ 
+Values are valid termination of expression, it can be a built-in or construct literal or an abstraction
+literal =
+  | unit                               (*  *)
+  | bool                               (*  *)
+  | int                                (*  *)
+  | nat                                (*  *)
+  | mutez                              (*  *)
+  | string                             (*  *)
+  | bytes                              (*  *)
+  | address                            (*  *)
+  | timestamp                          (*  *)
+  | operation                          (*  *)
+
+the above lists all predefined literals supported by ligos
+accessor (a) = 
+  | i (natural number)                 (* for tuples *)
+  | l                                  (* for record *)
+
+Accessor are use to access fields of data structure. If S is a structure, S.a if field a of S. 
+matching (m) = 
+  | { true => e; false => e;}          (* match bool *)
+  | { nil  => e; cons(hd::tl) => e;}   (* match list *)
+  | { none => e; some(x)  => e;}       (* match option *)
+  | (x_i)  => e                        (* match tuple *)
+  | ({const_i(x_i) => e_i;} )          (* match variant *)
+
+Matchings represent the different branch of the control flow that are taken depending on what the value 
+it is matched to i.e in "match a :bool with {true => print 'toto'; false => print 'tata'}" the program 
+will display 'toto' if a is true and 'tata' if a is false. notice that if clause are just a boolean matching.
+
+(** Evaluation of expression **)
+The following describes how expression are evaluated to yield expressions $A -> A'$ reads as A evaluates to A', $P ==> Q$ reads as P implies Q
+
+(* base *)
+%Values are not evaluted
+x -> v (corresponding value in the environment)                                                     (* E-VARIABLE *)
+built in (e_i) -> built in result                            (* evaluated depending on each case *) (* E-BUILTIN *)
+SKIP -> unit                                                                                        (* E-SKIP *)
+(λx.e) v -> [ x --> v ] e                                                                           (* E-LAMBDA *)
+Lambda expression are evaluated by replacing the bound variable in the inner expression with the value it is applied to
+e1 -> e1' ==> e1 e2 -> e1' e2                                                                       (* E-APP1 *)
+e2 -> e2' ==> v1 e2 -> v1 e2'                                                                       (* E-APP2 *)
+In application, expressions are evaluated from left to right
+e1 -> e1' ==> let x=e1 in e2 -> let x=e1' in e2                                                     (* E-LET *)
+let x=v1 in e2 -> [x->v1] e2                                                                        (* E-LETIN *)
+In let in the first expression is evaluated to a value before using this value in place of the bound variable in the second expression 
+e1 -> e1' ==> e1; e2 -> e1'; e2                                                                     (* E-SEQ *)
+unit; e2 -> e2                                                                                      (* E-SEQNEXT *)
+In sequence the left expression are evaluated first and shall yield a unit
+while e1 then e2 ==> match e1 with { true => `e2; while e1 then e2` ; false => skip}                (* E-LOOP *)
+In loop, the condition expression is evaluted first, if it is true, the loop yield a sequence with the inner expression follow by a replication of the loop, otherwise the loop yield a unit
+e -> e' ==> x(.a_i) = e -> x(.a_i) = e'                                                             (* E-ASSIGN1 *)
+x(.a_i) = v -> x' with x' as x with field (.a_i) replace by v                                       (* E-ASSIGN2 *)
+In an assign expression, the expression to be assign is evaluated first and then the expression yield the data structure with the corresponding field replace buy the value yield by right expresion
+e -> e' ==> e as T -> e' as T                                                                       (* E-ASCR1 *)
+v as T  -> v                                                                                        (* E-ASCR2 *)  
+Ascription are dropped while being evaluated
+
+(* data structure *)
+e_j -> e_j' ==> (v_i, e_j, e_k) -> (v_i, e_j', e_k)                                                 (* E-TUPLES *)
+e_j -> e_j' ==> {l_i=v_i, l_j=e_j, l_k=e_k} -> {l_i=v_i, l_j=e_j', l_k=e_k}                         (* E-RECORDS *)
+e -> e' ==> e(.a_i) -> e'(.a_i)                                                                     (* E-ACCESS *)
+e1_j -> e1_j' ==> [v1_i=v_i, e1_j=e2_j, e1_k=e2_k] -> [v1_i=v_i, e1_j'=e2_j, e1_k=e2_k]             (* E-MAP1 *)
+e2_j -> e2_j' ==> [v1_i=v_i, v1_j=e2_j, e1_k=e2_k] -> [v1_i=v_i, v1_j=e2_j', e1_k=e2_k]             (* E-MAP2 *)
+e1_j -> e1_j' ==> [[v1_i=v_i, e1_j=e2_j, e1_k=e2_k]] -> [[v1_i=v_i, e1_j'=e2_j, e1_k=e2_k]]         (* E-BIGMAP1 *)
+e2_j -> e2_j' ==> [[v1_i=v_i, v1_j=e2_j, e1_k=e2_k]] -> [[v1_i=v_i, v1_j=e2_j', e1_k=e2_k]]         (* E-BIGMAP2 *)
+e_j -> e_j' ==> [v_i, e_j, e_k] -> [v_i, e_j', e_k]                                                 (* E-LIST *)
+e_j -> e_j' ==> {v_i, e_j, e_k} -> {v_i, e_j', e_k}                                                 (* E-SET *)
+These rules Means in a data structure, expression are fully evaluated from left to right until it reach a value.
+
+(* look up *)
+[v1_i=v2_i][v1_j]  -> v2_j                                                                          (* E-LUPMAP *)
+[[v2_i=v2_i]][v1_j]  -> v2_j                                                                        (* E-LUPBIGMAP *)
+These rules indicated that when a loop up is evaluate to the element in the data-structure whose key/label/indice correspond to the argument of the lookup
+(no evaluation if there is no correspondence)
+
+(* matching *)
+e -> e' ==> C e -> C e'                                                                             (* E-CONST *)
+Constructor are avaluated by evaluating the inner expression
+e -> e' ==> match e with m -> match e' with m                                                       (* E-MATCH1 *)
+match v_i with m -> e_i (if {v_i => e_i} in m)                                                                (* E-MATCH2 *)
+To sum up, in matching expression, the element to be match is first evaluated, then
+the expression is evaluated by looking in the matching value, the element to be match against and extracting the expression given. 
+
+
+
+(** Derive form **)
+The following describe equivalent notation. The AST could define only the right expression and the CST define the left one as syntactic sugar
+e1; e2 ====  (λx:Unit.e2) e1 with x not a free variable in e1 
+let x=e1 in e2 ==== (λx:T1.e2) e1 

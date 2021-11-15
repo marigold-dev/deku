@@ -1,0 +1,6 @@
+---
+  title: "Properly support tuple accessors when using '+' operator."
+  merge_request: "1197"
+  author: "@SanderSpies"
+  type: "fixed"
+

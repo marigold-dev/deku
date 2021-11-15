@@ -1,0 +1,6 @@
+---
+  title: "[PascaLIGO] Fixed pretty-printing."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "fixed"
+

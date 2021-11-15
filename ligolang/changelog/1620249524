@@ -1,0 +1,5 @@
+author: '@er433'
+merge_request: '1138'
+title: 'src/test/test_helpers.ml: added code quality marker, added helper for get_program,
+  use it in other test files'
+type: changed

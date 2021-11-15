@@ -1,0 +1,343 @@
+{
+	"foldingStartMarker": "{",
+	"foldingStopMarker": "}",
+	"name": "ReasonLIGO",
+	"scopeName": "source.religo",
+	"fileTypes": [ "religo", "rligo" ],
+	"patterns": [
+	  { "include": "#macro" },
+	  { "include": "#type-decl" },
+	  { "include": "#let-decl" },
+	  { "include": "#comment" }
+	],
+	"repository": {
+	  "macro": {
+		"name": "string.quoted.double.religo",
+		"begin": "^\\s*((#)\\w+)",
+		"end": "$",
+		"beginCaptures": {
+		  "1": { "name": "meta.preprocessor.religo" },
+		  "2": { "name": "punctuation.definition.directive.religo" }
+		},
+		"endCaptures": {},
+		"patterns": [ { "include": "#string" }, { "include": "#comment" } ]
+	  },
+	  "let-decl": {
+		"begin": "\\b(let)\\b",
+		"end": "(?=let|type|\\[@|\\/\\*|\\/\\/)",
+		"beginCaptures": {
+		  "1": { "name": "keyword.other.let-binding.religo" }
+		},
+		"endCaptures": {},
+		"patterns": [
+		  { "include": "#let-name" },
+		  { "include": "#expr" },
+		  { "include": "#comment" }
+		]
+	  },
+	  "let-name": {
+		"begin": "\\G[ ]*(\\b(rec)\\b\\s\\b)?([a-z_][A-Za-z0-9_]*)\\b",
+		"end": "(\\=)",
+		"beginCaptures": {
+		  "2": { "name": "storage.modifier.recursive.religo" },
+		  "3": { "name": "entity.name.variable.religo" }
+		},
+		"endCaptures": {
+		  "1": { "name": "keyword.operator.assignment.religo" }
+		},
+		"patterns": [
+		  { "include": "#type_annotation" },
+		  { "include": "#comment" }
+		]
+	  },
+	  "type_annotation": {
+		"begin": "\\G[ ]*(\\:)",
+		"end": "(?=\\=)",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [ { "include": "#pattern" }, { "include": "#comment" } ]
+	  },
+	  "operators": {
+		"name": "keyword.operator.religo",
+		"match": "\\b(mod|ediv)\\b|(\\+|\\-|\\*|\\/|==|\\|\\||\\&\\&)",
+		"captures": {}
+	  },
+	  "string": {
+		"name": "string.quoted.double.religo",
+		"begin": "\"",
+		"end": "\"",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [
+		  {
+			"name": "constant.character.escape.religo",
+			"match": "\\\\.",
+			"captures": {}
+		  }
+		]
+	  },
+	  "record_expr": {
+		"begin": "(?<=\\=)\\s*\\{",
+		"end": "\\}",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [
+		  { "include": "#tuple_record_name" },
+		  { "include": "#expr" }
+		]
+	  },
+	  "tuple_record_name": {
+		"begin": "(?<=\\(|,|\\{)\\s*([a-z][A-Za-z0-9_]*)\\s*(?=\\,|:|\\)|\\})",
+		"end": "(?!\\,|\\)|\\})",
+		"beginCaptures": { "1": { "name": "variable.parameter.religo" } },
+		"endCaptures": {},
+		"patterns": [ { "include": "#comment" } ]
+	  },
+	  "tuple_arg_annot_type": {
+		"begin": "\\:[ ]*",
+		"end": "(?=,|\\)|\\=\\>|\\})",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [ { "include": "#pattern" } ]
+	  },
+	  "if-or-switch-block": {
+		"begin": "\\b(if|switch)\\b[ ]*(\\(|[a-z_])",
+		"end": "\\)",
+		"beginCaptures": { "1": { "name": "keyword.control.religo" } },
+		"endCaptures": {},
+		"patterns": [ { "include": "#expr" } ]
+	  },
+	  "constructor": {
+		"name": "variable.other.enummember",
+		"match": "(\\b[A-Z][a-zA-Z0-9_]*(\\b|\\())",
+		"captures": {}
+	  },
+	  "expr": {
+		"patterns": [
+		  { "include": "#string" },
+		  { "include": "#comment" },
+		  { "include": "#if-or-switch-block" },
+		  {
+			"name": "keyword.control.else.religo",
+			"match": "\\b(else)\\b",
+			"captures": {}
+		  },
+		  { "include": "#record_expr" },
+		  { "include": "#tuple_record_name" },
+		  { "include": "#tuple_arg_annot_type" },
+		  { "include": "#builtin-modules" },
+		  { "include": "#operators" },
+		  {
+			"match": "\\b([A-Z][a-zA-Z0-9_]+)\\.\\b",
+			"captures": { "1": { "name": "storage.class.religo" } }
+		  },
+		  {
+			"match": "\\b([a-z_][a-zA-Z0-9_]*)\\b",
+			"captures": { "1": { "name": "storage.var.religo" } }
+		  },
+		  { "include": "#constructor" },
+		  {
+			"name": "constant.numeric.religo",
+			"match": "\\b([0-9_]+)(tez|mutez|n)?\\b",
+			"captures": {}
+		  },
+		  {
+			"name": "constant.numeric.religo",
+			"match": "\\b0x([0-9_]+)?\\b",
+			"captures": {}
+		  },
+		  {
+			"name": "constant.language.religo",
+			"match": "\\b(true|false)\\b",
+			"captures": {}
+		  }
+		]
+	  },
+	  "type-decl": {
+		"begin": "\\b(type)\\b",
+		"end": "(?=let|type|\\[@|\\/\\*|\\/\\/)",
+		"beginCaptures": { "1": { "name": "keyword.other.type.religo" } },
+		"endCaptures": {},
+		"patterns": [
+		  { "include": "#comment" },
+		  { "include": "#type-identifier" },
+		  { "include": "#type-decl-identifier" }
+		]
+	  },
+	  "type-decl-identifier": {
+		"begin": "(=)",
+		"end": "(?=let|type|\\[@|\\/\\*|\\/\\/)",
+		"beginCaptures": {
+		  "1": { "name": "keyword.operator.assignment.religo" }
+		},
+		"endCaptures": {},
+		"patterns": [ { "include": "#comment" }, { "include": "#pattern" } ]
+	  },
+	  "builtin-types": {
+		"name": "support.type.religo",
+		"match":
+		  "\\b(int|nat|address|tez|contract|list|option|unit|bool|signature|bytes|big_map|chain_id|key|key_hash|map|operation|set|string|timestamp)\\b",
+		"captures": {}
+	  },
+	  "builtin-big-map": {
+		"match":
+		  "\\b(Big_map)\\.(empty|literal|find_opt|mem|update|add|remove|get_and_update|identifier)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-bitwise": {
+		"match": "\\b(Bitwise)\\.(and|or|xor|shift_left|shift_right)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-bytes": {
+		"match": "\\b(Bytes)\\.(concat|sub|pack|unpack|length)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-crypto": {
+		"match": "\\b(Crypto)\\.(blake2b|sha256|sha512|hash_key|check)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-list": {
+		"match":
+		  "\\b(List)\\.(length|size|head_opt|tail_opt|iter|map|fold|fold_left|fold_right)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-map": {
+		"match":
+		  "\\b(Map)\\.(empty|literal|find_opt|update|add|remove|iter|map|fold|size|mem|get_and_update)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-set": {
+		"match":
+		  "\\b(Set)\\.(empty|literal|mem|cardinal|add|remove|iter|fold|fold_desc)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-string": {
+		"match": "\\b(String)\\.(length|sub|concat)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-tezos": {
+		"match":
+		  "\\b(Tezos)\\.(now|balance|amount|sender|address|self_address|self|source|implicit_account|create_contract|failwith|chain_id|transaction|set_delegate|get_contract_opt|get_entrypoint_opt|level|pairing_check|sapling_empty_state|sapling_verify_update|create_ticket|read_ticket|split_ticket|join_tickets|level|pairing_check|never)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-test": {
+		"match":
+		  "\\b(Test)\\.(originate|set_now|set_source|set_baker|transfer|transfer_exn|get_storage|get_balance|michelson_equal|log|reset_state|nth_bootstrap_account|last_originations|compile_expression|compile_expression_subst|compile_value)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-toplevel": {
+		"match": "\\b(is_nat|abs|int|failwith|assert|ediv)\\b",
+		"captures": {
+		  "1": { "name": "support.class.religo" },
+		  "2": { "name": "support.function.religo" }
+		}
+	  },
+	  "builtin-modules": {
+		"patterns": [
+		  { "include": "#builtin-big-map" },
+		  { "include": "#builtin-bitwise" },
+		  { "include": "#builtin-bytes" },
+		  { "include": "#builtin-crypto" },
+		  { "include": "#builtin-list" },
+		  { "include": "#builtin-map" },
+		  { "include": "#builtin-set" },
+		  { "include": "#builtin-string" },
+		  { "include": "#builtin-tezos" },
+		  { "include": "#builtin-test" },
+		  { "include": "#builtin-toplevel" }
+		]
+	  },
+	  "pattern": {
+		"patterns": [
+		  { "include": "#pattern-par" },
+		  { "include": "#pattern-record" },
+		  { "include": "#pattern-sum" },
+		  { "include": "#builtin-types" },
+		  {
+			"name": "storage.type.religo",
+			"match": "\\b([_a-z][a-zA-Z0-9$_]*)\\b",
+			"captures": {}
+		  }
+		]
+	  },
+	  "pattern-par": {
+		"begin": "\\(",
+		"end": "\\)",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [ { "include": "#pattern" } ]
+	  },
+	  "pattern-sum": {
+		"match": "\\b(\\|?[A-Z][a-zA-Z0-9_]*)+\\b",
+		"captures": { "1": { "name": "variable.other.enummember" } }
+	  },
+	  "pattern-record": {
+		"begin": "{",
+		"end": "}",
+		"beginCaptures": {},
+		"endCaptures": {},
+		"patterns": [
+		  { "include": "#comment" },
+		  { "include": "#pattern-record-item" }
+		]
+	  },
+	  "pattern-record-item": {
+		"begin": "([a-z_][A-Za-z0-9_]*)",
+		"end": "(?=\\,|\\})",
+		"beginCaptures": { "1": { "name": "entity.name.type.religo" } },
+		"endCaptures": {},
+		"patterns": [ { "include": "#comment" }, { "include": "#pattern" } ]
+	  },
+	  "type-identifier": {
+		"match": "\\b([_a-z][a-zA-Z0-9$_]*)\\b",
+		"captures": { "1": { "name": "entity.name.type.religo" } }
+	  },
+	  "comment": {
+		"patterns": [
+		  {
+			"name": "comment.line.double-slash.religo",
+			"match": "(//.*)",
+			"captures": {}
+		  },
+		  {
+			"name": "comment.block.religo",
+			"begin": "\\/\\*",
+			"end": "\\*\\/",
+			"beginCaptures": {},
+			"endCaptures": {},
+			"patterns": []
+		  }
+		]
+	  }
+	}
+  }

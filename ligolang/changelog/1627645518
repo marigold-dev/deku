@@ -1,0 +1,6 @@
+---
+  title: "[PascaLIGO] Removed predefined constructors Unit, True and False."
+  merge_request: "1179"
+  author: "Christian Rinderknecht"
+  type: "internal"
+
