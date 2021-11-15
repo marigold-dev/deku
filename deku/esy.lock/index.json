@@ -1,5 +1,5 @@
 {
-  "checksum": "9896739b0496f0dae7021bee7c634263",
+  "checksum": "1e2cc3fa665fac34fbfcbb1bb613daf0",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -447,7 +447,7 @@
         "webpack-cli@4.9.1@d41d8cd9", "webpack@5.64.1@d41d8cd9",
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@taquito/taquito@9.2.0@d41d8cd9", "@taquito/signer@9.2.0@d41d8cd9",
-        "@taquito/rpc@9.2.0@d41d8cd9", "@opam/zinc@link:zinc",
+        "@taquito/rpc@9.2.0@d41d8cd9", "@opam/zinc@link:../zinc",
         "@opam/tezos-micheline@opam:8.3@3d86363d",
         "@opam/secp256k1-internal@opam:0.2.0@54945e35",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
@@ -3239,11 +3239,11 @@
       ],
       "devDependencies": []
     },
-    "@opam/zinc@link:zinc": {
-      "id": "@opam/zinc@link:zinc",
+    "@opam/zinc@link:../zinc": {
+      "id": "@opam/zinc@link:../zinc",
       "name": "@opam/zinc",
-      "version": "link:zinc",
-      "source": { "type": "link", "path": "zinc" },
+      "version": "link:../zinc",
+      "source": { "type": "link", "path": "../zinc" },
       "overrides": [],
       "dependencies": [
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
