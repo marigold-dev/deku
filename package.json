@@ -3,6 +3,12 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
+      "rewritePrefix": true,
+      "includePackages": [
+        "root",
+        "esy-gmp",
+        "esy-openssl"
+      ],
       "bin": [
         "sidecli",
         "deku-node"
