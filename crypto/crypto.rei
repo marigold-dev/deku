@@ -6,7 +6,9 @@
 
    TODO: This is a workaround and we should discuss this in the future
     */
+// TODO: the following two modules probably shouldn't be exposed here
 module Base58: (module type of Base58);
+module Encoding_helpers: (module type of Encoding_helpers);
 module Random: (module type of Random);
 module Secp256k1: (module type of Secp256k1);
 module Ed25519: (module type of Ed25519);

@@ -1,4 +1,5 @@
 module Base58 = Base58;
+module Encoding_helpers = Encoding_helpers;
 module Ed25519 = Ed25519;
 module Secp256k1 = Secp256k1;
 module Incremental_patricia = Incremental_patricia;

@@ -8,9 +8,10 @@ module Make =
          type t;
          let to_string: t => string;
          let of_string: string => option(t);
-         /** this is a leaky abstraction */
+         // TODO: this is a leaky abstraction
          let of_raw_string: string => option(t);
          let to_raw_string: t => string;
+
          let equal: (t, t) => bool;
          let compare: (t, t) => int;
 
@@ -18,6 +19,7 @@ module Make =
          let verify: (~hash: t, string) => bool;
 
          let both: (t, t) => t;
+         let size: int;
 
          module Map: Map.S with type key = t;
 
