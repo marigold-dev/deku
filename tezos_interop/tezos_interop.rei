@@ -9,20 +9,6 @@ module Operation_hash: {
   let of_string: string => option(t);
 };
 
-module Pack: {
-  type t;
-
-  let int: Z.t => t;
-  let bytes: bytes => t;
-  let pair: (t, t) => t;
-  let list: list(t) => t;
-  let key: Key.t => t;
-  let key_hash: Key_hash.t => t;
-  let address: Address.t => t;
-
-  let to_bytes: t => bytes;
-};
-
 module Context: {
   type t = {
     rpc_node: Uri.t,
