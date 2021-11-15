@@ -12,10 +12,6 @@ let sign = (~key as secret, hash) => {
   let public_key = Key.of_secret(secret);
   {signature, public_key};
 };
-let signature_to_b58check = t => Signature.to_string(t.signature);
-let signature_to_b58check_by_address = t => {
-  (t.public_key, signature_to_b58check(t));
-};
 let signature_to_signature_by_address = t => (t.public_key, t.signature);
 let verify = (~signature, hash) =>
   Signature.verify(signature.public_key, signature.signature, hash);
