@@ -166,7 +166,7 @@ let try_to_produce_block = (state, update_state) => {
 
   // TODO: avoid spam? how?
   let block = produce_block(state);
-  let signature = sign(~key=state.identity.key, block);
+  let signature = sign(~key=state.identity.secret, block);
   let state =
     append_signature(state, update_state, ~signature, ~hash=block.hash);
   broadcast_block_and_signature(state, ~block, ~signature);
@@ -175,7 +175,7 @@ let try_to_produce_block = (state, update_state) => {
 
 let try_to_sign_block = (state, update_state, block) =>
   if (is_signable(state, block)) {
-    let signature = sign(~key=state.identity.key, block);
+    let signature = sign(~key=state.identity.secret, block);
     broadcast_signature(state, ~hash=block.hash, ~signature);
     append_signature(state, update_state, ~hash=block.hash, ~signature);
   } else {
