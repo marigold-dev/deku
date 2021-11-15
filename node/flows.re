@@ -312,10 +312,9 @@ let received_operation =
             `Invalid_signature_author,
             Address.compare(
               state.Node.identity.t,
-              Signature.public_key(
+              Signature.address(
                 request.operation.Operation.Side_chain.signature,
-              )
-              |> Address.of_wallet,
+              ),
             )
             == 0,
           );
@@ -410,7 +409,7 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
       ...state,
       validators_uri:
         Node.Address_map.add(
-          Signature.public_key(signature) |> Address.of_wallet,
+          Signature.address(signature),
           uri,
           state.validators_uri,
         ),
@@ -451,11 +450,7 @@ let trusted_validators_membership = (state, update_state, request) => {
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Address.compare(
-      state.Node.identity.t,
-      Address.of_wallet(Signature.public_key(signature)),
-    )
-    == 0,
+    Address.compare(state.Node.identity.t, Signature.address(signature)) == 0,
   );
   let.assert () = (
     `Failed_to_verify_payload,
