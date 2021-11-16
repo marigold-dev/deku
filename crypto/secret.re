@@ -2,12 +2,14 @@ open Helpers;
 [@deriving (ord, eq)]
 type t =
   | Ed25519(Ed25519.Secret.t)
-  | Secp256k1(Secp256k1.Secret.t);
+  | Secp256k1(Secp256k1.Secret.t)
+  | P256(P256.Secret.t);
 
 let to_string =
   fun
   | Ed25519(secret) => Ed25519.Secret.to_string(secret)
-  | Secp256k1(secret) => Secp256k1.Secret.to_string(secret);
+  | Secp256k1(secret) => Secp256k1.Secret.to_string(secret)
+  | P256(secret) => P256.Secret.to_string(secret);
 let of_string = {
   let ed25519 = string => {
     let.some secret = Ed25519.Secret.of_string(string);
@@ -17,7 +19,11 @@ let of_string = {
     let.some secret = Secp256k1.Secret.of_string(string);
     Some(Secp256k1(secret));
   };
-  Encoding_helpers.parse_string_variant([ed25519, secp256k1]);
+  let p256 = string => {
+    let.some secret = P256.Secret.of_string(string);
+    Some(P256(secret));
+  };
+  Encoding_helpers.parse_string_variant([ed25519, secp256k1, p256]);
 };
 
 let encoding = {
@@ -46,6 +52,16 @@ let encoding = {
         | _ => None,
         secret =>
         Secp256k1(secret)
+      ),
+      case(
+        Tag(2),
+        P256.Secret.encoding,
+        ~title="P256",
+        fun
+        | P256(secret) => Some(secret)
+        | _ => None,
+        secret =>
+        P256(secret)
       ),
     ]);
   Encoding_helpers.make_encoding(

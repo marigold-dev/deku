@@ -1,7 +1,8 @@
 [@deriving (ord, eq)]
 type t =
   | Ed25519(Ed25519.Key.t)
-  | Secp256k1(Secp256k1.Key.t);
+  | Secp256k1(Secp256k1.Key.t)
+  | P256(P256.Key.t);
 
 let of_secret: Secret.t => t;
 
