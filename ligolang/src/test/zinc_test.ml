@@ -120,7 +120,8 @@ let simple_3 =
     [
       ("my_address", [ Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"; Return ]);
     ]
-    ~expected_output:[ Stack_item.Z (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx") ]
+    ~expected_output:
+      [ Stack_item.Z (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx") ]
 
 let id =
   expect_simple_compile_to "id_func"
@@ -224,7 +225,8 @@ let check_hash_key =
       [
         Stack_item.Record
           (LMap.empty
-          |> LMap.add (Label "0") (Stack_item.Z (Zinc_types.Hash "not sure yet"))
+          |> LMap.add (Label "0")
+               (Stack_item.Z (Zinc_types.Hash "not sure yet"))
           |> LMap.add (Label "1") (Stack_item.Z (Key "Hashy hash!")));
       ]
 
@@ -251,7 +253,10 @@ let get_contract_opt =
   expect_simple_compile_to ~reason:true "get_contract_opt"
     [ ("a", [ Address "whatever"; Contract_opt; Return ]) ]
     ~expected_output:
-      [ Stack_item.Variant (Label "Some", Stack_item.Z (Extensions (Contract ("whatever", None)))) ]
+      [
+        Stack_item.Variant
+          (Label "Some", Stack_item.Z (Extensions (Contract ("whatever", None))));
+      ]
 
 let match_on_sum =
   expect_simple_compile_to ~reason:true "match_on_sum"
@@ -354,20 +359,37 @@ let create_transaction_in_tuple =
             empty
             |> add (Label "0")
                  (Stack_item.Z
-                   (Extensions
-                      (Operation
-                         (Transaction
-                            ( Z.of_int 10,
-                              ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) )))))
+                    (Extensions
+                       (Operation
+                          (Transaction
+                             ( Z.of_int 10,
+                               ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) )))))
             |> add (Label "1")
                  (Stack_item.Z
-                   (Key "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"))
+                    (Key
+                       "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"))
             |> add (Label "2") (Stack_item.Z (String "my string")));
       ]
 
 let list_construction =
   expect_simple_compile_to ~reason:true "list_construction" []
-(* necessary zinc_types primitives not yet implemented *)
+
+let make_an_option =
+  expect_simple_compile_to ~reason:true "make_an_option"
+    [
+      ("a", [ MakeRecord []; MakeVariant (Label "None"); Return ]);
+      ( "b",
+        [
+          MakeRecord [];
+          (* constructing None, from the definition of a *)
+          MakeVariant (Label "None");
+          Grab;
+          MakeRecord [];
+          (* constructing Some *)
+          MakeVariant (Label "Some");
+          Return;
+        ] );
+    ]
 
 let main =
   let open Test_helpers in
@@ -391,4 +413,5 @@ let main =
       test_w "create_transaction_in_tuple" create_transaction_in_tuple;
       test_w "mutez_construction" mutez_construction;
       test_w "list_construction" list_construction;
+      test_w "make_an_option" make_an_option;
     ]
