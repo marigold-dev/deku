@@ -42,7 +42,8 @@
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
-    "@opam/bigstring": "*"
+    "@opam/bigstring": "*",
+    "@opam/domainslib": "0.3.1"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -61,6 +62,10 @@
     "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt-unix": "github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/lwt": "github:Sudha247/lwt-multicore:lwt.opam#321081dcc8dc359bb45d71847c70e01e78a74d02",
+    "@opam/mirage-crypto": "github:marigold-dev/mirage-crypto:mirage-crypto.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
+    "@opam/mirage-crypto-ec": "github:marigold-dev/mirage-crypto:mirage-crypto-ec.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
+    "@opam/mirage-crypto-pk": "github:marigold-dev/mirage-crypto:mirage-crypto-pk.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
+    "@opam/mirage-crypto-rng": "github:marigold-dev/mirage-crypto:mirage-crypto-rng.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
     "@opam/base-domains": {
       "source": "no-source:",
       "override": {}
