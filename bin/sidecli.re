@@ -459,7 +459,7 @@ let info_sign_block = {
 };
 let sign_block = (node_folder, block_hash) => {
   let.await identity = read_identity(~node_folder);
-  let signature = Signature.sign(~key=identity.key, block_hash);
+  let signature = Signature.sign(~key=identity.secret, block_hash);
   let.await validators_uris = validators_uris(node_folder);
   let.await () =
     Networking.(
@@ -503,7 +503,7 @@ let produce_block = node_folder => {
       ~main_chain_ops=[],
       ~side_chain_ops=[],
     );
-  let signature = Block.sign(~key=identity.key, block);
+  let signature = Block.sign(~key=identity.secret, block);
   let.await validators_uris = validators_uris(node_folder);
   let.await () =
     Networking.(
@@ -545,9 +545,9 @@ let setup_identity = (node_folder, uri) => {
   let.await () = ensure_folder(node_folder);
 
   let identity = {
-    let (key, t) = Crypto.Ed25519.generate();
-    let t = Address.of_wallet(Ed25519(t));
-    {uri, t, key: Ed25519(key)};
+    let (secret, key) = Crypto.Ed25519.generate();
+    let t = Address.of_wallet(Ed25519(key));
+    {uri, t, key: Ed25519(key), secret: Ed25519(secret)};
   };
   let.await () = write_identity(~node_folder, identity);
   await(`Ok());
@@ -674,7 +674,7 @@ let info_self = {
 
 let self = node_folder => {
   let.await identity = read_identity(~node_folder);
-  Format.printf("key: %s\n", Wallet.(of_key(identity.key) |> to_string));
+  Format.printf("key: %s\n", Wallet.to_string(identity.key));
   Format.printf("address: %s\n", Address.to_string(identity.t));
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());
@@ -710,7 +710,7 @@ let add_trusted_validator = (node_folder, address) => {
     |> Trusted_validators_membership_change.payload_to_yojson
     |> Yojson.Safe.to_string;
   let payload_hash = BLAKE2B.hash(payload_json_str);
-  let signature = Signature.sign(~key=identity.key, payload_hash);
+  let signature = Signature.sign(~key=identity.secret, payload_hash);
   let.await () =
     Networking.request_trusted_validator_membership(
       {signature, payload},
@@ -762,7 +762,7 @@ let remove_trusted_validator = (node_folder, address) => {
     |> Trusted_validators_membership_change.payload_to_yojson
     |> Yojson.Safe.to_string;
   let payload_hash = BLAKE2B.hash(payload_json_str);
-  let signature = Signature.sign(~key=identity.key, payload_hash);
+  let signature = Signature.sign(~key=identity.secret, payload_hash);
   let.await () =
     Networking.request_trusted_validator_membership(
       {signature, payload},
