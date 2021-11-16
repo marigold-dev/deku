@@ -81,13 +81,6 @@ and ensure_previous_is_signed = (block_and_signatures, t) =>
     };
   | None => t
   };
-let make = (~self_key) => {
-  self_key,
-  available: Hash_map.empty,
-  available_by_previous: Hash_map.empty,
-  signed: Hash_map.empty,
-  signed_by_previous: Hash_map.empty,
-};
 
 let append_block = (block, t) => {
   let block_and_signatures =
@@ -158,3 +151,14 @@ let rec find_all_signed_blocks_above = (blocks, (block, signatures), t) => {
   };
 };
 let find_all_signed_blocks_above = find_all_signed_blocks_above([]);
+
+let make = (~self_key) => {
+  let empty = {
+    self_key,
+    available: Hash_map.empty,
+    available_by_previous: Hash_map.empty,
+    signed: Hash_map.empty,
+    signed_by_previous: Hash_map.empty,
+  };
+  append_block(Block.genesis, empty);
+};
