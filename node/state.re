@@ -199,7 +199,16 @@ let apply_block = (state, block) => {
   let state =
     if (new_epoch) {
       let state = start_new_epoch(state);
-      let new_snapshot = Protocol.hash(state.protocol);
+      let (new_snapshot, state) =
+        switch (get_next_hash(state)) {
+        | Some(snapshot) => (snapshot, state)
+        | None =>
+          let new_snapshot = Protocol.hash(old_state.protocol);
+          (
+            new_snapshot,
+            add_finished_hash(block.block_height, new_snapshot, state),
+          );
+        };
       let state = add_finished_hash(block.block_height, new_snapshot, state);
       let snapshots =
         Snapshots.update(
