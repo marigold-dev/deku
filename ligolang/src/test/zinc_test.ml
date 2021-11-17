@@ -391,6 +391,23 @@ let make_an_option =
         ] );
     ]
 
+let make_a_custom_option =
+  expect_simple_compile_to ~reason:true "make_a_custom_option"
+    [
+      ("a", [ MakeRecord []; MakeVariant (Label "My_none"); Return ]);
+      ( "b",
+        [
+          MakeRecord [];
+          (* constructing My_none, from the definition of a *)
+          MakeVariant (Label "My_none");
+          Grab;
+          MakeRecord [];
+          (* constructing Some *)
+          MakeVariant (Label "My_some");
+          Return;
+        ] );
+    ]
+
 let main =
   let open Test_helpers in
   test_suite "Zinc tests"
@@ -414,4 +431,5 @@ let main =
       test_w "mutez_construction" mutez_construction;
       test_w "list_construction" list_construction;
       test_w "make_an_option" make_an_option;
+      test_w "make_a_custom_option" make_a_custom_option;
     ]
