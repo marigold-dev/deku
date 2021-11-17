@@ -190,8 +190,11 @@ let rec try_to_apply_block = (state, update_state, block) => {
   );
   let.assert () = (
     `Invalid_state_root_hash,
-    state.protocol.state_root_hash == block.state_root_hash
-    || state.next_state_root_hash == block.state_root_hash,
+    BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash)
+    || State.get_next_hash(state)
+    |> Option.map(fst)
+    |> Option.map(BLAKE2B.equal(block.state_root_hash))
+    |> Option.value(~default=false),
   );
 
   let.ok state = apply_block(state, update_state, block);

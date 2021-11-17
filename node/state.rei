@@ -12,6 +12,7 @@ type identity = {
 
 module Address_map: Map.S with type key = Address.t;
 module Uri_map: Map.S with type key = Uri.t;
+module Int64_map: Map.S with type key = int64;
 
 type t = {
   identity,
@@ -23,7 +24,8 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
-  next_state_root_hash: BLAKE2B.t,
+  next_state_root_hash_block_height: int64,
+  finished_hashes: Int64_map.t((BLAKE2B.t, string)),
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
@@ -39,6 +41,14 @@ type t = {
   persist_trusted_membership_change:
     list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
+
+/** Adds a (hash, data) pair to the map of finished hashes,
+    indexed by the block height it was generated on. */
+let add_finished_hash: (int64, (BLAKE2B.t, string), t) => t;
+
+/** Gets the next state root hash.
+    Returns [None] if it is not known. */
+let get_next_hash: t => option((BLAKE2B.t, string));
 
 let make:
   (

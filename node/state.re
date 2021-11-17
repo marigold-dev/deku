@@ -13,6 +13,7 @@ type identity = {
 
 module Address_map = Map.Make(Address);
 module Uri_map = Map.Make(Uri);
+module Int64_map = Map.Make(Int64);
 
 type t = {
   identity,
@@ -24,7 +25,9 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
-  next_state_root_hash: BLAKE2B.t,
+  next_state_root_hash_block_height: int64,
+  // Map from block heights to hash of the state at that height
+  finished_hashes: Int64_map.t((BLAKE2B.t, string)),
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -47,6 +50,31 @@ type t = {
     list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
 
+let add_finished_hash = (block_height, hash, state) => {
+  {
+    ...state,
+    finished_hashes: Int64_map.add(block_height, hash, state.finished_hashes),
+  };
+};
+
+let get_next_hash = state =>
+  Int64_map.find_opt(
+    state.next_state_root_hash_block_height,
+    state.finished_hashes,
+  );
+
+let start_new_epoch = state => {
+  {
+    ...state,
+    next_state_root_hash_block_height: state.protocol.block_height,
+    finished_hashes:
+      Int64_map.filter(
+        (block_height, _) => block_height > state.protocol.block_height,
+        state.finished_hashes,
+      ),
+  };
+};
+
 let make =
     (
       ~identity,
@@ -64,8 +92,8 @@ let make =
   let initial_block_pool =
     Block_pool.make(~self_key=identity.key)
     |> Block_pool.append_block(initial_block);
+  let initial_snapshot = Protocol.hash(initial_protocol);
   let initial_snapshots = {
-    let initial_snapshot = Protocol.hash(initial_protocol);
     Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
   };
   {
@@ -78,13 +106,15 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
-    next_state_root_hash: initial_block.state_root_hash,
+    next_state_root_hash_block_height: 0L,
+    finished_hashes: Int64_map.empty,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
     recent_operation_results: BLAKE2B.Map.empty,
     persist_trusted_membership_change,
-  };
+  }
+  |> add_finished_hash(0L, initial_snapshot);
 };
 
 let commit_state_hash = state =>
@@ -168,14 +198,16 @@ let apply_block = (state, block) => {
   let new_epoch = block.state_root_hash != old_state.protocol.state_root_hash;
   let state =
     if (new_epoch) {
+      let state = start_new_epoch(state);
       let new_snapshot = Protocol.hash(state.protocol);
+      let state = add_finished_hash(block.block_height, new_snapshot, state);
       let snapshots =
         Snapshots.update(
           ~new_snapshot,
           ~applied_block_height=state.protocol.block_height,
           state.snapshots,
         );
-      {...state, snapshots, next_state_root_hash: fst(new_snapshot)};
+      {...state, snapshots};
     } else {
       state;
     };
