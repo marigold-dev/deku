@@ -168,8 +168,10 @@ and other_compile :
   | E_mod_alias _mod_alias -> failwith "E_mod_alias unimplemented"
   | E_raw_code _raw_code -> failwith "E_raw_code unimplemented"
   (* Variant *)
-  | E_constructor _constructor ->
-      failwith "E_constructor unimplemented" (* For user defined constructors *)
+  | E_constructor { constructor = Label constructor; element } ->
+      compile_known_function_application environment
+        (fun ~k -> MakeVariant (Zinc_utils.Label constructor) :: k)
+        [ element ] ~k
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
   | E_record expression_label_map ->
