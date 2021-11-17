@@ -16,5 +16,6 @@
         "**/gitlab-pages/**": true,
         "**/_esy/**": true,
         "**/node_modules/**": true,
-    }
+    },
+    "files.eol": "\n",
 }
