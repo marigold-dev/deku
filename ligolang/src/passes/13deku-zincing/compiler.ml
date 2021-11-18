@@ -104,15 +104,16 @@ and other_compile :
     in
     other_compile environment ~k:(Grab :: result_compiled) value
   in
-  let compile_known_function_application =
-    compile_known_function_application ~raise
+  let compile_known_function_application environment compiled_func args ~k =
+    compile_known_function_application ~raise environment (compiled_func ~k)
+      args
   in
   let compile_function_application ~function_compiler environment expr args ~k =
     PushRetAddr k
     ::
     compile_known_function_application environment
-      (function_compiler environment expr ~k:[ Apply ])
-      args
+      (fun ~k -> function_compiler environment expr ~k:(Apply :: k))
+      args ~k
   in
   match expr.expression_content with
   | E_literal literal -> (
@@ -130,10 +131,11 @@ and other_compile :
             (Format.asprintf "literal type not supported: %a"
                Ast_typed.PP.literal x))
   | E_constant constant ->
-      let compile_constant = compile_constant ~raise expr.type_expression in
-      compile_known_function_application environment
-        (compile_constant constant k)
-        constant.arguments
+      let compiled_constant =
+        compile_constant ~raise expr.type_expression constant
+      in
+      compile_known_function_application environment compiled_constant
+        constant.arguments ~k
   | E_variable ({ wrap_content = variable; location = _ } as binder) -> (
       let find_index x lst =
         let rec func x lst c =
@@ -166,23 +168,27 @@ and other_compile :
   | E_mod_alias _mod_alias -> failwith "E_mod_alias unimplemented"
   | E_raw_code _raw_code -> failwith "E_raw_code unimplemented"
   (* Variant *)
-  | E_constructor _constructor ->
-      failwith "E_constructor unimplemented" (* For user defined constructors *)
+  | E_constructor { constructor = Label constructor; element } ->
+      compile_known_function_application environment
+        (fun ~k -> MakeVariant (Zinc_utils.Label constructor) :: k)
+        [ element ] ~k
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
   | E_record expression_label_map ->
       let bindings = Stage_common.Types.LMap.bindings expression_label_map in
       compile_known_function_application environment
-        (MakeRecord
-           (List.map
-              ~f:(fun (Stage_common.Types.Label k, _) -> Zinc_utils.Label k)
-              bindings)
-         :: k)
+        (fun ~k ->
+          MakeRecord
+            (List.map
+               ~f:(fun (Stage_common.Types.Label k, _) -> Zinc_utils.Label k)
+               bindings)
+          :: k)
         (List.map ~f:(fun (_, value) -> value) bindings)
+        ~k
   | E_record_accessor { record; path = Stage_common.Types.Label path } ->
       compile_known_function_application environment
-        (RecordAccess (Zinc_utils.Label path) :: k)
-        [ record ]
+        (fun ~k -> RecordAccess (Zinc_utils.Label path) :: k)
+        [ record ] ~k
   | E_record_update _record_update -> failwith "E_record_update unimplemented"
   | E_type_inst _ -> failwith "E_type_inst unimplemented"
   | E_module_accessor _module_access ->
@@ -192,9 +198,9 @@ and compile_constant :
     raise:Errors.zincing_error raise ->
     AST.type_expression ->
     AST.constant ->
-    'a zinc ->
+    k:'a zinc ->
     'a zinc =
- fun ~raise:_ _ constant k ->
+ fun ~raise:_ _ constant ~k ->
   match constant.cons_name with
   | C_CHAIN_ID -> ChainID :: k
   | C_HASH_KEY -> HashKey :: k
