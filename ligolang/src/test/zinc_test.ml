@@ -60,7 +60,6 @@ type test =
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?(index = 0)
     ?(initial_stack = []) ?expect_failure ?expected_output_env ?expected_output
     contract_file (expected_zinc : Zinc_types.program) : test =
- let open Ligo_compile.Helpers in  
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
@@ -236,12 +235,12 @@ let check_hash_key =
       ]
 
 let basic_function_application =
-  expect_simple_compile_to ~dialect:Reasonligo "basic_function_application"
+  expect_simple_compile_to ~dialect:ReasonLIGO "basic_function_application"
     [ ("a", [ Plain_old_data (Num (Z.of_int 3)); Core Grab; Core (Access 0); Core Return ]) ]
     ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 3))) ]
 
 let basic_link =
-  expect_simple_compile_to ~dialect:Reasonligo "basic_link"
+  expect_simple_compile_to ~dialect:ReasonLIGO "basic_link"
     [
       ("a", [ Plain_old_data (Num (Z.of_int 1)); Core Return ]);
       ("b", [ Plain_old_data (Num (Z.of_int 1)); Core Grab; Core (Access 0); Core Return ]);
@@ -250,12 +249,12 @@ let basic_link =
     ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 1))) ]
 
 let failwith_simple =
-  expect_simple_compile_to ~dialect:Reasonligo "failwith_simple"
+  expect_simple_compile_to ~dialect:ReasonLIGO "failwith_simple"
     [ ("a", [ Plain_old_data (String "Not a contract"); Control_flow Failwith; Core Return ]) ]
     ~expect_failure:"Not a contract"
 
 let get_contract_opt =
-  expect_simple_compile_to ~dialect:Reasonligo "get_contract_opt"
+  expect_simple_compile_to ~dialect:ReasonLIGO "get_contract_opt"
     [ ("a", [ Plain_old_data (Address "whatever"); Domain_specific_operation Contract_opt; Core Return ]) ]
     ~expected_output:
       [
@@ -264,7 +263,7 @@ let get_contract_opt =
       ]
 
 let match_on_sum =
-  expect_simple_compile_to ~dialect:Reasonligo "match_on_sum"
+  expect_simple_compile_to ~dialect:ReasonLIGO "match_on_sum"
     [
       ( "a",
         [
@@ -291,11 +290,11 @@ let match_on_sum =
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
-  expect_simple_compile_to ~dialect:Reasonligo "mutez_construction"
+  expect_simple_compile_to ~dialect:ReasonLIGO "mutez_construction"
     [ ("a", [ Plain_old_data (Mutez (Z.of_int 1)); Core Return ]) ]
 
 let create_transaction =
-  expect_simple_compile_to ~dialect:Reasonligo "create_transaction"
+  expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction"
     [
       ( "a",
         [
@@ -329,7 +328,7 @@ let create_transaction =
 
 let create_transaction_in_tuple =
   let open Zinc_utils in
-  expect_simple_compile_to ~dialect:Reasonligo "create_transaction_in_tuple"
+  expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction_in_tuple"
     [
       ( "a",
         [
@@ -374,17 +373,150 @@ let create_transaction_in_tuple =
       ]
 
 let list_construction =
-  expect_simple_compile_to ~dialect:Reasonligo "list_construction" 
+  expect_simple_compile_to ~dialect:ReasonLIGO "list_construction" 
   [("a", [Plain_old_data Nil; Plain_old_data (Mutez (Z.of_int 2)); Operation Cons; Plain_old_data (Mutez (Z.of_int 1)); Operation Cons; Core Return])]
   ~expected_output:[
     (Zinc_types.Stack_item.List
       [ 
         (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 1))));
         (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 2))))
-      ]
+      ])
+  ]
 
+
+let bools_religo =
+  expect_simple_compile_to ~dialect:ReasonLIGO "bools"
+    [("a", [(Plain_old_data (Bool true)); (Core Return)]);
+                ("b",
+                 [(Plain_old_data (Bool true)); (Core Grab);
+                   (Plain_old_data (Bool false)); (Core Return)]);
+                ("lf",
+                 [(Plain_old_data (Bool false)); (Core Grab);
+                   (Plain_old_data (Bool true)); (Core Grab);
+                   (Plain_old_data (Bool false)); (Core Grab);
+                   (Core (Access 0)); (Core Grab); (Core (Access 0));
+                   (Adt
+                      (MatchVariant
+                         [("False", [(Core Grab); (Core (Access 3))]);
+                           ("True", [(Core Grab); (Core (Access 3))])]));
+                   (Core Return)])
+                ]
+    ~expected_output:[(Zinc_types.Stack_item.Z (Plain_old_data (Bool true)))]
+
+let bools_ligo =
+  expect_simple_compile_to ~dialect:PascaLIGO "bools"
+    [("a", [(Plain_old_data (Bool true)); (Core Return)]);
+                ("b",
+                 [(Plain_old_data (Bool true)); (Core Grab);
+                   (Plain_old_data (Bool false)); (Core Return)]);
+                ("lf",
+                 [(Plain_old_data (Bool false)); (Core Grab);
+                   (Plain_old_data (Bool true)); (Core Grab); (Core Grab);
+                   (Core (Access 0)); (Core Grab); (Core (Access 0));
+                   (Adt
+                      (MatchVariant
+                         [("False", [(Core Grab); (Core (Access 3))]);
+                           ("True", [(Core Grab); (Core (Access 3))])]));
+                   (Core Return)])
+                ]
+    ~expected_output:[(Zinc_types.Stack_item.Z (Plain_old_data (Bool true)))]
+
+let bool_ops =
+  expect_simple_compile_to ~dialect:PascaLIGO "boolean_operators"
+    [("or_true",
+                [(Core Grab); (Plain_old_data (Bool true));
+                  (Core (Access 0)); (Operation Or); (Core Return)]);
+                ("or_false",
+                 [(Core
+                     (Closure
+                        [(Core Grab); (Plain_old_data (Bool true));
+                          (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab); (Core Grab); (Plain_old_data (Bool false));
+                   (Core (Access 0)); (Operation Or); (Core Return)]);
+                ("and_true",
+                 [(Core
+                     (Closure
+                        [(Core Grab); (Plain_old_data (Bool false));
+                          (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool true));
+                           (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab); (Core Grab); (Plain_old_data (Bool true));
+                   (Core (Access 0)); (Operation And); (Core Return)]);
+                ("and_false",
+                 [(Core
+                     (Closure
+                        [(Core Grab); (Plain_old_data (Bool true));
+                          (Core (Access 0)); (Operation And); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool false));
+                           (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool true));
+                           (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab); (Core Grab); (Plain_old_data (Bool false));
+                   (Core (Access 0)); (Operation And); (Core Return)]);
+                ("not_bool",
+                 [(Core
+                     (Closure
+                        [(Core Grab); (Plain_old_data (Bool false));
+                          (Core (Access 0)); (Operation And); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool true));
+                           (Core (Access 0)); (Operation And); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool false));
+                           (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab);
+                   (Core
+                      (Closure
+                         [(Core Grab); (Plain_old_data (Bool true));
+                           (Core (Access 0)); (Operation Or); (Core Return)]));
+                   (Core Grab); (Core Grab); (Core (Access 0));
+                   (Operation Not); (Core Return)])
+                ]
+    ~initial_stack:[ Stack_item.Z (Plain_old_data (Bool false)) ]
+    ~expected_output:[ Stack_item.Z (Plain_old_data  (Bool true)) ]
+
+let if_then_else_op =
+  let open Z in 
+  expect_simple_compile_to ~dialect:PascaLIGO "if_then_else_op"
+    [("a", [(Plain_old_data (Num ~$2)); (Core Return)]);
+                ("b",
+                 [(Plain_old_data (Num ~$2)); (Core Grab);
+                   (Plain_old_data (Num ~$3)); (Core Return)]);
+                ("lf",
+                 [(Plain_old_data (Num ~$3)); (Core Grab);
+                   (Plain_old_data (Num ~$2)); (Core Grab); (Core Grab);
+                   (Core (Access 0)); (Core Grab); (Core (Access 0));
+                   (Core Grab); (Core (Access 0)); (Adt (RecordAccess 1));
+                   (Core Grab); (Core (Access 1)); (Adt (RecordAccess 0));
+                   (Core Grab); (Core (Access 1)); (Core (Access 0));
+                   (Operation Or); (Core Grab); (Core (Access 0));
+                   (Adt
+                      (MatchVariant
+                         [("False", [(Core Grab); (Core (Access 7))]);
+                           ("True", [(Core Grab); (Core (Access 7))])]));
+                   (Core EndLet); (Core EndLet); (Core EndLet);
+                   (Core EndLet); (Core Return)])
+                ]
+    ~initial_stack:[ Stack_item.Z (Plain_old_data (Bool true)); Stack_item.Z (Plain_old_data (Bool true)) ]
+    ~expected_output:
+      [(Zinc_types.Stack_item.Z (Plain_old_data (Num ~$2)));
+                (Zinc_types.Stack_item.Z (Plain_old_data (Bool true)));
+                (Zinc_types.Stack_item.Z (Plain_old_data (Bool true)))]
 let make_an_option =
-  expect_simple_compile_to ~dialect:Reasonligo "make_an_option"
+  expect_simple_compile_to ~dialect:ReasonLIGO "make_an_option"
     [
       ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "None"); Core Return ]);
       ( "b",
@@ -401,7 +533,7 @@ let make_an_option =
     ]
 
 let make_a_custom_option =
-  expect_simple_compile_to ~dialect:Reasonligo "make_a_custom_option"
+  expect_simple_compile_to ~dialect:ReasonLIGO "make_a_custom_option"
     [
       ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "My_none"); Core Return ]);
       ( "b",
@@ -424,6 +556,10 @@ let main =
       test_w "simple1" simple_1;
       test_w "simple2" simple_2;
       test_w "simple3" simple_3;
+      test_w "bools_religo" bools_religo;
+      test_w "bools_ligo" bools_ligo;
+      test_w "bool_ops" bool_ops;
+      test_w "if with ops" if_then_else_op;
       test_w "id" id;
       test_w "chain_id" chain_id;
       test_w "chain_id_func" chain_id_func;
@@ -441,4 +577,5 @@ let main =
       test_w "list_construction" list_construction;
       test_w "make_an_option" make_an_option;
       test_w "make_a_custom_option" make_a_custom_option;
+      
     ]

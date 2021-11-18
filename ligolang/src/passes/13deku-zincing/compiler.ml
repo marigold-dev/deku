@@ -164,8 +164,19 @@ and other_compile :
   | E_type_in _type_in -> failwith "E_type_in unimplemented"
   | E_mod_in _mod_in -> failwith "E_mod_in unimplemented"
   | E_mod_alias _mod_alias -> failwith "E_mod_alias unimplemented"
-  | E_raw_code _raw_code -> failwith "E_raw_code unimplemented"
-  (* Variant *)
+  | E_raw_code _raw_code -> failwith "E_raw_code unimplemented" (* Variant *)
+  | E_constructor { constructor = Label name; element }
+    when String.equal name "True" && element.expression_content = AST.e_unit ()
+    ->
+      compile_constant ~raise expr.type_expression
+        { cons_name = C_TRUE; arguments = [] }
+        ~k
+  | E_constructor { constructor = Label name; element }
+    when String.equal name "False" && element.expression_content = AST.e_unit ()
+    ->
+      compile_constant ~raise expr.type_expression
+        { cons_name = C_FALSE; arguments = [] }
+        ~k
   | E_constructor { constructor = Label constructor; element } ->
       compile_known_function_application environment
         (fun ~k -> Adt (MakeVariant (constructor)) :: k)
@@ -173,8 +184,7 @@ and other_compile :
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
   | E_record expression_label_map ->
-    let bindings = Stage_common.Types.LMap.bindings  expression_label_map
-    in
+      let bindings = Stage_common.Types.LMap.bindings expression_label_map in
       compile_known_function_application environment
         (fun ~k ->
           Adt (MakeRecord
@@ -182,18 +192,25 @@ and other_compile :
           :: k)
         (List.map ~f:(fun (_, value) -> value) bindings)
         ~k
-  | E_record_accessor { record; path = path } ->
-     let rows = record.type_expression.type_content in
-     let label =  match rows with 
-     | T_record rows -> 
-      let[@warning "-8"] Some (label, _) = 
-        let bindings = LMap.bindings rows.content in
-        List.findi bindings ~f:(fun _ (k, _) -> k = path ) in 
-      label
-     | T_constant _typ ->
-       let Stage_common.Types.Label path = path in 
-       int_of_string path
-     | _ -> failwith "other" in
+  | E_record_accessor { record; path } ->
+      let rows = record.type_expression.type_content in
+      let label =
+        match rows with
+        | T_record rows ->
+            let[@warning "-8"] (Some (label, _)) =
+              let bindings = LMap.bindings rows.content in
+              List.findi bindings ~f:(fun _ (k, _) -> k = path)
+            in
+            label
+        | T_constant _typ ->
+            let (Stage_common.Types.Label path) = path in
+            int_of_string path
+        | T_sum _rows ->
+            let (Label path) = path in
+            int_of_string path
+        | x ->
+            Format.asprintf "constructor %a\n" AST.PP.type_content x |> failwith
+      in
       compile_known_function_application environment
         (fun ~k -> Adt (RecordAccess label) :: k)
         [ record ] ~k
@@ -222,6 +239,11 @@ and compile_constant :
   | C_SOME -> Adt (MakeVariant ("Some") ):: k
   | C_CONS -> Operation Cons :: k 
   | C_LIST_EMPTY -> Plain_old_data Nil :: k
+  | C_TRUE -> Plain_old_data (Bool true) :: k
+  | C_FALSE -> Plain_old_data (Bool false) :: k
+  | C_OR -> Operation Or :: k
+  | C_AND -> Operation And :: k
+  | C_NOT -> Operation Not :: k
   | name ->
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)
@@ -336,6 +358,25 @@ and compile_pattern_matching :
       in
       other_compile environment lettified ~k
   | T_option _, Match_variant { cases; _ } ->
+      let code =
+        Adt (MatchVariant
+          (List.map
+             ~f:
+               (fun {
+                      constructor = Label label;
+                      pattern = { wrap_content = pattern; _ };
+                      body;
+                    } ->
+               (* We assume that the interpreter will put the matched value on the stack *)
+               let compiled =
+                 Core Grab
+                 :: other_compile (add_binder pattern environment) body ~k:[]
+               in
+               (label, compiled))
+             cases))
+      in
+      other_compile environment to_match.matchee ~k:(code :: k)
+  | T_base TB_bool, Match_variant { cases; _ } ->
       let code =
         Adt (MatchVariant
           (List.map
