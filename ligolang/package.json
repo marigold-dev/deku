@@ -32,7 +32,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "dune build -w @zinctest --no-buffer",
+    "test": "dune build -w @runtest --no-buffer",
+    "zinctest": "dune build -w @zinctest --no-buffer",
     "format": "dune build @fmt --auto-promote"
   },
   "dependencies": {
