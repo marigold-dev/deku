@@ -65,28 +65,29 @@ let[@warning "-4"] interpret_zinc :
         Continue (c, env, Stack_item.Z v :: s)
     (* ADTs *)
     | (MakeRecord r :: c, env, s) ->
-        let rec zipExtra x y =
-          match (x, y) with
-          | (x :: xs, y :: ys) ->
-              let (zipped, extra) = zipExtra xs ys in
-              ((x, y) :: zipped, extra)
-          | ([], y) -> ([], y)
-          | _ -> failwith "more items in left list than in right"
+        let list_split_at ~n lst =
+          let rec go n acc = function
+            | [] ->
+                if Int.equal n 0 then (acc, [])
+                else raise (Invalid_argument "not enough entries on the list")
+            | x when Int.equal n 0 -> (acc, x)
+            | x :: xs -> go (n - 1) (x :: acc) xs
+          in
+          go n [] lst
         in
-        let (record_contents, new_stack) = zipExtra r s in
-        let record_contents =
-          Base.List.fold
-            record_contents
-            ~init:LMap.empty
-            ~f:(fun acc (label, value) -> acc |> LMap.add label value)
-        in
-        Continue (c, env, Stack_item.Record record_contents :: new_stack)
+        let (record, stack) = list_split_at ~n:r s in
+        let record_contents = LMap.of_list (List.rev record) in
+        Continue (c, env, Stack_item.Record record_contents :: stack)
     | (RecordAccess accessor :: c, env, Stack_item.Record r :: s) ->
-        Continue (c, env, (r |> LMap.find accessor) :: s)
-    | (MatchVariant vs :: c, env, Stack_item.Variant (Label label, item) :: s)
-      -> (
+        let res =
+          match LMap.find r accessor with
+          | None -> failwith "field not found"
+          | Some x -> Continue (c, env, x :: s)
+        in
+        res
+    | (MatchVariant vs :: c, env, Stack_item.Variant (label, item) :: s) -> (
         match
-          Base.List.find_map vs ~f:(fun (Label match_arm, constructors) ->
+          Base.List.find_map vs ~f:(fun (match_arm, constructors) ->
               if String.equal match_arm label then Some constructors else None)
         with
         | None -> Internal_error "inexhaustive match"
@@ -121,9 +122,9 @@ let[@warning "-4"] interpret_zinc :
           match interpreter_context.get_contract_opt address with
           | Some (address, entrypoint) ->
               Stack_item.Variant
-                ( Label "Some",
+                ( "Some",
                   Stack_item.Z (Extensions (Contract (address, entrypoint))) )
-          | None -> Stack_item.Variant (Label "None", Utils.unit_record_stack)
+          | None -> Stack_item.Variant ("None", Utils.unit_record_stack)
         in
         Continue (c, env, contract :: s)
     | ( MakeTransaction :: c,
