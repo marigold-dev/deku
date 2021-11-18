@@ -9,7 +9,8 @@ external stack_to_env_ext : Stack_item.t -> Env_item.t = "%identity"
 let stack_to_env = function
   | Stack_item.Marker _ ->
       failwith "type error, cant convert a stack_item into an env_item"
-  | Stack_item.(Clos _ | Record _ | Variant _ | Z _) as x -> stack_to_env_ext x
+  | Stack_item.(Clos _ | Record _ | Variant _ | Z _ | List _) as x ->
+      stack_to_env_ext x
 
 type steps =
   | Done
@@ -35,6 +36,9 @@ let[@warning "-4"] interpret_zinc :
            stack)
     in
     match (code, env, stack) with
+    | (Nil :: c, env, s) -> Continue (c, env, Stack_item.List [] :: s)
+    | (Cons :: c, env, item :: Stack_item.List x :: s) ->
+        Continue (c, env, Stack_item.List (item :: x) :: s)
     | (Grab :: c, env, Stack_item.Marker (c', e') :: s) ->
         Continue (c', e', Stack_item.Clos {Clos.code = Grab :: c; env} :: s)
     | (Grab :: c, env, v :: s) -> Continue (c, stack_to_env v :: env, s)

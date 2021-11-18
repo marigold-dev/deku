@@ -372,7 +372,16 @@ let create_transaction_in_tuple =
       ]
 
 let list_construction =
-  expect_simple_compile_to ~reason:true "list_construction" []
+  expect_simple_compile_to ~reason:true "list_construction" 
+  [("a", [Nil; (Mutez (Z.of_int 2)); Cons; (Mutez (Z.of_int 1)); Cons; Return])]
+  ~expected_output:[
+    (Zinc_types.Stack_item.List
+      [ 
+        (Zinc_types.Stack_item.Z (Mutez (Z.of_int 1)));
+        (Zinc_types.Stack_item.Z (Mutez (Z.of_int 2)))
+      ]
+    )
+  ]
 
 let make_an_option =
   expect_simple_compile_to ~reason:true "make_an_option"

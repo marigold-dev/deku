@@ -39,6 +39,9 @@ type 'a zinc_instruction =
   | RecordAccess of label
   | MakeVariant of variant_label
   | MatchVariant of (variant_label * 'a zinc) list
+  (* Lists *)
+  | Nil
+  | Cons
   (* Crypto *)
   | Key of string
   | HashKey
@@ -98,6 +101,7 @@ module rec Env_item : sig
     | Z of zinc_instruction_extended
     | Clos of Clos.t
     | Record of Stack_item.t LMap.t
+    | List of Stack_item.t list
     | Variant of variant_label * Stack_item.t
   [@@deriving show, eq, yojson]
 end = struct
@@ -105,6 +109,7 @@ end = struct
     | Z of zinc_instruction_extended
     | Clos of Clos.t
     | Record of Stack_item.t LMap.t
+    | List of Stack_item.t list
     | Variant of variant_label * Stack_item.t
   [@@deriving show, eq, yojson]
 end
@@ -114,6 +119,7 @@ and Stack_item : sig
     | Z of zinc_instruction_extended
     | Clos of Clos.t
     | Record of t LMap.t
+    | List of t list
     | Variant of variant_label * t
     | Marker of zinc_extended * Env_item.t list
   [@@deriving show, eq, yojson]
@@ -122,6 +128,7 @@ end = struct
     | Z of zinc_instruction_extended
     | Clos of Clos.t
     | Record of t LMap.t
+    | List of t list
     | Variant of variant_label * t
     | Marker of zinc_extended * Env_item.t list
   [@@deriving show, eq, yojson]
