@@ -6,7 +6,7 @@ module Address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
     address: Address.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   module Map =
     Map.Make_with_yojson({
@@ -26,10 +26,10 @@ module Handle = {
     id: int,
     owner: Tezos.Address.t,
     amount: Amount.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   let hash = (~id, ~owner, ~amount, ~ticket) => {
-    let Ticket.{ticketer, data} = ticket;
+    let Ticket_id.{ticketer, data} = ticket;
     Tezos.Deku.Consensus.hash_withdraw_handle(
       ~id=Z.of_int(id),
       ~owner,

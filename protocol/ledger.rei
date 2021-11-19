@@ -9,22 +9,28 @@ module Handle: {
       id: int,
       owner: Tezos.Address.t,
       amount: Amount.t,
-      ticket: Ticket.t,
+      ticket: Ticket_id.t,
     };
 };
 
 [@deriving yojson]
 type t;
 let empty: t;
-let balance: (Address.t, Ticket.t, t) => Amount.t;
+let balance: (Address.t, Ticket_id.t, t) => Amount.t;
 let transfer:
-  (~source: Address.t, ~destination: Address.t, Amount.t, Ticket.t, t) =>
+  (~source: Address.t, ~destination: Address.t, Amount.t, Ticket_id.t, t) =>
   result(t, [> | `Not_enough_funds]);
 
 // on chain ops
-let deposit: (Address.t, Amount.t, Ticket.t, t) => t;
+let deposit: (Address.t, Amount.t, Ticket_id.t, t) => t;
 let withdraw:
-  (~source: Address.t, ~destination: Tezos.Address.t, Amount.t, Ticket.t, t) =>
+  (
+    ~source: Address.t,
+    ~destination: Tezos.Address.t,
+    Amount.t,
+    Ticket_id.t,
+    t
+  ) =>
   result((t, Handle.t), [> | `Not_enough_funds]);
 
 let handles_find_proof: (Handle.t, t) => list((BLAKE2B.t, BLAKE2B.t));

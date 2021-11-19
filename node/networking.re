@@ -187,7 +187,7 @@ module Ticket_balance = {
   [@deriving yojson]
   type request = {
     address: Address.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   [@deriving yojson]
   type response = {amount: Amount.t};
