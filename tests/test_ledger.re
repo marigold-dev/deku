@@ -26,7 +26,7 @@ describe("ledger", ({test, _}) => {
       | Some(data) => data
       | None => Random.generate(256) |> Cstruct.to_bytes
       };
-    Ticket.{ticketer, data};
+    Ticket_id.{ticketer, data};
   };
   let make_address = () => snd(Address.make());
   let make_tezos_address = () => {
