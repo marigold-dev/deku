@@ -464,7 +464,7 @@ let trusted_validators_membership = (state, update_state, request) => {
         state.Node.trusted_validator_membership_change,
       )
     | Remove =>
-      Trusted_validators_membership_change.Set.remove(
+      Trusted_validators_membership_change.Set.add(
         {action: Remove, address},
         state.Node.trusted_validator_membership_change,
       )
