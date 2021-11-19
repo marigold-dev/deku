@@ -22,14 +22,6 @@ module Main_chain: {
 
   let make:
     (~tezos_hash: Tezos.Operation_hash.t, ~tezos_index: int, ~kind: kind) => t;
-  let verify:
-    (
-      ~hash: BLAKE2B.t,
-      ~tezos_hash: Tezos.Operation_hash.t,
-      ~tezos_index: int,
-      ~kind: kind
-    ) =>
-    result(t, string);
 };
 
 module Side_chain: {
@@ -69,15 +61,4 @@ module Side_chain: {
       ~kind: kind
     ) =>
     t;
-
-  let verify:
-    (
-      ~hash: BLAKE2B.t,
-      ~signature: Protocol_signature.t,
-      ~nonce: int32,
-      ~block_height: int64,
-      ~source: Address.t,
-      ~kind: kind
-    ) =>
-    result(t, string);
 };
