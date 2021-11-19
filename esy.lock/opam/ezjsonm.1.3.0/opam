@@ -7,10 +7,13 @@ homepage: "https://github.com/mirage/ezjsonm"
 doc: "https://mirage.github.io/ezjsonm/"
 bug-reports: "https://github.com/mirage/ezjsonm/issues"
 depends: [
-  "ocaml" {>="4.04.0"}
+  "ocaml" {>="4.08.0"}
   "dune" {>= "2.0"}
-  "alcotest" {with-test & >= "0.4.0"}
+  "alcotest" {with-test & >= "1.5.0"}
   "jsonm" {>= "1.0.0"}
+  "uutf"
+  "js_of_ocaml-compiler" {with-test}
+  "conf-npm" {with-test}
   "sexplib0"
   "hex"
 ]
@@ -29,12 +32,12 @@ quick scripts that manipulate JSON.
 More advanced users should go straight to the Jsonm library and
 use it directly, rather than be saddled with the Ezjsonm interface.
 """
-x-commit-hash: "5986fd927c7a804b09867f43ca82a75407dcdadb"
 url {
   src:
-    "https://github.com/mirage/ezjsonm/releases/download/v1.2.0/ezjsonm-v1.2.0.tbz"
+    "https://github.com/mirage/ezjsonm/releases/download/v1.3.0/ezjsonm-1.3.0.tbz"
   checksum: [
-    "sha256=870bbe1c24484bb7e1acce44859dd521c24cb8a8f0e74042a62418c68671cce0"
-    "sha512=f603642ecdd01696017d0a8fef0ae8867777fbced53ad670afa3da8f12e2c101a5c6cd201b7917685323bc9033793dd406c6d333ed4a24d2d4d4d6c88527693b"
+    "sha256=08633e0f0e767a8ae81935ca7e74f1693b85a79c4502d568eedff5170f0cd77b"
+    "sha512=b731036384115603af9187464695418d27b7cf6f763c8dbc0812db62a7657cac1b6019d3b205b1c95ae81b7dab0bd4037390d977ee8c122bef29a9ddef771e18"
   ]
 }
+x-commit-hash: "a2b724b3bb084ce5045aca6f3431bf1abb096b6f"
