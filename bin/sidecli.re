@@ -732,7 +732,7 @@ let address_t = {
 let validator_address = {
   let docv = "validator_address";
   let doc = "The validator address to be added/removed as trusted";
-  Arg.(required & pos(2, some(address_t), None) & info([], ~docv, ~doc));
+  Arg.(required & pos(1, some(address_t), None) & info([], ~docv, ~doc));
 };
 
 let add_trusted_validator = {
