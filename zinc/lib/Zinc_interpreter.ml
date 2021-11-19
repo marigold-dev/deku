@@ -9,25 +9,25 @@ external stack_to_env_ext : Stack_item.t -> Env_item.t = "%identity"
 let stack_to_env = function
   | Stack_item.Marker _ ->
       failwith "type error, cant convert a stack_item into an env_item"
-  | Stack_item.(Clos _ | Record _ | Variant _ | Z _) as x -> stack_to_env_ext x
+  | Stack_item.(Clos _ | Record _ | Variant _ | Z _ | NonliteralValue _) as x -> stack_to_env_ext x
 
 type steps =
   | Done
   | Internal_error of string
   | Failwith of string
-  | Continue of zinc_extended * env * stack
+  | Continue of zinc * env * stack
 
 let initial_state ?initial_stack:(stack = []) a = (a, [], stack)
 
 let[@warning "-4"] interpret_zinc :
     interpreter_context -> interpreter_input -> Interpreter_output.t =
  fun interpreter_context (code, env, stack) ->
-  let apply_once (code : zinc_extended) (env : env) (stack : stack) =
+  let apply_once (code : zinc) (env : env) (stack : stack) =
     let () =
       print_endline
         (Format.asprintf
            "interpreting:\ncode:  %a\nenv:   %a\nstack: %a"
-           pp_zinc_extended
+           pp_zinc
            code
            pp_env
            env
@@ -122,7 +122,7 @@ let[@warning "-4"] interpret_zinc :
           | Some (address, entrypoint) ->
               Stack_item.Variant
                 ( Label "Some",
-                  Stack_item.Z (Extensions (Contract (address, entrypoint))) )
+                  Stack_item.NonliteralValue (Contract (address, entrypoint)) )
           | None -> Stack_item.Variant (Label "None", Utils.unit_record_stack)
         in
         Continue (c, env, contract :: s)
@@ -130,13 +130,13 @@ let[@warning "-4"] interpret_zinc :
         env,
         r
         :: Stack_item.Z (Mutez amount)
-           :: Stack_item.Z (Extensions (Contract contract)) :: s )
+           :: Stack_item.NonliteralValue (Contract contract) :: s )
       when Stack_item.equal r Utils.unit_record_stack ->
         Continue
           ( c,
             env,
-            Stack_item.Z
-              (Extensions (Operation (Transaction (amount, contract))))
+            Stack_item.NonliteralValue
+              (Operation (Transaction (amount, contract)))
             :: s )
     (* should be unreachable except when program is done *)
     | ([Return], _, _) -> Done
@@ -144,12 +144,11 @@ let[@warning "-4"] interpret_zinc :
     (* should not be reachable *)
     | (x :: _, _, _) ->
         Internal_error
-          (Format.asprintf "%a unimplemented!" pp_zinc_instruction_extended x)
+          (Format.asprintf "%a unimplemented!" pp_zinc_instruction x)
     | _ ->
         Internal_error
           (Format.asprintf "somehow ran out of code without hitting return!")
   in
-  let code : zinc_extended = generalize_zinc code in
   let rec loop code env stack =
     match apply_once code env stack with
     | Done -> Interpreter_output.Success (env, stack)
