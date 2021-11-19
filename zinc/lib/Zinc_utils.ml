@@ -19,44 +19,22 @@ module Z = struct
    fun fmt v -> Format.fprintf fmt "%s" (Z.to_string v)
 end
 
-type label = Label of string [@@deriving show {with_path = false}, eq, yojson]
+type label = int [@@deriving show {with_path = false}, eq, yojson]
+
+type variant_label = string [@@deriving show {with_path = false}, eq, yojson]
 
 module LMap = struct
-  include Map.Make (struct
-    type t = label
+  type 'a t = 'a array [@@deriving yojson, ord, eq, show]
 
-    let compare = compare
-  end)
 
-  type 'a association_list = (label * 'a) list [@@deriving yojson]
+  let of_list (lst : 'a list) : 'a t = lst |> Array.of_list
 
-  let of_list (lst : 'a association_list) : 'a t =
-    let aux prev (k, v) = add k v prev in
-    List.fold_left aux empty lst
+  let find arr item =
+    try Some (Array.get arr item) with Invalid_argument _ -> None
 
-  let pp : (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a t -> unit
-      =
-   fun value ppf m ->
-    let lst = bindings m in
-    let lst =
-      Base.List.dedup_and_sort
-        ~compare:(fun (Label a, _) (Label b, _) -> String.compare a b)
-        lst
-    in
-    let new_pp ppf (k, v) =
-      Format.fprintf ppf "@[<h>%a -> %a@]" pp_label k value v
-    in
-    Format.fprintf
-      ppf
-      "%a"
-      (Format.pp_print_list
-         ?pp_sep:(Some (fun fmt _ -> Format.pp_print_string fmt ", "))
-         new_pp)
-      lst
+  let add _k v array = Array.concat [array; [|v|]]
 
-  let of_yojson a m = Result.map of_list (association_list_of_yojson a m)
-
-  let to_yojson a m = bindings m |> association_list_to_yojson a
+  let empty = [||]
 end
 
 module Blake2B_20 = Digestif.Make_BLAKE2B (struct

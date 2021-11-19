@@ -125,7 +125,7 @@ and other_compile :
       | Literal_string (Verbatim b) -> String b :: k
       | Literal_mutez a -> Mutez a :: k
       | Literal_key a -> Key a :: k
-      | Literal_unit -> MakeRecord [] :: k
+      | Literal_unit -> MakeRecord 0 :: k
       | x ->
           failwith
             (Format.asprintf "literal type not supported: %a"
@@ -170,24 +170,34 @@ and other_compile :
   (* Variant *)
   | E_constructor { constructor = Label constructor; element } ->
       compile_known_function_application environment
-        (fun ~k -> MakeVariant (Zinc_utils.Label constructor) :: k)
+        (fun ~k -> MakeVariant (constructor) :: k)
         [ element ] ~k
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
   | E_record expression_label_map ->
-      let bindings = Stage_common.Types.LMap.bindings expression_label_map in
+    let bindings = Stage_common.Types.LMap.bindings  expression_label_map
+    in
       compile_known_function_application environment
         (fun ~k ->
           MakeRecord
-            (List.map
-               ~f:(fun (Stage_common.Types.Label k, _) -> Zinc_utils.Label k)
-               bindings)
+            (List.length bindings)
           :: k)
         (List.map ~f:(fun (_, value) -> value) bindings)
         ~k
-  | E_record_accessor { record; path = Stage_common.Types.Label path } ->
+  | E_record_accessor { record; path = path } ->
+     let rows = record.type_expression.type_content in
+     let label =  match rows with 
+     | T_record rows -> 
+      let[@warning "-8"] Some (label, _) = 
+        let bindings = LMap.bindings rows.content in
+        List.findi bindings ~f:(fun _ (k, _) -> k = path ) in 
+      label
+     | T_constant _typ ->
+       let Stage_common.Types.Label path = path in 
+       int_of_string path
+     | _ -> failwith "other" in
       compile_known_function_application environment
-        (fun ~k -> RecordAccess (Zinc_utils.Label path) :: k)
+        (fun ~k -> RecordAccess label :: k)
         [ record ] ~k
   | E_record_update _record_update -> failwith "E_record_update unimplemented"
   | E_type_inst _ -> failwith "E_type_inst unimplemented"
@@ -209,9 +219,9 @@ and compile_constant :
   | C_FAILWITH -> Failwith :: k
   | C_CONTRACT_OPT -> Contract_opt :: k
   | C_CALL -> MakeTransaction :: k
-  | C_UNIT -> MakeRecord [] :: k
-  | C_NONE -> MakeRecord [] :: MakeVariant (Label "None") :: k
-  | C_SOME -> MakeVariant (Label "Some") :: k
+  | C_UNIT -> MakeRecord 0 :: k
+  | C_NONE -> MakeRecord 0 :: MakeVariant ("None") :: k
+  | C_SOME -> MakeVariant ("Some") :: k
   | name ->
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)
@@ -339,7 +349,7 @@ and compile_pattern_matching :
                  Grab
                  :: other_compile (add_binder pattern environment) body ~k:[]
                in
-               (Zinc_utils.Label label, compiled))
+               (label, compiled))
              cases)
       in
       other_compile environment to_match.matchee ~k:(code :: k)
