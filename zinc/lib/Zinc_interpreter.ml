@@ -97,6 +97,8 @@ let[@warning "-4"] interpret_zinc :
         | None -> Internal_error "inexhaustive match"
         | Some match_code ->
             Continue (List.concat [match_code; c], env, item :: s))
+    | (MakeVariant label :: c, env, value :: s) ->
+        Continue (c, env, Stack_item.Variant (label, value) :: s)
     (* Math *)
     | (Add :: c, env, Stack_item.Z (Num a) :: Stack_item.Z (Num b) :: s) ->
         Continue (c, env, Stack_item.Z (Num (Z.add a b)) :: s)
