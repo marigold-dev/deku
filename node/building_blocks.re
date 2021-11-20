@@ -1,4 +1,5 @@
 open Helpers;
+open Crypto;
 open Protocol;
 
 module Node = State;
