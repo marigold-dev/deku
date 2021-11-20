@@ -222,6 +222,8 @@ and compile_constant :
   | C_UNIT -> MakeRecord 0 :: k
   | C_NONE -> MakeRecord 0 :: MakeVariant ("None") :: k
   | C_SOME -> MakeVariant ("Some") :: k
+  | C_CONS -> Cons :: k 
+  | C_LIST_EMPTY -> Nil :: k
   | name ->
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)
