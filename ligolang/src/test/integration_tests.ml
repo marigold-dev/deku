@@ -2638,7 +2638,7 @@ let jsligo_let_multiple ~raise ~add_warning () : unit =
 let balance_test_options ~raise () =
   let balance = trace_option ~raise (test_internal "could not convert balance") @@
     Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "4000000" in
-  Proto_alpha_utils.Memory_proto_alpha.make_options ~balance ()
+  Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~balance ())
 
 let balance_constant ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/balance_constant.ligo" in
@@ -2679,7 +2679,7 @@ let amount ~raise ~add_warning () : unit =
     | Some t -> t
     | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
   in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
   expect_eq ~raise ~options program "check" input expected
 
 let amount_mligo ~raise ~add_warning () : unit =
@@ -2691,7 +2691,7 @@ let amount_mligo ~raise ~add_warning () : unit =
     | Some t -> t
     | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
   in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
   expect_eq ~raise ~options program "check_" input expected
 
 let amount_religo ~raise ~add_warning () : unit =
@@ -2703,7 +2703,7 @@ let amount_religo ~raise ~add_warning () : unit =
     | Some t -> t
     | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
   in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
   expect_eq ~raise ~options program "check_" input expected
 
 let amount_jsligo ~raise ~add_warning () : unit =
@@ -2715,17 +2715,17 @@ let amount_jsligo ~raise ~add_warning () : unit =
     | Some t -> t
     | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
   in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
   expect_eq ~raise ~options program "check_" input expected
   
 
 let addr_test ~raise program =
   let open Proto_alpha_utils.Memory_proto_alpha in
   let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).implicit_contract in
+      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
   let open Tezos_crypto in
   let key_hash = Signature.Public_key_hash.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).public_key_hash in
+      (List.nth_exn (test_environment ()).identities 0).public_key_hash in
   expect_eq ~raise program "main" (e_key_hash key_hash) (e_address addr)
 
 let address ~raise ~add_warning () : unit =
@@ -2914,7 +2914,7 @@ let get_contract_ligo ~raise ~add_warning () : unit =
       in
     let () =
       let amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
       let () = expect_n_strict_pos_small ~raise ~options program "cb" make_input make_expected in
       expect_n_strict_pos_small ~raise ~options program "cbo" make_input make_expected in
     ()
@@ -3130,7 +3130,7 @@ let bytes_unpack ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).implicit_contract in
+      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
   let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
   ()
 
@@ -3140,7 +3140,7 @@ let bytes_unpack_mligo ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).implicit_contract in
+      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
   let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
   ()
 
@@ -3150,7 +3150,7 @@ let bytes_unpack_religo ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).implicit_contract in
+      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
   let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
   ()
 
@@ -3160,7 +3160,7 @@ let bytes_unpack_jsligo ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
   let open Proto_alpha_utils.Memory_proto_alpha in
   let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (dummy_environment ()).identities 0).implicit_contract in
+      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
   let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
   ()
 

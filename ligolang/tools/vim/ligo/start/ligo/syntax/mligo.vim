@@ -2,64 +2,60 @@ if exists("b:current_syntax")
     finish
 endif
 
-" Keywords
-syntax keyword ligoKeyword begin end
-syntax keyword ligoKeyword in of
-syntax keyword ligoKeyword fun let rec type
-syntax keyword ligoConditional if then else match with
-syntax match ligoOperator "\v[-+*/=]"
-syntax match ligoOperator "->"
-syntax match ligoParens "("
-syntax match ligoParens ")"
+" string
+syntax region string start="\"" end="\"" 
+highlight link string String 
 
-highlight link ligoKeyword Keyword
-highlight link ligoConditional Conditional
-highlight link ligoRepeat Repeat
-highlight link ligoOperator Operator
+" comment
+syntax match comment "\/\/.*$" 
+syntax region comment start="(\*" end="\*)" 
+highlight link comment Comment 
 
-" Constants
-syntax keyword ligoBoolean True False
-syntax match ligoNumber "\v<\d+[a-z]*>"
-syntax match ligoNumber "\v<0x[a-fA-F0-9]+>"
-syntax region ligoString start=/\v"/ skip=/\v\\./ end=/\v"/
+" identifierconstructor
+syntax match identifierconstructor "\<\([A-Z][a-zA-Z0-9_$]*\)\s\+" 
+highlight link identifierconstructor Label 
 
-highlight link ligoBoolean Boolean
-highlight link ligoNumber Number
-highlight link ligoString String
+" module
+syntax match module_ "[a-z_][a-zA-Z0-9_$]*" contained 
+highlight link module_ Identifier 
+syntax match module "\<\([A-Z][a-zA-Z0-9_$]*\)\." nextgroup=module_ 
+highlight link module Structure 
 
-" Comments
-syntax region ligoComment start=/\v\(\*/ end=/\v\*\)/ contains=ligoComment
-syntax match ligoComment "\v//.*$"
-highlight link ligoComment Comment
+" typedefinition
+syntax match typedefinition "\(type\)\>" 
+highlight link typedefinition Type 
 
-" Types
-syntax region ligoParenTypeExpr start=/\v\(/ end=/\v\)/
-            \ contains=ligoParenTypeExpr,ligoComment
-            \ contained
-syntax region ligoTypeAnnotation 
-            \ matchgroup=ligoKeyword start=/:/
-            \ matchgroup=ligoKeyword end=/=/
-            \ matchgroup=ligoKeyword end=/:=/
-            \ matchgroup=ligoKeyword end=/;/
-            \ matchgroup=ligoParens end=/)/
-            \ contains=ligoParenTypeExpr
-highlight link ligoTypeAnnotation Type
-highlight link ligoParenTypeExpr Type
+" lambda
+syntax region lambda matchgroup=lambda_ start="\(fun\)\W" matchgroup=lambda__ end="\(->\)" 
+highlight link lambda_ Statement 
+highlight link lambda__ Operator 
 
-" We need to match :: after type annotations so that it has
-" a higher precedence
-syntax match ligoOperator "::"
+" operators
+syntax match operators "\<\(::\|-\|+\|/\|mod\|land\|lor\|lxor\|lsl\|lsr\|&&\|||\|<\|>\|<>\|<=\|>=\)\>" 
+highlight link operators Operator 
 
-" Macros
-syntax match p_include "#\s*include"
-syntax match p_define  "#\s*\(define\|undef\)"
-syntax match p_if      "#\s*\(if\|elif\|else\|endif\)\(n\?def\)\?"
-syntax match p_message "#\s*\(error\|warning\)"
+" numericliterals
+syntax match numericliterals "\<[0-9]+\(n\|tz\|tez\|mutez\|\)\>" 
+highlight link numericliterals Number 
 
-highlight link p_include Include
-highlight link p_define  Define
-highlight link p_if      PreCondit
-highlight link p_message Macro
+" letbinding
+syntax match letbinding__ "[a-zA-Z$_][a-zA-Z0-9$_]*" contained 
+highlight link letbinding__ Statement 
+syntax match letbinding_ "rec\W\|" contained nextgroup=letbinding__ 
+highlight link letbinding_ StorageClass 
+syntax match letbinding "\(let\)\W" nextgroup=letbinding_ 
+highlight link letbinding Keyword 
+
+" controlkeywords
+syntax match controlkeywords "\<\(match\|with\|if\|then\|else\|assert\|failwith\|begin\|end\|in\)\>" 
+highlight link controlkeywords Conditional 
+
+" macro
+syntax match macro "^\#[a-zA-Z]\+" 
+highlight link macro PreProc 
+
+" attribute
+syntax match attribute "\[@.*\]" 
+highlight link attribute PreProc 
 
 let b:current_syntax = "mligo"
-

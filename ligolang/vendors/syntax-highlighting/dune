@@ -1,0 +1,8 @@
+(library
+ (name SyntaxHighlighting)
+ (public_name SyntaxHighlighting)
+ (modules regexp Core Helpers Textmate VIM Emacs)
+ (libraries 
+   yojson 
+ )
+)

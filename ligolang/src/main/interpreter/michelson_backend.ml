@@ -122,18 +122,19 @@ let make_options ~raise ?param ctxt =
      make_dry_run_options ~raise default
   | Some (ctxt: Tezos_state.context) ->
     let source = ctxt.internals.source in
+    let tezos_context = Tezos_state.get_alpha_context ~raise ctxt in
+    let tezos_context = Memory_proto_alpha.Protocol.Alpha_context.Gas.set_limit tezos_context (Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.integral_exn (Z.of_int 800000)) in
     let timestamp = Timestamp.of_zint (Z.of_int64 (Proto_alpha_utils.Time.Protocol.to_seconds (Tezos_state.get_timestamp ctxt))) in
-    Proto_alpha_utils.Memory_proto_alpha.make_options
-      ?tezos_context:None
-      ~now:timestamp
-      ~source:source
-      ~sender:source (* debatable *)
-      ~self:source (* debatable *)
-      ?parameter_ty:None
-      ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
-      ~balance:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
-      ~chain_id:Memory_proto_alpha.Protocol.Environment.Chain_id.zero
-      ()
+    {
+      tezos_context ;
+      source ;
+      payer = source ;
+      self = source ;
+      amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez_exn 100000000L ;
+      chain_id = Memory_proto_alpha.Protocol.Environment.Chain_id.zero;
+      balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero ;
+      now = timestamp ;
+    }
 
 let run_expression_unwrap ~raise ?ctxt ?(loc = Location.generated) (c_expr : Stacking.compiled_expression) =
   let options = make_options ~raise ctxt in

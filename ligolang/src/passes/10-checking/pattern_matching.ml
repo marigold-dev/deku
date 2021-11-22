@@ -24,6 +24,14 @@ type equations = (typed_pattern list * (I.expression * O.environment)) list
 type type_fun = raise:typer_error raise -> O.environment -> ?tv_opt:O.type_expression -> I.expression -> O.expression
 type rest = O.expression_content
 
+module PP_DEBUG = struct
+  let pp_typed_pattern ppf ((p,t) : typed_pattern) = Format.fprintf ppf "(%a : %a)" (Stage_common.PP.match_pattern I.PP.type_expression) p O.PP.type_expression t
+  let pp_pattern_list ppf (plist : typed_pattern list) = Format.fprintf ppf "[%a]" Simple_utils.PP_helpers.(list_sep pp_typed_pattern (tag "; ")) plist
+  let pp_eq ppf ((plist,(expr,_)):(typed_pattern list * (I.expression * O.environment))) = Format.fprintf ppf "@[%a -> %a]" pp_pattern_list plist I.PP.expression expr
+  let pp_eqs ppf (eqs:equations) = Format.fprintf ppf "@[<hv>%a@]" Simple_utils.PP_helpers.(list_sep pp_eq (tag "; ")) eqs
+  let pp_partition ppf (part: equations list) = Format.fprintf ppf "@[<hv><@.%a@.>@]" Simple_utils.PP_helpers.(list_sep pp_eqs (tag "@.")) part
+end
+
 let is_var : _ I.pattern -> bool = fun p ->
   match p.wrap_content with
   | P_var _ -> true
@@ -247,23 +255,20 @@ let rec match_ ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type_e
   fun ~err_loc ~type_f ~body_t ms eqs def ->
   match ms , eqs with
   | [] , [([],(body,env))] ->
-      let body = type_f ~raise ?tv_opt:body_t env body in
-      let () = assert_body_t ~raise ~body_t body.location body.type_expression in
-      body
+    let body = type_f ~raise ?tv_opt:body_t env body in
+    let () = assert_body_t ~raise ~body_t body.location body.type_expression in
+    body
   | [] , eqs when List.for_all ~f:(fun (ps,_) -> List.length ps = 0) eqs ->
     raise.raise @@ redundant_pattern err_loc
   | _ ->
     let leq = partition (fun (pl,_) -> is_var (fst @@ List.hd_exn pl)) eqs in
-    let aux = fun part_eq (prev_opt:O.expression option) ->
-      let r =
-        match prev_opt with
-        | None -> consvar ~raise ~err_loc ~type_f ~body_t ms part_eq def
-        | Some prev -> consvar ~raise ~err_loc ~type_f ~body_t:(Some prev.type_expression) ms part_eq prev.expression_content
-      in
-      (Some r)
+    let aux = fun (part_eq:equations) ((def,body_t,_):O.expression_content * O.type_expression option * Location.t) ->
+      let r = consvar ~raise ~err_loc ~type_f ~body_t ms part_eq def in
+      let () = assert_body_t ~raise ~body_t r.location r.type_expression in
+      (r.expression_content , Some r.type_expression, r.location)
     in
-    let r = List.fold_right ~f:aux ~init:None leq in
-    Option.value_exn r
+    let (r,t,location) = List.fold_right ~f:aux ~init:(def,body_t,Location.generated) leq in
+    O.make_e ~location r (Option.value_exn t)
 
 and consvar ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type_expression option -> matchees -> equations -> rest -> O.expression =
   fun ~err_loc ~type_f ~body_t ms eqs def ->
@@ -311,63 +316,56 @@ and ctor_rule ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type_ex
     let matchee_t = type_matchee ~raise eqs in
     let matchee = O.make_e (O.e_variable mhd) matchee_t in
     let eq_map = group_equations ~raise eqs in
-      let aux_p : O.label * equations -> O.matching_content_case =
-        fun (constructor,eq) ->
-          let proj =
-            match eq with
-            | [(tp,_)] -> (
-              let (pattern,t) = List.hd_exn tp in
-              match pattern.wrap_content with
-              | P_var x -> x.var
-              | P_unit ->
-                let () = assert_unit_pattern ~raise pattern.location t in
-                Location.wrap @@ Var.fresh ~name:"unit_proj" ()
-              | _ -> Location.wrap @@ Var.fresh ~name:"ctor_proj" ()
-            )
-            | _ ->
-              Location.wrap @@ Var.fresh ~name:"ctor_proj" ()
-          in
-          let new_ms = proj::mtl in
-          let nested = match_ ~raise ~err_loc ~type_f ~body_t new_ms eq def in
-          ({ constructor ; pattern = proj ; body = nested } : O.matching_content_case)
-      in
-      let aux_m : O.label * O.type_expression -> O.matching_content_case =
-        fun (constructor,t) ->
-          let proj = Location.wrap @@ Var.fresh ~name:"ctor_proj" () in
-          let body = O.make_e def t in
-          { constructor ; pattern = proj ; body }
-      in
-      let grouped_eqs =
-        match O.get_t_sum matchee_t with
-        | Some rows ->
-          let eq_opt_map = O.LMap.mapi (fun label _ -> O.LMap.find_opt label eq_map) rows.content in
-          O.LMap.to_kv_list @@ eq_opt_map
-        | None -> (
-          match O.get_t_option matchee_t with
-          | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Some"; Label "None"]
-          | None -> (
-            match O.get_t_list matchee_t with
-            | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Cons"; Label "Nil"]
-            | None -> raise.raise @@ corner_case __LOC__ (* should be caught when typing the matchee *)
+    let aux_p : O.type_expression option -> O.label * equations -> O.type_expression option * O.matching_content_case  =
+      fun body_t (constructor,eq) ->
+        let proj =
+          match eq with
+          | [(tp,_)] -> (
+            let (pattern,t) = List.hd_exn tp in
+            match pattern.wrap_content with
+            | P_var x -> x.var
+            | P_unit ->
+              let () = assert_unit_pattern ~raise pattern.location t in
+              Location.wrap @@ Var.fresh ~name:"unit_proj" ()
+            | _ -> Location.wrap @@ Var.fresh ~name:"ctor_proj" ()
           )
-        )
-      in
-      let present = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some eq -> Some (c,eq) | None -> None) grouped_eqs in
-      let present_cases = List.map ~f:aux_p present in
-      let body_t =
-        let aux t_opt (c:O.matching_content_case) =
-          let () = assert_body_t ~raise ~body_t:t_opt c.body.location c.body.type_expression in
-          match t_opt with
-          | None -> (Some c.body.type_expression)
-          | Some _ -> t_opt
+          | _ ->
+            Location.wrap @@ Var.fresh ~name:"ctor_proj" ()
         in
-        let t = List.fold ~f:aux ~init:body_t present_cases in
-        Option.value_exn t
-      in
-      let missing = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some _ -> None | None -> Some (c,body_t)) grouped_eqs in
-      let missing_cases = List.map ~f:aux_m missing in
-      let cases = O.Match_variant { cases = missing_cases @ present_cases ; tv = matchee_t } in
-      O.make_e (O.E_matching { matchee ; cases }) body_t
+        let new_ms = proj::mtl in
+        let nested = match_ ~raise ~err_loc ~type_f ~body_t new_ms eq def in
+        let () = assert_body_t ~raise ~body_t nested.location nested.type_expression in
+        (Some nested.type_expression , O.{ constructor ; pattern = proj ; body = nested }) 
+    in
+    let aux_m : O.label * O.type_expression -> O.matching_content_case =
+      fun (constructor,t) ->
+        let proj = Location.wrap @@ Var.fresh ~name:"ctor_proj" () in
+        let body = O.make_e def t in
+        { constructor ; pattern = proj ; body }
+    in
+    let grouped_eqs =
+      match O.get_t_sum matchee_t with
+      | Some rows ->
+        let eq_opt_map = O.LMap.mapi (fun label _ -> O.LMap.find_opt label eq_map) rows.content in
+        O.LMap.to_kv_list @@ eq_opt_map
+      | None -> (
+        (* REMITODO: parametric types in env ? *)
+        match O.get_t_option matchee_t with
+        | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Some"; Label "None"]
+        | None -> (
+          match O.get_t_list matchee_t with
+          | Some _ -> List.map ~f:(fun label -> (label, O.LMap.find_opt label eq_map)) O.[Label "Cons"; Label "Nil"]
+          | None -> raise.raise @@ corner_case __LOC__ (* should be caught when typing the matchee *)
+        )
+      )
+    in
+    let present = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some eq -> Some (c,eq) | None -> None) grouped_eqs in
+    let (body_t,present_cases) = List.fold_map present ~f:aux_p ~init:body_t in
+    let body_t = Option.value_exn body_t in
+    let missing = List.filter_map ~f:(fun (c,eq_opt) -> match eq_opt with Some _ -> None | None -> Some (c,body_t)) grouped_eqs in
+    let missing_cases = List.map ~f:aux_m missing in
+    let cases = O.Match_variant { cases = missing_cases @ present_cases ; tv = matchee_t } in
+    O.make_e (O.E_matching { matchee ; cases }) body_t
   | [] -> raise.raise @@ corner_case __LOC__
 
 and product_rule ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type_expression option -> typed_pattern -> matchees -> equations -> rest -> O.expression =
@@ -464,7 +462,7 @@ and product_rule ~raise : err_loc:Location.t -> type_f:type_fun -> body_t:O.type
   )
   | [] -> raise.raise @@ corner_case __LOC__
 
-and compile_matching ~raise ~err_loc ~type_f ~body_t matchee (eqs:equations) =
+let compile_matching ~raise ~err_loc ~type_f ~body_t matchee (eqs:equations) =
   let missing_case_default =
     let fs = O.make_e (O.E_literal (O.Literal_string Stage_common.Backends.fw_partial_match)) (O.t_string ()) in
     O.e_failwith fs

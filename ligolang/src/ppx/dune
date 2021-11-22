@@ -1,0 +1,7 @@
+(library
+ (name ppx_poly_constructor)
+ (kind ppx_deriver)
+ (libraries base ppxlib)
+ (modules ppx_poly_constructor)
+ (preprocess
+  (pps ppxlib.metaquot)))

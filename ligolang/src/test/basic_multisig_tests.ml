@@ -32,7 +32,7 @@ let init_storage threshold counter pkeys =
 
 let (first_owner , first_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
@@ -87,7 +87,7 @@ let not_enough_1_of_2 ~raise ~add_warning f () =
   let exp_failwith = "Not enough signatures passed the check" in
   let keys = gen_keys () in
   let test_params = params ~raise ~add_warning 0 empty_payload [keys] [true] f in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~sender:first_contract () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender:first_contract ()) in
   let () = expect_string_failwith ~raise
     program ~options "main" (e_pair test_params (init_storage 2 0 [keys;gen_keys()])) exp_failwith in
   ()

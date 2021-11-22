@@ -1,12 +1,10 @@
 (library
-  (name self_cst_reasonligo)
-  (public_name ligo.self_cst.reasonligo)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    cst
-    tezos-crypto
-    tezos-base
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
-)
+ (name self_cst_reasonligo)
+ (public_name ligo.self_cst.reasonligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cst tezos-crypto tezos-base)
+ (preprocess
+  (pps ppx_poly_constructor))
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils)))

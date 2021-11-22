@@ -4,4 +4,4 @@
  ; TODO hmm, nix barfs in opaline because this will install in
  ; lib_root section for coq user-contrib
  ; (package ligo)
-)
+ )

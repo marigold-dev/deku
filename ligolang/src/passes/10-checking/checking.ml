@@ -135,7 +135,7 @@ match Location.unwrap d with
   )
   | Declaration_constant {name ; binder = { ascr = None ; var } ; attr  ; expr} -> (
     let expr =
-      trace ~raise (constant_declaration_error_tracer var expr None) @@
+      trace ~raise (constant_declaration_tracer var expr None) @@
       type_expression' ~test ~protocol_version env expr in
     let binder : O.expression_variable = cast_var var in
     let post_env = Environment.add_ez_declaration ~public:attr.public binder expr attr env in
@@ -149,7 +149,7 @@ match Location.unwrap d with
     let env = List.fold_right av ~f:(fun v env -> Environment.add_type_var v () env) ~init:env in
     let tv = evaluate_type ~raise env tv in
     let expr =
-      trace ~raise (constant_declaration_error_tracer var expr (Some tv)) @@
+      trace ~raise (constant_declaration_tracer var expr (Some tv)) @@
       type_expression' ~test ~protocol_version ~tv_opt:tv env expr in
     let rec aux t = function
       | [] -> t
@@ -398,7 +398,6 @@ and type_expression ~raise ~test ~protocol_version : environment -> ?tv_opt:O.ty
     (e, res)
 
 and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environment -> ?tv_opt:O.type_expression -> ?other_module:bool -> I.expression -> O.expression = fun e ?tv_opt ?other_module ae ->
-  let module L = Logger.Stateful() in
   let return expr tv =
     let () =
       match tv_opt with
@@ -470,15 +469,15 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
         | None -> ()
         | Some tv' -> assert_type_expression_eq ~raise ae.location (tv' , ae.type_expression) in
       (ae)
-  | E_constructor {constructor = Label s ; element} when String.equal s "M_left" || String.equal s "M_right" -> (
-    let t = trace_option ~raise (michelson_or (Label s) ae.location) @@ tv_opt in
+  | E_constructor {constructor = Label s as constructor ; element} when String.equal s "M_left" || String.equal s "M_right" -> (
+    let t = trace_option ~raise (michelson_or_no_annotation constructor ae.location) @@ tv_opt in
     let expr' = type_expression' ~raise ~test ~protocol_version e element in
     ( match t.type_content with
       | T_sum c ->
         let {associated_type ; _} : O.row_element = O.LMap.find (Label s) c.content in
         let () = assert_type_expression_eq ~raise expr'.location (associated_type, expr'.type_expression) in
         return (E_constructor {constructor = Label s; element=expr'}) t
-      | _ -> raise.raise (michelson_or (Label s) ae.location)
+      | _ -> raise.raise (michelson_or_no_annotation constructor ae.location)
     )
   )
   (* Sum *)
@@ -499,7 +498,11 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
   (* Record *)
   | E_record m ->
       let m' = O.LMap.map (type_expression' ~raise ~test ~protocol_version e) m in
-      let lmap = O.LMap.map (fun e -> ({associated_type = get_type_expression e; michelson_annotation = None; decl_pos=0}:O.row_element)) m' in
+      let _,lmap = O.LMap.fold_map ~f:(
+        fun (Label k) e i -> 
+          let decl_pos = match int_of_string_opt k with Some i -> i | None -> i in
+          i+1,({associated_type = get_type_expression e ; michelson_annotation = None ; decl_pos}: O.row_element)
+        ) m' ~init:0 in
       let record_type = match Environment.get_record lmap e with
         | None -> t_record ~layout:default_layout lmap
         | Some (orig_var,r) -> make_t_orig_var (T_record r) None orig_var
@@ -599,7 +602,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
           let fvs = Free_variables.lambda [] l in
           if Int.equal (List.length fvs) 0 then ()
           else raise.raise @@ fvs_in_create_contract_lambda ae (List.hd_exn fvs)
-        | _ -> raise.raise @@ create_contract_lambda C_CREATE_CONTRACT ae
+        | _ -> raise.raise @@ create_contract_lambda S.C_CREATE_CONTRACT ae
       in
       let tv_lst = List.map ~f:get_type_expression lst' in
       let (name', tv) =
@@ -680,7 +683,7 @@ and type_expression' ~raise ~test ~protocol_version ?(args = []) ?last : environ
      (* Build lambda with type instantiations *)
      let lamb = build_type_insts ~raise ~loc:ae.location lamb table avs in
      (* Re-build term (i.e. re-add applications) *)
-     let app = trace_option ~raise (type_error_approximate ~expression:ilamb ~actual:lamb.type_expression) @@
+     let app = trace_option ~raise (should_be_a_function_type lamb.type_expression ilamb) @@
                  O.Helpers.build_applications_opt lamb args in
      return_e app
   (* Advanced *)

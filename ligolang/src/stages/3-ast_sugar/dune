@@ -1,10 +1,8 @@
 (library
-  (name ast_sugar)
-  (public_name ligo.ast_sugar)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    stage_common
-  )
-  (flags (:standard -open Simple_utils ))
-)
+ (name ast_sugar)
+ (public_name ligo.ast_sugar)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils stage_common)
+ (flags
+  (:standard -open Simple_utils)))

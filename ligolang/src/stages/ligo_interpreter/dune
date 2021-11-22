@@ -1,13 +1,13 @@
 (library
-  (name ligo_interpreter)
-  (public_name ligo.ligo_interpreter)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    proto-alpha-utils
-    tezos-utils
-    ast_typed
-    stage_common
-  )
-  (flags (:standard -open Simple_utils))
-)
+ (name ligo_interpreter)
+ (public_name ligo.ligo_interpreter)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  simple-utils
+  proto-alpha-utils
+  tezos-utils
+  ast_typed
+  stage_common)
+ (flags
+  (:standard -open Simple_utils)))

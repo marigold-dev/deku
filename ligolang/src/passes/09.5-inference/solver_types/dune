@@ -1,16 +1,15 @@
 (library
-  (name solver_types)
-  (public_name ligo.typer_new.solver_types)
-  (libraries
-    ;; Many of these are unused dependencies
-    simple-utils
-    tezos-utils
-    ast_core
-    typer_common
-    type_variable_abstraction
-    predefined
-    UnionFind
-    environment
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils ))
-)
+ (name solver_types)
+ (public_name ligo.typer_new.solver_types)
+ (libraries
+  ;; Many of these are unused dependencies
+  simple-utils
+  tezos-utils
+  ast_core
+  typer_common
+  type_variable_abstraction
+  predefined
+  UnionFind
+  environment)
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils)))

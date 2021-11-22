@@ -8,7 +8,7 @@ let peephole_type_expression ~raise : type_expression -> type_expression  = fun 
     let _ = LMap.mapi
       (fun k _ ->
         let (Label name) = k in
-        if (String.length name >= 32) then raise.raise @@ too_long_constructor name e
+        if (String.length name >= 32) then raise.raise @@ long_constructor name e
         (*RL TODO: move this to some passes after typer*)
         else ()
       )

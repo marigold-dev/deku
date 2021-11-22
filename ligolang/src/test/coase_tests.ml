@@ -73,13 +73,13 @@ let cards_ez owner n =
 
 let (first_owner , first_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
 let (second_owner , second_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 1 in
+  let id = List.nth_exn (test_environment ()).identities 1 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
@@ -114,13 +114,13 @@ let buy ~raise ~add_warning () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run") @@
           Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez @@ Int64.of_int 10000000000 in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender:second_contract () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender:second_contract ()) in
       expect_eq_n_pos_small ~raise ~options program "buy_single" make_input make_expected in
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run") @@
           Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez @@ Int64.of_int 0 in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender:second_contract () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender:second_contract ()) in
       Assert.assert_fail ~raise (test_internal "could buy without money") @@
         expect_eq_n_pos_small ~options program "buy_single" make_input make_expected in
     ()
@@ -152,13 +152,13 @@ let dispatch_buy ~raise ~add_warning () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run") @@
         Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez @@ Int64.of_int 10000000000 in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender:second_contract () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender:second_contract ()) in
       expect_eq_n_pos_small ~raise ~options program "main" make_input make_expected in
     let () =
       let amount =
         trace_option ~raise (test_internal "getting amount for run") @@
         Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mutez @@ Int64.of_int 0 in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender:second_contract () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender:second_contract ()) in
       Assert.assert_fail ~raise (test_internal "could buy without money") @@
         expect_eq_n_pos_small ~options program "main" make_input make_expected in
     ()
@@ -190,7 +190,7 @@ let transfer ~raise ~add_warning () =
     let () =
       let amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero in
       let sender = first_contract in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender ()) in
       expect_eq_n_strict_pos_small ~raise ~options program "transfer_single" make_input make_expected in
     ()
   in
@@ -224,7 +224,7 @@ let sell ~raise ~add_warning () =
     let () =
       let amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero in
       let sender = first_contract in
-      let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~amount ~sender () in
+      let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ~sender ()) in
       expect_n_strict_pos_small ~raise ~options program "sell_single" make_input make_expecter in
     ()
   in

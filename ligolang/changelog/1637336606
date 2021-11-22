@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1417'
+title: 'PPX: add ppx_poly_constructor for errors'
+type: internal

@@ -1,46 +1,235 @@
 ;; pretty print contracts to an output file
-(rule (targets all_the_things.religo_output) (action  (with-stdout-to all_the_things.religo_output (run ligo "print" "pretty-print" "all_the_things.religo"))) (deps all_the_things.religo))
-(rule (targets all_the_things.mligo_output ) (action  (with-stdout-to all_the_things.mligo_output  (run ligo "print" "pretty-print" "all_the_things.mligo"))) (deps all_the_things.mligo))
-(rule (targets all_the_things.ligo_output  ) (action  (with-stdout-to all_the_things.ligo_output   (run ligo "print" "pretty-print" "all_the_things.ligo"))) (deps all_the_things.ligo))
-(rule (targets all_the_things.jsligo_output) (action  (with-stdout-to all_the_things.jsligo_output (run ligo "print" "pretty-print" "all_the_things.jsligo"))) (deps all_the_things.jsligo))
+
+(rule
+ (targets all_the_things.religo_output)
+ (action
+  (with-stdout-to
+   all_the_things.religo_output
+   (run ligo "print" "pretty-print" "all_the_things.religo")))
+ (deps all_the_things.religo))
+
+(rule
+ (targets all_the_things.mligo_output)
+ (action
+  (with-stdout-to
+   all_the_things.mligo_output
+   (run ligo "print" "pretty-print" "all_the_things.mligo")))
+ (deps all_the_things.mligo))
+
+(rule
+ (targets all_the_things.ligo_output)
+ (action
+  (with-stdout-to
+   all_the_things.ligo_output
+   (run ligo "print" "pretty-print" "all_the_things.ligo")))
+ (deps all_the_things.ligo))
+
+(rule
+ (targets all_the_things.jsligo_output)
+ (action
+  (with-stdout-to
+   all_the_things.jsligo_output
+   (run ligo "print" "pretty-print" "all_the_things.jsligo")))
+ (deps all_the_things.jsligo))
 
 ;; compare the output with the expected result
-(rule (alias runtest) (action (diff expected/all_the_things.religo.expected all_the_things.religo_output)))
-(rule (alias runtest) (action (diff expected/all_the_things.mligo.expected all_the_things.mligo_output)))
-(rule (alias runtest) (action (diff expected/all_the_things.ligo.expected all_the_things.ligo_output)))
-(rule (alias runtest) (action (diff expected/all_the_things.jsligo.expected all_the_things.jsligo_output)))
+
+(rule
+ (alias runtest)
+ (action
+  (diff expected/all_the_things.religo.expected all_the_things.religo_output)))
+
+(rule
+ (alias runtest)
+ (action
+  (diff expected/all_the_things.mligo.expected all_the_things.mligo_output)))
+
+(rule
+ (alias runtest)
+ (action
+  (diff expected/all_the_things.ligo.expected all_the_things.ligo_output)))
+
+(rule
+ (alias runtest)
+ (action
+  (diff expected/all_the_things.jsligo.expected all_the_things.jsligo_output)))
 
 ;; try to parse the generated contracts
-(rule (alias runtest) (action  (ignore-stdout (run ligo print cst all_the_things.religo_output -s reasonligo))) (deps all_the_things.religo_output))
-(rule (alias runtest) (action  (ignore-stdout (run ligo print cst all_the_things.mligo_output -s cameligo))) (deps all_the_things.mligo_output))
-(rule (alias runtest) (action  (ignore-stdout (run ligo print cst all_the_things.ligo_output -s pascaligo))) (deps all_the_things.ligo_output))
-(rule (alias runtest) (action  (ignore-stdout (run ligo print cst all_the_things.jsligo_output -s jsligo))) (deps all_the_things.jsligo_output))
+
+(rule
+ (alias runtest)
+ (action
+  (ignore-stdout
+   (run ligo print cst all_the_things.religo_output -s reasonligo)))
+ (deps all_the_things.religo_output))
+
+(rule
+ (alias runtest)
+ (action
+  (ignore-stdout
+   (run ligo print cst all_the_things.mligo_output -s cameligo)))
+ (deps all_the_things.mligo_output))
+
+(rule
+ (alias runtest)
+ (action
+  (ignore-stdout
+   (run ligo print cst all_the_things.ligo_output -s pascaligo)))
+ (deps all_the_things.ligo_output))
+
+(rule
+ (alias runtest)
+ (action
+  (ignore-stdout
+   (run ligo print cst all_the_things.jsligo_output -s jsligo)))
+ (deps all_the_things.jsligo_output))
 
 ;; pretty print with the former pretty printed contracts as input
-(rule (targets all_the_things.religo_output2) (action  (with-stdout-to all_the_things.religo_output2 (run ligo print pretty-print all_the_things.religo_output -s reasonligo))) (deps all_the_things.religo_output))
-(rule (targets all_the_things.mligo_output2 ) (action  (with-stdout-to all_the_things.mligo_output2  (run ligo print pretty-print all_the_things.mligo_output -s cameligo))) (deps all_the_things.mligo_output))
-(rule (targets all_the_things.ligo_output2  ) (action  (with-stdout-to all_the_things.ligo_output2   (run ligo print pretty-print all_the_things.ligo_output -s pascaligo))) (deps all_the_things.ligo_output))
-(rule (targets all_the_things.jsligo_output2) (action  (with-stdout-to all_the_things.jsligo_output2 (run ligo print pretty-print all_the_things.jsligo_output -s jsligo))) (deps all_the_things.jsligo_output))
 
+(rule
+ (targets all_the_things.religo_output2)
+ (action
+  (with-stdout-to
+   all_the_things.religo_output2
+   (run ligo print pretty-print all_the_things.religo_output -s reasonligo)))
+ (deps all_the_things.religo_output))
+
+(rule
+ (targets all_the_things.mligo_output2)
+ (action
+  (with-stdout-to
+   all_the_things.mligo_output2
+   (run ligo print pretty-print all_the_things.mligo_output -s cameligo)))
+ (deps all_the_things.mligo_output))
+
+(rule
+ (targets all_the_things.ligo_output2)
+ (action
+  (with-stdout-to
+   all_the_things.ligo_output2
+   (run ligo print pretty-print all_the_things.ligo_output -s pascaligo)))
+ (deps all_the_things.ligo_output))
+
+(rule
+ (targets all_the_things.jsligo_output2)
+ (action
+  (with-stdout-to
+   all_the_things.jsligo_output2
+   (run ligo print pretty-print all_the_things.jsligo_output -s jsligo)))
+ (deps all_the_things.jsligo_output))
 
 ;; diff the pretty printed contract with the pretty printed pretty printed contract
-(rule (alias runtest) (action (diff all_the_things.religo_output all_the_things.religo_output2)) (deps all_the_things.religo_output all_the_things.religo_output2))
-(rule (alias runtest) (action (diff all_the_things.mligo_output  all_the_things.mligo_output2)) (deps all_the_things.mligo_output all_the_things.mligo_output2))
-(rule (alias runtest) (action (diff all_the_things.ligo_output   all_the_things.ligo_output2)) (deps all_the_things.ligo_output all_the_things.ligo_output2))
-(rule (alias runtest) (action (diff all_the_things.jsligo_output all_the_things.jsligo_output2)) (deps all_the_things.jsligo_output all_the_things.jsligo_output2))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.religo_output all_the_things.religo_output2))
+ (deps all_the_things.religo_output all_the_things.religo_output2))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.mligo_output all_the_things.mligo_output2))
+ (deps all_the_things.mligo_output all_the_things.mligo_output2))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.ligo_output all_the_things.ligo_output2))
+ (deps all_the_things.ligo_output all_the_things.ligo_output2))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.jsligo_output all_the_things.jsligo_output2))
+ (deps all_the_things.jsligo_output all_the_things.jsligo_output2))
 
 ;; check produced ast
-(rule (targets all_the_things.religo_ast) (action (with-stdout-to all_the_things.religo_ast (run ligo print ast all_the_things.religo))) (deps all_the_things.religo))
-(rule (targets all_the_things.mligo_ast ) (action (with-stdout-to all_the_things.mligo_ast  (run ligo print ast all_the_things.mligo))) (deps all_the_things.mligo))
-(rule (targets all_the_things.ligo_ast  ) (action (with-stdout-to all_the_things.ligo_ast   (run ligo print ast all_the_things.ligo))) (deps all_the_things.ligo))
-(rule (targets all_the_things.jsligo_ast) (action (with-stdout-to all_the_things.jsligo_ast (run ligo print ast all_the_things.jsligo))) (deps all_the_things.jsligo))
 
-(rule (targets all_the_things.religo_ast_pretty) (action (with-stdout-to all_the_things.religo_ast_pretty (run ligo print ast all_the_things.religo_output -s reasonligo))) (deps all_the_things.religo_output))
-(rule (targets all_the_things.mligo_ast_pretty ) (action (with-stdout-to all_the_things.mligo_ast_pretty  (run ligo print ast all_the_things.mligo_output -s cameligo))) (deps all_the_things.mligo_output))
-(rule (targets all_the_things.ligo_ast_pretty  ) (action (with-stdout-to all_the_things.ligo_ast_pretty   (run ligo print ast all_the_things.ligo_output -s pascaligo))) (deps all_the_things.ligo_output))
-(rule (targets all_the_things.jsligo_ast_pretty) (action (with-stdout-to all_the_things.jsligo_ast_pretty (run ligo print ast all_the_things.jsligo_output -s jsligo))) (deps all_the_things.jsligo_output))
+(rule
+ (targets all_the_things.religo_ast)
+ (action
+  (with-stdout-to
+   all_the_things.religo_ast
+   (run ligo print ast all_the_things.religo)))
+ (deps all_the_things.religo))
 
-(rule (alias runtest) (action (diff all_the_things.religo_ast all_the_things.religo_ast_pretty)) (deps all_the_things.religo_ast all_the_things.religo_ast_pretty))
-(rule (alias runtest) (action (diff all_the_things.mligo_ast all_the_things.mligo_ast_pretty)) (deps all_the_things.mligo_ast all_the_things.mligo_ast_pretty))
-(rule (alias runtest) (action (diff all_the_things.ligo_ast all_the_things.ligo_ast_pretty)) (deps all_the_things.ligo_ast all_the_things.ligo_ast_pretty))
-(rule (alias runtest) (action (diff all_the_things.jsligo_ast all_the_things.jsligo_ast_pretty)) (deps all_the_things.jsligo_ast all_the_things.jsligo_ast_pretty))
+(rule
+ (targets all_the_things.mligo_ast)
+ (action
+  (with-stdout-to
+   all_the_things.mligo_ast
+   (run ligo print ast all_the_things.mligo)))
+ (deps all_the_things.mligo))
+
+(rule
+ (targets all_the_things.ligo_ast)
+ (action
+  (with-stdout-to
+   all_the_things.ligo_ast
+   (run ligo print ast all_the_things.ligo)))
+ (deps all_the_things.ligo))
+
+(rule
+ (targets all_the_things.jsligo_ast)
+ (action
+  (with-stdout-to
+   all_the_things.jsligo_ast
+   (run ligo print ast all_the_things.jsligo)))
+ (deps all_the_things.jsligo))
+
+(rule
+ (targets all_the_things.religo_ast_pretty)
+ (action
+  (with-stdout-to
+   all_the_things.religo_ast_pretty
+   (run ligo print ast all_the_things.religo_output -s reasonligo)))
+ (deps all_the_things.religo_output))
+
+(rule
+ (targets all_the_things.mligo_ast_pretty)
+ (action
+  (with-stdout-to
+   all_the_things.mligo_ast_pretty
+   (run ligo print ast all_the_things.mligo_output -s cameligo)))
+ (deps all_the_things.mligo_output))
+
+(rule
+ (targets all_the_things.ligo_ast_pretty)
+ (action
+  (with-stdout-to
+   all_the_things.ligo_ast_pretty
+   (run ligo print ast all_the_things.ligo_output -s pascaligo)))
+ (deps all_the_things.ligo_output))
+
+(rule
+ (targets all_the_things.jsligo_ast_pretty)
+ (action
+  (with-stdout-to
+   all_the_things.jsligo_ast_pretty
+   (run ligo print ast all_the_things.jsligo_output -s jsligo)))
+ (deps all_the_things.jsligo_output))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.religo_ast all_the_things.religo_ast_pretty))
+ (deps all_the_things.religo_ast all_the_things.religo_ast_pretty))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.mligo_ast all_the_things.mligo_ast_pretty))
+ (deps all_the_things.mligo_ast all_the_things.mligo_ast_pretty))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.ligo_ast all_the_things.ligo_ast_pretty))
+ (deps all_the_things.ligo_ast all_the_things.ligo_ast_pretty))
+
+(rule
+ (alias runtest)
+ (action
+  (diff all_the_things.jsligo_ast all_the_things.jsligo_ast_pretty))
+ (deps all_the_things.jsligo_ast all_the_things.jsligo_ast_pretty))

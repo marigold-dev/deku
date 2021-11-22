@@ -1,4 +1,4 @@
-[submodule "vendors/tezos"]
-	path = vendors/tezos
-	url = https://gitlab.com/tezos/tezos.git
-	branch = tags/v11.0-rc1
+[submodule "vendors/tezos-ligo"]
+	path = vendors/tezos-ligo
+	url = https://gitlab.com/ligolang/tezos-ligo.git
+	branch = v11.0-rc1-ligo

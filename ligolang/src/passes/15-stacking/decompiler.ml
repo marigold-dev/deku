@@ -29,7 +29,7 @@ let normalize_edo_comb_value =
       | x -> x)
   | _ -> fun x -> x
 
-let rec decompile_value ~raise :
+let rec decompile_value ~(raise : stacking_error raise) :
   ('l, string) node -> ('l, string) node -> value =
   fun ty value ->
   let ty = normalize_edo_comb_type ty in

@@ -418,7 +418,7 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
     let record,module_env = compile_module_as_record ~raise module_binder module_env rhs in
     let t_record = record.type_expression in
     let result' = self ~module_env let_result in
-    return @@ E_let_in (record,false, ((Location.wrap @@ Var.of_name module_binder, t_record),result'))
+    return @@ E_let_in (record,true, ((Location.wrap @@ Var.of_name module_binder, t_record),result'))
   | E_mod_alias {alias; binders; result} -> (
     let module_binder,access = binders in
     let module_ =
@@ -430,7 +430,7 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
     let module_expr = self ~module_env module_expr in
     let module_env  = SMap.add alias module_ module_env in
     let result' = self ~module_env result in
-    return @@ E_let_in (module_expr,false,((Location.wrap @@ Var.of_name alias, tv),result'))
+    return @@ E_let_in (module_expr,true,((Location.wrap @@ Var.of_name alias, tv),result'))
   )
   | E_literal l -> return @@ E_literal l
   | E_variable name -> (
@@ -956,16 +956,16 @@ and compile_module_as_record ~raise module_name (module_env : _ SMap.t) (lst : A
   let rec module_as_record ~raise module_env (AST.Module_Fully_Typed lst) : (AST.expression * _) =
     let aux (r,env) (cur : AST.declaration ) =
       match cur with
-      | Declaration_constant { binder ; expr; attr=_ } ->
+      | Declaration_constant { binder ; expr; attr } ->
         let l = Format.asprintf "%a" Var.pp @@ Location.unwrap binder in
-        let attr : AST.known_attributes = { inline = false ; no_mutation = false; public = true; view = false } in
+        let attr : AST.known_attributes = { inline = attr.inline ; no_mutation = false; public = true ; view = false } in
         ((Label l,(expr,attr))::r,env)
       | Declaration_type _ty -> (r,env)
       | Declaration_module {module_binder; module_} ->
         let l = module_binder in
         let r',_ = module_as_record env ~raise module_ in
         let env = SMap.add l (get_type_expression r') env in
-        let attr : AST.known_attributes = { inline = false ; no_mutation = false; public = true ; view = false } in
+        let attr : AST.known_attributes = { inline = true ; no_mutation = false; public = true ; view = false } in
         ((Label l,(r',attr))::r,env)
       | Module_alias {alias; binders} ->
         let l = alias in
@@ -989,7 +989,8 @@ and compile_module_as_record ~raise module_name (module_env : _ SMap.t) (lst : A
           let expr = {expr with expression_content = e_variable @@ Location.wrap @@ Var.of_name l} in
           (Label l, expr)
         in
-        let record = ez_e_a_record @@ List.map ~f:aux (List.rev r) in
+        let record = ez_e_a_record ~layout:L_comb @@
+          List.map ~f:aux (List.rev r) in
       (* prefix with let_in*)
         let aux record (Label l, (expr, inline)) =
           let binder = Location.wrap @@ Var.of_name l in

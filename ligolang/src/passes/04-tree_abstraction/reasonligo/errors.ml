@@ -7,7 +7,7 @@ let stage = "abstracter"
 
 type abs_error = [
   | `Concrete_reasonligo_unknown_constant of string * Location.t
-  | `Concrete_reasonligo_recursive_fun of Region.t
+  | `Concrete_reasonligo_untyped_recursive_fun of Region.t
   | `Concrete_reasonligo_unsupported_pattern_type of Raw.pattern
   | `Concrete_reasonligo_unsupported_string_singleton of Raw.type_expr
   | `Concrete_reasonligo_michelson_type_wrong of Raw.type_expr * string
@@ -15,19 +15,7 @@ type abs_error = [
   | `Concrete_reasonligo_recursion_on_non_function of Location.t
   | `Concrete_reasonligo_missing_funarg_annotation of Raw.variable
   | `Concrete_reasonligo_funarg_tuple_type_mismatch of Region.t * Raw.pattern * Raw.type_expr
-  ]
-
-let unknown_predefined_type name = `Concrete_reasonligo_unknown_predefined_type name
-let unknown_constant s loc = `Concrete_reasonligo_unknown_constant (s,loc)
-let untyped_recursive_fun reg = `Concrete_reasonligo_recursive_fun reg
-let unsupported_pattern_type pl = `Concrete_reasonligo_unsupported_pattern_type pl
-let unsupported_deep_list_patterns cons = `Concrete_reasonligo_unsupported_deep_list_pattern cons
-let unsupported_string_singleton te = `Concrete_reasonligo_unsupported_string_singleton te
-let recursion_on_non_function reg = `Concrete_reasonligo_recursion_on_non_function reg
-let michelson_type_wrong texpr name = `Concrete_reasonligo_michelson_type_wrong (texpr,name)
-let michelson_type_wrong_arity loc name = `Concrete_reasonligo_michelson_type_wrong_arity (loc,name)
-let missing_funarg_annotation v = `Concrete_reasonligo_missing_funarg_annotation v
-let funarg_tuple_type_mismatch r p t = `Concrete_reasonligo_funarg_tuple_type_mismatch (r, p, t)
+  ] [@@deriving poly_constructor { prefix = "concrete_reasonligo_" }]
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> abs_error -> unit =
@@ -39,7 +27,7 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f
       "@[<hv>%a@.Unknown constant: %s"
         Snippet.pp loc s
-    | `Concrete_reasonligo_recursive_fun reg ->
+    | `Concrete_reasonligo_untyped_recursive_fun reg ->
       Format.fprintf f
         "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to have a type annotation (for now). @]"
         Snippet.pp_lift reg
@@ -98,7 +86,7 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("location", Location.to_yojson loc);
     ] in
     json_error ~stage ~content
-  | `Concrete_reasonligo_recursive_fun reg ->
+  | `Concrete_reasonligo_untyped_recursive_fun reg ->
     let message = `String "Untyped recursive functions are not supported yet" in
     let loc = Format.asprintf "%a" Location.pp_lift reg in
     let content = `Assoc [

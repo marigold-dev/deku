@@ -140,7 +140,7 @@ let sign_message ~raise (env:Ast_typed.environment) (payload : Ast_imperative.ex
 
 let contract id =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities id in
+  let id = List.nth_exn (test_environment ()).identities id in
   id.implicit_contract
 
 let addr id =

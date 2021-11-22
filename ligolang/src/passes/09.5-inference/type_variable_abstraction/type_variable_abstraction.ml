@@ -374,14 +374,14 @@ module TYPE_VARIABLE_ABSTRACTION = functor (Type_variable : sig type t end) -> s
         | `Typer_different_types of Types.type_expression * Types.type_expression
         | `Typer_variant_redefined_error of Location.t
         | `Typer_record_redefined_error of Location.t
-        | `Typer_constant_tag_number_of_arguments of string * Types.constant_tag * Types.constant_tag * int * int
+        | `Typer_different_constant_tag_number_of_arguments of string * Types.constant_tag * Types.constant_tag * int * int
         | `Typer_typeclass_not_a_rectangular_matrix
         | `Typer_could_not_remove of Types.type_constraint_simpl
         | `Typer_internal_error of string * string
         | `Trace_debug of string * typer_error
         | `Typer_pattern_do_not_match of Location.t
         | `Typer_label_do_not_match of Types.label * Types.label * Location.t
-        | `Typer_solver_no_progress of string
+        | `Typer_solver_made_no_progress of string
         | `Typer_different_typeclasses of Ast_core.c_typeclass_simpl * Ast_core.c_typeclass_simpl
       ]
     end

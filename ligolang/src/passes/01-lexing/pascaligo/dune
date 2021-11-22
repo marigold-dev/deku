@@ -2,70 +2,80 @@
 
 (rule
  (targets MenhirToken.ml MenhirToken.mli)
- (deps (:ParToken ../../02-parsing/pascaligo/ParToken.mly))
- (action (run menhir %{ParToken} --only-tokens --inspection --table --base MenhirToken))
-)
+ (deps
+  (:ParToken ../../02-parsing/pascaligo/ParToken.mly))
+ (action
+  (run
+   menhir
+   %{ParToken}
+   --only-tokens
+   --inspection
+   --table
+   --base
+   MenhirToken)))
 
 (library
  (name menhir_pascaligo_tokens)
  (public_name ligo.lexing.menhir_pascaligo_tokens)
  (modules MenhirToken)
- (libraries
-   lexing_shared
-   hex)
- (flags (:standard
-          -open Lexing_shared
-            -open Wrap     ;; for [wrap]
-            -open Common)) ;; for [lexeme]
-)
+ (libraries lexing_shared hex)
+ (flags
+  (:standard
+   -open
+   Lexing_shared
+   -open
+   Wrap ;; for [wrap]
+   -open
+   Common))
+ ;; for [lexeme]
+ )
 
 ;; Build of the PascaLIGO lexer as a library
 
 (library
-  (name lexing_pascaligo)
-  (public_name ligo.lexing.pascaligo)
-  (modules Token Self_tokens Style)
-  (libraries
-    ;; LIGO
-    lexing_shared
-    menhir_pascaligo_tokens
-    ;; Third party
-    str
-    hex))
+ (name lexing_pascaligo)
+ (public_name ligo.lexing.pascaligo)
+ (modules Token Self_tokens Style)
+ (libraries
+  ;; LIGO
+  lexing_shared
+  menhir_pascaligo_tokens
+  ;; Third party
+  str
+  hex))
 
 ;; Build of a standalone lexer for PascaLIGO
 
 (executable
-  (name LexerMain)
-  (libraries
-    ;; LIGO
-    preprocessing_pascaligo
-    lexing_shared
-    lexing_pascaligo
-    ;; Third party
-    str)
-  (modules Version LexerMain))
-
+ (name LexerMain)
+ (libraries
+  ;; LIGO
+  preprocessing_pascaligo
+  lexing_shared
+  lexing_pascaligo
+  ;; Third party
+  str)
+ (modules Version LexerMain))
 
 ;; Build of the unlexer (for covering the
 ;; error states of the LR automaton)
 
 (executable
-  (name Unlexer)
-  (libraries
-    ;; LIGO
-    lexing_shared
-    lexing_pascaligo
-    ;; Third party
-    str)
-  (modules Unlexer))
+ (name Unlexer)
+ (libraries
+  ;; LIGO
+  lexing_shared
+  lexing_pascaligo
+  ;; Third party
+  str)
+ (modules Unlexer))
 
 ;; --------------------------------------------------------------------
 ;; Build of the version source (for the user, as a CLI option)
 
 (rule
  (targets Version.ml)
- (action (with-stdout-to
-          Version.ml
-          (run "sh" "-c"
-               "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
+ (action
+  (with-stdout-to
+   Version.ml
+   (run "sh" "-c" "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))

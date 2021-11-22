@@ -2,71 +2,55 @@ if exists("b:current_syntax")
     finish
 endif
 
-" Keywords
-syntax keyword ligoKeyword begin end
-syntax keyword ligoKeyword is
-syntax keyword ligoKeyword fun let type
-syntax keyword ligoConditional if then else switch with
-syntax keyword ligoRepeat for to in set while
-syntax match ligoOperator "\v[-+*/=]"
-syntax match ligoOperator "=>"
-syntax match ligoOperator "\.\.\."
-syntax match ligoOtherSymbol "[(),;]"
+" string
+syntax region string start="\"" end="\"" 
+highlight link string String 
 
-highlight link ligoKeyword Keyword
-highlight link ligoConditional Conditional
-highlight link ligoRepeat Repeat
-highlight link ligoOperator Operator
+" comment
+syntax match comment "\/\/.*$" 
+syntax region comment start="/\*" end="\*/" 
+highlight link comment Comment 
 
-" Constants
-syntax keyword ligoBoolean True False true false
-syntax match ligoNumber "\v<\d+[a-z]*>"
-syntax match ligoNumber "\v<0x[a-fA-F0-9]+>"
-syntax region ligoString start=/\v"/ skip=/\v\\./ end=/\v"/
+" identifierconstructor
+syntax match identifierconstructor "\<\([A-Z][a-zA-Z0-9_$]*\)\s\+" 
+highlight link identifierconstructor Label 
 
-highlight link ligoBoolean Boolean
-highlight link ligoNumber Number
-highlight link ligoString String
+" module
+syntax match module_ "[a-z_][a-zA-Z0-9_$]*" contained 
+highlight link module_ Identifier 
+syntax match module "\<\([A-Z][a-zA-Z0-9_$]*\)\." nextgroup=module_ 
+highlight link module Structure 
 
-" Comments
-syntax region ligoComment start="\v/\*" end="\v\*/" contains=ligoComment
-syntax match ligoComment "\v//.*$"
-highlight link ligoComment Comment
+" typedefinition
+syntax match typedefinition "\(type\)\>" 
+highlight link typedefinition Type 
 
-" Types
-syntax region ligoParenTypeExpr start=/\v\(/ end=/\v\)/
-            \ contains=ligoParenTypeExpr,ligoComment
-            \ contained
+" operators
+syntax match operators "\<\(-\|+\|/\|mod\|land\|lor\|lxor\|lsl\|lsr\|&&\|||\|<\|>\|!=\|<=\|>=\)\>" 
+highlight link operators Operator 
 
-" In religo, we require type annotations to start with nonword
-" symbol followed by a colon instead of just colon. This simplifies
-" the highlighting logic – otherwise, to discriminate `{ field : type }`
-" and `{ field: value}` we would have to describe the whole grammar
-" in Vim syntax, and lay out the nesting rules. It is possible in theory
-" but since LIGO is under active development, the maintenance burden
-" would overweigh the advantages. Since space-colon is a recommended
-" formatting, the highlighting behavior is predictable.
-syntax region ligoTypeAnnotation 
-            \ matchgroup=ligoKeyword start=/\v(\W)@<=:/
-            \ matchgroup=ligoKeyword end=/=/
-            \ matchgroup=ligoKeyword end=/=>/
-            \ matchgroup=ligoOtherSymbol end=/,/
-            \ matchgroup=ligoOtherSymbol end=/;/
-            \ matchgroup=ligoOtherSymbol end=/)/
-            \ contains=ligoParenTypeExpr,ligoComment
-highlight link ligoTypeAnnotation Type
-highlight link ligoParenTypeExpr Type
+" numericliterals
+syntax match numericliterals "\<[0-9]+\(n\|tz\|tez\|mutez\|\)\>" 
+highlight link numericliterals Number 
 
-" Macros
-syntax match p_include "#\s*include"
-syntax match p_define  "#\s*\(define\|undef\)"
-syntax match p_if      "#\s*\(if\|elif\|else\|endif\)\(n\?def\)\?"
-syntax match p_message "#\s*\(error\|warning\)"
+" letbinding
+syntax match letbinding__ "[a-zA-Z$_][a-zA-Z0-9$_]*" contained 
+highlight link letbinding__ Statement 
+syntax match letbinding_ "rec\W\|" contained nextgroup=letbinding__ 
+highlight link letbinding_ StorageClass 
+syntax match letbinding "\(let\)\W" nextgroup=letbinding_ 
+highlight link letbinding Keyword 
 
-highlight link p_include Include
-highlight link p_define  Define
-highlight link p_if      PreCondit
-highlight link p_message Macro
+" controlkeywords
+syntax match controlkeywords "\<\(switch\|if\|else\|assert\|failwith\)\>" 
+highlight link controlkeywords Conditional 
+
+" macro
+syntax match macro "^\#[a-zA-Z]\+" 
+highlight link macro PreProc 
+
+" attribute
+syntax match attribute "\[@.*\]" 
+highlight link attribute PreProc 
 
 let b:current_syntax = "religo"
-

@@ -1,18 +1,18 @@
 ;; Parsing as a library
 
 (library
-  (name parsing_shared)
-  (public_name ligo.parsing.shared)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-     ;; Vendors
-     simple-utils
-     Preprocessor
-     ParserLib
-     ;; LIGO
-     lexing_shared
-     ;; Third party
-     terminal_size
-     pprint)
-  (modules
-     Errors Formatter Common ParserMainGen))
+ (name parsing_shared)
+ (public_name ligo.parsing.shared)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  simple-utils
+  Preprocessor
+  ParserLib
+  ;; LIGO
+  lexing_shared
+  ;; Third party
+  terminal_size
+  pprint)
+ (modules Errors Formatter Common ParserMainGen))

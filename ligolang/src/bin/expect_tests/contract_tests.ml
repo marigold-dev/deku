@@ -2167,3 +2167,22 @@ let%expect_test _ =
                      DIG 2 ;
                      CONS ;
                      PAIR } } } } } |} ]
+
+(* Check that decl_pos is not taken into account when "inferring" about tuples (including long tuples) *)
+let%expect_test _ =
+  run_ligo_good [ "print" ; "ast-typed" ; contract "tuple_decl_pos.mligo" ] ;
+  [%expect {|
+                     const c = lambda (#4) return CREATE_CONTRACT(lambda (#1) return let #9 = #1 in
+                      match #9 with
+                       | ( #3 , #2 ) ->
+                       ( LIST_EMPTY() , unit ) ,
+                     NONE() ,
+                     0mutez ,
+                     unit)
+                     const foo = let #11 = (c)@(unit) in  match #11 with
+                                                           | ( _a , _b ) ->
+                                                           unit
+                     const c = lambda (#5) return ( 1 , "1" , +1 , 2 , "2" , +2 , 3 , "3" , +3 , 4 , "4" )
+                     const foo = let #13 = (c)@(unit) in  match #13 with
+                                                           | ( _i1 , _s1 , _n1 , _i2 , _s2 , _n2 , _i3 , _s3 , _n3 , _i4 , _s4 ) ->
+                                                           unit |} ]

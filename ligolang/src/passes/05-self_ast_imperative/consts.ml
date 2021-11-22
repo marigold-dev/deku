@@ -23,7 +23,7 @@ let rec assign_expression ~raise : ?vars:expression_variable list -> expression 
                    | E_assign {variable} ->
                       begin
                         match List.find ~f:(fun v -> compare_vars variable v = 0) vars with
-                        | Some v -> raise.raise@@ const_rebound v.location variable
+                        | Some v -> raise.raise@@ const_assigned v.location variable
                         | None -> (true, vars, expr)
                       end
                    | E_lambda {binder={var;attributes}} ->

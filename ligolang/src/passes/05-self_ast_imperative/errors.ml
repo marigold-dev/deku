@@ -11,23 +11,11 @@ type self_ast_imperative_error = [
   | `Self_ast_imperative_bad_single_arity of (constant' * expression)
   | `Self_ast_imperative_bad_map_param_type of (constant' * expression)
   | `Self_ast_imperative_bad_set_param_type of (constant' * expression)
-  | `Self_ast_imperative_bad_convertion_bytes of expression
+  | `Self_ast_imperative_bad_conversion_bytes of expression
   | `Self_ast_imperative_vars_captured of (location * expression_variable) list
   | `Self_ast_imperative_const_assigned of (location * expression_variable)
   | `Self_ast_imperative_no_shadowing of location
-]
-
-let too_long_constructor c e = `Self_ast_imperative_long_constructor (c,e)
-let bad_timestamp t e = `Self_ast_imperative_bad_timestamp (t,e)
-let bad_format e = `Self_ast_imperative_bad_format_literal e
-let bad_empty_arity c e = `Self_ast_imperative_bad_empty_arity (c,e)
-let bad_single_arity c e = `Self_ast_imperative_bad_single_arity (c,e)
-let bad_map_param_type c e = `Self_ast_imperative_bad_map_param_type (c,e)
-let bad_set_param_type c e = `Self_ast_imperative_bad_set_param_type (c,e)
-let bad_conversion_bytes e = `Self_ast_imperative_bad_convertion_bytes e
-let vars_captured vars = `Self_ast_imperative_vars_captured vars
-let const_rebound decl_loc var = `Self_ast_imperative_const_assigned (decl_loc, var)
-let no_shadowing l = `Self_ast_imperative_no_shadowing l
+] [@@deriving poly_constructor { prefix = "self_ast_imperative_" }]
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> self_ast_imperative_error -> unit =
@@ -66,7 +54,7 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f
         "@[<hv>%a@ Ill-formed \"%a\" expression.@.A list of pair parameters is expected.@]"
         Snippet.pp e.location PP.constant' c
-    | `Self_ast_imperative_bad_convertion_bytes e ->
+    | `Self_ast_imperative_bad_conversion_bytes e ->
       Format.fprintf f
         "@[<hv>%a@ Ill-formed bytes literal.@.Example of a valid bytes literal: \"ff7a7aff\". @]"
         Snippet.pp e.location
@@ -160,7 +148,7 @@ let error_jsonformat : self_ast_imperative_error -> json = fun a ->
       ("value", value);
     ] in
     json_error ~stage ~content
-  | `Self_ast_imperative_bad_convertion_bytes e ->
+  | `Self_ast_imperative_bad_conversion_bytes e ->
     let message = `String "Bad bytes literal (conversion went wrong)" in
     let loc = `String (Format.asprintf "%a" Location.pp e.location) in
     let content = `Assoc [

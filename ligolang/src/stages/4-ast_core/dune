@@ -1,12 +1,8 @@
 (library
-  (name ast_core)
-  (public_name ligo.ast_core)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    stage_common
-    ast_sugar
-    UnionFind
-  )
-  (flags (:standard -open Simple_utils ))
-)
+ (name ast_core)
+ (public_name ligo.ast_core)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils stage_common ast_sugar UnionFind)
+ (flags
+  (:standard -open Simple_utils)))

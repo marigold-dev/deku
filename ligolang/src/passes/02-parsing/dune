@@ -1,21 +1,21 @@
 ;; Build of all LIGO parsers as a library
 
 (library
-  (name parsing)
-  (public_name ligo.parsing)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-     ;; Vendors
-     simple-utils
-     ;; LIGO
-     parsing_shared
-     parsing_pascaligo
-     parsing_cameligo
-     parsing_reasonligo
-     parsing_jsligo
-     preprocessing_cameligo
-     preprocessing_reasonligo
-     preprocessing_jsligo
-     preprocessing_pascaligo)
-  (modules
-     Parsing Errors Pascaligo Cameligo Reasonligo Jsligo))
+ (name parsing)
+ (public_name ligo.parsing)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  simple-utils
+  ;; LIGO
+  parsing_shared
+  parsing_pascaligo
+  parsing_cameligo
+  parsing_reasonligo
+  parsing_jsligo
+  preprocessing_cameligo
+  preprocessing_reasonligo
+  preprocessing_jsligo
+  preprocessing_pascaligo)
+ (modules Parsing Errors Pascaligo Cameligo Reasonligo Jsligo))

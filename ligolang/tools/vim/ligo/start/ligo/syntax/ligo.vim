@@ -2,62 +2,57 @@ if exists("b:current_syntax")
     finish
 endif
 
-" Keywords
-syntax keyword ligoKeyword begin end
-syntax keyword ligoKeyword block with is
-syntax keyword ligoKeyword function var const type record
-syntax keyword ligoConditional if then else case of
-syntax keyword ligoRepeat for to in set while
-syntax match ligoOperator "\v[-+*/=:;]"
-syntax match ligoOperator ":="
-syntax match ligoParens "("
-syntax match ligoParens ")"
+" string
+syntax region string start="\"" end="\"" 
+highlight link string String 
 
-highlight link ligoKeyword Keyword
-highlight link ligoConditional Conditional
-highlight link ligoRepeat Repeat
-highlight link ligoOperator Operator
+" comment
+syntax match comment "\/\/.*$" 
+syntax region comment start="(\*" end="\*)" 
+highlight link comment Comment 
 
-" Constants
-syntax keyword ligoBoolean True False true false
-syntax match ligoNumber "\v<\d+[a-z]*>"
-syntax match ligoNumber "\v<0x[a-fA-F0-9]+>"
-syntax region ligoString start=/\v"/ skip=/\v\\./ end=/\v"/
+" constorvar
+syntax match constorvar "\<\(const\|var\)\>" 
+highlight link constorvar Keyword 
 
-highlight link ligoBoolean Boolean
-highlight link ligoNumber Number
-highlight link ligoString String
+" identifierconstructor
+syntax match identifierconstructor "\<\([A-Z][a-zA-Z0-9_$]*\)\s\+" 
+highlight link identifierconstructor Label 
 
-" Comments
-syntax region ligoComment start=/\v\(\*/ end=/\v\*\)/ contains=ligoComment
-syntax match ligoComment "\v//.*$"
-highlight link ligoComment Comment
+" module
+syntax match module_ "[a-z_][a-zA-Z0-9_$]*" contained 
+highlight link module_ Identifier 
+syntax match module "\<\([A-Z][a-zA-Z0-9_$]*\)\." nextgroup=module_ 
+highlight link module Structure 
 
-" Types
-syntax region ligoParenTypeExpr start=/\v\(/ end=/\v\)/
-            \ contains=ligoParenTypeExpr,ligoComment
-            \ contained
-syntax region ligoTypeAnnotation 
-            \ matchgroup=ligoKeyword start=/:/
-            \ matchgroup=ligoKeyword end=/=/
-            \ matchgroup=ligoKeyword end=/:=/
-            \ matchgroup=ligoKeyword end=/;/
-            \ matchgroup=ligoParens end=/)/
-            \ matchgroup=ligoKeyword end=/\v\sis(\W|$)/
-            \ contains=ligoParenTypeExpr,ligoComment
-highlight link ligoTypeAnnotation Type
-highlight link ligoParenTypeExpr Type
+" typedefinition
+syntax match typedefinition "\(type\)\>" 
+highlight link typedefinition Type 
 
-" Macros
-syntax match p_include "#\s*include"
-syntax match p_define  "#\s*\(define\|undef\)"
-syntax match p_if      "#\s*\(if\|elif\|else\|endif\)\(n\?def\)\?"
-syntax match p_message "#\s*\(error\|warning\)"
+" operators
+syntax match operators "\<\(-\|+\|/\|mod\|land\|lor\|lxor\|lsl\|lsr\|&&\|||\|<\|>\|=/=\|<=\|>=\)\>" 
+highlight link operators Operator 
 
-highlight link p_include Include
-highlight link p_define  Define
-highlight link p_if      PreCondit
-highlight link p_message Macro
+" numericliterals
+syntax match numericliterals "\<[0-9]+\(n\|tz\|tez\|mutez\|\)\>" 
+highlight link numericliterals Number 
+
+" function
+syntax match function_ "[a-zA-Z$_][a-zA-Z0-9$_]*" contained 
+highlight link function_ Statement 
+syntax match function "\(function\)\W" nextgroup=function_ 
+highlight link function Keyword 
+
+" controlkeywords
+syntax match controlkeywords "\<\(case\|with\|if\|then\|else\|assert\|failwith\|begin\|end\|in\|is\|from\|skip\|block\|contains\|to\|step\|of\|while\|for\)\>" 
+highlight link controlkeywords Conditional 
+
+" macro
+syntax match macro "^\#[a-zA-Z]\+" 
+highlight link macro PreProc 
+
+" attribute
+syntax match attribute "\[@.*\]" 
+highlight link attribute PreProc 
 
 let b:current_syntax = "ligo"
-

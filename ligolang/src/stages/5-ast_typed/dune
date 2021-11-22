@@ -1,14 +1,13 @@
 (library
-  (name ast_typed)
-  (public_name ligo.ast_typed)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    ast_core
-    stage_common
-    UnionFind
-  )
-  (flags (:standard -open Simple_utils
-           ;; SOMEDAY remove this
-           -w -9))
-)
+ (name ast_typed)
+ (public_name ligo.ast_typed)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils ast_core stage_common UnionFind)
+ (flags
+  (:standard
+   -open
+   Simple_utils
+   ;; SOMEDAY remove this
+   -w
+   -9)))
