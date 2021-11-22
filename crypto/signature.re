@@ -2,12 +2,14 @@ open Helpers;
 [@deriving (ord, eq)]
 type t =
   | Ed25519(Ed25519.Signature.t)
-  | Secp256k1(Secp256k1.Signature.t);
+  | Secp256k1(Secp256k1.Signature.t)
+  | P256(P256.Signature.t);
 
 let sign = (secret, hash) =>
   switch (secret) {
   | Secret.Ed25519(secret) => Ed25519(Ed25519.sign(secret, hash))
   | Secret.Secp256k1(secret) => Secp256k1(Secp256k1.sign(secret, hash))
+  | Secret.P256(secret) => P256(P256.sign(secret, hash))
   };
 let verify = (key, signature, hash) =>
   switch (key, signature) {
@@ -15,13 +17,19 @@ let verify = (key, signature, hash) =>
     Ed25519.verify(key, signature, hash)
   | (Key.Secp256k1(key), Secp256k1(signature)) =>
     Secp256k1.verify(key, signature, hash)
-  | (Key.Ed25519(_) | Key.Secp256k1(_), Ed25519(_) | Secp256k1(_)) => false
+  | (Key.P256(key), P256(signature)) => P256.verify(key, signature, hash)
+  | (
+      Key.Ed25519(_) | Key.Secp256k1(_) | Key.P256(_),
+      Ed25519(_) | Secp256k1(_) | P256(_),
+    ) =>
+    false
   };
 
 let to_string =
   fun
   | Ed25519(signature) => Ed25519.Signature.to_string(signature)
-  | Secp256k1(signature) => Secp256k1.Signature.to_string(signature);
+  | Secp256k1(signature) => Secp256k1.Signature.to_string(signature)
+  | P256(signature) => P256.Signature.to_string(signature);
 let of_string = {
   let ed25519 = string => {
     let.some signature = Ed25519.Signature.of_string(string);
@@ -31,7 +39,11 @@ let of_string = {
     let.some signature = Secp256k1.Signature.of_string(string);
     Some(Secp256k1(signature));
   };
-  Encoding_helpers.parse_string_variant([ed25519, secp256k1]);
+  let p256 = string => {
+    let.some signature = P256.Signature.of_string(string);
+    Some(P256(signature));
+  };
+  Encoding_helpers.parse_string_variant([ed25519, secp256k1, p256]);
 };
 
 let (to_yojson, of_yojson) =

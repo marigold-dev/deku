@@ -13,6 +13,7 @@ let of_key = secret =>
   | Secret.Ed25519(secret) => Key.Ed25519(Ed25519.Key.of_secret(secret))
   | Secret.Secp256k1(secret) =>
     Key.Secp256k1(Secp256k1.Key.of_secret(secret))
+  | Secret.P256(secret) => Key.P256(P256.Key.of_secret(secret))
   };
 
 let genesis_key = {|edsk4bfbFdb4s2BdkW3ipfB23i9u82fgji6KT3oj2SCWTeHUthbSVd|};
