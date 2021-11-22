@@ -2,10 +2,7 @@
  (name ligo_coq_ocaml)
  (public_name ligo.coq_ocaml)
  (flags :standard -w "-33-39")
- (libraries
-  simple-utils
-  zarith
-  tezos-micheline))
+ (libraries simple-utils zarith tezos-micheline))
 
 ;; TODO removed temporarily due to dune race condition bug. extracted
 ;; files have been committed here.

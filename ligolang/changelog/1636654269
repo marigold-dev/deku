@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1410'
+title: 'Tezos dep.: vendored version now points to a custom repo'
+type: internal

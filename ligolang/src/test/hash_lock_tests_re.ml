@@ -28,7 +28,7 @@ let storage hashed used commits =
 
 let (first_committer , first_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
@@ -63,10 +63,11 @@ let commit ~raise ~add_warning () =
   in
   let post_storage = storage test_hash true post_commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_eq ~raise ~options (program,env) "commit"
     (e_pair salted_hash init_storage) (e_pair empty_op_list post_storage)
@@ -111,10 +112,11 @@ let reveal_young_commit ~raise ~add_warning () =
   in
   let init_storage = storage test_hash true commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_string_failwith ~raise ~options (program,env) "reveal"
     (e_pair reveal init_storage)
@@ -142,10 +144,11 @@ let reveal_breaks_commit ~raise ~add_warning () =
   in
   let init_storage = storage test_hash true commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_string_failwith ~raise ~options (program,env) "reveal"
     (e_pair reveal init_storage)
@@ -173,10 +176,11 @@ let reveal_wrong_commit ~raise ~add_warning () =
   in
   let init_storage = storage test_hash true commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_string_failwith ~raise ~options (program,env) "reveal"
     (e_pair reveal init_storage)
@@ -204,10 +208,11 @@ let reveal_no_reuse ~raise ~add_warning () =
   in
   let init_storage = storage test_hash false commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_string_failwith ~raise ~options (program,env) "reveal"
     (e_pair reveal init_storage)
@@ -236,10 +241,11 @@ let reveal ~raise ~add_warning () =
   let init_storage = storage test_hash true commits in
   let post_storage = storage test_hash false commits in
   let options =
-    Proto_alpha_utils.Memory_proto_alpha.make_options
+    Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~now
       ~sender:first_contract
-      ()
+      ())
   in
   expect_eq ~raise ~options (program,env) "reveal"
     (e_pair reveal init_storage) (e_pair empty_op_list post_storage)

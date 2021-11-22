@@ -19,13 +19,13 @@ let compile_main ~raise ~add_warning f () =
 
 let (oracle_addr , oracle_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
 let (stranger_addr , stranger_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 1 in
+  let id = List.nth_exn (test_environment ()).identities 1 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
@@ -40,9 +40,10 @@ let pledge  ~raise~add_warning f () =
   let (program,env) = get_program  ~raise~add_warning f() in
   let storage = e_address oracle_addr in
   let parameter = e_unit () in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+                  ~env:(test_environment ())
                   ~sender:oracle_contract
-                  ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ()
+                  ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ())
   in
   expect_eq  ~raise~options (program,env) "donate"
     (e_pair parameter storage)
@@ -52,8 +53,9 @@ let distribute ~raise ~add_warning f () =
   let (program,env) = get_program ~raise ~add_warning f () in
   let storage = e_address oracle_addr in
   let parameter =  empty_message in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
-                  ~sender:oracle_contract ()
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+                  ~env:(test_environment ())
+                  ~sender:oracle_contract ())
   in
   expect_eq ~raise ~options (program,env) "distribute"
     (e_pair parameter storage)
@@ -63,8 +65,9 @@ let distribute_unauthorized ~raise ~add_warning f () =
   let (program,env) = get_program ~raise ~add_warning f () in
   let storage = e_address oracle_addr in
   let parameter =  empty_message in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
-                  ~sender:stranger_contract ()
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+                  ~env:(test_environment ())
+                  ~sender:stranger_contract ())
   in
   expect_string_failwith ~raise ~options (program,env) "distribute"
     (e_pair parameter storage)

@@ -1,14 +1,11 @@
 (library
-  (name mini_c)
-  (public_name ligo.mini_c)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    tezos-utils
-    stage_common
-    tezos-hacl-glue-unix
-  )
-  (inline_tests)
-  (preprocess (pps ppx_expect ppx_deriving_yojson))
-  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
-)
+ (name mini_c)
+ (public_name ligo.mini_c)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils tezos-utils stage_common tezos-hacl-glue-unix)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect))
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils)))

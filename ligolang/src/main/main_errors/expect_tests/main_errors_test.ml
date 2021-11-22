@@ -197,7 +197,7 @@ let%expect_test "self_ast_imperative" =
   Ill-formed "ITER" expression.
   A list of pair parameters is expected.
   |}] ;
-  error (`Self_ast_imperative_bad_convertion_bytes expression) ;
+  error (`Self_ast_imperative_bad_conversion_bytes expression) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
@@ -206,9 +206,9 @@ let%expect_test "self_ast_imperative" =
   |}]
 
 let%expect_test _ =
-  human_readable_error (`Main_purification (`purification_corner_case "foo")) ;
+  human_readable_error (`Main_purification (`Purification_corner_case "foo")) ;
   [%expect {|Corner case: foo|}] ;
-  human_readable_error (`Main_depurification (`purification_corner_case "foo")) ;
+  human_readable_error (`Main_depurification (`Purification_corner_case "foo")) ;
   [%expect {| |}]
 
 let%expect_test "desugaring" = ()
@@ -218,12 +218,12 @@ let%expect_test "sugaring" = ()
 let%expect_test "main_cit_pascaligo" =
   let open Cst.Pascaligo in
   let open Location in
-  let ghost = 
-    object 
-      method region = Region.ghost 
+  let ghost =
+    object
+      method region = Region.ghost
       method attributes = []
       method payload = ""
-    end 
+    end
   in
   let error e = human_readable_error (`Main_cit_pascaligo e) in
   let lexeme_reg : lexeme reg = {value= "foo"; region= default_region1} in
@@ -259,7 +259,7 @@ let%expect_test "main_cit_pascaligo" =
 
       Invalid "zzz" type.
       An even number of 2 or more arguments is expected, where each odd item is a type annotated by the following string.|}] ;
-  error (`Concrete_pascaligo_recursive_fun location_t) ;
+  error (`Concrete_pascaligo_untyped_recursive_fun location_t) ;
   [%expect
     {|
   File "a dummy file name", line 20, character 5:
@@ -269,7 +269,7 @@ let%expect_test "main_cit_pascaligo" =
   |}] ;
   let pvar : var_pattern = {variable = {value = "foo"; region = Region.ghost} ; attributes = []} in
   error
-    (`Concrete_pascaligo_block_attribute
+    (`Concrete_pascaligo_block_start_with_attribute
       { value=
           { enclosing= BeginEnd (ghost, ghost);
             statements=
@@ -301,7 +301,7 @@ let%expect_test "main_cit_cameligo" =
   let pvar = PVar {value = { variable ; attributes = []} ; region = default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
   let location_t = File default_location in
-  error (`Concrete_cameligo_recursive_fun default_region1) ;
+  error (`Concrete_cameligo_untyped_recursive_fun default_region1) ;
   [%expect
     {|
       File "a dummy file name", line 20, character 5:
@@ -358,7 +358,7 @@ let%expect_test "main_cit_reasonligo" =
   let pvar = PVar  {value= {variable; attributes = []}; region= default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
   let location_t = File default_location in
-  error (`Concrete_reasonligo_recursive_fun default_region1) ;
+  error (`Concrete_reasonligo_untyped_recursive_fun default_region1) ;
   [%expect
     {|
       File "a dummy file name", line 20, character 5:
@@ -901,7 +901,7 @@ let%expect_test "self_ast_typed" =
   let expression =
     {expression_content; location= location_t; type_expression}
   in
-  error (`Self_ast_typed_rec_call (expression_variable, location_t)) ;
+  error (`Self_ast_typed_recursive_call_is_only_allowed_as_the_last_operation (expression_variable, location_t)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -918,7 +918,7 @@ let%expect_test "self_ast_typed" =
     Invalid type annotation.
     "bar" was given, but "foo" was expected.
     Note that "Tezos.self" refers to this contract, so the parameters should be the same. |}] ;
-  error (`Self_ast_typed_format_entrypoint_ann ("foo", location_t)) ;
+  error (`Self_ast_typed_bad_format_entrypoint_ann ("foo", location_t)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -940,7 +940,7 @@ let%expect_test "self_ast_typed" =
 
     Invalid entrypoint value.
     The entrypoint value does not match a constructor of the contract parameter. |}] ;
-  error (`Self_ast_typed_nested_big_map location_t) ;
+  error (`Self_ast_typed_nested_bigmap location_t) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -950,7 +950,7 @@ let%expect_test "self_ast_typed" =
   error (`Self_ast_typed_corner_case "foo") ;
   [%expect {|
     Internal error: foo |}] ;
-  error (`Self_ast_typed_contract_io ("foo", expression)) ;
+  error (`Self_ast_typed_bad_contract_io ("foo", expression)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -958,7 +958,7 @@ let%expect_test "self_ast_typed" =
     Invalid type for entrypoint "foo".
     An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
   error
-    (`Self_ast_typed_contract_list_ops ("foo", type_expression, expression)) ;
+    (`Self_ast_typed_expected_list_operation ("foo", type_expression, expression)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -975,14 +975,14 @@ let%expect_test "self_ast_typed" =
 
     Invalid type for entrypoint "foo".
     The storage type "foo" of the function parameter must be the same as the storage type "bar" of the return value. |}] ;
-  error (`Self_ast_typed_pair_in (location_t, `Contract)) ;
+  error (`Self_ast_typed_expected_pair_in (location_t, `Contract)) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
 
     Invalid contract.
     Expected a tuple as argument. |}] ;
-  error (`Self_ast_typed_pair_out location_t) ;
+  error (`Self_ast_typed_expected_pair_out location_t) ;
   [%expect
     {|
     File "a dummy file name", line 20, character 5:
@@ -998,7 +998,7 @@ let%expect_test "self_mini_c" =
   [%expect {|
     Invalid type for entrypoint.
     An entrypoint must of type "parameter * storage -> operations list * storage". |}] ;
-  error `Self_mini_c_aggregation ;
+  error `Self_mini_c_could_not_aggregate_entry ;
   [%expect {|
     Invalid type for entrypoint.
     An entrypoint must of type "parameter * storage -> operations list * storage". |}]

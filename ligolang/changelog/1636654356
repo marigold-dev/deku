@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1410'
+title: 'Performance: separate environments for "dummy" and "test"'
+type: performance

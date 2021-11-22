@@ -8,29 +8,20 @@ type stacking_error = [
   | `Stacking_could_not_tokenize_michelson of string
   | `Stacking_could_not_parse_michelson of string
   | `Stacking_untranspilable of int Michelson.t * int Michelson.t
-  | `Spilling_unsupported_primitive of Stage_common.Types.constant' * Environment.Protocols.t
-]
+  | `Stacking_unsupported_primitive of Stage_common.Types.constant' * Environment.Protocols.t
+] [@@deriving poly_constructor { prefix = "stacking_" }]
 
 let stage = "stacking"
 let unstacking_stage = "unstacking_stage"
-let corner_case_msg () = 
+let corner_case_msg () =
   "Sorry, we don't have a proper error message for this error. Please report \
    this use case so we can improve on this."
 
-let unsupported_primitive c p = `Spilling_unsupported_primitive (c,p)
-let corner_case ~loc  message = `Stacking_corner_case (loc,message)
-let contract_entrypoint_must_be_literal ~loc = `Stacking_contract_entrypoint loc
-let bad_iterator cst = `Stacking_bad_iterator cst
-let not_comparable_pair_struct = `Stacking_not_comparable_pair_struct
-let unrecognized_data errs = `Stacking_unparsing_unrecognized_data errs
 let untranspilable m_type m_data =
   let open Tezos_micheline.Micheline in
   let m_type = root (strip_locations m_type) in
   let m_data = root (strip_locations m_data) in
   `Stacking_untranspilable (m_type, m_data)
-let bad_constant_arity c = `Stacking_bad_constant_arity c
-let could_not_tokenize_michelson c = `Stacking_could_not_tokenize_michelson c
-let could_not_parse_michelson c = `Stacking_could_not_parse_michelson c
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> stacking_error -> unit =
@@ -38,7 +29,7 @@ let error_ppformat : display_format:string display_format ->
   match display_format with
   | Human_readable | Dev -> (
     match a with
-    | `Spilling_unsupported_primitive (c,p) ->
+    | `Stacking_unsupported_primitive (c,p) ->
       Format.fprintf f "@[<hv>unsupported primitive %a in protocol %s@]" Stage_common.PP.constant' c (Environment.Protocols.variant_to_string p)
     | `Stacking_corner_case (loc,msg) ->
       let s = Format.asprintf "Stacking corner case at %s : %s.\n%s"
@@ -72,7 +63,7 @@ let error_jsonformat : stacking_error -> Yojson.Safe.t = fun a ->
       ("content",  content )]
   in
   match a with
-  | `Spilling_unsupported_primitive (_,_) ->
+  | `Stacking_unsupported_primitive (_,_) ->
     let content = `Assoc [
       ("message", `String "unsupported primitive" );
       ]
@@ -80,12 +71,12 @@ let error_jsonformat : stacking_error -> Yojson.Safe.t = fun a ->
     json_error ~stage ~content
   | `Stacking_corner_case (loc,msg) ->
     let content = `Assoc [
-      ("location", `String loc); 
+      ("location", `String loc);
       ("message", `String msg); ] in
     json_error ~stage ~content
   | `Stacking_contract_entrypoint loc ->
     let content = `Assoc [
-      ("location", `String loc); 
+      ("location", `String loc);
       ("message", `String "contract entrypoint must be given as literal string"); ] in
     json_error ~stage ~content
   | `Stacking_bad_iterator cst ->

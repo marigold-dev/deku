@@ -82,7 +82,7 @@ let rec compile_type_expression : I.type_expression -> O.type_expression =
     | I.T_tuple tuple ->
       let aux (i,acc) el =
         let el = self el in
-        (i+1,(O.Label (string_of_int i), ({associated_type=el;michelson_annotation=None;decl_pos=0}:_ O.row_element_mini_c))::acc) in
+        (i+1,(O.Label (string_of_int i), ({associated_type=el;michelson_annotation=None;decl_pos=i}:_ O.row_element_mini_c))::acc) in
       let (_, lst ) = List.fold ~f:aux ~init:(0,[]) tuple in
       let record = O.LMap.of_list lst in
       return @@ O.T_record {fields = record ; layout = None}

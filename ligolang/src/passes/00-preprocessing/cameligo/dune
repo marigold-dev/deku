@@ -1,22 +1,21 @@
 ;; Build of the preprocessor of CameLIGO as a library
 
 (library
-  (name preprocessing_cameligo)
-  (public_name ligo.preprocessing.cameligo)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-     ;; Vendors
-     Preprocessor)
-  (modules Comments File)
-)
+ (name preprocessing_cameligo)
+ (public_name ligo.preprocessing.cameligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  Preprocessor)
+ (modules Comments File))
 
 ;; Build of a standalone preprocessor for CameLIGO
 
 (executable
-  (name PreprocMain)
-  (libraries
-    ;; LIGO
-    preprocessing_cameligo
-    preprocessing_shared)
-  (modules PreprocMain)
-)
+ (name PreprocMain)
+ (libraries
+  ;; LIGO
+  preprocessing_cameligo
+  preprocessing_shared)
+ (modules PreprocMain))

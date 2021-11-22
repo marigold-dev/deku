@@ -62,7 +62,7 @@ let sub ~raise loc = typer_2 ~raise loc "SUB" @@ fun a b ->
   then t_timestamp () else
   if (eq_2 (a , b) (t_mutez ()))
   then t_mutez () else
-    raise.raise (bad_subtraction loc)
+    raise.raise (bad_substraction loc)
 
 let some ~raise loc = typer_1 ~raise loc "SOME" @@ fun a -> t_option a
 

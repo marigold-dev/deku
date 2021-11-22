@@ -8,7 +8,7 @@ let stage = "abstracter"
 type abs_error = [
   | `Concrete_jsligo_unknown_constant of string * Location.t
   | `Concrete_jsligo_unknown_constructor of string * Location.t
-  | `Concrete_jsligo_recursive_fun of Region.t
+  | `Concrete_jsligo_untyped_recursive_fun of Region.t
   | `Concrete_jsligo_unsupported_pattern_type of Raw.pattern
   | `Concrete_jsligo_unsupported_string_singleton of Raw.type_expr
   | `Concrete_jsligo_michelson_type_wrong of Raw.type_expr * string
@@ -34,36 +34,7 @@ type abs_error = [
   | `Concrete_jsligo_expected_a_field_name of Raw.selection
   | `Concrete_jsligo_expected_an_int of Raw.expr
   | `Concrete_jsligo_invalid_list_pattern_match of Raw.array_item list
-  ]
-
-let unknown_constant s loc = `Concrete_jsligo_unknown_constant (s,loc)
-let unknown_constructor s loc = `Concrete_jsligo_unknown_constructor (s,loc)
-let untyped_recursive_fun reg = `Concrete_jsligo_recursive_fun reg
-let unsupported_pattern_type pl = `Concrete_jsligo_unsupported_pattern_type pl
-let unsupported_string_singleton te = `Concrete_jsligo_unsupported_string_singleton te
-let recursion_on_non_function reg = `Concrete_jsligo_recursion_on_non_function reg
-let michelson_type_wrong texpr name = `Concrete_jsligo_michelson_type_wrong (texpr,name)
-let michelson_type_wrong_arity loc name = `Concrete_jsligo_michelson_type_wrong_arity (loc,name)
-let missing_funarg_annotation v = `Concrete_jsligo_missing_funarg_annotation v
-let funarg_tuple_type_mismatch r p t = `Concrete_jsligo_funarg_tuple_type_mismatch (r, p, t)
-let not_in_switch_or_loop b = `Concrete_jsligo_not_in_switch_or_loop b
-let statement_not_supported_at_toplevel s = `Concrete_jsligo_statement_not_supported_at_toplevel s
-let not_a_valid_parameter p = `Concrete_jsligo_not_a_valid_parameter p
-let rest_not_supported_here p = `Concrete_jsligo_rest_not_supported_here p
-let property_not_supported p = `Concrete_jsligo_property_not_supported p
-let expected_an_expression p = `Concrete_jsligo_expected_an_expression p
-let new_not_supported n = `Concrete_jsligo_new_not_supported n
-let invalid_case s e = `Concrete_jsligo_invalid_case (s, e)
-let invalid_constructor e = `Concrete_jsligo_invalid_constructor e
-let unsupported_match_pattern p = `Concrete_jsligo_unsupported_match_pattern p
-let unsupported_match_object_property o = `Concrete_jsligo_unsupported_match_object_property o
-let expected_a_function e = `Concrete_jsligo_expected_a_function e
-let not_supported_assignment e = `Concrete_jsligo_not_supported_assignment e
-let array_rest_not_supported p = `Concrete_jsligo_array_rest_not_supported p
-let expected_a_variable e = `Concrete_jsligo_expected_a_variable e
-let expected_a_field_name f = `Concrete_jsligo_expected_a_field_name f
-let expected_an_int e = `Concrete_jsligo_expected_an_int e
-let invalid_list_pattern_match args = `Concrete_jsligo_invalid_list_pattern_match args
+  ] [@@deriving poly_constructor { prefix = "concrete_jsligo_" }]
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> abs_error -> unit =
@@ -79,7 +50,7 @@ let error_ppformat : display_format:string display_format ->
       Format.fprintf f
       "@[<hv>%a@.Unknown constructor in module: %s"
         Snippet.pp loc s
-    | `Concrete_jsligo_recursive_fun reg ->
+    | `Concrete_jsligo_untyped_recursive_fun reg ->
       Format.fprintf f
         "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to have a type annotation (for now). @]"
         Snippet.pp_lift reg
@@ -222,7 +193,7 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("location", Location.to_yojson loc);
     ] in
     json_error ~stage ~content
-  | `Concrete_jsligo_recursive_fun reg ->
+  | `Concrete_jsligo_untyped_recursive_fun reg ->
     let message = `String "Untyped recursive functions are not supported yet" in
     let loc = Format.asprintf "%a" Location.pp_lift reg in
     let content = `Assoc [

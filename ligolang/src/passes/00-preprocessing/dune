@@ -1,18 +1,18 @@
 ;; Build of the LIGO preprocessors
 
 (library
-  (name preprocessing)
-  (public_name ligo.preprocessing)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    ;; Vendors
-    Preprocessor
-    simple-utils
-    ;; LIGO
-    preprocessing_shared
-    preprocessing_pascaligo
-    preprocessing_cameligo
-    preprocessing_reasonligo
-    preprocessing_jsligo)
-  (modules
-     Preprocessing Errors Pascaligo Cameligo Reasonligo Jsligo))
+ (name preprocessing)
+ (public_name ligo.preprocessing)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  Preprocessor
+  simple-utils
+  ;; LIGO
+  preprocessing_shared
+  preprocessing_pascaligo
+  preprocessing_cameligo
+  preprocessing_reasonligo
+  preprocessing_jsligo)
+ (modules Preprocessing Errors Pascaligo Cameligo Reasonligo Jsligo))

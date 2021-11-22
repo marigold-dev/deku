@@ -376,7 +376,7 @@ let fetch_contract_type ~raise : string -> module_fully_typed -> contract_type =
       let (listop,storage') = trace_option ~raise (expected_pair_out expr.location) @@ Ast_typed.Helpers.get_pair tout.content in
       let () = trace_option ~raise (expected_list_operation main_fname listop expr) @@
         Ast_typed.assert_t_list_operation listop in
-      let () = trace_option ~raise (expected_same main_fname storage storage' expr) @@
+      let () = trace_option ~raise (expected_same_entry main_fname storage storage' expr) @@
         Ast_typed.assert_type_expression_eq (storage,storage') in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
       { parameter ; storage }

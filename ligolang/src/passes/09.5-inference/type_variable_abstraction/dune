@@ -1,15 +1,14 @@
 (library
-  (name type_variable_abstraction)
-  (public_name ligo.typer_new.type_variable_abstraction)
-  (libraries
-    ;; Many of these are unused dependencies
-    simple-utils
-    tezos-utils
-    ast_core
-    typer_common
-    predefined
-    UnionFind
-    environment
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils ))
-)
+ (name type_variable_abstraction)
+ (public_name ligo.typer_new.type_variable_abstraction)
+ (libraries
+  ;; Many of these are unused dependencies
+  simple-utils
+  tezos-utils
+  ast_core
+  typer_common
+  predefined
+  UnionFind
+  environment)
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils)))

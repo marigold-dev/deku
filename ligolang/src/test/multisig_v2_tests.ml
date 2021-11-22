@@ -59,7 +59,7 @@ let wrong_addr ~raise ~add_warning () =
     msg_store_list = []
   } in
   let sender = contract 3 in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   let () =
     let exp_failwith = "Unauthorized address" in
     expect_string_failwith ~raise ~options (program,env) "main"
@@ -75,7 +75,7 @@ let message_size_exceeded ~raise ~add_warning () =
     msg_store_list = []
   } in
   let sender = contract 1 in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   let () =
     let exp_failwith = "Message size exceed maximum limit" in
     expect_string_failwith ~raise ~options (program,env) "main"
@@ -93,7 +93,7 @@ let maximum_number_of_proposal ~raise ~add_warning () =
     msg_store_list = [(bytes1, e_set [e_address@@ addr 1])]
   } in
   let sender = contract 1 in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   let () =
     let exp_failwith = "Maximum number of proposal reached" in
     expect_string_failwith ~raise ~options (program,env) "main"
@@ -112,7 +112,7 @@ let send_already_accounted ~raise ~add_warning () =
   } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair (send_param empty_message) init_storage) (e_pair empty_op_list init_storage)
 
@@ -133,7 +133,7 @@ let send_never_accounted ~raise ~add_warning () =
   } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair (send_param empty_message) init_storage) (e_pair empty_op_list final_storage)
 
@@ -154,7 +154,7 @@ let withdraw_already_accounted_one ~raise ~add_warning () =
     msg_store_list = [] } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
@@ -175,7 +175,7 @@ let withdraw_already_accounted_two ~raise ~add_warning () =
     msg_store_list = [(bytes, e_set [e_address@@ addr 2])] } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
@@ -198,7 +198,7 @@ let counters_reset ~raise ~add_warning () =
     msg_store_list = [] } in
   let options =
     let sender = contract 3 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list final_storage)
 
@@ -213,7 +213,7 @@ let withdraw_never_accounted ~raise ~add_warning () =
   } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   expect_eq ~raise ~options (program,env) "main"
     (e_pair param init_storage) (e_pair empty_op_list init_storage)
 
@@ -229,7 +229,7 @@ let succeeded_storing ~raise ~add_warning () =
   } in
   let options =
     let sender = contract 1 in
-    Proto_alpha_utils.Memory_proto_alpha.make_options ~sender () in
+    Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~sender ()) in
   let () = expect_eq_n_trace_aux ~raise ~options [1;2] (program,env) "main"
       (fun th ->
         let init_storage = storage (init_storage th) in

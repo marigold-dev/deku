@@ -86,106 +86,10 @@ type typer_error = [
   | `Typer_wrong_type_for_unit_pattern of Location.t * Ast_typed.type_expression
   | `Typer_poly_not_applied of Location.t
   | `Typer_wrong_generalizable of Location.t * Ast_core.type_variable
-]
+] [@@deriving poly_constructor { prefix = "typer_" }]
 
-let wrong_type_for_unit_pattern l t = `Typer_wrong_type_for_unit_pattern (l,t)
-let pattern_do_not_conform_type p t = `Typer_pattern_do_not_conform_type (p,t)
-let pattern_do_not_match loc = `Typer_pattern_do_not_match loc
-let missing_funarg_annotation v = `Typer_missing_funarg_annotation v
-let variant_redefined_error (loc:Location.t) = `Typer_variant_redefined_error loc
-let record_redefined_error (loc:Location.t) = `Typer_record_redefined_error loc
-let michelson_comb_no_record (loc:Location.t) = `Typer_michelson_comb_no_record loc
-let michelson_comb_no_variant (loc:Location.t) = `Typer_michelson_comb_no_variant loc
-let unbound_module_variable (e:Ast_typed.Environment.t) (mv:Ast_typed.module_variable) (loc:Location.t) = `Typer_unbound_module_variable (e,mv,loc)
-let unbound_type_variable (e:Ast_typed.Environment.t) (tv:Ast_typed.type_variable) (loc:Location.t) = `Typer_unbound_type_variable (e,tv,loc)
-let unbound_variable (e:Ast_typed.Environment.t) (v:Ast_typed.expression_variable) (loc:Location.t) = `Typer_unbound_variable (e,v,loc)
-let match_missing_case (m:Ast_core.label list) (v:Ast_core.label list) (loc:Location.t) = `Typer_match_missing_case (m, v, loc)
-let match_extra_case (m:Ast_core.label list) (v:Ast_core.label list) (loc:Location.t) = `Typer_match_extra_case (m, v, loc)
-let unbound_constructor (e:Ast_typed.Environment.t) (c:Ast_core.label) (loc:Location.t) = `Typer_unbound_constructor (e,c,loc)
-let type_constant_wrong_number_of_arguments (op:Ast_core.type_variable option) (expected:int) (actual:int) loc = `Typer_type_constant_wrong_number_of_arguments (op,expected,actual,loc)
-let redundant_constructor (e:Ast_typed.Environment.t) (c:Ast_core.label) (loc:Location.t) = `Typer_redundant_constructor (e,c,loc)
-let michelson_or (c:Ast_core.label) (loc:Location.t) = `Typer_michelson_or_no_annotation (c,loc)
-let module_error_tracer (p:Ast_core.module_) (err:typer_error) = `Typer_module_tracer (p,err)
-let constant_declaration_error_tracer (name:Ast_core.expression_variable) (ae:Ast_core.expression) (expected: Ast_typed.type_expression option) (err:typer_error) =
-  `Typer_constant_declaration_tracer (name,ae,expected,err)
 let match_error ~(expected: Ast_typed.type_expression) ~(actual: Ast_typed.type_expression) (loc:Location.t) =
-  `Typer_match_error (expected,actual,loc)
-let needs_annotation (e:Ast_core.expression) (case:string) = `Typer_needs_annotation (e,case)
-let fvs_in_create_contract_lambda (e:Ast_core.expression) (fvar:Ast_typed.expression_variable) = `Typer_fvs_in_create_contract_lambda (e,fvar)
-let create_contract_lambda (cst : Ast_core.constant') (e : Ast_core.expression) = `Typer_create_contract_lambda (cst,e)
-let type_error_approximate ~(actual: Ast_typed.type_expression) ~(expression:Ast_core.expression) =
-  `Typer_should_be_a_function_type (actual,expression)
-let bad_record_access (field:Ast_core.label) (ae:Ast_core.expression) (t:Ast_typed.type_expression) (loc:Location.t) =
-  `Typer_bad_record_access (field,ae,t,loc)
-let expression_tracer ae err = `Typer_expression_tracer (ae,err)
-let record_access_tracer (e:Ast_typed.expression) (err:typer_error) = `Typer_record_access_tracer (e,err)
-let assert_equal (loc:Location.t) (expected:Ast_typed.type_expression) (actual:Ast_typed.type_expression) = `Typer_assert_equal (loc,expected,actual)
-let corner_case desc = `Typer_corner_case desc
-let bad_collect_loop (t:Ast_typed.type_expression) (loc:Location.t) = `Typer_bad_collect_loop (t,loc)
-let declaration_order_record (loc:Location.t) = `Typer_declaration_order_record loc
-let too_small_record (loc:Location.t) = `Typer_too_small_record loc
-let expected_record (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_record (loc,t)
-let expected_variant (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_variant (loc,t)
-let wrong_param_number (loc:Location.t) (name:string) (expected:int) (actual:Ast_typed.type_expression list) =
-  `Typer_wrong_param_number (loc,name,expected,actual)
-let bad_list_fold_tracer err = `Typer_bad_list_fold_tracer err
-let bad_set_fold_tracer err = `Typer_bad_set_fold_tracer err
-let bad_map_fold_tracer err = `Typer_bad_map_fold_tracer err
-let expected_function (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_function (loc,t)
-let expected_pair (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_pair (loc,t)
-let expected_list (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_list (loc,t)
-let expected_sapling_transaction (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_sapling_transaction (loc,t)
-let expected_sapling_state (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_sapling_state (loc,t)
-let expected_ligo_code (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_ligo_code (loc,t)
-let expected_michelson_code (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_michelson_code (loc,t)
-let expected_address (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_address (loc,t)
-let expected_set (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_set (loc,t)
-let expected_map (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_map (loc,t)
-let expected_big_map (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_big_map (loc,t)
-let expected_option (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_option (loc,t)
-let expected_nat (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_nat (loc,t)
-let expected_bytes (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_bytes (loc,t)
-let expected_key (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_key (loc,t)
-let expected_signature (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_signature (loc,t)
-let expected_contract (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_contract (loc,t)
-let expected_typed_address (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_typed_address (loc,t)
-let expected_ticket (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_ticket (loc,t)
-let expected_string (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_string (loc,t)
-let expected_key_hash (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_key_hash (loc,t)
-let expected_mutez (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_mutez (loc,t)
-let expected_op_list (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_op_list (loc,t)
-let expected_int (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_int (loc,t)
-let expected_bool (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_bool (loc,t)
-let expected_unit (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_expected_unit (loc,t)
-let expected_ascription (t:Ast_core.expression) = `Typer_expected_ascription t
-let not_matching (loc:Location.t) (t1:Ast_typed.type_expression) (t2:Ast_typed.type_expression) = `Typer_not_matching (loc,t1,t2)
-let not_annotated (loc: Location.t) = `Typer_not_annotated loc
-let contract_not_annotated (loc: Location.t) = `Typer_contract_not_annotated loc
-let bad_subtraction (loc:Location.t) = `Typer_bad_substraction loc
-let wrong_size (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_wrong_size (loc,t)
-let wrong_neg (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_wrong_neg (loc,t)
-let wrong_not (loc:Location.t) (t:Ast_typed.type_expression) = `Typer_wrong_not (loc,t)
-let typeclass_error (loc:Location.t) (exps:Ast_typed.type_expression list list) (acts:Ast_typed.type_expression list) =
-  `Typer_typeclass_error (loc,exps,acts)
-let wrong_converter (t:Ast_typed.type_expression) = `Typer_converter t
-let uncomparable_types (loc:Location.t) (a:Ast_typed.type_expression) (b:Ast_typed.type_expression) =
-  `Typer_uncomparable_types (loc,a,b)
-let comparator_composed (loc:Location.t) (a:Ast_typed.type_expression) = `Typer_comparator_composed (loc,a)
-let unrecognized_type_constant (e:Ast_core.type_expression) = `Typer_unrecognized_type_constant e
-let poly_not_applied (loc:Location.t) = `Typer_poly_not_applied loc
-let wrong_generalizable (loc:Location.t) (t:Ast_core.type_variable) = `Typer_wrong_generalizable (loc, t)
-
-(* new typer errors *)
-let constant_declaration_tracer (name: Ast_core.expression_variable) (ae:Ast_core.expression) (expected: Ast_typed.type_expression option) (err:typer_error) =
-  `Typer_constant_decl_tracer (name,ae,expected,err)
-let different_types a b = `Typer_different_types (a,b)
-let different_constant_tag_number_of_arguments loc opa opb lena lenb = `Typer_constant_tag_number_of_arguments (loc, opa, opb, lena, lenb)
-let typeclass_not_a_rectangular_matrix = `Typer_typeclass_not_a_rectangular_matrix
-let internal_error (loc : string) (msg : string) : typer_error = `Typer_internal_error (loc, msg)
-let could_not_remove = fun constraints -> `Typer_could_not_remove constraints
-let trace_debug (msg : string) (err : typer_error) : typer_error = `Trace_debug (msg,err)
-let redundant_pattern (x : Location.t) : typer_error = `Typer_redundant_pattern x
-
+  match_error expected actual loc
 
 let rec error_ppformat : display_format:string display_format ->
   Format.formatter -> typer_error -> unit =

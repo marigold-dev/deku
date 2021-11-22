@@ -1,0 +1,5 @@
+author: er433
+merge_request: '1409'
+title: 'Testing framework: update run so it runs in current tezos_context and port
+  tzip12 tests to testing framework'
+type: added

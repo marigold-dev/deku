@@ -18,13 +18,13 @@ open Ast_imperative
 
 let (sender , contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
 let external_contract =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 4 in
+  let id = List.nth_exn (test_environment ()).identities 4 in
   let kh = id.public_key_hash in
   Tezos_utils.Signature.Public_key_hash.to_string kh
 
@@ -48,7 +48,7 @@ let transfer ~raise ~add_warning f s () =
   ] in
   let input = e_pair parameter storage in
   let expected = e_pair (e_typed_list [] (t_operation ())) new_storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_eq ~raise (program, env) ~options "transfer" input expected
 
 let transfer_not_e_allowance ~raise ~add_warning f s () =
@@ -60,7 +60,7 @@ let transfer_not_e_allowance ~raise ~add_warning f s () =
   ] in
   let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("value",e_nat 10)] in
   let input = e_pair parameter storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_string_failwith ~raise ~options (program, env) "transfer" input
   "NotEnoughAllowance"
 
@@ -73,7 +73,7 @@ let transfer_not_e_balance ~raise ~add_warning f s () =
   ] in
   let parameter = e_record_ez [("address_from", from_);("address_to",to_); ("value",e_nat 10)] in
   let input = e_pair parameter storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_string_failwith ~raise ~options (program, env) "transfer" input
   "NotEnoughBalance"
 
@@ -92,7 +92,7 @@ let approve ~raise ~add_warning f s () =
   ] in
   let input = e_pair parameter storage in
   let expected = e_pair (e_typed_list [] (t_operation ())) new_storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_eq ~raise (program, env) ~options "approve" input expected
 
 let approve_unsafe ~raise ~add_warning f s () =
@@ -104,7 +104,7 @@ let approve_unsafe ~raise ~add_warning f s () =
   ] in
   let parameter = e_record_ez [("spender", from_);("value",e_nat 100)] in
   let input = e_pair parameter storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_string_failwith ~raise ~options (program, env) "approve" input
   "UnsafeAllowanceChange"
 
@@ -118,7 +118,7 @@ let get_allowance ~raise ~add_warning f s () =
   let parameter = e_record_ez [("owner", from_);("spender",sender); ("callback", external_contract)] in
   let input = e_pair parameter storage in
   let expected = e_pair (e_typed_list [] (t_operation ())) storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_eq ~raise (program, env) ~options "getAllowance" input expected
 
 let get_balance ~raise ~add_warning f s () =
@@ -131,7 +131,7 @@ let get_balance ~raise ~add_warning f s () =
   let parameter = e_record_ez [("owner", from_);("callback", external_contract)] in
   let input = e_pair parameter storage in
   let expected = e_pair (e_typed_list [] (t_operation ())) storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_eq ~raise (program, env) ~options "getBalance" input expected
 
 let get_total_supply ~raise ~add_warning f s () =
@@ -144,7 +144,7 @@ let get_total_supply ~raise ~add_warning f s () =
   let parameter = e_record_ez [("callback", external_contract)] in
   let input = e_pair parameter storage in
   let expected = e_pair (e_typed_list [] (t_operation ())) storage in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options () in
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ()) in
   expect_eq ~raise (program, env) ~options "getTotalSupply" input expected
 
 let main = test_suite "tzip-12" [

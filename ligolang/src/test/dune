@@ -13,8 +13,7 @@
   tezos-crypto
   zinc.types
   zinc.interpreter
-  zinc.utils
-  )
+  zinc.utils)
  (flags
   (:standard -w +1..62-4-9-44-40-42-48@39@33 -open Simple_utils)))
 

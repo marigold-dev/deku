@@ -8,7 +8,7 @@ let peephole_expression ~raise : expression -> expression = fun e ->
   | E_literal (Literal_key_hash s) as l -> (
     let open Tezos_crypto in
     match Signature.Public_key_hash.of_b58check_opt s with
-    | None -> raise.raise (bad_format e)
+    | None -> raise.raise (bad_format_literal e)
     | Some _ -> return l
     )
   | E_literal (Literal_address _) as l -> (
@@ -17,13 +17,13 @@ let peephole_expression ~raise : expression -> expression = fun e ->
   | E_literal (Literal_signature s) as l -> (
     let open Tezos_crypto in
     match Signature.of_b58check_opt s with
-    | None -> raise.raise (bad_format e)
+    | None -> raise.raise (bad_format_literal e)
     | Some _ -> return l
     )
   | E_literal (Literal_key s) as l -> (
     let open Tezos_crypto in
     match Signature.Public_key.of_b58check_opt s with
-    | None -> raise.raise (bad_format e)
+    | None -> raise.raise (bad_format_literal e)
     | Some _ ->
       return l
     )

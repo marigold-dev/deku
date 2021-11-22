@@ -6,7 +6,7 @@ module Parsing = Parsing.Cameligo
 let stage = "abstracter"
 
 type abs_error = [
-  | `Concrete_cameligo_recursive_fun of Region.t
+  | `Concrete_cameligo_untyped_recursive_fun of Region.t
   | `Concrete_cameligo_unknown_constant of string * Location.t
   | `Concrete_cameligo_unsupported_pattern_type of Raw.pattern list
   | `Concrete_cameligo_unsupported_string_singleton of Raw.type_expr
@@ -16,36 +16,7 @@ type abs_error = [
   | `Concrete_cameligo_missing_funarg_annotation of Raw.variable
   | `Concrete_cameligo_funarg_tuple_type_mismatch of Region.t * Raw.pattern * Raw.type_expr
   | `Concrete_cameligo_type_params_not_annotated of Region.t
-  ]
-
-let untyped_recursive_fun reg : abs_error =
-  `Concrete_cameligo_recursive_fun reg
-let unknown_constant s loc : abs_error =
-  `Concrete_cameligo_unknown_constant (s,loc)
-
-let unsupported_pattern_type pl : abs_error =
-  `Concrete_cameligo_unsupported_pattern_type pl
-
-let unsupported_string_singleton te : abs_error =
-  `Concrete_cameligo_unsupported_string_singleton te
-
-let recursion_on_non_function reg : abs_error =
-  `Concrete_cameligo_recursion_on_non_function reg
-
-let michelson_type_wrong texpr name : abs_error =
-  `Concrete_cameligo_michelson_type_wrong (texpr,name)
-
-let michelson_type_wrong_arity loc name : abs_error =
-  `Concrete_cameligo_michelson_type_wrong_arity (loc,name)
-
-let missing_funarg_annotation v : abs_error =
-  `Concrete_cameligo_missing_funarg_annotation v
-
-let funarg_tuple_type_mismatch r p t : abs_error =
-  `Concrete_cameligo_funarg_tuple_type_mismatch (r, p, t)
-
-let type_params_not_annotated r : abs_error =
-  `Concrete_cameligo_type_params_not_annotated r
+  ] [@@deriving poly_constructor { prefix = "concrete_cameligo_" }]
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> abs_error -> unit =
@@ -53,7 +24,7 @@ let error_ppformat : display_format:string display_format ->
   match display_format with
   | Human_readable | Dev -> (
     match a with
-    | `Concrete_cameligo_recursive_fun reg ->
+    | `Concrete_cameligo_untyped_recursive_fun reg ->
       Format.fprintf f
       "@[<hv>%a@.Invalid function declaration.@.Recursive functions are required to have a type annotation (for now). @]"
         Snippet.pp_lift reg
@@ -112,7 +83,7 @@ let error_jsonformat : abs_error -> Yojson.Safe.t = fun a ->
       ("content",  content )]
   in
   match a with
-  | `Concrete_cameligo_recursive_fun reg ->
+  | `Concrete_cameligo_untyped_recursive_fun reg ->
     let message = `String "Untyped recursive functions are not supported yet" in
     let loc = Format.asprintf "%a" Location.pp_lift reg in
     let content = `Assoc [

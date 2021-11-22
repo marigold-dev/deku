@@ -24,19 +24,19 @@ let typecheck ~raise ~add_warning ~(options: Compiler_options.t) (cform : form) 
     | Env -> selfed in
   (applied,e)
 
-let compile_expression ~raise ~(options: Compiler_options.t) ~(env : Ast_typed.environment) (e : Ast_core.expression)
+let compile_expression ~raise ~(options: Compiler_options.t) ~(env : Ast_typed.environment) (expr : Ast_core.expression)
     : Ast_typed.expression * Ast_typed.environment =
   let inferred = match options.infer with
     | true  ->
       let env_inf = Checking.decompile_env env in
-      let (_,e,_,_) =
-        trace ~raise inference_tracer @@ Inference.type_expression_subst env_inf Inference.Solver.initial_state e in
-      e
-    | false -> e
+      let (_,expr,_,_) =
+        trace ~raise inference_tracer @@ Inference.type_expression_subst env_inf Inference.Solver.initial_state expr in
+      expr
+    | false -> expr
   in
-  let e,typed = trace ~raise checking_tracer @@ Checking.type_expression ~test:false ~protocol_version:options.protocol_version env inferred in
+  let env,typed = trace ~raise checking_tracer @@ Checking.type_expression ~test:false ~protocol_version:options.protocol_version env inferred in
   let applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_expression typed in
-  (applied, e)
+  (applied, env)
 
 let apply (entry_point : string) (param : Ast_core.expression) : Ast_core.expression  =
   let name = Location.wrap @@ Var.of_name entry_point in

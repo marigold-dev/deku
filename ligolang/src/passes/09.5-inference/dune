@@ -1,17 +1,16 @@
 (library
-  (name inference)
-  (public_name ligo.inference)
-  (libraries
-    simple-utils
-    tezos-utils
-    ast_core
-    ast_typed
-    predefined
-    UnionFind
-    environment
-    database_plugins
-    type_variable_abstraction
-    self_ast_core
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils ))
-)
+ (name inference)
+ (public_name ligo.inference)
+ (libraries
+  simple-utils
+  tezos-utils
+  ast_core
+  ast_typed
+  predefined
+  UnionFind
+  environment
+  database_plugins
+  type_variable_abstraction
+  self_ast_core)
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-60-30@39@33 -open Simple_utils)))

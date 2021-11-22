@@ -1,22 +1,21 @@
 ;; Build of the preprocessor of ReasonLIGO as a library
 
 (library
-  (name preprocessing_reasonligo)
-  (public_name ligo.preprocessing.reasonligo)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-     ;; Vendors
-     Preprocessor)
-  (modules Comments File)
-)
+ (name preprocessing_reasonligo)
+ (public_name ligo.preprocessing.reasonligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  Preprocessor)
+ (modules Comments File))
 
 ;; Build of a standalone preprocessor for ReasonLIGO
 
 (executable
-  (name PreprocMain)
-  (libraries
-    ;; LIGO
-    preprocessing_reasonligo
-    preprocessing_shared)
-  (modules PreprocMain)
-)
+ (name PreprocMain)
+ (libraries
+  ;; LIGO
+  preprocessing_reasonligo
+  preprocessing_shared)
+ (modules PreprocMain))

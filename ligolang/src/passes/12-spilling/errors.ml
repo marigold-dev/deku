@@ -9,34 +9,14 @@ type spilling_error = [
   | `Spilling_bad_decompile of Mini_c.value
   | `Spilling_could_not_parse_raw_michelson of Location.t * string
   | `Spilling_raw_michelson_must_be_seq of Location.t * (Location.t, string) Tezos_micheline.Micheline.node
-  ]
+  ] [@@deriving poly_constructor { prefix = "spilling_" }]
 
 let stage = "spilling"
 
-let corner_case ~loc desc = `Spilling_corner_case (loc, desc)
+let corner_case ~loc desc = corner_case loc desc
 let corner_case_message () =
   "Sorry, we don't have a proper error message for this error. Please report \
   this use case so we can improve on this."
-
-let no_type_variable name = `Spilling_no_type_variable name
-
-let unsupported_tuple_pattern_matching location =
-  `Spilling_unsupported_pattern_matching location
-
-let unsupported_recursive_function expression_variable =
-  `Spilling_unsupported_recursive_function expression_variable
-
-let wrong_mini_c_value expected actual =
-  `Spilling_wrong_mini_c_value (expected , actual)
-
-let bad_decompile bad_type =
-  `Spilling_bad_decompile bad_type
-
-let could_not_parse_raw_michelson loc code =
-  `Spilling_could_not_parse_raw_michelson (loc, code)
-
-let raw_michelson_must_be_seq loc code =
-  `Spilling_raw_michelson_must_be_seq (loc, code)
 
 let error_ppformat : display_format:string display_format ->
   Format.formatter -> spilling_error -> unit =

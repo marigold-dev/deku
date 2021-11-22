@@ -1,15 +1,11 @@
 (library
-  (name self_mini_c)
-  (public_name ligo.self_mini_c)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    mini_c
-    tezos-hacl-glue-unix
-    bls12-381-unix
-  )
-  (inline_tests)
-  (preprocess
-    (pps ppx_expect)
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils ))
-)
+ (name self_mini_c)
+ (public_name ligo.self_mini_c)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries mini_c tezos-hacl-glue-unix bls12-381-unix)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_poly_constructor))
+ (flags
+  (:standard -w +1..62-4-9-44-40-42-48-30@39@33 -open Simple_utils)))

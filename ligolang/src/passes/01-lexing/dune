@@ -1,22 +1,21 @@
 ;; Build of all LIGO lexers as a library
 
 (library
-  (name lexing)
-  (public_name ligo.lexing)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-     ;; Vendors
-     simple-utils
-     ;; LIGO
-     lexing_shared
-     preprocessing_pascaligo
-     lexing_pascaligo
-     preprocessing_cameligo
-     lexing_cameligo
-     preprocessing_reasonligo
-     lexing_reasonligo
-     preprocessing_jsligo
-     lexing_jsligo)
-  (modules
-     Lexing Errors Pascaligo Cameligo Reasonligo jsligo)
-)
+ (name lexing)
+ (public_name ligo.lexing)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Vendors
+  simple-utils
+  ;; LIGO
+  lexing_shared
+  preprocessing_pascaligo
+  lexing_pascaligo
+  preprocessing_cameligo
+  lexing_cameligo
+  preprocessing_reasonligo
+  lexing_reasonligo
+  preprocessing_jsligo
+  lexing_jsligo)
+ (modules Lexing Errors Pascaligo Cameligo Reasonligo jsligo))

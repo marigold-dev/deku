@@ -1,15 +1,15 @@
 (library
-  (name cst_reasonligo)
-  (public_name ligo.cst.reasonligo)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    ;; Input 
-    lexing_reasonligo
-    ;; Vendors
-    LexerLib
-    simple-utils
-    ;; Third party
-    hex
-    zarith)
-  (modules CST Printer)
-)
+ (name cst_reasonligo)
+ (public_name ligo.cst.reasonligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ;; Input 
+  lexing_reasonligo
+  ;; Vendors
+  LexerLib
+  simple-utils
+  ;; Third party
+  hex
+  zarith)
+ (modules CST Printer))

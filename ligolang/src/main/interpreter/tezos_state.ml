@@ -143,6 +143,18 @@ let get_storage ~raise ~loc ~calltrace ctxt addr =
   let storage_type = canonical_to_ligo storage_type in
   (st_v, storage_type)
 
+let get_alpha_context ~raise ctxt =
+  let (alpha_context,_,_) =
+    let open Tezos_raw_protocol in
+    Trace.trace_alpha_tzresult_lwt ~raise (fun _ -> corner_case ()) @@
+      Alpha_context.prepare
+        ~level:ctxt.raw.header.shell.level
+        ~predecessor_timestamp:ctxt.raw.header.shell.timestamp
+        ~timestamp:(get_timestamp ctxt)
+        ~fitness:ctxt.raw.header.shell.fitness
+        ctxt.raw.context in
+  alpha_context
+
 let unwrap_baker ~raise ~loc : Memory_proto_alpha.Protocol.Alpha_context.Contract.t -> Tezos_crypto.Signature.Public_key_hash.t  =
   fun x ->
     Trace.trace_option ~raise (generic_error loc "The baker is not an implicit account") @@ Memory_proto_alpha.Protocol.Alpha_context.Contract.is_implicit x

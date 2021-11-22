@@ -16,7 +16,7 @@ let compile_main ~raise ~add_warning () =
 
 let (first_owner , first_contract) =
   let open Proto_alpha_utils.Memory_proto_alpha in
-  let id = List.nth_exn (dummy_environment ()).identities 0 in
+  let id = List.nth_exn (test_environment ()).identities 0 in
   let kt = id.implicit_contract in
   Protocol.Alpha_context.Contract.to_b58check kt , kt
 
@@ -34,9 +34,10 @@ let buy_id ~raise ~add_warning () =
                              ("skip_price", e_mutez 1000000) ; ]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
-      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ()
+      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -72,9 +73,10 @@ let buy_id_sender_addr ~raise ~add_warning () =
                              ("skip_price", e_mutez 1000000) ; ]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
-      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ()
+      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -110,9 +112,10 @@ let buy_id_wrong_amount ~raise ~add_warning () =
                              ("skip_price", e_mutez 1000000) ; ]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
-      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents) ()
+      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents) ())
   in
   let param = e_record_ez [("profile", owner_website) ;
                            ("initial_controller", (e_some (e_address new_addr)))] in
@@ -130,10 +133,11 @@ let update_details_owner ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -175,10 +179,11 @@ let update_details_controller ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address owner_addr) ;
@@ -221,10 +226,11 @@ let update_details_nonexistent ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -257,9 +263,10 @@ let update_details_wrong_addr ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -292,10 +299,11 @@ let update_details_unchanged ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -326,10 +334,11 @@ let update_owner ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -370,10 +379,11 @@ let update_owner_nonexistent ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -404,10 +414,11 @@ let update_owner_wrong_addr ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
       ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.zero)
-      ()
+      ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -437,9 +448,10 @@ let skip ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
-      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ()
+      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.one) ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;
@@ -475,9 +487,10 @@ let skip_wrong_amount ~raise ~add_warning () =
                                   ("profile", owner_website)]
   in
   let new_addr = first_owner in
-  let options = Proto_alpha_utils.Memory_proto_alpha.make_options
+  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options
+      ~env:(test_environment ())
       ~sender:first_contract
-      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents) ()
+      ~amount:(Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents) ())
   in
   let new_website = e_bytes_string "ligolang.org" in
   let id_details_2 = e_record_ez [("owner", e_address new_addr) ;

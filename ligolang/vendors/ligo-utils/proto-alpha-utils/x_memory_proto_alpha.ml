@@ -3,7 +3,7 @@ module Michelson = Tezos_utils.Michelson
 include Memory_proto_alpha
 let init_environment = Init_proto_alpha.init_environment
 let dummy_environment = Init_proto_alpha.dummy_environment
-
+let test_environment = Init_proto_alpha.test_environment
 
 open Protocol
 open Script_typed_ir
@@ -200,12 +200,13 @@ let fake_bake tezos_context chain_id now =
   tezos_context
 
 let make_options
-    ?(tezos_context = (dummy_environment ()).tezos_context)
-    ?(now = Alpha_context.Script_timestamp.now (dummy_environment ()).tezos_context)
-    ?(sender = (List.nth_exn (dummy_environment ()).identities 0).implicit_contract)
+    ?(env = (dummy_environment ()))
+    ?(tezos_context = env.tezos_context)
+    ?(now = Alpha_context.Script_timestamp.now env.tezos_context)
+    ?(sender = (List.nth_exn env.identities 0).implicit_contract)
     ?(self = default_self)
     ?(parameter_ty = t_unit)
-    ?(source = (List.nth_exn (dummy_environment ()).identities 1).implicit_contract)
+    ?(source = (List.nth_exn env.identities 1).implicit_contract)
     ?(amount = Alpha_context.Tez.one)
     ?(balance = Alpha_context.Tez.zero)
     ?(chain_id = Environment.Chain_id.zero)

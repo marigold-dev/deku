@@ -1,56 +1,42 @@
 (library
-  (name cli)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-    ligo_compile
-    build
-    repl
-    ligo_api
-  )
-  (modules cli cli_helpers old_cli old_cli_helpers version)
-  (flags (:standard -open Simple_utils -open Ligo))
-)
+ (name cli)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo ligo_compile build repl ligo_api)
+ (modules cli cli_helpers old_cli old_cli_helpers version)
+ (flags
+  (:standard -open Simple_utils -open Ligo)))
 
 (library
-  (name repl)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-    build
-    linenoise
-  )
-  (modules repl)
-  (flags (:standard -open Simple_utils))
-)
+ (name repl)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo build linenoise)
+ (modules repl)
+ (flags
+  (:standard -open Simple_utils)))
 
 (rule
  (targets version.ml)
- (action (with-stdout-to
-          version.ml
-          (run "sh" "-c"
-               "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
-
+ (action
+  (with-stdout-to
+   version.ml
+   (run "sh" "-c" "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
 
 ; build static executable with --profile static
+
 (env
- (static (flags (:standard -ccopt -static -cclib "-lgmp"))))
+ (static
+  (flags
+   (:standard -ccopt -static -cclib "-lgmp"))))
 
 (executable
-  (name runligo)
-  (public_name ligo)
-  (instrumentation (backend bisect_ppx))
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-    cli
-  )
-  (modules runligo)
-  (package ligo)
-  (flags (:standard -open Simple_utils))
-)
+ (name runligo)
+ (public_name ligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo cli)
+ (modules runligo)
+ (package ligo)
+ (flags
+  (:standard -open Simple_utils)))

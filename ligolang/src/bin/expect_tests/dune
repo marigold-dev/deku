@@ -1,6 +1,11 @@
 (library
  (name cli_expect_tests)
  (libraries simple-utils cli)
- (inline_tests (deps (source_tree ../../test/contracts) (source_tree ../../test/lexer)))
- (preprocess (pps ppx_expect))
- (flags (:standard -open Simple_utils)))
+ (inline_tests
+  (deps
+   (source_tree ../../test/contracts)
+   (source_tree ../../test/lexer)))
+ (preprocess
+  (pps ppx_expect))
+ (flags
+  (:standard -open Simple_utils)))
