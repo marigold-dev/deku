@@ -663,7 +663,7 @@ describe("pack", ({test, _}) => {
 });
 describe("consensus", ({test, _}) => {
   open Helpers;
-  open Consensus;
+  open Deku.Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
   let key_hash_exn = s => Key_hash.of_string(s) |> Option.get;

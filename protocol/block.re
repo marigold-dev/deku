@@ -71,7 +71,7 @@ let (hash, verify) = {
     // TODO: maybe should also be previous?
 
     let hash =
-      Tezos_interop.Consensus.hash_block(
+      Tezos.Deku.Consensus.hash_block(
         ~block_height,
         ~block_payload_hash,
         ~state_root_hash,
