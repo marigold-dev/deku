@@ -35,10 +35,13 @@ type zinc_instruction =
   | Num of Z.t
   | Add
   (* ASTs *)
-  | MakeRecord of label list
+  | MakeRecord of int
   | RecordAccess of label
-  | MakeVariant of label
-  | MatchVariant of (label * zinc) list
+  | MakeVariant of variant_label
+  | MatchVariant of (variant_label * zinc) list
+  (* Lists *)
+  | Nil
+  | Cons
   (* Crypto *)
   | Key of string
   | HashKey
@@ -82,7 +85,8 @@ module rec Env_item : sig
     | NonliteralValue of zinc_nonliteral_value
     | Clos of Clos.t
     | Record of Stack_item.t LMap.t
-    | Variant of label * Stack_item.t
+    | List of Stack_item.t list
+    | Variant of variant_label * Stack_item.t
   [@@deriving show, eq, yojson]
 end = struct
   type t =
@@ -90,7 +94,8 @@ end = struct
     | NonliteralValue of zinc_nonliteral_value
     | Clos of Clos.t
     | Record of Stack_item.t LMap.t
-    | Variant of label * Stack_item.t
+    | List of Stack_item.t list
+    | Variant of variant_label * Stack_item.t
   [@@deriving show, eq, yojson]
 end
 
@@ -100,7 +105,8 @@ and Stack_item : sig
     | NonliteralValue of zinc_nonliteral_value
     | Clos of Clos.t
     | Record of t LMap.t
-    | Variant of label * t
+    | List of t list
+    | Variant of variant_label * t
     | Marker of zinc * Env_item.t list
   [@@deriving show, eq, yojson]
 end = struct
@@ -109,7 +115,8 @@ end = struct
     | NonliteralValue of zinc_nonliteral_value
     | Clos of Clos.t
     | Record of t LMap.t
-    | Variant of label * t
+    | List of t list
+    | Variant of variant_label * t
     | Marker of zinc * Env_item.t list
   [@@deriving show, eq, yojson]
 end

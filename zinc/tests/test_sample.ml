@@ -11,8 +11,8 @@ let zinc =
       Access 0;
       MatchVariant
         [
-          (Zinc_utils.Label "Some", [Grab; Access 0]);
-          (Zinc_utils.Label "None", [Grab; String "Not a contract"; Failwith]);
+          ("Some", [Grab; Access 0]);
+          ("None", [Grab; String "Not a contract"; Failwith]);
         ];
       EndLet;
       Grab;
@@ -20,10 +20,9 @@ let zinc =
       Key "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav";
       Access 0;
       Mutez (Z.of_int 10);
-      MakeRecord [];
+      MakeRecord 0;
       MakeTransaction;
-      MakeRecord
-        [Zinc_utils.Label "0"; Zinc_utils.Label "1"; Zinc_utils.Label "2"];
+      MakeRecord 3;
       Return;
     ]
 
