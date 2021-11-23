@@ -7,6 +7,6 @@ RUN esy
 RUN esy release
 WORKDIR _release
 RUN npm pack
-RUN npm i -g ./sidechain-0.1.0.tgz --prefix /usr/local
+RUN npm i -g ./sidechain-0.0.0.tgz --prefix /usr/local
 ENTRYPOINT ["deku-node"]
 CMD ["/app/data"]
