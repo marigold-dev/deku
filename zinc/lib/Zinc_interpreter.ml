@@ -40,40 +40,45 @@ let[@warning "-4"] interpret_zinc :
     in
     let open Zinc in
     match (code, env, stack) with
-    | (Nil :: c, env, s) -> Steps.Continue (c, env, Stack_item.List [] :: s)
-    | (Cons :: c, env, item :: Stack_item.List x :: s) ->
+    | (Plain_old_data Nil :: c, env, s) ->
+        Steps.Continue (c, env, Stack_item.List [] :: s)
+    | (Operation Cons :: c, env, item :: Stack_item.List x :: s) ->
         Steps.Continue (c, env, Stack_item.List (item :: x) :: s)
-    | (Grab :: c, env, Stack_item.Marker (c', e') :: s) ->
+    | (Core Grab :: c, env, Stack_item.Marker (c', e') :: s) ->
         Steps.Continue
-          (c', e', Stack_item.Clos {Clos.code = Grab :: c; env} :: s)
-    | (Grab :: c, env, v :: s) -> Steps.Continue (c, stack_to_env v :: env, s)
-    | (Grab :: _, _, []) -> failwith "nothing to grab!"
-    | (Return :: _, _, Stack_item.Z v :: Stack_item.Marker (c', e') :: s) ->
+          (c', e', Stack_item.Clos {Clos.code = Core Grab :: c; env} :: s)
+    | (Core Grab :: c, env, v :: s) ->
+        Steps.Continue (c, stack_to_env v :: env, s)
+    | (Core Grab :: _, _, []) -> failwith "nothing to grab!"
+    | (Core Return :: _, _, Stack_item.Z v :: Stack_item.Marker (c', e') :: s)
+      ->
         Steps.Continue (c', e', Stack_item.Z v :: s)
-    | (Return :: _, _, Stack_item.Clos {Clos.code = c'; env = e'} :: s) ->
+    | (Core Return :: _, _, Stack_item.Clos {Clos.code = c'; env = e'} :: s) ->
         Steps.Continue (c', e', s)
-    | (PushRetAddr c' :: c, env, s) ->
+    | (Core (PushRetAddr c') :: c, env, s) ->
         Steps.Continue (c, env, Stack_item.Marker (c', env) :: s)
-    | (Apply :: _, _, Stack_item.Clos {Clos.code = c'; env = e'} :: s) ->
+    | (Core Apply :: _, _, Stack_item.Clos {Clos.code = c'; env = e'} :: s) ->
         Steps.Continue (c', e', s)
     (* Below here is just modern SECD *)
-    | (Access n :: c, env, s) -> (
+    | (Core (Access n) :: c, env, s) -> (
         let nth = Base.List.nth env n in
         match nth with
         | Some nth -> Steps.Continue (c, env, (nth |> env_to_stack) :: s)
         | None -> Steps.Internal_error "Tried to access env item out of bounds")
-    | (Closure c' :: c, env, s) ->
+    | (Core (Closure c') :: c, env, s) ->
         Steps.Continue (c, env, Stack_item.Clos {Clos.code = c'; env} :: s)
-    | (EndLet :: c, _ :: env, s) -> Steps.Continue (c, env, s)
+    | (Core EndLet :: c, _ :: env, s) -> Steps.Continue (c, env, s)
     (* zinc extensions *)
     (* operations that jsut drop something on the stack haha *)
-    | ( ((Num _ | Address _ | Key _ | Hash _ | Bool _ | String _ | Mutez _) as v)
+    | ( (Plain_old_data
+           (Num _ | Address _ | Key _ | Hash _ | Bool _ | String _ | Mutez _) as
+        v)
         :: c,
         env,
         s ) ->
         Steps.Continue (c, env, Stack_item.Z v :: s)
     (* ADTs *)
-    | (MakeRecord r :: c, env, s) ->
+    | (Adt (MakeRecord r) :: c, env, s) ->
         let list_split_at ~n lst =
           let rec go n acc = function
             | [] ->
@@ -87,14 +92,15 @@ let[@warning "-4"] interpret_zinc :
         let (record, stack) = list_split_at ~n:r s in
         let record_contents = LMap.of_list (List.rev record) in
         Steps.Continue (c, env, Stack_item.Record record_contents :: stack)
-    | (RecordAccess accessor :: c, env, Stack_item.Record r :: s) ->
+    | (Adt (RecordAccess accessor) :: c, env, Stack_item.Record r :: s) ->
         let res =
           match LMap.find r accessor with
           | None -> failwith "field not found"
           | Some x -> Steps.Continue (c, env, x :: s)
         in
         res
-    | (MatchVariant vs :: c, env, Stack_item.Variant (label, item) :: s) -> (
+    | (Adt (MatchVariant vs) :: c, env, Stack_item.Variant (label, item) :: s)
+      -> (
         match
           Base.List.find_map vs ~f:(fun (match_arm, constructors) ->
               if String.equal match_arm label then Some constructors else None)
@@ -102,22 +108,33 @@ let[@warning "-4"] interpret_zinc :
         | None -> Steps.Internal_error "inexhaustive match"
         | Some match_code ->
             Steps.Continue (List.concat [match_code; c], env, item :: s))
-    | (MakeVariant label :: c, env, value :: s) ->
+    | (Adt (MakeVariant label) :: c, env, value :: s) ->
         Steps.Continue (c, env, Stack_item.Variant (label, value) :: s)
     (* Math *)
-    | (Add :: c, env, Stack_item.Z (Num a) :: Stack_item.Z (Num b) :: s) ->
-        Steps.Continue (c, env, Stack_item.Z (Num (Z.add a b)) :: s)
-    | (Add :: c, env, Stack_item.Z (Mutez a) :: Stack_item.Z (Mutez b) :: s) ->
-        Steps.Continue (c, env, Stack_item.Z (Mutez (Z.add a b)) :: s)
+    | ( Operation Add :: c,
+        env,
+        Stack_item.Z (Plain_old_data (Num a))
+        :: Stack_item.Z (Plain_old_data (Num b)) :: s ) ->
+        Steps.Continue
+          (c, env, Stack_item.Z (Plain_old_data (Num (Z.add a b))) :: s)
+    | ( Operation Add :: c,
+        env,
+        Stack_item.Z (Plain_old_data (Mutez a))
+        :: Stack_item.Z (Plain_old_data (Mutez b)) :: s ) ->
+        Steps.Continue
+          (c, env, Stack_item.Z (Plain_old_data (Mutez (Z.add a b))) :: s)
     (* Booleans *)
-    | (Eq :: c, env, a :: b :: s) ->
-        Steps.Continue (c, env, Stack_item.Z (Bool (Stack_item.equal a b)) :: s)
+    | (Operation Eq :: c, env, a :: b :: s) ->
+        Steps.Continue
+          ( c,
+            env,
+            Stack_item.Z (Plain_old_data (Bool (Stack_item.equal a b))) :: s )
     (* Crypto *)
-    | (HashKey :: c, env, Stack_item.Z (Key _key) :: s) ->
+    | (Operation HashKey :: c, env, Stack_item.Z (Plain_old_data (Key _key)) :: s) ->
         let h = failwith "need to move this into interpreter_context" in
-        Steps.Continue (c, env, Stack_item.Z (Hash h) :: s)
+        Steps.Continue (c, env, Stack_item.Z (Plain_old_data (Hash h)) :: s)
     (* Tezos specific *)
-    | (ChainID :: c, env, s) ->
+    | (Domain_specific_operation ChainID :: c, env, s) ->
         Steps.Continue
           ( c,
             env,
@@ -125,9 +142,11 @@ let[@warning "-4"] interpret_zinc :
               (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
                  Also probably shouldn't use key like this. *)
               (let h = failwith "need to move this into interpreter_context" in
-               Hash h)
+               Plain_old_data (Hash h))
             :: s )
-    | (Contract_opt :: c, env, Stack_item.Z (Address address) :: s) ->
+    | ( Domain_specific_operation Contract_opt :: c,
+        env,
+        Stack_item.Z (Plain_old_data (Address address)) :: s ) ->
         (* todo: abstract this into a function *)
         let contract =
           match interpreter_context.get_contract_opt address with
@@ -138,21 +157,24 @@ let[@warning "-4"] interpret_zinc :
           | None -> Stack_item.Variant ("None", Utils.unit_record_stack)
         in
         Steps.Continue (c, env, contract :: s)
-    | ( MakeTransaction :: c,
+    | ( Domain_specific_operation MakeTransaction :: c,
         env,
         r
-        :: Stack_item.Z (Mutez amount)
+        :: Stack_item.Z (Plain_old_data (Mutez amount))
            :: Stack_item.NonliteralValue (Contract contract) :: s )
       when Stack_item.equal r Utils.unit_record_stack ->
         Steps.Continue
           ( c,
             env,
             Stack_item.NonliteralValue
-              (Operation (Transaction (amount, contract)))
+              (Chain_operation (Transaction (amount, contract)))
             :: s )
     (* should be unreachable except when program is done *)
-    | ([Return], _, _) -> Steps.Done
-    | (Failwith :: _, _, Stack_item.Z (String s) :: _) -> Steps.Failwith s
+    | ([Core Return], _, _) -> Steps.Done
+    | ( Control_flow Failwith :: _,
+        _,
+        Stack_item.Z (Plain_old_data (String s)) :: _ ) ->
+        Steps.Failwith s
     (* should not be reachable *)
     | (x :: _, _, _) ->
         Steps.Internal_error

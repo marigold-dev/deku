@@ -6,18 +6,7 @@ type contract = string * address option
 [@@deriving show {with_path = false}, eq, yojson]
 
 module Zinc = struct
-  type t = instruction list [@@deriving show {with_path = false}, eq, yojson]
-
-  and instruction =
-    (*
-      Everything in here should be safe and trustworthy. Our assumption is that an adversary
-      can create whatever zinc they want and provide it as code to the interpreter.
-      The code is guaranteed
-  *)
-    (* ====================
-       zinc core operations
-       ====================
-    *)
+  type core_instruction =
     | Grab
     | Return
     | PushRetAddr of t
@@ -25,55 +14,63 @@ module Zinc = struct
     | Access of int
     | Closure of t
     | EndLet
-    (*
-     ================
-     Extra operations
-     ================
-  *)
-    (* Core types *)
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and plain_old_data =
     | Bool of bool
-    | Eq
     | String of string
-    (* math *)
     | Num of Z.t
-    | Add
-    (* ASTs *)
+    | Mutez of Z.t
+    | Nil
+    | Bytes of bytes
+    | Address of address
+    | Key of string
+    | Hash of string
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and adt =
     | MakeRecord of int
     | RecordAccess of label
     | MakeVariant of variant_label
     | MatchVariant of (variant_label * t) list
-    (* Lists *)
-    | Nil
-    | Cons
-    (* Crypto *)
-    | Key of string
-    | HashKey
-    | Hash of string
-    (* serialization *)
-    | Bytes of bytes
-    (*
-     ===========================
-     tezos_specific instructions
-     ===========================
-  *)
-    | Address of address
-    | ChainID
-    | Contract_opt
-    | MakeTransaction
-    | Mutez of Z.t
-    (* Adding this to make contracts easier to interpret even though I think it's technically unecessary  *)
-    | Done
-    | Failwith
   [@@deriving show {with_path = false}, eq, yojson]
+
+  and operation = Eq | Add | Cons | HashKey
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and domain_specific_operation = ChainID | Contract_opt | MakeTransaction
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and control_flow = Failwith
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and instruction =
+    (*
+      Everything in here should be safe and trustworthy. Our assumption is that an adversary
+      can create whatever zinc they want and provide it as code to the interpreter.
+      The code is guaranteed
+  *)
+    | Core of core_instruction
+    | Plain_old_data of plain_old_data
+    | Adt of adt
+    | Operation of operation
+    | Domain_specific_operation of domain_specific_operation
+    | Control_flow of control_flow
+  [@@deriving show {with_path = false}, eq, yojson]
+
+  and t = instruction list [@@deriving show {with_path = false}, eq, yojson]
 
   (*
     Not all zinc values can be expressed directly in code as literals.
     So they're represented as a seperate type.
   *)
-  type nonliteral_value = Contract of contract | Operation of operation
+  type nonliteral_value =
+    | Contract of contract
+    | Chain_operation of chain_operation
   [@@deriving show {with_path = false}, eq, yojson]
 
-  and operation = Transaction of Z.t * contract (* todo: add parameter *)
+  and chain_operation =
+    | Transaction of Z.t * contract (* todo: add parameter *)
   [@@deriving show {with_path = false}, eq, yojson]
 end
 
