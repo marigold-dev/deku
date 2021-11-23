@@ -32,7 +32,7 @@ let compile_type ~(raise : Errors.zincing_error raise) t =
   t |> Spilling.compile_type ~raise |> fun x -> x.type_content
 
 let rec tail_compile :
-    raise:Errors.zincing_error raise -> environment -> AST.expression -> zinc =
+    raise:Errors.zincing_error raise -> environment -> AST.expression -> Zinc.t =
  (*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for
      compiling everything else. *)
  fun ~raise environment expr ->
@@ -49,7 +49,7 @@ let rec tail_compile :
     let result_compiled =
       tail_compile (environment |> add_binder name) expression
     in
-    other_compile environment ~k:(Grab :: result_compiled) value
+    other_compile environment ~k:(Core Grab :: result_compiled) value
   in
   let compile_known_function_application =
     compile_known_function_application ~raise
@@ -62,7 +62,7 @@ let rec tail_compile :
 
   match expr.expression_content with
   | E_lambda lambda ->
-      Grab
+      Core Grab
       ::
       tail_compile
         (environment |> add_binder lambda.binder.wrap_content)
@@ -74,7 +74,7 @@ let rec tail_compile :
   | E_application { lamb; args } ->
       compile_function_application ~function_compiler:tail_compile environment
         lamb [ args ]
-  | _ -> other_compile environment ~k:[ Return ] expr
+  | _ -> other_compile environment ~k:[ Core Return ] expr
 
 (*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for 
      compiling everything else. *)
@@ -82,13 +82,13 @@ and other_compile :
     raise:Errors.zincing_error raise ->
     environment ->
     AST.expression ->
-    k:zinc ->
-    zinc =
+    k:Zinc.t ->
+    Zinc.t =
  fun ~raise environment expr ~k ->
   let () =
     print_endline
       (Format.asprintf "other compile: %a / ~k:%s / env: %s" AST.PP.expression
-         expr (show_zinc k)
+         expr (Zinc.show k)
          (environment.binders
          |> List.map ~f:(Format.asprintf "%a" Var.pp)
          |> String.concat ","))
@@ -98,32 +98,32 @@ and other_compile :
   let compile_pattern_matching = compile_pattern_matching ~raise in
   let compile_let environment ~let':name ~equal:value ~in':expression =
     let result_compiled =
-      other_compile (environment |> add_binder name) expression ~k:(EndLet :: k)
+      other_compile (environment |> add_binder name) expression ~k:(Core EndLet :: k)
     in
-    other_compile environment ~k:(Grab :: result_compiled) value
+    other_compile environment ~k:(Core Grab :: result_compiled) value
   in
   let compile_known_function_application environment compiled_func args ~k =
     compile_known_function_application ~raise environment (compiled_func ~k)
       args
   in
   let compile_function_application ~function_compiler environment expr args ~k =
-    PushRetAddr k
+    Zinc.Core (PushRetAddr k)
     ::
     compile_known_function_application environment
-      (fun ~k -> function_compiler environment expr ~k:(Apply :: k))
+      (fun ~k -> function_compiler environment expr ~k:(Zinc.Core Apply :: k))
       args ~k
   in
   match expr.expression_content with
   | E_literal literal -> (
       match literal with
-      | Literal_int x -> Num x :: k
-      | Literal_address s -> Address s :: k
-      | Literal_bytes b -> Bytes b :: k
-      | Literal_string (Standard b) -> String b :: k
-      | Literal_string (Verbatim b) -> String b :: k
-      | Literal_mutez a -> Mutez a :: k
-      | Literal_key a -> Key a :: k
-      | Literal_unit -> MakeRecord 0 :: k
+      | Literal_int x -> Plain_old_data (Num x) :: k
+      | Literal_address s -> Plain_old_data (Address s) :: k
+      | Literal_bytes b -> Plain_old_data (Bytes b) :: k
+      | Literal_string (Standard b) -> Plain_old_data (String b) :: k
+      | Literal_string (Verbatim b) -> Plain_old_data (String b) :: k
+      | Literal_mutez a -> Plain_old_data (Mutez a) :: k
+      | Literal_key a -> Plain_old_data (Key a) :: k
+      | Literal_unit -> Adt (MakeRecord 0) :: k
       | x ->
           failwith
             (Format.asprintf "literal type not supported: %a"
@@ -149,13 +149,13 @@ and other_compile :
           failwith
             (Format.asprintf "binder %a not found in environment!"
                AST.PP.expression_variable binder)
-      | Some index -> Access index :: k)
+      | Some index -> Core (Access index) :: k)
   (* TODO: function applications are disagregated in typed_ast, this defeats the whole purpose of using zinc, need to fix this *)
   | E_application { lamb; args } ->
       compile_function_application ~function_compiler:other_compile environment
         lamb [ args ] ~k
   | E_lambda { binder = { wrap_content = binder; _ }; result } ->
-      Closure (Grab :: tail_compile (environment |> add_binder binder) result)
+      Core (Closure (Core Grab :: tail_compile (environment |> add_binder binder) result))
       :: k
   | E_recursive _recursive -> failwith "E_recursive unimplemented"
   | E_let_in { let_binder; rhs; let_result; _ } ->
@@ -168,7 +168,7 @@ and other_compile :
   (* Variant *)
   | E_constructor { constructor = Label constructor; element } ->
       compile_known_function_application environment
-        (fun ~k -> MakeVariant (constructor) :: k)
+        (fun ~k -> Adt (MakeVariant (constructor)) :: k)
         [ element ] ~k
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
@@ -177,8 +177,8 @@ and other_compile :
     in
       compile_known_function_application environment
         (fun ~k ->
-          MakeRecord
-            (List.length bindings)
+          Adt (MakeRecord
+            (List.length bindings))
           :: k)
         (List.map ~f:(fun (_, value) -> value) bindings)
         ~k
@@ -195,7 +195,7 @@ and other_compile :
        int_of_string path
      | _ -> failwith "other" in
       compile_known_function_application environment
-        (fun ~k -> RecordAccess label :: k)
+        (fun ~k -> Adt (RecordAccess label) :: k)
         [ record ] ~k
   | E_record_update _record_update -> failwith "E_record_update unimplemented"
   | E_type_inst _ -> failwith "E_type_inst unimplemented"
@@ -206,22 +206,22 @@ and compile_constant :
     raise:Errors.zincing_error raise ->
     AST.type_expression ->
     AST.constant ->
-    k:zinc ->
-    zinc =
+    k:Zinc.t ->
+    Zinc.t =
  fun ~raise:_ _ constant ~k ->
   match constant.cons_name with
-  | C_CHAIN_ID -> ChainID :: k
-  | C_HASH_KEY -> HashKey :: k
-  | C_EQ -> Eq :: k
-  | C_ADD -> Add :: k
-  | C_FAILWITH -> Failwith :: k
-  | C_CONTRACT_OPT -> Contract_opt :: k
-  | C_CALL -> MakeTransaction :: k
-  | C_UNIT -> MakeRecord 0 :: k
-  | C_NONE -> MakeRecord 0 :: MakeVariant ("None") :: k
-  | C_SOME -> MakeVariant ("Some") :: k
-  | C_CONS -> Cons :: k 
-  | C_LIST_EMPTY -> Nil :: k
+  | C_CHAIN_ID -> Domain_specific_operation ChainID :: k
+  | C_HASH_KEY -> Operation HashKey :: k
+  | C_EQ -> Operation Eq :: k
+  | C_ADD -> Operation Add :: k
+  | C_FAILWITH -> Control_flow Failwith :: k
+  | C_CONTRACT_OPT -> Domain_specific_operation Contract_opt :: k
+  | C_CALL -> Domain_specific_operation MakeTransaction :: k
+  | C_UNIT -> Adt (MakeRecord 0) :: k
+  | C_NONE -> Adt (MakeRecord 0) :: Adt (MakeVariant ("None")) :: k
+  | C_SOME -> Adt (MakeVariant ("Some") ):: k
+  | C_CONS -> Operation Cons :: k 
+  | C_LIST_EMPTY -> Plain_old_data Nil :: k
   | name ->
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)
@@ -234,9 +234,9 @@ and compile_constant :
 and compile_known_function_application :
     raise:Errors.zincing_error raise ->
     environment ->
-    zinc ->
+    Zinc.t ->
     AST.expression list ->
-    zinc =
+    Zinc.t =
  fun ~raise environment compiled_func args ->
   let rec comp l =
     match l with
@@ -277,9 +277,10 @@ and compile_pattern_matching :
     raise:Errors.zincing_error raise ->
     environment ->
     AST.matching ->
-    k:zinc ->
-    zinc =
+    k:Zinc.t ->
+    Zinc.t =
  fun ~raise environment to_match ~k ->
+  let open Zinc in 
   let other_compile = other_compile ~raise in
   let compile_type = compile_type ~raise in
   let compiled_type = compile_type to_match.matchee.type_expression in
@@ -336,7 +337,7 @@ and compile_pattern_matching :
       other_compile environment lettified ~k
   | T_option _, Match_variant { cases; _ } ->
       let code =
-        Zinc_types.MatchVariant
+        Adt (MatchVariant
           (List.map
              ~f:
                (fun {
@@ -346,11 +347,11 @@ and compile_pattern_matching :
                     } ->
                (* We assume that the interpreter will put the matched value on the stack *)
                let compiled =
-                 Grab
+                 Core Grab
                  :: other_compile (add_binder pattern environment) body ~k:[]
                in
                (label, compiled))
-             cases)
+             cases))
       in
       other_compile environment to_match.matchee ~k:(code :: k)
   | _ ->
