@@ -34,8 +34,8 @@ let expect_code =
   Alcotest.(
     check
       (Alcotest.testable
-         (fun ppf zinc -> Fmt.pf ppf "%a" Zinc_types.pp_zinc_code zinc)
-         Zinc_types.equal_zinc_code))
+         (fun ppf zinc -> Fmt.pf ppf "%a" Zinc_types.pp_zinc zinc)
+         Zinc_types.equal_zinc))
 
 let expect_env =
   Alcotest.(
@@ -255,7 +255,7 @@ let get_contract_opt =
     ~expected_output:
       [
         Stack_item.Variant
-          ("Some", Stack_item.Z (Extensions (Contract ("whatever", None))));
+          ("Some", Stack_item.NonliteralValue (Contract ("whatever", None)));
       ]
 
 let match_on_sum =
@@ -279,8 +279,8 @@ let match_on_sum =
     ]
     ~expected_output:
       [
-        Stack_item.Z
-          (Extensions (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None)));
+        Stack_item.NonliteralValue
+          (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None));
       ]
 
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
@@ -316,11 +316,10 @@ let create_transaction =
     ]
     ~expected_output:
       [
-        Stack_item.Z
-          (Extensions
-             (Operation
-                (Transaction
-                   (Z.of_int 10, ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None)))));
+        Stack_item.NonliteralValue
+          (Operation
+             (Transaction
+                (Z.of_int 10, ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None))));
       ]
 
 let create_transaction_in_tuple =
@@ -358,12 +357,10 @@ let create_transaction_in_tuple =
           LMap.(
             empty
             |> add (0)
-                 (Stack_item.Z
-                    (Extensions
-                       (Operation
+                 (Stack_item.NonliteralValue (Operation
                           (Transaction
                              ( Z.of_int 10,
-                               ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) )))))
+                               ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) ))))
             |> add (1)
                  (Stack_item.Z
                     (Key
