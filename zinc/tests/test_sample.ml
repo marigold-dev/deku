@@ -1,7 +1,7 @@
 [@@@warning "-40"]
 
 let zinc =
-  Zinc_types.
+  Zinc_types.Zinc.
     [
       Address "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
       Grab;
@@ -70,7 +70,7 @@ let%expect_test _ =
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
     env:   []
-    stack: [(Zinc_types.Stack_item.Z
+    stack: [(Zinc_types.Zinc.Stack_item.Z
                                                         (Address
                                                            "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                                       ]
@@ -88,7 +88,7 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Z
+    env:   [(Zinc_types.Zinc.Env_item.Z
                                               (Address
                                                  "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
@@ -107,11 +107,11 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Z
+    env:   [(Zinc_types.Zinc.Env_item.Z
                                               (Address
                                                  "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
-    stack: [(Zinc_types.Stack_item.Z
+    stack: [(Zinc_types.Zinc.Stack_item.Z
                                                          (Address
                                                             "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                                        ]
@@ -129,13 +129,13 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Z
+    env:   [(Zinc_types.Zinc.Env_item.Z
                                               (Address
                                                  "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
-    stack: [(Zinc_types.Stack_item.Variant (
+    stack: [(Zinc_types.Zinc.Stack_item.Variant (
                                                          (Label "None"),
-                                                         (Zinc_types.Stack_item.Record
+                                                         (Zinc_types.Zinc.Stack_item.Record
                                                             )
                                                          ))
                                                        ]
@@ -153,10 +153,10 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Variant (
+    env:   [(Zinc_types.Zinc.Env_item.Variant (
                                               (Label "None"),
-                                              (Zinc_types.Stack_item.Record )));
-                                            (Zinc_types.Env_item.Z
+                                              (Zinc_types.Zinc.Stack_item.Record )));
+                                            (Zinc_types.Zinc.Env_item.Z
                                                (Address
                                                   "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
@@ -174,16 +174,16 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Variant (
+    env:   [(Zinc_types.Zinc.Env_item.Variant (
                                               (Label "None"),
-                                              (Zinc_types.Stack_item.Record )));
-                                            (Zinc_types.Env_item.Z
+                                              (Zinc_types.Zinc.Stack_item.Record )));
+                                            (Zinc_types.Zinc.Env_item.Z
                                                (Address
                                                   "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
-    stack: [(Zinc_types.Stack_item.Variant (
+    stack: [(Zinc_types.Zinc.Stack_item.Variant (
                                                          (Label "None"),
-                                                         (Zinc_types.Stack_item.Record
+                                                         (Zinc_types.Zinc.Stack_item.Record
                                                             )
                                                          ))
                                                        ]
@@ -196,14 +196,14 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Variant (
+    env:   [(Zinc_types.Zinc.Env_item.Variant (
                                               (Label "None"),
-                                              (Zinc_types.Stack_item.Record )));
-                                            (Zinc_types.Env_item.Z
+                                              (Zinc_types.Zinc.Stack_item.Record )));
+                                            (Zinc_types.Zinc.Env_item.Z
                                                (Address
                                                   "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
-    stack: [(Zinc_types.Stack_item.Record
+    stack: [(Zinc_types.Zinc.Stack_item.Record
                                                          )
                                                        ]
     interpreting:
@@ -215,11 +215,11 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Record );
-                                            (Zinc_types.Env_item.Variant (
+    env:   [(Zinc_types.Zinc.Env_item.Record );
+                                            (Zinc_types.Zinc.Env_item.Variant (
                                                (Label "None"),
-                                               (Zinc_types.Stack_item.Record )));
-                                            (Zinc_types.Env_item.Z
+                                               (Zinc_types.Zinc.Stack_item.Record )));
+                                            (Zinc_types.Zinc.Env_item.Z
                                                (Address
                                                   "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
@@ -232,15 +232,15 @@ let%expect_test _ =
                            MakeTransaction;
                            (MakeRecord [(Label "0"); (Label "1"); (Label "2")]);
                            Return]
-    env:   [(Zinc_types.Env_item.Record );
-                                            (Zinc_types.Env_item.Variant (
+    env:   [(Zinc_types.Zinc.Env_item.Record );
+                                            (Zinc_types.Zinc.Env_item.Variant (
                                                (Label "None"),
-                                               (Zinc_types.Stack_item.Record )));
-                                            (Zinc_types.Env_item.Z
+                                               (Zinc_types.Zinc.Stack_item.Record )));
+                                            (Zinc_types.Zinc.Env_item.Z
                                                (Address
                                                   "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"))
                                             ]
-    stack: [(Zinc_types.Stack_item.Z
+    stack: [(Zinc_types.Zinc.Stack_item.Z
                                                          (String "Not a contract"))
                                                        ]
     (Zinc_types.Interpreter_output.Failure "Not a contract") |}]
