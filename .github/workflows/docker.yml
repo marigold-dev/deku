@@ -34,6 +34,8 @@ jobs:
           file: ./docker/alpine.Dockerfile
           context: .
           platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: ${{ github.ref == 'refs/head/main' && github.event_name == 'push' }}
           tags: |
             marigold-dev/deku:latest
