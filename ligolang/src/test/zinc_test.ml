@@ -57,19 +57,18 @@ type test =
   unit ->
   unit
 
-type dialect = Reasonligo | Cameligo | Pascaligo | Jsligo
-
-let expect_simple_compile_to ?(dialect = Pascaligo) ?(index = 0)
+let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?(index = 0)
     ?(initial_stack = []) ?expect_failure ?expected_output_env ?expected_output
     contract_file (expected_zinc : Zinc_types.program) : test =
+ let open Ligo_compile.Helpers in  
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
     match dialect with
-    | Cameligo -> "mligo"
-    | Pascaligo -> "ligo"
-    | Reasonligo -> "religo"
-    | Jsligo -> "jsligo"
+    | CameLIGO -> "mligo"
+    | PascaLIGO -> "ligo"
+    | ReasonLIGO -> "religo"
+    | JsLIGO -> "jsligo"
   in
   let contract = Printf.sprintf "./contracts/%s.%s" contract_file ext in
   let zinc = to_zinc contract in
