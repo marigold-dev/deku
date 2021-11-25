@@ -38,7 +38,7 @@ let update_current = (address, t) => {
 let hash_validators = validators => {
   validators
   |> List.map(validator => validator.address |> Address.to_key_hash)
-  |> Tezos_interop.Consensus.hash_validators;
+  |> Tezos.Deku.Consensus.hash_validators;
 };
 let empty = {
   current: None,
