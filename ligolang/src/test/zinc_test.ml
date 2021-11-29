@@ -57,15 +57,20 @@ type test =
   unit ->
   unit
 
-let expect_simple_compile_to ?reason:(enabled = false) ?(index = 0)
+let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?(index = 0)
     ?(initial_stack = []) ?expect_failure ?expected_output_env ?expected_output
     contract_file (expected_zinc : Zinc_types.program) : test =
+ let open Ligo_compile.Helpers in  
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
-  let contract =
-    Printf.sprintf "./contracts/%s.%s" contract_file
-      (if enabled then "religo" else "ligo")
+  let ext =
+    match dialect with
+    | CameLIGO -> "mligo"
+    | PascaLIGO -> "ligo"
+    | ReasonLIGO -> "religo"
+    | JsLIGO -> "jsligo"
   in
+  let contract = Printf.sprintf "./contracts/%s.%s" contract_file ext in
   let zinc = to_zinc contract in
   let () =
     expect_program
@@ -231,12 +236,12 @@ let check_hash_key =
       ]
 
 let basic_function_application =
-  expect_simple_compile_to ~reason:true "basic_function_application"
+  expect_simple_compile_to ~dialect:Reasonligo "basic_function_application"
     [ ("a", [ Plain_old_data (Num (Z.of_int 3)); Core Grab; Core (Access 0); Core Return ]) ]
     ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 3))) ]
 
 let basic_link =
-  expect_simple_compile_to ~reason:true "basic_link"
+  expect_simple_compile_to ~dialect:Reasonligo "basic_link"
     [
       ("a", [ Plain_old_data (Num (Z.of_int 1)); Core Return ]);
       ("b", [ Plain_old_data (Num (Z.of_int 1)); Core Grab; Core (Access 0); Core Return ]);
@@ -245,12 +250,12 @@ let basic_link =
     ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 1))) ]
 
 let failwith_simple =
-  expect_simple_compile_to ~reason:true "failwith_simple"
+  expect_simple_compile_to ~dialect:Reasonligo "failwith_simple"
     [ ("a", [ Plain_old_data (String "Not a contract"); Control_flow Failwith; Core Return ]) ]
     ~expect_failure:"Not a contract"
 
 let get_contract_opt =
-  expect_simple_compile_to ~reason:true "get_contract_opt"
+  expect_simple_compile_to ~dialect:Reasonligo "get_contract_opt"
     [ ("a", [ Plain_old_data (Address "whatever"); Domain_specific_operation Contract_opt; Core Return ]) ]
     ~expected_output:
       [
@@ -259,7 +264,7 @@ let get_contract_opt =
       ]
 
 let match_on_sum =
-  expect_simple_compile_to ~reason:true "match_on_sum"
+  expect_simple_compile_to ~dialect:Reasonligo "match_on_sum"
     [
       ( "a",
         [
@@ -286,11 +291,11 @@ let match_on_sum =
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
-  expect_simple_compile_to ~reason:true "mutez_construction"
+  expect_simple_compile_to ~dialect:Reasonligo "mutez_construction"
     [ ("a", [ Plain_old_data (Mutez (Z.of_int 1)); Core Return ]) ]
 
 let create_transaction =
-  expect_simple_compile_to ~reason:true "create_transaction"
+  expect_simple_compile_to ~dialect:Reasonligo "create_transaction"
     [
       ( "a",
         [
@@ -324,7 +329,7 @@ let create_transaction =
 
 let create_transaction_in_tuple =
   let open Zinc_utils in
-  expect_simple_compile_to ~reason:true "create_transaction_in_tuple"
+  expect_simple_compile_to ~dialect:Reasonligo "create_transaction_in_tuple"
     [
       ( "a",
         [
@@ -369,7 +374,7 @@ let create_transaction_in_tuple =
       ]
 
 let list_construction =
-  expect_simple_compile_to ~reason:true "list_construction" 
+  expect_simple_compile_to ~dialect:Reasonligo "list_construction" 
   [("a", [Plain_old_data Nil; Plain_old_data (Mutez (Z.of_int 2)); Operation Cons; Plain_old_data (Mutez (Z.of_int 1)); Operation Cons; Core Return])]
   ~expected_output:[
     (Zinc_types.Stack_item.List
@@ -377,11 +382,9 @@ let list_construction =
         (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 1))));
         (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 2))))
       ]
-    )
-  ]
 
 let make_an_option =
-  expect_simple_compile_to ~reason:true "make_an_option"
+  expect_simple_compile_to ~dialect:Reasonligo "make_an_option"
     [
       ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "None"); Core Return ]);
       ( "b",
@@ -398,7 +401,7 @@ let make_an_option =
     ]
 
 let make_a_custom_option =
-  expect_simple_compile_to ~reason:true "make_a_custom_option"
+  expect_simple_compile_to ~dialect:Reasonligo "make_a_custom_option"
     [
       ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "My_none"); Core Return ]);
       ( "b",
