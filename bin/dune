@@ -20,3 +20,14 @@
  (libraries lwt lwt.unix node)
  (preprocess
   (pps ppx_deriving_yojson)))
+
+(env
+ (static
+  (flags
+   (:standard
+    -ccopt
+    -static
+    -ccopt
+    %{env:CFLAGS=/lib}
+    -cclib
+    -L%{env:LD_LIBRARY_PATH=/lib}))))
