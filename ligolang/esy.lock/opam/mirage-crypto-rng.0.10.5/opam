@@ -34,10 +34,10 @@ sublibrary)
 """
 url {
   src:
-    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.4/mirage-crypto-v0.10.4.tbz"
+    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.5/mirage-crypto-v0.10.5.tbz"
   checksum: [
-    "sha256=bfd023232b596e2d88b0603c1b234fea2319f86111ae6413d227cf2b555eeefb"
-    "sha512=a5b615ca361f50b4f6b2238e8103d6e23c9d5ba52276a743159ca32458a29fca7858944be642c0670cc067b6a3d09f4160ffecb9d34253462a8359f0e8091075"
+    "sha256=79e28c49166b0624f358bbfcd0fe4b7a8b8f89bdb8b938a09361cbb4e44aa495"
+    "sha512=18b493be1e7909e8429bc5ddd1f0d1175aab9e21a10711e95749b74f1d9f851a5cfd3ee1a5b3b73a47b5fc54d6458a911ec586ab243e63bf276d2777a787ae51"
   ]
 }
-x-commit-hash: "4c48711a8cb37c8e7b78b4520d9d998388572669"
+x-commit-hash: "a671f107615837ac236c2238cb0668a68c2e0c84"

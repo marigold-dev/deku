@@ -156,34 +156,6 @@
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
     "esy-hidapi": "esy-packages/esy-hidapi:esy.json#e21f930d6474e460fa5bb955a26505f6c3500c7a",
     "libtool": "ManasJayanth/esy-libtool:esy.json#d6725b52f8d021539e92d182d29979951e706836",
-    "@opam/ctypes-foreign": {
-      "source": "ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22",
-      "override": {
-        "dependencies": {
-          "@opam/ctypes": null
-        }
-      }
-    },
-    "@opam/ctypes": {
-      "source": "ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22",
-      "override": {
-        "build": [
-          [
-            "make",
-            "libffi.config",
-            "ctypes-base",
-            "ctypes-stubs"
-          ],
-          [
-            "make",
-            "ctypes-foreign"
-          ]
-        ],
-        "dependencies": {
-          "@opam/conf-libffi": "*"
-        }
-      }
-    },
     "@opam/conduit-lwt-unix": "4.0.1",
     "@opam/hacl-star-raw": {
       "source": "https://github.com/project-everest/hacl-star/releases/download/ocaml-v0.4.3/hacl-star.0.4.3.tar.gz#sha512:bfb2ddf125a345deb361483aedf9d79837e9ee18b0bc31644588f8409a0fe0c50db2fc1e6b20a07e02fb9f393d2fc9968fd9d2aa9f506f4e23ca8b6ed4036870",
