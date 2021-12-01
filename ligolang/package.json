@@ -16,10 +16,6 @@
       ],
       "rewritePrefix": true
     },
-    "sandboxEnv": {
-      "DYLD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib : $DYLD_LIBRARY_PATH}",
-      "LD_LIBRARY_PATH": "#{@esy-ocaml/libffi.lib : $LD_LIBRARY_PATH}"
-    },
     "buildEnv": {
       "OPAM_SWITCH_PREFIX": "#{ @opam/tezos-rust-libs.install }"
     }
@@ -91,51 +87,6 @@
   "resolutions": {
     "@opam/zinc": "link:../zinc",
     "@opam/ocaml-recovery-parser": "serokell/ocaml-recovery-parser:ocaml-recovery-parser.opam#7a759aed307f986d43006c50b8ced677e18b5a6d",
-    "@opam/conf-libev": "esy-packages/libev:package.json#0817b2d",
-    "@opam/coq": {
-      "source": "https://github.com/coq/coq/archive/V8.13.2.tar.gz#sha256:1e7793d8483f1e939f62df6749f843df967a15d843a4a5acb024904b76e25a14",
-      "override": {
-        "build": [
-          [
-            "./configure",
-            "-configdir",
-            "#{self.lib}/coq/config",
-            "-prefix",
-            "#{self.install}",
-            "-mandir",
-            "#{self.man}",
-            "-docdir",
-            "#{self.doc}",
-            "-libdir",
-            "#{self.lib}/coq",
-            "-datadir",
-            "#{self.share}/coq",
-            "-coqide",
-            "no",
-            "-camldir",
-            "#{ ocaml.bin }"
-          ],
-          [
-            "make",
-            "-j2"
-          ],
-          [
-            "make",
-            "-j2",
-            "byte"
-          ]
-        ],
-        "dependencies": {
-          "ocaml": "*",
-          "@opam/ocamlfind": "*",
-          "@opam/num": "*",
-          "@opam/conf-findutils": "*",
-          "@opam/zarith": "*"
-        }
-      }
-    },
-    "@opam/nonstd": "git+https://bitbucket.org/smondet/nonstd.git:nonstd.opam#75e06d417730f64e74ec2060d1143e765c68ea1b",
-    "@opam/genspio": "hammerlab/genspio:genspio.opam#f270fb296cebcf25e2ea89a7929a274c03ae9e6e",
     "@esy-ocaml/libffi": "ManasJayanth/esy-libffi:esy.json#41698aeda66c004df26c0c1d80a191503bada03d",
     "@opam/conf-libffi": {
       "source": "no-source:",
@@ -145,18 +96,7 @@
         }
       }
     },
-    "@opam/conf-hidapi": {
-      "source": "no-source:",
-      "override": {
-        "dependencies": {
-          "yarn-pkg-config": "*",
-          "esy-hidapi": "*"
-        }
-      }
-    },
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79",
-    "esy-hidapi": "esy-packages/esy-hidapi:esy.json#e21f930d6474e460fa5bb955a26505f6c3500c7a",
-    "libtool": "ManasJayanth/esy-libtool:esy.json#d6725b52f8d021539e92d182d29979951e706836",
     "@opam/conduit-lwt-unix": "4.0.1",
     "@opam/hacl-star-raw": {
       "source": "https://github.com/project-everest/hacl-star/releases/download/ocaml-v0.4.3/hacl-star.0.4.3.tar.gz#sha512:bfb2ddf125a345deb361483aedf9d79837e9ee18b0bc31644588f8409a0fe0c50db2fc1e6b20a07e02fb9f393d2fc9968fd9d2aa9f506f4e23ca8b6ed4036870",
@@ -289,30 +229,6 @@
         }
       }
     },
-    "esy-rustup": "ManasJayanth/esy-rustup:esy.json#e07d864138ed41c5a151a4065063521d0588eb2a",
-    "@opam/tezos-client": {
-      "source": "./src/bin_client",
-      "override": {
-        "dependencies": {
-          "@opam/dune": "*",
-          "@opam/tezos-base": "*",
-          "@opam/tezos-client-base": "*",
-          "@opam/tezos-client-genesis": "*",
-          "@opam/tezos-client-genesis-carthagenet": "*",
-          "@opam/tezos-client-alpha": "*",
-          "@opam/tezos-client-demo-counter": "*",
-          "@opam/tezos-client-alpha-commands": "*",
-          "@opam/tezos-baking-alpha-commands": "*",
-          "@opam/tezos-client-base-unix": "*",
-          "@opam/tezos-mockup-commands": "*",
-          "@opam/tezos-signer-backends": "*"
-        },
-        "devDependencies": {
-          "tezos-node": "*",
-          "tezos-protocol-compiler": "*",
-          "tezos-protocol-alpha-parameters": "*"
-        }
-      }
-    }
+    "esy-rustup": "ManasJayanth/esy-rustup:esy.json#e07d864138ed41c5a151a4065063521d0588eb2a"
   }
 }
