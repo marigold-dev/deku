@@ -1,5 +1,5 @@
 {
-  "checksum": "ebab3cf4d1ea6772abe6e225985369d8",
+  "checksum": "18b1de9b2251f9f3aa14bd2aa35cd125",
   "root": "ligo@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -3484,8 +3484,8 @@
       ],
       "dependencies": [
         "@opam/ocamlfind@opam:1.9.1@b748edf6",
-        "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba",
-        "@opam/ctypes@github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22@d24c87ce",
+        "@opam/ctypes-foreign@opam:0.18.0@4201a88c",
+        "@opam/ctypes@opam:0.18.0@1be5c5e5",
         "@esy-ocaml/libffi@archive:https://github.com/libffi/libffi/releases/download/v3.3/libffi-3.3.tar.gz#sha1:8df6cb570c8d6596a67d1c0773bf00650154f7aa@076bf609"
       ],
       "devDependencies": []
@@ -3973,56 +3973,65 @@
         "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
-    "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba": {
-      "id":
-        "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba",
+    "@opam/ctypes-foreign@opam:0.18.0@4201a88c": {
+      "id": "@opam/ctypes-foreign@opam:0.18.0@4201a88c",
       "name": "@opam/ctypes-foreign",
-      "version":
-        "github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22",
+      "version": "opam:0.18.0",
       "source": {
         "type": "install",
-        "source": [
-          "github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22"
-        ]
-      },
-      "overrides": [ { "dependencies": { "@opam/ctypes": null } } ],
-      "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@esy-ocaml/substs@0.0.1@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.12.0@d41d8cd9" ]
-    },
-    "@opam/ctypes@github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22@d24c87ce": {
-      "id":
-        "@opam/ctypes@github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22@d24c87ce",
-      "name": "@opam/ctypes",
-      "version":
-        "github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22",
-      "source": {
-        "type": "install",
-        "source": [
-          "github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22"
-        ]
+        "source": [ "no-source:" ],
+        "opam": {
+          "name": "ctypes-foreign",
+          "version": "0.18.0",
+          "path": "esy.lock/opam/ctypes-foreign.0.18.0"
+        }
       },
       "overrides": [
         {
-          "build": [
-            [ "make", "libffi.config", "ctypes-base", "ctypes-stubs" ],
-            [ "make", "ctypes-foreign" ]
-          ],
-          "dependencies": { "@opam/conf-libffi": "*" }
+          "opamoverride":
+            "esy.lock/overrides/opam__s__ctypes_foreign_opam__c__0.18.0_opam_override"
+        }
+      ],
+      "dependencies": [
+        "@opam/conf-pkg-config@opam:2@85f8644d",
+        "@opam/conf-libffi@no-source:@8cbeabd9",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9",
+        "@esy-ocaml/libffi@archive:https://github.com/libffi/libffi/releases/download/v3.3/libffi-3.3.tar.gz#sha1:8df6cb570c8d6596a67d1c0773bf00650154f7aa@076bf609"
+      ],
+      "devDependencies": [ "@opam/conf-libffi@no-source:@8cbeabd9" ]
+    },
+    "@opam/ctypes@opam:0.18.0@1be5c5e5": {
+      "id": "@opam/ctypes@opam:0.18.0@1be5c5e5",
+      "name": "@opam/ctypes",
+      "version": "opam:0.18.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/5d/5d9ef3790fda7cd97a8cec08be4b5b61#md5:5d9ef3790fda7cd97a8cec08be4b5b61",
+          "archive:https://github.com/ocamllabs/ocaml-ctypes/archive/0.18.0.tar.gz#md5:5d9ef3790fda7cd97a8cec08be4b5b61"
+        ],
+        "opam": {
+          "name": "ctypes",
+          "version": "0.18.0",
+          "path": "esy.lock/opam/ctypes.0.18.0"
+        }
+      },
+      "overrides": [
+        {
+          "opamoverride":
+            "esy.lock/overrides/opam__s__ctypes_opam__c__0.18.0_opam_override"
         }
       ],
       "dependencies": [
         "ocaml@4.12.0@d41d8cd9", "@opam/ocamlfind@opam:1.9.1@b748edf6",
         "@opam/integers@opam:0.5.1@8fb996f8",
-        "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba",
-        "@opam/conf-pkg-config@opam:2@85f8644d",
-        "@opam/conf-libffi@no-source:@8cbeabd9",
-        "@opam/bisect_ppx@opam:2.7.0@ad70f359",
+        "@opam/ctypes-foreign@opam:0.18.0@4201a88c",
+        "@opam/bigarray-compat@opam:1.0.0@951830c6",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/integers@opam:0.5.1@8fb996f8"
+        "ocaml@4.12.0@d41d8cd9", "@opam/integers@opam:0.5.1@8fb996f8",
+        "@opam/bigarray-compat@opam:1.0.0@951830c6"
       ]
     },
     "@opam/cstruct@opam:6.0.1@69eae449": {
@@ -4629,8 +4638,8 @@
         "@opam/tezos-rust-libs@opam:1.1@02945c1d",
         "@opam/hex@opam:1.4.0@41725494", "@opam/ff-sig@opam:0.6.2@13e04ec3",
         "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba",
-        "@opam/ctypes@github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22@d24c87ce",
+        "@opam/ctypes-foreign@opam:0.18.0@4201a88c",
+        "@opam/ctypes@opam:0.18.0@1be5c5e5",
         "@opam/conf-rust@no-source:@3165ff25",
         "@opam/bls12-381-gen@opam:0.4.3@685aa827",
         "@opam/bls12-381@opam:1.0.1@30956730"
@@ -4678,8 +4687,8 @@
         "@opam/zarith@opam:1.11@6b66cdc1",
         "@opam/tezos-rust-libs@opam:1.1@02945c1d",
         "@opam/ff-sig@opam:0.6.2@13e04ec3", "@opam/dune@opam:2.9.1@1e504822",
-        "@opam/ctypes-foreign@github:ocamllabs/ocaml-ctypes:ctypes-foreign.opam#0cbd0378b494d6377fd40606433a846736109c22@747d64ba",
-        "@opam/ctypes@github:ocamllabs/ocaml-ctypes:ctypes.opam#0cbd0378b494d6377fd40606433a846736109c22@d24c87ce",
+        "@opam/ctypes-foreign@opam:0.18.0@4201a88c",
+        "@opam/ctypes@opam:0.18.0@1be5c5e5",
         "@opam/conf-rust@no-source:@3165ff25",
         "@opam/bls12-381-gen@opam:0.4.3@685aa827"
       ],
