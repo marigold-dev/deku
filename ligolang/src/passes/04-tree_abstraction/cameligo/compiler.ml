@@ -478,6 +478,16 @@ let rec compile_expression ~raise : CST.expr -> AST.expr = fun e ->
         let aux (_name,binder,attr,rhs) expr = e_let_in ~loc binder attr rhs expr in
         return @@ aux (name, binder, attr, expr) body
       )
+      | CST.PTyped ({value={pattern=PVar _; type_expr}}), None -> 
+        (* In case that we have a pattern variable defined (`foo`) and type parameters are present,
+           i.e., we have `let foo (type a ... z) = RHS in BODY`, then we use `T_for_all` to quantify
+           over type parameters in the annotation (required) of the binder (`t = binder.ascr`):
+           `let foo : ∀ a . ... . ∀ z. t = RHS in BODY` *)
+        let ascr = Some (compile_type_expression ~raise type_expr) in  
+        let (name, binder, attr, expr) = compile_let_binding ~raise ?kwd_rec attributes binding in
+        let binder = { binder with ascr } in
+        let aux (_name,binder,attr,rhs) expr = e_let_in ~loc binder attr rhs expr in
+        return @@ aux (name, binder, attr, expr) body
       | pattern, _ -> (
         (* let destructuring happens here *)
         let type_ = Option.map ~f:(compile_type_expression ~raise <@ snd) lhs_type in
@@ -656,7 +666,7 @@ and compile_let_binding ~raise ?kwd_rec attributes binding =
   | CST.PPar par, [] ->
     let par, _ = r_split par in
     aux (par.inside, [])
-  | CST.PVar pvar, args -> (* function *)
+  | ((CST.PVar pvar) | (CST.PTyped {value={pattern=CST.PVar pvar}})), args -> (* function *)
     let (pvar, _loc) = r_split pvar in (* TODO: shouldn't _loc be used somewhere bellow ?*)
     let {variable=name;attributes=var_attributes} : CST.var_pattern = pvar in
     let var_attributes = var_attributes |> List.map ~f:(fun x -> x.Region.value) |>
@@ -803,7 +813,7 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
         let (name, binder,attr, expr) = compile_let_binding ~raise ?kwd_rec attributes let_binding in
         return region @@ [AST.Declaration_constant {name; binder; attr; expr}]
       )
-      | CST.PVar _, _, Some type_params -> (
+      | CST.PVar _, _, type_params -> (
         (* In case that we have a pattern variable defined (`foo`) and type parameters are present,
            i.e., we have `let foo (type a ... z) = RHS`, then we use `T_for_all` to quantify
            over type parameters in the annotation (required) of the binder (`t = binder.ascr`):
@@ -813,8 +823,24 @@ and compile_declaration ~raise : CST.declaration -> _ = fun decl ->
         let rec add_type_params = function
           | [] -> ascr
           | ({ value } : CST.variable) :: vs -> t_for_all (Location.wrap @@ Var.of_name value) () (add_type_params vs) in
-        let ascr = Some (add_type_params type_params) in
+        let ascr = Option.map ~f:add_type_params type_params in
         let binder = { binder with ascr } in
+        return region @@ [AST.Declaration_constant {name; binder; attr; expr}]
+      )
+      | CST.PTyped ({value={type_expr}}), _, type_params -> (
+        (* In case that we have a pattern variable defined (`foo`) and type parameters are present,
+           i.e., we have `let foo (type a ... z) = RHS`, then we use `T_for_all` to quantify
+           over type parameters in the annotation (required) of the binder (`t = binder.ascr`):
+           `let foo : ∀ a . ... . ∀ z. t = RHS` *)
+        let (name, binder,attr, expr) = compile_let_binding ~raise ?kwd_rec attributes let_binding in
+        let ascr = trace_option ~raise (type_params_not_annotated region) binder.ascr in
+        let rec add_type_params = function
+          | [] -> ascr
+          | ({ value } : CST.variable) :: vs -> t_for_all (Location.wrap @@ Var.of_name value) () (add_type_params vs) in
+        let ascr' = compile_type_expression ~raise type_expr in 
+        let ascr = Option.map ~f:add_type_params type_params in
+        let binder = { binder with ascr } in
+        let expr = e_annotation expr ascr' in
         return region @@ [AST.Declaration_constant {name; binder; attr; expr}]
       )
       | p, _, Some _ ->
