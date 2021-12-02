@@ -41,6 +41,6 @@ Usage is simple - add package bisect_ppx when building tests, run your tests,
 then run the Bisect_ppx report tool on the generated visitation files."
 
 url {
-  src: "https://github.com/aantron/bisect_ppx/archive/2.6.0.tar.gz"
-  checksum: "md5=1e87162003525cd853631dae5b4aea66"
+  src: "https://github.com/aantron/bisect_ppx/archive/2.7.0.tar.gz"
+  checksum: "md5=73cddd4025cff329b52b93bb663927f8"
 }

@@ -81,6 +81,7 @@
     "@opam/bls12-381-legacy": "0.4.3",
     "@opam/ocaml-recovery-parser": "0.1",
     "@opam/zarith": "1.11",
+    "@opam/ctypes": "*",
     "@opam/zinc": "*"
   },
   "devDependencies": {
