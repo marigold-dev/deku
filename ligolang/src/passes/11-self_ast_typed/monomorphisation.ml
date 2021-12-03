@@ -29,6 +29,13 @@ let pp_instance ppf { vid ; type_instances ; type_ } =
   Format.fprintf ppf "{ vid = %a ; type_ = %a ; type_instances = [ %a ] }"
     pp_longident vid PP.type_expression type_ (PP_helpers.list_sep_d PP.type_expression) type_instances
 
+let pp_instances ppf xs =
+  let f (lid, instances_of_lid) =
+    Format.fprintf ppf "{ lid = %a ~> %a }\n"
+    pp_longident lid (PP_helpers.list_sep_d pp_instance) instances_of_lid
+  in
+  List.iter xs ~f
+
 module LIMap = Map.Make(struct type t = longident let compare x y = compare_longident x y end)
 
 type data = { env : unit ; instances : (instance list) LIMap.t }
@@ -144,8 +151,10 @@ let rec mono_polymorphic_expression : _ -> data -> expression -> data * expressi
      let data, args = self data args in
      data, return (E_application { lamb; args })
   | E_lambda { binder ; result } ->
+     let binder_instances, data = instances_lookup_and_remove { variable = binder ; path } data in
      let data, result = self data result in
      let _, data = instances_lookup_and_remove { variable = binder ; path } data in
+     let data = instances_add  { variable = binder ; path } binder_instances data in
      data, return (E_lambda { binder ; result })
   | E_recursive { fun_name ; fun_type ; lambda = { binder ; result } } ->
      let data, result = self data result in
@@ -216,7 +225,7 @@ let rec mono_polymorphic_expression : _ -> data -> expression -> data * expressi
        | E_module_accessor {module_name;element} -> (
          aux type_insts (path @ [module_name]) element)
        | _ -> failwith "Cannot resolve non-variables with instantiations" in
-     let type_instances, lid = aux [] [] expr in
+     let type_instances, lid = aux [] path expr in
      let type_ = expr.type_expression in
      let vid, data = match instance_lookup_opt lid type_instances type_ data with
        | Some (vid, _) -> vid, data
@@ -224,10 +233,29 @@ let rec mono_polymorphic_expression : _ -> data -> expression -> data * expressi
           let vid = { lid with variable = (Location.wrap (poly_name (Location.unwrap lid.variable))) } in
           vid, instance_add lid { vid ; type_instances ; type_ } data in
      data, longident_to_expression vid type_
-  | E_module_accessor { module_name ; element } ->
-     let data, element = mono_polymorphic_expression (path @ [module_name]) data element in
-     data, return (E_module_accessor { module_name ; element })
-  | _ -> data, expr
+  | E_module_accessor _ ->
+     let rec aux type_insts path (e : expression) = match e.expression_content with
+       | E_type_inst {forall; type_} ->
+          aux (type_ :: type_insts) path forall
+       | E_variable variable -> (
+         Some (List.rev type_insts, { path ; variable }))
+       | E_record_accessor _ ->
+         None
+       | E_module_accessor {module_name;element} -> (
+         aux type_insts (path @ [module_name]) element)
+       | _ -> failwith "Cannot resolve non-variables with instantiations" in
+     (match aux [] [] expr with
+        None | Some ([], _) ->
+         data, expr
+      | Some (type_instances, lid) ->
+        let type_ = expr.type_expression in
+        let vid, data = match instance_lookup_opt lid type_instances type_ data with
+          | Some (vid, _) -> vid, data
+          | None ->
+             let vid = { lid with variable = (Location.wrap (poly_name (Location.unwrap lid.variable))) } in
+             vid, instance_add lid { vid ; type_instances ; type_ } data in
+        data, longident_to_expression vid type_)
+  | E_mod_alias _ -> data, expr
 
 and mono_polymorphic_cases : _ -> data -> matching_expr -> data * matching_expr = fun path data m ->
   match m with
@@ -301,11 +329,8 @@ and mono_polymorphic_module : _ -> data -> module_fully_typed -> data * module_f
           let data, decls = aux data decls in
           let instances, data = instances_of_path_lookup_and_remove [alias] data in
           let instances = List.map instances ~f:(fun (lid, instances) ->
-                            let f ({ vid ; type_ ; type_instances } : instance) =
-                              let vid = { vid with path = List.tl_exn vid.path } in
-                              { vid ; type_ ; type_instances } in
                             let lid = { lid with path = List.Ne.to_list binders } in
-                            (lid, List.map instances ~f)) in
+                            (lid, instances)) in
           let data = List.fold_left instances ~init:data ~f:(fun data (lid, instances) -> instances_add lid instances data) in
           data, (Location.wrap ~loc (Module_alias { alias ; binders })) :: decls
        | _ ->

@@ -22,7 +22,9 @@ module Stacking = struct
      arguments to some part of its output. *)
   let special c = Special c
 
-  let unpredicate apply_args = function
-    | Simple code -> code
-    | Special code -> code apply_args
+  let unpredicate loc apply_args pred =
+    Tezos_micheline.Micheline.map_node (fun _ -> loc) (fun p -> p)
+      (match pred with
+       | Simple code -> code
+       | Special code -> code apply_args)
 end

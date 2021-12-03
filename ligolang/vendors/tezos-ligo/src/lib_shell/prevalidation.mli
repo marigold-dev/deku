@@ -78,15 +78,6 @@ module type T = sig
 
   val apply_operation : t -> Proto.operation_data operation -> result Lwt.t
 
-  type status = {
-    applied_operations :
-      (Proto.operation_data operation * Proto.operation_receipt) list;
-    block_result : Tezos_protocol_environment.validation_result;
-    block_metadata : Proto.block_header_metadata;
-  }
-
-  val status : t -> Block_header.shell_header option -> status tzresult Lwt.t
-
   val validation_state : t -> Proto.validation_state
 
   val pp_result : Format.formatter -> result -> unit
@@ -94,17 +85,6 @@ end
 
 module Make (Proto : Tezos_protocol_environment.PROTOCOL) :
   T with module Proto = Proto
-
-(** Pre-apply creates a new block and returns it. *)
-val preapply :
-  Store.chain_store ->
-  user_activated_upgrades:User_activated.upgrades ->
-  user_activated_protocol_overrides:User_activated.protocol_overrides ->
-  predecessor:Store.Block.t ->
-  timestamp:Time.Protocol.t ->
-  protocol_data:Bytes.t ->
-  Operation.t list list ->
-  (Block_header.shell_header * error Preapply_result.t list) tzresult Lwt.t
 
 module Internal_for_tests : sig
   (** [safe_binary_of_bytes encoding bytes] parses [bytes] using [encoding]. Any error happening during parsing becomes {!Parse_error}.

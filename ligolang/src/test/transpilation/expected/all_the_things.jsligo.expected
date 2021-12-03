@@ -29,7 +29,7 @@ type getBalance =  {owner: address, callback: contract<nat>};
 type getTotalSupply =  {callback: contract<nat>};
 
 type action = 
-  
+
   ["Transfer",
    transfer]|
   ["Approve",

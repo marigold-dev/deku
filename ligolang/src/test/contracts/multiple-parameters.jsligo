@@ -1,5 +1,9 @@
 /* Test function with several parameters */
 
+let ab = (a :int, b: int) :int => a + b;
+
+let abcd = (a :int ,b :int, c :int, d :int) :int => a + b + c + d + 2;
+
 let abcde_curried =
   (_a: int, _b: int, c: int, _d: int, e: int): int => c + e + 3;
 

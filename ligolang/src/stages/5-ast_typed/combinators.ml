@@ -337,6 +337,8 @@ let e_contract_opt v : expression_content = E_constant {cons_name=C_CONTRACT_OPT
 let e_contract v : expression_content = E_constant {cons_name=C_CONTRACT; arguments=[v]}
 let e_contract_entrypoint e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT; arguments=[e; v]}
 let e_contract_entrypoint_opt e v : expression_content = E_constant {cons_name=C_CONTRACT_ENTRYPOINT_OPT; arguments=[e; v]}
+let e_pack e : expression_content = E_constant {cons_name=C_BYTES_PACK; arguments=[e]}
+let e_unpack e : expression_content = E_constant {cons_name=C_BYTES_UNPACK; arguments=[e]}
 
 let e_failwith e : expression_content = E_constant {cons_name=C_FAILWITH ; arguments=[e]}
 
@@ -415,7 +417,8 @@ let e_a_contract_opt a t = make_e (e_contract_opt a) (t_option (t_contract t))
 let e_a_contract a t = make_e (e_contract a) (t_contract t)
 let e_a_contract_entrypoint e a t = make_e (e_contract_entrypoint e a) (t_contract t)
 let e_a_contract_entrypoint_opt e a t = make_e (e_contract_entrypoint_opt e a) (t_option (t_contract t))
-
+let e_a_pack e = make_e (e_pack e) (t_bytes ())
+let e_a_unpack e t = make_e (e_unpack e) (t_option t)
 
 let get_a_int (t:expression) =
   match t.expression_content with

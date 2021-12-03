@@ -160,6 +160,23 @@ let michelson_code_format =
     | "hex"  -> Proto_alpha_utils.Error_monad.return `Hex
     | _ -> failwith "todo"
 
+let michelson_comments =
+  let doc = "Selects kinds of comments to be added to the Michelson output. Currently only 'location' is supported, which propagates original source locations (line/col)." in
+  let long = "michelson-comments" in
+  let placeholder = "MICHELSON_COMMENTS" in
+  let default = "" in
+  let open Proto_alpha_utils.Error_monad in
+  Clic.default_arg ~doc ~long ~placeholder ~default
+    (Clic.parameter
+      ~autocomplete:(fun _ -> return ["location"])
+      (fun _cctxt s ->
+         let f = function
+           | "location" -> return `Location
+           | s -> failwith "unexpected value for --%s: %s" long s in
+         match s with
+         | "" -> return []
+         | _ -> all_ep (List.map ~f (String.split_on_char ',' s))))
+
 let optimize =
   let docv = "ENTRY_POINT" in
   let doc = "Apply Mini-C optimizations as if compiling for this entry_point" in
@@ -213,9 +230,9 @@ module Api = Ligo_api
 
 let compile_group = Clic.{name="compile";title="Commands for compiling from Ligo to Michelson"}
 let compile_file =
-  let f (entry_point, oc_views, syntax, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror) source_file () =
+  let f (entry_point, oc_views, syntax, infer, protocol_version, display_format, disable_typecheck, michelson_format, output_file, warn, werror, michelson_comments) source_file () =
     return_result ~warn ?output_file @@
-    Api.Compile.contract ~werror source_file entry_point oc_views syntax infer protocol_version display_format disable_typecheck michelson_format in
+    Api.Compile.contract ~werror source_file entry_point oc_views syntax infer protocol_version display_format disable_typecheck michelson_format michelson_comments in
   let _doc = "Subcommand: Compile a contract." in
   let desc =     "This sub-command compiles a contract to Michelson \
                  code. It expects a source file and an entrypoint \
@@ -225,7 +242,7 @@ let compile_file =
 
     ~group:compile_group
     ~desc
-    Clic.(args11 entry_point on_chain_views syntax infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror)
+    Clic.(args12 entry_point on_chain_views syntax infer protocol_version display_format disable_michelson_typechecking michelson_code_format output_file warn werror michelson_comments)
     Clic.(prefixes ["compile"; "contract"] @@ source_file @@ stop)
     f
 

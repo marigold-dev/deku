@@ -33,7 +33,6 @@ let patch_deep = (m : (foobar, nat)) : (foobar, nat) => (
 let size_ = (m : foobar) : nat => Map.size (m);
 
 let get = (m: foobar): option(int) => Map.find_opt (42, m);
-let get_ = (m: foobar): option(int) => Map.find_opt(42, m);
 
 let mem = (km: (int, foobar)): bool => Map.mem (km[0], km[1]);
 
@@ -47,7 +46,7 @@ let map_op = (m: foobar) : foobar => {
   Map.map (increment, m);
 };
 
-let fold_op = (m: foobar): foobar => {
+let fold_op = (m: foobar): int => {
   let aggregate = (i: int, j: (int, int)) => i + j[0] + j[1];
   Map.fold (aggregate, m, 10);
 };

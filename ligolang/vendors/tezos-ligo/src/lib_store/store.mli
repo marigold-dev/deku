@@ -174,17 +174,17 @@ type chain_store
 
 (** {3 Initialization} *)
 
-(** [init ?patch_context ?commit_genesis ?history_mode ~store_dir
-    ~context_dir ~allow_testchains genesis] initializes the store and
-    a main chain store. If [store_dir] (resp. [context_dir]) does not
-    exist, a fresh store (resp. context) is created. Otherwise, it
-    loads the store (resp. context) from reading the adequate
-    directory. If [allow_testchains] is passed, the store will be able
-    to fork chains and instantiate testchain's sub chain stores, for
-    all chains contained in the store. The chain store created is
-    based on the [genesis] provided. Its chain identifier will be
-    computed using the {!Tezos_crypto.Chain_id.of_block_hash}
-    function.
+(** [init ?patch_context ?commit_genesis ?history_mode
+    ?block_cache_limit ~store_dir ~context_dir ~allow_testchains
+    genesis] initializes the store and a main chain store. If
+    [store_dir] (resp. [context_dir]) does not exist, a fresh store
+    (resp. context) is created. Otherwise, it loads the store
+    (resp. context) from reading the adequate directory. If
+    [allow_testchains] is passed, the store will be able to fork
+    chains and instantiate testchain's sub chain stores, for all
+    chains contained in the store. The chain store created is based on
+    the [genesis] provided. Its chain identifier will be computed
+    using the {!Tezos_crypto.Chain_id.of_block_hash} function.
 
     @param patch_context the handle called when initializing the
     context. It usually is passed when creating a sandboxed chain.
@@ -202,6 +202,9 @@ type chain_store
       Default: {!History_mode.default} (which should correspond to full
     with 5 extra preserved cycles.)
 
+    @param block_cache_limit allows to override the size of the block
+    cache to use. The minimal value is 1.
+
     @param readonly a flag that, if set to true, prevent writing
     throughout the store {b and} context.
       Default: false
@@ -211,6 +214,7 @@ val init :
   ?commit_genesis:(chain_id:Chain_id.t -> Context_hash.t tzresult Lwt.t) ->
   ?history_mode:History_mode.t ->
   ?readonly:bool ->
+  ?block_cache_limit:int ->
   store_dir:string ->
   context_dir:string ->
   allow_testchains:bool ->
@@ -303,6 +307,11 @@ module Block : sig
       invalid in [chain_store] (i.e. the block is present in the
       invalid blocks file). *)
   val is_known_invalid : chain_store -> Block_hash.t -> bool Lwt.t
+
+  (** [is_known_prechecked chain_store bh] tests that the block [bh]
+      is prechecked in [chain_store] (i.e. the block is present in the
+      prechecked block cache). *)
+  val is_known_prechecked : chain_store -> Block_hash.t -> bool Lwt.t
 
   (** [is_known chain_store bh] tests that the block [bh] is either
       known valid or known invalid in [chain_store]. *)
@@ -400,21 +409,44 @@ module Block : sig
   val read_predecessor_of_hash_opt :
     chain_store -> Block_hash.t -> block option Lwt.t
 
+  (** [read_prechecked_block chain_store bh] tries to read in the
+      [chain_store]'s prechecked block cache the block [bh].*)
+  val read_prechecked_block :
+    chain_store -> Block_hash.t -> block tzresult Lwt.t
+
+  (** [read_prechecked_block_opt chain_store bh] optional version of
+      [read_prechecked_block].*)
+  val read_prechecked_block_opt :
+    chain_store -> Block_hash.t -> block option Lwt.t
+
   (** [store_block chain_store ~block_header ~operations
-      validation_result] stores in [chain_store] the block with its
-      [block_header], [operations] and validation result.
-      Inconsistent blocks and validation will result in
-      failures. Returns [None] if the block was already stored. If the
-      block is correctly stored, the newly created block is returned.
+     validation_result] stores in [chain_store] the block with its
+     [block_header], [operations] and validation result. Inconsistent
+     blocks and validation will result in failures. Returns [None] if
+     the block was already stored. If the block is correctly stored,
+     the newly created block is returned.
+
+      If the block was successfully stored, then the block is removed
+     from the prechecked block cache.
 
       {b Warning} The store will refuse to store blocks with no
-      associated context's commit. *)
+     associated context's commit. *)
   val store_block :
     chain_store ->
     block_header:Block_header.t ->
     operations:Operation.t list list ->
     Block_validation.result ->
     block option tzresult Lwt.t
+
+  (** [store_prechecked_block chain_store ~hash ~block_header ~operations]
+      stores in [chain_store]'s prechecked block cache the block with
+      its [block_header] and [operations]. *)
+  val store_prechecked_block :
+    chain_store ->
+    hash:Block_hash.t ->
+    block_header:Block_header.t ->
+    operations:Operation.t trace trace ->
+    unit tzresult Lwt.t
 
   (** [context_exn chain_store block] checkouts the context of the
       [block]. *)
@@ -828,15 +860,28 @@ module Chain : sig
   val all_protocol_levels :
     chain_store -> Protocol_levels.activation_block Protocol_levels.t Lwt.t
 
-  (** [may_update_protocol_level chain_store ~protocol_level (block,
-      ph)] updates the protocol level for the protocol [ph] in
-      [chain_store] with the activation [block]. If a previous entry
-      is found, does nothing. *)
+  (** [may_update_protocol_level chain_store ?pred ?protocol_level
+      (block, ph)] updates the protocol level for the protocol [ph] in
+      [chain_store] with the activation [block]. If [pred] is not
+      provided, it reads the [block]'s predecessor and check that the
+      [block]'s protocol level is increasing compared to its
+      predecessor. If [protocol_level] is provided, we use this value
+      instead of the protocol level found in [block]. If a previous
+      entry is found, it overwrites it. *)
   val may_update_protocol_level :
     chain_store ->
-    protocol_level:int ->
+    ?pred:Block.block ->
+    ?protocol_level:int ->
     Block.block * Protocol_hash.t ->
     unit tzresult Lwt.t
+
+  (** [may_update_ancestor_protocol_level chain_store ~head] tries to
+      find the activation block of the [head]'s protocol, checks that
+      its an ancestor and tries to update it if that's not the case. If
+      the registered activation block is not reachable (already
+      pruned), this function does nothing. *)
+  val may_update_ancestor_protocol_level :
+    chain_store -> head:Block.block -> unit tzresult Lwt.t
 
   (** [watcher chain_store] instantiates a new block watcher for
       [chain_store]. *)
@@ -971,6 +1016,15 @@ module Unsafe : sig
   (** [set_caboose chain_store caboose] sets the caboose for the
       [chain_store] without checks. *)
   val set_caboose : chain_store -> block_descriptor -> unit tzresult Lwt.t
+
+  (** [set_protocol_level chain_store protocol_level
+      (block, ph)] updates the protocol level for the protocol [ph] in
+      [chain_store] with the activation [block]. *)
+  val set_protocol_level :
+    chain_store ->
+    protocol_level:int ->
+    Block.block * Protocol_hash.t ->
+    unit tzresult Lwt.t
 
   (** Snapshots utility functions *)
 

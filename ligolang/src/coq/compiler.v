@@ -16,12 +16,12 @@ Context {A : Set}.
 Context {op : Set}.
 Context {lit : Set}.
 Context {nil : A}.
-Context {op_code : op -> @static_args A op lit -> list (node A string)}.
+Context {op_code : A -> op -> @static_args A op lit -> list (node A string)}.
 Context {op_typed : op -> @static_args A op lit -> list (node A string) -> (node A string) -> Prop}.
 Context {op_code_type_preservation :
-  forall o sargs az b,
+  forall l o sargs az b,
     op_typed o sargs az b ->
-    prog_typed (op_code o sargs) az [b]}.
+    prog_typed (op_code l o sargs) az [b]}.
 Context {lit_type : lit -> node A string}.
 Context {lit_value : lit -> node A string}.
 Context {lit_type_preservation :
@@ -169,9 +169,9 @@ Fixpoint compile_expr
        Prim nil "SWAP" [] [];
        Prim nil "APPLY" [] []]
     end
-  | E_operator _ op sargs args =>
+  | E_operator l op sargs args =>
     [Seq nil (compile_args env outer args);
-     Seq nil (op_code op sargs)]
+     Seq nil (op_code l op sargs)]
   | E_literal _ lit =>
     [Prim nil "PUSH" [lit_type lit; lit_value lit] []]
   | E_pair _ e => [Seq nil (compile_args env outer e); Prim nil "PAIR" [] []]

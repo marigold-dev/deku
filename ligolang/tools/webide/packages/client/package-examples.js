@@ -4,7 +4,6 @@ const join = require('path').join;
 const fs = require('fs');
 const YAML = require('yamljs');
 
-
 function urlFriendlyHash(content) {
   const hash = createHash('md5');
   hash.update(content);
@@ -28,7 +27,7 @@ function convertToJson(content, path) {
     const config = YAML.parse(match[1]);
     config.editor = {
       language: config.language,
-      code: content.replace(METADATA_REGEX, '')
+      code: content.replace(METADATA_REGEX, ''),
     };
     delete config.language;
 
@@ -64,7 +63,7 @@ function readFile(path) {
 
 function writeFile(path, config) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path, JSON.stringify(config), error => {
+    fs.writeFile(path, JSON.stringify(config), (error) => {
       if (error) {
         reject(error);
       } else {
@@ -91,31 +90,40 @@ async function processExample(srcDir, file, destDir) {
 }
 
 function processExamples(srcDir, files, destDir) {
-  return Promise.all(files.map(file => processExample(srcDir, file, destDir)));
+  return Promise.all(
+    files.map((file) => processExample(srcDir, file, destDir))
+  );
 }
 
 async function main() {
-  process.on('unhandledRejection', error => {
+  process.on('unhandledRejection', (error) => {
     throw error;
   });
 
-  const EXAMPLES_DIR = process.env['EXAMPLES_DIR'] || join(process.cwd(), '../../../../src/test/examples');
+  const EXAMPLES_DIR =
+    process.env['EXAMPLES_DIR'] ||
+    join(process.cwd(), '../../../../src/test/examples');
 
   // const EXAMPLES_GLOB = '**/*.ligo';
   // const files = await findFiles(EXAMPLES_GLOB, EXAMPLES_DIR);
- 
+
   const CURATED_EXAMPLES = [
-    'pascaligo/arithmetic-contract.ligo',
-    'cameligo/arithmetic-contract.ligo',
-    'reasonligo/arithmetic-contract.ligo',
+    // 'pascaligo/arithmetic-contract.ligo',
+    // 'cameligo/arithmetic-contract.ligo',
+    // 'reasonligo/arithmetic-contract.ligo',
+    'jsligo/arithmetic-contract.ligo',
+
     'cameligo/id.mligo',
     'pascaligo/id.ligo',
     'reasonligo/id.religo',
     'cameligo/hashlock.mligo',
     'pascaligo/hashlock.ligo',
-    'reasonligo/hashlock.religo'
+    'reasonligo/hashlock.religo',
   ];
-
+  // Disable ID examples pending https://ligo.atlassian.net/browse/LIGO-676
+  //'pascaligo/id.ligo',
+  //'cameligo/id.mligo',
+  //'reasonligo/id.religo',
 
   const EXAMPLES_DEST_DIR = join(process.cwd(), 'build', 'static', 'examples');
   fs.mkdirSync(EXAMPLES_DEST_DIR, { recursive: true });

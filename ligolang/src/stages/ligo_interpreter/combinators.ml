@@ -21,7 +21,7 @@ let v_none : unit -> value =
 let v_ctor : string -> value -> value =
   fun ctor value -> V_Construct (ctor, value)
 
-let v_address : Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t -> value =
+let v_address : Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.t -> value =
   fun a -> V_Ct (C_address a)
 
 let extract_pair : value -> (value * value) option =
@@ -53,7 +53,7 @@ let is_bool : value -> bool =
 let counter_of_address : string -> int = fun addr ->
   try (int_of_string addr) with | Failure _ -> -1
 
-let get_address : value -> Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t option = function
+let get_address : value -> Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.t option = function
   | V_Ct ( C_address x ) -> Some x
   | _ -> None
 
@@ -167,11 +167,11 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | C_mutez _ , (C_address _ | C_contract _ | C_key_hash _) -> 1
   | C_address _, (C_unit | C_bool _ | C_int _ | C_nat _| C_timestamp _ | C_string _ | C_bytes _ | C_mutez _) -> - 1
   | C_address a, C_address a' ->
-     Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.compare a a'
+     Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.compare a a'
   | C_address _ , (C_contract _ | C_key_hash _) -> 1
   | C_contract _, (C_unit | C_bool _ | C_int _ | C_nat _| C_timestamp _ | C_string _ | C_bytes _ | C_mutez _ | C_address _) -> - 1
   | C_contract {address=a;entrypoint=e}, C_contract {address=a';entrypoint=e'} -> (
-     match Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.compare a a' with
+     match Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.compare a a' with
        0 -> Option.compare String.compare e e'
      | c -> c
   )

@@ -31,6 +31,8 @@ let compile_constant' : AST.constant' -> constant' = function
   | C_ASSERTION_WITH_ERROR -> C_ASSERTION_WITH_ERROR
   | C_ASSERT_SOME -> C_ASSERT_SOME
   | C_ASSERT_SOME_WITH_ERROR -> C_ASSERT_SOME_WITH_ERROR
+  | C_ASSERT_NONE -> C_ASSERT_NONE
+  | C_ASSERT_NONE_WITH_ERROR -> C_ASSERT_NONE_WITH_ERROR
   | C_ASSERT_INFERRED -> C_ASSERT_INFERRED
   | C_FAILWITH -> C_FAILWITH
   | C_UPDATE -> C_UPDATE
@@ -399,9 +401,9 @@ let rec compile_literal : AST.literal -> value = fun l -> match l with
   | Literal_operation op -> D_operation op
   | Literal_unit -> D_unit
 
-and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : expression =
+and compile_expression ~raise (ae:AST.expression) : expression =
   let tv = compile_type ~raise ae.type_expression in
-  let self ?(module_env=module_env) = compile_expression ~raise ~module_env in
+  let self = compile_expression ~raise in
   let return ?(tv = tv) expr =
     Combinators.Expression.make_tpl ~loc:ae.location (expr, tv) in
   match ae.expression_content with
@@ -414,24 +416,8 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
   | E_type_in {type_binder=_; rhs=_; let_result} ->
     let result' = self let_result in
     result'
-  | E_mod_in {module_binder; rhs; let_result} ->
-    let record,module_env = compile_module_as_record ~raise module_binder module_env rhs in
-    let t_record = record.type_expression in
-    let result' = self ~module_env let_result in
-    return @@ E_let_in (record,true, ((Location.wrap @@ Var.of_name module_binder, t_record),result'))
-  | E_mod_alias {alias; binders; result} -> (
-    let module_binder,access = binders in
-    let module_ =
-      trace_option ~raise (corner_case ~loc:__LOC__ "Mod_alias: This program shouldn't type")
-      @@ SMap.find_opt  module_binder module_env  in
-    let module_var = e_a_variable (Location.wrap (Var.of_name module_binder)) module_ in
-    let module_expr = build_record_accessor ~raise module_var (List.map ~f:(fun l -> Label l) access) in
-    let module_ = get_type_expression module_expr in
-    let module_expr = self ~module_env module_expr in
-    let module_env  = SMap.add alias module_ module_env in
-    let result' = self ~module_env result in
-    return @@ E_let_in (module_expr,true,((Location.wrap @@ Var.of_name alias, tv),result'))
-  )
+  | E_mod_in _    -> raise.raise @@ corner_case ~loc:__LOC__ "E_mod_in should be morphed"
+  | E_mod_alias _ -> raise.raise @@ corner_case ~loc:__LOC__ "E_mod_alias should be morphed"
   | E_literal l -> return @@ E_literal l
   | E_variable name -> (
       return @@ E_variable (Location.map Var.todo_cast name)
@@ -614,9 +600,9 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
   | E_lambda l ->
     let io = trace_option ~raise (corner_case ~loc:__LOC__ "expected function type") @@
       AST.get_t_function ae.type_expression in
-    compile_lambda ~raise module_env l io
+    compile_lambda ~raise l io
   | E_recursive r ->
-    compile_recursive ~raise module_env r
+    compile_recursive ~raise r
   | E_matching {matchee=expr; cases=m} -> (
       let expr' = self expr in
       match m with
@@ -736,36 +722,11 @@ and compile_expression ~raise ?(module_env = SMap.empty) (ae:AST.expression) : e
         | _ ->
           raise.raise (raw_michelson_must_be_seq ae.location code)
     )
-  | E_module_accessor {module_name; element} -> (
-    let module_var = module_name in
-    let module_ =
-      trace_option ~raise (corner_case ~loc:__LOC__ "Module_accessor: This program shouldn't type")
-      @@ SMap.find_opt module_var module_env in
-    (* TODO E_module_accessor should not be this way *)
-    let rec aux (element : AST.expression) =
-      match element.expression_content with
-      | E_module_accessor {module_name; element} ->
-        let module_var = module_name in
-        let module_names = aux element in
-        (module_var :: module_names)
-      | E_variable var ->
-        [Format.asprintf "%a" Var.pp @@ Location.unwrap var]
-      | E_record_accessor {record; path} ->
-        let module_names = aux record in
-        let Label module_var = path in
-        (module_names @ [module_var])
-      | _ -> raise.raise @@ corner_case ~loc:__LOC__ "The parser shouldn't allowed this construct"
-    in
-    let access_list = aux element in
-    let module_var = e_a_variable (Location.wrap (Var.of_name module_var)) module_ in
-    let expr = build_record_accessor ~raise module_var (List.map ~f:(fun l -> Label l) access_list) in
-    let expr = self ~module_env expr in
-    expr
-  )
+  | E_module_accessor _ -> raise.raise @@ corner_case ~loc:__LOC__ "E_mod_accessor should be morphed"
 
-and compile_lambda ~raise module_env l (input_type , output_type) =
+and compile_lambda ~raise l (input_type , output_type) =
   let { binder ; result } : AST.lambda = l in
-  let result' = compile_expression ~raise ~module_env result in
+  let result' = compile_expression ~raise result in
   let input = compile_type ~raise input_type in
   let output = compile_type ~raise output_type in
   let tv = Combinators.t_function input output in
@@ -773,7 +734,7 @@ and compile_lambda ~raise module_env l (input_type , output_type) =
   let closure = E_closure { binder; body = result'} in
   Combinators.Expression.make_tpl ~loc:result.location (closure , tv)
 
-and compile_recursive ~raise module_env {fun_name; fun_type; lambda} =
+and compile_recursive ~raise {fun_name; fun_type; lambda} =
   let rec map_lambda : AST.expression_variable -> type_expression -> AST.expression -> expression * expression_variable list = fun fun_name loop_type e ->
     match e.expression_content with
       E_lambda {binder;result} ->
@@ -789,7 +750,7 @@ and compile_recursive ~raise module_env {fun_name; fun_type; lambda} =
       | E_let_in li ->
         let shadowed = shadowed || Var.equal li.let_binder.wrap_content fun_name.wrap_content in
         let let_result = replace_callback ~raise fun_name loop_type shadowed li.let_result in
-        let rhs = compile_expression ~raise ~module_env li.rhs in
+        let rhs = compile_expression ~raise li.rhs in
         let ty  = compile_type ~raise li.rhs.type_expression in
         e_let_in (Location.map Var.todo_cast li.let_binder) ty li.attr.inline rhs let_result
       | E_matching m ->
@@ -798,19 +759,19 @@ and compile_recursive ~raise module_env {fun_name; fun_type; lambda} =
       | E_application {lamb;args} -> (
         match lamb.expression_content,shadowed with
         | E_variable name, false when Var.equal fun_name.wrap_content name.wrap_content ->
-          let expr = compile_expression ~raise ~module_env args in
+          let expr = compile_expression ~raise args in
           Expression.make (E_constant {cons_name=C_LOOP_CONTINUE;arguments=[expr]}) loop_type
         | _ ->
-          let expr = compile_expression ~raise ~module_env e in
+          let expr = compile_expression ~raise e in
           Expression.make (E_constant {cons_name=C_LOOP_STOP;arguments=[expr]}) loop_type
       )
       | _ ->
-        let expr = compile_expression ~raise ~module_env e in
+        let expr = compile_expression ~raise e in
         Expression.make (E_constant {cons_name=C_LOOP_STOP;arguments=[expr]}) loop_type
 
   and matching ~raise : AST.expression_variable -> type_expression -> bool -> AST.matching -> type_expression -> expression = fun fun_name loop_type shadowed m ty ->
     let return ret = Expression.make ret @@ ty in
-    let expr' = compile_expression ~raise ~module_env m.matchee in
+    let expr' = compile_expression ~raise m.matchee in
     let self = replace_callback ~raise fun_name loop_type shadowed in
     match m.cases with
     | Match_variant {cases ; tv} -> (
@@ -910,102 +871,27 @@ and compile_recursive ~raise module_env {fun_name; fun_type; lambda} =
   let body = Expression.make (E_iterator (C_LOOP_LEFT, ((lambda.binder, input_type), body), expr)) output_type in
   Expression.make (E_closure {binder;body}) fun_type
 
-and compile_declaration ~raise module_env env (d:AST.declaration) : (toplevel_statement * _ SMap.t) option =
+and compile_declaration ~raise env (d:AST.declaration) : toplevel_statement option =
   match d with
   | Declaration_type _ -> None
   | Declaration_constant { binder ; expr ; attr = { inline } } ->
-    let expression = compile_expression ~raise ~module_env expr in
+    let expression = compile_expression ~raise expr in
     let binder = Location.map Var.todo_cast binder in
     let tv = Combinators.Expression.get_type expression in
     let env' = Environment.add (binder, tv) env in
-    Some (((binder, inline, expression), environment_wrap env env'), module_env)
-  | Declaration_module {module_binder; module_} ->
-    let record,module_env = compile_module_as_record ~raise module_binder module_env module_ in
-    let binder = Location.wrap @@ Var.of_name module_binder in
-    let tv = Combinators.Expression.get_type record in
-    let env' = Environment.add (binder, tv) env in
-    Some (((binder, false, record), environment_wrap env env'), module_env)
-  | Module_alias {alias; binders} ->
-    let module_var, access = binders in
-    let module_ =
-      trace_option ~raise (corner_case ~loc:__LOC__ "Mod_alias: This program shouldn't type")
-      @@ SMap.find_opt module_var module_env  in
-    let module_var = e_a_variable (Location.wrap (Var.of_name module_var)) module_ in
-    let module_expr = build_record_accessor ~raise module_var (List.map ~f:(fun l -> Label l) access) in
-    let module_ = get_type_expression module_expr in
-    let module_expr = compile_expression ~raise ~module_env module_expr in
-    let module_env  = SMap.add alias module_ module_env in
-    let module_type = compile_type ~raise module_ in
-    let env' = Environment.add (Location.wrap @@ Var.of_name alias, module_type) env in
-    Some ((((Location.wrap @@ Var.of_name alias),true,module_expr),environment_wrap env env'),module_env)
+    Some ((binder, inline, expression), environment_wrap env env')
+  | Declaration_module _ -> raise.raise @@ corner_case ~loc:__LOC__ "Declaration_module should be morphed"
+  | Module_alias _ -> raise.raise @@ corner_case ~loc:__LOC__ "Module_alias should be morphed"
 
 
 
-and compile_module ~raise ?(module_env = SMap.empty) ((AST.Module_Fully_Typed lst) : AST.module_fully_typed) : program * AST.type_expression SMap.t =
-  let aux (prev:toplevel_statement list * _ SMap.t * Environment.t) cur =
-    let (hds, module_env, env) = prev in
-    let x = compile_declaration ~raise module_env env cur in
+and compile_module ~raise ((AST.Module_Fully_Typed lst) : AST.module_fully_typed) : program =
+  let aux (prev:toplevel_statement list * Environment.t) cur =
+    let (hds, env) = prev in
+    let x = compile_declaration ~raise env cur in
     match x with
-    | Some (((_ , env') as cur', module_env)) -> (hds @ [ cur' ] , module_env, env'.post_environment)
+    | Some ((_ , env') as cur') -> (hds @ [ cur' ] , env'.post_environment)
     | None -> prev
   in
-  let (statements,map, _) = List.fold_left ~f:aux ~init:([], module_env,Environment.empty) (temp_unwrap_loc_list lst) in
-  (statements, map)
-
-and compile_module_as_record ~raise module_name (module_env : _ SMap.t) (lst : AST.module_fully_typed) : (expression * _)=
-  let rec module_as_record ~raise module_env (AST.Module_Fully_Typed lst) : (AST.expression * _) =
-    let aux (r,env) (cur : AST.declaration ) =
-      match cur with
-      | Declaration_constant { binder ; expr; attr } ->
-        let l = Format.asprintf "%a" Var.pp @@ Location.unwrap binder in
-        let attr : AST.known_attributes = { inline = attr.inline ; no_mutation = false; public = true ; view = false } in
-        ((Label l,(expr,attr))::r,env)
-      | Declaration_type _ty -> (r,env)
-      | Declaration_module {module_binder; module_} ->
-        let l = module_binder in
-        let r',_ = module_as_record env ~raise module_ in
-        let env = SMap.add l (get_type_expression r') env in
-        let attr : AST.known_attributes = { inline = true ; no_mutation = false; public = true ; view = false } in
-        ((Label l,(r',attr))::r,env)
-      | Module_alias {alias; binders} ->
-        let l = alias in
-        let module_var, access = binders in
-        let module_type =
-          trace_option ~raise (corner_case ~loc:__LOC__ "Mod_alias: This program shouldn't type")
-          @@ SMap.find_opt module_var env in
-        let module_var = e_a_variable (Location.wrap (Var.of_name module_var)) module_type in
-        let module_expr = build_record_accessor ~raise module_var (List.map ~f:(fun l -> Label l) access) in
-        let module_type = get_type_expression module_expr in
-        let env = SMap.add l module_type env in
-        let r' = module_expr in
-        let attr : AST.known_attributes = { inline = true ; no_mutation = false ; public = true ; view = false } in
-        ((Label l,(r',attr))::r,env)
-
-    in
-    let r,env = List.fold ~f:aux ~init:([],module_env) (temp_unwrap_loc_list lst) in
-    if List.length r <> 0 then begin
-      let build_record r =
-        let aux (Label l, ((expr : AST.expression), _)) =
-          let expr = {expr with expression_content = e_variable @@ Location.wrap @@ Var.of_name l} in
-          (Label l, expr)
-        in
-        let record = ez_e_a_record ~layout:L_comb @@
-          List.map ~f:aux (List.rev r) in
-      (* prefix with let_in*)
-        let aux record (Label l, (expr, inline)) =
-          let binder = Location.wrap @@ Var.of_name l in
-          AST.e_a_let_in binder expr record inline
-        in
-        let record = List.fold_left ~f:aux ~init:record r in
-        record
-      in
-      let record = build_record r in
-      (record,env)
-    end
-    else
-      (e_a_unit,env)
-  in
-  let record,env = module_as_record ~raise module_env lst in
-  let module_env = SMap.add module_name (get_type_expression record) env in
-  let record = compile_expression ~raise ~module_env record in
-  (record, module_env)
+  let (statements, _) = List.fold_left ~f:aux ~init:([], Environment.empty) (temp_unwrap_loc_list lst) in
+  statements

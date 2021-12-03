@@ -9,7 +9,7 @@ let generator_to_variant ~raise s =
   else if String.equal s "random" then
     `Generator_random
   else
-    raise.raise @@ Main_errors.invalid_generator s
+    raise.raise @@ Main_errors.main_invalid_generator_name s
 
 let mutate_ast source_file syntax infer protocol_version libs display_format seed generator =
   Trace.warning_with @@ fun add_warning get_warnings ->

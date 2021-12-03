@@ -176,7 +176,7 @@ function update_owner (const parameter : update_owner; const storage : storage) 
     const id : int = parameter.id;
     const new_owner : address = parameter.new_owner;
     var identities : big_map (id, id_details) := storage.identities;
-    const id_details : id_details =
+    var id_details : id_details :=
       case identities[id] of
         Some(id_details) -> id_details
       | None -> (failwith("This ID does not exist."): id_details)
@@ -203,8 +203,8 @@ function update_details (const parameter : update_details; const storage : stora
     const id : int = parameter.id;
     const new_profile : option(bytes) = parameter.new_profile;
     const new_controller : option(address) = parameter.new_controller;
-    const identities : big_map (id, id_details) = storage.identities;
-    const id_details: id_details =
+    var identities : big_map (id, id_details) := storage.identities;
+    var id_details: id_details :=
       case identities[id] of
         Some(id_details) -> id_details
       | None -> (failwith("This ID does not exist."): id_details)

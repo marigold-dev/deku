@@ -333,6 +333,27 @@ build-preview-ligo-webide-front-end:
         - tools/webide/**/*
       when: always
 
+# This job builds the ligo-webide front-end from the tools/webide/ directory and does a production deployment to Netlify and publishes the site using the netlify-cli tool.
+build-ligo-webide-front-end:
+  stage: ide-deploy
+  image: node:12.20.0-buster
+  tags:
+    - docker
+  script:
+    - apt-get update
+    - cd ./tools/webide/
+    - mv ./packages/client/prod-netlify.toml ./packages/client/netlify.toml
+    - yarn install
+    - CI= yarn workspaces run build
+    - cd ./packages/client
+    - npm install netlify-cli
+    - npx netlify deploy --site $NETLIFY_SITE_ID --auth $NETLIFY_AUTH_TOKEN --json --prod > netlify.json
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - tools/webide/**/*
+      when: always
+      
 # This job will remove the web-ide docker containers that contain the MR_IID in their name from the test server.
 downstream-webide-removal-handoff:
   # Handoff deployment duties to private repo
@@ -349,7 +370,7 @@ downstream-webide-removal-handoff:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_PROJECT_PATH == "ligolang/ligo"'
       changes:
         - tools/webide/**/*
-      when: manual
+      when: always
     # After a MR merges and is committed to the default branch, the removal job will be triggered
     - if: '$CI_COMMIT_REF_NAME == "dev" && $CI_PROJECT_PATH == "ligolang/ligo" && $CI_MERGE_REQUEST_IID != null'
       changes:

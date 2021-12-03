@@ -476,6 +476,16 @@ let rec apply_operator ~raise ~steps ~protocol_version : Location.t -> calltrace
       return (V_Ct (C_address address))
     | ( C_TRUE , [] ) -> return @@ v_bool true
     | ( C_FALSE , [] ) -> return @@ v_bool false
+    | ( C_BYTES_PACK , [ value ] ) ->
+      let value_ty = List.nth_exn types 0 in
+      let>> ret = Pack (loc, value, value_ty) in
+      let* value = eval_ligo ret calltrace env in
+      return value
+    | ( C_BYTES_UNPACK , [ V_Ct (C_bytes bytes) ] ) ->
+      let value_ty = expr_ty in
+      let>> typed_exp = Unpack (loc, bytes, value_ty) in
+      let* value = eval_ligo typed_exp calltrace env in
+      return value
     (*
     >>>>>>>>
       Test operators
@@ -732,7 +742,7 @@ and eval_literal : Ast_typed.literal -> value Monad.t = function
      end
   | Literal_address s   ->
      begin
-       match Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.of_b58check s with
+       match Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.of_b58check s with
        | Ok t -> Monad.return @@ V_Ct (C_address t)
        | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_address s)
      end

@@ -1,0 +1,6 @@
+---
+  title: "Fix webide by adding correct file extension to temp files"
+  merge_request: "1440"
+  author: "melwyn95"
+  type: "fixed"
+

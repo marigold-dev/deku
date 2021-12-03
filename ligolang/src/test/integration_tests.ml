@@ -69,8 +69,8 @@ let application ~raise ~add_warning () : unit =
     expect_eq_evaluate ~raise program "z" expected in
   ()
 
-let variant ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/variant.ligo" in
+let variant ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let expected = e_constructor "Foo" (e_int 42) in
     expect_eq_evaluate ~raise program "foo" expected in
@@ -82,44 +82,6 @@ let variant ~raise ~add_warning () : unit =
     expect_eq_evaluate ~raise program "kee" expected in
   ()
 
-let variant_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/variant.mligo" in
-  let () =
-    let expected = e_constructor "Foo" (e_int 42) in
-    expect_eq_evaluate ~raise program "foo" expected in
-  let () =
-    let expected = e_constructor "Bar" (e_bool true) in
-    expect_eq_evaluate ~raise program "bar" expected in
-  let () =
-    let expected = e_constructor "Kee" (e_nat 23) in
-    expect_eq_evaluate ~raise program "kee" expected in
-  ()
-
-let variant_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/variant.religo" in
-  let () =
-    let expected = e_constructor "Foo" (e_int 42) in
-    expect_eq_evaluate ~raise program "foo" expected in
-  let () =
-    let expected = e_constructor "Bar" (e_bool true) in
-    expect_eq_evaluate ~raise program "bar" expected in
-  let () =
-    let expected = e_constructor "Kee" (e_nat 23) in
-    expect_eq_evaluate ~raise program "kee" expected in
-  ()
-
-let variant_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/variant.jsligo" in
-  let () =
-    let expected = e_constructor "Foo" (e_int 42) in
-    expect_eq_evaluate ~raise program "foo" expected in
-  let () =
-    let expected = e_constructor "Bar" (e_bool true) in
-    expect_eq_evaluate ~raise program "bar" expected in
-  let () =
-    let expected = e_constructor "Kee" (e_nat 23) in
-    expect_eq_evaluate ~raise program "kee" expected in
-  ()
   
 let variant_matching ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/variant-matching.ligo" in
@@ -199,8 +161,8 @@ let shadowing ~raise ~add_warning () : unit =
   in
   ()
 
-let higher_order ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/high-order.ligo" in
+let higher_order ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_expect = fun n -> n in
   let _ = expect_eq_n_int ~raise program "foobar" make_expect in
   let _ = expect_eq_n_int ~raise program "foobar2" make_expect in
@@ -210,45 +172,12 @@ let higher_order ~raise ~add_warning () : unit =
   (* let _ = applies_expect_eq_n_int program "foobar5" make_expect in *)
   ()
 
-let higher_order_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/high-order.mligo" in
-  let make_expect = fun n -> n in
-  let _ = expect_eq_n_int ~raise program "foobar" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar2" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar3" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar4" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar5" make_expect in
-  ()
 
-let higher_order_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/high-order.religo" in
-  let make_expect = fun n -> n in
-  let _ = expect_eq_n_int ~raise program "foobar" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar2" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar3" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar4" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar5" make_expect in
-  ()
-
-let higher_order_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/high-order.jsligo" in
-  let make_expect = fun n -> n in
-  let _ = expect_eq_n_int ~raise program "foobar" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar2" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar3" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar4" make_expect in
-  let _ = expect_eq_n_int ~raise program "foobar5" make_expect in
-  ()
-  
-
-let shared_function ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/function-shared.ligo" in
+let shared_function ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let make_expect = fun n -> (n + 1) in
     expect_eq_n_int ~raise program "inc" make_expect
-  in
-  let () =
-    expect_eq ~raise program "double_inc" (e_int 0) (e_int 2)
   in
   let () =
     let make_expect = fun n -> (n + 2) in
@@ -258,38 +187,11 @@ let shared_function ~raise ~add_warning () : unit =
     let make_expect = fun n -> (2 * n + 3) in
     expect_eq ~raise program "foo" (e_int 0) (e_int @@ make_expect 0)
   in
-  let () =
-    let make_expect = fun n -> (2 * n + 3) in
-    expect_eq_n_int ~raise program "foo" make_expect
-  in
   ()
 
-let shared_function_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/function-shared.mligo" in
-  let () =
-    let make_expect = fun n -> (2 * n + 70) in
-    expect_eq_n_int ~raise program "foobar" make_expect
-  in
-  ()
-
-let shared_function_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/function-shared.religo" in
-  let () =
-    let make_expect = fun n -> (2 * n + 70) in
-    expect_eq_n_int ~raise program "foobar" make_expect
-  in
-  ()
-
-let shared_function_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/function-shared.jsligo" in
-  let () =
-    let make_expect = fun n -> (2 * n + 70) in
-    expect_eq_n_int ~raise program "foobar" make_expect
-  in
-  ()
   
-let bool_expression ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/boolean_operators.ligo" in
+let bool_expression ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let _ =
     let aux (name , f) = expect_eq_b_bool program name f in
     List.map ~f:aux [
@@ -301,47 +203,9 @@ let bool_expression ~raise ~add_warning () : unit =
     ] in
   ()
 
-let bool_expression_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/boolean_operators.mligo" in
-  let _ =
-    let aux (name, f) = expect_eq_b_bool program name f in
-    List.map ~f:aux [
-      ("or_true", fun b -> b || true) ;
-      ("or_false", fun b -> b || false) ;
-      ("and_true", fun b -> b && true) ;
-      ("and_false", fun b -> b && false) ;
-      ("not_bool", fun b -> not b) ;
-    ] in
-  ()
 
-let bool_expression_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/boolean_operators.religo" in
-  let _ =
-    let aux (name, f) = expect_eq_b_bool program name f in
-    List.map ~f:aux [
-      ("or_true", fun b -> b || true) ;
-      ("or_false", fun b -> b || false) ;
-      ("and_true", fun b -> b && true) ;
-      ("and_false", fun b -> b && false) ;
-      ("not_bool", fun b -> not b) ;
-    ] in
-  ()
-
-let bool_expression_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/boolean_operators.jsligo" in
-  let _ =
-    let aux (name, f) = expect_eq_b_bool program name f in
-    List.map ~f:aux [
-      ("or_true", fun b -> b || true) ;
-      ("or_false", fun b -> b || false) ;
-      ("and_true", fun b -> b && true) ;
-      ("and_false", fun b -> b && false) ;
-      ("not_bool", fun b -> not b) ;
-    ] in
-  ()
-
-let arithmetic ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/arithmetic.ligo" in
+let arithmetic ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let _ =
     let aux (name , f) = expect_eq_n_int ~raise program name f in
     List.map ~f:aux [
@@ -349,65 +213,18 @@ let arithmetic ~raise ~add_warning () : unit =
       ("minus_op", fun n -> (n - 42)) ;
       ("times_op", fun n -> (n * 42)) ;
       ("neg_op", fun n -> (-n)) ;
+      ("neg_op_2", fun n -> -(n + 10)) ;
     ] in
   let () = expect_eq_n_pos ~raise program "int_op" e_nat e_int in
   let () = expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42)) in
   let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
   let () = expect_eq_n_pos ~raise program "ediv_op" e_int (fun n -> e_some (e_pair (e_int (n/2)) (e_nat (n mod 2)))) in
-  ()
-
-let arithmetic_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/arithmetic.mligo" in
-  let _ =
-    let aux (name, f) = expect_eq_n_int ~raise program name f in
-    List.map ~f:aux [
-      ("plus_op", fun n -> (n + 42)) ;
-      ("minus_op", fun n -> (n - 42)) ;
-      ("times_op", fun n -> (n * 42)) ;
-      ("neg_op", fun n -> (-n)) ;
-      ("neg_op_2", fun n -> -(n + 10)) ;
-    ] in
-  let () = expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42)) in
-  let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
-  let () = expect_eq_n_pos ~raise program "ediv_op" e_int (fun n -> e_some (e_pair (e_int (n/2)) (e_nat (n mod 2)))) in
-  let _ = expect_eq_evaluate ~raise program "mul_woo" (e_unit ()) in
-  ()
-
-let arithmetic_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/arithmetic.religo" in
-  let _ =
-    let aux (name, f) = expect_eq_n_int ~raise program name f in
-    List.map ~f:aux [
-      ("plus_op", fun n -> (n + 42)) ;
-      ("minus_op", fun n -> (n - 42)) ;
-      ("times_op", fun n -> (n * 42)) ;
-      ("neg_op", fun n -> (-n)) ;
-      ("neg_op_2", fun n -> -(n + 10)) ;
-    ] in
-  let () = expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42)) in
-  let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
-  let () = expect_eq_n_pos ~raise program "ediv_op" e_int (fun n -> e_some (e_pair (e_int (n/2)) (e_nat (n mod 2)))) in
-  ()
-
-let arithmetic_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/arithmetic.jsligo" in
-  let _ =
-    let aux (name, f) = expect_eq_n_int ~raise program name f in
-    List.map ~f:aux [
-      ("plus_op", fun n -> (n + 42)) ;
-      ("minus_op", fun n -> (n - 42)) ;
-      ("times_op", fun n -> (n * 42)) ;
-      ("neg_op", fun n -> (-n)) ;
-      ("neg_op_2", fun n -> -(n + 10)) ;
-    ] in
-  let () = expect_eq_n_pos ~raise program "mod_op" e_int (fun n -> e_nat (n mod 42)) in
-  let () = expect_eq_n_pos ~raise program "div_op" e_int (fun n -> e_int (n / 2)) in
-  let () = expect_eq_n_pos ~raise program "ediv_op" e_int (fun n -> e_some (e_pair (e_int (n/2)) (e_nat (n mod 2)))) in
+  let () = expect_eq_evaluate ~raise program "mul_woo" (e_unit ()) in
   ()
   
 
-let bitwise_arithmetic ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bitwise_arithmetic.ligo" in
+let bitwise_arithmetic ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () = expect_eq ~raise program "or_op" (e_nat 7) (e_nat 7) in
   let () = expect_eq ~raise program "or_op" (e_nat 3) (e_nat 7) in
   let () = expect_eq ~raise program "or_op" (e_nat 2) (e_nat 6) in
@@ -424,96 +241,22 @@ let bitwise_arithmetic ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "lsr_op" (e_nat 128000) (e_nat 1000) in
   ()
 
-let bitwise_arithmetic_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bitwise_arithmetic.mligo" in
-  let () = expect_eq ~raise program "or_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 3) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 2) (e_nat 6) in
-  let () = expect_eq ~raise program "or_op" (e_nat 14) (e_nat 14) in
-  let () = expect_eq ~raise program "or_op" (e_nat 10) (e_nat 14) in
-  let () = expect_eq ~raise program "and_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "and_op" (e_nat 3) (e_nat 3) in
-  let () = expect_eq ~raise program "and_op" (e_nat 2) (e_nat 2) in
-  let () = expect_eq ~raise program "and_op" (e_nat 14) (e_nat 6) in
-  let () = expect_eq ~raise program "and_op" (e_nat 10) (e_nat 2) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 0) (e_nat 7) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 7) (e_nat 0) in
-  let () = expect_eq ~raise program "lsl_op" (e_nat 1000) (e_nat 128000) in
-  let () = expect_eq ~raise program "lsr_op" (e_nat 128000) (e_nat 1000) in
-  ()
 
-let bitwise_arithmetic_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bitwise_arithmetic.religo" in
-  let () = expect_eq ~raise program "or_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 3) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 2) (e_nat 6) in
-  let () = expect_eq ~raise program "or_op" (e_nat 14) (e_nat 14) in
-  let () = expect_eq ~raise program "or_op" (e_nat 10) (e_nat 14) in
-  let () = expect_eq ~raise program "and_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "and_op" (e_nat 3) (e_nat 3) in
-  let () = expect_eq ~raise program "and_op" (e_nat 2) (e_nat 2) in
-  let () = expect_eq ~raise program "and_op" (e_nat 14) (e_nat 6) in
-  let () = expect_eq ~raise program "and_op" (e_nat 10) (e_nat 2) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 0) (e_nat 7) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 7) (e_nat 0) in
-  let () = expect_eq ~raise program "lsl_op" (e_nat 1000) (e_nat 128000) in
-  let () = expect_eq ~raise program "lsr_op" (e_nat 128000) (e_nat 1000) in
-  ()
-
-let bitwise_arithmetic_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bitwise_arithmetic.jsligo" in
-  let () = expect_eq ~raise program "or_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 3) (e_nat 7) in
-  let () = expect_eq ~raise program "or_op" (e_nat 2) (e_nat 6) in
-  let () = expect_eq ~raise program "or_op" (e_nat 14) (e_nat 14) in
-  let () = expect_eq ~raise program "or_op" (e_nat 10) (e_nat 14) in
-  let () = expect_eq ~raise program "and_op" (e_nat 7) (e_nat 7) in
-  let () = expect_eq ~raise program "and_op" (e_nat 3) (e_nat 3) in
-  let () = expect_eq ~raise program "and_op" (e_nat 2) (e_nat 2) in
-  let () = expect_eq ~raise program "and_op" (e_nat 14) (e_nat 6) in
-  let () = expect_eq ~raise program "and_op" (e_nat 10) (e_nat 2) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 0) (e_nat 7) in
-  let () = expect_eq ~raise program "xor_op" (e_nat 7) (e_nat 0) in
-  let () = expect_eq ~raise program "lsl_op" (e_nat 1000) (e_nat 128000) in
-  let () = expect_eq ~raise program "lsr_op" (e_nat 128000) (e_nat 1000) in
-  ()
-
-let string_arithmetic ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/string_arithmetic.ligo" in
+let string_arithmetic ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
+  let () = expect_eq ~raise program "length_op"  (e_string "tata") (e_nat 4) in
+  let () = expect_eq ~raise program "length_op"  (e_string "foo") (e_nat 3) in
   let () = expect_eq ~raise program "concat_op" (e_string "foo") (e_string "foototo") in
   let () = expect_eq ~raise program "concat_op" (e_string "") (e_string "toto") in
-  let () = expect_eq ~raise program "slice_op" (e_string "tata") (e_string "at") in
-  let () = expect_eq ~raise program "slice_op" (e_string "foo") (e_string "oo") in
-  let () = expect_fail ~raise program "slice_op" (e_string "ba") in
+  let () = expect_eq ~raise program "sub_op" (e_string "tata") (e_string "at") in
+  let () = expect_eq ~raise program "sub_op" (e_string "foo") (e_string "oo") in
+  let () = expect_fail ~raise program "sub_op" (e_string "ba") in
   ()
 
-let string_arithmetic_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/string_arithmetic.mligo" in
-  let () = expect_eq ~raise program "size_op"  (e_string "tata") (e_nat 4) in
-  let () = expect_eq ~raise program "slice_op" (e_string "tata") (e_string "at") in
-  let () = expect_eq ~raise program "slice_op" (e_string "foo") (e_string "oo") in
-  let () = expect_eq ~raise program "concat_syntax" (e_string "string_") (e_string "string_test_literal")
-  in ()
-
-let string_arithmetic_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/string_arithmetic.religo" in
-  let () = expect_eq ~raise program "size_op"  (e_string "tata") (e_nat 4) in
-  let () = expect_eq ~raise program "slice_op" (e_string "tata") (e_string "at") in
-  let () = expect_eq ~raise program "slice_op" (e_string "foo") (e_string "oo") in
-  let () = expect_eq ~raise program "concat_syntax" (e_string "string_") (e_string "string_test_literal")
-  in ()
-
-let string_arithmetic_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/string_arithmetic.jsligo" in
-  let () = expect_eq ~raise program "size_op"  (e_string "tata") (e_nat 4) in
-  let () = expect_eq ~raise program "slice_op" (e_string "tata") (e_string "at") in
-  let () = expect_eq ~raise program "slice_op" (e_string "foo") (e_string "oo") in
-  let () = expect_eq ~raise program "concat_syntax" (e_string "string_") (e_string "string_test_literal")
-  in ()
   
 
-let bytes_arithmetic ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_arithmetic.ligo" in
+let bytes_arithmetic ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
   let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
   let toto = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070" in
@@ -573,8 +316,8 @@ let comparable_mligo ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "comb_record" comb (e_bool false) in
   ()
 
-let crypto ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/crypto.ligo" in
+let crypto ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
   let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
   let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foo in
@@ -587,117 +330,19 @@ let crypto ~raise ~add_warning () : unit =
   let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b5 , b4) in
   ()
 
-let crypto_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/crypto.mligo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foo in
-  let () = expect_eq_core ~raise program "hasherman512" foo b1 in
-  let b2 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b2 , b1) in
-  let b4 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foo in
-  let () = expect_eq_core ~raise program "hasherman_blake" foo b4 in
-  let b5 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b5 , b4) in
-  ()
 
-let crypto_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/crypto.religo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foo in
-  let () = expect_eq_core ~raise program "hasherman512" foo b1 in
-  let b2 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@ Ast_core.Misc.assert_value_eq (b2 , b1) in
-  let b4 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foo in
-  let () = expect_eq_core ~raise program "hasherman_blake" foo b4 in
-  let b5 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@ Ast_core.Misc.assert_value_eq (b5 , b4) in
-  ()
 
-let crypto_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/crypto.jsligo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foo in
-  let () = expect_eq_core ~raise program "hasherman512" foo b1 in
-  let b2 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman512" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@ Ast_core.Misc.assert_value_eq (b2 , b1) in
-  let b4 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foo in
-  let () = expect_eq_core ~raise program "hasherman_blake" foo b4 in
-  let b5 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman_blake" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@ Ast_core.Misc.assert_value_eq (b5 , b4) in
-  ()
-  
-
-let bytes_arithmetic_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_arithmetic.mligo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let toto = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070" in
-  let empty = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "" in
-  let tata = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ff7a7aff" in
-  let at = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7a7a" in
-  let ba = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ba" in
-  let () = expect_eq ~raise program "concat_op" foo foototo in
-  let () = expect_eq ~raise program "concat_op" empty toto in
-  let () = expect_eq ~raise program "slice_op" tata at in
-  let () = expect_fail ~raise program "slice_op" foo in
-  let () = expect_fail ~raise program "slice_op" ba in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman" foo in
-  let () = expect_eq_core ~raise program "hasherman" foo b1 in
-  let b3 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b3 , b1) in
-  ()
-
-let bytes_arithmetic_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_arithmetic.religo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let toto = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070" in
-  let empty = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "" in
-  let tata = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ff7a7aff" in
-  let at = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7a7a" in
-  let ba = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ba" in
-  let () = expect_eq ~raise program "concat_op" foo foototo in
-  let () = expect_eq ~raise program "concat_op" empty toto in
-  let () = expect_eq ~raise program "slice_op" tata at in
-  let () = expect_fail ~raise program "slice_op" foo in
-  let () = expect_fail ~raise program "slice_op" ba in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program"hasherman" foo in
-  let () = expect_eq_core ~raise program "hasherman" foo b1 in
-  let b3 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b3 , b1) in
-  ()
-
-let bytes_arithmetic_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_arithmetic.jsligo" in
-  let foo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f00" in
-  let foototo = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "0f007070" in
-  let toto = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7070" in
-  let empty = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "" in
-  let tata = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ff7a7aff" in
-  let at = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "7a7a" in
-  let ba = trace_option ~raise (test_internal __LOC__) @@ e_bytes_hex_ez "ba" in
-  let () = expect_eq ~raise program "concat_op" foo foototo in
-  let () = expect_eq ~raise program "concat_op" empty toto in
-  let () = expect_eq ~raise program "slice_op" tata at in
-  let () = expect_fail ~raise program "slice_op" foo in
-  let () = expect_fail ~raise program "slice_op" ba in
-  let b1 = Test_helpers.run_typed_program_with_imperative_input ~raise program"hasherman" foo in
-  let () = expect_eq_core ~raise program "hasherman" foo b1 in
-  let b3 = Test_helpers.run_typed_program_with_imperative_input ~raise program "hasherman" foototo in
-  let () = trace_assert_fail_option ~raise (test_internal __LOC__) @@  Ast_core.Misc.assert_value_eq (b3 , b1) in
-  ()
-  
-
-let set_arithmetic ~raise ~add_warning () : unit =
-  let program   = type_file ~raise ~add_warning "./contracts/set_arithmetic.ligo" in
-  let program_1 = type_file ~raise ~add_warning "./contracts/set_arithmetic-1.ligo" in
+let set_arithmetic ~raise ~add_warning f : unit =
+  let program   = type_file ~raise ~add_warning f in
   let () =
-    expect_eq ~raise program_1 "iter_op"
-      (e_set [e_int 2 ; e_int 4 ; e_int 7])
-      (e_int 13) in
+    expect_eq ~raise program "literal_op"
+      (e_unit ())
+      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
+  in
+  let () =
+    expect_eq ~raise program "size_op"
+      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
+      (e_nat 3) in
   let () =
     expect_eq ~raise program "add_op"
       (e_set [e_string "foo" ; e_string "bar"])
@@ -712,17 +357,13 @@ let set_arithmetic ~raise ~add_warning () : unit =
       (e_set [e_string "foo" ; e_string "bar"]) in
   let () =
     expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program "remove_syntax"
       (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
       (e_set [e_string "foo" ; e_string "bar"]) in
   let () =
     expect_eq ~raise program "remove_deep"
       (e_pair
-         (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-         (e_nat 42))
+        (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
+        (e_nat 42))
       (e_pair
         (e_set [e_string "foo" ; e_string "bar"])
         (e_nat 42))
@@ -748,121 +389,26 @@ let set_arithmetic ~raise ~add_warning () : unit =
       (e_set [e_string "foo" ; e_string "bar"])
       (e_bool false) in
   let () =
+    expect_eq ~raise program "iter_op"
+      (e_set [e_int 2 ; e_int 4 ; e_int 7])
+      (e_int 0) in
+  (* can't work without effect
+  let () =
+    expect_eq ~raise program "iter_op_with_effect"
+      (e_set [e_int 2 ; e_int 4 ; e_int 7])
+      (e_int 13) in *)
+  let () =
     expect_eq ~raise program "fold_op"
-      (e_set [ e_int 4 ; e_int 10 ])
-      (e_int 29)
-  in
-  ()
-
-let set_arithmetic_mligo ~raise ~add_warning () : unit =
-  let program   = type_file ~raise ~add_warning "./contracts/set_arithmetic.mligo" in
-  let program_1 = type_file ~raise ~add_warning "./contracts/set_arithmetic-1.mligo" in
-  let () =
-    expect_eq ~raise program "literal_op"
-      (e_unit ())
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-  in
-  let () =
-    expect_eq ~raise program "size_op"
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-      (e_nat 3) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program_1 "fold_op"
       (e_set [ e_int 4 ; e_int 10 ])
       (e_list [e_int 10; e_int  4 ])
   in
   let () =
-    expect_eq ~raise program_1 "fold_right"
+    expect_eq ~raise program "fold_right"
       (e_set [ e_int 4 ; e_int 10 ])
       (e_list [e_int 4; e_int  10 ])
   in
   ()
 
-let set_arithmetic_religo ~raise ~add_warning () : unit =
-  let program   = type_file ~raise ~add_warning "./contracts/set_arithmetic.religo" in
-  let program_1 = type_file ~raise ~add_warning "./contracts/set_arithmetic-1.ligo" in
-  let () =
-    expect_eq ~raise program "literal_op"
-      (e_unit ())
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-  in
-  let () =
-    expect_eq ~raise program "size_op"
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-      (e_nat 3) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program_1 "fold_op"
-      (e_set [ e_int 4 ; e_int 10 ])
-      (e_int 29)
-  in
-  ()
-
-let set_arithmetic_jsligo ~raise ~add_warning () : unit =
-  let program   = type_file ~raise ~add_warning "./contracts/set_arithmetic.jsligo" in
-  let program_1 = type_file ~raise ~add_warning "./contracts/set_arithmetic-1.ligo" in
-  let () =
-    expect_eq ~raise program "literal_op"
-      (e_unit ())
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-  in
-  let () =
-    expect_eq ~raise program "size_op"
-      (e_set [e_string "foo"; e_string "bar"; e_string "foobar"])
-      (e_nat 3) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "add_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program "remove_op"
-      (e_set [e_string "foo" ; e_string "bar" ; e_string "foobar"])
-      (e_set [e_string "foo" ; e_string "bar"]) in
-  let () =
-    expect_eq ~raise program_1 "fold_op"
-      (e_set [ e_int 4 ; e_int 10 ])
-      (e_int 29)
-  in
-  ()
 
 let unit_expression ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/unit.ligo" in
@@ -873,8 +419,8 @@ let string_expression ~raise ~add_warning () : unit =
   let _ = expect_eq_evaluate ~raise program "s" (e_string "toto") in
   expect_eq_evaluate ~raise program "y" (e_string "foototobar")
 
-let include_ ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/includer.ligo" in
+let include_ ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   expect_eq_evaluate ~raise program "bar" (e_int 144)
 
 let include_mligo ~raise ~add_warning () : unit =
@@ -917,8 +463,8 @@ let record_ez_int names n =
 let tuple_ez_int names n =
   e_tuple @@ List.map ~f:(fun _ -> e_int n) names
 
-let multiple_parameters ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/multiple-parameters.ligo" in
+let multiple_parameters ~raise ~add_warning f : unit  =
+  let program = type_file ~raise ~add_warning f in
   let aux ((name : string) , make_input , make_output) =
     let make_output' = fun n -> e_int @@ make_output n in
     expect_eq_n ~raise program name make_input make_output'
@@ -966,8 +512,8 @@ let multiple_parameters_jsligo ~raise ~add_warning () : unit  =
     ] in
   ()
 
-let record ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/record.ligo" in
+let record ~raise ~add_warning f : unit  =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let expected = record_ez_int ["foo" ; "bar"] 0 in
     expect_eq_evaluate ~raise program "fb" expected
@@ -1012,146 +558,8 @@ let record ~raise ~add_warning () : unit  =
   in
   ()
 
-let record_mligo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/record.mligo" in
-  let () =
-    let expected = record_ez_int ["foo" ; "bar"] 0 in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let () = expect_eq_evaluate ~raise program "a" (e_int 42) in
-    let () = expect_eq_evaluate ~raise program "b" (e_int 142) in
-    let () = expect_eq_evaluate ~raise program "c" (e_int 242) in
-    ()
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_record_ez [("foo" , e_int 256) ; ("bar" , e_int n) ] in
-    expect_eq_n ~raise program "modify" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["a" ; "b" ; "c"] in
-    let make_expected = fun n -> e_record_ez [
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int 42)
-      ] in
-    expect_eq_n ~raise program "modify_abc" make_input make_expected
-  in
-  let () =
-    let expected = record_ez_int ["a";"b";"c";"d";"e"] 23 in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  let () =
-    let make_input = fun n -> e_record_ez [("inner", record_ez_int ["a";"b";"c"] n)] in
-    let make_expected = fun n -> e_record_ez [("inner", e_record_ez [
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int n)
-    ])] in
-    expect_eq_n ~raise program "modify_inner" make_input make_expected
-  in
-  ()
-
-let record_religo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/record.religo" in
-  let () =
-    let expected = record_ez_int ["foo" ; "bar"] 0 in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let () = expect_eq_evaluate ~raise program "a" (e_int 42) in
-    let () = expect_eq_evaluate ~raise program "b" (e_int 142) in
-    let () = expect_eq_evaluate ~raise program "c" (e_int 242) in
-    ()
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_record_ez [("foo" , e_int 256) ; ("bar" , e_int n) ] in
-    expect_eq_n ~raise program "modify" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["a" ; "b" ; "c"] in
-    let make_expected = fun n -> e_record_ez [
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int 42)
-      ] in
-    expect_eq_n ~raise program "modify_abc" make_input make_expected
-  in
-  let () =
-    let expected = record_ez_int ["a";"b";"c";"d";"e"] 23 in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  let () =
-    let make_input = fun n -> e_record_ez [("inner", record_ez_int ["a";"b";"c"] n)] in
-    let make_expected = fun n -> e_record_ez [("inner", e_record_ez[
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int n)
-    ])] in
-    expect_eq_n ~raise program "modify_inner" make_input make_expected
-  in
-  ()
-
-let record_jsligo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/record.jsligo" in
-  let () =
-    let expected = record_ez_int ["foo" ; "bar"] 0 in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let () = expect_eq_evaluate ~raise program "a" (e_int 42) in
-    let () = expect_eq_evaluate ~raise program "b" (e_int 142) in
-    let () = expect_eq_evaluate ~raise program "c" (e_int 242) in
-    ()
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["foo" ; "bar"] in
-    let make_expected = fun n -> e_record_ez [("foo" , e_int 256) ; ("bar" , e_int n) ] in
-    expect_eq_n ~raise program "modify" make_input make_expected
-  in
-  let () =
-    let make_input = record_ez_int ["a" ; "b" ; "c"] in
-    let make_expected = fun n -> e_record_ez [
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int 42)
-      ] in
-    expect_eq_n ~raise program "modify_abc" make_input make_expected
-  in
-  let () =
-    let expected = record_ez_int ["a";"b";"c";"d";"e"] 23 in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  let () =
-    let make_input = fun n -> e_record_ez [("inner", record_ez_int ["a";"b";"c"] n)] in
-    let make_expected = fun n -> e_record_ez [("inner", e_record_ez[
-        ("a" , e_int n) ;
-        ("b" , e_int 2048) ;
-        ("c" , e_int n)
-    ])] in
-    expect_eq_n ~raise program "modify_inner" make_input make_expected
-  in
-  ()
-
-let tuple ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/tuple.ligo" in
+let tuple ~raise ~add_warning f : unit  =
+  let program = type_file ~raise ~add_warning f in
   let ez n =
     e_tuple (List.map ~f:e_int n) in
   let () =
@@ -1189,81 +597,9 @@ let tuple ~raise ~add_warning () : unit  =
   in
   ()
 
-let tuple_mligo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/tuple.mligo" in
-  let ez n =
-    e_tuple (List.map ~f:e_int n) in
-  let () =
-    let expected = ez [0 ; 0] in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; 2 * n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection_abc" make_input make_expected
-  in
-  let () =
-    let expected = ez [23 ; 23 ; 23 ; 23 ; 23] in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  ()
 
-
-let tuple_religo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/tuple.religo" in
-  let ez n =
-    e_tuple (List.map ~f:e_int n) in
-  let () =
-    let expected = ez [0 ; 0] in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; 2 * n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection_abc" make_input make_expected
-  in
-  let () =
-    let expected = ez [23 ; 23 ; 23 ; 23 ; 23] in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  ()
-
-let tuple_jsligo ~raise ~add_warning () : unit  =
-  let program = type_file ~raise ~add_warning "./contracts/tuple.jsligo" in
-  let ez n =
-    e_tuple (List.map ~f:e_int n) in
-  let () =
-    let expected = ez [0 ; 0] in
-    expect_eq_evaluate ~raise program "fb" expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection" make_input make_expected
-  in
-  let () =
-    let make_input = fun n -> ez [n ; 2 * n ; n] in
-    let make_expected = fun n -> e_int (2 * n) in
-    expect_eq_n ~raise program "projection_abc" make_input make_expected
-  in
-  let () =
-    let expected = ez [23 ; 23 ; 23 ; 23 ; 23] in
-    expect_eq_evaluate ~raise program "br" expected
-  in
-  ()
-
-let option ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/option.ligo" in
+let option ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let expected = e_some (e_int 42) in
     expect_eq_evaluate ~raise program "s" expected
@@ -1282,45 +618,9 @@ let option ~raise ~add_warning () : unit =
   in
   ()
 
-let moption ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/option.mligo" in
-  let () =
-    let expected = e_some (e_int 42) in
-    expect_eq_evaluate ~raise program "s" expected
-  in
-  let () =
-    let expected = e_typed_none (t_int ()) in
-    expect_eq_evaluate ~raise program "n" expected
-  in
-  ()
 
-let reoption ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/option.religo" in
-  let () =
-    let expected = e_some (e_int 42) in
-    expect_eq_evaluate ~raise program "s" expected
-  in
-  let () =
-    let expected = e_typed_none (t_int ()) in
-    expect_eq_evaluate ~raise program "n" expected
-  in
-  ()
-
-let jsoption ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/option.jsligo" in
-  let () =
-    let expected = e_some (e_int 42) in
-    expect_eq_evaluate ~raise program "s" expected
-  in
-  let () =
-    let expected = e_typed_none (t_int ()) in
-    expect_eq_evaluate ~raise program "n" expected
-  in
-  ()
-  
-
-let map_ ~raise type_f path : unit =
-  let program = type_f path in
+let map ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let ez lst =
     let lst' = List.map ~f:(fun (x, y) -> e_int x, e_int y) lst in
     e_typed_map lst' (t_int ()) (t_int ())
@@ -1407,8 +707,8 @@ let map_ ~raise type_f path : unit =
   in
   ()
 
-let big_map_ ~raise type_f path : unit =
-  let program = type_f path in
+let big_map   ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let ez lst =
     let lst' = List.map ~f:(fun (x, y) -> e_int x, e_int y) lst in
     (e_typed_big_map lst' (t_int ()) (t_int()))
@@ -1438,15 +738,6 @@ let big_map_ ~raise type_f path : unit =
   in
   ()
 
-
-let map       ~raise ~add_warning () : unit = map_     ~raise (type_file ~raise ~add_warning) "./contracts/map.ligo"
-let mmap      ~raise ~add_warning () : unit = map_     ~raise (type_file ~raise ~add_warning) "./contracts/map.mligo"
-let remap     ~raise ~add_warning () : unit = map_     ~raise (type_file ~raise ~add_warning) "./contracts/map.religo"
-let jsmap     ~raise ~add_warning () : unit = map_     ~raise (type_file ~raise ~add_warning) "./contracts/map.jsligo"
-let big_map   ~raise ~add_warning () : unit = big_map_ ~raise (type_file ~raise ~add_warning) "./contracts/big_map.ligo"
-let mbig_map  ~raise ~add_warning () : unit = big_map_ ~raise (type_file ~raise ~add_warning) "./contracts/big_map.mligo"
-let rebig_map ~raise ~add_warning () : unit = big_map_ ~raise (type_file ~raise ~add_warning) "./contracts/big_map.religo"
-let jsbig_map ~raise ~add_warning () : unit = big_map_ ~raise (type_file ~raise ~add_warning) "./contracts/big_map.jsligo"
 
 
 
@@ -1506,60 +797,15 @@ let list ~raise ~add_warning () : unit =
   in
   ()
 
-let condition ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/condition.ligo" in
-  let _ =
-    let make_input = e_int in
-    let make_expected = fun n -> e_int (if n = 2 then 42 else 0) in
-    expect_eq_n ~raise program "main" make_input make_expected
-  in
-  let _ =
-    let make_expected = fun b -> e_int (if b then 42 else 1) in
-    expect_eq_b ~raise program "foo" make_expected
-  in
+let condition ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
+  let make_input = e_int in
+  let make_expected = fun n -> e_int (if n = 2 then 42 else 0) in
+  let () = expect_eq_n ~raise program "simple"  make_input make_expected in
+  let () = expect_eq_n ~raise program "annot"  make_input make_expected in
+  let () = expect_eq_n ~raise program "shadow"  make_input make_expected in
   ()
 
-let condition_mligo ~raise ~add_warning () : unit =
-  let _ =
-    let aux file =
-      let program = type_file ~raise ~add_warning file in
-      let make_input = e_int in
-      let make_expected = fun n -> e_int (if n = 2 then 42 else 0) in
-      expect_eq_n ~raise program "main"  make_input make_expected in
-    List.map ~f:aux [
-      "./contracts/condition.mligo";
-      "./contracts/condition-shadowing.mligo";
-      "./contracts/condition-annot.mligo";
-    ] in
-  ()
-
-let condition_religo ~raise ~add_warning () : unit =
-  let _ =
-    let aux file =
-      let program = type_file ~raise ~add_warning file in
-      let make_input = e_int in
-      let make_expected = fun n -> e_int (if n = 2 then 42 else 0) in
-      expect_eq_n ~raise program "main"  make_input make_expected in
-    List.map ~f:aux [
-      "./contracts/condition.religo";
-      "./contracts/condition-shadowing.religo";
-      "./contracts/condition-annot.religo";
-    ] in
-  ()
-
-let condition_jsligo ~raise ~add_warning () : unit =
-  let _ =
-    let aux file =
-      let program = type_file ~raise ~add_warning file in
-      let make_input = e_int in
-      let make_expected = fun n -> e_int (if n = 2 then 42 else 0) in
-      expect_eq_n ~raise program "main"  make_input make_expected in
-    List.map ~f:aux [
-      "./contracts/condition.jsligo";
-      "./contracts/condition-shadowing.jsligo";
-      "./contracts/condition-annot.jsligo";
-    ] in
-  ()
 
 let sequence_mligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/sequence.mligo" in
@@ -1578,8 +824,8 @@ let eq_bool_common ~raise program =
   in
   ()
 
-let eq_bool ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/eq_bool.ligo" in
+let eq_bool ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   eq_bool_common ~raise program
 
 let eq_bool_mligo ~raise ~add_warning () : unit =
@@ -1593,12 +839,6 @@ let eq_bool_religo ~raise ~add_warning () : unit =
 let eq_bool_jsligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/eq_bool.jsligo" in
   eq_bool_common ~raise program
-
-let condition_simple ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/condition-simple.ligo" in
-  let make_input = e_int in
-  let make_expected = fun _ -> e_int 42 in
-  expect_eq_n ~raise program "main" make_input make_expected
 
 let loop1 ~raise ~add_warning () : unit =
   let _program = type_file ~raise ~add_warning "./contracts/loop1.ligo" in
@@ -2013,14 +1253,14 @@ let quote_declarations ~raise ~add_warning () : unit =
   let make_expected = fun n -> e_int (74 + 2 * n) in
   expect_eq_n ~raise program "main" make_input make_expected
 
-let counter_contract ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/counter.ligo" in
+let counter_contract ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_input = fun n-> e_pair (e_int n) (e_int 42) in
   let make_expected = fun n -> e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
-let super_counter_contract ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/super-counter.ligo" in
+let super_counter_contract ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_input = fun n ->
     let action = if n mod 2 = 0 then "Increment" else "Decrement" in
     e_pair (e_constructor action (e_int n)) (e_int 42) in
@@ -2029,36 +1269,6 @@ let super_counter_contract ~raise ~add_warning () : unit =
     e_pair (e_typed_list [] (t_operation ())) (e_int (op 42 n)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
-let super_counter_contract_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/super-counter.mligo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation ())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let super_counter_contract_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/super-counter.religo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let super_counter_contract_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/super-counter.jsligo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-  
 let dispatch_counter_contract ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/dispatch-counter.ligo" in
   let make_input = fun n ->
@@ -2107,6 +1317,8 @@ let assert_mligo ~raise ~add_warning () : unit =
   let _ = expect_eq ~raise program "main" (make_input true) make_expected in
   let _ = expect_fail ~raise program "some" (e_none ()) in
   let _ = expect_eq ~raise program "some" (e_some (e_unit ())) (e_unit ()) in
+  let _ = expect_fail ~raise program "none" (e_some (e_unit ())) in
+  let _ = expect_eq ~raise program "none" (e_none ()) (e_unit ()) in
   ()
 
 let assert_religo ~raise ~add_warning () : unit =
@@ -2125,8 +1337,8 @@ let assert_jsligo ~raise ~add_warning () : unit =
   let _ = expect_eq ~raise program "main" (make_input true) make_expected in
   ()
     
-let recursion_ligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/recursion.ligo" in
+let recursion_ligo ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let _ =
     let make_input = e_pair (e_int 10) (e_int 0) in
     let make_expected = e_int 55 in
@@ -2138,46 +1350,6 @@ let recursion_ligo ~raise ~add_warning () : unit =
     expect_eq ~raise program "fibo" make_input make_expected
   in ()
 
-
-let recursion_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/recursion.mligo" in
-  let _ =
-    let make_input = e_pair (e_int 10) (e_int 0) in
-    let make_expected = e_int 55 in
-    expect_eq ~raise program "sum" make_input make_expected
-  in
-  let _ =
-    let make_input = e_tuple [(e_int 10); (e_int 1); (e_int 1)] in
-    let make_expected = e_int 89 in
-    expect_eq ~raise program "fibo" make_input make_expected
-  in ()
-
-let recursion_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/recursion.religo" in
-  let _ =
-    let make_input = e_pair (e_int 10) (e_int 0) in
-    let make_expected = e_int 55 in
-    expect_eq ~raise program "sum" make_input make_expected
-  in
-  let _ =
-    let make_input = e_tuple [(e_int 10); (e_int 1); (e_int 1)] in
-    let make_expected = e_int 89 in
-    expect_eq ~raise program "fibo" make_input make_expected
-  in ()
-
-let recursion_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/recursion.jsligo" in
-  let _ =
-    let make_input = e_pair (e_int 10) (e_int 0) in
-    let make_expected = e_int 55 in
-    expect_eq ~raise program "sum" make_input make_expected
-  in
-  let _ =
-    let make_input = e_tuple [(e_int 10); (e_int 1); (e_int 1)] in
-    let make_expected = e_int 89 in
-    expect_eq ~raise program "fibo" make_input make_expected
-  in ()
-  
 
 let guess_string_mligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/guess_string.mligo" in
@@ -2192,24 +1364,6 @@ let basic_mligo ~raise ~add_warning () : unit =
 let basic_religo ~raise ~add_warning () : unit =
   let typed = type_file ~raise ~add_warning "./contracts/basic.religo" in
   expect_eq_evaluate ~raise typed "foo" (e_int (42+127))
-
-let counter_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/counter.mligo" in
-  let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let counter_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/counter.religo" in
-  let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let counter_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/counter.jsligo" in
-  let make_input n = e_pair (e_int n) (e_int 42) in
-  let make_expected n = e_pair (e_typed_list [] (t_operation ())) (e_int (42 + n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
 
 let let_in_mligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/letin.mligo" in
@@ -2269,21 +1423,10 @@ let local_type_decl ~raise program : unit =
   in
   ()
 
-let local_type_decl_ligo ~raise ~add_warning () : unit =
+let local_type_decl ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/local_type_decl.ligo" in
   local_type_decl ~raise program
 
-let local_type_decl_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/local_type_decl.mligo" in
-  local_type_decl ~raise program
-
-let local_type_decl_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/local_type_decl.religo" in
-  local_type_decl ~raise program
-
-let local_type_decl_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/local_type_decl.jsligo" in
-  local_type_decl ~raise program  
 
 let match_variant ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/match.mligo" in
@@ -2426,44 +1569,15 @@ let jsligo_list ~raise ~add_warning () : unit =
   ()
   
 
-let lambda_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda.mligo" in
+
+let lambda ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_input = e_pair (e_unit ()) (e_unit ()) in
   let make_expected = (e_unit ()) in
   expect_eq ~raise program "main" make_input make_expected
 
-let lambda_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda.religo" in
-  let make_input = e_pair (e_unit ()) (e_unit ()) in
-  let make_expected = (e_unit ()) in
-  expect_eq ~raise program "main" make_input make_expected
-
-let lambda_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda.jsligo" in
-  let make_input = e_pair (e_unit ()) (e_unit ()) in
-  let make_expected = (e_unit ()) in
-  expect_eq ~raise program "main" make_input make_expected
-
-let lambda_ligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda.ligo" in
-  let make_input = e_pair (e_unit ()) (e_unit ()) in
-  let make_expected = (e_unit ()) in
-  expect_eq ~raise program "main" make_input make_expected
-
-let lambda2_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda2.mligo" in
-  let make_input = e_pair (e_unit ()) (e_unit ()) in
-  let make_expected = (e_unit ()) in
-  expect_eq ~raise program "main" make_input make_expected
-
-let lambda2_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda2.religo" in
-  let make_input = e_pair (e_unit ()) (e_unit ()) in
-  let make_expected = (e_unit ()) in
-  expect_eq ~raise program "main" make_input make_expected
-
-let lambda2_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/lambda2.jsligo" in
+let lambda2 ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_input = e_pair (e_unit ()) (e_unit ()) in
   let make_expected = (e_unit ()) in
   expect_eq ~raise program "main" make_input make_expected
@@ -2481,17 +1595,8 @@ let michelson_insertion ~raise program : unit =
   let make_expected = fun n -> e_nat (n+1) in
   expect_eq_n_pos ~raise program "michelson_add" make_input make_expected
 
-let michelson_insertion_ligo ~raise ~add_warning () : unit =
-  michelson_insertion ~raise @@ type_file ~raise ~add_warning "./contracts/michelson_insertion.ligo"
-
-let michelson_insertion_mligo ~raise ~add_warning () : unit =
-  michelson_insertion ~raise @@ type_file ~raise ~add_warning "./contracts/michelson_insertion.mligo"
-
-let michelson_insertion_religo ~raise ~add_warning () : unit =
-  michelson_insertion ~raise @@ type_file ~raise ~add_warning "./contracts/michelson_insertion.religo"
-
-let michelson_insertion_jsligo ~raise ~add_warning () : unit =
-  michelson_insertion ~raise @@ type_file ~raise ~add_warning "./contracts/michelson_insertion.jsligo"
+let michelson_insertion ~raise ~add_warning f : unit =
+  michelson_insertion ~raise @@ type_file ~raise ~add_warning f
 
 let website1_ligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/website1.ligo" in
@@ -2499,8 +1604,8 @@ let website1_ligo ~raise ~add_warning () : unit =
   let make_expected = fun _n -> e_pair (e_typed_list [] (t_operation ())) (e_int (42 + 1)) in
   expect_eq_n ~raise program "main" make_input make_expected
 
-let website2_ligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/website2.ligo" in
+let website2_ligo ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let make_input = fun n ->
     let action = if n mod 2 = 0 then "Increment" else "Decrement" in
     e_pair (e_constructor action (e_int n)) (e_int 42) in
@@ -2532,35 +1637,6 @@ let tez_mligo ~raise ~add_warning () : unit =
   let _ = expect_eq_evaluate ~raise program "add_more_tez" (e_mutez 111111000) in
   ()
 
-let website2_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/website2.mligo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation ())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let website2_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/website2.religo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation ())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
-
-let website2_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/website2.jsligo" in
-  let make_input = fun n ->
-    let action = if n mod 2 = 0 then "Increment" else "Decrement" in
-    e_pair (e_constructor action (e_int n)) (e_int 42) in
-  let make_expected = fun n ->
-    let op = if n mod 2 = 0 then (+) else (-) in
-    e_pair (e_typed_list [] (t_operation ())) (e_int (op 42 n)) in
-  expect_eq_n ~raise program "main" make_input make_expected
   
 let mligo_let_multiple ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/let_multiple.mligo" in
@@ -2640,50 +1716,16 @@ let balance_test_options ~raise () =
     Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "4000000" in
   Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~balance ())
 
-let balance_constant ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/balance_constant.ligo" in
+let balance_constant ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let input = e_tuple [e_unit () ; e_mutez 0]  in
   let expected = e_tuple [e_list []; e_mutez 4000000000000] in
   let options = balance_test_options ~raise () in
   expect_eq ~raise ~options program "main" input expected
 
 
-let balance_constant_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/balance_constant.mligo" in
-  let input = e_tuple [e_unit () ; e_mutez 0]  in
-  let expected = e_tuple [e_list []; e_mutez 4000000000000] in
-  let options = balance_test_options ~raise () in
-  expect_eq ~raise ~options program "main" input expected
-
-let balance_constant_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/balance_constant.religo" in
-  let input = e_tuple [e_unit () ; e_mutez 0]  in
-  let expected = e_tuple [e_list []; e_mutez 4000000000000] in
-  let options = balance_test_options ~raise () in
-  expect_eq ~raise ~options program "main" input expected
-
-let balance_constant_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/balance_constant.jsligo" in
-  let input = e_tuple [e_unit () ; e_mutez 0]  in
-  let expected = e_tuple [e_list []; e_mutez 4000000000000] in
-  let options = balance_test_options ~raise () in
-  expect_eq ~raise ~options program "main" input expected
-  
-
-let amount ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/amount.ligo" in
-  let input = e_unit () in
-  let expected = e_int 42 in
-  let amount =
-    match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "100" with
-    | Some t -> t
-    | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
-  in
-  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
-  expect_eq ~raise ~options program "check" input expected
-
-let amount_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/amount.mligo" in
+let amount ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let input = e_unit () in
   let expected = e_int 42 in
   let amount =
@@ -2694,30 +1736,6 @@ let amount_mligo ~raise ~add_warning () : unit =
   let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
   expect_eq ~raise ~options program "check_" input expected
 
-let amount_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/amount.religo" in
-  let input = e_unit () in
-  let expected = e_int 42 in
-  let amount =
-    match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "100" with
-    | Some t -> t
-    | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
-  in
-  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
-  expect_eq ~raise ~options program "check_" input expected
-
-let amount_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/amount.jsligo" in
-  let input = e_unit () in
-  let expected = e_int 42 in
-  let amount =
-    match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "100" with
-    | Some t -> t
-    | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
-  in
-  let options = Proto_alpha_utils.Memory_proto_alpha.(make_options ~env:(test_environment ()) ~amount ()) in
-  expect_eq ~raise ~options program "check_" input expected
-  
 
 let addr_test ~raise program =
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -2728,56 +1746,18 @@ let addr_test ~raise program =
       (List.nth_exn (test_environment ()).identities 0).public_key_hash in
   expect_eq ~raise program "main" (e_key_hash key_hash) (e_address addr)
 
-let address ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/address.ligo" in
+let address ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   addr_test ~raise program
 
-let address_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/address.mligo" in
-  addr_test ~raise program
 
-let address_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/address.religo" in
-  addr_test ~raise program
-
-let address_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/address.jsligo" in
-  addr_test ~raise program
-  
-
-let self_address ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/self_address.ligo" in
+let self_address ~raise ~add_warning f : unit =
+  let _ = type_file ~raise ~add_warning f in
   ()
 
-let self_address_mligo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/self_address.mligo" in
+let implicit_account ~raise ~add_warning f : unit =
+  let _ = type_file ~raise ~add_warning f in
   ()
-
-let self_address_religo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/self_address.religo" in
-  ()
-
-let self_address_jsligo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/self_address.jsligo" in
-  ()
-
-let implicit_account ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/implicit_account.ligo" in
-  ()
-
-let implicit_account_mligo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/implicit_account.mligo" in
-  ()
-
-
-let implicit_account_religo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/implicit_account.religo" in
-  ()
-
-let implicit_account_jsligo ~raise ~add_warning () : unit =
-  let _ = type_file ~raise ~add_warning "./contracts/implicit_account.jsligo" in
-  ()
-  
 
 let tuples_sequences_functions_religo ~raise ~add_warning () : unit =
   let _ = type_file ~raise ~add_warning "./contracts/tuples_sequences_functions.religo" in
@@ -2788,47 +1768,8 @@ let tuples_sequences_functions_jsligo ~raise ~add_warning () : unit =
   ()
   
 
-let is_nat ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/isnat.ligo" in
-  let () =
-    let input = e_int 10 in
-    let expected = e_some (e_nat 10) in
-    expect_eq ~raise program "main" input expected
-  in
-  let () =
-    let input = e_int (-10) in
-    let expected = e_none () in
-    expect_eq ~raise program "main" input expected
-  in ()
-
-let is_nat_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/isnat.mligo" in
-  let () =
-    let input = e_int 10 in
-    let expected = e_some (e_nat 10) in
-    expect_eq ~raise program "main" input expected
-  in
-  let () =
-    let input = e_int (-10) in
-    let expected = e_none () in
-    expect_eq ~raise program "main" input expected
-  in ()
-
-let is_nat_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/isnat.religo" in
-  let () =
-    let input = e_int 10 in
-    let expected = e_some (e_nat 10) in
-    expect_eq ~raise program "main" input expected
-  in
-  let () =
-    let input = e_int (-10) in
-    let expected = e_none () in
-    expect_eq ~raise program "main" input expected
-  in ()
-
-let is_nat_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/isnat.jsligo" in
+let is_nat ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let input = e_int 10 in
     let expected = e_some (e_nat 10) in
@@ -2863,42 +1804,14 @@ let deep_access_ligo ~raise ~add_warning () : unit =
     expect_eq ~raise program "nested_record" make_input make_expected in
   ()
 
-let attributes_ligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/attributes.ligo" in
+let attributes ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let input = e_int 3 in
     let expected = e_int 5 in
     expect_eq ~raise program "foo" input expected
   in
   ()
-
-let attributes_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/attributes.mligo" in
-  let () =
-    let input = e_int 3 in
-    let expected = e_int 5 in
-    expect_eq ~raise program "foo" input expected
-  in
-  ()
-
-let attributes_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/attributes.religo" in
-  let () =
-    let input = e_int 3 in
-    let expected = e_int 5 in
-    expect_eq ~raise program "foo" input expected
-  in
-  ()
-
-let attributes_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/attributes.jsligo" in
-  let () =
-    let input = e_int 3 in
-    let expected = e_int 5 in
-    expect_eq ~raise program "foo" input expected
-  in
-  ()
-  
 
 let get_contract_ligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/get_contract.ligo" in
@@ -2926,22 +1839,6 @@ let entrypoints_ligo ~raise ~add_warning () : unit =
   (* hmm... *)
   ()
 
-let simple1 ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/simple1.ligo" in
-  expect_eq_evaluate ~raise program "i" (e_int 42)
-
-let simple2 ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/simple2.ligo" in
-  expect_eq_evaluate ~raise program "i" (e_int 42)
-
-let simple3 ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/simple3.ligo" in
-  expect_eq_evaluate ~raise program "my_address" (e_address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")
-
-let simple4 ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/simple4.ligo" in
-  expect_eq_evaluate ~raise program "my_string_option" (e_string "hello")
-
 let chain_id ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/chain_id.ligo" in
   let pouet = Tezos_crypto.Base58.simple_encode
@@ -2952,104 +1849,30 @@ let chain_id ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "chain_id" make_input make_expected in
   ()
 
-let key_hash ~raise ~add_warning () : unit =
+let key_hash ~raise ~add_warning f : unit =
   let open Tezos_crypto in
   let (raw_pkh,raw_pk,_) = Signature.generate_key () in
   let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
   let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let program = type_file ~raise ~add_warning "./contracts/key_hash.ligo" in
+  let program = type_file ~raise ~add_warning f in
   let make_input = e_pair (e_key_hash pkh_str) (e_key pk_str) in
   let make_expected = e_pair (e_bool true) (e_key_hash pkh_str) in
   let () = expect_eq ~raise program "check_hash_key" make_input make_expected in
   ()
 
-let key_hash_mligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,raw_pk,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let program = type_file ~raise ~add_warning "./contracts/key_hash.mligo" in
-  let make_input = e_pair (e_key_hash pkh_str) (e_key pk_str) in
-  let make_expected = e_pair (e_bool true) (e_key_hash pkh_str) in
-  let () = expect_eq ~raise program "check_hash_key" make_input make_expected in
-  ()
 
-let key_hash_religo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,raw_pk,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let program = type_file ~raise ~add_warning "./contracts/key_hash.religo" in
-  let make_input = e_pair (e_key_hash pkh_str) (e_key pk_str) in
-  let make_expected = e_pair (e_bool true) (e_key_hash pkh_str) in
-  let () = expect_eq ~raise program "check_hash_key" make_input make_expected in
-  ()
-
-let key_hash_jsligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,raw_pk,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let program = type_file ~raise ~add_warning "./contracts/key_hash.jsligo" in
-  let make_input = e_pair (e_key_hash pkh_str) (e_key pk_str) in
-  let make_expected = e_pair (e_bool true) (e_key_hash pkh_str) in
-  let () = expect_eq ~raise program "check_hash_key" make_input make_expected in
-  ()
-  
-
-let check_signature ~raise ~add_warning () : unit =
+let check_signature ~raise ~add_warning f : unit =
   let open Tezos_crypto in
   let (_, raw_pk, sk) = Signature.generate_key () in
   let pk_str = Signature.Public_key.to_b58check raw_pk in
   let signed = Signature.sign sk (Bytes.of_string "hello world") in
-  let program = type_file ~raise ~add_warning "./contracts/check_signature.ligo" in
+  let program = type_file ~raise ~add_warning f in
   let make_input = e_tuple [e_key pk_str ;
                             e_signature (Signature.to_b58check signed) ;
                             e_bytes_string "hello world"] in
   let make_expected = e_bool true in
   let () = expect_eq ~raise program "check_signature" make_input make_expected in
   ()
-
-let check_signature_mligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (_, raw_pk, sk) = Signature.generate_key () in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let signed = Signature.sign sk (Bytes.of_string "hello world") in
-  let program = type_file ~raise ~add_warning "./contracts/check_signature.mligo" in
-  let make_input = e_tuple [e_key pk_str ;
-                            e_signature (Signature.to_b58check signed) ;
-                            e_bytes_string "hello world"] in
-  let make_expected = e_bool true in
-  let () = expect_eq ~raise program "check_signature" make_input make_expected in
-  let () = expect_eq_evaluate ~raise program "example" (e_bool true) in
-  ()
-
-let check_signature_religo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (_, raw_pk, sk) = Signature.generate_key () in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let signed = Signature.sign sk (Bytes.of_string "hello world") in
-  let program = type_file ~raise ~add_warning "./contracts/check_signature.religo" in
-  let make_input = e_tuple [e_key pk_str ;
-                            e_signature (Signature.to_b58check signed) ;
-                            e_bytes_string "hello world"] in
-  let make_expected = e_bool true in
-  let () = expect_eq ~raise program "check_signature" make_input make_expected in
-  ()
-
-let check_signature_jsligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (_, raw_pk, sk) = Signature.generate_key () in
-  let pk_str = Signature.Public_key.to_b58check raw_pk in
-  let signed = Signature.sign sk (Bytes.of_string "hello world") in
-  let program = type_file ~raise ~add_warning "./contracts/check_signature.jsligo" in
-  let make_input = e_tuple [e_key pk_str ;
-                            e_signature (Signature.to_b58check signed) ;
-                            e_bytes_string "hello world"] in
-  let make_expected = e_bool true in
-  let () = expect_eq ~raise program "check_signature" make_input make_expected in
-  ()
-  
 
 let curry ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/curry.mligo" in
@@ -3061,38 +1884,13 @@ let curry ~raise ~add_warning () : unit =
   in
   ()
 
-let set_delegate ~raise ~add_warning () : unit =
+let set_delegate ~raise ~add_warning f : unit =
   let open Tezos_crypto in
   let (raw_pkh,_,_) = Signature.generate_key () in
   let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let program = type_file ~raise ~add_warning "./contracts/set_delegate.ligo" in
+  let program = type_file ~raise ~add_warning f in
   let () = expect_eq ~raise program "main" (e_key_hash pkh_str) (e_typed_list [] (t_operation ()))
   in ()
-
-let set_delegate_mligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,_,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let program = type_file ~raise ~add_warning "./contracts/set_delegate.mligo" in
-  let () = expect_eq ~raise program "main" (e_key_hash pkh_str) (e_typed_list [] (t_operation ()))
-  in ()
-
-let set_delegate_religo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,_,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let program = type_file ~raise ~add_warning "./contracts/set_delegate.religo" in
-  let () = expect_eq ~raise program "main" (e_key_hash pkh_str) (e_typed_list [] (t_operation ()))
-  in ()
-
-let set_delegate_jsligo ~raise ~add_warning () : unit =
-  let open Tezos_crypto in
-  let (raw_pkh,_,_) = Signature.generate_key () in
-  let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
-  let program = type_file ~raise ~add_warning "./contracts/set_delegate.jsligo" in
-  let () = expect_eq ~raise program "main" (e_key_hash pkh_str) (e_typed_list [] (t_operation ()))
-  in ()
-  
 
 let type_tuple_destruct ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/type_tuple_destruct.mligo" in
@@ -3124,8 +1922,8 @@ let let_in_multi_bind ~raise ~add_warning () : unit =
       (e_string "mynameisbob")
   in ()
 
-let bytes_unpack ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_unpack.ligo" in
+let bytes_unpack ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () = expect_eq ~raise program "id_string" (e_string "teststring") (e_some (e_string "teststring")) in
   let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
   let open Proto_alpha_utils.Memory_proto_alpha in
@@ -3134,38 +1932,8 @@ let bytes_unpack ~raise ~add_warning () : unit =
   let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
   ()
 
-let bytes_unpack_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_unpack.mligo" in
-  let () = expect_eq ~raise program "id_string" (e_string "teststring") (e_some (e_string "teststring")) in
-  let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
-  let open Proto_alpha_utils.Memory_proto_alpha in
-  let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
-  let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
-  ()
-
-let bytes_unpack_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_unpack.religo" in
-  let () = expect_eq ~raise program "id_string" (e_string "teststring") (e_some (e_string "teststring")) in
-  let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
-  let open Proto_alpha_utils.Memory_proto_alpha in
-  let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
-  let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
-  ()
-
-let bytes_unpack_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/bytes_unpack.jsligo" in
-  let () = expect_eq ~raise program "id_string" (e_string "teststring") (e_some (e_string "teststring")) in
-  let () = expect_eq ~raise program "id_int" (e_int 42) (e_some (e_int 42)) in
-  let open Proto_alpha_utils.Memory_proto_alpha in
-  let addr = Protocol.Alpha_context.Contract.to_b58check @@
-      (List.nth_exn (test_environment ()).identities 0).implicit_contract in
-  let () = expect_eq ~raise program "id_address" (e_address addr) (e_some (e_address addr)) in
-  ()
-
-let empty_case ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/empty_case.ligo" in
+let empty_case ~raise ~add_warning f : unit =
+  let program = type_file ~raise ~add_warning f in
   let () =
     let input _ = e_constructor "Bar" (e_int 1) in
     let expected _ = e_int 1 in
@@ -3178,48 +1946,6 @@ let empty_case ~raise ~add_warning () : unit =
   in
   ()
 
-let empty_case_mligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/empty_case.mligo" in
-  let () =
-    let input _ = e_constructor "Bar" (e_int 1) in
-    let expected _ = e_int 1 in
-    expect_eq_n ~raise program "main" input expected
-  in
-  let () =
-    let input _ = e_constructor "Baz" (e_unit ()) in
-    let expected _ = e_int (-1) in
-    expect_eq_n ~raise program "main" input expected
-  in
-  ()
-
-let empty_case_religo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/empty_case.religo" in
-  let () =
-    let input _ = e_constructor "Bar" (e_int 1) in
-    let expected _ = e_int 1 in
-    expect_eq_n ~raise program "main" input expected
-  in
-  let () =
-    let input _ = e_constructor "Baz" (e_unit ()) in
-    let expected _ = e_int (-1) in
-    expect_eq_n ~raise program "main" input expected
-  in
-  ()
-
-let empty_case_jsligo ~raise ~add_warning () : unit =
-  let program = type_file ~raise ~add_warning "./contracts/empty_case.jsligo" in
-  let () =
-    let input _ = e_constructor "Bar" (e_int 1) in
-    let expected _ = e_int 1 in
-    expect_eq_n ~raise program "main" input expected
-  in
-  let () =
-    let input _ = e_constructor "Baz" (e_unit ()) in
-    let expected _ = e_int (-1) in
-    expect_eq_n ~raise program "main" input expected
-  in
-  ()
-  
 
 let tuple_type_mligo ~raise ~add_warning () : unit =
   let program = type_file ~raise ~add_warning "./contracts/tuple_type.mligo" in
@@ -3491,24 +2217,49 @@ let tuple_fun_religo ~raise ~add_warning () : unit =
  ()
 
 let main = test_suite "Integration (End to End)"
-  [
-    test_w "simple1" simple1 ;
-    test_w "simple2" simple2 ;
-    test_w "simple3" simple3 ;
-    test_w "chain id" chain_id ;
-    test_w "bytes unpack" bytes_unpack ;
-    test_w "bytes unpack (mligo)" bytes_unpack_mligo ;
-    test_w "bytes unpack (religo)" bytes_unpack_religo ; 
-    test_w "bytes unpack (jsligo)" bytes_unpack_jsligo ; 
-    test_w "key hash" key_hash ;
-    test_w "key hash (mligo)" key_hash_mligo ;
-    test_w "key hash (religo)" key_hash_religo ;
-    test_w "key hash (jsligo)" key_hash_jsligo ;
-    test_w "check signature" check_signature ;
-    test_w "check signature (mligo)" check_signature_mligo ;
-    test_w "check signature (religo)" check_signature_religo ;
-    test_w "check signature (jsligo)" check_signature_jsligo ;
+  @@ [
 
+  (* Tezos stuff *)
+    test_w "chain id" chain_id ] @
+    test_w_all "bytes unpack" bytes_unpack @
+    test_w_all "key hash" key_hash @
+    test_w_all "check signature" check_signature @
+    test_w_all "crypto" crypto @
+    test_w_all "balance constant" balance_constant @
+    test_w_all "amount" amount @
+    test_w_all "address" address @
+    test_w_all "self address" self_address @
+    test_w_all "implicit account" implicit_account @
+  [
+    test_w "get_contract (ligo)" get_contract_ligo;
+    test_w "entrypoints (ligo)" entrypoints_ligo ;
+    test_w "tez (ligo)" tez_ligo ;
+    test_w "tez (mligo)" tez_mligo ;
+  ] @
+
+  (* Ligo stuff *)
+
+    test_w_all "lambda" lambda @
+    test_w_all "lambda2" lambda2 @
+    (* t_west "fibo (mligo)" fibo_mligo ; *)
+    (* t_west "fibo2 (mligo)" fibo2_mligo ; *)
+    (* t_west "fibo3 (mligo)" fibo3_mligo ; *)
+    (* t_west "fibo4 (mligo)" fibo4_mligo ; *)
+
+    test_w_all "tuple" tuple @ [
+    test_w "tuple type (mligo)" tuple_type_mligo ;
+    test_w "tuple type (religo)" tuple_type_religo ;
+    test_w "tuple type (jsligo)" tuple_type_jsligo ;
+    ] @
+    test_w_all "record" record @
+    test_w_all "option" option @
+
+    test_w_all "map" map @
+    test_w_all "big_map" big_map @
+
+    test_w_all "condition" condition @ 
+[
+    test_w "sequence (mligo)" sequence_mligo ;
     test_w "type alias" type_alias ;
 
     test_w "function" function_ ;                        (* tests don't typecheck the test case's application *)
@@ -3526,89 +2277,48 @@ let main = test_suite "Integration (End to End)"
     test_w "closure (mligo)" closure_mligo ;
     test_w "closure (religo)" closure_religo ;
     test_w "closure (jsligo)" closure_jsligo ;
-    test_w "shared function" shared_function ;
-    test_w "shared function (mligo)" shared_function_mligo ;
-    test_w "shared function (religo)" shared_function_religo ;
-    test_w "shared function (jsligo)" shared_function_jsligo ;
-    test_w "higher order" higher_order ;
-    test_w "higher order (mligo)" higher_order_mligo ;
-    test_w "higher order (religo)" higher_order_religo ;
-    test_w "higher order (jsligo)" higher_order_jsligo ;
-    test_w "variant" variant ;
-    test_w "variant (mligo)" variant_mligo ;
-    test_w "variant (religo)" variant_religo ;
-    test_w "variant (jsligo)" variant_jsligo ;
-
+] @
+    test_w_all "shared-function" shared_function @
+    test_w_all "high-order" higher_order @
+    test_w_all "variant" variant @ 
+[
+    test_w "matching" matching ;
     test_w "variant matching" variant_matching ;
-    test_w "tuple" tuple ;
-    test_w "tuple (mligo)" tuple_mligo ;
-    test_w "tuple (religo)" tuple_religo ;
-    test_w "tuple (jsligo)" tuple_jsligo ;
-    test_w "record" record ;
-    test_w "record (mligo)" record_mligo ;
-    test_w "record (religo)" record_religo ;
-    test_w "record (jsligo)" record_jsligo ;
-    test_w "condition simple" condition_simple ;
-    test_w "condition (ligo)" condition ;
-    test_w "condition (mligo)" condition_mligo ;
-    test_w "condition (religo)" condition_religo ;
-    test_w "condition (jsligo)" condition_jsligo ;
-    test_w "sequence (mligo" sequence_mligo ;
-    test_w "eq bool (ligo)" eq_bool ;
-    test_w "eq bool (mligo)" eq_bool_mligo ;
-    test_w "eq bool (religo)" eq_bool_religo ;
-    test_w "eq bool (jsligo)" eq_bool_jsligo ;
-    test_w "shadow" shadow ;
-    test_w "annotation" annotation ;
+    test_w "match variant (mligo)" match_variant ;
+    test_w "match variant (religo)" match_variant_re ;
+    test_w "match variant (jsligo)" match_variant_js ;
+    test_w "match variant 2 (mligo)" match_matej ;
+    test_w "match variant 2 (religo)" match_matej_re ;
+    test_w "match variant 2 (jsligo)" match_matej_js ;
 
-    test_w "multiple parameters" multiple_parameters ;
-    test_w "multiple parameters (mligo)" multiple_parameters_mligo ;
-    test_w "multiple parameters (religo)" multiple_parameters_religo ;
-    test_w "multiple parameters (jsligo)" multiple_parameters_jsligo ;
-    test_w "bool" bool_expression ;
-    test_w "bool (mligo)" bool_expression_mligo ;
-    test_w "bool (religo)" bool_expression_religo ;
-    test_w "bool (jsligo)" bool_expression_jsligo ;
-    test_w "arithmetic" arithmetic ;
-    test_w "arithmetic (mligo)" arithmetic_mligo ;
-    test_w "arithmetic (religo)" arithmetic_religo ;
-    test_w "arithmetic (jsligo)" arithmetic_jsligo ;
-    test_w "bitwise_arithmetic" bitwise_arithmetic ;
-    test_w "bitwise_arithmetic (mligo)" bitwise_arithmetic_mligo;
-    test_w "bitwise_arithmetic (religo)" bitwise_arithmetic_religo;
-    test_w "bitwise_arithmetic (jsligo)" bitwise_arithmetic_jsligo;
-    test_w "string_arithmetic" string_arithmetic ;
-    test_w "string_arithmetic (mligo)" string_arithmetic_mligo ;
-    test_w "string_arithmetic (religo)" string_arithmetic_religo ;
-    test_w "bytes_arithmetic" bytes_arithmetic ;
-    test_w "bytes_arithmetic (mligo)" bytes_arithmetic_mligo ;
-    test_w "bytes_arithmetic (religo)" bytes_arithmetic_religo ;
-    test_w "bytes_arithmetic (jsligo)" bytes_arithmetic_jsligo ;
-    test_w "comparable (mligo)" comparable_mligo;
-    test_w "crypto" crypto ;
-    test_w "crypto (mligo)" crypto_mligo ;
-    test_w "crypto (religo)" crypto_religo ;
-    test_w "crypto (jsligo)" crypto_jsligo ;
-    (* t_west "set_arithmetic" set_arithmetic ; *)
-    test_w "set_arithmetic (mligo)" set_arithmetic_mligo ;
-    test_w "set_arithmetic (religo)" set_arithmetic_religo ;
-    test_w "set_arithmetic (jsligo)" set_arithmetic_jsligo ;
+    test_w "list matching (mligo)" mligo_list ;
+    test_w "list matching (religo)" religo_list ;
+    test_w "list matching (jsligo)" jsligo_list ;
+    test_w "failwith ligo" failwith_ligo ;
+    test_w "failwith jsligo" failwith_jsligo ;
+    test_w "failwith mligo" failwith_mligo ;
+    test_w "assert mligo" assert_mligo ;
+    test_w "assert jsligo" assert_jsligo ;
+] @
+    test_w_all "eq_bool" eq_bool @
+[
+    test_w "shadow" shadow ;
+    test_w "shadowing (mligo)" shadowing;
+    test_w "annotation" annotation ;
+] @
+    test_w_all "multiple-parameters" multiple_parameters @
+    test_w_all "boolean_operators" bool_expression @
+    test_w_all "arithmetic" arithmetic @
+    test_w_all "bitwise_arithmetic" bitwise_arithmetic @
+    test_w_all "string_arithmetic" string_arithmetic @
+    test_w_all "bytes_arithmetic" bytes_arithmetic @
+    test_w_all "set_arithmetic" set_arithmetic @
+    [
+    test_w "comparable (mligo)" comparable_mligo ;
     test_w "unit" unit_expression ;
     test_w "string" string_expression ;
-    test_w "option" option ;
-    test_w "option (mligo)" moption ;
-    test_w "option (religo)" reoption ;
-    test_w "option (jsligo)" jsoption ;
-
-    test_w "map" map ;
-    test_w "map (mligo)" mmap ;
-    (* t_west "map (religo)" remap ; *)
-    test_w "map (jsligo)" jsmap;
-    test_w "big_map" big_map ;
-    test_w "big_map (mligo)" mbig_map ;
-    test_w "big_map (religo)" rebig_map ;
-    test_w "big_map (jsligo)" jsbig_map ;
     test_w "list" list ;
+
     test_w "loop1" loop1 ;
     test_w "loop2" loop2 ;
     test_w "loop3" loop3 ;
@@ -3633,24 +2343,14 @@ let main = test_suite "Integration (End to End)"
     test_w "loop (jsligo)" loop_jsligo ;
     test_w "loop2 (jsligo)" loop2_jsligo ;
 
-    test_w "matching" matching ;
     test_w "declarations" declarations ;
     test_w "quote declaration" quote_declaration ;
     test_w "quote declarations" quote_declarations ;
+    ] @
+    test_w_all "includer" include_ @
 
-    test_w "#include directives" include_ ;
-    test_w "#include directives (mligo)" include_mligo ;
-    test_w "#include directives (religo)" include_religo ;
-    test_w "#include directives (jsligo)" include_jsligo ;
-
-    test_w "counter contract" counter_contract ;
-    test_w "counter contract (mligo)" counter_mligo ;
-    test_w "counter contract (religo)" counter_religo ;
-    test_w "counter contract (jsligo)" counter_jsligo ;
-    test_w "super counter contract" super_counter_contract ;
-    test_w "super counter contract" super_counter_contract_mligo ;
-    test_w "super counter contract (reasonligo)" super_counter_contract_religo ;
-    test_w "super counter contract (jsligo)" super_counter_contract_jsligo ;
+    test_w_all "counter" counter_contract @
+    test_w_all "super-counter" super_counter_contract @ [
     test_w "dispatch counter contract" dispatch_counter_contract ;
     test_w "basic (mligo)" basic_mligo ;
     test_w "basic (religo)" basic_religo ;
@@ -3658,115 +2358,39 @@ let main = test_suite "Integration (End to End)"
     test_w "let-in (mligo)" let_in_mligo ;
     test_w "let-in (religo)" let_in_religo ;
     test_w "let-in (jsligo)" let_in_jsligo ;
-    test_w "local type declaration (ligo)" local_type_decl_ligo;
-    test_w "local type declaration (mligo)" local_type_decl_mligo;
-    test_w "local type declaration (religo)" local_type_decl_religo;
-    test_w "local type declaration (jsligo)" local_type_decl_jsligo;
-    test_w "match variant (mligo)" match_variant ;
-    test_w "match variant (religo)" match_variant_re ;
-    test_w "match variant (jsligo)" match_variant_js ;
-    test_w "match variant 2 (mligo)" match_matej ;
-    test_w "match variant 2 (religo)" match_matej_re ;
-    test_w "match variant 2 (jsligo)" match_matej_js ;
-    test_w "list matching (mligo)" mligo_list ;
-    test_w "list matching (religo)" religo_list ;
-    test_w "list matching (jsligo)" jsligo_list ;
-    test_w "failwith ligo" failwith_ligo ;
-    test_w "failwith jsligo" failwith_jsligo ;
-    test_w "failwith mligo" failwith_mligo ;
-    test_w "assert mligo" assert_mligo ;
-    test_w "assert jsligo" assert_jsligo ;
-    test_w "recursion (ligo)" recursion_ligo ;
-    test_w "recursion (mligo)" recursion_mligo ;
-    test_w "recursion (religo)" recursion_religo ;
-    test_w "recursion (jsligo)" recursion_jsligo ;
-    (* t_west "guess string mligo" guess_string_mligo ; WIP? *)
-    test_w "lambda mligo" lambda_mligo ;
-    test_w "lambda religo" lambda_religo ;
-    test_w "lambda jsligo" lambda_jsligo ;
-    test_w "lambda ligo" lambda_ligo ;
-    test_w "tez (ligo)" tez_ligo ;
-    test_w "tez (mligo)" tez_mligo ;
-
-    test_w "lambda2 mligo" lambda2_mligo ;
-    test_w "lambda2 religo" lambda2_religo ;
-    test_w "lambda2 jsligo" lambda2_jsligo ;
-    (* t_west "fibo (mligo)" fibo_mligo ; *)
-    (* t_west "fibo2 (mligo)" fibo2_mligo ; *)
-    (* t_west "fibo3 (mligo)" fibo3_mligo ; *)
-    (* t_west "fibo4 (mligo)" fibo4_mligo ; *)
-    test_w "michelson inserion ligo" michelson_insertion_ligo;
-    test_w "michelson inserion mligo" michelson_insertion_mligo;
-    test_w "michelson inserion religo" michelson_insertion_religo;
-    test_w "michelson inserion jsligo" michelson_insertion_jsligo;
-    test_w "website1 ligo" website1_ligo ;
-    test_w "website2 ligo" website2_ligo ;
-    test_w "website2 (mligo)" website2_mligo ;
-    test_w "website2 (religo)" website2_religo ;
-    test_w "website2 (jsligo)" website2_jsligo ;
     test_w "let multiple (mligo)" mligo_let_multiple ;
     test_w "let multiple (religo)" religo_let_multiple ;
     test_w "let multiple (jsligo)" jsligo_let_multiple ;
-    test_w "balance constant" balance_constant ;
-    test_w "balance constant (mligo)" balance_constant_mligo ;
-    test_w "balance constant (religo)" balance_constant_religo ;
-    test_w "balance constant (jsligo)" balance_constant_jsligo ;
-    test_w "amount" amount ;
-    test_w "amount (mligo)" amount_mligo ;
-    test_w "amount (religo)" amount_religo ;
-    test_w "amount (jsligo)" amount_jsligo ;
-    test_w "address" address ;
-    test_w "address (mligo)" address_mligo ;
-    test_w "address (religo)" address_religo ;
-    test_w "address (jsligo)" address_jsligo ;
-    test_w "self address" self_address ;
-    test_w "self address (mligo)" self_address_mligo ;
-    test_w "self address (religo)" self_address_religo ;
-    test_w "self address (jsligo)" self_address_jsligo ;
-    test_w "implicit account" implicit_account ;
-    test_w "implicit account (mligo)" implicit_account_mligo ;
-    test_w "implicit account (religo)" implicit_account_religo ;
-    test_w "implicit account (jsligo)" implicit_account_jsligo ;
+    test_w "local_type_decl" local_type_decl;
+    ] @
+    test_w_all "recursion" recursion_ligo @
+    (* t_west "guess string mligo" guess_string_mligo ; WIP? *)
 
-    test_w "set delegate" set_delegate ;
-    test_w "set delegate (mligo)" set_delegate_mligo ;
-    test_w "set delegate (religo)" set_delegate_religo ;
-    test_w "set delegate (jsligo)" set_delegate_jsligo ;
-    test_w "is_nat" is_nat ;
-    test_w "is_nat (mligo)" is_nat_mligo ;
-    test_w "is_nat (religo)" is_nat_religo ;
-    test_w "is_nat (jsligo)" is_nat_jsligo ;
+    test_w_all "michelson_insertion" michelson_insertion @
+    [ test_w "website1 ligo" website1_ligo] @
+    test_w_all "website2" website2_ligo @
+
+    test_w_all "set delegate" set_delegate @
+    test_w_all "is_nat" is_nat @ [
     test_w "tuples_sequences_functions (religo)" tuples_sequences_functions_religo ;
     test_w "tuples_sequences_functions (jsligo)" tuples_sequences_functions_jsligo ;
 
     test_w "simple_access (ligo)" simple_access_ligo;
     test_w "deep_access (ligo)" deep_access_ligo;
-    test_w "get_contract (ligo)" get_contract_ligo;
-    test_w "entrypoints (ligo)" entrypoints_ligo ;
 
     test_w "curry (mligo)" curry ;
     test_w "type tuple destruct (mligo)" type_tuple_destruct ;
-    test_w "attributes (ligo)" attributes_ligo;
-    test_w "attributes (mligo)" attributes_mligo;
-    test_w "attributes (religo)" attributes_religo;
-    test_w "attributes (jsligo)" attributes_jsligo;
+    ] @
+    test_w_all "attributes" attributes @
+    test_w_all "empty case" empty_case @
+    [
     test_w "let in multi-bind (mligo)" let_in_multi_bind ;
     test_w "tuple param destruct (mligo)" tuple_param_destruct ;
     test_w "tuple param destruct (religo)" tuple_param_destruct_religo ;
-    test_w "empty case" empty_case ;
-    test_w "empty case (mligo)" empty_case_mligo ;
-    test_w "empty case (religo)" empty_case_religo ;
-    test_w "empty case (jsligo)" empty_case_jsligo ;
-    test_w "tuple type (mligo)" tuple_type_mligo ;
-    test_w "tuple type (religo)" tuple_type_religo ;
-    test_w "tuple type (jsligo)" tuple_type_jsligo ;
     test_w "no semicolon (religo)" no_semicolon_religo ;
-    test_w "no semicolon (jsligo)" no_semicolon_jsligo ;
     test_w "loop_bugs (ligo)" loop_bugs_ligo ;
     test_w "tuple_list (religo)" tuple_list_religo ;
-    test_w "no semicolon (jsligo)" no_semicolon_jsligo ;
     test_w "single_record_expr (religo)" single_record_expr_religo ;
-    test_w "shadowing (mligo)" shadowing;
     test_w "if no else (jsligo)" if_no_else_jsligo;
     test_w "tuple_assignment (jsligo)" tuple_assignment_jsligo;
     test_w "chained_assignment (jsligo)" chained_assignment_jsligo;

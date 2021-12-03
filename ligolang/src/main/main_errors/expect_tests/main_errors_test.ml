@@ -107,25 +107,25 @@ let%expect_test "main_execution_failed" =
   [%expect {|An error occurred while evaluating an expression: bar|}]
 
 let%expect_test _ =
-  human_readable_error (`Main_unparse_michelson_result [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (unparsing_michelson_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while unparsing the Michelson result:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_parse_michelson_input [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (parsing_input_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while parsing the Michelson input:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_parse_michelson_code [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (parsing_code_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while checking the contract:
   The request has timed out
   The promise was unexpectedly canceled
   |}] ;
-  human_readable_error (`Main_michelson_execution_error [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
+  human_readable_error (error_of_execution_tracer [`Tezos_alpha_error Tezos_error_monad.Error_monad.Timeout; `Tezos_alpha_error Tezos_error_monad.Error_monad.Canceled]) ;
   [%expect {|
   Error(s) occurred while executing the contract:
   The request has timed out
@@ -137,7 +137,7 @@ let%expect_test "pretty" = () (* not used *)
 let%expect_test "self_ast_imperative" =
   let open Ast_imperative in
   let open Location in
-  let error e = human_readable_error (`Main_self_ast_imperative e) in
+  let error e = human_readable_error (self_ast_imperative_tracer e) in
   let location_t = File default_location in
   let type_content = T_variable (Var.of_name "foo") in
   let type_expression = {type_content; location= location_t} in
@@ -206,9 +206,9 @@ let%expect_test "self_ast_imperative" =
   |}]
 
 let%expect_test _ =
-  human_readable_error (`Main_purification (`Purification_corner_case "foo")) ;
+  human_readable_error (purification_tracer (`Purification_corner_case "foo")) ;
   [%expect {|Corner case: foo|}] ;
-  human_readable_error (`Main_depurification (`Purification_corner_case "foo")) ;
+  human_readable_error (depurification_tracer (`Purification_corner_case "foo")) ;
   [%expect {| |}]
 
 let%expect_test "desugaring" = ()
@@ -225,7 +225,7 @@ let%expect_test "main_cit_pascaligo" =
       method payload = ""
     end
   in
-  let error e = human_readable_error (`Main_cit_pascaligo e) in
+  let error e = human_readable_error (cit_pascaligo_tracer e) in
   let lexeme_reg : lexeme reg = {value= "foo"; region= default_region1} in
   let pvar = PVar {value = {variable = lexeme_reg ; attributes = []} ; region = default_region1} in
   let type_expr = TString {value= "yolo"; region= default_region1} in
@@ -296,7 +296,7 @@ let%expect_test "main_cit_pascaligo" =
 let%expect_test "main_cit_cameligo" =
   let open Cst.Cameligo in
   let open Location in
-  let error e = human_readable_error (`Main_cit_cameligo e) in
+  let error e = human_readable_error (cit_cameligo_tracer e) in
   let variable = {value= "dog"; region= default_region1} in
   let pvar = PVar {value = { variable ; attributes = []} ; region = default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
@@ -353,7 +353,7 @@ At this point, an annotation, in the form of a string, is expected for the prece
 let%expect_test "main_cit_reasonligo" =
   let open Cst.Reasonligo in
   let open Location in
-  let error e = human_readable_error (`Main_cit_reasonligo e) in
+  let error e = human_readable_error (cit_reasonligo_tracer e) in
   let variable = {value= "dog"; region= default_region1} in
   let pvar = PVar  {value= {variable; attributes = []}; region= default_region1} in
   let type_expr = TVar {value= "dog"; region= default_region1} in
@@ -410,7 +410,7 @@ let%expect_test "main_cit_reasonligo" =
 let%expect_test "typer" =
   let open Ast_typed in
   let open Location in
-  let error e = human_readable_error (`Main_checking e) in
+  let error e = human_readable_error (checking_tracer e) in
   let location_t = File default_location in
   let environment = Environment.empty in
   let type_variable = Var.of_name "foo" in
@@ -882,7 +882,7 @@ let%expect_test "interpreter" = ()
 let%expect_test "self_ast_typed" =
   let open Ast_typed in
   let open Location in
-  let error e = human_readable_error (`Main_self_ast_typed e) in
+  let error e = human_readable_error (self_ast_typed_tracer e) in
   let expression_variable = Location.wrap (Var.of_name "bar") in
   let location_t = File default_location in
   let type_expression : Ast_typed.type_expression =
@@ -991,7 +991,7 @@ let%expect_test "self_ast_typed" =
     Expected a tuple of operations and storage as return value. |}]
 
 let%expect_test "self_mini_c" =
-  let error e = human_readable_error (`Main_self_mini_c e) in
+  let error e = human_readable_error (self_mini_c_tracer e) in
   error (`Self_mini_c_bad_self_address C_SELF_ADDRESS) ;
   [%expect {|"Tezos.self" must be used directly and cannot be used via another function. |}] ;
   error `Self_mini_c_not_a_function ;
@@ -1004,7 +1004,7 @@ let%expect_test "self_mini_c" =
     An entrypoint must of type "parameter * storage -> operations list * storage". |}]
 
 let%expect_test "spilling" =
-  let error (e:Spilling.Errors.spilling_error) = human_readable_error (`Main_spilling e) in
+  let error (e:Spilling.Errors.spilling_error) = human_readable_error (spilling_tracer e) in
   let open Ast_typed in
   let open Location in
   let type_variable : Ast_typed.type_variable = Var.of_name "foo" in
@@ -1044,7 +1044,7 @@ let%expect_test "spilling" =
 
 let%expect_test "stacking" =
   let open Mini_c in
-  let error e = human_readable_error (`Main_stacking e) in
+  let error e = human_readable_error (stacking_tracer e) in
   error (`Stacking_corner_case ("foo", "bar")) ;
   [%expect
     {|

@@ -38,7 +38,7 @@ export async function compileExpressionHandler(req: Request, res: Response) {
       if (ex instanceof CompilerError) {
         res.status(400).json({ error: ex.message });
       } else {
-        logger.error(ex);
+        logger.error((ex as Error).message);
         res.sendStatus(500);
       }
     }

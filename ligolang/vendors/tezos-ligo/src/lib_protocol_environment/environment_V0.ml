@@ -635,6 +635,7 @@ struct
 
   module Micheline = struct
     include Micheline
+    include Tezos_micheline.Micheline_encoding
 
     let canonical_encoding_v1 ~variant encoding =
       canonical_encoding_v1 ~variant:(Param.name ^ "." ^ variant) encoding
@@ -783,6 +784,16 @@ struct
 
       include Environment_protocol_T.V0toV3 (LiftV0 (P))
     end)
+
+    let begin_partial_application ~chain_id ~ancestor_context
+        ~(predecessor : Block_header.t) ~predecessor_hash:_ ~cache:_
+        (raw_block : block_header) =
+      begin_partial_application
+        ~chain_id
+        ~ancestor_context
+        ~predecessor_timestamp:predecessor.shell.timestamp
+        ~predecessor_fitness:predecessor.shell.fitness
+        raw_block
   end
 
   class ['chain, 'block] proto_rpc_context (t : Tezos_rpc.RPC_context.t)

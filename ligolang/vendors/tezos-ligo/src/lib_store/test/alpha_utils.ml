@@ -372,7 +372,7 @@ let default_genesis_parameters =
     bootstrap_accounts = default_accounts;
   }
 
-let default_patch_context ctxt =
+let patch_context ctxt ~json =
   let shell =
     {
       Tezos_base.Block_header.level = 0l;
@@ -385,8 +385,6 @@ let default_patch_context ctxt =
       context = Context_hash.zero;
     }
   in
-  let open Tezos_protocol_alpha_parameters in
-  let json = Default_parameters.json_of_parameters default_genesis_parameters in
   let proto_params =
     Data_encoding.Binary.to_bytes_exn Data_encoding.json json
   in
@@ -396,6 +394,11 @@ let default_patch_context ctxt =
   Main.init ctxt shell >|= Environment.wrap_tzresult >>= function
   | Error _ -> assert false
   | Ok {context; _} -> return (Shell_context.unwrap_disk_context context)
+
+let default_patch_context ctxt =
+  patch_context
+    ctxt
+    ~json:(Default_parameters.json_of_parameters default_genesis_parameters)
 
 (********* Baking *************)
 
@@ -526,6 +529,7 @@ let apply_and_store chain_store ?(synchronous_merge = true) ?policy
       Tezos_validation.Block_validation.validation_store =
         {
           context_hash;
+          timestamp = block_header.shell.timestamp;
           message = validation.Environment_context.message;
           max_operations_ttl = validation.max_operations_ttl;
           last_allowed_fork_level = validation.last_allowed_fork_level;

@@ -133,7 +133,7 @@ const MonacoComponent = (props) => {
         }
 
         if (editorState && editorState.language !== model.getModeId()) {
-          if (editorState.language === 'reasonligo') {
+          if (['reasonligo', 'jsligo'].includes(editorState.language)) {
             monaco.editor.setModelLanguage(model, 'javascript');
           } else {
             monaco.editor.setModelLanguage(model, editorState.language);

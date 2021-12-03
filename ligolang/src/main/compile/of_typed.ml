@@ -5,24 +5,23 @@ open Main_errors
 
 module SMap = Map.Make(String)
 
-let compile_with_modules ~raise ?(module_env = SMap.empty) : Ast_typed.module_fully_typed -> Mini_c.program * AST.type_expression SMap.t = fun p ->
-  trace ~raise spilling_tracer @@ compile_module ~module_env:module_env p
+let compile_with_modules ~raise : Ast_typed.module_fully_typed -> Mini_c.program = fun p ->
+  trace ~raise spilling_tracer @@ compile_module p
 
-let compile ~raise ?(module_env = SMap.empty) : Ast_typed.module_fully_typed -> Mini_c.program = fun p ->
-  let p = Self_ast_typed.monomorphise_module p in
-  let mini_c,_ = compile_with_modules ~raise ~module_env:module_env p in
+let compile ~raise : Ast_typed.module_fully_typed -> Mini_c.program = fun p ->
+  let mini_c = compile_with_modules ~raise p in
   mini_c
 
-let compile_expression ~raise ?(module_env = SMap.empty) : expression -> Mini_c.expression = fun e ->
-  trace ~raise spilling_tracer @@ compile_expression ~module_env:module_env e
+let compile_expression ~raise : expression -> Mini_c.expression = fun e ->
+  trace ~raise spilling_tracer @@ compile_expression e
 
 let compile_type ~raise : type_expression -> Mini_c.type_expression = fun e ->
   trace ~raise spilling_tracer @@ compile_type e
 
 let assert_equal_contract_type ~raise : Simple_utils.Runned_result.check_type -> string -> Ast_typed.module_fully_typed -> Ast_typed.expression -> unit  =
     fun c entry contract param ->
-  let entry_point = trace_option ~raise entrypoint_not_found (Ast_typed.get_entry contract entry) in
-  trace ~raise (arguments_check_tracer c) (
+  let entry_point = trace_option ~raise main_entrypoint_not_found (Ast_typed.get_entry contract entry) in
+  trace ~raise (check_typed_arguments_tracer c) (
     fun ~raise ->
     match entry_point.type_expression.type_content with
     | T_arrow {type1=args} -> (
@@ -34,8 +33,8 @@ let assert_equal_contract_type ~raise : Simple_utils.Runned_result.check_type ->
             | Check_parameter -> trace ~raise checking_tracer @@ Checking.assert_type_expression_eq entry_point.location (param_exp, param.type_expression)
             | Check_storage   -> trace ~raise checking_tracer @@ Checking.assert_type_expression_eq entry_point.location (storage_exp, param.type_expression)
         )
-        | _ -> raise.raise @@ entrypoint_not_a_function )
-    | _ -> raise.raise @@ entrypoint_not_a_function
+        | _ -> raise.raise @@ main_entrypoint_not_a_function )
+    | _ -> raise.raise @@ main_entrypoint_not_a_function
   )
 
 let rec get_views : Ast_typed.environment -> (string * location) list = fun e ->

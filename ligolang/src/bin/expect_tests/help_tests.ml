@@ -37,6 +37,7 @@ let%expect_test _ =
         [-o --output-file <OUTPUT_FILE>]
         [--warn <BOOL>]
         [--werror <BOOL>]
+        [--michelson-comments <MICHELSON_COMMENTS>]
 
     Usage
     ligo [global options] command [command options]
@@ -63,6 +64,7 @@ let%expect_test _ =
     [-o --output-file <OUTPUT_FILE>]
     [--warn <BOOL>]
     [--werror <BOOL>]
+    [--michelson-comments <MICHELSON_COMMENTS>]
     This sub-command compiles a contract to Michelson code. It expects a source file and an entrypoint function that has the type of a contract: "parameter * storage -> operations list * storage".
     SOURCE_FILE: SOURCE_FILE is the path to the smart contract file.
     -e --entry-point <ENTRY_POINT>: the entry-point that will be compiled.
@@ -84,7 +86,9 @@ let%expect_test _ =
     --warn <BOOL>: Indicates whether warning messages should be printed in stderr or not
       Defaults to `true`.
     --werror <BOOL>: Indicates whether warning messages should be treated as errors or not
-      Defaults to `false`. |} ] ;
+      Defaults to `false`.
+    --michelson-comments <MICHELSON_COMMENTS>: Selects kinds of comments to be added to the Michelson output. Currently only 'location' is supported, which propagates original source locations (line/col).
+      Defaults to ``. |} ] ;
 
   run_ligo_good [ "compile" ; "parameter" ; "--help" ] ;
   [%expect {|

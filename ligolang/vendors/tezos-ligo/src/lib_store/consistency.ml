@@ -82,6 +82,29 @@ let is_block_stored block_store (descriptor, expected_metadata, block_name) =
         | Some _ -> return_unit
       else return_unit
 
+let check_protocol_levels block_store ~caboose protocol_levels =
+  Protocol_levels.iter_es
+    (fun proto_level
+         {Protocol_levels.block = (hash, activation_level); protocol; _} ->
+      if Compare.Int32.(activation_level < snd caboose) then
+        (* Cannot say anything *)
+        return_unit
+      else if (* Do not check the fake protocol *)
+              proto_level = 0 then return_unit
+      else
+        (Block_store.read_block
+           ~read_metadata:false
+           block_store
+           (Block (hash, 0))
+         >>= function
+         | Error _ -> return_none
+         | Ok block_opt -> return block_opt)
+        >>=? function
+        | Some _ -> return_unit
+        | None ->
+            fail (Unexpected_missing_activation_block {block = hash; protocol}))
+    protocol_levels
+
 let check_invariant ~genesis ~caboose ~savepoint ~cementing_highwatermark
     ~checkpoint ~current_head ~alternate_heads =
   let ( <= ) descr descr' = Compare.Int32.(snd descr <= snd descr') in
@@ -96,7 +119,17 @@ let check_invariant ~genesis ~caboose ~savepoint ~cementing_highwatermark
     | Some ch -> Compare.Int32.(ch <= snd checkpoint)
     | None -> true
   in
-  fail_unless invariant_holds Bad_ordering_invariant
+  fail_unless
+    invariant_holds
+    (Bad_ordering_invariant
+       {
+         genesis = snd genesis;
+         caboose = snd caboose;
+         savepoint = snd savepoint;
+         cementing_highwatermark;
+         checkpoint = snd checkpoint;
+         head = snd current_head;
+       })
 
 (* [check_consistency ~store_dir genesis] aims to provide a quick
    check (in terms of execution time) which checks that files may be
@@ -113,6 +146,8 @@ let check_consistency chain_dir genesis =
     (Inconsistent_genesis
        {expected = genesis.block; got = Block_repr.hash genesis_block})
   >>=? fun () ->
+  Stored_data.load (Naming.chain_config_file chain_dir)
+  >>=? fun _chain_config ->
   Stored_data.load (Naming.caboose_file chain_dir) >>=? fun caboose_data ->
   Stored_data.get caboose_data >>= fun caboose ->
   Stored_data.load (Naming.savepoint_file chain_dir) >>=? fun savepoint_data ->
@@ -127,7 +162,7 @@ let check_consistency chain_dir genesis =
   >>=? fun alternate_heads_data ->
   Stored_data.get alternate_heads_data >>= fun alternate_heads ->
   Stored_data.load (Naming.protocol_levels_file chain_dir)
-  >>=? fun _protocol_levels_data ->
+  >>=? fun protocol_levels_data ->
   Stored_data.load (Naming.invalid_blocks_file chain_dir)
   >>=? fun _invalid_blocks_data ->
   Stored_data.load (Naming.forked_chains_file chain_dir)
@@ -164,6 +199,8 @@ let check_consistency chain_dir genesis =
       >>= fun cementing_highwatermark ->
       check_cementing_highwatermark ~cementing_highwatermark block_store
       >>=? fun () ->
+      Stored_data.get protocol_levels_data >>= fun protocol_levels ->
+      check_protocol_levels block_store ~caboose protocol_levels >>=? fun () ->
       check_invariant
         ~genesis:genesis_descr
         ~caboose
@@ -811,11 +848,11 @@ let fix_protocol_levels context_index block_store genesis genesis_header ~head
 
 (* [fix_chain_state ~chain_dir ~head ~cementing_highwatermark
    ~checkpoint ~savepoint ~caboose ~alternate_heads ~forked_chains
-   ~protocol_levels ~genesis ~genesis_context] writes, as
+   ~protocol_levels ~chain_config ~genesis ~genesis_context] writes, as
    [Stored_data.t], the given arguments. *)
 let fix_chain_state chain_dir ~head ~cementing_highwatermark ~checkpoint
     ~savepoint ~caboose ~alternate_heads ~forked_chains ~protocol_levels
-    ~genesis ~genesis_context =
+    ~chain_config ~genesis ~genesis_context =
   (* By setting each stored data, we erase the previous content. *)
   let rec init_protocol_table protocol_table = function
     | [] -> protocol_table
@@ -828,6 +865,8 @@ let fix_chain_state chain_dir ~head ~cementing_highwatermark ~checkpoint
   let protocol_table =
     init_protocol_table Protocol_levels.empty protocol_levels
   in
+  Stored_data.write_file (Naming.chain_config_file chain_dir) chain_config
+  >>=? fun () ->
   Stored_data.write_file (Naming.protocol_levels_file chain_dir) protocol_table
   >>=? fun () ->
   let genesis_block =
@@ -855,9 +894,8 @@ let fix_chain_state chain_dir ~head ~cementing_highwatermark ~checkpoint
   Stored_data.write_file (Naming.forked_chains_file chain_dir) forked_chains
   >>=? fun () -> return_unit
 
-(* [fix_chain_config ~chain_dir block_store genesis caboose savepoint]
-   infers the history mode and update the [chain_config]. *)
-let fix_chain_config chain_dir block_store genesis caboose savepoint =
+(* Infers the history mode by inspecting the state of the store. *)
+let infer_history_mode chain_dir block_store genesis caboose savepoint =
   let cemented_block_store = Block_store.cemented_block_store block_store in
   let cemented_blocks_files =
     match Cemented_block_store.cemented_blocks_files cemented_block_store with
@@ -906,8 +944,28 @@ let fix_chain_config chain_dir block_store genesis caboose savepoint =
          full or rolling. We choose full as the less destructive. *)
       Full offset
   in
-  let chain_config = {history_mode; genesis; expiration = None} in
-  Stored_data.write_file (Naming.chain_config_file chain_dir) chain_config
+  Store_events.(emit restore_infered_history_mode history_mode) >>= fun () ->
+  return {history_mode; genesis; expiration = None}
+
+(* [fix_chain_config ?history_mode ~chain_dir block_store genesis
+   caboose savepoint] infers the history mode. *)
+let fix_chain_config ?history_mode chain_dir block_store genesis caboose
+    savepoint =
+  Stored_data.load (Naming.chain_config_file chain_dir) >>= function
+  | Ok chain_config ->
+      (* If the store's config is available, we use it as is. *)
+      Stored_data.get chain_config >>= return
+  | Error _ -> (
+      match history_mode with
+      (* Otherwise, we try to get the history mode that was given by
+         the command line or the config file. *)
+      | Some history_mode ->
+          Store_events.(emit restore_history_mode history_mode) >>= fun () ->
+          return {history_mode; genesis; expiration = None}
+      | None ->
+          (* If there is no hint in the config file nor the command
+             line, we try to infer the history mode. *)
+          infer_history_mode chain_dir block_store genesis caboose savepoint)
 
 let fix_cementing_highwatermark block_store =
   let cemented_block_store = Block_store.cemented_block_store block_store in
@@ -917,7 +975,7 @@ let fix_cementing_highwatermark block_store =
   Store_events.(emit fix_cementing_highwatermark cementing_highwatermark)
   >>= fun () -> Lwt.return cementing_highwatermark
 
-(* [fix_consistency store_dir context_index]
+(* [fix_consistency ?history_mode store_dir context_index]
    aims to fix a store in an inconsistent state. The fixing steps are:
     - the current head is set as the highest block level found in the
       floating stores,
@@ -932,7 +990,7 @@ let fix_cementing_highwatermark block_store =
    Assumptions:
     - context is valid and available
     - block store is valid and available *)
-let fix_consistency chain_dir context_index genesis =
+let fix_consistency ?history_mode chain_dir context_index genesis =
   Store_events.(emit fix_store ()) >>= fun () ->
   (* We suppose that the genesis block is accessible *)
   trace
@@ -950,8 +1008,8 @@ let fix_consistency chain_dir context_index genesis =
   fix_savepoint_and_caboose chain_dir block_store head
   >>=? fun (savepoint, caboose) ->
   fix_checkpoint chain_dir block_store head >>=? fun checkpoint ->
-  fix_chain_config chain_dir block_store genesis caboose savepoint
-  >>=? fun () ->
+  fix_chain_config ?history_mode chain_dir block_store genesis caboose savepoint
+  >>=? fun chain_config ->
   fix_protocol_levels
     context_index
     block_store
@@ -970,6 +1028,7 @@ let fix_consistency chain_dir context_index genesis =
     ~alternate_heads:[]
     ~forked_chains:Chain_id.Map.empty
     ~protocol_levels
+    ~chain_config
     ~genesis
     ~genesis_context:(Block_repr.context genesis_block)
   >>=? fun () ->

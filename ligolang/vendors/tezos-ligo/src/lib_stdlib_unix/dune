@@ -14,10 +14,10 @@
             tezos-stdlib
             lwt.unix
             ipaddr.unix
+	    fmt
             re
             ptime
             ptime.clock.os
-            fmt
             mtime
             mtime.clock.os
             lwt_log))

@@ -99,6 +99,7 @@ and chain_state = {
   live_operations : Operation_hash.Set.t;
   mutable live_data_cache :
     (Block_hash.t * Operation_hash.Set.t) Ringo.Ring.t option;
+  prechecked_blocks : Block_repr.t Block_lru_cache.t;
 }
 
 and testchain = {forked_block : Block_hash.t; testchain_store : chain_store}
@@ -208,6 +209,15 @@ module Block = struct
     Shared.use chain_state (fun chain_state ->
         locked_is_known_invalid chain_state hash)
 
+  let is_known_prechecked {chain_state; _} hash =
+    Shared.use chain_state (fun {prechecked_blocks; _} ->
+        match Block_lru_cache.find_opt prechecked_blocks hash with
+        | None -> Lwt.return_false
+        | Some t -> (
+            t >>= function
+            | None -> Lwt.return_false
+            | Some _ -> Lwt.return_true))
+
   let is_known chain_store hash =
     is_known_valid chain_store hash >>= fun is_known ->
     if is_known then Lwt.return_true else is_known_invalid chain_store hash
@@ -314,10 +324,27 @@ module Block = struct
     current_head chain_store >>= fun current_head ->
     locked_read_block_by_level_opt chain_store current_head level
 
+  let read_prechecked_block_opt {chain_state; _} hash =
+    Shared.use chain_state (fun {prechecked_blocks; _} ->
+        match Block_lru_cache.find_opt prechecked_blocks hash with
+        | None -> Lwt.return_none
+        | Some t -> t)
+
+  let read_prechecked_block chain_store hash =
+    read_prechecked_block_opt chain_store hash >>= function
+    | Some b -> return b
+    | None -> fail (Block_not_found hash)
+
   let store_block chain_store ~block_header ~operations validation_result =
     let {
       Block_validation.validation_store =
-        {context_hash; message; max_operations_ttl; last_allowed_fork_level};
+        {
+          context_hash;
+          timestamp = _;
+          message;
+          max_operations_ttl;
+          last_allowed_fork_level;
+        };
       block_metadata;
       ops_metadata;
       block_metadata_hash;
@@ -441,11 +468,45 @@ module Block = struct
         Block_store.store_block chain_store.block_store block >>=? fun () ->
         Store_events.(emit store_block) (hash, block_header.shell.level)
         >>= fun () ->
+        Shared.use chain_store.chain_state (fun {prechecked_blocks; _} ->
+            Block_lru_cache.remove prechecked_blocks hash ;
+            Lwt.return_unit)
+        >>= fun () ->
         Lwt_watcher.notify chain_store.block_watcher block ;
         Lwt_watcher.notify
           chain_store.global_store.global_block_watcher
           (chain_store, block) ;
         return_some block
+
+  let store_prechecked_block chain_store ~hash ~block_header ~operations =
+    let operations_length = List.length operations in
+    let validation_passes = block_header.Block_header.shell.validation_passes in
+    fail_unless
+      (validation_passes = operations_length)
+      (Cannot_store_block
+         ( hash,
+           Invalid_operations_length
+             {validation_passes; operations = operations_length} ))
+    >>=? fun () ->
+    let block =
+      {
+        Block_repr.hash;
+        contents =
+          {
+            header = block_header;
+            operations;
+            block_metadata_hash = None;
+            operations_metadata_hashes = None;
+          };
+        metadata = None;
+      }
+    in
+    Shared.use chain_store.chain_state (fun {prechecked_blocks; _} ->
+        Block_lru_cache.replace prechecked_blocks hash (Lwt.return_some block) ;
+        Lwt.return_unit)
+    >>= fun () ->
+    Store_events.(emit store_prechecked_block) (hash, block_header.shell.level)
+    >>= return
 
   let context_exn chain_store block =
     let context_index = chain_store.global_store.context_index in
@@ -757,9 +818,8 @@ module Chain = struct
     if Block.equal current_head block && not force then
       Lwt.return (live_blocks, live_operations)
     else
-      let max_operations_ttl = Block.max_operations_ttl metadata in
       (* We actually compute max_op_ttl + 1... *)
-      let expected_capacity = max_operations_ttl + 1 in
+      let expected_capacity = Block.max_operations_ttl metadata + 1 in
       match live_data_cache with
       | Some live_data_cache
         when update_cache
@@ -797,7 +857,7 @@ module Chain = struct
           Chain_traversal.live_blocks_with_ring
             chain_store
             block
-            max_operations_ttl
+            expected_capacity
             new_cache
           >>= fun () ->
           chain_state.live_data_cache <- Some new_cache ;
@@ -810,7 +870,7 @@ module Chain = struct
           in
           Lwt.return (live_blocks, live_ops)
       | _ ->
-          Chain_traversal.live_blocks chain_store block max_operations_ttl
+          Chain_traversal.live_blocks chain_store block expected_capacity
           >>= fun (live_blocks, live_ops) -> Lwt.return (live_blocks, live_ops)
 
   let compute_live_blocks chain_store ~block =
@@ -1077,7 +1137,6 @@ module Chain = struct
     | _ -> return_unit
 
   let set_head chain_store new_head =
-    Store_events.(emit set_head) (Block.descriptor new_head) >>= fun () ->
     Shared.update_with chain_store.chain_state (fun chain_state ->
         (* The merge cannot finish until we release the lock on the
            chain state so its status cannot change while this
@@ -1085,16 +1144,16 @@ module Chain = struct
         (* Also check the status to be extra-safe *)
         Block_store.status chain_store.block_store >>= fun store_status ->
         (match Block_store.get_merge_status chain_store.block_store with
-        | Merge_failed _ ->
+        | Merge_failed errs ->
             (* If the merge has failed, notify in the logs but don't
                trigger any merge. *)
-            Store_events.(emit notify_merge_error ()) >>= fun () ->
+            Store_events.(emit notify_merge_error errs) >>= fun () ->
             (* We mark the merge as on-going to prevent the merge from
                being triggered and to update on-disk values. *)
             return_true
         | Not_running when store_status <> Idle ->
             (* Degenerate case, do the same as the Merge_failed case *)
-            Store_events.(emit notify_merge_error ()) >>= fun () -> return_true
+            Store_events.(emit notify_merge_error []) >>= fun () -> return_true
         | Not_running -> return_false
         | Running -> return_true)
         >>=? fun is_merge_ongoing ->
@@ -1559,9 +1618,10 @@ module Chain = struct
     let current_head = genesis_block in
     let active_testchain = None in
     let mempool = Mempool.empty in
-    let live_blocks = Block_hash.Set.empty in
+    let live_blocks = Block_hash.Set.singleton genesis_block.hash in
     let live_operations = Operation_hash.Set.empty in
     let live_data_cache = None in
+    let prechecked_blocks = Block_lru_cache.create 10 in
     return
       {
         current_head_data;
@@ -1578,6 +1638,7 @@ module Chain = struct
         live_blocks;
         live_operations;
         live_data_cache;
+        prechecked_blocks;
       }
 
   (* In some case, when a merge was interrupted, the highest cemented
@@ -1643,6 +1704,7 @@ module Chain = struct
         let live_blocks = Block_hash.Set.empty in
         let live_operations = Operation_hash.Set.empty in
         let live_data_cache = None in
+        let prechecked_blocks = Block_lru_cache.create 10 in
         return
           {
             current_head_data;
@@ -1659,6 +1721,7 @@ module Chain = struct
             live_blocks;
             live_operations;
             live_data_cache;
+            prechecked_blocks;
           }
 
   let get_commit_info index header =
@@ -1678,9 +1741,9 @@ module Chain = struct
     | Ok v -> Lwt.return_some v
     | Error _ -> Lwt.return_none
 
-  let create_chain_store global_store chain_dir ?target ~chain_id
-      ?(expiration = None) ?genesis_block ~genesis ~genesis_context history_mode
-      =
+  let create_chain_store ?block_cache_limit global_store chain_dir ?target
+      ~chain_id ?(expiration = None) ?genesis_block ~genesis ~genesis_context
+      history_mode =
     (* Chain directory *)
     let genesis_block =
       match genesis_block with
@@ -1688,7 +1751,8 @@ module Chain = struct
       | Some genesis_block -> genesis_block
     in
     (* Block_store.create also stores genesis *)
-    Block_store.create chain_dir ~genesis_block >>=? fun block_store ->
+    Block_store.create ?block_cache_limit chain_dir ~genesis_block
+    >>=? fun block_store ->
     let chain_config = {history_mode; genesis; expiration} in
     Stored_data.write_file (Naming.chain_config_file chain_dir) chain_config
     >>=? fun () ->
@@ -1725,14 +1789,16 @@ module Chain = struct
     in
     return chain_store
 
-  let load_chain_store global_store chain_dir ~chain_id ~readonly =
+  let load_chain_store ?block_cache_limit global_store chain_dir ~chain_id
+      ~readonly =
     Stored_data.load (Naming.chain_config_file chain_dir)
     >>=? fun chain_config_data ->
     Stored_data.get chain_config_data >>= fun chain_config ->
     Stored_data.load (Naming.genesis_block_file chain_dir)
     >>=? fun genesis_block_data ->
     Stored_data.get genesis_block_data >>= fun genesis_block ->
-    Block_store.load chain_dir ~genesis_block ~readonly >>=? fun block_store ->
+    Block_store.load ?block_cache_limit chain_dir ~genesis_block ~readonly
+    >>=? fun block_store ->
     load_chain_state chain_dir block_store >>=? fun chain_state ->
     let chain_state = Shared.create chain_state in
     let block_watcher = Lwt_watcher.create_input () in
@@ -1946,7 +2012,12 @@ module Chain = struct
                     commit_info = commit_info_opt;
                   }
                   protocol_levels))
-        >>=? fun () -> return_unit)
+        >>=? fun () ->
+        Store_events.(
+          emit
+            update_protocol_table
+            (protocol_hash, protocol_level, Block.hash block, Block.level block))
+        >>= fun () -> return_unit)
 
   let find_activation_block chain_store ~protocol_level =
     Shared.use chain_store.chain_state (fun {protocol_levels_data; _} ->
@@ -1958,12 +2029,49 @@ module Chain = struct
     | None -> Lwt.return_none
     | Some {Protocol_levels.protocol; _} -> Lwt.return_some protocol
 
-  let may_update_protocol_level chain_store ~protocol_level
+  let may_update_protocol_level chain_store ?pred ?protocol_level
       (block, protocol_hash) =
-    find_activation_block chain_store ~protocol_level >>= function
-    | Some _ -> return_unit
-    | None ->
-        set_protocol_level chain_store ~protocol_level (block, protocol_hash)
+    (match pred with
+    | None -> Block.read_predecessor chain_store block
+    | Some pred -> return pred)
+    >>=? fun pred ->
+    let prev_proto_level = Block.proto_level pred in
+    let protocol_level =
+      Option.value ~default:(Block.proto_level block) protocol_level
+    in
+    if Compare.Int.(prev_proto_level < protocol_level) then
+      find_activation_block chain_store ~protocol_level >>= function
+      | Some {block = (bh, _); _} ->
+          if Block_hash.(bh <> Block.hash block) then
+            set_protocol_level chain_store ~protocol_level (block, protocol_hash)
+          else return_unit
+      | None ->
+          set_protocol_level chain_store ~protocol_level (block, protocol_hash)
+    else return_unit
+
+  let may_update_ancestor_protocol_level chain_store ~head =
+    let head_proto_level = Block.proto_level head in
+    find_activation_block chain_store ~protocol_level:head_proto_level
+    >>= function
+    | None -> return_unit
+    | Some {block; protocol; _} -> (
+        savepoint chain_store >>= fun (_, savepoint_level) ->
+        if Compare.Int32.(savepoint_level > snd block) then
+          (* the block is too far in the past *)
+          return_unit
+        else
+          is_ancestor chain_store ~head:(Block.descriptor head) ~ancestor:block
+          >>= function
+          | true -> (* nothing to do *) return_unit
+          | false -> (
+              let distance =
+                Int32.(sub (Block.level head) (snd block) |> to_int)
+              in
+              Block.read_block_opt chain_store ~distance (Block.hash head)
+              >>= function
+              | None -> return_unit
+              | Some ancestor ->
+                  may_update_protocol_level chain_store (ancestor, protocol)))
 
   let all_protocol_levels chain_store =
     Shared.use chain_store.chain_state (fun {protocol_levels_data; _} ->
@@ -2039,8 +2147,9 @@ module Protocol = struct
     Lwt_watcher.create_stream protocol_watcher
 end
 
-let create_store ~context_index ~chain_id ~genesis ~genesis_context
-    ?(history_mode = History_mode.default) ~allow_testchains store_dir =
+let create_store ?block_cache_limit ~context_index ~chain_id ~genesis
+    ~genesis_context ?(history_mode = History_mode.default) ~allow_testchains
+    store_dir =
   let store_dir_path = Naming.dir_path store_dir in
   Lwt_utils_unix.create_dir store_dir_path >>= fun () ->
   Protocol_store.init store_dir >>= fun protocol_store ->
@@ -2059,6 +2168,7 @@ let create_store ~context_index ~chain_id ~genesis ~genesis_context
     }
   in
   Chain.create_chain_store
+    ?block_cache_limit
     global_store
     chain_dir
     ~chain_id
@@ -2070,8 +2180,8 @@ let create_store ~context_index ~chain_id ~genesis ~genesis_context
   global_store.main_chain_store <- Some main_chain_store ;
   return global_store
 
-let load_store ?history_mode store_dir ~context_index ~genesis ~chain_id
-    ~allow_testchains ~readonly () =
+let load_store ?history_mode ?block_cache_limit store_dir ~context_index
+    ~genesis ~chain_id ~allow_testchains ~readonly () =
   let chain_dir = Naming.chain_dir store_dir chain_id in
   protect
     (fun () ->
@@ -2089,7 +2199,11 @@ let load_store ?history_mode store_dir ~context_index ~genesis ~chain_id
           Lwt.return_error err
       | err ->
           Store_events.(emit inconsistent_store err) >>= fun () ->
-          Consistency.fix_consistency chain_dir context_index genesis
+          Consistency.fix_consistency
+            chain_dir
+            context_index
+            genesis
+            ?history_mode
           >>=? fun () ->
           Store_events.(emit store_was_fixed ()) >>= fun () -> return_unit)
   >>=? fun () ->
@@ -2107,7 +2221,12 @@ let load_store ?history_mode store_dir ~context_index ~genesis ~chain_id
       global_block_watcher;
     }
   in
-  Chain.load_chain_store global_store chain_dir ~chain_id ~readonly
+  Chain.load_chain_store
+    ?block_cache_limit
+    global_store
+    chain_dir
+    ~chain_id
+    ~readonly
   >>=? fun main_chain_store ->
   let stored_genesis = Chain.genesis main_chain_store in
   fail_unless
@@ -2131,7 +2250,7 @@ let main_chain_store store =
   WithExceptions.Option.get ~loc:__LOC__ store.main_chain_store
 
 let init ?patch_context ?commit_genesis ?history_mode ?(readonly = false)
-    ~store_dir ~context_dir ~allow_testchains genesis =
+    ?block_cache_limit ~store_dir ~context_dir ~allow_testchains genesis =
   let store_dir = Naming.store_dir ~dir_path:store_dir in
   let chain_id = Chain_id.of_block_hash genesis.Genesis.block in
   (match commit_genesis with
@@ -2156,6 +2275,7 @@ let init ?patch_context ?commit_genesis ?history_mode ?(readonly = false)
   if Sys.file_exists chain_dir_path && Sys.is_directory chain_dir_path then
     load_store
       ?history_mode
+      ?block_cache_limit
       store_dir
       ~context_index
       ~genesis
@@ -2167,6 +2287,7 @@ let init ?patch_context ?commit_genesis ?history_mode ?(readonly = false)
     (* Fresh store *)
     commit_genesis ~chain_id >>=? fun genesis_context ->
     create_store
+      ?block_cache_limit
       store_dir
       ~context_index
       ~chain_id
@@ -2528,6 +2649,9 @@ module Unsafe = struct
 
   let set_caboose chain_store new_caboose =
     Chain.unsafe_set_caboose chain_store new_caboose
+
+  let set_protocol_level chain_store ~protocol_level (b, ph) =
+    Chain.set_protocol_level chain_store ~protocol_level (b, ph)
 
   let load_testchain = Chain.load_testchain
 

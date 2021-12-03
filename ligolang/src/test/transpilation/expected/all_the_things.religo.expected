@@ -39,7 +39,7 @@ let transfer = ((p, s): (transfer, storage))
     if(Tezos.sender == p.address_from) {
       s.allowances
     } else {
-    
+
       let authorized_value = 
         switch(
          Big_map.find_opt((Tezos.sender, p.address_from),
@@ -50,8 +50,8 @@ let transfer = ((p, s): (transfer, storage))
       if(authorized_value < p.value) {
         (failwith("Not Enough Allowance") : allowances)
       } else {
-      
-        
+
+
         Big_map.update((Tezos.sender, p.address_from),
            (Some (abs(authorized_value - p.value))),
            s.allowances)
@@ -63,13 +63,13 @@ let transfer = ((p, s): (transfer, storage))
     | None => 0n
     };
   if(sender_balance < p.value) {
-  
+
     (failwith("Not Enough Balance")
       : (list(operation), storage))
   } else {
-  
+
     let new_tokens = 
-      
+
       Big_map.update(p.address_from,
          (Some (abs(sender_balance - p.value))),
          s.tokens);
@@ -79,7 +79,7 @@ let transfer = ((p, s): (transfer, storage))
       | None => 0n
       };
     let new_tokens = 
-      
+
       Big_map.update(p.address_to,
          (Some (receiver_balance + p.value)),
          new_tokens);
@@ -99,13 +99,13 @@ let approve = ((p, s): (approve, storage))
     | None => 0n
     };
   if(previous_value > 0n && p.value > 0n) {
-  
+
     (failwith("Unsafe Allowance Change")
       : (list(operation), storage))
   } else {
-  
+
     let new_allowances = 
-      
+
       Big_map.update((p.spender, Tezos.sender),
          (Some (p.value)),
          s.allowances);
@@ -163,7 +163,7 @@ let check_ = (p: unit): int =>
   if(Tezos.amount == 100000000mutez) {
     42
   } else {
-  
+
     0
     };
 
@@ -314,18 +314,18 @@ let main = (i: int) =>
   if(((i == 2) : bool)) {
     (42 : int)
   } else {
-  
+
     (0 : int)
     };
 
 let main = (i: int) => {
   let result = 0;
   if(i == 2) {
-  
+
     let result = 42;
     result
   } else {
-  
+
     let result = 0;
     result
     }
@@ -335,7 +335,7 @@ let main = (i: int) =>
   if(i == 2) {
     42
   } else {
-  
+
     0
     };
 
@@ -400,7 +400,7 @@ let allowOnlyOwnTransfer = (from: tokenOwner): unit => {
   if(from != Tezos.sender) {
     failwith(errorNotOwner)
   } else {
-  
+
     ()
     }
 };
@@ -432,7 +432,7 @@ let main = ((a, b): (bool, bool)) =>
   if(a == b) {
     999
   } else {
-  
+
     1
     };
 
@@ -634,7 +634,7 @@ let buy = ((parameter, storage): (buy, storage))
     if(amount == storage.name_price) {
       ()
     } else {
-    
+
       failwith("Incorrect amount paid.")
       };
   let profile = parameter.profile;
@@ -652,7 +652,7 @@ let buy = ((parameter, storage): (buy, storage))
     profile: profile
   };
   let updated_identities: big_map(id, id_details) = 
-    
+
     Big_map.update(new_id, Some (new_id_details), identities);
   (([] : list(operation)),
     {...storage,
@@ -665,7 +665,7 @@ let update_owner = ((parameter, storage): (update_owner,
     if(amount != 0mutez) {
       failwith("Updating owner doesn't cost anything.")
     } else {
-    
+
       ()
       };
   let id: int = parameter.id;
@@ -681,7 +681,7 @@ let update_owner = ((parameter, storage): (update_owner,
     if(sender == current_id_details.owner) {
       ()
     } else {
-    
+
       failwith("You are not the owner of this ID.")
       };
   let updated_id_details: id_details = {
@@ -690,7 +690,7 @@ let update_owner = ((parameter, storage): (update_owner,
     profile: current_id_details.profile
   };
   let updated_identities = 
-    
+
     Big_map.update(id, (Some updated_id_details), identities);
   (([] : list(operation)),
     {...storage,
@@ -703,7 +703,7 @@ let update_details = ((parameter, storage): (update_details,
     if(amount != 0mutez) {
       failwith("Updating details doesn't cost anything.")
     } else {
-    
+
       ()
       };
   let id = parameter.id;
@@ -719,11 +719,11 @@ let update_details = ((parameter, storage): (update_details,
   let u: unit = 
     if((sender != current_id_details.controller) && (sender != current_id_details.
             owner)) {
-    
-      
+
+
       failwith("You are not the owner or controller of this ID.")
     } else {
-    
+
       ()
       };
   let owner: address = current_id_details.owner;
@@ -743,7 +743,7 @@ let update_details = ((parameter, storage): (update_details,
     profile: profile
   };
   let updated_identities: big_map(id, id_details) = 
-    
+
     Big_map.update(id, (Some updated_id_details), identities);
   (([] : list(operation)),
     {...storage,
@@ -755,7 +755,7 @@ let skip = ((p, storage): (unit, storage)) => {
     if(amount != storage.skip_price) {
       failwith("Incorrect amount paid.")
     } else {
-    
+
       ()
       };
   (([] : list(operation)),
@@ -915,7 +915,7 @@ let rec aux_simple = (i: int): int =>
   if(i < 100) {
     aux_simple(i + 1)
   } else {
-  
+
     i
     };
 
@@ -930,14 +930,14 @@ let counter = (n: int): int => {
   };
   let rec aggregate = (prev: sum_aggregator): int => 
     if(prev.counter <= n) {
-    
-      
+
+
       aggregate({
           counter: prev.counter + 1,
           sum: prev.counter + prev.sum
         })
     } else {
-    
+
       prev.sum
       };
   aggregate(initial)
@@ -945,11 +945,11 @@ let counter = (n: int): int => {
 
 let rec aux_nest = (prev: sum_aggregator): sum_aggregator => 
   if(prev.counter < 100) {
-  
+
     let sum: int = prev.sum + aux_simple(prev.counter);
     aux_nest({counter: prev.counter + 1, sum: sum })
   } else {
-  
+
     ({
        counter: prev.counter,
        sum: prev.sum
@@ -970,7 +970,7 @@ type foobar = map(int, int);
 let empty_map: foobar = Map.empty;
 
 let map1: foobar = 
-  
+
   Map.literal([(144, 23),
      (51, 23),
      (42, 23),
@@ -1058,7 +1058,7 @@ let main = ((action, store): (parameter, storage)) => {
 };
 
 let michelson_add = (n: (nat, nat)): nat => 
-  
+
   [%Michelson
   ({| { UNPAIR;ADD } |} : ((nat, nat) => nat))](n);
 
@@ -1119,7 +1119,7 @@ let check_message = ((param, s): (check_message_pt, storage))
     if(param.counter != s.counter) {
       (failwith("Counters does not match") : storage)
     } else {
-    
+
       let packed_payload: bytes = 
         Bytes.pack((message, param.counter, s.id, chain_id));
       let valid: nat = 0n;
@@ -1131,7 +1131,7 @@ let check_message = ((param, s): (check_message_pt, storage))
         | [] => vk
         | [key, ...keys] =>
             if(pkh_sig[0] == Crypto.hash_key(key)) {
-            
+
               let valid = 
                 if(
                  Crypto.check(key,
@@ -1139,12 +1139,12 @@ let check_message = ((param, s): (check_message_pt, storage))
                     packed_payload)) {
                   valid + 1n
                 } else {
-                
+
                   (failwith("Invalid signature") : nat)
                   };
               (valid, keys)
             } else {
-            
+
               (valid, keys)
               }
         }
@@ -1152,11 +1152,11 @@ let check_message = ((param, s): (check_message_pt, storage))
       let (valid, keys) = 
         List.fold(aux, param.signatures, (valid, keys));
       if(valid < s.threshold) {
-      
+
         (failwith("Not enough signatures passed the check")
           : storage)
       } else {
-      
+
         {...s,
           counter: s.counter + 1n}
         }
@@ -1175,7 +1175,7 @@ let a = (b: f) => {
   if(b == 2) {
     3
   } else {
-  
+
     4
     }
 };
@@ -1206,7 +1206,7 @@ let distribute = ((p, s): ((unit => list(operation)),
   if(Tezos.sender == s) {
     (p(), s)
   } else {
-  
+
     (
       failwith("You're not the oracle for this distribution.")
       : (list(operation), storage))
@@ -1255,7 +1255,7 @@ let rec sum = ((n, acc): (int, int)): int =>
   if(n < 1) {
     acc
   } else {
-  
+
     sum((n - 1, acc + n))
     };
 
@@ -1263,7 +1263,7 @@ let rec fibo = ((n, n_1, n_0): (int, int, int)): int =>
   if(n < 2) {
     n_1
   } else {
-  
+
     fibo((n - 1, n_1 + n_0, n_1))
     };
 
@@ -1446,7 +1446,7 @@ let u =
   if(true) {
     1
   } else {
-  
+
     2
     };
 

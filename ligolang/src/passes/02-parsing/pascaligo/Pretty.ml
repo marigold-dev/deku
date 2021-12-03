@@ -86,7 +86,7 @@ and pp_module_decl decl =
 
 and pp_module_alias decl =
   let {alias; binders; _} = decl.value in
-  string "module " ^^ string alias.value
+  string "module " ^^ string alias.value ^^ string " is"
   ^^ group (nest 2 (break 1 ^^ pp_nsepseq "." pp_ident binders))
 
 and pp_type_expr = function

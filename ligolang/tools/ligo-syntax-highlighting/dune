@@ -1,5 +1,6 @@
 (executable
  (name LigoSyntaxHighlighting)
+ (modes exe)
  ; (link_flags (-ccopt -static))
  (modules
   regexp

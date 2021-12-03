@@ -83,23 +83,23 @@ let rec error_ppformat : display_format:string display_format ->
     | `Main_unparse_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[Error(s) occurred while translating to Michelson:@.%a@]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
     | `Main_typecheck_contract_tracer (_c,err_l) ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) err_l in
       Format.fprintf f "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
     | `Main_could_not_serialize errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while serializing Michelson code:@.%a @]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_check_typed_arguments (Simple_utils.Runned_result.Check_parameter, err) ->
+    | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_parameter, err) ->
       Format.fprintf f "@[<hv>Invalid command line argument. @.The provided parameter does not have the correct type for the given entrypoint.@ %a@]"
         (error_ppformat ~display_format) err
 
-    | `Main_check_typed_arguments (Simple_utils.Runned_result.Check_storage, err) ->
+    | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_storage, err) ->
       Format.fprintf f "@[<hv>Invalid command line argument. @.The provided storage does not have the correct type for the contract.@ %a@]"
         (error_ppformat ~display_format) err
 
@@ -125,51 +125,51 @@ let rec error_ppformat : display_format:string display_format ->
     | `Main_invalid_sender a -> Format.fprintf f "@[<hv>Invalid command line option \"--sender\". @.The provided sender address \"%s\" is invalid. A valid Tezos address is a string prefixed by either tz1, tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a 4-byte checksum.@]" a
     | `Main_invalid_timestamp t -> Format.fprintf f "@[<hv>Invalid command line option \"--now\". @.The provided now \"%s\" is invalid. It should use RFC3339 notation in a string, or the number of seconds since Epoch.@]" t
 
-    | `Main_unparse_michelson_result errs ->
+    | `Unparsing_michelson_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while unparsing the Michelson result:@.%a @]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_parse_payload _ -> Format.fprintf f "@[<hv>Error parsing message. @]" (* internal testing *)
-    | `Main_pack_payload _ -> Format.fprintf f "@[<hv>Error packing message. @]" (* internal testing *)
-    | `Main_parse_michelson_input errs ->
+    | `Parsing_payload_tracer _ -> Format.fprintf f "@[<hv>Error parsing message. @]" (* internal testing *)
+    | `Packing_payload_tracer _ -> Format.fprintf f "@[<hv>Error packing message. @]" (* internal testing *)
+    | `Parsing_input_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while parsing the Michelson input:@.%a @]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_parse_michelson_code errs ->
+    | `Parsing_code_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while checking the contract:@.%a @]"
-        (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+        (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_michelson_execution_error errs ->
+    | `Error_of_execution_tracer errs ->
       let errs = List.map ~f:( fun e -> match e with `Tezos_alpha_error a -> a) errs in
       Format.fprintf f "@[<hv>Error(s) occurred while executing the contract:@.%a @]"
-      (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+      (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
 
-    | `Main_preproc e -> Preprocessing.Errors.error_ppformat ~display_format f e
-    | `Main_parser e -> Parsing.Errors.error_ppformat ~display_format f e
-    | `Main_pretty _e -> () (*no error in this pass*)
-    | `Main_self_cst_cameligo e -> Self_cst.Cameligo.Errors.error_ppformat ~display_format f e
-    | `Main_self_cst_pascaligo e -> Self_cst.Pascaligo.Errors.error_ppformat ~display_format f e
-    | `Main_self_cst_reasonligo e -> Self_cst.Reasonligo.Errors.error_ppformat ~display_format f e
-    | `Main_self_cst_jsligo e -> Self_cst.Jsligo.Errors.error_ppformat ~display_format f e
-    | `Main_cit_pascaligo e -> Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format f e
-    | `Main_cit_cameligo e -> Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format f e
-    | `Main_cit_reasonligo e -> Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format f e
-    | `Main_cit_jsligo e -> Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format f e
-    | `Main_self_ast_imperative e -> Self_ast_imperative.Errors.error_ppformat ~display_format f e
-    | `Main_purification e -> Purification.Errors.error_ppformat ~display_format f e
-    | `Main_depurification _e -> () (*no error in this pass*)
-    | `Main_desugaring _e -> () (*no error in this pass*)
-    | `Main_sugaring _e -> () (*no error in this pass*)
-    | `Main_inference e -> Inference.Errors.error_ppformat ~display_format f e
-    | `Main_checking e -> Checking.Errors.error_ppformat ~display_format f e
-    | `Main_self_ast_typed e -> Self_ast_typed.Errors.error_ppformat ~display_format f e
-    | `Main_self_mini_c e -> Self_mini_c.Errors.error_ppformat ~display_format f e
-    | `Main_spilling e -> Spilling.Errors.error_ppformat ~display_format f  e
-    | `Main_stacking e -> Stacking.Errors.error_ppformat ~display_format f e
-    
+    | `Preproc_tracer e -> Preprocessing.Errors.error_ppformat ~display_format f e
+    | `Parser_tracer e -> Parsing.Errors.error_ppformat ~display_format f e
+    | `Pretty_tracer _e -> () (*no error in this pass*)
+    | `Self_cst_cameligo_tracer e -> Self_cst.Cameligo.Errors.error_ppformat ~display_format f e
+    | `Self_cst_pascaligo_tracer e -> Self_cst.Pascaligo.Errors.error_ppformat ~display_format f e
+    | `Self_cst_reasonligo_tracer e -> Self_cst.Reasonligo.Errors.error_ppformat ~display_format f e
+    | `Self_cst_jsligo_tracer e -> Self_cst.Jsligo.Errors.error_ppformat ~display_format f e
+    | `Cit_pascaligo_tracer e -> Tree_abstraction.Pascaligo.Errors.error_ppformat ~display_format f e
+    | `Cit_cameligo_tracer e -> Tree_abstraction.Cameligo.Errors.error_ppformat ~display_format f e
+    | `Cit_reasonligo_tracer e -> Tree_abstraction.Reasonligo.Errors.error_ppformat ~display_format f e
+    | `Cit_jsligo_tracer e -> Tree_abstraction.Jsligo.Errors.error_ppformat ~display_format f e
+    | `Self_ast_imperative_tracer e -> Self_ast_imperative.Errors.error_ppformat ~display_format f e
+    | `Purification_tracer e -> Purification.Errors.error_ppformat ~display_format f e
+    | `Depurification_tracer _e -> () (*no error in this pass*)
+    | `Desugaring_tracer _e -> () (*no error in this pass*)
+    | `Sugaring_tracer _e -> () (*no error in this pass*)
+    | `Inference_tracer e -> Inference.Errors.error_ppformat ~display_format f e
+    | `Checking_tracer e -> Checking.Errors.error_ppformat ~display_format f e
+    | `Self_ast_typed_tracer e -> Self_ast_typed.Errors.error_ppformat ~display_format f e
+    | `Self_mini_c_tracer e -> Self_mini_c.Errors.error_ppformat ~display_format f e
+    | `Spilling_tracer e -> Spilling.Errors.error_ppformat ~display_format f  e
+    | `Stacking_tracer e -> Stacking.Errors.error_ppformat ~display_format f e
+
     | `Main_interpret_not_enough_initial_accounts (loc,max) ->
       Format.fprintf f "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
         Snippet.pp loc
@@ -179,11 +179,11 @@ let rec error_ppformat : display_format:string display_format ->
     | `Main_interpret_target_lang_error (loc, [], errs) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.%a@]"
         Snippet.pp loc
-        (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+        (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
     | `Main_interpret_target_lang_error (loc, calltrace, errs) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.%a@.Trace:@.%a@]"
         Snippet.pp loc
-        (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
+        (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errs
         (PP_helpers.list_sep_d Location.pp) calltrace
     | `Main_interpret_target_lang_failwith (loc, Failwith_int n) ->
       Format.fprintf f "@[<v 4>%a@.An uncaught error occured:@.Failwith (int): %d@]"
@@ -296,14 +296,14 @@ let rec error_jsonformat : Types.all -> Yojson.Safe.t = fun a ->
     let content = `Assoc [("message", `String "Could not serialize michelson code")] in
     json_error ~stage:"michelson serialization" ~content
 
-  | `Main_check_typed_arguments (Simple_utils.Runned_result.Check_parameter, err) ->
+  | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_parameter, err) ->
     let content = `Assoc [
       ("message", `String "Passed parameter does not match the contract type");
       ("children", error_jsonformat err);
       ] in
     json_error ~stage:"contract argument typechecking" ~content
 
-  | `Main_check_typed_arguments (Simple_utils.Runned_result.Check_storage, err) ->
+  | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_storage, err) ->
     let content = `Assoc [
       ("message", `String "Passed storage does not match the contract type");
       ("children", error_jsonformat err);
@@ -350,49 +350,49 @@ let rec error_jsonformat : Types.all -> Yojson.Safe.t = fun a ->
     let content = `Assoc [("message", message) ; ("value", value)] in
     json_error ~stage:"parsing command line parameters" ~content
 
-  | `Main_unparse_michelson_result _ ->
+  | `Unparsing_michelson_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error unparsing michelson result")
 
-  | `Main_parse_payload _ ->
+  | `Parsing_payload_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error parsing message")
 
-  | `Main_pack_payload _ ->
+  | `Packing_payload_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error packing message")
 
-  | `Main_parse_michelson_input _ ->
+  | `Parsing_input_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error parsing input")
 
-  | `Main_parse_michelson_code _ ->
+  | `Parsing_code_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error parsing program code")
 
-  | `Main_michelson_execution_error _ ->
+  | `Error_of_execution_tracer _ ->
     json_error ~stage:"michelson execution" ~content:(`String "error of execution")
 
   | `Main_entrypoint_not_a_function -> json_error ~stage:"top-level glue" ~content:(`String "given entrypoint is not a function")
   | `Main_entrypoint_not_found -> json_error ~stage:"top-level glue" ~content:(`String "Missing entrypoint")
 
-  | `Main_preproc e -> Preprocessing.Errors.error_jsonformat e
-  | `Main_parser e -> Parsing.Errors.error_jsonformat e
-  | `Main_pretty _ -> `Null (*no error in this pass*)
-  | `Main_self_cst_cameligo e -> Self_cst.Cameligo.Errors.error_jsonformat e
-  | `Main_self_cst_pascaligo e -> Self_cst.Pascaligo.Errors.error_jsonformat e
-  | `Main_self_cst_reasonligo e -> Self_cst.Reasonligo.Errors.error_jsonformat e
-  | `Main_self_cst_jsligo e -> Self_cst.Jsligo.Errors.error_jsonformat e
-  | `Main_cit_pascaligo e -> Tree_abstraction.Pascaligo.Errors.error_jsonformat e
-  | `Main_cit_cameligo e -> Tree_abstraction.Cameligo.Errors.error_jsonformat e
-  | `Main_cit_reasonligo e -> Tree_abstraction.Reasonligo.Errors.error_jsonformat e
-  | `Main_cit_jsligo e -> Tree_abstraction.Jsligo.Errors.error_jsonformat e
-  | `Main_self_ast_imperative e -> Self_ast_imperative.Errors.error_jsonformat e
-  | `Main_purification e -> Purification.Errors.error_jsonformat e
-  | `Main_depurification _ -> `Null (*no error in this pass*)
-  | `Main_desugaring _ -> `Null (*no error in this pass*)
-  | `Main_sugaring _ -> `Null (*no error in this pass*)
-  | `Main_inference e -> Inference.Errors.error_jsonformat e
-  | `Main_checking e -> Checking.Errors.error_jsonformat e
-  | `Main_self_ast_typed e -> Self_ast_typed.Errors.error_jsonformat e
-  | `Main_spilling e -> Spilling.Errors.error_jsonformat e
-  | `Main_self_mini_c e -> Self_mini_c.Errors.error_jsonformat e
-  | `Main_stacking e -> Stacking.Errors.error_jsonformat e
+  | `Preproc_tracer e -> Preprocessing.Errors.error_jsonformat e
+  | `Parser_tracer e -> Parsing.Errors.error_jsonformat e
+  | `Pretty_tracer _ -> `Null (*no error in this pass*)
+  | `Self_cst_cameligo_tracer e -> Self_cst.Cameligo.Errors.error_jsonformat e
+  | `Self_cst_pascaligo_tracer e -> Self_cst.Pascaligo.Errors.error_jsonformat e
+  | `Self_cst_reasonligo_tracer e -> Self_cst.Reasonligo.Errors.error_jsonformat e
+  | `Self_cst_jsligo_tracer e -> Self_cst.Jsligo.Errors.error_jsonformat e
+  | `Cit_pascaligo_tracer e -> Tree_abstraction.Pascaligo.Errors.error_jsonformat e
+  | `Cit_cameligo_tracer e -> Tree_abstraction.Cameligo.Errors.error_jsonformat e
+  | `Cit_reasonligo_tracer e -> Tree_abstraction.Reasonligo.Errors.error_jsonformat e
+  | `Cit_jsligo_tracer e -> Tree_abstraction.Jsligo.Errors.error_jsonformat e
+  | `Self_ast_imperative_tracer e -> Self_ast_imperative.Errors.error_jsonformat e
+  | `Purification_tracer e -> Purification.Errors.error_jsonformat e
+  | `Depurification_tracer _ -> `Null (*no error in this pass*)
+  | `Desugaring_tracer _ -> `Null (*no error in this pass*)
+  | `Sugaring_tracer _ -> `Null (*no error in this pass*)
+  | `Inference_tracer e -> Inference.Errors.error_jsonformat e
+  | `Checking_tracer e -> Checking.Errors.error_jsonformat e
+  | `Self_ast_typed_tracer e -> Self_ast_typed.Errors.error_jsonformat e
+  | `Spilling_tracer e -> Spilling.Errors.error_jsonformat e
+  | `Self_mini_c_tracer e -> Self_mini_c.Errors.error_jsonformat e
+  | `Stacking_tracer e -> Stacking.Errors.error_jsonformat e
 
   | `Main_interpret_test_entry_not_found _
   | `Main_interpret_target_lang_error _

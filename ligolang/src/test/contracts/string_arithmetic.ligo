@@ -1,5 +1,8 @@
-function concat_op (const s : string) : string is
-  string_concat (s, "toto")
+function length_op (const s : string) : nat is
+  String.length (s)
 
-function slice_op (const s : string) : string is
-  string_slice (1n, 2n, s)
+function concat_op (const s : string) : string is
+  String.concat (s, "toto")
+
+function sub_op (const s : string) : string is
+  String.sub (1n, 2n, s)

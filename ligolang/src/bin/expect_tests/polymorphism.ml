@@ -125,6 +125,22 @@ let%expect_test _ =
   [%expect{|
     1 |}]
 
+let%expect_test _ =
+  run_ligo_good [ "run" ; "interpret" ; "List.map (fun (x : int) -> x + 1) [1;2]" ; "--init-file" ; (test "map.mligo") ] ;
+  [%expect{|
+    CONS(2 , CONS(3 , LIST_EMPTY())) |}]
+
+let%expect_test _ =
+  run_ligo_good [ "run" ; "test" ; (test "module_k.mligo") ] ;
+  [%expect{|
+    Everything at the top-level was executed.
+    - test_helpers exited with value (). |}]
+
+let%expect_test _ =
+  run_ligo_good [ "compile" ; "expression" ; "cameligo" ; "foo" ; "--init-file" ; (test "lambda.mligo") ] ;
+  [%expect{|
+    1 |}]
+
 let () = Sys.chdir pwd ;
          Sys.chdir "../../test/contracts/negative/polymorphism/"
 

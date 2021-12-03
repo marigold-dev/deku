@@ -105,7 +105,7 @@ module Context_init = struct
       Stdlib.failwith "Must have one account with a roll to bake";
 
     (* Check there is at least one roll *)
-    let constants : Alpha_context.Constants.parametric = Tezos_protocol_011_PtHangzH_parameters.Default_parameters.constants_test in
+    let constants : Alpha_context.Constants.parametric = Tezos_protocol_011_PtHangz2_parameters.Default_parameters.constants_test in
     check_constants_consistency constants >>=? fun () ->
 
     let hash =

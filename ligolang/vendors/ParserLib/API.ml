@@ -66,8 +66,16 @@ module type PARSER =
 
     (* The recovery API. *)
 
-    module Recovery : Merlin_recovery.RECOVERY_GENERATED
-           with module I := MenhirInterpreter
+    module Recovery :
+      sig
+        include Merlin_recovery.RECOVERY_GENERATED
+                with module I := MenhirInterpreter
+
+        module Default :
+        sig
+          val default_loc : Region.t ref
+        end
+      end
   end
 
 (* Parser errors for the Incremental API of Menhir *)
@@ -279,6 +287,8 @@ module Make (Lexer: LEXER)
                 let print_token t = print @@ Lexer.Token.to_lexeme t
             end)
 
+    (* Remember last consumed token to assign approximate to synthesized token *)
+    let last_token_region = ref Region.ghost
 
     module R = Merlin_recovery.Make
                    (Inter)
@@ -286,6 +296,8 @@ module Make (Lexer: LEXER)
                        include Parser.Recovery
 
                        let default_value _loc sym =
+                         let stop = !last_token_region#stop in
+                         Default.default_loc := Region.make stop stop;
                          default_value sym
 
                        let guide _ = false
@@ -373,6 +385,7 @@ module Make (Lexer: LEXER)
                | Some error -> errors := error :: !errors;
                | None       -> ()
                end;
+               last_token_region := (let (t, _, _) = token in Token.to_region t);
                match s with
                | Success x              -> Stdlib.Ok (success x, !errors)
                | Intermediate (parser)  -> loop parser

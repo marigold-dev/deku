@@ -391,6 +391,15 @@ let assert_some_with_error ~raise loc = typer_2 ~raise loc "ASSERT_SOME_WITH_ERR
   let () = trace_option ~raise (expected_string loc b) @@ assert_t_string b in
   t_unit ()
 
+let assert_none ~raise loc = typer_1 ~raise loc "ASSERT_NONE" @@ fun a ->
+  let () = trace_option ~raise (expected_option loc a) @@ assert_t_option a in
+  t_unit ()
+
+let assert_none_with_error ~raise loc = typer_2 ~raise loc "ASSERT_NONE_WITH_ERROR" @@ fun a b ->
+  let () = trace_option ~raise (expected_option loc a) @@ assert_t_option a in
+  let () = trace_option ~raise (expected_string loc b) @@ assert_t_string b in
+  t_unit ()
+
 let times ~raise loc = typer_2 ~raise loc "TIMES" @@ fun a b ->
   if (eq_1 a (t_bls12_381_g1 ()) && eq_1 b (t_bls12_381_fr ()))
   then (t_bls12_381_g1 ()) else
@@ -1148,6 +1157,8 @@ let constant_typers ~raise ~test ~protocol_version loc c : typer = match c with
   | C_ASSERTION_WITH_ERROR-> assertion_with_error ~raise loc ;
   | C_ASSERT_SOME         -> assert_some ~raise loc ;
   | C_ASSERT_SOME_WITH_ERROR -> assert_some_with_error ~raise loc ;
+  | C_ASSERT_NONE         -> assert_none ~raise loc ;
+  | C_ASSERT_NONE_WITH_ERROR -> assert_none_with_error ~raise loc ;
   | C_FAILWITH            -> failwith_ ~raise loc ;
     (* LOOPS *)
   | C_FOLD_WHILE          -> fold_while ~raise loc ;

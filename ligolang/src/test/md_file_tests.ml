@@ -128,8 +128,10 @@ let compile_groups ~raise filename grp_list =
         let _ = Interpreter.eval_test ~protocol_version:options.protocol_version ~raise ~steps:5000 typed in
         ()
       | Object ->
-        let typed,_    = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
-        let mini_c     = Ligo_compile.Of_typed.compile ~raise typed in
+        let typed,_   = Ligo_compile.Of_core.typecheck ~raise ~add_warning ~options Env inferred in
+        let applied   = Self_ast_typed.monomorphise_module typed in
+        let _,applied = trace ~raise self_ast_typed_tracer @@ Self_ast_typed.morph_module options.init_env applied in
+        let mini_c    = Ligo_compile.Of_typed.compile ~raise applied in
         let (_michelsons : Stacking.compiled_expression list) =
           List.map ~f:
             (fun ((_, _, exp),_) -> Ligo_compile.Of_mini_c.aggregate_and_compile_expression ~raise ~options mini_c exp)

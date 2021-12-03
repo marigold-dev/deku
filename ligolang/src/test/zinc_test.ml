@@ -60,7 +60,6 @@ type test =
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?(index = 0)
     ?(initial_stack = []) ?expect_failure ?expected_output_env ?expected_output
     contract_file (expected_zinc : Zinc_types.program) : test =
- let open Ligo_compile.Helpers in  
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =

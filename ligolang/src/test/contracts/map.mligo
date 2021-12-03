@@ -31,7 +31,6 @@ let patch_deep (_m : foobar * nat) : foobar * nat =
 let size_ (m : foobar) : nat = Map.size m
 
 let get  (m : foobar) : int option = Map.find_opt 42 m
-let get_ (m : foobar) : int option = Map.find_opt 42 m
 
 let mem (k,m : int * foobar) : bool = Map.mem k m
 

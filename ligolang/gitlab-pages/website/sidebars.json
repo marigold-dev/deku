@@ -102,9 +102,12 @@
     ]
   },
   "tutorials": {
-    "Get Started": [
-      "tutorials/get-started/tezos-taco-shop-smart-contract",
-      "tutorials/get-started/tezos-taco-shop-payout"
+    "Get-started" : [
+      "tutorials/getting-started/getting-started"
+    ],
+    "First-contract": [
+      "tutorials/taco-shop/tezos-taco-shop-smart-contract",
+      "tutorials/taco-shop/tezos-taco-shop-payout"
     ],
     "Migrating from Ethereum": [
       "tutorials/tz-vs-eth/tz-vs-eth"

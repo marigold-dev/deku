@@ -58,7 +58,7 @@ let ty_eq (type a b)
 (* should not need lwt *)
 let prims_of_strings michelson =
   let (michelson, errs) =
-    Tezos_client_011_PtHangzH.Michelson_v1_macros.expand_rec michelson in
+    Tezos_client_011_PtHangz2.Michelson_v1_macros.expand_rec michelson in
   match errs with
   | _ :: _ ->
     Lwt.return (Error errs)

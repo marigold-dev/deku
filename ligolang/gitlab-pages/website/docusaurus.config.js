@@ -203,7 +203,7 @@ const siteConfig = {
         { to: 'docs/intro/installation', label: 'Install', position: 'left' },
         { to: 'docs/intro/introduction', label: 'Docs', position: 'left' },
         {
-          to: 'docs/tutorials/get-started/tezos-taco-shop-smart-contract',
+          to: 'docs/tutorials/getting-started/getting-started',
           label: 'Tutorials',
           position: 'left'
         },
@@ -250,7 +250,7 @@ const siteConfig = {
           items: [
             {
               label: 'Tutorials',
-              to: 'docs/tutorials/get-started/tezos-taco-shop-smart-contract'
+              to: 'docs/tutorials/getting-started/getting-started'
             },
             {
               href: 'https://forum.tezosagora.org/tag/ligo',

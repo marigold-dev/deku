@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1427'
+title: 'Fix: simple polymorphism wrong interaction with module accessing'
+type: fixed

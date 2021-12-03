@@ -338,13 +338,13 @@ let cement_blocks_metadata cemented_store blocks =
   |> function
   | None -> fail (Cannot_cement_blocks_metadata `Not_cemented)
   | Some {file; _} ->
-      let metadata_file_path =
-        Naming.cemented_blocks_metadata_file cemented_metadata_dir file
+      let tmp_metadata_file_path =
+        Naming.cemented_blocks_tmp_metadata_file cemented_metadata_dir file
         |> Naming.file_path
       in
       if List.exists (fun block -> Block_repr.metadata block <> None) blocks
       then (
-        let out_file = Zip.open_out metadata_file_path in
+        let out_file = Zip.open_out tmp_metadata_file_path in
         List.iter
           (fun block ->
             let level = Block_repr.level block in
@@ -363,6 +363,11 @@ let cement_blocks_metadata cemented_store blocks =
             | None -> ())
           blocks ;
         Zip.close_out out_file ;
+        let metadata_file_path =
+          Naming.cemented_blocks_metadata_file cemented_metadata_dir file
+          |> Naming.file_path
+        in
+        Lwt_unix.rename tmp_metadata_file_path metadata_file_path >>= fun () ->
         return_unit)
       else return_unit
 
@@ -527,7 +532,10 @@ let cement_blocks ?(check_consistency = true) (cemented_store : t)
   let new_array =
     match cemented_store.cemented_blocks_files with
     | None -> [|cemented_block_interval|]
-    | Some arr -> Array.append arr [|cemented_block_interval|]
+    | Some arr ->
+        if not (Array.mem cemented_block_interval arr) then
+          Array.append arr [|cemented_block_interval|]
+        else arr
   in
   (* If the cementing is done arbitrarily, we need to make sure the
      files remain sorted. *)
@@ -567,7 +575,7 @@ let trigger_rolling_gc cemented_store cemented_blocks_files offset =
     in
     let cemented_files = Array.to_list cemented_blocks_files in
     (* Start by updating the indexes by filtering blocks that are
-           below the offset *)
+       below the offset *)
     Cemented_block_hash_index.filter
       cemented_store.cemented_block_hash_index
       (fun (level, _) -> Compare.Int32.(level > last_level_to_purge)) ;

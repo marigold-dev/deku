@@ -176,6 +176,7 @@ let notify_new_block w peer block =
 let with_activated_peer_validator w peer_id f =
   let nv = Worker.state w in
   P2p_peer.Error_table.find_or_make nv.active_peers peer_id (fun () ->
+      Worker.log_event w (Connection peer_id) >>= fun () ->
       Peer_validator.create
         ~notify_new_block:(notify_new_block w (Some peer_id))
         ~notify_termination:(fun _pv ->
@@ -192,14 +193,16 @@ let with_activated_peer_validator w peer_id f =
   | Worker_types.Launching _ ->
       return_unit
 
-let may_update_protocol_level chain_store ~prev ~block =
-  let prev_proto_level = Store.Block.proto_level prev in
+let may_update_protocol_level chain_store ~block =
+  Store.Block.read_predecessor chain_store block >>=? fun pred ->
+  let prev_proto_level = Store.Block.proto_level pred in
   let new_proto_level = Store.Block.proto_level block in
   if Compare.Int.(prev_proto_level < new_proto_level) then
     Store.Block.context chain_store block >>=? fun context ->
     Context.get_protocol context >>= fun new_protocol ->
     Store.Chain.may_update_protocol_level
       chain_store
+      ~pred
       ~protocol_level:new_proto_level
       (block, new_protocol)
   else return_unit
@@ -391,17 +394,9 @@ let on_validation_request w peer start_testchain active_chains spawn_child block
   let head_header = Store.Block.header head
   and head_hash = Store.Block.hash head
   and block_header = Store.Block.header block in
-  (match !(nv.prevalidator) with
-  | None -> Lwt.return head_header.shell.fitness
-  | Some pv -> Prevalidator.fitness pv)
-  >>= fun context_fitness ->
   let head_fitness = head_header.shell.fitness in
   let new_fitness = block_header.shell.fitness in
-  let accepted_head =
-    if Fitness.(context_fitness = head_fitness) then
-      Fitness.(new_fitness > head_fitness)
-    else Fitness.(new_fitness >= context_fitness)
-  in
+  let accepted_head = Fitness.(new_fitness > head_fitness) in
   if not accepted_head then return Event.Ignored_head
   else
     Store.Chain.set_head chain_store block >>=? function
@@ -411,18 +406,22 @@ let on_validation_request w peer start_testchain active_chains spawn_child block
         return Event.Ignored_head
     | Some previous ->
         broadcast_head w ~previous block >>= fun () ->
-        may_update_protocol_level chain_store ~prev:previous ~block
-        >>=? fun () ->
+        may_update_protocol_level chain_store ~block >>=? fun () ->
         (if start_testchain then
          may_switch_test_chain w active_chains spawn_child block
         else Lwt.return_unit)
         >>= fun () ->
         Lwt_watcher.notify nv.new_head_input block ;
-        let event =
-          if Block_hash.equal head_hash block_header.shell.predecessor then
-            Event.Head_increment
-          else Event.Branch_switch
+        let is_branch_switch =
+          Block_hash.equal head_hash block_header.shell.predecessor
         in
+        let event =
+          if is_branch_switch then Event.Head_increment else Event.Branch_switch
+        in
+        (if is_branch_switch then
+         Store.Chain.may_update_ancestor_protocol_level chain_store ~head:block
+        else return_unit)
+        >>=? fun () ->
         may_flush_or_update_prevalidator
           nv.parameters
           event
@@ -765,11 +764,15 @@ let validate_block w ?force hash block operations =
   Block_validator.validate
     ~canceler:(Worker.canceler w)
     ~notify_new_block:(notify_new_block w None)
+    ~precheck_and_notify:true
     nv.parameters.block_validator
     nv.chain_db
     hash
     block
     operations
+  >>= function
+  | Valid -> return_unit
+  | Invalid errs | Invalid_after_precheck errs -> Lwt.return_error errs
 
 let bootstrapped w =
   let state = Worker.state w in

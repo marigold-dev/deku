@@ -22,10 +22,10 @@ let make_dry_run_options ~raise ?tezos_context (opts : dry_run_options) : option
   let open Proto_alpha_utils.Memory_proto_alpha in
   let open Protocol.Alpha_context in
   let balance = match Tez.of_string opts.balance with
-    | None -> raise.raise @@ Errors.invalid_balance opts.balance
+    | None -> raise.raise @@ Errors.main_invalid_balance opts.balance
     | Some balance -> balance in
   let amount = match Tez.of_string opts.amount with
-    | None -> raise.raise @@ Errors.invalid_amount opts.amount
+    | None -> raise.raise @@ Errors.main_invalid_amount opts.amount
     | Some amount -> amount in
   let sender =
     match opts.sender with
@@ -33,7 +33,7 @@ let make_dry_run_options ~raise ?tezos_context (opts : dry_run_options) : option
     | Some sender ->
       let sender =
         trace_alpha_tzresult ~raise
-          (fun _ -> Errors.invalid_sender sender)
+          (fun _ -> Errors.main_invalid_sender sender)
           (Contract.of_b58check sender) in
       (Some sender) in
   let source =
@@ -42,7 +42,7 @@ let make_dry_run_options ~raise ?tezos_context (opts : dry_run_options) : option
     | Some source ->
       let source =
         trace_alpha_tzresult ~raise
-          (fun _ -> Errors.invalid_source source)
+          (fun _ -> Errors.main_invalid_source source)
           (Contract.of_b58check source) in
       (Some source) in
   let now =
@@ -51,7 +51,7 @@ let make_dry_run_options ~raise ?tezos_context (opts : dry_run_options) : option
     | Some st ->
       match Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp.of_string st with
         | Some t -> (Some t)
-        | None -> raise.raise @@ Errors.invalid_timestamp st in
+        | None -> raise.raise @@ Errors.main_invalid_timestamp st in
   let parameter_ty =
     match opts.parameter_ty with
     | Some x ->
@@ -93,10 +93,10 @@ let pack_payload ~raise (payload : _ Michelson.t) ty =
 let fetch_lambda_types ~raise (contract_ty : _ Michelson.t) =
   match contract_ty with
   | Prim (_, "lambda", [in_ty; out_ty], _) -> (in_ty, out_ty)
-  | _ -> raise.raise Errors.unknown (*TODO*)
+  | _ -> raise.raise Errors.main_unknown (*TODO*)
 
 let run_contract ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t) (input_michelson : _ Michelson.t) =
-  let open! Tezos_raw_protocol_011_PtHangzH in
+  let open! Tezos_raw_protocol_011_PtHangz2 in
   let (input_ty, output_ty) = fetch_lambda_types ~raise exp_type in
   let input_ty =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer @@
@@ -147,10 +147,10 @@ let run_contract ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t
     | Int (_ , i)    -> Fail (Failwith_int (Z.to_int i))
     | String (_ , s) -> Fail (Failwith_string s)
     | Bytes (_, s)   -> Fail (Failwith_bytes s)
-    | _              -> raise.raise @@ Errors.unknown_failwith_type )
+    | _              -> raise.raise @@ Errors.main_unknown_failwith_type )
 
 let run_function ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t) (input_michelson : _ Michelson.t) =
-  let open! Tezos_raw_protocol_011_PtHangzH in
+  let open! Tezos_raw_protocol_011_PtHangz2 in
   let (input_ty, output_ty) = fetch_lambda_types ~raise exp_type in
   let input_ty =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer @@
@@ -192,10 +192,10 @@ let run_function ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t
     | Int (_ , i)    -> Fail (Failwith_int (Z.to_int i))
     | String (_ , s) -> Fail (Failwith_string s)
     | Bytes (_, s)   -> Fail (Failwith_bytes s)
-    | _              -> raise.raise @@ Errors.unknown_failwith_type )
+    | _              -> raise.raise @@ Errors.main_unknown_failwith_type )
 
 let run_expression ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t) =
-  let open! Tezos_raw_protocol_011_PtHangzH in
+  let open! Tezos_raw_protocol_011_PtHangz2 in
   let exp_type =
     Trace.trace_tzresult_lwt ~raise Errors.parsing_input_tracer @@
     Memory_proto_alpha.prims_of_strings exp_type in
@@ -220,25 +220,25 @@ let run_expression ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson
     | Int (_ , i)    -> Fail (Failwith_int (Z.to_int i))
     | String (_ , s) -> Fail (Failwith_string s)
     | Bytes (_, s)   -> Fail (Failwith_bytes s)
-    | _              -> raise.raise @@ Errors.unknown_failwith_type )
+    | _              -> raise.raise @@ Errors.main_unknown_failwith_type )
 
 let run_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t) : failwith  =
   let expr = run_expression ~raise ?options exp exp_type in
   match expr with
-  | Success _  -> raise.raise Errors.unknown (* TODO : simple_fail "an error of execution was expected" *)
+  | Success _  -> raise.raise Errors.main_unknown (* TODO : simple_fail "an error of execution was expected" *)
   | Fail res -> res
 
 let run_no_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t) =
   let expr = run_expression ~raise ?options exp exp_type in
   match expr with
   | Success tval  -> tval
-  | Fail _ -> raise.raise Errors.unknown (* TODO : simple_fail "unexpected error of execution" *)
+  | Fail _ -> raise.raise Errors.main_unknown (* TODO : simple_fail "unexpected error of execution" *)
 
 let evaluate_expression ~raise ?options exp exp_type =
   let etv = run_expression ~raise ?options exp exp_type in
   match etv with
     | Success (_, value) -> value
-    | Fail res -> raise.raise @@ Errors.main_failwith res
+    | Fail res -> raise.raise @@ Errors.main_execution_failed res
 
 let clean_expression exp =
   let open Tezos_micheline.Micheline in

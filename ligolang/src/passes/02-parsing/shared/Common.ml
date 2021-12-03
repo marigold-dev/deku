@@ -227,8 +227,16 @@ module type LIGO_PARSER =
 
     (* The recovery API. *)
 
-    module Recovery : Merlin_recovery.RECOVERY_GENERATED
-           with module I := MenhirInterpreter
+    module Recovery :
+      sig
+        include Merlin_recovery.RECOVERY_GENERATED
+                with module I := MenhirInterpreter
+
+        module Default :
+          sig
+            val default_loc : Region.t ref
+          end
+      end
   end
 
 (* Making parsers for CSTs and expressions *)

@@ -42,6 +42,8 @@ end
 module Hash : sig
   include Irmin.Hash.S
 
+  val to_raw_string : t -> string
+
   val to_context_hash : t -> Context_hash.t
 
   val of_context_hash : Context_hash.t -> t
@@ -51,6 +53,8 @@ end = struct
   end)
 
   type t = H.t
+
+  let to_raw_string = H.to_raw_string
 
   let of_context_hash s = H.of_raw_string (Context_hash.to_string s)
 
@@ -71,16 +75,14 @@ end = struct
 
   let short_hash_string = Irmin.Type.(unstage (short_hash string))
 
-  let short_hash_staged =
-    Irmin.Type.stage @@ fun ?seed t ->
-    short_hash_string ?seed (H.to_raw_string t)
+  let short_hash ?seed t = short_hash_string ?seed (H.to_raw_string t)
 
   let t : t Irmin.Type.t =
     Irmin.Type.map
       ~pp
       ~of_string
       Irmin.Type.(string_of (`Fixed H.digest_size))
-      ~short_hash:short_hash_staged
+      ~short_hash
       H.of_raw_string
       H.to_raw_string
 
@@ -149,7 +151,7 @@ struct
 
   include M
 
-  let t = Irmin.Type.(like t ~pre_hash:(stage @@ fun x -> V1.pre_hash x))
+  let t = Irmin.Type.(like t ~pre_hash:V1.pre_hash)
 end
 
 module Commit (Hash : Irmin.Type.S) = struct
@@ -161,7 +163,7 @@ module Commit (Hash : Irmin.Type.S) = struct
 
   let pre_hash_v1 t = pre_hash_v1_t (V1.import t)
 
-  let t = Irmin.Type.(like t ~pre_hash:(stage @@ fun x -> pre_hash_v1 x))
+  let t = Irmin.Type.(like t ~pre_hash:pre_hash_v1)
 end
 
 module Contents = struct
@@ -173,7 +175,7 @@ module Contents = struct
 
   let pre_hash_v1 x = pre_hash_ty (x, ())
 
-  let t = Irmin.Type.(like bytes ~pre_hash:(stage @@ fun x -> pre_hash_v1 x))
+  let t = Irmin.Type.(like bytes ~pre_hash:pre_hash_v1)
 
   let merge = Irmin.Merge.(idempotent (Irmin.Type.option t))
 end

@@ -62,7 +62,7 @@ let type_contract_string ~raise ~add_warning ~options syntax expression env =
   (typed,core,e)
 
 let type_expression ~raise ~options source_file syntax expression env =
-  let meta              = Of_source.make_meta ~raise syntax source_file in
+  let meta              = Of_source.make_meta ~raise syntax source_file in (* TODO: should be computed outside *)
   let c_unit_exp, _     = Of_source.compile_string ~raise ~options ~meta expression in
   let imperative_exp    = Of_c_unit.compile_expression ~raise ~meta c_unit_exp in
   let sugar_exp         = Of_imperative.compile_expression ~raise imperative_exp in

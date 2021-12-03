@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1423'
+title: 'Fix: simple polymorphism; remember instances in lambda case'
+type: fixed

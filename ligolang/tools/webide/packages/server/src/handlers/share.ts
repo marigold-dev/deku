@@ -120,7 +120,7 @@ export async function shareHandler(req: Request, res: Response) {
         res.send({ hash: digest });
       }
     } catch (ex) {
-      logger.error(ex);
+      logger.error((ex as Error).message);
       res.sendStatus(500);
     }
   }

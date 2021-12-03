@@ -152,6 +152,12 @@ let to_yojson x =
       "point_bol", `Int (x#point_bol)
     ]
 
+let to_human_yojson x =
+  `Assoc
+    [("file", `String x#byte.Lexing.pos_fname);
+     ("line", `Int x#byte.Lexing.pos_lnum);
+     ("col", `Int (x#point_num - x#point_bol))]
+
 let of_yojson x =
   match x with
   | `Assoc ["byte", byte;

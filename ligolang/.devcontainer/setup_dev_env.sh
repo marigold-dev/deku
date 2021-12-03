@@ -7,7 +7,7 @@ opam update
 
 export PATH=~/.cargo/bin:$PATH
 
-opam install -y --deps-only --with-test --locked=locked ./ligo.opam 
+opam install -y --deps-only --with-test --locked ./ligo.opam 
 
 
 setup_opam="eval \`opam config env\` "

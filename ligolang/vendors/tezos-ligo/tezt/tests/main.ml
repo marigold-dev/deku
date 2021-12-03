@@ -64,6 +64,9 @@ let () =
   User_activated_upgrade.register
     ~migrate_from:Protocol.current_mainnet
     ~migrate_to:Alpha ;
+  Protocol_table_update.register
+    ~migrate_from:Protocol.current_mainnet
+    ~migrate_to:Alpha ;
   (* TODO: the "Baking" test does not have a documentation.
      I don't know if it is about baking accounts (and thus it is not a protocol-agnostic
      test since it requires Alpha) or about baking (which would make it possible to run
@@ -72,6 +75,7 @@ let () =
   Baking.register ~protocols:[Alpha] ;
   Mempool.register ~protocols:[Alpha] ;
   Monitor_operations.register ~protocols:[Alpha] ;
+  Precheck.register ~protocols:[Alpha] ;
   (* Tests that are protocol-independent.
      They do not take a protocol as a parameter and thus need to be registered only once. *)
   Light.register_protocol_independent () ;
@@ -86,5 +90,6 @@ let () =
   RPC_test.register () ;
   (* This file tests an RPC added in protocol G *)
   Big_map_all.register () ;
+  Reject_malformed_micheline.register ~protocols:[Alpha] ;
   (* Test.run () should be the last statement, don't register afterwards! *)
   Test.run ()

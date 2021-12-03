@@ -65,6 +65,8 @@ let is_pure_constant : constant' -> bool =
   | C_ASSERTION_WITH_ERROR
   | C_ASSERT_SOME
   | C_ASSERT_SOME_WITH_ERROR
+  | C_ASSERT_NONE
+  | C_ASSERT_NONE_WITH_ERROR
   | C_ASSERT_INFERRED
   | C_MAP_FIND
   | C_FOLD_WHILE

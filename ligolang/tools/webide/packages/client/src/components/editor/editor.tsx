@@ -74,6 +74,7 @@ export const EditorComponent = ({editorHeight}) => {
       <Header>
         <LeftActions>
           <ShareComponent></ShareComponent>
+          {console.log('PPPP', language)}
           <StyledEditableTitleComponent
             id="editor-title"
             title={title}
@@ -92,7 +93,8 @@ export const EditorComponent = ({editorHeight}) => {
           >
             <Option value={Language.PascaLigo}>PascaLIGO</Option>
             <Option value={Language.CameLigo}>CameLIGO</Option>
-            <Option value={Language.ReasonLIGO}>ReasonLIGO</Option>
+            <Option value={Language.ReasonLigo}>ReasonLIGO</Option>
+            <Option value={Language.JsLigo}>JsLIGO</Option>
           </SelectLanguage>
         </LeftActions>
       </Header>

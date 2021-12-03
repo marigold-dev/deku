@@ -8,6 +8,7 @@
     tezos-base
     data-encoding
     simple-utils
+    base
   )
  (flags (:standard -open Simple_utils ))
 )

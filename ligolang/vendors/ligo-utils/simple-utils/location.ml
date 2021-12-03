@@ -28,6 +28,10 @@ let of_yojson = function
   | _ ->
     Utils.error_yojson_format "File Region.t | Virtual String"
 
+let to_human_yojson = function
+  | File reg  -> Region.to_human_yojson reg
+  | Virtual v -> `Assoc [("virtual", `String v)]
+
 let pp = fun ppf t ->
   match t with
   | Virtual _s -> Format.fprintf ppf ""
@@ -51,6 +55,10 @@ let generated = virtual_location "generated"
 let is_dummy_or_generated = function
   | Virtual "dummy" | Virtual "generated" -> true
   | _ -> false
+
+let is_virtual = function
+  | File _ -> false
+  | Virtual _ -> true
 
 type 'a wrap = {
   wrap_content : 'a ;

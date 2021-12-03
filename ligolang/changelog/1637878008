@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1429'
+title: 'Test framework: add pack/unpack using Michelson interpreter'
+type: added

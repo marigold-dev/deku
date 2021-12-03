@@ -68,7 +68,7 @@ module Random_type_generator = struct
     let repr_mock : type_variable -> type_variable = fun tv -> tv in (*no aliases*)
     let all_vars : type_variable list = List.map ~f:(fun ({var ;_}:m) -> var) map in
     let test_checker ~raise constraints_list =
-      Trace.trace ~raise (Main_errors.test_tracer "typechecker tests") @@
+      Trace.trace ~raise (Main_errors.test_err_tracer "typechecker tests") @@
       (fun ~raise -> Trace.trace ~raise (Main_errors.inference_tracer)
       (Inference.Typecheck.check constraints_list all_vars repr_mock find_assignment_mock))
     in
@@ -119,7 +119,7 @@ module Small_env_manual_test = struct
     | k' when Var.equal k' k -> Some (make_constructor_or 9 None k C_arrow [h ; c])
     | v -> failwith ("test internal : FIND_ASSIGNENT_MOCK" ^ (Format.asprintf "%a" Var.pp v))
   let test_checker ~raise constraints_list =
-    Trace.trace ~raise (Main_errors.test_tracer "typechecker tests") @@
+    Trace.trace ~raise (Main_errors.test_err_tracer "typechecker tests") @@
       fun ~raise -> Trace.trace ~raise (Main_errors.inference_tracer) @@
         Inference.Typecheck.check constraints_list all_vars repr_mock find_assignment_mock
   let test_checker_neg ~raise lst =

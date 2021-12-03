@@ -10,8 +10,8 @@ let pp_ct : Format.formatter -> constant_val -> unit = fun ppf c ->
   | C_timestamp t -> Format.fprintf ppf "timestamp(%a)" Z.pp_print t
   | C_string s -> Format.fprintf ppf "\"%s\"" s
   | C_bytes b -> Format.fprintf ppf "0x%a" Hex.pp (Hex.of_bytes b)
-  | C_address c -> Format.fprintf ppf "%a" Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.pp c
-  | C_contract c -> Format.fprintf ppf "%a(%a)" Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.pp c.address (PP_helpers.option PP_helpers.string) c.entrypoint
+  | C_address c -> Format.fprintf ppf "%a" Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.pp c
+  | C_contract c -> Format.fprintf ppf "%a(%a)" Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.pp c.address (PP_helpers.option PP_helpers.string) c.entrypoint
   | C_mutez n -> Format.fprintf ppf "%smutez" (Z.to_string n)
   | C_key_hash c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key_hash.pp c
 
@@ -49,7 +49,7 @@ let rec pp_value : Format.formatter -> value -> unit = fun ppf v ->
      | Object_lang_ex {location;errors;calltrace = _} ->
         Format.fprintf ppf "@[<v 4>%a@.An uncaught error occured:@.%a@]"
           Snippet.pp location
-          (Tezos_client_011_PtHangzH.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errors
+          (Tezos_client_011_PtHangz2.Michelson_v1_error_reporter.report_errors ~details:true ~show_source:true ?parsed:(None)) errors
      | Meta_lang_ex {location;reason = Reason s;calltrace = _} ->
         Format.fprintf ppf "@[<v 4>%a@.An uncaught error occured:@.%s@]" Snippet.pp location s
      | Meta_lang_ex {location;reason = Val s;calltrace = _} ->

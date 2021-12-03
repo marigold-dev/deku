@@ -1,0 +1,4 @@
+author: er433
+merge_request: '1432'
+title: 'PPX: use ppx_construct in main_errors'
+type: internal

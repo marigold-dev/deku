@@ -1,3 +1,16 @@
 /* Test conditional in JsLIGO */
 
-let main = (i : int) : int => { if (i == 2) { return 42; } else { return 0; }; };
+let simple = (i : int) : int => { if (i == 2) { return 42; } else { return 0; }; };
+let annot = (i : int) : int => {
+  if (((i == 2) as bool)) { return (42 as int); } else { return (0 as int); };
+};
+let shadow = (i: int): int => {
+  let _result = 0;
+  if (i == 2) {
+    let _result = 42;
+    return _result;
+  } else {
+    let _result = 0;
+    return _result;
+  };
+};

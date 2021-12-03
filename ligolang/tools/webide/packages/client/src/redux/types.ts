@@ -1,7 +1,8 @@
 export enum Language {
   PascaLigo = 'pascaligo',
   CameLigo = 'cameligo',
-  ReasonLIGO = 'reasonligo',
+  ReasonLigo = 'reasonligo',
+  JsLigo = 'jsligo',
 }
 
 export enum CommandType {

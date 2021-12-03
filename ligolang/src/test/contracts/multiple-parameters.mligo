@@ -1,5 +1,9 @@
 (* Test function with several parameters *)
 
+let ab (a,b: int * int) : int = a + b
+
+let abcd (a,b,c,d : int * int * int * int) : int = a + b + c + d + 2
+
 let abcde_curried (_a : int)  (_b : int)  (c : int)  (_d : int)  (e : int) : int =
   c + e + 3
 

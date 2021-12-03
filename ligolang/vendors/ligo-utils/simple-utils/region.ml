@@ -162,6 +162,12 @@ let to_yojson f =
       ("stop",  Pos.to_yojson f#stop) ;
     ]
 
+let to_human_yojson f =
+  `Assoc [
+      ("start", Pos.to_human_yojson f#start) ;
+      ("stop",  Pos.to_human_yojson f#stop) ;
+    ]
+
 let of_yojson = fun t ->
   match t with
   | `Assoc [

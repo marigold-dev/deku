@@ -29,14 +29,14 @@ let syntax_to_variant ~raise ?dialect (Syntax_name syntax) source =
        | ".mligo"           -> CameLIGO
        | ".religo"          -> ReasonLIGO
        | ".jsligo"          -> JsLIGO
-       | ext                -> raise.raise (syntax_auto_detection ext))
+       | ext                -> raise.raise (main_invalid_extension ext))
   | ("pascaligo" | "PascaLIGO"),   _ ->
      let dialect = dialect_to_variant ~raise dialect in
      (PascaLIGO dialect)
   | ("cameligo" | "CameLIGO"),     _ -> CameLIGO
   | ("reasonligo" | "ReasonLIGO"), _ -> ReasonLIGO
   | ("jsligo" | "JsLIGO"),         _ -> JsLIGO
-  | _ -> raise.raise (invalid_syntax syntax)
+  | _ -> raise.raise (main_invalid_syntax_name syntax)
 
 let specialise_and_print_pascaligo dialect m =
   let ast = Self_ast_imperative.decompile_imperative m in

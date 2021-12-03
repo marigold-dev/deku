@@ -83,7 +83,7 @@ and tuple_comb ts =
   snd (tuple_comb_ann ts)
 
 let translate_var (m : meta) (x : I.var_name) (env : I.environment) =
-  let (_, idx) = I.Environment.Environment.get_i x env in
+  let (_, idx) = match I.Environment.Environment.get_i_opt x env with Some (v) -> v | None -> failwith @@ Format.asprintf "Corner case: %a not found in env" Ast_typed.PP.expression_variable x in
   let usages = List.repeat idx Drop
                @ [ Keep ]
                @ List.repeat (List.length env - idx - 1) Drop in

@@ -11,3 +11,9 @@ let some (o : unit option) =
 
 let some_with_error (o : unit option) =
   assert_some_with_error o "my custom error"
+
+let none (o : unit option) =
+  assert_none o
+
+let none_with_error (o : unit option) =
+  assert_none_with_error o "my custom error"

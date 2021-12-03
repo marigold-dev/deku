@@ -15,9 +15,10 @@ Examples that are displayed in the Web IDE are curated from `/src/test/examples`
 
 The server source code is located under `packages/server/`. Please see README under `packages/server/` for information about how to get started on the server development.
 
+You may use the static binary of Ligo by setting the LIGO_CMD environment variable. Otherwise this project assumes that docker is available, and will use the Ligo docker image to run Ligo.
+
+[install-ligo]: https://ligolang.org/docs/intro/installation/
+
 ## Client
 
 The client source code is located under `packages/client/`.  See the README under the `packages/client/` for information about how to get started on the client development.
-
-
-[install-ligo]: https://ligolang.org/docs/intro/installation/

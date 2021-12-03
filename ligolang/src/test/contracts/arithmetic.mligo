@@ -3,6 +3,7 @@ let plus_op  (n : int) : int = n + 42
 let minus_op (n : int) : int = n - 42
 let times_op (n : int) : int = n * 42
 let div_op   (n : int) : int = n / 2
+let int_op   (n : nat) : int = int (n)
 let neg_op   (n : int) : int = -n
 let foo      (n : int) : int = n + 10
 let neg_op_2 (b : int) : int = -(foo b)

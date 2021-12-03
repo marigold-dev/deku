@@ -1,19 +1,9 @@
 (ocamllex md)
 
 (executables
- (names test doc_test repl_test parser_negative_tests mydebugplease)
- (libraries
-  simple-utils
-  tezos-memory-proto-alpha
-  ligo
-  repl
-  interpreter
-  alcotest
-  tezos-utils
-  tezos-crypto
-  zinc.types
-  zinc.interpreter
-  zinc.utils)
+ (names test doc_test repl_test parser_negative_tests vendors_test inference_test contract_test mydebugplease)
+ (libraries simple-utils tezos-memory-proto-alpha ligo repl interpreter
+   alcotest tezos-utils tezos-crypto)
  (flags
   (:standard -w +1..62-4-9-44-40-42-48@39@33 -open Simple_utils)))
 
@@ -41,26 +31,43 @@
   ../passes/02-parsing/reasonligo/all.religo))
 
 (rule
- (alias ligo-test)
- (action
-  (setenv
-   POSITIVE_CONTRACTS
-   "%{pos}"
-   (run ./test.exe)))
- (deps
-  (glob_files contracts/*)
-  (:pos
-   (glob_files contracts/positive/*))
-  (glob_files contracts/negative/*)
-  (glob_files preprocessor/*)))
+  (alias ligo-test)
+  (action (run ./test.exe))
+  (deps (glob_files preprocessor/*))
+)
+
+(rule
+  (alias vendors_test)
+  (action (run ./vendors_test.exe))
+)
+
+(rule
+  (alias inference_test)
+  (action (run ./inference_test.exe))
+)
+
+(rule
+  (alias contract_test)
+  (action (setenv POSITIVE_CONTRACTS "%{pos}"
+          (run ./contract_test.exe)))
+  (deps (glob_files contracts/*)
+        (:pos (glob_files contracts/positive/*))
+        (glob_files contracts/negative/*)
+        (glob_files preprocessor/*))
+)
 
 (alias
- (name runtest)
- (deps
-  (alias ligo-test)
-  (alias doc-test)
-  (alias parser-negative-tests)
-  (alias repl-test)))
+  (name runtest)
+  (deps
+    (alias vendors_test)
+    (alias ligo-test)
+    (alias doc-test)
+    (alias parser-negative-tests)
+    (alias repl-test)
+    (alias inference_test)
+    (alias contract_test)
+  )
+)
 
 (rule
  (alias manual-test)

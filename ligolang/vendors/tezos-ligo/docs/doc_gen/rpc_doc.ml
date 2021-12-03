@@ -36,7 +36,7 @@ let protocols =
     ( "011",
       "011 Hangzhou",
       Some "/include/rpc_introduction.rst.inc",
-      "PtHangzHogokSuiMHemCuowEavgYTP8J5qQ9fQS793MHYFpCY3r" );
+      "PtHangz2aRngywmSRGGvrcTyMbbdpWdpFKuS4uMWxg2RaH9i1qx" );
     ( "",
       "010 Granada",
       Some "/include/rpc_introduction.rst.inc",
@@ -387,8 +387,6 @@ let make_index node required_version =
           [".."; "<block_id>"],
           RPC_directory.map (fun () -> assert false)
           @@ Block_directory.build_raw_rpc_directory
-               ~user_activated_upgrades:[]
-               ~user_activated_protocol_overrides:[]
                (module Proto)
                (module Proto) ))
       protocols

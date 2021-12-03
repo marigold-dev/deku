@@ -75,11 +75,21 @@ export class LigoCompiler {
     });
   }
 
-  private createTemporaryFile(fileContent: string) {
+  private getExtensionFromSyntax(syntax: string) {
+    switch (syntax) {
+      case "cameligo": return ".mligo"
+      case "reasonligo": return ".religo"
+      case "jsligo": return ".jsligo"
+      case "pascaligo": return ".ligo"
+      default: return ".ligo"
+    }
+  }
+
+  private createTemporaryFile(fileContent: string, syntax: string) {
     return new Promise<{ name: string; remove: () => void }>(
       (resolve, reject) => {
         tmp.file(
-          { dir: dataDir, postfix: '.ligo' },
+          { dir: dataDir, postfix: this.getExtensionFromSyntax(syntax) },
           (err, name, fd, remove) => {
             if (err) {
               reject(err);
@@ -100,7 +110,7 @@ export class LigoCompiler {
                   } catch (ex) {
                     logger.error(`Unable to remove file ${name}`);
                   }
-                  const ppFile = name.replace('.ligo', '.pp.ligo');
+                  const ppFile = name.replace(this.getExtensionFromSyntax(syntax), `.pp${this.getExtensionFromSyntax(syntax)}`);
                   try {
                     if (fs.existsSync(ppFile)) {
                       fs.unlinkSync(ppFile);
@@ -123,7 +133,7 @@ export class LigoCompiler {
     entrypoint: string,
     format: string
   ) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
 
     try {
       const result = await this.execPromise(this.ligoCmd, [
@@ -148,7 +158,7 @@ export class LigoCompiler {
     expression: string,
     methodName: string
   ) {
-    const { name, remove } = await this.createTemporaryFile(expression);
+    const { name, remove } = await this.createTemporaryFile(expression, syntax);
     try {
       const result = await this.execPromise(this.ligoCmd, [
         'compile',
@@ -166,7 +176,7 @@ export class LigoCompiler {
   }
 
   async listDeclaration(syntax: string, code: string) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
     try {
       const result = await this.execPromise(this.ligoCmd, [
         'info',
@@ -188,7 +198,7 @@ export class LigoCompiler {
     format: string,
     storage: string
   ) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
 
     try {
       const result = await this.execPromise(this.ligoCmd, [
@@ -217,7 +227,7 @@ export class LigoCompiler {
     parameter: string,
     storage: string
   ) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
     try {
       const result = await this.execPromise(this.ligoCmd, [
         'run',
@@ -237,14 +247,15 @@ export class LigoCompiler {
   }
 
   async evaluateValue(syntax: string, code: string, entrypoint: string) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
     try {
       const result = await this.execPromise(this.ligoCmd, [
         'run',
         'evaluate-expr',
+        name,
         '-s',
         syntax,
-        name,
+        '-e',
         entrypoint,
       ]);
       return result;
@@ -259,7 +270,7 @@ export class LigoCompiler {
     entrypoint: string,
     parameter: string
   ) {
-    const { name, remove } = await this.createTemporaryFile(code);
+    const { name, remove } = await this.createTemporaryFile(code, syntax);
     try {
       const result = await this.execPromise(this.ligoCmd, [
         'run',

@@ -151,3 +151,4 @@ val cover : t -> t -> t
 
 val to_yojson : t -> Yojson.Safe.t
 val of_yojson : Yojson.Safe.t -> (t,string) Result.result
+val to_human_yojson : t -> Yojson.Safe.t

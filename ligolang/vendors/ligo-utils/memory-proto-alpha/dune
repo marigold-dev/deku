@@ -3,6 +3,6 @@
   (public_name tezos-memory-proto-alpha)
   (libraries
     tezos-protocol-environment
-    tezos-protocol-011-PtHangzH
+    tezos-protocol-011-PtHangz2
   )
 )

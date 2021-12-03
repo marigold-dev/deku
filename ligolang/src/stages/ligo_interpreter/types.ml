@@ -4,7 +4,7 @@ module Tez = Proto_alpha_utils.Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Script_timestamp
 
 type mcode = unit Tezos_utils.Michelson.michelson
-type mcontract = Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t
+type mcontract = Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.t
 
 type mutation = Location.t * Ast_typed.expression
 
@@ -41,7 +41,7 @@ and constant_val =
   | C_mutez of Z.t
   | C_address of mcontract (*should be represented as michelson data ? not convenient *)
   | C_contract of contract
-  | C_key_hash of Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.public_key_hash
+  | C_key_hash of Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.public_key_hash
 
 
 and micheline_value = (unit, string) Tezos_micheline.Micheline.node *
@@ -72,8 +72,8 @@ and exception_type =
 
 type bigmap_state = (value * value) list
 type bigmap_data = {
-      key_type : Tezos_raw_protocol_011_PtHangzH.Script_repr.expr;
-      value_type : Tezos_raw_protocol_011_PtHangzH.Script_repr.expr;
+      key_type : Tezos_raw_protocol_011_PtHangz2.Script_repr.expr;
+      value_type : Tezos_raw_protocol_011_PtHangz2.Script_repr.expr;
       version : bigmap_state }
 type bigmap = int * bigmap_data
 type bigmaps = bigmap list

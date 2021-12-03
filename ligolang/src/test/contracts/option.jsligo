@@ -2,3 +2,13 @@ type foobar = option <int>;
 
 let s : foobar = Some (42);
 let n : foobar = None ();
+let i : int    = Option.unopt (s);
+
+
+let assign = (m : int) : foobar => {
+   let coco : foobar = None ();
+   coco = Some (m);
+   coco = (None () as foobar);
+   return coco;
+}
+

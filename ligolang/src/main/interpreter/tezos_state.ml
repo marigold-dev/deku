@@ -1,12 +1,12 @@
 open Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Tezos_011_PtHangzH_test_helpers
+module Tezos_alpha_test_helpers = Tezos_011_PtHangz2_test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
-module Tezos_protocol = Tezos_protocol_011_PtHangzH
-module Tezos_raw_protocol = Tezos_raw_protocol_011_PtHangzH
+module Tezos_protocol = Tezos_protocol_011_PtHangz2
+module Tezos_raw_protocol = Tezos_raw_protocol_011_PtHangz2
 
 type r = Errors.interpreter_error raise
 
@@ -135,7 +135,7 @@ let get_storage ~raise ~loc ~calltrace ctxt addr =
           ~fitness:ctxt.raw.header.shell.fitness
           ctxt.raw.context
     in
-    fst @@ Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace) @@
+    fst @@ Trace.trace_alpha_tzresult_lwt ~raise (throw_obj_exc loc calltrace) @@ 
       Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context ~legacy:false x
   in
   let storage_type = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations storage_type)) in
@@ -407,7 +407,7 @@ let init_ctxt ~raise ?(loc=Location.generated) ?(calltrace=[]) ?(initial_balance
     match initial_balances with
     | [] -> () (* if empty list: will be defaulted with coherent values*)
     | baker::_ -> (
-      let max = Tezos_protocol_011_PtHangzH_parameters.Default_parameters.constants_test.tokens_per_roll in
+      let max = Tezos_protocol_011_PtHangz2_parameters.Default_parameters.constants_test.tokens_per_roll in
       if (Alpha_context.Tez.of_mutez_exn baker < max) then raise.raise (Errors.not_enough_initial_accounts loc max) else ()
     )
   in

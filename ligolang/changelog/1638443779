@@ -1,0 +1,6 @@
+---
+  title: "Update tezos-ligo submodule to latest Hangzhou release"
+  merge_request: "1439"
+  author: "melwyn95"
+  type: "internal"
+

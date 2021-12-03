@@ -1,0 +1,5 @@
+author: tomjack
+title: 'Experimental: propagate source locations to Michelson with `--michelson-comments
+  location`'
+type: added
+merge_request: '1251'

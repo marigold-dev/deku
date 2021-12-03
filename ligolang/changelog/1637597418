@@ -1,0 +1,4 @@
+author: Exequiel Rivas & Rémi Lesénéchal
+title: Fix 'ligo interpret' when working with polymorphic types
+type: fixed
+merge_request: '1421'

@@ -1,7 +1,7 @@
 open Trace
 
 let int_of_mutez t = Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mutez t
-let string_of_contract t = Format.asprintf "%a" Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.pp t
+let string_of_contract t = Format.asprintf "%a" Tezos_protocol_011_PtHangz2.Protocol.Alpha_context.Contract.pp t
 let string_of_key_hash t = Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp t
 
 module Tezos_eq = struct
@@ -265,8 +265,8 @@ let rec val_to_ast ~raise ~loc : Ligo_interpreter.Types.value ->
   | V_Func_val v ->
      make_ast_func ~raise ?name:v.rec_name v.env v.arg_binder v.body v.orig_lambda
   | V_Michelson (Ty_code (expr, expr_ty, ty_exp)) ->
-     let mini_c = trace ~raise Main_errors.decompile_michelson @@ Stacking.Decompiler.decompile_value expr_ty expr in
-     trace ~raise Main_errors.decompile_mini_c @@ Spilling.decompile mini_c ty_exp
+     let mini_c = trace ~raise Main_errors.main_decompile_michelson @@ Stacking.Decompiler.decompile_value expr_ty expr in
+     trace ~raise Main_errors.main_decompile_mini_c @@ Spilling.decompile mini_c ty_exp
   | V_Record map when is_t_record ty ->
      let map_ty = trace_option ~raise (Errors.generic_error loc "Expected record") @@  get_t_record ty in
      make_ast_record ~raise ~loc map_ty map

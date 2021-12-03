@@ -8,6 +8,8 @@ open Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
+module Tezos_protocol = Tezos_protocol_011_PtHangz2
+
 open Errors
 
 type execution_trace = unit
@@ -21,9 +23,11 @@ module Command = struct
     | Set_big_map : Z.t * (LT.value * LT.value) list * Ast_typed.type_expression -> unit t
     | Get_big_map : Location.t * Ligo_interpreter.Types.calltrace * LT.type_expression * LT.type_expression * LT.value * Z.t -> LT.value t
     | Mem_big_map : Location.t * LT.type_expression * LT.type_expression * LT.value * Z.t -> bool t
+    | Pack : Location.t * LT.value * Ast_typed.type_expression -> Ast_typed.expression t
+    | Unpack : Location.t * bytes * Ast_typed.type_expression -> Ast_typed.expression t
     | Bootstrap_contract : int * LT.value * LT.value * Ast_typed.type_expression  -> unit t
-    | Nth_bootstrap_contract : int -> Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t t
-    | Nth_bootstrap_typed_address : Location.t * int -> (Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression * Ast_typed.type_expression) t
+    | Nth_bootstrap_contract : int -> Tezos_protocol.Protocol.Alpha_context.Contract.t t
+    | Nth_bootstrap_typed_address : Location.t * int -> (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression * Ast_typed.type_expression) t
     | Reset_state : Location.t * LT.calltrace * LT.value * LT.value -> unit t
     | Get_state : unit -> Tezos_state.context t
     | Put_state : Tezos_state.context -> unit t
@@ -41,7 +45,7 @@ module Command = struct
     | Eval : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | Compile_contract : Location.t * LT.value * Ast_typed.type_expression -> LT.value t
     | To_contract : Location.t * LT.value * string option * Ast_typed.type_expression -> LT.value t
-    | Check_storage_address : Location.t * Tezos_protocol_011_PtHangzH.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression -> unit t
+    | Check_storage_address : Location.t * Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_typed.type_expression -> unit t
     | Contract_exists : LT.value -> bool t
     | Inject_script : Location.t * Ligo_interpreter.Types.calltrace * LT.value * LT.value * Z.t -> LT.value t
     | Set_now : Location.t * Ligo_interpreter.Types.calltrace * Z.t -> unit t
@@ -76,6 +80,22 @@ module Command = struct
       let key,key_ty,_ = Michelson_backend.compile_simple_value ~raise ~ctxt ~loc k k_ty in
       let storage' = Tezos_state.get_big_map ~raise ctxt (Z.to_int m) key key_ty in
       (Option.is_some storage', ctxt)
+    | Pack (loc, value, value_ty) ->
+      let expr = Michelson_backend.val_to_ast ~raise ~loc value value_ty in
+      let expr = Ast_typed.e_a_pack expr in
+      let mich = Michelson_backend.compile_value ~raise expr in
+      let (ret_co, ret_ty) = Michelson_backend.run_expression_unwrap ~raise ~ctxt ~loc mich in
+      let ret = LT.V_Michelson (Ty_code (ret_co, ret_ty, Ast_typed.t_bytes ())) in
+      let ret = Michelson_backend.val_to_ast ~raise ~loc ret (Ast_typed.t_bytes ()) in
+      (ret, ctxt)
+    | Unpack (loc, bytes, value_ty) ->
+      let value_ty = trace_option ~raise (Errors.generic_error loc "Expected return type is not an option" ) @@ Ast_typed.get_t_option value_ty in
+      let expr = Ast_typed.(e_a_unpack (e_a_bytes bytes) value_ty) in
+      let mich = Michelson_backend.compile_value ~raise expr in
+      let (ret_co, ret_ty) = Michelson_backend.run_expression_unwrap ~raise ~ctxt ~loc mich in
+      let ret = LT.V_Michelson (Ty_code (ret_co, ret_ty, Ast_typed.t_option value_ty)) in
+      let ret = Michelson_backend.val_to_ast ~raise ~loc ret (Ast_typed.t_option value_ty) in
+      (ret, ctxt)
     | Nth_bootstrap_contract (n) ->
       let contract = Tezos_state.get_bootstrapped_contract ~raise n in
       (contract,ctxt)
@@ -137,7 +157,7 @@ module Command = struct
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let (storage',ty) = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
       let storage = storage'
-        |> Tezos_protocol_011_PtHangzH.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
       let ret = Michelson_to_value.decompile_to_untyped_value ~raise ~bigmaps:ctxt.transduced.bigmaps ty storage in
@@ -153,7 +173,7 @@ module Command = struct
       let addr = trace_option ~raise (corner_case ()) @@ LC.get_address addr in
       let (storage',ty) = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
       let storage = storage'
-        |> Tezos_protocol_011_PtHangzH.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
         |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
       in
       let ligo_ty =
@@ -185,6 +205,7 @@ module Command = struct
         let s = Ligo_compile.Of_michelson.measure ~raise contract_code in
         LT.V_Ct (C_int (Z.of_int s))
       in
+      let contract_code = Tezos_micheline.Micheline.(inject_locations (fun _ -> ()) (strip_locations contract_code)) in
       let contract = LT.V_Michelson (LT.Contract contract_code) in
       ((contract,size), ctxt)
     | Run (loc, f, v) ->
