@@ -1,9 +1,12 @@
 open Zinc_utils
+module Zinc_types = Zinc_types.Raw
 open Zinc_types
 
+
+module Zinc_interpreter = Zinc_interpreter.Dummy
+open Zinc_interpreter
+
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
-let test_interpreter_context =
-  Zinc_types.{ get_contract_opt = (fun address -> Some (address, None)) }
 
 (* Helpers *)
 
@@ -27,29 +30,29 @@ let expect_program =
   Alcotest.(
     check
       (Alcotest.testable
-         (fun ppf program -> Fmt.pf ppf "%a" pp_program program)
-         equal_program))
+         (fun ppf program -> Fmt.pf ppf "%s" (Program.to_string program))
+         Program.equal))
 
 let expect_code =
   Alcotest.(
     check
       (Alcotest.testable
-         (fun ppf zinc -> Fmt.pf ppf "%a" Zinc.pp zinc)
+         (fun ppf zinc -> Fmt.pf ppf "%s" (Zinc.to_string zinc))
          Zinc.equal))
 
 let expect_env =
   Alcotest.(
     check
       (Alcotest.testable
-         (fun ppf env -> Fmt.pf ppf "%a" pp_env env)
-         equal_env))
+         (fun ppf env -> Fmt.pf ppf "%s" (Types.Env.to_string env))
+         Types.Env.equal))
 
 let expect_stack =
   Alcotest.(
     check
       (Alcotest.testable
-         (fun ppf stack -> Fmt.pf ppf "%a" pp_stack stack)
-         equal_stack))
+         (fun ppf stack -> Fmt.pf ppf "%s" (Types.Stack.to_string stack))
+         Types.Stack.equal))
 
 type test =
   raise:Main_errors.all Trace.raise ->
@@ -59,7 +62,7 @@ type test =
 
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?(index = 0)
     ?(initial_stack = []) ?expect_failure ?expected_output_env ?expected_output
-    contract_file (expected_zinc : Zinc_types.program) : test =
+    contract_file (expected_zinc : Zinc_types.Program.t) : test =
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
@@ -78,9 +81,11 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?
   in
   match
     ( expect_failure,
-      List.nth_exn zinc index |> snd
-      |> Zinc_interpreter.initial_state ~initial_stack
-      |> Zinc_interpreter.interpret_zinc test_interpreter_context )
+     let from =  List.nth_exn zinc index |> snd |> Zinc.to_yojson in 
+      let to_ = Types.Zinc.of_yojson from |> Result.get_ok in
+      to_
+      |> Interpreter.initial_state ~initial_stack
+      |> Interpreter.eval )
   with
   | None, Success (output_env, output_stack) ->
       let () =
@@ -112,12 +117,12 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO) ?
 let simple_1 =
   expect_simple_compile_to "simple1"
     [ ("i", [  Plain_old_data (Num (Z.of_int 42)); Core Return ]) ]
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
 
 let simple_2 =
   expect_simple_compile_to "simple2"
     [ ("i", [ Plain_old_data (Num (Z.of_int 42)); Core Return ]) ]
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
 
 let simple_3 =
   expect_simple_compile_to "simple3"
@@ -125,23 +130,24 @@ let simple_3 =
       ("my_address", [ Plain_old_data (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"); Core Return ]);
     ]
     ~expected_output:
-      [ Stack_item.Z (Plain_old_data (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")) ]
+      [ Types.Stack_item.Z (Plain_old_data (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")) ]
 
 let id =
+  
   expect_simple_compile_to "id_func"
     [ ("id", [ Core Grab; Core (Access 0); Core Return ]) ]
-    ~initial_stack:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+    ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
 
 let chain_id =
   expect_simple_compile_to "chain_id"
     [ ("chain_id", [ Domain_specific_operation ChainID; Core Return ]) ]
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Hash "not sure yet")) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Hash "need to move this into interpreter_context")) ]
 
 let chain_id_func =
   expect_simple_compile_to "chain_id_func"
     [ ("chain_id", [ Core Grab; Domain_specific_operation ChainID; Core Return ]) ]
-    ~initial_stack:[ Zinc_types.Utils.unit_record_stack ]
+    ~initial_stack:[ Types.Utils.unit_record_stack ]
 
 let tuple_creation =
   expect_simple_compile_to "tuple_creation"
@@ -151,12 +157,12 @@ let tuple_creation =
           Core Grab; Core (Access 0); Core (Access 0); Adt (MakeRecord 2); Core Return;
         ] );
     ]
-    ~initial_stack:[ Stack_item.Z (Plain_old_data (Num Z.one)) ]
+    ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Num Z.one)) ]
     ~expected_output:
       [
-        Stack_item.Record
+        Types.Stack_item.Record
           Zinc_utils.LMap.(
-            let one = Stack_item.Z (Plain_old_data (Num Z.one)) in
+            let one = Types.Stack_item.Z (Plain_old_data (Num Z.one)) in
             empty |> add (0) one |> add (1) one);
       ]
 
@@ -187,9 +193,9 @@ let check_record_destructure =
     ]
     ~initial_stack:
       [
-        Stack_item.Record
+        Types.Stack_item.Record
           Zinc_utils.LMap.(
-            let one = Stack_item.Z (Plain_old_data (Num Z.one)) in
+            let one = Types.Stack_item.Z (Plain_old_data (Num Z.one)) in
             empty |> add (0) one |> add (1) one);
       ]
 
@@ -227,17 +233,17 @@ let check_hash_key =
     ]
     ~initial_stack:
       [
-        Stack_item.Record
+        Types.Stack_item.Record
           (LMap.empty
           |> LMap.add (0)
-               (Stack_item.Z (Plain_old_data (Hash "not sure yet")))
-          |> LMap.add (1) (Stack_item.Z (Plain_old_data (Key "Hashy hash!"))));
+               (Types.Stack_item.Z (Plain_old_data (Hash "not sure yet")))
+          |> LMap.add (1) (Types.Stack_item.Z (Plain_old_data (Key "Hashy hash!"))));
       ]
 
 let basic_function_application =
   expect_simple_compile_to ~dialect:ReasonLIGO "basic_function_application"
     [ ("a", [ Plain_old_data (Num (Z.of_int 3)); Core Grab; Core (Access 0); Core Return ]) ]
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 3))) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 3))) ]
 
 let basic_link =
   expect_simple_compile_to ~dialect:ReasonLIGO "basic_link"
@@ -246,7 +252,7 @@ let basic_link =
       ("b", [ Plain_old_data (Num (Z.of_int 1)); Core Grab; Core (Access 0); Core Return ]);
     ]
     ~index:1
-    ~expected_output:[ Stack_item.Z (Plain_old_data (Num (Z.of_int 1))) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 1))) ]
 
 let failwith_simple =
   expect_simple_compile_to ~dialect:ReasonLIGO "failwith_simple"
@@ -258,8 +264,8 @@ let get_contract_opt =
     [ ("a", [ Plain_old_data (Address "whatever"); Domain_specific_operation Contract_opt; Core Return ]) ]
     ~expected_output:
       [
-        Stack_item.Variant
-          ("Some", Stack_item.NonliteralValue (Contract ("whatever", None)));
+        Types.Stack_item.Variant
+          ("Some", Types.Stack_item.NonliteralValue (Contract ("whatever", None)));
       ]
 
 let match_on_sum =
@@ -283,7 +289,7 @@ let match_on_sum =
     ]
     ~expected_output:
       [
-        Stack_item.NonliteralValue
+        Types.Stack_item.NonliteralValue
           (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None));
       ]
 
@@ -320,7 +326,7 @@ let create_transaction =
     ]
     ~expected_output:
       [
-        Stack_item.NonliteralValue
+        Types.Stack_item.NonliteralValue
           (Chain_operation
              (Transaction
                 (Z.of_int 10, ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None))));
@@ -357,29 +363,29 @@ let create_transaction_in_tuple =
     ]
     ~expected_output:
       [
-        Stack_item.Record
+        Types.Stack_item.Record
           LMap.(
             empty
             |> add (0)
-                 (Stack_item.NonliteralValue (Chain_operation
+                 (Types.Stack_item.NonliteralValue (Chain_operation
                           (Transaction
                              ( Z.of_int 10,
                                ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) ))))
             |> add (1)
-                 (Stack_item.Z
+                 (Types.Stack_item.Z
                     (Plain_old_data (Key
                        "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav")))
-            |> add (2) (Stack_item.Z (Plain_old_data (String "my string"))));
+            |> add (2) (Types.Stack_item.Z (Plain_old_data (String "my string"))));
       ]
 
 let list_construction =
   expect_simple_compile_to ~dialect:ReasonLIGO "list_construction" 
   [("a", [Plain_old_data Nil; Plain_old_data (Mutez (Z.of_int 2)); Operation Cons; Plain_old_data (Mutez (Z.of_int 1)); Operation Cons; Core Return])]
   ~expected_output:[
-    (Zinc_types.Stack_item.List
+    (Types.Stack_item.List
       [ 
-        (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 1))));
-        (Zinc_types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 2))))
+        (Types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 1))));
+        (Types.Stack_item.Z (Plain_old_data (Mutez (Z.of_int 2))))
       ])]
 
 let make_an_option =
