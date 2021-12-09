@@ -8,4 +8,5 @@ let () =
   [
     Integration_tests.main ;
     Spilling_tests.main ;
+    Zinc_tests.main ;
   ];()

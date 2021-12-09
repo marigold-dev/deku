@@ -3,7 +3,7 @@
 (executables
  (names test doc_test repl_test parser_negative_tests vendors_test inference_test contract_test mydebugplease)
  (libraries simple-utils tezos-memory-proto-alpha ligo repl interpreter
-   alcotest tezos-utils tezos-crypto)
+   alcotest tezos-utils tezos-crypto zinc.types zinc.interpreter zinc.utils)
  (flags
   (:standard -w +1..62-4-9-44-40-42-48@39@33 -open Simple_utils)))
 
