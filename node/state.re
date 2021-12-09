@@ -19,8 +19,8 @@ type t = {
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
-  pending_side_ops: list(Operation.Side_chain.t),
-  pending_main_ops: list(Operation.Main_chain.t),
+  pending_side_ops: list(Protocol.Operation.Side_chain.t),
+  pending_main_ops: list(Protocol.Operation.Main_chain.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
@@ -138,7 +138,11 @@ let apply_block = (state, block) => {
   let recent_operation_results =
     List.fold_left(
       (results, (op, result)) =>
-        BLAKE2B.Map.add(op.Operation.Side_chain.hash, result, results),
+        BLAKE2B.Map.add(
+          op.Protocol.Operation.Side_chain.hash,
+          result,
+          results,
+        ),
       state.recent_operation_results,
       results,
     );

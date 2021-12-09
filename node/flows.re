@@ -303,7 +303,7 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
 
 let received_user_operation = (state, update_state, user_operation) => {
   let.ok () =
-    switch (user_operation.Operation.Side_chain.kind) {
+    switch (user_operation.Protocol.Operation.Side_chain.kind) {
     | Add_validator(_)
     | Remove_validator(_) => Error(`Not_a_user_opertaion)
     | _ => Ok()
@@ -370,9 +370,14 @@ let parse_main_transaction = (hash, index, transaction) => {
       | _ => Error(`Invalid_address_on_main_operation)
       };
     let amount = Amount.of_int(Z.to_int(amount));
-    let kind = Operation.Main_chain.Deposit({ticket, amount, destination});
+    let kind =
+      Protocol.Operation.Main_chain.Deposit({ticket, amount, destination});
     Ok(
-      Operation.Main_chain.make(~tezos_hash=hash, ~tezos_index=index, ~kind),
+      Protocol.Operation.Main_chain.make(
+        ~tezos_hash=hash,
+        ~tezos_index=index,
+        ~kind,
+      ),
     );
   };
 };

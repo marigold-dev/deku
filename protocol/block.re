@@ -1,4 +1,4 @@
-open Operation;
+open Protocol_operation;
 open Helpers;
 open Crypto;
 open Core;

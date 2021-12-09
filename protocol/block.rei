@@ -1,6 +1,6 @@
 open Crypto;
 open Core;
-open Operation;
+open Protocol_operation;
 
 [@deriving (yojson, ord)]
 type t =
