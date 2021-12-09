@@ -416,6 +416,14 @@ let make_a_custom_option =
         ] );
     ]
 
+let top_level_let_dependencies =
+  expect_simple_compile_to ~dialect:ReasonLIGO "top_level_let_dependencies"
+    [
+      ("a", [ Plain_old_data (Num Z.one); Core Return ]);
+      ("b", [ Plain_old_data (Num Z.one); Core Grab; Core (Access 0); Core Return ]);
+      ("c", [ Plain_old_data (Num Z.one); Core Grab; Core (Access 0); Core Grab; Plain_old_data (Num Z.one); Core Return ]);
+    ]
+
 let main =
   let open Test_helpers in
   test_suite "Zinc tests"
@@ -440,4 +448,5 @@ let main =
       test_w "list_construction" list_construction;
       test_w "make_an_option" make_an_option;
       test_w "make_a_custom_option" make_a_custom_option;
+      test_w "top_level_let_dependencies" top_level_let_dependencies;
     ]

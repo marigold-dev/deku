@@ -392,8 +392,8 @@ let compile_module :
             tail_compile ~raise empty_environment (let_wrapper expression)
           in
           ( (fun a ->
-              make_expression_with_dependencies [ (expr_var, expression) ]
-                (let_wrapper a)),
+              let_wrapper (make_expression_with_dependencies [ (expr_var, expression) ]
+                a)),
             compiled )
         in
         (let_wrapper, (name, declaration) :: declarations))
