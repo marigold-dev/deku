@@ -1,4 +1,5 @@
 open Helpers;
+open Core;
 include Exn_noop;
 
 module Signature = Protocol_signature;

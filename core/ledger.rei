@@ -1,5 +1,4 @@
 open Crypto;
-open Core;
 
 module Handle: {
   [@deriving yojson]
