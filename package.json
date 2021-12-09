@@ -53,7 +53,11 @@
     "@opam/menhir": "20210419",
     "@esy-ocaml/rtop": "^3.3.3",
     "@reason-native/rely": "^3.2.1",
-    "@opam/ocamlformat-rpc": "*"
+    "@opam/ocamlformat-rpc": "*",
+    "@opam/mirage-crypto": "0.10.5",
+    "@opam/mirage-crypto-ec": "0.10.5",
+    "@opam/mirage-crypto-pk": "0.10.5",
+    "@opam/mirage-crypto-rng": "0.10.5"
   },
   "resolutions": {
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
@@ -62,10 +66,6 @@
     "@opam/httpaf-lwt": "github:anmonteiro/httpaf:httpaf-lwt.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/httpaf-lwt-unix": "github:anmonteiro/httpaf:httpaf-lwt-unix.opam#559019829b7ed267a5b4b86aed1e7d7795214bcd",
     "@opam/lwt": "github:Sudha247/lwt-multicore:lwt.opam#321081dcc8dc359bb45d71847c70e01e78a74d02",
-    "@opam/mirage-crypto": "github:marigold-dev/mirage-crypto:mirage-crypto.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
-    "@opam/mirage-crypto-ec": "github:marigold-dev/mirage-crypto:mirage-crypto-ec.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
-    "@opam/mirage-crypto-pk": "github:marigold-dev/mirage-crypto:mirage-crypto-pk.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
-    "@opam/mirage-crypto-rng": "github:marigold-dev/mirage-crypto:mirage-crypto-rng.opam#4f2223eecb7a93e35187a45a8e21c5f99e46288a",
     "@opam/base-domains": {
       "source": "no-source:",
       "override": {}

@@ -44,7 +44,7 @@ module Key = {
     let size = 33;
     let prefix = Base58.Prefix.p256_public_key;
 
-    let to_raw = t => Cstruct.to_string(pub_to_compressed(t));
+    let to_raw = t => Cstruct.to_string(pub_to_cstruct(~compress=true, t));
     let of_raw = string =>
       pub_of_cstruct(Cstruct.of_string(string)) |> Result.to_option;
   });
@@ -55,7 +55,7 @@ module Key_hash = {
   type t = BLAKE2B_20.t;
 
   let of_key = t =>
-    BLAKE2B_20.hash(pub_to_compressed(t) |> Cstruct.to_string);
+    BLAKE2B_20.hash(pub_to_cstruct(~compress=true, t) |> Cstruct.to_string);
 
   include Encoding_helpers.Make_b58({
     type nonrec t = t;
