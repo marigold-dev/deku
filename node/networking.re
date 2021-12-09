@@ -153,7 +153,7 @@ module Register_uri = {
 
 module User_operation_gossip = {
   [@deriving yojson]
-  type request = {user_operation: Operation.Side_chain.t};
+  type request = {user_operation: Protocol.Operation.Side_chain.t};
   [@deriving yojson]
   type response = unit;
   let path = "/user-operation-gossip";

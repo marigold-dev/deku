@@ -6,11 +6,11 @@ module Wallet = Wallet;
 module Ledger = Ledger;
 module Validators = Validators;
 module Block = Block;
-module Operation = Operation;
+module Operation = Protocol_operation;
 
 include State;
 let apply_main_chain = (state, operation) => {
-  open Operation.Main_chain;
+  open Protocol_operation.Main_chain;
   module Set = Operation_main_chain_set;
   if (Set.mem(operation, state.included_main_operations)) {
     raise(Noop("duplicated operation"));
