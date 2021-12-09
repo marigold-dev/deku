@@ -1,6 +1,5 @@
 open Helpers;
 open Crypto;
-open Core;
 
 module Address_and_ticket_map = {
   [@deriving (ord, yojson)]
