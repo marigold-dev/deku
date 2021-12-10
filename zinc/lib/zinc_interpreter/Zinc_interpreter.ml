@@ -238,7 +238,7 @@ module Dummy_executor = struct
 
     let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
 
-    let get_contract_opt (_ : Address.t) : t option = None
+    let get_contract_opt (a : Address.t) : t option = Some (a, None)
   end
 
   module Key = struct
