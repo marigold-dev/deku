@@ -7,6 +7,7 @@ module Make (D : Domain_types) :
     with type Zinc.Hash.t := D.Hash.t
      and type Zinc.Address.t := D.Address.t
      and type Zinc.Contract.t := D.Contract.t
+     and type Zinc.Chain_id.t := D.Chain_id.t
      and type Zinc.Key.t := D.Key.t
 
 module Raw :
@@ -14,4 +15,5 @@ module Raw :
     with type Zinc.Hash.t := string
      and type Zinc.Address.t := string
      and type Zinc.Contract.t := string * string option
+     and type Zinc.Chain_id.t := string 
      and type Zinc.Key.t := string

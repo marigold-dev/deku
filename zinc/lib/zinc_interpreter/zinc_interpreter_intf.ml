@@ -54,6 +54,15 @@ module type Executor = sig
     val get_contract_opt : Address.t -> t option
   end
 
+  module Chain_id : sig
+    (* Tezos.Contract - TODO *)
+    type t
+
+    include With_domain_derivation with type t := t
+
+    val chain_id : t
+  end
+
   module Hash : sig
     (*Crypto.BLAKE2B*)
     type t

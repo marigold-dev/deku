@@ -153,11 +153,7 @@ module Make (E : Executor) = struct
                 Stack_item.Z
                   (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
                      Also probably shouldn't use key like this. *)
-                  (let h =
-                     E.Hash.hash "need to move this into interpreter_context"
-                   in
-                   Plain_old_data (Hash h))
-                :: s )
+                  (Plain_old_data (Chain_id E.Chain_id.chain_id)) :: s )
         | ( Domain_specific_operation Contract_opt :: c,
             env,
             Stack_item.Z (Plain_old_data (Address address)) :: s ) ->
@@ -247,6 +243,16 @@ module Dummy_executor = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
+  end
+
+  module Chain_id = struct
+    type t = string [@@deriving eq, yojson]
+
+    let to_string = Fun.id
+
+    let of_string (x : string) : t option = Some x
+
+    let chain_id = "chain id goes here"
   end
 end
 

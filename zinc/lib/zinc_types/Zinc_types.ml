@@ -6,6 +6,7 @@ module Make (D : Domain_types) :
     with type Zinc.Hash.t := D.Hash.t
      and type Zinc.Address.t := D.Address.t
      and type Zinc.Contract.t := D.Contract.t
+     and type Zinc.Chain_id.t := D.Chain_id.t
      and type Zinc.Key.t := D.Key.t = struct
   module Zinc = struct
     open D
@@ -34,6 +35,12 @@ module Make (D : Domain_types) :
       let pp fmt t = Format.fprintf fmt "%s" (to_string t)
     end
 
+    module Chain_id = struct
+      include Chain_id
+
+      let pp fmt t = Format.fprintf fmt "%s" (to_string t)
+    end
+
     type core_instruction =
       | Grab
       | Return
@@ -54,6 +61,7 @@ module Make (D : Domain_types) :
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
+      | Chain_id of Chain_id.t
     [@@deriving show {with_path = false}, eq, yojson]
 
     and adt =
@@ -241,6 +249,16 @@ module Exec = struct
 
     let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
   end
+  
+  module Chain_id = struct
+    type t = string [@@deriving show, eq, yojson]
+
+    let _ = pp
+
+    let to_string x = to_yojson x |> Yojson.Safe.to_string
+
+    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
+  end
 end
 
 module Raw :
@@ -248,5 +266,6 @@ module Raw :
     with type Zinc.Hash.t := string
      and type Zinc.Address.t := string
      and type Zinc.Contract.t := string * string option
+     and type Zinc.Chain_id.t := string
      and type Zinc.Key.t := string =
   Make (Exec)

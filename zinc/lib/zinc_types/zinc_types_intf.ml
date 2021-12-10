@@ -74,6 +74,12 @@ module type Domain_types = sig
 
     include With_domain_derivation with type t := t
   end
+
+  module Chain_id : sig
+    type t
+
+    include With_domain_derivation with type t := t
+  end
 end
 
 module type S = sig
@@ -110,6 +116,14 @@ module type S = sig
       include With_show with type t := t
     end
 
+    module Chain_id : sig
+      type t
+
+      include With_domain_derivation with type t := t
+
+      include With_show with type t := t
+    end
+
     type core_instruction =
       | Grab
       | Return
@@ -129,6 +143,7 @@ module type S = sig
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
+      | Chain_id of Chain_id.t
 
     and adt =
       | MakeRecord of int

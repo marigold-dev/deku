@@ -6,6 +6,7 @@ module Make (E : Executor) : sig
       with type Zinc.Key.t := E.Key.t
        and type Zinc.Address.t := E.Address.t
        and type Zinc.Contract.t := E.Contract.t
+       and type Zinc.Chain_id.t := E.Chain_id.t
        and type Zinc.Hash.t := E.Hash.t
 
   module Interpreter : sig
@@ -22,6 +23,7 @@ module Dummy : sig
       with type Zinc.Key.t := string
        and type Zinc.Address.t := string
        and type Zinc.Contract.t := string * string option
+       and type Zinc.Chain_id.t := string
        and type Zinc.Hash.t := string
 
   module Interpreter : sig

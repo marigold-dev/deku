@@ -133,7 +133,6 @@ let simple_3 =
       [ Types.Stack_item.Z (Plain_old_data (Address "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx")) ]
 
 let id =
-  
   expect_simple_compile_to "id_func"
     [ ("id", [ Core Grab; Core (Access 0); Core Return ]) ]
     ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
@@ -142,7 +141,7 @@ let id =
 let chain_id =
   expect_simple_compile_to "chain_id"
     [ ("chain_id", [ Domain_specific_operation ChainID; Core Return ]) ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Hash "need to move this into interpreter_context")) ]
+    ~expected_output:[(Z (Plain_old_data (Chain_id "chain id goes here")))]
 
 let chain_id_func =
   expect_simple_compile_to "chain_id_func"
