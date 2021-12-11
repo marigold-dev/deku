@@ -26,7 +26,6 @@ type variant_label = string [@@deriving show {with_path = false}, eq, yojson]
 module LMap = struct
   type 'a t = 'a array [@@deriving yojson, ord, eq, show]
 
-
   let of_list (lst : 'a list) : 'a t = lst |> Array.of_list
 
   let find arr item =

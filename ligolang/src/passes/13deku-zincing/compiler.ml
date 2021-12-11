@@ -1,6 +1,6 @@
 open Simple_utils
 open Trace
-open Zinc_types
+open Zinc_types.Raw
 module AST = Ast_typed
 open Ast_typed.Types
 
@@ -88,7 +88,7 @@ and other_compile :
   let () =
     print_endline
       (Format.asprintf "other compile: %a / ~k:%s / env: %s" AST.PP.expression
-         expr (Zinc.show k)
+         expr (Zinc.to_string k)
          (environment.binders
          |> List.map ~f:(Format.asprintf "%a" Var.pp)
          |> String.concat ","))
@@ -362,7 +362,7 @@ and compile_pattern_matching :
            (compile_type to_match.matchee.type_expression))
 
 let compile_module :
-    raise:Errors.zincing_error raise -> AST.module_fully_typed -> program =
+    raise:Errors.zincing_error raise -> AST.module_fully_typed -> Program.t =
  fun ~raise modul ->
   let (Module_Fully_Typed ast) = modul in
   let constant_declaration_extractor :
