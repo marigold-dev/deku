@@ -31,13 +31,6 @@ module type With_domain_derivation = sig
 end
 
 module type Executor = sig
-  module Key : sig
-    (*Crypto.Key*)
-    type t
-
-    include With_domain_derivation with type t := t
-  end
-
   module Address : sig
     (*Tezos.Address*)
     type t
@@ -70,5 +63,14 @@ module type Executor = sig
     include With_domain_derivation with type t := t
 
     val hash : string -> t
+  end
+
+  module Key : sig
+    (*Crypto.Key*)
+    type t
+
+    val hash_key : t -> Hash.t
+
+    include With_domain_derivation with type t := t
   end
 end

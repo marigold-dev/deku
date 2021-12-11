@@ -143,6 +143,7 @@ module type S = sig
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
+      | Key_hash of Hash.t
       | Chain_id of Chain_id.t
 
     and adt =

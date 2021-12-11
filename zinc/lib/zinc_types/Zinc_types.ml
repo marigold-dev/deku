@@ -61,6 +61,7 @@ module Make (D : Domain_types) :
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
+      | Key_hash of Hash.t
       | Chain_id of Chain_id.t
     [@@deriving show {with_path = false}, eq, yojson]
 
