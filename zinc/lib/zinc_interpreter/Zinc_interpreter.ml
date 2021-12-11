@@ -142,9 +142,9 @@ module Make (E : Executor) = struct
         (* Crypto *)
         | ( Operation HashKey :: c,
             env,
-            Stack_item.Z (Plain_old_data (Key _key)) :: s ) ->
-            let h = failwith "need to move this into interpreter_context" in
-            Steps.Continue (c, env, Stack_item.Z (Plain_old_data (Hash h)) :: s)
+            Stack_item.Z (Plain_old_data (Key key)) :: s ) ->
+            let h = E.Key.hash_key key in
+            Steps.Continue (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
         (* Tezos specific *)
         | (Domain_specific_operation ChainID :: c, env, s) ->
             Steps.Continue
@@ -243,6 +243,8 @@ module Dummy_executor = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
+
+    let hash_key (x : t) : Hash.t = x ^ "hash"
   end
 
   module Chain_id = struct
