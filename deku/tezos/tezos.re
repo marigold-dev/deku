@@ -3,3 +3,4 @@ module Address = Address;
 module Ticket_id = Ticket_id;
 module Pack = Pack;
 module Operation_hash = Operation_hash;
+module Deku = Deku;

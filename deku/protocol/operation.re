@@ -66,8 +66,7 @@ module Side_chain = {
         ticket: Ticket.t,
       })
     | Add_validator(Validators.validator)
-    | Remove_validator(Validators.validator)
-    | Invoke_contract;
+    | Remove_validator(Validators.validator);
 
   [@deriving yojson]
   type t = {

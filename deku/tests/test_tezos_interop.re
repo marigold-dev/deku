@@ -14,6 +14,16 @@ module TZ2_ex = {
     |> Option.get;
 };
 
+module TZ3_ex = {
+  let sk =
+    Secret.of_string("p2sk2s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ")
+    |> Option.get;
+
+  let pk =
+    Key.of_string("p2pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7")
+    |> Option.get;
+};
+
 // TODO: maybe fuzz testing or any other cool testing magic?
 let some_contract_hash =
   Contract_hash.of_string("KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc")
@@ -31,6 +41,9 @@ describe("key", ({test, _}) => {
     expect.string(to_string(TZ2_ex.pk)).toEqual(
       "sppk7aCim2kYBWGoEQGezcg8LbHi99XxrAE5dh6DDUru26pT93V2c5U",
     );
+    expect.string(to_string(TZ3_ex.pk)).toEqual(
+      "p2pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7",
+    );
   });
   test("of_string", ({expect, _}) => {
     expect.option(
@@ -47,6 +60,13 @@ describe("key", ({test, _}) => {
       ~equals=Key.equal,
       Some(TZ2_ex.pk),
     );
+    expect.option(
+      of_string("p2pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"),
+    ).
+      toBe(
+      ~equals=Key.equal,
+      Some(TZ3_ex.pk),
+    );
   });
   test("invalid prefix", ({expect, _}) => {
     // TODO: this test would fail anyway becose of the checksum
@@ -61,6 +81,10 @@ describe("key", ({test, _}) => {
       of_string("sddk7aCim2kYBWGoEQGezcg8LbHi99XxrAE5dh6DDUru26pT93V2c5U"),
     ).
       toBeNone();
+    expect.option(
+      of_string("p3pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"),
+    ).
+      toBeNone();
   });
   test("invalid checksum", ({expect, _}) => {
     expect.option(
@@ -69,6 +93,10 @@ describe("key", ({test, _}) => {
       toBeNone();
     expect.option(
       of_string("sppk7dCim2kYBWGoEQGezcg8LbHi99XxrAE5dh6DDUru26pT93V2c5U"),
+    ).
+      toBeNone();
+    expect.option(
+      of_string("p2pk67mCLEz2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"),
     ).
       toBeNone();
   });
@@ -83,6 +111,10 @@ describe("key", ({test, _}) => {
       of_string("sppk7Cim2kYBWGoEQGezcg8LbHi99XxrAE5dh6DDUru26pT93V2c5U"),
     ).
       toBeNone();
+    expect.option(
+      of_string("p2pk67mCLE2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"),
+    ).
+      toBeNone();
   });
 });
 describe("key_hash", ({test, _}) => {
@@ -91,12 +123,16 @@ describe("key_hash", ({test, _}) => {
   // TODO: proper test of_key
   let tz1 = of_key(genesis_wallet);
   let tz2 = of_key(TZ2_ex.pk);
+  let tz3 = of_key(TZ3_ex.pk);
   test("to_string", ({expect, _}) => {
     expect.string(to_string(tz1)).toEqual(
       "tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC",
     );
     expect.string(to_string(tz2)).toEqual(
       "tz2LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD",
+    );
+    expect.string(to_string(tz3)).toEqual(
+      "tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y",
     );
   });
   test("of_string", ({expect, _}) => {
@@ -108,18 +144,25 @@ describe("key_hash", ({test, _}) => {
       ~equals=Key_hash.equal,
       Some(tz2),
     );
+    expect.option(of_string("tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBe(
+      ~equals=Key_hash.equal,
+      Some(tz3),
+    );
   });
   test("invalid prefix", ({expect, _}) => {
     expect.option(of_string("tzaLzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBeNone();
     expect.option(of_string("tz4LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tzdb8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
   test("invalid checksum", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLA")).toBeNone();
     expect.option(of_string("tz2LcrhRoD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tz3d8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
   test("invalid size", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCL")).toBeNone();
     expect.option(of_string("tz2LcShRD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tz38hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
 });
 describe("secret", ({test, _}) => {
@@ -127,6 +170,7 @@ describe("secret", ({test, _}) => {
 
   let edsk = genesis_key;
   let spsk = TZ2_ex.sk;
+  let p2sk = TZ3_ex.sk;
 
   test("to_string", ({expect, _}) => {
     expect.string(to_string(edsk)).toEqual(
@@ -134,6 +178,9 @@ describe("secret", ({test, _}) => {
     );
     expect.string(to_string(spsk)).toEqual(
       "spsk3LfH15rYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy",
+    );
+    expect.string(to_string(p2sk)).toEqual(
+      "p2sk2s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ",
     );
   });
   test("of_string", ({expect, _}) => {
@@ -151,6 +198,13 @@ describe("secret", ({test, _}) => {
       ~equals=Secret.equal,
       Some(spsk),
     );
+    expect.option(
+      of_string("p2sk2s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"),
+    ).
+      toBe(
+      ~equals=Secret.equal,
+      Some(p2sk),
+    );
   });
   test("invalid prefix", ({expect, _}) => {
     expect.option(
@@ -159,6 +213,10 @@ describe("secret", ({test, _}) => {
       toBeNone();
     expect.option(
       of_string("spdk3LfH15rYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy"),
+    ).
+      toBeNone();
+    expect.option(
+      of_string("p3sk2s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"),
     ).
       toBeNone();
   });
@@ -171,6 +229,10 @@ describe("secret", ({test, _}) => {
       of_string("spsk3LfH15dYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy"),
     ).
       toBeNone();
+    expect.option(
+      of_string("p2sk3s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"),
+    ).
+      toBeNone();
   });
   test("invalid size", ({expect, _}) => {
     expect.option(
@@ -179,6 +241,10 @@ describe("secret", ({test, _}) => {
       toBeNone();
     expect.option(
       of_string("spsk3LfH15YByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy"),
+    ).
+      toBeNone();
+    expect.option(
+      of_string("p2sk2s8wFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"),
     ).
       toBeNone();
   });
@@ -200,13 +266,19 @@ describe("signature", ({test, _}) => {
   let spsk = TZ2_ex.sk;
   let spsig = sign(spsk, tuturu);
 
+  let p2pk = TZ3_ex.pk;
+  let p2sk = TZ3_ex.sk;
+  let p2sig = sign(p2sk, tuturu);
+
   test("check", ({expect, _}) => {
     expect.bool(verify(edpk, edsig, tuturu)).toBeTrue();
     expect.bool(verify(sppk, spsig, tuturu)).toBeTrue();
+    expect.bool(verify(p2pk, p2sig, tuturu)).toBeTrue();
   });
   test("invalid message", ({expect, _}) => {
     expect.bool(verify(edpk, edsig, tuturu2)).toBeFalse();
     expect.bool(verify(sppk, spsig, tuturu2)).toBeFalse();
+    expect.bool(verify(p2pk, p2sig, tuturu2)).toBeFalse();
   });
   test("invalid key", ({expect, _}) => {
     let (secret, key) = {
@@ -223,6 +295,13 @@ describe("signature", ({test, _}) => {
     let pksig_from_key = sign(secret, tuturu);
     expect.bool(verify(key, pksig_from_key, tuturu)).toBeTrue();
     expect.bool(verify(sppk, pksig_from_key, tuturu)).toBeFalse();
+    let (secret, key) = {
+      let (secret, key) = Crypto.P256.generate();
+      (Secret.P256(secret), Key.P256(key));
+    };
+    let p2sig_from_key = sign(secret, tuturu);
+    expect.bool(verify(key, p2sig_from_key, tuturu)).toBeTrue();
+    expect.bool(verify(p2pk, p2sig_from_key, tuturu)).toBeFalse();
   });
 
   test("to_string", ({expect, _}) => {
@@ -231,6 +310,9 @@ describe("signature", ({test, _}) => {
     );
     expect.string(to_string(spsig)).toEqual(
       "spsig1ao4VRH1rAXpfUDT6B7y2ScbbM5RSP9ZRqtkKuKbE4Eo1QGAKqMVKieYtvFcUDUeqSpGWcqVMedfsfKr45yuQqWpz7Wgqh",
+    );
+    expect.string(to_string(p2sig)).toEqual(
+      "p2sigt13usEEBey8JkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo",
     );
   });
   test("of_string", ({expect, _}) => {
@@ -252,6 +334,15 @@ describe("signature", ({test, _}) => {
       ~equals=Signature.equal,
       Some(spsig),
     );
+    expect.option(
+      of_string(
+        "p2sigt13usEEBey8JkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo",
+      ),
+    ).
+      toBe(
+      ~equals=Signature.equal,
+      Some(p2sig),
+    );
   });
   test("invalid prefix", ({expect, _}) => {
     expect.option(
@@ -263,6 +354,12 @@ describe("signature", ({test, _}) => {
     expect.option(
       of_string(
         "spsdg1ao4VRH1rAXpfUDT6B7y2ScbbM5RSP9ZRqtkKuKbE4Eo1QGAKqMVKieYtvFcUDUeqSpGWcqVMedfsfKr45yuQqWpz7Wgqh",
+      ),
+    ).
+      toBeNone();
+    expect.option(
+      of_string(
+        "p3sigt13usEEBey8JkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo",
       ),
     ).
       toBeNone();
@@ -280,6 +377,12 @@ describe("signature", ({test, _}) => {
       ),
     ).
       toBeNone();
+    expect.option(
+      of_string(
+        "p2sigt13useEBey8JkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo",
+      ),
+    ).
+      toBeNone();
   });
   test("invalid size", ({expect, _}) => {
     expect.option(
@@ -291,6 +394,12 @@ describe("signature", ({test, _}) => {
     expect.option(
       of_string(
         "spsig1ao4VRH1rAXpfUDT67y2ScbbM5RSP9ZRqtkKuKbE4Eo1QGAKqMVKieYtvFcUDUeqSpGWcqVMedfsfKr45yuQqWpz7Wgqh",
+      ),
+    ).
+      toBeNone();
+    expect.option(
+      of_string(
+        "p2sigt13usEEBeyJkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo",
       ),
     ).
       toBeNone();
@@ -325,6 +434,7 @@ describe("address", ({test, _}) => {
 
   let tz1 = Implicit(Key_hash.of_key(genesis_wallet));
   let tz2 = Implicit(Key_hash.of_key(TZ2_ex.pk));
+  let tz3 = Implicit(Key_hash.of_key(TZ3_ex.pk));
   let kt1 = Originated({contract: some_contract_hash, entrypoint: None});
   let kt1_tuturu =
     Originated({contract: some_contract_hash, entrypoint: Some("tuturu")});
@@ -334,6 +444,9 @@ describe("address", ({test, _}) => {
     );
     expect.string(to_string(tz2)).toEqual(
       "tz2LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD",
+    );
+    expect.string(to_string(tz3)).toEqual(
+      "tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y",
     );
     expect.string(to_string(kt1)).toEqual(
       "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc",
@@ -350,6 +463,10 @@ describe("address", ({test, _}) => {
     expect.option(of_string("tz2LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBe(
       ~equals=Address.equal,
       Some(tz2),
+    );
+    expect.option(of_string("tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBe(
+      ~equals=Address.equal,
+      Some(tz3),
     );
     // TODO: should we accept tz1 with entrypoint?
     // expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC%tuturu")).
@@ -373,14 +490,17 @@ describe("address", ({test, _}) => {
   test("invalid prefix", ({expect, _}) => {
     expect.option(of_string("tz4LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC")).toBeNone();
     expect.option(of_string("td2LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tzab8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
   test("invalid checksum", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLd")).toBeNone();
     expect.option(of_string("tz2LcShaoD1PHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tz3b8hdcRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
   test("invalid size", ({expect, _}) => {
     expect.option(of_string("tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCL")).toBeNone();
     expect.option(of_string("tz2LcShRoDPHxUYHq2DyEUjayG1kfqeqLVD")).toBeNone();
+    expect.option(of_string("tz3b8hJRfJzz5ZNCTepE9kU1QnTrL8Acy3y")).toBeNone();
   });
 });
 describe("ticket", ({test, _}) => {
@@ -501,6 +621,11 @@ describe("pack", ({test, _}) => {
     "050a0000002201027643ad744d2e26125b38726114eadf9f5f75af61838e7dee1bb7dda9df1984fd",
   );
   test(
+    "key(\"p2pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7\")",
+    key(TZ3_ex.pk),
+    "050a000000220203a4242cde26340f1eb943956bf1209c5247c76ff4ddf51eb8cf050a70312c9c19",
+  );
+  test(
     "key_hash(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
     key_hash(Key_hash.of_key(genesis_wallet)),
     "050a00000015000ec89608700c0414159d93552ef9361cea96da13",
@@ -509,6 +634,11 @@ describe("pack", ({test, _}) => {
     "key_hash(\"tz2LcShRoD1PHxUYHq2DyEUjayG1kfqeqLVD\")",
     key_hash(Key_hash.of_key(TZ2_ex.pk)),
     "050a000000150186e2a0c1f9a83eb066b54c8a594b3af88445b395",
+  );
+  test(
+    "key_hash(\"tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y\")",
+    key_hash(Key_hash.of_key(TZ3_ex.pk)),
+    "050a0000001502a2645b31bbb34a3a070378905f2b03a823b63227",
   );
   test(
     "address(\"tz1LzCSmZHG3jDvqxA8SG8WqbrJ9wz5eUCLC\")",
@@ -521,6 +651,11 @@ describe("pack", ({test, _}) => {
     "050a00000016000186e2a0c1f9a83eb066b54c8a594b3af88445b395",
   );
   test(
+    "address(\"tz3b8hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y\")",
+    address(Implicit(Key_hash.of_key(TZ3_ex.pk))),
+    "050a000000160002a2645b31bbb34a3a070378905f2b03a823b63227",
+  );
+  test(
     "address(\"KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc\")",
     address(Originated({contract: some_contract_hash, entrypoint: None})),
     "050a0000001601370027c6c8f3fbafda4f9bfd08b14f45e6a29ce300",
@@ -528,7 +663,7 @@ describe("pack", ({test, _}) => {
 });
 describe("consensus", ({test, _}) => {
   open Helpers;
-  open Consensus;
+  open Deku.Consensus;
 
   let hash_exn = s => BLAKE2B.of_string(s) |> Option.get;
   let key_hash_exn = s => Key_hash.of_string(s) |> Option.get;

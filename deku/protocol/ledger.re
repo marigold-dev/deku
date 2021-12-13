@@ -29,7 +29,7 @@ module Handle = {
   };
   let hash = (~id, ~owner, ~amount, ~ticket) => {
     let Ticket.{ticketer, data} = ticket;
-    Tezos_interop.Consensus.hash_withdraw_handle(
+    Tezos.Deku.Consensus.hash_withdraw_handle(
       ~id=Z.of_int(id),
       ~owner,
       ~amount=Z.of_int(Amount.to_int(amount)),

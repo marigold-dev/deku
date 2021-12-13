@@ -21,7 +21,7 @@ for i in ${VALIDATORS[@]}; do
   SERVERS+=($!)
 done
 
-sleep 0.1
+sleep 1
 
 echo "Producing a block"
 HASH=$(sidecli produce-block "$data_directory/0" | awk '{ print $2 }')
