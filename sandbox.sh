@@ -154,7 +154,7 @@ EOF
 tear-down() {
   if [[ $(docker ps | grep my-sandbox) ]]; then
     docker kill my-sandbox
-    rm -rf "$DATA_DIRECTORY/**"
+    rm -r "$DATA_DIRECTORY"
     echo "Stopped the sandbox and wiped all state."
   fi
 }
