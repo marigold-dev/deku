@@ -3,10 +3,27 @@
  (public_name ligo.main_errors)
  (instrumentation
   (backend bisect_ppx))
- (libraries simple-utils BuildSystem preprocessing parsing self_cst
-   tree_abstraction self_ast_imperative purification ast_sugar self_ast_sugar
-   desugaring self_ast_core inference checking self_ast_typed
-   ligo_interpreter spilling self_mini_c stacking self_michelson)
+ (libraries
+  simple-utils
+  BuildSystem
+  preprocessing
+  parsing
+  self_cst
+  tree_abstraction
+  self_ast_imperative
+  purification
+  ast_sugar
+  self_ast_sugar
+  desugaring
+  self_ast_core
+  inference
+  checking
+  self_ast_typed
+  ligo_interpreter
+  spilling
+  self_mini_c
+  stacking
+  self_michelson)
  (preprocess
   (pps ppx_poly_constructor))
  (flags
