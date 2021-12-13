@@ -42,6 +42,22 @@ module Make (E : Executor) = struct
         in
         let open Zinc in
         match (code, env, stack) with
+        | ( Operation Or :: c,
+            env,
+            (Stack_item.Z (Plain_old_data (Bool x)) as x')
+            :: (Stack_item.Z (Plain_old_data (Bool _)) as y') :: stack ) ->
+            let return = if x then x' else y' in
+            Steps.Continue (c, env, return :: stack)
+        | ( Operation And :: c,
+            env,
+            (Stack_item.Z (Plain_old_data (Bool x)) as x')
+            :: (Stack_item.Z (Plain_old_data (Bool _)) as y') :: stack ) ->
+            let return = if x then y' else x' in
+            Steps.Continue (c, env, return :: stack)
+        | (Operation Not :: c, env, Stack_item.Z (Plain_old_data (Bool x)) :: stack)
+          ->
+            let return = Stack_item.Z (Plain_old_data (Bool (not x))) in
+            Steps.Continue (c, env, return :: stack)
         | (Plain_old_data Nil :: c, env, s) ->
             Steps.Continue (c, env, Stack_item.List [] :: s)
         | (Operation Cons :: c, env, item :: Stack_item.List x :: s) ->
