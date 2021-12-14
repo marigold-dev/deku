@@ -9,7 +9,7 @@ module Validators = Validators;
 module Block = Block;
 module Operation = Protocol_operation;
 
-include State;
+include Protocol_state;
 let apply_main_chain = (state, operation) => {
   open Protocol_operation.Main_chain;
   module Set = Operation_main_chain_set;

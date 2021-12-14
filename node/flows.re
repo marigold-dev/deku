@@ -1,7 +1,6 @@
 open Helpers;
 open Crypto;
 open Protocol;
-open Core;
 open Building_blocks;
 
 module Node = State;
@@ -337,7 +336,7 @@ let received_consensus_operation = (state, update_state, consensus_operation) =>
     };
   let.assert () = (
     `Invalid_signature_author,
-    Address.compare(
+    Core.Address.compare(
       state.Node.identity.t,
       Signature.address(consensus_operation.signature),
     )
@@ -366,10 +365,10 @@ let parse_main_transaction = (hash, index, transaction) => {
   | Tezos_interop.Consensus.Deposit({ticket, amount, destination}) =>
     let.ok destination =
       switch (destination) {
-      | Implicit(destination) => Ok(Address.of_key_hash(destination))
+      | Implicit(destination) => Ok(Core.Address.of_key_hash(destination))
       | _ => Error(`Invalid_address_on_main_operation)
       };
-    let amount = Amount.of_int(Z.to_int(amount));
+    let amount = Core.Amount.of_int(Z.to_int(amount));
     let kind =
       Protocol.Operation.Main_chain.Deposit({ticket, amount, destination});
     Ok(
@@ -489,7 +488,8 @@ let trusted_validators_membership = (state, update_state, request) => {
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Address.compare(state.Node.identity.t, Signature.address(signature)) == 0,
+    Core.Address.compare(state.Node.identity.t, Signature.address(signature))
+    == 0,
   );
   let.assert () = (
     `Failed_to_verify_payload,
