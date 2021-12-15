@@ -20,11 +20,11 @@ type environment = { binders : AST.expression_ Var.t list }
 
 let empty_environment = { binders = [] }
 
-(*** Adds a binder to the environment. 
+(*** Adds a binder to the environment.
      For example, in `let a=b in c`, `a` is a binder and it needs to be added to the environment when compiling `c` *)
 let add_binder x = function { binders } -> { binders = x :: binders }
 
-(*** Adds a declaration name to the environment. 
+(*** Adds a declaration name to the environment.
      For example, in `let a=b; let c=d;`, `a` is a declaration name and it needs to be added to the environment when compiling `d` *)
 
 (*** Compiles a type from the ast_typed representation to mini-c's, which is substantially simpler and more useful for us *)
@@ -32,7 +32,8 @@ let compile_type ~(raise : Errors.zincing_error raise) t =
   t |> Spilling.compile_type ~raise |> fun x -> x.type_content
 
 let rec tail_compile :
-    raise:Errors.zincing_error raise -> environment -> AST.expression -> Zinc.t =
+    raise:Errors.zincing_error raise -> environment -> AST.expression -> Zinc.t
+    =
  (*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for
      compiling everything else. *)
  fun ~raise environment expr ->
@@ -63,10 +64,9 @@ let rec tail_compile :
   match expr.expression_content with
   | E_lambda lambda ->
       Core Grab
-      ::
-      tail_compile
-        (environment |> add_binder lambda.binder.wrap_content)
-        lambda.result
+      :: tail_compile
+           (environment |> add_binder lambda.binder.wrap_content)
+           lambda.result
   | E_let_in { let_binder; rhs; let_result; _ } ->
       compile_let environment ~let':let_binder.wrap_content ~equal:rhs
         ~in':let_result
@@ -76,7 +76,7 @@ let rec tail_compile :
         lamb [ args ]
   | _ -> other_compile environment ~k:[ Core Return ] expr
 
-(*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for 
+(*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for
      compiling everything else. *)
 and other_compile :
     raise:Errors.zincing_error raise ->
@@ -98,7 +98,9 @@ and other_compile :
   let compile_pattern_matching = compile_pattern_matching ~raise in
   let compile_let environment ~let':name ~equal:value ~in':expression =
     let result_compiled =
-      other_compile (environment |> add_binder name) expression ~k:(Core EndLet :: k)
+      other_compile
+        (environment |> add_binder name)
+        expression ~k:(Core EndLet :: k)
     in
     other_compile environment ~k:(Core Grab :: result_compiled) value
   in
@@ -108,10 +110,10 @@ and other_compile :
   in
   let compile_function_application ~function_compiler environment expr args ~k =
     Zinc.Core (PushRetAddr k)
-    ::
-    compile_known_function_application environment
-      (fun ~k -> function_compiler environment expr ~k:(Zinc.Core Apply :: k))
-      args ~k
+    :: compile_known_function_application environment
+         (fun ~k ->
+           function_compiler environment expr ~k:(Zinc.Core Apply :: k))
+         args ~k
   in
   match expr.expression_content with
   | E_literal literal -> (
@@ -155,7 +157,9 @@ and other_compile :
       compile_function_application ~function_compiler:other_compile environment
         lamb [ args ] ~k
   | E_lambda { binder = { wrap_content = binder; _ }; result } ->
-      Core (Closure (Core Grab :: tail_compile (environment |> add_binder binder) result))
+      Core
+        (Closure
+           (Core Grab :: tail_compile (environment |> add_binder binder) result))
       :: k
   | E_recursive _recursive -> failwith "E_recursive unimplemented"
   | E_let_in { let_binder; rhs; let_result; _ } ->
@@ -179,17 +183,14 @@ and other_compile :
         ~k
   | E_constructor { constructor = Label constructor; element } ->
       compile_known_function_application environment
-        (fun ~k -> Adt (MakeVariant (constructor)) :: k)
+        (fun ~k -> Adt (MakeVariant constructor) :: k)
         [ element ] ~k
   | E_matching matching -> compile_pattern_matching environment matching ~k
   (* Record *)
   | E_record expression_label_map ->
       let bindings = Stage_common.Types.LMap.bindings expression_label_map in
       compile_known_function_application environment
-        (fun ~k ->
-          Adt (MakeRecord
-            (List.length bindings))
-          :: k)
+        (fun ~k -> Adt (MakeRecord (List.length bindings)) :: k)
         (List.map ~f:(fun (_, value) -> value) bindings)
         ~k
   | E_record_accessor { record; path } ->
@@ -235,9 +236,9 @@ and compile_constant :
   | C_CONTRACT_OPT -> Domain_specific_operation Contract_opt :: k
   | C_CALL -> Domain_specific_operation MakeTransaction :: k
   | C_UNIT -> Adt (MakeRecord 0) :: k
-  | C_NONE -> Adt (MakeRecord 0) :: Adt (MakeVariant ("None")) :: k
-  | C_SOME -> Adt (MakeVariant ("Some") ):: k
-  | C_CONS -> Operation Cons :: k 
+  | C_NONE -> Adt (MakeRecord 0) :: Adt (MakeVariant "None") :: k
+  | C_SOME -> Adt (MakeVariant "Some") :: k
+  | C_CONS -> Operation Cons :: k
   | C_LIST_EMPTY -> Plain_old_data Nil :: k
   | C_TRUE -> Plain_old_data (Bool true) :: k
   | C_FALSE -> Plain_old_data (Bool false) :: k
@@ -248,9 +249,9 @@ and compile_constant :
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)
 
-(*** This is for "known function"s, which is what we call functions whose definition is known at compile time. Compare to 
+(*** This is for "known function"s, which is what we call functions whose definition is known at compile time. Compare to
      functions such as `f` in `List.map` - inside the function `List.map`, `f` could be anything. The important difference
-     is that we know how many arguments known functions take before doing any actual work. This function assumes that you've 
+     is that we know how many arguments known functions take before doing any actual work. This function assumes that you've
      ensured that you've passed exactly that many arguments, and if you don't the generated code will be wrong. Since you can
      only ensure that for known functions, it's called `compile_known_function_application`. *)
 and compile_known_function_application :
@@ -302,7 +303,7 @@ and compile_pattern_matching :
     k:Zinc.t ->
     Zinc.t =
  fun ~raise environment to_match ~k ->
-  let open Zinc in 
+  let open Zinc in
   let other_compile = other_compile ~raise in
   let compile_type = compile_type ~raise in
   let compiled_type = compile_type to_match.matchee.type_expression in
@@ -359,40 +360,42 @@ and compile_pattern_matching :
       other_compile environment lettified ~k
   | T_option _, Match_variant { cases; _ } ->
       let code =
-        Adt (MatchVariant
-          (List.map
-             ~f:
-               (fun {
-                      constructor = Label label;
-                      pattern = { wrap_content = pattern; _ };
-                      body;
-                    } ->
-               (* We assume that the interpreter will put the matched value on the stack *)
-               let compiled =
-                 Core Grab
-                 :: other_compile (add_binder pattern environment) body ~k:[]
-               in
-               (label, compiled))
-             cases))
+        Adt
+          (MatchVariant
+             (List.map
+                ~f:
+                  (fun {
+                         constructor = Label label;
+                         pattern = { wrap_content = pattern; _ };
+                         body;
+                       } ->
+                  (* We assume that the interpreter will put the matched value on the stack *)
+                  let compiled =
+                    Core Grab
+                    :: other_compile (add_binder pattern environment) body ~k:[]
+                  in
+                  (label, compiled))
+                cases))
       in
       other_compile environment to_match.matchee ~k:(code :: k)
   | T_base TB_bool, Match_variant { cases; _ } ->
       let code =
-        Adt (MatchVariant
-          (List.map
-             ~f:
-               (fun {
-                      constructor = Label label;
-                      pattern = { wrap_content = pattern; _ };
-                      body;
-                    } ->
-               (* We assume that the interpreter will put the matched value on the stack *)
-               let compiled =
-                 Core Grab
-                 :: other_compile (add_binder pattern environment) body ~k:[]
-               in
-               (label, compiled))
-             cases))
+        Adt
+          (MatchVariant
+             (List.map
+                ~f:
+                  (fun {
+                         constructor = Label label;
+                         pattern = { wrap_content = pattern; _ };
+                         body;
+                       } ->
+                  (* We assume that the interpreter will put the matched value on the stack *)
+                  let compiled =
+                    Core Grab
+                    :: other_compile (add_binder pattern environment) body ~k:[]
+                  in
+                  (label, compiled))
+                cases))
       in
       other_compile environment to_match.matchee ~k:(code :: k)
   | _ ->
@@ -433,8 +436,8 @@ let compile_module :
             tail_compile ~raise empty_environment (let_wrapper expression)
           in
           ( (fun a ->
-              let_wrapper (make_expression_with_dependencies [ (expr_var, expression) ]
-                a)),
+              let_wrapper
+                (make_expression_with_dependencies [ (expr_var, expression) ] a)),
             compiled )
         in
         (let_wrapper, (name, declaration) :: declarations))
