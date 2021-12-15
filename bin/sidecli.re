@@ -214,8 +214,8 @@ let create_transaction =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: transaction},
+    Networking.request_user_operation_gossip(
+      {user_operation: transaction},
       identity.uri,
     );
   Format.printf(
@@ -307,8 +307,8 @@ let withdraw =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: operation},
+    Networking.request_user_operation_gossip(
+      {user_operation: operation},
       identity.uri,
     );
 
