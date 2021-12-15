@@ -25,6 +25,7 @@
  (static
   (flags
    (:standard
+    -O2
     -ccopt
     -static
     -ccopt
