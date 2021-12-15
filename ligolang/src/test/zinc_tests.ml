@@ -195,9 +195,6 @@ let check_record_destructure =
           Core (Access 1);
           Core (Access 0);
           Operation Add;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
@@ -234,10 +231,6 @@ let check_hash_key =
           Core (Access 1);
           Operation Eq;
           Adt (MakeRecord 2);
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
@@ -785,10 +778,6 @@ let if_then_else_op_function =
                  ("False", [ Core Grab; Core (Access 7) ]);
                  ("True", [ Core Grab; Core (Access 8) ]);
                ]);
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]

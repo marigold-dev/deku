@@ -74,6 +74,8 @@ let rec tail_compile :
   | E_application { lamb; args } ->
       compile_function_application ~function_compiler:tail_compile environment
         lamb [ args ]
+  | E_matching { matchee; cases = Match_record match_record } ->
+      tail_compile environment (match_record_rewrite ~matchee match_record)
   | _ -> other_compile environment ~k:[ Core Return ] expr
 
 (*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for
@@ -185,7 +187,10 @@ and other_compile :
       compile_known_function_application environment
         (fun ~k -> Adt (MakeVariant constructor) :: k)
         [ element ] ~k
-  | E_matching matching -> compile_pattern_matching environment matching ~k
+  | E_matching { matchee; cases = Match_record match_record } ->
+      other_compile environment (match_record_rewrite ~matchee match_record) ~k
+  | E_matching { matchee; cases = Match_variant match_variant } ->
+      compile_pattern_matching environment ~matchee match_variant ~k
   (* Record *)
   | E_record expression_label_map ->
       let bindings = Stage_common.Types.LMap.bindings expression_label_map in
@@ -296,19 +301,10 @@ and make_expression_with_dependencies :
            type_expression = expression.type_expression;
          })
 
-and compile_pattern_matching :
-    raise:Errors.zincing_error raise ->
-    environment ->
-    AST.matching ->
-    k:Zinc.t ->
-    Zinc.t =
- fun ~raise environment to_match ~k ->
-  let open Zinc in
-  let other_compile = other_compile ~raise in
-  let compile_type = compile_type ~raise in
-  let compiled_type = compile_type to_match.matchee.type_expression in
-  match (compiled_type, to_match.cases) with
-  | T_tuple _, Match_record { fields = binders; body; _ } ->
+and match_record_rewrite :
+    matchee:AST.expression -> AST.matching_content_record -> AST.expression =
+ fun ~matchee -> function
+  | { fields = binders; body; _ } ->
       let open Stage_common.Types in
       let fresh = Simple_utils.Var.fresh () in
       let loc =
@@ -343,7 +339,7 @@ and compile_pattern_matching :
             E_let_in
               {
                 let_binder = { wrap_content = fresh; location = loc };
-                rhs = to_match.matchee;
+                rhs = matchee;
                 let_result = lettified;
                 attr =
                   {
@@ -353,12 +349,26 @@ and compile_pattern_matching :
                     public = false;
                   };
               };
-          type_expression = to_match.matchee.type_expression;
+          type_expression = matchee.type_expression;
           location = loc;
         }
       in
-      other_compile environment lettified ~k
-  | T_option _, Match_variant { cases; _ } ->
+      lettified
+
+and compile_pattern_matching :
+    raise:Errors.zincing_error raise ->
+    environment ->
+    matchee:AST.expression ->
+    AST.matching_content_variant ->
+    k:Zinc.t ->
+    Zinc.t =
+ fun ~raise environment ~matchee cases ~k ->
+  let open Zinc in
+  let other_compile = other_compile ~raise in
+  let compile_type = compile_type ~raise in
+  let compiled_type = compile_type matchee.type_expression in
+  match (compiled_type, cases) with
+  | T_option _, { cases; _ } ->
       let code =
         Adt
           (MatchVariant
@@ -377,8 +387,8 @@ and compile_pattern_matching :
                   (label, compiled))
                 cases))
       in
-      other_compile environment to_match.matchee ~k:(code :: k)
-  | T_base TB_bool, Match_variant { cases; _ } ->
+      other_compile environment matchee ~k:(code :: k)
+  | T_base TB_bool, { cases; _ } ->
       let code =
         Adt
           (MatchVariant
@@ -397,13 +407,13 @@ and compile_pattern_matching :
                   (label, compiled))
                 cases))
       in
-      other_compile environment to_match.matchee ~k:(code :: k)
+      other_compile environment matchee ~k:(code :: k)
   | _ ->
       failwith
         (Format.asprintf
            "E_matching unimplemented. Need to implement matching for %a"
            Mini_c.PP.type_content
-           (compile_type to_match.matchee.type_expression))
+           (compile_type matchee.type_expression))
 
 let compile_module :
     raise:Errors.zincing_error raise -> AST.module_fully_typed -> Program.t =
