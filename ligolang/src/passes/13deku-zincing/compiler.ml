@@ -60,6 +60,9 @@ let rec tail_compile :
       (function_compiler environment expr)
       args
   in
+  let compile_pattern_matching =
+    compile_pattern_matching ~raise ~compile_match_code:tail_compile
+  in
 
   match expr.expression_content with
   | E_lambda lambda ->
@@ -76,6 +79,8 @@ let rec tail_compile :
         lamb [ args ]
   | E_matching { matchee; cases = Match_record match_record } ->
       tail_compile environment (match_record_rewrite ~matchee match_record)
+  | E_matching { matchee; cases = Match_variant match_variant } ->
+      compile_pattern_matching environment ~matchee match_variant ~k:[]
   | _ -> other_compile environment ~k:[ Core Return ] expr
 
 (*** For optimization purposes, we have one function for compiling expressions in the "tail position" and another for
@@ -97,7 +102,10 @@ and other_compile :
   in
   let tail_compile = tail_compile ~raise in
   let other_compile = other_compile ~raise in
-  let compile_pattern_matching = compile_pattern_matching ~raise in
+  let compile_pattern_matching =
+    compile_pattern_matching ~raise
+      ~compile_match_code:(other_compile ~k:[ Core EndLet ])
+  in
   let compile_let environment ~let':name ~equal:value ~in':expression =
     let result_compiled =
       other_compile
@@ -360,9 +368,10 @@ and compile_pattern_matching :
     environment ->
     matchee:AST.expression ->
     AST.matching_content_variant ->
+    compile_match_code:(environment -> AST.expression -> Zinc.t) ->
     k:Zinc.t ->
     Zinc.t =
- fun ~raise environment ~matchee cases ~k ->
+ fun ~raise environment ~matchee cases ~compile_match_code ~k ->
   let open Zinc in
   let other_compile = other_compile ~raise in
   let compile_type = compile_type ~raise in
@@ -379,10 +388,14 @@ and compile_pattern_matching :
                          pattern = { wrap_content = pattern; _ };
                          body;
                        } ->
-                  (* We assume that the interpreter will put the matched value on the stack *)
+                  (* When interpreting MatchVariant, the interpreter pops the top item off the stack,
+                     which better be a variant, then unwraps it, then pushes the unwraped item onto
+                     the stack. We compile pattern match cases as if they were functions, so we need
+                     to `Grab` the unwrapped item off the stack just like we would when compiling any
+                     other function *)
                   let compiled =
                     Core Grab
-                    :: other_compile (add_binder pattern environment) body ~k:[]
+                    :: compile_match_code (add_binder pattern environment) body
                   in
                   (label, compiled))
                 cases))
@@ -402,7 +415,7 @@ and compile_pattern_matching :
                   (* We assume that the interpreter will put the matched value on the stack *)
                   let compiled =
                     Core Grab
-                    :: other_compile (add_binder pattern environment) body ~k:[]
+                    :: compile_match_code (add_binder pattern environment) body
                   in
                   (label, compiled))
                 cases))
