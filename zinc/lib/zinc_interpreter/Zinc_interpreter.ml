@@ -54,8 +54,9 @@ module Make (E : Executor) = struct
             :: (Stack_item.Z (Plain_old_data (Bool _)) as y') :: stack ) ->
             let return = if x then y' else x' in
             Steps.Continue (c, env, return :: stack)
-        | (Operation Not :: c, env, Stack_item.Z (Plain_old_data (Bool x)) :: stack)
-          ->
+        | ( Operation Not :: c,
+            env,
+            Stack_item.Z (Plain_old_data (Bool x)) :: stack ) ->
             let return = Stack_item.Z (Plain_old_data (Bool (not x))) in
             Steps.Continue (c, env, return :: stack)
         | (Plain_old_data Nil :: c, env, s) ->
@@ -133,6 +134,19 @@ module Make (E : Executor) = struct
             | None -> Steps.Internal_error "inexhaustive match"
             | Some match_code ->
                 Steps.Continue (List.concat [match_code; c], env, item :: s))
+        | ( Adt (MatchVariant vs) :: c,
+            env,
+            Stack_item.Z (Plain_old_data (Bool b)) :: s ) -> (
+            let label = if b then "True" else "False" in
+            let item = Utils.unit_record_stack in
+            match
+              Base.List.find_map vs ~f:(fun (match_arm, constructors) ->
+                  if String.equal match_arm label then Some constructors
+                  else None)
+            with
+            | None -> Steps.Internal_error "inexhaustive match"
+            | Some match_code ->
+                Steps.Continue (List.concat [match_code; c], env, item :: s))
         | (Adt (MakeVariant label) :: c, env, value :: s) ->
             Steps.Continue (c, env, Stack_item.Variant (label, value) :: s)
         (* Math *)
@@ -150,6 +164,7 @@ module Make (E : Executor) = struct
               (c, env, Stack_item.Z (Plain_old_data (Mutez (Z.add a b))) :: s)
         (* Booleans *)
         | (Operation Eq :: c, env, a :: b :: s) ->
+            (* This is not constant time, which is bad *)
             Steps.Continue
               ( c,
                 env,
@@ -160,7 +175,8 @@ module Make (E : Executor) = struct
             env,
             Stack_item.Z (Plain_old_data (Key key)) :: s ) ->
             let h = E.Key.hash_key key in
-            Steps.Continue (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
+            Steps.Continue
+              (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
         (* Tezos specific *)
         | (Domain_specific_operation ChainID :: c, env, s) ->
             Steps.Continue

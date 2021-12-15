@@ -59,7 +59,7 @@ type test =
   unit
 
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
-    ?(index = 0) ?(initial_stack = []) ?expect_failure ?expected_output_env
+    ?index ?(initial_stack = []) ?expect_failure ?expected_output_env
     ?expected_output contract_file (expected_zinc : Zinc_types.Program.t) : test
     =
  fun ~raise ~add_warning () ->
@@ -78,6 +78,7 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
       (Printf.sprintf "compiling %s" contract_file)
       expected_zinc zinc
   in
+  let index = match index with None -> List.length zinc - 1 | Some n -> n in
   match
     ( expect_failure,
       let from = List.nth_exn zinc index |> snd |> Zinc.to_yojson in
@@ -491,7 +492,7 @@ let bools_religo =
           Core Return;
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool true)) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
 
 let bools_ligo =
   expect_simple_compile_to ~dialect:PascaLIGO "bools"
@@ -524,7 +525,7 @@ let bools_ligo =
           Core Return;
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool true)) ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
 
 let bool_ops =
   expect_simple_compile_to ~dialect:PascaLIGO "boolean_operators"
@@ -672,9 +673,81 @@ let bool_ops =
     ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool true)) ]
 
+let if_then_else =
+  let open Z in
+  expect_simple_compile_to ~dialect:ReasonLIGO "if_then_else"
+    [
+      ("a", [ Plain_old_data (Num ~$2); Core Return ]);
+      ( "b",
+        [
+          Plain_old_data (Num ~$2);
+          Core Grab;
+          Plain_old_data (Num ~$3);
+          Core Return;
+        ] );
+      ( "lf",
+        [
+          Plain_old_data (Num ~$2);
+          Core Grab;
+          Plain_old_data (Num ~$3);
+          Core Grab;
+          Plain_old_data (Bool true);
+          Core Grab;
+          Core (Access 0);
+          Adt
+            (MatchVariant
+               [
+                 ("False", [ Core Grab; Core (Access 2) ]);
+                 ( "True",
+                   [
+                     Core Grab;
+                     Plain_old_data (Num ~$2);
+                     Core (Access 3);
+                     Operation Add;
+                   ] );
+               ]);
+          Core Return;
+        ] );
+    ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$4)) ]
+
 let if_then_else_op =
   let open Z in
   expect_simple_compile_to ~dialect:PascaLIGO "if_then_else_op"
+    [
+      ("a", [ Plain_old_data (Num ~$2); Core Return ]);
+      ( "b",
+        [
+          Plain_old_data (Num ~$2);
+          Core Grab;
+          Plain_old_data (Num ~$3);
+          Core Return;
+        ] );
+      ( "lf",
+        [
+          Plain_old_data (Num ~$2);
+          Core Grab;
+          Plain_old_data (Num ~$3);
+          Core Grab;
+          Plain_old_data (Bool true);
+          Plain_old_data (Bool false);
+          Operation Or;
+          Core Grab;
+          Core (Access 0);
+          Adt
+            (MatchVariant
+               [
+                 ("False", [ Core Grab; Core (Access 2) ]);
+                 ("True", [ Core Grab; Core (Access 3) ]);
+               ]);
+          Core Return;
+        ] );
+    ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
+
+let if_then_else_op_function =
+  let open Z in
+  expect_simple_compile_to ~dialect:PascaLIGO "if_then_else_op_function"
     [
       ("a", [ Plain_old_data (Num ~$2); Core Return ]);
       ( "b",
@@ -709,7 +782,7 @@ let if_then_else_op =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 8) ]);
+                 ("False", [ Core Grab; Core (Access 7) ]);
                  ("True", [ Core Grab; Core (Access 8) ]);
                ]);
           Core EndLet;
@@ -721,15 +794,12 @@ let if_then_else_op =
     ]
     ~initial_stack:
       [
-        Types.Stack_item.Z (Plain_old_data (Bool true));
-        Types.Stack_item.Z (Plain_old_data (Bool true));
+        Types.Stack_item.Record
+          (LMap.empty
+          |> LMap.add 0 (Types.Stack_item.Z (Plain_old_data (Bool false)))
+          |> LMap.add 1 (Types.Stack_item.Z (Plain_old_data (Bool true))));
       ]
-    ~expected_output:
-      [
-        Types.Stack_item.Z (Plain_old_data (Num ~$2));
-        Types.Stack_item.Z (Plain_old_data (Bool true));
-        Types.Stack_item.Z (Plain_old_data (Bool true));
-      ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
 
 let make_an_option =
   expect_simple_compile_to ~dialect:ReasonLIGO "make_an_option"
@@ -793,7 +863,9 @@ let main =
       test_w "bools_religo" bools_religo;
       test_w "bools_ligo" bools_ligo;
       test_w "bool_ops" bool_ops;
+      test_w "if_then_else" if_then_else;
       test_w "if with ops" if_then_else_op;
+      test_w "if with ops function" if_then_else_op_function;
       test_w "id" id;
       test_w "chain_id" chain_id;
       test_w "chain_id_func" chain_id_func;
