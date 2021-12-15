@@ -1,7 +1,7 @@
 open Crypto;
 open Core;
 
-[@deriving (yojson, ord)]
+[@deriving (eq, ord, yojson)]
 type validator = {address: Address.t};
 
 [@deriving yojson]
