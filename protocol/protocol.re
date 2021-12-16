@@ -10,6 +10,7 @@ module Validators = Validators;
 module Amount = Amount;
 module Block = Block;
 module Operation = Operation;
+module Contract = Contract;
 
 include State;
 let apply_main_chain = (state, operation) => {

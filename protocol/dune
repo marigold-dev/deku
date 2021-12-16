@@ -2,4 +2,4 @@
  (name protocol)
  (libraries helpers tezos_interop tezos crypto)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.ord)))
+  (pps ppx_deriving_yojson ppx_deriving.ord ppx_deriving.eq)))
