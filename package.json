@@ -15,7 +15,8 @@
   "license": "MIT",
   "scripts": {
     "test": "dune test",
-    "format": "dune build @fmt --auto-promote"
+    "format": "dune build @fmt --auto-promote",
+    "build_static": "dune build --profile=static --release"
   },
   "dependencies": {
     "ocaml": "4.12.",
