@@ -76,7 +76,10 @@ module type Executor = sig
   end
 end
 
-module Executor: Executor = struct 
+module Executor: Executor = struct
+
+  (* i really dont like this *)
+  let get_state () = !Flows.get_state()
   module Key = struct 
     include Crypto.Key
     let hash_key t = to_string t |> Crypto.BLAKE2B.hash

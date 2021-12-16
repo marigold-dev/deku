@@ -1,6 +1,6 @@
 open Helpers
 
-module M = Map.Make_with_yojson(Contract)
+module M = Map.Make_with_yojson(Tezos.Contract_hash)
 type contract_state = {
   entrypoint: string option;
   originator: Address.t;
