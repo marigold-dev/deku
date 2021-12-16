@@ -46,7 +46,10 @@ module Side_chain: {
         ticket: Ticket.t,
       })
     | Add_validator(Validators.validator)
-    | Remove_validator(Validators.validator);
+    | Remove_validator(Validators.validator)
+    | Originate_contract(
+        unit /* replace with (zinc.program, zinc.program), for contract code and one for initial storage */,
+      );
 
   [@deriving (ord, yojson)]
   type t =
