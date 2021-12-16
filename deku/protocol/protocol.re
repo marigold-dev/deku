@@ -86,6 +86,7 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
+  | Originate_contract(_) => failwith("Implement");
   };
 };
 let apply_side_chain = (state, operation) =>
