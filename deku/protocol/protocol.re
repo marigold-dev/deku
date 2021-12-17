@@ -89,11 +89,27 @@ let apply_side_chain = (state: t, operation) => {
   | Remove_validator(validator) =>
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
-  | Originate_contract((code,initial_storage)) =>
-    let (_, signature) = Protocol_signature.signature_to_signature_by_address(operation.signature);
-    let new_address =  Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
-    let contract_state = Contract_storage.make_state(~entrypoint = None,~code=code, ~storage=initial_storage, ~originator = operation.source, () )
-    let new_contract_state = Contract_storage.add(state.contracts_storage,new_address,contract_state);
+  | Originate_contract((code, initial_storage)) =>
+    let (_, signature) =
+      Protocol_signature.signature_to_signature_by_address(
+        operation.signature,
+      );
+    let new_address =
+      Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
+    let contract_state =
+      Contract_storage.make_state(
+        ~entrypoint=None,
+        ~code,
+        ~storage=initial_storage,
+        ~originator=operation.source,
+        (),
+      );
+    let new_contract_state =
+      Contract_storage.add(
+        state.contracts_storage,
+        new_address,
+        contract_state,
+      );
     Ok(({...state, contracts_storage: new_contract_state}, `Origination));
   };
 };

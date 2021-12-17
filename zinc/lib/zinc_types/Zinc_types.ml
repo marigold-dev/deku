@@ -1,13 +1,7 @@
 open Zinc_utils
 include Zinc_types_intf
 
-module Make (D : Domain_types) :
-  S
-    with type Zinc.Hash.t := D.Hash.t
-     and type Zinc.Address.t := D.Address.t
-     and type Zinc.Contract.t := D.Contract.t
-     and type Zinc.Chain_id.t := D.Chain_id.t
-     and type Zinc.Key.t := D.Key.t = struct
+module Make (D : Domain_types) = struct
   module Zinc = struct
     open D
 
@@ -25,6 +19,12 @@ module Make (D : Domain_types) :
 
     module Key = struct
       include Key
+
+      let pp fmt t = Format.fprintf fmt "%s" (to_string t)
+    end
+
+    module Key_hash = struct
+      include Key_hash
 
       let pp fmt t = Format.fprintf fmt "%s" (to_string t)
     end
@@ -61,7 +61,7 @@ module Make (D : Domain_types) :
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
-      | Key_hash of Hash.t
+      | Key_hash of Key_hash.t
       | Chain_id of Chain_id.t
     [@@deriving show {with_path = false}, eq, yojson]
 
@@ -214,7 +214,7 @@ module Make (D : Domain_types) :
   end
 end
 
-module Exec = struct
+module Domain = struct
   module Address = struct
     type t = string [@@deriving eq, yojson]
 
@@ -226,6 +226,14 @@ module Exec = struct
   end
 
   module Key = struct
+    type t = string [@@deriving eq, yojson]
+
+    let to_string = Fun.id
+
+    let of_string a = Some a
+  end
+
+  module Key_hash = struct
     type t = string [@@deriving eq, yojson]
 
     let to_string = Fun.id
@@ -250,7 +258,7 @@ module Exec = struct
 
     let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
   end
-  
+
   module Chain_id = struct
     type t = string [@@deriving show, eq, yojson]
 
@@ -262,11 +270,4 @@ module Exec = struct
   end
 end
 
-module Raw :
-  S
-    with type Zinc.Hash.t := string
-     and type Zinc.Address.t := string
-     and type Zinc.Contract.t := string * string option
-     and type Zinc.Chain_id.t := string
-     and type Zinc.Key.t := string =
-  Make (Exec)
+module Raw = Make (Domain)

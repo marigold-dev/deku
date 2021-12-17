@@ -1,76 +1,21 @@
-module type With_string = sig
-  type t
-
-  val of_string : string -> t option
-
-  val to_string : t -> string
-end
-
-module type With_yojson = sig
-  type t
-
-  val of_yojson : Yojson.Safe.t -> t Ppx_deriving_yojson_runtime.error_or
-
-  val to_yojson : t -> Yojson.Safe.t
-end
-
-module type With_eq = sig
-  type t
-
-  val equal : t -> t -> bool
-end
-
-module type With_domain_derivation = sig
-  type t
-
-  include With_string with type t := t
-
-  include With_yojson with type t := t
-
-  include With_eq with type t := t
-end
-
 module type Executor = sig
-  module Address : sig
-    (*Tezos.Address*)
-    type t
+  type address
 
-    include With_domain_derivation with type t := t
-  end
+  type contract
 
-  module Contract : sig
-    (* Tezos.Contract - TODO *)
-    type t
+  type hash
 
-    include With_domain_derivation with type t := t
+  type chain_id
 
-    val get_contract_opt : Address.t -> t option
-  end
+  type key
 
-  module Chain_id : sig
-    (* Tezos.Contract - TODO *)
-    type t
+  type key_hash
 
-    include With_domain_derivation with type t := t
+  val get_contract_opt : address -> contract option
 
-    val chain_id : t
-  end
+  val chain_id : chain_id
 
-  module Hash : sig
-    (*Crypto.BLAKE2B*)
-    type t
+  val hash : string -> hash
 
-    include With_domain_derivation with type t := t
-
-    val hash : string -> t
-  end
-
-  module Key : sig
-    (*Crypto.Key*)
-    type t
-
-    val hash_key : t -> Hash.t
-
-    include With_domain_derivation with type t := t
-  end
+  val key_hash : key -> key_hash
 end

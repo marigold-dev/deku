@@ -22,7 +22,4 @@ let to_string t = Yojson.Safe.to_string @@ to_yojson t
 let of_string str = Result.to_option @@ of_yojson @@ Yojson.Safe.from_string str
 
 
-(* @TODO: fetch contract from storage *)
-let get_contract_opt _ = failwith "todo"
-
 

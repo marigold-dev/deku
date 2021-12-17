@@ -1,16 +1,10 @@
 
 module Executor = struct
-  module Key = struct 
-    include Crypto.Key
-    let hash_key t = to_string t |> Crypto.BLAKE2B.hash
-  end
-  module Address = struct
-    include Tezos.Address
-  end
-  module Hash = struct
-    include Crypto.BLAKE2B
-  end
+  module Key = Crypto.Key
+  module Address = Tezos.Address
+  module Hash = Crypto.BLAKE2B
   module Chain_id = Chain_id
+  module Key_hash = Crypto.Key_hash
   module Contract = Contract
 end
 

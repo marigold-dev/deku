@@ -67,7 +67,9 @@ module Side_chain = {
       })
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator)
-    | Originate_contract((Interpreter.Types.Program.t, Interpreter.Types.Program.t));
+    | Originate_contract(
+        (Interpreter.Types.Program.t, Interpreter.Types.Program.t),
+      );
 
   [@deriving yojson]
   type t = {
