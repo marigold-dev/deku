@@ -8,7 +8,14 @@
 
 (executable
  (name sidecli)
- (libraries node files helpers cmdliner)
+ (libraries
+  node
+  files
+  helpers
+  zinc.types
+  zinc.interpreter
+  zinc.utils
+  cmdliner)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
