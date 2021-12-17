@@ -10,6 +10,8 @@ module Validators = Validators;
 module Amount = Amount;
 module Block = Block;
 module Operation = Operation;
+module Contract = Contract;
+module Contract_storage = Contract_storage;
 
 include State;
 let apply_main_chain = (state, operation) => {
@@ -172,6 +174,7 @@ let make = (~initial_block) => {
     last_state_root_update: 0.0,
     last_applied_block_timestamp: 0.0,
     last_seen_membership_change_timestamp: 0.0,
+    contracts_storage: Contract_storage.empty,
   };
   apply_block(empty, initial_block) |> fst;
 };

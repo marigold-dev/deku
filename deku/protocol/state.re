@@ -16,6 +16,7 @@ type t = {
   validators_hash: BLAKE2B.t,
   // shared consensus
   block_height: int64,
+  contracts_storage: Contract_storage.t,
   last_block_hash: BLAKE2B.t,
   state_root_hash: BLAKE2B.t,
   /* TODO: I really don't like this field here, as it means protocol
