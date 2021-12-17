@@ -37,12 +37,23 @@ let zinc =
     ]
   |> Zinc_types.Zinc.to_yojson
 
+module Executor : Zinc_interpreter.Dummy.Executor = struct
+  let get_contract_opt a = Some (a, None)
+
+  let chain_id = "chain id goes here"
+
+  let hash = Fun.id
+
+  let key_hash s = s ^ "hash"
+end
+
 let%expect_test _ =
   let open Zinc_interpreter.Dummy in
   let open Interpreter in
   let zinc = Types.Zinc.of_yojson zinc |> Result.get_ok in
   let run_resutl =
-    try eval (initial_state zinc) with Failure x -> Failure x
+    try eval (module Executor) (initial_state zinc)
+    with Failure x -> Failure x
   in
   Types.Interpreter_output.to_string run_resutl |> print_endline ;
   [%expect

@@ -1,0 +1,9 @@
+# folders
+_esy
+node_modules
+.github
+
+# files
+*.install
+*.md
+*.yml

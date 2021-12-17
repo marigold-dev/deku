@@ -5,7 +5,15 @@ module Zinc_interpreter = Zinc_interpreter.Dummy
 open Zinc_interpreter
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
+module Executor : Executor = struct
+  let get_contract_opt a = Some (a, None)
 
+  let chain_id = "chain id goes here"
+
+  let hash = Fun.id
+
+  let key_hash s = s ^ "hash"
+end
 (* Helpers *)
 
 (* Compiling *)
@@ -91,7 +99,7 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
     ( expect_failure,
       let from = List.nth_exn zinc index |> snd |> Zinc.to_yojson in
       let to_ = Types.Zinc.of_yojson from |> Result.get_ok in
-      to_ |> Interpreter.initial_state ~initial_stack |> Interpreter.eval )
+      to_ |> Interpreter.initial_state ~initial_stack |> Interpreter.eval (module Executor) )
   with
   | None, Success (output_env, output_stack) ->
       let () =
