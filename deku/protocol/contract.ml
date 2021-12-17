@@ -6,7 +6,7 @@ type unparsed = string * string option [@@deriving yojson] (* the same as Raw.Co
 
 (** Address.t * entrypoint, @TODO: decide on entrypoint *)
 type t = Contract_hash.t * string option [@@deriving yojson,eq, ord]
-
+let make c = c
 let of_yojson json = 
   let open Result.Syntax in
   let* (contract_hash, entrypoint) = unparsed_of_yojson json  in

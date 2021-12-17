@@ -39,6 +39,7 @@ type t = {
         | `Remove_validator
         | `Transaction
         | `Withdraw(Ledger.Handle.t)
+        | `Origination
       ],
     ),
   persist_trusted_membership_change:

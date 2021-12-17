@@ -185,7 +185,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   open Networking;
 
   let contract = Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
-  module Zinc_interpreter = Zinc_interpreter.Dummy;
+  module Zinc_interpreter = Protocol.Interpreter;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);

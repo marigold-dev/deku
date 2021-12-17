@@ -1,5 +1,12 @@
 (library
  (name node)
- (libraries protocol uri helpers piaf crypto tezos)
+ (libraries
+  protocol
+  uri
+  helpers
+  piaf
+  crypto
+  tezos
+)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord)))

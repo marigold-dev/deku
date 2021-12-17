@@ -1,6 +1,6 @@
 {
     "ocaml.sandbox": {
         "kind": "esy",
-        "root": "${workspaceFolder:sidechain}"
+        "root": "${workspaceFolder:deku}"
     }
 }

@@ -47,7 +47,7 @@ module Side_chain: {
       })
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator)
-    | Originate_contract((Zinc_interpreter.Dummy.Types.Program.t, Zinc_interpreter.Dummy.Types.Program.t));
+    | Originate_contract((Interpreter.Types.Program.t, Interpreter.Types.Program.t));
 
   [@deriving (ord, yojson)]
   type t =
