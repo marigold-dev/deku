@@ -4,6 +4,8 @@ open Zinc_interpreter_intf
 module Make (E : Executor) = struct
   module Types = Zinc_types.Make (E)
 
+  module Functions = E.Functions
+
   module Interpreter = struct
     open Types
 
@@ -30,7 +32,10 @@ module Make (E : Executor) = struct
     let initial_state ?initial_stack:(stack = []) a : Interpreter_input.t =
       (a, [], stack)
 
-    let[@warning "-4"] eval (code, env, stack) =
+    let[@warning "-4"] eval (state : 'a) (functions : 'a -> E.Functions.t)
+        (code, env, stack) =
+      let open E.Functions in
+      let functions : E.Functions.t = functions state in
       let apply_once (code : Zinc.t) env stack =
         let () =
           print_endline
@@ -54,8 +59,9 @@ module Make (E : Executor) = struct
             :: (Stack_item.Z (Plain_old_data (Bool _)) as y') :: stack ) ->
             let return = if x then y' else x' in
             Steps.Continue (c, env, return :: stack)
-        | (Operation Not :: c, env, Stack_item.Z (Plain_old_data (Bool x)) :: stack)
-          ->
+        | ( Operation Not :: c,
+            env,
+            Stack_item.Z (Plain_old_data (Bool x)) :: stack ) ->
             let return = Stack_item.Z (Plain_old_data (Bool (not x))) in
             Steps.Continue (c, env, return :: stack)
         | (Plain_old_data Nil :: c, env, s) ->
@@ -160,7 +166,8 @@ module Make (E : Executor) = struct
             env,
             Stack_item.Z (Plain_old_data (Key key)) :: s ) ->
             let h = E.Key.hash_key key in
-            Steps.Continue (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
+            Steps.Continue
+              (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
         (* Tezos specific *)
         | (Domain_specific_operation ChainID :: c, env, s) ->
             Steps.Continue
@@ -169,13 +176,13 @@ module Make (E : Executor) = struct
                 Stack_item.Z
                   (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
                      Also probably shouldn't use key like this. *)
-                  (Plain_old_data (Chain_id E.Chain_id.chain_id)) :: s )
+                  (Plain_old_data (Chain_id functions.chain_id)) :: s )
         | ( Domain_specific_operation Contract_opt :: c,
             env,
             Stack_item.Z (Plain_old_data (Address address)) :: s ) ->
             (* todo: abstract this into a function *)
             let contract =
-              match E.Contract.get_contract_opt address with
+              match functions.get_contract_opt address with
               | Some contract ->
                   Stack_item.Variant
                     ("Some", Stack_item.NonliteralValue (Contract contract))
@@ -249,8 +256,6 @@ module Dummy_executor = struct
     let to_string x = to_yojson x |> Yojson.Safe.to_string
 
     let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-
-    let get_contract_opt (a : Address.t) : t option = Some (a, None)
   end
 
   module Key = struct
@@ -269,8 +274,13 @@ module Dummy_executor = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
+  end
 
-    let chain_id = "chain id goes here"
+  module Functions = struct
+    type t = {
+      get_contract_opt : string -> (string * string option) option;
+      chain_id : string;
+    }
   end
 end
 

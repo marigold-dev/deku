@@ -1,3 +1,4 @@
+(*
 [@@@warning "-40"]
 
 module Zinc_types = Zinc_types.Raw
@@ -205,3 +206,4 @@ let%expect_test _ =
          (Z (Plain_old_data (Address tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV)))]
        stack: [(Z (Plain_old_data (String "Not a contract")))]
        (Failure "Not a contract") |}]
+*)
