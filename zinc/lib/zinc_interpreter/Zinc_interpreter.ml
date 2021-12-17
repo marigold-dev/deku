@@ -14,8 +14,6 @@ module Make (D : Domain_types) = struct
        and type chain_id := D.Chain_id.t
        and type hash := D.Hash.t
 
-  module Functions = E.Functions
-
   module Interpreter = struct
     open Types
 
@@ -285,13 +283,6 @@ module Dummy_domain = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
-  end
-
-  module Functions = struct
-    type t = {
-      get_contract_opt : string -> (string * string option) option;
-      chain_id : string;
-    }
   end
 end
 
