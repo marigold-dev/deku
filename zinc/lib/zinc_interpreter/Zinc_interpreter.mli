@@ -13,7 +13,8 @@ module Make (E : Executor) : sig
     val initial_state :
       ?initial_stack:Types.Stack.t -> Types.Zinc.t -> Types.Interpreter_input.t
 
-    val eval : Types.Interpreter_input.t -> Types.Interpreter_output.t
+    val eval : 'a ->
+           ('a -> E.Functions.t) -> Types.Interpreter_input.t -> Types.Interpreter_output.t
   end
 end
 
@@ -26,10 +27,15 @@ module Dummy : sig
        and type Zinc.Chain_id.t := string
        and type Zinc.Hash.t := string
 
+  module Functions : sig
+    type t = {get_contract_opt: (string -> (string * string option) option); chain_id: string}
+  end 
+
   module Interpreter : sig
     val initial_state :
       ?initial_stack:Types.Stack.t -> Types.Zinc.t -> Types.Interpreter_input.t
 
-    val eval : Types.Interpreter_input.t -> Types.Interpreter_output.t
+    val eval : 'a ->
+           ('a -> Functions.t) -> Types.Interpreter_input.t -> Types.Interpreter_output.t
   end
 end
