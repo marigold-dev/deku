@@ -67,7 +67,7 @@ type test =
   unit
 
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
-    ?(index) ?(initial_stack = []) ?expect_failure ?expected_output_env
+    ?index ?(initial_stack = []) ?expect_failure ?expected_output_env
     ?expected_output ?expected_json contract_file
     (expected_zinc : Zinc_types.Program.t) : test =
  fun ~raise ~add_warning () ->
@@ -100,7 +100,9 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
     ( expect_failure,
       let from = List.nth_exn zinc index |> snd |> Zinc.to_yojson in
       let to_ = Types.Zinc.of_yojson from |> Result.get_ok in
-      to_ |> Interpreter.initial_state ~initial_stack |> Interpreter.eval (module Executor) )
+      to_
+      |> Interpreter.initial_state ~initial_stack
+      |> Interpreter.eval (module Executor) )
   with
   | None, Success (output_env, output_stack) ->
       let () =
@@ -212,9 +214,6 @@ let check_record_destructure =
           Core (Access 1);
           Core (Access 0);
           Operation Add;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
@@ -251,10 +250,6 @@ let check_hash_key =
           Core (Access 1);
           Operation Eq;
           Adt (MakeRecord 2);
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
@@ -378,9 +373,6 @@ let super_simple_contract =
           Operation Add;
           Plain_old_data Nil;
           Adt (MakeRecord 2);
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
@@ -402,15 +394,14 @@ let super_simple_contract =
       ]
     ~expected_json:
       "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],\
-      [\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],\
-      [\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",\
-      [\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],\
-      [\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",\
+      [\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",\
+      [\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",\
+      [\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",\
+      [\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",\
+      [\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",\
       [\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",\
-      [\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"EndLet\"]],\
-      [\"Core\",[\"EndLet\"]],[\"Core\",[\"EndLet\"]],[\"Core\",\
+      [\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",\
       [\"Return\"]]]]]"
-
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
@@ -857,10 +848,6 @@ let if_then_else_op_function =
                  ("False", [ Core Grab; Core (Access 7) ]);
                  ("True", [ Core Grab; Core (Access 8) ]);
                ]);
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
-          Core EndLet;
           Core Return;
         ] );
     ]
