@@ -334,15 +334,15 @@ let match_on_sum =
           Adt
             (MatchVariant
                [
-                 ("Some", [ Core Grab; Core (Access 0) ]);
+                 ("Some", [ Core Grab; Core (Access 0); Core Return ]);
                  ( "None",
                    [
                      Core Grab;
                      Plain_old_data (String "Not a contract");
                      Control_flow Failwith;
+                     Core Return;
                    ] );
                ]);
-          Core Return;
         ] );
     ]
     ~expected_output:
@@ -393,22 +393,58 @@ let super_simple_contract =
           |];
       ]
     ~expected_json:
-      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],\
-      [\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",\
-      [\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",\
-      [\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",\
-      [\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",\
-      [\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",\
-      [\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",\
-      [\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",\
-      [\"Return\"]]]]]"
+      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
   expect_simple_compile_to ~dialect:ReasonLIGO "mutez_construction"
     [ ("a", [ Plain_old_data (Mutez (Z.of_int 1)); Core Return ]) ]
 
+let nontail_match =
+  let open Z in
+  expect_simple_compile_to ~dialect:ReasonLIGO "nontail_match"
+    [
+      ( "a",
+        [
+          Plain_old_data (Num ~$4);
+          Core Grab;
+          Plain_old_data (Num ~$3);
+          Adt (MakeVariant "Some");
+          Core Grab;
+          Core (Access 0);
+          Core Grab;
+          Core (Access 0);
+          Adt
+            (MatchVariant
+               [
+                 ( "Some",
+                   [
+                     Core Grab;
+                     Plain_old_data (Num ~$5);
+                     Core (Access 0);
+                     Operation Add;
+                     Core EndLet;
+                   ] );
+                 ( "None",
+                   [
+                     Core Grab;
+                     Plain_old_data (String "should be some >:(");
+                     Control_flow Failwith;
+                     Core EndLet;
+                   ] );
+               ]);
+          Core EndLet;
+          Core Grab;
+          Core (Access 2);
+          Core (Access 0);
+          Operation Add;
+          Core Return;
+        ] );
+    ]
+    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$12)) ]
+
 let create_transaction =
+  let open Z in
   expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction"
     [
       ( "a",
@@ -422,18 +458,19 @@ let create_transaction =
           Adt
             (MatchVariant
                [
-                 ("Some", [ Core Grab; Core (Access 0) ]);
+                 ("Some", [ Core Grab; Core (Access 0); Core EndLet ]);
                  ( "None",
                    [
                      Core Grab;
                      Plain_old_data (String "Not a contract");
                      Control_flow Failwith;
+                     Core EndLet;
                    ] );
                ]);
           Core EndLet;
           Core Grab;
           Core (Access 0);
-          Plain_old_data (Mutez (Z.of_int 10));
+          Plain_old_data (Mutez ~$10);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Core Return;
@@ -448,7 +485,7 @@ let create_transaction =
       ]
 
 let create_transaction_in_tuple =
-  let open Zinc_utils in
+  let open Z in
   expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction_in_tuple"
     [
       ( "a",
@@ -462,12 +499,13 @@ let create_transaction_in_tuple =
           Adt
             (MatchVariant
                [
-                 ("Some", [ Core Grab; Core (Access 0) ]);
+                 ("Some", [ Core Grab; Core (Access 0); Core EndLet ]);
                  ( "None",
                    [
                      Core Grab;
                      Plain_old_data (String "Not a contract");
                      Control_flow Failwith;
+                     Core EndLet;
                    ] );
                ]);
           Core EndLet;
@@ -476,7 +514,7 @@ let create_transaction_in_tuple =
           Plain_old_data
             (Key "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav");
           Core (Access 0);
-          Plain_old_data (Mutez (Z.of_int 10));
+          Plain_old_data (Mutez ~$10);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Adt (MakeRecord 3);
@@ -549,10 +587,9 @@ let bools_religo =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 3) ]);
-                 ("True", [ Core Grab; Core (Access 4) ]);
+                 ("False", [ Core Grab; Core (Access 3); Core Return ]);
+                 ("True", [ Core Grab; Core (Access 4); Core Return ]);
                ]);
-          Core Return;
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
@@ -582,10 +619,9 @@ let bools_ligo =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 3) ]);
-                 ("True", [ Core Grab; Core (Access 4) ]);
+                 ("False", [ Core Grab; Core (Access 3); Core Return ]);
+                 ("True", [ Core Grab; Core (Access 4); Core Return ]);
                ]);
-          Core Return;
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
@@ -760,16 +796,16 @@ let if_then_else =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 2) ]);
+                 ("False", [ Core Grab; Core (Access 2); Core Return ]);
                  ( "True",
                    [
                      Core Grab;
                      Plain_old_data (Num ~$2);
                      Core (Access 3);
                      Operation Add;
+                     Core Return;
                    ] );
                ]);
-          Core Return;
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$4)) ]
@@ -800,10 +836,9 @@ let if_then_else_op =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 2) ]);
-                 ("True", [ Core Grab; Core (Access 3) ]);
+                 ("False", [ Core Grab; Core (Access 2); Core Return ]);
+                 ("True", [ Core Grab; Core (Access 3); Core Return ]);
                ]);
-          Core Return;
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
@@ -845,10 +880,9 @@ let if_then_else_op_function =
           Adt
             (MatchVariant
                [
-                 ("False", [ Core Grab; Core (Access 7) ]);
-                 ("True", [ Core Grab; Core (Access 8) ]);
+                 ("False", [ Core Grab; Core (Access 7); Core Return ]);
+                 ("True", [ Core Grab; Core (Access 8); Core Return ]);
                ]);
-          Core Return;
         ] );
     ]
     ~initial_stack:
@@ -943,5 +977,6 @@ let main =
       test_w "make_an_option" make_an_option;
       test_w "make_a_custom_option" make_a_custom_option;
       test_w "top_level_let_dependencies" top_level_let_dependencies;
+      test_w "nontail_match" nontail_match;
       test_w "super_simple_contract" super_simple_contract;
     ]
