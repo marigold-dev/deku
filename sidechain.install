@@ -1,0 +1,13 @@
+lib: [
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/lib/sidechain/META"
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/lib/sidechain/dune-package"
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/lib/sidechain/opam"
+]
+bin: [
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/bin/deku-node"
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/bin/sidecli"
+]
+doc: [
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/doc/sidechain/LICENSE"
+  "/home/pavel/marigold/sidechain/_esy/default/store/b/sidechain-9ca2692e/install/default/doc/sidechain/README.md"
+]

@@ -1,8 +1,18 @@
 open Zinc_utils
+open Zinc_types
 open Zinc_interpreter_intf
 
-module Make (E : Executor) = struct
-  module Types = Zinc_types.Make (E)
+module Make (D : Domain_types) = struct
+  module Types = Zinc_types.Make (D)
+
+  module type Executor =
+    Executor
+      with type key := D.Key.t
+      with type key_hash := D.Key_hash.t
+       and type address := D.Address.t
+       and type contract := D.Contract.t
+       and type chain_id := D.Chain_id.t
+       and type hash := D.Hash.t
 
   module Interpreter = struct
     open Types
@@ -30,7 +40,7 @@ module Make (E : Executor) = struct
     let initial_state ?initial_stack:(stack = []) a : Interpreter_input.t =
       (a, [], stack)
 
-    let[@warning "-4"] eval (code, env, stack) =
+    let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
       let apply_once (code : Zinc.t) env stack =
         let () =
           print_endline
@@ -174,7 +184,7 @@ module Make (E : Executor) = struct
         | ( Operation HashKey :: c,
             env,
             Stack_item.Z (Plain_old_data (Key key)) :: s ) ->
-            let h = E.Key.hash_key key in
+            let h = E.key_hash key in
             Steps.Continue
               (c, env, Stack_item.Z (Plain_old_data (Key_hash h)) :: s)
         (* Tezos specific *)
@@ -185,13 +195,13 @@ module Make (E : Executor) = struct
                 Stack_item.Z
                   (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
                      Also probably shouldn't use key like this. *)
-                  (Plain_old_data (Chain_id E.Chain_id.chain_id)) :: s )
+                  (Plain_old_data (Chain_id E.chain_id)) :: s )
         | ( Domain_specific_operation Contract_opt :: c,
             env,
             Stack_item.Z (Plain_old_data (Address address)) :: s ) ->
             (* todo: abstract this into a function *)
             let contract =
-              match E.Contract.get_contract_opt address with
+              match E.get_contract_opt address with
               | Some contract ->
                   Stack_item.Variant
                     ("Some", Stack_item.NonliteralValue (Contract contract))
@@ -238,15 +248,13 @@ module Make (E : Executor) = struct
   end
 end
 
-module Dummy_executor = struct
+module Dummy_domain = struct
   module Hash = struct
     type t = string [@@deriving eq, yojson]
 
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
-
-    let hash = Fun.id
   end
 
   module Address = struct
@@ -265,8 +273,6 @@ module Dummy_executor = struct
     let to_string x = to_yojson x |> Yojson.Safe.to_string
 
     let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-
-    let get_contract_opt (a : Address.t) : t option = Some (a, None)
   end
 
   module Key = struct
@@ -275,8 +281,14 @@ module Dummy_executor = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
+  end
 
-    let hash_key (x : t) : Hash.t = x ^ "hash"
+  module Key_hash = struct
+    type t = string [@@deriving eq, yojson]
+
+    let to_string = Fun.id
+
+    let of_string (x : string) : t option = Some x
   end
 
   module Chain_id = struct
@@ -285,9 +297,7 @@ module Dummy_executor = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
-
-    let chain_id = "chain id goes here"
   end
 end
 
-module Dummy = Make (Dummy_executor)
+module Dummy = Make (Dummy_domain)

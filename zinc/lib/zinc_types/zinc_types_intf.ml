@@ -63,6 +63,12 @@ module type Domain_types = sig
     include With_domain_derivation with type t := t
   end
 
+  module Key_hash : sig
+    type t
+
+    include With_domain_derivation with type t := t
+  end
+
   module Address : sig
     type t
 
@@ -85,6 +91,14 @@ end
 module type S = sig
   module Zinc : sig
     module Key : sig
+      type t
+
+      include With_domain_derivation with type t := t
+
+      include With_show with type t := t
+    end
+
+    module Key_hash : sig
       type t
 
       include With_domain_derivation with type t := t
@@ -143,7 +157,7 @@ module type S = sig
       | Address of Address.t
       | Key of Key.t
       | Hash of Hash.t
-      | Key_hash of Hash.t
+      | Key_hash of Key_hash.t
       | Chain_id of Chain_id.t
 
     and adt =

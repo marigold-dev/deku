@@ -5,7 +5,15 @@ module Zinc_interpreter = Zinc_interpreter.Dummy
 open Zinc_interpreter
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
+module Executor : Executor = struct
+  let get_contract_opt a = Some (a, None)
 
+  let chain_id = "chain id goes here"
+
+  let hash = Fun.id
+
+  let key_hash s = s ^ "hash"
+end
 (* Helpers *)
 
 (* Compiling *)
@@ -60,8 +68,8 @@ type test =
 
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
     ?index ?(initial_stack = []) ?expect_failure ?expected_output_env
-    ?expected_output contract_file (expected_zinc : Zinc_types.Program.t) : test
-    =
+    ?expected_output ?expected_json contract_file
+    (expected_zinc : Zinc_types.Program.t) : test =
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
@@ -78,12 +86,23 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
       (Printf.sprintf "compiling %s" contract_file)
       expected_zinc zinc
   in
+  let () =
+    match expected_json with
+    | Some expected_json ->
+        Alcotest.(check string)
+          (Printf.sprintf "converting %s to json" contract_file)
+          expected_json
+          (Zinc_types.Program.to_yojson zinc |> Yojson.Safe.to_string)
+    | _ -> ()
+  in
   let index = match index with None -> List.length zinc - 1 | Some n -> n in
   match
     ( expect_failure,
       let from = List.nth_exn zinc index |> snd |> Zinc.to_yojson in
       let to_ = Types.Zinc.of_yojson from |> Result.get_ok in
-      to_ |> Interpreter.initial_state ~initial_stack |> Interpreter.eval )
+      to_
+      |> Interpreter.initial_state ~initial_stack
+      |> Interpreter.eval (module Executor) )
   with
   | None, Success (output_env, output_stack) ->
       let () =
@@ -332,6 +351,49 @@ let match_on_sum =
           (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None));
       ]
 
+let super_simple_contract =
+  let open Z in
+  expect_simple_compile_to ~dialect:ReasonLIGO "super_simple_contract"
+    [
+      ( "main",
+        [
+          Core Grab;
+          Core (Access 0);
+          Core Grab;
+          Core (Access 0);
+          Core Grab;
+          Core (Access 0);
+          Adt (RecordAccess 1);
+          Core Grab;
+          Core (Access 1);
+          Adt (RecordAccess 0);
+          Core Grab;
+          Plain_old_data (Num ~$1);
+          Core (Access 1);
+          Operation Add;
+          Plain_old_data Nil;
+          Adt (MakeRecord 2);
+          Core Return;
+        ] );
+    ]
+    ~initial_stack:
+      [
+        Types.Stack_item.Record
+          [|
+            Types.Utils.unit_record_stack;
+            Types.Stack_item.Z (Plain_old_data (Num ~$1));
+          |];
+      ]
+    ~expected_output:
+      [
+        Types.Stack_item.Record
+          [|
+            Types.Stack_item.List [];
+            Types.Stack_item.Z (Plain_old_data (Num ~$2));
+          |];
+      ]
+    ~expected_json:
+      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
 (* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
@@ -916,4 +978,5 @@ let main =
       test_w "make_a_custom_option" make_a_custom_option;
       test_w "top_level_let_dependencies" top_level_let_dependencies;
       test_w "nontail_match" nontail_match;
+      test_w "super_simple_contract" super_simple_contract;
     ]
