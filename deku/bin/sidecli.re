@@ -63,7 +63,7 @@ let contract = {
   };
   let printer = Arg.(conv_printer(non_dir_file));
   Arg.(conv((parser, printer)));
-}
+};
 
 // TODO: Wallet.t
 let wallet = {
@@ -184,27 +184,29 @@ let info_originate_contract = {
 let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   open Networking;
 
-  let contract = Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
-  module Zinc_interpreter = Zinc_interpreter.Dummy;
+  let contract =
+    Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
+  module Zinc_interpreter = Protocol.Interpreter;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
-  
+
   let contract_program =
     contract
     |> Yojson.Safe.from_string
     |> Zinc_interpreter.Types.Program.of_yojson
     |> Result.get_ok;
 
-  let originate_contract_op = Operation.Side_chain.sign(
-    ~secret=wallet.priv_key,
-    ~nonce=0l,
-    ~block_height=block_level,
-    ~source=wallet.address,
-    ~kind=Originate_contract((contract_program, contract_program))
-  );
+  let originate_contract_op =
+    Operation.Side_chain.sign(
+      ~secret=wallet.priv_key,
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~source=wallet.address,
+      ~kind=Originate_contract((contract_program, contract_program)),
+    );
 
   let.await identity = read_identity(~node_folder);
 
@@ -213,7 +215,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
       Networking.Operation_gossip.{operation: originate_contract_op},
       identity.uri,
     );
-    Lwt.return(`Ok());
+  Lwt.return(`Ok());
 };
 
 let folder_node = {
@@ -244,13 +246,10 @@ let originate_contract = {
 
   Term.(
     lwt_ret(
-      const(originate_contract)
-      $ folder_node
-      $ contract_json
-      $ address_from
+      const(originate_contract) $ folder_node $ contract_json $ address_from,
     )
   );
-}
+};
 // create-wallet
 
 let info_create_wallet = {
@@ -319,7 +318,6 @@ let create_transaction =
 
   Lwt.return(`Ok());
 };
-
 
 let create_transaction = {
   let address_from = {

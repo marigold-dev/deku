@@ -39,6 +39,7 @@ type t = {
         | `Remove_validator
         | `Transaction
         | `Withdraw(Ledger.Handle.t)
+        | `Origination
       ],
     ),
   persist_trusted_membership_change:
@@ -269,6 +270,7 @@ let load_snapshot =
       last_state_root_update: 0.0,
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
+      contracts_storage: Protocol.Contract_storage.empty,
     };
   let.ok protocol =
     List.fold_left_ok(
