@@ -2,90 +2,48 @@ open Helpers;
 open Crypto;
 open Core;
 
-module Main_chain = {
-  [@deriving yojson]
-  type kind =
-    // TODO: can a validator uses the same key in different nodes?
-    // If so the ordering in the list must never use the same key two times in sequence
-    | Deposit({
-        destination: Address.t,
-        amount: Amount.t,
-        ticket: Ticket_id.t,
-      });
-  [@deriving yojson]
-  type t = {
-    hash: BLAKE2B.t,
-    tezos_hash: Tezos.Operation_hash.t,
-    tezos_index: int,
-    kind,
-  };
-  let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
-
-  let (hash, verify) = {
-    /* TODO: this is bad name, it exists like this to prevent
-       duplicating all this name parameters */
-    let apply = (f, ~tezos_hash, ~tezos_index, ~kind) => {
-      let to_yojson = [%to_yojson: (Tezos.Operation_hash.t, int, kind)];
-      let json = to_yojson((tezos_hash, tezos_index, kind));
-      let payload = Yojson.Safe.to_string(json);
-      f(payload);
-    };
-    let hash = apply(BLAKE2B.hash);
-    let verify = (~hash) => apply(BLAKE2B.verify(~hash));
-    (hash, verify);
-  };
-
-  let make = (~tezos_hash, ~tezos_index, ~kind) => {
-    let hash = hash(~tezos_hash, ~tezos_index, ~kind);
-    {hash, tezos_hash, tezos_index, kind};
-  };
-  let verify = (~hash, ~tezos_hash, ~tezos_index, ~kind) => {
-    let.ok () =
-      verify(~hash, ~tezos_hash, ~tezos_index, ~kind)
-        ? Ok() : Error("Main operation invalid hash");
-    Ok({hash, tezos_hash, tezos_index, kind});
-  };
-
-  let of_yojson = json => {
-    let.ok {hash, tezos_hash, tezos_index, kind} = of_yojson(json);
-    verify(~hash, ~tezos_hash, ~tezos_index, ~kind);
-  };
-};
-
-module Side_chain = {
-  // TODO: I don't like this structure model
-  [@deriving yojson]
-  type kind =
-    | Transaction({
-        destination: Address.t,
-        amount: Amount.t,
-        ticket: Ticket_id.t,
-      })
-    | Withdraw({
-        owner: Tezos.Address.t,
-        amount: Amount.t,
-        ticket: Ticket_id.t,
-      })
+module Consensus = {
+  [@deriving (eq, ord, yojson)]
+  type t =
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator);
 
-  [@deriving yojson]
+  let hash = payload =>
+    to_yojson(payload) |> Yojson.Safe.to_string |> BLAKE2B.hash;
+  let sign = (secret, t) => {
+    let hash = hash(t);
+    Signature.sign(secret, hash);
+  };
+  let verify = (key, signature, t) => {
+    let hash = hash(t);
+    Signature.verify(key, signature, hash);
+  };
+};
+module Core_tezos = {
+  [@deriving (eq, ord, yojson)]
+  type t = Tezos_operation.t;
+};
+module Core_user = {
+  [@deriving (eq, yojson)]
   type t = {
+    // signature
     hash: BLAKE2B.t,
-    signature: Protocol_signature.t,
+    key: Key.t,
+    signature: Signature.t,
+    // replay
     nonce: int32,
     block_height: int64,
-    source: Address.t,
-    kind,
+    data: User_operation.t,
   };
   let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
   let (hash, verify) = {
     /* TODO: this is bad name, it exists like this to prevent
        duplicating all this name parameters */
-    let apply = (f, ~nonce, ~block_height, ~source, ~kind) => {
-      let to_yojson = [%to_yojson: (int32, int64, Address.t, kind)];
-      let json = to_yojson((nonce, block_height, source, kind));
+    let apply = (f, ~nonce, ~block_height, ~data) => {
+      // TODO: header to distinguish hashes
+      let to_yojson = [%to_yojson: (int32, int64, User_operation.t)];
+      let json = to_yojson((nonce, block_height, data));
       let payload = Yojson.Safe.to_string(json);
       f(payload);
     };
@@ -94,29 +52,49 @@ module Side_chain = {
     (hash, verify);
   };
 
-  let verify = (~hash, ~signature, ~nonce, ~block_height, ~source, ~kind) => {
-    let.ok () =
-      verify(~hash, ~nonce, ~block_height, ~source, ~kind)
-        ? Ok() : Error("Side operation invalid hash");
-    let.ok () =
-      Protocol_signature.verify(~signature, hash)
-      && Address.matches_key(
-           Protocol_signature.public_key(signature),
-           source,
-         )
-        ? Ok() : Error("Side operation invalid signature");
-    Ok({hash, signature, nonce, block_height, source, kind});
+  let sign = (~secret, ~nonce, ~block_height, ~data) => {
+    let hash = hash(~nonce, ~block_height, ~data);
+    let key = Key.of_secret(secret);
+    let signature = Signature.sign(secret, hash);
+    // TODO: this can only happen through a bug
+    //       maybe the API should enforce it
+    assert(Address.matches_key(key, data.source));
+    {hash, key, signature, nonce, block_height, data};
   };
 
-  let sign = (~secret, ~nonce, ~block_height, ~source, ~kind) => {
-    let hash = hash(~nonce, ~block_height, ~source, ~kind);
-    let signature = Protocol_signature.sign(~key=secret, hash);
-    {hash, signature, nonce, block_height, source, kind};
+  let verify = (~hash, ~key, ~signature, ~nonce, ~block_height, ~data) => {
+    let.assert () = (
+      "Invalid core_user operation hash",
+      verify(~hash, ~nonce, ~block_height, ~data),
+    );
+    let.assert () = (
+      "Invalid core_user key",
+      Address.matches_key(key, data.source),
+    );
+    let.assert () = (
+      "Invalid core_user signature",
+      Signature.verify(key, signature, hash),
+    );
+    Ok({hash, key, signature, nonce, block_height, data});
   };
-
   let of_yojson = json => {
-    let.ok {hash, signature, nonce, block_height, source, kind} =
+    let.ok {hash, key, signature, nonce, block_height, data} =
       of_yojson(json);
-    verify(~hash, ~signature, ~nonce, ~block_height, ~source, ~kind);
+    verify(~hash, ~key, ~signature, ~nonce, ~block_height, ~data);
+  };
+
+  let unsafe_make = (~hash, ~key, ~signature, ~nonce, ~block_height, ~data) => {
+    hash,
+    key,
+    signature,
+    nonce,
+    block_height,
+    data,
   };
 };
+
+[@deriving (eq, ord, yojson)]
+type t =
+  | Core_tezos(Core.Tezos_operation.t)
+  | Core_user(Core_user.t)
+  | Consensus(Consensus.t);
