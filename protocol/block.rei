@@ -1,6 +1,5 @@
 open Crypto;
 open Core;
-open Protocol_operation;
 
 [@deriving (yojson, ord)]
 type t =
@@ -13,8 +12,7 @@ type t =
     previous_hash: BLAKE2B.t,
     author: Address.t,
     block_height: int64,
-    main_chain_ops: list(Main_chain.t),
-    side_chain_ops: list(Side_chain.t),
+    operations: list(Protocol_operation.t),
   };
 
 let sign: (~key: Secret.t, t) => Protocol_signature.t;
@@ -24,7 +22,6 @@ let produce:
   (
     ~state: Protocol_state.t,
     ~author: Address.t,
-    ~main_chain_ops: list(Main_chain.t),
-    ~side_chain_ops: list(Side_chain.t)
+    ~operations: list(Protocol_operation.t)
   ) =>
   t;

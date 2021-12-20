@@ -1,19 +1,17 @@
 open Helpers;
 open Crypto;
-open Core;
 
-module Operation_side_chain_set =
-  Set.Make_with_yojson(Protocol_operation.Side_chain);
-module Operation_main_chain_set =
-  Set.Make_with_yojson(Protocol_operation.Main_chain);
+module Tezos_operation_set =
+  Set.Make_with_yojson(Protocol_operation.Core_tezos);
+module User_operation_set =
+  Set.Make_with_yojson(Protocol_operation.Core_user);
 
 type t = {
-  // state machine data
-  ledger: Ledger.t,
+  core_state: Core.State.t,
   // TODO: more efficient lookup on included_operations
   // TODO: is this part of the protocol?
-  included_operations: Operation_side_chain_set.t,
-  included_main_operations: Operation_main_chain_set.t,
+  included_tezos_operations: Tezos_operation_set.t,
+  included_user_operations: User_operation_set.t,
   // consensus
   validators: Validators.t,
   validators_hash: BLAKE2B.t,
@@ -35,9 +33,9 @@ let hash = t => {
   // state_root_hash is part of last_block_hash
   let to_yojson = [%to_yojson:
     (
-      Ledger.t,
-      Operation_side_chain_set.t,
-      Operation_main_chain_set.t,
+      Core.State.t,
+      Tezos_operation_set.t,
+      User_operation_set.t,
       Validators.t,
       BLAKE2B.t,
       int64,
@@ -47,9 +45,9 @@ let hash = t => {
   ];
   let json =
     to_yojson((
-      t.ledger,
-      t.included_operations,
-      t.included_main_operations,
+      t.core_state,
+      t.included_tezos_operations,
+      t.included_user_operations,
       t.validators,
       t.validators_hash,
       t.block_height,
