@@ -1,5 +1,5 @@
 
-module Executor = struct
+module Domain_types = struct
   module Key = Crypto.Key
   module Address = Tezos.Address
   module Hash = Crypto.BLAKE2B
@@ -8,4 +8,4 @@ module Executor = struct
   module Contract = Contract
 end
 
-include Zinc_interpreter.Make(Executor)
+include Zinc_interpreter.Make(Domain_types)
