@@ -19,8 +19,7 @@ type t = {
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
-  pending_side_ops: list(Protocol.Operation.Side_chain.t),
-  pending_main_ops: list(Protocol.Operation.Main_chain.t),
+  pending_operations: list(Protocol.Operation.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
@@ -33,15 +32,7 @@ type t = {
   validators_uri: Address_map.t(Uri.t),
   // TODO: use proper variants in the future
   // TODO: this also needs to be cleaned in the future
-  recent_operation_results:
-    BLAKE2B.Map.t(
-      [
-        | `Add_validator
-        | `Remove_validator
-        | `Transaction
-        | `Withdraw(Ledger.Handle.t)
-      ],
-    ),
+  recent_operation_receipts: BLAKE2B.Map.t(Core.State.receipt),
   persist_trusted_membership_change:
     list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
@@ -72,15 +63,14 @@ let make =
     trusted_validator_membership_change,
     interop_context,
     data_folder,
-    pending_side_ops: [],
-    pending_main_ops: [],
+    pending_operations: [],
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
-    recent_operation_results: BLAKE2B.Map.empty,
+    recent_operation_receipts: BLAKE2B.Map.empty,
     persist_trusted_membership_change,
   };
 };
@@ -132,20 +122,15 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
 };
 let apply_block = (state, block) => {
   let old_state = state;
-  let.ok (protocol, new_snapshot, results) =
+  let.ok (protocol, new_snapshot, receipts) =
     apply_block(state.protocol, block);
-  let recent_operation_results =
+  let recent_operation_receipts =
     List.fold_left(
-      (results, (op, result)) =>
-        BLAKE2B.Map.add(
-          op.Protocol.Operation.Side_chain.hash,
-          result,
-          results,
-        ),
-      state.recent_operation_results,
-      results,
+      (results, (hash, receipt)) => BLAKE2B.Map.add(hash, receipt, results),
+      state.recent_operation_receipts,
+      receipts,
     );
-  let state = {...state, protocol, recent_operation_results};
+  let state = {...state, protocol, recent_operation_receipts};
   Lwt.async(() =>
     Lwt_io.with_file(
       ~mode=Output,
@@ -235,9 +220,9 @@ let load_snapshot =
 
   let of_yojson = [%of_yojson:
     (
-      Ledger.t,
-      Operation_side_chain_set.t,
-      Operation_main_chain_set.t,
+      Core.State.t,
+      Tezos_operation_set.t,
+      User_operation_set.t,
       Validators.t,
       BLAKE2B.t,
       int64,
@@ -246,9 +231,9 @@ let load_snapshot =
     )
   ];
   let (
-    ledger,
-    included_operations,
-    included_main_operations,
+    core_state,
+    included_tezos_operations,
+    included_user_operations,
     validators,
     validators_hash,
     block_height,
@@ -262,9 +247,9 @@ let load_snapshot =
 
   let protocol =
     Protocol.{
-      ledger,
-      included_operations,
-      included_main_operations,
+      core_state,
+      included_tezos_operations,
+      included_user_operations,
       validators,
       validators_hash,
       block_height,

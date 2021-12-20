@@ -43,6 +43,7 @@ let print_error = err => {
   | `Unknown_uri => eprintf("Unknown_uri")
   | `Not_a_user_opertaion => eprintf("Not_a_user_opertaion")
   | `Not_consensus_operation => eprintf("Not_consensus_operation")
+  | `Invalid_signature => eprintf("Invalid_signature")
   };
   eprintf("\n%!");
 };
@@ -176,6 +177,7 @@ let handle_receive_consensus_operation =
       Server.get_state(),
       update_state,
       request.consensus_operation,
+      request.signature,
     )
   });
 
@@ -281,7 +283,11 @@ let node = folder => {
     };
   Tezos_interop.Consensus.listen_operations(
     ~context=interop_context, ~on_operation=operation =>
-    Flows.received_main_operation(Server.get_state(), update_state, operation)
+    Flows.received_tezos_operation(
+      Server.get_state(),
+      update_state,
+      operation,
+    )
   );
   await({...node, protocol});
 };

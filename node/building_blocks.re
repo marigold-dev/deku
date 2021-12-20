@@ -59,11 +59,6 @@ let is_current_producer = (state, ~key_hash) => {
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
 let is_signable = (state, block) => {
-  // TODO: this is O(n*m) which is bad
-  let is_known_main = main_op =>
-    state.State.pending_main_ops |> List.exists(op => op == main_op);
-  let all_main_ops_are_known =
-    List.for_all(is_known_main, block.Block.main_chain_ops);
   let {
     Node.trusted_validator_membership_change,
     protocol: {last_seen_membership_change_timestamp, _},
@@ -74,30 +69,41 @@ let is_signable = (state, block) => {
   let next_allowed_membership_change_timestamp =
     last_seen_membership_change_timestamp +. 24. *. 60. *. 60.;
 
-  let contains_only_trusted_add_validator_op =
-    List.for_all(h => {
-      switch (h.Operation.Side_chain.kind) {
-      | Add_validator(validator) =>
-        Trusted_validators_membership_change.Set.mem(
-          {address: validator.address, action: Add},
-          trusted_validator_membership_change,
-        )
-        && current_time > next_allowed_membership_change_timestamp
-      | Remove_validator(validator) =>
-        Trusted_validators_membership_change.Set.mem(
-          {address: validator.address, action: Remove},
-          trusted_validator_membership_change,
-        )
-        && current_time > next_allowed_membership_change_timestamp
-      | _ => true
-      }
-    });
+  let is_trusted_operation = operation =>
+    switch (operation) {
+    | Protocol.Operation.Core_tezos(_) =>
+      List.exists(
+        op => Protocol.Operation.equal(op, operation),
+        state.pending_operations,
+      )
+    | Core_user(_) => true
+    | Consensus(consensus_operation) =>
+      current_time > next_allowed_membership_change_timestamp
+      && (
+        switch (consensus_operation) {
+        | Add_validator(validator) =>
+          Trusted_validators_membership_change.Set.mem(
+            {address: validator.address, action: Add},
+            trusted_validator_membership_change,
+          )
+        | Remove_validator(validator) =>
+          Trusted_validators_membership_change.Set.mem(
+            {address: validator.address, action: Remove},
+            trusted_validator_membership_change,
+          )
+        }
+      )
+    };
+
+  // TODO: this is O(n*m) which is bad
+  let all_operations_are_trusted =
+    List.for_all(is_trusted_operation, block.Block.operations);
+
   is_next(state, block)
   && !is_signed_by_self(state, ~hash=block.hash)
   && is_current_producer(state, ~key_hash=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
-  && all_main_ops_are_known
-  && contains_only_trusted_add_validator_op(block.side_chain_ops);
+  && all_operations_are_trusted;
 };
 
 let sign = (~key, block) => Block.sign(~key, block);
@@ -106,8 +112,7 @@ let produce_block = state =>
   Block.produce(
     ~state=state.Node.protocol,
     ~author=state.identity.t,
-    ~main_chain_ops=state.pending_main_ops,
-    ~side_chain_ops=state.pending_side_ops,
+    ~operations=state.pending_operations,
   );
 
 let is_valid_block_height = (state, block_height) =>
@@ -144,35 +149,35 @@ let apply_block = (state, update_state, block) => {
 
 let clean = (state, update_state, block) => {
   // TODO: this is the dumbest piece of code that I could write
-  //       but now it should work
-  let main_op_not_in_block = main_op =>
-    !List.mem(main_op, block.Block.main_chain_ops);
-  let side_op_not_in_block = side_op =>
-    !List.mem(side_op, block.side_chain_ops);
-  let pending_main_ops =
-    state.Node.pending_main_ops |> List.find_all(main_op_not_in_block);
-  let pending_side_ops =
-    state.pending_side_ops |> List.find_all(side_op_not_in_block);
-
+  let operation_is_in_block = operation =>
+    List.exists(
+      op => Operation.equal(op, operation),
+      block.Block.operations,
+    );
+  let pending_operations =
+    List.find_all(
+      operation => !operation_is_in_block(operation),
+      state.State.pending_operations,
+    );
   let trusted_validator_membership_change =
     List.fold_left(
-      (trusted_validator_membership_change, operation) => {
-        switch (operation.Operation.Side_chain.kind) {
-        | Add_validator(validator) =>
+      (trusted_validator_membership_change, operation) =>
+        switch (operation) {
+        | Operation.Core_tezos(_)
+        | Core_user(_) => trusted_validator_membership_change
+        | Consensus(Add_validator(validator)) =>
           Trusted_validators_membership_change.Set.remove(
             {address: validator.address, action: Add},
             trusted_validator_membership_change,
           )
-        | Remove_validator(validator) =>
+        | Consensus(Remove_validator(validator)) =>
           Trusted_validators_membership_change.Set.remove(
             {address: validator.address, action: Remove},
             state.Node.trusted_validator_membership_change,
           )
-        | _ => trusted_validator_membership_change
-        }
-      },
+        },
       state.Node.trusted_validator_membership_change,
-      block.side_chain_ops,
+      block.operations,
     );
 
   Lwt.async(() =>
@@ -185,8 +190,7 @@ let clean = (state, update_state, block) => {
   update_state({
     ...state,
     trusted_validator_membership_change,
-    pending_main_ops,
-    pending_side_ops,
+    pending_operations,
   });
 };
 

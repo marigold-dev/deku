@@ -204,12 +204,15 @@ let create_transaction =
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let transaction =
-    Protocol.Operation.Side_chain.sign(
+    Protocol.Operation.Core_user.sign(
       ~secret=wallet.priv_key,
       ~nonce=0l,
       ~block_height=block_level,
-      ~source=wallet.address,
-      ~kind=Transaction({destination: received_address, amount, ticket}),
+      ~data=
+        Core.User_operation.make(
+          ~source=wallet.address,
+          Transaction({destination: received_address, amount, ticket}),
+        ),
     );
   let.await identity = read_identity(~node_folder);
 
@@ -298,12 +301,15 @@ let withdraw =
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let operation =
-    Protocol.Operation.Side_chain.sign(
+    Protocol.Operation.Core_user.sign(
       ~secret=wallet.priv_key,
       ~nonce=0l,
       ~block_height=block_level,
-      ~source=wallet.address,
-      ~kind=Withdraw({owner: tezos_address, amount, ticket}),
+      ~data=
+        Core.User_operation.make(
+          ~source=wallet.address,
+          Tezos_withdraw({owner: tezos_address, amount, ticket}),
+        ),
     );
 
   // Broadcast transaction
@@ -497,13 +503,7 @@ let produce_block = node_folder => {
   let.await identity = read_identity(~node_folder);
   let.await state = read_state(~node_folder);
   let address = identity.t;
-  let block =
-    Block.produce(
-      ~state,
-      ~author=address,
-      ~main_chain_ops=[],
-      ~side_chain_ops=[],
-    );
+  let block = Block.produce(~state, ~author=address, ~operations=[]);
   let signature = Block.sign(~key=identity.secret, block);
   let.await validators_uris = validators_uris(node_folder);
   let.await () =
