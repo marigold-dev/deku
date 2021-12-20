@@ -1,6 +1,5 @@
 open Helpers;
 open Crypto;
-open Core;
 
 module Tezos_operation_set =
   Set.Make_with_yojson(Protocol_operation.Core_tezos);
