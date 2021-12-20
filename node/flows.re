@@ -359,11 +359,10 @@ let received_consensus_operation = (state, update_state, consensus_operation) =>
   };
 };
 
-let received_main_operation = (state, update_state, operation) => {
-  switch (operation.Tezos_interop.Consensus.parameters) {
-  // TODO: handle this properly
-  | Update_root_hash(_) => Ok()
-  | Deposit({ticket, amount, destination}) =>
+let parse_main_transaction = (hash, index, transaction) => {
+  switch (transaction) {
+  | Tezos_interop.Consensus.Update_root_hash(_) => Error(`Update_root_hash)
+  | Tezos_interop.Consensus.Deposit({ticket, amount, destination}) =>
     let.ok destination =
       switch (destination) {
       | Implicit(destination) => Ok(Address.of_key_hash(destination))
@@ -371,12 +370,15 @@ let received_main_operation = (state, update_state, operation) => {
       };
     let amount = Amount.of_int(Z.to_int(amount));
     let kind = Operation.Main_chain.Deposit({ticket, amount, destination});
-    let operation =
-      Operation.Main_chain.make(
-        ~tezos_hash=operation.Tezos_interop.Consensus.hash,
-        ~tezos_index=operation.index,
-        ~kind,
-      );
+    Ok(
+      Operation.Main_chain.make(~tezos_hash=hash, ~tezos_index=index, ~kind),
+    );
+  };
+};
+let received_main_transaction =
+    (state, update_state, hash, index, transaction) => {
+  switch (parse_main_transaction(hash, index, transaction)) {
+  | Ok(operation) =>
     if (!List.mem(operation, state.Node.pending_main_ops)) {
       let _ =
         update_state(
@@ -386,9 +388,22 @@ let received_main_operation = (state, update_state, operation) => {
           },
         );
       ();
-    };
-    Ok();
+    }
+  | Error(`Invalid_address_on_main_operation | `Update_root_hash) => ()
   };
+};
+let received_main_operation = (state, update_state, operation) => {
+  let Tezos_interop.Consensus.{hash, transactions} = operation;
+  transactions
+  |> List.iteri((index, transaction) =>
+       received_main_transaction(
+         state,
+         update_state,
+         hash,
+         index,
+         transaction,
+       )
+     );
 };
 
 let find_block_by_hash = (state, hash) =>
