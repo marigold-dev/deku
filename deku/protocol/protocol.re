@@ -111,11 +111,40 @@ let apply_side_chain = (state: t, operation) => {
         contract_state,
       );
     Ok(({...state, contracts_storage: new_contract_state}, `Origination));
+  | Invoke_contract(contract_hash, parameter) =>
+    let new_contract_storage = try(Some(Contract_storage.update(state.contracts_storage, contract_hash, (contract_state) => {
+      let contract_state = Option.get(contract_state);
+      let module Executor {
+
+        let get_contract_opt(_) = failwith("Not implemented: get_contract_op");
+        let chain_id = Block.genesis.hash;
+        let hash(_) = failwith("Not implemented: hash");
+        let key_hash = Crypto.Key_hash.of_key;
+      };
+
+      open Interpreter;
+      let (_operations, new_storage) =
+        switch(Interpreter.eval((module Executor), Interpreter.initial_state(~initial_stack=[Types.Stack_item.Record([|parameter, contract_state.storage|])], contract_state.code))) {
+          | Types.Interpreter_output.Success(_, [Types.Stack_item.Record([|Types.Stack_item.List(operations), new_storage|]), ..._]) => (operations, new_storage);
+          | _ => raise(Not_found)
+        };
+
+      Some({...contract_state, storage: new_storage})
+    }))) {
+      | Invalid_argument(_)
+      | Not_found => None
+    }
+    switch(new_contract_storage) {
+      | Some(new_contract_storage) => Ok(({...state, contracts_storage: new_contract_storage}, `Invocation))
+      | None => Error(`Invalid_invocation)
+    };
   };
 };
+
 let apply_side_chain = (state, operation) =>
   switch (apply_side_chain(state, operation)) {
   | Ok((state, result)) => (state, result)
+  | Error(`Invalid_invocation) => raise(Noop("Invalid contract output"))
   | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
   };
 let is_next = (state, block) =>

@@ -422,6 +422,7 @@ let request_withdraw_proof = (state, ~hash) =>
   | Some(`Transaction)
   | Some(`Add_validator)
   | Some(`Origination)
+  | Some(`Invocation)
   | Some(`Remove_validator) => Operation_is_not_a_withdraw
   | Some(`Withdraw(handle)) =>
     let last_block_hash = state.Node.protocol.last_block_hash;

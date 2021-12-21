@@ -33,6 +33,7 @@ type t = {
         | `Transaction
         | `Withdraw(Ledger.Handle.t)
         | `Origination
+        | `Invocation
       ],
     ),
   persist_trusted_membership_change:
