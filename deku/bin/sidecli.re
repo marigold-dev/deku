@@ -205,7 +205,11 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=Originate_contract((contract_program, Zinc_interpreter.Types.Stack_item.Record([||]))),
+      ~kind=
+        Originate_contract((
+          contract_program,
+          Zinc_interpreter.Types.Stack_item.Record([||]),
+        )),
     );
 
   let.await identity = read_identity(~node_folder);
