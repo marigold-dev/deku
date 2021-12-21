@@ -196,7 +196,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   let contract_program =
     contract
     |> Yojson.Safe.from_string
-    |> Zinc_interpreter.Types.Program.of_yojson
+    |> Zinc_interpreter.Types.Zinc.of_yojson
     |> Result.get_ok;
 
   let originate_contract_op =
@@ -205,7 +205,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=Originate_contract((contract_program, [])),
+      ~kind=Originate_contract((contract_program, Zinc_interpreter.Types.Stack_item.Record([||]))),
     );
 
   let.await identity = read_identity(~node_folder);
