@@ -49,7 +49,8 @@ module Side_chain: {
     | Remove_validator(Validators.validator)
     | Originate_contract(
         (Interpreter.Types.Zinc.t, Interpreter.Types.Stack_item.t),
-      );
+      )
+    | Invoke_contract(Tezos.Contract_hash.t, Interpreter.Types.Stack_item.t);
 
   [@deriving (ord, yojson)]
   type t =

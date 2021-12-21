@@ -63,243 +63,118 @@ let apply_side_chain = {
         Some(Invocation({destination: address, parameter, entrypoint}))
       | _ => None;
 
-    let rec map_m = (f, l) =>
-      switch (l) {
-      | [] => Ok([])
-      | [x, ...xs] =>
-        let.ok x = f(x);
-        let.ok xs = map_m(f, xs);
-        Ok([x, ...xs]);
-      };
+  // validate operation
+  let block_height = operation.block_height;
+  if (block_height > state.block_height) {
+    raise(Noop("block in the future"));
+  };
 
-    Printf.printf("%s\n", kind |> kind_to_yojson |> Yojson.Safe.to_string);
-    switch (sender, kind) {
-    | (_, Withdraw(_))
-    | (_, Add_validator(_))
-    | (_, Remove_validator(_))
-    | (_, Originate_contract(_)) => Error(assert(false))
-    | (
-        sender,
-        Invocation({
-          parameter,
-          destination: Address.Originated(destination),
-          entrypoint: Some(entrypoint),
-        }), 
-      ) =>
-      // If the sender is an implicit account, that means that the operation was 
-      // submitted by a user, which means it could contain a ticket or other illegal 
-      // value. 
-      // TODO: this behavior should be tested
-      let.ok _ =
-        switch (sender) {
-        | Address.Originated(_) => Ok()
-        | Address.Implicit(_) =>
-          if (Interpreter.Types.Utils.stack_item_contains_nonliteral(parameter)) {
-            Error(`Implicit_account_invoking_contract_with_ticket);
-          } else {
-            Ok();
-          }
-        };
-      let _ = failwith("security problem must be solved");
-      Printf.printf("Transaction!\n");
-      let.ok (new_contract_storage, operation_kinds) =
-        Contract_storage.update_entry(
+  if (Int64.add(block_height, maximum_old_block_height_operation)
+      < state.block_height) {
+    raise(Noop("really old operation"));
+  };
+
+  if (Set.mem(operation, state.included_operations)) {
+    raise(Noop("duplicated operation"));
+  };
+
+  // apply operation
+  let included_operations = Set.add(operation, state.included_operations);
+  let state = {...state, included_operations};
+
+  let {source, _} = operation;
+  let update_validators = validators => {
+    let last_seen_membership_change_timestamp = Unix.time();
+    {...state, validators, last_seen_membership_change_timestamp};
+  };
+  switch (operation.kind) {
+  | Transaction({destination, amount, ticket}) =>
+    let.ok ledger =
+      Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
+    Ok(({...state, ledger}, `Transaction));
+  | Withdraw({owner, amount, ticket}) =>
+    let.ok (ledger, handle) =
+      Ledger.withdraw(
+        ~source,
+        ~destination=owner,
+        amount,
+        ticket,
+        state.ledger,
+      );
+    // TODO: publish the handle somewhere
+    Ok(({...state, ledger}, `Withdraw(handle)));
+  | Add_validator(validator) =>
+    let validators = Validators.add(validator, state.validators);
+    Ok((update_validators(validators), `Add_validator));
+  | Remove_validator(validator) =>
+    let validators = Validators.remove(validator, state.validators);
+    Ok((update_validators(validators), `Remove_validator));
+  | Originate_contract((code, initial_storage)) =>
+    let (_, signature) =
+      Protocol_signature.signature_to_signature_by_address(
+        operation.signature,
+      );
+    let new_address =
+      Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
+    let contract_state =
+      Contract_storage.make_state(
+        ~entrypoint=None,
+        ~code,
+        ~storage=initial_storage,
+        ~originator=operation.source,
+        (),
+      );
+    let new_contract_state =
+      Contract_storage.add(
+        state.contracts_storage,
+        new_address,
+        contract_state,
+      );
+    Ok(({...state, contracts_storage: new_contract_state}, `Origination));
+  | Invoke_contract(contract_hash, parameter) =>
+    exception Invalid_contract_output;
+    try({
+      let new_contract_storage =
+        Contract_storage.update(
           state.contracts_storage,
-          destination,
+          contract_hash,
           contract_state => {
-            let.ok contract_state =
-              Option.to_result(~none=`Invalid_invocation, contract_state);
+            let.some contract_state = contract_state;
             module Executor = {
               let get_contract_opt = _ =>
-                failwith("Not implemented: get_contract_opt");
+                failwith("Not implemented: get_contract_op");
               let chain_id = Block.genesis.hash;
+              let hash = _ => failwith("Not implemented: hash");
               let key_hash = Crypto.Key_hash.of_key;
             };
             open Interpreter;
-            open Types;
-            let.ok code =
-              List.assoc_opt(entrypoint, contract_state.code)
-              |> Option.to_result(~none=`Unknown_entrypoint);
             let initial_stack = [
-              Stack_item.Record([|parameter, contract_state.storage|]),
+              Types.Stack_item.Record([|parameter, contract_state.storage|]),
             ];
             let initial_state =
-              Interpreter.initial_state(~initial_stack, code);
+              Interpreter.initial_state(~initial_stack, contract_state.code);
             let interpretation_result =
               Interpreter.eval((module Executor), initial_state);
-            Stack_item.(
+            open Types.Interpreter_output;
+            open Types.Stack_item;
+            let (_operations, new_storage) =
               switch (interpretation_result) {
-              | Success(_, [Record([|List(operations), storage|]), ..._]) =>
-                let stack_item_to_kind = x =>
-                  stack_item_to_kind(x)
-                  |> Option.to_result(~none=`Invalid_invocation);
-                let.ok operation_kinds =
-                  map_m(stack_item_to_kind, operations);
-                Printf.printf(
-                  "New storage: %s \n",
-                  storage |> Stack_item.to_string,
-                );
-                Ok(({...contract_state, storage}, operation_kinds));
-              | _ => Error(`Invalid_invocation)
-              }
-            );
+              | Success(
+                  _,
+                  [Record([|List(operations), new_storage|]), ..._],
+                ) => (
+                  operations,
+                  new_storage,
+                )
+              | _ => raise(Invalid_contract_output)
+              };
+
+            Some({...contract_state, storage: new_storage});
           },
         );
-
-      let new_state = {...state, contracts_storage: new_contract_storage};
-      let.ok new_state =
-        apply_all_internal_operations(
-          new_state,
-          Address.Originated(destination),
-          operation_kinds,
-        );
-      Ok(new_state);
-    | (
-        Address.Originated(_),
-        Invocation({
-          parameter:
-            Interpreter.Types.Stack_item.NonliteralValue(Ticket(handle)),
-          destination: Address.Implicit(destination),
-          entrypoint: None,
-        }),
-      ) =>
-      let.ok ledger =
-        Ledger.redeem_ticket_handle(~destination, handle, state.ledger);
-      Ok({...state, ledger});
-    | (
-        _,
-        Invocation({
-          parameter: _,
-          destination: Address.Implicit(_),
-          entrypoint: Some(_),
-        }),
-      ) =>
-      Error(`Tried_to_use_entrypoint_for_implicit_account)
-    | (
-        _,
-        Invocation({
-          parameter: _,
-          destination: Address.Implicit(_),
-          entrypoint: None,
-        }),
-      ) =>
-      Error(`Invalid_argument_to_implicit_account)
-    | (
-        _sender,
-        Invocation({
-          parameter: _,
-          destination: Address.Originated(_),
-          entrypoint: None,
-        }),
-      ) =>
-      Error(`Invoked_contract_without_entrypoint)
-
-    | (Address.Implicit(sender), Transaction({destination, amount, ticket})) =>
-      let.ok ledger =
-        Ledger.transfer(
-          ~source=sender,
-          ~destination,
-          amount,
-          ticket,
-          state.ledger,
-        );
-      Ok({...state, ledger});
-    | (_, Transaction(_)) => Error(`No_ticket_in_transaction)
-    };
-  }
-  and apply_all_internal_operations = (state, sender, operation_kinds) => {
-    fold_left_m(
-      (state, operation_kind) =>
-        apply_internal_operation(state, sender, operation_kind),
-      state,
-      operation_kinds,
-    );
-  };
-
-  (state: t, operation) => {
-    open Operation.Side_chain;
-    module Set = Operation_side_chain_set;
-
-    // validate operation
-    let block_height = operation.block_height;
-    if (block_height > state.block_height) {
-      raise(Noop("block in the future"));
-    };
-
-    if (Int64.add(block_height, maximum_old_block_height_operation)
-        < state.block_height) {
-      raise(Noop("really old operation"));
-    };
-
-    if (Set.mem(operation, state.included_operations)) {
-      raise(Noop("duplicated operation"));
-    };
-
-    // apply operation
-    let included_operations = Set.add(operation, state.included_operations);
-    let state = {...state, included_operations};
-
-    let {source, _} = operation;
-    let apply_internal_operation = (state, operation_kind) =>
-      apply_internal_operation(
-        state,
-        Address.Implicit(source),
-        operation_kind,
-      );
-
-    let update_validators = validators => {
-      let last_seen_membership_change_timestamp = Unix.time();
-      {...state, validators, last_seen_membership_change_timestamp};
-    };
-
-    switch (operation.kind) {
-    | Add_validator(validator) =>
-      let validators = Validators.add(validator, state.validators);
-      Ok((update_validators(validators), `Add_validator));
-    | Remove_validator(validator) =>
-      let validators = Validators.remove(validator, state.validators);
-      Ok((update_validators(validators), `Remove_validator));
-    | Originate_contract((code, initial_storage)) =>
-      let contract_hash: Crypto.Contract_hash.t =
-        operation |> to_contract_hash;
-      let new_address: Address.Originated.t =
-        Address.Originated.(contract_hash |> of_contract_hash);
-      let contract_state =
-        Contract_storage.make_state(
-          ~entrypoint=None,
-          ~code,
-          ~storage=initial_storage,
-          ~originator=operation.source,
-          (),
-        );
-      let new_contract_state =
-        Contract_storage.add(
-          state.contracts_storage,
-          new_address,
-          contract_state,
-        );
-      Printf.printf(
-        "originated contract with address %s\n",
-        new_address |> Address.Originated.to_string,
-      );
-      Ok(({...state, contracts_storage: new_contract_state}, `Origination));
-    | Withdraw({owner, amount, ticket}) =>
-      let.ok (ledger, handle) =
-        Ledger.withdraw(
-          ~source,
-          ~destination=owner,
-          amount,
-          ticket,
-          state.ledger,
-        );
-      // TODO: publish the handle somewhere
-      Ok(({...state, ledger}, `Withdraw(handle)));
-    | Transaction(_) as transaction =>
-      let.ok new_state = apply_internal_operation(state, transaction);
-      Ok((new_state, `Transaction));
-    | Invocation(_) as invocation =>
-      let.ok new_state = apply_internal_operation(state, invocation);
-      Ok((new_state, `Invocation));
+      Ok(({...state, contracts_storage: new_contract_storage}, `Invocation));
+    }) {
+    | _ => Error(`Invalid_invocation)
     };
   };
 };
