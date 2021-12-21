@@ -33,7 +33,7 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          push: ${{ github.ref == 'refs/head/main' && github.event_name == 'push' }}
+          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
             marigold-dev/deku:latest
             marigold-dev/deku:${{ github.sha }}
