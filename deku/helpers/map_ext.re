@@ -15,4 +15,12 @@ module Make_with_yojson =
     json
     |> [%of_yojson: list((K.t, 'a))](f)
     |> Result.map(l => l |> List.to_seq |> of_seq);
+
+  let update_entry = (key, f, m) => {
+    let value = find_opt(key, m);
+    switch (f(value)) {
+    | Ok((new_value, data)) => Ok((add(key, new_value, m), data))
+    | Error(_) as e => e
+    };
+  };
 };

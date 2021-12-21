@@ -15,4 +15,7 @@ module Make_with_yojson:
     let of_yojson:
       (Yojson.Safe.t => result('a, string), Yojson.Safe.t) =>
       result(t('a), string);
+    let update_entry:
+      (key, option('a) => result(('a, 'b), 'c), t('a)) =>
+      result((t('a), 'b), 'c);
   };

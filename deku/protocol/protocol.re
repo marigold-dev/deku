@@ -112,50 +112,39 @@ let apply_side_chain = (state: t, operation) => {
       );
     Ok(({...state, contracts_storage: new_contract_state}, `Origination));
   | Invoke_contract(contract_hash, parameter) =>
-    exception Invalid_contract_output;
-    try({
-      let new_contract_storage =
-        Contract_storage.update(
-          state.contracts_storage,
-          contract_hash,
-          contract_state => {
-            let.some contract_state = contract_state;
-            module Executor = {
-              let get_contract_opt = _ =>
-                failwith("Not implemented: get_contract_op");
-              let chain_id = Block.genesis.hash;
-              let hash = _ => failwith("Not implemented: hash");
-              let key_hash = Crypto.Key_hash.of_key;
-            };
-            open Interpreter;
-            let initial_stack = [
-              Types.Stack_item.Record([|parameter, contract_state.storage|]),
-            ];
-            let initial_state =
-              Interpreter.initial_state(~initial_stack, contract_state.code);
-            let interpretation_result =
-              Interpreter.eval((module Executor), initial_state);
-            open Types.Interpreter_output;
-            open Types.Stack_item;
-            let (_operations, new_storage) =
-              switch (interpretation_result) {
-              | Success(
-                  _,
-                  [Record([|List(operations), new_storage|]), ..._],
-                ) => (
-                  operations,
-                  new_storage,
-                )
-              | _ => raise(Invalid_contract_output)
-              };
-
-            Some({...contract_state, storage: new_storage});
-          },
-        );
-      Ok(({...state, contracts_storage: new_contract_storage}, `Invocation));
-    }) {
-    | _ => Error(`Invalid_invocation)
-    };
+    let.ok (new_contract_storage, _operations) =
+      Contract_storage.update_entry(
+        state.contracts_storage,
+        contract_hash,
+        contract_state => {
+          let.ok contract_state =
+            Option.to_result(~none=`Invalid_invocation, contract_state);
+          module Executor = {
+            let get_contract_opt = _ =>
+              failwith("Not implemented: get_contract_op");
+            let chain_id = Block.genesis.hash;
+            let hash = _ => failwith("Not implemented: hash");
+            let key_hash = Crypto.Key_hash.of_key;
+          };
+          open Interpreter;
+          open Types;
+          let initial_stack = [
+            Stack_item.Record([|parameter, contract_state.storage|]),
+          ];
+          let initial_state =
+            Interpreter.initial_state(~initial_stack, contract_state.code);
+          let interpretation_result =
+            Interpreter.eval((module Executor), initial_state);
+          Stack_item.(
+            switch (interpretation_result) {
+            | Success(_, [Record([|List(operations), storage|]), ..._]) =>
+              Ok(({...contract_state, storage}, operations))
+            | _ => Error(`Invalid_invocation)
+            }
+          );
+        },
+      );
+    Ok(({...state, contracts_storage: new_contract_storage}, `Invocation));
   };
 };
 
