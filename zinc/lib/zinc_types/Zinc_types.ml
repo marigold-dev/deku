@@ -72,7 +72,7 @@ module Make (D : Domain_types) = struct
       | MatchVariant of (variant_label * t) list
     [@@deriving show {with_path = false}, eq, yojson]
 
-    and operation = Eq | Add | Cons | HashKey | Or | And | Not
+    and operation = Eq | Add | Cons | HashKey | Or | And | Not | Pack | Unpack
     [@@deriving show {with_path = false}, eq, yojson]
 
     and domain_specific_operation = ChainID | Contract_opt | MakeTransaction

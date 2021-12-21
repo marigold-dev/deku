@@ -946,10 +946,95 @@ let top_level_let_dependencies =
         ] );
     ]
 
+let pack_and_unpack =
+  let open Z in
+  expect_simple_compile_to ~dialect:CameLIGO "bytes_unpack"
+    [
+      ( "id_string",
+        [
+          Core Grab;
+          Core (Access 0);
+          Operation Pack;
+          Core Grab;
+          Core (Access 0);
+          Operation Unpack;
+          Core Return;
+        ] );
+      ( "id_int",
+        [
+          Core
+            (Closure
+               [
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Pack;
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Unpack;
+                 Core Return;
+               ]);
+          Core Grab;
+          Core Grab;
+          Core (Access 0);
+          Operation Pack;
+          Core Grab;
+          Core (Access 0);
+          Operation Unpack;
+          Core Return;
+        ] );
+      ( "id_address",
+        [
+          Core
+            (Closure
+               [
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Pack;
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Unpack;
+                 Core Return;
+               ]);
+          Core Grab;
+          Core
+            (Closure
+               [
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Pack;
+                 Core Grab;
+                 Core (Access 0);
+                 Operation Unpack;
+                 Core Return;
+               ]);
+          Core Grab;
+          Core Grab;
+          Core (Access 0);
+          Operation Pack;
+          Core Grab;
+          Core (Access 0);
+          Operation Unpack;
+          Core Return;
+        ] );
+    ]
+    ~initial_stack:
+      [
+        Types.Stack_item.Z (Plain_old_data (String "test"));
+        Types.Stack_item.Z (Plain_old_data (Num ~$1));
+        Types.Stack_item.Z (Plain_old_data (Address "test"));
+      ]
+    ~expected_output:
+      [
+        Z (Plain_old_data (String "test"));
+        Z (Plain_old_data (Num ~$1));
+        Z (Plain_old_data (Address "test"));
+      ]
+
 let main =
   let open Test_helpers in
   test_suite "Zinc tests"
     [
+      test_w "bytes_unpack" pack_and_unpack;
       test_w "simple1" simple_1;
       test_w "simple2" simple_2;
       test_w "simple3" simple_3;

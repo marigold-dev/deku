@@ -52,6 +52,14 @@ module Make (D : Domain_types) = struct
         in
         let open Zinc in
         match (code, env, stack) with
+        | (Operation Unpack :: c, e, (Stack_item.Z (Plain_old_data (Bytes s'))) :: s ) -> 
+          let unpacked =  Stack_item.of_yojson @@ Yojson.Safe.from_string @@  Bytes.to_string s' in
+          let continue = Result.fold  unpacked in
+          continue ~error:(fun _ -> failwith "failed to unpack value") ~ok:(fun unpacked -> Steps.Continue (c,e, unpacked :: s))
+        | (Operation Pack :: c, e, s' :: s ) -> 
+          let packed = Bytes.of_string @@ Yojson.Safe.to_string  @@ Stack_item.to_yojson s' in
+          let packed = Stack_item.Z (Plain_old_data (Bytes packed)) in
+          Steps.Continue (c,e, packed :: s)
         | ( Operation Or :: c,
             env,
             (Stack_item.Z (Plain_old_data (Bool x)) as x')

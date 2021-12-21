@@ -258,6 +258,8 @@ and compile_constant :
   | C_OR -> Operation Or :: k
   | C_AND -> Operation And :: k
   | C_NOT -> Operation Not :: k
+  | C_BYTES_UNPACK -> Operation Unpack :: k
+  | C_BYTES_PACK -> Operation Pack :: k
   | name ->
       failwith
         (Format.asprintf "Unsupported constant: %a" AST.PP.constant' name)

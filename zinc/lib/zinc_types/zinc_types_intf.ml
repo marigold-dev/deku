@@ -166,7 +166,7 @@ module type S = sig
       | MakeVariant of variant_label
       | MatchVariant of (variant_label * t) list
 
-    and operation = Eq | Add | Cons | HashKey | Or | And | Not
+    and operation = Eq | Add | Cons | HashKey | Or | And | Not | Pack | Unpack
 
     and domain_specific_operation = ChainID | Contract_opt | MakeTransaction
 
