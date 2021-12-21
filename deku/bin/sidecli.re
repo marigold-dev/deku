@@ -197,14 +197,15 @@ let hash = {
 // originate-contract
 
 let info_originate_contract = {
-  let doc = "Invokes a contract";
+  let doc = "Originates a contract to be executed on the sidechain";
   Term.info("originate-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
 
-let originate_contract =
-    (node_folder, contract_json, initial_storage_json, sender_wallet_file) => {
+let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   open Networking;
 
+  let contract =
+    Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
   module Zinc_interpreter = Protocol.Interpreter;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
@@ -213,14 +214,9 @@ let originate_contract =
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
 
   let contract_program =
-    contract_json
-    |> Yojson.Safe.from_file
-    |> Zinc_interpreter.Types.Program.of_yojson
-    |> Result.get_ok;
-  let initial_storage =
-    initial_storage_json
-    |> Yojson.Safe.from_file
-    |> Zinc_interpreter.Types.Stack_item.of_yojson
+    contract
+    |> Yojson.Safe.from_string
+    |> Zinc_interpreter.Types.Zinc.of_yojson
     |> Result.get_ok;
 
   let originate_contract_op =
@@ -229,43 +225,36 @@ let originate_contract =
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=Originate_contract((contract_program, initial_storage)),
+      ~kind=
+        Originate_contract((
+          contract_program,
+          Zinc_interpreter.Types.Stack_item.Record([||]),
+        )),
     );
 
   let.await identity = read_identity(~node_folder);
 
   let.await () =
-    Networking.request_user_operation_gossip(
-      Networking.User_operation_gossip.{
-        user_operation: originate_contract_op,
-      },
+    Networking.request_operation_gossip(
+      Networking.Operation_gossip.{operation: originate_contract_op},
       identity.uri,
     );
   Lwt.return(`Ok());
 };
 
-let originate_contract = {
-  let folder_node = {
-    let docv = "folder_node";
-    let doc = "The folder where the node lives.";
-    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-  };
+let folder_node = {
+  let docv = "folder_node";
+  let doc = "The folder where the node lives.";
+  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+};
 
+let originate_contract = {
   let contract_json = {
     let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
     Arg.(
       required
-      & pos(1, some(contract_code_path), None)
+      & pos(1, some(contract), None)
       & info([], ~docv="contract", ~doc)
-    );
-  };
-
-  let initial_storage_json = {
-    let doc = "The path to the JSON output of compiling the contract's initial storage to Zinc.";
-    Arg.(
-      required
-      & pos(2, some(contract_stack_item_path), None)
-      & info([], ~docv="initial_storage", ~doc)
     );
   };
 
@@ -274,111 +263,14 @@ let originate_contract = {
     let env = Arg.env_var("SENDER", ~doc);
     Arg.(
       required
-      & pos(3, some(wallet), None)
+      & pos(2, some(wallet), None)
       & info([], ~env, ~docv="sender", ~doc)
     );
   };
 
   Term.(
     lwt_ret(
-      const(originate_contract)
-      $ folder_node
-      $ contract_json
-      $ initial_storage_json
-      $ address_from,
-    )
-  );
-};
-
-// invoke-contract
-
-let info_invoke_contract = {
-  let doc = "Originates a contract to be executed on the sidechain";
-  Term.info("invoke-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
-};
-
-let invoke_contract =
-    (node_folder, address_originated, parameter_json, sender_wallet_file) => {
-  open Networking;
-
-  let parameter = Yojson.Safe.from_file(parameter_json);
-  module Zinc_interpreter = Protocol.Interpreter;
-  let.await validators_uris = validators_uris(node_folder);
-  let validator_uri = List.hd(validators_uris);
-  let.await block_level_response = request_block_level((), validator_uri);
-  let block_level = block_level_response.level;
-  let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
-
-  let parameter =
-    parameter |> Zinc_interpreter.Types.Stack_item.of_yojson |> Result.get_ok;
-
-  let invoke_contract_op =
-    Operation.Side_chain.sign(
-      ~secret=wallet.priv_key,
-      ~nonce=0l,
-      ~block_height=block_level,
-      ~source=wallet.address,
-      ~kind=
-        Invocation({
-          parameter,
-          destination: address_originated |> Address.of_originated,
-          entrypoint: Some("main"),
-        }),
-    );
-
-  let.await identity = read_identity(~node_folder);
-
-  let.await () =
-    Networking.request_user_operation_gossip(
-      Networking.User_operation_gossip.{user_operation: invoke_contract_op},
-      identity.uri,
-    );
-  Lwt.return(`Ok());
-};
-
-let invoke_contract = {
-  let folder_node = {
-    let docv = "folder_node";
-    let doc = "The folder where the node lives.";
-    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-  };
-
-  let parameter_json = {
-    let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
-    Arg.(
-      required
-      & pos(1, some(contract_code_path), None)
-      & info([], ~docv="contract", ~doc)
-    );
-  };
-
-  let address_originated = {
-    let doc = "The address of the contract to invoke";
-    let env = Arg.env_var("CONTRACT", ~doc);
-    Arg.(
-      required
-      & pos(2, some(address_originated), None)
-      & info([], ~env, ~docv="contract_address", ~doc)
-    );
-  };
-
-  let address_from = {
-    let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
-    let env = Arg.env_var("SENDER", ~doc);
-    Arg.(
-      required
-      & pos(3, some(wallet), None)
-      & info([], ~env, ~docv="sender", ~doc)
-    );
-  };
-
-  Term.(
-    lwt_ret(
-      const(invoke_contract)
-      $ folder_node
-      $ address_originated
-      $ parameter_json
-      $ address_from,
+      const(originate_contract) $ folder_node $ contract_json $ address_from,
     )
   );
 };
