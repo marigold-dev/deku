@@ -4,8 +4,8 @@ module M = Map.Make_with_yojson(Tezos.Contract_hash)
 type contract_state = {
   entrypoint: string option;
   originator: Address.t;
-  storage: Interpreter.Types.Program.t; (* zinc.t *)
-  code: Interpreter.Types.Program.t (* zinc.t *)
+  storage: Interpreter.Types.Zinc.t;
+  code: Interpreter.Types.Program.t
 } [@@deriving yojson]
 
 type t = contract_state M.t [@@deriving to_yojson]
