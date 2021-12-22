@@ -123,7 +123,6 @@ let apply_side_chain = (state: t, operation) => {
             let get_contract_opt = _ =>
               failwith("Not implemented: get_contract_op");
             let chain_id = Block.genesis.hash;
-            let hash = _ => failwith("Not implemented: hash");
             let key_hash = Crypto.Key_hash.of_key;
           };
           open Interpreter;

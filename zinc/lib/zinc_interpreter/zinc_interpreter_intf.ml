@@ -15,7 +15,5 @@ module type Executor = sig
 
   val chain_id : chain_id
 
-  val hash : string -> hash
-
   val key_hash : key -> key_hash
 end
