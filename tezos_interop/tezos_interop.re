@@ -160,11 +160,14 @@ module Fetch_storage: {
 
 module Listen_transactions = {
   [@deriving of_yojson]
-  type output = {
-    hash: string,
-    index: int,
+  type transaction = {
     entrypoint: string,
     value: michelson,
+  };
+  [@deriving of_yojson]
+  type output = {
+    hash: string,
+    transactions: list(transaction),
   };
   module CLI = {
     [@deriving to_yojson]
@@ -291,7 +294,7 @@ module Consensus = {
     await();
   };
 
-  type parameters =
+  type transaction =
     | Deposit({
         ticket: Ticket_id.t,
         // TODO: proper type for amounts
@@ -301,12 +304,11 @@ module Consensus = {
     | Update_root_hash(BLAKE2B.t);
   type operation = {
     hash: Operation_hash.t,
-    index: int,
-    parameters,
+    transactions: list(transaction),
   };
 
-  let parse_parameters = (entrypoint, micheline) =>
-    switch (entrypoint, micheline) {
+  let parse_transaction = transaction =>
+    switch (transaction.Listen_transactions.entrypoint, transaction.value) {
     | (
         "update_root_hash",
         Tezos_micheline.Micheline.Prim(
@@ -377,10 +379,11 @@ module Consensus = {
     | _ => None
     };
   let parse_operation = output => {
-    let.some parameters =
-      parse_parameters(output.Listen_transactions.entrypoint, output.value);
-    let.some hash = Operation_hash.of_string(output.hash);
-    Some({hash, index: output.index, parameters});
+    let.some hash = Operation_hash.of_string(output.Listen_transactions.hash);
+    let transactions =
+      List.filter_map(parse_transaction, output.transactions);
+
+    Some({hash, transactions});
   };
   let listen_operations = (~context, ~on_operation) => {
     let on_message = output =>

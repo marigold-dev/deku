@@ -23,15 +23,19 @@ const error = (err) => {
 /**
  * @typedef Transaction
  * @type {object}
- * @property {string} hash
- * @property {number} index
  * @property {string} entrypoint
  * @property {rpc.MichelsonV1Expression} value
  */
-/** @param {Transaction} transaction */
-const output = (transaction) => {
+/**
+ * @typedef Operation
+ * @type {object}
+ * @property {string} hash
+ * @property {Transaction[]} transactions
+ */
+/** @param {Operation} Operation */
+const output = (operation) => {
   const callback = (err) => err && error(err);
-  process.stdout.write(JSON.stringify(transaction), callback);
+  process.stdout.write(JSON.stringify(operation), callback);
   process.stdout.write("\n", callback);
 };
 
@@ -56,7 +60,7 @@ operationStream.on("data", async (content) => {
   try {
     const hash = content.hash;
 
-    let operations = (metadata.internal_operation_results || [])
+    let transactions = (metadata.internal_operation_results || [])
       .filter(
         (operation) =>
           operation.kind === taquito.OpKind.TRANSACTION &&
@@ -64,17 +68,13 @@ operationStream.on("data", async (content) => {
       )
       .map((operation) => operation.parameters);
 
-    operations =
+    transactions =
       content.destination === destination
-        ? [content.parameters, ...operations]
-        : operations;
-    operations = operations.filter(Boolean).map((parameters, index) => ({
-      ...parameters,
-      hash,
-      index,
-    }));
+        ? [content.parameters, ...transactions]
+        : transactions;
+    transactions = transactions.filter(Boolean);
 
-    if (operations.length === 0) {
+    if (transactions.length === 0) {
       return;
     }
 
@@ -82,7 +82,7 @@ operationStream.on("data", async (content) => {
 
     const result = await operation.confirmation(confirmation);
     if (await result.isInCurrentBranch()) {
-      operations.forEach(output);
+      output({ hash, transactions });
     }
   } catch (err) {
     console.error(err);

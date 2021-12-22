@@ -280,16 +280,7 @@ let node = folder => {
     };
   Tezos_interop.Consensus.listen_operations(
     ~context=interop_context, ~on_operation=operation =>
-    switch (
-      Flows.received_main_operation(
-        Server.get_state(),
-        update_state,
-        operation,
-      )
-    ) {
-    | Ok () => ()
-    | Error(err) => print_error(err)
-    }
+    Flows.received_main_operation(Server.get_state(), update_state, operation)
   );
   await({...node, protocol});
 };
