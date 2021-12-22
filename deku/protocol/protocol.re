@@ -90,12 +90,8 @@ let apply_side_chain = (state: t, operation) => {
     let validators = Validators.remove(validator, state.validators);
     Ok((update_validators(validators), `Remove_validator));
   | Originate_contract((code, initial_storage)) =>
-    let (_, signature) =
-      Protocol_signature.signature_to_signature_by_address(
-        operation.signature,
-      );
     let new_address =
-      Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
+      operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
     let contract_state =
       Contract_storage.make_state(
         ~entrypoint=None,
