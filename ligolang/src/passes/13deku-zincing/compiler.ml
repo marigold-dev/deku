@@ -192,8 +192,25 @@ and other_compile :
         { cons_name = C_FALSE; arguments = [] }
         ~k
   | E_constructor { constructor = Label constructor; element } ->
+      let idx =
+        expr.type_expression.type_content |> function
+        | T_sum r | T_record r ->
+            let rows = LMap.keys r.content in
+            List.findi ~f:(fun _ (Label x) -> constructor = x) rows
+            |> Stdlib.Option.get |> fst
+        | T_constant const when Ligo_string.extract const.injection = "option"
+          -> (
+            match constructor with
+            | "Some" -> 0
+            | "None" -> 1
+            | x -> failwith @@ Format.asprintf "invalid constructor %s" x)
+        | x ->
+            failwith
+            @@ Format.asprintf "Unsupported type in pattern match: %a\n"
+                 AST.PP.type_content x
+      in
       compile_known_function_application environment
-        (fun ~k -> Adt (MakeVariant constructor) :: k)
+        (fun ~k -> Adt (MakeVariant idx) :: k)
         [ element ] ~k
   | E_matching { matchee; cases = Match_record match_record } ->
       other_compile environment (match_record_rewrite ~matchee match_record) ~k
@@ -249,8 +266,8 @@ and compile_constant :
   | C_CONTRACT_OPT -> Domain_specific_operation Contract_opt :: k
   | C_CALL -> Domain_specific_operation MakeTransaction :: k
   | C_UNIT -> Adt (MakeRecord 0) :: k
-  | C_NONE -> Adt (MakeRecord 0) :: Adt (MakeVariant "None") :: k
-  | C_SOME -> Adt (MakeVariant "Some") :: k
+  | C_NONE -> Adt (MakeRecord 0) :: Adt (MakeVariant 1) :: k
+  | C_SOME -> Adt (MakeVariant 0) :: k
   | C_CONS -> Operation Cons :: k
   | C_LIST_EMPTY -> Plain_old_data Nil :: k
   | C_TRUE -> Plain_old_data (Bool true) :: k
@@ -376,51 +393,56 @@ and compile_pattern_matching :
   let other_compile = other_compile ~raise in
   let compile_type = compile_type ~raise in
   let compiled_type = compile_type matchee.type_expression in
+  let pattern_match_common cases fn =
+    let code =
+      Adt
+        (MatchVariant
+           (List.map
+              ~f:
+                (fun {
+                       constructor = Label lbl;
+                       pattern = { wrap_content = pattern; _ };
+                       body;
+                     } ->
+                (* When interpreting MatchVariant, the interpreter pops the top item off the stack,
+                   which better be a variant, then unwraps it, then pushes the unwraped item onto
+                   the stack. We compile pattern match cases as if they were functions, so we need
+                   to `Grab` the unwrapped item off the stack just like we would when compiling any
+                   other function *)
+                let compiled =
+                  Core Grab
+                  :: compile_match_code (add_binder pattern environment) body
+                in
+                let idx = fn lbl in
+                (idx, compiled))
+              cases
+           |> List.sort ~compare:(fun (x, _) (y, _) -> Int.compare x y)
+           |> List.map ~f:snd |> Zinc_utils.LMap.of_list))
+    in
+    other_compile environment matchee ~k:(code :: k)
+  in
   match (compiled_type, cases) with
+  | T_or _, { cases; _ } ->
+      let rows =
+        matchee.type_expression.type_content |> function
+        | T_sum r | T_record r -> LMap.keys r.content
+        | x -> failwith @@ Format.asprintf "%a\n" AST.PP.type_content x
+      in
+      let fn lbl =
+        List.findi ~f:(fun _ (Label label) -> label = lbl) rows
+        |> Stdlib.Option.get |> fst
+      in
+      pattern_match_common cases fn
   | T_option _, { cases; _ } ->
-      let code =
-        Adt
-          (MatchVariant
-             (List.map
-                ~f:
-                  (fun {
-                         constructor = Label label;
-                         pattern = { wrap_content = pattern; _ };
-                         body;
-                       } ->
-                  (* When interpreting MatchVariant, the interpreter pops the top item off the stack,
-                     which better be a variant, then unwraps it, then pushes the unwraped item onto
-                     the stack. We compile pattern match cases as if they were functions, so we need
-                     to `Grab` the unwrapped item off the stack just like we would when compiling any
-                     other function *)
-                  let compiled =
-                    Core Grab
-                    :: compile_match_code (add_binder pattern environment) body
-                  in
-                  (label, compiled))
-                cases))
-      in
-      other_compile environment matchee ~k:(code :: k)
+      pattern_match_common cases (function
+        | "Some" -> 0
+        | "None" -> 1
+        | _ -> failwith "invalid case")
   | T_base TB_bool, { cases; _ } ->
-      let code =
-        Adt
-          (MatchVariant
-             (List.map
-                ~f:
-                  (fun {
-                         constructor = Label label;
-                         pattern = { wrap_content = pattern; _ };
-                         body;
-                       } ->
-                  (* We assume that the interpreter will put the matched value on the stack *)
-                  let compiled =
-                    Core Grab
-                    :: compile_match_code (add_binder pattern environment) body
-                  in
-                  (label, compiled))
-                cases))
-      in
-      other_compile environment matchee ~k:(code :: k)
+      pattern_match_common cases (function
+        | "False" -> 0
+        | "True" -> 1
+        | _ -> failwith "invalid case")
   | _ ->
       failwith
         (Format.asprintf

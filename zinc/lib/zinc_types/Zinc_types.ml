@@ -66,10 +66,10 @@ module Make (D : Domain_types) = struct
     [@@deriving show {with_path = false}, eq, yojson]
 
     and adt =
-      | MakeRecord of int
+      | MakeRecord of label
       | RecordAccess of label
-      | MakeVariant of variant_label
-      | MatchVariant of (variant_label * t) list
+      | MakeVariant of label
+      | MatchVariant of t LMap.t
     [@@deriving show {with_path = false}, eq, yojson]
 
     and operation = Eq | Add | Cons | HashKey | Or | And | Not
@@ -129,7 +129,7 @@ module Make (D : Domain_types) = struct
       | Clos of Clos.t
       | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
-      | Variant of variant_label * Stack_item.t
+      | Variant of label * Stack_item.t
 
     include Zinc_types_intf.With_default_derivation with type t := t
   end = struct
@@ -139,7 +139,7 @@ module Make (D : Domain_types) = struct
       | Clos of Clos.t
       | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
-      | Variant of variant_label * Stack_item.t
+      | Variant of label * Stack_item.t
     [@@deriving show {with_path = false}, eq, yojson]
 
     let to_string = show
@@ -152,7 +152,7 @@ module Make (D : Domain_types) = struct
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
-      | Variant of variant_label * t
+      | Variant of label * t
       | Marker of Zinc.t * Env_item.t list
 
     include Zinc_types_intf.With_default_derivation with type t := t
@@ -163,7 +163,7 @@ module Make (D : Domain_types) = struct
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
-      | Variant of variant_label * t
+      | Variant of label * t
       | Marker of Zinc.t * Env_item.t list
     [@@deriving show {with_path = false}, eq, yojson]
 
