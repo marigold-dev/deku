@@ -42,7 +42,7 @@ module Make (D : Domain_types) = struct
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
       let apply_once (code : Zinc.t) env stack =
-        let () =
+        let _ =
           print_endline
             (Format.asprintf
                "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
@@ -128,35 +128,22 @@ module Make (D : Domain_types) = struct
             Steps.Continue (c, env, Stack_item.Record record_contents :: stack)
         | (Adt (RecordAccess accessor) :: c, env, Stack_item.Record r :: s) ->
             let res =
-              match LMap.find r accessor with
-              | None -> failwith "field not found"
-              | Some x -> Steps.Continue (c, env, x :: s)
+              let res = LMap.find r accessor in
+              Steps.Continue (c, env, res :: s)
             in
             res
         | ( Adt (MatchVariant vs) :: c,
             env,
-            Stack_item.Variant (label, item) :: s ) -> (
-            match
-              Base.List.find_map vs ~f:(fun (match_arm, constructors) ->
-                  if String.equal match_arm label then Some constructors
-                  else None)
-            with
-            | None -> Steps.Internal_error "inexhaustive match"
-            | Some match_code ->
-                Steps.Continue (List.concat [match_code; c], env, item :: s))
+            Stack_item.Variant (label, item) :: s ) ->
+            let match_code = LMap.find vs label in
+            Steps.Continue (List.concat [match_code; c], env, item :: s)
         | ( Adt (MatchVariant vs) :: c,
             env,
-            Stack_item.Z (Plain_old_data (Bool b)) :: s ) -> (
-            let label = if b then "True" else "False" in
+            Stack_item.Z (Plain_old_data (Bool b)) :: s ) ->
+            let label = if b then 1 else 0 in
             let item = Utils.unit_record_stack in
-            match
-              Base.List.find_map vs ~f:(fun (match_arm, constructors) ->
-                  if String.equal match_arm label then Some constructors
-                  else None)
-            with
-            | None -> Steps.Internal_error "inexhaustive match"
-            | Some match_code ->
-                Steps.Continue (List.concat [match_code; c], env, item :: s))
+            let match_code = LMap.find vs label in
+            Steps.Continue (List.concat [match_code; c], env, item :: s)
         | (Adt (MakeVariant label) :: c, env, value :: s) ->
             Steps.Continue (c, env, Stack_item.Variant (label, value) :: s)
         (* Math *)
@@ -204,8 +191,8 @@ module Make (D : Domain_types) = struct
               match E.get_contract_opt address with
               | Some contract ->
                   Stack_item.Variant
-                    ("Some", Stack_item.NonliteralValue (Contract contract))
-              | None -> Stack_item.Variant ("None", Utils.unit_record_stack)
+                    (0, Stack_item.NonliteralValue (Contract contract))
+              | None -> Stack_item.Variant (1, Utils.unit_record_stack)
             in
             Steps.Continue (c, env, contract :: s)
         | ( Domain_specific_operation MakeTransaction :: c,

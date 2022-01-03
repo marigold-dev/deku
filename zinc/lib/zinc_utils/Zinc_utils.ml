@@ -21,15 +21,14 @@ end
 
 type label = int [@@deriving show {with_path = false}, eq, yojson]
 
-type variant_label = string [@@deriving show {with_path = false}, eq, yojson]
-
 module LMap = struct
   type 'a t = 'a array [@@deriving yojson, ord, eq, show]
 
   let of_list (lst : 'a list) : 'a t = lst |> Array.of_list
 
   let find arr item =
-    try Some (Array.get arr item) with Invalid_argument _ -> None
+    try Array.get arr item
+    with Invalid_argument _ -> failwith "field not found"
 
   let add _k v array = Array.concat [array; [|v|]]
 
