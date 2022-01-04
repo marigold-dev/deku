@@ -185,8 +185,8 @@ module Withdraw_proof = {
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
-    address: Address.t,
-    ticket: Ticket_id.t,
+    address: Address.Implicit.t,
+    ticket: Ticket.t,
   };
   [@deriving yojson]
   type response = {amount: Amount.t};

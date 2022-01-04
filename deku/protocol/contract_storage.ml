@@ -3,9 +3,9 @@ open Helpers
 module M = Map.Make_with_yojson(Address.Originated)
 type contract_state = {
   entrypoint: string option;
-  originator: Address.t;
-  storage: Interpreter.Types.Stack_item.t;
-  code: Interpreter.Types.Zinc.t
+  originator: Address.Implicit.t;
+  storage: Interpreter.Types.Zinc.t;
+  code: Interpreter.Types.Program.t
 } [@@deriving yojson]
 
 type t = contract_state M.t [@@deriving to_yojson]

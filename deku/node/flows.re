@@ -300,27 +300,31 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   };
 };
 
-let received_user_operation = (state, update_state, user_operation) => {
-  let.ok () =
-    switch (user_operation.Operation.Side_chain.kind) {
-    | Add_validator(_)
-    | Remove_validator(_) => Error(`Not_a_user_opertaion)
-    | _ => Ok()
-    };
-
-  if (!List.mem(user_operation, state.Node.pending_side_ops)) {
-    Lwt.async(() =>
-      Networking.broadcast_user_operation_gossip(
-        state,
-        {user_operation: user_operation},
-      )
-    );
-    let _: State.t =
-      update_state(
-        Node.{
-          ...state,
-          pending_side_ops: [user_operation, ...state.Node.pending_side_ops],
-        },
+let received_operation =
+    (state, update_state, request: Networking.Operation_gossip.request) =>
+  if (!List.mem(request.operation, state.Node.pending_side_ops)) {
+    let.ok () =
+      Operation.Side_chain.(
+        switch (request.operation.kind) {
+        | Add_validator(_)
+        | Remove_validator(_) =>
+          let.assert () = (
+            `Invalid_signature_author,
+            Address.Implicit.compare(
+              state.Node.identity.t,
+              Signature.address(
+                request.operation.Operation.Side_chain.signature,
+              ),
+            )
+            == 0,
+          );
+          Ok();
+        | _ =>
+          Lwt.async(() => {
+            Networking.broadcast_operation_gossip(state, request)
+          });
+          Ok();
+        }
       );
     Ok();
   } else {

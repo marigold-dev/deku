@@ -125,16 +125,11 @@ let address_implicit = {
     Option.bind(Address.of_string(string), Address.to_implicit)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
-    Format.fprintf(fmt, "%s", wallet |> Address.Implicit.to_string);
-  Arg.(conv((parser, printer)));
-};
-
-let address_originated = {
-  let parser = string =>
-    Option.bind(Address.of_string(string), Address.to_originated)
-    |> Option.to_result(~none=`Msg("Expected a wallet address."));
-  let printer = (fmt, wallet) =>
-    Format.fprintf(fmt, "%s", wallet |> Address.Originated.to_string);
+    Format.fprintf(
+      fmt,
+      "%s",
+      wallet |> Address.Implicit.to_key_hash |> Key_hash.to_string,
+    );
   Arg.(conv((parser, printer)));
 };
 
