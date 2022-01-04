@@ -8,7 +8,6 @@ let make ~state () =
   (module struct
   let state = state 
   let key_hash = Key_hash.of_key
-  let hash = BLAKE2B.hash
   let get_contract_opt = function 
    | Address.Originated({contract; entrypoint = _}) -> 
     let open Option.Syntax in 

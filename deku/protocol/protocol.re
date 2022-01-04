@@ -63,26 +63,60 @@ let apply_side_chain = (state: t, operation) => {
   let state = {...state, included_operations};
 
   let {source, _} = operation;
+
   let update_validators = validators => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
+  let apply_internal_operation = (state, kind) => {
+    switch (kind) {
+    | Withdraw(_)
+    | Add_validator(_)
+    | Remove_validator(_)
+    | Originate_contract(_) => Error(assert(false))
+    | Invoke_contract(contract_hash, parameter) =>
+      let.ok (new_contract_storage, _operations) =
+        Contract_storage.update_entry(
+          state.contracts_storage,
+          contract_hash,
+          contract_state => {
+            let.ok contract_state =
+              Option.to_result(~none=`Invalid_invocation, contract_state);
+            module Executor = {
+              let get_contract_opt = _ =>
+                failwith("Not implemented: get_contract_op");
+              let chain_id = Block.genesis.hash;
+              let key_hash = Crypto.Key_hash.of_key;
+            };
+            open Interpreter;
+            open Types;
+            let initial_stack = [
+              Stack_item.Record([|parameter, contract_state.storage|]),
+            ];
+            let initial_state =
+              Interpreter.initial_state(~initial_stack, contract_state.code);
+            let interpretation_result =
+              Interpreter.eval((module Executor), initial_state);
+            Stack_item.(
+              switch (interpretation_result) {
+              | Success(_, [Record([|List(operations), storage|]), ..._]) =>
+                Ok(({...contract_state, storage}, operations))
+              | _ => Error(`Invalid_invocation)
+              }
+            );
+          },
+        );
+
+      let new_state = {...state, contracts_storage: new_contract_storage};
+      Ok(new_state);
+    | Transaction({destination, amount, ticket}) =>
+      let.ok ledger =
+        Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
+      Ok({...state, ledger});
+    };
+  };
+
   switch (operation.kind) {
-  | Transaction({destination, amount, ticket}) =>
-    let.ok ledger =
-      Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
-    Ok(({...state, ledger}, `Transaction));
-  | Withdraw({owner, amount, ticket}) =>
-    let.ok (ledger, handle) =
-      Ledger.withdraw(
-        ~source,
-        ~destination=owner,
-        amount,
-        ticket,
-        state.ledger,
-      );
-    // TODO: publish the handle somewhere
-    Ok(({...state, ledger}, `Withdraw(handle)));
   | Add_validator(validator) =>
     let validators = Validators.add(validator, state.validators);
     Ok((update_validators(validators), `Add_validator));
@@ -111,39 +145,23 @@ let apply_side_chain = (state: t, operation) => {
         contract_state,
       );
     Ok(({...state, contracts_storage: new_contract_state}, `Origination));
-  | Invoke_contract(contract_hash, parameter) =>
-    let.ok (new_contract_storage, _operations) =
-      Contract_storage.update_entry(
-        state.contracts_storage,
-        contract_hash,
-        contract_state => {
-          let.ok contract_state =
-            Option.to_result(~none=`Invalid_invocation, contract_state);
-          module Executor = {
-            let get_contract_opt = _ =>
-              failwith("Not implemented: get_contract_op");
-            let chain_id = Block.genesis.hash;
-            let key_hash = Crypto.Key_hash.of_key;
-          };
-          open Interpreter;
-          open Types;
-          let initial_stack = [
-            Stack_item.Record([|parameter, contract_state.storage|]),
-          ];
-          let initial_state =
-            Interpreter.initial_state(~initial_stack, contract_state.code);
-          let interpretation_result =
-            Interpreter.eval((module Executor), initial_state);
-          Stack_item.(
-            switch (interpretation_result) {
-            | Success(_, [Record([|List(operations), storage|]), ..._]) =>
-              Ok(({...contract_state, storage}, operations))
-            | _ => Error(`Invalid_invocation)
-            }
-          );
-        },
+  | Withdraw({owner, amount, ticket}) =>
+    let.ok (ledger, handle) =
+      Ledger.withdraw(
+        ~source,
+        ~destination=owner,
+        amount,
+        ticket,
+        state.ledger,
       );
-    Ok(({...state, contracts_storage: new_contract_storage}, `Invocation));
+    // TODO: publish the handle somewhere
+    Ok(({...state, ledger}, `Withdraw(handle)));
+  | Invoke_contract(_) as invoke_contract =>
+    let.ok new_state = apply_internal_operation(state, invoke_contract);
+    Ok((new_state, `Invocation));
+  | Transaction(_) as transaction =>
+    let.ok new_state = apply_internal_operation(state, transaction);
+    Ok((new_state, `Transaction));
   };
 };
 
