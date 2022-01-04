@@ -19,4 +19,5 @@ module BLAKE2B_20: (module type of BLAKE2B_20);
 module Secret: (module type of Secret);
 module Key: (module type of Key);
 module Key_hash: (module type of Key_hash);
+module Contract_hash: (module type of Contract_hash);
 module Signature: (module type of Signature);
