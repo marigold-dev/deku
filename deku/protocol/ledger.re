@@ -4,7 +4,7 @@ open Crypto;
 module Implicit_address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
-    address: Address.t,
+    address: Address.Implicit.t,
     ticket: Ticket.t,
   };
   module Map =

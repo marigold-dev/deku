@@ -4,12 +4,12 @@ open Crypto;
 type t;
 let compare: (t, t) => int;
 let public_key: t => Wallet.t;
-let address: t => Address.t;
+let address: t => Address.Implicit.t;
 
 let sign: (~key: Secret.t, BLAKE2B.t) => t;
 let verify: (~signature: t, BLAKE2B.t) => bool;
 
-let signature_to_signature_by_address: t => (Address.t, Signature.t);
+let signature_to_signature_by_address: t => (Address.Implicit.t, Signature.t);
 
 module type S = {
   type value;

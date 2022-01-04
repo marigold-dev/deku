@@ -11,7 +11,7 @@ module Identity: {
 
 module Wallet: {
   type t = {
-    address: Address.t,
+    address: Address.Implicit.t,
     priv_key: Crypto.Secret.t,
   };
   let read: (~file: string) => Lwt.t(t);
@@ -19,8 +19,9 @@ module Wallet: {
 };
 
 module Validators: {
-  let read: (~file: string) => Lwt.t(list((Address.t, Uri.t)));
-  let write: (list((Address.t, Uri.t)), ~file: string) => Lwt.t(unit);
+  let read: (~file: string) => Lwt.t(list((Address.Implicit.t, Uri.t)));
+  let write:
+    (list((Address.Implicit.t, Uri.t)), ~file: string) => Lwt.t(unit);
 };
 
 module Interop_context: {

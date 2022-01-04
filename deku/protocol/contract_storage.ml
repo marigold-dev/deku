@@ -3,7 +3,7 @@ open Helpers
 module M = Map.Make_with_yojson(Crypto.Contract_hash)
 type contract_state = {
   entrypoint: string option;
-  originator: Address.t;
+  originator: Address.Implicit.t;
   storage: Interpreter.Types.Zinc.t;
   code: Interpreter.Types.Program.t
 } [@@deriving yojson]
