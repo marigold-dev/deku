@@ -68,14 +68,28 @@ let apply_side_chain = (state: t, operation) => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
-  let apply_internal_operation = (state, kind) => {
+  let rec apply_internal_operation =
+          (state, kind) => {
+    let stack_item_to_kind = (_item: Interpreter.Types.Stack_item.t): kind =>
+      assert(false);
+
+    let rec fold_left_m =
+            (f: ('a, 'b) => result('a, 'e), acc: 'a, l: list('b))
+            : result('a, 'e) =>
+      switch (l) {
+      | [] => Ok(acc)
+      | [x, ...xs] =>
+        let.ok acc = f(acc, x);
+        fold_left_m(f, acc, xs);
+      };
+
     switch (kind) {
     | Withdraw(_)
     | Add_validator(_)
     | Remove_validator(_)
     | Originate_contract(_) => Error(assert(false))
     | Invoke_contract(contract_hash, parameter) =>
-      let.ok (new_contract_storage, _operations) =
+      let.ok (new_contract_storage, operations) =
         Contract_storage.update_entry(
           state.contracts_storage,
           contract_hash,
@@ -100,7 +114,10 @@ let apply_side_chain = (state: t, operation) => {
             Stack_item.(
               switch (interpretation_result) {
               | Success(_, [Record([|List(operations), storage|]), ..._]) =>
-                Ok(({...contract_state, storage}, operations))
+                Ok((
+                  {...contract_state, storage},
+                  List.map(stack_item_to_kind, operations),
+                ))
               | _ => Error(`Invalid_invocation)
               }
             );
@@ -108,6 +125,8 @@ let apply_side_chain = (state: t, operation) => {
         );
 
       let new_state = {...state, contracts_storage: new_contract_storage};
+      let.ok new_state =
+        fold_left_m(apply_internal_operation, new_state, operations);
       Ok(new_state);
     | Transaction({destination, amount, ticket}) =>
       let.ok ledger =
