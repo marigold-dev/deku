@@ -2,7 +2,9 @@
 
 set -e
 
-RPC_NODE=http://localhost:20000
+# The default port in flextesa is 20000
+PORT=20000
+RPC_NODE="http://localhost:$PORT"
 
 # This secret key never changes.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -145,7 +147,7 @@ EOF
 
     sidecli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
-      --tezos_rpc_node=$RPC_NODE \
+      --tezos_rpc_node="$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" my-sandbox):$PORT"\
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1
   done
@@ -162,7 +164,7 @@ tear-down() {
 start_node() {
   tear-down
   message "Starting sandbox"
-  docker run --rm --name my-sandbox --detach -p 20000:20000 \
+  docker run --rm --name my-sandbox --detach -p "$PORT:$PORT" \
     tqtezos/flextesa:20210602 granabox start
   sleep 3
   message "Sandbox started"
