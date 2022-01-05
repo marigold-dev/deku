@@ -68,19 +68,27 @@ let apply_side_chain = (state: t, operation) => {
     let last_seen_membership_change_timestamp = Unix.time();
     {...state, validators, last_seen_membership_change_timestamp};
   };
-  let rec apply_internal_operation =
-          (state, kind) => {
-    let stack_item_to_kind = (_item: Interpreter.Types.Stack_item.t): kind =>
-      assert(false);
+  let rec apply_internal_operation = (state, kind) => {
+    let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
+      fun
+      | NonliteralValue(Chain_operation(Transaction(_amount, _destination))) =>
+        Some(failwith("todo"))
+      | _ => None;
 
-    let rec fold_left_m =
-            (f: ('a, 'b) => result('a, 'e), acc: 'a, l: list('b))
-            : result('a, 'e) =>
+    let rec fold_left_m = (f, acc, l) =>
       switch (l) {
       | [] => Ok(acc)
       | [x, ...xs] =>
         let.ok acc = f(acc, x);
         fold_left_m(f, acc, xs);
+      };
+    let rec map_m = (f, l) =>
+      switch (l) {
+      | [] => Ok([])
+      | [x, ...xs] =>
+        let.ok x = f(x);
+        let.ok xs = map_m(f, xs);
+        Ok([x, ...xs]);
       };
 
     switch (kind) {
@@ -114,10 +122,11 @@ let apply_side_chain = (state: t, operation) => {
             Stack_item.(
               switch (interpretation_result) {
               | Success(_, [Record([|List(operations), storage|]), ..._]) =>
-                Ok((
-                  {...contract_state, storage},
-                  List.map(stack_item_to_kind, operations),
-                ))
+                let stack_item_to_kind = x =>
+                  stack_item_to_kind(x)
+                  |> Option.to_result(~none=`Invalid_invocation);
+                let.ok operations = map_m(stack_item_to_kind, operations);
+                Ok(({...contract_state, storage}, operations));
               | _ => Error(`Invalid_invocation)
               }
             );
