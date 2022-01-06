@@ -205,7 +205,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=Originate_contract((contract_program, contract_program)),
+      ~kind=Originate_contract((contract_program, [])),
     );
 
   let.await identity = read_identity(~node_folder);

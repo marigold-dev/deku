@@ -164,7 +164,7 @@ start_node() {
   message "Starting sandbox"
   docker run --rm --name my-sandbox --detach -p 20000:20000 \
     tqtezos/flextesa:20210602 granabox start
-  sleep 3
+  sleep 5
   message "Sandbox started"
   message "Configuring Tezos client"
   tezos-client --endpoint $RPC_NODE bootstrapped
