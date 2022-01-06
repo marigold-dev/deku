@@ -134,9 +134,8 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
         | None -> ()
       in
       ()
-  | Some s, Failure s' ->
-      Alcotest.(check string) "Test faild unsuccessfully:" s s'
-  | Some _, Success _ ->
+  | Some s, Interpreter_output.Failure s' -> Alcotest.(check string) "hmm" s s'
+  | Some _, Interpreter_output.Success _ ->
       failwith "expected failure, but execution was successful"
   | None, Interpreter_output.Failure _ ->
       failwith "was not expecting failure, but execution failed anyway"
