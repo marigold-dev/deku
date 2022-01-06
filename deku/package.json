@@ -1,7 +1,7 @@
 {
   "name": "sidechain",
   "esy": {
-    "build": "dune build -p #{self.name}",
+    "build": "dune build -p sidechain,zinc",
     "release": {
       "bin": [
         "sidecli",
@@ -44,8 +44,7 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
     "@opam/bigstring": "*",
-    "@opam/domainslib": "0.3.1",
-    "zinc": "*"
+    "@opam/domainslib": "0.3.1"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -75,7 +74,6 @@
     "@opam/piaf": "github:EduardoRFS/piaf:piaf.opam#8e4eeb916aef8e95f04d98eef57c43f07008b631",
     "@opam/ssl": "github:Firgeis/ocaml-ssl:ssl.opam#f7524f7b6db756ce4097dea7fa4e1c4f4f2832a9",
     "@opam/opium": "github:EduardoRFS/opium:opium.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
-    "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1",
-    "zinc": "link:../zinc"
+    "@opam/rock": "github:EduardoRFS/opium:rock.opam#9fdbfbd0eedf238e1be0663ab95977be27d9a6e1"
   }
 }
