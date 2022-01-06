@@ -174,6 +174,7 @@ let hash = {
 // Commands
 // ========
 
+
 // originate-contract
 
 let info_originate_contract = {
@@ -215,8 +216,8 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   let.await identity = read_identity(~node_folder);
 
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: originate_contract_op},
+    Networking.request_user_operation_gossip(
+      Networking.User_operation_gossip.{user_operation: originate_contract_op},
       identity.uri,
     );
   Lwt.return(`Ok());
@@ -254,6 +255,7 @@ let originate_contract = {
     )
   );
 };
+
 // create-wallet
 
 let info_create_wallet = {
@@ -293,7 +295,6 @@ let info_create_transaction = {
 let create_transaction =
     (node_folder, sender_wallet_file, received_address, amount, ticket) => {
   open Networking;
-
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);
@@ -311,8 +312,8 @@ let create_transaction =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: transaction},
+    Networking.request_user_operation_gossip(
+      {user_operation: transaction},
       identity.uri,
     );
   Format.printf(
@@ -321,6 +322,12 @@ let create_transaction =
   );
 
   Lwt.return(`Ok());
+};
+
+let folder_node = {
+  let docv = "folder_node";
+  let doc = "The folder where the node lives.";
+  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
 };
 
 let create_transaction = {
@@ -398,8 +405,8 @@ let withdraw =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: operation},
+    Networking.request_user_operation_gossip(
+      {user_operation: operation},
       identity.uri,
     );
 
@@ -879,7 +886,6 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
-      (originate_contract, info_originate_contract),
       (withdraw, info_withdraw),
       (withdraw_proof, info_withdraw_proof),
       (sign_block_term, info_sign_block),
@@ -888,6 +894,7 @@ let () = {
       (setup_tezos, info_setup_tezos),
       (add_trusted_validator, info_add_trusted_validator),
       (remove_trusted_validator, info_remove_trusted_validator),
+      (originate_contract, info_originate_contract),
       (self, info_self),
     ],
   );

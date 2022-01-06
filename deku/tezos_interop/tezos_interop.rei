@@ -26,7 +26,7 @@ module Consensus: {
     ) =>
     Lwt.t(unit);
 
-  type parameters =
+  type transaction =
     | Deposit({
         ticket: Ticket_id.t,
         // TODO: proper type for amounts
@@ -36,8 +36,7 @@ module Consensus: {
     | Update_root_hash(BLAKE2B.t);
   type operation = {
     hash: Operation_hash.t,
-    index: int,
-    parameters,
+    transactions: list(transaction),
   };
   let listen_operations:
     (~context: Context.t, ~on_operation: operation => unit) => unit;
