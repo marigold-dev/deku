@@ -44,7 +44,10 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
     "@opam/bigstring": "*",
-    "@opam/domainslib": "0.3.1"
+    "@opam/domainslib": "0.3.1",
+    "@opam/ppx_inline_test": "*",
+    "@opam/ppx_expect": "*",
+    "@opam/alcotest": "1.5.0"
   },
   "devDependencies": {
     "prettier": "^2.3.2",

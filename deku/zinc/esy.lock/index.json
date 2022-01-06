@@ -1,5 +1,5 @@
 {
-  "checksum": "f0172ea757231bbdd12c7c274fdcb0d2",
+  "checksum": "78d9f57a4562e8289b85a6e19501b659",
   "root": "zinc@link-dev:./package.json",
   "node": {
     "zinc@link-dev:./package.json": {
@@ -18,7 +18,8 @@
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
         "@opam/dune@opam:2.9.1@1e504822",
         "@opam/digestif@opam:1.1.0@a8d16625",
-        "@opam/base@opam:v0.14.2@04880a76"
+        "@opam/base@opam:v0.14.2@04880a76",
+        "@opam/alcotest@opam:1.5.0@c3a8eb69"
       ],
       "devDependencies": [
         "@opam/utop@opam:2.9.0@10af4ff3",
@@ -2272,6 +2273,31 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
+    "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb": {
+      "id": "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
+      "name": "@opam/ocaml-syntax-shims",
+      "version": "opam:1.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/89/89b2e193e90a0c168b6ec5ddf6fef09033681bdcb64e11913c97440a2722e8c8#sha256:89b2e193e90a0c168b6ec5ddf6fef09033681bdcb64e11913c97440a2722e8c8",
+          "archive:https://github.com/ocaml-ppx/ocaml-syntax-shims/releases/download/1.0.0/ocaml-syntax-shims-1.0.0.tbz#sha256:89b2e193e90a0c168b6ec5ddf6fef09033681bdcb64e11913c97440a2722e8c8"
+        ],
+        "opam": {
+          "name": "ocaml-syntax-shims",
+          "version": "1.0.0",
+          "path": "esy.lock/opam/ocaml-syntax-shims.1.0.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.12.0@d41d8cd9", "@opam/dune@opam:2.9.1@1e504822",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.12.0@d41d8cd9", "@opam/dune@opam:2.9.1@1e504822"
+      ]
+    },
     "@opam/ocaml-secondary-compiler@opam:4.08.1-1@097b00ea": {
       "id": "@opam/ocaml-secondary-compiler@opam:4.08.1-1@097b00ea",
       "name": "@opam/ocaml-secondary-compiler",
@@ -2674,6 +2700,7 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/seq@opam:base@d8d7de1d",
         "@opam/result@opam:1.5@1c6a6533",
         "@opam/ocplib-endian@opam:1.2@008dc942",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
         "@opam/mmap@opam:1.1.0@a98cdc3b",
         "@opam/dune-configurator@opam:2.9.1@b7cf7a02",
         "@opam/dune@opam:2.9.1@1e504822", "@opam/cppo@opam:1.6.8@7e48217d",
@@ -2685,6 +2712,7 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/seq@opam:base@d8d7de1d",
         "@opam/result@opam:1.5@1c6a6533",
         "@opam/ocplib-endian@opam:1.2@008dc942",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
         "@opam/mmap@opam:1.1.0@a98cdc3b",
         "@opam/dune-configurator@opam:2.9.1@b7cf7a02",
         "@opam/dune@opam:2.9.1@1e504822"
@@ -3757,6 +3785,43 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.12.0@d41d8cd9" ]
+    },
+    "@opam/alcotest@opam:1.5.0@c3a8eb69": {
+      "id": "@opam/alcotest@opam:1.5.0@c3a8eb69",
+      "name": "@opam/alcotest",
+      "version": "opam:1.5.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/54/54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c#sha256:54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c",
+          "archive:https://github.com/mirage/alcotest/releases/download/1.5.0/alcotest-js-1.5.0.tbz#sha256:54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c"
+        ],
+        "opam": {
+          "name": "alcotest",
+          "version": "1.5.0",
+          "path": "esy.lock/opam/alcotest.1.5.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/re@opam:1.10.3@0585c65d",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
+        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
+        "@opam/cmdliner@opam:1.0.4@93208aac",
+        "@opam/astring@opam:0.8.5@1300cee8",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/re@opam:1.10.3@0585c65d",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
+        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
+        "@opam/cmdliner@opam:1.0.4@93208aac",
+        "@opam/astring@opam:0.8.5@1300cee8"
+      ]
     },
     "@esy-ocaml/substs@0.0.1@d41d8cd9": {
       "id": "@esy-ocaml/substs@0.0.1@d41d8cd9",
