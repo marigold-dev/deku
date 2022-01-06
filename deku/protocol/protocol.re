@@ -39,49 +39,26 @@ let apply_main_chain = (state, operation) => {
 let maximum_old_block_height_operation = 60L;
 let maximum_stored_block_height = 75L; // we're dumb, lots, of off-by-one
 
-let apply_side_chain = (state: t, operation) => {
-  open Operation.Side_chain;
-  module Set = Operation_side_chain_set;
-
-  // validate operation
-  let block_height = operation.block_height;
-  if (block_height > state.block_height) {
-    raise(Noop("block in the future"));
-  };
-
-  if (Int64.add(block_height, maximum_old_block_height_operation)
-      < state.block_height) {
-    raise(Noop("really old operation"));
-  };
-
-  if (Set.mem(operation, state.included_operations)) {
-    raise(Noop("duplicated operation"));
-  };
-
-  // apply operation
-  let included_operations = Set.add(operation, state.included_operations);
-  let state = {...state, included_operations};
-
-  let {source, _} = operation;
-
-  let update_validators = validators => {
-    let last_seen_membership_change_timestamp = Unix.time();
-    {...state, validators, last_seen_membership_change_timestamp};
-  };
-  let rec apply_internal_operation = (state, kind) => {
+let apply_side_chain = {
+  let rec fold_left_m = (f, acc, l) =>
+    switch (l) {
+    | [] => Ok(acc)
+    | [x, ...xs] =>
+      let.ok acc = f(acc, x);
+      fold_left_m(f, acc, xs);
+    };
+  let rec apply_internal_operation = (state, sender, kind) => {
+    open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
-      | NonliteralValue(Chain_operation(Transaction(_amount, _destination))) =>
-        Some(failwith("todo"))
+      | NonliteralValue(Chain_operation(Transaction(amount, _destination))) =>
+        Some(Transaction({
+        destination: failwith("waiting on address pr"),
+        amount: amount |> Z.to_int |> Amount.of_int,
+        ticket: failwith("what to do here?"),
+      }))
       | _ => None;
 
-    let rec fold_left_m = (f, acc, l) =>
-      switch (l) {
-      | [] => Ok(acc)
-      | [x, ...xs] =>
-        let.ok acc = f(acc, x);
-        fold_left_m(f, acc, xs);
-      };
     let rec map_m = (f, l) =>
       switch (l) {
       | [] => Ok([])
@@ -97,7 +74,7 @@ let apply_side_chain = (state: t, operation) => {
     | Remove_validator(_)
     | Originate_contract(_) => Error(assert(false))
     | Invoke_contract(contract_hash, parameter) =>
-      let.ok (new_contract_storage, operations) =
+      let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
           state.contracts_storage,
           contract_hash,
@@ -106,7 +83,7 @@ let apply_side_chain = (state: t, operation) => {
               Option.to_result(~none=`Invalid_invocation, contract_state);
             module Executor = {
               let get_contract_opt = _ =>
-                failwith("Not implemented: get_contract_op");
+                failwith("Not implemented: get_contract_opt");
               let chain_id = Block.genesis.hash;
               let key_hash = Crypto.Key_hash.of_key;
             };
@@ -125,8 +102,9 @@ let apply_side_chain = (state: t, operation) => {
                 let stack_item_to_kind = x =>
                   stack_item_to_kind(x)
                   |> Option.to_result(~none=`Invalid_invocation);
-                let.ok operations = map_m(stack_item_to_kind, operations);
-                Ok(({...contract_state, storage}, operations));
+                let.ok operation_kinds =
+                  map_m(stack_item_to_kind, operations);
+                Ok(({...contract_state, storage}, operation_kinds));
               | _ => Error(`Invalid_invocation)
               }
             );
@@ -135,61 +113,108 @@ let apply_side_chain = (state: t, operation) => {
 
       let new_state = {...state, contracts_storage: new_contract_storage};
       let.ok new_state =
-        fold_left_m(apply_internal_operation, new_state, operations);
+        apply_all_internal_operations(new_state, failwith("waiting on address pr, but this should be the current contract address"), operation_kinds);
       Ok(new_state);
     | Transaction({destination, amount, ticket}) =>
       let.ok ledger =
-        Ledger.transfer(~source, ~destination, amount, ticket, state.ledger);
+        Ledger.transfer(
+          ~source=sender,
+          ~destination,
+          amount,
+          ticket,
+          state.ledger,
+        );
       Ok({...state, ledger});
     };
+  }
+  and apply_all_internal_operations = (state, sender, operation_kinds) => {
+    fold_left_m(
+      (state, operation_kind) =>
+        apply_internal_operation(state, sender, operation_kind),
+      state,
+      operation_kinds,
+    );
   };
 
-  switch (operation.kind) {
-  | Add_validator(validator) =>
-    let validators = Validators.add(validator, state.validators);
-    Ok((update_validators(validators), `Add_validator));
-  | Remove_validator(validator) =>
-    let validators = Validators.remove(validator, state.validators);
-    Ok((update_validators(validators), `Remove_validator));
-  | Originate_contract((code, initial_storage)) =>
-    let (_, signature) =
-      Protocol_signature.signature_to_signature_by_address(
-        operation.signature,
-      );
-    let new_address =
-      Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
-    let contract_state =
-      Contract_storage.make_state(
-        ~entrypoint=None,
-        ~code,
-        ~storage=initial_storage,
-        ~originator=operation.source,
-        (),
-      );
-    let new_contract_state =
-      Contract_storage.add(
-        state.contracts_storage,
-        new_address,
-        contract_state,
-      );
-    Ok(({...state, contracts_storage: new_contract_state}, `Origination));
-  | Withdraw({owner, amount, ticket}) =>
-    let.ok (ledger, handle) =
-      Ledger.withdraw(
-        ~source,
-        ~destination=owner,
-        amount,
-        ticket,
-        state.ledger,
-      );
-    // TODO: publish the handle somewhere
-    Ok(({...state, ledger}, `Withdraw(handle)));
-  | Invoke_contract(_) as invoke_contract =>
-    let.ok new_state = apply_internal_operation(state, invoke_contract);
-    Ok((new_state, `Invocation));
-  | Transaction(_) as transaction =>
-    let.ok new_state = apply_internal_operation(state, transaction);
-    Ok((new_state, `Transaction));
+  (state: t, operation) => {
+    open Operation.Side_chain;
+    module Set = Operation_side_chain_set;
+
+    // validate operation
+    let block_height = operation.block_height;
+    if (block_height > state.block_height) {
+      raise(Noop("block in the future"));
+    };
+
+    if (Int64.add(block_height, maximum_old_block_height_operation)
+        < state.block_height) {
+      raise(Noop("really old operation"));
+    };
+
+    if (Set.mem(operation, state.included_operations)) {
+      raise(Noop("duplicated operation"));
+    };
+
+    // apply operation
+    let included_operations = Set.add(operation, state.included_operations);
+    let state = {...state, included_operations};
+
+    let {source, _} = operation;
+    let apply_internal_operation = (state, operation_kind) =>
+      apply_internal_operation(state, source, operation_kind);
+
+    let update_validators = validators => {
+      let last_seen_membership_change_timestamp = Unix.time();
+      {...state, validators, last_seen_membership_change_timestamp};
+    };
+
+    switch (operation.kind) {
+    | Add_validator(validator) =>
+      let validators = Validators.add(validator, state.validators);
+      Ok((update_validators(validators), `Add_validator));
+    | Remove_validator(validator) =>
+      let validators = Validators.remove(validator, state.validators);
+      Ok((update_validators(validators), `Remove_validator));
+    | Originate_contract((code, initial_storage)) =>
+      let (_, signature) =
+        Protocol_signature.signature_to_signature_by_address(
+          operation.signature,
+        );
+      let new_address =
+        Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
+      let contract_state =
+        Contract_storage.make_state(
+          ~entrypoint=None,
+          ~code,
+          ~storage=initial_storage,
+          ~originator=operation.source,
+          (),
+        );
+      let new_contract_state =
+        Contract_storage.add(
+          state.contracts_storage,
+          new_address,
+          contract_state,
+        );
+      Ok(({...state, contracts_storage: new_contract_state}, `Origination));
+    | Withdraw({owner, amount, ticket}) =>
+      let.ok (ledger, handle) =
+        Ledger.withdraw(
+          ~source,
+          ~destination=owner,
+          amount,
+          ticket,
+          state.ledger,
+        );
+      // TODO: publish the handle somewhere
+      Ok(({...state, ledger}, `Withdraw(handle)));
+    | Invoke_contract(_) as invoke_contract =>
+      let.ok new_state = apply_internal_operation(state, invoke_contract);
+      Ok((new_state, `Invocation));
+    | Transaction(_) as transaction =>
+      let.ok new_state = apply_internal_operation(state, transaction);
+      Ok((new_state, `Transaction));
+    };
   };
 };
 
