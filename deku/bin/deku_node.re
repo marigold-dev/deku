@@ -40,6 +40,8 @@ let print_error = err => {
   | `Not_a_valid_request(err) => eprintf("Invalid request: %s", err)
   | `Pending_blocks => eprintf("Pending_blocks")
   | `Unknown_uri => eprintf("Unknown_uri")
+  | `Not_a_user_opertaion => eprintf("Not_a_user_opertaion")
+  | `Not_consensus_operation => eprintf("Not_consensus_operation")
   };
   eprintf("\n%!");
 };
@@ -157,10 +159,23 @@ let handle_register_uri =
     (module Networking.Register_uri), (update_state, {uri, signature}) =>
     Flows.register_uri(Server.get_state(), update_state, ~uri, ~signature)
   );
-let handle_receive_operation_gossip =
+let handle_receive_user_operation_gossip =
   handle_request(
-    (module Networking.Operation_gossip), (update_state, request) => {
-    Flows.received_operation(Server.get_state(), update_state, request)
+    (module Networking.User_operation_gossip), (update_state, request) => {
+    Flows.received_user_operation(
+      Server.get_state(),
+      update_state,
+      request.user_operation,
+    )
+  });
+let handle_receive_consensus_operation =
+  handle_request(
+    (module Networking.Consensus_operation_gossip), (update_state, request) => {
+    Flows.received_consensus_operation(
+      Server.get_state(),
+      update_state,
+      request.consensus_operation,
+    )
   });
 
 let handle_trusted_validators_membership =
@@ -265,16 +280,7 @@ let node = folder => {
     };
   Tezos_interop.Consensus.listen_operations(
     ~context=interop_context, ~on_operation=operation =>
-    switch (
-      Flows.received_main_operation(
-        Server.get_state(),
-        update_state,
-        operation,
-      )
-    ) {
-    | Ok () => ()
-    | Error(err) => print_error(err)
-    }
+    Flows.received_main_operation(Server.get_state(), update_state, operation)
   );
   await({...node, protocol});
 };
@@ -292,7 +298,8 @@ let node = folder => {
     |> handle_protocol_snapshot
     |> handle_request_nonce
     |> handle_register_uri
-    |> handle_receive_operation_gossip
+    |> handle_receive_user_operation_gossip
+    |> handle_receive_consensus_operation
     |> handle_withdraw_proof
     |> handle_ticket_balance
     |> handle_trusted_validators_membership

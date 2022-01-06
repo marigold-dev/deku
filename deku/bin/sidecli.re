@@ -49,22 +49,6 @@ let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 // Arguments
 // ==========
 
-let contract = {
-  let parser = file => {
-    let non_dir_file = Arg.(conv_parser(non_dir_file));
-    switch (
-      non_dir_file(file),
-      non_dir_file(make_filename_from_address(file)),
-    ) {
-    | (Ok(file), _)
-    | (_, Ok(file)) => Ok(file)
-    | _ => Error(`Msg("Expected path to contract JSON"))
-    };
-  };
-  let printer = Arg.(conv_printer(non_dir_file));
-  Arg.(conv((parser, printer)));
-};
-
 // TODO: Wallet.t
 let wallet = {
   let parser = file => {
@@ -174,82 +158,6 @@ let hash = {
 // Commands
 // ========
 
-// originate-contract
-
-let info_originate_contract = {
-  let doc = "Originates a contract to be executed on the sidechain";
-  Term.info("originate-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
-};
-
-let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
-  open Networking;
-
-  let contract =
-    Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
-  module Zinc_interpreter = Protocol.Interpreter;
-  let.await validators_uris = validators_uris(node_folder);
-  let validator_uri = List.hd(validators_uris);
-  let.await block_level_response = request_block_level((), validator_uri);
-  let block_level = block_level_response.level;
-  let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
-
-  let contract_program =
-    contract
-    |> Yojson.Safe.from_string
-    |> Zinc_interpreter.Types.Program.of_yojson
-    |> Result.get_ok;
-
-  let originate_contract_op =
-    Operation.Side_chain.sign(
-      ~secret=wallet.priv_key,
-      ~nonce=0l,
-      ~block_height=block_level,
-      ~source=wallet.address,
-      ~kind=Originate_contract((contract_program, [])),
-    );
-
-  let.await identity = read_identity(~node_folder);
-
-  let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: originate_contract_op},
-      identity.uri,
-    );
-  Lwt.return(`Ok());
-};
-
-let folder_node = {
-  let docv = "folder_node";
-  let doc = "The folder where the node lives.";
-  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-};
-
-let originate_contract = {
-  let contract_json = {
-    let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
-    Arg.(
-      required
-      & pos(1, some(contract), None)
-      & info([], ~docv="contract", ~doc)
-    );
-  };
-
-  let address_from = {
-    let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
-    let env = Arg.env_var("SENDER", ~doc);
-    Arg.(
-      required
-      & pos(2, some(wallet), None)
-      & info([], ~env, ~docv="sender", ~doc)
-    );
-  };
-
-  Term.(
-    lwt_ret(
-      const(originate_contract) $ folder_node $ contract_json $ address_from,
-    )
-  );
-};
 // create-wallet
 
 let info_create_wallet = {
@@ -289,7 +197,6 @@ let info_create_transaction = {
 let create_transaction =
     (node_folder, sender_wallet_file, received_address, amount, ticket) => {
   open Networking;
-
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
   let.await block_level_response = request_block_level((), validator_uri);
@@ -307,8 +214,8 @@ let create_transaction =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: transaction},
+    Networking.request_user_operation_gossip(
+      {user_operation: transaction},
       identity.uri,
     );
   Format.printf(
@@ -317,6 +224,12 @@ let create_transaction =
   );
 
   Lwt.return(`Ok());
+};
+
+let folder_node = {
+  let docv = "folder_node";
+  let doc = "The folder where the node lives.";
+  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
 };
 
 let create_transaction = {
@@ -394,8 +307,8 @@ let withdraw =
 
   // Broadcast transaction
   let.await () =
-    Networking.request_operation_gossip(
-      Networking.Operation_gossip.{operation: operation},
+    Networking.request_user_operation_gossip(
+      {user_operation: operation},
       identity.uri,
     );
 
@@ -875,7 +788,6 @@ let () = {
     [
       (create_wallet, info_create_wallet),
       (create_transaction, info_create_transaction),
-      (originate_contract, info_originate_contract),
       (withdraw, info_withdraw),
       (withdraw_proof, info_withdraw_proof),
       (sign_block_term, info_sign_block),

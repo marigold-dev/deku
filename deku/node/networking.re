@@ -150,12 +150,19 @@ module Register_uri = {
   let path = "/register-uri";
 };
 
-module Operation_gossip = {
+module User_operation_gossip = {
   [@deriving yojson]
-  type request = {operation: Operation.Side_chain.t};
+  type request = {user_operation: Operation.Side_chain.t};
   [@deriving yojson]
   type response = unit;
-  let path = "/operation-gossip";
+  let path = "/user-operation-gossip";
+};
+module Consensus_operation_gossip = {
+  [@deriving yojson]
+  type request = {consensus_operation: Protocol.Operation.Side_chain.t};
+  [@deriving yojson]
+  type response = unit;
+  let path = "/consensus-operation-gossip";
 };
 
 module Withdraw_proof = {
@@ -215,10 +222,12 @@ let request_withdraw_proof = request((module Withdraw_proof));
 let broadcast_signature = broadcast_to_validators((module Signature_spec));
 let broadcast_block_and_signature =
   broadcast_to_validators((module Block_and_signature_spec));
-let broadcast_operation_gossip =
-  broadcast_to_validators((module Operation_gossip));
-let broadcast_operation_gossip_to_list =
-  broadcast_to_list((module Operation_gossip));
-let request_operation_gossip = request((module Operation_gossip));
+let broadcast_user_operation_gossip =
+  broadcast_to_validators((module User_operation_gossip));
+let broadcast_user_operation_gossip_to_list =
+  broadcast_to_list((module User_operation_gossip));
+let request_user_operation_gossip = request((module User_operation_gossip));
+let request_consensus_operation =
+  request((module Consensus_operation_gossip));
 let request_trusted_validator_membership =
   request((module Trusted_validators_membership_change));
