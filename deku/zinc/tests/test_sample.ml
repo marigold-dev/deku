@@ -41,8 +41,6 @@ module Executor : Zinc_interpreter.Dummy.Executor = struct
 
   let chain_id = "chain id goes here"
 
-  let hash = Fun.id
-
   let key_hash s = s ^ "hash"
 end
 

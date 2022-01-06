@@ -40,6 +40,7 @@
     "@opam/ppx_inline_test": "*",
     "@opam/ppx_expect": "*",
     "@opam/core_bench": "*",
-    "@opam/utop": "*"
+    "@opam/utop": "*",
+    "@opam/alcotest": "*"
   }
 }
