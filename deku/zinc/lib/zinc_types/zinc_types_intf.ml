@@ -161,10 +161,10 @@ module type S = sig
       | Chain_id of Chain_id.t
 
     and adt =
-      | MakeRecord of int
-      | RecordAccess of int
-      | MakeVariant of variant_label
-      | MatchVariant of (variant_label * t) list
+      | MakeRecord of label
+      | RecordAccess of label
+      | MakeVariant of label
+      | MatchVariant of t LMap.t
 
     and operation = Eq | Add | Cons | HashKey | Or | And | Not
 
@@ -206,9 +206,9 @@ module type S = sig
       | Z of Zinc.instruction
       | NonliteralValue of Zinc.nonliteral_value
       | Clos of Clos.t
-      | Record of Stack_item.t array
+      | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
-      | Variant of string * Stack_item.t
+      | Variant of Zinc_utils.label * Stack_item.t
 
     include With_default_derivation with type t := t
   end
@@ -218,9 +218,9 @@ module type S = sig
       | Z of Zinc.instruction
       | NonliteralValue of Zinc.nonliteral_value
       | Clos of Clos.t
-      | Record of t array
+      | Record of t LMap.t
       | List of t list
-      | Variant of string * t
+      | Variant of Zinc_utils.label * t
       | Marker of Zinc.t * Env_item.t list
 
     include With_default_derivation with type t := t

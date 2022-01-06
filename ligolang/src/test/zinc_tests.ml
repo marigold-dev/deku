@@ -316,8 +316,7 @@ let get_contract_opt =
     ~expected_output:
       [
         Types.Stack_item.Variant
-          ( "Some",
-            Types.Stack_item.NonliteralValue (Contract ("whatever", None)) );
+          (0, Types.Stack_item.NonliteralValue (Contract ("whatever", None)));
       ]
 
 let match_on_sum =
@@ -333,16 +332,15 @@ let match_on_sum =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("Some", [ Core Grab; Core (Access 0); Core Return ]);
-                 ( "None",
-                   [
-                     Core Grab;
-                     Plain_old_data (String "Not a contract");
-                     Control_flow Failwith;
-                     Core Return;
-                   ] );
-               ]);
+               [|
+                 [ Core Grab; Core (Access 0); Core Return ];
+                 [
+                   Core Grab;
+                   Plain_old_data (String "Not a contract");
+                   Control_flow Failwith;
+                   Core Return;
+                 ];
+               |]);
         ] );
     ]
     ~expected_output:
@@ -409,30 +407,28 @@ let nontail_match =
           Plain_old_data (Num ~$4);
           Core Grab;
           Plain_old_data (Num ~$3);
-          Adt (MakeVariant "Some");
+          Adt (MakeVariant 0);
           Core Grab;
           Core (Access 0);
           Core Grab;
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ( "Some",
-                   [
-                     Core Grab;
-                     Plain_old_data (Num ~$5);
-                     Core (Access 0);
-                     Operation Add;
-                     Core EndLet;
-                   ] );
-                 ( "None",
-                   [
-                     Core Grab;
-                     Plain_old_data (String "should be some >:(");
-                     Control_flow Failwith;
-                     Core EndLet;
-                   ] );
-               ]);
+               [|
+                 [
+                   Core Grab;
+                   Plain_old_data (Num ~$5);
+                   Core (Access 0);
+                   Operation Add;
+                   Core EndLet;
+                 ];
+                 [
+                   Core Grab;
+                   Plain_old_data (String "should be some >:(");
+                   Control_flow Failwith;
+                   Core EndLet;
+                 ];
+               |]);
           Core EndLet;
           Core Grab;
           Core (Access 2);
@@ -457,16 +453,15 @@ let create_transaction =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("Some", [ Core Grab; Core (Access 0); Core EndLet ]);
-                 ( "None",
-                   [
-                     Core Grab;
-                     Plain_old_data (String "Not a contract");
-                     Control_flow Failwith;
-                     Core EndLet;
-                   ] );
-               ]);
+               [|
+                 [ Core Grab; Core (Access 0); Core EndLet ];
+                 [
+                   Core Grab;
+                   Plain_old_data (String "Not a contract");
+                   Control_flow Failwith;
+                   Core EndLet;
+                 ];
+               |]);
           Core EndLet;
           Core Grab;
           Core (Access 0);
@@ -498,16 +493,15 @@ let create_transaction_in_tuple =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("Some", [ Core Grab; Core (Access 0); Core EndLet ]);
-                 ( "None",
-                   [
-                     Core Grab;
-                     Plain_old_data (String "Not a contract");
-                     Control_flow Failwith;
-                     Core EndLet;
-                   ] );
-               ]);
+               [|
+                 [ Core Grab; Core (Access 0); Core EndLet ];
+                 [
+                   Core Grab;
+                   Plain_old_data (String "Not a contract");
+                   Control_flow Failwith;
+                   Core EndLet;
+                 ];
+               |]);
           Core EndLet;
           Core Grab;
           Plain_old_data (String "my string");
@@ -586,10 +580,10 @@ let bools_religo =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("False", [ Core Grab; Core (Access 3); Core Return ]);
-                 ("True", [ Core Grab; Core (Access 4); Core Return ]);
-               ]);
+               [|
+                 [ Core Grab; Core (Access 3); Core Return ];
+                 [ Core Grab; Core (Access 4); Core Return ];
+               |]);
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
@@ -618,10 +612,10 @@ let bools_ligo =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("False", [ Core Grab; Core (Access 3); Core Return ]);
-                 ("True", [ Core Grab; Core (Access 4); Core Return ]);
-               ]);
+               [|
+                 [ Core Grab; Core (Access 3); Core Return ];
+                 [ Core Grab; Core (Access 4); Core Return ];
+               |]);
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
@@ -795,17 +789,16 @@ let if_then_else =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("False", [ Core Grab; Core (Access 2); Core Return ]);
-                 ( "True",
-                   [
-                     Core Grab;
-                     Plain_old_data (Num ~$2);
-                     Core (Access 3);
-                     Operation Add;
-                     Core Return;
-                   ] );
-               ]);
+               [|
+                 [ Core Grab; Core (Access 2); Core Return ];
+                 [
+                   Core Grab;
+                   Plain_old_data (Num ~$2);
+                   Core (Access 3);
+                   Operation Add;
+                   Core Return;
+                 ];
+               |]);
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$4)) ]
@@ -835,10 +828,10 @@ let if_then_else_op =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("False", [ Core Grab; Core (Access 2); Core Return ]);
-                 ("True", [ Core Grab; Core (Access 3); Core Return ]);
-               ]);
+               [|
+                 [ Core Grab; Core (Access 2); Core Return ];
+                 [ Core Grab; Core (Access 3); Core Return ];
+               |]);
         ] );
     ]
     ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
@@ -879,10 +872,10 @@ let if_then_else_op_function =
           Core (Access 0);
           Adt
             (MatchVariant
-               [
-                 ("False", [ Core Grab; Core (Access 7); Core Return ]);
-                 ("True", [ Core Grab; Core (Access 8); Core Return ]);
-               ]);
+               [|
+                 [ Core Grab; Core (Access 7); Core Return ];
+                 [ Core Grab; Core (Access 8); Core Return ];
+               |]);
         ] );
     ]
     ~initial_stack:
@@ -897,16 +890,16 @@ let if_then_else_op_function =
 let make_an_option =
   expect_simple_compile_to ~dialect:ReasonLIGO "make_an_option"
     [
-      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "None"); Core Return ]);
+      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant 1); Core Return ]);
       ( "b",
         [
           Adt (MakeRecord 0);
           (* constructing None, from the definition of a *)
-          Adt (MakeVariant "None");
+          Adt (MakeVariant 1);
           Core Grab;
           Adt (MakeRecord 0);
           (* constructing Some *)
-          Adt (MakeVariant "Some");
+          Adt (MakeVariant 0);
           Core Return;
         ] );
     ]
@@ -914,16 +907,16 @@ let make_an_option =
 let make_a_custom_option =
   expect_simple_compile_to ~dialect:ReasonLIGO "make_a_custom_option"
     [
-      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant "My_none"); Core Return ]);
+      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant 0); Core Return ]);
       ( "b",
         [
           Adt (MakeRecord 0);
           (* constructing My_none, from the definition of a *)
-          Adt (MakeVariant "My_none");
+          Adt (MakeVariant 0);
           Core Grab;
           Adt (MakeRecord 0);
           (* constructing Some *)
-          Adt (MakeVariant "My_some");
+          Adt (MakeVariant 1);
           Core Return;
         ] );
     ]
@@ -945,6 +938,45 @@ let top_level_let_dependencies =
           Core Return;
         ] );
     ]
+
+let custom_variant_matching =
+  let open Z in
+  expect_simple_compile_to ~dialect:CameLIGO "custom_variant_matching"
+    [
+      ("a", [ Plain_old_data (String "test"); Adt (MakeVariant 2); Core Return ]);
+      ( "b",
+        [
+          Plain_old_data (String "test");
+          Adt (MakeVariant 2);
+          Core Grab;
+          Adt (MakeRecord 0);
+          Adt (MakeVariant 0);
+          Core Return;
+        ] );
+      ( "c",
+        [
+          Plain_old_data (String "test");
+          Adt (MakeVariant 2);
+          Core Grab;
+          Adt (MakeRecord 0);
+          Adt (MakeVariant 0);
+          Core Grab;
+          Core Grab;
+          Core (Access 1);
+          Core Grab;
+          Core (Access 0);
+          Adt
+            (MatchVariant
+               [|
+                 [ Core Grab; Plain_old_data (Num ~$1); Core Return ];
+                 [ Core Grab; Plain_old_data (Num ~$2); Core Return ];
+                 [ Core Grab; Plain_old_data (Num ~$0); Core Return ];
+               |]);
+        ] );
+    ]
+    ~expected_output:[ Z (Plain_old_data (Num ~$1)) ]
+    ~initial_stack:
+      [ Types.Stack_item.Z (Types.Zinc.Plain_old_data (Bool false)) ]
 
 let main =
   let open Test_helpers in
@@ -979,4 +1011,5 @@ let main =
       test_w "top_level_let_dependencies" top_level_let_dependencies;
       test_w "nontail_match" nontail_match;
       test_w "super_simple_contract" super_simple_contract;
+      test_w "custom_variant_matching" custom_variant_matching;
     ]
