@@ -1,4 +1,0 @@
-// first comment
-(contract
-  // will it blend?
-  (const (? x) int 42))

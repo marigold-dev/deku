@@ -1,1 +1,0 @@
-This folder contains contracts for negative tests: contracts that are expected to fail (parse error, type error and so on).

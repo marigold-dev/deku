@@ -1,6 +1,0 @@
-*.log
-
-node_modules/
-lib/
-.cache/
-dist/

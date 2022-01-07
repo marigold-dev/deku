@@ -1,1 +1,0 @@
-../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/ligo/constants/ConstantsV1.ligo

@@ -1,7 +1,0 @@
-/* Test boolean comparison in ReasonLIGO */
-(contract
-  (const
-    (? main)
-    (lam
-      (parameter (?(tuple? (? a) (? b))) (PROD bool bool))
-      : => (if ((a == b)) (seq 999) (seq 1)))))

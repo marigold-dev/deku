@@ -1,7 +1,0 @@
-/* Test JsLIGO bitwise operators */
-
-let or_op  = (n : nat) : nat => Bitwise.or (n, (4 as nat));
-let and_op = (n : nat) : nat => Bitwise.and (n, (7 as nat));
-let xor_op = (n : nat) : nat => Bitwise.xor (n, (7 as nat));
-let lsl_op = (n : nat) : nat => Bitwise.shift_left (n, (7 as nat));
-let lsr_op = (n : nat) : nat => Bitwise.shift_right (n, (7 as nat));

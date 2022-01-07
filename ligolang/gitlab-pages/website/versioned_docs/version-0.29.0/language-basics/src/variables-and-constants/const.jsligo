@@ -1,1 +1,0 @@
-const age : int = 25;

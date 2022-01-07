@@ -1,6 +1,0 @@
----
-  title: "Add missing function argument type annotation error"
-  merge_request: "769"
-  author: "SanderSpies"
-  type: "added"
-

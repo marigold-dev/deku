@@ -1,4 +1,0 @@
-author: tomjack
-merge_request: '957'
-title: Use `opam lock` to lock dependencies
-type: internal

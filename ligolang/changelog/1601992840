@@ -1,5 +1,0 @@
-author: Rémi Lesénéchal
-merge_request: '827'
-title: --lib option for the get-scope command. this allows to specify paths to included
-  files
-type: added

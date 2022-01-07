@@ -1,3 +1,0 @@
-// Demonstrate JsLIGO inclusion statements, see includer.jsligo
-
-let foo : int = 144;

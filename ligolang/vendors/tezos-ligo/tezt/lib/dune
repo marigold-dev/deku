@@ -1,4 +1,0 @@
-(library
- (name tezt)
- (public_name tezt)
- (libraries re lwt.unix ezjsonm))

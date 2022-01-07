@@ -1,1 +1,0 @@
-../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/religo/inlining/HelloLigoV2.religo

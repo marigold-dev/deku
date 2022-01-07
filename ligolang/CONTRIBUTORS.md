@@ -1,2 +1,0 @@
-Nomadic Labs
-Gabriel Alfour

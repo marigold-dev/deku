@@ -1,4 +1,0 @@
-author: Rémi Lesénéchal
-merge_request: '909'
-title: EDO primitives (use --protocol edo and --disable-michelson-typechecking)
-type: added

@@ -1,4 +1,0 @@
-author: Rémi Lesénéchal
-merge_request: '1133'
-title: fix dry-run rejecting Tezos.self
-type: fixed

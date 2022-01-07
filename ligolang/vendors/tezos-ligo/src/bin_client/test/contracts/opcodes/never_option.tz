@@ -1,8 +1,0 @@
-parameter unit;
-storage (option never);
-code {
-       DROP;
-       PUSH (option never) None;
-       NIL operation;
-       PAIR
-     }

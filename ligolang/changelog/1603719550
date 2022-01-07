@@ -1,4 +1,0 @@
-author: Tom
-merge_request: '820'
-title: 'Optimization: push DROP into failing conditionals'
-type: performance

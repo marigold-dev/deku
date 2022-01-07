@@ -1,5 +1,0 @@
-author: Suzanne Soy
-title: In the typer which is not currently in use, constraint removal is now handled
-  by normalizers
-type: changed
-merge_request: '801'

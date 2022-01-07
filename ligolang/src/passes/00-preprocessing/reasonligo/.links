@@ -1,6 +1,0 @@
-$HOME/git/OCaml-build/Makefile
-
-../shared/PreprocMainGen.ml
-
-./Stubs/Preprocessing_shared.ml
-./Stubs/Preprocessing_reasonligo.ml

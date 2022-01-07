@@ -1,4 +1,0 @@
-author: Suzanne Soy
-merge_request: '915'
-title: Fix assert in type_and_subst
-type: fixed

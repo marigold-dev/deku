@@ -1,6 +1,0 @@
-(library
- (name cst)
- (public_name ligo.cst)
- (instrumentation
-  (backend bisect_ppx))
- (libraries cst_pascaligo cst_cameligo cst_reasonligo cst_jsligo))

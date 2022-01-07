@@ -1,4 +1,0 @@
-author: '@er433'
-merge_request: '1110'
-title: Fix failure when applying a type var. not expecting arguments
-type: fixed

@@ -1,9 +1,0 @@
-src
-demo
-
-*.lock
-.babelrc
-.gitignore
-webpack.config.js
-tsconfig.json
-webpack.config.js

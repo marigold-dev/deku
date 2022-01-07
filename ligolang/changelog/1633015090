@@ -1,4 +1,0 @@
-author: tomjack
-title: Removed uses of vendor .opam in CI
-type: internal
-merge_request: '1327'

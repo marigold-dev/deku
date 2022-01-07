@@ -1,5 +1,0 @@
-author: Rémi Lesénéchal
-title: 'Testing framework: new primitive ''Test.cast_address'' to cast an address
-  to a typed_adress'
-type: added
-merge_request: '1346'

@@ -1,6 +1,0 @@
----
-  title: "Uncurry before inlining"
-  merge_request: "1056"
-  author: "@tomjack"
-  type: "internal"
-

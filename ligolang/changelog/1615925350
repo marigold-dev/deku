@@ -1,4 +1,0 @@
-author: tomjack
-merge_request: '1035'
-title: Tezos.self_address is now allowed in lambdas
-type: fixed

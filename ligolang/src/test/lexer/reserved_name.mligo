@@ -1,1 +1,0 @@
-let object = 1;

@@ -1,4 +1,0 @@
-author: balsoft
-merge_request: '741'
-title: dune runtest in nix-shell
-type: fixed

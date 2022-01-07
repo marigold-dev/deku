@@ -1,6 +1,0 @@
-(library
- (name lib_test)
- (public_name tezos-test-helpers)
- (instrumentation (backend bisect_ppx))
- (libraries uri qcheck-alcotest alcotest alcotest-lwt)
- (flags (:standard -linkall)))

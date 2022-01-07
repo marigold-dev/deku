@@ -1,4 +1,0 @@
-author: Suzanne Soy
-merge_request: '839'
-title: Unprotected Sys.getenv
-type: fixed

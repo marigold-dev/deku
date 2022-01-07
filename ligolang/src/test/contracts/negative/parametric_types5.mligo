@@ -1,1 +1,0 @@
-type ('a,'a) foo = 'a * 'a

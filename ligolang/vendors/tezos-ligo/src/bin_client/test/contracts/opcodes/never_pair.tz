@@ -1,5 +1,0 @@
-parameter unit;
-storage (pair unit never);
-code {
-       CDDR; NEVER
-     }

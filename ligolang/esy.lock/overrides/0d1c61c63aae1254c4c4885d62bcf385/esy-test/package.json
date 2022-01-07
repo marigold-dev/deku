@@ -1,8 +1,0 @@
-{
-  "esy": {
-    "build": "cargo --version"
-  },
-  "dependencies": {
-    "esy-rustup": "*"
-  }
-}

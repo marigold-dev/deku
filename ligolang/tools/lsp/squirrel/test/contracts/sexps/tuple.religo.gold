@@ -1,5 +1,0 @@
-(contract
-  (type_decl abc (PROD int int int))
-  (const
-    (? projection_abc)
-    (lam (parameter (? tpl) abc) : int => (get tpl 1))))

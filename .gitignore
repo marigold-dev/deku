@@ -1,3 +1,6 @@
-_esy/
-data/
-node_modules/
+_esy
+node_modules
+data
+*.install
+*.bundle.js
+*.bundle.js.LICENSE.txt

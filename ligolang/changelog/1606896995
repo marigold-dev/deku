@@ -1,4 +1,0 @@
-author: tomjack
-merge_request: '905'
-title: Fix bug with let_in annotations in recursive functions
-type: fixed

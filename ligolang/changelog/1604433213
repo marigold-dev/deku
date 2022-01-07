@@ -1,5 +1,0 @@
-author: Suzanne Soy
-merge_request: '839'
-title: Disable failing tests for typer not currently in use when it is in use (except
-  the one being worked on)
-type: internal

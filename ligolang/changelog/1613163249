@@ -1,5 +1,0 @@
-author: Suzanne Soy
-merge_request: '981'
-title: 'prototype typer: separated typeclass deduce_and_clean to its own heuristic;
-  trimmed down the Compat modules'
-type: added

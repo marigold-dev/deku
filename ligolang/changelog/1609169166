@@ -1,4 +1,0 @@
-author: Rémi Lesénéchal
-merge_request: '926'
-title: Upgrade tezos backend (for dry-run, compile-expression..) to Edo
-type: changed

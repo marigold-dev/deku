@@ -1,4 +1,0 @@
-author: Rémi Lesénéchal
-merge_request: '1179'
-title: The typechecking now understand parametric types
-type: added

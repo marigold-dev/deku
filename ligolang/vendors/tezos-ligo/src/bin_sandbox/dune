@@ -1,5 +1,0 @@
-(executables
-  (names main)
-  (libraries tezos-base
-             tezos-base.unix
-             flextesa))

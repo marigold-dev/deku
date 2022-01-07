@@ -1,3 +1,0 @@
-(lang dune 2.7)
-(name tezos-shell-benchmarks-alpha)
-(formatting (enabled_for ocaml))
