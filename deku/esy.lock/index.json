@@ -1,5 +1,5 @@
 {
-  "checksum": "f0dc14888c38fa5cb55cfa947e0b899a",
+  "checksum": "f10ba1019d1c199c8f8ce82b9f18ce99",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -2101,14 +2101,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.4.50@d41d8cd9": {
-      "id": "electron-to-chromium@1.4.50@d41d8cd9",
+    "electron-to-chromium@1.4.38@d41d8cd9": {
+      "id": "electron-to-chromium@1.4.38@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.4.50",
+      "version": "1.4.38",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.50.tgz#sha1:edbeeca145494b1cd4a6a2aa1fe3d28abc0b08a4"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.38.tgz#sha1:10ea58d73d36b13e78d5024f3b74a352d3958d01"
         ]
       },
       "overrides": [],
@@ -2388,14 +2388,14 @@
       ],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001301@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001301@d41d8cd9",
+    "caniuse-lite@1.0.30001297@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001297@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001301",
+      "version": "1.0.30001297",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001301.tgz#sha1:ebc9086026534cab0dab99425d9c3b4425e5f450"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001297.tgz#sha1:ea7776ccc4992956582cae5b8fea127fbebde430"
         ]
       },
       "overrides": [],
@@ -2482,8 +2482,8 @@
         "picocolors@1.0.0@d41d8cd9",
         "node-releases@2.0.1@d41d8cd9",
         "escalade@3.1.1@d41d8cd9",
-        "electron-to-chromium@1.4.50@d41d8cd9",
-        "caniuse-lite@1.0.30001301@d41d8cd9"
+        "electron-to-chromium@1.4.38@d41d8cd9",
+        "caniuse-lite@1.0.30001297@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -3198,18 +3198,18 @@
       "overrides": [],
       "dependencies": [
         "@types/estree@0.0.50@d41d8cd9",
-        "@types/eslint@8.4.0@d41d8cd9"
+        "@types/eslint@8.2.2@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "@types/eslint@8.4.0@d41d8cd9": {
-      "id": "@types/eslint@8.4.0@d41d8cd9",
+    "@types/eslint@8.2.2@d41d8cd9": {
+      "id": "@types/eslint@8.2.2@d41d8cd9",
       "name": "@types/eslint",
-      "version": "8.4.0",
+      "version": "8.2.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@types/eslint/-/eslint-8.4.0.tgz#sha1:95712d5b32fd99a0d9493c31c6197ea7471c3ba6"
+          "archive:https://registry.npmjs.org/@types/eslint/-/eslint-8.2.2.tgz#sha1:b64dbdb64b1957cfc8a698c68297fcf8983e94c7"
         ]
       },
       "overrides": [],
