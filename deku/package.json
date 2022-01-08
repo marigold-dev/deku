@@ -58,7 +58,9 @@
     "@opam/mirage-crypto": "0.10.5",
     "@opam/mirage-crypto-ec": "0.10.5",
     "@opam/mirage-crypto-pk": "0.10.5",
-    "@opam/mirage-crypto-rng": "0.10.5"
+    "@opam/mirage-crypto-rng": "0.10.5",
+    "@opam/ppx_inline_test": "*",
+    "@opam/ppx_expect": "*"
   },
   "resolutions": {
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
