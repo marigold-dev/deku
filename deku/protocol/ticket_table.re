@@ -51,21 +51,6 @@ let recreate = (handle, table) => {
   Ok((handle, table));
 };
 
-/** Invalidates the old ticket */
-
-/*
- let recreate_or_create = (handle, ~ticket_id, table) => {
-   let.ok ticket_opt = {
-       switch (find_opt(handle, table)) {
-           | None => Ok(None)
-           | Some(ticket) when Ticket.equal(ticket.id, ticket_id) => Ok(Some(ticket))
-           | Some(ticket) => Error(`Invalid_ticket)
-       }
-   }
-
-   ticket_opt |> Option.map(t => (handle, t, table)) |> Option.value(add());
- };*/
-
 type split = {
   split_at: handle,
   remaining: handle,
