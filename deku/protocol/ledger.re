@@ -4,7 +4,7 @@ open Crypto;
 module Implicit_address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
-    address: Address.Implicit.t,
+    address: Address.t,
     ticket: Ticket_id.t,
   };
   module Map =
@@ -136,7 +136,7 @@ let redeem_ticket_handle = (~destination, ~ticket_id=?, handle, t) => {
          ),
     ticket_table,
     withdrawal_handles: t.withdrawal_handles,
-  });
+  };
 };
 
 let deposit = (destination, amount, ticket_id, t) => {

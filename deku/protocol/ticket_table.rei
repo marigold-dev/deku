@@ -22,9 +22,9 @@ type split = {
 
 let empty: t;
 let unsafe_create_ticket: (Ticket_id.t, Amount.t) => ticket_with_amount;
-let add_empty: (Ticket_id.t, t) => (Handle.t, t);
-let add: (ticket_with_amount, t) => (Handle.t, t);
-let find_opt: (Handle.t, t) => option(ticket_with_amount);
+let add_empty: (Ticket_id.t, t) => (handle, t);
+let add: (ticket_with_amount, t) => (handle, t);
+let find_opt: (handle, t) => option(ticket_with_amount);
 let remove:
   (Handle.t, t) => result((ticket_with_amount, t), [> | `Invalid_ticket]);
 let recreate: (Handle.t, t) => result((Handle.t, t), [> | `Invalid_ticket]);
