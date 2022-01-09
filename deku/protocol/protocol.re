@@ -6,6 +6,7 @@ module Address = Address;
 module Wallet = Wallet;
 module Ledger = Ledger;
 module Ticket = Ticket;
+module Ticket_table = Ticket_table;
 module Validators = Validators;
 module Amount = Amount;
 module Block = Block;
