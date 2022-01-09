@@ -5,7 +5,7 @@ module Address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
     address: Address.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   module Map =
     Map.Make_with_yojson({
@@ -18,17 +18,17 @@ module Address_and_ticket_map = {
   let find_opt = (address, ticket) => Map.find_opt({address, ticket});
   let add = (address, ticket) => Map.add({address, ticket});
 };
-module Handle = {
+module Withdrawal_handle = {
   [@deriving yojson]
   type t = {
     hash: BLAKE2B.t,
     id: int,
     owner: Tezos.Address.t,
     amount: Amount.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   let hash = (~id, ~owner, ~amount, ~ticket) => {
-    let Ticket.{ticketer, data} = ticket;
+    let Ticket_id.{ticketer, data} = ticket;
     Tezos.Deku.Consensus.hash_withdraw_handle(
       ~id=Z.of_int(id),
       ~owner,
@@ -38,23 +38,23 @@ module Handle = {
     );
   };
 };
-module Handle_tree =
+module Withdrawal_handle_tree =
   Incremental_patricia.Make({
     [@deriving yojson]
-    type t = Handle.t;
-    let hash = t => t.Handle.hash;
+    type t = Withdrawal_handle.t;
+    let hash = t => t.Withdrawal_handle.hash;
   });
 [@deriving yojson]
 type t = {
   ledger: Address_and_ticket_map.t,
   ticket_table: Ticket_table.t,
-  handles: Handle_tree.t,
+  withdrawal_handles: Withdrawal_handle_tree.t,
 };
 
 let empty = {
   ledger: Address_and_ticket_map.empty,
   ticket_table: Ticket_table.empty,
-  handles: Handle_tree.empty,
+  withdrawal_handles: Withdrawal_handle_tree.empty,
 };
 
 let balance = (address, ticket, t) => {
@@ -102,7 +102,7 @@ let transfer = (~source, ~destination, amount, ticket, t) => {
       |> Address_and_ticket_map.add(source, ticket, source_handle)
       |> Address_and_ticket_map.add(destination, ticket, destination_handle),
     ticket_table,
-    handles: t.handles,
+    withdrawal_handles: t.withdrawal_handles,
   });
 };
 
@@ -123,7 +123,7 @@ let deposit = (destination, amount, ticket, t) => {
       ledger
       |> Address_and_ticket_map.add(destination, ticket, destination_handle),
     ticket_table,
-    handles: t.handles,
+    withdrawal_handles: t.withdrawal_handles,
   };
 };
 let withdraw = (~source, ~destination, amount, ticket, t) => {
@@ -144,28 +144,35 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
   let (Ticket_table.{id: _, amount: amount_withdrawn}, ticket_table) =
     Ticket_table.remove(split_at, ticket_table) |> Result.get_ok;
 
-  let (handles, handle) =
-    Handle_tree.add(
+  let (withdrawal_handles, withdrawal_handle) =
+    Withdrawal_handle_tree.add(
       id => {
-        let hash = Handle.hash(~id, ~owner, ~amount, ~ticket);
+        let hash = Withdrawal_handle.hash(~id, ~owner, ~amount, ~ticket);
         {id, hash, owner, amount: amount_withdrawn, ticket};
       },
-      t.handles,
+      t.withdrawal_handles,
     );
   let t = {
     ledger: t.ledger |> Address_and_ticket_map.add(source, ticket, remaining),
     ticket_table,
-    handles,
+    withdrawal_handles,
   };
-  Ok((t, handle));
+  Ok((t, withdrawal_handle));
 };
 
 let handles_find_proof = (handle, t) =>
-  switch (Handle_tree.find(handle.Handle.id, t.handles)) {
+  switch (
+    Withdrawal_handle_tree.find(
+      handle.Withdrawal_handle.id,
+      t.withdrawal_handles,
+    )
+  ) {
   // TODO: enforce this unreachability on the type system
-  // the only way to have a Handle.t is to do a withdraw
+  // the only way to have a Withdrawal_handle.t is to do a withdraw
   | None => assert(false)
   | Some((proof, _)) => proof
   };
-let handles_find_proof_by_id = (key, t) => Handle_tree.find(key, t.handles);
-let handles_root_hash = t => Handle_tree.hash(t.handles);
+let handles_find_proof_by_id = (key, t) =>
+  Withdrawal_handle_tree.find(key, t.withdrawal_handles);
+let handles_root_hash = t =>
+  Withdrawal_handle_tree.hash(t.withdrawal_handles);

@@ -7,7 +7,7 @@ type handle = M.key;
 
 [@deriving yojson]
 type ticket_with_amount = {
-  id: Ticket.t,
+  id: Ticket_id.t,
   amount: Amount.t,
 };
 
@@ -91,7 +91,7 @@ let split = (handle, ~at as split_at, table) => {
 let join = (handle_a, handle_b, table) => {
   let.ok (ticket_a, table) = remove(handle_a, table);
   let.ok (ticket_b, table) = remove(handle_b, table);
-  if (Ticket.equal(ticket_a.id, ticket_b.id)) {
+  if (Ticket_id.equal(ticket_a.id, ticket_b.id)) {
     let ticket = {
       id: ticket_a.id,
       amount: Amount.(ticket_a.amount + ticket_b.amount),

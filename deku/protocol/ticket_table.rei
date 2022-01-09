@@ -4,7 +4,7 @@ type handle;
 [@deriving yojson]
 type ticket_with_amount =
   pri {
-    id: Ticket.t,
+    id: Ticket_id.t,
     amount: Amount.t,
   };
 
@@ -17,8 +17,8 @@ type split = {
 };
 
 let empty: t;
-let unsafe_create_ticket: (Ticket.t, Amount.t) => ticket_with_amount;
-let add_empty: (Ticket.t, t) => (handle, t);
+let unsafe_create_ticket: (Ticket_id.t, Amount.t) => ticket_with_amount;
+let add_empty: (Ticket_id.t, t) => (handle, t);
 let add: (ticket_with_amount, t) => (handle, t);
 let find_opt: (handle, t) => option(ticket_with_amount);
 let remove:
