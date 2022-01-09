@@ -15,4 +15,7 @@ module Make_with_yojson:
     let of_yojson:
       (Yojson.Safe.t => result('a, string), Yojson.Safe.t) =>
       result(t('a), string);
+
+    let key_to_yojson: key => Yojson.Safe.t;
+    let key_of_yojson: Yojson.Safe.t => result(key, string);
   };
