@@ -4,6 +4,7 @@ module Domain_types = struct
   module Address = Tezos.Address
   module Hash = Crypto.BLAKE2B
   module Chain_id = Chain_id
+  module Ticket = Ticket_table.Handle
   module Key_hash = Crypto.Key_hash
   module Contract = Contract
 end

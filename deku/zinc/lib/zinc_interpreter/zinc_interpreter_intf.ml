@@ -7,6 +7,8 @@ module type Executor = sig
 
   type chain_id
 
+  type ticket
+
   type key
 
   type key_hash

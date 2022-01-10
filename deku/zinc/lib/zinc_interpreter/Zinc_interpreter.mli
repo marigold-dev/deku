@@ -8,6 +8,7 @@ module Make (D : Domain_types) : sig
        and type Zinc.Address.t := D.Address.t
        and type Zinc.Contract.t := D.Contract.t
        and type Zinc.Chain_id.t := D.Chain_id.t
+       and type Zinc.Ticket.t := D.Ticket.t
        and type Zinc.Hash.t := D.Hash.t
        and type Zinc.Key_hash.t := D.Key_hash.t
 
@@ -18,6 +19,7 @@ module Make (D : Domain_types) : sig
        and type address := D.Address.t
        and type contract := D.Contract.t
        and type chain_id := D.Chain_id.t
+       and type ticket := D.Ticket.t
        and type hash := D.Hash.t
 
   module Interpreter : sig
@@ -39,6 +41,7 @@ module Dummy : sig
        and type Zinc.Address.t := string
        and type Zinc.Contract.t := string * string option
        and type Zinc.Chain_id.t := string
+       and type Zinc.Ticket.t := int64
        and type Zinc.Hash.t := string
 
   module type Executor =
@@ -48,6 +51,7 @@ module Dummy : sig
        and type address := string
        and type contract := string * string option
        and type chain_id := string
+       and type ticket := int64
        and type hash := string
 
   module Interpreter : sig

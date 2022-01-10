@@ -13,7 +13,7 @@ module Implicit_address_and_ticket_map = {
       type t = key;
     });
   [@deriving yojson]
-  type t = Map.t(Ticket_table.handle);
+  type t = Map.t(Ticket_table.Handle.t);
   let empty = Map.empty;
   let find_opt = (address, ticket) => Map.find_opt({address, ticket});
   let add = (address, ticket) => Map.add({address, ticket});

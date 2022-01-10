@@ -86,6 +86,12 @@ module type Domain_types = sig
 
     include With_domain_derivation with type t := t
   end
+
+  module Ticket : sig
+    type t
+
+    include With_domain_derivation with type t := t
+  end
 end
 
 module type S = sig
@@ -131,6 +137,14 @@ module type S = sig
     end
 
     module Chain_id : sig
+      type t
+
+      include With_domain_derivation with type t := t
+
+      include With_show with type t := t
+    end
+
+    module Ticket : sig
       type t
 
       include With_domain_derivation with type t := t
@@ -191,6 +205,7 @@ module type S = sig
     type nonliteral_value =
       | Contract of Contract.t
       | Chain_operation of chain_operation
+      | Ticket of Ticket.t
 
     and chain_operation = Transaction of Z.t * Contract.t
   end

@@ -12,6 +12,7 @@ module Make (D : Domain_types) = struct
        and type address := D.Address.t
        and type contract := D.Contract.t
        and type chain_id := D.Chain_id.t
+       and type ticket := D.Ticket.t
        and type hash := D.Hash.t
 
   module Interpreter = struct
@@ -284,6 +285,14 @@ module Dummy_domain = struct
     let to_string = Fun.id
 
     let of_string (x : string) : t option = Some x
+  end
+
+  module Ticket = struct
+    type t = int64 [@@deriving eq, yojson]
+
+    let to_string = Int64.to_string
+
+    let of_string = Int64.of_string_opt
   end
 end
 

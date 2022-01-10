@@ -2,8 +2,12 @@ open Helpers;
 
 module M = Helpers.Int64_map;
 
-[@deriving yojson]
-type handle = M.key;
+module Handle = {
+  [@deriving (eq, yojson)]
+  type t = int64;
+  let to_string = Int64.to_string;
+  let of_string = Int64.of_string_opt;
+};
 
 [@deriving yojson]
 type ticket_with_amount = {
@@ -52,8 +56,8 @@ let recreate = (handle, table) => {
 };
 
 type split = {
-  split_at: handle,
-  remaining: handle,
+  split_at: Handle.t,
+  remaining: Handle.t,
 };
 
 let split = (handle, ~at as split_at, table) => {

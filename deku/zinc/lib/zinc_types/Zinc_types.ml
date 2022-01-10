@@ -41,6 +41,12 @@ module Make (D : Domain_types) = struct
       let pp fmt t = Format.fprintf fmt "%s" (to_string t)
     end
 
+    module Ticket = struct
+      include Ticket
+
+      let pp fmt t = Format.fprintf fmt "%s" (to_string t)
+    end
+
     type core_instruction =
       | Grab
       | Return
@@ -108,6 +114,7 @@ module Make (D : Domain_types) = struct
     type nonliteral_value =
       | Contract of Contract.t
       | Chain_operation of chain_operation
+      | Ticket of Ticket.t
     [@@deriving show {with_path = false}, eq, yojson]
 
     and chain_operation =
@@ -261,6 +268,16 @@ module Domain = struct
 
   module Chain_id = struct
     type t = string [@@deriving show, eq, yojson]
+
+    let _ = pp
+
+    let to_string x = to_yojson x |> Yojson.Safe.to_string
+
+    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
+  end
+
+  module Ticket = struct
+    type t = int64 [@@deriving show, eq, yojson]
 
     let _ = pp
 

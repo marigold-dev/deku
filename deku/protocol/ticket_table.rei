@@ -1,5 +1,9 @@
-[@deriving yojson]
-type handle;
+module Handle: {
+  [@deriving (eq, yojson)]
+  type t;
+  let to_string: t => string;
+  let of_string: string => option(t);
+};
 
 [@deriving yojson]
 type ticket_with_amount =
@@ -12,21 +16,21 @@ type ticket_with_amount =
 type t;
 
 type split = {
-  split_at: handle,
-  remaining: handle,
+  split_at: Handle.t,
+  remaining: Handle.t,
 };
 
 let empty: t;
 let unsafe_create_ticket: (Ticket_id.t, Amount.t) => ticket_with_amount;
-let add_empty: (Ticket_id.t, t) => (handle, t);
-let add: (ticket_with_amount, t) => (handle, t);
-let find_opt: (handle, t) => option(ticket_with_amount);
+let add_empty: (Ticket_id.t, t) => (Handle.t, t);
+let add: (ticket_with_amount, t) => (Handle.t, t);
+let find_opt: (Handle.t, t) => option(ticket_with_amount);
 let remove:
-  (handle, t) => result((ticket_with_amount, t), [> | `Invalid_ticket]);
-let recreate: (handle, t) => result((handle, t), [> | `Invalid_ticket]);
+  (Handle.t, t) => result((ticket_with_amount, t), [> | `Invalid_ticket]);
+let recreate: (Handle.t, t) => result((Handle.t, t), [> | `Invalid_ticket]);
 let split:
-  (handle, ~at: Amount.t, t) =>
+  (Handle.t, ~at: Amount.t, t) =>
   result((split, t), [> | `Invalid_ticket | `Not_enough_funds]);
 let join:
-  (handle, handle, t) =>
-  result((handle, t), [> | `Invalid_ticket | `Unlike_tickets]);
+  (Handle.t, Handle.t, t) =>
+  result((Handle.t, t), [> | `Invalid_ticket | `Unlike_tickets]);
