@@ -38,11 +38,11 @@ let remove = (handle, {next_key, map}) => {
   let.ok ticket =
     find_opt(handle, {next_key, map})
     |> Option.to_result(~none=`Invalid_ticket);
-  let map = {
+  let table = {
     let map = M.remove(handle, map);
-    {next_key: Int64.succ(next_key), map};
+    {next_key, map};
   };
-  Ok((ticket, map));
+  Ok((ticket, table));
 };
 
 let recreate = (handle, table) => {
