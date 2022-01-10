@@ -53,11 +53,13 @@ let apply_side_chain = {
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
       | NonliteralValue(Chain_operation(Transaction(amount, _destination))) =>
-        Some(Transaction({
-        destination: failwith("waiting on address pr"),
-        amount: amount |> Z.to_int |> Amount.of_int,
-        ticket: failwith("what to do here?"),
-      }))
+        Some(
+          Transaction({
+            destination: failwith("waiting on address pr"),
+            amount: amount |> Z.to_int |> Amount.of_int,
+            ticket: failwith("what to do here?"),
+          }),
+        )
       | _ => None;
 
     let rec map_m = (f, l) =>
@@ -74,7 +76,7 @@ let apply_side_chain = {
     | Add_validator(_)
     | Remove_validator(_)
     | Originate_contract(_) => Error(assert(false))
-    | Invoke_contract(contract_hash, parameter) =>
+    | Invoke_contract(contract_hash, parameter, entrypoint) =>
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
           state.contracts_storage,
@@ -90,11 +92,14 @@ let apply_side_chain = {
             };
             open Interpreter;
             open Types;
+            let.ok code =
+              List.assoc_opt(entrypoint, contract_state.code)
+              |> Option.to_result(~none=`Unknown_entrypoint);
             let initial_stack = [
               Stack_item.Record([|parameter, contract_state.storage|]),
             ];
             let initial_state =
-              Interpreter.initial_state(~initial_stack, contract_state.code);
+              Interpreter.initial_state(~initial_stack, code);
             let interpretation_result =
               Interpreter.eval((module Executor), initial_state);
             Stack_item.(
@@ -114,7 +119,13 @@ let apply_side_chain = {
 
       let new_state = {...state, contracts_storage: new_contract_storage};
       let.ok new_state =
-        apply_all_internal_operations(new_state, failwith("waiting on address pr, but this should be the current contract address"), operation_kinds);
+        apply_all_internal_operations(
+          new_state,
+          failwith(
+            "waiting on address pr, but this should be the current contract address",
+          ),
+          operation_kinds,
+        );
       Ok(new_state);
     | Transaction({destination, amount, ticket}) =>
       let.ok ledger =
@@ -224,6 +235,7 @@ let apply_side_chain = (state, operation) =>
   | Ok((state, result)) => (state, result)
   | Error(`Invalid_invocation) => raise(Noop("Invalid contract output"))
   | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
+  | Error(`Unknown_entrypoint) => raise(Noop("unknown entrypoint"))
   };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height

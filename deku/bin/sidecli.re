@@ -104,16 +104,15 @@ let uri = {
   Arg.(conv((parser, printer)));
 };
 
-let address = {
+let address_implicit = {
   let parser = string =>
-    Key_hash.of_string(string)
-    |> Option.map(Address.of_key_hash)
+    Option.bind(Address.of_string(string), Address.to_implicit)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
     Format.fprintf(
       fmt,
       "%s",
-      wallet |> Address.to_key_hash |> Key_hash.to_string,
+      wallet |> Address.Implicit.to_key_hash |> Key_hash.to_string,
     );
   Arg.(conv((parser, printer)));
 };
@@ -174,7 +173,6 @@ let hash = {
 // Commands
 // ========
 
-
 // originate-contract
 
 let info_originate_contract = {
@@ -197,7 +195,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   let contract_program =
     contract
     |> Yojson.Safe.from_string
-    |> Zinc_interpreter.Types.Zinc.of_yojson
+    |> Zinc_interpreter.Types.Program.of_yojson
     |> Result.get_ok;
 
   let originate_contract_op =
@@ -217,7 +215,9 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
 
   let.await () =
     Networking.request_user_operation_gossip(
-      Networking.User_operation_gossip.{user_operation: originate_contract_op},
+      Networking.User_operation_gossip.{
+        user_operation: originate_contract_op,
+      },
       identity.uri,
     );
   Lwt.return(`Ok());
@@ -264,9 +264,9 @@ let info_create_wallet = {
 };
 
 let create_wallet = () => {
-  let (key, address) = Address.make();
+  let (key, address) = Address.Implicit.make();
 
-  let address_string = Address.to_string(address);
+  let address_string = Address.to_string(address |> Address.of_implicit);
   let file = make_filename_from_address(address_string);
 
   let.await () = Files.Wallet.write({priv_key: key, address}, ~file);
@@ -346,7 +346,7 @@ let create_transaction = {
     let env = Arg.env_var("RECEIVER", ~doc);
     Arg.(
       required
-      & pos(2, some(address), None)
+      & pos(2, some(address_implicit), None)
       & info([], ~env, ~docv="receiver", ~doc)
     );
   };
@@ -644,7 +644,7 @@ let setup_identity = (node_folder, uri) => {
 
   let identity = {
     let (secret, key) = Crypto.Ed25519.generate();
-    let t = Address.of_wallet(Ed25519(key));
+    let t = Address.Implicit.of_wallet(Ed25519(key));
     {uri, t, key: Ed25519(key), secret: Ed25519(secret)};
   };
   let.await () = write_identity(~node_folder, identity);
@@ -773,7 +773,10 @@ let info_self = {
 let self = node_folder => {
   let.await identity = read_identity(~node_folder);
   Format.printf("key: %s\n", Wallet.to_string(identity.key));
-  Format.printf("address: %s\n", Address.to_string(identity.t));
+  Format.printf(
+    "address: %s\n",
+    Address.to_string(identity.t |> Address.of_implicit),
+  );
   Format.printf("uri: %s\n", Uri.to_string(identity.uri));
   await(`Ok());
 };
@@ -817,20 +820,12 @@ let add_trusted_validator = (node_folder, address) => {
   await(`Ok());
 };
 
-let address_t = {
-  let parser = string =>
-    string
-    |> Address.of_string
-    |> Option.to_result(~none=`Msg("Expected a validator address."));
-  let printer = (fmt, address) =>
-    Format.fprintf(fmt, "%s", Address.to_string(address));
-  Arg.(conv((parser, printer)));
-};
-
 let validator_address = {
   let docv = "validator_address";
   let doc = "The validator address to be added/removed as trusted";
-  Arg.(required & pos(1, some(address_t), None) & info([], ~docv, ~doc));
+  Arg.(
+    required & pos(1, some(address_implicit), None) & info([], ~docv, ~doc)
+  );
 };
 
 let add_trusted_validator = {

@@ -1,10 +1,10 @@
 open Helpers;
 open Crypto;
 
-module Address_and_ticket_map = {
+module Implicit_address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
-    address: Address.t,
+    address: Address.Implicit.t,
     ticket: Ticket_id.t,
   };
   module Map =
@@ -46,13 +46,13 @@ module Withdrawal_handle_tree =
   });
 [@deriving yojson]
 type t = {
-  ledger: Address_and_ticket_map.t,
+  ledger: Implicit_address_and_ticket_map.t,
   ticket_table: Ticket_table.t,
   withdrawal_handles: Withdrawal_handle_tree.t,
 };
 
 let empty = {
-  ledger: Address_and_ticket_map.empty,
+  ledger: Implicit_address_and_ticket_map.empty,
   ticket_table: Ticket_table.empty,
   withdrawal_handles: Withdrawal_handle_tree.empty,
 };
@@ -60,7 +60,7 @@ let empty = {
 let balance = (address, ticket, t) => {
   let balance = {
     let.some handle =
-      Address_and_ticket_map.find_opt(address, ticket, t.ledger);
+      Implicit_address_and_ticket_map.find_opt(address, ticket, t.ledger);
     let.some ticket = Ticket_table.find_opt(handle, t.ticket_table);
     Some(ticket.amount);
   };
@@ -68,11 +68,12 @@ let balance = (address, ticket, t) => {
 };
 
 let get_or_create = (address, ticket, ticket_table, ledger) => {
-  switch (Address_and_ticket_map.find_opt(address, ticket, ledger)) {
+  switch (Implicit_address_and_ticket_map.find_opt(address, ticket, ledger)) {
   | None =>
     let (handle, ticket_table) =
       Ticket_table.add_empty(ticket, ticket_table);
-    let ledger = Address_and_ticket_map.add(address, ticket, handle, ledger);
+    let ledger =
+      Implicit_address_and_ticket_map.add(address, ticket, handle, ledger);
     (handle, ticket_table, ledger);
   | Some(handle) => (handle, ticket_table, ledger)
   };
@@ -80,7 +81,7 @@ let get_or_create = (address, ticket, ticket_table, ledger) => {
 
 let transfer = (~source, ~destination, amount, ticket, t) => {
   let.ok source_handle =
-    Address_and_ticket_map.find_opt(source, ticket, t.ledger)
+    Implicit_address_and_ticket_map.find_opt(source, ticket, t.ledger)
     |> Option.to_result(~none=`Not_enough_funds);
   let (destination_handle, ticket_table, ledger) =
     get_or_create(destination, ticket, t.ticket_table, t.ledger);
@@ -99,8 +100,12 @@ let transfer = (~source, ~destination, amount, ticket, t) => {
   Ok({
     ledger:
       ledger
-      |> Address_and_ticket_map.add(source, ticket, source_handle)
-      |> Address_and_ticket_map.add(destination, ticket, destination_handle),
+      |> Implicit_address_and_ticket_map.add(source, ticket, source_handle)
+      |> Implicit_address_and_ticket_map.add(
+           destination,
+           ticket,
+           destination_handle,
+         ),
     ticket_table,
     withdrawal_handles: t.withdrawal_handles,
   });
@@ -121,7 +126,11 @@ let deposit = (destination, amount, ticket, t) => {
   {
     ledger:
       ledger
-      |> Address_and_ticket_map.add(destination, ticket, destination_handle),
+      |> Implicit_address_and_ticket_map.add(
+           destination,
+           ticket,
+           destination_handle,
+         ),
     ticket_table,
     withdrawal_handles: t.withdrawal_handles,
   };
@@ -130,7 +139,7 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
   let owner = destination;
 
   let.ok source_handle =
-    Address_and_ticket_map.find_opt(source, ticket, t.ledger)
+    Implicit_address_and_ticket_map.find_opt(source, ticket, t.ledger)
     |> Option.to_result(~none=`Not_enough_funds);
 
   let.ok (Ticket_table.{split_at, remaining}, ticket_table) =
@@ -153,7 +162,9 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
       t.withdrawal_handles,
     );
   let t = {
-    ledger: t.ledger |> Address_and_ticket_map.add(source, ticket, remaining),
+    ledger:
+      t.ledger
+      |> Implicit_address_and_ticket_map.add(source, ticket, remaining),
     ticket_table,
     withdrawal_handles,
   };

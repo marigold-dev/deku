@@ -1,5 +1,4 @@
 open Helpers;
-open Crypto;
 
 [@deriving (eq, ord)]
 type t = BLAKE2B_20.t;

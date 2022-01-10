@@ -185,7 +185,7 @@ module Withdraw_proof = {
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
-    address: Address.t,
+    address: Address.Implicit.t,
     ticket: Ticket_id.t,
   };
   [@deriving yojson]
@@ -201,7 +201,7 @@ module Trusted_validators_membership_change = {
   [@deriving yojson]
   type payload = {
     action,
-    address: Address.t,
+    address: Address.Implicit.t,
   };
   [@deriving yojson]
   type request = {

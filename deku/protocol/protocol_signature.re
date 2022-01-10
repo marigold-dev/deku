@@ -6,7 +6,7 @@ type t = {
   // TODO: what is the name of a signature?
   signature: Signature.t,
   public_key: Wallet.t,
-  address: Address.t,
+  address: Address.Implicit.t,
 };
 let public_key = t => t.public_key;
 let address = t => t.address;
@@ -27,7 +27,7 @@ let (to_yojson, of_yojson) = {
     });
   let of_yojson = json => {
     let.ok {signature, public_key} = Serialized_data.of_yojson(json);
-    let address = Address.of_wallet(public_key);
+    let address = Address.Implicit.of_wallet(public_key);
     Ok({signature, public_key, address});
   };
   (to_yojson, of_yojson);
@@ -36,7 +36,7 @@ let (to_yojson, of_yojson) = {
 let sign = (~key as secret, hash) => {
   let signature = Signature.sign(secret, hash);
   let public_key = Key.of_secret(secret);
-  let address = Address.of_wallet(public_key);
+  let address = Address.Implicit.of_wallet(public_key);
   {signature, public_key, address};
 };
 let signature_to_signature_by_address = t => (t.address, t.signature);

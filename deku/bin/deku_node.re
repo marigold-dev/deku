@@ -229,7 +229,7 @@ let node = folder => {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             Address.of_key_hash(validator),
+             Address.Implicit.of_key_hash(validator),
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })

@@ -1,7 +1,6 @@
-
-
 open Helpers
-open Tezos
+open Crypto
+
 type unparsed = string * string option [@@deriving yojson] (* the same as Raw.Contract.t*)
 
 (** Address.t * entrypoint, @TODO: decide on entrypoint *)

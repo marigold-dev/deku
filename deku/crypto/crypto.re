@@ -10,4 +10,5 @@ module Random = Random;
 module Secret = Secret;
 module Key = Key;
 module Key_hash = Key_hash;
+module Contract_hash = Contract_hash;
 module Signature = Signature;

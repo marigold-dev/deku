@@ -16,7 +16,7 @@ describe("protocol state", ({test, _}) => {
     };
   };
   let make_state = (~validators=?, ()) => {
-    let (key_wallet, address) = Address.make();
+    let (key_wallet, address) = Address.Implicit.make();
     let state = {
       ...make(~initial_block=Block.genesis),
       ledger:
@@ -58,7 +58,7 @@ describe("protocol state", ({test, _}) => {
           expect.int(Amount.to_int(left)).toBe(right);
         // TODO: use random wallet with random amount
         let (old_state, key_a, address_a) = make_state();
-        let (key_b, address_b) = Address.make();
+        let (key_b, address_b) = Address.Implicit.make();
         let new_state =
           f(old_state, (address_a, key_a), (address_b, key_b));
 

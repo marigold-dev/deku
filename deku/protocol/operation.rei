@@ -5,7 +5,7 @@ module Main_chain: {
     // TODO: can a validator uses the same key in different nodes?
     // If so the ordering in the list must never use the same key two times in sequence
     | Deposit({
-        destination: Address.t,
+        destination: Address.Implicit.t,
         amount: Amount.t,
         ticket: Ticket_id.t,
       });
@@ -36,7 +36,7 @@ module Side_chain: {
   [@deriving yojson]
   type kind =
     | Transaction({
-        destination: Address.t,
+        destination: Address.Implicit.t,
         amount: Amount.t,
         ticket: Ticket_id.t,
       })
@@ -48,9 +48,13 @@ module Side_chain: {
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator)
     | Originate_contract(
-        (Interpreter.Types.Zinc.t, Interpreter.Types.Stack_item.t),
+        (Interpreter.Types.Program.t, Interpreter.Types.Stack_item.t),
       )
-    | Invoke_contract(Tezos.Contract_hash.t, Interpreter.Types.Stack_item.t);
+    | Invoke_contract(
+        Contract_hash.t,
+        Interpreter.Types.Stack_item.t,
+        string,
+      );
 
   [@deriving (ord, yojson)]
   type t =
@@ -59,7 +63,7 @@ module Side_chain: {
       signature: Protocol_signature.t,
       nonce: int32,
       block_height: int64,
-      source: Address.t,
+      source: Address.Implicit.t,
       kind,
     };
 
@@ -68,7 +72,7 @@ module Side_chain: {
       ~secret: Secret.t,
       ~nonce: int32,
       ~block_height: int64,
-      ~source: Address.t,
+      ~source: Address.Implicit.t,
       ~kind: kind
     ) =>
     t;
@@ -79,7 +83,7 @@ module Side_chain: {
       ~signature: Protocol_signature.t,
       ~nonce: int32,
       ~block_height: int64,
-      ~source: Address.t,
+      ~source: Address.Implicit.t,
       ~kind: kind
     ) =>
     result(t, string);
