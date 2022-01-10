@@ -173,7 +173,7 @@ module Withdraw_proof = {
   type response =
     | Ok({
         handles_hash: BLAKE2B.t,
-        handle: Ledger.Handle.t,
+        handle: Ledger.Withdrawal_handle.t,
         proof: list((BLAKE2B.t, BLAKE2B.t)),
       })
     | Unknown_operation
@@ -186,7 +186,7 @@ module Ticket_balance = {
   [@deriving yojson]
   type request = {
     address: Address.t,
-    ticket: Ticket.t,
+    ticket: Ticket_id.t,
   };
   [@deriving yojson]
   type response = {amount: Amount.t};

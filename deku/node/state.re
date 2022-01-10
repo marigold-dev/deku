@@ -38,7 +38,7 @@ type t = {
         | `Add_validator
         | `Remove_validator
         | `Transaction
-        | `Withdraw(Ledger.Handle.t)
+        | `Withdraw(Ledger.Withdrawal_handle.t)
         | `Origination
         | `Invocation
       ],

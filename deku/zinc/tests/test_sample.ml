@@ -14,13 +14,12 @@ let zinc =
       Adt
         (MatchVariant
            [|
-             ( [Core Grab; Core (Access 0)]);
-             (
-               [
-                 Core Grab;
-                 Plain_old_data (String "Not a contract");
-                 Control_flow Failwith;
-               ] );
+             [Core Grab; Core (Access 0)];
+             [
+               Core Grab;
+               Plain_old_data (String "Not a contract");
+               Control_flow Failwith;
+             ];
            |]);
       Core EndLet;
       Core Grab;

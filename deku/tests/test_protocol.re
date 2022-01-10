@@ -10,7 +10,7 @@ describe("protocol state", ({test, _}) => {
       |> Cstruct.to_string
       |> BLAKE2B_20.of_raw_string
       |> Option.get;
-    Ticket.{
+    Ticket_id.{
       ticketer: Originated({contract: random_hash, entrypoint: None}),
       data: Bytes.of_string(""),
     };

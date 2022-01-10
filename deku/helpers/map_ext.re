@@ -8,6 +8,7 @@ module Make_with_yojson =
          },
        ) => {
   include Map.Make(K);
+
   let to_yojson = (f, t) => {
     t |> bindings |> [%to_yojson: list((K.t, 'a))](f);
   };
@@ -23,4 +24,7 @@ module Make_with_yojson =
     | Error(_) as e => e
     };
   };
+
+  let key_to_yojson = K.to_yojson;
+  let key_of_yojson = K.of_yojson;
 };
