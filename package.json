@@ -1,7 +1,10 @@
 {
   "name": "sidechain",
   "esy": {
-    "build": "dune build -p #{self.name}",
+    "build": [
+      "dune build --profile=release @bundle",
+      "dune build -p #{self.name}"
+    ],
     "release": {
       "bin": [
         "sidecli",

@@ -19,6 +19,7 @@
   ./fetch_storage.bundle.js
   ./run_entrypoint.bundle.js)
  (mode promote)
+ (alias bundle)
  (action
   (run webpack --env=%{profile})))
 
