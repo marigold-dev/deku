@@ -253,6 +253,7 @@ module Consensus = {
         ~handles_hash,
         ~validators,
         ~signatures,
+        ~current_validator_keys,
       ) => {
     module Payload = {
       [@deriving to_yojson]
@@ -264,6 +265,7 @@ module Consensus = {
         handles_hash: BLAKE2B.t,
         state_hash: BLAKE2B.t,
         validators: list(string),
+        current_validator_keys: list(option(string)),
       };
     };
     open Payload;
@@ -275,6 +277,10 @@ module Consensus = {
         signatures,
       );
     let validators = List.map(Key_hash.to_string, validators);
+
+    let current_validator_keys =
+      List.map(Option.map(Key.to_string), current_validator_keys);
+
     let payload = {
       block_hash,
       block_height,
@@ -283,6 +289,7 @@ module Consensus = {
       handles_hash,
       state_hash,
       validators,
+      current_validator_keys,
     };
     // TODO: what should this code do with the output? Retry?
     //      return back that it was a failure?
