@@ -228,17 +228,21 @@ module type S = sig
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
-      | Variant of Zinc_utils.label * t
+      | Variant of label * t
       | Marker of Zinc.t * Env_item.t list
+    [@@deriving show {with_path = false}, eq, yojson]
 
     and nonliteral_value =
       | Contract of Zinc.Contract.t
       | Chain_operation of chain_operation
       | Ticket of Zinc.Ticket.t
+    [@@deriving show {with_path = false}, eq, yojson]
 
-    and chain_operation = Transaction of t * Zinc.Address.t
+    and chain_operation =
+      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+    [@@deriving show {with_path = false}, eq, yojson]
 
-    include With_default_derivation with type t := t
+    val to_string : t -> string
   end
 
   and Clos : sig
