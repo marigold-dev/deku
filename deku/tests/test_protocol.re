@@ -60,7 +60,7 @@ describe("protocol state", ({test, _}) => {
         let (old_state, key_a, address_a) = make_state();
         let (key_b, address_b) = Address.Implicit.make();
         let new_state =
-          f(old_state, (address_a, key_a), (address_b, key_b));
+          (f(old_state, ((address_a), key_a), ((address_b), key_b)));
 
         expect_amount(
           Ledger.balance(address_a, ticket, old_state.ledger),
@@ -108,7 +108,7 @@ describe("protocol state", ({test, _}) => {
             ~nonce=0l,
             ~block_height=0L,
             ~source,
-            ~kind=Transaction({destination, parameter: failwith("todo")}),
+            ~kind=Transaction({destination: Implicit(destination), parameter: failwith("todo"), entrypoint: None}),
           ),
         );
       assert(result == `Transaction);
@@ -127,7 +127,7 @@ describe("protocol state", ({test, _}) => {
           ~nonce=0l,
           ~block_height=0L,
           ~source,
-          ~kind=Transaction({destination, parameter: failwith("todo")}),
+          ~kind=Transaction({destination: Implicit(destination), parameter: failwith("todo"), entrypoint: None}),
         ),
       );
     assert(result == `Transaction);

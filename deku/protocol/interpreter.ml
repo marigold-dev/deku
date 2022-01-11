@@ -1,7 +1,7 @@
 
 module Domain_types = struct
   module Key = Crypto.Key
-  module Address = Tezos.Address
+  module Address = Address
   module Hash = Crypto.BLAKE2B
   module Chain_id = Chain_id
   module Ticket = Ticket_table.Handle

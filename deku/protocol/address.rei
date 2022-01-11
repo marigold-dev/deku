@@ -1,10 +1,8 @@
 open Crypto;
 
-[@deriving (ord, yojson)]
-type t;
 
 module Implicit: {
-  [@deriving (ord, yojson)]
+  [@deriving (ord, eq, yojson)]
   type t;
 
   let of_wallet: Wallet.t => t;
@@ -19,7 +17,7 @@ module Implicit: {
 };
 
 module Originated: {
-  [@deriving (ord, yojson)]
+  [@deriving (ord, eq, yojson)]
   type t;
 
   let to_contract_hash: t => Contract_hash.t;
@@ -28,6 +26,11 @@ module Originated: {
   let to_string: t => string;
   let of_string: string => option(t);
 };
+
+[@deriving (ord, eq, yojson)]
+type t =
+  | Implicit(Implicit.t)
+  | Originated(Originated.t);
 
 let of_implicit: Implicit.t => t;
 let to_implicit: t => option(Implicit.t);

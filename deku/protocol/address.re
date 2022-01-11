@@ -24,6 +24,7 @@ module Implicit = {
   let of_yojson = of_yojson;
 
   let compare = compare;
+  let equal = equal;
 };
 
 module Originated = {
@@ -40,9 +41,10 @@ module Originated = {
   let of_yojson = of_yojson;
 
   let compare = compare;
+  let equal = equal
 };
 
-[@deriving (yojson, ord)]
+[@deriving (yojson, eq, ord)]
 type t =
   | Implicit(Implicit.t)
   | Originated(Originated.t);

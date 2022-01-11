@@ -52,15 +52,14 @@ let apply_side_chain = {
     open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
-      | NonliteralValue(Chain_operation(Transaction(_amount, _destination))) =>
-        failwith("unimplemented") /*
+      | NonliteralValue(Chain_operation(Transaction(_amount, destination))) =>
         Some(
           Transaction({
-            destination: failwith("waiting on address pr"),
-            amount: amount |> Z.to_int |> Amount.of_int,
-            ticket: failwith("what to do here?"),
+            destination: destination,
+            parameter: failwith("todo"),
+            entrypoint: failwith("todo"),
           }),
-        )*/
+        )
 
       | _ => None;
 
@@ -78,11 +77,11 @@ let apply_side_chain = {
     | Add_validator(_)
     | Remove_validator(_)
     | Originate_contract(_) => Error(assert(false))
-    | Invoke_contract(contract_hash, parameter, entrypoint) =>
+    | Transaction({parameter, destination: Address.Originated(destination), entrypoint: Some(entrypoint)})  =>
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
           state.contracts_storage,
-          contract_hash,
+          destination,
           contract_state => {
             let.ok contract_state =
               Option.to_result(~none=`Invalid_invocation, contract_state);
@@ -129,7 +128,7 @@ let apply_side_chain = {
           operation_kinds,
         );
       Ok(new_state);
-    | Transaction({parameter: NonliteralValue(Ticket(handle)), destination}) =>
+    | Transaction({parameter: NonliteralValue(Ticket(handle)), destination: Implicit(destination),entrypoint: None}) =>
       let.ok ledger =
         Ledger.transfer_ticket(
           ~source=sender,
@@ -190,12 +189,8 @@ let apply_side_chain = {
       let validators = Validators.remove(validator, state.validators);
       Ok((update_validators(validators), `Remove_validator));
     | Originate_contract((code, initial_storage)) =>
-      let (_, signature) =
-        Protocol_signature.signature_to_signature_by_address(
-          operation.signature,
-        );
-      let new_address =
-        Crypto.Signature.to_string(signature) |> Crypto.BLAKE2B_20.hash;
+      let contract_hash : Crypto.Contract_hash.t = operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
+      let new_address : Address.Originated.t = Address.Originated.(of_contract_hash(contract_hash));
       let contract_state =
         Contract_storage.make_state(
           ~entrypoint=None,
@@ -222,9 +217,6 @@ let apply_side_chain = {
         );
       // TODO: publish the handle somewhere
       Ok(({...state, ledger}, `Withdraw(handle)));
-    | Invoke_contract(_) as invoke_contract =>
-      let.ok new_state = apply_internal_operation(state, invoke_contract);
-      Ok((new_state, `Invocation));
     | Transaction(_) as transaction =>
       let.ok new_state = apply_internal_operation(state, transaction);
       Ok((new_state, `Transaction));

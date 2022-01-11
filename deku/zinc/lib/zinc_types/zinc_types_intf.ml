@@ -201,13 +201,6 @@ module type S = sig
     val equal_instruction : instruction -> instruction -> bool
 
     val instruction_to_string : instruction -> string
-
-    type nonliteral_value =
-      | Contract of Contract.t
-      | Chain_operation of chain_operation
-      | Ticket of Ticket.t
-
-    and chain_operation = Transaction of Z.t * Contract.t
   end
 
   module Program : sig
@@ -219,7 +212,7 @@ module type S = sig
   module rec Env_item : sig
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of Stack_item.nonliteral_value
       | Clos of Clos.t
       | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
@@ -231,12 +224,19 @@ module type S = sig
   and Stack_item : sig
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of nonliteral_value
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
       | Variant of Zinc_utils.label * t
       | Marker of Zinc.t * Env_item.t list
+
+    and nonliteral_value =
+      | Contract of Zinc.Contract.t
+      | Chain_operation of chain_operation
+      | Ticket of Zinc.Ticket.t
+
+    and chain_operation = Transaction of t * Zinc.Address.t
 
     include With_default_derivation with type t := t
   end

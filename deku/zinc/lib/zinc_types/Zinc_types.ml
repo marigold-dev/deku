@@ -111,15 +111,6 @@ module Make (D : Domain_types) = struct
     Not all zinc values can be expressed directly in code as literals.
     So they're represented as a seperate type.
   *)
-    type nonliteral_value =
-      | Contract of Contract.t
-      | Chain_operation of chain_operation
-      | Ticket of Ticket.t
-    [@@deriving show {with_path = false}, eq, yojson]
-
-    and chain_operation =
-      | Transaction of Z.t * Contract.t (* todo: add parameter *)
-    [@@deriving show {with_path = false}, eq, yojson]
   end
 
   module Program = struct
@@ -132,7 +123,7 @@ module Make (D : Domain_types) = struct
   module rec Env_item : sig
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of Stack_item.nonliteral_value
       | Clos of Clos.t
       | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
@@ -142,7 +133,7 @@ module Make (D : Domain_types) = struct
   end = struct
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of Stack_item.nonliteral_value
       | Clos of Clos.t
       | Record of Stack_item.t LMap.t
       | List of Stack_item.t list
@@ -155,23 +146,46 @@ module Make (D : Domain_types) = struct
   and Stack_item : sig
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of nonliteral_value
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
       | Variant of label * t
       | Marker of Zinc.t * Env_item.t list
+    [@@deriving show {with_path = false}, eq, yojson]
 
+    and nonliteral_value =
+      | Contract of Zinc.Contract.t
+      | Chain_operation of chain_operation
+      | Ticket of Zinc.Ticket.t   
+    [@@deriving show {with_path = false}, eq, yojson]
+
+
+    and chain_operation =
+      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+    [@@deriving show {with_path = false}, eq, yojson]
+    
     include Zinc_types_intf.With_default_derivation with type t := t
+
   end = struct
     type t =
       | Z of Zinc.instruction
-      | NonliteralValue of Zinc.nonliteral_value
+      | NonliteralValue of nonliteral_value
       | Clos of Clos.t
       | Record of t LMap.t
       | List of t list
       | Variant of label * t
       | Marker of Zinc.t * Env_item.t list
+    [@@deriving show {with_path = false}, eq, yojson]
+
+    and nonliteral_value =
+      | Contract of Zinc.Contract.t
+      | Chain_operation of chain_operation
+      | Ticket of Zinc.Ticket.t
+    [@@deriving show {with_path = false}, eq, yojson]
+
+    and chain_operation =
+      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
 
     let to_string = show

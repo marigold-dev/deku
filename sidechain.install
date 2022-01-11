@@ -1,0 +1,13 @@
+lib: [
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/lib/sidechain/META"
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/lib/sidechain/dune-package"
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/lib/sidechain/opam"
+]
+bin: [
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/bin/deku-node"
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/bin/sidecli"
+]
+doc: [
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/doc/sidechain/LICENSE"
+  "/home/anchpop/workspaces/deku/deku/_esy/default/store/b/sidechain-b1552f01/install/default/doc/sidechain/README.md"
+]
