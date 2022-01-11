@@ -22,7 +22,8 @@ module Consensus: {
       ~state_hash: BLAKE2B.t,
       ~handles_hash: BLAKE2B.t,
       ~validators: list(Key_hash.t),
-      ~signatures: list((Key_hash.t, option(Signature.t)))
+      ~signatures: list((Key_hash.t, option(Signature.t))),
+      ~current_validator_keys: list(option(Key.t))
     ) =>
     Lwt.t(unit);
 
