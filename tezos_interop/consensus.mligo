@@ -20,7 +20,6 @@ type root_hash_storage = {
 type signatures = signature option list
 
 type root_hash_action = {
-  block_hash: blake2b;
   block_height: int;
   block_payload_hash: blake2b;
 
@@ -55,7 +54,7 @@ let root_hash_check_block_height
       block_height > storage.current_block_height
     )
 
-let root_hash_check_hash (root_hash_update: root_hash_action) =
+let root_hash_block_hash (root_hash_update: root_hash_action) =
   let block_hash_structure = {
     block_height = root_hash_update.block_height;
     block_payload_hash = root_hash_update.block_payload_hash;
@@ -64,11 +63,7 @@ let root_hash_check_hash (root_hash_update: root_hash_action) =
     (* TODO: should we do pack of list? *)
     validators_hash = Crypto.blake2b (Bytes.pack root_hash_update.validators)
   } in
-  let calculated_hash = Crypto.blake2b (Bytes.pack block_hash_structure) in
-  assert_msg (
-    "invalid block hash",
-    root_hash_update.block_hash = calculated_hash
-  )
+  Crypto.blake2b (Bytes.pack block_hash_structure)
 
 let rec root_hash_check_keys
   (validator_keys, validators, block_hash, remaining:
@@ -139,7 +134,7 @@ let root_hash_check_signatures
 let root_hash_main
   (root_hash_update: root_hash_action)
   (storage: root_hash_storage) =
-    let block_hash = root_hash_update.block_hash in
+    let block_hash = root_hash_block_hash root_hash_update in
     let block_height = root_hash_update.block_height in
     let state_hash = root_hash_update.state_hash in
     let handles_hash = root_hash_update.handles_hash in
@@ -147,9 +142,8 @@ let root_hash_main
     let signatures = root_hash_update.signatures in
 
     let () = root_hash_check_block_height storage block_height in
-    let () = root_hash_check_hash root_hash_update in
-    let () = root_hash_check_keys root_hash_update storage block_hash in
     let () = root_hash_check_signatures root_hash_update storage signatures block_hash in
+    let () = root_hash_check_keys root_hash_update storage block_hash in
 
     {
       current_block_hash = block_hash;
