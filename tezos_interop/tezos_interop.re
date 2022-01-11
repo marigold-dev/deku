@@ -246,7 +246,6 @@ module Consensus = {
   let commit_state_hash =
       (
         ~context,
-        ~block_hash,
         ~block_height,
         ~block_payload_hash,
         ~state_hash,
@@ -258,7 +257,6 @@ module Consensus = {
     module Payload = {
       [@deriving to_yojson]
       type t = {
-        block_hash: BLAKE2B.t,
         block_height: int64,
         block_payload_hash: BLAKE2B.t,
         signatures: list(option(string)),
@@ -282,7 +280,6 @@ module Consensus = {
       List.map(Option.map(Key.to_string), current_validator_keys);
 
     let payload = {
-      block_hash,
       block_height,
       block_payload_hash,
       signatures,

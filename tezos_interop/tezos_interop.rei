@@ -16,7 +16,6 @@ module Consensus: {
   let commit_state_hash:
     (
       ~context: Context.t,
-      ~block_hash: BLAKE2B.t,
       ~block_height: int64,
       ~block_payload_hash: BLAKE2B.t,
       ~state_hash: BLAKE2B.t,
