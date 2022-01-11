@@ -145,7 +145,6 @@ let apply_block = (state, block) => {
         block.state_root_hash != state.state_root_hash
           ? Unix.time() : state.last_state_root_update,
       last_applied_block_timestamp: Unix.time(),
-      state_root_hash: block.state_root_hash,
       validators_hash: block.validators_hash,
     },
     side_chain_operation_results,
@@ -165,8 +164,15 @@ let make = (~initial_block) => {
        are in the right place, otherwise invariants
        can be broken */
     last_block_hash: initial_block.Block.previous_hash,
-    state_root_hash: initial_block.Block.state_root_hash,
-    last_state_root_update: 0.0,
+    // The initial protocol state includes an unreachable
+    // hash as the first state root hash. When the genesis
+    // block is applied, then the state root hash of the block
+    // will be different, triggering the creation of the next hash.
+    // Hash: 4ba060ef0b65c3690407175d7bd0e09975f9d8f5907fb9e99de27ea4de804652
+    state_root_hash: Crypto.BLAKE2B.hash("Tetsutetsu Tetsutetsu"),
+    // The node only signs blocks with state root hashes that are neither too
+    // early nor too late relative to [last_state_root_update].
+    last_state_root_update: Unix.time(),
     last_applied_block_timestamp: 0.0,
     last_seen_membership_change_timestamp: 0.0,
   };
@@ -174,17 +180,15 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let (valid_hash, hash) =
-    if (block.state_root_hash == state.state_root_hash) {
-      (true, None);
+  let hash =
+    if (Crypto.BLAKE2B.equal(block.state_root_hash, state.state_root_hash)) {
+      None;
     } else {
-      // TODO: pipeline this
-      let (hash, data) = hash(state);
-      (block.state_root_hash == hash, Some((hash, data)));
+      let (next_state_root_hash, next_state_root_data) = State.hash(state);
+      Some((next_state_root_hash, next_state_root_data));
     };
-  let.assert () = (`Invalid_state_root_hash, valid_hash);
   let (state, result) = apply_block(state, block);
-  Ok((state, hash, result));
+  Ok(({...state, state_root_hash: block.state_root_hash}, hash, result));
 };
 
 let get_current_block_producer = state =>

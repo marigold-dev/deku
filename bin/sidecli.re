@@ -500,6 +500,7 @@ let produce_block = node_folder => {
   let block =
     Block.produce(
       ~state,
+      ~next_state_root_hash=None,
       ~author=address,
       ~main_chain_ops=[],
       ~side_chain_ops=[],

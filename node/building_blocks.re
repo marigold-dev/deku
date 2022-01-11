@@ -56,6 +56,29 @@ let is_current_producer = (state, ~key_hash) => {
   Some(current_producer.address == key_hash);
 };
 
+// TODO: verify reasonable times for this with benchmarking.
+// currently set to [state_root_min_timeout] as a reasonable
+// default.
+let minimum_signable_time_between_epochs = 60.0;
+
+// TODO: verify reasonable times for this with benchmarking.
+// Currently set to [minimum_signable_time_between_epochs] + 10
+// as a reasonable default.
+let maximum_signable_time_between_epochs = 70.0;
+
+let block_has_signable_state_root_hash = (~current_time, state, block) => {
+  let protocol = state.Node.protocol;
+  let time_since_last_epoch = current_time -. protocol.last_state_root_update;
+  Crypto.(
+    if (BLAKE2B.equal(block.Block.state_root_hash, protocol.state_root_hash)) {
+      time_since_last_epoch <= maximum_signable_time_between_epochs;
+    } else {
+      BLAKE2B.equal(block.state_root_hash, state.next_state_root_hash)
+      && time_since_last_epoch >= minimum_signable_time_between_epochs;
+    }
+  );
+};
+
 // TODO: bad naming
 // TODO: check if block must have published a new snapshot
 let is_signable = (state, block) => {
@@ -97,18 +120,51 @@ let is_signable = (state, block) => {
   && is_current_producer(state, ~key_hash=block.author)
   && !has_next_block_to_apply(state, ~hash=block.hash)
   && all_main_ops_are_known
-  && contains_only_trusted_add_validator_op(block.side_chain_ops);
+  && contains_only_trusted_add_validator_op(block.side_chain_ops)
+  && block_has_signable_state_root_hash(~current_time, state, block);
 };
 
 let sign = (~key, block) => Block.sign(~key, block);
 
-let produce_block = state =>
+/** Calculates whether to start sending a new state root hash.
+
+    The state root epoch is the interval (in blocks) between state root
+    hash updates. Thus, a new epoch is triggered by applying a block with
+    a new state root hash. The block producer decides when to send
+    blocks with new state root hashes. To enforce that he does so on time,
+    validators reject blocks with updates that occur to soon or too late
+    (see [Protocol.apply]).
+
+    The block producer uses this function to determine when to send a
+    block with an updated state root hash.
+*/
+let should_start_new_epoch = (last_state_root_update, current_time) => {
+  let avoid_jitter = 1.0;
+  current_time
+  -. last_state_root_update
+  -. avoid_jitter >= minimum_signable_time_between_epochs;
+};
+
+let produce_block = state => {
+  let start_new_epoch =
+    should_start_new_epoch(
+      state.Node.protocol.last_state_root_update,
+      Unix.time(),
+    );
+  let next_state_root_hash =
+    if (start_new_epoch) {
+      Some(state.Node.next_state_root_hash);
+    } else {
+      None;
+    };
   Block.produce(
     ~state=state.Node.protocol,
     ~author=state.identity.t,
+    ~next_state_root_hash,
     ~main_chain_ops=state.pending_main_ops,
     ~side_chain_ops=state.pending_side_ops,
   );
+};
 
 let is_valid_block_height = (state, block_height) =>
   block_height >= 1L && block_height <= state.Node.protocol.block_height;

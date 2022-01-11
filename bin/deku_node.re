@@ -272,18 +272,25 @@ let node = folder => {
   };
   let state_bin = folder ++ "/state.bin";
   let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let.await protocol =
+  let.await (protocol, next_state_root_hash) =
     if (state_bin_exists) {
-      Files.State_bin.read(~file=state_bin);
+      let.await protocol = Files.State_bin.read(~file=state_bin);
+      let prev_epoch_state_bin = folder ++ "/prev_epoch_state.bin";
+      let.await prev_protocol =
+        Files.State_bin.read(~file=prev_epoch_state_bin);
+      let (next_state_root_hash, _) = Protocol.hash(prev_protocol);
+      await((protocol, next_state_root_hash));
     } else {
       let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
-      await(node.protocol);
+      // TODO: should we write prev_epoch_state.bin here? Otherwise there's
+      // a possibility of the one existing without the other
+      await((node.protocol, node.next_state_root_hash));
     };
   Tezos_interop.Consensus.listen_operations(
     ~context=interop_context, ~on_operation=operation =>
     Flows.received_main_operation(Server.get_state(), update_state, operation)
   );
-  await({...node, protocol});
+  await({...node, next_state_root_hash, protocol});
 };
 
 let node = folder => {

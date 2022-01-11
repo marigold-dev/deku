@@ -24,6 +24,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  next_state_root_hash: BLAKE2B.t,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -77,6 +78,7 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    next_state_root_hash: initial_block.state_root_hash,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -151,6 +153,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     );
   });
 };
+
 let apply_block = (state, block) => {
   let old_state = state;
   let.ok (protocol, new_snapshot, results) =
@@ -162,18 +165,35 @@ let apply_block = (state, block) => {
       state.recent_operation_results,
       results,
     );
-  let state = {...state, protocol, recent_operation_results};
-  Lwt.async(() =>
-    Lwt_io.with_file(
-      ~mode=Output,
-      state.data_folder ++ "/state.bin",
-      oc => {
-        let protocol_bin = Marshal.to_string(state.protocol, []);
-        let.await () = Lwt_io.write(oc, protocol_bin);
-        Lwt_io.flush(oc);
-      },
-    )
-  );
+  let next_state_root_hash =
+    new_snapshot
+    |> Option.map(fst)
+    |> Option.value(~default=state.next_state_root_hash);
+  let state = {
+    ...state,
+    protocol,
+    next_state_root_hash,
+    recent_operation_results,
+  };
+  Lwt.async(() => {
+    let protocol_bin = Marshal.to_string(state.protocol, []);
+    let write_to_state_to_file = file_name => {
+      Lwt_io.with_file(
+        ~mode=Output,
+        state.data_folder ++ "/" ++ file_name,
+        oc => {
+          let.await () = Lwt_io.write(oc, protocol_bin);
+          Lwt_io.flush(oc);
+        },
+      );
+    };
+    let.await () = write_to_state_to_file("state.bin");
+    if (Option.is_some(new_snapshot)) {
+      write_to_state_to_file("prev_epoch_state.bin");
+    } else {
+      Lwt.return_unit;
+    };
+  });
   switch (new_snapshot) {
   | Some(new_snapshot) =>
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
@@ -287,7 +307,10 @@ let load_snapshot =
       block_height,
       last_block_hash,
       state_root_hash,
-      last_state_root_update: 0.0,
+      // The node will only sign blocks that have an
+      // acceptable state root hash relative to the last_state_root_update.
+      // see [building_blocks.re].
+      last_state_root_update: Unix.time(),
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
@@ -304,5 +327,10 @@ let load_snapshot =
       all_blocks,
     );
   //TODO: snapshots?
+  // It's ok for the [next_state_root_hash] to be incorrect
+  // here, because by definition when we load a snapshot we're
+  // out of sync and can't sign blocks anyway. On the next state
+  // root epoch, we'll update the [next_state_root_hash] to the
+  // correct value, at which point we'll also be in sync.
   Ok({...t, block_pool, protocol});
 };
