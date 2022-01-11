@@ -52,14 +52,16 @@ let apply_side_chain = {
     open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
-      | NonliteralValue(Chain_operation(Transaction(amount, _destination))) =>
+      | NonliteralValue(Chain_operation(Transaction(_amount, _destination))) =>
+        failwith("unimplemented") /*
         Some(
           Transaction({
             destination: failwith("waiting on address pr"),
             amount: amount |> Z.to_int |> Amount.of_int,
             ticket: failwith("what to do here?"),
           }),
-        )
+        )*/
+
       | _ => None;
 
     let rec map_m = (f, l) =>
@@ -127,16 +129,16 @@ let apply_side_chain = {
           operation_kinds,
         );
       Ok(new_state);
-    | Transaction({destination, amount, ticket}) =>
+    | Transaction({parameter: NonliteralValue(Ticket(handle)), destination}) =>
       let.ok ledger =
-        Ledger.transfer(
+        Ledger.transfer_ticket(
           ~source=sender,
           ~destination,
-          amount,
-          ticket,
+          handle,
           state.ledger,
         );
       Ok({...state, ledger});
+    | Transaction(_) => Error(`No_ticket_in_transaction)
     };
   }
   and apply_all_internal_operations = (state, sender, operation_kinds) => {
@@ -236,6 +238,9 @@ let apply_side_chain = (state, operation) =>
   | Error(`Invalid_invocation) => raise(Noop("Invalid contract output"))
   | Error(`Not_enough_funds) => raise(Noop("not enough funds"))
   | Error(`Unknown_entrypoint) => raise(Noop("unknown entrypoint"))
+  | Error(`No_ticket_in_transaction) =>
+    raise(Noop("no ticket in transaction"))
+  | Error(`Invalid_ticket) => raise(Noop("no ticket in transaction"))
   };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height

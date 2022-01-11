@@ -108,8 +108,7 @@ describe("protocol state", ({test, _}) => {
             ~nonce=0l,
             ~block_height=0L,
             ~source,
-            ~kind=
-              Transaction({destination, amount: Amount.of_int(7), ticket}),
+            ~kind=Transaction({destination, parameter: failwith("todo")}),
           ),
         );
       assert(result == `Transaction);
@@ -128,13 +127,7 @@ describe("protocol state", ({test, _}) => {
           ~nonce=0l,
           ~block_height=0L,
           ~source,
-          ~kind=
-            Transaction({
-              destination,
-
-              amount: Amount.of_int(501),
-              ticket,
-            }),
+          ~kind=Transaction({destination, parameter: failwith("todo")}),
         ),
       );
     assert(result == `Transaction);

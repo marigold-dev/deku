@@ -34,3 +34,4 @@ let split:
 let join:
   (Handle.t, Handle.t, t) =>
   result((Handle.t, t), [> | `Invalid_ticket | `Unlike_tickets]);
+let get_id: (Handle.t, t) => option(Ticket_id.t);

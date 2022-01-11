@@ -90,3 +90,7 @@ let join = (handle_a, handle_b, table) => {
     Error(`Unlike_tickets);
   };
 };
+
+let get_id = (handle, {next_key: _, map}) => {
+  M.find_opt(handle, map) |> Option.map(ticket => ticket.id);
+};
