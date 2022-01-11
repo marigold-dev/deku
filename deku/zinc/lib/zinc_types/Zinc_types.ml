@@ -215,8 +215,10 @@ module Make (D : Domain_types) = struct
 end
 
 module Domain = struct
+  open Bin_prot.Std
+
   module Address = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -226,7 +228,7 @@ module Domain = struct
   end
 
   module Key = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -234,7 +236,7 @@ module Domain = struct
   end
 
   module Key_hash = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -242,7 +244,7 @@ module Domain = struct
   end
 
   module Hash = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -250,7 +252,7 @@ module Domain = struct
   end
 
   module Contract = struct
-    type t = string * string option [@@deriving show, eq, yojson]
+    type t = string * string option [@@deriving show, eq, yojson, bin_io]
 
     let _ = pp
 
@@ -260,7 +262,7 @@ module Domain = struct
   end
 
   module Chain_id = struct
-    type t = string [@@deriving show, eq, yojson]
+    type t = string [@@deriving show, eq, yojson, bin_io]
 
     let _ = pp
 

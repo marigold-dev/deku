@@ -45,6 +45,13 @@ module Executor : Zinc_interpreter.Dummy.Executor = struct
   let key_hash s = s ^ "hash"
 end
 
+let%test _ =
+  let open Zinc_interpreter.Dummy in
+  let code = Ir.Num Z.one in
+  let written = Bin_prot.Utils.bin_dump Ir.bin_writer_t code in
+  let[@warning "-8"] (Ir.Num x) = Ir.bin_read_t ~pos_ref:(ref 0) written in
+  Z.equal x Z.one
+
 let%expect_test _ =
   let open Zinc_interpreter.Dummy in
   let open Interpreter in

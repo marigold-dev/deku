@@ -22,7 +22,9 @@ end
 type label = int [@@deriving show {with_path = false}, eq, yojson]
 
 module LMap = struct
-  type 'a t = 'a array [@@deriving yojson, ord, eq, show]
+  open Bin_prot.Std
+
+  type 'a t = 'a array [@@deriving yojson, ord, eq, show, bin_io]
 
   let of_list (lst : 'a list) : 'a t = lst |> Array.of_list
 

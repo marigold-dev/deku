@@ -4,6 +4,7 @@ open Zinc_interpreter_intf
 
 module Make (D : Domain_types) = struct
   module Types = Zinc_types.Make (D)
+  module Ir = Zinc_instructions.Instructions.Make (D)
 
   module type Executor =
     Executor
@@ -236,8 +237,10 @@ module Make (D : Domain_types) = struct
 end
 
 module Dummy_domain = struct
+  open Bin_prot.Std
+
   module Hash = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -245,7 +248,7 @@ module Dummy_domain = struct
   end
 
   module Address = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -253,7 +256,7 @@ module Dummy_domain = struct
   end
 
   module Contract = struct
-    type t = string * string option [@@deriving show, eq, yojson]
+    type t = string * string option [@@deriving show, eq, yojson, bin_io]
 
     let _ = pp
 
@@ -263,7 +266,7 @@ module Dummy_domain = struct
   end
 
   module Key = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -271,7 +274,7 @@ module Dummy_domain = struct
   end
 
   module Key_hash = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 
@@ -279,7 +282,7 @@ module Dummy_domain = struct
   end
 
   module Chain_id = struct
-    type t = string [@@deriving eq, yojson]
+    type t = string [@@deriving eq, yojson, bin_io]
 
     let to_string = Fun.id
 

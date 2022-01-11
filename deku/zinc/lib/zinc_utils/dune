@@ -2,12 +2,13 @@
  (name zinc_utils)
  (public_name zinc.utils)
  (modules Zinc_utils)
- (libraries zarith digestif base)
+ (libraries zarith digestif base bin_prot)
  (preprocess
   (pps
    ppx_deriving.show
    ppx_deriving.ord
    ppx_deriving.eq
    ppx_deriving.map
-   ppx_deriving_yojson))
+   ppx_deriving_yojson
+   ppx_bin_prot))
  (ppx_runtime_libraries ppx_deriving_yojson.runtime))

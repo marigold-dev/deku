@@ -1,5 +1,5 @@
 {
-  "checksum": "f0172ea757231bbdd12c7c274fdcb0d2",
+  "checksum": "479c2626597b50ab2fa86dd3eec8d7c1",
   "root": "zinc@link-dev:./package.json",
   "node": {
     "zinc@link-dev:./package.json": {
@@ -16,8 +16,10 @@
         "ocaml@4.12.0@d41d8cd9", "@opam/zarith@opam:1.12@232cc7f2",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
+        "@opam/ppx_bin_prot@opam:v0.14.0@4a83bcd2",
         "@opam/dune@opam:2.9.1@1e504822",
         "@opam/digestif@opam:1.1.0@a8d16625",
+        "@opam/bin_prot@opam:v0.14.0@2d7601e9",
         "@opam/base@opam:v0.14.2@04880a76"
       ],
       "devDependencies": [

@@ -11,6 +11,15 @@ module Make (D : Domain_types) : sig
        and type Zinc.Hash.t := D.Hash.t
        and type Zinc.Key_hash.t := D.Key_hash.t
 
+  module Ir :
+    Zinc_instructions.Instructions.S
+      with type Key.t := D.Key.t
+       and type Address.t := D.Address.t
+       and type Contract.t := D.Contract.t
+       and type Chain_id.t := D.Chain_id.t
+       and type Hash.t := D.Hash.t
+       and type Key_hash.t := D.Key_hash.t
+
   module type Executor =
     Executor
       with type key := D.Key.t
@@ -40,6 +49,15 @@ module Dummy : sig
        and type Zinc.Contract.t := string * string option
        and type Zinc.Chain_id.t := string
        and type Zinc.Hash.t := string
+
+  module Ir :
+    Zinc_instructions.Instructions.S
+      with type Key.t := string
+      with type Key_hash.t := string
+       and type Address.t := string
+       and type Contract.t := string * string option
+       and type Chain_id.t := string
+       and type Hash.t := string
 
   module type Executor =
     Executor

@@ -1,0 +1,7 @@
+(library
+ (name zinc_instructions)
+ (public_name zinc.zinc_instructions)
+ (libraries zinc_types zinc_utils zarith digestif base)
+ (preprocess
+  (pps ppx_deriving.show ppx_bin_prot))
+ (ppx_runtime_libraries ppx_deriving_yojson.runtime))

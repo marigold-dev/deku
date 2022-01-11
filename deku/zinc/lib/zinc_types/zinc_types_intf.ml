@@ -48,6 +48,8 @@ module type With_domain_derivation = sig
   include With_yojson with type t := t
 
   include With_string with type t := t
+
+  include Bin_prot.Binable.S with type t := t
 end
 
 module type Domain_types = sig

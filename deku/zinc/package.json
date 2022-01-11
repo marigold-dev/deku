@@ -28,7 +28,9 @@
     "@opam/ppx_deriving_yojson": "*",
     "@opam/zarith": "*",
     "@opam/digestif": "*",
-    "@opam/base": "*"
+    "@opam/base": "*",
+    "@opam/bin_prot": "*",
+    "@opam/ppx_bin_prot": "*"
   },
   "devDependencies": {
     "@opam/merlin": "*",

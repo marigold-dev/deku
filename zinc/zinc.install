@@ -1,0 +1,54 @@
+lib: [
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/META"
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/dune-package"
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/Zinc_interpreter.ml" {"interpreter/Zinc_interpreter.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/Zinc_interpreter.mli" {"interpreter/Zinc_interpreter.mli"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.a" {"interpreter/zinc_interpreter.a"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cma" {"interpreter/zinc_interpreter.cma"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmi" {"interpreter/zinc_interpreter.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmt" {"interpreter/zinc_interpreter.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmti" {"interpreter/zinc_interpreter.cmti"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmx" {"interpreter/zinc_interpreter.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmxa" {"interpreter/zinc_interpreter.cmxa"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__.cmi" {"interpreter/zinc_interpreter__.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__.cmt" {"interpreter/zinc_interpreter__.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__.cmx" {"interpreter/zinc_interpreter__.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__.ml" {"interpreter/zinc_interpreter__.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__Zinc_interpreter_intf.cmi" {"interpreter/zinc_interpreter__Zinc_interpreter_intf.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__Zinc_interpreter_intf.cmt" {"interpreter/zinc_interpreter__Zinc_interpreter_intf.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter__Zinc_interpreter_intf.cmx" {"interpreter/zinc_interpreter__Zinc_interpreter_intf.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter_intf.ml" {"interpreter/zinc_interpreter_intf.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/opam"
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/Zinc_types.ml" {"types/Zinc_types.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/Zinc_types.mli" {"types/Zinc_types.mli"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.a" {"types/zinc_types.a"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cma" {"types/zinc_types.cma"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmi" {"types/zinc_types.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmt" {"types/zinc_types.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmti" {"types/zinc_types.cmti"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmx" {"types/zinc_types.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmxa" {"types/zinc_types.cmxa"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__.cmi" {"types/zinc_types__.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__.cmt" {"types/zinc_types__.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__.cmx" {"types/zinc_types__.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__.ml" {"types/zinc_types__.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__Zinc_types_intf.cmi" {"types/zinc_types__Zinc_types_intf.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__Zinc_types_intf.cmt" {"types/zinc_types__Zinc_types_intf.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types__Zinc_types_intf.cmx" {"types/zinc_types__Zinc_types_intf.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types_intf.ml" {"types/zinc_types_intf.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/Zinc_utils.ml" {"utils/Zinc_utils.ml"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.a" {"utils/zinc_utils.a"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cma" {"utils/zinc_utils.cma"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cmi" {"utils/zinc_utils.cmi"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cmt" {"utils/zinc_utils.cmt"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cmx" {"utils/zinc_utils.cmx"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cmxa" {"utils/zinc_utils.cmxa"}
+]
+libexec: [
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/interpreter/zinc_interpreter.cmxs" {"interpreter/zinc_interpreter.cmxs"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/types/zinc_types.cmxs" {"types/zinc_types.cmxs"}
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/lib/zinc/utils/zinc_utils.cmxs" {"utils/zinc_utils.cmxs"}
+]
+doc: [
+  "/home/pavel/marigold/sidechain/zinc/_esy/default/store/b/zinc-6d07115c/install/default/doc/zinc/README.md"
+]

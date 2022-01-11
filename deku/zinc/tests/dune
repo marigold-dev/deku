@@ -1,6 +1,6 @@
 (library
  (name test_interpret)
- (libraries zinc.types zinc.utils zinc.interpreter)
+ (libraries zinc.types zinc.utils zinc.interpreter bin_prot base)
  (inline_tests)
  (preprocess
   (pps
