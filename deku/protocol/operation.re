@@ -56,9 +56,8 @@ module Side_chain = {
   [@deriving yojson]
   type kind =
     | Transaction({
+        parameter: Interpreter.Types.Stack_item.t,
         destination: Address.Implicit.t,
-        amount: Amount.t,
-        ticket: Ticket_id.t,
       })
     | Withdraw({
         owner: Tezos.Address.t,

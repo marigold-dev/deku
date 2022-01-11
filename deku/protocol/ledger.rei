@@ -25,7 +25,14 @@ let transfer:
     t
   ) =>
   result(t, [> | `Not_enough_funds]);
-
+let transfer_ticket:
+  (
+    ~source: Address.Implicit.t,
+    ~destination: Address.Implicit.t,
+    Ticket_table.Handle.t,
+    t
+  ) =>
+  result(t, [> | `Invalid_ticket | `Not_enough_funds]);
 // on chain ops
 let deposit: (Address.Implicit.t, Amount.t, Ticket.t, t) => t;
 let withdraw:

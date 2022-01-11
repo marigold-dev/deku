@@ -52,21 +52,99 @@ let apply_side_chain = {
     open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
-      | NonliteralValue(
-          Chain_operation(
-            Transaction(
-              parameter,
-              Interpreter.Types.Zinc.Contract.{address, entrypoint},
-            ),
-          ),
-        ) =>
-        Some(Invocation({destination: address, parameter, entrypoint}))
+      | NonliteralValue(Chain_operation(Transaction(_amount, _destination))) =>
+        failwith("unimplemented") /*
+        Some(
+          Transaction({
+            destination: failwith("waiting on address pr"),
+            amount: amount |> Z.to_int |> Amount.of_int,
+            ticket: failwith("what to do here?"),
+          }),
+        )*/
+
       | _ => None;
 
-  // validate operation
-  let block_height = operation.block_height;
-  if (block_height > state.block_height) {
-    raise(Noop("block in the future"));
+    let rec map_m = (f, l) =>
+      switch (l) {
+      | [] => Ok([])
+      | [x, ...xs] =>
+        let.ok x = f(x);
+        let.ok xs = map_m(f, xs);
+        Ok([x, ...xs]);
+      };
+
+    switch (kind) {
+    | Withdraw(_)
+    | Add_validator(_)
+    | Remove_validator(_)
+    | Originate_contract(_) => Error(assert(false))
+    | Invoke_contract(contract_hash, parameter) =>
+      let.ok (new_contract_storage, operation_kinds) =
+        Contract_storage.update_entry(
+          state.contracts_storage,
+          contract_hash,
+          contract_state => {
+            let.ok contract_state =
+              Option.to_result(~none=`Invalid_invocation, contract_state);
+            module Executor = {
+              let get_contract_opt = _ =>
+                failwith("Not implemented: get_contract_opt");
+              let chain_id = Block.genesis.hash;
+              let key_hash = Crypto.Key_hash.of_key;
+            };
+            open Interpreter;
+            open Types;
+            let initial_stack = [
+              Stack_item.Record([|parameter, contract_state.storage|]),
+            ];
+            let initial_state =
+              Interpreter.initial_state(~initial_stack, contract_state.code);
+            let interpretation_result =
+              Interpreter.eval((module Executor), initial_state);
+            Stack_item.(
+              switch (interpretation_result) {
+              | Success(_, [Record([|List(operations), storage|]), ..._]) =>
+                let stack_item_to_kind = x =>
+                  stack_item_to_kind(x)
+                  |> Option.to_result(~none=`Invalid_invocation);
+                let.ok operation_kinds =
+                  map_m(stack_item_to_kind, operations);
+                Ok(({...contract_state, storage}, operation_kinds));
+              | _ => Error(`Invalid_invocation)
+              }
+            );
+          },
+        );
+
+      let new_state = {...state, contracts_storage: new_contract_storage};
+      let.ok new_state =
+        apply_all_internal_operations(
+          new_state,
+          failwith(
+            "waiting on address pr, but this should be the current contract address",
+          ),
+          operation_kinds,
+        );
+      Ok(new_state);
+    | Transaction({parameter: NonliteralValue(Ticket(handle)), destination}) =>
+      let.ok ledger =
+        Ledger.transfer_ticket(
+          ~source=sender,
+          ~destination,
+          handle,
+          state.ledger,
+        );
+      Ok({...state, ledger});
+    | Transaction(_) => Error(`No_ticket_in_transaction)
+    };
+  }
+  and apply_all_internal_operations = (state, sender, operation_kinds) => {
+    fold_left_m(
+      (state, operation_kind) =>
+        apply_internal_operation(state, sender, operation_kind),
+      state,
+      operation_kinds,
+    );
   };
 
   if (Int64.add(block_height, maximum_old_block_height_operation)
@@ -176,18 +254,6 @@ let apply_side_chain = (state, operation) =>
   | Error(`No_ticket_in_transaction) =>
     raise(Noop("no ticket in transaction"))
   | Error(`Invalid_ticket) => raise(Noop("no ticket in transaction"))
-  | Error(`Invalid_argument_to_implicit_account) =>
-    raise(Noop("Invalid argument passed to implicit account"))
-  | Error(`Tried_to_use_entrypoint_for_implicit_account) =>
-    raise(
-      Noop(
-        "unknown entrypoint (on an implicit account, None is the only entrypoint)",
-      ),
-    )
-  | Error(`Invoked_contract_without_entrypoint) =>
-    raise(Noop("Invoked contract without entrypoint"))
-  | Error(`Implicit_account_invoking_contract_with_ticket) =>
-    raise(Noop("Implicit account invoking contract with ticket"))
   };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height
