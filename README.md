@@ -17,6 +17,16 @@ npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES iss
 yarn global add esy
 ```
 
+Alternatively, you can use the `nix` package manager with
+[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an
+environment preloaded with the correct dependencies, including `esy`:
+```
+nix --experimental-features "nix-command flakes" run
+```
+
+(We suggest using this [binary cache repository](https://app.cachix.org/cache/anmonteiro) to reduce
+build times)
+
 #### Tmuxinator (optional)
 
 Tmuxinator manages running multiple commands in a terminal session. We
