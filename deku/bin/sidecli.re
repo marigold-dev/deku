@@ -321,8 +321,9 @@ let create_transaction =
       ~source=wallet.address,
       ~kind=
         Transaction({
-          destination: received_address,
+          destination: Implicit(received_address),
           parameter: failwith("todo"),
+          entrypoint: None
         }),
     );
   let.await identity = read_identity(~node_folder);

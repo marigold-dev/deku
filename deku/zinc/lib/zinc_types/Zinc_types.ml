@@ -156,14 +156,16 @@ module Make (D : Domain_types) = struct
     and nonliteral_value =
       | Contract of Zinc.Contract.t
       | Chain_operation of chain_operation
-      | Ticket of Zinc.Ticket.t
+      | Ticket of Zinc.Ticket.t   
     [@@deriving show {with_path = false}, eq, yojson]
+
 
     and chain_operation =
-      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
+    
+    include Zinc_types_intf.With_default_derivation with type t := t
 
-    val to_string : t -> string
   end = struct
     type t =
       | Z of Zinc.instruction
@@ -182,7 +184,7 @@ module Make (D : Domain_types) = struct
     [@@deriving show {with_path = false}, eq, yojson]
 
     and chain_operation =
-      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
 
     let to_string = show

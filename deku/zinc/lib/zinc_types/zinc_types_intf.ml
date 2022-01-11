@@ -236,13 +236,10 @@ module type S = sig
       | Contract of Zinc.Contract.t
       | Chain_operation of chain_operation
       | Ticket of Zinc.Ticket.t
-    [@@deriving show {with_path = false}, eq, yojson]
 
-    and chain_operation =
-      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
-    [@@deriving show {with_path = false}, eq, yojson]
+    and chain_operation = Transaction of t * Zinc.Address.t
 
-    val to_string : t -> string
+    include With_default_derivation with type t := t
   end
 
   and Clos : sig

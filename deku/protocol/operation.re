@@ -57,7 +57,8 @@ module Side_chain = {
   type kind =
     | Transaction({
         parameter: Interpreter.Types.Stack_item.t,
-        destination: Address.Implicit.t,
+        destination: Address.t,
+        entrypoint: option(string),
       })
     | Withdraw({
         owner: Tezos.Address.t,
@@ -67,9 +68,8 @@ module Side_chain = {
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator)
     | Originate_contract(
-        (Interpreter.Types.Zinc.t, Interpreter.Types.Stack_item.t),
-      )
-    | Invoke_contract(Tezos.Contract_hash.t, Interpreter.Types.Stack_item.t);
+        (Interpreter.Types.Program.t, Interpreter.Types.Stack_item.t),
+      );
 
   [@deriving yojson]
   type t = {
