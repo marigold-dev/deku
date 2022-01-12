@@ -196,31 +196,7 @@ let apply_block = (state, block) => {
     );
   let state = {...state, protocol, recent_operation_results};
   let new_epoch = block.state_root_hash != old_state.protocol.state_root_hash;
-  let state =
-    if (new_epoch) {
-      let state = start_new_epoch(state);
-      let (new_snapshot, state) =
-        switch (get_next_hash(state)) {
-        | Some(snapshot) => (snapshot, state)
-        | None =>
-          let new_snapshot = Protocol.hash(old_state.protocol);
-          (
-            new_snapshot,
-            add_finished_hash(block.block_height, new_snapshot, state),
-          );
-        };
-      let state = add_finished_hash(block.block_height, new_snapshot, state);
-      let snapshots =
-        Snapshots.update(
-          ~new_snapshot,
-          ~applied_block_height=state.protocol.block_height,
-          state.snapshots,
-        );
-      {...state, snapshots};
-    } else {
-      state;
-    };
-
+  let state = if(new_epoch) start_new_epoch(state) else state;
   Lwt.async(() => {
     let protocol_bin = Marshal.to_string(state.protocol, []);
     let write_to_state_to_file = file_name => {
@@ -234,6 +210,10 @@ let apply_block = (state, block) => {
       );
     };
     let.await () = write_to_state_to_file("state.bin");
+    // There are also side-effects in flows.re when
+    // state hash finishes.
+    // TODO: co-locate these side-effects, since they
+    // should always happen together.
     if (new_epoch) {
       switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
       | Some(signatures) when Signatures.is_self_signed(signatures) =>
