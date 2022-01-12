@@ -1,5 +1,6 @@
 open Helpers;
 open Crypto;
+open Core;
 
 module Main_chain = {
   [@deriving yojson]

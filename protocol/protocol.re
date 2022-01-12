@@ -7,7 +7,6 @@ module Wallet = Wallet;
 module Ledger = Ledger;
 module Ticket = Ticket;
 module Validators = Validators;
-module Amount = Amount;
 module Block = Block;
 module Operation = Operation;
 

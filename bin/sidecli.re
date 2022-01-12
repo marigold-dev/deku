@@ -4,6 +4,7 @@ open Node;
 open State;
 open Protocol;
 open Cmdliner;
+open Core;
 
 Printexc.record_backtrace(true);
 

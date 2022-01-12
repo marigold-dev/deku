@@ -1,4 +1,5 @@
-[@deriving ord]
+[@deriving (eq, ord)]
+// TODO: this should definitely be using Z.t
 type t = int;
 
 let zero = 0;
