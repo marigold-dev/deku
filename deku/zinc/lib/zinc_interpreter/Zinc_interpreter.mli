@@ -2,15 +2,6 @@ open Zinc_types
 open Zinc_interpreter_intf
 
 module Make (D : Domain_types) : sig
-  module Types :
-    Zinc_types.S
-      with type Zinc.Key.t := D.Key.t
-       and type Zinc.Address.t := D.Address.t
-       and type Zinc.Contract.t := D.Contract.t
-       and type Zinc.Chain_id.t := D.Chain_id.t
-       and type Zinc.Hash.t := D.Hash.t
-       and type Zinc.Key_hash.t := D.Key_hash.t
-
   module Ir :
     Zinc_instructions.Instructions.S
       with type Key.t := D.Key.t
@@ -19,6 +10,15 @@ module Make (D : Domain_types) : sig
        and type Chain_id.t := D.Chain_id.t
        and type Hash.t := D.Hash.t
        and type Key_hash.t := D.Key_hash.t
+
+  module Types :
+    Zinc_types.S
+      with type Zinc.Key.t := D.Key.t
+       and type Zinc.Address.t := D.Address.t
+       and type Zinc.Contract.t := D.Contract.t
+       and type Zinc.Chain_id.t := D.Chain_id.t
+       and type Zinc.Hash.t := D.Hash.t
+       and type Zinc.Key_hash.t := D.Key_hash.t
 
   module type Executor =
     Executor
@@ -31,25 +31,22 @@ module Make (D : Domain_types) : sig
 
   module Interpreter : sig
     val initial_state :
-      ?initial_stack:Types.Stack.t -> Types.Zinc.t -> Types.Interpreter_input.t
+      ?initial_stack:Ir.Zt.Stack.t -> Ir.Zt.Zinc.t -> Ir.Zt.Interpreter_input.t
 
     val eval :
       (module Executor) ->
-      Types.Interpreter_input.t ->
+      Ir.Zt.Interpreter_input.t ->
       Types.Interpreter_output.t
+
+    val eval' :
+      (module Executor) ->
+      debug:bool ->
+      Ir.t list * Ir.t list * Ir.t list ->
+      Ir.t list * Ir.t list
   end
 end
 
 module Dummy : sig
-  module Types :
-    Zinc_types.S
-      with type Zinc.Key.t := string
-      with type Zinc.Key_hash.t := string
-       and type Zinc.Address.t := string
-       and type Zinc.Contract.t := string * string option
-       and type Zinc.Chain_id.t := string
-       and type Zinc.Hash.t := string
-
   module Ir :
     Zinc_instructions.Instructions.S
       with type Key.t := string
@@ -58,6 +55,15 @@ module Dummy : sig
        and type Contract.t := string * string option
        and type Chain_id.t := string
        and type Hash.t := string
+
+  module Types :
+    Zinc_types.S
+      with type Zinc.Key.t := string
+      with type Zinc.Key_hash.t := string
+       and type Zinc.Address.t := string
+       and type Zinc.Contract.t := string * string option
+       and type Zinc.Chain_id.t := string
+       and type Zinc.Hash.t := string
 
   module type Executor =
     Executor
@@ -70,11 +76,17 @@ module Dummy : sig
 
   module Interpreter : sig
     val initial_state :
-      ?initial_stack:Types.Stack.t -> Types.Zinc.t -> Types.Interpreter_input.t
+      ?initial_stack:Ir.Zt.Stack.t -> Ir.Zt.Zinc.t -> Ir.Zt.Interpreter_input.t
 
     val eval :
       (module Executor) ->
-      Types.Interpreter_input.t ->
+      Ir.Zt.Interpreter_input.t ->
       Types.Interpreter_output.t
+
+    val eval' :
+      (module Executor) ->
+      debug:bool ->
+      Ir.t list * Ir.t list * Ir.t list ->
+      Ir.t list * Ir.t list
   end
 end

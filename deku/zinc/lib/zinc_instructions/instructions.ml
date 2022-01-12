@@ -87,11 +87,11 @@ module type S = sig
     | List of t list
     | Variant of {tag : int; value : t}
     | Marker of {code : t list; env : t list}
-  [@@deriving bin_io]
+  [@@deriving bin_io, show, eq]
 
-  val of_typed : Zt.Zinc.t -> t
+  val of_typed : Zt.Zinc.t -> t list
 
-  val of_typed_stack : Zt.Stack.t -> t
+  val of_typed_stack : Zt.Stack.t -> t list
 end
 
 module Make (D : Zinc_types.Domain_types) = struct
@@ -120,12 +120,43 @@ module Make (D : Zinc_types.Domain_types) = struct
     end
   end
 
-  module Key = D.Key
-  module Key_hash = D.Key_hash
-  module Hash = D.Hash
-  module Chain_id = D.Chain_id
-  module Address = D.Address
-  module Contract = D.Contract
+  open D
+
+  module Hash = struct
+    include Hash
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
+
+  module Address = struct
+    include Address
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
+
+  module Key = struct
+    include Key
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
+
+  module Key_hash = struct
+    include Key_hash
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
+
+  module Contract = struct
+    include Contract
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
+
+  module Chain_id = struct
+    include Chain_id
+
+    let pp fmt t = Caml.Format.fprintf fmt "%s" (to_string t)
+  end
 
   type t =
     | Grab
@@ -170,7 +201,7 @@ module Make (D : Zinc_types.Domain_types) = struct
     | List of t list
     | Variant of {tag : int; value : t}
     | Marker of {code : t list; env : t list}
-  [@@deriving bin_io]
+  [@@deriving bin_io, show, eq]
 
   open Zt
 

@@ -46,7 +46,7 @@ module type S = sig
   type t =
     | Grab
     | Return
-    | PushRetAddr of t
+    | PushRetAddr of t list
     | Apply
     | Access of int
     | Closure of t list
@@ -86,7 +86,11 @@ module type S = sig
     | List of t list
     | Variant of {tag : int; value : t}
     | Marker of {code : t list; env : t list}
-  [@@deriving bin_io]
+  [@@deriving bin_io, show, eq]
+
+  val of_typed : Zt.Zinc.t -> t list
+
+  val of_typed_stack : Zt.Stack.t -> t list
 end
 
 module Make (D : Zinc_types.Domain_types) :

@@ -3,8 +3,8 @@ open Zinc_types
 open Zinc_interpreter_intf
 
 module Make (D : Domain_types) = struct
-  module Types = Zinc_types.Make (D)
   module Ir = Zinc_instructions.Instructions.Make (D)
+  module Types = Ir.Zt
 
   module type Executor =
     Executor
@@ -43,14 +43,14 @@ module Make (D : Domain_types) = struct
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
       let apply_once (code : Zinc.t) env stack =
-        let _ =
-          print_endline
-            (Format.asprintf
-               "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
-               (Zinc.to_string code)
-               (Env.to_string env)
-               (Stack.to_string stack))
-        in
+        (* let _ =
+             print_endline
+               (Format.asprintf
+                  "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
+                  (Zinc.to_string code)
+                  (Env.to_string env)
+                  (Stack.to_string stack))
+           in *)
         let open Zinc in
         match (code, env, stack) with
         | ( Operation Or :: c,
@@ -231,6 +231,133 @@ module Make (D : Domain_types) = struct
         | Steps.Failwith s -> Interpreter_output.Failure s
         | Steps.Internal_error s -> failwith s
         | Steps.Continue (code, env, stack) -> loop code env stack
+      in
+      loop code env stack
+
+    let[@warning "-4"] eval' (module E : Executor) ~debug
+        ((code, env, stack) : Ir.t list * Ir.t list * Ir.t list) :
+        Ir.t list * Ir.t list =
+      let rec loop code env stack =
+        let _ =
+          if debug then
+            print_endline
+              (Format.asprintf
+                 "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
+                 ([%derive.show: Ir.t list] code)
+                 ([%derive.show: Ir.t list] env)
+                 ([%derive.show: Ir.t list] stack))
+          else ()
+        in
+        let open Ir in
+        match (code, stack) with
+        | (Or :: c, (Bool x as x') :: (Bool _ as y') :: stack) ->
+            let return = if x then x' else y' in
+            loop c env (return :: stack)
+        | (And :: c, (Bool x as x') :: (Bool _ as y') :: stack) ->
+            let return = if x then y' else x' in
+            loop c env (return :: stack)
+        | (Not :: c, Bool x :: stack) ->
+            let return = Bool (not x) in
+            loop c env (return :: stack)
+        | (Nil :: c, s) -> loop c env (List [] :: s)
+        | (Cons :: c, item :: List x :: s) -> loop c env (List (item :: x) :: s)
+        | (Grab :: c, Marker {code = c'; env = e'} :: s) ->
+            loop c' e' (Clos {code = Grab :: c; env} :: s)
+        | (Grab :: c, v :: s) -> loop c (v :: env) s
+        | (Grab :: _, []) -> failwith "nothing to grab!"
+        | (Return :: _, v :: Marker {code = c'; env = e'} :: s) ->
+            loop c' e' (v :: s)
+        | (Return :: _, Clos {code = c'; env = e'} :: s) -> loop c' e' s
+        | (PushRetAddr c' :: c, s) -> loop c env (Marker {code = c'; env} :: s)
+        | (Apply :: _, Clos {code = c'; env = e'} :: s) -> loop c' e' s
+        (* Below here is just modern SECD *)
+        | (Access n :: c, s) -> (
+            let nth = Base.List.nth env n in
+            match nth with
+            | Some nth -> loop c env (nth :: s)
+            | None -> failwith "Tried to access env item out of bounds")
+        | (Closure c' :: c, s) -> loop c env (Clos {code = c'; env} :: s)
+        | (EndLet :: c, s) -> loop c (List.tl env) s
+        (* zinc extensions *)
+        (* operations that jsut drop something on the stack haha *)
+        | ( (( Num _ | Address _ | Key _ | Hash _ | Bool _ | String _ | Mutez _
+             | Bytes _ ) as v)
+            :: c,
+            s ) ->
+            loop c env (v :: s)
+        (* ADTs *)
+        | (MakeRecord r :: c, s) ->
+            let list_split_at ~n lst =
+              let rec go n acc = function
+                | [] ->
+                    if Int.equal n 0 then (acc, [])
+                    else
+                      raise (Invalid_argument "not enough entries on the list")
+                | x when Int.equal n 0 -> (acc, x)
+                | x :: xs -> go (n - 1) (x :: acc) xs
+              in
+              go n [] lst
+            in
+            let (record, stack) = list_split_at ~n:r s in
+            let record_contents = LMap.of_list (List.rev record) in
+            loop c env (Record record_contents :: stack)
+        | (RecordAccess accessor :: c, Record r :: s) ->
+            let res =
+              let res = LMap.find r accessor in
+              loop c env (res :: s)
+            in
+            res
+        | (MatchVariant vs :: c, Variant {tag = label; value = item} :: s) ->
+            let match_code = LMap.find vs label in
+            loop (List.concat [match_code; c]) env (item :: s)
+        | (MatchVariant vs :: c, Bool b :: s) ->
+            let label = if b then 1 else 0 in
+            let item = Record [||] in
+            let match_code = LMap.find vs label in
+            loop (List.concat [match_code; c]) env (item :: s)
+        | (MakeVariant label :: c, value :: s) ->
+            loop c env (Variant {tag = label; value} :: s)
+        (* Math *)
+        | (Add :: c, Num a :: Num b :: s) -> loop c env (Num (Z.add a b) :: s)
+        | (Add :: c, Mutez a :: Mutez b :: s) ->
+            loop c env (Mutez (Z.add a b) :: s)
+        (* Booleans *)
+        | (Eq :: c, a :: b :: s) ->
+            (* This is not constant time, which is bad *)
+            loop c env (Bool (Ir.equal a b) :: s)
+        (* Crypto *)
+        | (HashKey :: c, Key key :: s) ->
+            let h = E.key_hash key in
+            loop c env (Key_hash h :: s)
+        (* Tezos specific *)
+        | (ChainID :: c, s) ->
+            loop
+              c
+              env
+              (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
+                 Also probably shouldn't use key like this. *)
+              (Chain_id E.chain_id :: s)
+        | (Contract_opt :: c, Address address :: s) ->
+            (* todo: abstract this into a function *)
+            let contract =
+              match E.get_contract_opt address with
+              | Some contract -> Variant {tag = 0; value = Contract contract}
+              | None -> Variant {tag = 1; value = Record [||]}
+            in
+            loop c env (contract :: s)
+        | (MakeTransaction :: c, r :: Mutez amount :: Contract contract :: s)
+          when Ir.equal r (Record [||]) ->
+            loop c env (Transaction (amount, contract) :: s)
+        (* should be unreachable except when program is done *)
+        | ([Return], _) -> (env, stack)
+        | (Failwith :: _, String s :: _) -> failwith s
+        (* should not be reachable *)
+        | (x :: _, _) ->
+            failwith (Format.asprintf "%s unimplemented!" (Ir.show x))
+        | _ ->
+            failwith
+              (Format.asprintf
+                 "somehow ran out of code without hitting return!")
       in
       loop code env stack
   end
