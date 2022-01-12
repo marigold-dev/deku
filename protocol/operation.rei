@@ -8,7 +8,7 @@ module Main_chain: {
     | Deposit({
         destination: Address.t,
         amount: Amount.t,
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
       });
 
   [@deriving (ord, yojson)]
@@ -39,12 +39,12 @@ module Side_chain: {
     | Transaction({
         destination: Address.t,
         amount: Amount.t,
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
       })
     | Withdraw({
         owner: Tezos.Address.t,
         amount: Amount.t,
-        ticket: Ticket.t,
+        ticket: Ticket_id.t,
       })
     | Add_validator(Validators.validator)
     | Remove_validator(Validators.validator);

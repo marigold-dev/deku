@@ -4,7 +4,6 @@ include Exn_noop;
 module Signature = Protocol_signature;
 module Wallet = Wallet;
 module Ledger = Ledger;
-module Ticket = Ticket;
 module Validators = Validators;
 module Block = Block;
 module Operation = Operation;
