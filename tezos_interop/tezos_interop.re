@@ -252,7 +252,6 @@ module Consensus = {
         ~handles_hash,
         ~validators,
         ~signatures,
-        ~current_validator_keys,
       ) => {
     module Payload = {
       [@deriving to_yojson]
@@ -267,17 +266,20 @@ module Consensus = {
       };
     };
     open Payload;
-    let signatures =
-      // TODO: we should sort the map using the keys
+    let (current_validator_keys, signatures) =
       List.map(
-        ((_key, signature)) =>
-          Option.map(signature => Signature.to_string(signature), signature),
+        signature =>
+          switch (signature) {
+          | Some((key, signature)) =>
+            let key = Key.to_string(key);
+            let signature = Signature.to_string(signature);
+            (Some(key), Some(signature));
+          | None => (None, None)
+          },
         signatures,
-      );
+      )
+      |> List.split;
     let validators = List.map(Key_hash.to_string, validators);
-
-    let current_validator_keys =
-      List.map(Option.map(Key.to_string), current_validator_keys);
 
     let payload = {
       block_height,
