@@ -77,7 +77,9 @@ module Run_contract = {
         Yojson.Safe.to_string(input_to_yojson(input)),
       );
     switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
-    | Ok(data) => await(data)
+    | Ok(data) =>
+      Format.printf("Commit operation result: %s\n%!", output);
+      await(data);
     | Error(error) => await(Error(error))
     };
   };
