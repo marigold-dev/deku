@@ -91,7 +91,12 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let signatures_map =
     signatures
     |> Signatures.to_list
-    |> List.map(Signature.signature_to_signature_by_address)
+    |> List.map(signature => {
+         let address = Signature.address(signature);
+         let key = Signature.public_key(signature);
+         let signature = Signature.signature(signature);
+         (address, (key, signature));
+       })
     |> List.to_seq
     |> Address_map.of_seq;
 
@@ -105,32 +110,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     old_state.protocol.validators
     |> Validators.to_list
     |> List.map(validator => validator.Validators.address)
-    |> List.map(wallet =>
-         (
-           Address.to_key_hash(wallet),
-           Address_map.find_opt(wallet, signatures_map),
-         )
-       );
-  let signatures_of_block =
-    Block_pool.find_signatures(~hash=block.Block.hash, state.block_pool)
-    |> Option.map(Signatures.to_list);
-
-  let current_validator_keys =
-    List.map(
-      ((signer_key, _signature_opt)) => {
-        let.some signatures_of_block = signatures_of_block;
-        let.some validator_signature =
-          List.find_opt(
-            s => {
-              let key_hash = Signature.address(s) |> Address.to_key_hash;
-              Key_hash.equal(signer_key, key_hash);
-            },
-            signatures_of_block,
-          );
-        some(Signature.public_key(validator_signature));
-      },
-      signatures,
-    );
+    |> List.map(address => Address_map.find_opt(address, signatures_map));
 
   Lwt.async(() => {
     /* TODO: solve this magic number
@@ -147,7 +127,6 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
       ~state_hash=block.state_root_hash,
       ~validators,
       ~signatures,
-      ~current_validator_keys,
     );
   });
 };
