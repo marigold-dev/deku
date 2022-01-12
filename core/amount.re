@@ -6,12 +6,15 @@ let zero = 0;
 let (+) = (+);
 let (-) = (a, b) => {
   let t = a - b;
-  assert(t >= 0);
+  if (t < 0) {
+    raise(Invalid_argument("Negative amount"));
+  };
   t;
 };
 let of_int = t => {
-  // TODO: test this, should amount be non-zero?
-  assert(t >= 0);
+  if (t < 0) {
+    raise(Invalid_argument("Negative amount"));
+  };
   t;
 };
 let to_int = t => t;
