@@ -47,7 +47,7 @@ module type S = sig
   type t =
     | Grab
     | Return
-    | PushRetAddr of t
+    | PushRetAddr of t list
     | Apply
     | Access of int
     | Closure of t list
@@ -130,7 +130,7 @@ module Make (D : Zinc_types.Domain_types) = struct
   type t =
     | Grab
     | Return
-    | PushRetAddr of t
+    | PushRetAddr of t list
     | Apply
     | Access of int
     | Closure of t list
@@ -172,7 +172,87 @@ module Make (D : Zinc_types.Domain_types) = struct
     | Marker of {code : t list; env : t list}
   [@@deriving bin_io]
 
-  let of_typed = failwith "Simple"
+  open Zt
 
-  let of_typed_stack = failwith "simple"
+  let rec of_typed lst = List.map ~f:typed_match lst
+
+  and typed_match = function
+    | Zinc.Core c -> of_core c
+    | Zinc.Plain_old_data c -> of_plain c
+    | Zinc.Adt c -> of_adt c
+    | Zinc.Operation o -> of_operation o
+    | Zinc.Domain_specific_operation d -> of_domain_specific_operation d
+    | Zinc.Control_flow c -> of_control_flow c
+
+  and of_core = function
+    | Zinc.Grab -> Grab
+    | Zinc.Return -> Return
+    | Zinc.Access n -> Access n
+    | Zinc.Apply -> Apply
+    | Zinc.Closure z -> Closure (of_typed z)
+    | Zinc.EndLet -> EndLet
+    | Zinc.PushRetAddr z -> PushRetAddr (of_typed z)
+
+  and of_plain = function
+    | Zinc.Bool b -> Bool b
+    | Zinc.String s -> String s
+    | Zinc.Num z -> Num z
+    | Zinc.Mutez z -> Mutez z
+    | Zinc.Nil -> Nil
+    | Zinc.Bytes b -> Bytes b
+    | Zinc.Address a -> Address a
+    | Zinc.Key a -> Key a
+    | Zinc.Hash a -> Hash a
+    | Zinc.Key_hash a -> Key_hash a
+    | Zinc.Chain_id c -> Chain_id c
+
+  and of_adt = function
+    | Zinc.MakeRecord n -> MakeRecord n
+    | Zinc.MakeVariant n -> MakeVariant n
+    | Zinc.MatchVariant t -> MatchVariant (Array.map ~f:of_typed t)
+    | Zinc.RecordAccess n -> RecordAccess n
+
+  and of_operation = function
+    | Zinc.Eq -> Eq
+    | Zinc.Add -> Add
+    | Zinc.Cons -> Cons
+    | Zinc.HashKey -> HashKey
+    | Zinc.Or -> Or
+    | Zinc.And -> And
+    | Zinc.Not -> Not
+
+  and of_domain_specific_operation = function
+    | Zinc.ChainID -> ChainID
+    | Zinc.Contract_opt -> Contract_opt
+    | Zinc.MakeTransaction -> MakeTransaction
+
+  and of_control_flow = function Zinc.Failwith -> Failwith
+
+  let rec of_typed_stack lst = List.map ~f:of_stack_match lst
+
+  and of_stack_match = function
+    | Stack_item.Z d -> typed_match d
+    | Stack_item.NonliteralValue d -> of_nonlit d
+    | Stack_item.Clos {Clos.code; env} ->
+        Clos {code = of_typed code; env = of_env env}
+    | Stack_item.Record r -> Record (Array.map ~f:of_stack_match r)
+    | Stack_item.List l -> List (of_typed_stack l)
+    | Stack_item.Variant (l, t) -> Variant {tag = l; value = of_stack_match t}
+    | Stack_item.Marker (instructions, env) ->
+        Marker {code = of_typed instructions; env = of_env env}
+
+  and of_env lst = List.map ~f:of_env_match lst
+
+  and of_env_match = function
+    | Env_item.Z d -> typed_match d
+    | Env_item.NonliteralValue d -> of_nonlit d
+    | Env_item.Clos {Clos.code; env} ->
+        Clos {code = of_typed code; env = of_env env}
+    | Env_item.Record r -> Record (Array.map ~f:of_stack_match r)
+    | Env_item.List l -> List (of_typed_stack l)
+    | Env_item.Variant (l, t) -> Variant {tag = l; value = of_stack_match t}
+
+  and of_nonlit = function
+    | Zinc.Contract c -> Contract c
+    | Zinc.Chain_operation (Zinc.Transaction (x, y)) -> Transaction (x, y)
 end
