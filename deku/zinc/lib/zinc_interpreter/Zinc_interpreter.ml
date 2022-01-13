@@ -218,8 +218,9 @@ module Make (D : Domain_types) = struct
         | (x :: _, _, _) ->
             Steps.Internal_error
               (Format.asprintf
-                 "%s unimplemented!"
-                 (Zinc.instruction_to_string x))
+                 "%s unimplemented!\n stack: %s "
+                 (Zinc.instruction_to_string x)
+                 (Stack.to_string stack))
         | _ ->
             Steps.Internal_error
               (Format.asprintf
@@ -234,14 +235,17 @@ module Make (D : Domain_types) = struct
       in
       loop code env stack
 
-    let[@warning "-4"] eval' (module E : Executor) ~debug
-        ((code, env, stack) : Ir.t list * Ir.t list * Ir.t list) :
-        Ir.t list * Ir.t list =
-      let rec loop code env stack =
-        let _ =
+    let unit_record = Ir.Record [||]
+
+    module G = Gas_counter_intf.Dummy_Gas (Ir)
+
+    let[@warning "-4"] eval' (module E : Executor) ~debug (code, env, stack) =
+      let counter = G.make () in
+      let rec loop code env stack gas =
+        let (_ : unit) =
           if debug then
             print_endline
-              (Format.asprintf
+              (Base.Printf.sprintf
                  "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
                  ([%derive.show: Ir.t list] code)
                  ([%derive.show: Ir.t list] env)
@@ -250,85 +254,82 @@ module Make (D : Domain_types) = struct
         in
         let open Ir in
         match (code, stack) with
+        | ([Return], _) -> (env, stack)
         | (Or :: c, (Bool x as x') :: (Bool _ as y') :: stack) ->
             let return = if x then x' else y' in
-            loop c env (return :: stack)
+            loop c env (return :: stack) (G.simple gas)
         | (And :: c, (Bool x as x') :: (Bool _ as y') :: stack) ->
             let return = if x then y' else x' in
-            loop c env (return :: stack)
+            loop c env (return :: stack) (G.simple gas)
         | (Not :: c, Bool x :: stack) ->
             let return = Bool (not x) in
-            loop c env (return :: stack)
-        | (Nil :: c, s) -> loop c env (List [] :: s)
-        | (Cons :: c, item :: List x :: s) -> loop c env (List (item :: x) :: s)
-        | (Grab :: c, Marker {code = c'; env = e'} :: s) ->
-            loop c' e' (Clos {code = Grab :: c; env} :: s)
-        | (Grab :: c, v :: s) -> loop c (v :: env) s
+            loop c env (return :: stack) (G.simple gas)
+        | (Nil :: c, s) -> loop c env (List [] :: s) gas
+        | (Cons :: c, item :: List x :: s) ->
+            loop c env (List (item :: x) :: s) (G.simple gas)
+        | (Grab :: _, Marker {code = c'; env = e'} :: s) ->
+            loop c' e' (Clos {code; env} :: s) (G.simple gas)
+        | (Grab :: c, v :: s) -> loop c (v :: env) s (G.simple gas)
         | (Grab :: _, []) -> failwith "nothing to grab!"
         | (Return :: _, v :: Marker {code = c'; env = e'} :: s) ->
-            loop c' e' (v :: s)
-        | (Return :: _, Clos {code = c'; env = e'} :: s) -> loop c' e' s
-        | (PushRetAddr c' :: c, s) -> loop c env (Marker {code = c'; env} :: s)
-        | (Apply :: _, Clos {code = c'; env = e'} :: s) -> loop c' e' s
+            loop c' e' (v :: s) (G.simple gas)
+        | (Return :: _, Clos {code = c'; env = e'} :: s) ->
+            loop c' e' s (G.simple gas)
+        | (PushRetAddr c' :: c, s) ->
+            loop c env (Marker {code = c'; env} :: s) (G.simple gas)
+        | (Apply :: _, Clos {code = c'; env = e'} :: s) ->
+            loop c' e' s (G.simple gas)
         (* Below here is just modern SECD *)
-        | (Access n :: c, s) -> (
-            let nth = Base.List.nth env n in
-            match nth with
-            | Some nth -> loop c env (nth :: s)
-            | None -> failwith "Tried to access env item out of bounds")
-        | (Closure c' :: c, s) -> loop c env (Clos {code = c'; env} :: s)
-        | (EndLet :: c, s) -> loop c (List.tl env) s
+        | (Access n :: c, s) ->
+            loop c env (Base.List.nth_exn env n :: s) (G.simple_n gas n)
+        | (Closure c' :: c, s) ->
+            loop c env (Clos {code = c'; env} :: s) (G.simple gas)
+        | (EndLet :: c, s) -> loop c (List.tl env) s gas
         (* zinc extensions *)
         (* operations that jsut drop something on the stack haha *)
         | ( (( Num _ | Address _ | Key _ | Hash _ | Bool _ | String _ | Mutez _
              | Bytes _ ) as v)
             :: c,
             s ) ->
-            loop c env (v :: s)
+            loop c env (v :: s) (G.sized gas ~item:v)
         (* ADTs *)
         | (MakeRecord r :: c, s) ->
-            let list_split_at ~n lst =
-              let rec go n acc = function
-                | [] ->
-                    if Int.equal n 0 then (acc, [])
-                    else
-                      raise (Invalid_argument "not enough entries on the list")
-                | x when Int.equal n 0 -> (acc, x)
-                | x :: xs -> go (n - 1) (x :: acc) xs
-              in
-              go n [] lst
-            in
-            let (record, stack) = list_split_at ~n:r s in
-            let record_contents = LMap.of_list (List.rev record) in
-            loop c env (Record record_contents :: stack)
+            let (record, stack) = Base.List.split_n s r in
+            let record_contents = LMap.of_list record in
+            loop c env (Record record_contents :: stack) (G.simple_n gas r)
         | (RecordAccess accessor :: c, Record r :: s) ->
-            let res =
-              let res = LMap.find r accessor in
-              loop c env (res :: s)
-            in
-            res
+            let res = LMap.find r accessor in
+            loop c env (res :: s) (G.simple gas)
         | (MatchVariant vs :: c, Variant {tag = label; value = item} :: s) ->
             let match_code = LMap.find vs label in
-            loop (List.concat [match_code; c]) env (item :: s)
+            loop (List.concat [match_code; c]) env (item :: s) (G.simple gas)
         | (MatchVariant vs :: c, Bool b :: s) ->
             let label = if b then 1 else 0 in
-            let item = Record [||] in
             let match_code = LMap.find vs label in
-            loop (List.concat [match_code; c]) env (item :: s)
+            loop
+              (List.concat [match_code; c])
+              env
+              (unit_record :: s)
+              (G.simple gas)
         | (MakeVariant label :: c, value :: s) ->
-            loop c env (Variant {tag = label; value} :: s)
+            loop
+              c
+              env
+              (Variant {tag = label; value} :: s)
+              (G.sized gas ~item:value)
         (* Math *)
-        | (Add :: c, Num a :: Num b :: s) -> loop c env (Num (Z.add a b) :: s)
+        | (Add :: c, Num a :: Num b :: s) ->
+            loop c env (Num (Z.add a b) :: s) (G.simple gas)
         | (Add :: c, Mutez a :: Mutez b :: s) ->
-            loop c env (Mutez (Z.add a b) :: s)
+            loop c env (Mutez (Z.add a b) :: s) (G.simple gas)
         (* Booleans *)
         | (Eq :: c, a :: b :: s) ->
             (* This is not constant time, which is bad *)
-            loop c env (Bool (Ir.equal a b) :: s)
+            loop c env (Bool (Ir.equal a b) :: s) (G.simple gas)
         (* Crypto *)
         | (HashKey :: c, Key key :: s) ->
             let h = E.key_hash key in
-            loop c env (Key_hash h :: s)
+            loop c env (Key_hash h :: s) (G.simple gas)
         (* Tezos specific *)
         | (ChainID :: c, s) ->
             loop
@@ -337,20 +338,20 @@ module Make (D : Domain_types) = struct
               (* TODO: fix this usage of Digestif.BLAKE2B.hmac_string - should use an effect system or smth.
                  Also probably shouldn't use key like this. *)
               (Chain_id E.chain_id :: s)
+              (G.simple gas)
         | (Contract_opt :: c, Address address :: s) ->
             (* todo: abstract this into a function *)
             let contract =
               match E.get_contract_opt address with
               | Some contract -> Variant {tag = 0; value = Contract contract}
-              | None -> Variant {tag = 1; value = Record [||]}
+              | None -> Variant {tag = 1; value = unit_record}
             in
-            loop c env (contract :: s)
-        | (MakeTransaction :: c, r :: Mutez amount :: Contract contract :: s)
-          when Ir.equal r (Record [||]) ->
-            loop c env (Transaction (amount, contract) :: s)
+            loop c env (contract :: s) (G.simple gas)
+        | ( MakeTransaction :: c,
+            Record [||] :: Mutez amount :: Contract contract :: s ) ->
+            loop c env (Transaction (amount, contract) :: s) (G.simple gas)
         (* should be unreachable except when program is done *)
-        | ([Return], _) -> (env, stack)
-        | (Failwith :: _, String s :: _) -> failwith s
+        | (Failwith :: _, String s :: _) -> failwith s (* should be a failure *)
         (* should not be reachable *)
         | (x :: _, _) ->
             failwith (Format.asprintf "%s unimplemented!" (Ir.show x))
@@ -359,7 +360,7 @@ module Make (D : Domain_types) = struct
               (Format.asprintf
                  "somehow ran out of code without hitting return!")
       in
-      loop code env stack
+      loop code env stack counter
   end
 end
 

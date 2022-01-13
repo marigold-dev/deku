@@ -28,12 +28,12 @@ module type S = sig
 
   module Zt :
     Zinc_types.S
-      with type Zinc.Key.t := Key.t
-       and type Zinc.Address.t := Address.t
-       and type Zinc.Contract.t := Contract.t
-       and type Zinc.Chain_id.t := Chain_id.t
-       and type Zinc.Hash.t := Hash.t
-       and type Zinc.Key_hash.t := Key_hash.t
+      with type Zinc.Key.t = Key.t
+       and type Zinc.Address.t = Address.t
+       and type Zinc.Contract.t = Contract.t
+       and type Zinc.Chain_id.t = Chain_id.t
+       and type Zinc.Hash.t = Hash.t
+       and type Zinc.Key_hash.t = Key_hash.t
 
   module Z : sig
     include module type of struct
@@ -95,9 +95,9 @@ end
 
 module Make (D : Zinc_types.Domain_types) :
   S
-    with type Key.t := D.Key.t
-     and type Address.t := D.Address.t
-     and type Contract.t := D.Contract.t
-     and type Chain_id.t := D.Chain_id.t
-     and type Hash.t := D.Hash.t
-     and type Key_hash.t := D.Key_hash.t
+    with type Key.t = D.Key.t
+     and type Address.t = D.Address.t
+     and type Contract.t = D.Contract.t
+     and type Chain_id.t = D.Chain_id.t
+     and type Hash.t = D.Hash.t
+     and type Key_hash.t = D.Key_hash.t

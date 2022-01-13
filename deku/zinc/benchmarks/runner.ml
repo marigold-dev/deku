@@ -2,12 +2,15 @@ open Base
 open Core_bench
 open Zinc_interpreter.Dummy
 open Ir.Zt.Zinc
-open Z
 
 let convert zinc =
-  let from = List.nth_exn zinc 0 |> snd |> Ir.Zt.Zinc.to_yojson in
+  let from =
+    List.nth_exn zinc (List.length zinc - 1) |> snd |> Ir.Zt.Zinc.to_yojson
+  in
   let to_ = Ir.Zt.Zinc.of_yojson from |> Result.ok_or_failwith in
   to_
+
+open Z
 
 let prog1 =
   let list =
@@ -178,27 +181,16 @@ let prog3 =
         Core Grab;
         Plain_old_data (Num ~$3);
         Core Grab;
-        Core Grab;
-        Core (Access 0);
-        Core Grab;
-        Core (Access 0);
-        Core Grab;
-        Core (Access 0);
-        Adt (RecordAccess 1);
-        Core Grab;
-        Core (Access 1);
-        Adt (RecordAccess 0);
-        Core Grab;
-        Core (Access 1);
-        Core (Access 0);
+        Plain_old_data (Bool true);
+        Plain_old_data (Bool false);
         Operation Or;
         Core Grab;
         Core (Access 0);
         Adt
           (MatchVariant
              [|
-               [Core Grab; Core (Access 7); Core Return];
-               [Core Grab; Core (Access 8); Core Return];
+               [Core Grab; Core (Access 2); Core Return];
+               [Core Grab; Core (Access 3); Core Return];
              |]);
       ] );
   ]
@@ -227,6 +219,7 @@ let tests () =
   let prog3' = (prog3', [], []) in
   let prog3 = Interpreter.initial_state prog3 in
   let test name f = Bench.Test.create f ~name in
+  let (ex, _, _) = prog1' in
   [
     test "old_eval list_cons" (fun _ -> runner1 prog1);
     test "new_eval list_cons" (fun _ -> runner2 prog1');
@@ -234,6 +227,7 @@ let tests () =
     test "new_eval bools" (fun _ -> runner2 prog2');
     test "old_eval if_then_else" (fun _ -> runner1 prog3);
     test "new_eval if_then_else" (fun _ -> runner2 prog3');
+    test "bin_prot sizer" (fun _ -> Bin_prot.Std.bin_size_list Ir.bin_size_t ex);
   ]
 
 let () = tests () |> Bench.make_command |> Core.Command.run

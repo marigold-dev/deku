@@ -29,12 +29,12 @@ module type S = sig
 
   module Zt :
     Zinc_types.S
-      with type Zinc.Key.t := Key.t
-       and type Zinc.Address.t := Address.t
-       and type Zinc.Contract.t := Contract.t
-       and type Zinc.Chain_id.t := Chain_id.t
-       and type Zinc.Hash.t := Hash.t
-       and type Zinc.Key_hash.t := Key_hash.t
+      with type Zinc.Key.t = Key.t
+       and type Zinc.Address.t = Address.t
+       and type Zinc.Contract.t = Contract.t
+       and type Zinc.Chain_id.t = Chain_id.t
+       and type Zinc.Hash.t = Hash.t
+       and type Zinc.Key_hash.t = Key_hash.t
 
   module Z : sig
     include module type of struct
@@ -201,7 +201,7 @@ module Make (D : Zinc_types.Domain_types) = struct
     | List of t list
     | Variant of {tag : int; value : t}
     | Marker of {code : t list; env : t list}
-  [@@deriving bin_io, show, eq]
+  [@@deriving bin_io, show {with_path = false}, eq]
 
   open Zt
 
