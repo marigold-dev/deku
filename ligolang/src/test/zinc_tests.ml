@@ -1,8 +1,9 @@
 open Zinc_utils
-module Zinc_types = Zinc_types.Raw
-open Zinc_types
 module Zinc_interpreter = Zinc_interpreter.Dummy
+open Zinc_interpreter.Types
 open Zinc_interpreter
+open Zinc
+open Types.Stack_item
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
 module Executor : Executor = struct

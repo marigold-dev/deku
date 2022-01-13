@@ -7,13 +7,13 @@ module Make (D : Domain_types) = struct
 
   module type Executor =
     Executor
-      with type key := D.Key.t
-      with type key_hash := D.Key_hash.t
-       and type address := D.Address.t
+      with type key := Types.Zinc.Key.t
+      with type key_hash := Types.Zinc.Key_hash.t
+       and type address := Types.Zinc.Address.t
        and type contract := D.Contract.t
-       and type chain_id := D.Chain_id.t
-       and type ticket := D.Ticket.t
-       and type hash := D.Hash.t
+       and type chain_id := Types.Zinc.Chain_id.t
+       and type ticket := Types.Zinc.Ticket.t
+       and type hash := Types.Zinc.Hash.t
 
   module Interpreter = struct
     open Types
