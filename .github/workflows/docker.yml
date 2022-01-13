@@ -35,5 +35,5 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
-            marigold-dev/deku:latest
-            marigold-dev/deku:${{ github.sha }}
+            ghcr.io/marigold-dev/deku:latest
+            ghcr.io/marigold-dev/deku:${{ github.sha }}
