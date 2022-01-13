@@ -282,18 +282,18 @@ module Make (D : Domain_types) = struct
               | None -> Stack_item.Variant (1, Utils.unit_record_stack)
             in
             Steps.Continue (c, env, contract :: s)
-        (* TODO: fix, MakeTransaction is totally wrong,   *)
         | ( Domain_specific_operation MakeTransaction :: c,
             env,
-            r
-            :: Stack_item.Z (Plain_old_data (Mutez _amount))
-               :: Stack_item.(Z (Plain_old_data (Address address)) :: s ))
-          when Stack_item.equal r Utils.unit_record_stack ->
+            parameter
+            :: Stack_item.Z (Plain_old_data (Mutez amount))
+               :: Stack_item.(NonliteralValue (Contract contract) :: s) )
+          when Z.equal amount Z.zero ->
             Steps.Continue
               ( c,
                 env,
-                Stack_item.(NonliteralValue
-                  (Chain_operation (Transaction (Utils.unit_record_stack, address))))
+                Stack_item.(
+                  NonliteralValue
+                    (Chain_operation (Transaction (parameter, contract))))
                 :: s )
         (* should be unreachable except when program is done *)
         | ([Core Return], _, _) -> Steps.Done

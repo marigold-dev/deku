@@ -161,7 +161,7 @@ module Make (D : Domain_types) = struct
 
 
     and chain_operation =
-      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
     
     include Zinc_types_intf.With_default_derivation with type t := t
@@ -184,7 +184,7 @@ module Make (D : Domain_types) = struct
     [@@deriving show {with_path = false}, eq, yojson]
 
     and chain_operation =
-      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
 
     let to_string = show

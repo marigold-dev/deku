@@ -2,15 +2,13 @@ open Zinc_utils
 module Zinc_interpreter = Zinc_interpreter.Dummy
 open Zinc_interpreter.Types
 open Zinc_interpreter
-open Zinc 
-open Types.Stack_item 
+open Zinc
+open Types.Stack_item
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
 module Executor : Executor = struct
   let get_contract_opt a = Some Contract.{ address = a; entrypoint = None }
-
   let chain_id = "chain id goes here"
-
   let key_hash s = s ^ "hash"
 end
 (* Helpers *)
@@ -99,7 +97,7 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
         Alcotest.(check string)
           (Printf.sprintf "converting %s to json" contract_file)
           expected_json
-          (zinc |> Program.to_yojson |> Yojson.Safe.to_string)
+          (Program.to_yojson zinc |> Yojson.Safe.to_string)
     | _ -> ()
   in
   let () =
@@ -369,82 +367,6 @@ let match_on_sum =
                  address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
                  entrypoint = None;
                });
-      ]
-
-let increment_contract =
-  let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "increment_contract"
-    [
-      ( "main",
-        [
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Adt (RecordAccess 1);
-          Core Grab;
-          Core (Access 1);
-          Adt (RecordAccess 0);
-          Core Grab;
-          Plain_old_data (Num one);
-          Core (Access 1);
-          Operation Add;
-          Plain_old_data Nil;
-          Adt (MakeRecord 2);
-          Core Return;
-        ] );
-    ]
-    ~initial_stack:
-      [
-        Types.Stack_item.Record
-          [|
-            Utils.unit_record_stack;
-            Types.Stack_item.Z (Plain_old_data (Num ~$5));
-          |];
-      ]
-    ~expected_output:
-      [
-        Types.Stack_item.Record
-          [|
-            Types.Stack_item.List [];
-            Types.Stack_item.Z (Plain_old_data (Num ~$6));
-          |];
-      ]
-    ~expected_json:
-      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
-
-let increment_contract_bad_parameter =
-  let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO
-    ~expect_failure:"(Operation Add) unimplemented!" "increment_contract"
-    [
-      ( "main",
-        [
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Adt (RecordAccess 1);
-          Core Grab;
-          Core (Access 1);
-          Adt (RecordAccess 0);
-          Core Grab;
-          Plain_old_data (Num one);
-          Core (Access 1);
-          Operation Add;
-          Plain_old_data Nil;
-          Adt (MakeRecord 2);
-          Core Return;
-        ] );
-    ]
-    ~initial_stack:
-      [
-        Types.Stack_item.Record
-          [| Utils.unit_record_stack; Utils.unit_record_stack |];
       ]
 
 let super_simple_contract =

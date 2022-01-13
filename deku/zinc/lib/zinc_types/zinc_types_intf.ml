@@ -237,7 +237,9 @@ module type S = sig
       | Chain_operation of chain_operation
       | Ticket of Zinc.Ticket.t
 
-    and chain_operation = Transaction of t * Zinc.Address.t
+    and chain_operation =
+      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
+    [@@deriving show {with_path = false}, eq, yojson]
 
     include With_default_derivation with type t := t
   end
@@ -283,11 +285,11 @@ module Dummy_domain = struct
   module Address = struct
     type t = string [@@deriving eq, yojson]
 
-    let to_string s = Printf.sprintf "\"%s\"" s
+    let to_string = Fun.id
 
     let equal (t1 : t) (t2 : t) = equal t1 t2
 
-    let of_string a = Some (String.sub a 1 (String.length a - 2))
+    let of_string a = Some a
   end
 
   module Key = struct
