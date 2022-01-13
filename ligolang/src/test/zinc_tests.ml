@@ -59,6 +59,14 @@ let expect_stack =
          (fun ppf stack -> Fmt.pf ppf "%s" (Types.Stack.to_string stack))
          Types.Stack.equal))
 
+let expect_stack_item =
+  Alcotest.(
+    check
+      (Alcotest.testable
+         (fun ppf stack_item ->
+           Fmt.pf ppf "%s" (Types.Stack_item.to_string stack_item))
+         Types.Stack_item.equal))
+
 type test =
   raise:Main_errors.all Trace.raise ->
   add_warning:(Main_warnings.all -> unit) ->
@@ -91,8 +99,15 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
         Alcotest.(check string)
           (Printf.sprintf "converting %s to json" contract_file)
           expected_json
-          (Program.to_yojson zinc |> Yojson.Safe.to_string)
+          (zinc |> Program.to_yojson |> Yojson.Safe.to_string)
     | _ -> ()
+  in
+  let () =
+    expect_program
+      (Printf.sprintf "converting %s to and from json" contract_file)
+      zinc
+      (zinc |> Program.to_yojson |> Yojson.Safe.to_string
+     |> Yojson.Safe.from_string |> Program.of_yojson |> Result.get_ok)
   in
   let index = match index with None -> List.length zinc - 1 | Some n -> n in
   match
@@ -372,7 +387,7 @@ let super_simple_contract =
           Core (Access 1);
           Adt (RecordAccess 0);
           Core Grab;
-          Plain_old_data (Num ~$1);
+          Core (Access 0);
           Core (Access 1);
           Operation Add;
           Plain_old_data Nil;
@@ -384,7 +399,7 @@ let super_simple_contract =
       [
         Types.Stack_item.Record
           [|
-            Types.Utils.unit_record_stack;
+            Z (Plain_old_data (Num ~$3));
             Types.Stack_item.Z (Plain_old_data (Num ~$1));
           |];
       ]
@@ -393,12 +408,29 @@ let super_simple_contract =
         Types.Stack_item.Record
           [|
             Types.Stack_item.List [];
-            Types.Stack_item.Z (Plain_old_data (Num ~$2));
+            Types.Stack_item.Z (Plain_old_data (Num ~$4));
           |];
       ]
     ~expected_json:
-      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
-(* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
+      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
+
+let stack_item_serialization ~raise:_ () =
+  let open Z in
+  let stack_item = Types.Stack_item.Z (Plain_old_data (Num ~$4)) in
+  let expected_json = "[\"Z\",[\"Plain_old_data\",[\"Num\",\"4\"]]]" in
+  let () =
+    Alcotest.(check string)
+      (Printf.sprintf "converting %s to json"
+         (stack_item |> Stack_item.to_string))
+      expected_json
+      (Stack_item.to_yojson stack_item |> Yojson.Safe.to_string)
+  in
+  expect_stack_item
+    (Printf.sprintf "converting %s from json"
+       (stack_item |> Stack_item.to_string))
+    stack_item
+    (Yojson.Safe.from_string expected_json
+    |> Stack_item.of_yojson |> Result.get_ok)
 
 let mutez_construction =
   expect_simple_compile_to ~dialect:ReasonLIGO "mutez_construction"
@@ -471,7 +503,7 @@ let create_transaction =
           Core EndLet;
           Core Grab;
           Core (Access 0);
-          Plain_old_data (Mutez ~$10);
+          Plain_old_data (Mutez zero);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Core Return;
@@ -519,7 +551,7 @@ let create_transaction_in_tuple =
           Plain_old_data
             (Key "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav");
           Core (Access 0);
-          Plain_old_data (Mutez ~$10);
+          Plain_old_data (Mutez zero);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Adt (MakeRecord 3);
@@ -1027,4 +1059,5 @@ let main =
       test_w "nontail_match" nontail_match;
       test_w "super_simple_contract" super_simple_contract;
       test_w "custom_variant_matching" custom_variant_matching;
+      test "stack_item serialization" stack_item_serialization;
     ]

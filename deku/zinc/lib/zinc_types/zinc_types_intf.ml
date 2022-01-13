@@ -286,11 +286,11 @@ module Dummy_domain = struct
   module Address = struct
     type t = string [@@deriving eq, yojson]
 
-    let to_string = Fun.id
+    let to_string s = Printf.sprintf "\"%s\"" s
 
     let equal (t1 : t) (t2 : t) = equal t1 t2
 
-    let of_string a = Some a
+    let of_string a = Some (String.sub a 1 (String.length a - 2))
   end
 
   module Key = struct
