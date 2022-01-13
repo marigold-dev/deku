@@ -11,6 +11,7 @@ type t = {
 };
 let public_key = t => t.public_key;
 let address = t => t.address;
+let signature = t => t.signature;
 
 let (to_yojson, of_yojson) = {
   module Serialized_data = {
@@ -40,7 +41,6 @@ let sign = (~key as secret, hash) => {
   let address = Address.of_key(public_key);
   {signature, public_key, address};
 };
-let signature_to_signature_by_address = t => (t.address, t.signature);
 let verify = (~signature, hash) =>
   Signature.verify(signature.public_key, signature.signature, hash);
 module type S = {

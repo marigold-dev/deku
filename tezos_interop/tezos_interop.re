@@ -246,7 +246,6 @@ module Consensus = {
   let commit_state_hash =
       (
         ~context,
-        ~block_hash,
         ~block_height,
         ~block_payload_hash,
         ~state_hash,
@@ -257,32 +256,39 @@ module Consensus = {
     module Payload = {
       [@deriving to_yojson]
       type t = {
-        block_hash: BLAKE2B.t,
         block_height: int64,
         block_payload_hash: BLAKE2B.t,
         signatures: list(option(string)),
         handles_hash: BLAKE2B.t,
         state_hash: BLAKE2B.t,
         validators: list(string),
+        current_validator_keys: list(option(string)),
       };
     };
     open Payload;
-    let signatures =
-      // TODO: we should sort the map using the keys
+    let (current_validator_keys, signatures) =
       List.map(
-        ((_key, signature)) =>
-          Option.map(signature => Signature.to_string(signature), signature),
+        signature =>
+          switch (signature) {
+          | Some((key, signature)) =>
+            let key = Key.to_string(key);
+            let signature = Signature.to_string(signature);
+            (Some(key), Some(signature));
+          | None => (None, None)
+          },
         signatures,
-      );
+      )
+      |> List.split;
     let validators = List.map(Key_hash.to_string, validators);
+
     let payload = {
-      block_hash,
       block_height,
       block_payload_hash,
       signatures,
       handles_hash,
       state_hash,
       validators,
+      current_validator_keys,
     };
     // TODO: what should this code do with the output? Retry?
     //      return back that it was a failure?

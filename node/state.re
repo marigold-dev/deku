@@ -91,7 +91,12 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
   let signatures_map =
     signatures
     |> Signatures.to_list
-    |> List.map(Signature.signature_to_signature_by_address)
+    |> List.map(signature => {
+         let address = Signature.address(signature);
+         let key = Signature.public_key(signature);
+         let signature = Signature.signature(signature);
+         (address, (key, signature));
+       })
     |> List.to_seq
     |> Address_map.of_seq;
 
@@ -105,12 +110,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     old_state.protocol.validators
     |> Validators.to_list
     |> List.map(validator => validator.Validators.address)
-    |> List.map(wallet =>
-         (
-           Address.to_key_hash(wallet),
-           Address_map.find_opt(wallet, signatures_map),
-         )
-       );
+    |> List.map(address => Address_map.find_opt(address, signatures_map));
 
   Lwt.async(() => {
     /* TODO: solve this magic number
@@ -121,7 +121,6 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
         ? Lwt.return_unit : Lwt_unix.sleep(120.0);
     commit_state_hash(
       state,
-      ~block_hash=block.hash,
       ~block_height=block.block_height,
       ~block_payload_hash=block.payload_hash,
       ~handles_hash=block.handles_hash,
