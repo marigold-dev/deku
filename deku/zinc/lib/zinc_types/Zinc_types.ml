@@ -29,12 +29,6 @@ module Make (D : Domain_types) = struct
       let pp fmt t = Format.fprintf fmt "%s" (to_string t)
     end
 
-    module Contract = struct
-      include Contract
-
-      let pp fmt t = Format.fprintf fmt "%s" (to_string t)
-    end
-
     module Chain_id = struct
       include Chain_id
 
@@ -45,6 +39,11 @@ module Make (D : Domain_types) = struct
       include Ticket
 
       let pp fmt t = Format.fprintf fmt "%s" (to_string t)
+    end
+
+    module Contract = struct
+      type t = {address : Address.t; entrypoint : string option}
+      [@@deriving show {with_path = false}, eq, yojson]
     end
 
     type core_instruction =
@@ -161,7 +160,7 @@ module Make (D : Domain_types) = struct
     [@@deriving show {with_path = false}, eq, yojson]
 
     and chain_operation =
-      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
 
     val to_string : t -> string
@@ -183,7 +182,7 @@ module Make (D : Domain_types) = struct
     [@@deriving show {with_path = false}, eq, yojson]
 
     and chain_operation =
-      | Transaction of t * Zinc.Address.t (* todo: add parameter *)
+      | Transaction of t * Zinc.Contract.t (* todo: add parameter *)
     [@@deriving show {with_path = false}, eq, yojson]
 
     let to_string = show
@@ -233,70 +232,4 @@ module Make (D : Domain_types) = struct
   end
 end
 
-module Domain = struct
-  module Address = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let equal (t1 : t) (t2 : t) = equal t1 t2
-
-    let of_string a = Some a
-  end
-
-  module Key = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string a = Some a
-  end
-
-  module Key_hash = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string a = Some a
-  end
-
-  module Hash = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string a = Some a
-  end
-
-  module Contract = struct
-    type t = string * string option [@@deriving show, eq, yojson]
-
-    let _ = pp
-
-    let to_string x = to_yojson x |> Yojson.Safe.to_string
-
-    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-  end
-
-  module Chain_id = struct
-    type t = string [@@deriving show, eq, yojson]
-
-    let _ = pp
-
-    let to_string x = to_yojson x |> Yojson.Safe.to_string
-
-    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-  end
-
-  module Ticket = struct
-    type t = int64 [@@deriving show, eq, yojson]
-
-    let _ = pp
-
-    let to_string x = to_yojson x |> Yojson.Safe.to_string
-
-    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-  end
-end
-
-module Raw = Make (Domain)
+module Raw = Make (Dummy_domain)

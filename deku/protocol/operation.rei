@@ -38,7 +38,7 @@ module Side_chain: {
     | Transaction({
         parameter: Interpreter.Types.Stack_item.t,
         destination: Address.t,
-        entrypoint: option(string)
+        entrypoint: option(string),
       })
     | Withdraw({
         owner: Tezos.Address.t,

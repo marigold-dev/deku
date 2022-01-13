@@ -1,6 +1,5 @@
 open Crypto;
 
-
 module Implicit: {
   [@deriving (ord, eq, yojson)]
   type t;
@@ -34,6 +33,9 @@ type t =
 
 let of_implicit: Implicit.t => t;
 let to_implicit: t => option(Implicit.t);
+
+let of_originated: Originated.t => t;
+let to_originated: t => option(Originated.t);
 
 let to_string: t => string;
 let of_string: string => option(t);

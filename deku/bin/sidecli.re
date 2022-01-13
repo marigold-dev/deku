@@ -109,11 +109,16 @@ let address_implicit = {
     Option.bind(Address.of_string(string), Address.to_implicit)
     |> Option.to_result(~none=`Msg("Expected a wallet address."));
   let printer = (fmt, wallet) =>
-    Format.fprintf(
-      fmt,
-      "%s",
-      wallet |> Address.Implicit.to_key_hash |> Key_hash.to_string,
-    );
+    Format.fprintf(fmt, "%s", wallet |> Address.Implicit.to_string);
+  Arg.(conv((parser, printer)));
+};
+
+let address_originated = {
+  let parser = string =>
+    Option.bind(Address.of_string(string), Address.to_originated)
+    |> Option.to_result(~none=`Msg("Expected a wallet address."));
+  let printer = (fmt, wallet) =>
+    Format.fprintf(fmt, "%s", wallet |> Address.Originated.to_string);
   Arg.(conv((parser, printer)));
 };
 
@@ -176,15 +181,14 @@ let hash = {
 // originate-contract
 
 let info_originate_contract = {
-  let doc = "Originates a contract to be executed on the sidechain";
+  let doc = "Invokes a contract";
   Term.info("originate-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
 
 let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   open Networking;
 
-  let contract =
-    Yojson.Safe.from_file(contract_json) |> Yojson.Safe.to_string;
+  let contract = Yojson.Safe.from_file(contract_json);
   module Zinc_interpreter = Protocol.Interpreter;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
@@ -193,10 +197,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
 
   let contract_program =
-    contract
-    |> Yojson.Safe.from_string
-    |> Zinc_interpreter.Types.Program.of_yojson
-    |> Result.get_ok;
+    contract |> Zinc_interpreter.Types.Program.of_yojson |> Result.get_ok;
 
   let originate_contract_op =
     Operation.Side_chain.sign(
@@ -222,13 +223,11 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
     );
   Lwt.return(`Ok());
 };
-
 let folder_node = {
   let docv = "folder_node";
   let doc = "The folder where the node lives.";
   Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
 };
-
 let originate_contract = {
   let contract_json = {
     let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
@@ -256,6 +255,92 @@ let originate_contract = {
   );
 };
 
+// invoke-contract
+
+let info_invoke_contract = {
+  let doc = "Originates a contract to be executed on the sidechain";
+  Term.info("invoke-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
+};
+
+let invoke_contract =
+    (node_folder, address_originated, parameter_json, sender_wallet_file) => {
+  open Networking;
+
+  let parameter = Yojson.Safe.from_file(parameter_json);
+  module Zinc_interpreter = Protocol.Interpreter;
+  let.await validators_uris = validators_uris(node_folder);
+  let validator_uri = List.hd(validators_uris);
+  let.await block_level_response = request_block_level((), validator_uri);
+  let block_level = block_level_response.level;
+  let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
+
+  let parameter =
+    parameter |> Zinc_interpreter.Types.Stack_item.of_yojson |> Result.get_ok;
+
+  let invoke_contract_op =
+    Operation.Side_chain.sign(
+      ~secret=wallet.priv_key,
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~source=wallet.address,
+      ~kind=
+        Transaction({
+          parameter,
+          destination: address_originated |> Address.of_originated,
+          entrypoint: Some("main"),
+        }),
+    );
+
+  let.await identity = read_identity(~node_folder);
+
+  let.await () =
+    Networking.request_user_operation_gossip(
+      Networking.User_operation_gossip.{user_operation: invoke_contract_op},
+      identity.uri,
+    );
+  Lwt.return(`Ok());
+};
+
+let invoke_contract = {
+  let parameter_json = {
+    let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
+    Arg.(
+      required
+      & pos(1, some(contract), None)
+      & info([], ~docv="contract", ~doc)
+    );
+  };
+
+  let address_originated = {
+    let doc = "The address of the contract to invoke";
+    let env = Arg.env_var("CONTRACT", ~doc);
+    Arg.(
+      required
+      & pos(2, some(address_originated), None)
+      & info([], ~env, ~docv="contract", ~doc)
+    );
+  };
+
+  let address_from = {
+    let doc = "The sending address, or a path to a wallet. If a bare sending address is provided, the corresponding wallet is assumed to be in the working directory.";
+    let env = Arg.env_var("SENDER", ~doc);
+    Arg.(
+      required
+      & pos(3, some(wallet), None)
+      & info([], ~env, ~docv="sender", ~doc)
+    );
+  };
+
+  Term.(
+    lwt_ret(
+      const(invoke_contract)
+      $ folder_node
+      $ address_originated
+      $ parameter_json
+      $ address_from,
+    )
+  );
+};
 // create-wallet
 
 let info_create_wallet = {
@@ -310,7 +395,7 @@ let create_transaction =
         Transaction({
           destination: Implicit(received_address),
           parameter: failwith("todo"),
-          entrypoint: None
+          entrypoint: None,
         }),
     );
   let.await identity = read_identity(~node_folder);
@@ -895,6 +980,7 @@ let () = {
       (add_trusted_validator, info_add_trusted_validator),
       (remove_trusted_validator, info_remove_trusted_validator),
       (originate_contract, info_originate_contract),
+      (invoke_contract, info_invoke_contract),
       (self, info_self),
     ],
   );

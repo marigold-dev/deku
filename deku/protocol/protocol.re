@@ -52,14 +52,15 @@ let apply_side_chain = {
     open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
-      | NonliteralValue(Chain_operation(Transaction(_amount, destination))) =>
-        Some(
-          Transaction({
-            destination: destination,
-            parameter: failwith("todo"),
-            entrypoint: failwith("todo"),
-          }),
-        )
+      | NonliteralValue(
+          Chain_operation(
+            Transaction(
+              parameter,
+              Interpreter.Types.Zinc.Contract.{address, entrypoint},
+            ),
+          ),
+        ) =>
+        Some(Transaction({destination: address, parameter, entrypoint}))
 
       | _ => None;
 
@@ -72,12 +73,17 @@ let apply_side_chain = {
         Ok([x, ...xs]);
       };
 
+    Printf.printf("%s\n", kind |> kind_to_yojson |> Yojson.Safe.to_string);
     switch (kind) {
     | Withdraw(_)
     | Add_validator(_)
     | Remove_validator(_)
     | Originate_contract(_) => Error(assert(false))
-    | Transaction({parameter, destination: Address.Originated(destination), entrypoint: Some(entrypoint)})  =>
+    | Transaction({
+        parameter,
+        destination: Address.Originated(destination),
+        entrypoint: Some(entrypoint),
+      }) =>
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
           state.contracts_storage,
@@ -128,7 +134,11 @@ let apply_side_chain = {
           operation_kinds,
         );
       Ok(new_state);
-    | Transaction({parameter: NonliteralValue(Ticket(handle)), destination: Implicit(destination),entrypoint: None}) =>
+    | Transaction({
+        parameter: NonliteralValue(Ticket(handle)),
+        destination: Implicit(destination),
+        entrypoint: None,
+      }) =>
       let.ok ledger =
         Ledger.transfer_ticket(
           ~source=sender,
@@ -189,8 +199,10 @@ let apply_side_chain = {
       let validators = Validators.remove(validator, state.validators);
       Ok((update_validators(validators), `Remove_validator));
     | Originate_contract((code, initial_storage)) =>
-      let contract_hash : Crypto.Contract_hash.t = operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
-      let new_address : Address.Originated.t = Address.Originated.(of_contract_hash(contract_hash));
+      let contract_hash: Crypto.Contract_hash.t =
+        operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
+      let new_address: Address.Originated.t =
+        Address.Originated.(of_contract_hash(contract_hash));
       let contract_state =
         Contract_storage.make_state(
           ~entrypoint=None,
@@ -205,6 +217,10 @@ let apply_side_chain = {
           new_address,
           contract_state,
         );
+      Printf.printf(
+        "originated contract with address %s\n",
+        new_address |> Address.Originated.to_string,
+      );
       Ok(({...state, contracts_storage: new_contract_state}, `Origination));
     | Withdraw({owner, amount, ticket}) =>
       let.ok (ledger, handle) =

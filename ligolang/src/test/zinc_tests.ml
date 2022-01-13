@@ -7,11 +7,9 @@ open Types.Stack_item
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
 module Executor : Executor = struct
-  let get_contract_opt a = Some (a, None)
+  let get_contract_opt a = Some Contract.{ address = a; entrypoint = None }
 
   let chain_id = "chain id goes here"
-
-  let hash = Fun.id
 
   let key_hash s = s ^ "hash"
 end
@@ -69,8 +67,8 @@ type test =
 
 let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
     ?index ?(initial_stack = []) ?expect_failure ?expected_output_env
-    ?expected_output ?expected_json contract_file
-    (expected_zinc : Zinc_types.Program.t) : test =
+    ?expected_output ?expected_json contract_file (expected_zinc : Program.t) :
+    test =
  fun ~raise ~add_warning () ->
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
@@ -93,7 +91,7 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
         Alcotest.(check string)
           (Printf.sprintf "converting %s to json" contract_file)
           expected_json
-          (Zinc_types.Program.to_yojson zinc |> Yojson.Safe.to_string)
+          (Program.to_yojson zinc |> Yojson.Safe.to_string)
     | _ -> ()
   in
   let index = match index with None -> List.length zinc - 1 | Some n -> n in
@@ -317,7 +315,9 @@ let get_contract_opt =
     ~expected_output:
       [
         Types.Stack_item.Variant
-          (0, Types.Stack_item.NonliteralValue (Contract ("whatever", None)));
+          ( 0,
+            Types.Stack_item.NonliteralValue
+              (Contract Contract.{ address = "whatever"; entrypoint = None }) );
       ]
 
 let match_on_sum =
@@ -347,7 +347,12 @@ let match_on_sum =
     ~expected_output:
       [
         Types.Stack_item.NonliteralValue
-          (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None));
+          (Contract
+             Contract.
+               {
+                 address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
+                 entrypoint = None;
+               });
       ]
 
 let super_simple_contract =
@@ -477,7 +482,12 @@ let create_transaction =
         Types.Stack_item.NonliteralValue
           (Chain_operation
              (Transaction
-                (Z.of_int 10, ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None))));
+                ( Utils.unit_record_stack,
+                  Contract.
+                    {
+                      address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
+                      entrypoint = None;
+                    } )));
       ]
 
 let create_transaction_in_tuple =
@@ -525,8 +535,12 @@ let create_transaction_in_tuple =
                  (Types.Stack_item.NonliteralValue
                     (Chain_operation
                        (Transaction
-                          ( Z.of_int 10,
-                            ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) ))))
+                          ( Utils.unit_record_stack,
+                            Contract.
+                              {
+                                address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
+                                entrypoint = None;
+                              } ))))
             |> add 1
                  (Types.Stack_item.Z
                     (Plain_old_data

@@ -1,8 +1,6 @@
 module type Executor = sig
   type address
 
-  type contract
-
   type hash
 
   type chain_id
@@ -12,6 +10,8 @@ module type Executor = sig
   type key
 
   type key_hash
+
+  type contract
 
   val get_contract_opt : address -> contract option
 

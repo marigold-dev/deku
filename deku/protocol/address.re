@@ -41,7 +41,7 @@ module Originated = {
   let of_yojson = of_yojson;
 
   let compare = compare;
-  let equal = equal
+  let equal = equal;
 };
 
 [@deriving (yojson, eq, ord)]
@@ -53,6 +53,13 @@ let of_implicit = implicit => Implicit(implicit);
 let to_implicit = t =>
   switch (t) {
   | Implicit(implicit) => Some(implicit)
+  | _ => None
+  };
+
+let of_originated = originated => Originated(originated);
+let to_originated = t =>
+  switch (t) {
+  | Originated(originated) => Some(originated)
   | _ => None
   };
 

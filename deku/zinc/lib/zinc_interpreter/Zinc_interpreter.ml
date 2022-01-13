@@ -10,10 +10,10 @@ module Make (D : Domain_types) = struct
       with type key := Types.Zinc.Key.t
       with type key_hash := Types.Zinc.Key_hash.t
        and type address := Types.Zinc.Address.t
-       and type contract := D.Contract.t
        and type chain_id := Types.Zinc.Chain_id.t
        and type ticket := Types.Zinc.Ticket.t
        and type hash := Types.Zinc.Hash.t
+       and type contract := Types.Zinc.Contract.t
 
   module Interpreter = struct
     open Types
@@ -196,18 +196,18 @@ module Make (D : Domain_types) = struct
               | None -> Stack_item.Variant (1, Utils.unit_record_stack)
             in
             Steps.Continue (c, env, contract :: s)
-        (* TODO: fix, MakeTransaction is totally wrong,   *)
         | ( Domain_specific_operation MakeTransaction :: c,
             env,
-            r
-            :: Stack_item.Z (Plain_old_data (Mutez _amount))
-               :: Stack_item.(Z (Plain_old_data (Address address)) :: s ))
-          when Stack_item.equal r Utils.unit_record_stack ->
+            parameter
+            :: Stack_item.Z (Plain_old_data (Mutez amount))
+               :: Stack_item.(NonliteralValue (Contract contract) :: s) )
+          when Z.equal amount Z.zero ->
             Steps.Continue
               ( c,
                 env,
-                Stack_item.(NonliteralValue
-                  (Chain_operation (Transaction (Utils.unit_record_stack, address))))
+                Stack_item.(
+                  NonliteralValue
+                    (Chain_operation (Transaction (parameter, contract))))
                 :: s )
         (* should be unreachable except when program is done *)
         | ([Core Return], _, _) -> Steps.Done
@@ -237,64 +237,4 @@ module Make (D : Domain_types) = struct
   end
 end
 
-module Dummy_domain = struct
-  module Hash = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string (x : string) : t option = Some x
-  end
-
-  module Address = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string (x : string) : t option = Some x
-  end
-
-  module Contract = struct
-    type t = string * string option [@@deriving show, eq, yojson]
-
-    let _ = pp
-
-    let to_string x = to_yojson x |> Yojson.Safe.to_string
-
-    let of_string x = Yojson.Safe.from_string x |> of_yojson |> Result.to_option
-  end
-
-  module Key = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string (x : string) : t option = Some x
-  end
-
-  module Key_hash = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string (x : string) : t option = Some x
-  end
-
-  module Chain_id = struct
-    type t = string [@@deriving eq, yojson]
-
-    let to_string = Fun.id
-
-    let of_string (x : string) : t option = Some x
-  end
-
-  module Ticket = struct
-    type t = int64 [@@deriving eq, yojson]
-
-    let to_string = Int64.to_string
-
-    let of_string = Int64.of_string_opt
-  end
-end
-
-module Dummy = Make (Dummy_domain)
+module Dummy = Make (Zinc_types.Dummy_domain)

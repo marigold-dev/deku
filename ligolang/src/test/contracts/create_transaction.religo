@@ -4,5 +4,5 @@ let a = {
   | Some (contract) => contract
   | None => (failwith ("Not a contract") : (contract(unit)))
   };
-  Tezos.transaction(unit, 10mutez, receiver) 
+  Tezos.transaction(unit, 0mutez, receiver) 
 }
