@@ -56,7 +56,6 @@ module Make (D : Domain_types) = struct
       (a, [], stack)
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
-      let _ = print_endline (Format.asprintf "interpreting ========") in
       let apply_once (code : Zinc.t) env stack =
         let open Zinc in
         match (code, env, stack) with
