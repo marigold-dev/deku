@@ -167,6 +167,73 @@ describe("protocol state", ({test, _}) => {
     // expect.list(Validators.validators(validators)).toEqual([new_validator]);
     // remove all validators
   });
+  test("contract origination and invocation", (_) => {
+    let (state, secret, source) = make_state();
+    let (key_b, address_b) = Address.Implicit.make();
+    open Operation.Side_chain;
+    open Interpreter.Types;
+    open Zinc;
+    let sign = (kind, i) =>
+      sign(~secret, ~nonce=i, ~block_height=0L, ~source, ~kind);
+
+    let contract = [
+      (
+        "main",
+        [
+          Core(Grab),
+          Core(Access(0)),
+          Core(Grab),
+          Core(Access(0)),
+          Core(Grab),
+          Core(Access(0)),
+          Adt(RecordAccess(1)),
+          Core(Grab),
+          Core(Access(1)),
+          Adt(RecordAccess(0)),
+          Core(Grab),
+          Core(Access(0)),
+          Core(Access(1)),
+          Operation(Add),
+          Plain_old_data(Nil),
+          Adt(MakeRecord(2)),
+          Core(Return),
+        ],
+      ),
+    ];
+    let storage = Stack_item.Z(Plain_old_data(Num(Z.zero)));
+    let parameter = Stack_item.Z(Plain_old_data(Num(Z.one)));
+    let origination = sign(Originate_contract((contract, storage)), 0l);
+    let contract_address =
+      origination |> to_contract_hash |> Protocol.Address.Originated.of_contract_hash;
+    let invocation =
+        Transaction({
+          parameter,
+          destination: Protocol.Address.(contract_address |> of_originated),
+          entrypoint: Some("main"),
+        });
+    let (state, result) = apply_side_chain(state, origination);
+    assert(result == `Origination);
+    let (state, result) = apply_side_chain(state, sign(invocation, 1l));
+    assert(result == `Transaction);
+    let (state, result) = apply_side_chain(state, sign(invocation, 2l));
+    assert(result == `Transaction);
+    switch (
+      Protocol.Contract_storage.(
+        contract_address |> get(state.contracts_storage)
+      )
+    ) {
+    | None =>
+      failwith("Contract wasn't in contract storage, it should have been")
+    | Some(contract) =>
+      assert(
+        Stack_item.equal(
+          contract.storage,
+          Stack_item.Z(Plain_old_data(Num(Z.of_int (2)))),
+        ),
+      )
+    };
+    ();
+  });
   // TODO: check on of_yojson
   /*
    test("invalid block height", _ => {

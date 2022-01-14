@@ -79,7 +79,7 @@ let apply_side_chain = {
     | (_, Remove_validator(_))
     | (_, Originate_contract(_)) => Error(assert(false))
     | (
-        sender,
+        _sender,
         Transaction({
           parameter,
           destination: Address.Originated(destination),
@@ -212,9 +212,9 @@ let apply_side_chain = {
       Ok((update_validators(validators), `Remove_validator));
     | Originate_contract((code, initial_storage)) =>
       let contract_hash: Crypto.Contract_hash.t =
-        operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
+        operation |> to_contract_hash;
       let new_address: Address.Originated.t =
-        Address.Originated.(of_contract_hash(contract_hash));
+        Address.Originated.(contract_hash |> of_contract_hash);
       let contract_state =
         Contract_storage.make_state(
           ~entrypoint=None,

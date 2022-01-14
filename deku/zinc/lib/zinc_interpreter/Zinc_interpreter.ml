@@ -72,7 +72,7 @@ module Make (D : Domain_types) = struct
               (c', e', Stack_item.Clos {Clos.code = Core Grab :: c; env} :: s)
         | (Core Grab :: c, env, v :: s) ->
             Steps.Continue (c, stack_to_env v :: env, s)
-        | (Core Grab :: _, _, []) -> Failwith "nothing to grab!"
+        | (Core Grab :: _, _, []) -> Steps.Failwith "nothing to grab!"
         | ( Core Return :: _,
             _,
             Stack_item.Z v :: Stack_item.Marker (c', e') :: s ) ->

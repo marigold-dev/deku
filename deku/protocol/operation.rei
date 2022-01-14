@@ -82,4 +82,6 @@ module Side_chain: {
       ~kind: kind
     ) =>
     result(t, string);
+
+  let to_contract_hash: t => Crypto.Contract_hash.t;
 };

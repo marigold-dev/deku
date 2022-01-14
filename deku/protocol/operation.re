@@ -121,4 +121,9 @@ module Side_chain = {
       of_yojson(json);
     verify(~hash, ~signature, ~nonce, ~block_height, ~source, ~kind);
   };
+
+  // TODO: This is the hash of the hash, which doesn't really add any security over just using the hash
+  let to_contract_hash = operation => {
+    operation.hash |> Crypto.BLAKE2B.to_string |> Crypto.BLAKE2B_20.hash;
+  };
 };
