@@ -27,12 +27,6 @@ nix --experimental-features "nix-command flakes" run
 (We suggest using this [binary cache repository](https://app.cachix.org/cache/anmonteiro) to reduce
 build times)
 
-#### Tmuxinator (optional)
-
-Tmuxinator manages running multiple commands in a terminal session. We
-provide [config file](./.tmuxinator.yml) to help you get started with
-it. 
-
 ### Testing
 
 We use [Rely](https://reason-native.com/docs/rely/) to write
@@ -64,23 +58,17 @@ Run `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku
 
 #### Start
 
+Simply run:
 
-If you have tmuxinator installed, simply run:
-```
-tmuxinator
-```
-
-This will open 3 shells for the node and one shell to inject the genesis block. You can stop the session by pressing `CTRL+B`
-and typing `:kill-session`.
-
-Alternatively, to run the nodes as background processes without tmuxinator, simply run
 ```
 ./start.sh
 ```
 
+This starts 3 nodes as background processes.
+
 You may have to stop the session with `killall deku-node` to fully shutdown the cluster.
 
-In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
+In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so. 
 
 ## Contributing
 
