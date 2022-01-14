@@ -24,7 +24,7 @@ module Make (D : Domain_types) = struct
 
     let stack_to_env = function
       | Stack_item.Marker _ ->
-          failwith "type error, cant convert a stack_item into an env_item"
+          failwith "type error, cant convert a stack_item marker into an env_item"
       | Stack_item.(
           Clos _ | Record _ | Variant _ | List _ | Z _ | NonliteralValue _) as x
         ->
@@ -42,6 +42,9 @@ module Make (D : Domain_types) = struct
       (a, [], stack)
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
+    let _ =
+      print_endline
+        (Format.asprintf "interpreting ========") in
       let apply_once (code : Zinc.t) env stack =
         let _ =
           print_endline
@@ -79,7 +82,7 @@ module Make (D : Domain_types) = struct
               (c', e', Stack_item.Clos {Clos.code = Core Grab :: c; env} :: s)
         | (Core Grab :: c, env, v :: s) ->
             Steps.Continue (c, stack_to_env v :: env, s)
-        | (Core Grab :: _, _, []) -> failwith "nothing to grab!"
+        | (Core Grab :: _, _, []) -> Failwith "nothing to grab!"
         | ( Core Return :: _,
             _,
             Stack_item.Z v :: Stack_item.Marker (c', e') :: s ) ->
@@ -230,7 +233,7 @@ module Make (D : Domain_types) = struct
         match apply_once code env stack with
         | Steps.Done -> Interpreter_output.Success (env, stack)
         | Steps.Failwith s -> Interpreter_output.Failure s
-        | Steps.Internal_error s -> failwith s
+        | Steps.Internal_error s -> Interpreter_output.Failure s
         | Steps.Continue (code, env, stack) -> loop code env stack
       in
       loop code env stack
