@@ -56,38 +56,7 @@ module Make (D : Domain_types) = struct
       (a, [], stack)
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
-      let rec stack_of_pack_result r =
-        let open Zinc in
-        let open E in
-        match r with
-        | Pack.Int z -> Ok (stack_of (Num z))
-        | Pack.String s -> Ok (stack_of (String s))
-        | Pack.Bytes b -> Ok (stack_of (Bytes b))
-        | Pack.Key k -> Ok (stack_of (Key k))
-        | Pack.Key_hash kh -> Ok (stack_of (Key_hash kh))
-        | Pack.Address a -> Ok (stack_of (Address a))
-        | Pack.Error s -> Error (Steps.Internal_error s)
-        | Pack.List l -> (
-            match has_err (List.map stack_of_pack_result l) with
-            | (_, true) ->
-                Error
-                  (Steps.Internal_error
-                     "Found invalid entry while unpacking list")
-            | (results, _) -> Ok (List.concat results @ stack_of Nil))
-      in
-      let pack_pod d =
-        let open E in
-        let open Zinc in
-        match d with
-        | Num n -> Ok (Pack.int n)
-        | Bytes b -> Ok (Pack.bytes b)
-        | String s -> Ok (Pack.string s)
-        | Key k -> Ok (Pack.key k)
-        | Key_hash kh -> Ok (Pack.key_hash kh)
-        | Address a -> Ok (Pack.address a)
-        | _ -> Error (Steps.Internal_error "Tried to pack unpackable type")
-      in
-
+      let _ = print_endline (Format.asprintf "interpreting ========") in
       let apply_once (code : Zinc.t) env stack =
         let open Zinc in
         match (code, env, stack) with
@@ -165,7 +134,7 @@ module Make (D : Domain_types) = struct
               (c', e', Stack_item.Clos {Clos.code = Core Grab :: c; env} :: s)
         | (Core Grab :: c, env, v :: s) ->
             Steps.Continue (c, stack_to_env v :: env, s)
-        | (Core Grab :: _, _, []) -> Steps.Failwith "nothing to grab!"
+        | (Core Grab :: _, _, []) -> Failwith "nothing to grab!"
         | ( Core Return :: _,
             _,
             Stack_item.Z v :: Stack_item.Marker (c', e') :: s ) ->
