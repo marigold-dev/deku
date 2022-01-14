@@ -48,7 +48,7 @@ let apply_side_chain = {
       let.ok acc = f(acc, x);
       fold_left_m(f, acc, xs);
     };
-  let rec apply_internal_operation = (state, sender, kind) => {
+  let rec apply_internal_operation = (state, sender: Address.t, kind) => {
     open Operation.Side_chain;
     let stack_item_to_kind: Interpreter.Types.Stack_item.t => option(kind) =
       fun
@@ -61,7 +61,6 @@ let apply_side_chain = {
           ),
         ) =>
         Some(Transaction({destination: address, parameter, entrypoint}))
-
       | _ => None;
 
     let rec map_m = (f, l) =>
@@ -74,16 +73,20 @@ let apply_side_chain = {
       };
 
     Printf.printf("%s\n", kind |> kind_to_yojson |> Yojson.Safe.to_string);
-    switch (kind) {
-    | Withdraw(_)
-    | Add_validator(_)
-    | Remove_validator(_)
-    | Originate_contract(_) => Error(assert(false))
-    | Transaction({
-        parameter,
-        destination: Address.Originated(destination),
-        entrypoint: Some(entrypoint),
-      }) =>
+    switch (sender, kind) {
+    | (_, Withdraw(_))
+    | (_, Add_validator(_))
+    | (_, Remove_validator(_))
+    | (_, Originate_contract(_)) => Error(assert(false))
+    | (
+        sender,
+        Transaction({
+          parameter,
+          destination: Address.Originated(destination),
+          entrypoint: Some(entrypoint),
+        }),
+      ) =>
+      Printf.printf("Transaction!\n");
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
           state.contracts_storage,
@@ -117,6 +120,10 @@ let apply_side_chain = {
                   |> Option.to_result(~none=`Invalid_invocation);
                 let.ok operation_kinds =
                   map_m(stack_item_to_kind, operations);
+                Printf.printf(
+                  "New storage: %s \n",
+                  storage |> Stack_item.to_string,
+                );
                 Ok(({...contract_state, storage}, operation_kinds));
               | _ => Error(`Invalid_invocation)
               }
@@ -128,17 +135,18 @@ let apply_side_chain = {
       let.ok new_state =
         apply_all_internal_operations(
           new_state,
-          failwith(
-            "waiting on address pr, but this should be the current contract address",
-          ),
+          Address.Originated(destination),
           operation_kinds,
         );
       Ok(new_state);
-    | Transaction({
-        parameter: NonliteralValue(Ticket(handle)),
-        destination: Implicit(destination),
-        entrypoint: None,
-      }) =>
+    | (
+        Address.Implicit(sender),
+        Transaction({
+          parameter: NonliteralValue(Ticket(handle)),
+          destination: Implicit(destination),
+          entrypoint: None,
+        }),
+      ) =>
       let.ok ledger =
         Ledger.transfer_ticket(
           ~source=sender,
@@ -147,7 +155,7 @@ let apply_side_chain = {
           state.ledger,
         );
       Ok({...state, ledger});
-    | Transaction(_) => Error(`No_ticket_in_transaction)
+    | (_, Transaction(_)) => Error(`No_ticket_in_transaction)
     };
   }
   and apply_all_internal_operations = (state, sender, operation_kinds) => {
@@ -184,7 +192,11 @@ let apply_side_chain = {
 
     let {source, _} = operation;
     let apply_internal_operation = (state, operation_kind) =>
-      apply_internal_operation(state, source, operation_kind);
+      apply_internal_operation(
+        state,
+        Address.Implicit(source),
+        operation_kind,
+      );
 
     let update_validators = validators => {
       let last_seen_membership_change_timestamp = Unix.time();

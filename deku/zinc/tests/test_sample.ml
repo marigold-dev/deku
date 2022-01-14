@@ -7,7 +7,7 @@ open Zinc_interpreter
 open Zinc
 
 let zinc =
-  let open Z in 
+  let open Z in
   [
     Plain_old_data (Address "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV");
     Core Grab;
@@ -53,7 +53,8 @@ let%expect_test _ =
   let zinc = Types.Zinc.of_yojson zinc |> Result.get_ok in
   let run_result = eval (module Executor) (initial_state zinc) in
   Types.Interpreter_output.to_string run_result |> print_endline ;
-  [%expect{|
+  [%expect
+    {|
     interpreting:
     code:  [(Plain_old_data (Address "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"));
       (Core Grab); (Core (Access 0)); (Domain_specific_operation Contract_opt);

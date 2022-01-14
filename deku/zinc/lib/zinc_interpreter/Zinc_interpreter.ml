@@ -24,7 +24,8 @@ module Make (D : Domain_types) = struct
 
     let stack_to_env = function
       | Stack_item.Marker _ ->
-          failwith "type error, cant convert a stack_item marker into an env_item"
+          failwith
+            "type error, cant convert a stack_item marker into an env_item"
       | Stack_item.(
           Clos _ | Record _ | Variant _ | List _ | Z _ | NonliteralValue _) as x
         ->
@@ -42,18 +43,7 @@ module Make (D : Domain_types) = struct
       (a, [], stack)
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
-    let _ =
-      print_endline
-        (Format.asprintf "interpreting ========") in
       let apply_once (code : Zinc.t) env stack =
-        let _ =
-          print_endline
-            (Format.asprintf
-               "interpreting:\ncode:  %s\nenv:   %s\nstack: %s"
-               (Zinc.to_string code)
-               (Env.to_string env)
-               (Stack.to_string stack))
-        in
         let open Zinc in
         match (code, env, stack) with
         | ( Operation Or :: c,

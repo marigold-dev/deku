@@ -49,7 +49,7 @@ let lwt_ret = p => Term.(ret(const(Lwt_main.run) $ p));
 // Arguments
 // ==========
 
-let contract = {
+let contract_code_path = {
   let parser = file => {
     let non_dir_file = Arg.(conv_parser(non_dir_file));
     switch (
@@ -59,6 +59,22 @@ let contract = {
     | (Ok(file), _)
     | (_, Ok(file)) => Ok(file)
     | _ => Error(`Msg("Expected path to contract JSON"))
+    };
+  };
+  let printer = Arg.(conv_printer(non_dir_file));
+  Arg.(conv((parser, printer)));
+};
+
+let contract_stack_item_path = {
+  let parser = file => {
+    let non_dir_file = Arg.(conv_parser(non_dir_file));
+    switch (
+      non_dir_file(file),
+      non_dir_file(make_filename_from_address(file)),
+    ) {
+    | (Ok(file), _)
+    | (_, Ok(file)) => Ok(file)
+    | _ => Error(`Msg("Expected path to stack item JSON"))
     };
   };
   let printer = Arg.(conv_printer(non_dir_file));
@@ -185,10 +201,10 @@ let info_originate_contract = {
   Term.info("originate-contract", ~version="%%VERSION%%", ~doc, ~exits, ~man);
 };
 
-let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
+let originate_contract =
+    (node_folder, contract_json, initial_storage_json, sender_wallet_file) => {
   open Networking;
 
-  let contract = Yojson.Safe.from_file(contract_json);
   module Zinc_interpreter = Protocol.Interpreter;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
@@ -197,7 +213,15 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
 
   let contract_program =
-    contract |> Zinc_interpreter.Types.Program.of_yojson |> Result.get_ok;
+    contract_json
+    |> Yojson.Safe.from_file
+    |> Zinc_interpreter.Types.Program.of_yojson
+    |> Result.get_ok;
+  let initial_storage =
+    initial_storage_json
+    |> Yojson.Safe.from_file
+    |> Zinc_interpreter.Types.Stack_item.of_yojson
+    |> Result.get_ok;
 
   let originate_contract_op =
     Operation.Side_chain.sign(
@@ -205,11 +229,7 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=
-        Originate_contract((
-          contract_program,
-          Zinc_interpreter.Types.Stack_item.Record([||]),
-        )),
+      ~kind=Originate_contract((contract_program, initial_storage)),
     );
 
   let.await identity = read_identity(~node_folder);
@@ -223,18 +243,29 @@ let originate_contract = (node_folder, contract_json, sender_wallet_file) => {
     );
   Lwt.return(`Ok());
 };
-let folder_node = {
-  let docv = "folder_node";
-  let doc = "The folder where the node lives.";
-  Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
-};
+
 let originate_contract = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
   let contract_json = {
     let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
     Arg.(
       required
-      & pos(1, some(contract), None)
+      & pos(1, some(contract_code_path), None)
       & info([], ~docv="contract", ~doc)
+    );
+  };
+
+  let initial_storage_json = {
+    let doc = "The path to the JSON output of compiling the contract's initial storage to Zinc.";
+    Arg.(
+      required
+      & pos(2, some(contract_stack_item_path), None)
+      & info([], ~docv="initial_storage", ~doc)
     );
   };
 
@@ -243,14 +274,18 @@ let originate_contract = {
     let env = Arg.env_var("SENDER", ~doc);
     Arg.(
       required
-      & pos(2, some(wallet), None)
+      & pos(3, some(wallet), None)
       & info([], ~env, ~docv="sender", ~doc)
     );
   };
 
   Term.(
     lwt_ret(
-      const(originate_contract) $ folder_node $ contract_json $ address_from,
+      const(originate_contract)
+      $ folder_node
+      $ contract_json
+      $ initial_storage_json
+      $ address_from,
     )
   );
 };
@@ -302,11 +337,17 @@ let invoke_contract =
 };
 
 let invoke_contract = {
+  let folder_node = {
+    let docv = "folder_node";
+    let doc = "The folder where the node lives.";
+    Arg.(required & pos(0, some(string), None) & info([], ~doc, ~docv));
+  };
+
   let parameter_json = {
     let doc = "The path to the JSON output of compiling the LIGO contract to Zinc.";
     Arg.(
       required
-      & pos(1, some(contract), None)
+      & pos(1, some(contract_code_path), None)
       & info([], ~docv="contract", ~doc)
     );
   };
@@ -317,7 +358,7 @@ let invoke_contract = {
     Arg.(
       required
       & pos(2, some(address_originated), None)
-      & info([], ~env, ~docv="contract", ~doc)
+      & info([], ~env, ~docv="contract_address", ~doc)
     );
   };
 

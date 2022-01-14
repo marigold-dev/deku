@@ -491,10 +491,27 @@ let super_simple_contract =
     ~expected_json:
       "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
 
-let stack_item_serialization ~raise:_ () =
+let num_serialization ~raise:_ () =
   let open Z in
   let stack_item = Types.Stack_item.Z (Plain_old_data (Num ~$4)) in
   let expected_json = "[\"Z\",[\"Plain_old_data\",[\"Num\",\"4\"]]]" in
+  let () =
+    Alcotest.(check string)
+      (Printf.sprintf "converting %s to json"
+         (stack_item |> Stack_item.to_string))
+      expected_json
+      (Stack_item.to_yojson stack_item |> Yojson.Safe.to_string)
+  in
+  expect_stack_item
+    (Printf.sprintf "converting %s from json"
+       (stack_item |> Stack_item.to_string))
+    stack_item
+    (Yojson.Safe.from_string expected_json
+    |> Stack_item.of_yojson |> Result.get_ok)
+
+let unit_serialization ~raise:_ () =
+  let stack_item = Utils.unit_record_stack in
+  let expected_json = "[\"Record\",[]]" in
   let () =
     Alcotest.(check string)
       (Printf.sprintf "converting %s to json"
@@ -1138,5 +1155,6 @@ let main =
       test_w "increment_contract" increment_contract;
       test_w "increment_contract_bad_parameter" increment_contract_bad_parameter;
       test_w "custom_variant_matching" custom_variant_matching;
-      test "stack_item serialization" stack_item_serialization;
+      test "num_serialization" num_serialization;
+      test "unit_serialization" unit_serialization;
     ]
