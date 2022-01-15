@@ -109,11 +109,7 @@ describe("protocol state", ({test, _}) => {
             ~block_height=0L,
             ~source,
             ~kind=
-              Transaction({
-                destination: Implicit(destination),
-                parameter: failwith("todo"),
-                entrypoint: None,
-              }),
+              Transaction({destination, amount: Amount.of_int(7), ticket}),
           ),
         );
       assert(result == `Transaction);
@@ -134,9 +130,10 @@ describe("protocol state", ({test, _}) => {
           ~source,
           ~kind=
             Transaction({
-              destination: Implicit(destination),
-              parameter: failwith("todo"),
-              entrypoint: None,
+              destination,
+
+              amount: Amount.of_int(501),
+              ticket,
             }),
         ),
       );
@@ -167,7 +164,7 @@ describe("protocol state", ({test, _}) => {
     // expect.list(Validators.validators(validators)).toEqual([new_validator]);
     // remove all validators
   });
-  test("contract origination and invocation", (_) => {
+  test("contract origination and invocation", _ => {
     let (state, secret, source) = make_state();
     let (key_b, address_b) = Address.Implicit.make();
     open Operation.Side_chain;
@@ -204,19 +201,21 @@ describe("protocol state", ({test, _}) => {
     let parameter = Stack_item.Z(Plain_old_data(Num(Z.one)));
     let origination = sign(Originate_contract((contract, storage)), 0l);
     let contract_address =
-      origination |> to_contract_hash |> Protocol.Address.Originated.of_contract_hash;
+      origination
+      |> to_contract_hash
+      |> Protocol.Address.Originated.of_contract_hash;
     let invocation =
-        Transaction({
-          parameter,
-          destination: Protocol.Address.(contract_address |> of_originated),
-          entrypoint: Some("main"),
-        });
+      Invocation({
+        parameter,
+        destination: Protocol.Address.(contract_address |> of_originated),
+        entrypoint: Some("main"),
+      });
     let (state, result) = apply_side_chain(state, origination);
     assert(result == `Origination);
     let (state, result) = apply_side_chain(state, sign(invocation, 1l));
-    assert(result == `Transaction);
+    assert(result == `Invocation);
     let (state, result) = apply_side_chain(state, sign(invocation, 2l));
-    assert(result == `Transaction);
+    assert(result == `Invocation);
     switch (
       Protocol.Contract_storage.(
         contract_address |> get(state.contracts_storage)
@@ -228,7 +227,7 @@ describe("protocol state", ({test, _}) => {
       assert(
         Stack_item.equal(
           contract.storage,
-          Stack_item.Z(Plain_old_data(Num(Z.of_int (2)))),
+          Stack_item.Z(Plain_old_data(Num(Z.of_int(2)))),
         ),
       )
     };

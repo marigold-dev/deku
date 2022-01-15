@@ -60,7 +60,7 @@ let apply_side_chain = {
             ),
           ),
         ) =>
-        Some(Transaction({destination: address, parameter, entrypoint}))
+        Some(Invocation({destination: address, parameter, entrypoint}))
       | _ => None;
 
     let rec map_m = (f, l) =>
@@ -80,12 +80,17 @@ let apply_side_chain = {
     | (_, Originate_contract(_)) => Error(assert(false))
     | (
         _sender,
-        Transaction({
+        Invocation({
           parameter,
           destination: Address.Originated(destination),
           entrypoint: Some(entrypoint),
         }),
       ) =>
+      // Very important! If sender is not a contract, we MUST verify that 
+      // either there are no tickets in their transaction or that 
+      // all tickets are theirs!
+      // The following line is to remind me to fix this
+      let _ = failwith("security problem must be solved")
       Printf.printf("Transaction!\n");
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
@@ -140,18 +145,49 @@ let apply_side_chain = {
         );
       Ok(new_state);
     | (
-        Address.Implicit(sender),
-        Transaction({
-          parameter: NonliteralValue(Ticket(handle)),
-          destination: Implicit(destination),
+        Address.Originated(_),
+        Invocation({
+          parameter: Interpreter.Types.Stack_item.NonliteralValue(Ticket(handle)),
+          destination: Address.Implicit(destination),
           entrypoint: None,
         }),
       ) =>
+      let.ok ledger = Ledger.redeem_ticket_handle(~destination, handle, state.ledger);
+      Ok({...state, ledger});
+    | (
+        _,
+        Invocation({
+          parameter: _,
+          destination: Address.Implicit(_),
+          entrypoint: Some (_),
+        }),
+      ) =>
+      Error(`Tried_to_use_entrypoint_for_implicit_account);
+    | (
+        _,
+        Invocation({
+          parameter: _,
+          destination: Address.Implicit(_),
+          entrypoint: None,
+        }),
+      ) =>
+      Error(`Invalid_argument_to_implicit_account);
+    | (
+        _sender,
+        Invocation({
+          parameter: _,
+          destination: Address.Originated(_),
+          entrypoint: None,
+        }),
+      ) => Error(`Invoked_contract_without_entrypoint)
+      
+    | (Address.Implicit(sender), Transaction({destination, amount, ticket})) =>
       let.ok ledger =
-        Ledger.transfer_ticket(
+        Ledger.transfer(
           ~source=sender,
           ~destination,
-          handle,
+          amount,
+          ticket,
           state.ledger,
         );
       Ok({...state, ledger});
@@ -248,6 +284,9 @@ let apply_side_chain = {
     | Transaction(_) as transaction =>
       let.ok new_state = apply_internal_operation(state, transaction);
       Ok((new_state, `Transaction));
+    | Invocation(_) as invocation =>
+      let.ok new_state = apply_internal_operation(state, invocation);
+      Ok((new_state, `Invocation));
     };
   };
 };
@@ -261,6 +300,10 @@ let apply_side_chain = (state, operation) =>
   | Error(`No_ticket_in_transaction) =>
     raise(Noop("no ticket in transaction"))
   | Error(`Invalid_ticket) => raise(Noop("no ticket in transaction"))
+  | Error(`Invalid_argument_to_implicit_account) => raise(Noop("Invalid argument passed to implicit account")) 
+  | Error(`Tried_to_use_entrypoint_for_implicit_account) => raise(Noop("unknown entrypoint (on an implicit account, None is the only entrypoint)"))
+  | Error(`Invoked_contract_without_entrypoint) => raise(Noop("Invoked contract without entrypoint"))
+
   };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height
