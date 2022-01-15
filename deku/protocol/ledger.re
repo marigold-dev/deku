@@ -17,7 +17,6 @@ module Implicit_address_and_ticket_map = {
   let empty = Map.empty;
   let find_opt = (address, ticket) => Map.find_opt({address, ticket});
   let add = (address, ticket) => Map.add({address, ticket});
-  let remove = (address, ticket) => Map.remove({address, ticket});
 };
 module Withdrawal_handle = {
   [@deriving yojson]
@@ -116,43 +115,6 @@ let transfer = (~source, ~destination, amount, ticket, t) => {
   });
 };
 
-let transfer_ticket = (~source, ~destination, to_add, t) => {
-  let.ok ticket_id =
-    Ticket_table.get_id(to_add, t.ticket_table)
-    |> Option.to_result(~none=`Invalid_ticket);
-
-  let.ok _ = {
-    switch (
-      Implicit_address_and_ticket_map.find_opt(source, ticket_id, t.ledger)
-    ) {
-    | None => Error(`Not_enough_funds)
-    | Some(user_handle) when Ticket_table.Handle.equal(to_add, user_handle) =>
-      Ok()
-    | _ => Error(`Invalid_ticket)
-    };
-  };
-
-  let (destination_handle, ticket_table, ledger) =
-    get_or_create(destination, ticket_id, t.ticket_table, t.ledger);
-
-  let (destination_handle, ticket_table) =
-    Ticket_table.join(destination_handle, to_add, ticket_table)
-    |> Result.get_ok;
-
-  Ok({
-    ledger:
-      ledger
-      |> Implicit_address_and_ticket_map.remove(source, ticket_id)
-      |> Implicit_address_and_ticket_map.add(
-           destination,
-           ticket_id,
-           destination_handle,
-         ),
-    ticket_table,
-    withdrawal_handles: t.withdrawal_handles,
-  });
-};
-
 // tezos operations
 
 let redeem_ticket_handle = (~destination, ~ticket_id=?, handle, t) => {
@@ -170,14 +132,15 @@ let redeem_ticket_handle = (~destination, ~ticket_id=?, handle, t) => {
     |> Result.get_ok;
   Ok({
     ledger:
-      t.ledger
+      ledger
       |> Implicit_address_and_ticket_map.add(
            destination,
-           ticket,
-           destination_balance + amount,
+           ticket_id,
+           destination_handle,
          ),
-    handles: t.handles,
-  };
+    ticket_table,
+    withdrawal_handles: t.withdrawal_handles,
+  });
 };
 
 let deposit = (destination, amount, ticket_id, t) => {
@@ -186,13 +149,7 @@ let deposit = (destination, amount, ticket_id, t) => {
       Ticket_table.unsafe_create_ticket(ticket_id, amount),
       t.ticket_table,
     );
-  redeem_ticket_handle(
-    ~destination,
-    ~ticket_id,
-    handle,
-    {...t, ticket_table},
-  )
-  |> Result.get_ok;
+  redeem_ticket_handle(~destination, ~ticket_id, handle, {...t, ticket_table}) |> Result.get_ok;
 };
 
 let withdraw = (~source, ~destination, amount, ticket, t) => {

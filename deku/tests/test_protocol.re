@@ -109,11 +109,7 @@ describe("protocol state", ({test, _}) => {
             ~block_height=0L,
             ~source,
             ~kind=
-              Transaction({
-                destination: Implicit(destination),
-                parameter: failwith("todo"),
-                entrypoint: None,
-              }),
+              Transaction({destination, amount: Amount.of_int(7), ticket}),
           ),
         );
       assert(result == `Transaction);
@@ -134,9 +130,10 @@ describe("protocol state", ({test, _}) => {
           ~source,
           ~kind=
             Transaction({
-              destination: Implicit(destination),
-              parameter: failwith("todo"),
-              entrypoint: None,
+              destination,
+
+              amount: Amount.of_int(501),
+              ticket,
             }),
         ),
       );

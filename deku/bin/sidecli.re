@@ -317,7 +317,7 @@ let invoke_contract =
       ~block_height=block_level,
       ~source=wallet.address,
       ~kind=
-        Transaction({
+        Invocation({
           parameter,
           destination: address_originated |> Address.of_originated,
           entrypoint: Some("main"),
@@ -417,7 +417,7 @@ let info_create_transaction = {
 };
 
 let create_transaction =
-    (node_folder, sender_wallet_file, received_address, _amount, _ticket) => {
+    (node_folder, sender_wallet_file, received_address, amount, ticket) => {
   open Networking;
   let.await validators_uris = validators_uris(node_folder);
   let validator_uri = List.hd(validators_uris);
@@ -430,12 +430,7 @@ let create_transaction =
       ~nonce=0l,
       ~block_height=block_level,
       ~source=wallet.address,
-      ~kind=
-        Transaction({
-          destination: Implicit(received_address),
-          parameter: failwith("todo"),
-          entrypoint: None,
-        }),
+      ~kind=Transaction({destination: received_address, amount, ticket}),
     );
   let.await identity = read_identity(~node_folder);
 
