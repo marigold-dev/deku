@@ -300,15 +300,49 @@ let received_signature = (state, update_state, ~hash, ~signature) => {
   };
 };
 
-let received_user_operation = (state, update_state, user_operation) => {
-  let.ok () =
-    switch (user_operation.Protocol.Operation.Side_chain.kind) {
-    | Add_validator(_)
-    | Remove_validator(_) => Error(`Not_a_user_opertaion)
-    | _ => Ok()
-    };
+let parse_internal_tezos_transaction = transaction =>
+  switch (transaction) {
+  | Tezos_interop.Consensus.Update_root_hash(_) => Error(`Update_root_hash)
+  | Tezos_interop.Consensus.Deposit({ticket, amount, destination}) =>
+    let amount = Core.Amount.of_int(Z.to_int(amount));
+    Ok(Core.Tezos_operation.Tezos_deposit({destination, amount, ticket}));
+  };
+let parse_internal_tezos_transactions = tezos_internal_transactions =>
+  List.filter_map(
+    transaction =>
+      switch (parse_internal_tezos_transaction(transaction)) {
+      | Ok(core_tezos_internal_transactions) =>
+        Some(core_tezos_internal_transactions)
+      | Error(`Update_root_hash) => None
+      },
+    tezos_internal_transactions,
+  );
 
-  if (!List.mem(user_operation, state.Node.pending_side_ops)) {
+let received_tezos_operation = (state, update_state, tezos_interop_operation) => {
+  open Protocol.Operation;
+  let Tezos_interop.Consensus.{hash, transactions} = tezos_interop_operation;
+  let tezos_operation =
+    Core.Tezos_operation.make({
+      tezos_operation_hash: hash,
+      internal_operations: parse_internal_tezos_transactions(transactions),
+    });
+
+  let operation = Core_tezos(tezos_operation);
+  let _: State.t =
+    update_state(
+      Node.{
+        ...state,
+        pending_operations: [operation, ...state.pending_operations],
+      },
+    );
+  ();
+};
+let received_user_operation = (state, update_state, user_operation) => {
+  open Protocol.Operation;
+  let operation = Core_user(user_operation);
+  let operation_exists =
+    List.exists(op => equal(op, operation), state.Node.pending_operations);
+  if (!operation_exists) {
     Lwt.async(() =>
       Networking.broadcast_user_operation_gossip(
         state,
@@ -319,96 +353,30 @@ let received_user_operation = (state, update_state, user_operation) => {
       update_state(
         Node.{
           ...state,
-          pending_side_ops: [user_operation, ...state.Node.pending_side_ops],
+          pending_operations: [operation, ...state.pending_operations],
         },
       );
-    Ok();
-  } else {
-    Ok();
+    ();
   };
+  Ok();
 };
-let received_consensus_operation = (state, update_state, consensus_operation) => {
-  let.ok () =
-    switch (consensus_operation.Protocol.Operation.Side_chain.kind) {
-    | Add_validator(_)
-    | Remove_validator(_) => Ok()
-    | _ => Error(`Not_consensus_operation)
-    };
+let received_consensus_operation =
+    (state, update_state, consensus_operation, signature) => {
+  open Protocol.Operation;
   let.assert () = (
-    `Invalid_signature_author,
-    Core.Address.compare(
-      state.Node.identity.t,
-      Signature.address(consensus_operation.signature),
-    )
-    == 0,
+    `Invalid_signature,
+    Consensus.verify(state.Node.identity.key, signature, consensus_operation),
   );
-  if (!List.mem(consensus_operation, state.Node.pending_side_ops)) {
-    let _: State.t =
-      update_state(
-        Node.{
-          ...state,
-          pending_side_ops: [
-            consensus_operation,
-            ...state.Node.pending_side_ops,
-          ],
-        },
-      );
-    Ok();
-  } else {
-    Ok();
-  };
-};
 
-let parse_main_transaction = (hash, index, transaction) => {
-  switch (transaction) {
-  | Tezos_interop.Consensus.Update_root_hash(_) => Error(`Update_root_hash)
-  | Tezos_interop.Consensus.Deposit({ticket, amount, destination}) =>
-    let.ok destination =
-      switch (destination) {
-      | Implicit(destination) => Ok(Core.Address.of_key_hash(destination))
-      | _ => Error(`Invalid_address_on_main_operation)
-      };
-    let amount = Core.Amount.of_int(Z.to_int(amount));
-    let kind =
-      Protocol.Operation.Main_chain.Deposit({ticket, amount, destination});
-    Ok(
-      Protocol.Operation.Main_chain.make(
-        ~tezos_hash=hash,
-        ~tezos_index=index,
-        ~kind,
-      ),
+  let operation = Consensus(consensus_operation);
+  let _: State.t =
+    update_state(
+      Node.{
+        ...state,
+        pending_operations: [operation, ...state.pending_operations],
+      },
     );
-  };
-};
-let received_main_transaction =
-    (state, update_state, hash, index, transaction) => {
-  switch (parse_main_transaction(hash, index, transaction)) {
-  | Ok(operation) =>
-    if (!List.mem(operation, state.Node.pending_main_ops)) {
-      let _ =
-        update_state(
-          Node.{
-            ...state,
-            pending_main_ops: [operation, ...state.Node.pending_main_ops],
-          },
-        );
-      ();
-    }
-  | Error(`Invalid_address_on_main_operation | `Update_root_hash) => ()
-  };
-};
-let received_main_operation = (state, update_state, operation) => {
-  let Tezos_interop.Consensus.{hash, transactions} = operation;
-  transactions
-  |> List.iteri((index, transaction) =>
-       received_main_transaction(
-         state,
-         update_state,
-         hash,
-         index,
-         transaction,
-       )
-     );
+  Ok();
 };
 
 let find_block_by_hash = (state, hash) =>
@@ -455,12 +423,9 @@ let register_uri = (state, update_state, ~uri, ~signature) => {
   Ok();
 };
 let request_withdraw_proof = (state, ~hash) =>
-  switch (state.Node.recent_operation_results |> BLAKE2B.Map.find_opt(hash)) {
+  switch (state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt(hash)) {
   | None => Networking.Withdraw_proof.Unknown_operation
-  | Some(`Transaction)
-  | Some(`Add_validator)
-  | Some(`Remove_validator) => Operation_is_not_a_withdraw
-  | Some(`Withdraw(handle)) =>
+  | Some(Receipt_tezos_withdraw(handle)) =>
     let last_block_hash = state.Node.protocol.last_block_hash;
     /* TODO: possible problem with this solution
        if this specific handles_hash was never commited to Tezos
@@ -475,11 +440,15 @@ let request_withdraw_proof = (state, ~hash) =>
       | Some(block) => block.Block.handles_hash
       };
     let proof =
-      state.Node.protocol.ledger |> Ledger.handles_find_proof(handle);
+      state.Node.protocol.core_state
+      |> Core.State.ledger
+      |> Ledger.handles_find_proof(handle);
     Ok({handles_hash, handle, proof});
   };
 let request_ticket_balance = (state, ~ticket, ~address) =>
-  state.Node.protocol.ledger |> Ledger.balance(address, ticket);
+  state.Node.protocol.core_state
+  |> Core.State.ledger
+  |> Ledger.balance(address, ticket);
 
 let trusted_validators_membership = (state, update_state, request) => {
   open Networking.Trusted_validators_membership_change;

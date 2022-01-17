@@ -1,4 +1,3 @@
-open Protocol_operation;
 open Helpers;
 open Crypto;
 open Core;
@@ -22,8 +21,7 @@ type t = {
   // TODO: do we need a block_height? What is the tradeoffs?
   // TODO: maybe it should be only for internal pagination and stuff like this
   block_height: int64,
-  main_chain_ops: list(Main_chain.t),
-  side_chain_ops: list(Side_chain.t),
+  operations: list(Protocol_operation.t),
 };
 
 let (hash, verify) = {
@@ -39,8 +37,7 @@ let (hash, verify) = {
         ~previous_hash,
         ~author,
         ~block_height,
-        ~main_chain_ops,
-        ~side_chain_ops,
+        ~operations,
       ) => {
     let to_yojson = [%to_yojson:
       (
@@ -51,8 +48,7 @@ let (hash, verify) = {
         // block data
         Address.t,
         int64,
-        list(Main_chain.t),
-        list(Side_chain.t),
+        list(Protocol_operation.t),
       )
     ];
     let json =
@@ -63,8 +59,7 @@ let (hash, verify) = {
         previous_hash,
         author,
         block_height,
-        main_chain_ops,
-        side_chain_ops,
+        operations,
       ));
     let payload = Yojson.Safe.to_string(json);
     let block_payload_hash = BLAKE2B.hash(payload);
@@ -102,8 +97,7 @@ let make =
       ~previous_hash,
       ~author,
       ~block_height,
-      ~main_chain_ops,
-      ~side_chain_ops,
+      ~operations,
     ) => {
   let (hash, payload_hash) =
     hash(
@@ -113,8 +107,7 @@ let make =
       ~previous_hash,
       ~author,
       ~block_height,
-      ~main_chain_ops,
-      ~side_chain_ops,
+      ~operations,
     );
   {
     hash,
@@ -126,8 +119,7 @@ let make =
     validators_hash,
     author,
     block_height,
-    main_chain_ops,
-    side_chain_ops,
+    operations,
   };
 };
 
@@ -142,8 +134,7 @@ let of_yojson = json => {
       ~previous_hash=block.previous_hash,
       ~author=block.author,
       ~block_height=block.block_height,
-      ~main_chain_ops=block.main_chain_ops,
-      ~side_chain_ops=block.side_chain_ops,
+      ~operations=block.operations,
     )
       ? Ok() : Error("Invalid hash");
   Ok(block);
@@ -158,8 +149,7 @@ let genesis =
     ~handles_hash=BLAKE2B.hash("desu"),
     ~validators_hash=Validators.hash(Validators.empty),
     ~block_height=0L,
-    ~main_chain_ops=[],
-    ~side_chain_ops=[],
+    ~operations=[],
     ~author=Address.of_key(Wallet.genesis_wallet),
   );
 
@@ -185,7 +175,8 @@ let produce = (~state) => {
     ~state_root_hash=
       update_state_hashes
         ? fst(Protocol_state.hash(state)) : state.state_root_hash,
-    ~handles_hash=Ledger.handles_root_hash(state.ledger),
+    ~handles_hash=
+      Core.State.ledger(state.core_state) |> Ledger.handles_root_hash,
     ~validators_hash=Validators.hash(state.validators),
     ~block_height=Int64.add(state.block_height, 1L),
   );

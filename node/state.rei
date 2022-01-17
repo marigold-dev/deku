@@ -18,23 +18,14 @@ type t = {
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
-  pending_side_ops: list(Protocol.Operation.Side_chain.t),
-  pending_main_ops: list(Protocol.Operation.Main_chain.t),
+  pending_operations: list(Protocol.Operation.t),
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),
-  recent_operation_results:
-    BLAKE2B.Map.t(
-      [
-        | `Add_validator
-        | `Remove_validator
-        | `Transaction
-        | `Withdraw(Ledger.Handle.t)
-      ],
-    ),
+  recent_operation_receipts: BLAKE2B.Map.t(Core.State.receipt),
   persist_trusted_membership_change:
     list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
