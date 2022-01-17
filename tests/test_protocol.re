@@ -104,7 +104,7 @@ describe("protocol state", ({test, _}) => {
       let (state, result) =
         apply_side_chain(
           state,
-          Operation.Side_chain.sign(
+          Protocol.Operation.Side_chain.sign(
             ~secret,
             ~nonce=0l,
             ~block_height=0L,
@@ -124,7 +124,7 @@ describe("protocol state", ({test, _}) => {
     let (state, result) =
       apply_side_chain(
         state,
-        Operation.Side_chain.sign(
+        Protocol.Operation.Side_chain.sign(
           ~secret,
           ~nonce=0l,
           ~block_height=0L,

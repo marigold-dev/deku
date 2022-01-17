@@ -1,8 +1,8 @@
 open Helpers;
 open Crypto;
+open State;
 open Protocol;
 open Core;
-open State;
 
 module type Request_endpoint = {
   [@deriving yojson]
@@ -71,7 +71,7 @@ let broadcast_to_list = (endpoint, uris, data) =>
 let broadcast_to_validators = (endpoint, state, data) =>
   Validators.to_list(state.protocol.validators)
   |> List.filter_map((Validators.{address, _}) =>
-       State.Address_map.find_opt(address, state.validators_uri)
+       Address_map.find_opt(address, state.validators_uri)
      )
   |> (uris => broadcast_to_list(endpoint, uris, data));
 
@@ -153,7 +153,7 @@ module Register_uri = {
 
 module User_operation_gossip = {
   [@deriving yojson]
-  type request = {user_operation: Operation.Side_chain.t};
+  type request = {user_operation: Protocol.Operation.Side_chain.t};
   [@deriving yojson]
   type response = unit;
   let path = "/user-operation-gossip";

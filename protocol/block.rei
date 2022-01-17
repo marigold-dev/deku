@@ -1,6 +1,6 @@
 open Crypto;
 open Core;
-open Operation;
+open Protocol_operation;
 
 [@deriving (yojson, ord)]
 type t =
@@ -22,7 +22,7 @@ let verify: (~signature: Protocol_signature.t, t) => bool;
 let genesis: t;
 let produce:
   (
-    ~state: State.t,
+    ~state: Protocol_state.t,
     ~author: Address.t,
     ~main_chain_ops: list(Main_chain.t),
     ~side_chain_ops: list(Side_chain.t)

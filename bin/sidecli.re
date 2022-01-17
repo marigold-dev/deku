@@ -204,7 +204,7 @@ let create_transaction =
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let transaction =
-    Operation.Side_chain.sign(
+    Protocol.Operation.Side_chain.sign(
       ~secret=wallet.priv_key,
       ~nonce=0l,
       ~block_height=block_level,
@@ -298,7 +298,7 @@ let withdraw =
   let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
   let operation =
-    Operation.Side_chain.sign(
+    Protocol.Operation.Side_chain.sign(
       ~secret=wallet.priv_key,
       ~nonce=0l,
       ~block_height=block_level,
