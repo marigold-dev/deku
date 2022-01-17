@@ -62,6 +62,12 @@ describe("ledger", ({test, _}) => {
         f(expect, expect_balance);
       },
     );
+  test("amount", (expect, _) => {
+    expect.equal(Amount.(of_int(0) + of_int(5)), Amount.of_int(5));
+    expect.fn(() => Amount.of_int(-1)).toThrowException(
+      Invalid_argument("Negative amount"),
+    );
+  });
   test("balance", (_, expect_balance) => {
     let (t, (t1, t2), (a, b)) = setup_two();
     expect_balance(a, t1, 100, t);
