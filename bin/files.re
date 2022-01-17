@@ -78,6 +78,7 @@ module Interop_context = {
 module State_bin = {
   let read = (~file) =>
     Lwt_io.with_file(~mode=Input, file, Lwt_io.read_value);
+
   let write = (protocol, ~file) =>
     Lwt_io.with_file(~mode=Output, file, Lwt_io.write_value(_, protocol));
 };

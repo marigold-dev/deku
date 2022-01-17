@@ -5,9 +5,8 @@
 open Cmdliner;
 open Opium;
 open Helpers;
-open Protocol;
-open Core;
 open Node;
+open Bin_common;
 
 let ignore_some_errors =
   fun
@@ -209,91 +208,16 @@ let handle_ticket_balance =
   );
 
 let node = folder => {
-  let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
-
-  let trusted_validator_membership_change_file =
-    folder ++ "/trusted-validator-membership-change.json";
-
-  let.await trusted_validator_membership_change_list =
-    Files.Trusted_validators_membership_change.read(
-      ~file=trusted_validator_membership_change_file,
-    );
-  let trusted_validator_membership_change =
-    Trusted_validators_membership_change.Set.of_list(
-      trusted_validator_membership_change_list,
-    );
-  let.await interop_context =
-    Files.Interop_context.read(~file=folder ++ "/tezos.json");
-  let.await validator_res =
-    Tezos_interop.Consensus.fetch_validators(~context=interop_context);
-  let validators =
-    switch (validator_res) {
-    | Ok(current_validators) =>
-      current_validators
-      |> List.mapi((i, validator) => {
-           (
-             Address.of_key_hash(validator),
-             Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
-           )
-         })
-    | Error(err) => failwith(err)
-    };
-
-  let initial_validators_uri =
-    List.fold_left(
-      (validators_uri, (address, uri)) =>
-        State.Address_map.add(address, uri, validators_uri),
-      State.Address_map.empty,
-      validators,
-    );
-  let persist_trusted_membership_change =
-    Files.Trusted_validators_membership_change.write(
-      ~file=trusted_validator_membership_change_file,
-    );
-  let node =
-    State.make(
-      ~identity,
-      ~trusted_validator_membership_change,
-      ~interop_context,
-      ~data_folder=folder,
-      ~initial_validators_uri,
-      ~persist_trusted_membership_change,
-    );
-  let node = {
-    ...node,
-    protocol: {
-      ...node.protocol,
-      validators:
-        List.fold_left(
-          (validators, (address, _)) =>
-            Validators.add({address: address}, validators),
-          Validators.empty,
-          validators,
-        ),
-    },
-  };
-  let state_bin = folder ++ "/state.bin";
-  let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let.await protocol =
-    if (state_bin_exists) {
-      Files.State_bin.read(~file=state_bin);
-    } else {
-      let.await () = Files.State_bin.write(node.protocol, ~file=state_bin);
-      await(node.protocol);
-    };
+  let node = Node_state.get_initial_state(~folder) |> Lwt_main.run;
   Tezos_interop.Consensus.listen_operations(
-    ~context=interop_context, ~on_operation=operation =>
+    ~context=node.Node.State.interop_context, ~on_operation=operation =>
     Flows.received_tezos_operation(
       Server.get_state(),
       update_state,
       operation,
     )
   );
-  await({...node, protocol});
-};
-
-let node = folder => {
-  let () = Node.Server.start(~initial=node(folder) |> Lwt_main.run);
+  let () = Node.Server.start(~initial=node);
 
   let _server =
     App.empty
