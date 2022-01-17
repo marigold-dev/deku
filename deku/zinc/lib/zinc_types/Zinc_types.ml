@@ -229,6 +229,28 @@ module Make (D : Domain_types) = struct
     let unit_record_stack = Stack_item.Record LMap.empty
 
     let unit_record_env = Env_item.Record LMap.empty
+
+    (* TODO: this is bad *)
+    let rec stack_item_contains_nonliteral =
+      let open Stack_item in
+      function
+      | NonliteralValue (_) -> true
+      | Z _ -> false
+      | Clos Clos.{env; _} -> env |> List.exists env_item_contains_nonliteral
+      | Record r -> r |> Array.exists stack_item_contains_nonliteral
+      | List l -> l |> List.exists stack_item_contains_nonliteral
+      | Variant (_, v) -> v |> stack_item_contains_nonliteral
+      | Marker (_, e) -> e |> List.exists env_item_contains_nonliteral
+
+    and env_item_contains_nonliteral =
+      let open Env_item in
+      function
+      | NonliteralValue _ -> true
+      | Z _ -> false
+      | Clos Clos.{env; _} -> env |> List.exists env_item_contains_nonliteral
+      | Record r -> r |> Array.exists stack_item_contains_nonliteral
+      | List l -> l |> List.exists stack_item_contains_nonliteral
+      | Variant (_, v) -> v |> stack_item_contains_nonliteral
   end
 end
 

@@ -145,7 +145,13 @@ let deposit = (destination, amount, ticket_id, t) => {
       Ticket_table.unsafe_create_ticket(ticket_id, amount),
       t.ticket_table,
     );
-  redeem_ticket_handle(~destination, ~ticket_id, handle, {...t, ticket_table}) |> Result.get_ok;
+  redeem_ticket_handle(
+    ~destination,
+    ~ticket_id,
+    handle,
+    {...t, ticket_table},
+  )
+  |> Result.get_ok;
 };
 
 let withdraw = (~source, ~destination, amount, ticket, t) => {

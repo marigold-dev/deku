@@ -79,18 +79,28 @@ let apply_side_chain = {
     | (_, Remove_validator(_))
     | (_, Originate_contract(_)) => Error(assert(false))
     | (
-        _sender,
+        sender,
         Invocation({
           parameter,
           destination: Address.Originated(destination),
           entrypoint: Some(entrypoint),
-        }),
+        }), 
       ) =>
-      // Very important! If sender is not a contract, we MUST verify that 
-      // either there are no tickets in their transaction or that 
-      // all tickets are theirs!
-      // The following line is to remind me to fix this
-      let _ = failwith("security problem must be solved")
+      // If the sender is an implicit account, that means that the operation was 
+      // submitted by a user, which means it could contain a ticket or other illegal 
+      // value. 
+      // TODO: this behavior should be tested
+      let.ok _ =
+        switch (sender) {
+        | Address.Originated(_) => Ok()
+        | Address.Implicit(_) =>
+          if (Interpreter.Types.Utils.stack_item_contains_nonliteral(parameter)) {
+            Error(`Implicit_account_invoking_contract_with_ticket);
+          } else {
+            Ok();
+          }
+        };
+      let _ = failwith("security problem must be solved");
       Printf.printf("Transaction!\n");
       let.ok (new_contract_storage, operation_kinds) =
         Contract_storage.update_entry(
@@ -147,22 +157,24 @@ let apply_side_chain = {
     | (
         Address.Originated(_),
         Invocation({
-          parameter: Interpreter.Types.Stack_item.NonliteralValue(Ticket(handle)),
+          parameter:
+            Interpreter.Types.Stack_item.NonliteralValue(Ticket(handle)),
           destination: Address.Implicit(destination),
           entrypoint: None,
         }),
       ) =>
-      let.ok ledger = Ledger.redeem_ticket_handle(~destination, handle, state.ledger);
+      let.ok ledger =
+        Ledger.redeem_ticket_handle(~destination, handle, state.ledger);
       Ok({...state, ledger});
     | (
         _,
         Invocation({
           parameter: _,
           destination: Address.Implicit(_),
-          entrypoint: Some (_),
+          entrypoint: Some(_),
         }),
       ) =>
-      Error(`Tried_to_use_entrypoint_for_implicit_account);
+      Error(`Tried_to_use_entrypoint_for_implicit_account)
     | (
         _,
         Invocation({
@@ -171,7 +183,7 @@ let apply_side_chain = {
           entrypoint: None,
         }),
       ) =>
-      Error(`Invalid_argument_to_implicit_account);
+      Error(`Invalid_argument_to_implicit_account)
     | (
         _sender,
         Invocation({
@@ -179,8 +191,9 @@ let apply_side_chain = {
           destination: Address.Originated(_),
           entrypoint: None,
         }),
-      ) => Error(`Invoked_contract_without_entrypoint)
-      
+      ) =>
+      Error(`Invoked_contract_without_entrypoint)
+
     | (Address.Implicit(sender), Transaction({destination, amount, ticket})) =>
       let.ok ledger =
         Ledger.transfer(
@@ -300,10 +313,18 @@ let apply_side_chain = (state, operation) =>
   | Error(`No_ticket_in_transaction) =>
     raise(Noop("no ticket in transaction"))
   | Error(`Invalid_ticket) => raise(Noop("no ticket in transaction"))
-  | Error(`Invalid_argument_to_implicit_account) => raise(Noop("Invalid argument passed to implicit account")) 
-  | Error(`Tried_to_use_entrypoint_for_implicit_account) => raise(Noop("unknown entrypoint (on an implicit account, None is the only entrypoint)"))
-  | Error(`Invoked_contract_without_entrypoint) => raise(Noop("Invoked contract without entrypoint"))
-
+  | Error(`Invalid_argument_to_implicit_account) =>
+    raise(Noop("Invalid argument passed to implicit account"))
+  | Error(`Tried_to_use_entrypoint_for_implicit_account) =>
+    raise(
+      Noop(
+        "unknown entrypoint (on an implicit account, None is the only entrypoint)",
+      ),
+    )
+  | Error(`Invoked_contract_without_entrypoint) =>
+    raise(Noop("Invoked contract without entrypoint"))
+  | Error(`Implicit_account_invoking_contract_with_ticket) =>
+    raise(Noop("Implicit account invoking contract with ticket"))
   };
 let is_next = (state, block) =>
   Int64.add(state.block_height, 1L) == block.Block.block_height
