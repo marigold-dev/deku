@@ -1,1 +1,0 @@
-../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/mligo/constants/ConstantsV2.mligo

@@ -1,1 +1,0 @@
-type fail_big_map = map(bool);

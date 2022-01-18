@@ -1,4 +1,0 @@
-author: Sander Spies
-merge_request: '927'
-title: Improve transpilation and speed up transpilation tests
-type: internal

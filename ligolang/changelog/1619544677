@@ -1,6 +1,0 @@
----
-  title: "Fix support for lowcase verbatim strings in JsLIGO (important for test framework support)"
-  merge_request: "1120"
-  author: "@SanderSpies"
-  type: "fixed"
-

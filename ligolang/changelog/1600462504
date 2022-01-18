@@ -1,5 +1,0 @@
-author: Suzanne Soy
-title: In the typer which is not currently in use, added a boolean flag on constraints
-  indicating whether they might be necessary for correctness
-type: changed
-merge_request: '814'

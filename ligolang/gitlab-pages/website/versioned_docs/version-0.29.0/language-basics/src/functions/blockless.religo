@@ -1,1 +1,0 @@
-let add = ((a, b): (int, int)) : int => a + b;

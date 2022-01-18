@@ -1,9 +1,0 @@
-type taco_supply = { current_stock : nat , max_price : tez } ;
-
-type taco_shop_storage = map <nat, taco_supply> ;
-type return_ = [list <operation>, taco_shop_storage];
-
-let init_storage : taco_shop_storage = Map.literal (list([
-  [1 as nat, { current_stock : 50 as nat, max_price : 50 as tez }],
-  [2 as nat, { current_stock : 20 as nat, max_price : 75 as tez }]
-]));

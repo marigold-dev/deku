@@ -1,1 +1,0 @@
-../../../../../gitlab-pages/docs/tutorials/optimisation/examples/contracts/mligo/inlining/HelloLigoV2.mligo

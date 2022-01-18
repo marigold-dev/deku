@@ -1,4 +1,0 @@
-author: tomjack
-merge_request: '1038'
-title: Curried functions again work correctly with commands like interpret and compile-storage
-type: fixed

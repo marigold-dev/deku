@@ -1,8 +1,0 @@
-{
-  "esy": {
-    "build": "true"
-  },
-  "dependencies": {
-    "esy-libffi": "*"
-  }
-}

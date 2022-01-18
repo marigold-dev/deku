@@ -1,8 +1,0 @@
-FROM    ubuntu:focal
-ENV     OPAMROOTISOK=1
-RUN     apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        opam make pkg-config cargo libhidapi-dev libev-dev libgmp-dev libffi-dev
-RUN     opam init --disable-sandboxing --bare
-ADD     . /build
-WORKDIR /build
-RUN     make

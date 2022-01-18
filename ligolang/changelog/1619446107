@@ -1,4 +1,0 @@
-author: tomjack
-merge_request: '1102'
-title: Added compile-time optimization of comb record destructuring and uncurrying
-type: performance

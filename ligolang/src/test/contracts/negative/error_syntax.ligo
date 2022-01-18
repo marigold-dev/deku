@@ -1,1 +1,0 @@
-type foo is bar - 42

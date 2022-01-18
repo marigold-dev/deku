@@ -1,6 +1,0 @@
----
-  title: "Fix handling of true/false constructors in switch expressions."
-  merge_request: "987"
-  author: "Sander Spies"
-  type: "fixed"
-

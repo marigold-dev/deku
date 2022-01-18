@@ -1,4 +1,0 @@
-author: Pierre-Emmanuel Wulfman
-title: Move the preprocessor away from the parser
-type: internal
-merge_request: '851'

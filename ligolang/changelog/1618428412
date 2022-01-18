@@ -1,6 +1,0 @@
----
-  title: "Add type inference to the compiler"
-  merge_request: "1026"
-  author: "@ligo.suzanne.soy, @pewulfman, @lesenechal.remi"
-  type: "added"
-

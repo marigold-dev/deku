@@ -1,4 +1,0 @@
-author: Suzanne Soy
-title: Added dependency on json2yaml and jq in nix-shell
-type: changed
-merge_request: '800'

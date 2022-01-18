@@ -1,6 +1,0 @@
----
-  title: "Fix typing of For_each with any type"
-  merge_request: "1033"
-  author: "@pewulfman"
-  type: "internal"
-

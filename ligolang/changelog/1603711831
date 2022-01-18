@@ -1,6 +1,0 @@
----
-  title: "Refactoring of front-end (making libraries, removing exceptions from interfaces, factoring and removing code etc.)"
-  merge_request: "751"
-  author: "Christian Rinderknecht"
-  type: "internal"
-

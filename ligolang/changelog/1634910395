@@ -1,5 +1,0 @@
-author: Rémi Lesénéchal
-title: '[Hangzhou] Testing framework: Test.originate_from_file now takes an additional
-  list of top-level declaration for views'
-type: added
-merge_request: '1346'

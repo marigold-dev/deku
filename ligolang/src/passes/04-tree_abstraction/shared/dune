@@ -1,7 +1,0 @@
-(library
- (name tree_abstraction_shared)
- (public_name ligo.tree_abstraction.shared)
- (instrumentation
-  (backend bisect_ppx))
- (libraries simple-utils ast_imperative)
- (modules Helpers))

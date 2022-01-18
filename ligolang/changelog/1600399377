@@ -1,4 +1,0 @@
-author: Suzanne Soy
-title: Fix broken build after removal of generated code
-type: fixed
-merge_request: '807'

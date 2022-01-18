@@ -1,6 +1,0 @@
----
-  title: "Add error message for function argument tuple components mismatch"
-  merge_request: "772"
-  author: "SanderSpies"
-  type: "added"
-

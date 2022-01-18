@@ -1,4 +1,0 @@
-author: Rémi Lesénéchal
-title: Fix record destructuring error reporting
-type: fixed
-merge_request: '1362'

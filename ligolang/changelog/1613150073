@@ -1,6 +1,0 @@
-author: Suzanne Soy
-merge_request: '981'
-title: 'Fixed potential bug: use multiset in typeclasses_constraining; added indexer
-  for typeclasses using a variable as an unbound var; sketched out heuristic which
-  inlines variabes in typeclasses'
-type: added

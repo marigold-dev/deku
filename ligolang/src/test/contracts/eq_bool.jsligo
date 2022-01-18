@@ -1,5 +1,0 @@
-/* Test boolean comparison in JsLIGO */
-
-let main = ([a, b] : [bool, bool]) : int => {
-  if (a == b) { return 999; } else { return 1; };
-};

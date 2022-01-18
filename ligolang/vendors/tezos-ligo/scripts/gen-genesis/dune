@@ -1,7 +1,0 @@
-(executable
- (name gen_genesis)
- (libraries
-   lwt.unix
-   tezos-base
-   tezos-base.unix
-   tezos-crypto))

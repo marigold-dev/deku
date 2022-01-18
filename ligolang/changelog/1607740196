@@ -1,6 +1,0 @@
-author: Suzanne Soy
-merge_request: '914'
-title: Addded pretty-printers to the API of indexer plug-ins; added test for addition
-  of constraints and merging of type variables for the by_constraint_identifier indexer
-  and other indexers.
-type: internal

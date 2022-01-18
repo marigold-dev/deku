@@ -1,6 +1,0 @@
----
-  title: "Add a build system that type file in order to resolve dependency"
-  merge_request: "854"
-  author: "Pierre-Emmanuel Wulfman"
-  type: "internal"
-
