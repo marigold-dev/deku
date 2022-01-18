@@ -1,0 +1,17 @@
+(library
+ (name test_interpret)
+ (libraries zinc.types zinc.utils zinc.interpreter)
+ (inline_tests)
+ (modules test_sample)
+ (preprocess
+  (pps
+   ppx_inline_test
+   ppx_expect
+   ppx_deriving.show
+   ppx_deriving_yojson
+   ppx_deriving.eq)))
+
+(tests
+ (names interpreter_tests)
+ (modules interpreter_tests)
+ (libraries alcotest zinc.types zinc.utils zinc.interpreter))

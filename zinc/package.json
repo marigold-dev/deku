@@ -1,0 +1,47 @@
+{
+  "name": "zinc",
+  "version": "0.1.0",
+  "description": "A package defining the types used by zinc functions",
+  "license": "MIT",
+  "esy": {
+    "build": "dune build -p #{self.name}",
+    "buildDev": "dune build --promote-install-files --root . --only-package #{self.name}",
+    "NOTE": "Optional release Section. Customizes result of `esy release`",
+    "release": {
+      "rewritePrefix": true,
+      "bin": [
+        "Hello"
+      ]
+    },
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
+    }
+  },
+  "scripts": {
+    "format": "esy b dune build @fmt --auto-promote",
+    "doc": "esy b dune build @doc"
+  },
+  "dependencies": {
+    "@opam/dune": ">=2.6",
+    "ocaml": "4.12.0",
+    "@opam/ppx_deriving": "*",
+    "@opam/ppx_deriving_yojson": "*",
+    "@opam/alcotest": "*",
+    "@opam/zarith": "*",
+    "@opam/digestif": "*",
+    "@opam/base": "*"
+  },
+  "devDependencies": {
+    "@opam/merlin": "*",
+    "@opam/odoc": "*",
+    "@opam/ocaml-lsp-server": "*",
+    "@opam/ocamlfind-secondary": "*",
+    "@opam/ocamlformat": "0.20.1",
+    "@opam/ocamlformat-rpc": "*",
+    "@opam/ppx_inline_test": "*",
+    "@opam/ppx_expect": "*",
+    "@opam/core_bench": "*",
+    "@opam/utop": "*",
+    "@opam/alcotest": "*"
+  }
+}

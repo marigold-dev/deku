@@ -1,7 +1,7 @@
 {
   "name": "sidechain",
   "esy": {
-    "build": "dune build -p #{self.name}",
+    "build": "dune build -p sidechain,zinc",
     "release": {
       "bin": [
         "sidecli",
@@ -44,12 +44,15 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "0.2.0",
     "@opam/bigstring": "*",
-    "@opam/domainslib": "0.3.1"
+    "@opam/domainslib": "0.3.1",
+    "@opam/ppx_inline_test": "*",
+    "@opam/ppx_expect": "*",
+    "@opam/alcotest": "1.5.0"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
     "@opam/ocaml-lsp-server": "1.9.0",
-    "@opam/ocamlformat": "0.19.0",
+    "@opam/ocamlformat": "0.20.1",
     "@opam/utop": "^2.8.0",
     "@opam/menhir": "20210419",
     "@esy-ocaml/rtop": "^3.3.3",
@@ -58,7 +61,9 @@
     "@opam/mirage-crypto": "0.10.5",
     "@opam/mirage-crypto-ec": "0.10.5",
     "@opam/mirage-crypto-pk": "0.10.5",
-    "@opam/mirage-crypto-rng": "0.10.5"
+    "@opam/mirage-crypto-rng": "0.10.5",
+    "@opam/ppx_inline_test": "*",
+    "@opam/ppx_expect": "*"
   },
   "resolutions": {
     "@esy-ocaml/rtop": "ManasJayanth/reason:rtop.json#cb5afe1df701cfc92321f2123fce2dcad39a02aa",
