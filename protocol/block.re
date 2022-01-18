@@ -176,7 +176,7 @@ let produce = (~state) => {
       update_state_hashes
         ? fst(Protocol_state.hash(state)) : state.state_root_hash,
     ~handles_hash=
-      Core.State.ledger(state.core_state) |> Ledger.handles_root_hash,
+      Core.State.ledger(state.core_state) |> Ledger.withdrawal_handles_root_hash,
     ~validators_hash=Validators.hash(state.validators),
     ~block_height=Int64.add(state.block_height, 1L),
   );

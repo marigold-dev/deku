@@ -1,6 +1,6 @@
 open Crypto;
 
-module Handle: {
+module Withdrawal_handle: {
   [@deriving yojson]
   type t =
     pri {
@@ -30,10 +30,10 @@ let withdraw:
     Ticket_id.t,
     t
   ) =>
-  result((t, Handle.t), [> | `Not_enough_funds]);
+  result((t, Withdrawal_handle.t), [> | `Not_enough_funds]);
 
-let handles_find_proof: (Handle.t, t) => list((BLAKE2B.t, BLAKE2B.t));
+let withdrawal_handles_find_proof: (Withdrawal_handle.t, t) => list((BLAKE2B.t, BLAKE2B.t));
 // TODO: I don't like this API
-let handles_find_proof_by_id:
-  (int, t) => option((list((BLAKE2B.t, BLAKE2B.t)), Handle.t));
-let handles_root_hash: t => BLAKE2B.t;
+let withdrawal_handles_find_proof_by_id:
+  (int, t) => option((list((BLAKE2B.t, BLAKE2B.t)), Withdrawal_handle.t));
+let withdrawal_handles_root_hash: t => BLAKE2B.t;

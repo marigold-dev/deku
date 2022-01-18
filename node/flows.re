@@ -442,7 +442,7 @@ let request_withdraw_proof = (state, ~hash) =>
     let proof =
       state.Node.protocol.core_state
       |> Core.State.ledger
-      |> Ledger.handles_find_proof(handle);
+      |> Ledger.withdrawal_handles_find_proof(handle);
     Ok({handles_hash, handle, proof});
   };
 let request_ticket_balance = (state, ~ticket, ~address) =>

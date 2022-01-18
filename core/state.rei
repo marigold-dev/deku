@@ -5,7 +5,7 @@ type t;
 
 [@deriving yojson]
 type receipt =
-  | Receipt_tezos_withdraw(Ledger.Handle.t);
+  | Receipt_tezos_withdraw(Ledger.Withdrawal_handle.t);
 
 let empty: t;
 let ledger: t => Ledger.t;
