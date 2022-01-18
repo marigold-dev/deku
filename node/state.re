@@ -7,11 +7,11 @@ open Core;
 type identity = {
   secret: Secret.t,
   key: Key.t,
-  t: Address.t,
+  t: Address.Implicit.t,
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Address);
+module Address_map = Map.Make(Address.Implicit);
 module Uri_map = Map.Make(Uri);
 
 type t = {
@@ -94,7 +94,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     state.protocol.validators
     |> Validators.to_list
     |> List.map(validator =>
-         Address.to_key_hash(validator.Validators.address)
+         Address.Implicit.to_key_hash(validator.Validators.address)
        );
   let signatures =
     old_state.protocol.validators

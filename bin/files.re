@@ -26,7 +26,7 @@ module Identity = {
 module Wallet = {
   [@deriving yojson]
   type t = {
-    address: Address.t,
+    address: Address.Implicit.t,
     priv_key: Crypto.Secret.t,
   };
   let read = read_json(of_yojson);
@@ -35,7 +35,7 @@ module Wallet = {
 module Validators = {
   [@deriving yojson]
   type t = {
-    address: Address.t,
+    address: Address.Implicit.t,
     uri: Uri.t,
   };
   let read =

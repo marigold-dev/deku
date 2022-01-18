@@ -4,7 +4,7 @@ open Crypto;
 [@deriving yojson]
 type initial_operation =
   | Transaction({
-      destination: Address.t,
+      destination: Address.Implicit.t,
       amount: Amount.t,
       ticket: Ticket_id.t,
     })
@@ -16,7 +16,7 @@ type initial_operation =
 [@deriving yojson]
 type t = {
   hash: BLAKE2B.t,
-  source: Address.t,
+  source: Address.Implicit.t,
   initial_operation,
 };
 let equal = (a, b) => BLAKE2B.equal(a.hash, b.hash);
@@ -24,7 +24,10 @@ let compare = (a, b) => BLAKE2B.compare(a.hash, b.hash);
 
 let (hash, verify) = {
   let to_yojson = (source, initial_operation) =>
-    [%to_yojson: (Address.t, initial_operation)]((source, initial_operation))
+    [%to_yojson: (Address.Implicit.t, initial_operation)]((
+      source,
+      initial_operation,
+    ))
     |> Yojson.Safe.to_string;
   let hash = (source, initial_operation) =>
     to_yojson(source, initial_operation) |> BLAKE2B.hash;

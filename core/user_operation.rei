@@ -2,7 +2,7 @@ open Crypto;
 
 type initial_operation =
   | Transaction({
-      destination: Address.t,
+      destination: Address.Implicit.t,
       amount: Amount.t,
       ticket: Ticket_id.t,
     })
@@ -16,8 +16,8 @@ type initial_operation =
 type t =
   pri {
     hash: BLAKE2B.t,
-    source: Address.t,
+    source: Address.Implicit.t,
     initial_operation,
   };
 
-let make: (~source: Address.t, initial_operation) => t;
+let make: (~source: Address.Implicit.t, initial_operation) => t;

@@ -10,7 +10,7 @@ type t =
     handles_hash: BLAKE2B.t,
     validators_hash: BLAKE2B.t,
     previous_hash: BLAKE2B.t,
-    author: Address.t,
+    author: Address.Implicit.t,
     block_height: int64,
     operations: list(Protocol_operation.t),
   };
@@ -21,7 +21,7 @@ let genesis: t;
 let produce:
   (
     ~state: Protocol_state.t,
-    ~author: Address.t,
+    ~author: Address.Implicit.t,
     ~operations: list(Protocol_operation.t)
   ) =>
   t;

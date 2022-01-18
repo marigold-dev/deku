@@ -15,16 +15,22 @@ module Withdrawal_handle: {
 [@deriving yojson]
 type t;
 let empty: t;
-let balance: (Address.t, Ticket_id.t, t) => Amount.t;
+let balance: (Address.Implicit.t, Ticket_id.t, t) => Amount.t;
 let transfer:
-  (~source: Address.t, ~destination: Address.t, Amount.t, Ticket_id.t, t) =>
+  (
+    ~source: Address.Implicit.t,
+    ~destination: Address.Implicit.t,
+    Amount.t,
+    Ticket_id.t,
+    t
+  ) =>
   result(t, [> | `Not_enough_funds]);
 
 // on chain ops
-let deposit: (Address.t, Amount.t, Ticket_id.t, t) => t;
+let deposit: (Address.Implicit.t, Amount.t, Ticket_id.t, t) => t;
 let withdraw:
   (
-    ~source: Address.t,
+    ~source: Address.Implicit.t,
     ~destination: Tezos.Address.t,
     Amount.t,
     Ticket_id.t,

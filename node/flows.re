@@ -457,7 +457,10 @@ let trusted_validators_membership = (state, update_state, request) => {
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Core.Address.compare(state.Node.identity.t, Signature.address(signature))
+    Core.Address.Implicit.compare(
+      state.Node.identity.t,
+      Signature.address(signature),
+    )
     == 0,
   );
   let.assert () = (
