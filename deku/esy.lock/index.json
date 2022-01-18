@@ -1,5 +1,5 @@
 {
-  "checksum": "f10ba1019d1c199c8f8ce82b9f18ce99",
+  "checksum": "25c9f1615e8e195fbc33f0795a2c8154",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -106,7 +106,7 @@
       "overrides": [],
       "dependencies": [
         "webpack-merge@5.8.0@d41d8cd9",
-        "webpack@5.67.0@d41d8cd9",
+        "webpack@5.66.0@d41d8cd9",
         "rechoir@0.7.1@d41d8cd9",
         "interpret@2.2.0@d41d8cd9",
         "import-local@3.1.0@d41d8cd9",
@@ -121,14 +121,14 @@
       ],
       "devDependencies": []
     },
-    "webpack@5.67.0@d41d8cd9": {
-      "id": "webpack@5.67.0@d41d8cd9",
+    "webpack@5.66.0@d41d8cd9": {
+      "id": "webpack@5.66.0@d41d8cd9",
       "name": "webpack",
-      "version": "5.67.0",
+      "version": "5.66.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/webpack/-/webpack-5.67.0.tgz#sha1:cb43ca2aad5f7cc81c4cd36b626e6b819805dbfd"
+          "archive:https://registry.npmjs.org/webpack/-/webpack-5.66.0.tgz#sha1:789bf36287f407fc92b3e2d6f978ddff1bfc2dbb"
         ]
       },
       "overrides": [],
@@ -263,7 +263,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack@5.67.0@d41d8cd9",
+        "webpack@5.66.0@d41d8cd9",
         "terser@5.10.0@d41d8cd9",
         "source-map@0.6.1@d41d8cd9",
         "serialize-javascript@6.0.0@d41d8cd9",
@@ -498,7 +498,7 @@
       "overrides": [],
       "dependencies": [
         "webpack-cli@4.9.1@d41d8cd9",
-        "webpack@5.67.0@d41d8cd9",
+        "webpack@5.66.0@d41d8cd9",
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@taquito/taquito@9.2.0@d41d8cd9",
         "@taquito/signer@9.2.0@d41d8cd9",
@@ -2101,14 +2101,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.4.38@d41d8cd9": {
-      "id": "electron-to-chromium@1.4.38@d41d8cd9",
+    "electron-to-chromium@1.4.47@d41d8cd9": {
+      "id": "electron-to-chromium@1.4.47@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.4.38",
+      "version": "1.4.47",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.38.tgz#sha1:10ea58d73d36b13e78d5024f3b74a352d3958d01"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.47.tgz#sha1:5d5535cdbca2b9264abee4d6ea121995e9554bbe"
         ]
       },
       "overrides": [],
@@ -2388,14 +2388,14 @@
       ],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001297@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001297@d41d8cd9",
+    "caniuse-lite@1.0.30001300@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001300@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001297",
+      "version": "1.0.30001300",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001297.tgz#sha1:ea7776ccc4992956582cae5b8fea127fbebde430"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001300.tgz#sha1:11ab6c57d3eb6f964cba950401fd00a146786468"
         ]
       },
       "overrides": [],
@@ -2482,8 +2482,8 @@
         "picocolors@1.0.0@d41d8cd9",
         "node-releases@2.0.1@d41d8cd9",
         "escalade@3.1.1@d41d8cd9",
-        "electron-to-chromium@1.4.38@d41d8cd9",
-        "caniuse-lite@1.0.30001297@d41d8cd9"
+        "electron-to-chromium@1.4.47@d41d8cd9",
+        "caniuse-lite@1.0.30001300@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -2793,7 +2793,7 @@
       "overrides": [],
       "dependencies": [
         "webpack-cli@4.9.1@d41d8cd9",
-        "webpack@5.67.0@d41d8cd9"
+        "webpack@5.66.0@d41d8cd9"
       ],
       "devDependencies": []
     },
