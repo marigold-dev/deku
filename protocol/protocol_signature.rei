@@ -5,7 +5,7 @@ open Core;
 type t;
 let compare: (t, t) => int;
 let public_key: t => Wallet.t;
-let address: t => Address.t;
+let address: t => Address.Implicit.t;
 let signature: t => Signature.t;
 
 let sign: (~key: Secret.t, BLAKE2B.t) => t;

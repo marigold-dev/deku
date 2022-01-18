@@ -6,11 +6,11 @@ open Core;
 type identity = {
   secret: Secret.t,
   key: Key.t,
-  t: Address.t,
+  t: Address.Implicit.t,
   uri: Uri.t,
 };
 
-module Address_map: Map.S with type key = Address.t;
+module Address_map: Map.S with type key = Address.Implicit.t;
 module Uri_map: Map.S with type key = Uri.t;
 
 type t = {

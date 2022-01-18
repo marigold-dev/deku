@@ -22,7 +22,7 @@ let apply_tezos_operation = (t, tezos_operation) => {
       let ledger =
         switch (destination) {
         | Implicit(key_hash) =>
-          let destination = Address.of_key_hash(key_hash);
+          let destination = Address.Implicit.of_key_hash(key_hash);
           Ledger.deposit(destination, amount, ticket, ledger);
         | Originated(_) => failwith("not implemented")
         };

@@ -58,7 +58,7 @@ module Core_user = {
     let signature = Signature.sign(secret, hash);
     // TODO: this can only happen through a bug
     //       maybe the API should enforce it
-    assert(Address.matches_key(key, data.source));
+    assert(Address.Implicit.matches_key(key, data.source));
     {hash, key, signature, nonce, block_height, data};
   };
 
@@ -69,7 +69,7 @@ module Core_user = {
     );
     let.assert () = (
       "Invalid core_user key",
-      Address.matches_key(key, data.source),
+      Address.Implicit.matches_key(key, data.source),
     );
     let.assert () = (
       "Invalid core_user signature",
