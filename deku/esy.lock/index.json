@@ -1,5 +1,5 @@
 {
-  "checksum": "f10ba1019d1c199c8f8ce82b9f18ce99",
+  "checksum": "25c9f1615e8e195fbc33f0795a2c8154",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -60,14 +60,14 @@
       "dependencies": [ "isexe@2.0.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "webpack-sources@3.2.2@d41d8cd9": {
-      "id": "webpack-sources@3.2.2@d41d8cd9",
+    "webpack-sources@3.2.3@d41d8cd9": {
+      "id": "webpack-sources@3.2.3@d41d8cd9",
       "name": "webpack-sources",
-      "version": "3.2.2",
+      "version": "3.2.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.2.2.tgz#sha1:d88e3741833efec57c4c789b6010db9977545260"
+          "archive:https://registry.npmjs.org/webpack-sources/-/webpack-sources-3.2.3.tgz#sha1:2d4daab8451fd4b240cc27055ff6a0c2ccea0cde"
         ]
       },
       "overrides": [],
@@ -102,7 +102,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.65.0@d41d8cd9",
+        "webpack-merge@5.8.0@d41d8cd9", "webpack@5.66.0@d41d8cd9",
         "rechoir@0.7.1@d41d8cd9", "interpret@2.2.0@d41d8cd9",
         "import-local@3.1.0@d41d8cd9", "fastest-levenshtein@1.0.12@d41d8cd9",
         "execa@5.1.1@d41d8cd9", "commander@7.2.0@d41d8cd9",
@@ -113,19 +113,19 @@
       ],
       "devDependencies": []
     },
-    "webpack@5.65.0@d41d8cd9": {
-      "id": "webpack@5.65.0@d41d8cd9",
+    "webpack@5.66.0@d41d8cd9": {
+      "id": "webpack@5.66.0@d41d8cd9",
       "name": "webpack",
-      "version": "5.65.0",
+      "version": "5.66.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/webpack/-/webpack-5.65.0.tgz#sha1:ed2891d9145ba1f0d318e4ea4f89c3fa18e6f9be"
+          "archive:https://registry.npmjs.org/webpack/-/webpack-5.66.0.tgz#sha1:789bf36287f407fc92b3e2d6f978ddff1bfc2dbb"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "webpack-sources@3.2.2@d41d8cd9", "watchpack@2.3.1@d41d8cd9",
+        "webpack-sources@3.2.3@d41d8cd9", "watchpack@2.3.1@d41d8cd9",
         "terser-webpack-plugin@5.3.0@d41d8cd9", "tapable@2.2.1@d41d8cd9",
         "schema-utils@3.1.1@d41d8cd9", "neo-async@2.6.2@d41d8cd9",
         "mime-types@2.1.34@d41d8cd9", "loader-runner@4.2.0@d41d8cd9",
@@ -138,7 +138,7 @@
         "@webassemblyjs/wasm-parser@1.11.1@d41d8cd9",
         "@webassemblyjs/wasm-edit@1.11.1@d41d8cd9",
         "@webassemblyjs/ast@1.11.1@d41d8cd9",
-        "@types/estree@0.0.50@d41d8cd9", "@types/eslint-scope@3.7.2@d41d8cd9"
+        "@types/estree@0.0.50@d41d8cd9", "@types/eslint-scope@3.7.3@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -240,7 +240,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack@5.65.0@d41d8cd9", "terser@5.10.0@d41d8cd9",
+        "webpack@5.66.0@d41d8cd9", "terser@5.10.0@d41d8cd9",
         "source-map@0.6.1@d41d8cd9", "serialize-javascript@6.0.0@d41d8cd9",
         "schema-utils@3.1.1@d41d8cd9", "jest-worker@27.4.6@d41d8cd9"
       ],
@@ -458,7 +458,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.9.1@d41d8cd9", "webpack@5.65.0@d41d8cd9",
+        "webpack-cli@4.9.1@d41d8cd9", "webpack@5.66.0@d41d8cd9",
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@taquito/taquito@9.2.0@d41d8cd9", "@taquito/signer@9.2.0@d41d8cd9",
         "@taquito/rpc@9.2.0@d41d8cd9",
@@ -489,7 +489,7 @@
         "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/ocamlformat-rpc@opam:0.20.1@89f659b0",
         "@opam/ocamlformat@opam:0.20.1@6e37e311",
-        "@opam/ocaml-lsp-server@opam:1.9.1@1397dba9",
+        "@opam/ocaml-lsp-server@opam:1.9.0@671f2077",
         "@opam/mirage-crypto-rng@opam:0.10.5@77f514fc",
         "@opam/mirage-crypto-pk@opam:0.10.5@b93f17b3",
         "@opam/mirage-crypto-ec@opam:0.10.5@88b644fe",
@@ -1997,14 +1997,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.4.38@d41d8cd9": {
-      "id": "electron-to-chromium@1.4.38@d41d8cd9",
+    "electron-to-chromium@1.4.47@d41d8cd9": {
+      "id": "electron-to-chromium@1.4.47@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.4.38",
+      "version": "1.4.47",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.38.tgz#sha1:10ea58d73d36b13e78d5024f3b74a352d3958d01"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.47.tgz#sha1:5d5535cdbca2b9264abee4d6ea121995e9554bbe"
         ]
       },
       "overrides": [],
@@ -2270,14 +2270,14 @@
       ],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001297@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001297@d41d8cd9",
+    "caniuse-lite@1.0.30001300@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001300@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001297",
+      "version": "1.0.30001300",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001297.tgz#sha1:ea7776ccc4992956582cae5b8fea127fbebde430"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001300.tgz#sha1:11ab6c57d3eb6f964cba950401fd00a146786468"
         ]
       },
       "overrides": [],
@@ -2358,8 +2358,8 @@
       "overrides": [],
       "dependencies": [
         "picocolors@1.0.0@d41d8cd9", "node-releases@2.0.1@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.38@d41d8cd9",
-        "caniuse-lite@1.0.30001297@d41d8cd9"
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.47@d41d8cd9",
+        "caniuse-lite@1.0.30001300@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -2650,7 +2650,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "webpack-cli@4.9.1@d41d8cd9", "webpack@5.65.0@d41d8cd9"
+        "webpack-cli@4.9.1@d41d8cd9", "webpack@5.66.0@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -3031,14 +3031,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "@types/eslint-scope@3.7.2@d41d8cd9": {
-      "id": "@types/eslint-scope@3.7.2@d41d8cd9",
+    "@types/eslint-scope@3.7.3@d41d8cd9": {
+      "id": "@types/eslint-scope@3.7.3@d41d8cd9",
       "name": "@types/eslint-scope",
-      "version": "3.7.2",
+      "version": "3.7.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@types/eslint-scope/-/eslint-scope-3.7.2.tgz#sha1:11e96a868c67acf65bf6f11d10bb89ea71d5e473"
+          "archive:https://registry.npmjs.org/@types/eslint-scope/-/eslint-scope-3.7.3.tgz#sha1:125b88504b61e3c8bc6f870882003253005c3224"
         ]
       },
       "overrides": [],
@@ -5376,20 +5376,20 @@
         "@opam/dune@opam:2.9.1@1e504822"
       ]
     },
-    "@opam/ocaml-lsp-server@opam:1.9.1@1397dba9": {
-      "id": "@opam/ocaml-lsp-server@opam:1.9.1@1397dba9",
+    "@opam/ocaml-lsp-server@opam:1.9.0@671f2077": {
+      "id": "@opam/ocaml-lsp-server@opam:1.9.0@671f2077",
       "name": "@opam/ocaml-lsp-server",
-      "version": "opam:1.9.1",
+      "version": "opam:1.9.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/cf/cf1cdb257d4ef1ed1a05e951264b11c7dc7d3066bf448111cb17c67be56ddcee#sha256:cf1cdb257d4ef1ed1a05e951264b11c7dc7d3066bf448111cb17c67be56ddcee",
-          "archive:https://github.com/ocaml/ocaml-lsp/releases/download/1.9.1/jsonrpc-1.9.1.tbz#sha256:cf1cdb257d4ef1ed1a05e951264b11c7dc7d3066bf448111cb17c67be56ddcee"
+          "archive:https://opam.ocaml.org/cache/sha256/70/7046491eb9d0417d23d2a0ce39f9bc3bb9b75521453106f723c8e5f18c2584a9#sha256:7046491eb9d0417d23d2a0ce39f9bc3bb9b75521453106f723c8e5f18c2584a9",
+          "archive:https://github.com/ocaml/ocaml-lsp/releases/download/1.9.0/jsonrpc-1.9.0.tbz#sha256:7046491eb9d0417d23d2a0ce39f9bc3bb9b75521453106f723c8e5f18c2584a9"
         ],
         "opam": {
           "name": "ocaml-lsp-server",
-          "version": "1.9.1",
-          "path": "esy.lock/opam/ocaml-lsp-server.1.9.1"
+          "version": "1.9.0",
+          "path": "esy.lock/opam/ocaml-lsp-server.1.9.0"
         }
       },
       "overrides": [],
