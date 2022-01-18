@@ -26,6 +26,7 @@
     "ocaml": "4.12.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
+    "@opam/alcotest": "*",
     "@opam/zarith": "*",
     "@opam/digestif": "*",
     "@opam/base": "*"

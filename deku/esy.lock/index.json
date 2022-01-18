@@ -1,5 +1,5 @@
 {
-  "checksum": "25c9f1615e8e195fbc33f0795a2c8154",
+  "checksum": "ca2170d64308b61f5e26a6ff54f4a2e7",
   "root": "sidechain@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -464,6 +464,8 @@
         "@taquito/rpc@9.2.0@d41d8cd9",
         "@opam/tezos-micheline@opam:8.3@3d86363d",
         "@opam/secp256k1-internal@opam:0.2.0@54945e35",
+        "@opam/ppx_inline_test@opam:v0.14.1@8b68b6f7",
+        "@opam/ppx_expect@opam:v0.14.2@b6279606",
         "@opam/ppx_deriving_yojson@opam:3.6.1@faf11a7c",
         "@opam/ppx_deriving@opam:5.2.1@089e5dd3",
         "@opam/ppx_blob@opam:0.7.2@f89ed130",
@@ -480,6 +482,7 @@
         "@opam/digestif@opam:1.1.0@a8d16625",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/bigstring@opam:0.3@d98556f0",
+        "@opam/alcotest@opam:1.5.0@c3a8eb69",
         "@esy-ocaml/reason@3.7.0@d41d8cd9"
       ],
       "devDependencies": [
@@ -7916,6 +7919,45 @@
         "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
         "@opam/result@opam:1.5@1c6a6533", "@opam/dune@opam:2.9.1@1e504822",
         "@opam/bigstringaf@opam:0.8.0@6a362afb"
+      ]
+    },
+    "@opam/alcotest@opam:1.5.0@c3a8eb69": {
+      "id": "@opam/alcotest@opam:1.5.0@c3a8eb69",
+      "name": "@opam/alcotest",
+      "version": "opam:1.5.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/54/54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c#sha256:54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c",
+          "archive:https://github.com/mirage/alcotest/releases/download/1.5.0/alcotest-js-1.5.0.tbz#sha256:54281907e02d78995df246dc2e10ed182828294ad2059347a1e3a13354848f6c"
+        ],
+        "opam": {
+          "name": "alcotest",
+          "version": "1.5.0",
+          "path": "esy.lock/opam/alcotest.1.5.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/uutf@opam:1.0.2@4440868f",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/re@opam:1.10.3@0585c65d",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
+        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
+        "@opam/cmdliner@opam:1.0.4@93208aac",
+        "@opam/astring@opam:0.8.5@1300cee8",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae@d41d8cd9",
+        "@opam/uutf@opam:1.0.2@4440868f",
+        "@opam/stdlib-shims@opam:0.3.0@0d088929",
+        "@opam/re@opam:1.10.3@0585c65d",
+        "@opam/ocaml-syntax-shims@opam:1.0.0@9f361fbb",
+        "@opam/fmt@opam:0.9.0@87213963", "@opam/dune@opam:2.9.1@1e504822",
+        "@opam/cmdliner@opam:1.0.4@93208aac",
+        "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
     "@jest/types@26.6.2@d41d8cd9": {

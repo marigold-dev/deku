@@ -1,33 +1,35 @@
+(*
+
+  All of these tests are copied from here:
+  https://github.com/marigold-dev/deku/blob/smart-contracts/ligolang/src/test/zinc_tests.ml
+
+  If you want to add tests, you should add them to that branch too, so you can test the compiler
+  at the same time.
+
+*)
+
 open Zinc_utils
 module Zinc_interpreter = Zinc_interpreter.Dummy
 open Zinc_interpreter.Types
 open Zinc_interpreter
-open Zinc 
-open Types.Stack_item 
+open Zinc
+open Types.Stack_item
+
+let test_w name t = Alcotest.test_case name `Quick t
+
+type dialect = ReasonLIGO | CameLIGO | JsLIGO | PascaLIGO
 
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
 module Executor : Executor = struct
-  let get_contract_opt a = Some Contract.{ address = a; entrypoint = None }
+  let get_contract_opt a = Some (a, None)
 
   let chain_id = "chain id goes here"
+
+  let hash = Fun.id
 
   let key_hash s = s ^ "hash"
 end
 (* Helpers *)
-
-(* Compiling *)
-let init_env = Environment.default Environment.Protocols.current
-
-let to_zinc ~raise ~add_warning path =
-  let typed, _ =
-    Ligo_compile.Utils.type_file ~raise ~add_warning
-      ~options:Test_helpers.options path "auto" Env
-  in
-  let zinc = Ligo_compile.Zinc_of_typed.compile ~raise typed in
-  zinc
-
-let blank_raise_and_warn f =
-  f ~raise:Trace.{ raise = (fun _ -> assert false) } ~add_warning:(fun _ -> ())
 
 (* Alcotest setup *)
 
@@ -59,25 +61,13 @@ let expect_stack =
          (fun ppf stack -> Fmt.pf ppf "%s" (Types.Stack.to_string stack))
          Types.Stack.equal))
 
-let expect_stack_item =
-  Alcotest.(
-    check
-      (Alcotest.testable
-         (fun ppf stack_item ->
-           Fmt.pf ppf "%s" (Types.Stack_item.to_string stack_item))
-         Types.Stack_item.equal))
+type test = unit -> unit
 
-type test =
-  raise:Main_errors.all Trace.raise ->
-  add_warning:(Main_warnings.all -> unit) ->
-  unit ->
-  unit
-
-let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
-    ?index ?(initial_stack = []) ?expect_failure ?expected_output_env
-    ?expected_output ?expected_json contract_file (expected_zinc : Program.t) :
-    test =
- fun ~raise ~add_warning () ->
+let expect_simple_compile_to ?dialect:_ ?index ?(initial_stack = [])
+    ?expect_failure ?expected_output_env ?expected_output ?expected_json
+    contract_file (zinc : Program.t) : test =
+ fun () ->
+  (*
   let to_zinc = to_zinc ~raise ~add_warning in
   let ext =
     match dialect with
@@ -93,38 +83,33 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
       (Printf.sprintf "compiling %s" contract_file)
       expected_zinc zinc
   in
+  *)
   let () =
     match expected_json with
     | Some expected_json ->
         Alcotest.(check string)
           (Printf.sprintf "converting %s to json" contract_file)
           expected_json
-          (zinc |> Program.to_yojson |> Yojson.Safe.to_string)
+          (Program.to_yojson zinc |> Yojson.Safe.to_string)
     | _ -> ()
-  in
-  let () =
-    expect_program
-      (Printf.sprintf "converting %s to and from json" contract_file)
-      zinc
-      (zinc |> Program.to_yojson |> Yojson.Safe.to_string
-     |> Yojson.Safe.from_string |> Program.of_yojson |> Result.get_ok)
   in
   let index = match index with None -> List.length zinc - 1 | Some n -> n in
   match
     ( expect_failure,
-      let from = List.nth_exn zinc index |> snd |> Zinc.to_yojson in
+      let from = Base.List.nth_exn zinc index |> snd |> Zinc.to_yojson in
       let to_ = Types.Zinc.of_yojson from |> Result.get_ok in
       to_
       |> Interpreter.initial_state ~initial_stack
       |> Interpreter.eval (module Executor) )
   with
-  | None, Interpreter_output.Success (output_env, output_stack) ->
+  | (None, Interpreter_output.Success (output_env, output_stack)) ->
       let () =
         match expected_output_env with
         | Some expected_zinc ->
             expect_env
               (Printf.sprintf "evaluating env for %s" contract_file)
-              expected_zinc output_env
+              expected_zinc
+              output_env
         | None -> ()
       in
       let () =
@@ -132,32 +117,36 @@ let expect_simple_compile_to ?(dialect = Self_ast_imperative.Syntax.PascaLIGO)
         | Some expected_stack ->
             expect_stack
               (Printf.sprintf "evaluating stack for %s" contract_file)
-              expected_stack output_stack
+              expected_stack
+              output_stack
         | None -> ()
       in
       ()
-  | Some s, Failure s' ->
-      Alcotest.(check string) "Test faild unsuccessfully:" s s'
-  | Some _, Success _ ->
+  | (Some s, Interpreter_output.Failure s') ->
+      Alcotest.(check string) "hmm" s s'
+  | (Some _, Interpreter_output.Success _) ->
       failwith "expected failure, but execution was successful"
-  | None, Interpreter_output.Failure _ ->
+  | (None, Interpreter_output.Failure _) ->
       failwith "was not expecting failure, but execution failed anyway"
 
 (* ================ *)
 (* Tests *)
 
 let simple_1 =
-  expect_simple_compile_to "simple1"
-    [ ("i", [ Plain_old_data (Num (Z.of_int 42)); Core Return ]) ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+  expect_simple_compile_to
+    "simple1"
+    [("i", [Plain_old_data (Num (Z.of_int 42)); Core Return])]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42)))]
 
 let simple_2 =
-  expect_simple_compile_to "simple2"
-    [ ("i", [ Plain_old_data (Num (Z.of_int 42)); Core Return ]) ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+  expect_simple_compile_to
+    "simple2"
+    [("i", [Plain_old_data (Num (Z.of_int 42)); Core Return])]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42)))]
 
 let simple_3 =
-  expect_simple_compile_to "simple3"
+  expect_simple_compile_to
+    "simple3"
     [
       ( "my_address",
         [
@@ -172,25 +161,27 @@ let simple_3 =
       ]
 
 let id =
-  expect_simple_compile_to "id_func"
-    [ ("id", [ Core Grab; Core (Access 0); Core Return ]) ]
-    ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42))) ]
+  expect_simple_compile_to
+    "id_func"
+    [("id", [Core Grab; Core (Access 0); Core Return])]
+    ~initial_stack:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42)))]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 42)))]
 
 let chain_id =
-  expect_simple_compile_to "chain_id"
-    [ ("chain_id", [ Domain_specific_operation ChainID; Core Return ]) ]
-    ~expected_output:[ Z (Plain_old_data (Chain_id "chain id goes here")) ]
+  expect_simple_compile_to
+    "chain_id"
+    [("chain_id", [Domain_specific_operation ChainID; Core Return])]
+    ~expected_output:[Z (Plain_old_data (Chain_id "chain id goes here"))]
 
 let chain_id_func =
-  expect_simple_compile_to "chain_id_func"
-    [
-      ("chain_id", [ Core Grab; Domain_specific_operation ChainID; Core Return ]);
-    ]
-    ~initial_stack:[ Types.Utils.unit_record_stack ]
+  expect_simple_compile_to
+    "chain_id_func"
+    [("chain_id", [Core Grab; Domain_specific_operation ChainID; Core Return])]
+    ~initial_stack:[Types.Utils.unit_record_stack]
 
 let tuple_creation =
-  expect_simple_compile_to "tuple_creation"
+  expect_simple_compile_to
+    "tuple_creation"
     [
       ( "dup",
         [
@@ -201,7 +192,7 @@ let tuple_creation =
           Core Return;
         ] );
     ]
-    ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Num Z.one)) ]
+    ~initial_stack:[Types.Stack_item.Z (Plain_old_data (Num Z.one))]
     ~expected_output:
       [
         Types.Stack_item.Record
@@ -211,7 +202,8 @@ let tuple_creation =
       ]
 
 let check_record_destructure =
-  expect_simple_compile_to "check_record_destructure"
+  expect_simple_compile_to
+    "check_record_destructure"
     [
       ( "check_record_destructure",
         [
@@ -242,7 +234,8 @@ let check_record_destructure =
 
 let check_hash_key =
   let open Zinc_utils in
-  expect_simple_compile_to "key_hash"
+  expect_simple_compile_to
+    "key_hash"
     [
       ( "check_hash_key",
         [
@@ -272,14 +265,18 @@ let check_hash_key =
       [
         Types.Stack_item.Record
           (LMap.empty
-          |> LMap.add 0
+          |> LMap.add
+               0
                (Types.Stack_item.Z (Plain_old_data (Hash "not sure yet")))
-          |> LMap.add 1
+          |> LMap.add
+               1
                (Types.Stack_item.Z (Plain_old_data (Key "Hashy hash!"))));
       ]
 
 let basic_function_application =
-  expect_simple_compile_to ~dialect:ReasonLIGO "basic_function_application"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "basic_function_application"
     [
       ( "a",
         [
@@ -289,12 +286,14 @@ let basic_function_application =
           Core Return;
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 3))) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 3)))]
 
 let basic_link =
-  expect_simple_compile_to ~dialect:ReasonLIGO "basic_link"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "basic_link"
     [
-      ("a", [ Plain_old_data (Num (Z.of_int 1)); Core Return ]);
+      ("a", [Plain_old_data (Num (Z.of_int 1)); Core Return]);
       ( "b",
         [
           Plain_old_data (Num (Z.of_int 1));
@@ -304,10 +303,12 @@ let basic_link =
         ] );
     ]
     ~index:1
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 1))) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num (Z.of_int 1)))]
 
 let failwith_simple =
-  expect_simple_compile_to ~dialect:ReasonLIGO "failwith_simple"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "failwith_simple"
     [
       ( "a",
         [
@@ -319,7 +320,9 @@ let failwith_simple =
     ~expect_failure:"Not a contract"
 
 let get_contract_opt =
-  expect_simple_compile_to ~dialect:ReasonLIGO "get_contract_opt"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "get_contract_opt"
     [
       ( "a",
         [
@@ -331,13 +334,13 @@ let get_contract_opt =
     ~expected_output:
       [
         Types.Stack_item.Variant
-          ( 0,
-            Types.Stack_item.NonliteralValue
-              (Contract Contract.{ address = "whatever"; entrypoint = None }) );
+          (0, Types.Stack_item.NonliteralValue (Contract ("whatever", None)));
       ]
 
 let match_on_sum =
-  expect_simple_compile_to ~dialect:ReasonLIGO "match_on_sum"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "match_on_sum"
     [
       ( "a",
         [
@@ -350,7 +353,7 @@ let match_on_sum =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 0); Core Return ];
+                 [Core Grab; Core (Access 0); Core Return];
                  [
                    Core Grab;
                    Plain_old_data (String "Not a contract");
@@ -363,93 +366,14 @@ let match_on_sum =
     ~expected_output:
       [
         Types.Stack_item.NonliteralValue
-          (Contract
-             Contract.
-               {
-                 address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
-                 entrypoint = None;
-               });
-      ]
-
-let increment_contract =
-  let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "increment_contract"
-    [
-      ( "main",
-        [
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Adt (RecordAccess 1);
-          Core Grab;
-          Core (Access 1);
-          Adt (RecordAccess 0);
-          Core Grab;
-          Plain_old_data (Num one);
-          Core (Access 1);
-          Operation Add;
-          Plain_old_data Nil;
-          Adt (MakeRecord 2);
-          Core Return;
-        ] );
-    ]
-    ~initial_stack:
-      [
-        Types.Stack_item.Record
-          [|
-            Utils.unit_record_stack;
-            Types.Stack_item.Z (Plain_old_data (Num ~$5));
-          |];
-      ]
-    ~expected_output:
-      [
-        Types.Stack_item.Record
-          [|
-            Types.Stack_item.List [];
-            Types.Stack_item.Z (Plain_old_data (Num ~$6));
-          |];
-      ]
-    ~expected_json:
-      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
-
-let increment_contract_bad_parameter =
-  let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO
-    ~expect_failure:"(Operation Add) unimplemented!" "increment_contract"
-    [
-      ( "main",
-        [
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Core Grab;
-          Core (Access 0);
-          Adt (RecordAccess 1);
-          Core Grab;
-          Core (Access 1);
-          Adt (RecordAccess 0);
-          Core Grab;
-          Plain_old_data (Num one);
-          Core (Access 1);
-          Operation Add;
-          Plain_old_data Nil;
-          Adt (MakeRecord 2);
-          Core Return;
-        ] );
-    ]
-    ~initial_stack:
-      [
-        Types.Stack_item.Record
-          [| Utils.unit_record_stack; Utils.unit_record_stack |];
+          (Contract ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None));
       ]
 
 let super_simple_contract =
   let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "super_simple_contract"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "super_simple_contract"
     [
       ( "main",
         [
@@ -464,7 +388,7 @@ let super_simple_contract =
           Core (Access 1);
           Adt (RecordAccess 0);
           Core Grab;
-          Core (Access 0);
+          Plain_old_data (Num ~$1);
           Core (Access 1);
           Operation Add;
           Plain_old_data Nil;
@@ -476,7 +400,7 @@ let super_simple_contract =
       [
         Types.Stack_item.Record
           [|
-            Z (Plain_old_data (Num ~$3));
+            Types.Utils.unit_record_stack;
             Types.Stack_item.Z (Plain_old_data (Num ~$1));
           |];
       ]
@@ -485,54 +409,24 @@ let super_simple_contract =
         Types.Stack_item.Record
           [|
             Types.Stack_item.List [];
-            Types.Stack_item.Z (Plain_old_data (Num ~$4));
+            Types.Stack_item.Z (Plain_old_data (Num ~$2));
           |];
       ]
     ~expected_json:
-      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
-
-let num_serialization ~raise:_ () =
-  let open Z in
-  let stack_item = Types.Stack_item.Z (Plain_old_data (Num ~$4)) in
-  let expected_json = "[\"Z\",[\"Plain_old_data\",[\"Num\",\"4\"]]]" in
-  let () =
-    Alcotest.(check string)
-      (Printf.sprintf "converting %s to json"
-         (stack_item |> Stack_item.to_string))
-      expected_json
-      (Stack_item.to_yojson stack_item |> Yojson.Safe.to_string)
-  in
-  expect_stack_item
-    (Printf.sprintf "converting %s from json"
-       (stack_item |> Stack_item.to_string))
-    stack_item
-    (Yojson.Safe.from_string expected_json
-    |> Stack_item.of_yojson |> Result.get_ok)
-
-let unit_serialization ~raise:_ () =
-  let stack_item = Utils.unit_record_stack in
-  let expected_json = "[\"Record\",[]]" in
-  let () =
-    Alcotest.(check string)
-      (Printf.sprintf "converting %s to json"
-         (stack_item |> Stack_item.to_string))
-      expected_json
-      (Stack_item.to_yojson stack_item |> Yojson.Safe.to_string)
-  in
-  expect_stack_item
-    (Printf.sprintf "converting %s from json"
-       (stack_item |> Stack_item.to_string))
-    stack_item
-    (Yojson.Safe.from_string expected_json
-    |> Stack_item.of_yojson |> Result.get_ok)
+      "[[\"main\",[[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",0]],[\"Adt\",[\"RecordAccess\",1]],[\"Core\",[\"Grab\"]],[\"Core\",[\"Access\",1]],[\"Adt\",[\"RecordAccess\",0]],[\"Core\",[\"Grab\"]],[\"Plain_old_data\",[\"Num\",\"1\"]],[\"Core\",[\"Access\",1]],[\"Operation\",[\"Add\"]],[\"Plain_old_data\",[\"Nil\"]],[\"Adt\",[\"MakeRecord\",2]],[\"Core\",[\"Return\"]]]]]"
+(* below this line are tests that fail because I haven't yet implemented the necessary primatives *)
 
 let mutez_construction =
-  expect_simple_compile_to ~dialect:ReasonLIGO "mutez_construction"
-    [ ("a", [ Plain_old_data (Mutez (Z.of_int 1)); Core Return ]) ]
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "mutez_construction"
+    [("a", [Plain_old_data (Mutez (Z.of_int 1)); Core Return])]
 
 let nontail_match =
   let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "nontail_match"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "nontail_match"
     [
       ( "a",
         [
@@ -569,11 +463,13 @@ let nontail_match =
           Core Return;
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$12)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num ~$12))]
 
 let create_transaction =
   let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "create_transaction"
     [
       ( "a",
         [
@@ -586,7 +482,7 @@ let create_transaction =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 0); Core EndLet ];
+                 [Core Grab; Core (Access 0); Core EndLet];
                  [
                    Core Grab;
                    Plain_old_data (String "Not a contract");
@@ -597,7 +493,7 @@ let create_transaction =
           Core EndLet;
           Core Grab;
           Core (Access 0);
-          Plain_old_data (Mutez zero);
+          Plain_old_data (Mutez ~$10);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Core Return;
@@ -608,17 +504,14 @@ let create_transaction =
         Types.Stack_item.NonliteralValue
           (Chain_operation
              (Transaction
-                ( Utils.unit_record_stack,
-                  Contract.
-                    {
-                      address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
-                      entrypoint = None;
-                    } )));
+                (Z.of_int 10, ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None))));
       ]
 
 let create_transaction_in_tuple =
   let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "create_transaction_in_tuple"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "create_transaction_in_tuple"
     [
       ( "a",
         [
@@ -631,7 +524,7 @@ let create_transaction_in_tuple =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 0); Core EndLet ];
+                 [Core Grab; Core (Access 0); Core EndLet];
                  [
                    Core Grab;
                    Plain_old_data (String "Not a contract");
@@ -645,7 +538,7 @@ let create_transaction_in_tuple =
           Plain_old_data
             (Key "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav");
           Core (Access 0);
-          Plain_old_data (Mutez zero);
+          Plain_old_data (Mutez ~$10);
           Adt (MakeRecord 0);
           Domain_specific_operation MakeTransaction;
           Adt (MakeRecord 3);
@@ -657,17 +550,15 @@ let create_transaction_in_tuple =
         Types.Stack_item.Record
           LMap.(
             empty
-            |> add 0
+            |> add
+                 0
                  (Types.Stack_item.NonliteralValue
                     (Chain_operation
                        (Transaction
-                          ( Utils.unit_record_stack,
-                            Contract.
-                              {
-                                address = "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV";
-                                entrypoint = None;
-                              } ))))
-            |> add 1
+                          ( Z.of_int 10,
+                            ("tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV", None) ))))
+            |> add
+                 1
                  (Types.Stack_item.Z
                     (Plain_old_data
                        (Key
@@ -676,7 +567,9 @@ let create_transaction_in_tuple =
       ]
 
 let list_construction =
-  expect_simple_compile_to ~dialect:ReasonLIGO "list_construction"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "list_construction"
     [
       ( "a",
         [
@@ -698,9 +591,11 @@ let list_construction =
       ]
 
 let bools_religo =
-  expect_simple_compile_to ~dialect:ReasonLIGO "bools"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "bools"
     [
-      ("a", [ Plain_old_data (Bool true); Core Return ]);
+      ("a", [Plain_old_data (Bool true); Core Return]);
       ( "b",
         [
           Plain_old_data (Bool true);
@@ -722,17 +617,19 @@ let bools_religo =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 3); Core Return ];
-                 [ Core Grab; Core (Access 4); Core Return ];
+                 [Core Grab; Core (Access 3); Core Return];
+                 [Core Grab; Core (Access 4); Core Return];
                |]);
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Bool false))]
 
 let bools_ligo =
-  expect_simple_compile_to ~dialect:PascaLIGO "bools"
+  expect_simple_compile_to
+    ~dialect:PascaLIGO
+    "bools"
     [
-      ("a", [ Plain_old_data (Bool true); Core Return ]);
+      ("a", [Plain_old_data (Bool true); Core Return]);
       ( "b",
         [
           Plain_old_data (Bool true);
@@ -754,15 +651,17 @@ let bools_ligo =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 3); Core Return ];
-                 [ Core Grab; Core (Access 4); Core Return ];
+                 [Core Grab; Core (Access 3); Core Return];
+                 [Core Grab; Core (Access 4); Core Return];
                |]);
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Bool false))]
 
 let bool_ops =
-  expect_simple_compile_to ~dialect:PascaLIGO "boolean_operators"
+  expect_simple_compile_to
+    ~dialect:PascaLIGO
+    "boolean_operators"
     [
       ( "or_true",
         [
@@ -904,14 +803,16 @@ let bool_ops =
           Core Return;
         ] );
     ]
-    ~initial_stack:[ Types.Stack_item.Z (Plain_old_data (Bool false)) ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Bool true)) ]
+    ~initial_stack:[Types.Stack_item.Z (Plain_old_data (Bool false))]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Bool true))]
 
 let if_then_else =
   let open Z in
-  expect_simple_compile_to ~dialect:ReasonLIGO "if_then_else"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "if_then_else"
     [
-      ("a", [ Plain_old_data (Num ~$2); Core Return ]);
+      ("a", [Plain_old_data (Num ~$2); Core Return]);
       ( "b",
         [
           Plain_old_data (Num ~$2);
@@ -931,7 +832,7 @@ let if_then_else =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 2); Core Return ];
+                 [Core Grab; Core (Access 2); Core Return];
                  [
                    Core Grab;
                    Plain_old_data (Num ~$2);
@@ -942,13 +843,15 @@ let if_then_else =
                |]);
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$4)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num ~$4))]
 
 let if_then_else_op =
   let open Z in
-  expect_simple_compile_to ~dialect:PascaLIGO "if_then_else_op"
+  expect_simple_compile_to
+    ~dialect:PascaLIGO
+    "if_then_else_op"
     [
-      ("a", [ Plain_old_data (Num ~$2); Core Return ]);
+      ("a", [Plain_old_data (Num ~$2); Core Return]);
       ( "b",
         [
           Plain_old_data (Num ~$2);
@@ -970,18 +873,20 @@ let if_then_else_op =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 2); Core Return ];
-                 [ Core Grab; Core (Access 3); Core Return ];
+                 [Core Grab; Core (Access 2); Core Return];
+                 [Core Grab; Core (Access 3); Core Return];
                |]);
         ] );
     ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num ~$2))]
 
 let if_then_else_op_function =
   let open Z in
-  expect_simple_compile_to ~dialect:PascaLIGO "if_then_else_op_function"
+  expect_simple_compile_to
+    ~dialect:PascaLIGO
+    "if_then_else_op_function"
     [
-      ("a", [ Plain_old_data (Num ~$2); Core Return ]);
+      ("a", [Plain_old_data (Num ~$2); Core Return]);
       ( "b",
         [
           Plain_old_data (Num ~$2);
@@ -1014,8 +919,8 @@ let if_then_else_op_function =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Core (Access 7); Core Return ];
-                 [ Core Grab; Core (Access 8); Core Return ];
+                 [Core Grab; Core (Access 7); Core Return];
+                 [Core Grab; Core (Access 8); Core Return];
                |]);
         ] );
     ]
@@ -1026,12 +931,14 @@ let if_then_else_op_function =
           |> LMap.add 0 (Types.Stack_item.Z (Plain_old_data (Bool false)))
           |> LMap.add 1 (Types.Stack_item.Z (Plain_old_data (Bool true))));
       ]
-    ~expected_output:[ Types.Stack_item.Z (Plain_old_data (Num ~$2)) ]
+    ~expected_output:[Types.Stack_item.Z (Plain_old_data (Num ~$2))]
 
 let make_an_option =
-  expect_simple_compile_to ~dialect:ReasonLIGO "make_an_option"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "make_an_option"
     [
-      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant 1); Core Return ]);
+      ("a", [Adt (MakeRecord 0); Adt (MakeVariant 1); Core Return]);
       ( "b",
         [
           Adt (MakeRecord 0);
@@ -1046,9 +953,11 @@ let make_an_option =
     ]
 
 let make_a_custom_option =
-  expect_simple_compile_to ~dialect:ReasonLIGO "make_a_custom_option"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "make_a_custom_option"
     [
-      ("a", [ Adt (MakeRecord 0); Adt (MakeVariant 0); Core Return ]);
+      ("a", [Adt (MakeRecord 0); Adt (MakeVariant 0); Core Return]);
       ( "b",
         [
           Adt (MakeRecord 0);
@@ -1063,12 +972,13 @@ let make_a_custom_option =
     ]
 
 let top_level_let_dependencies =
-  expect_simple_compile_to ~dialect:ReasonLIGO "top_level_let_dependencies"
+  expect_simple_compile_to
+    ~dialect:ReasonLIGO
+    "top_level_let_dependencies"
     [
-      ("a", [ Plain_old_data (Num Z.one); Core Return ]);
+      ("a", [Plain_old_data (Num Z.one); Core Return]);
       ( "b",
-        [ Plain_old_data (Num Z.one); Core Grab; Core (Access 0); Core Return ]
-      );
+        [Plain_old_data (Num Z.one); Core Grab; Core (Access 0); Core Return] );
       ( "c",
         [
           Plain_old_data (Num Z.one);
@@ -1082,9 +992,11 @@ let top_level_let_dependencies =
 
 let custom_variant_matching =
   let open Z in
-  expect_simple_compile_to ~dialect:CameLIGO "custom_variant_matching"
+  expect_simple_compile_to
+    ~dialect:CameLIGO
+    "custom_variant_matching"
     [
-      ("a", [ Plain_old_data (String "test"); Adt (MakeVariant 2); Core Return ]);
+      ("a", [Plain_old_data (String "test"); Adt (MakeVariant 2); Core Return]);
       ( "b",
         [
           Plain_old_data (String "test");
@@ -1109,52 +1021,51 @@ let custom_variant_matching =
           Adt
             (MatchVariant
                [|
-                 [ Core Grab; Plain_old_data (Num ~$1); Core Return ];
-                 [ Core Grab; Plain_old_data (Num ~$2); Core Return ];
-                 [ Core Grab; Plain_old_data (Num ~$0); Core Return ];
+                 [Core Grab; Plain_old_data (Num ~$1); Core Return];
+                 [Core Grab; Plain_old_data (Num ~$2); Core Return];
+                 [Core Grab; Plain_old_data (Num ~$0); Core Return];
                |]);
         ] );
     ]
-    ~expected_output:[ Z (Plain_old_data (Num ~$1)) ]
-    ~initial_stack:
-      [ Types.Stack_item.Z (Types.Zinc.Plain_old_data (Bool false)) ]
+    ~expected_output:[Z (Plain_old_data (Num ~$1))]
+    ~initial_stack:[Types.Stack_item.Z (Types.Zinc.Plain_old_data (Bool false))]
 
 let main =
-  let open Test_helpers in
-  test_suite "Zinc tests"
+  let open Alcotest in
+  run
+    "Zinc tests"
     [
-      test_w "simple1" simple_1;
-      test_w "simple2" simple_2;
-      test_w "simple3" simple_3;
-      test_w "bools_religo" bools_religo;
-      test_w "bools_ligo" bools_ligo;
-      test_w "bool_ops" bool_ops;
-      test_w "if_then_else" if_then_else;
-      test_w "if with ops" if_then_else_op;
-      test_w "if with ops function" if_then_else_op_function;
-      test_w "id" id;
-      test_w "chain_id" chain_id;
-      test_w "chain_id_func" chain_id_func;
-      test_w "tuple_creation" tuple_creation;
-      test_w "check_record_destructure" check_record_destructure;
-      test_w "check_hash_key" check_hash_key;
-      test_w "basic_function_application" basic_function_application;
-      test_w "basic_link" basic_link;
-      test_w "failwith_simple" failwith_simple;
-      test_w "get_contract_opt" get_contract_opt;
-      test_w "match_on_sum" match_on_sum;
-      test_w "create_transaction" create_transaction;
-      test_w "create_transaction_in_tuple" create_transaction_in_tuple;
-      test_w "mutez_construction" mutez_construction;
-      test_w "list_construction" list_construction;
-      test_w "make_an_option" make_an_option;
-      test_w "make_a_custom_option" make_a_custom_option;
-      test_w "top_level_let_dependencies" top_level_let_dependencies;
-      test_w "nontail_match" nontail_match;
-      test_w "super_simple_contract" super_simple_contract;
-      test_w "increment_contract" increment_contract;
-      test_w "increment_contract_bad_parameter" increment_contract_bad_parameter;
-      test_w "custom_variant_matching" custom_variant_matching;
-      test "num_serialization" num_serialization;
-      test "unit_serialization" unit_serialization;
+      ( "string-case",
+        [
+          test_w "simple1" simple_1;
+          test_w "simple2" simple_2;
+          test_w "simple3" simple_3;
+          test_w "bools_religo" bools_religo;
+          test_w "bools_ligo" bools_ligo;
+          test_w "bool_ops" bool_ops;
+          test_w "if_then_else" if_then_else;
+          test_w "if with ops" if_then_else_op;
+          test_w "if with ops function" if_then_else_op_function;
+          test_w "id" id;
+          test_w "chain_id" chain_id;
+          test_w "chain_id_func" chain_id_func;
+          test_w "tuple_creation" tuple_creation;
+          test_w "check_record_destructure" check_record_destructure;
+          test_w "check_hash_key" check_hash_key;
+          test_w "basic_function_application" basic_function_application;
+          test_w "basic_link" basic_link;
+          test_w "failwith_simple" failwith_simple;
+          test_w "get_contract_opt" get_contract_opt;
+          test_w "match_on_sum" match_on_sum;
+          test_w "create_transaction" create_transaction;
+          test_w "create_transaction_in_tuple" create_transaction_in_tuple;
+          test_w "mutez_construction" mutez_construction;
+          test_w "list_construction" list_construction;
+          test_w "make_an_option" make_an_option;
+          test_w "make_a_custom_option" make_a_custom_option;
+          test_w "top_level_let_dependencies" top_level_let_dependencies;
+          test_w "nontail_match" nontail_match;
+          test_w "super_simple_contract" super_simple_contract;
+          test_w "custom_variant_matching" custom_variant_matching;
+        ] );
     ]
