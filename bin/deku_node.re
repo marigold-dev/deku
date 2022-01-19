@@ -208,6 +208,11 @@ let handle_ticket_balance =
     },
   );
 
+let handle_current_node_state =
+  handle_request((module Networking.Current_Node_state), (_, _) =>
+    Ok({node_state: Server.get_state()})
+  );
+
 let node = folder => {
   let.await identity = Files.Identity.read(~file=folder ++ "/identity.json");
 
@@ -310,6 +315,13 @@ let node = folder => {
     |> handle_withdraw_proof
     |> handle_ticket_balance
     |> handle_trusted_validators_membership
+    |> handle_current_node_state
+    |> App.middleware(
+         // TODO: make this configurable
+         // This is potentially a big security concern so it should only
+         // be accessible via localhost
+         Middleware.allow_cors(~origins=["http://localhost:3000"], ()),
+       )
     |> App.start
     |> Lwt_main.run;
 

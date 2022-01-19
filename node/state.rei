@@ -66,3 +66,5 @@ let load_snapshot:
       | `State_root_not_the_expected
     ],
   );
+
+let to_yojson : t => Yojson.Safe.t

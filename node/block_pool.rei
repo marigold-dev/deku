@@ -21,3 +21,4 @@ let find_signatures: (~hash: BLAKE2B.t, t) => option(Signatures.t);
 let find_next_block_to_apply: (~hash: BLAKE2B.t, t) => option(Block.t);
 let find_all_signed_blocks_above:
   ((Block.t, Signatures.t), t) => (list(Block.t), (Block.t, Signatures.t));
+let to_yojson: t => Yojson.Safe.t;

@@ -8,6 +8,8 @@ module Hash_map =
     [@deriving (ord, yojson)]
     type t = BLAKE2B.t;
   });
+
+[@deriving to_yojson]
 type block_and_signatures = {
   signatures: Signatures.t,
   block: option(Block.t),
@@ -15,6 +17,7 @@ type block_and_signatures = {
 };
 
 // TODO: clean all blocks older than the current state root hash
+[@deriving to_yojson]
 type t = {
   self_key: Wallet.t,
   available: Hash_map.t(block_and_signatures),

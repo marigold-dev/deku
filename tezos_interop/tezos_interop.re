@@ -3,6 +3,7 @@ open Crypto;
 open Tezos;
 
 module Context = {
+  [@deriving yojson]
   type t = {
     rpc_node: Uri.t,
     secret: Secret.t,

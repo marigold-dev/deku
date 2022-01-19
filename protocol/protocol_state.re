@@ -6,6 +6,7 @@ module Tezos_operation_set =
 module User_operation_set =
   Set.Make_with_yojson(Protocol_operation.Core_user);
 
+[@deriving to_yojson]
 type t = {
   core_state: Core.State.t,
   // TODO: more efficient lookup on included_operations

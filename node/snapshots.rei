@@ -21,3 +21,5 @@ let make:
 let append_block: (~pool: Block_pool.t, (Block.t, Signatures.t), t) => t;
 let update:
   (~new_snapshot: (BLAKE2B.t, string), ~applied_block_height: int64, t) => t;
+
+let to_yojson: t => Yojson.Safe.t;

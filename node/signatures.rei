@@ -9,3 +9,5 @@ let set_signed: t => t;
 let add: (~signatures_required: int, Signature.t, t) => t;
 let mem: (Signature.t, t) => bool;
 let to_list: t => List.t(Signature.t);
+let of_yojson: Yojson.Safe.t => result(t, string);
+let to_yojson: t => Yojson.Safe.t;

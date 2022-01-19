@@ -6,6 +6,7 @@ open Protocol;
  bigger block_height than the state snapshot,
  this ensures that if last_block is signed the
  state snapshot will also be signed */
+[@deriving to_yojson]
 type t = {
   last_snapshot: (BLAKE2B.t, string),
   last_block: Block.t,

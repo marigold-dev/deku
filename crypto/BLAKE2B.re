@@ -51,8 +51,10 @@ module Make =
   let both = (a, b) => hash(to_raw_string(a) ++ to_raw_string(b));
 
   module Map =
-    Map.Make({
+    Map.Make_with_yojson({
       type nonrec t = t;
+      let of_yojson = of_yojson;
+      let to_yojson = to_yojson;
       let compare = compare;
     });
 

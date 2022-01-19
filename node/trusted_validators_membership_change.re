@@ -1,4 +1,5 @@
 open Core;
+open Helpers;
 
 [@deriving (yojson, ord)]
 type action =
@@ -12,7 +13,9 @@ type t = {
 };
 
 module Set =
-  Set.Make({
+  Set.Make_with_yojson({
     type nonrec t = t;
+    let of_yojson = of_yojson;
+    let to_yojson = to_yojson;
     let compare = compare;
   });

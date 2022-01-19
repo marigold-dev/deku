@@ -9,6 +9,7 @@ module Context: {
     consensus_contract: Address.t,
     required_confirmations: int,
   };
+  let to_yojson: t => Yojson.Safe.t;
 };
 
 module Consensus: {

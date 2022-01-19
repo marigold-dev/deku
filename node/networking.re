@@ -2,7 +2,6 @@ open Helpers;
 open Crypto;
 open State;
 open Protocol;
-open Core;
 
 module type Request_endpoint = {
   [@deriving yojson]
@@ -189,11 +188,11 @@ module Withdraw_proof = {
 module Ticket_balance = {
   [@deriving yojson]
   type request = {
-    address: Address.t,
-    ticket: Ticket_id.t,
+    address: Core.Address.t,
+    ticket: Core.Ticket_id.t,
   };
   [@deriving yojson]
-  type response = {amount: Amount.t};
+  type response = {amount: Core.Amount.t};
   let path = "/ticket-balance";
 };
 
@@ -205,7 +204,7 @@ module Trusted_validators_membership_change = {
   [@deriving yojson]
   type payload = {
     action,
-    address: Address.t,
+    address: Core.Address.t,
   };
   [@deriving yojson]
   type request = {
@@ -215,6 +214,17 @@ module Trusted_validators_membership_change = {
   [@deriving yojson]
   type response = unit;
   let path = "/trusted-validators-membership";
+};
+
+module Current_Node_state = {
+  [@deriving yojson]
+  type request = unit;
+
+  [@deriving to_yojson]
+  type response = {node_state: State.t};
+  let response_of_yojson = _ => raise(Failure("Not a deserializable type"));
+
+  let path = "/current-node-state";
 };
 
 let request_block_by_hash = request((module Block_by_hash_spec));
@@ -235,3 +245,4 @@ let request_consensus_operation =
   request((module Consensus_operation_gossip));
 let request_trusted_validator_membership =
   request((module Trusted_validators_membership_change));
+let request_current_node_state = request((module Current_Node_state));

@@ -11,12 +11,17 @@ type identity = {
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Address);
-module Uri_map = Map.Make(Uri);
+module Address_map = Map.Make_with_yojson(Address);
+module Uri_map = Map.Make_with_yojson(Uri);
 
+let ommitted = _ => Yojson.Safe.from_string("\"OMMITTED\"");
+
+[@deriving to_yojson]
 type t = {
+  [@to_yojson ommitted]
   identity,
   trusted_validator_membership_change: Trusted_validators_membership_change.Set.t,
+  [@to_yojson ommitted]
   interop_context: Tezos_interop.Context.t,
   data_folder: string,
   pending_operations: list(Protocol.Operation.t),
@@ -32,7 +37,10 @@ type t = {
   validators_uri: Address_map.t(Uri.t),
   // TODO: use proper variants in the future
   // TODO: this also needs to be cleaned in the future
+  // FIXME: to_yojson should work properly for this but it doesn't. Hmmmmm.
+  [@to_yojson ommitted]
   recent_operation_receipts: BLAKE2B.Map.t(Core.State.receipt),
+  [@to_yojson ommitted]
   persist_trusted_membership_change:
     list(Trusted_validators_membership_change.t) => Lwt.t(unit),
 };
