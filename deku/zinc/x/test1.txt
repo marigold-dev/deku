@@ -1,0 +1,21 @@
+(setglobal Test!
+  (let (b/81 =[int] 5 f/82 = (function a/84[int] : int (+ a/84 b/81)))
+    (makeblock 0 b/81 f/82)))
+	branch L2
+L1:	envacc 2
+	push
+	acc 1
+	addint
+	return 1
+L2:	const 5
+	push
+	acc 0
+	closure L1, 1
+	push
+	acc 0
+	push
+	acc 2
+	makeblock 2, 0
+	pop 2
+	setglobal Test!
+

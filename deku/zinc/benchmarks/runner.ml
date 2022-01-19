@@ -14,7 +14,7 @@ open Z
 
 let prog1 =
   let list =
-    List.init 1000 ~f:(fun x -> [Plain_old_data (Mutez ~$x); Operation Cons])
+    List.init 100000 ~f:(fun x -> [Plain_old_data (Mutez ~$x); Operation Cons])
     |> List.concat
   in
   [("a", List.concat [[Plain_old_data Nil]; list; [Core Return]])] |> convert
@@ -212,22 +212,20 @@ let tests () =
   let prog1' = Ir.of_typed prog1 in
   let prog1' = (prog1', [], []) in
   let prog1 = Interpreter.initial_state prog1 in
-  let prog2' = Ir.of_typed prog2 in
-  let prog2' = (prog2', [], Ir.of_typed_stack prog2_stack) in
-  let prog2 = Interpreter.initial_state ~initial_stack:prog2_stack prog2 in
-  let prog3' = Ir.of_typed prog3 in
-  let prog3' = (prog3', [], []) in
-  let prog3 = Interpreter.initial_state prog3 in
+  (* let prog2' = Ir.of_typed prog2 in
+     let prog2' = (prog2', [], Ir.of_typed_stack prog2_stack) in
+     let prog2 = Interpreter.initial_state ~initial_stack:prog2_stack prog2 in
+     let prog3' = Ir.of_typed prog3 in
+     let prog3' = (prog3', [], []) in
+     let prog3 = Interpreter.initial_state prog3 in *)
   let test name f = Bench.Test.create f ~name in
-  let (ex, _, _) = prog1' in
   [
     test "old_eval list_cons" (fun _ -> runner1 prog1);
-    test "new_eval list_cons" (fun _ -> runner2 prog1');
-    test "old_eval bools" (fun _ -> runner1 prog2);
-    test "new_eval bools" (fun _ -> runner2 prog2');
-    test "old_eval if_then_else" (fun _ -> runner1 prog3);
-    test "new_eval if_then_else" (fun _ -> runner2 prog3');
-    test "bin_prot sizer" (fun _ -> Bin_prot.Std.bin_size_list Ir.bin_size_t ex);
+    test "new_eval list_cons" (fun _ -> runner2 prog1')
+    (* test "old_eval bools" (fun _ -> runner1 prog2);
+       test "new_eval bools" (fun _ -> runner2 prog2');
+       test "old_eval if_then_else" (fun _ -> runner1 prog3);
+       test "new_eval if_then_else" (fun _ -> runner2 prog3'); *);
   ]
 
 let () = tests () |> Bench.make_command |> Core.Command.run

@@ -109,3 +109,249 @@ let%expect_test _ =
                       (Z (Plain_old_data (String "my string")))|])
                   ]
                 )) |}]
+
+module T = struct
+  exception Out_of_bound_write
+
+  exception Out_of_bound_read
+
+  exception Type_error
+
+  (* TODO: use GADTs and proper fetch and decode to avoid allocations *)
+  (* https://xavierleroy.org/mpri/2-4/machines.pdf SECD *)
+  type instr =
+    (* get nth position of env *)
+    | ACCESS of int
+    (* move top of the stack to env *)
+    | LET
+    (* drop top of the env *)
+    | ENDLET
+    | CLOSURE of instr array
+    | APPLY
+    | TAILAPPLY
+    | RETURN
+    | CONST of Obj.t
+    | IADD
+    | SCONCAT
+
+  (* TODO: maybe use Obj.magic in the future to remove fetch_and_decode *)
+
+  (* TODO: this doesn't work on OCaml 32 bits*)
+  type imm_32 = int
+
+  type item = Obj.t
+
+  type program = instr array
+
+  (* TODO: maybe stack should be bigarray to avoid being scanned by GC *)
+  type stack = item array
+
+  type env = stack
+
+  type pointer = imm_32
+
+  (* TODO: should we allow JIT? *)
+  type state = {
+    mutable program_counter : pointer;
+    program : program;
+    mutable stack_pointer : pointer;
+    stack : stack;
+    mutable env_pointer : pointer;
+    env : env;
+    mutable gas_counter : int; (* TODO: proper abstract type here *)
+  }
+
+  let[@inline always] read memory pointer =
+    try Array.get memory pointer
+    with Invalid_argument _ -> raise Out_of_bound_read
+
+  let[@inline always] write memory pointer value =
+    try Array.set memory pointer value
+    with Invalid_argument _ -> raise Out_of_bound_write
+
+  let push_stack state value =
+    let stack = state.stack in
+    let stack_pointer = state.stack_pointer + 1 in
+
+    write stack state.stack_pointer value ;
+    state.stack_pointer <- stack_pointer
+
+  let pop_stack state =
+    let stack = state.stack in
+    let stack_pointer = state.stack_pointer - 1 in
+    let value = read stack stack_pointer in
+    state.stack_pointer <- stack_pointer ;
+    value
+
+  let push_env state value =
+    let env = state.env in
+    let env_pointer = state.env_pointer + 1 in
+
+    write env env_pointer value ;
+    state.env_pointer <- env_pointer
+
+  let tail_env state =
+    let env_pointer = state.env_pointer - 1 in
+    state.env_pointer <- env_pointer
+
+  let access_env state ~offset =
+    let env = state.env in
+    let offset = state.env_pointer - offset in
+    read env offset
+
+  (* TODO: adding an accu would probably be faster *)
+
+  let verify_gas state = state.gas_counter > 0
+
+  let fetch_and_decode state =
+    (* TODO: is Array.length compare + unsafe_get + raise faster? *)
+    let program = state.program in
+    let program_counter = state.program_counter in
+    try Array.get program program_counter
+    with Invalid_argument _ -> raise Out_of_bound_read
+
+  (* let execute state instr =
+     match instr with
+     | ACCESS offset ->
+         let value = access_env state ~offset in
+         push_stack state value
+     | LET ->
+         let value = pop_stack state in
+         push_env state value
+     | ENDLET -> tail_env state
+     | CLOSURE offset ->
+         (* TODO: should this be absolute? *)
+         let env_pointer = state.env_pointer in
+         (* TODO: check if storing only the env pointer z is safe *)
+         let program_counter = state.program_counter + offset in
+         let closure = Closure {env_pointer; program_counter} in
+         push_stack state closure
+     | APPLY -> (
+         let value = pop_stack state in
+         let closure = pop_stack state in
+
+         match closure with
+         | Int _ -> raise Type_error
+         | Closure {env_pointer; program_counter} ->
+             push_stack state (Int state.env_pointer) ;
+             push_stack state (Int state.program_counter) ;
+
+             state.env_pointer <- env_pointer ;
+             push_env state value ;
+
+             state.program_counter <- program_counter)
+     | TAILAPPLY -> (
+         let value = pop_stack state in
+         let closure = pop_stack state in
+
+         match closure with
+         | Int _ -> raise Type_error
+         | Closure {env_pointer; program_counter} ->
+             state.env_pointer <- env_pointer ;
+             push_env state value ;
+
+             state.program_counter <- program_counter)
+     | RETURN -> (
+         let value = pop_stack state in
+         let program_counter = pop_stack state in
+         let env_pointer = pop_stack state in
+
+         match (program_counter, env_pointer) with
+         | (Closure _, _) | (_, Closure _) -> raise Type_error
+         | (Int program_counter, Int env_pointer) ->
+             push_stack state value ;
+             state.env_pointer <- env_pointer ;
+             state.program_counter <- program_counter)
+     | CONST int -> push_stack state (Int int) *)
+
+  let rec clos cd_pointer code env_pc state =
+    state.program_counter <- cd_pointer ;
+    state.env_pointer <- env_pc ;
+    execute state code
+
+  and execute state code =
+    let pc = ref (-1) in
+    while true do
+      incr pc ;
+      Format.printf
+        "Stack state => %s,@, pc: %d\n"
+        (Array.fold_left
+           (fun acc x ->
+             let x : int = Obj.obj x in
+             acc ^ " " ^ string_of_int x)
+           ""
+           state.stack)
+        state.stack_pointer ;
+      match code.(!pc) with
+      | ACCESS offset ->
+          let value = access_env state ~offset in
+          push_stack state value
+      | LET ->
+          let value = pop_stack state in
+          push_env state value
+      | ENDLET -> tail_env state
+      | CLOSURE offset ->
+          push_stack state (Obj.repr (clos 0 offset state.env_pointer))
+      | APPLY ->
+          let value = pop_stack state in
+          let closure' : state -> unit = Obj.obj (pop_stack state) in
+          push_stack
+            state
+            (Obj.repr
+               (clos state.program_counter state.program state.env_pointer)) ;
+          push_env state value ;
+          closure' state
+      | TAILAPPLY ->
+          let value = pop_stack state in
+          let closure : state -> unit = Obj.obj (pop_stack state) in
+          push_env state value ;
+          closure state
+      | RETURN ->
+          let value = pop_stack state in
+          let program_counter : int = Obj.obj (pop_stack state) in
+          let env_pointer : int = Obj.obj (pop_stack state) in
+          push_stack state value ;
+          state.env_pointer <- env_pointer ;
+          state.program_counter <- program_counter
+      | CONST v -> push_stack state v
+      | IADD ->
+          let int1 = pop_stack state in
+          let int2 = pop_stack state in
+          let int1 : int = Obj.obj int1 in
+          let int2 : int = Obj.obj int2 in
+          let res = int1 + int2 in
+          push_stack state (Obj.repr res)
+      | SCONCAT -> failwith "todo"
+    done
+end
+
+let%expect_test _ =
+  let open T in
+  let env = Array.init 1000 (fun _ -> Obj.repr 0) in
+  let stack = Array.init 10 (fun _ -> Obj.repr 0) in
+  let code = [|CONST (Obj.repr 1); CONST (Obj.repr 2); IADD|] in
+  let s =
+    {
+      program_counter = 0;
+      program = code;
+      stack_pointer = 0;
+      stack;
+      env_pointer = 0;
+      env;
+      gas_counter = 0 (* TODO: proper abstract type here *);
+    }
+  in
+  let _ = try execute s code with Invalid_argument _ -> () in
+  let res : int = Obj.obj (pop_stack s) in
+  Format.printf "result is %d\n" res ;
+  [%expect
+    {|
+    Stack state =>  0 0 0 0 0 0 0 0 0 0,
+     pc: 0
+    Stack state =>  1 0 0 0 0 0 0 0 0 0,
+     pc: 1
+    Stack state =>  1 2 0 0 0 0 0 0 0 0,
+     pc: 2
+    Stack state =>  3 2 0 0 0 0 0 0 0 0,
+     pc: 1
+    result is 3 |}]

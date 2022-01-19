@@ -1,0 +1,29 @@
+(setglobal Test!
+  (let
+    (b/81 = "tss"
+     f/82 = (function a/84 (apply (field 27 (global Stdlib!)) a/84 b/81)))
+    (seq (apply f/82 b/81) (makeblock 0 b/81 f/82))))
+	branch L2
+L1:	envacc 2
+	push
+	acc 1
+	push
+	getglobal Stdlib!
+	getfield 27
+	appterm 2, 3
+L2:	const "tss"
+	push
+	acc 0
+	closure L1, 1
+	push
+	acc 1
+	push
+	acc 1
+	apply 1
+	acc 0
+	push
+	acc 2
+	makeblock 2, 0
+	pop 2
+	setglobal Test!
+
