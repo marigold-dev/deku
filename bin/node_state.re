@@ -69,14 +69,18 @@ let get_initial_state = (~folder) => {
   };
   let state_bin = folder ++ "/state.bin";
   let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let.await protocol =
+  let.await (protocol, next_state_root) =
     if (state_bin_exists) {
       let.await protocol = Files.State_bin.read(~file=state_bin);
-      await(protocol);
+      let prev_epoch_state_bin = folder ++ "/prev_epoch_state.bin";
+      let.await prev_protocol =
+        Files.State_bin.read(~file=prev_epoch_state_bin);
+      let next_state_root = Protocol.hash(prev_protocol);
+      await((protocol, next_state_root));
     } else {
-      await(node.protocol);
+      await((node.protocol, node.next_state_root));
     };
-  let node = {...node, protocol};
+  let node = {...node, next_state_root, protocol};
 
   await(node);
 };

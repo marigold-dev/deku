@@ -156,15 +156,18 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let (valid_hash, hash) =
-    if (block.state_root_hash == state.state_root_hash) {
-      (true, None);
+  let hash =
+    if (Crypto.BLAKE2B.equal(block.state_root_hash, state.state_root_hash)) {
+      None;
     } else {
-      // TODO: pipeline this
-      let (hash, data) = hash(state);
-      (block.state_root_hash == hash, Some((hash, data)));
+      let (next_state_root_hash, next_state_root_data) =
+        Protocol_state.hash(state);
+      Format.printf(
+        "\x1b[36m New protocol hash: %s\x1b[m\n%!",
+        next_state_root_hash |> Crypto.BLAKE2B.to_string,
+      );
+      Some((next_state_root_hash, next_state_root_data));
     };
-  let.assert () = (`Invalid_state_root_hash, valid_hash);
   let (state, result) = apply_block(state, block);
   Ok((state, hash, result));
 };

@@ -499,7 +499,12 @@ let produce_block = node_folder => {
   let.await state = Node_state.get_initial_state(~folder=node_folder);
   let address = identity.t;
   let block =
-    Block.produce(~state=state.protocol, ~author=address, ~operations=[]);
+    Block.produce(
+      ~state=state.protocol,
+      ~next_state_root_hash=None,
+      ~author=address,
+      ~operations=[],
+    );
   let signature = Block.sign(~key=identity.secret, block);
   let.await validators_uris = validators_uris(node_folder);
   let.await () =

@@ -4,6 +4,7 @@ open Protocol;
 type t =
   pri {
     last_snapshot: (BLAKE2B.t, string),
+    last_snapshot_height: int64,
     last_block: Block.t,
     last_block_signatures: Signatures.t,
     additional_blocks: list(Block.t),
