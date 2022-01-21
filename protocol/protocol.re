@@ -156,20 +156,8 @@ let make = (~initial_block) => {
 };
 let apply_block = (state, block) => {
   let.assert () = (`Invalid_block_when_applying, is_next(state, block));
-  let hash =
-    if (Crypto.BLAKE2B.equal(block.state_root_hash, state.state_root_hash)) {
-      None;
-    } else {
-      let (next_state_root_hash, next_state_root_data) =
-        Protocol_state.hash(state);
-      Format.printf(
-        "\x1b[36m New protocol hash: %s\x1b[m\n%!",
-        next_state_root_hash |> Crypto.BLAKE2B.to_string,
-      );
-      Some((next_state_root_hash, next_state_root_data));
-    };
   let (state, result) = apply_block(state, block);
-  Ok((state, hash, result));
+  Ok((state, result));
 };
 
 let get_current_block_producer = state =>

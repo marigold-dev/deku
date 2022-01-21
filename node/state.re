@@ -77,53 +77,8 @@ let make =
   };
 };
 
-let commit_state_hash = state =>
-  Tezos_interop.Consensus.commit_state_hash(~context=state.interop_context);
-let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
-  let signatures_map =
-    signatures
-    |> Signatures.to_list
-    |> List.map(signature => {
-         let address = Signature.address(signature);
-         let key = Signature.public_key(signature);
-         let signature = Signature.signature(signature);
-         (address, (key, signature));
-       })
-    |> List.to_seq
-    |> Address_map.of_seq;
-
-  let validators =
-    state.protocol.validators
-    |> Validators.to_list
-    |> List.map(validator =>
-         Address.to_key_hash(validator.Validators.address)
-       );
-  let signatures =
-    old_state.protocol.validators
-    |> Validators.to_list
-    |> List.map(validator => validator.Validators.address)
-    |> List.map(address => Address_map.find_opt(address, signatures_map));
-
-  Lwt.async(() => {
-    /* TODO: solve this magic number
-       the goal here is to prevent a bunch of nodes concurrently trying
-       to update the state root hash */
-    let.await () =
-      state.identity.t == block.Block.author
-        ? Lwt.return_unit : Lwt_unix.sleep(120.0);
-    commit_state_hash(
-      state,
-      ~block_height=block.block_height,
-      ~block_payload_hash=block.payload_hash,
-      ~handles_hash=block.handles_hash,
-      ~state_hash=block.state_root_hash,
-      ~validators,
-      ~signatures,
-    );
-  });
-};
 // TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
-let write_data_to_file = (path, protocol) => {
+let write_state_to_file = (path, protocol) => {
   let protocol_bin = Marshal.to_string(protocol, []);
   Lwt.async(() =>
     Lwt_io.with_file(
@@ -137,50 +92,52 @@ let write_data_to_file = (path, protocol) => {
   );
 };
 
-let write_state_to_file = (~data_folder, protocol) =>
-  write_data_to_file(data_folder ++ "/state.bin", protocol);
-let write_prev_epoch_state_to_file = (~data_folder, protocol) =>
-  write_data_to_file(data_folder ++ "/prev_epoch_state.bin", protocol);
-
 let apply_block = (state, block) => {
-  let old_state = state;
-  let.ok (protocol, new_snapshot, receipts) =
-    apply_block(state.protocol, block);
+  let prev_protocol = state.protocol;
+  let.ok (protocol, receipts) = Protocol.apply_block(state.protocol, block);
+
+  write_state_to_file(state.data_folder ++ "/state.bin", protocol);
+  let (next_state_root, snapshots) =
+    if (Crypto.BLAKE2B.equal(
+          block.state_root_hash,
+          prev_protocol.state_root_hash,
+        )) {
+      (state.next_state_root, state.snapshots);
+    } else {
+      // Save the hash that will become the next state root
+      // to disk so if the node goes offline before finishing
+      // hashing it, it can pick up where it left off.
+      write_state_to_file(
+        state.data_folder ++ "/prev_epoch_state.bin",
+        prev_protocol,
+      );
+      let (next_state_root_hash, next_state_root_data) =
+        Protocol.hash(prev_protocol);
+      Format.printf(
+        "\x1b[36m New protocol hash: %s\x1b[m\n%!",
+        next_state_root_hash |> Crypto.BLAKE2B.to_string,
+      );
+      let snapshots =
+        Snapshots.update(
+          ~new_snapshot=state.next_state_root,
+          ~applied_block_height=block.block_height,
+          state.snapshots,
+        );
+      ((next_state_root_hash, next_state_root_data), snapshots);
+    };
   let recent_operation_receipts =
     List.fold_left(
       (results, (hash, receipt)) => BLAKE2B.Map.add(hash, receipt, results),
       state.recent_operation_receipts,
       receipts,
     );
-  let next_state_root =
-    new_snapshot |> Option.value(~default=state.next_state_root);
-  let state = {
+  Ok({
     ...state,
     protocol,
     next_state_root,
     recent_operation_receipts,
-  };
-  write_state_to_file(~data_folder=state.data_folder, state.protocol);
-  switch (new_snapshot) {
-  | Some(_) =>
-    switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
-    | Some(signatures) when Signatures.is_self_signed(signatures) =>
-      try_to_commit_state_hash(~old_state, state, block, signatures)
-    | _ => ()
-    };
-    write_prev_epoch_state_to_file(
-      ~data_folder=state.data_folder,
-      old_state.protocol,
-    );
-    let snapshots =
-      Snapshots.update(
-        ~new_snapshot=old_state.next_state_root,
-        ~applied_block_height=state.protocol.block_height,
-        state.snapshots,
-      );
-    Ok({...state, snapshots});
-  | None => Ok(state)
-  };
+    snapshots,
+  });
 };
 
 // TODO: duplicated code
@@ -287,31 +244,6 @@ let load_snapshot =
       last_seen_membership_change_timestamp: 0.0,
     };
   let next_state_root = (state_root_hash, state_root);
-
-  let.ok (protocol, next_state_root) =
-    List.fold_left_ok(
-      ((protocol, prev_state_root), block) => {
-        // TODO: we're leaking information about when the protocol
-        // hashes a new state here; however, this will get much cleaner
-        // in the next PR.
-        if (block.Block.state_root_hash != protocol.state_root_hash) {
-          write_prev_epoch_state_to_file(
-            ~data_folder=t.data_folder,
-            protocol,
-          );
-        };
-        // TODO: ignore this may be really bad for snapshots
-        // TODO: ignore the result is also really bad
-        let.ok (protocol, next_state_root, _result) =
-          Protocol.apply_block(protocol, block);
-        Ok((
-          protocol,
-          Option.value(~default=prev_state_root, next_state_root),
-        ));
-      },
-      (protocol, next_state_root),
-      all_blocks,
-    );
-  //TODO: snapshots?
-  Ok({...t, next_state_root, block_pool, protocol});
+  let t = {...t, next_state_root, protocol, block_pool};
+  List.fold_left_ok(apply_block, t, all_blocks);
 };

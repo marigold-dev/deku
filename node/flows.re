@@ -182,6 +182,55 @@ let try_to_sign_block = (state, update_state, block) =>
     state;
   };
 
+let commit_state_hash = state =>
+  Tezos_interop.Consensus.commit_state_hash(
+    ~context=state.Node.interop_context,
+  );
+let try_to_commit_state_hash = (~prev_validators, state, block, signatures) => {
+  open Node;
+  let signatures_map =
+    signatures
+    |> Signatures.to_list
+    |> List.map(signature => {
+         let address = Signature.address(signature);
+         let key = Signature.public_key(signature);
+         let signature = Signature.signature(signature);
+         (address, (key, signature));
+       })
+    |> List.to_seq
+    |> Address_map.of_seq;
+
+  let validators =
+    state.protocol.validators
+    |> Validators.to_list
+    |> List.map(validator =>
+         Core.Address.to_key_hash(validator.Validators.address)
+       );
+  let signatures =
+    prev_validators
+    |> Validators.to_list
+    |> List.map(validator => validator.Validators.address)
+    |> List.map(address => Address_map.find_opt(address, signatures_map));
+
+  Lwt.async(() => {
+    /* TODO: solve this magic number
+       the goal here is to prevent a bunch of nodes concurrently trying
+       to update the state root hash */
+    let.await () =
+      state.identity.t == block.Block.author
+        ? Lwt.return_unit : Lwt_unix.sleep(120.0);
+    commit_state_hash(
+      state,
+      ~block_height=block.block_height,
+      ~block_payload_hash=block.payload_hash,
+      ~handles_hash=block.handles_hash,
+      ~state_hash=block.state_root_hash,
+      ~validators,
+      ~signatures,
+    );
+  });
+};
+
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
@@ -196,9 +245,22 @@ let rec try_to_apply_block = (state, update_state, block) => {
     || BLAKE2B.equal(next_state_root_hash, block.state_root_hash),
   );
 
+  let prev_validators = state.protocol.validators;
+  let is_new_state_root_hash =
+    !BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash);
+
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
+
+  if (is_new_state_root_hash) {
+    switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
+    | Some(signatures) when Signatures.is_self_signed(signatures) =>
+      try_to_commit_state_hash(~prev_validators, state, block, signatures)
+    | _ => ()
+    };
+  };
+
   switch (
     Block_pool.find_next_block_to_apply(
       ~hash=block.Block.hash,
