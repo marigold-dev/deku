@@ -122,7 +122,7 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     );
   });
 };
-
+// TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
 let write_data_to_file = (path, protocol) => {
   let protocol_bin = Marshal.to_string(protocol, []);
   Lwt.async(() =>
