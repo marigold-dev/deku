@@ -77,51 +77,6 @@ let make =
   };
 };
 
-let commit_state_hash = state =>
-  Tezos_interop.Consensus.commit_state_hash(~context=state.interop_context);
-let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
-  let signatures_map =
-    signatures
-    |> Signatures.to_list
-    |> List.map(signature => {
-         let address = Signature.address(signature);
-         let key = Signature.public_key(signature);
-         let signature = Signature.signature(signature);
-         (address, (key, signature));
-       })
-    |> List.to_seq
-    |> Address_map.of_seq;
-
-  let validators =
-    state.protocol.validators
-    |> Validators.to_list
-    |> List.map(validator =>
-         Address.to_key_hash(validator.Validators.address)
-       );
-  let signatures =
-    old_state.protocol.validators
-    |> Validators.to_list
-    |> List.map(validator => validator.Validators.address)
-    |> List.map(address => Address_map.find_opt(address, signatures_map));
-
-  Lwt.async(() => {
-    /* TODO: solve this magic number
-       the goal here is to prevent a bunch of nodes concurrently trying
-       to update the state root hash */
-    let.await () =
-      state.identity.t == block.Block.author
-        ? Lwt.return_unit : Lwt_unix.sleep(120.0);
-    commit_state_hash(
-      state,
-      ~block_height=block.block_height,
-      ~block_payload_hash=block.payload_hash,
-      ~handles_hash=block.handles_hash,
-      ~state_hash=block.state_root_hash,
-      ~validators,
-      ~signatures,
-    );
-  });
-};
 // TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
 let write_data_to_file = (path, protocol) => {
   let protocol_bin = Marshal.to_string(protocol, []);
@@ -163,11 +118,6 @@ let apply_block = (state, block) => {
   write_state_to_file(~data_folder=state.data_folder, state.protocol);
   switch (new_snapshot) {
   | Some(_) =>
-    switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
-    | Some(signatures) when Signatures.is_self_signed(signatures) =>
-      try_to_commit_state_hash(~old_state, state, block, signatures)
-    | _ => ()
-    };
     write_prev_epoch_state_to_file(
       ~data_folder=state.data_folder,
       old_state.protocol,
