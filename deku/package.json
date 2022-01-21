@@ -47,7 +47,8 @@
     "@opam/domainslib": "0.3.1",
     "@opam/ppx_inline_test": "*",
     "@opam/ppx_expect": "*",
-    "@opam/alcotest": "1.5.0"
+    "@opam/alcotest": "1.5.0",
+    "@opam/data-encoding": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
