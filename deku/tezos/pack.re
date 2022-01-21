@@ -31,31 +31,14 @@ type result =
   | Int(Z.t)
   | String(string)
   | Bytes(bytes)
-  | Key(Key.t)
-  | Key_hash(Key_hash.t)
-  | Address(Address.t)
   | List(list(result))
   | Error(string);
-
-let decode_bytes = b =>
-  switch (Data_encoding.Binary.of_bytes_opt(Key.encoding, b)) {
-  | Some(key) => Key(key)
-  | None =>
-    switch (Data_encoding.Binary.of_bytes_opt(Key_hash.encoding, b)) {
-    | Some(key_hash) => Key_hash(key_hash)
-    | None =>
-      switch (Data_encoding.Binary.of_bytes_opt(Address.encoding, b)) {
-      | Some(addr) => Address(addr)
-      | None => Bytes(b)
-      }
-    }
-  };
 
 let rec decode_micheline = micheline =>
   switch (micheline) {
   | Micheline.Int(_, z) => Int(z)
   | Micheline.String(_, s) => String(s)
-  | Micheline.Bytes(_, b) => decode_bytes(b)
+  | Micheline.Bytes(_, b) => Bytes(b)
   | Micheline.Seq(_, l) => List(List.map(decode_micheline, l))
   | _ => Error("Not designed to handle prim")
   };

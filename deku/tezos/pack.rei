@@ -25,9 +25,6 @@ type result =
   | Int(Z.t)
   | String(string)
   | Bytes(bytes)
-  | Key(Key.t)
-  | Key_hash(Key_hash.t)
-  | Address(Address.t)
   | List(list(result))
   | Error(string);
 
