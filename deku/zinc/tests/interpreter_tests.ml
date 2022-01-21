@@ -19,9 +19,40 @@ let test_w name t = Alcotest.test_case name `Quick t
 
 type dialect = ReasonLIGO | CameLIGO | JsLIGO | PascaLIGO
 
+module Pack = struct
+  type t = string option
+
+  type result =
+    | Int of Z.t
+    | String of string
+    | Bytes of bytes
+    | List of result list
+    | Error of string
+
+  let int _ = None
+
+  let string _ = None
+
+  let bytes _ = None
+
+  let list _ = None
+
+  let key _ = None
+
+  let key_hash _ = None
+
+  let address _ = None
+
+  let to_bytes _ = Bytes.empty
+
+  let of_bytes _ = String "Error"
+end
+
+
 (* Use `dune build -w @zinctest --no-buffer` to run just the zinc tests! *)
 module Executor : Executor = struct
-  let get_contract_opt a = Some (a, None)
+  module Pack = Pack
+  let get_contract_opt a = Some Contract.{address=a; entrypoint=None}
 
   let chain_id = "chain id goes here"
 
