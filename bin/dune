@@ -1,23 +1,23 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries opium files node helpers cmdliner)
+ (libraries opium bin_common node helpers cmdliner)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson)))
 
 (executable
  (name sidecli)
- (libraries node files helpers cmdliner)
+ (libraries node bin_common helpers cmdliner)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
   (pps ppx_deriving_yojson)))
 
 (library
- (name files)
- (modules Files)
- (libraries lwt lwt.unix node)
+ (name bin_common)
+ (modules Files Node_state)
+ (libraries lwt lwt.unix node helpers)
  (preprocess
   (pps ppx_deriving_yojson)))
 

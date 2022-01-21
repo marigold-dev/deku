@@ -21,6 +21,7 @@ let genesis: t;
 let produce:
   (
     ~state: Protocol_state.t,
+    ~next_state_root_hash: option(BLAKE2B.t),
     ~author: Address.t,
     ~operations: list(Protocol_operation.t)
   ) =>

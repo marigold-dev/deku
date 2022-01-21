@@ -22,6 +22,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  next_state_root: (BLAKE2B.t, string),
   // networking
   uri_state: Uri_map.t(string),
   validators_uri: Address_map.t(Uri.t),

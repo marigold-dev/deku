@@ -5,6 +5,7 @@ open State;
 open Protocol;
 open Cmdliner;
 open Core;
+open Bin_common;
 
 Printexc.record_backtrace(true);
 
@@ -18,12 +19,6 @@ let write_identity = (~node_folder) =>
   Files.Identity.write(~file=node_folder ++ "/identity.json");
 let write_interop_context = (~node_folder) =>
   Files.Interop_context.write(~file=node_folder ++ "/tezos.json");
-let read_state = (~node_folder): Lwt.t(Protocol.t) =>
-  Lwt_io.with_file(
-    ~mode=Input,
-    node_folder ++ "/state.bin",
-    Lwt_io.read_value,
-  );
 
 let man = [
   `S(Manpage.s_bugs),
@@ -501,9 +496,15 @@ let info_produce_block = {
 
 let produce_block = node_folder => {
   let.await identity = read_identity(~node_folder);
-  let.await state = read_state(~node_folder);
+  let.await state = Node_state.get_initial_state(~folder=node_folder);
   let address = identity.t;
-  let block = Block.produce(~state, ~author=address, ~operations=[]);
+  let block =
+    Block.produce(
+      ~state=state.protocol,
+      ~next_state_root_hash=None,
+      ~author=address,
+      ~operations=[],
+    );
   let signature = Block.sign(~key=identity.secret, block);
   let.await validators_uris = validators_uris(node_folder);
   let.await () =

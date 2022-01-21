@@ -8,6 +8,7 @@ open Protocol;
  state snapshot will also be signed */
 type t = {
   last_snapshot: (BLAKE2B.t, string),
+  last_snapshot_height: int64,
   last_block: Block.t,
   last_block_signatures: Signatures.t,
   additional_blocks: list(Block.t),
@@ -15,6 +16,7 @@ type t = {
 
 let make = (~initial_snapshot, ~initial_block, ~initial_signatures) => {
   last_snapshot: initial_snapshot,
+  last_snapshot_height: 0L,
   last_block: initial_block,
   last_block_signatures: initial_signatures,
   additional_blocks: [],
@@ -29,6 +31,7 @@ let append_block = (~pool, (block, signatures), t) =>
       Block_pool.find_all_signed_blocks_above((block, signatures), pool);
     {
       last_snapshot: t.last_snapshot,
+      last_snapshot_height: t.last_snapshot_height,
       last_block: block,
       last_block_signatures: signatures,
       additional_blocks: blocks @ [t.last_block] @ t.additional_blocks,
@@ -37,7 +40,7 @@ let append_block = (~pool, (block, signatures), t) =>
 let update = (~new_snapshot, ~applied_block_height, t) => {
   let rec truncate_additional_blocks = (block_height, blocks) =>
     switch (blocks) {
-    | [hd, ...tl] when hd.Block.block_height > block_height => [
+    | [hd, ...tl] when hd.Block.block_height >= block_height => [
         hd,
         ...truncate_additional_blocks(block_height, tl),
       ]
@@ -45,9 +48,10 @@ let update = (~new_snapshot, ~applied_block_height, t) => {
     };
 
   let additional_blocks =
-    truncate_additional_blocks(applied_block_height, t.additional_blocks);
+    truncate_additional_blocks(t.last_snapshot_height, t.additional_blocks);
   {
     last_snapshot: new_snapshot,
+    last_snapshot_height: applied_block_height,
     last_block: t.last_block,
     last_block_signatures: t.last_block_signatures,
     additional_blocks,

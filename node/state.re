@@ -23,6 +23,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
+  next_state_root: (BLAKE2B.t, string),
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -54,10 +55,10 @@ let make =
   let initial_block_pool =
     Block_pool.make(~self_key=identity.key)
     |> Block_pool.append_block(initial_block);
-  let initial_snapshots = {
-    let initial_snapshot = Protocol.hash(initial_protocol);
+  let initial_snapshot = Protocol.hash(initial_protocol);
+  let initial_snapshots =
     Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
-  };
+
   {
     identity,
     trusted_validator_membership_change,
@@ -67,6 +68,7 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
+    next_state_root: initial_snapshot,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -120,6 +122,26 @@ let try_to_commit_state_hash = (~old_state, state, block, signatures) => {
     );
   });
 };
+// TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
+let write_data_to_file = (path, protocol) => {
+  let protocol_bin = Marshal.to_string(protocol, []);
+  Lwt.async(() =>
+    Lwt_io.with_file(
+      ~mode=Output,
+      path,
+      oc => {
+        let.await () = Lwt_io.write(oc, protocol_bin);
+        Lwt_io.flush(oc);
+      },
+    )
+  );
+};
+
+let write_state_to_file = (~data_folder, protocol) =>
+  write_data_to_file(data_folder ++ "/state.bin", protocol);
+let write_prev_epoch_state_to_file = (~data_folder, protocol) =>
+  write_data_to_file(data_folder ++ "/prev_epoch_state.bin", protocol);
+
 let apply_block = (state, block) => {
   let old_state = state;
   let.ok (protocol, new_snapshot, receipts) =
@@ -130,28 +152,29 @@ let apply_block = (state, block) => {
       state.recent_operation_receipts,
       receipts,
     );
-  let state = {...state, protocol, recent_operation_receipts};
-  Lwt.async(() =>
-    Lwt_io.with_file(
-      ~mode=Output,
-      state.data_folder ++ "/state.bin",
-      oc => {
-        let protocol_bin = Marshal.to_string(state.protocol, []);
-        let.await () = Lwt_io.write(oc, protocol_bin);
-        Lwt_io.flush(oc);
-      },
-    )
-  );
+  let next_state_root =
+    new_snapshot |> Option.value(~default=state.next_state_root);
+  let state = {
+    ...state,
+    protocol,
+    next_state_root,
+    recent_operation_receipts,
+  };
+  write_state_to_file(~data_folder=state.data_folder, state.protocol);
   switch (new_snapshot) {
-  | Some(new_snapshot) =>
+  | Some(_) =>
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
     | Some(signatures) when Signatures.is_self_signed(signatures) =>
       try_to_commit_state_hash(~old_state, state, block, signatures)
     | _ => ()
     };
+    write_prev_epoch_state_to_file(
+      ~data_folder=state.data_folder,
+      old_state.protocol,
+    );
     let snapshots =
       Snapshots.update(
-        ~new_snapshot,
+        ~new_snapshot=old_state.next_state_root,
         ~applied_block_height=state.protocol.block_height,
         state.snapshots,
       );
@@ -210,14 +233,18 @@ let load_snapshot =
   );
   let.assert () = (
     `State_root_not_the_expected,
-    // TODO: this List.hd will not fail, but it makes me anxious
-    state_root_hash == List.hd(all_blocks).state_root_hash,
+    // TODO: It may not hold in the future that the last block's
+    // state root hash is equal to this state root's hash. E.g.,
+    // we may send blocks from the requested epoch and future ones.
+    // In the future, the equivalent check should be something like this:
+    // let hd_srh == List.hd(all_blocks).state_root_hash;
+    // state_root_hash == List.find(b => b.srh != hd_srh)
+    state_root_hash == last_block.state_root_hash,
   );
   let.assert () = (
     `Snapshots_with_invalid_hash,
     BLAKE2B.verify(~hash=state_root_hash, state_root),
   );
-
   let of_yojson = [%of_yojson:
     (
       Core.State.t,
@@ -259,18 +286,32 @@ let load_snapshot =
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
-  let.ok protocol =
+  let next_state_root = (state_root_hash, state_root);
+
+  let.ok (protocol, next_state_root) =
     List.fold_left_ok(
-      (protocol, block) => {
+      ((protocol, prev_state_root), block) => {
+        // TODO: we're leaking information about when the protocol
+        // hashes a new state here; however, this will get much cleaner
+        // in the next PR.
+        if (block.Block.state_root_hash != protocol.state_root_hash) {
+          write_prev_epoch_state_to_file(
+            ~data_folder=t.data_folder,
+            protocol,
+          );
+        };
         // TODO: ignore this may be really bad for snapshots
         // TODO: ignore the result is also really bad
-        let.ok (protocol, _new_hash, _result) =
+        let.ok (protocol, next_state_root, _result) =
           Protocol.apply_block(protocol, block);
-        Ok(protocol);
+        Ok((
+          protocol,
+          Option.value(~default=prev_state_root, next_state_root),
+        ));
       },
-      protocol,
+      (protocol, next_state_root),
       all_blocks,
     );
   //TODO: snapshots?
-  Ok({...t, block_pool, protocol});
+  Ok({...t, next_state_root, block_pool, protocol});
 };

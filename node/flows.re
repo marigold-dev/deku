@@ -187,6 +187,15 @@ let rec try_to_apply_block = (state, update_state, block) => {
     `Block_not_signed_enough_to_apply,
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
+
+  let (next_state_root_hash, _) = state.next_state_root;
+  // TODO: in the future, we should stop the chain if this assert fails
+  let.assert () = (
+    `Invalid_state_root_hash,
+    BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash)
+    || BLAKE2B.equal(next_state_root_hash, block.state_root_hash),
+  );
+
   let.ok state = apply_block(state, update_state, block);
   reset_timeout^();
   let state = clean(state, update_state, block);
