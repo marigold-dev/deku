@@ -41,6 +41,38 @@ let zinc =
   |> Zinc.to_yojson
 
 module Executor : Executor = struct
+module Pack = struct
+  type t = string option
+
+  type result =
+    | Int of Z.t
+    | String of string
+    | Bytes of bytes
+    | List of result list
+    | Error of string
+
+  let int _ = None
+
+  let string _ = None
+
+  let bytes _ = None
+
+  let list _ = None
+
+  let key _ = None
+
+  let key_hash _ = None
+
+  let address _ = None
+
+  let to_bytes _ = Bytes.empty
+
+  let of_bytes _ = String "Error"
+end
+
+module Executor : Zinc_interpreter.Dummy.Executor = struct
+  module Pack = Pack
+
   let get_contract_opt a = Some Contract.{address = a; entrypoint = None}
 
   let chain_id = "chain id goes here"

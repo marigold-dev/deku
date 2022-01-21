@@ -180,7 +180,7 @@ module type S = sig
       | MakeVariant of label
       | MatchVariant of t LMap.t
 
-    and operation = Eq | Add | Cons | HashKey | Or | And | Not
+    and operation = Eq | Add | Cons | HashKey | Or | And | Not | Pack | Unpack
 
     and domain_specific_operation = ChainID | Contract_opt | MakeTransaction
 

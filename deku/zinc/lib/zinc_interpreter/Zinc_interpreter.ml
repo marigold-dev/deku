@@ -46,6 +46,40 @@ module Make (D : Domain_types) = struct
       let apply_once (code : Zinc.t) env stack =
         let open Zinc in
         match (code, env, stack) with
+        | (Operation Pack :: c, env, Stack_item.Z (Plain_old_data d) :: stack)
+          ->
+            let open E in
+            let packed_data =
+              match d with
+              | Num n -> Pack.int n
+              | Bytes b -> Pack.bytes b
+              | String s -> Pack.string s
+              | Key k -> Pack.key k
+              | Key_hash kh -> Pack.key_hash kh
+              | Address a -> Pack.address a
+              | _ -> failwith "Not a packable data type"
+            in
+            let si =
+              Stack_item.Z (Plain_old_data (Bytes (Pack.to_bytes packed_data)))
+            in
+            Steps.Continue (c, env, si :: stack)
+        | (Operation Unpack :: c, env, Stack_item.Z (Plain_old_data d) :: stack)
+          ->
+            let open E in
+            let packed_data =
+              match d with
+              | Bytes b -> b
+              | _ -> failwith "Can only unpack bytes"
+            in
+            let unpacked_data =
+              match Pack.of_bytes packed_data with
+              | Pack.Int z -> Num z
+              | Pack.String s -> String s
+              | Pack.Bytes b -> Bytes b
+              | _ -> failwith "Whatever"
+            in
+            let si = Stack_item.Z (Plain_old_data unpacked_data) in
+            Steps.Continue (c, env, si :: stack)
         | ( Operation Or :: c,
             env,
             (Stack_item.Z (Plain_old_data (Bool x)) as x')
