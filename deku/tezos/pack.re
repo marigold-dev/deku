@@ -9,6 +9,7 @@ type t = node(canonical_location, prim);
 
 let int = n => Int(-1, n);
 let nat = n => Int(-1, n);
+let string = n => String(-1, n);
 let bytes = b => Bytes(-1, b);
 let pair = (l, r) => Prim(-1, D_Pair, [l, r], []);
 let list = l => Seq(-1, l);
@@ -25,3 +26,24 @@ let expr_encoding =
 let to_bytes = data =>
   Data_encoding.Binary.to_bytes_exn(expr_encoding, strip_locations(data))
   |> Bytes.cat(Bytes.of_string("\005"));
+
+type result =
+  | Int(Z.t)
+  | String(string)
+  | Bytes(bytes)
+  | List(list(result))
+  | Error(string);
+
+let rec decode_micheline = micheline =>
+  switch (micheline) {
+  | Micheline.Int(_, z) => Int(z)
+  | Micheline.String(_, s) => String(s)
+  | Micheline.Bytes(_, b) => Bytes(b)
+  | Micheline.Seq(_, l) => List(List.map(decode_micheline, l))
+  | _ => Error("Not designed to handle prim")
+  };
+
+let of_bytes = data =>
+  decode_micheline(
+    root(Data_encoding.Binary.of_bytes_exn(expr_encoding, data)),
+  );
