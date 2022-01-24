@@ -77,26 +77,9 @@ let make =
   };
 };
 
-// TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
-let write_state_to_file = (path, protocol) => {
-  let protocol_bin = Marshal.to_string(protocol, []);
-  Lwt.async(() =>
-    Lwt_io.with_file(
-      ~mode=Output,
-      path,
-      oc => {
-        let.await () = Lwt_io.write(oc, protocol_bin);
-        Lwt_io.flush(oc);
-      },
-    )
-  );
-};
-
 let apply_block = (state, block) => {
   let prev_protocol = state.protocol;
   let.ok (protocol, receipts) = Protocol.apply_block(state.protocol, block);
-
-  write_state_to_file(state.data_folder ++ "/state.bin", protocol);
   let (next_state_root, snapshots) =
     if (Crypto.BLAKE2B.equal(
           block.state_root_hash,
@@ -104,13 +87,6 @@ let apply_block = (state, block) => {
         )) {
       (state.next_state_root, state.snapshots);
     } else {
-      // Save the hash that will become the next state root
-      // to disk so if the node goes offline before finishing
-      // hashing it, it can pick up where it left off.
-      write_state_to_file(
-        state.data_folder ++ "/prev_epoch_state.bin",
-        prev_protocol,
-      );
       let (next_state_root_hash, next_state_root_data) =
         Protocol.hash(prev_protocol);
       Format.printf(

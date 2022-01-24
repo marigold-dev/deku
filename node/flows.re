@@ -5,6 +5,20 @@ open Building_blocks;
 
 module Node = State;
 
+let write_state_to_file = (path, protocol) => {
+  let protocol_bin = Marshal.to_string(protocol, []);
+  Lwt.async(() =>
+    Lwt_io.with_file(
+      ~mode=Output,
+      path,
+      oc => {
+        let.await () = Lwt_io.write(oc, protocol_bin);
+        Lwt_io.flush(oc);
+      },
+    )
+  );
+};
+
 type flag_node = [ | `Invalid_block | `Invalid_signature];
 type ignore = [
   | `Added_block_not_signed_enough_to_desync
@@ -245,18 +259,32 @@ let rec try_to_apply_block = (state, update_state, block) => {
     || BLAKE2B.equal(next_state_root_hash, block.state_root_hash),
   );
 
-  let prev_validators = state.protocol.validators;
+  let prev_protocol = state.protocol;
   let is_new_state_root_hash =
     !BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash);
 
   let.ok state = apply_block(state, update_state, block);
+  write_state_to_file(state.Node.data_folder ++ "/state.bin", state.protocol);
+
   reset_timeout^();
   let state = clean(state, update_state, block);
 
   if (is_new_state_root_hash) {
+    // Save the hash that will become the next state root
+    // to disk so if the node goes offline before finishing
+    // hashing it, it can pick up where it left off.
+    write_state_to_file(
+      state.data_folder ++ "/prev_epoch_state.bin",
+      prev_protocol,
+    );
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
     | Some(signatures) when Signatures.is_self_signed(signatures) =>
-      try_to_commit_state_hash(~prev_validators, state, block, signatures)
+      try_to_commit_state_hash(
+        ~prev_validators=prev_protocol.validators,
+        state,
+        block,
+        signatures,
+      )
     | _ => ()
     };
   };
