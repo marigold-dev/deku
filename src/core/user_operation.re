@@ -4,7 +4,7 @@ open Crypto;
 [@deriving yojson]
 type initial_operation =
   | Transaction({
-      destination: Address.t,
+      destination: Key_hash.t,
       amount: Amount.t,
       ticket: Ticket_id.t,
     })

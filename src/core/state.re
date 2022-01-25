@@ -22,7 +22,7 @@ let apply_tezos_operation = (t, tezos_operation) => {
       let ledger =
         switch (destination) {
         | Implicit(key_hash) =>
-          let destination = Address.of_key_hash(key_hash);
+          let destination = key_hash;
           Ledger.deposit(destination, amount, ticket, ledger);
         | Originated(_) => failwith("not implemented")
         };
@@ -37,19 +37,29 @@ let apply_tezos_operation = (t, tezos_operation) => {
 let apply_user_operation = (t, user_operation) => {
   open User_operation;
   let {hash: _, sender, initial_operation} = user_operation;
-  switch (initial_operation) {
-  | Transaction({destination, amount, ticket}) =>
+  switch (Address.to_key_hash(sender), initial_operation) {
+  | (Some(sender), Transaction({destination, amount, ticket})) =>
     let.ok ledger =
       Ledger.transfer(~sender, ~destination, amount, ticket, t.ledger);
     Ok(({ledger: ledger}, None));
-  | Tezos_withdraw({owner, amount, ticket}) =>
+  | (None, Transaction(_)) =>
+    Error(`Transaction_sender_must_be_implicit_account)
+  | (Some(sender), Tezos_withdraw({owner, amount, ticket})) =>
     let.ok (ledger, handle) =
       Ledger.withdraw(~sender, ~destination=owner, amount, ticket, t.ledger);
     Ok(({ledger: ledger}, Some(Receipt_tezos_withdraw(handle))));
+  | (None, Tezos_withdraw(_)) =>
+    Error(`Withdraw_sender_must_be_implicit_account)
   };
 };
 let apply_user_operation = (t, user_operation) =>
   switch (apply_user_operation(t, user_operation)) {
   | Ok((t, receipt)) => (t, receipt)
-  | Error(`Not_enough_funds) => (t, None)
+  | Error(
+      `Not_enough_funds | `Transaction_sender_must_be_implicit_account |
+      `Withdraw_sender_must_be_implicit_account,
+    ) => (
+      t,
+      None,
+    )
   };

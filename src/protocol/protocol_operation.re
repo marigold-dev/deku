@@ -53,23 +53,36 @@ module Core_user = {
   };
 
   let sign = (~secret, ~nonce, ~block_height, ~data) => {
-    let hash = hash(~nonce, ~block_height, ~data);
+    open User_operation;
     let key = Key.of_secret(secret);
-    let signature = Signature.sign(secret, hash);
+    switch (Address.to_key_hash(data.sender)) {
+    | Some(sender) when Address.Implicit.matches_key(key, sender) =>
+      let hash = hash(~nonce, ~block_height, ~data);
+      let signature = Signature.sign(secret, hash);
+      {hash, key, signature, nonce, block_height, data};
     // TODO: this can only happen through a bug
     //       maybe the API should enforce it
-    assert(Address.matches_key(key, data.sender));
-    {hash, key, signature, nonce, block_height, data};
+    | _ =>
+      failwith(
+        "Operations to be signed should come from a key_hash that matches the secret",
+      )
+    };
   };
 
   let verify = (~hash, ~key, ~signature, ~nonce, ~block_height, ~data) => {
+    let.ok sender =
+      switch (Address.to_key_hash(data.User_operation.sender)) {
+      | Some(sender) => Ok(sender)
+      | _ => Error("Sender should be a key_hash")
+      };
     let.assert () = (
       "Invalid core_user operation hash",
       verify(~hash, ~nonce, ~block_height, ~data),
     );
+
     let.assert () = (
       "Invalid core_user key",
-      Address.matches_key(key, data.sender),
+      Address.Implicit.matches_key(key, sender),
     );
     let.assert () = (
       "Invalid core_user signature",

@@ -1,4 +1,3 @@
-open Core;
 open Node;
 open State;
 
@@ -11,7 +10,7 @@ module Identity: {
 
 module Wallet: {
   type t = {
-    address: Address.t,
+    address: Crypto.Key_hash.t,
     priv_key: Crypto.Secret.t,
   };
   let read: (~file: string) => Lwt.t(t);
@@ -19,8 +18,9 @@ module Wallet: {
 };
 
 module Validators: {
-  let read: (~file: string) => Lwt.t(list((Address.t, Uri.t)));
-  let write: (list((Address.t, Uri.t)), ~file: string) => Lwt.t(unit);
+  let read: (~file: string) => Lwt.t(list((Crypto.Key_hash.t, Uri.t)));
+  let write:
+    (list((Crypto.Key_hash.t, Uri.t)), ~file: string) => Lwt.t(unit);
 };
 
 module Interop_context: {

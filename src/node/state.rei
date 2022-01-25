@@ -1,16 +1,15 @@
 open Crypto;
 open Protocol;
-open Core;
 
 [@deriving yojson]
 type identity = {
   secret: Secret.t,
   key: Key.t,
-  t: Address.t,
+  t: Key_hash.t,
   uri: Uri.t,
 };
 
-module Address_map: Map.S with type key = Address.t;
+module Address_map: Map.S with type key = Key_hash.t;
 module Uri_map: Map.S with type key = Uri.t;
 
 type t = {

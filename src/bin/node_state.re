@@ -1,5 +1,4 @@
 open Helpers;
-open Core;
 open Protocol;
 open Node;
 
@@ -27,7 +26,7 @@ let get_initial_state = (~folder) => {
       current_validators
       |> List.mapi((i, validator) => {
            (
-             Address.of_key_hash(validator),
+             validator,
              Printf.sprintf("http://localhost:444%d", i) |> Uri.of_string,
            )
          })

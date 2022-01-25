@@ -4,7 +4,7 @@ open Crypto;
 module Address_and_ticket_map = {
   [@deriving (ord, yojson)]
   type key = {
-    address: Address.t,
+    address: Key_hash.t,
     ticket: Ticket_id.t,
   };
   module Map =

@@ -216,9 +216,7 @@ let try_to_commit_state_hash = (~prev_validators, state, block, signatures) => {
   let validators =
     state.protocol.validators
     |> Validators.to_list
-    |> List.map(validator =>
-         Core.Address.to_key_hash(validator.Validators.address)
-       );
+    |> List.map(validator => validator.Validators.address);
   let signatures =
     prev_validators
     |> Validators.to_list
@@ -554,7 +552,7 @@ let trusted_validators_membership = (state, update_state, request) => {
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash;
   let.assert () = (
     `Invalid_signature_author,
-    Core.Address.compare(state.Node.identity.t, Signature.address(signature))
+    Key_hash.compare(state.Node.identity.t, Signature.address(signature))
     == 0,
   );
   let.assert () = (
