@@ -59,25 +59,25 @@ let balance = (address, ticket, t) =>
   Address_and_ticket_map.find_opt(address, ticket, t.ledger)
   |> Option.value(~default=Amount.zero);
 
-let assert_available = (~source, ~amount: Amount.t) =>
-  if (source >= amount) {
+let assert_available = (~sender, ~amount: Amount.t) =>
+  if (sender >= amount) {
     Ok();
   } else {
     Error(`Not_enough_funds);
   };
 
-let transfer = (~source, ~destination, amount, ticket, t) => {
+let transfer = (~sender, ~destination, amount, ticket, t) => {
   open Amount;
 
-  let source_balance = balance(source, ticket, t);
-  let.ok () = assert_available(~source=source_balance, ~amount);
+  let sender_balance = balance(sender, ticket, t);
+  let.ok () = assert_available(~sender=sender_balance, ~amount);
 
   let destination_balance = balance(destination, ticket, t);
 
   Ok({
     ledger:
       t.ledger
-      |> Address_and_ticket_map.add(source, ticket, source_balance - amount)
+      |> Address_and_ticket_map.add(sender, ticket, sender_balance - amount)
       |> Address_and_ticket_map.add(
            destination,
            ticket,
@@ -102,11 +102,11 @@ let deposit = (destination, amount, ticket, t) => {
     handles: t.handles,
   };
 };
-let withdraw = (~source, ~destination, amount, ticket, t) => {
+let withdraw = (~sender, ~destination, amount, ticket, t) => {
   open Amount;
   let owner = destination;
-  let source_balance = balance(source, ticket, t);
-  let.ok () = assert_available(~source=source_balance, ~amount);
+  let sender_balance = balance(sender, ticket, t);
+  let.ok () = assert_available(~sender=sender_balance, ~amount);
 
   let (handles, handle) =
     Handle_tree.add(
@@ -119,7 +119,7 @@ let withdraw = (~source, ~destination, amount, ticket, t) => {
   let t = {
     ledger:
       t.ledger
-      |> Address_and_ticket_map.add(source, ticket, source_balance - amount),
+      |> Address_and_ticket_map.add(sender, ticket, sender_balance - amount),
     handles,
   };
   Ok((t, handle));

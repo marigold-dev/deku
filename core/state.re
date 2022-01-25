@@ -36,15 +36,15 @@ let apply_tezos_operation = (t, tezos_operation) => {
 };
 let apply_user_operation = (t, user_operation) => {
   open User_operation;
-  let {hash: _, source, initial_operation} = user_operation;
+  let {hash: _, sender, initial_operation} = user_operation;
   switch (initial_operation) {
   | Transaction({destination, amount, ticket}) =>
     let.ok ledger =
-      Ledger.transfer(~source, ~destination, amount, ticket, t.ledger);
+      Ledger.transfer(~sender, ~destination, amount, ticket, t.ledger);
     Ok(({ledger: ledger}, None));
   | Tezos_withdraw({owner, amount, ticket}) =>
     let.ok (ledger, handle) =
-      Ledger.withdraw(~source, ~destination=owner, amount, ticket, t.ledger);
+      Ledger.withdraw(~sender, ~destination=owner, amount, ticket, t.ledger);
     Ok(({ledger: ledger}, Some(Receipt_tezos_withdraw(handle))));
   };
 };
