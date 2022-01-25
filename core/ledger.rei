@@ -17,14 +17,14 @@ type t;
 let empty: t;
 let balance: (Address.t, Ticket_id.t, t) => Amount.t;
 let transfer:
-  (~source: Address.t, ~destination: Address.t, Amount.t, Ticket_id.t, t) =>
+  (~sender: Address.t, ~destination: Address.t, Amount.t, Ticket_id.t, t) =>
   result(t, [> | `Not_enough_funds]);
 
 // on chain ops
 let deposit: (Address.t, Amount.t, Ticket_id.t, t) => t;
 let withdraw:
   (
-    ~source: Address.t,
+    ~sender: Address.t,
     ~destination: Tezos.Address.t,
     Amount.t,
     Ticket_id.t,

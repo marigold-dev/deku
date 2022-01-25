@@ -16,8 +16,8 @@ type initial_operation =
 type t =
   pri {
     hash: BLAKE2B.t,
-    source: Address.t,
+    sender: Address.t,
     initial_operation,
   };
 
-let make: (~source: Address.t, initial_operation) => t;
+let make: (~sender: Address.t, initial_operation) => t;

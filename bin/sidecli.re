@@ -205,7 +205,7 @@ let create_transaction =
       ~block_height=block_level,
       ~data=
         Core.User_operation.make(
-          ~source=wallet.address,
+          ~sender=wallet.address,
           Transaction({destination: received_address, amount, ticket}),
         ),
     );
@@ -302,7 +302,7 @@ let withdraw =
       ~block_height=block_level,
       ~data=
         Core.User_operation.make(
-          ~source=wallet.address,
+          ~sender=wallet.address,
           Tezos_withdraw({owner: tezos_address, amount, ticket}),
         ),
     );

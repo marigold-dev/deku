@@ -84,7 +84,7 @@ describe("ledger", ({test, _}) => {
     let (t, (t1, t2), (a, b)) = setup_two();
     let c = make_address();
 
-    let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1, t);
+    let t = transfer(~sender=a, ~destination=b, Amount.of_int(1), t1, t);
     expect.result(t).toBeOk();
     let t = Result.get_ok(t);
     expect_balance(a, t1, 99, t);
@@ -94,7 +94,7 @@ describe("ledger", ({test, _}) => {
     expect_balance(c, t1, 0, t);
     expect_balance(c, t2, 0, t);
 
-    let t = transfer(~source=b, ~destination=a, Amount.of_int(3), t2, t);
+    let t = transfer(~sender=b, ~destination=a, Amount.of_int(3), t2, t);
     expect.result(t).toBeOk();
     let t = Result.get_ok(t);
     expect_balance(a, t1, 99, t);
@@ -104,7 +104,7 @@ describe("ledger", ({test, _}) => {
     expect_balance(c, t1, 0, t);
     expect_balance(c, t2, 0, t);
 
-    let t = transfer(~source=b, ~destination=c, Amount.of_int(5), t2, t);
+    let t = transfer(~sender=b, ~destination=c, Amount.of_int(5), t2, t);
     expect.result(t).toBeOk();
     let t = Result.get_ok(t);
     expect_balance(a, t1, 99, t);
@@ -114,7 +114,7 @@ describe("ledger", ({test, _}) => {
     expect_balance(c, t1, 0, t);
     expect_balance(c, t2, 5, t);
 
-    let t = transfer(~source=a, ~destination=c, Amount.of_int(99), t1, t);
+    let t = transfer(~sender=a, ~destination=c, Amount.of_int(99), t1, t);
     expect.result(t).toBeOk();
     let t = Result.get_ok(t);
     expect_balance(a, t1, 0, t);
@@ -125,19 +125,19 @@ describe("ledger", ({test, _}) => {
     expect_balance(c, t2, 5, t);
 
     {
-      let t = transfer(~source=b, ~destination=c, Amount.of_int(202), t1, t);
+      let t = transfer(~sender=b, ~destination=c, Amount.of_int(202), t1, t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
     {
       let d = make_address();
-      let t = transfer(~source=d, ~destination=c, Amount.of_int(1), t2, t);
+      let t = transfer(~sender=d, ~destination=c, Amount.of_int(1), t2, t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
     {
       let t3 = make_ticket();
-      let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t3, t);
+      let t = transfer(~sender=a, ~destination=b, Amount.of_int(1), t3, t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
@@ -162,7 +162,7 @@ describe("ledger", ({test, _}) => {
     let (t, (t1, t2), (a, b)) = setup_two();
     let destination = make_tezos_address();
 
-    let t = withdraw(~source=a, ~destination, Amount.of_int(10), t1, t);
+    let t = withdraw(~sender=a, ~destination, Amount.of_int(10), t1, t);
     expect.result(t).toBeOk();
     let (t, handle) = Result.get_ok(t);
     expect_balance(a, t1, 90, t);
@@ -173,7 +173,7 @@ describe("ledger", ({test, _}) => {
     expect.equal(handle.owner, destination);
     expect.equal(handle.amount, Amount.of_int(10));
 
-    let t = withdraw(~source=b, ~destination, Amount.of_int(9), t2, t);
+    let t = withdraw(~sender=b, ~destination, Amount.of_int(9), t2, t);
     expect.result(t).toBeOk();
     let (t, handle) = Result.get_ok(t);
     expect_balance(a, t1, 90, t);
@@ -184,7 +184,7 @@ describe("ledger", ({test, _}) => {
     expect.equal(handle.owner, destination);
     expect.equal(handle.amount, Amount.of_int(9));
 
-    let t = withdraw(~source=a, ~destination, Amount.of_int(8), t2, t);
+    let t = withdraw(~sender=a, ~destination, Amount.of_int(8), t2, t);
     expect.result(t).toBeOk();
     let (t, handle) = Result.get_ok(t);
     expect_balance(a, t1, 90, t);
@@ -196,17 +196,17 @@ describe("ledger", ({test, _}) => {
     expect.equal(handle.amount, Amount.of_int(8));
 
     {
-      let t = withdraw(~source=a, ~destination, Amount.of_int(91), t1, t);
+      let t = withdraw(~sender=a, ~destination, Amount.of_int(91), t1, t);
       expect.result(t).toBeError();
     };
     {
-      let t = withdraw(~source=b, ~destination, Amount.of_int(203), t1, t);
+      let t = withdraw(~sender=b, ~destination, Amount.of_int(203), t1, t);
       expect.result(t).toBeError();
     };
     {
       let c = make_address();
 
-      let t = withdraw(~source=c, ~destination, Amount.of_int(1), t1, t);
+      let t = withdraw(~sender=c, ~destination, Amount.of_int(1), t1, t);
       expect.result(t).toBeError();
     };
     ();
@@ -217,14 +217,14 @@ describe("ledger", ({test, _}) => {
     {
       // two tickets with same data
       let t1' = make_ticket(~data=t1.data, ());
-      let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1', t);
+      let t = transfer(~sender=a, ~destination=b, Amount.of_int(1), t1', t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
     {
       // two tickets with same ticketer
       let t1' = make_ticket(~ticketer=t1.ticketer, ());
-      let t = transfer(~source=a, ~destination=b, Amount.of_int(1), t1', t);
+      let t = transfer(~sender=a, ~destination=b, Amount.of_int(1), t1', t);
       expect.result(t).toBeError();
       expect.equal(Result.get_error(t), `Not_enough_funds);
     };
