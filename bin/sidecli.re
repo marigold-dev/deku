@@ -151,6 +151,33 @@ let hash = {
   Arg.(conv((parser, printer)));
 };
 
+// Helpers
+// =======
+
+let submit_user_operation = (node_folder, wallet, operation) => {
+  open Networking;
+  let.await validators_uris = validators_uris(node_folder);
+  let validator_uri = List.hd(validators_uris);
+  let.await block_level_response = request_block_level((), validator_uri);
+  let block_level = block_level_response.level;
+  let operation =
+    Protocol.Operation.Core_user.sign(
+      ~secret=Files.Wallet.(wallet.priv_key),
+      ~nonce=0l,
+      ~block_height=block_level,
+      ~data=Core.User_operation.make(~sender=wallet.address, operation),
+    );
+  let.await identity = read_identity(~node_folder);
+
+  // Broadcast operation
+  let.await () =
+    Networking.request_user_operation_gossip(
+      {user_operation: operation},
+      identity.uri,
+    );
+  Lwt.return(operation);
+};
+
 // Commands
 // ========
 
@@ -192,30 +219,12 @@ let info_create_transaction = {
 
 let create_transaction =
     (node_folder, sender_wallet_file, received_address, amount, ticket) => {
-  open Networking;
-  let.await validators_uris = validators_uris(node_folder);
-  let validator_uri = List.hd(validators_uris);
-  let.await block_level_response = request_block_level((), validator_uri);
-  let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
-  let transaction =
-    Protocol.Operation.Core_user.sign(
-      ~secret=wallet.priv_key,
-      ~nonce=0l,
-      ~block_height=block_level,
-      ~data=
-        Core.User_operation.make(
-          ~sender=wallet.address,
-          Transaction({destination: received_address, amount, ticket}),
-        ),
-    );
-  let.await identity = read_identity(~node_folder);
-
-  // Broadcast transaction
-  let.await () =
-    Networking.request_user_operation_gossip(
-      {user_operation: transaction},
-      identity.uri,
+  let.await transaction =
+    submit_user_operation(
+      node_folder,
+      wallet,
+      Transaction({destination: received_address, amount, ticket}),
     );
   Format.printf(
     "operation.hash: %s\n%!",
@@ -290,28 +299,12 @@ let info_withdraw = {
 
 let withdraw =
     (node_folder, sender_wallet_file, tezos_address, amount, ticket) => {
-  open Networking;
-  let.await identity = read_identity(~node_folder);
-  let.await block_level_response = request_block_level((), identity.uri);
-  let block_level = block_level_response.level;
   let.await wallet = Files.Wallet.read(~file=sender_wallet_file);
-  let operation =
-    Protocol.Operation.Core_user.sign(
-      ~secret=wallet.priv_key,
-      ~nonce=0l,
-      ~block_height=block_level,
-      ~data=
-        Core.User_operation.make(
-          ~sender=wallet.address,
-          Tezos_withdraw({owner: tezos_address, amount, ticket}),
-        ),
-    );
-
-  // Broadcast transaction
-  let.await () =
-    Networking.request_user_operation_gossip(
-      {user_operation: operation},
-      identity.uri,
+  let.await operation =
+    submit_user_operation(
+      node_folder,
+      wallet,
+      Tezos_withdraw({owner: tezos_address, amount, ticket}),
     );
 
   Format.printf("operation.hash: %s\n%!", BLAKE2B.to_string(operation.hash));
