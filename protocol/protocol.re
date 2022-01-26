@@ -56,8 +56,8 @@ let apply_core_user_operation = (state, user_operation) => {
     Core.State.apply_user_operation(state.core_state, data);
   Ok(({...state, core_state, included_user_operations}, receipt));
 };
-let apply_core_user_operation = (state, tezos_operation) =>
-  switch (apply_core_user_operation(state, tezos_operation)) {
+let apply_core_user_operation = (state, user_operation) =>
+  switch (apply_core_user_operation(state, user_operation)) {
   | Ok((state, receipts)) => (state, receipts)
   | Error(`Block_in_the_future | `Old_operation | `Duplicated_operation) => (
       state,
