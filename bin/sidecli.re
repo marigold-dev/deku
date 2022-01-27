@@ -274,7 +274,7 @@ let create_transaction = {
   let ticket = {
     let doc = "The ticket to be transferred.";
     Arg.(
-      required & pos(4, some(ticket), None) & info([], ~docv="MSG", ~doc)
+      required & pos(4, some(ticket), None) & info([], ~docv="ticket", ~doc)
     );
   };
 
@@ -350,7 +350,7 @@ let withdraw = {
   let ticket = {
     let doc = "The ticket to be trasnsacted.";
     Arg.(
-      required & pos(4, some(ticket), None) & info([], ~docv="MSG", ~doc)
+      required & pos(4, some(ticket), None) & info([], ~docv="ticket", ~doc)
     );
   };
 
