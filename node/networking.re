@@ -121,8 +121,7 @@ module Protocol_snapshot = {
   type request = unit;
   [@deriving yojson]
   type response = {
-    snapshot: string,
-    snapshot_hash: BLAKE2B.t,
+    snapshot: Snapshots.snapshot,
     additional_blocks: list(Block.t),
     last_block: Block.t,
     // TODO: this is bad, Signatures.t is a private type and not a network one

@@ -73,7 +73,7 @@ let block_has_signable_state_root_hash = (~current_time, state, block) => {
     if (BLAKE2B.equal(block.Block.state_root_hash, protocol.state_root_hash)) {
       time_since_last_epoch <= maximum_signable_time_between_epochs;
     } else {
-      BLAKE2B.equal(block.state_root_hash, state.next_state_root |> fst)
+      BLAKE2B.equal(block.state_root_hash, state.next_state_root.hash)
       && time_since_last_epoch >= minimum_signable_time_between_epochs;
     }
   );
@@ -159,7 +159,7 @@ let produce_block = state => {
     );
   let next_state_root_hash =
     if (start_new_epoch) {
-      Some(state.Node.next_state_root |> fst);
+      Some(state.Node.next_state_root.hash);
     } else {
       None;
     };

@@ -1,13 +1,19 @@
 open Crypto;
 open Protocol;
 
+[@deriving yojson]
+type snapshot = {
+  hash: BLAKE2B.t,
+  data: string,
+};
+
 /*
  last_block should always have the same or
  bigger block_height than the state snapshot,
  this ensures that if last_block is signed the
  state snapshot will also be signed */
 type t = {
-  last_snapshot: (BLAKE2B.t, string),
+  last_snapshot: snapshot,
   last_snapshot_height: int64,
   last_block: Block.t,
   last_block_signatures: Signatures.t,

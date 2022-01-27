@@ -23,7 +23,7 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
-  next_state_root: (BLAKE2B.t, string),
+  next_state_root: Snapshots.snapshot,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -55,7 +55,8 @@ let make =
   let initial_block_pool =
     Block_pool.make(~self_key=identity.key)
     |> Block_pool.append_block(initial_block);
-  let initial_snapshot = Protocol.hash(initial_protocol);
+  let (hash, data) = Protocol.hash(initial_protocol);
+  let initial_snapshot = Snapshots.{hash, data};
   let initial_snapshots =
     Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
 
@@ -87,11 +88,10 @@ let apply_block = (state, block) => {
         )) {
       (state.next_state_root, state.snapshots);
     } else {
-      let (next_state_root_hash, next_state_root_data) =
-        Protocol.hash(prev_protocol);
+      let (hash, data) = Protocol.hash(prev_protocol);
       Format.printf(
         "\x1b[36m New protocol hash: %s\x1b[m\n%!",
-        next_state_root_hash |> Crypto.BLAKE2B.to_string,
+        hash |> Crypto.BLAKE2B.to_string,
       );
       let snapshots =
         Snapshots.update(
@@ -99,7 +99,7 @@ let apply_block = (state, block) => {
           ~applied_block_height=block.block_height,
           state.snapshots,
         );
-      ((next_state_root_hash, next_state_root_data), snapshots);
+      (Snapshots.{hash, data}, snapshots);
     };
   let recent_operation_receipts =
     List.fold_left(
@@ -124,8 +124,7 @@ let signatures_required = state => {
 };
 let load_snapshot =
     (
-      ~state_root_hash,
-      ~state_root,
+      ~snapshot,
       ~additional_blocks,
       ~last_block,
       // TODO: this is bad, Signatures.t is a private type and not a network one
@@ -172,11 +171,11 @@ let load_snapshot =
     // In the future, the equivalent check should be something like this:
     // let hd_srh == List.hd(all_blocks).state_root_hash;
     // state_root_hash == List.find(b => b.srh != hd_srh)
-    state_root_hash == last_block.state_root_hash,
+    snapshot.Snapshots.hash == last_block.state_root_hash,
   );
   let.assert () = (
     `Snapshots_with_invalid_hash,
-    BLAKE2B.verify(~hash=state_root_hash, state_root),
+    BLAKE2B.verify(~hash=snapshot.hash, snapshot.data),
   );
   let of_yojson = [%of_yojson:
     (
@@ -201,7 +200,7 @@ let load_snapshot =
     state_root_hash,
   ) =
     // TODO: verify the hash
-    state_root |> Yojson.Safe.from_string |> of_yojson |> Result.get_ok;
+    snapshot.data |> Yojson.Safe.from_string |> of_yojson |> Result.get_ok;
 
   // TODO: this is clearly an abstraction leak
 
@@ -219,7 +218,6 @@ let load_snapshot =
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
-  let next_state_root = (state_root_hash, state_root);
-  let t = {...t, next_state_root, protocol, block_pool};
+  let t = {...t, next_state_root: snapshot, protocol, block_pool};
   List.fold_left_ok(apply_block, t, all_blocks);
 };

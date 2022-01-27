@@ -75,8 +75,8 @@ let get_initial_state = (~folder) => {
       let prev_epoch_state_bin = folder ++ "/prev_epoch_state.bin";
       let.await prev_protocol =
         Files.State_bin.read(~file=prev_epoch_state_bin);
-      let next_state_root = Protocol.hash(prev_protocol);
-      await((protocol, next_state_root));
+      let (hash, data) = Protocol.hash(prev_protocol);
+      await((protocol, Snapshots.{hash, data}));
     } else {
       await((node.protocol, node.next_state_root));
     };
