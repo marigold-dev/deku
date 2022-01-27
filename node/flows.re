@@ -163,7 +163,8 @@ let request_protocol_snapshot = () =>
   });
 
 let request_previous_blocks = (state, block) =>
-  if (block.Block.state_root_hash == state.Node.protocol.state_root_hash) {
+  if (block_matches_current_state_root_hash(state, block)
+      || block_matches_next_state_root_hash(state, block)) {
     request_block(~hash=block.Block.previous_hash);
   } else if (! pending^) {
     pending := true;
@@ -252,8 +253,8 @@ let rec try_to_apply_block = (state, update_state, block) => {
   // TODO: in the future, we should stop the chain if this assert fails
   let.assert () = (
     `Invalid_state_root_hash,
-    BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash)
-    || BLAKE2B.equal(state.next_state_root.hash, block.state_root_hash),
+    block_matches_current_state_root_hash(state, block)
+    || block_matches_next_state_root_hash(state, block),
   );
 
   let prev_protocol = state.protocol;

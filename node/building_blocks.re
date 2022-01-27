@@ -66,17 +66,28 @@ let minimum_signable_time_between_epochs = 10.0;
 // as a reasonable default.
 let maximum_signable_time_between_epochs = 20.0;
 
-let block_has_signable_state_root_hash = (~current_time, state, block) => {
-  let protocol = state.Node.protocol;
-  let time_since_last_epoch = current_time -. protocol.last_state_root_update;
-  Crypto.(
-    if (BLAKE2B.equal(block.Block.state_root_hash, protocol.state_root_hash)) {
-      time_since_last_epoch <= maximum_signable_time_between_epochs;
-    } else {
-      BLAKE2B.equal(block.state_root_hash, state.next_state_root.hash)
-      && time_since_last_epoch >= minimum_signable_time_between_epochs;
-    }
+let block_matches_current_state_root_hash = (state, block) =>
+  BLAKE2B.equal(
+    block.Block.state_root_hash,
+    state.Node.protocol.state_root_hash,
   );
+
+let block_matches_next_state_root_hash = (state, block) => {
+  let.default () = false;
+  let.some {hash: next_state_root_hash, _} =
+    Snapshots.get_next_snapshot(state.Node.snapshots);
+  Some(BLAKE2B.equal(block.Block.state_root_hash, next_state_root_hash));
+};
+
+let block_has_signable_state_root_hash = (~current_time, state, block) => {
+  let time_since_last_epoch =
+    current_time -. state.Node.protocol.last_state_root_update;
+  if (block_matches_current_state_root_hash(state, block)) {
+    time_since_last_epoch <= maximum_signable_time_between_epochs;
+  } else {
+    block_matches_next_state_root_hash(state, block)
+    && time_since_last_epoch >= minimum_signable_time_between_epochs;
+  };
 };
 
 // TODO: bad naming
@@ -159,7 +170,8 @@ let produce_block = state => {
     );
   let next_state_root_hash =
     if (start_new_epoch) {
-      Some(state.Node.next_state_root.hash);
+      let.some snapshot = Snapshots.get_next_snapshot(state.snapshots);
+      Some(snapshot.hash);
     } else {
       None;
     };

@@ -23,7 +23,6 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
-  next_state_root: Snapshots.snapshot,
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -69,7 +68,6 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
-    next_state_root: initial_snapshot,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -81,25 +79,20 @@ let make =
 let apply_block = (state, block) => {
   let prev_protocol = state.protocol;
   let.ok (protocol, receipts) = Protocol.apply_block(state.protocol, block);
-  let (next_state_root, snapshots) =
+  let snapshots =
     if (Crypto.BLAKE2B.equal(
           block.state_root_hash,
           prev_protocol.state_root_hash,
         )) {
-      (state.next_state_root, state.snapshots);
+      state.snapshots;
     } else {
       let (hash, data) = Protocol.hash(prev_protocol);
-      Format.printf(
-        "\x1b[36m New protocol hash: %s\x1b[m\n%!",
-        hash |> Crypto.BLAKE2B.to_string,
-      );
-      let snapshots =
-        Snapshots.update(
-          ~new_snapshot=state.next_state_root,
-          ~applied_block_height=block.block_height,
-          state.snapshots,
-        );
-      (Snapshots.{hash, data}, snapshots);
+      state.snapshots
+      |> Snapshots.start_new_epoch
+      |> Snapshots.add_snapshot(
+           ~new_snapshot=Snapshots.{hash, data},
+           ~block_height=prev_protocol.block_height,
+         );
     };
   let recent_operation_receipts =
     List.fold_left(
@@ -107,13 +100,7 @@ let apply_block = (state, block) => {
       state.recent_operation_receipts,
       receipts,
     );
-  Ok({
-    ...state,
-    protocol,
-    next_state_root,
-    recent_operation_receipts,
-    snapshots,
-  });
+  Ok({...state, protocol, recent_operation_receipts, snapshots});
 };
 
 // TODO: duplicated code
@@ -218,6 +205,16 @@ let load_snapshot =
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
-  let t = {...t, next_state_root: snapshot, protocol, block_pool};
+  // We should only ever load snapshots of the future, never the past.
+  let.assert () = (
+    `Invalid_snapshot_height,
+    protocol.block_height > t.protocol.block_height,
+  );
+  let t = {...t, protocol, block_pool};
+  // TODO: it doesn't seem valid to add a snapshot here based on the information received
+  // from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
+  // the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
+  // In the future, we should only add snapshots once we're in sync. This will happen automatically
+  // when async state hashing is done.
   List.fold_left_ok(apply_block, t, all_blocks);
 };
