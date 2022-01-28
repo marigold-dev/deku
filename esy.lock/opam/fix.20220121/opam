@@ -18,9 +18,9 @@ depends: [
 synopsis: "Algorithmic building blocks for memoization, recursion, and more"
 url {
   src:
-    "https://gitlab.inria.fr/fpottier/fix/-/archive/20211231/archive.tar.gz"
+    "https://gitlab.inria.fr/fpottier/fix/-/archive/20220121/archive.tar.gz"
   checksum: [
-    "md5=0f633b0cdd5faba947d11da113c81fcc"
-    "sha512=6817ce5c79e0c957ef01def7b89059262414af8e8bc7ffafef96430cfb1d78e32350fe7a57e118e68727962338c4fc45023cddb1c4db8c344910d6c8c1873a18"
+    "md5=48d8a5bdff23cf7fbf9288877df2b6aa"
+    "sha512=a851d8783c0c519c6e55359a5c471af433058872409c29a1a7bdfd0076813341ad2c0ebd1ce9e28bff4d4c729dfbc808c41c084fe12a42b45a2b5e391e77ccd2"
   ]
 }
