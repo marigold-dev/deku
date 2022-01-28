@@ -167,15 +167,28 @@ let submit_user_operation = (node_folder, wallet, operation) => {
       ~block_height=block_level,
       ~data=Core.User_operation.make(~sender=wallet.address, operation),
     );
+
   let.await identity = read_identity(~node_folder);
 
-  // Broadcast operation
-  let.await () =
-    Networking.request_user_operation_gossip(
-      {user_operation: operation},
-      identity.uri,
-    );
-  Lwt.return(operation);
+  let.await {gas_consumed, result} =
+    request_operation_mock({user_operation: operation}, identity.uri);
+
+  switch (result) {
+  | Some () =>
+    Printf.printf("Gas is expected to cost: %d.\n", gas_consumed);
+
+    // Broadcast operation
+    let.await () =
+      Networking.request_user_operation_gossip(
+        {user_operation: operation},
+        identity.uri,
+      );
+    Lwt.return(Ok(operation));
+
+  | None =>
+    Printf.printf("Transaction is expected to fail, aborting.\n");
+    Lwt.return(Error());
+  };
 };
 
 // Commands
@@ -226,11 +239,15 @@ let create_transaction =
       wallet,
       Transaction({destination: received_address, amount, ticket}),
     );
-  Format.printf(
-    "operation.hash: %s\n%!",
-    BLAKE2B.to_string(transaction.hash),
-  );
-
+  let () =
+    switch (transaction) {
+    | Ok(transaction) =>
+      Format.printf(
+        "operation.hash: %s\n%!",
+        BLAKE2B.to_string(transaction.hash),
+      )
+    | _ => ()
+    };
   Lwt.return(`Ok());
 };
 
@@ -307,7 +324,16 @@ let withdraw =
       Tezos_withdraw({owner: tezos_address, amount, ticket}),
     );
 
-  Format.printf("operation.hash: %s\n%!", BLAKE2B.to_string(operation.hash));
+  let () =
+    switch (operation) {
+    | Ok(operation) =>
+      Format.printf(
+        "operation.hash: %s\n%!",
+        BLAKE2B.to_string(operation.hash),
+      )
+    | _ => ()
+    };
+
   Lwt.return(`Ok());
 };
 

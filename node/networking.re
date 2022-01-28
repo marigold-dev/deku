@@ -168,6 +168,17 @@ module Consensus_operation_gossip = {
   type response = unit;
   let path = "/consensus-operation-gossip";
 };
+module User_operation_mock = {
+  [@deriving yojson]
+  type request = {user_operation: Protocol.Operation.Core_user.t};
+  [@deriving yojson]
+  type response = {
+    gas_consumed: int,
+    result: option(unit),
+  };
+
+  let path = "/user-operation-mock";
+};
 
 module Withdraw_proof = {
   [@deriving yojson]
@@ -235,3 +246,4 @@ let request_consensus_operation =
   request((module Consensus_operation_gossip));
 let request_trusted_validator_membership =
   request((module Trusted_validators_membership_change));
+let request_operation_mock = request((module User_operation_mock));

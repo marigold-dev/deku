@@ -449,6 +449,10 @@ let received_consensus_operation =
     );
   Ok();
 };
+let received_operation_mock_request = (_state, _operation) => {
+  // TODO: fix this
+  (0, Some());
+};
 
 let find_block_by_hash = (state, hash) =>
   Block_pool.find_block(~hash, state.Node.block_pool);

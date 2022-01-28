@@ -179,6 +179,18 @@ let handle_receive_consensus_operation =
       request.signature,
     )
   });
+let handle_operation_mock =
+  handle_request(
+    (module Networking.User_operation_mock),
+    (_, request) => {
+      let (gas_consumed, result) =
+        Flows.received_operation_mock_request(
+          Server.get_state(),
+          request.user_operation,
+        );
+      Ok(Networking.User_operation_mock.{gas_consumed, result});
+    },
+  );
 
 let handle_trusted_validators_membership =
   handle_request(
@@ -231,6 +243,7 @@ let node = folder => {
     |> handle_register_uri
     |> handle_receive_user_operation_gossip
     |> handle_receive_consensus_operation
+    |> handle_operation_mock
     |> handle_withdraw_proof
     |> handle_ticket_balance
     |> handle_trusted_validators_membership
