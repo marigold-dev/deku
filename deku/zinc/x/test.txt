@@ -1,29 +1,49 @@
 (setglobal Test!
   (let
-    (b/81 = "tss"
-     f/82 = (function a/84 (apply (field 27 (global Stdlib!)) a/84 b/81)))
-    (seq (apply f/82 b/81) (makeblock 0 b/81 f/82))))
+    (ddc/84 =
+       (function d/86 param/87
+         (if param/87
+           (if (!= (field 0 param/87) 2)
+             (apply (field 27 (global Stdlib!)) "tt" d/86)
+             (apply (field 27 (global Stdlib!)) "g" d/86))
+           (apply (field 27 (global Stdlib!)) "awd" d/86))))
+    (makeblock 0 ddc/84)))
 	branch L2
-L1:	envacc 2
-	push
+	restart
+L1:	grab 1
 	acc 1
+	branchifnot L3
+	acc 1
+	getfield 0
+	push
+	const 2
+	neqint
+	branchifnot L4
+	acc 0
+	push
+	const "tt"
 	push
 	getglobal Stdlib!
 	getfield 27
-	appterm 2, 3
-L2:	const "tss"
+	appterm 2, 4
+L4:	acc 0
+	push
+	const "g"
+	push
+	getglobal Stdlib!
+	getfield 27
+	appterm 2, 4
+L3:	acc 0
+	push
+	const "awd"
+	push
+	getglobal Stdlib!
+	getfield 27
+	appterm 2, 4
+L2:	closure L1, 0
 	push
 	acc 0
-	closure L1, 1
-	push
-	acc 1
-	push
-	acc 1
-	apply 1
-	acc 0
-	push
-	acc 2
-	makeblock 2, 0
-	pop 2
+	makeblock 1, 0
+	pop 1
 	setglobal Test!
 

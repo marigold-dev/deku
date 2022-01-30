@@ -1,5 +1,3 @@
-let b = "tss"
+type a = AA of int | BB
 
-let f a = a ^ b
-
-let _ = f b
+let ddc d = function AA 2 -> "g" ^ d | BB -> "awd" ^ d | _ -> "tt" ^ d

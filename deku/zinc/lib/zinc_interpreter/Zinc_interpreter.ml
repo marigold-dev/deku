@@ -254,7 +254,6 @@ module Make (D : Domain_types) = struct
         in
         let open Ir in
         match (code, stack) with
-        | ([Return], _) -> (env, stack)
         | (Or :: c, (Bool x as x') :: (Bool _ as y') :: stack) ->
             let return = if x then x' else y' in
             loop c env (return :: stack) (G.simple gas)
@@ -275,6 +274,7 @@ module Make (D : Domain_types) = struct
             loop c' e' (v :: s) (G.simple gas)
         | (Return :: _, Clos {code = c'; env = e'} :: s) ->
             loop c' e' s (G.simple gas)
+        | ([Return], _) -> (env, stack)
         | (PushRetAddr c' :: c, s) ->
             loop c env (Marker {code = c'; env} :: s) (G.simple gas)
         | (Apply :: _, Clos {code = c'; env = e'} :: s) ->
