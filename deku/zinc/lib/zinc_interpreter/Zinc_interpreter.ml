@@ -49,37 +49,57 @@ module Make (D : Domain_types) = struct
         | (Operation Pack :: c, env, Stack_item.Z (Plain_old_data d) :: stack)
           ->
             let open E in
-            let packed_data =
-              match d with
-              | Num n -> Pack.int n
-              | Bytes b -> Pack.bytes b
-              | String s -> Pack.string s
-              | Key k -> Pack.key k
-              | Key_hash kh -> Pack.key_hash kh
-              | Address a -> Pack.address a
-              | _ -> failwith "Not a packable data type"
-            in
-            let si =
-              Stack_item.Z (Plain_old_data (Bytes (Pack.to_bytes packed_data)))
-            in
-            Steps.Continue (c, env, si :: stack)
+            let open Base.With_return in
+            with_return (fun r ->
+                let packed_data =
+                  match d with
+                  | Num n -> Pack.int n
+                  | Bytes b -> Pack.bytes b
+                  | String s -> Pack.string s
+                  | Key k -> Pack.key k
+                  | Key_hash kh -> Pack.key_hash kh
+                  | Address a -> Pack.address a
+                  | _ ->
+                      r.return
+                        (Steps.Internal_error
+                           "Tried to pack data of unpackable type")
+                in
+                let si =
+                  Stack_item.Z
+                    (Plain_old_data (Bytes (Pack.to_bytes packed_data)))
+                in
+                Steps.Continue (c, env, si :: stack))
         | (Operation Unpack :: c, env, Stack_item.Z (Plain_old_data d) :: stack)
           ->
             let open E in
-            let packed_data =
-              match d with
-              | Bytes b -> b
-              | _ -> failwith "Can only unpack bytes"
-            in
-            let unpacked_data =
-              match Pack.of_bytes packed_data with
-              | Pack.Int z -> Num z
-              | Pack.String s -> String s
-              | Pack.Bytes b -> Bytes b
-              | _ -> failwith "Whatever"
-            in
-            let si = Stack_item.Z (Plain_old_data unpacked_data) in
-            Steps.Continue (c, env, si :: stack)
+            let open Base.With_return in
+            with_return (fun r ->
+                let packed_data =
+                  match d with
+                  | Bytes b -> Some b
+                  | _ ->
+                      r.return
+                        (Steps.Internal_error "Tried to unpack non-byte data")
+                in
+                match packed_data with
+                | Some packed_data ->
+                    let unpacked_data =
+                      match Pack.of_bytes packed_data with
+                      | Pack.Int z -> Num z
+                      | Pack.String s -> String s
+                      | Pack.Bytes b -> Bytes b
+                      | Pack.Key k -> Key k
+                      | Pack.Key_hash kh -> Key_hash kh
+                      | Pack.Address a -> Address a
+                      | Pack.Error s -> r.return (Steps.Internal_error s)
+                      | _ ->
+                          r.return
+                            (Steps.Internal_error
+                               "Unsupported type for unpacking")
+                    in
+                    let si = Stack_item.Z (Plain_old_data unpacked_data) in
+                    Steps.Continue (c, env, si :: stack)
+                | None -> Steps.Internal_error "Error")
         | ( Operation Or :: c,
             env,
             (Stack_item.Z (Plain_old_data (Bool x)) as x')

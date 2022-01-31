@@ -26,6 +26,9 @@ module type Executor = sig
       | Int of Z.t
       | String of string
       | Bytes of bytes
+      | Key of key
+      | Key_hash of key_hash
+      | Address of address
       | List of result list
       | Error of string
 
