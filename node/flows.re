@@ -5,6 +5,20 @@ open Building_blocks;
 
 module Node = State;
 
+let write_state_to_file = (path, protocol) => {
+  let protocol_bin = Marshal.to_string(protocol, []);
+  Lwt.async(() =>
+    Lwt_io.with_file(
+      ~mode=Output,
+      path,
+      oc => {
+        let.await () = Lwt_io.write(oc, protocol_bin);
+        Lwt_io.flush(oc);
+      },
+    )
+  );
+};
+
 type flag_node = [ | `Invalid_block | `Invalid_signature];
 type ignore = [
   | `Added_block_not_signed_enough_to_desync
@@ -128,16 +142,14 @@ Lwt.async_exception_hook :=
     }
   );
 let pending = ref(false);
-let load_snapshot = snapshot => {
+let load_snapshot = snapshot_data => {
   open Networking.Protocol_snapshot;
-
   let.ok state =
     Node.load_snapshot(
-      ~state_root_hash=snapshot.snapshot_hash,
-      ~state_root=snapshot.snapshot,
-      ~additional_blocks=snapshot.additional_blocks,
-      ~last_block=snapshot.last_block,
-      ~last_block_signatures=snapshot.last_block_signatures,
+      ~snapshot=snapshot_data.snapshot,
+      ~additional_blocks=snapshot_data.additional_blocks,
+      ~last_block=snapshot_data.last_block,
+      ~last_block_signatures=snapshot_data.last_block_signatures,
       get_state^(),
     );
   Ok(set_state^(state));
@@ -151,7 +163,8 @@ let request_protocol_snapshot = () =>
   });
 
 let request_previous_blocks = (state, block) =>
-  if (block.Block.state_root_hash == state.Node.protocol.state_root_hash) {
+  if (block_matches_current_state_root_hash(state, block)
+      || block_matches_next_state_root_hash(state, block)) {
     request_block(~hash=block.Block.previous_hash);
   } else if (! pending^) {
     pending := true;
@@ -237,26 +250,39 @@ let rec try_to_apply_block = (state, update_state, block) => {
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
   );
 
-  let (next_state_root_hash, _) = state.next_state_root;
   // TODO: in the future, we should stop the chain if this assert fails
   let.assert () = (
     `Invalid_state_root_hash,
-    BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash)
-    || BLAKE2B.equal(next_state_root_hash, block.state_root_hash),
+    block_matches_current_state_root_hash(state, block)
+    || block_matches_next_state_root_hash(state, block),
   );
 
-  let prev_validators = state.protocol.validators;
+  let prev_protocol = state.protocol;
   let is_new_state_root_hash =
     !BLAKE2B.equal(state.protocol.state_root_hash, block.state_root_hash);
 
   let.ok state = apply_block(state, update_state, block);
+  write_state_to_file(state.Node.data_folder ++ "/state.bin", state.protocol);
+
   reset_timeout^();
   let state = clean(state, update_state, block);
 
   if (is_new_state_root_hash) {
+    // Save the hash that will become the next state root
+    // to disk so if the node goes offline before finishing
+    // hashing it, it can pick up where it left off.
+    write_state_to_file(
+      state.data_folder ++ "/prev_epoch_state.bin",
+      prev_protocol,
+    );
     switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
     | Some(signatures) when Signatures.is_self_signed(signatures) =>
-      try_to_commit_state_hash(~prev_validators, state, block, signatures)
+      try_to_commit_state_hash(
+        ~prev_validators=prev_protocol.validators,
+        state,
+        block,
+        signatures,
+      )
     | _ => ()
     };
   };

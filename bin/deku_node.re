@@ -138,8 +138,7 @@ let handle_protocol_snapshot =
     (_update_state, ()) => {
       let State.{snapshots, _} = Server.get_state();
       Ok({
-        snapshot: snd(snapshots.Snapshots.last_snapshot),
-        snapshot_hash: fst(snapshots.last_snapshot),
+        snapshot: snapshots.current_snapshot,
         additional_blocks: snapshots.additional_blocks,
         last_block: snapshots.last_block,
         last_block_signatures:

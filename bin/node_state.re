@@ -69,18 +69,35 @@ let get_initial_state = (~folder) => {
   };
   let state_bin = folder ++ "/state.bin";
   let.await state_bin_exists = Lwt_unix.file_exists(state_bin);
-  let.await (protocol, next_state_root) =
+
+  let.await protocol =
     if (state_bin_exists) {
-      let.await protocol = Files.State_bin.read(~file=state_bin);
-      let prev_epoch_state_bin = folder ++ "/prev_epoch_state.bin";
+      Files.State_bin.read(~file=state_bin);
+    } else {
+      await(node.protocol);
+    };
+
+  let prev_epoch_state_bin = folder ++ "/prev_epoch_state.bin";
+  let.await prev_epoch_state_bin_exists =
+    Lwt_unix.file_exists(prev_epoch_state_bin);
+  let.await snapshots =
+    if (state_bin_exists && prev_epoch_state_bin_exists) {
       let.await prev_protocol =
         Files.State_bin.read(~file=prev_epoch_state_bin);
-      let next_state_root = Protocol.hash(prev_protocol);
-      await((protocol, next_state_root));
+      let (hash, data) = Protocol.hash(prev_protocol);
+      let snapshots =
+        Snapshots.add_snapshot(
+          ~new_snapshot=Snapshots.{hash, data},
+          ~block_height=prev_protocol.block_height,
+          node.snapshots,
+        )
+        |> Snapshots.start_new_epoch;
+      await(snapshots);
     } else {
-      await((node.protocol, node.next_state_root));
+      await(node.snapshots);
     };
-  let node = {...node, next_state_root, protocol};
+
+  let node = {...node, snapshots, protocol};
 
   await(node);
 };

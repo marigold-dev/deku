@@ -23,7 +23,6 @@ type t = {
   block_pool: Block_pool.t,
   protocol: Protocol.t,
   snapshots: Snapshots.t,
-  next_state_root: (BLAKE2B.t, string),
   // networking
   // TODO: move this to somewhere else but the string means the nonce needed
   // TODO: someone right now can spam the network to prevent uri changes
@@ -55,7 +54,8 @@ let make =
   let initial_block_pool =
     Block_pool.make(~self_key=identity.key)
     |> Block_pool.append_block(initial_block);
-  let initial_snapshot = Protocol.hash(initial_protocol);
+  let (hash, data) = Protocol.hash(initial_protocol);
+  let initial_snapshot = Snapshots.{hash, data};
   let initial_snapshots =
     Snapshots.make(~initial_snapshot, ~initial_block, ~initial_signatures);
 
@@ -68,7 +68,6 @@ let make =
     block_pool: initial_block_pool,
     protocol: initial_protocol,
     snapshots: initial_snapshots,
-    next_state_root: initial_snapshot,
     // networking
     uri_state: Uri_map.empty,
     validators_uri: initial_validators_uri,
@@ -77,53 +76,23 @@ let make =
   };
 };
 
-// TODO: this function should be moved anywhere else, it doesn't make sense in the protocol
-let write_state_to_file = (path, protocol) => {
-  let protocol_bin = Marshal.to_string(protocol, []);
-  Lwt.async(() =>
-    Lwt_io.with_file(
-      ~mode=Output,
-      path,
-      oc => {
-        let.await () = Lwt_io.write(oc, protocol_bin);
-        Lwt_io.flush(oc);
-      },
-    )
-  );
-};
-
 let apply_block = (state, block) => {
   let prev_protocol = state.protocol;
   let.ok (protocol, receipts) = Protocol.apply_block(state.protocol, block);
-
-  write_state_to_file(state.data_folder ++ "/state.bin", protocol);
-  let (next_state_root, snapshots) =
+  let snapshots =
     if (Crypto.BLAKE2B.equal(
           block.state_root_hash,
           prev_protocol.state_root_hash,
         )) {
-      (state.next_state_root, state.snapshots);
+      state.snapshots;
     } else {
-      // Save the hash that will become the next state root
-      // to disk so if the node goes offline before finishing
-      // hashing it, it can pick up where it left off.
-      write_state_to_file(
-        state.data_folder ++ "/prev_epoch_state.bin",
-        prev_protocol,
-      );
-      let (next_state_root_hash, next_state_root_data) =
-        Protocol.hash(prev_protocol);
-      Format.printf(
-        "\x1b[36m New protocol hash: %s\x1b[m\n%!",
-        next_state_root_hash |> Crypto.BLAKE2B.to_string,
-      );
-      let snapshots =
-        Snapshots.update(
-          ~new_snapshot=state.next_state_root,
-          ~applied_block_height=block.block_height,
-          state.snapshots,
-        );
-      ((next_state_root_hash, next_state_root_data), snapshots);
+      let (hash, data) = Protocol.hash(prev_protocol);
+      state.snapshots
+      |> Snapshots.start_new_epoch
+      |> Snapshots.add_snapshot(
+           ~new_snapshot=Snapshots.{hash, data},
+           ~block_height=prev_protocol.block_height,
+         );
     };
   let recent_operation_receipts =
     List.fold_left(
@@ -131,13 +100,7 @@ let apply_block = (state, block) => {
       state.recent_operation_receipts,
       receipts,
     );
-  Ok({
-    ...state,
-    protocol,
-    next_state_root,
-    recent_operation_receipts,
-    snapshots,
-  });
+  Ok({...state, protocol, recent_operation_receipts, snapshots});
 };
 
 // TODO: duplicated code
@@ -148,8 +111,7 @@ let signatures_required = state => {
 };
 let load_snapshot =
     (
-      ~state_root_hash,
-      ~state_root,
+      ~snapshot,
       ~additional_blocks,
       ~last_block,
       // TODO: this is bad, Signatures.t is a private type and not a network one
@@ -196,11 +158,11 @@ let load_snapshot =
     // In the future, the equivalent check should be something like this:
     // let hd_srh == List.hd(all_blocks).state_root_hash;
     // state_root_hash == List.find(b => b.srh != hd_srh)
-    state_root_hash == last_block.state_root_hash,
+    snapshot.Snapshots.hash == last_block.state_root_hash,
   );
   let.assert () = (
     `Snapshots_with_invalid_hash,
-    BLAKE2B.verify(~hash=state_root_hash, state_root),
+    BLAKE2B.verify(~hash=snapshot.hash, snapshot.data),
   );
   let of_yojson = [%of_yojson:
     (
@@ -225,7 +187,7 @@ let load_snapshot =
     state_root_hash,
   ) =
     // TODO: verify the hash
-    state_root |> Yojson.Safe.from_string |> of_yojson |> Result.get_ok;
+    snapshot.data |> Yojson.Safe.from_string |> of_yojson |> Result.get_ok;
 
   // TODO: this is clearly an abstraction leak
 
@@ -243,7 +205,16 @@ let load_snapshot =
       last_applied_block_timestamp: 0.0,
       last_seen_membership_change_timestamp: 0.0,
     };
-  let next_state_root = (state_root_hash, state_root);
-  let t = {...t, next_state_root, protocol, block_pool};
+  // We should only ever load snapshots of the future, never the past.
+  let.assert () = (
+    `Invalid_snapshot_height,
+    protocol.block_height > t.protocol.block_height,
+  );
+  let t = {...t, protocol, block_pool};
+  // TODO: it doesn't seem valid to add a snapshot here based on the information received
+  // from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
+  // the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
+  // In the future, we should only add snapshots once we're in sync. This will happen automatically
+  // when async state hashing is done.
   List.fold_left_ok(apply_block, t, all_blocks);
 };
