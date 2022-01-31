@@ -2,6 +2,7 @@ open Helpers;
 open Crypto;
 open Protocol;
 open Building_blocks;
+open Domainslib;
 
 module Node = State;
 
@@ -35,6 +36,7 @@ type ignore = [
 let reset_timeout: ref(unit => unit) = ref(() => assert(false));
 let get_state: ref(unit => State.t) = ref(() => assert(false));
 let set_state: ref(State.t => unit) = ref(_ => assert(false));
+let get_task_pool: ref(unit => Task.pool) = ref(() => assert(false));
 
 // TODO: poor man recursion
 let received_block':
@@ -172,6 +174,8 @@ let request_previous_blocks = (state, block) =>
   };
 
 let try_to_produce_block = (state, update_state) => {
+  // TODO: WHY IS THIS NEEDED????
+  // let state = get_state^();
   let.assert () = (
     `Not_current_block_producer,
     is_current_producer(state, ~key_hash=state.identity.t),
@@ -245,17 +249,29 @@ let try_to_commit_state_hash = (~prev_validators, state, block, signatures) => {
   });
 };
 
+let hash_new_state_root = (state, protocol, update_state) => {
+  let task_pool = get_task_pool^();
+  let (snapshot_ref, snapshots) =
+    Snapshots.add_snapshot_ref(
+      ~block_height=protocol.block_height,
+      state.Node.snapshots,
+    );
+  let _ =
+    Task.async(
+      task_pool,
+      () => {
+        let (hash, data) = Protocol.hash(protocol);
+        Snapshots.set_snapshot_ref(snapshot_ref, Snapshots.{hash, data});
+      },
+    );
+
+  update_state({...state, snapshots});
+};
+
 let rec try_to_apply_block = (state, update_state, block) => {
   let.assert () = (
     `Block_not_signed_enough_to_apply,
     Block_pool.is_signed(~hash=block.Block.hash, state.Node.block_pool),
-  );
-
-  // TODO: in the future, we should stop the chain if this assert fails
-  let.assert () = (
-    `Invalid_state_root_hash,
-    block_matches_current_state_root_hash(state, block)
-    || block_matches_next_state_root_hash(state, block),
   );
 
   let prev_protocol = state.protocol;
@@ -268,25 +284,30 @@ let rec try_to_apply_block = (state, update_state, block) => {
   reset_timeout^();
   let state = clean(state, update_state, block);
 
-  if (is_new_state_root_hash) {
-    // Save the hash that will become the next state root
-    // to disk so if the node goes offline before finishing
-    // hashing it, it can pick up where it left off.
-    write_state_to_file(
-      state.data_folder ++ "/prev_epoch_state.bin",
-      prev_protocol,
-    );
-    switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
-    | Some(signatures) when Signatures.is_self_signed(signatures) =>
-      try_to_commit_state_hash(
-        ~prev_validators=prev_protocol.validators,
-        state,
-        block,
-        signatures,
-      )
-    | _ => ()
+  let state =
+    if (is_new_state_root_hash) {
+      // Save the hash that will become the next state root
+      // to disk so if the node goes offline before finishing
+      // hashing it, it can pick up where it left off.
+      write_state_to_file(
+        state.data_folder ++ "/prev_epoch_state.bin",
+        prev_protocol,
+      );
+      let state = hash_new_state_root(state, prev_protocol, update_state);
+      switch (Block_pool.find_signatures(~hash=block.hash, state.block_pool)) {
+      | Some(signatures) when Signatures.is_self_signed(signatures) =>
+        try_to_commit_state_hash(
+          ~prev_validators=prev_protocol.validators,
+          state,
+          block,
+          signatures,
+        )
+      | _ => ()
+      };
+      state;
+    } else {
+      state;
     };
-  };
 
   switch (
     Block_pool.find_next_block_to_apply(

@@ -86,13 +86,7 @@ let apply_block = (state, block) => {
         )) {
       state.snapshots;
     } else {
-      let (hash, data) = Protocol.hash(prev_protocol);
-      state.snapshots
-      |> Snapshots.start_new_epoch
-      |> Snapshots.add_snapshot(
-           ~new_snapshot=Snapshots.{hash, data},
-           ~block_height=prev_protocol.block_height,
-         );
+      Snapshots.start_new_epoch(state.snapshots);
     };
   let recent_operation_receipts =
     List.fold_left(
@@ -214,7 +208,27 @@ let load_snapshot =
   // TODO: it doesn't seem valid to add a snapshot here based on the information received
   // from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
   // the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
-  // In the future, we should only add snapshots once we're in sync. This will happen automatically
-  // when async state hashing is done.
-  List.fold_left_ok(apply_block, t, all_blocks);
+  // In the future, we should only add snapshots once we're in sync.
+  List.fold_left_ok(
+    (prev_state, block) => {
+      let.ok state = apply_block(prev_state, block);
+      if (BLAKE2B.equal(
+            prev_state.protocol.state_root_hash,
+            state.protocol.state_root_hash,
+          )) {
+        Ok(state);
+      } else {
+        let (hash, data) = Protocol.hash(prev_state.protocol);
+        let (snapshot_ref, snapshots) =
+          Snapshots.add_snapshot_ref(
+            ~block_height=prev_state.protocol.block_height,
+            state.snapshots,
+          );
+        let () = Snapshots.set_snapshot_ref(snapshot_ref, {hash, data});
+        Ok({...state, snapshots});
+      };
+    },
+    t,
+    all_blocks,
+  );
 };

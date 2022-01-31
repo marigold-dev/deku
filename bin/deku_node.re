@@ -43,6 +43,7 @@ let print_error = err => {
   | `Not_a_user_opertaion => eprintf("Not_a_user_opertaion")
   | `Not_consensus_operation => eprintf("Not_consensus_operation")
   | `Invalid_signature => eprintf("Invalid_signature")
+  | `Node_not_yet_initialized => eprintf("Node_not_yet_initialized")
   };
   eprintf("\n%!");
 };
@@ -132,18 +133,33 @@ let handle_block_level =
     Ok({level: Flows.find_block_level(Server.get_state())})
   });
 
+let latest_snapshot = ref(None);
+
 let handle_protocol_snapshot =
   handle_request(
     (module Networking.Protocol_snapshot),
     (_update_state, ()) => {
       let State.{snapshots, _} = Server.get_state();
-      Ok({
-        snapshot: snapshots.current_snapshot,
-        additional_blocks: snapshots.additional_blocks,
-        last_block: snapshots.last_block,
-        last_block_signatures:
-          Signatures.to_list(snapshots.last_block_signatures),
-      });
+      let.ok snapshot =
+        switch (Snapshots.get_current_snapshot(snapshots)) {
+        | Some(snapshot) =>
+          latest_snapshot := Some(snapshot);
+          Ok(snapshot);
+        | None =>
+          switch (latest_snapshot^) {
+          | Some(latest_snapshot) => Ok(latest_snapshot)
+          | None => Error(`Node_not_yet_initialized)
+          }
+        };
+      Ok(
+        Networking.Protocol_snapshot.{
+          snapshot,
+          additional_blocks: snapshots.additional_blocks,
+          last_block: snapshots.last_block,
+          last_block_signatures:
+            Signatures.to_list(snapshots.last_block_signatures),
+        },
+      );
     },
   );
 let handle_request_nonce =
@@ -236,6 +252,11 @@ let node = folder => {
     |> handle_trusted_validators_membership
     |> App.start
     |> Lwt_main.run;
+
+  // As of domainslib 0.3.1, it seems like there is a problem with Lwt + Domainslib,
+  // such that if you set up the Task pool before calling [Lwt_main.run] it won't work correctly.
+  // This might be fixed in domainslib 0.3.2 which was a major upgrade but includes breaking changes.
+  Node.Server.setup_task_pool();
 
   let (forever, _) = Lwt.wait();
   Lwt_main.run(forever);

@@ -85,14 +85,13 @@ let get_initial_state = (~folder) => {
       let.await prev_protocol =
         Files.State_bin.read(~file=prev_epoch_state_bin);
       let (hash, data) = Protocol.hash(prev_protocol);
-      let snapshots =
-        Snapshots.add_snapshot(
-          ~new_snapshot=Snapshots.{hash, data},
+      let (snapshot_ref, snapshots) =
+        Snapshots.add_snapshot_ref(
           ~block_height=prev_protocol.block_height,
           node.snapshots,
-        )
-        |> Snapshots.start_new_epoch;
-      await(snapshots);
+        );
+      let () = Snapshots.set_snapshot_ref(snapshot_ref, {hash, data});
+      await(Snapshots.start_new_epoch(snapshots));
     } else {
       await(node.snapshots);
     };

@@ -9,6 +9,8 @@ type t = {
   mutable timeout: Lwt.t(unit),
 };
 
+let task_pool = ref(None);
+
 let global_server = ref(None);
 let start = (~initial) =>
   switch (global_server^) {
@@ -48,6 +50,17 @@ let rec reset_timeout = server => {
   };
 };
 
+let setup_task_pool = () =>
+  task_pool :=
+    Some(Domainslib.Task.setup_pool(~num_additional_domains=4, ()));
+
+let get_task_pool = () =>
+  switch (task_pool^) {
+  | Some(pool) => pool
+  | None => failwith("You must first call Server.setup_task_pool")
+  };
+
 Flows.reset_timeout := (() => reset_timeout(get()));
 Flows.get_state := get_state;
 Flows.set_state := set_state;
+Flows.get_task_pool := get_task_pool;
