@@ -6,6 +6,7 @@ module Option = Option_ext;
 module Yojson_ext = Yojson_ext;
 module Map = Map_ext;
 module Set = Set_ext;
+module Named_pipe = Named_pipe;
 module String_map =
   Map.Make_with_yojson({
     [@deriving yojson]

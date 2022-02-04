@@ -13,6 +13,7 @@ module Context = {
 module Run_contract = {
   [@deriving to_yojson]
   type input = {
+    nonce: int,
     rpc_node: string,
     secret: string,
     confirmation: int,
@@ -20,18 +21,42 @@ module Run_contract = {
     entrypoint: string,
     payload: Yojson.Safe.t,
   };
-  type output =
+  type output_data =
     | Applied({hash: string})
     | Failed({hash: string})
     | Skipped({hash: string})
     | Backtracked({hash: string})
     | Unknown({hash: string})
     | Error(string);
+  type output = {
+    nonce: int,
+    data: output_data,
+  };
+
+  let nonce_level = ref(-1);
+  let bump_nonce_level = () => {
+    let nonce = nonce_level^;
+    let nonce =
+      if (nonce == 999) {
+        0;
+      } else {
+        nonce_level^ + 1;
+      };
+    nonce_level := nonce;
+    nonce;
+  };
+
+  module IntMap = Map.Make(Int);
+  let nonce_resolutions: ref(IntMap.t(Lwt.u(output_data))) =
+    ref(IntMap.empty);
 
   let output_of_yojson = json => {
     module T = {
       [@deriving of_yojson({strict: false})]
-      type t = {status: string}
+      type t = {
+        status: string,
+        nonce: int,
+      }
       and finished = {hash: string}
       and error = {error: string};
     };
@@ -39,29 +64,26 @@ module Run_contract = {
       let.ok {hash} = T.finished_of_yojson(json);
       Ok(make(hash));
     };
-    let.ok {status} = T.of_yojson(json);
-    switch (status) {
-    | "applied" => finished(hash => Applied({hash: hash}))
-    | "failed" => finished(hash => Failed({hash: hash}))
-    | "skipped" => finished(hash => Skipped({hash: hash}))
-    | "backtracked" => finished(hash => Backtracked({hash: hash}))
-    | "unknown" => finished(hash => Unknown({hash: hash}))
-    | "error" =>
-      let.ok {error} = T.error_of_yojson(json);
-      Ok(Error(error));
-    | _ => Error("invalid status")
-    };
+    let.ok {status, nonce} = T.of_yojson(json);
+    let.ok data =
+      switch (status) {
+      | "applied" => finished(hash => Applied({hash: hash}))
+      | "failed" => finished(hash => Failed({hash: hash}))
+      | "skipped" => finished(hash => Skipped({hash: hash}))
+      | "backtracked" => finished(hash => Backtracked({hash: hash}))
+      | "unknown" => finished(hash => Unknown({hash: hash}))
+      | "error" =>
+        let.ok {error} = T.error_of_yojson(json);
+        Ok(Error(error));
+      | _ => Error("invalid status")
+      };
+    Ok({nonce, data});
   };
 
-  // TODO: this leaks the file as it needs to be removed when the app closes
-  let file = {
-    let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
-    let.await () = Lwt_io.write(oc, [%blob "run_entrypoint.bundle.js"]);
-    await(file);
-  };
-  let file = Lwt_main.run(file);
-  let run = (~context, ~destination, ~entrypoint, ~payload) => {
+  let run = (~data_folder, ~context, ~destination, ~entrypoint, ~payload) => {
+    let nonce = bump_nonce_level();
     let input = {
+      nonce,
       rpc_node: context.Context.rpc_node |> Uri.to_string,
       secret: context.secret |> Secret.to_string,
       confirmation: context.required_confirmations,
@@ -69,19 +91,32 @@ module Run_contract = {
       entrypoint,
       payload,
     };
-    // TODO: stop hard coding this
-    let command = "node";
-    let.await output =
-      Lwt_process.pmap(
-        (command, [|command, file|]),
-        Yojson.Safe.to_string(input_to_yojson(input)),
-      );
-    switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
-    | Ok(data) =>
-      Format.printf("Commit operation result: %s\n%!", output);
-      await(data);
-    | Error(error) => await(Error(error))
-    };
+    let (read_channel, write_channel) =
+      Named_pipe.get_pipe_pair_channels(data_folder ++ "/tezos_interop");
+    let input_str = Yojson.Safe.to_string(input_to_yojson(input));
+    let.await () = Lwt_io.write(write_channel, input_str);
+    let (promise, resolve) = Lwt.wait();
+    // Results may come in out of order, thus we need to be sure to resolve
+    // the promise with the correct result.
+    nonce_resolutions := IntMap.add(nonce, resolve, nonce_resolutions^);
+    Lwt.async(() => {
+      // Responses are always <=98 bytes
+      let.await output = Lwt_io.read(~count=100, read_channel);
+      switch (Yojson.Safe.from_string(output) |> output_of_yojson) {
+      | Ok({nonce, data}) =>
+        Format.printf("Commit operation result: %s\n%!", output);
+        let resolve = IntMap.find(nonce, nonce_resolutions^);
+        Lwt.wakeup(resolve, data);
+        nonce_resolutions := IntMap.remove(nonce, nonce_resolutions^);
+        Lwt.return_unit;
+      | Error(error) =>
+        Format.eprintf("Error while parsing Taquito output: %s", error);
+        // In the case of an error, we just let the promise go unresolved.
+        // TODO: fix this to be more robust.
+        Lwt.return_unit;
+      };
+    });
+    promise;
   };
 };
 
@@ -239,12 +274,34 @@ module Listen_transactions = {
   };
 };
 module Consensus = {
+  let initialize_taquito = (~data_folder) => {
+    let pipe_path = data_folder ++ "/tezos_interop";
+    Named_pipe.make_pipe_pair(pipe_path);
+    // TODO: this leaks the file as it needs to be removed when the app closes
+    let js_file = {
+      let.await (file, oc) = Lwt_io.open_temp_file(~suffix=".js", ());
+      let.await () = Lwt_io.write(oc, [%blob "run_entrypoint.bundle.js"]);
+      await(file);
+    };
+    let js_file = Lwt_main.run(js_file);
+    let _pid =
+      Unix.create_process(
+        "node",
+        [|"node", js_file, pipe_path|],
+        Unix.stdin,
+        Unix.stdout,
+        Unix.stderr,
+      );
+    ();
+  };
+
   open Pack;
   open Tezos_micheline;
 
   // TODO: how to test this?
   let commit_state_hash =
       (
+        ~data_folder,
         ~context,
         ~block_height,
         ~block_payload_hash,
@@ -294,6 +351,7 @@ module Consensus = {
     //      return back that it was a failure?
     let.await _ =
       Run_contract.run(
+        ~data_folder,
         ~context,
         ~destination=context.Context.consensus_contract,
         ~entrypoint="update_root_hash",

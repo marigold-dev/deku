@@ -208,6 +208,7 @@ let handle_ticket_balance =
 
 let node = folder => {
   let node = Node_state.get_initial_state(~folder) |> Lwt_main.run;
+  Tezos_interop.Consensus.initialize_taquito(~data_folder=folder);
   Tezos_interop.Consensus.listen_operations(
     ~context=node.Node.State.interop_context, ~on_operation=operation =>
     Flows.received_tezos_operation(

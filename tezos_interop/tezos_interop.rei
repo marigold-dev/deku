@@ -15,6 +15,7 @@ module Consensus: {
   /** ~signatures should be in the same order as the old validators */
   let commit_state_hash:
     (
+      ~data_folder: string,
       ~context: Context.t,
       ~block_height: int64,
       ~block_payload_hash: BLAKE2B.t,
@@ -39,6 +40,7 @@ module Consensus: {
   };
   let listen_operations:
     (~context: Context.t, ~on_operation: operation => unit) => unit;
+  let initialize_taquito: (~data_folder: string) => unit;
   let fetch_validators:
     (~context: Context.t) => Lwt.t(result(list(Key_hash.t), string));
 };

@@ -1,5 +1,5 @@
 (library
  (name helpers)
- (libraries lwt uri zarith hex digestif)
+ (libraries lwt lwt.unix uri zarith hex digestif)
  (preprocess
   (pps ppx_deriving_yojson)))
