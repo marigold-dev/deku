@@ -5,9 +5,10 @@
   zinc.interpreter
   zinc.types
   zinc_instructions
-  core_bench)
+  core_bench
+  bigstringaf)
  (ocamlopt_flags
-  (:standard -O3 -unboxed-types))
+  (:standard -O3 -unboxed-types -g))
  (preprocess
   (pps
    ppx_deriving.show

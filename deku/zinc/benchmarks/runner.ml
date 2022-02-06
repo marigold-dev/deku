@@ -221,6 +221,8 @@ module Mem_cell : sig
 
   val set_pointer : 'a t -> value:pointer -> unit
 
+  val read_and_increment : 'a t -> 'a
+
   val make : default_elem:'a -> cap:pointer -> unit -> 'a t
 
   val of_list : 'a list -> 'a t -> unit
@@ -246,7 +248,7 @@ module Mem_cell : sig
 
   val read_closure_pc : pointer t -> closure:pointer -> pointer
 
-  val allocate : 'a t -> size:pointer -> pointer
+  val allocate : pointer t -> size:pointer -> tag:pointer -> pointer
 
   val read_field : 'a t -> block:pointer -> field:pointer -> 'a
 
@@ -269,12 +271,17 @@ end = struct
 
   let[@inline always] memory t = t.memory
 
+  let[@inline always] read_and_increment t =
+    let res = Array.unsafe_get t.memory t.pointer in
+    t.pointer <- t.pointer + 1 ;
+    res
+
   let[@inline always] read t ~memory ~pointer =
-    if Int.(pointer < 0 || pointer >= t.cap) then raise Out_of_bound_read
+    if pointer < 0 || pointer >= t.cap then raise Out_of_bound_read
     else Array.unsafe_get memory pointer
 
   let[@inline always] write t ~memory ~pointer ~data =
-    if Int.(pointer < 0 || pointer >= t.cap) then raise Out_of_bound_write
+    if pointer < 0 || pointer >= t.cap then raise Out_of_bound_write
     else Array.unsafe_set memory pointer data
 
   let of_list l t =
@@ -291,8 +298,7 @@ end = struct
     t.pointer <- pointer ;
     value
 
-  let[@inline always] tail ({memory = _; pointer; cap = _} as t) =
-    t.pointer <- pred pointer
+  let[@inline always] tail ({pointer; _} as t) = t.pointer <- pred pointer
 
   let[@inline always] read_offset ({memory; pointer; cap = _} as t) ~offset =
     let offset = pointer - offset in
@@ -316,18 +322,20 @@ end = struct
       ~closure =
     read t ~memory ~pointer:(succ closure)
 
-  let[@inline always] allocate t ~size =
+  let[@inline always] allocate t ~size ~tag =
     let point = t.pointer in
-    t.pointer <- t.pointer + size ;
+    write t ~memory:t.memory ~pointer:t.pointer ~data:size ;
+    write t ~memory:t.memory ~pointer:(t.pointer + 1) ~data:tag ;
+    t.pointer <- t.pointer + (size + 2) ;
     point
 
-  let[@inline always] read_field ({memory; pointer = _; cap = _} as t) ~block
-      ~field =
-    read t ~memory ~pointer:(block + field)
+  let[@inline always] read_field t ~block ~field =
+    let memory = t.memory in
+    read t ~memory ~pointer:(block + field + 1)
 
-  let[@inline always] write_field ({memory; pointer = _; cap = _} as t) ~block
-      ~field ~value =
-    write t ~memory ~pointer:(block + field) ~data:value
+  let[@inline always] write_field t ~block ~field ~value =
+    let memory = t.memory in
+    write t ~memory ~pointer:(block + field + 1) ~data:value
 end
 
 module type Default = sig
@@ -388,6 +396,8 @@ module Progn : sig
   type nonrec 'a t = private 'a Mem_cell.t
 
   include Default with type 'a t := 'a t and type pointer := int
+
+  val read_and_increment : 'a t -> 'a
 end =
   Mem_cell
 
@@ -409,7 +419,7 @@ module Memory : sig
 
   include Closures with type 'a t := 'a t and type pointer := pointer
 
-  val allocate : 'a t -> size:pointer -> pointer
+  val allocate : pointer t -> size:pointer -> tag:pointer -> pointer
 
   val read_field : 'a t -> block:pointer -> field:pointer -> 'a
 
@@ -440,14 +450,24 @@ module T = struct
     | RETURN
     | CONST of int
     (* size : a -> block : a *)
-    | ALLOCATE_BLOCK
+    (* block structure: [block_size; block_tag; value0;value1;..]
+       block tags
+         - 0 record, tuple
+         - 1 list
+         - 3 variant
+         - 252 bytes
+         -
+    *)
+    | MAKE_BLOCK
     (* field : block : a -> value : a *)
     | READ_FIELD
     (* value : field : block -> a *)
     | WRITE_FIELD
     (* value : value : a -> value : a*)
-    | ADD
-    | IO of (state -> unit)
+    | IADD
+    | IMUL
+    | IDIV
+    | ISUB
 
   (* TODO: maybe use Obj.magic in the future to remove fetch_and_decode *)
 
@@ -472,7 +492,12 @@ module T = struct
     (* TODO: benchmark how long it takes *)
     memory : memory;
     mutable gas_counter : int; (* TODO: proper abstract type here *)
+    mutable extra_args : int;
   }
+
+  let ptr = [0xFF; 0x00; 0x11]
+
+  let x = (100, ptr)
 
   let default () =
     {
@@ -481,8 +506,9 @@ module T = struct
       stack = Stack.make ~default_elem:0 ~cap:1000 ();
       env = Env.make ~default_elem:0 ~cap:1000 ();
       (* TODO: benchmark how long it takes *)
-      memory = Memory.make ~default_elem:0 ~cap:1000 ();
+      memory = Memory.make ~default_elem:0 ~cap:5000 ();
       gas_counter = 0 (* TODO: proper abstract type here *);
+      extra_args = 0;
     }
 
   (* TODO: adding an accu would probably be faster *)
@@ -492,103 +518,213 @@ module T = struct
   (* let fetch_and_decode (state : program) =
      (* TODO: is Array.length compare + unsafe_get + raise faster? *)
      Progn.read ~memory:state.Mem_cell.memory ~pointer:state.Mem_cell.pointer *)
-
   (* [Closure; . <- offset, ., ., ., ., ., ; Return, rest of the contract]*)
   (* Closure c; access 1; const 1; add; return; const 2; apply*)
-  let execute state instr =
-    match instr with
-    | IO _ -> failwith "todo"
-    | ACCESS offset ->
-        let value = Env.read_offset state.env ~offset in
-        Stack.push state.stack ~data:value
-    | LET ->
-        let value = Stack.pop state.stack in
-        Env.push state.env ~data:value
-    | ENDLET -> Env.tail state.env
-    | CLOSURE offset ->
-        let closure_pointer =
-          Memory.store_closure
-            state.memory
-            ~program_counter:(Progn.pointer state.program)
-            ~env_pointer:(Env.pointer state.env)
-        in
-        Progn.set_pointer
-          state.program
-          ~value:(Progn.pointer state.program + offset) ;
-        Stack.push state.stack ~data:closure_pointer
-    | APPLY ->
-        let value = Stack.pop state.stack in
-        let closure = Stack.pop state.stack in
 
-        Stack.push state.stack ~data:(Env.pointer state.env) ;
-        Stack.push state.stack ~data:(Progn.pointer state.program) ;
+  type (_, _) exec = Halt : (state, unit) exec | Continue : (state, unit) exec
 
-        let env_pointer = Memory.read_closure_env state.memory ~closure in
-        let program_counter = Memory.read_closure_pc state.memory ~closure in
+  let rec execute : type a b. (a, b) exec -> state -> a =
+   fun exec state ->
+    match exec with
+    | Halt -> state
+    | Continue -> (
+        let instr = Progn.read_and_increment state.program in
+        match instr with
+        | ACCESS offset ->
+            let value = Env.read_offset state.env ~offset in
+            Stack.push state.stack ~data:value ;
+            execute Continue state
+        | LET ->
+            let value = Stack.pop state.stack in
+            Env.push state.env ~data:value ;
+            execute Continue state
+        | ENDLET ->
+            Env.tail state.env ;
+            execute Continue state
+        | CLOSURE offset ->
+            let closure_pointer =
+              Memory.store_closure
+                state.memory
+                ~program_counter:(Progn.pointer state.program)
+                ~env_pointer:(Env.pointer state.env)
+            in
+            state.extra_args <- state.extra_args + 1 ;
+            Progn.set_pointer
+              state.program
+              ~value:(Progn.pointer state.program + offset) ;
+            Stack.push state.stack ~data:closure_pointer ;
+            execute Continue state
+        | APPLY ->
+            let value = Stack.pop state.stack in
+            let closure = Stack.pop state.stack in
 
-        Env.set_pointer state.env ~value:env_pointer ;
-        Progn.set_pointer state.program ~value:program_counter ;
-        Env.push state.env ~data:value
-    | TAILAPPLY ->
-        let value = Stack.pop state.stack in
-        let closure = Stack.pop state.stack in
+            Stack.push state.stack ~data:(Env.pointer state.env) ;
+            Stack.push state.stack ~data:(Progn.pointer state.program) ;
 
-        let env_pointer = Memory.read_closure_env state.memory ~closure in
-        let program_counter = Memory.read_closure_pc state.memory ~closure in
+            let env_pointer = Memory.read_closure_env state.memory ~closure in
+            let program_counter =
+              Memory.read_closure_pc state.memory ~closure
+            in
 
-        Env.set_pointer state.env ~value:env_pointer ;
-        Progn.set_pointer state.program ~value:program_counter ;
-        Env.push state.env ~data:value
-    | RETURN ->
-        let value = Stack.pop state.stack in
-        let program_counter = Stack.pop state.stack in
-        let env_pointer = Stack.pop state.stack in
+            Env.set_pointer state.env ~value:env_pointer ;
+            Progn.set_pointer state.program ~value:program_counter ;
+            Env.push state.env ~data:value ;
+            execute Continue state
+        | TAILAPPLY ->
+            let value = Stack.pop state.stack in
+            let closure = Stack.pop state.stack in
 
-        Stack.push state.stack ~data:value ;
-        Env.set_pointer state.env ~value:env_pointer ;
-        Progn.set_pointer state.program ~value:program_counter
-    | CONST v -> Stack.push state.stack ~data:v
-    | ALLOCATE_BLOCK ->
-        let size = Stack.pop state.stack in
-        let block = Memory.allocate state.memory ~size in
-        Stack.push state.stack ~data:block
-    | READ_FIELD ->
-        let field = Stack.pop state.stack in
-        let block = Stack.pop state.stack in
-        Stack.push state.stack ~data:block ;
-        let value = Memory.read_field state.memory ~block ~field in
-        Stack.push state.stack ~data:value
-    | WRITE_FIELD ->
-        let value = Stack.pop state.stack in
-        let field = Stack.pop state.stack in
-        let block = Stack.pop state.stack in
-        Stack.push state.stack ~data:block ;
-        Memory.write_field state.memory ~block ~field ~value
-    | ADD ->
-        let a = Stack.pop state.stack in
-        let b = Stack.pop state.stack in
-        Stack.push state.stack ~data:(a + b)
+            let env_pointer = Memory.read_closure_env state.memory ~closure in
+            let program_counter =
+              Memory.read_closure_pc state.memory ~closure
+            in
+
+            Env.set_pointer state.env ~value:env_pointer ;
+            Progn.set_pointer state.program ~value:program_counter ;
+            Env.push state.env ~data:value ;
+            execute Continue state
+        | RETURN ->
+            if state.extra_args = 0 then execute Halt state
+            else
+              let value = Stack.pop state.stack in
+              let program_counter = Stack.pop state.stack in
+              let env_pointer = Stack.pop state.stack in
+
+              Stack.push state.stack ~data:value ;
+              Env.set_pointer state.env ~value:env_pointer ;
+              Progn.set_pointer state.program ~value:program_counter ;
+              execute Continue state
+        | CONST v ->
+            let block = Memory.allocate state.memory ~size:1 ~tag:1000 in
+            let _ = Memory.write_field state.memory ~block ~field:1 ~value:v in
+            Stack.push state.stack ~data:block ;
+            execute Continue state
+        | MAKE_BLOCK ->
+            let tag = Stack.pop state.stack in
+            let size = Stack.pop state.stack in
+            let block = Memory.allocate state.memory ~size ~tag in
+            Stack.push state.stack ~data:block ;
+            execute Continue state
+        | READ_FIELD ->
+            let field = Stack.pop state.stack in
+            let block = Stack.pop state.stack in
+            Stack.push state.stack ~data:block ;
+            let value = Memory.read_field state.memory ~block ~field in
+            Stack.push state.stack ~data:value ;
+            execute Continue state
+        | WRITE_FIELD ->
+            let value = Stack.pop state.stack in
+            let field = Stack.pop state.stack in
+            let block = Stack.pop state.stack in
+            Stack.push state.stack ~data:block ;
+            Memory.write_field state.memory ~block ~field ~value ;
+            execute Continue state
+        | IADD ->
+            let a = Stack.pop state.stack in
+            let a = Memory.read_field ~block:a ~field:1 state.memory in
+            let b = Stack.pop state.stack in
+            let b = Memory.read_field state.memory ~block:b ~field:1 in
+            let res = Memory.allocate ~size:1 ~tag:1000 state.memory in
+            let _ =
+              Memory.write_field state.memory ~block:res ~field:1 ~value:(a + b)
+            in
+            Stack.push state.stack ~data:res ;
+            execute Continue state
+        | IMUL ->
+            let a = Stack.pop state.stack in
+            let b = Stack.pop state.stack in
+            Stack.push state.stack ~data:(a * b) ;
+            execute Continue state
+        | IDIV ->
+            let a = Stack.pop state.stack in
+            let b = Stack.pop state.stack in
+            Stack.push state.stack ~data:(a / b) ;
+            execute Continue state
+        | ISUB ->
+            let a = Stack.pop state.stack in
+            let b = Stack.pop state.stack in
+            Stack.push state.stack ~data:(a - b) ;
+            execute Continue state)
 end
 
 let code =
   let open T in
-  [CONST 1; CONST 1; ADD; RETURN]
+  [
+    CONST 1;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    CONST 1;
+    IADD;
+    RETURN;
+  ]
+
+module TT = struct
+  type (_, _) instr =
+    | IADD : (int * 's, 'f) instr -> (int * (int * 's), 'f) instr
+    | Push : 'b * ('b * 's, 'f) instr -> ('s, 'f) instr
+    | REturn : ('s, 's) instr
+
+  type (_, _) instrs =
+    | KNil : ('s, 's) instrs
+    | KCons : ('s, 't) instr * ('t, 'u) instrs -> ('s, 'u) instrs
+
+  let code =
+    let l = List.init 14 (fun _ -> 1) in
+    let l = List.fold_right (fun x acc -> IADD (Push (x, acc))) l REturn in
+    Push (1, Push (1, l))
+
+  let interpret : type a b. (a, b) instr -> a -> b =
+   fun i stack ->
+    let rec exec : type a i. (a, i) instr -> (i, b) instrs -> a -> b =
+     fun k ks s ->
+      match (k, ks) with
+      | (REturn, KNil) -> s
+      | (REturn, KCons (k, ks)) -> exec k ks s
+      | (Push (z, k), ks) -> exec k ks (z, s)
+      | (IADD k, ks) ->
+          let (x, (y, s)) = s in
+          exec k ks (x + y, s)
+    in
+    exec i KNil stack
+end
 
 let s =
   let a =
     let s = T.default () in
-    Progn.of_list code s.program ;
+    Progn.of_list code s.T.program ;
     s
   in
   a
 
 let runloop (s : T.state) =
-  let idx = ref 0 in
-  while !idx < 3 do
-    T.execute s (Array.unsafe_get (Progn.memory s.T.program) !idx) ;
-    incr idx
-  done ;
-  ()
+  let res = T.execute T.Continue s in
+  res
 
 let tests () =
   (* let runner1 = Interpreter.eval (module Executor) in *)
@@ -601,7 +737,40 @@ let tests () =
      let prog3' = (prog3', [], []) in
      let prog3 = Interpreter.initial_state prog3 in *)
   let progn2 : Ir.t list =
-    [Ir.Num Z.one; Ir.Num (Z.of_int 3); Ir.Add; Ir.Return]
+    [
+      Ir.Num Z.one;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Num (Z.of_int 3);
+      Ir.Add;
+      Ir.Return;
+    ]
   in
   let progn2 = (progn2, [], []) in
   let test name f = Bench.Test.create f ~name in
@@ -612,10 +781,13 @@ let tests () =
        test "new_eval bools" (fun _ -> runner2 prog2');
        test "old_eval if_then_else" (fun _ -> runner1 prog3);
        test "new_eval if_then_else" (fun _ -> runner2 prog3'); *)
-    test "immut_eval" (fun _ -> try runner2 progn2 with _ -> ([], []));
-    test "new_eval obj" (fun _ ->
-        runloop s ;
-        Stack.set_pointer s.T.stack ~value:0);
+    test "array zero_alloc eval" (fun _ ->
+        let _ = runloop s in
+        Stack.set_pointer s.T.stack ~value:0 ;
+        Progn.set_pointer s.T.program ~value:0 ;
+        Memory.set_pointer s.T.memory ~value:0);
+    test "gadt_eval" (fun _ -> TT.interpret TT.code ());
+    test "old_eval" (fun _ -> try runner2 progn2 with _ -> ([], []));
   ]
 
 let () = tests () |> Bench.make_command |> Core.Command.run

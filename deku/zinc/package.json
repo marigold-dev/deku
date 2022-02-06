@@ -36,7 +36,6 @@
     "@opam/merlin": "*",
     "@opam/odoc": "*",
     "@opam/ocaml-lsp-server": "*",
-    "@opam/ocamlfind-secondary": "*",
     "@opam/ocamlformat": "0.20.1",
     "@opam/ocamlformat-rpc": "*",
     "@opam/ppx_inline_test": "*",
