@@ -1,0 +1,10 @@
+(executable
+ (name ppx_let_binding_test)
+ (preprocess
+  (pps ppx_let_binding)))
+
+(rule
+ (alias runtest)
+ (deps ./ppx_let_binding_test.exe)
+ (action
+  (run ./ppx_let_binding_test.exe)))
