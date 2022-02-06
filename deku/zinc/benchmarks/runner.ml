@@ -684,6 +684,62 @@ let code =
     RETURN;
   ]
 
+module Counter_toy = struct
+  type instr = IADD | PUSH of int | HALT
+  type instrs = instr array
+
+  let code =
+    let l = List.init 14 (fun _ -> 1) in
+    let l = List.concat_map (fun x -> [IADD; PUSH x]) l in
+    Array.of_list ([PUSH 1; PUSH 1] @ l @ [HALT])
+
+  let read = Array.unsafe_get
+  let write = Array.unsafe_set
+
+  let rec interpret stack_pointer stack instr_pointer instrs = 
+    let instr = read instrs instr_pointer in
+    let instr_pointer = instr_pointer + 1 in
+    match instr with
+    | IADD ->
+        let fst = read stack stack_pointer in
+        let stack_pointer = stack_pointer - 1 in
+        let snd = read stack stack_pointer in
+        let value = fst + snd in
+        write stack stack_pointer value;
+        interpret stack_pointer stack instr_pointer instrs
+    | PUSH n ->
+        let stack_pointer = stack_pointer + 1 in
+        write stack stack_pointer n;
+        interpret stack_pointer stack instr_pointer instrs
+    | HALT -> ()
+end
+
+module Counter_toy_no_alias = struct
+  type instr = IADD | PUSH of int | HALT
+  type instrs = instr array
+
+  let code =
+    let l = List.init 14 (fun _ -> 1) in
+    let l = List.concat_map (fun x -> [IADD; PUSH x]) l in
+    Array.of_list ([PUSH 1; PUSH 1] @ l @ [HALT])
+
+  let rec interpret stack_pointer stack instr_pointer instrs = 
+    let instr = Array.unsafe_get instrs instr_pointer in
+    let instr_pointer = instr_pointer + 1 in
+    match instr with
+    | IADD ->
+        let fst = Array.unsafe_get stack stack_pointer in
+        let stack_pointer = stack_pointer - 1 in
+        let snd = Array.unsafe_get stack stack_pointer in
+        let value = fst + snd in
+        Array.unsafe_set stack stack_pointer value;
+        interpret stack_pointer stack instr_pointer instrs
+    | PUSH n ->
+        let stack_pointer = stack_pointer + 1 in
+        Array.unsafe_set stack stack_pointer n;
+        interpret stack_pointer stack instr_pointer instrs
+    | HALT -> ()
+end
 module TT = struct
   type (_, _) instr =
     | IADD : (int * 's, 'f) instr -> (int * (int * 's), 'f) instr
@@ -773,6 +829,7 @@ let tests () =
     ]
   in
   let progn2 = (progn2, [], []) in
+  let stack = Array.make 1024 0 in
   let test name f = Bench.Test.create f ~name in
   [
     (* test "old_eval list_cons" (fun _ -> runner1 prog1);
@@ -786,6 +843,10 @@ let tests () =
         Stack.set_pointer s.T.stack ~value:0 ;
         Progn.set_pointer s.T.program ~value:0 ;
         Memory.set_pointer s.T.memory ~value:0);
+    test "array alias toy zero alloc" (fun _ ->
+      Counter_toy.interpret 0 stack 0 Counter_toy.code);
+    test "array direct toy zero alloc" (fun _ ->
+      Counter_toy_no_alias.interpret 0 stack 0 Counter_toy_no_alias.code);
     test "gadt_eval" (fun _ -> TT.interpret TT.code ());
     test "old_eval" (fun _ -> try runner2 progn2 with _ -> ([], []));
   ]
