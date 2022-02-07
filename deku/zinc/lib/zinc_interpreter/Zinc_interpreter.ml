@@ -39,30 +39,82 @@ module Make (D : Domain_types) = struct
         | Continue of Zinc.t * Env.t * Stack.t
     end
 
+    let stack_of pod =
+      let open Zinc in
+      [Stack_item.Z (Plain_old_data pod)]
+
+    let has_err l =
+      let rec aux (acc_l, acc_r) l' =
+        match l' with
+        | [] -> (acc_l, acc_r)
+        | Ok h :: t -> aux (h :: acc_l, acc_r) t
+        | Error _ :: t -> aux (acc_l, true) t
+      in
+      aux ([], false) l
+
     let initial_state ?initial_stack:(stack = []) a : Interpreter_input.t =
       (a, [], stack)
 
     let[@warning "-4"] eval (module E : Executor) (code, env, stack) =
+      let rec stack_of_pack_result r =
+        let open Zinc in
+        let open E in
+        match r with
+        | Pack.Int z -> Ok (stack_of (Num z))
+        | Pack.String s -> Ok (stack_of (String s))
+        | Pack.Bytes b -> Ok (stack_of (Bytes b))
+        | Pack.Key k -> Ok (stack_of (Key k))
+        | Pack.Key_hash kh -> Ok (stack_of (Key_hash kh))
+        | Pack.Address a -> Ok (stack_of (Address a))
+        | Pack.Error s -> Error (Steps.Internal_error s)
+        | Pack.List l -> (
+            match has_err (List.map stack_of_pack_result l) with
+            | (_, true) ->
+                Error
+                  (Steps.Internal_error
+                     "Found invalid entry while unpacking list")
+            | (results, _) -> Ok (List.concat results @ stack_of Nil))
+      in
+      let pack_pod d =
+        let open E in
+        let open Zinc in
+        match d with
+        | Num n -> Ok (Pack.int n)
+        | Bytes b -> Ok (Pack.bytes b)
+        | String s -> Ok (Pack.string s)
+        | Key k -> Ok (Pack.key k)
+        | Key_hash kh -> Ok (Pack.key_hash kh)
+        | Address a -> Ok (Pack.address a)
+        | _ -> Error (Steps.Internal_error "Tried to pack unpackable type")
+      in
+
       let apply_once (code : Zinc.t) env stack =
         let open Zinc in
         match (code, env, stack) with
-        | (Operation Pack :: c, env, Stack_item.Z (Plain_old_data d) :: stack)
-          ->
+        | (Operation Pack :: c, env, si :: stack) ->
             let open E in
             let open Base.With_return in
             with_return (fun r ->
                 let packed_data =
-                  match d with
-                  | Num n -> Pack.int n
-                  | Bytes b -> Pack.bytes b
-                  | String s -> Pack.string s
-                  | Key k -> Pack.key k
-                  | Key_hash kh -> Pack.key_hash kh
-                  | Address a -> Pack.address a
+                  match si with
+                  | Stack_item.Z (Plain_old_data d) -> (
+                      match pack_pod d with
+                      | Ok res -> res
+                      | Error e -> r.return e)
+                  | Stack_item.List l ->
+                      l
+                      |> List.filter_map (function
+                             | Stack_item.Z (Plain_old_data d) -> Some d
+                             | _ -> None)
+                      |> List.map pack_pod |> has_err
+                      |> fun (result_list, result_flag) ->
+                      if result_flag then Pack.list result_list
+                      else
+                        r.return
+                          (Steps.Internal_error
+                             "Found invalid entry while packing list")
                   | _ ->
-                      r.return
-                        (Steps.Internal_error
-                           "Tried to pack data of unpackable type")
+                      r.return (Steps.Internal_error "Non-packable stack item")
                 in
                 let si =
                   Stack_item.Z
@@ -76,30 +128,17 @@ module Make (D : Domain_types) = struct
             with_return (fun r ->
                 let packed_data =
                   match d with
-                  | Bytes b -> Some b
+                  | Bytes b -> b
                   | _ ->
                       r.return
                         (Steps.Internal_error "Tried to unpack non-byte data")
                 in
-                match packed_data with
-                | Some packed_data ->
-                    let unpacked_data =
-                      match Pack.of_bytes packed_data with
-                      | Pack.Int z -> Num z
-                      | Pack.String s -> String s
-                      | Pack.Bytes b -> Bytes b
-                      | Pack.Key k -> Key k
-                      | Pack.Key_hash kh -> Key_hash kh
-                      | Pack.Address a -> Address a
-                      | Pack.Error s -> r.return (Steps.Internal_error s)
-                      | _ ->
-                          r.return
-                            (Steps.Internal_error
-                               "Unsupported type for unpacking")
-                    in
-                    let si = Stack_item.Z (Plain_old_data unpacked_data) in
-                    Steps.Continue (c, env, si :: stack)
-                | None -> Steps.Internal_error "Error")
+                let unpacked_data =
+                  packed_data |> Pack.of_bytes |> stack_of_pack_result
+                in
+                match unpacked_data with
+                | Ok stack_items -> Steps.Continue (c, env, stack_items @ stack)
+                | Error internal_error -> internal_error)
         | ( Operation Or :: c,
             env,
             (Stack_item.Z (Plain_old_data (Bool x)) as x')
