@@ -16,22 +16,13 @@ module Implicit = {
 };
 
 module Originated = {
-  open Tezos.Contract_hash;
-  type nonrec t = t;
+  include Tezos.Contract_hash;
 
   let to_contract_hash = t => t;
   let of_contract_hash = t => t;
-
-  let to_string = to_string;
-  let of_string = of_string;
-
-  let to_yojson = to_yojson;
-  let of_yojson = of_yojson;
-
-  let compare = compare;
 };
 
-[@deriving (yojson, ord)]
+[@deriving (eq, ord, yojson)]
 type t =
   | Implicit(Key_hash.t)
   | Originated(Originated.t);

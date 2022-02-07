@@ -1,6 +1,6 @@
 open Crypto;
 
-[@deriving (ord, yojson)]
+[@deriving (eq, ord, yojson)]
 type t;
 
 module Implicit: {
