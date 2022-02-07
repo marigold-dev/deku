@@ -502,6 +502,8 @@ module T = struct
     | APPLY
     | TAILAPPLY
     | RETURN
+    (* variant that contains a value, simple variants get represented  as ints *)
+    | CONSTVARIANTBLOCK of int
     (* char array + size - bytes and strings *)
     | CONSTBYTES of int array * int
     | CONST of int
@@ -509,7 +511,7 @@ module T = struct
     (* block structure: [block_size; block_tag; value0;value1;..]
        block tags
          - 0 record, tuple
-         - 1 list
+         - 1 list repr as follows: 0 - NIL, block[head; CONS Addr] we need separate tag for lists for data_encoding
          - 2 closure
          - 3 variant
          - 252 bytes
