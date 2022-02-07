@@ -199,34 +199,31 @@
         "@opam/base@opam:v0.14.3@b3ddb868"
       ]
     },
-    "@opam/uutf@opam:1.0.2@4440868f": {
-      "id": "@opam/uutf@opam:1.0.2@4440868f",
+    "@opam/uutf@opam:1.0.3@47c95a18": {
+      "id": "@opam/uutf@opam:1.0.3@47c95a18",
       "name": "@opam/uutf",
-      "version": "opam:1.0.2",
+      "version": "opam:1.0.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/a7/a7c542405a39630c689a82bd7ef2292c#md5:a7c542405a39630c689a82bd7ef2292c",
-          "archive:http://erratique.ch/software/uutf/releases/uutf-1.0.2.tbz#md5:a7c542405a39630c689a82bd7ef2292c"
+          "archive:https://opam.ocaml.org/cache/sha512/50/50cc4486021da46fb08156e9daec0d57b4ca469b07309c508d5a9a41e9dbcf1f32dec2ed7be027326544453dcaf9c2534919395fd826dc7768efc6cc4bfcc9f8#sha512:50cc4486021da46fb08156e9daec0d57b4ca469b07309c508d5a9a41e9dbcf1f32dec2ed7be027326544453dcaf9c2534919395fd826dc7768efc6cc4bfcc9f8",
+          "archive:https://erratique.ch/software/uutf/releases/uutf-1.0.3.tbz#sha512:50cc4486021da46fb08156e9daec0d57b4ca469b07309c508d5a9a41e9dbcf1f32dec2ed7be027326544453dcaf9c2534919395fd826dc7768efc6cc4bfcc9f8"
         ],
         "opam": {
           "name": "uutf",
-          "version": "1.0.2",
-          "path": "esy.lock/opam/uutf.1.0.2"
+          "version": "1.0.3",
+          "path": "esy.lock/opam/uutf.1.0.3"
         }
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uchar@opam:0.0.2@c8218eea",
-        "@opam/topkg@opam:1.0.5@0aa59f51",
+        "ocaml@4.12.0@d41d8cd9", "@opam/topkg@opam:1.0.5@0aa59f51",
         "@opam/ocamlfind@opam:1.9.3@5b691822",
         "@opam/ocamlbuild@opam:0.14.0@0dee4078",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
-      "devDependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uchar@opam:0.0.2@c8218eea"
-      ]
+      "devDependencies": [ "ocaml@4.12.0@d41d8cd9" ]
     },
     "@opam/uuseg@opam:14.0.0@7d21466b": {
       "id": "@opam/uuseg@opam:14.0.0@7d21466b",
@@ -246,7 +243,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/uucp@opam:14.0.0@8715110e", "@opam/topkg@opam:1.0.5@0aa59f51",
         "@opam/ocamlfind@opam:1.9.3@5b691822",
         "@opam/ocamlbuild@opam:0.14.0@0dee4078",
@@ -275,7 +272,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/topkg@opam:1.0.5@0aa59f51",
         "@opam/ocamlfind@opam:1.9.3@5b691822",
         "@opam/ocamlbuild@opam:0.14.0@0dee4078",
@@ -325,29 +322,6 @@
         "@opam/base-threads@opam:base@36803084"
       ]
     },
-    "@opam/uchar@opam:0.0.2@c8218eea": {
-      "id": "@opam/uchar@opam:0.0.2@c8218eea",
-      "name": "@opam/uchar",
-      "version": "opam:0.0.2",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://opam.ocaml.org/cache/md5/c9/c9ba2c738d264c420c642f7bb1cf4a36#md5:c9ba2c738d264c420c642f7bb1cf4a36",
-          "archive:https://github.com/ocaml/uchar/releases/download/v0.0.2/uchar-0.0.2.tbz#md5:c9ba2c738d264c420c642f7bb1cf4a36"
-        ],
-        "opam": {
-          "name": "uchar",
-          "version": "0.0.2",
-          "path": "esy.lock/opam/uchar.0.0.2"
-        }
-      },
-      "overrides": [],
-      "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/ocamlbuild@opam:0.14.0@0dee4078",
-        "@esy-ocaml/substs@0.0.1@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.12.0@d41d8cd9" ]
-    },
     "@opam/tyxml@opam:4.5.0@0a609297": {
       "id": "@opam/tyxml@opam:4.5.0@0a609297",
       "name": "@opam/tyxml",
@@ -366,12 +340,12 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/dune@opam:2.9.3@f57a6d69", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/seq@opam:base@d8d7de1d", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/dune@opam:2.9.3@f57a6d69"
       ]
@@ -2078,7 +2052,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/odoc-parser@opam:1.0.0@b1029bdf",
@@ -2098,7 +2072,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/odoc-parser@opam:1.0.0@b1029bdf",
@@ -2135,7 +2109,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/odoc-parser@opam:1.0.0@b1029bdf",
@@ -2154,7 +2128,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
+        "ocaml@4.12.0@d41d8cd9", "@opam/uutf@opam:1.0.3@47c95a18",
         "@opam/uuseg@opam:14.0.0@7d21466b",
         "@opam/stdio@opam:v0.14.0@a5affb43", "@opam/re@opam:1.10.3@0585c65d",
         "@opam/odoc-parser@opam:1.0.0@b1029bdf",
