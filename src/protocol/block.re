@@ -153,7 +153,7 @@ let genesis =
     ~validators_hash=Validators.hash(Validators.empty),
     ~block_height=0L,
     ~operations=[],
-    ~author=Address.Implicit.of_key(Wallet.genesis_wallet),
+    ~author=Key_hash.of_key(Wallet.genesis_wallet),
   );
 
 let produce = (~state, ~next_state_root_hash) => {

@@ -56,7 +56,7 @@ module Core_user = {
     open User_operation;
     let key = Key.of_secret(secret);
     switch (Address.to_key_hash(data.sender)) {
-    | Some(sender) when Address.Implicit.matches_key(key, sender) =>
+    | Some(sender) when Key_hash.matches_key(key, sender) =>
       let hash = hash(~nonce, ~block_height, ~data);
       let signature = Signature.sign(secret, hash);
       {hash, key, signature, nonce, block_height, data};
@@ -82,7 +82,7 @@ module Core_user = {
 
     let.assert () = (
       "Invalid core_user key",
-      Address.Implicit.matches_key(key, sender),
+      Key_hash.matches_key(key, sender),
     );
     let.assert () = (
       "Invalid core_user signature",

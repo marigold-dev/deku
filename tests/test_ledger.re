@@ -27,7 +27,10 @@ describe("ledger", ({test, _}) => {
       };
     Ticket_id.{ticketer, data};
   };
-  let make_address = () => snd(Address.Implicit.make());
+  let make_address = () => {
+    let (_secret, _key, key_hash) = Key_hash.make_ed25519();
+    key_hash;
+  };
   let make_tezos_address = () => {
     open Crypto;
     open Tezos;

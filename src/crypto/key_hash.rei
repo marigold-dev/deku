@@ -5,6 +5,9 @@ type t =
   | P256(P256.Key_hash.t);
 
 let of_key: Key.t => t;
+let matches_key: (Key.t, t) => bool;
+
+let make_ed25519: unit => (Secret.t, Key.t, t);
 
 let encoding: Data_encoding.t(t);
 let to_string: t => string;

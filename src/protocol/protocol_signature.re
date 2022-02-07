@@ -1,6 +1,5 @@
 open Helpers;
 open Crypto;
-open Core;
 
 [@deriving ord]
 type t = {
@@ -29,7 +28,7 @@ let (to_yojson, of_yojson) = {
     });
   let of_yojson = json => {
     let.ok {signature, public_key} = Serialized_data.of_yojson(json);
-    let address = Address.Implicit.of_key(public_key);
+    let address = Key_hash.of_key(public_key);
     Ok({signature, public_key, address});
   };
   (to_yojson, of_yojson);
@@ -38,7 +37,7 @@ let (to_yojson, of_yojson) = {
 let sign = (~key as secret, hash) => {
   let signature = Signature.sign(secret, hash);
   let public_key = Key.of_secret(secret);
-  let address = Address.Implicit.of_key(public_key);
+  let address = Key_hash.of_key(public_key);
   {signature, public_key, address};
 };
 let verify = (~signature, hash) =>

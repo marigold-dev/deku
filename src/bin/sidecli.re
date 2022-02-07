@@ -157,12 +157,13 @@ let info_create_wallet = {
 };
 
 let create_wallet = () => {
-  let (key, address) = Address.Implicit.make();
+  let (secret, _key, key_hash) = Key_hash.make_ed25519();
 
-  let address_string = Address.to_string(address |> Address.of_key_hash);
+  let address_string = Address.to_string(key_hash |> Address.of_key_hash);
   let file = make_filename_from_address(address_string);
 
-  let.await () = Files.Wallet.write({priv_key: key, address}, ~file);
+  let.await () =
+    Files.Wallet.write({priv_key: secret, address: key_hash}, ~file);
   await(`Ok());
 };
 
@@ -543,7 +544,7 @@ let setup_identity = (node_folder, uri) => {
 
   let identity = {
     let (secret, key) = Crypto.Ed25519.generate();
-    let t = Address.Implicit.of_key(Ed25519(key));
+    let t = Key_hash.of_key(Ed25519(key));
     {uri, t, key: Ed25519(key), secret: Ed25519(secret)};
   };
   let.await () = write_identity(~node_folder, identity);

@@ -1,31 +1,10 @@
 open Crypto;
 open Helpers;
 
-module Implicit = {
-  open Key_hash;
-
-  let of_key = of_key;
-  let matches_key = (key, t) => equal(of_key(key), t);
-
-  let make = () => {
-    let (key, pub_) = Ed25519.generate();
-    let wallet_address = of_key(Ed25519(pub_));
-
-    (Secret.Ed25519(key), wallet_address);
-  };
-};
-
-module Originated = {
-  include Tezos.Contract_hash;
-
-  let to_contract_hash = t => t;
-  let of_contract_hash = t => t;
-};
-
 [@deriving (eq, ord, yojson)]
 type t =
   | Implicit(Key_hash.t)
-  | Originated(Originated.t);
+  | Originated(Tezos.Contract_hash.t);
 
 let of_key_hash = implicit => Implicit(implicit);
 let to_key_hash = t =>
@@ -33,6 +12,13 @@ let to_key_hash = t =>
   | Implicit(implicit) => Some(implicit)
   | _ => None
   };
+
+let to_contract_hash = t =>
+  switch (t) {
+  | Implicit(_key_hash) => None
+  | Originated(contract_hash) => Some(contract_hash)
+  };
+let of_contract_hash = contract_hash => Originated(contract_hash);
 
 let to_string =
   fun
