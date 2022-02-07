@@ -100,6 +100,7 @@ let apply_side_chain = {
             let.ok contract_state =
               Option.to_result(~none=`Invalid_invocation, contract_state);
             module Executor = {
+              module Pack = Tezos.Pack;
               let get_contract_opt = _ =>
                 failwith("Not implemented: get_contract_opt");
               let chain_id = Block.genesis.hash;

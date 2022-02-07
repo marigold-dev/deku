@@ -26,6 +26,9 @@ module Pack = struct
     | Int of Z.t
     | String of string
     | Bytes of bytes
+    | Key of string
+    | Key_hash of string
+    | Address of string
     | List of result list
     | Error of string
 
@@ -45,7 +48,7 @@ module Pack = struct
 
   let to_bytes _ = Bytes.empty
 
-  let of_bytes _ = String "Error"
+  let [@warning "-41"]of_bytes _ = String "Error"
 end
 
 
