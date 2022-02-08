@@ -1,19 +1,14 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 set -e 
 data_directory="data"
 
-LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-export LD_LIBRARY_PATH
-
-DEKU_CLI=$(esy x which deku-cli)
 deku_cli () {
-  eval $DEKU_CLI '"$@"'
+  eval dune exec src/bin/deku_cli.exe -- '"$@"'
 }
 
-DEKU_NODE=$(esy x which deku-node)
 deku_node () {
-  eval $DEKU_NODE '"$@"'
+  eval dune exec src/bin/deku_node.exe -- '"$@"'
 }
 
 VALIDATORS=(0 1 2)

@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 set -e
 
@@ -13,8 +13,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 DATA_DIRECTORY="data"
 
 deku_cli() {
-  DEKU_CLI=$(esy x which deku-cli)
-  eval $DEKU_CLI '"$@"'
+  eval dune exec bin/deku_cli.exe -- '"$@"'
 }
 
 tezos-client() {
