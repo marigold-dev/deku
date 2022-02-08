@@ -1,12 +1,7 @@
-open Crypto;
-
-[@deriving (yojson, ord)]
-type t = Key.t;
-
-let of_key: Secret.t => t;
-
-let genesis_key: Secret.t;
-let genesis_wallet: t;
-
-let to_string: t => string;
-let of_string: string => option(t);
+open Crypto
+type t = Key.t[@@deriving (yojson, ord)]
+val of_key : Secret.t -> t
+val genesis_key : Secret.t
+val genesis_wallet : t
+val to_string : t -> string
+val of_string : string -> t option

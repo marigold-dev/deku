@@ -1,12 +1,9 @@
-open Crypto;
-
-[@deriving (eq, ord, yojson)]
+open Crypto
 type t =
-  | Implicit(Key_hash.t)
-  | Originated({
-      contract: Contract_hash.t,
-      entrypoint: option(string),
-    });
-let encoding: Data_encoding.t(t);
-let to_string: t => string;
-let of_string: string => option(t);
+  | Implicit of Key_hash.t 
+  | Originated of {
+  contract: Contract_hash.t ;
+  entrypoint: string option } [@@deriving (eq, ord, yojson)]
+val encoding : t Data_encoding.t
+val to_string : t -> string
+val of_string : string -> t option

@@ -4,7 +4,7 @@
  (libraries opium bin_common node helpers cmdliner)
  (modules Deku_node)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson)))
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
 
 (executable
  (name sidecli)
@@ -12,14 +12,14 @@
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps ppx_deriving_yojson ppx_let_binding)))
 
 (library
  (name bin_common)
  (modules Files Node_state)
  (libraries lwt lwt.unix node helpers)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps ppx_deriving_yojson ppx_let_binding)))
 
 (env
  (static

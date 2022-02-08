@@ -1,42 +1,37 @@
-open Node;
-open State;
-
-exception Invalid_json(string);
-
-module Identity: {
-  let read: (~file: string) => Lwt.t(identity);
-  let write: (identity, ~file: string) => Lwt.t(unit);
-};
-
-module Wallet: {
+open Node
+open State
+exception Invalid_json of string 
+module Identity :
+sig
+  val read : file:string -> identity Lwt.t
+  val write : identity -> file:string -> unit Lwt.t
+end
+module Wallet :
+sig
   type t = {
-    address: Crypto.Key_hash.t,
-    priv_key: Crypto.Secret.t,
-  };
-  let read: (~file: string) => Lwt.t(t);
-  let write: (t, ~file: string) => Lwt.t(unit);
-};
-
-module Validators: {
-  let read: (~file: string) => Lwt.t(list((Crypto.Key_hash.t, Uri.t)));
-  let write:
-    (list((Crypto.Key_hash.t, Uri.t)), ~file: string) => Lwt.t(unit);
-};
-
-module Interop_context: {
-  let read: (~file: string) => Lwt.t(Tezos_interop.Context.t);
-  let write: (Tezos_interop.Context.t, ~file: string) => Lwt.t(unit);
-};
-
-module State_bin: {
-  let read: (~file: string) => Lwt.t(Protocol.t);
-  let write: (Protocol.t, ~file: string) => Lwt.t(unit);
-};
-
-module Trusted_validators_membership_change: {
-  [@deriving yojson]
-  type t = Trusted_validators_membership_change.t;
-
-  let read: (~file: string) => Lwt.t(list(t));
-  let write: (list(t), ~file: string) => Lwt.t(unit);
-};
+    address: Crypto.Key_hash.t ;
+    priv_key: Crypto.Secret.t }
+  val read : file:string -> t Lwt.t
+  val write : t -> file:string -> unit Lwt.t
+end
+module Validators :
+sig
+  val read : file:string -> (Crypto.Key_hash.t * Uri.t) list Lwt.t
+  val write : (Crypto.Key_hash.t * Uri.t) list -> file:string -> unit Lwt.t
+end
+module Interop_context :
+sig
+  val read : file:string -> Tezos_interop.Context.t Lwt.t
+  val write : Tezos_interop.Context.t -> file:string -> unit Lwt.t
+end
+module State_bin :
+sig
+  val read : file:string -> Protocol.t Lwt.t
+  val write : Protocol.t -> file:string -> unit Lwt.t
+end
+module Trusted_validators_membership_change :
+sig
+  type t = Trusted_validators_membership_change.t[@@deriving yojson]
+  val read : file:string -> t list Lwt.t
+  val write : t list -> file:string -> unit Lwt.t
+end

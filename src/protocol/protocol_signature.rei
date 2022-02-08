@@ -1,29 +1,21 @@
-open Crypto;
-
-[@deriving yojson]
-type t;
-let compare: (t, t) => int;
-let public_key: t => Wallet.t;
-let address: t => Key_hash.t;
-let signature: t => Signature.t;
-
-let sign: (~key: Secret.t, BLAKE2B.t) => t;
-let verify: (~signature: t, BLAKE2B.t) => bool;
-
-module type S = {
-  type value;
-  type signature = t;
-  type t =
-    pri {
-      value,
-      signature,
-    };
-  let sign: (~key: Secret.t, value) => t;
-  // TODO: maybe it should be something else?
-  let verify: (~signature: signature, value) => bool;
-};
-module Make:
-  (P: {
-     type t;
-     let hash: t => BLAKE2B.t;
-   }) => S with type value = P.t;
+open Crypto
+type t[@@deriving yojson]
+val compare : t -> t -> int
+val public_key : t -> Wallet.t
+val address : t -> Key_hash.t
+val signature : t -> Signature.t
+val sign : key:Secret.t -> BLAKE2B.t -> t
+val verify : signature:t -> BLAKE2B.t -> bool
+module type S  =
+  sig
+    type value
+    type signature = t
+    type t = private {
+      value: value ;
+      signature: signature }
+    val sign : key:Secret.t -> value -> t
+    val verify : signature:signature -> value -> bool
+  end
+module Make :
+functor (P : sig type t val hash : t -> BLAKE2B.t end) ->
+  S with type  value =  P.t

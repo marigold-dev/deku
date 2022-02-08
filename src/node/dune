@@ -2,4 +2,4 @@
  (name node)
  (libraries protocol uri helpers piaf)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.ord)))
+  (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))

@@ -1,21 +1,15 @@
-open Crypto;
-
-// TODO: this should probably not be here
-module Michelson_v1_primitives = Michelson_v1_primitives;
-
-type t;
-
-let int: Z.t => t;
-let nat: Z.t => t;
-let bytes: bytes => t;
-let pair: (t, t) => t;
-let list: list(t) => t;
-let key: Key.t => t;
-let key_hash: Key_hash.t => t;
-let address: Address.t => t;
-let expr_encoding:
-  Data_encoding.t(
-    Tezos_micheline.Micheline.canonical(Michelson_v1_primitives.prim),
-  );
-
-let to_bytes: t => bytes;
+open Crypto
+module Michelson_v1_primitives = Michelson_v1_primitives
+type t
+val int : Z.t -> t
+val nat : Z.t -> t
+val bytes : bytes -> t
+val pair : t -> t -> t
+val list : t list -> t
+val key : Key.t -> t
+val key_hash : Key_hash.t -> t
+val address : Address.t -> t
+val expr_encoding :
+  Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
+    Data_encoding.t
+val to_bytes : t -> bytes

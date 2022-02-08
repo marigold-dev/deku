@@ -19,3 +19,5 @@ nested-match = align
 if-then-else = fit-or-vertical
 let-and = sparse
 type-decl = sparse
+sequence-blank-line=preserve-one
+module-item-spacing=preserve

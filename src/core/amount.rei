@@ -1,9 +1,6 @@
-[@deriving (eq, ord, yojson)]
-type t;
-
-let zero: t;
-let (+): (t, t) => t;
-let (-): (t, t) => t;
-
-let of_int: int => t;
-let to_int: t => int;
+type t[@@deriving (eq, ord, yojson)]
+val zero : t
+val (+) : t -> t -> t
+val (-) : t -> t -> t
+val of_int : int -> t
+val to_int : t -> int
