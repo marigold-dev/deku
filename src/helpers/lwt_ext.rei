@@ -1,4 +1,8 @@
-module Let_syntax: {
-  let await: 'a => Lwt.t('a);
-  let (let.await): (Lwt.t('a), 'a => Lwt.t('b)) => Lwt.t('b);
-};
+module Let_syntax :
+sig
+  val await : 'a -> 'a Lwt.t
+  [%%let
+    ((("let.await")
+      ) : 'a Lwt.t ->
+                                             ('a -> 'b Lwt.t) -> 'b Lwt.t)]
+end

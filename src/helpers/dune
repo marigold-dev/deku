@@ -2,4 +2,4 @@
  (name helpers)
  (libraries lwt uri zarith hex digestif)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps ppx_deriving_yojson ppx_let_binding)))

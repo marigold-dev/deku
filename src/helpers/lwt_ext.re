@@ -1,4 +1,5 @@
-module Let_syntax = {
-  let await = Lwt.return;
-  let (let.await) = Lwt.bind;
-};
+module Let_syntax =
+  struct
+    let await = Lwt.return
+    [%%let ((("let.await")), Lwt.bind)]
+  end

@@ -1,4 +1,4 @@
-let start: (~initial: State.t) => unit;
-let get_state: unit => State.t;
-let set_state: State.t => unit;
-let get_port: unit => option(int);
+val start : initial:State.t -> unit
+val get_state : unit -> State.t
+val set_state : State.t -> unit
+val get_port : unit -> int option

@@ -1,39 +1,28 @@
-open Crypto;
-
-module Handle: {
-  [@deriving yojson]
-  type t =
-    pri {
-      hash: BLAKE2B.t,
-      id: int,
-      owner: Tezos.Address.t,
-      amount: Amount.t,
-      ticket: Ticket_id.t,
-    };
-};
-
-[@deriving yojson]
-type t;
-let empty: t;
-let balance: (Key_hash.t, Ticket_id.t, t) => Amount.t;
-let transfer:
-  (~sender: Key_hash.t, ~destination: Key_hash.t, Amount.t, Ticket_id.t, t) =>
-  result(t, [> | `Not_enough_funds]);
-
-// on chain ops
-let deposit: (Key_hash.t, Amount.t, Ticket_id.t, t) => t;
-let withdraw:
-  (
-    ~sender: Key_hash.t,
-    ~destination: Tezos.Address.t,
-    Amount.t,
-    Ticket_id.t,
-    t
-  ) =>
-  result((t, Handle.t), [> | `Not_enough_funds]);
-
-let handles_find_proof: (Handle.t, t) => list((BLAKE2B.t, BLAKE2B.t));
-// TODO: I don't like this API
-let handles_find_proof_by_id:
-  (int, t) => option((list((BLAKE2B.t, BLAKE2B.t)), Handle.t));
-let handles_root_hash: t => BLAKE2B.t;
+open Crypto
+module Handle :
+sig
+  type t = private
+    {
+    hash: BLAKE2B.t ;
+    id: int ;
+    owner: Tezos.Address.t ;
+    amount: Amount.t ;
+    ticket: Ticket_id.t }[@@deriving yojson]
+end
+type t[@@deriving yojson]
+val empty : t
+val balance : Key_hash.t -> Ticket_id.t -> t -> Amount.t
+val transfer :
+  sender:Key_hash.t ->
+    destination:Key_hash.t ->
+      Amount.t -> Ticket_id.t -> t -> (t, [> `Not_enough_funds ]) result
+val deposit : Key_hash.t -> Amount.t -> Ticket_id.t -> t -> t
+val withdraw :
+  sender:Key_hash.t ->
+    destination:Tezos.Address.t ->
+      Amount.t ->
+        Ticket_id.t -> t -> ((t * Handle.t), [> `Not_enough_funds ]) result
+val handles_find_proof : Handle.t -> t -> (BLAKE2B.t * BLAKE2B.t) list
+val handles_find_proof_by_id :
+  int -> t -> ((BLAKE2B.t * BLAKE2B.t) list * Handle.t) option
+val handles_root_hash : t -> BLAKE2B.t

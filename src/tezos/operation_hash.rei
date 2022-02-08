@@ -1,5 +1,4 @@
-[@deriving (eq, ord, yojson)]
-type t;
-let encoding: Data_encoding.t(t);
-let to_string: t => string;
-let of_string: string => option(t);
+type t[@@deriving (eq, ord, yojson)]
+val encoding : t Data_encoding.t
+val to_string : t -> string
+val of_string : string -> t option

@@ -1,9 +1,15 @@
-include (module type of {
-  include Result;
-});
-
-module Let_syntax: {
-  let ok: 'a => result('a, 'b);
-  let (let.ok): (result('a, 'b), 'a => result('c, 'b)) => result('c, 'b);
-  let (let.assert): (('a, bool), unit => result('b, 'a)) => result('b, 'a);
-};
+include module type of struct include Result end
+module Let_syntax :
+sig
+  val ok : 'a -> ('a, 'b) result
+  [%%let
+    ((("let.ok")
+      ) : ('a, 'b) result ->
+                                          ('a -> ('c, 'b) result) ->
+                                            ('c, 'b) result)]
+  [%%let
+    ((("let.assert")
+      ) : ('a * bool) ->
+                                              (unit -> ('b, 'a) result) ->
+                                                ('b, 'a) result)]
+end

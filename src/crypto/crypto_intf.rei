@@ -1,44 +1,44 @@
-module type S = {
-  module Secret: {
-    type t;
-    let encoding: Data_encoding.t(t);
-    let equal: (t, t) => bool;
-    let compare: (t, t) => int;
-    let to_string: t => string;
-    let of_string: string => option(t);
-  };
-  module Key: {
-    type t;
-
-    let of_secret: Secret.t => t;
-
-    let encoding: Data_encoding.t(t);
-    let equal: (t, t) => bool;
-    let compare: (t, t) => int;
-    let to_string: t => string;
-    let of_string: string => option(t);
-  };
-  module Key_hash: {
-    type t;
-
-    let of_key: Key.t => t;
-
-    let encoding: Data_encoding.t(t);
-    let equal: (t, t) => bool;
-    let compare: (t, t) => int;
-    let to_string: t => string;
-    let of_string: string => option(t);
-  };
-
-  module Signature: {
-    type t;
-    let encoding: Data_encoding.t(t);
-    let equal: (t, t) => bool;
-    let compare: (t, t) => int;
-    let to_string: t => string;
-    let of_string: string => option(t);
-  };
-  let sign: (Secret.t, BLAKE2B.t) => Signature.t;
-  let verify: (Key.t, Signature.t, BLAKE2B.t) => bool;
-  let generate: unit => (Secret.t, Key.t);
-};
+module type S  =
+  sig
+    module Secret :
+    sig
+      type t
+      val encoding : t Data_encoding.t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val to_string : t -> string
+      val of_string : string -> t option
+    end
+    module Key :
+    sig
+      type t
+      val of_secret : Secret.t -> t
+      val encoding : t Data_encoding.t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val to_string : t -> string
+      val of_string : string -> t option
+    end
+    module Key_hash :
+    sig
+      type t
+      val of_key : Key.t -> t
+      val encoding : t Data_encoding.t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val to_string : t -> string
+      val of_string : string -> t option
+    end
+    module Signature :
+    sig
+      type t
+      val encoding : t Data_encoding.t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val to_string : t -> string
+      val of_string : string -> t option
+    end
+    val sign : Secret.t -> BLAKE2B.t -> Signature.t
+    val verify : Key.t -> Signature.t -> BLAKE2B.t -> bool
+    val generate : unit -> (Secret.t * Key.t)
+  end

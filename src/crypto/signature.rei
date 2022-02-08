@@ -1,14 +1,10 @@
-[@deriving (ord, eq)]
 type t =
-  | Ed25519(Ed25519.Signature.t)
-  | Secp256k1(Secp256k1.Signature.t)
-  | P256(P256.Signature.t);
-
-let sign: (Secret.t, BLAKE2B.t) => t;
-let verify: (Key.t, t, BLAKE2B.t) => bool;
-
-let to_string: t => string;
-let of_string: string => option(t);
-
-let to_yojson: t => Yojson.Safe.t;
-let of_yojson: Yojson.Safe.t => result(t, string);
+  | Ed25519 of Ed25519.Signature.t 
+  | Secp256k1 of Secp256k1.Signature.t 
+  | P256 of P256.Signature.t [@@deriving (ord, eq)]
+val sign : Secret.t -> BLAKE2B.t -> t
+val verify : Key.t -> t -> BLAKE2B.t -> bool
+val to_string : t -> string
+val of_string : string -> t option
+val to_yojson : t -> Yojson.Safe.t
+val of_yojson : Yojson.Safe.t -> (t, string) result

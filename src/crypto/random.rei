@@ -1,3 +1,2 @@
-let generate: int => Cstruct.t;
-/** see Stdlib.Random.Int32 */
-let int32: int32 => int32;
+val generate : int -> Cstruct.t
+val int32 : int32 -> int32[@@ocaml.doc " see Stdlib.Random.Int32 "]
