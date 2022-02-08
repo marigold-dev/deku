@@ -1,3 +1,9 @@
-type a = AA of int | BB
+let b = "Test"
 
-let ddc d = function AA 2 -> "g" ^ d | BB -> "awd" ^ d | _ -> "tt" ^ d
+let ddc a = if a <> 0 then "bab" else "rab"
+
+let res = ddc 1
+
+let x b = 1 + b
+
+let ress = x 2

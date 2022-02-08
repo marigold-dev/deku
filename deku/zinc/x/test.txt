@@ -1,49 +1,52 @@
 (setglobal Test!
   (let
-    (ddc/84 =
-       (function d/86 param/87
-         (if param/87
-           (if (!= (field 0 param/87) 2)
-             (apply (field 27 (global Stdlib!)) "tt" d/86)
-             (apply (field 27 (global Stdlib!)) "g" d/86))
-           (apply (field 27 (global Stdlib!)) "awd" d/86))))
-    (makeblock 0 ddc/84)))
-	branch L2
-	restart
-L1:	grab 1
-	acc 1
-	branchifnot L3
-	acc 1
-	getfield 0
+    (b/81 = "Test"
+     ddc/82 = (function a/84[int] (if (!= a/84 0) "bab" "rab"))
+     res/85 = (apply ddc/82 1)
+     x/86 = (function b/88[int] : int (+ 1 b/88))
+     ress/89 =[int] (apply x/86 2))
+    (makeblock 0 b/81 ddc/82 res/85 x/86 ress/89)))
+	branch L3
+L1:	acc 0
 	push
-	const 2
+	const 1
+	addint
+	return 1
+L2:	acc 0
+	push
+	const 0
 	neqint
 	branchifnot L4
-	acc 0
+	const "bab"
+	return 1
+L4:	const "rab"
+	return 1
+L3:	const "Test"
 	push
-	const "tt"
+	closure L2, 0
 	push
-	getglobal Stdlib!
-	getfield 27
-	appterm 2, 4
-L4:	acc 0
+	const 1
 	push
-	const "g"
+	acc 1
+	apply 1
 	push
-	getglobal Stdlib!
-	getfield 27
-	appterm 2, 4
-L3:	acc 0
+	closure L1, 0
 	push
-	const "awd"
+	const 2
 	push
-	getglobal Stdlib!
-	getfield 27
-	appterm 2, 4
-L2:	closure L1, 0
+	acc 1
+	apply 1
 	push
 	acc 0
-	makeblock 1, 0
-	pop 1
+	push
+	acc 2
+	push
+	acc 4
+	push
+	acc 6
+	push
+	acc 8
+	makeblock 5, 0
+	pop 5
 	setglobal Test!
 

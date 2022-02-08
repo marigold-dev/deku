@@ -466,7 +466,7 @@ module Memory = struct
     let point = t.pointer in
     Array.set t.memory point size ;
     Array.set t.memory (point + 1) tag ;
-    t.pointer <- point + (size + 2) ;
+    t.pointer <- point + (size + 3) ;
     point
 
   let[@inline always] read_field (t : t) ~block ~field =
@@ -498,15 +498,15 @@ module T = struct
     | LET
     (* drop top of the env *)
     | ENDLET
-    | CLOSURE of int
+    | CLOSURE of int (* pointer to the end of the closure *)
     | APPLY
     | TAILAPPLY
     | RETURN
     (* variant that contains a value, simple variants get represented  as ints *)
-    | CONSTVARIANTBLOCK of int
     (* char array + size - bytes and strings *)
-    | CONSTBYTES of int array * int
+    | CONSTSTRING of string
     | CONST of int
+    | BRANCHIFNOT of int (* pointer to conditional jump to branch closure *)
     (* size : a -> block : a *)
     (* block structure: [block_size; block_tag; value0;value1;..]
        block tags
@@ -527,7 +527,17 @@ module T = struct
     | IMUL
     | IDIV
     | ISUB
+    | EQINT
+    | NEQINT
   [@@deriving show]
+
+  module Table = Caml.Hashtbl.Make (struct
+    type t = int
+
+    external equal : int -> int -> bool = "%equal" [@@inline always]
+
+    external hash : int -> int = "%identity" [@@inline always]
+  end)
 
   (* TODO: maybe use Obj.magic in the future to remove fetch_and_decode *)
 
@@ -551,6 +561,7 @@ module T = struct
     env : env;
     (* TODO: benchmark how long it takes *)
     memory : memory;
+    table : (int * string) Table.t;
     mutable gas_counter : int; (* TODO: proper abstract type here *)
     mutable extra_args : int;
   }
@@ -567,6 +578,7 @@ module T = struct
       env = Env.make ~default_elem:0 ~cap:51000 ();
       (* TODO: benchmark how long it takes *)
       memory = Memory.make ~default_elem:0 ~cap:225000 ();
+      table = Table.create 128;
       gas_counter = 0 (* TODO: proper abstract type here *);
       extra_args = 0;
     }
@@ -581,14 +593,13 @@ module T = struct
   (* [Closure; . <- offset, ., ., ., ., ., ; Return, rest of the contract]*)
   (* Closure c; access 1; const 1; add; return; const 2; apply*)
   let[@inline always] integer_op state op =
-    let a =
-      Memory.read_field state.memory ~block:(Stack.pop state.stack) ~field:1
-    in
-    let b =
-      Memory.read_field state.memory ~block:(Stack.pop state.stack) ~field:1
-    in
+    let init_a = Stack.pop state.stack in
+    let a = Memory.read_field state.memory ~block:init_a ~field:1 in
+    let init_b = Stack.pop state.stack in
+    let b = Memory.read_field state.memory ~block:init_b ~field:1 in
     let res = Memory.allocate state.memory ~size:1 ~tag:1000 in
-    Memory.write_field state.memory ~block:res ~field:1 ~value:(op a b) ;
+    let computed = op a b in
+    Memory.write_field state.memory ~block:res ~field:1 ~value:computed ;
     Stack.push state.stack ~data:res
 
   let[@inline always] alloc_int state v =
@@ -613,16 +624,11 @@ module T = struct
 
   let[@inline always] alloc_marker state =
     let block = Memory.allocate state.memory ~size:2 ~tag:2 in
-    Memory.write_field
-      state.memory
-      ~block
-      ~field:1
-      ~value:(Progn.pointer state.program) ;
-    Memory.write_field
-      state.memory
-      ~block
-      ~field:2
-      ~value:(Env.pointer state.env) ;
+    let pc_pointer = Progn.pointer state.program in
+    Memory.write_field state.memory ~block ~field:1 ~value:pc_pointer ;
+
+    let env_pointer = Env.pointer state.env in
+    Memory.write_field state.memory ~block ~field:2 ~value:env_pointer ;
     Stack.push state.stack ~data:block
 
   let[@inline always] apply_closure state closure =
@@ -632,6 +638,10 @@ module T = struct
     in
     Env.set_pointer state.env ~value:env_pointer ;
     Progn.set_pointer state.program ~value:program_counter
+
+  let[@inline always] eqint x y = if x = y then 1 else 0
+
+  let[@inline always] neqint x y = if x = y then 0 else 1
 
   let rec execute state =
     let isntr = Progn.read_and_increment state.program in
@@ -676,10 +686,15 @@ module T = struct
     | CONST v ->
         alloc_int state v ;
         execute state
-    | CONSTBYTES (v, s) ->
-        let block = Memory.allocate state.memory ~size:s ~tag:252 in
-        Array.blit v 0 state.memory.memory (block + 2) s ;
-        Stack.push state.stack ~data:block ;
+    | CONSTSTRING b ->
+        (let hashed = Base.hash_string b in
+         match Table.find state.table hashed with
+         | b -> Stack.push state.stack ~data:(fst b)
+         | exception Not_found ->
+             let block = Memory.allocate state.memory ~size:1 ~tag:252 in
+             Memory.write_field state.memory ~block ~field:1 ~value:hashed ;
+             Stack.push state.stack ~data:block ;
+             Table.add state.table hashed (block, b)) ;
         execute state
     | MAKE_BLOCK ->
         let tag = Stack.pop state.stack in
@@ -701,6 +716,15 @@ module T = struct
         Stack.push state.stack ~data:block ;
         Memory.write_field state.memory ~block ~field ~value ;
         execute state
+    | BRANCHIFNOT offset ->
+        let block = Stack.pop state.stack in
+        let cond = Memory.read_field ~block ~field:1 state.memory in
+        if cond = 0 then
+          Progn.set_pointer
+            state.program
+            ~value:(Progn.pointer state.program + offset)
+        else () ;
+        execute state
     | IADD ->
         integer_op state ( + ) ;
         execute state
@@ -713,6 +737,12 @@ module T = struct
     | ISUB ->
         integer_op state ( - ) ;
         execute state
+    | EQINT ->
+        integer_op state eqint ;
+        execute state
+    | NEQINT ->
+        integer_op state neqint ;
+        execute state
 end
 
 let code =
@@ -723,38 +753,36 @@ let code =
   [[CONST 1; CONST 1]; l; [RETURN]] |> List.flatten
 
 let code2 =
-  let open T in
-  [CLOSURE 4; ACCESS 1; CONST 1; IADD; RETURN; CONST 2; APPLY; RETURN]
+  T.[CLOSURE 4; ACCESS 1; CONST 1; IADD; RETURN; CONST 2; APPLY; RETURN]
 
-module TT = struct
-  type (_, _) instr =
-    | IADD : (int * 's, 'f) instr -> (int * (int * 's), 'f) instr
-    | Push : 'b * ('b * 's, 'f) instr -> ('s, 'f) instr
-    | REturn : ('s, 's) instr
+(* (lambda x -> if x = 0 then 1 else 0) 2 *)
+let code_branching =
+  T.
+    [
+      CLOSURE 8;
+      ACCESS 1;
+      CONST 0;
+      EQINT;
+      BRANCHIFNOT 2;
+      CONST 1;
+      RETURN;
+      CONST 0;
+      RETURN;
+      CONST 2;
+      APPLY;
+      RETURN;
+    ]
 
-  type (_, _) instrs =
-    | KNil : ('s, 's) instrs
-    | KCons : ('s, 't) instr * ('t, 'u) instrs -> ('s, 'u) instrs
-
-  let code =
-    let l = List.init 25000 (fun _ -> 1) in
-    let l = List.fold_right (fun x acc -> IADD (Push (x, acc))) l REturn in
-    Push (1, Push (1, l))
-
-  let interpret : type a b. (a, b) instr -> a -> b =
-   fun i stack ->
-    let rec exec : type a i. (a, i) instr -> (i, b) instrs -> a -> b =
-     fun k ks s ->
-      match (k, ks) with
-      | (REturn, KNil) -> s
-      | (REturn, KCons (k, ks)) -> exec k ks s
-      | (Push (z, k), ks) -> exec k ks (z, s)
-      | (IADD k, ks) ->
-          let (x, (y, s)) = s in
-          exec k ks (x + y, s)
-    in
-    exec i KNil stack
-end
+let code_str =
+  T.
+    [
+      CONSTSTRING "Test";
+      CONSTSTRING "Test";
+      CONSTSTRING "Test";
+      CONSTSTRING "Test";
+      CONSTSTRING "Test";
+      RETURN;
+    ]
 
 let s =
   let a =
@@ -767,14 +795,12 @@ let s =
 let s2 =
   let a =
     let s = T.default () in
-    Progn.of_list code2 s.T.program ;
+    Progn.of_list code_branching s.T.program ;
     s
   in
   a
 
-let runloop (s : T.state) =
-  let res = T.execute s in
-  res
+let runloop (s : T.state) = T.execute s
 
 let runloop2 (s : T.state) =
   let res = T.execute s in
@@ -869,15 +895,15 @@ let tests () =
      let progn2 = (progn2, [], []) in *)
   (* funcall \x -> x + 1 *)
   let _ = runloop2 s2 in
-  let p = Stack.pop s2.stack in
-  Printf.printf
-    "resutl of exec is %d \n"
-    (Memory.read_field s2.memory ~block:p ~field:1) ;
+  let v = Stack.pop s2.stack in
+  let vall = Memory.read_field s2.memory ~block:v ~field:1 in
+  Printf.printf " result is %d\n" vall ;
   Stack.set_pointer s2.T.stack ~value:0 ;
   Progn.set_pointer s2.T.program ~value:0 ;
   Env.set_pointer s2.T.env ~value:0 ;
   Memory.set_pointer s2.T.memory ~value:0 ;
-
+  T.Table.reset s2.T.table ;
+  if 0 = 0 then failwith "test" else () ;
   let test name f = Bench.Test.create f ~name in
   let stack = Array.make 51000 0 in
   [
@@ -888,15 +914,12 @@ let tests () =
        test "old_eval if_then_else" (fun _ -> runner1 prog3);
        test "new_eval if_then_else" (fun _ -> runner2 prog3'); *)
     test "array zero_alloc eval" (fun _ ->
-        try
-          let _ = runloop s in
-          Stack.set_pointer s.T.stack ~value:0 ;
-          Progn.set_pointer s.T.program ~value:0 ;
-          Memory.set_pointer s.T.memory ~value:0
-        with e -> print_endline @@ Printexc.to_string e);
+        let _ = runloop s in
+        Stack.set_pointer s.T.stack ~value:0 ;
+        Progn.set_pointer s.T.program ~value:0 ;
+        Memory.set_pointer s.T.memory ~value:0);
     test "array direct toy zero alloc" (fun _ ->
         Counter_toy_no_alias.interpret 0 stack 0 Counter_toy_no_alias.code);
-    test "gadt_eval" (fun _ -> TT.interpret TT.code ());
   ]
 
 let () = tests () |> Bench.make_command |> Core.Command.run
