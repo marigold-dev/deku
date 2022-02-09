@@ -1,5 +1,5 @@
 open Crypto
-type t = Key.t[@@deriving (yojson, ord)]
+type t = Key.t [@@deriving yojson, ord]
 val of_key : Secret.t -> t
 val genesis_key : Secret.t
 val genesis_wallet : t
