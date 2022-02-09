@@ -39,3 +39,6 @@ let to_originated: t => option(Originated.t);
 
 let to_string: t => string;
 let of_string: string => option(t);
+
+let to_tz_addr: t => Tezos.Address.t;
+let of_tz_addr: Tezos.Address.t => t;

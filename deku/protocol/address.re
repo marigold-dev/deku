@@ -79,3 +79,20 @@ let of_string = {
   };
   Encoding_helpers.parse_string_variant([implicit, contract]);
 };
+
+let of_tz_addr = tz_addr =>
+  switch (tz_addr) {
+  | Tezos.Address.Implicit(kh) => Implicit(Implicit.of_key_hash(kh))
+  | Tezos.Address.Originated({contract, _}) =>
+    Originated(Originated.of_contract_hash(contract))
+  };
+
+let to_tz_addr = addr =>
+  switch (addr) {
+  | Implicit(i) => Tezos.Address.Implicit(Implicit.to_key_hash(i))
+  | Originated(o) =>
+    Tezos.Address.Originated({
+      contract: Originated.to_contract_hash(o),
+      entrypoint: None,
+    })
+  };

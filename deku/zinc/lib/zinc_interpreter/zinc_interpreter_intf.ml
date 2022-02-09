@@ -1,4 +1,6 @@
 module type Executor = sig
+  type tz_address
+
   type address
 
   type hash
@@ -26,6 +28,9 @@ module type Executor = sig
       | Int of Z.t
       | String of string
       | Bytes of bytes
+      | Key of key
+      | Key_hash of key_hash
+      | Address of tz_address
       | List of result list
       | Error of string
 
@@ -41,7 +46,7 @@ module type Executor = sig
 
     val key_hash : key_hash -> t
 
-    val address : address -> t
+    val address : tz_address -> t
 
     val to_bytes : t -> bytes
 

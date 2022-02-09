@@ -5,6 +5,10 @@ module Make (D : Domain_types) = struct
   module Zinc = struct
     open D
 
+    module TezosAddress = struct
+      include TezosAddress
+    end
+
     module Hash = struct
       include Hash
 

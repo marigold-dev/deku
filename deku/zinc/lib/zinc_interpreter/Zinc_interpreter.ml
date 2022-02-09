@@ -7,6 +7,7 @@ module Make (D : Domain_types) = struct
 
   module type Executor =
     Executor
+      with type tz_address := Types.Zinc.TezosAddress.t
       with type key := Types.Zinc.Key.t
       with type key_hash := Types.Zinc.Key_hash.t
        and type address := Types.Zinc.Address.t
@@ -65,7 +66,7 @@ module Make (D : Domain_types) = struct
         | Pack.Bytes b -> Ok (stack_of (Bytes b))
         | Pack.Key k -> Ok (stack_of (Key k))
         | Pack.Key_hash kh -> Ok (stack_of (Key_hash kh))
-        | Pack.Address a -> Ok (stack_of (Address a))
+        | Pack.Address a -> Ok (stack_of (Address (Address.of_tz_addr a)))
         | Pack.Error s -> Error (Steps.Internal_error s)
         | Pack.List l -> (
             match has_err (List.map stack_of_pack_result l) with
@@ -84,7 +85,7 @@ module Make (D : Domain_types) = struct
         | String s -> Ok (Pack.string s)
         | Key k -> Ok (Pack.key k)
         | Key_hash kh -> Ok (Pack.key_hash kh)
-        | Address a -> Ok (Pack.address a)
+        | Address a -> Ok (Pack.address (Address.to_tz_addr a))
         | _ -> Error (Steps.Internal_error "Tried to pack unpackable type")
       in
 

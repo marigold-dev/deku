@@ -1,5 +1,6 @@
 
 module Domain_types = struct
+  module TezosAddress = Tezos.Address
   module Key = Crypto.Key
   module Address = Address
   module Hash = Crypto.BLAKE2B

@@ -51,6 +51,11 @@ module type With_domain_derivation = sig
 end
 
 module type Domain_types = sig
+  module TezosAddress : sig
+    type t
+
+    include With_domain_derivation with type t := t
+  end
   module Hash : sig
     type t
 
@@ -71,6 +76,9 @@ module type Domain_types = sig
 
   module Address : sig
     type t
+
+    val of_tz_addr : TezosAddress.t -> t
+    val to_tz_addr : t -> TezosAddress.t
 
     include With_domain_derivation with type t := t
   end
@@ -96,6 +104,11 @@ end
 
 module type S = sig
   module Zinc : sig
+    module TezosAddress : sig
+      type t
+      
+      include With_domain_derivation with type t := t
+    end
     module Key : sig
       type t
 
@@ -114,6 +127,9 @@ module type S = sig
 
     module Address : sig
       type t
+
+      val of_tz_addr : TezosAddress.t -> t
+      val to_tz_addr : t -> TezosAddress.t
 
       include With_domain_derivation with type t := t
 
@@ -282,10 +298,22 @@ module type S = sig
 end
 
 module Dummy_domain = struct
+  module TezosAddress = struct
+    type t = string [@@deriving eq, yojson]
+
+    let to_string s = Printf.sprintf "\"%s\"" s
+    
+    let equal (t1 : t) (t2 : t) = equal t1 t2
+
+    let of_string a = Some (String.sub a 1 (String.length a - 2))
+
+  end
   module Address = struct
     type t = string [@@deriving eq, yojson]
 
     let to_string = Fun.id
+    let of_tz_addr (addr: TezosAddress.t) : t = addr
+    let to_tz_addr (addr: t) : TezosAddress.t = addr
 
     let equal (t1 : t) (t2 : t) = equal t1 t2
 
