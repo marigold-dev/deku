@@ -11,5 +11,5 @@ val key_hash : Key_hash.t -> t
 val address : Address.t -> t
 val expr_encoding :
   Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
-    Data_encoding.t
+  Data_encoding.t
 val to_bytes : t -> bytes

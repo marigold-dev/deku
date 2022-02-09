@@ -1,1 +1,1 @@
-exception Noop of string 
+exception Noop of string

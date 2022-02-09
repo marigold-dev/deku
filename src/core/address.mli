@@ -1,5 +1,5 @@
 open Crypto
-type t[@@deriving (eq, ord, yojson)]
+type t [@@deriving eq, ord, yojson]
 val of_key_hash : Key_hash.t -> t
 val to_key_hash : t -> Key_hash.t option
 val of_contract_hash : Tezos.Contract_hash.t -> t
