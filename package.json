@@ -32,18 +32,19 @@
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
     "@opam/hex": "*",
-    "@opam/tezos-micheline": "8.3",
+    "@opam/tezos-micheline": "11.1",
     "@opam/digestif": "*",
-    "@opam/cmdliner": "1.0.4",
-    "@taquito/taquito": "^9.0.1",
-    "@taquito/signer": "^9.0.1",
-    "@taquito/rpc": "^9.0.1",
+    "@opam/cmdliner": "*",
+    "@taquito/taquito": "^11.0.1",
+    "@taquito/signer": "^11.0.1",
+    "@taquito/rpc": "^11.0.1",
     "webpack": "^5.47.1",
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*",
-    "@opam/secp256k1-internal": "0.2.0",
+    "@opam/secp256k1-internal": "*",
     "@opam/bigstring": "*",
-    "@opam/domainslib": "0.3.1"
+    "@opam/domainslib": "0.3.1",
+    "@opam/data-encoding": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -52,11 +53,7 @@
     "@opam/utop": "^2.8.0",
     "@opam/menhir": "20210419",
     "@reason-native/rely": "^3.2.1",
-    "@opam/ocamlformat-rpc": "*",
-    "@opam/mirage-crypto": "0.10.5",
-    "@opam/mirage-crypto-ec": "0.10.5",
-    "@opam/mirage-crypto-pk": "0.10.5",
-    "@opam/mirage-crypto-rng": "0.10.5"
+    "@opam/ocamlformat-rpc": "*"
   },
   "resolutions": {
     "ocaml": "github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae",
