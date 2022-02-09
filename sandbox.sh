@@ -115,7 +115,7 @@ EOF
 EOF
   )
 
-  consensus="./tezos_interop/consensus.mligo"
+  consensus="./src/tezos_interop/consensus.mligo"
   storage=$(ligo compile storage "$consensus" "$storage")
   contract=$(ligo compile contract $consensus)
 
