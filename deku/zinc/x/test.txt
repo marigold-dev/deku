@@ -1,52 +1,34 @@
 (setglobal Test!
   (let
     (b/81 = "Test"
-     ddc/82 = (function a/84[int] (if (!= a/84 0) "bab" "rab"))
-     res/85 = (apply ddc/82 1)
-     x/86 = (function b/88[int] : int (+ 1 b/88))
-     ress/89 =[int] (apply x/86 2))
-    (makeblock 0 b/81 ddc/82 res/85 x/86 ress/89)))
-	branch L3
-L1:	acc 0
-	push
-	const 1
-	addint
-	return 1
-L2:	acc 0
-	push
-	const 0
-	neqint
-	branchifnot L4
-	const "bab"
-	return 1
-L4:	const "rab"
-	return 1
-L3:	const "Test"
-	push
-	closure L2, 0
-	push
-	const 1
+     x/82 = (function b/84[int] c/85[int] : int (+ b/84 c/85))
+     ress/86 =[int] (apply x/82 2 3))
+    (makeblock 0 b/81 x/82 ress/86)))
+	branch L2
+	restart
+L1:	grab 1
+	acc 1
 	push
 	acc 1
-	apply 1
+	addint
+	return 2
+L2:	const "Test"
 	push
 	closure L1, 0
 	push
+	const 3
+	push
 	const 2
 	push
-	acc 1
-	apply 1
+	acc 2
+	apply 2
 	push
 	acc 0
 	push
 	acc 2
 	push
 	acc 4
-	push
-	acc 6
-	push
-	acc 8
-	makeblock 5, 0
-	pop 5
+	makeblock 3, 0
+	pop 3
 	setglobal Test!
 
