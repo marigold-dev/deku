@@ -1,10 +1,9 @@
 open Helpers;
 open Crypto;
-open Core;
 
 // TODO: we should avoid dead validators to avoid double timeout, A(dead) -> B(dead) -> C
 [@deriving (eq, ord, yojson)]
-type validator = {address: Address.t};
+type validator = {address: Key_hash.t};
 
 [@deriving yojson]
 type t = {
@@ -38,7 +37,7 @@ let update_current = (address, t) => {
 
 let hash_validators = validators => {
   validators
-  |> List.map(validator => validator.address |> Address.to_key_hash)
+  |> List.map(validator => validator.address)
   |> Tezos.Deku.Consensus.hash_validators;
 };
 let empty = {

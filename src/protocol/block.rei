@@ -1,5 +1,4 @@
 open Crypto;
-open Core;
 
 [@deriving (yojson, ord)]
 type t =
@@ -10,7 +9,7 @@ type t =
     handles_hash: BLAKE2B.t,
     validators_hash: BLAKE2B.t,
     previous_hash: BLAKE2B.t,
-    author: Address.t,
+    author: Key_hash.t,
     block_height: int64,
     operations: list(Protocol_operation.t),
   };
@@ -22,7 +21,7 @@ let produce:
   (
     ~state: Protocol_state.t,
     ~next_state_root_hash: option(BLAKE2B.t),
-    ~author: Address.t,
+    ~author: Key_hash.t,
     ~operations: list(Protocol_operation.t)
   ) =>
   t;

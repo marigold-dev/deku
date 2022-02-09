@@ -1,5 +1,3 @@
-open Core;
-
 [@deriving (yojson, ord)]
 type action =
   | Add
@@ -8,7 +6,7 @@ type action =
 [@deriving (yojson, ord)]
 type t = {
   action,
-  address: Address.t,
+  address: Crypto.Key_hash.t,
 };
 
 module Set =

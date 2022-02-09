@@ -1,17 +1,16 @@
 open Helpers;
 open Crypto;
 open Protocol;
-open Core;
 
 [@deriving yojson]
 type identity = {
   secret: Secret.t,
   key: Key.t,
-  t: Address.t,
+  t: Key_hash.t,
   uri: Uri.t,
 };
 
-module Address_map = Map.Make(Address);
+module Address_map = Map.Make(Key_hash);
 module Uri_map = Map.Make(Uri);
 
 type t = {

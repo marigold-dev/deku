@@ -11,6 +11,14 @@ let of_key =
   | Key.Ed25519(key) => Ed25519(Ed25519.Key_hash.of_key(key))
   | Key.Secp256k1(key) => Secp256k1(Secp256k1.Key_hash.of_key(key))
   | Key.P256(key) => P256(P256.Key_hash.of_key(key));
+let matches_key = (key, t) => equal(of_key(key), t);
+
+let make_ed25519 = () => {
+  let (secret, key) = Ed25519.generate();
+  let key_hash = Ed25519.Key_hash.of_key(key);
+  (Secret.Ed25519(secret), Key.Ed25519(key), Ed25519(key_hash));
+};
+
 let to_string =
   fun
   | Ed25519(key_hash) => Ed25519.Key_hash.to_string(key_hash)

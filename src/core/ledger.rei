@@ -15,16 +15,16 @@ module Handle: {
 [@deriving yojson]
 type t;
 let empty: t;
-let balance: (Address.t, Ticket_id.t, t) => Amount.t;
+let balance: (Key_hash.t, Ticket_id.t, t) => Amount.t;
 let transfer:
-  (~sender: Address.t, ~destination: Address.t, Amount.t, Ticket_id.t, t) =>
+  (~sender: Key_hash.t, ~destination: Key_hash.t, Amount.t, Ticket_id.t, t) =>
   result(t, [> | `Not_enough_funds]);
 
 // on chain ops
-let deposit: (Address.t, Amount.t, Ticket_id.t, t) => t;
+let deposit: (Key_hash.t, Amount.t, Ticket_id.t, t) => t;
 let withdraw:
   (
-    ~sender: Address.t,
+    ~sender: Key_hash.t,
     ~destination: Tezos.Address.t,
     Amount.t,
     Ticket_id.t,

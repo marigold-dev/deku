@@ -1,11 +1,10 @@
 open Crypto;
-open Core;
 
 [@deriving yojson]
 type t;
 let compare: (t, t) => int;
 let public_key: t => Wallet.t;
-let address: t => Address.t;
+let address: t => Key_hash.t;
 let signature: t => Signature.t;
 
 let sign: (~key: Secret.t, BLAKE2B.t) => t;
