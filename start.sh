@@ -3,6 +3,9 @@
 set -e 
 data_directory="data"
 
+LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
+export LD_LIBRARY_PATH
+
 SIDECLI=$(esy x which sidecli)
 sidecli () {
   eval $SIDECLI '"$@"'
