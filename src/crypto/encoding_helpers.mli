@@ -21,6 +21,11 @@ module Make_b58 : functor
    end)
   -> sig
   open H
+
+  (* TODO: should this be exposed? *)
+  val to_raw : t -> string
+  (** [to_raw t] serialize t to a string containing raw bytes with no prefix *)
+
   val to_string : t -> string
     [@@ocaml.doc " [to_string t] encodeds t as a b58 string "]
   val of_string : string -> t option
