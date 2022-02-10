@@ -7,4 +7,5 @@ module Tez = Tez
 module Gas = Gas
 module Block_hash = Block_hash
 module Operation_hash = Operation_hash
+module Operation = Operation
 module Deku = Deku
