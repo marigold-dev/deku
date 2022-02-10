@@ -1,5 +1,4 @@
 open Cmdliner
-open Opium
 open Helpers
 open Node
 open Bin_common
@@ -12,22 +11,19 @@ let update_state state =
 let handle_request (type req res)
     (module E : Networking.Request_endpoint
       with type request = req
-       and type response = res) f =
-  App.post E.path (fun request ->
-      let%await json = Request.to_json request in
-      let response =
-        let%ok json = Option.to_result ~none:`Not_a_json json in
-        let%ok request =
-          E.request_of_yojson json
-          |> Result.map_error (fun err -> `Not_a_valid_request err) in
-        f update_state request in
+       and type response = res) handler =
+  let handler request =
+    let%await body = Dream.body request in
+    match body |> Yojson.Safe.from_string |> E.request_of_yojson with
+    | Ok request -> (
+      let response = handler update_state request in
       match response with
       | Ok response ->
-        let response = E.response_to_yojson response in
-        await (Response.of_json ~status:`OK response)
-      | Error err ->
-        Flows.print_error err;
-        await (Response.make ~status:`Internal_server_error ()))
+        response |> E.response_to_yojson |> Yojson.Safe.to_string |> Dream.json
+      | Error err -> raise (Failure (Flows.string_of_error err)))
+    | Error err -> raise (Failure err) in
+  Dream.post E.path handler
+
 let handle_received_block_and_signature =
   handle_request
     (module Networking.Block_and_signature_spec)
@@ -123,26 +119,28 @@ let node folder =
     ~context:node.Node.State.interop_context ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
-  let () = Node.Server.start ~initial:node in
-  let _server =
-    App.empty
-    |> App.port (Node.Server.get_port () |> Option.get)
-    |> handle_block_level
-    |> handle_received_block_and_signature
-    |> handle_received_signature
-    |> handle_block_by_hash
-    |> handle_protocol_snapshot
-    |> handle_request_nonce
-    |> handle_register_uri
-    |> handle_receive_user_operation_gossip
-    |> handle_receive_consensus_operation
-    |> handle_withdraw_proof
-    |> handle_ticket_balance
-    |> handle_trusted_validators_membership
-    |> App.start
-    |> Lwt_main.run in
-  let forever, _ = Lwt.wait () in
-  Lwt_main.run forever
+  Node.Server.start ~initial:node;
+  Dream.initialize_log ~level:`Warning ();
+  let port = Node.Server.get_port () |> Option.get in
+  Dream.run ~port
+  @@ Dream.router
+       [
+         handle_received_block_and_signature;
+         handle_block_level;
+         handle_received_block_and_signature;
+         handle_received_signature;
+         handle_block_by_hash;
+         handle_protocol_snapshot;
+         handle_request_nonce;
+         handle_register_uri;
+         handle_receive_user_operation_gossip;
+         handle_receive_consensus_operation;
+         handle_withdraw_proof;
+         handle_ticket_balance;
+         handle_trusted_validators_membership;
+       ]
+  @@ Dream.not_found
+
 let node =
   let folder_node =
     let docv = "folder_node" in
