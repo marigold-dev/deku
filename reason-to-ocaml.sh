@@ -3,6 +3,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Converts a ReasonML file (.re or .rei) into an OCaml file. Does not do the renaming."
+    echo "If the file is already an OCaml file, then it just fixes certain artifacts left over from Reason transformation."
     echo
     echo "(For tips on ignoring mass changes in Git Blame, check out https://www.moxio.com/blog/43/ignoring-bulk-change-commits-with-git-blame)"
     echo
@@ -35,7 +36,9 @@ fix_let_syntax_recursive() {
 files=("$@")
 for i in "${files[@]}"; do
     echo "$i: Converting syntax with refmt."
-    esy refmt --in-place --parse=re --print=ml $i
+    if [[ $i == *.re* ]]; then
+        esy refmt --in-place --parse=re --print=ml $i
+    fi
     echo "$i Stripping annotations"
     comby "[@reason.:[any]]" "" -i $i
     comby "[@explicit_:[any]]" "" -i $i
