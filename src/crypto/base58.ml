@@ -35,6 +35,8 @@ module Prefix = struct
   let p256_public_key_hash = "\006\161\164" (* tz3(36) *)
 
   (* 32 *)
+  let block_hash = "\001\052" (* B(51) *)
+
   let operation_hash = "\005\116" (* o(51) *)
 
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
