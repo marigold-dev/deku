@@ -38,23 +38,31 @@ esy test
 
 ### Running a sidechain
 
-For convenient local development, we have a included a script `sandbox.sh` that
-automates the setup of a local Tezos network using [Flextesa](https://tezos.gitlab.io/flextesa/)
-running in Docker. Additionally, the script sets up a identities for a local Deku cluster.
-This script is the easiest way to get started with Deku; however, it uses unsafe
-configuration options to lower the required Tezos confirmations to 1. This setting greatly
-speeds up local development, **but is not at all safe for production**!
+For convenient local development, we have a included two components:
+- A `docker-compose.yml` file that setups a local Tezos network
+  using [Flextesa](https://tezos.gitlab.io/flextesa/) running in Docker.
+  Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance
+  for introspection of the deployed contract and its operations. The BCD interace is available in
+  your browser at http://localhost:8000.
+- A script `./sandbox.sh` that sets up a identities for a local Deku cluster.
+  This script is the easiest way to get started with Deku; however, it uses unsafe
+  configuration options to lower the required Tezos confirmations to 1. This setting greatly
+  speeds up local development, **but is not at all safe for production**!
 
 #### Requirements
 
-The sandbox requires only Bash and [Docker](https://docs.docker.com/get-docker/) to be installed.
-
+The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
+in addition to the usual Deku pre-requisites.
 #### Setup
+
+Run `docker-compose up -d` to start a Tezos network and the BCD interface. 
 
 Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
 a Deku consensus contract configured for these validators to the local sandbox.
 
 Run `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku state.
+
+Run `docker-compose down -v` to stop the Tezos network and destroy the BCD database.
 
 #### Start
 

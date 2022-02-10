@@ -12,8 +12,8 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-SIDECLI=$(esy x which sidecli)
 sidecli() {
+  SIDECLI=$(esy x which sidecli)
   eval $SIDECLI '"$@"'
 }
 
