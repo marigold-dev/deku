@@ -10,44 +10,38 @@ let write_state_to_file path protocol =
           let%await () = Lwt_io.write oc protocol_bin in
           Lwt_io.flush oc))
 
-let print_error err =
-  let open Format in
-  eprintf "\027[31m";
-  eprintf "Error: ";
-  (match err with
-  | `Added_block_has_lower_block_height ->
-    eprintf "Added block has lower block height"
+let string_of_error = function
+  | `Added_block_has_lower_block_height -> "Added block has lower block height"
   | `Added_block_not_signed_enough_to_desync ->
-    eprintf "Added_block_not_signed_enough_to_desync"
+    "Added_block_not_signed_enough_to_desync"
   | `Added_signature_not_signed_enough_to_request ->
-    eprintf "Added_signature_not_signed_enough_to_request"
-  | `Already_known_block -> eprintf "Already_known_block"
-  | `Already_known_signature -> eprintf "Already_known_signature"
-  | `Block_not_signed_enough_to_apply ->
-    eprintf "Block_not_signed_enough_to_apply"
-  | `Failed_to_verify_payload -> eprintf "Failed to verify payload signature"
-  | `Invalid_address_on_main_operation ->
-    eprintf "Invalid_address_on_main_operation"
-  | `Invalid_block string -> eprintf "Invalid_block(%s)" string
-  | `Invalid_block_when_applying -> eprintf "Invalid_block_when_applying"
-  | `Invalid_nonce_signature -> eprintf "Invalid_nonce_signature"
-  | `Invalid_signature_author -> eprintf "Invalid_signature_author"
-  | `Invalid_signature_for_this_hash ->
-    eprintf "Invalid_signature_for_this_hash"
-  | `Invalid_state_root_hash -> eprintf "Invalid_state_root_hash"
-  | `Not_current_block_producer -> eprintf "Not_current_block_producer"
-  | `Not_a_json -> eprintf "Invalid json"
-  | `Not_a_valid_request err -> eprintf "Invalid request: %s" err
-  | `Pending_blocks -> eprintf "Pending_blocks"
-  | `Unknown_uri -> eprintf "Unknown_uri"
-  | `Not_a_user_opertaion -> eprintf "Not_a_user_opertaion"
-  | `Not_consensus_operation -> eprintf "Not_consensus_operation"
-  | `Invalid_signature -> eprintf "Invalid_signature"
-  | `Invalid_snapshot_height -> eprintf "Invalid_snapshot_height"
-  | `Not_all_blocks_are_signed -> eprintf "Not_all_blocks_are_signed"
-  | `State_root_not_the_expected -> eprintf "State_root_not_the_expected"
-  | `Snapshots_with_invalid_hash -> eprintf "Snapshots_with_invalid_hash");
-  eprintf "\027[m\n%!"
+    "Added_signature_not_signed_enough_to_request"
+  | `Already_known_block -> "Already_known_block"
+  | `Already_known_signature -> "Already_known_signature"
+  | `Block_not_signed_enough_to_apply -> "Block_not_signed_enough_to_apply"
+  | `Failed_to_verify_payload -> "Failed to verify payload signature"
+  | `Invalid_address_on_main_operation -> "Invalid_address_on_main_operation"
+  | `Invalid_block string -> Format.sprintf "Invalid_block(%s)" string
+  | `Invalid_block_when_applying -> "Invalid_block_when_applying"
+  | `Invalid_nonce_signature -> "Invalid_nonce_signature"
+  | `Invalid_signature_author -> "Invalid_signature_author"
+  | `Invalid_signature_for_this_hash -> "Invalid_signature_for_this_hash"
+  | `Invalid_state_root_hash -> "Invalid_state_root_hash"
+  | `Not_current_block_producer -> "Not_current_block_producer"
+  | `Not_a_json -> "Invalid json"
+  | `Not_a_valid_request err -> Format.sprintf "Invalid request: %s" err
+  | `Pending_blocks -> "Pending_blocks"
+  | `Unknown_uri -> "Unknown_uri"
+  | `Not_a_user_opertaion -> "Not_a_user_opertaion"
+  | `Not_consensus_operation -> "Not_consensus_operation"
+  | `Invalid_signature -> "Invalid_signature"
+  | `Invalid_snapshot_height -> "Invalid_snapshot_height"
+  | `Not_all_blocks_are_signed -> "Not_all_blocks_are_signed"
+  | `State_root_not_the_expected -> "State_root_not_the_expected"
+  | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
+
+let print_error err =
+  Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
 
 type flag_node =
   [ `Invalid_block
