@@ -2,6 +2,9 @@
 
 set -e
 
+LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
+export LD_LIBRARY_PATH
+
 RPC_NODE=http://localhost:20000
 
 # This secret key never changes.
@@ -15,7 +18,7 @@ sidecli() {
 }
 
 tezos-client() {
-  docker exec -it my-sandbox tezos-client "$@"
+  docker exec -it deku_flextesa_1 tezos-client "$@"
 }
 
 ligo() {
@@ -149,23 +152,20 @@ EOF
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1
   done
+  echo "Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS"
 }
 
 tear-down() {
-  if [[ $(docker ps | grep my-sandbox) ]]; then
-    docker kill my-sandbox
-    rm -r "$DATA_DIRECTORY"
-    echo "Stopped the sandbox and wiped all state."
-  fi
+  for i in ${VALIDATORS[@]}; do
+    FOLDER="$DATA_DIRECTORY/$i"
+    if [ -d $FOLDER ]; then
+      rm -r $FOLDER
+    fi
+  done
 }
 
 start_node() {
   tear-down
-  message "Starting sandbox"
-  docker run --rm --name my-sandbox --detach -p 20000:20000 \
-    tqtezos/flextesa:20210602 granabox start
-  sleep 3
-  message "Sandbox started"
   message "Configuring Tezos client"
   tezos-client --endpoint $RPC_NODE bootstrapped
   tezos-client --endpoint $RPC_NODE config update
