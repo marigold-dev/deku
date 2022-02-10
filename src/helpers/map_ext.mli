@@ -13,4 +13,6 @@ module Make_with_yojson : functor
     (Yojson.Safe.t -> ('a, string) result) ->
     Yojson.Safe.t ->
     ('a t, string) result
+  val key_to_yojson : key -> Yojson.Safe.t
+  val key_of_yojson : Yojson.Safe.t -> (key, string) result
 end

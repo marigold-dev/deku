@@ -11,4 +11,6 @@ struct
     json
     |> [%of_yojson: (K.t * 'a) list] f
     |> Result.map (fun l -> l |> List.to_seq |> of_seq)
+  let key_to_yojson = K.to_yojson
+  let key_of_yojson = K.of_yojson
 end
