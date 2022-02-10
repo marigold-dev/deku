@@ -254,20 +254,17 @@ and block_added_to_the_pool state update_state block =
     let state = try_to_sign_block state update_state block in
     try_to_apply_block state update_state block
   else
-    [%assert
-      let () =
-        ( `Added_block_not_signed_enough_to_desync,
-          Block_pool.is_signed ~hash:block.hash state.block_pool ) in
-      let%assert () =
-        ( `Added_block_has_lower_block_height,
-          block.block_height > state.protocol.block_height ) in
-      match
-        Block_pool.find_block ~hash:block.previous_hash state.block_pool
-      with
-      | Some block -> block_added_to_the_pool state update_state block
-      | None ->
-        request_previous_blocks state block;
-        Ok ()]
+    let%assert () =
+      ( `Added_block_not_signed_enough_to_desync,
+        Block_pool.is_signed ~hash:block.hash state.block_pool ) in
+    let%assert () =
+      ( `Added_block_has_lower_block_height,
+        block.block_height > state.protocol.block_height ) in
+    match Block_pool.find_block ~hash:block.previous_hash state.block_pool with
+    | Some block -> block_added_to_the_pool state update_state block
+    | None ->
+      request_previous_blocks state block;
+      Ok ()
 ;;
 block_added_to_the_pool' := block_added_to_the_pool
 let received_block state update_state block =
