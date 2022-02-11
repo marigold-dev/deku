@@ -3,7 +3,7 @@ type t = private {
   hash : BLAKE2B.t;
   payload_hash : BLAKE2B.t;
   state_root_hash : BLAKE2B.t;
-  handles_hash : BLAKE2B.t;
+  withdrawal_handles_hash : BLAKE2B.t;
   validators_hash : BLAKE2B.t;
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;

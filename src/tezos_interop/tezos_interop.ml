@@ -203,13 +203,13 @@ module Consensus = struct
   open Michelson.Michelson_v1_primitives
   open Tezos_micheline
   let commit_state_hash ~context ~block_height ~block_payload_hash ~state_hash
-      ~handles_hash ~validators ~signatures =
+      ~withdrawal_handles_hash ~validators ~signatures =
     let module Payload = struct
       type t = {
         block_height : int64;
         block_payload_hash : BLAKE2B.t;
         signatures : string option list;
-        handles_hash : BLAKE2B.t;
+        withdrawal_handles_hash : BLAKE2B.t;
         state_hash : BLAKE2B.t;
         validators : string list;
         current_validator_keys : string option list;
@@ -234,7 +234,7 @@ module Consensus = struct
         block_height;
         block_payload_hash;
         signatures;
-        handles_hash;
+        withdrawal_handles_hash;
         state_hash;
         validators;
         current_validator_keys;

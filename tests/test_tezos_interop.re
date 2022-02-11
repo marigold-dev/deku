@@ -737,7 +737,7 @@ describe("consensus", ({test, _}) => {
           hash_exn(
             "bdd051ddb07925a0d88dc27583e38ae560aa1b4429cc93b9ec35dacdbd74ffb2",
           ),
-        ~handles_hash=
+        ~withdrawal_handles_hash=
           hash_exn(
             "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8",
           ),

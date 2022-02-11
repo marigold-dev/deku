@@ -271,7 +271,7 @@ let withdraw_proof node_folder operation_hash callback =
   | Operation_is_not_a_withdraw ->
     let message = BLAKE2B.to_string operation_hash ^ " is not a withdraw" in
     await (`Error (false, message))
-  | Ok { handles_hash; handle; proof } ->
+  | Ok { withdrawal_handles_hash; withdrawal_handle; proof } ->
     let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
     Format.printf
       {|(Pair (Pair %S
@@ -280,12 +280,12 @@ let withdraw_proof node_folder operation_hash callback =
       0x%s
       { %s })|}
       (Tezos.Address.to_string callback)
-      (Amount.to_int handle.amount)
-      (to_hex handle.ticket.data)
-      handle.id
-      (Tezos.Address.to_string handle.owner)
-      (Tezos.Address.to_string handle.ticket.ticketer)
-      (BLAKE2B.to_string handles_hash)
+      (Amount.to_int withdrawal_handle.amount)
+      (to_hex withdrawal_handle.ticket.data)
+      withdrawal_handle.id
+      (Tezos.Address.to_string withdrawal_handle.owner)
+      (Tezos.Address.to_string withdrawal_handle.ticket.ticketer)
+      (BLAKE2B.to_string withdrawal_handles_hash)
       (List.map
          (fun (left, right) ->
            Format.sprintf "        Pair 0x%s\n             0x%s"
