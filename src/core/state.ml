@@ -1,7 +1,8 @@
 open Helpers
 open Crypto
 type t = { ledger : Ledger.t } [@@deriving yojson]
-type receipt = Receipt_tezos_withdraw of Ledger.Handle.t [@@deriving yojson]
+type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
+[@@deriving yojson]
 let empty = { ledger = Ledger.empty }
 let ledger t = t.ledger
 let hash t = to_yojson t |> Yojson.Safe.to_string |> BLAKE2B.hash

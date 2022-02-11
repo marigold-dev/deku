@@ -15,7 +15,7 @@ module Consensus : sig
     block_height:int64 ->
     block_payload_hash:BLAKE2B.t ->
     state_hash:BLAKE2B.t ->
-    handles_hash:BLAKE2B.t ->
+    withdrawal_handles_hash:BLAKE2B.t ->
     validators:Key_hash.t list ->
     signatures:(Key.t * Signature.t) option list ->
     unit Lwt.t

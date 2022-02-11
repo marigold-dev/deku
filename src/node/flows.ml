@@ -166,7 +166,8 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
         | true -> Lwt.return_unit
         | false -> Lwt_unix.sleep 120.0 in
       commit_state_hash state ~block_height:block.block_height
-        ~block_payload_hash:block.payload_hash ~handles_hash:block.handles_hash
+        ~block_payload_hash:block.payload_hash
+        ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~state_hash:block.state_root_hash ~validators ~signatures)
 let rec try_to_apply_block state update_state block =
   let%assert () =
@@ -351,19 +352,19 @@ let register_uri state update_state ~uri ~signature =
 let request_withdraw_proof state ~hash =
   match state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt hash with
   | None -> Networking.Withdraw_proof.Unknown_operation
-  | Some (Receipt_tezos_withdraw handle) ->
+  | Some (Receipt_tezos_withdraw withdrawal_handle) ->
     let last_block_hash = state.Node.protocol.last_block_hash in
-    let handles_hash =
+    let withdrawal_handles_hash =
       match
         Block_pool.find_block ~hash:last_block_hash state.Node.block_pool
       with
       | None -> assert false
-      | Some block -> block.Block.handles_hash in
+      | Some block -> block.Block.withdrawal_handles_hash in
     let proof =
       state.Node.protocol.core_state
       |> Core.State.ledger
-      |> Ledger.handles_find_proof handle in
-    Ok { handles_hash; handle; proof }
+      |> Ledger.withdrawal_handles_find_proof withdrawal_handle in
+    Ok { withdrawal_handles_hash; withdrawal_handle; proof }
 let request_ticket_balance state ~ticket ~address =
   state.Node.protocol.core_state
   |> Core.State.ledger

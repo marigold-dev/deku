@@ -113,8 +113,8 @@ module Withdraw_proof = struct
   type request = { operation_hash : BLAKE2B.t } [@@deriving yojson]
   type response =
     | Ok                          of {
-        handles_hash : BLAKE2B.t;
-        handle : Ledger.Handle.t;
+        withdrawal_handles_hash : BLAKE2B.t;
+        withdrawal_handle : Ledger.Withdrawal_handle.t;
         proof : (BLAKE2B.t * BLAKE2B.t) list;
       }
     | Unknown_operation

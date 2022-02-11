@@ -1,5 +1,5 @@
 open Crypto
-module Handle : sig
+module Withdrawal_handle : sig
   type t = private {
     hash : BLAKE2B.t;
     id : int;
@@ -26,8 +26,9 @@ val withdraw :
   Amount.t ->
   Ticket_id.t ->
   t ->
-  (t * Handle.t, [> `Not_enough_funds]) result
-val handles_find_proof : Handle.t -> t -> (BLAKE2B.t * BLAKE2B.t) list
-val handles_find_proof_by_id :
-  int -> t -> ((BLAKE2B.t * BLAKE2B.t) list * Handle.t) option
-val handles_root_hash : t -> BLAKE2B.t
+  (t * Withdrawal_handle.t, [> `Not_enough_funds]) result
+val withdrawal_handles_find_proof :
+  Withdrawal_handle.t -> t -> (BLAKE2B.t * BLAKE2B.t) list
+val withdrawal_handles_find_proof_by_id :
+  int -> t -> ((BLAKE2B.t * BLAKE2B.t) list * Withdrawal_handle.t) option
+val withdrawal_handles_root_hash : t -> BLAKE2B.t
