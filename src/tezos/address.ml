@@ -28,28 +28,30 @@ let of_string =
     let%some contract = Contract_hash.of_string contract in
     Some (Originated { contract; entrypoint }) in
   Encoding_helpers.parse_string_variant [implicit; originated]
+
+let contract_encoding =
+  let open Data_encoding in
+  def "contract_id" ~title:"A contract handle"
+    ~description:
+      "A contract notation as given to an RPC or inside scripts. Can be a \
+       base58 implicit contract hash or a base58 originated contract hash."
+  @@ union ~tag_size:`Uint8
+       [
+         case (Tag 0) ~title:"Implicit" Key_hash.encoding
+           (function
+             | Implicit k -> Some k
+             | _ -> None)
+           (fun k -> Implicit k);
+         case (Tag 1)
+           (Fixed.add_padding Contract_hash.encoding 1)
+           ~title:"Originated"
+           (function
+             | Originated { contract; _ } -> Some contract
+             | _ -> None)
+           (fun contract -> Originated { contract; entrypoint = None });
+       ]
 let encoding =
   let open Data_encoding in
-  let contract_encoding =
-    def "contract_id" ~title:"A contract handle"
-      ~description:
-        "A contract notation as given to an RPC or inside scripts. Can be a \
-         base58 implicit contract hash or a base58 originated contract hash."
-    @@ union ~tag_size:`Uint8
-         [
-           case (Tag 0) ~title:"Implicit" Key_hash.encoding
-             (function
-               | Implicit k -> Some k
-               | _ -> None)
-             (fun k -> Implicit k);
-           case (Tag 1)
-             (Fixed.add_padding Contract_hash.encoding 1)
-             ~title:"Originated"
-             (function
-               | Originated { contract; _ } -> Some contract
-               | _ -> None)
-             (fun contract -> Originated { contract; entrypoint = None });
-         ] in
   let name = "address" in
   let title = "An contract address optionally followed by an entrypoint." in
   let raw_encoding =

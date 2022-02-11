@@ -28,6 +28,8 @@ module Make_b58 (H : sig
 end) =
 struct
   open H
+  let to_raw = H.to_raw
+
   let to_string t = Base58.simple_encode ~prefix ~to_raw t
   let of_string string = Base58.simple_decode ~prefix ~of_raw string
   let of_raw_exn string =

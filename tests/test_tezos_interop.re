@@ -576,6 +576,48 @@ describe("operation_hash", ({test, _}) => {
       toBeNone()
   });
 });
+describe("operation forging", ({test, _}) => {
+  test("same result as taquito", ({expect, _}) => {
+    open Tezos.Operation;
+
+    let forged_bytes = {
+      let branch =
+        Block_hash.of_string(
+          "BLBQQXyZ1qTwxZiT5FkJwvKj4YnCmx6xhqnhgaZg1Z13aQDJiCk",
+        )
+        |> Option.get;
+      let fee = Tez.of_mutez(443L) |> Option.get;
+      let gas_limit = Gas.of_int(1520) |> Option.get;
+      let storage_limit = Z.of_int(0);
+      let amount = Tez.of_mutez(2000000L) |> Option.get;
+      let destination =
+        Address.of_string("tz1ULf5uGJXefx8c8iLfHfuW1doMPpVicg7u")
+        |> Option.get;
+      let source =
+        Key_hash.of_string("tz1M6iKVFN8RhHjVSL3oF75nF2FJ1yMkrk5t")
+        |> Option.get;
+      let counter = Z.of_int(3305389);
+
+      let secret =
+        Secret.of_string(
+          "edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd",
+        )
+        |> Option.get;
+      let operation = {
+        source,
+        fee,
+        counter,
+        content: Transaction({amount, destination, parameters: None}),
+        gas_limit,
+        storage_limit,
+      };
+      Tezos.Operation.forge(~secret, ~branch, ~operations=[operation]);
+    };
+
+    let taquito_forged_bytes = "3d95683f0d29a6deb044f4ecd86efd9cbae6b373b7b9d7c2db16456783e664566c001004051072b588b39e25b9f4dbf4673abcd63147bb03addfc901f00b0080897a00005f70062003e798791cb04f51bcec1d3358ac64a600468a797b657cff8b585c18cb599443d7c0982220cfa9231270138c7a3e0996d8ea42a2912d51c44681877b2d3a3e8051ebd1498305f8f73cf68967f60349fc00";
+    expect.string(forged_bytes).toEqual(taquito_forged_bytes);
+  })
+});
 describe("pack", ({test, _}) => {
   open Pack;
 

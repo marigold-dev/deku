@@ -79,11 +79,11 @@ let michelson_of_yojson json =
   try
     Ok
       (Tezos_micheline.Micheline.root
-         (Data_encoding.Json.destruct Pack.expr_encoding json))
+         (Data_encoding.Json.destruct Michelson.expr_encoding json))
   with
   | _ -> Error "invalid json"
 type michelson =
-  (int, Pack.Michelson_v1_primitives.prim) Tezos_micheline.Micheline.node
+  (int, Michelson.Michelson_v1_primitives.prim) Tezos_micheline.Micheline.node
 module Fetch_storage : sig
   val run :
     rpc_node:Uri.t ->
@@ -200,7 +200,7 @@ module Listen_transactions = struct
     Lwt.async start
 end
 module Consensus = struct
-  open Pack
+  open Michelson.Michelson_v1_primitives
   open Tezos_micheline
   let commit_state_hash ~context ~block_height ~block_payload_hash ~state_hash
       ~handles_hash ~validators ~signatures =
@@ -260,7 +260,7 @@ module Consensus = struct
     | ( "update_root_hash",
         Tezos_micheline.Micheline.Prim
           ( _,
-            Michelson_v1_primitives.D_Pair,
+            D_Pair,
             [
               Prim
                 ( _,
@@ -295,7 +295,7 @@ module Consensus = struct
     | ( "deposit",
         Micheline.Prim
           ( _,
-            Michelson_v1_primitives.D_Pair,
+            D_Pair,
             [
               Bytes (_, destination);
               Prim
@@ -334,10 +334,8 @@ module Consensus = struct
     let micheline_to_validators = function
       | Ok
           (Micheline.Prim
-            ( _,
-              Michelson_v1_primitives.D_Pair,
-              [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _],
-              _ )) ->
+            (_, D_Pair, [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _], _))
+        ->
         List.fold_left_ok
           (fun acc k ->
             match k with

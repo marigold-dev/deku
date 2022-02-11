@@ -4,6 +4,7 @@ type t =
   | Secp256k1 of Secp256k1.Signature.t
   | P256      of P256.Signature.t
 [@@deriving ord, eq]
+
 let sign secret hash =
   match secret with
   | Secret.Ed25519 secret -> Ed25519 (Ed25519.sign secret hash)
@@ -18,6 +19,12 @@ let verify key signature hash =
   | ( (Key.Ed25519 _ | Key.Secp256k1 _ | Key.P256 _),
       (Ed25519 _ | Secp256k1 _ | P256 _) ) ->
     false
+
+let to_raw = function
+  | Ed25519 signature -> Ed25519.Signature.to_raw signature
+  | Secp256k1 signature -> Secp256k1.Signature.to_raw signature
+  | P256 signature -> P256.Signature.to_raw signature
+
 let to_string = function
   | Ed25519 signature -> Ed25519.Signature.to_string signature
   | Secp256k1 signature -> Secp256k1.Signature.to_string signature
