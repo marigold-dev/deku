@@ -5,6 +5,7 @@
   zinc.interpreter
   zinc.types
   zinc_instructions
+  zinc.vm
   core_bench)
  (ocamlopt_flags
   (:standard -O3 -unboxed-types))
