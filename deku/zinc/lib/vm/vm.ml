@@ -275,10 +275,6 @@ exception Out_of_gas
 *)
 (* let extract_result state out_mem out_stack = () *)
 
-(* let[@inline] read state ~out_stack ~out_mem =
-   let rec fetch_mem state ptr = (state, ptr) in
-   fetch_mem state 0 *)
-
 let rec execute state code =
   if state.gas_counter < 1 then raise Out_of_gas
   else (

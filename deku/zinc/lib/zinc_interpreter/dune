@@ -1,7 +1,7 @@
 (library
  (name zinc_interpreter)
  (public_name zinc.interpreter)
- (modules Zinc_interpreter zinc_interpreter_intf gas_counter_intf)
+ (modules Zinc_interpreter zinc_interpreter_intf)
  (libraries
   zinc_utils
   zinc_types

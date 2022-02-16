@@ -37,12 +37,6 @@ module Make (D : Domain_types) : sig
       (module Executor) ->
       Ir.Zt.Interpreter_input.t ->
       Ir.Zt.Interpreter_output.t
-
-    val eval' :
-      (module Executor) ->
-      debug:bool ->
-      Ir.t list * Ir.t list * Ir.t list ->
-      Ir.t list * Ir.t list
   end
 end
 
@@ -82,11 +76,5 @@ module Dummy : sig
       (module Executor) ->
       Ir.Zt.Interpreter_input.t ->
       Ir.Zt.Interpreter_output.t
-
-    val eval' :
-      (module Executor) ->
-      debug:bool ->
-      Ir.t list * Ir.t list * Ir.t list ->
-      Ir.t list * Ir.t list
   end
 end
