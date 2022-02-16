@@ -1,5 +1,6 @@
 open Crypto
 open Protocol
+open Validators
 
 (** Tendermint sometimes decides on a `Nil` value. *)
 type value =
@@ -117,17 +118,23 @@ let debug state msg =
   let self = String.sub self (String.length self - 6) 6 in
   prerr_endline ("*** " ^ self ^ "   " ^ msg)
 
-let is_allowed_proposer (_global_state : State.t) (_height : height)
-    (_round : round) (_address : Key_hash.t) =
-  assert false
+let is_allowed_proposer (global_state : State.t) (height : height)
+    (round : round) (address : Key_hash.t) =
+  let protocol_state = global_state.protocol in
+  let proposer = proposer protocol_state.validators height round in
+  let b = Key_hash.equal address proposer.address in
+  b
 
-let i_am_proposer (_global_state : State.t) (_height : height) (_round : round)
-    =
-  assert false
+let i_am_proposer (global_state : State.t) (height : height) (round : round) =
+  is_allowed_proposer global_state height round global_state.identity.t
 
-let get_weight (_global_state : State.t) (_address : Key_hash.t) = assert false
+(** Tendermint as proof-of-authority *)
+let get_weight (global_state : State.t) (address : Key_hash.t) =
+  if Validators.is_validator global_state.protocol.validators address then
+    1
+  else
+    0
 
-(* TODO: increasing timeouts when needed *)
 let proposal_timeout = 5
 let prevote_timeout = 10
 let precommit_timeout = 15

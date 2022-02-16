@@ -52,3 +52,20 @@ let remove validator t =
   let hash = hash_validators validators in
   { current; validators; length; hash }
 let hash t = t.hash
+
+(** Round-robin proposer as used in Tendermint consensus. *)
+let proposer t height round =
+  let validators = t.validators in
+  let n = List.length validators in
+  (* FIXME: this should be a vector. *)
+  (* n should stay small enough *)
+  let i1 = Int64.rem height (Int64.of_int n) in
+  let i1 = Int64.to_int i1 in
+  let i = (i1 + (round mod n)) mod n in
+  List.nth validators i
+
+(** Verifies if someone is a validator as required in Tendermint consensus. *)
+let is_validator t (x : Key_hash.t) =
+  (* FIXME: all we have in Tendermint consensus is an address so we should have a precomputed set of addresses *)
+  let addresses = List.map (fun v -> v.address) t.validators in
+  List.mem x addresses
