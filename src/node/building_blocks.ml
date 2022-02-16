@@ -2,31 +2,21 @@ open Helpers
 open Crypto
 open Protocol
 module Node = State
-let is_valid_block state block =
-  let is_all_operations_properly_signed _block = true in
-  let%assert () =
-    ( Printf.sprintf
-        "new block has a lower block height (%Ld) than the current state (%Ld)"
-        block.Block.block_height state.Node.protocol.block_height,
-      block.Block.block_height >= state.Node.protocol.block_height ) in
-  let%assert () =
-    ( "some operation in the block is not properly signed",
-      is_all_operations_properly_signed block ) in
-  Ok ()
 let is_next state block = Protocol.is_next state.Node.protocol block
-let has_next_block_to_apply state ~hash =
-  Block_pool.find_next_block_to_apply ~hash state.Node.block_pool
-  |> Option.is_some
-let is_known_block state ~hash =
-  Option.is_some (Block_pool.find_block state.Node.block_pool ~hash)
-let is_known_signature state ~hash ~signature =
-  let%default () = false in
-  let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
-  Some (Signatures.mem signature signatures)
+
+(* let has_next_block_to_apply state ~hash =
+   Block_pool.find_next_block_to_apply ~hash state.Node.block_pool
+   |> Option.is_some *)
+(* let is_known_block state ~hash =
+   Option.is_some (Block_pool.find_block state.Node.block_pool ~hash) *)
+let is_known_signature state ~hash ~signature ~height ~round =
+  Staging_area.contains state.Node.staging_area hash height round signature
+
+(*
 let is_signed_by_self state ~hash =
   let%default () = false in
   let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
-  Some (Signatures.is_self_signed signatures)
+  Some (Signatures.is_self_signed signatures) *)
 let is_current_producer state ~key_hash =
   let%default () = false in
   let%some current_producer = get_current_block_producer state.Node.protocol in
@@ -80,9 +70,9 @@ let is_signable state block =
   let all_operations_are_trusted =
     List.for_all is_trusted_operation block.Block.operations in
   is_next state block
-  && (not (is_signed_by_self state ~hash:block.hash))
+  (* && (not (is_signed_by_self state ~hash:block.hash)) FIXME: check if in decision_log *)
   && is_current_producer state ~key_hash:block.author
-  && (not (has_next_block_to_apply state ~hash:block.hash))
+  (* && (not (has_next_block_to_apply state ~hash:block.hash)) *)
   && all_operations_are_trusted
   && block_has_signable_state_root_hash ~current_time state block
 let sign ~key block = Block.sign ~key block
@@ -114,19 +104,12 @@ let produce_block state =
     ~next_state_root_hash ~operations:state.pending_operations
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
-let signatures_required state =
-  let number_of_validators = Validators.length state.Node.protocol.validators in
-  let open Float in
-  to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
-let append_signature state update_state ~hash ~signature =
-  let block_pool =
-    Block_pool.append_signature
-      ~signatures_required:(signatures_required state)
-      ~hash signature state.Node.block_pool in
-  update_state { state with block_pool }
-let add_block_to_pool state update_state block =
-  let block_pool = Block_pool.append_block block state.Node.block_pool in
-  update_state { state with block_pool }
+
+let append_signature state update_state ~hash ~signature ~height ~round =
+  let staging_area =
+    Staging_area.add state.State.staging_area hash height round signature in
+  update_state { state with staging_area }
+
 let apply_block state update_state block =
   let%ok state = Node.apply_block state block in
   Ok (update_state state)
@@ -160,6 +143,11 @@ let clean state update_state block =
       |> state.persist_trusted_membership_change);
   update_state
     { state with trusted_validator_membership_change; pending_operations }
+let broadcast_signature state ~operation ~sender ~hash ~hash_signature
+    ~signature =
+  Lwt.async (fun () ->
+      Networking.broadcast_signature state
+        { operation; sender; hash; hash_signature; signature })
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
   let validators = Validators.to_list state.Node.protocol.validators in

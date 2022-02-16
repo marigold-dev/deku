@@ -13,6 +13,7 @@ module Consensus : sig
   val commit_state_hash :
     context:Context.t ->
     block_height:int64 ->
+    block_round:int ->
     block_payload_hash:BLAKE2B.t ->
     state_hash:BLAKE2B.t ->
     handles_hash:BLAKE2B.t ->

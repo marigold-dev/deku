@@ -127,8 +127,22 @@ let broadcast_op state consensus_op =
     Protocol.Signature.sign ~key:node_state.State.identity.secret hash in
   Lwt.async (fun () ->
       let%await () = Lwt_unix.sleep 1.0 in
-      Networking.broadcast_consensus_op node_state
-        { operation = consensus_op; sender = node_address; signature })
+      match consensus_op with
+      | PrecommitOP (_height, _round, Block b) ->
+        let hash_signature =
+          Protocol.Signature.sign ~key:node_state.State.identity.secret b.hash
+        in
+        Networking.broadcast_signature node_state
+          {
+            operation = consensus_op;
+            sender = node_address;
+            hash = b.hash;
+            hash_signature;
+            signature;
+          }
+      | _ ->
+        Networking.broadcast_consensus_op node_state
+          { operation = consensus_op; sender = node_address; signature })
 
 let add_consensus_op node _update_state sender op =
   let input_log = node.input_log in
@@ -187,3 +201,24 @@ and start_clock current_height node clock =
 
 let make_proposal height round block =
   CI.ProposalOP (height, round, CI.block block, -1)
+
+let is_decided_on cstate (height : height) =
+  let decision = cstate.output_log in
+  match OutputLog.get decision height with
+  | Some (Block b, round) -> Some (b, round)
+  | _ -> None
+
+(** Required to publish hash on Tezos *)
+let previous_block cstate height =
+  match OutputLog.get cstate.output_log (Int64.sub height 1L) with
+  | Some (Block b, round) -> Some (b, round)
+  | _ -> None
+
+let height_from_op op = Tendermint_internals.height op
+
+let round_from_op op = Tendermint_internals.round op
+
+let get_block cstate height =
+  match OutputLog.get cstate.output_log (Int64.sub height 1L) with
+  | Some (Block b, _) -> b
+  | _ -> failwith (Printf.sprintf "No block here %Ld" height)

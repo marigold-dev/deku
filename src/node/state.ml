@@ -17,9 +17,9 @@ type t = {
   interop_context : Tezos_interop.Context.t;
   data_folder : string;
   pending_operations : Protocol.Operation.t list;
-  block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
+  staging_area : Staging_area.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
@@ -32,10 +32,9 @@ let make ~identity ~trusted_validator_membership_change
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
-    Signatures.make ~self_key:identity.key |> Signatures.set_signed in
-  let initial_block_pool =
-    Block_pool.make ~self_key:identity.key
-    |> Block_pool.append_block initial_block in
+    Signatures.make ~self_key:identity.key
+    |> Signatures.set_signed
+    |> Signatures.to_list in
   let hash, data = Protocol.hash initial_protocol in
   let initial_snapshot =
     let open Snapshots in
@@ -48,7 +47,7 @@ let make ~identity ~trusted_validator_membership_change
     interop_context;
     data_folder;
     pending_operations = [];
-    block_pool = initial_block_pool;
+    staging_area = Staging_area.create ();
     protocol = initial_protocol;
     snapshots = initial_snapshots;
     uri_state = Uri_map.empty;
@@ -77,33 +76,17 @@ let apply_block state block =
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
   Ok { state with protocol; recent_operation_receipts; snapshots }
-let signatures_required state =
+let _signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
-let load_snapshot ~snapshot ~additional_blocks ~last_block
-    ~last_block_signatures t =
+let load_snapshot ~snapshot ~additional_blocks ~last_block t =
   let all_blocks =
     last_block :: additional_blocks
     |> List.sort (fun a b ->
            let open Int64 in
            to_int (sub a.Block.block_height b.Block.block_height)) in
-  let block_pool =
-    let block_pool =
-      List.fold_left
-        (fun block_pool block -> Block_pool.append_block block block_pool)
-        t.block_pool all_blocks in
-    let signatures_required = signatures_required t in
-    List.fold_left
-      (fun block_pool signature ->
-        Block_pool.append_signature ~signatures_required
-          ~hash:last_block.Block.hash signature block_pool)
-      block_pool last_block_signatures in
-  let%assert () =
-    ( `Not_all_blocks_are_signed,
-      List.for_all
-        (fun block -> Block_pool.is_signed ~hash:block.Block.hash block_pool)
-        all_blocks ) in
+  (* FIXME: Why was the block pool in the snapshots anyway? *)
   let%assert () =
     ( `State_root_not_the_expected,
       snapshot.Snapshots.hash = last_block.state_root_hash ) in
@@ -147,5 +130,5 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
   let%assert () =
     (`Invalid_snapshot_height, protocol.block_height > t.protocol.block_height)
   in
-  let t = { t with protocol; block_pool } in
+  let t = { t with protocol } in
   List.fold_left_ok apply_block t all_blocks

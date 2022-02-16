@@ -16,9 +16,10 @@ type t = {
   interop_context : Tezos_interop.Context.t;
   data_folder : string;
   pending_operations : Protocol.Operation.t list;
-  block_pool : Block_pool.t;
+  (* block_pool : Block_pool.t; *)
   protocol : Protocol.t;
   snapshots : Snapshots.t;
+  staging_area : Staging_area.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
@@ -42,7 +43,6 @@ val load_snapshot :
   snapshot:Snapshots.snapshot ->
   additional_blocks:Block.t list ->
   last_block:Block.t ->
-  last_block_signatures:Signature.t list ->
   t ->
   ( t,
     [> `Invalid_block_when_applying

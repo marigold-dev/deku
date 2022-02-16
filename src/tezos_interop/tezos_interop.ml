@@ -200,13 +200,13 @@ module Listen_transactions = struct
     Lwt.async start
 end
 module Consensus = struct
-  open Michelson.Michelson_v1_primitives
   open Tezos_micheline
-  let commit_state_hash ~context ~block_height ~block_payload_hash ~state_hash
-      ~handles_hash ~validators ~signatures =
+  let commit_state_hash ~context ~block_height ~block_round ~block_payload_hash
+      ~state_hash ~handles_hash ~validators ~signatures =
     let module Payload = struct
       type t = {
         block_height : int64;
+        block_round : int;
         block_payload_hash : BLAKE2B.t;
         signatures : string option list;
         handles_hash : BLAKE2B.t;
@@ -232,6 +232,7 @@ module Consensus = struct
     let payload =
       {
         block_height;
+        block_round;
         block_payload_hash;
         signatures;
         handles_hash;
@@ -260,7 +261,7 @@ module Consensus = struct
     | ( "update_root_hash",
         Tezos_micheline.Micheline.Prim
           ( _,
-            D_Pair,
+            Michelson.Michelson_v1_primitives.D_Pair,
             [
               Prim
                 ( _,
@@ -295,7 +296,7 @@ module Consensus = struct
     | ( "deposit",
         Micheline.Prim
           ( _,
-            D_Pair,
+            Michelson.Michelson_v1_primitives.D_Pair,
             [
               Bytes (_, destination);
               Prim
@@ -334,8 +335,10 @@ module Consensus = struct
     let micheline_to_validators = function
       | Ok
           (Micheline.Prim
-            (_, D_Pair, [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _], _))
-        ->
+            ( _,
+              Michelson.Michelson_v1_primitives.D_Pair,
+              [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _],
+              _ )) ->
         List.fold_left_ok
           (fun acc k ->
             match k with
