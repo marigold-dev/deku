@@ -92,11 +92,12 @@ create_new_deku_environment() {
     cat <<EOF
 {
   root_hash = {
-    current_block_hash = 0x;
-    current_block_height = 0;
-    current_state_hash = 0x;
-    current_handles_hash = 0x;
-    current_validators = [
+    snapshotted_block_hash = 0x;
+    snapshotted_block_height = 0n;
+    snapshotted_block_round = 0n;
+    snapshotted_state_hash = 0x;
+    snapshotted_handles_hash = 0x;
+    snapshotted_validators = [
 EOF
     ## this iteration is done here just to ensure the indentation
     for VALIDATOR in ${VALIDATORS[@]}; do

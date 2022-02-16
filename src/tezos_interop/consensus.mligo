@@ -8,19 +8,21 @@ type validator_keys = validator_key option list
 
 (* Root_hash_update contract *)
 type root_hash_storage = {
-  (* TODO: is having current_block_hash even useful? *)
+  (* TODO: is having snapshotted_block_hash even useful? *)
   (* consensus proof *)
-  current_block_hash: blake2b;
-  current_block_height: int;
-  current_state_hash: blake2b;
-  current_handles_hash: blake2b;
-  current_validators: validators;
+  snapshotted_block_hash: blake2b;
+  snapshotted_block_height: nat;
+  snapshotted_block_round: nat;
+  snapshotted_state_hash: blake2b;
+  snapshotted_handles_hash: blake2b;
+  snapshotted_validators: validators;
 }
 
 type signatures = signature option list
 
 type root_hash_action = {
-  block_height: int;
+  block_height: nat;
+  block_round: nat;
   block_payload_hash: blake2b;
 
   state_hash: blake2b;
@@ -28,14 +30,14 @@ type root_hash_action = {
   (* TODO: performance, can this blown up? *)
   validators: validators;
 
-  current_validator_keys: validator_keys;
+  snapshotted_validator_keys: validator_keys;
   signatures: signatures;
 }
 
 (* (pair (pair int bytes) (pair bytes validators)) *)
 (* TODO: performance, put this structures in an optimized way *)
 type block_hash_structure = {
-  block_height: int;
+  block_height: nat;
   block_payload_hash: blake2b;
   state_hash: blake2b;
   handles_hash: blake2b;
@@ -48,10 +50,10 @@ let assert_msg ((message, condition): (string * bool)) =
 
 let root_hash_check_block_height
   (storage: root_hash_storage)
-  (block_height: int) =
+  (block_height: nat) =
     assert_msg (
       "old block height",
-      block_height > storage.current_block_height
+      block_height > storage.snapshotted_block_height
     )
 
 let root_hash_block_hash (root_hash_update: root_hash_action) =
@@ -107,11 +109,11 @@ let root_hash_check_keys
   (action: root_hash_action)
   (storage: root_hash_storage)
   (block_hash: blake2b) =
-    let validators_length = (int (List.length storage.current_validators)) in
+    let validators_length = (int (List.length storage.snapshotted_validators)) in
     let required_validators = (validators_length * 2) / 3 in
     root_hash_check_keys (
-      action.current_validator_keys,
-      storage.current_validators,
+      action.snapshotted_validator_keys,
+      storage.snapshotted_validators,
       block_hash,
       required_validators
     )
@@ -122,10 +124,10 @@ let root_hash_check_signatures
   (storage: root_hash_storage)
   (signatures: signatures)
   (block_hash: blake2b) =
-    let validators_length = (int (List.length storage.current_validators)) in
+    let validators_length = (int (List.length storage.snapshotted_validators)) in
     let required_validators = (validators_length * 2) / 3 in
     root_hash_check_signatures (
-      action.current_validator_keys,
+      action.snapshotted_validator_keys,
       signatures,
       block_hash,
       required_validators
@@ -136,6 +138,7 @@ let root_hash_main
   (storage: root_hash_storage) =
     let block_hash = root_hash_block_hash root_hash_update in
     let block_height = root_hash_update.block_height in
+    let block_round = root_hash_update.block_round in
     let state_hash = root_hash_update.state_hash in
     let handles_hash = root_hash_update.handles_hash in
     let validators = root_hash_update.validators in
@@ -146,11 +149,12 @@ let root_hash_main
     let () = root_hash_check_keys root_hash_update storage block_hash in
 
     {
-      current_block_hash = block_hash;
-      current_block_height = block_height;
-      current_state_hash = state_hash;
-      current_handles_hash = handles_hash;
-      current_validators = validators;
+      snapshotted_block_hash = block_hash;
+      snapshotted_block_height = block_height;
+      snapshotted_block_round = block_round;
+      snapshotted_state_hash = state_hash;
+      snapshotted_handles_hash = handles_hash;
+      snapshotted_validators = validators;
     }
 
 (* vault contract *)
@@ -236,11 +240,11 @@ let vault_check_handle_proof
     let rec verify
       (bit, proof, parent: int * vault_handle_proof * blake2b): unit =
         match proof with
-        | [] -> 
+        | [] ->
           let calculated_hash = Crypto.blake2b (Bytes.pack handle) in
           assert_msg ("invalid handle data", parent = calculated_hash)
         | (left, right) :: tl ->
-          let () = 
+          let () =
             let calculated_hash = Crypto.blake2b (Bytes.concat left right) in
             assert_msg ("invalid proof hash", parent = calculated_hash) in
           verify (bit - 1, tl, (if bit_is_set bit then right else left)) in
@@ -276,7 +280,7 @@ let vault_withdraw (withdraw: vault_withdraw) (storage: vault_storage) =
 
   let (fragment, vault) =
     let (old_ticket, vault) =
-      match 
+      match
         Big_map.get_and_update
           (handle.ticketer, handle.data)
           (None: bytes ticket option)
@@ -328,7 +332,7 @@ let main (action, storage : action * storage) =
     let root_hash = root_hash_main root_hash_update root_hash in
     let vault =
       vault_add_handles_hash
-        root_hash.current_handles_hash
+        root_hash.snapshotted_handles_hash
         vault in
     (([] : operation list), { root_hash = root_hash; vault = vault })
   | Deposit deposit ->
