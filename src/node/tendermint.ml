@@ -184,3 +184,6 @@ and start_clock current_height node clock =
         Lwt.return_unit);
     { clock with started = true }
   end
+
+let make_proposal height round block =
+  CI.ProposalOP (height, round, CI.block block, -1)

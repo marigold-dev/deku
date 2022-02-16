@@ -324,17 +324,8 @@ let info_sign_block =
     "Sign a block hash and broadcast to the network manually, useful when the \
      chain is stale." in
   Term.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-let sign_block node_folder block_hash =
-  let%await identity = read_identity ~node_folder in
-  let signature = Signature.sign ~key:identity.secret block_hash in
-  let%await validators_uris = validators_uris node_folder in
-  let%await () =
-    let open Networking in
-    broadcast_to_list
-      (module Signature_spec)
-      validators_uris
-      { hash = block_hash; signature } in
-  Lwt.return (`Ok ())
+let sign_block _node_folder _block_hash = failwith "To be reimplemented"
+
 let sign_block_term =
   let folder_node =
     let docv = "folder_node" in
@@ -347,35 +338,51 @@ let sign_block_term =
     required & pos 1 (some hash) None & info [] ~doc in
   let open Term in
   lwt_ret (const sign_block $ folder_node $ block_hash)
-let info_produce_block =
+let _info_produce_block =
   let doc =
     "Produce and sign a block and broadcast to the network manually, useful \
      when the chain is stale." in
   Term.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-let produce_block node_folder =
+
+let info_start_consensus =
+  let doc = "Runs a Tendermint consensus instance to decide on a block" in
+  Term.info "start-consensus" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+    ~man
+
+(* To test Tendermint consensus *)
+let start_consensus node_folder =
+  prerr_endline "*** Starting consensus?";
   let%await identity = read_identity ~node_folder in
   let%await state = Node_state.get_initial_state ~folder:node_folder in
   let address = identity.t in
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
       ~author:address ~operations:[] in
-  let signature = Block.sign ~key:identity.secret block in
   let%await validators_uris = validators_uris node_folder in
+  let height = state.protocol.Protocol.block_height in
+  let operation = Node.Tendermint.make_proposal height 0 block in
   let%await () =
     let open Networking in
+    let sender = Key_hash.of_key identity.key in
+    let signature = Block.sign ~key:identity.secret block in
+    (* Wrong signature but not important here *)
     broadcast_to_list
-      (module Block_and_signature_spec)
-      validators_uris { block; signature } in
+      (module Networking.Consensus_operation)
+      validators_uris
+      { operation; sender; signature } in
+  prerr_endline "*** Just started consensus";
   Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
   Lwt.return (`Ok ())
-let produce_block =
+
+let start_consensus =
   let folder_node =
     let docv = "folder_node" in
     let doc = "The folder where the node lives." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
-  lwt_ret (const produce_block $ folder_node)
+  lwt_ret (const start_consensus $ folder_node)
+
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
   if exists then
@@ -557,7 +564,7 @@ let () =
          (withdraw, info_withdraw);
          (withdraw_proof, info_withdraw_proof);
          (sign_block_term, info_sign_block);
-         (produce_block, info_produce_block);
+         (start_consensus, info_start_consensus);
          (setup_identity, info_setup_identity);
          (setup_tezos, info_setup_tezos);
          (add_trusted_validator, info_add_trusted_validator);
