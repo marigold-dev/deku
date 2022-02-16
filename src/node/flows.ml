@@ -223,7 +223,9 @@ let commit state update_state ~block ~hash ~height ~round =
         Staging_area.get state.Node.staging_area b.hash (Int64.sub height 1L)
           round in
       if List.length signatures = 0 then
-        prerr_endline "WHAT THE FUCK NO NO NO NO NO!!!!";
+        prerr_endline
+          "This should never be printed, there should be signatures at this \
+           time.";
       try_to_commit_state_hash ~prev_validators:prev_protocol.validators state b
         round signatures in
   let%ok state = apply_block state update_state block in
