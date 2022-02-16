@@ -265,7 +265,7 @@ let code_str =
     ]
   |> Array.of_list
 
-let s = Vm.default ()
+let s = Vm.make_default ()
 
 module Counter_toy_no_alias = struct
   type instr = IADD | PUSH of int | HALT

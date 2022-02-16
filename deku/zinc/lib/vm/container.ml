@@ -3,7 +3,7 @@ module type Entry = sig
 end
 
 module type Container = sig
-  type pointer = (int[@unboxed])
+  type pointer = int
 
   type entry
 
@@ -11,7 +11,7 @@ module type Container = sig
 
   val pointer : t -> pointer
 
-  val blit : entry array -> t -> unit
+  val blit : entry array -> t -> int
 
   val set_pointer : t -> value:pointer -> unit
 
@@ -49,7 +49,7 @@ module Make (E : Entry) : sig
 
   val read_and_increment : t -> entry
 
-  val blit : entry array -> t -> unit
+  val blit : entry array -> t -> int
 
   val make : default_elem:entry -> cap:pointer -> unit -> t
 
@@ -76,7 +76,9 @@ end = struct
   type t = {mutable pointer : int; memory : E.t array}
 
   let[@inline always] blit code t =
-    Array.blit code 0 t.memory 0 (Array.length code)
+    let cost = Array.length code in
+    Array.blit code 0 t.memory 0 cost ;
+    cost
 
   let make ~default_elem ~cap () =
     {pointer = 0; memory = Array.make cap default_elem}
@@ -149,8 +151,10 @@ end = struct
     point
 
   let[@inline always] read_field (t : t) ~block ~field =
-    Array.get t.memory (block + field + 1)
+    let dst = block + field + 1 in
+    Array.get t.memory dst
 
   let[@inline always] write_field (t : t) ~block ~field ~value =
-    Array.set t.memory (block + field + 1) value
+    let dst = block + field + 1 in
+    Array.set t.memory dst value
 end

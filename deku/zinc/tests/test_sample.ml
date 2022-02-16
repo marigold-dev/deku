@@ -402,6 +402,22 @@ module T = struct
       ]
     |> Array.of_list
 
+  let code_lst =
+    Vm.
+      [
+        CONST 0;
+        CONST 1;
+        CONST 2;
+        CONST 1;
+        MAKE_BLOCK;
+        CONST 3;
+        CONST 2;
+        CONST 1;
+        MAKE_BLOCK;
+        RETURN;
+      ]
+    |> Array.of_list
+
   let code_str =
     Vm.
       [
@@ -414,12 +430,12 @@ module T = struct
       ]
     |> Array.of_list
 
-  let s = Vm.default ()
+  let s = Vm.make_default ()
 
   let%expect_test "trace addition" =
     Vm.intepret
       ~debug:true
-      (Vm.default ())
+      (Vm.make_default ())
       ~remaining_gas:max_int
       ~code
       ~stack:[||] ;
@@ -429,103 +445,127 @@ module T = struct
         Current Instruction: (CONST 1)
         Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387902
       Executing:
         Current Instruction: (CONST 1)
         Current stack: [(Int 1)]
         Current env: []
+        Remaining Gas: 4611686018427387901
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 1)]
         Current env: []
+        Remaining Gas: 4611686018427387900
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 2)]
+        Current stack: [(Int 2)]
         Current env: []
+        Remaining Gas: 4611686018427387899
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 2)]
         Current env: []
+        Remaining Gas: 4611686018427387898
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 3)]
+        Current stack: [(Int 3)]
         Current env: []
+        Remaining Gas: 4611686018427387897
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 3)]
         Current env: []
+        Remaining Gas: 4611686018427387896
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 4)]
+        Current stack: [(Int 4)]
         Current env: []
+        Remaining Gas: 4611686018427387895
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 4)]
         Current env: []
+        Remaining Gas: 4611686018427387894
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 5)]
+        Current stack: [(Int 5)]
         Current env: []
+        Remaining Gas: 4611686018427387893
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 5)]
         Current env: []
+        Remaining Gas: 4611686018427387892
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 6)]
+        Current stack: [(Int 6)]
         Current env: []
+        Remaining Gas: 4611686018427387891
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 6)]
         Current env: []
+        Remaining Gas: 4611686018427387890
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 7)]
+        Current stack: [(Int 7)]
         Current env: []
+        Remaining Gas: 4611686018427387889
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 7)]
         Current env: []
+        Remaining Gas: 4611686018427387888
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 8)]
+        Current stack: [(Int 8)]
         Current env: []
+        Remaining Gas: 4611686018427387887
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 8)]
         Current env: []
+        Remaining Gas: 4611686018427387886
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 9)]
+        Current stack: [(Int 9)]
         Current env: []
+        Remaining Gas: 4611686018427387885
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 9)]
         Current env: []
+        Remaining Gas: 4611686018427387884
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 10)]
+        Current stack: [(Int 10)]
         Current env: []
+        Remaining Gas: 4611686018427387883
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 10)]
         Current env: []
+        Remaining Gas: 4611686018427387882
       Executing:
         Current Instruction: (CONST 1)
-        Current stack: [(Int 1); (Int 11)]
+        Current stack: [(Int 11)]
         Current env: []
+        Remaining Gas: 4611686018427387881
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 11)]
         Current env: []
+        Remaining Gas: 4611686018427387880
       Executing:
         Current Instruction: RETURN
-        Current stack: [(Int 1); (Int 12)]
-        Current env: [] |}]
+        Current stack: [(Int 12)]
+        Current env: []
+        Remaining Gas: 4611686018427387879 |}]
 
   let%expect_test "trace branching" =
     Vm.intepret
       ~debug:true
-      (Vm.default ())
+      (Vm.make_default ())
       ~remaining_gas:max_int
       ~code:code_branching
       ~stack:[||] ;
@@ -535,55 +575,67 @@ module T = struct
         Current Instruction: (CONST 0)
         Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387902
       Executing:
         Current Instruction: (BRANCHIFNOT 8)
         Current stack: [(Int 0)]
         Current env: []
+        Remaining Gas: 4611686018427387901
       Executing:
         Current Instruction: (CLOSURE 2)
-        Current stack: [(Int 0)]
+        Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387900
       Executing:
         Current Instruction: (CONST 2)
         Current stack: [Closure {jmp_dest = 2; env_pointer = 0}]
         Current env: []
+        Remaining Gas: 4611686018427387899
       Executing:
         Current Instruction: APPLY
         Current stack: [(Int 2); Closure {jmp_dest = 2; env_pointer = 0}]
         Current env: []
+        Remaining Gas: 4611686018427387898
       Executing:
         Current Instruction: (ACCESS 1)
-        Current stack: [(Int 2); Closure {jmp_dest = 13; env_pointer = 0}]
+        Current stack: [Closure {jmp_dest = 13; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387897
       Executing:
         Current Instruction: (CONST 0)
         Current stack: [(Int 2); Closure {jmp_dest = 13; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387896
       Executing:
         Current Instruction: EQINT
         Current stack: [(Int 0); (Int 2); Closure {jmp_dest = 13; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387895
       Executing:
         Current Instruction: (BRANCHIFNOT 2)
-        Current stack: [(Int 0); (Int 0); Closure {jmp_dest = 13; env_pointer = 0}]
-        Current env: [(Int 2)]
-      Executing:
-        Current Instruction: (CONST 0)
         Current stack: [(Int 0); Closure {jmp_dest = 13; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387894
       Executing:
-        Current Instruction: RETURN
-        Current stack: [(Int 0); (Int 0); Closure {jmp_dest = 13; env_pointer = 0}]
+        Current Instruction: (CONST 0)
+        Current stack: [Closure {jmp_dest = 13; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387893
       Executing:
         Current Instruction: RETURN
-        Current stack: [(Int 0); (Int 0)]
-        Current env: [(Int 2)] |}]
+        Current stack: [(Int 0); Closure {jmp_dest = 13; env_pointer = 0}]
+        Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387892
+      Executing:
+        Current Instruction: RETURN
+        Current stack: [(Int 0)]
+        Current env: []
+        Remaining Gas: 4611686018427387891 |}]
 
   let%expect_test "trace closures" =
     Vm.intepret
       ~debug:true
-      (Vm.default ())
+      (Vm.make_default ())
       ~remaining_gas:max_int
       ~code:code2
       ~stack:[||] ;
@@ -593,47 +645,57 @@ module T = struct
         Current Instruction: (CONST 0)
         Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387902
       Executing:
         Current Instruction: (BRANCHIFNOT 4)
         Current stack: [(Int 0)]
         Current env: []
+        Remaining Gas: 4611686018427387901
       Executing:
         Current Instruction: (CLOSURE 2)
-        Current stack: [(Int 0)]
+        Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387900
       Executing:
         Current Instruction: (CONST 2)
         Current stack: [Closure {jmp_dest = 2; env_pointer = 0}]
         Current env: []
+        Remaining Gas: 4611686018427387899
       Executing:
         Current Instruction: APPLY
         Current stack: [(Int 2); Closure {jmp_dest = 2; env_pointer = 0}]
         Current env: []
+        Remaining Gas: 4611686018427387898
       Executing:
         Current Instruction: (ACCESS 1)
-        Current stack: [(Int 2); Closure {jmp_dest = 9; env_pointer = 0}]
+        Current stack: [Closure {jmp_dest = 9; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387897
       Executing:
         Current Instruction: (CONST 1)
         Current stack: [(Int 2); Closure {jmp_dest = 9; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387896
       Executing:
         Current Instruction: IADD
         Current stack: [(Int 1); (Int 2); Closure {jmp_dest = 9; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387895
       Executing:
         Current Instruction: RETURN
-        Current stack: [(Int 1); (Int 3); Closure {jmp_dest = 9; env_pointer = 0}]
+        Current stack: [(Int 3); Closure {jmp_dest = 9; env_pointer = 0}]
         Current env: [(Int 2)]
+        Remaining Gas: 4611686018427387894
       Executing:
         Current Instruction: RETURN
-        Current stack: [(Int 3); (Int 3)]
-        Current env: [(Int 2)] |}]
+        Current stack: [(Int 3)]
+        Current env: []
+        Remaining Gas: 4611686018427387893 |}]
 
   let%expect_test "trace bytes" =
     Vm.intepret
       ~debug:true
-      (Vm.default ())
+      (Vm.make_default ())
       ~remaining_gas:max_int
       ~code:code_str
       ~stack:[||] ;
@@ -643,25 +705,91 @@ module T = struct
         Current Instruction: (CONSTBYTES "Test")
         Current stack: []
         Current env: []
+        Remaining Gas: 4611686018427387902
       Executing:
         Current Instruction: (CONSTBYTES "Test")
         Current stack: [(Bytes "Test")]
         Current env: []
+        Remaining Gas: 4611686018427387897
       Executing:
         Current Instruction: (CONSTBYTES "Test")
         Current stack: [(Bytes "Test"); (Bytes "Test")]
         Current env: []
+        Remaining Gas: 4611686018427387892
       Executing:
         Current Instruction: (CONSTBYTES "Test")
         Current stack: [(Bytes "Test"); (Bytes "Test"); (Bytes "Test")]
         Current env: []
+        Remaining Gas: 4611686018427387887
       Executing:
         Current Instruction: (CONSTBYTES "Test")
         Current stack: [(Bytes "Test"); (Bytes "Test"); (Bytes "Test"); (Bytes "Test")]
         Current env: []
+        Remaining Gas: 4611686018427387882
       Executing:
         Current Instruction: RETURN
         Current stack: [(Bytes "Test"); (Bytes "Test"); (Bytes "Test"); (Bytes "Test");
         (Bytes "Test")]
-        Current env: [] |}]
+        Current env: []
+        Remaining Gas: 4611686018427387877 |}]
+
+  let%expect_test "trace addition" =
+    Vm.intepret
+      ~debug:true
+      (Vm.make_default ())
+      ~remaining_gas:max_int
+      ~code:code_lst
+      ~stack:[||] ;
+    [%expect
+      {|
+      Executing:
+        Current Instruction: (CONST 0)
+        Current stack: []
+        Current env: []
+        Remaining Gas: 4611686018427387902
+      Executing:
+        Current Instruction: (CONST 1)
+        Current stack: [(Int 0)]
+        Current env: []
+        Remaining Gas: 4611686018427387901
+      Executing:
+        Current Instruction: (CONST 2)
+        Current stack: [(Int 1); (Int 0)]
+        Current env: []
+        Remaining Gas: 4611686018427387900
+      Executing:
+        Current Instruction: (CONST 1)
+        Current stack: [(Int 2); (Int 1); (Int 0)]
+        Current env: []
+        Remaining Gas: 4611686018427387899
+      Executing:
+        Current Instruction: MAKE_BLOCK
+        Current stack: [(Int 1); (Int 2); (Int 1); (Int 0)]
+        Current env: []
+        Remaining Gas: 4611686018427387898
+      Executing:
+        Current Instruction: (CONST 3)
+        Current stack: [(List [(Int 1)])]
+        Current env: []
+        Remaining Gas: 4611686018427387895
+      Executing:
+        Current Instruction: (CONST 2)
+        Current stack: [(Int 3); (List [(Int 1)])]
+        Current env: []
+        Remaining Gas: 4611686018427387894
+      Executing:
+        Current Instruction: (CONST 1)
+        Current stack: [(Int 2); (Int 3); (List [(Int 1)])]
+        Current env: []
+        Remaining Gas: 4611686018427387893
+      Executing:
+        Current Instruction: MAKE_BLOCK
+        Current stack: [(Int 1); (Int 2); (Int 3); (List [(Int 1)])]
+        Current env: []
+        Remaining Gas: 4611686018427387892
+      Executing:
+        Current Instruction: RETURN
+        Current stack: [(List [(Int 3); (Int 1)])]
+        Current env: []
+        Remaining Gas: 4611686018427387889 |}]
 end

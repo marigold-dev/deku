@@ -18,16 +18,18 @@ type instr =
   | ISUB
   | EQINT
   | NEQINT
-[@@deriving show]
+(* | CUSTOM *)
+(* [@@deriving show] *)
 
 type state
 
-val default : unit -> state
+val make_default : unit -> state
 
 val intepret :
-  state ->
+  ?dry_run:bool ->
   debug:bool ->
   remaining_gas:int ->
   code:instr array ->
   stack:int array ->
+  state ->
   unit

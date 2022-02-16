@@ -1,5 +1,5 @@
 let b = "Test"
 
-let x b c = b + c
+let x b d c = b :: d :: c
 
-let ress = x 2 3
+let ress = x 2 3 [3]

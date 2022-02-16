@@ -11,7 +11,7 @@ module type Container = sig
 
   val pointer : t -> pointer
 
-  val blit : entry array -> t -> unit
+  val blit : entry array -> t -> int
 
   val set_pointer : t -> value:pointer -> unit
 

@@ -63,11 +63,8 @@ type instr =
   | ISUB
   | EQINT
   | NEQINT
+(* | CUSTOM represents foreign functions, needs a preceeding `Const <num>` tag on the stack *)
 [@@deriving show {with_path = false}]
-
-module Progn = Make (struct
-  type t = instr
-end)
 
 (* [1, 2, 3, 0] : (int * int * int * int) -> [Int 1, Int 2, Int 3, Int 0]
    [1, 2, 3, 0] : int list -> [Cons (1, Cons (3, Nil))]
@@ -77,35 +74,35 @@ end)
 (* TODO: maybe use Obj.magic in the future to remove fetch_and_decode *)
 
 (* TODO: this doesn't work on OCaml 32 bits*)
+(*
+   type program = Progn.t
 
-type program = Progn.t
+   (* TODO: maybe stack should be bigarray to avoid being scanned by GC *)
+   type memory = Memory.t
 
-(* TODO: maybe stack should be bigarray to avoid being scanned by GC *)
-type memory = Memory.t
+   type stack = Stack.t
 
-type stack = Stack.t
-
-type env = Env.t
+   type env = Env.t *)
 
 (* TODO: should we allow JIT? *)
 type state = {
   (* 16-bits, 512kb *)
-  program : program;
-  stack : stack;
-  env : env;
+  stack : Stack.t;
+  env : Env.t;
   (* TODO: benchmark how long it takes *)
-  memory : memory;
+  memory : Memory.t;
+  mutable program_counter : int;
   mutable gas_counter : int; (* TODO: proper abstract type here *)
   mutable extra_args : int;
   mutable debug : bool;
 }
 
-let default () =
+let make_default () =
   {
     (* 16-bits, 512kb , ??? *)
-    program = Progn.make ~default_elem:RETURN ~cap:51000 ();
+    program_counter = 0;
     stack = Stack.make ~default_elem:(-1) ~cap:51000 ();
-    env = Env.make ~default_elem:(-1) ~cap:51000 ();
+    env = Env.make ~default_elem:(-1) ~cap:1000 ();
     (* TODO: benchmark how long it takes *)
     memory = Memory.make ~default_elem:(-1) ~cap:225000 ();
     gas_counter = 0 (* TODO: proper abstract type here *);
@@ -143,7 +140,7 @@ let[@inline always] alloc_clos state offset =
 
 let[@inline always] alloc_marker state =
   let block = Memory.allocate state.memory ~size:2 ~tag:2 in
-  let pc_pointer = Progn.pointer state.program in
+  let pc_pointer = state.program_counter in
   Memory.write_field state.memory ~block ~field:1 ~value:pc_pointer ;
   let env_pointer = Env.pointer state.env in
   Memory.write_field state.memory ~block ~field:2 ~value:env_pointer ;
@@ -155,7 +152,7 @@ let[@inline always] apply_closure state closure =
     Memory.read_field state.memory ~field:1 ~block:closure
   in
   Env.set_pointer state.env ~value:env_pointer ;
-  Progn.set_pointer state.program ~value:program_counter
+  state.program_counter <- program_counter
 
 external bool_to_int : bool -> int = "%identity"
 
@@ -177,8 +174,8 @@ let[@inline always] bytes_to_int_array (buf : bytes) (size : int) dst offs :
 module PP = struct
   type t =
     | Int of int
-    (* | List of t
-       | Pair of (t * t) *)
+    | List of t list
+    | Pair of (t * t)
     | Closure of {jmp_dest : int; env_pointer : int}
     | Bytes of bytes
     | Variant of {tag : int; value : t}
@@ -203,14 +200,35 @@ module PP = struct
         let jmp_dest = Memory.read_field ~block ~field:1 state.memory in
         let env_pointer = Memory.read_field ~block ~field:2 state.memory in
         Closure {jmp_dest; env_pointer}
-    | 0 -> failwith "todo"
-    | 1 -> failwith "todo"
+    | 0 ->
+        let size = Memory.read ~pointer:block state.memory in
+        let items =
+          List.init size (fun x ->
+              Memory.read_field state.memory ~block ~field:x + 1)
+        in
+        List.fold_right
+          (fun x acc -> Pair (go state x, acc))
+          (List.tl items)
+          (go state @@ List.hd items)
+    | 1 ->
+        (* lol, sorry *)
+        let rec traverse state acc ptr =
+          let block = Memory.read_field ~block:ptr ~field:2 state.memory in
+          let tag = Memory.read state.memory ~pointer:(block + 1) in
+          let hd =
+            Memory.read_field ~block:ptr ~field:1 state.memory |> go state
+          in
+          match tag with
+          | 1000 -> hd :: acc |> List.rev
+          | _ -> traverse state (hd :: acc) block
+        in
+        List (traverse state [] block)
     | x ->
-        Printf.printf "%d\n" x ;
-        failwith "todo"
+        Printf.printf "%d\n block: %d\n" x block ;
+        failwith "AAAA!"
 
   let pp_value_stack fmt state =
-    let ptr = Stack.pointer state.stack + 1 in
+    let ptr = Stack.pointer state.stack in
     let to_print = Array.sub (Stack.memory state.stack) 0 ptr in
     let res =
       to_print |> Array.to_list
@@ -221,7 +239,7 @@ module PP = struct
     Format.fprintf fmt "  Current stack: %s\n" ([%show: t list] res)
 
   let pp_value_env fmt state =
-    let ptr = Env.pointer state.env + 1 in
+    let ptr = Env.pointer state.env in
     let to_print = Array.sub (Env.memory state.env) 0 ptr in
     let res =
       to_print |> Array.to_list
@@ -235,9 +253,19 @@ module PP = struct
   let pp_instr fmt instr =
     Format.fprintf fmt "  Current Instruction: %s\n" (show_instr instr)
 
+  let pp_gas fmt gas = Format.fprintf fmt "  Remaining Gas: %d\n" gas
+
   let[@inline always] print state instr =
-    let template = Format.printf "Executing: \n%a%a%a" in
-    template pp_instr instr pp_value_stack state pp_value_env state
+    let template = Format.printf "Executing: \n%a%a%a%a" in
+    template
+      pp_instr
+      instr
+      pp_value_stack
+      state
+      pp_value_env
+      state
+      pp_gas
+      state.gas_counter
 end
 
 exception Out_of_gas
@@ -245,117 +273,133 @@ exception Out_of_gas
 (*
    TODO: memory dump and compact pointers, allocates two arrays (  momory(compacted) * stack(top element which points to the data laid out in memory)  )
 *)
-let extract_result state = ()
+(* let extract_result state out_mem out_stack = () *)
 
-let[@inline always] intepret state ~debug ~remaining_gas ~code ~stack =
+(* let[@inline] read state ~out_stack ~out_mem =
+   let rec fetch_mem state ptr = (state, ptr) in
+   fetch_mem state 0 *)
+
+let rec execute state code =
+  if state.gas_counter < 1 then raise Out_of_gas
+  else (
+    state.gas_counter <- state.gas_counter - 1 ;
+    let isntr = Array.get code state.program_counter in
+    state.program_counter <- state.program_counter + 1 ;
+    let ptr = state.program_counter in
+    if state.debug then PP.print state isntr ;
+    match isntr with
+    | ACCESS offset ->
+        let value = Env.read_offset state.env ~offset in
+        Stack.push state.stack ~data:value ;
+        execute state code
+    | LET ->
+        let value = Stack.pop state.stack in
+        Env.push state.env ~data:value ;
+        execute state code
+    | ENDLET ->
+        Env.tail state.env ;
+        execute state code
+    | CLOSURE offset ->
+        alloc_clos state offset ;
+        execute state code
+    | APPLY ->
+        state.extra_args <- state.extra_args + 1 ;
+        let value = Stack.pop state.stack in
+        let closure = Stack.pop state.stack in
+        alloc_marker state ;
+        apply_closure state closure ;
+        Env.push state.env ~data:value ;
+        execute state code
+    | TAILAPPLY ->
+        let value = Stack.pop state.stack in
+        let closure = Stack.pop state.stack in
+        apply_closure state closure ;
+        Env.push state.env ~data:value ;
+        execute state code
+    | RETURN ->
+        if state.extra_args = 0 then ()
+        else (
+          state.extra_args <- state.extra_args - 1 ;
+          let value = Stack.pop state.stack in
+          let closure = Stack.pop state.stack in
+          apply_closure state closure ;
+          Stack.push state.stack ~data:value ;
+          execute state code)
+    | CONST v ->
+        alloc_int state v ;
+        execute state code
+    | CONSTBYTES b ->
+        let size = Bytes.length b in
+        state.gas_counter <- state.gas_counter - size ;
+        let block = Memory.allocate ~tag:252 ~size state.memory in
+        let offs = block + 3 in
+        bytes_to_int_array b size (Memory.memory state.memory) offs ;
+        Stack.push state.stack ~data:block ;
+        execute state code
+    | MAKE_BLOCK ->
+        let block = Stack.pop state.stack in
+        let tag = Memory.read_field state.memory ~block ~field:1 in
+        let block = Stack.pop state.stack in
+        let size = Memory.read_field state.memory ~block ~field:1 in
+        let block = Memory.allocate state.memory ~size ~tag in
+        state.gas_counter <- state.gas_counter - size ;
+        for idx = 1 to size do
+          let value = Stack.pop state.stack in
+          Memory.write_field state.memory ~field:idx ~block ~value
+        done ;
+        Stack.push state.stack ~data:block ;
+        execute state code
+    | READ_FIELD ->
+        let field = Stack.pop state.stack in
+        let block = Stack.pop state.stack in
+        Stack.push state.stack ~data:block ;
+        let value = Memory.read_field state.memory ~block ~field in
+        Stack.push state.stack ~data:value ;
+        execute state code
+    | WRITE_FIELD ->
+        let value = Stack.pop state.stack in
+        let block = Stack.pop state.stack in
+        let field = Memory.read_field state.memory ~block ~field:1 in
+        let block = Stack.pop state.stack in
+        Stack.push state.stack ~data:block ;
+        Memory.write_field state.memory ~block ~field ~value ;
+        execute state code
+    | BRANCHIFNOT offset ->
+        let block = Stack.pop state.stack in
+        let cond = Memory.read_field ~block ~field:1 state.memory in
+        if Int.equal cond 0 then state.program_counter <- ptr + offset ;
+        execute state code
+    | IADD ->
+        integer_op state ( + ) ;
+        execute state code
+    | IMUL ->
+        integer_op state ( * ) ;
+        execute state code
+    | IDIV ->
+        let[@inline] ( / ) a b =
+          if Int.equal a 0 then raise Division_by_zero else a / b
+        in
+        (* TODO: proper exception *)
+        integer_op state ( / ) ;
+        execute state code
+    | ISUB ->
+        integer_op state ( - ) ;
+        execute state code
+    | EQINT ->
+        integer_op state eqint ;
+        execute state code
+    | NEQINT ->
+        integer_op state neqint ;
+        execute state code)
+
+let[@inline always] intepret ?(dry_run = false) ~debug ~remaining_gas ~code
+    ~stack state =
+  let _ = dry_run in
   state.gas_counter <- remaining_gas ;
-  Progn.set_pointer state.program ~value:0 ;
+  state.program_counter <- 0 ;
   Stack.set_pointer state.stack ~value:0 ;
   Memory.set_pointer state.memory ~value:0 ;
   Env.set_pointer state.env ~value:0 ;
-  Progn.blit code state.program ;
-  Stack.blit stack state.stack ;
+  state.gas_counter <- state.gas_counter - Stack.blit stack state.stack ;
   state.debug <- debug ;
-  let rec execute state =
-    if state.gas_counter < 1 then raise Out_of_gas
-    else (
-      state.gas_counter <- state.gas_counter - 1 ;
-      let isntr = Progn.read_and_increment state.program in
-      if state.debug then PP.print state isntr ;
-      match isntr with
-      | ACCESS offset ->
-          let value = Env.read_offset state.env ~offset in
-          Stack.push state.stack ~data:value ;
-          execute state
-      | LET ->
-          let value = Stack.pop state.stack in
-          Env.push state.env ~data:value ;
-          execute state
-      | ENDLET ->
-          Env.tail state.env ;
-          execute state
-      | CLOSURE offset ->
-          alloc_clos state offset ;
-          execute state
-      | APPLY ->
-          state.extra_args <- state.extra_args + 1 ;
-          let value = Stack.pop state.stack in
-          let closure = Stack.pop state.stack in
-          alloc_marker state ;
-          apply_closure state closure ;
-          Env.push state.env ~data:value ;
-          execute state
-      | TAILAPPLY ->
-          let value = Stack.pop state.stack in
-          let closure = Stack.pop state.stack in
-          apply_closure state closure ;
-          Env.push state.env ~data:value ;
-          execute state
-      | RETURN ->
-          if state.extra_args = 0 then ()
-          else (
-            state.extra_args <- state.extra_args - 1 ;
-            let value = Stack.pop state.stack in
-            let closure = Stack.pop state.stack in
-            apply_closure state closure ;
-            Stack.push state.stack ~data:value ;
-            execute state)
-      | CONST v ->
-          alloc_int state v ;
-          execute state
-      | CONSTBYTES b ->
-          let size = Bytes.length b in
-          let block = Memory.allocate ~tag:252 ~size state.memory in
-          let offs = block + 3 in
-          bytes_to_int_array b size (Memory.memory state.memory) offs ;
-          Stack.push state.stack ~data:block ;
-          execute state
-      | MAKE_BLOCK ->
-          let tag = Stack.pop state.stack in
-          let size = Stack.pop state.stack in
-          let block = Memory.allocate state.memory ~size ~tag in
-          Stack.push state.stack ~data:block ;
-          execute state
-      | READ_FIELD ->
-          let field = Stack.pop state.stack in
-          let block = Stack.pop state.stack in
-          Stack.push state.stack ~data:block ;
-          let value = Memory.read_field state.memory ~block ~field in
-          Stack.push state.stack ~data:value ;
-          execute state
-      | WRITE_FIELD ->
-          let value = Stack.pop state.stack in
-          let field = Stack.pop state.stack in
-          let block = Stack.pop state.stack in
-          Stack.push state.stack ~data:block ;
-          Memory.write_field state.memory ~block ~field ~value ;
-          execute state
-      | BRANCHIFNOT offset ->
-          let block = Stack.pop state.stack in
-          let cond = Memory.read_field ~block ~field:1 state.memory in
-          if Int.equal cond 0 then
-            Progn.set_pointer
-              state.program
-              ~value:(Progn.pointer state.program + offset) ;
-          execute state
-      | IADD ->
-          integer_op state ( + ) ;
-          execute state
-      | IMUL ->
-          integer_op state ( * ) ;
-          execute state
-      | IDIV ->
-          (* TODO: proper exception *)
-          integer_op state ( / ) ;
-          execute state
-      | ISUB ->
-          integer_op state ( - ) ;
-          execute state
-      | EQINT ->
-          integer_op state eqint ;
-          execute state
-      | NEQINT ->
-          integer_op state neqint ;
-          execute state)
-  in
-  execute state
+  execute state code

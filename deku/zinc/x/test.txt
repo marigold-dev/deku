@@ -1,27 +1,33 @@
 (setglobal Test!
   (let
     (b/81 = "Test"
-     x/82 = (function b/84[int] c/85[int] : int (+ b/84 c/85))
-     ress/86 =[int] (apply x/82 2 3))
-    (makeblock 0 b/81 x/82 ress/86)))
+     x/82 =
+       (function b/84 d/85 c/86 (makeblock 0 b/84 (makeblock 0 d/85 c/86)))
+     ress/87 = (apply x/82 2 3 [0: 3 0]))
+    (makeblock 0 b/81 x/82 ress/87)))
 	branch L2
 	restart
-L1:	grab 1
-	acc 1
+L1:	grab 2
+	acc 2
+	push
+	acc 2
+	makeblock 2, 0
 	push
 	acc 1
-	addint
-	return 2
+	makeblock 2, 0
+	return 3
 L2:	const "Test"
 	push
 	closure L1, 0
+	push
+	const [0: 3 0]
 	push
 	const 3
 	push
 	const 2
 	push
-	acc 2
-	apply 2
+	acc 3
+	apply 3
 	push
 	acc 0
 	push
