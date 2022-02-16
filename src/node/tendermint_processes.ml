@@ -307,6 +307,8 @@ let accept_block (_height : CI.height) (round : CI.round)
     let value, _valid_round = CD.MySet.choose valid_set in
     if CI.is_valid global_state value then (
       CD.OutputLog.set dlog height value round;
+      (* Removing now irrelevant data from input_log *)
+      CD.prune msg_log height;
       Some (RestartTendermint (Int64.add height 1L, 0)))
     else
       Some DoNothing in
