@@ -117,6 +117,16 @@ let debug state msg =
   let self = String.sub self (String.length self - 6) 6 in
   prerr_endline ("*** " ^ self ^ "   " ^ msg)
 
+let is_allowed_proposer (_global_state : State.t) (_height : height)
+    (_round : round) (_address : Key_hash.t) =
+  assert false
+
+let i_am_proposer (_global_state : State.t) (_height : height) (_round : round)
+    =
+  assert false
+
+let get_weight (_global_state : State.t) (_address : Key_hash.t) = assert false
+
 (* TODO: increasing timeouts when needed *)
 let proposal_timeout = 5
 let prevote_timeout = 10
