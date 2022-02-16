@@ -77,6 +77,17 @@ let tendermint_step node =
         (* Start new processes and forget about the older ones *)
         (* TODO: this is only valid for the (current) restricted version of Tendermint which does not
            support several cycles/heights running in parallel. *)
+        let network_actions =
+          network_actions
+          |> List.map (fun c_op ->
+                 match c_op with
+                 | ProposalOP (h, _, _, _) -> (c_op, h, height)
+                 | PrevoteOP (h, _, _) -> (c_op, h, height)
+                 | PrecommitOP (h, _, _) -> (c_op, h, height))
+          |> List.filter_map (fun (c_op, h1, h2) ->
+                 match h1 < h2 with
+                 | true -> None
+                 | false -> Some c_op) in
         ([], network_actions, RestartAtHeight height)
       | Some (RestartTendermint (_height, round)) ->
         ([], network_actions, RestartAtRound round)
