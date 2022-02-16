@@ -64,6 +64,10 @@ type ignore =
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
+
+let get_consensus = (ref (fun _ -> assert false) : (unit -> Tendermint.t) ref)
+let set_consensus = (ref (fun _ -> assert false) : (Tendermint.t -> unit) ref)
+
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -162,20 +166,10 @@ let request_previous_blocks state block =
   else if not !pending then (
     pending := true;
     request_protocol_snapshot ())
-let try_to_produce_block state update_state =
-  let%assert () =
-    ( `Not_current_block_producer,
-      is_current_producer state ~key_hash:state.identity.t ) in
-  let block = produce_block state in
-  let signature = sign ~key:state.identity.secret block in
-  let state = append_signature state update_state ~signature ~hash:block.hash in
-  broadcast_block_and_signature state ~block ~signature;
-  Ok ()
 let try_to_sign_block state update_state block =
-  if is_signable state block then (
+  if is_signable state block then
     let signature = sign ~key:state.identity.secret block in
-    broadcast_signature state ~hash:block.hash ~signature;
-    append_signature state update_state ~hash:block.hash ~signature)
+    append_signature state update_state ~hash:block.hash ~signature
   else
     state
 let commit_state_hash state =
@@ -241,7 +235,7 @@ let rec try_to_apply_block state update_state block =
   | Some block ->
     let state = try_to_sign_block state update_state block in
     try_to_apply_block state update_state block
-  | None -> try_to_produce_block state update_state
+  | None -> assert false
 
 and block_added_to_the_pool state update_state block =
   let state =
@@ -362,6 +356,27 @@ let received_consensus_operation state update_state consensus_operation
       { state with pending_operations = operation :: state.pending_operations })
   in
   Ok ()
+
+let received_consensus_step state update_state sender operation =
+  Tendermint_internals.debug state
+    (Printf.sprintf "received consensus step %s"
+       (Tendermint_internals.string_of_op operation));
+  let%ok () =
+    Tendermint.is_valid_consensus_op state operation
+    |> Result.map_error (fun _msg -> `Not_consensus_operation) in
+
+  (* TODO: Tendermint, check if already seen this message? AKA enforce unique in input_log? *)
+  (* TODO: Tendermint: add and check sender signature? *)
+  let consensus = !get_consensus () in
+  let consensus =
+    Tendermint.add_consensus_op consensus update_state sender operation in
+
+  (* Execute the consensus steps *)
+  (* TODO: Tendermint: not sure we should do this here *)
+  let consensus = Tendermint.exec_consensus consensus in
+  !set_consensus consensus;
+  Ok ()
+
 let find_block_by_hash state hash =
   Block_pool.find_block ~hash state.Node.block_pool
 let find_block_level state = state.State.protocol.block_height

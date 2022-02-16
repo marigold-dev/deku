@@ -160,12 +160,6 @@ let clean state update_state block =
       |> state.persist_trusted_membership_change);
   update_state
     { state with trusted_validator_membership_change; pending_operations }
-let broadcast_signature state ~hash ~signature =
-  Lwt.async (fun () -> Networking.broadcast_signature state { hash; signature })
-let broadcast_block_and_signature state ~block ~signature =
-  Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
-      Networking.broadcast_block_and_signature state { block; signature })
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
   let validators = Validators.to_list state.Node.protocol.validators in

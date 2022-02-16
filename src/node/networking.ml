@@ -43,27 +43,35 @@ let broadcast_to_validators endpoint state data =
   |> fun uris -> broadcast_to_list endpoint uris data
 module Signature_spec = struct
   type request = {
+    operation : Tendermint_internals.sidechain_consensus_op;
+    sender : Crypto.Key_hash.t;
     hash : BLAKE2B.t;
+    hash_signature : Signature.t;
     signature : Signature.t;
   }
   [@@deriving yojson]
   type response = unit [@@deriving yojson]
   let path = "/append-signature"
 end
-module Block_and_signature_spec = struct
+
+module Consensus_operation = struct
   type request = {
-    block : Block.t;
+    operation : Tendermint_internals.sidechain_consensus_op;
+    sender : Crypto.Key_hash.t;
     signature : Signature.t;
   }
   [@@deriving yojson]
   type response = unit [@@deriving yojson]
-  let path = "/append-block-and-signature"
+  let path = "/consensus"
 end
+[@deriving yojson]
+
 module Block_by_hash_spec = struct
   type request = { hash : BLAKE2B.t } [@@deriving yojson]
   type response = Block.t option [@@deriving yojson]
   let path = "/block-by-hash"
 end
+
 module Block_level = struct
   type request = unit [@@deriving yojson]
   type response = { level : int64 } [@@deriving yojson]
@@ -149,6 +157,7 @@ module Trusted_validators_membership_change = struct
   type response = unit [@@deriving yojson]
   let path = "/trusted-validators-membership"
 end
+
 let request_block_by_hash = request (module Block_by_hash_spec)
 let request_block_level = request (module Block_level)
 let request_protocol_snapshot = request (module Protocol_snapshot)
@@ -156,8 +165,8 @@ let request_nonce = request (module Request_nonce)
 let request_register_uri = request (module Register_uri)
 let request_withdraw_proof = request (module Withdraw_proof)
 let broadcast_signature = broadcast_to_validators (module Signature_spec)
-let broadcast_block_and_signature =
-  broadcast_to_validators (module Block_and_signature_spec)
+let broadcast_consensus_op =
+  broadcast_to_validators (module Consensus_operation)
 let broadcast_user_operation_gossip =
   broadcast_to_validators (module User_operation_gossip)
 let broadcast_user_operation_gossip_to_list =
