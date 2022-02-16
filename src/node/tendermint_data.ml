@@ -77,7 +77,7 @@ let empty () : input_log =
 let add (input_log : input_log) (index : index) (c : content) =
   match c with
   | Timeout ->
-    Hashtbl.add input_log.timeouts index c;
+    Hashtbl.replace input_log.timeouts index c;
     input_log
   | c ->
     let previous =
@@ -86,6 +86,18 @@ let add (input_log : input_log) (index : index) (c : content) =
       | None -> [] in
     Hashtbl.replace input_log.msg_log index (c :: previous);
     input_log
+
+let remove (input_log : input_log) (index : index) =
+  Hashtbl.remove input_log.msg_log index;
+  Hashtbl.remove input_log.timeouts index
+
+let prune (input_log : input_log) (height : height) =
+  let _ =
+    [Proposal; Prevote; Precommit]
+    (* Should we make sure all h < height are emptied here? *)
+    |> List.map (fun step -> (height, step))
+    |> List.map (fun index -> remove input_log index) in
+  ()
 
 let map_option f ls =
   let rec aux = function
