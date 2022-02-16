@@ -79,13 +79,16 @@ let add (input_log : input_log) (index : index) (c : content) =
   | Timeout ->
     Hashtbl.replace input_log.timeouts index c;
     input_log
-  | c ->
+  | c -> (
     let previous =
       match Hashtbl.find_opt input_log.msg_log index with
       | Some ls -> ls
       | None -> [] in
-    Hashtbl.replace input_log.msg_log index (c :: previous);
-    input_log
+    match List.find_opt (fun elem -> elem = c) previous with
+    | Some _ -> input_log (* Do not add same content twice *)
+    | None ->
+      Hashtbl.replace input_log.msg_log index (c :: previous);
+      input_log)
 
 let remove (input_log : input_log) (index : index) =
   Hashtbl.remove input_log.msg_log index;
