@@ -117,7 +117,18 @@ let is_valid_consensus_op state consensus_op =
   else
     ok ()
 
-let broadcast_op _state _consensus_op = assert false
+let broadcast_op state consensus_op =
+  let node_address = state.State.identity.t in
+  let node_state = state in
+  let s1 = string_of_op consensus_op in
+  let s2 = Crypto.Key_hash.to_string node_address in
+  let hash = Crypto.BLAKE2B.hash (s1 ^ s2) in
+  let signature =
+    Protocol.Signature.sign ~key:node_state.State.identity.secret hash in
+  Lwt.async (fun () ->
+      let%await () = Lwt_unix.sleep 1.0 in
+      Networking.broadcast_consensus_op node_state
+        { operation = consensus_op; sender = node_address; signature })
 
 let add_consensus_op node _update_state sender op =
   let input_log = node.input_log in

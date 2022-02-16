@@ -6,6 +6,41 @@ open Bin_common
 let ignore_some_errors = function
   | Error #Flows.ignore -> Ok ()
   | v -> v
+let print_error err =
+  let open Format in
+  (match err with
+  | `Added_block_has_lower_block_height ->
+    eprintf "Added block has lower block height"
+  | `Added_block_not_signed_enough_to_desync ->
+    eprintf "Added_block_not_signed_enough_to_desync"
+  | `Added_signature_not_signed_enough_to_request ->
+    eprintf "Added_signature_not_signed_enough_to_request"
+  | `Already_known_block -> eprintf "Already_known_block"
+  | `Already_known_signature -> eprintf "Already_known_signature"
+  | `Block_not_signed_enough_to_apply ->
+    eprintf "Block_not_signed_enough_to_apply"
+  | `Failed_to_verify_payload -> eprintf "Failed to verify payload signature"
+  | `Invalid_address_on_main_operation ->
+    eprintf "Invalid_address_on_main_operation"
+  | `Invalid_block string -> eprintf "Invalid_block(%s)" string
+  | `Invalid_block_when_applying -> eprintf "Invalid_block_when_applying"
+  | `Invalid_nonce_signature -> eprintf "Invalid_nonce_signature"
+  | `Invalid_signature_author -> eprintf "Invalid_signature_author"
+  | `Invalid_signature_for_this_hash ->
+    eprintf "Invalid_signature_for_this_hash"
+  | `Signed_by_unauthorized_validator ->
+    eprintf "Signed_by_unauthorized_validator"
+  | `Consensus_not_reached_yet -> eprintf "Consensus_not_reached_yet"
+  | `Invalid_state_root_hash -> eprintf "Invalid_state_root_hash"
+  | `Not_current_block_producer -> eprintf "Not_current_block_producer"
+  | `Not_a_json -> eprintf "Invalid json"
+  | `Not_a_valid_request err -> eprintf "Invalid request: %s" err
+  | `Pending_blocks -> eprintf "Pending_blocks"
+  | `Unknown_uri -> eprintf "Unknown_uri"
+  | `Not_a_user_opertaion -> eprintf "Not_a_user_opertaion"
+  | `Not_consensus_operation -> eprintf "Not_consensus_operation"
+  | `Invalid_signature -> eprintf "Invalid_signature");
+  eprintf "\n%!"
 let update_state state =
   Server.set_state state;
   state
@@ -26,21 +61,21 @@ let handle_request (type req res)
         let response = E.response_to_yojson response in
         await (Response.of_json ~status:`OK response)
       | Error err ->
-        Flows.print_error err;
+        print_error err;
         await (Response.make ~status:`Internal_server_error ()))
-let handle_received_block_and_signature =
+
+(** Consensus step as defined by Tendermint. *)
+let handle_receive_consensus_step =
   handle_request
-    (module Networking.Block_and_signature_spec)
+    (module Networking.Consensus_operation)
     (fun update_state request ->
       let open Flows in
       let%ok () =
-        received_block (Server.get_state ()) update_state request.block
-        |> ignore_some_errors in
-      let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
-        |> ignore_some_errors in
+        received_consensus_step (Server.get_state ()) update_state
+          request.sender request.operation in
+
       Ok ())
+
 let handle_received_signature =
   handle_request
     (module Networking.Signature_spec)
@@ -128,7 +163,6 @@ let node folder =
     App.empty
     |> App.port (Node.Server.get_port () |> Option.get)
     |> handle_block_level
-    |> handle_received_block_and_signature
     |> handle_received_signature
     |> handle_block_by_hash
     |> handle_protocol_snapshot
@@ -136,6 +170,7 @@ let node folder =
     |> handle_register_uri
     |> handle_receive_user_operation_gossip
     |> handle_receive_consensus_operation
+    |> handle_receive_consensus_step
     |> handle_withdraw_proof
     |> handle_ticket_balance
     |> handle_trusted_validators_membership
