@@ -337,7 +337,7 @@ module Consensus = struct
           (Micheline.Prim
             ( _,
               Michelson.Michelson_v1_primitives.D_Pair,
-              [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _],
+              [Prim (_, D_Pair, [_; _; Seq (_, key_hashes)], _); _; _],
               _ )) ->
         List.fold_left_ok
           (fun acc k ->
