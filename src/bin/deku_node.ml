@@ -40,7 +40,6 @@ let handle_receive_consensus_step =
       let%ok () =
         received_consensus_step (Server.get_state ()) update_state
           request.sender request.operation in
-
       Ok ())
 
 let handle_received_precommit_block =

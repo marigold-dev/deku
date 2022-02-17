@@ -364,8 +364,10 @@ let start_consensus node_folder =
   let%await () =
     let open Networking in
     let sender = Key_hash.of_key identity.key in
-    let signature = Block.sign ~key:identity.secret block in
-    (* Wrong signature but not important here *)
+    let s1 = Node.Tendermint_internals.string_of_op operation in
+    let s2 = Crypto.Key_hash.to_string address in
+    let hash = Crypto.BLAKE2B.hash (s1 ^ s2) in
+    let signature = Protocol.Signature.sign ~key:state.identity.secret hash in
     broadcast_to_list
       (module Networking.Consensus_operation)
       validators_uris
