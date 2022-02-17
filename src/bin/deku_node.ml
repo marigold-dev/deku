@@ -125,7 +125,6 @@ let node folder =
   Dream.run ~port
   @@ Dream.router
        [
-         handle_received_block_and_signature;
          handle_block_level;
          handle_received_block_and_signature;
          handle_received_signature;
