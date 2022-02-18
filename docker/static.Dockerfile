@@ -22,8 +22,8 @@ RUN esy build
 RUN esy build_static
 
 # Copy the static binaries to a known location
-RUN esy cp "#{self.target_dir / 'default' / 'bin' / 'sidecli.exe'}" sidecli.exe && \
-    esy cp "#{self.target_dir / 'default' / 'bin' / 'deku_node.exe'}" deku_node.exe
+RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'sidecli.exe'}" sidecli.exe && \
+    esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_node.exe'}" deku_node.exe
 RUN strip ./deku_node.exe && strip ./sidecli.exe
 
 FROM scratch as runtime
