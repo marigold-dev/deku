@@ -1,6 +1,7 @@
 open Crypto
 type t [@@deriving yojson]
-type receipt = Receipt_tezos_withdraw of Ledger.Handle.t [@@deriving yojson]
+type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
+[@@deriving yojson]
 val empty : t
 val ledger : t -> Ledger.t
 val hash : t -> BLAKE2B.t

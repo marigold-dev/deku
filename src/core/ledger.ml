@@ -14,7 +14,7 @@ module Address_and_ticket_map = struct
   let find_opt address ticket = Map.find_opt { address; ticket }
   let add address ticket = Map.add { address; ticket }
 end
-module Handle = struct
+module Withdrawal_handle = struct
   type t = {
     hash : BLAKE2B.t;
     id : int;
@@ -29,17 +29,20 @@ module Handle = struct
       ~amount:(Z.of_int (Amount.to_int amount))
       ~ticketer ~data
 end
-module Handle_tree = Incremental_patricia.Make (struct
-  type t = Handle.t [@@deriving yojson]
-  let hash t = t.Handle.hash
+module Withdrawal_handle_tree = Incremental_patricia.Make (struct
+  type t = Withdrawal_handle.t [@@deriving yojson]
+  let hash t = t.Withdrawal_handle.hash
 end)
 type t = {
   ledger : Address_and_ticket_map.t;
-  handles : Handle_tree.t;
+  withdrawal_handles : Withdrawal_handle_tree.t;
 }
 [@@deriving yojson]
 let empty =
-  { ledger = Address_and_ticket_map.empty; handles = Handle_tree.empty }
+  {
+    ledger = Address_and_ticket_map.empty;
+    withdrawal_handles = Withdrawal_handle_tree.empty;
+  }
 let balance address ticket t =
   Address_and_ticket_map.find_opt address ticket t.ledger
   |> Option.value ~default:Amount.zero
@@ -60,7 +63,7 @@ let transfer ~sender ~destination amount ticket t =
         |> Address_and_ticket_map.add sender ticket (sender_balance - amount)
         |> Address_and_ticket_map.add destination ticket
              (destination_balance + amount);
-      handles = t.handles;
+      withdrawal_handles = t.withdrawal_handles;
     }
 let deposit destination amount ticket t =
   let open Amount in
@@ -70,30 +73,34 @@ let deposit destination amount ticket t =
       t.ledger
       |> Address_and_ticket_map.add destination ticket
            (destination_balance + amount);
-    handles = t.handles;
+    withdrawal_handles = t.withdrawal_handles;
   }
 let withdraw ~sender ~destination amount ticket t =
   let open Amount in
   let owner = destination in
   let sender_balance = balance sender ticket t in
   let%ok () = assert_available ~sender:sender_balance ~amount in
-  let handles, handle =
-    Handle_tree.add
+  let withdrawal_handles, handle =
+    Withdrawal_handle_tree.add
       (fun id ->
-        let hash = Handle.hash ~id ~owner ~amount ~ticket in
+        let hash = Withdrawal_handle.hash ~id ~owner ~amount ~ticket in
         { id; hash; owner; amount; ticket })
-      t.handles in
+      t.withdrawal_handles in
   let t =
     {
       ledger =
         t.ledger
         |> Address_and_ticket_map.add sender ticket (sender_balance - amount);
-      handles;
+      withdrawal_handles;
     } in
   Ok (t, handle)
-let handles_find_proof handle t =
-  match Handle_tree.find handle.Handle.id t.handles with
+let withdrawal_handles_find_proof handle t =
+  match
+    Withdrawal_handle_tree.find handle.Withdrawal_handle.id t.withdrawal_handles
+  with
   | None -> assert false
   | Some (proof, _) -> proof
-let handles_find_proof_by_id key t = Handle_tree.find key t.handles
-let handles_root_hash t = Handle_tree.hash t.handles
+let withdrawal_handles_find_proof_by_id key t =
+  Withdrawal_handle_tree.find key t.withdrawal_handles
+let withdrawal_handles_root_hash t =
+  Withdrawal_handle_tree.hash t.withdrawal_handles
