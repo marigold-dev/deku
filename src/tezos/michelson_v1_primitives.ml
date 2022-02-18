@@ -332,7 +332,7 @@ let prim_encoding =
          ("READ_TICKET", I_READ_TICKET);
          ("SPLIT_TICKET", I_SPLIT_TICKET);
          ("JOIN_TICKETS", I_JOIN_TICKETS);
-         ("GET_AND_UPDATE", I_GET_AND_UPDATE);
+         ("GET_AND_UPDATE", I_GET_AND_UPDATE)
          (* New instructions must be added here, for backward compatibility of the encoding. *)
-         (* Keep the comment above at the end of the list *)
+         (* Keep the comment above at the end of the list *);
        ]

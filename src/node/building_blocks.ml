@@ -86,6 +86,7 @@ let is_signable state block =
   && all_operations_are_trusted
   && block_has_signable_state_root_hash ~current_time state block
 let sign ~key block = Block.sign ~key block
+
 let should_start_new_epoch last_state_root_update current_time =
   let avoid_jitter = 1.0 in
   current_time -. last_state_root_update -. avoid_jitter
@@ -100,6 +101,7 @@ let should_start_new_epoch last_state_root_update current_time =
     \    (see [Protocol.apply]).\n\n\
     \    The block producer uses this function to determine when to send a\n\
     \    block with an updated state root hash.\n"]
+
 let produce_block state =
   let start_new_epoch =
     should_start_new_epoch state.Node.protocol.last_state_root_update

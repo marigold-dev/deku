@@ -21,6 +21,7 @@ module Consensus : sig
     unit Lwt.t
     [@@ocaml.doc
       " ~signatures should be in the same order as the old validators "]
+
   type transaction =
     | Deposit          of {
         ticket : Ticket_id.t;
