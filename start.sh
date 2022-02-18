@@ -8,7 +8,7 @@ deku_cli () {
 }
 
 deku_node () {
-  eval dune exec src/bin/deku_node.exe -- '"$@"'
+  ./_build/default/src/bin/deku_node.exe "$@"
 }
 
 VALIDATORS=(0 1 2)

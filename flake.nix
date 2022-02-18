@@ -13,7 +13,7 @@
         devShell = (pkgs.mkShell {
           shellHook = ''
             npm install
-            export PATH="node_modules/.bin:_build/default/bin:$PATH"
+            export PATH="node_modules/.bin:_build/default/src/bin:$PATH"
           '';
 
           packages = with pkgs.ocaml-ng.ocamlPackages_multicore; [
@@ -30,11 +30,11 @@
             ppx_deriving
             ppx_deriving_yojson
             lwt
+            dream
             mirage-crypto
             mirage-crypto-pk
             mirage-crypto-rng
             mirage-crypto-ec
-            opium
             piaf
             mrmime
             hex

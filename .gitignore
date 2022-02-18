@@ -1,4 +1,5 @@
 _esy
+_build
 node_modules
 data
 *.install

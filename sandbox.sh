@@ -2,9 +2,6 @@
 
 set -e
 
-LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-export LD_LIBRARY_PATH
-
 RPC_NODE=http://localhost:20000
 
 # This secret key never changes.
