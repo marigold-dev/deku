@@ -2,7 +2,7 @@
   description = "Deku development environment";
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.ocaml-overlays.url = "github:anmonteiro/nix-overlays/ulrikstrid/deku-exploration";
+  inputs.ocaml-overlays.url = "github:anmonteiro/nix-overlays";
   inputs.ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = { self, nixpkgs, flake-utils, ocaml-overlays }:
@@ -27,7 +27,6 @@
           ];
 
           propagatedBuildInputs = with pkgs.ocaml-ng.ocamlPackages_multicore; [
-            reason
             ppx_deriving
             ppx_deriving_yojson
             lwt
@@ -46,9 +45,7 @@
             secp256k1-internal
             bigstring
             domainslib
-            reason-native.rely
             utop
-            rtop
           ];
         });
       }
