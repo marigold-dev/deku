@@ -133,7 +133,7 @@ end
 module Memory : sig
   include Container with type entry := int
 
-  val allocate : t -> size:pointer -> tag:pointer -> pointer
+  val allocate : t -> size:pointer -> pointer
 
   val read_field : t -> block:pointer -> field:pointer -> int
 
@@ -143,18 +143,17 @@ end = struct
     type t = int
   end)
 
-  let[@inline always] allocate (t : t) ~size ~tag =
+  let[@inline always] allocate (t : t) ~size =
     let point = t.pointer in
     Array.set t.memory point size ;
-    Array.set t.memory (point + 1) tag ;
-    t.pointer <- point + (size + 3) ;
+    t.pointer <- point + (size + 2) ;
     point
 
   let[@inline always] read_field (t : t) ~block ~field =
-    let dst = block + field + 1 in
+    let dst = block + field in
     Array.get t.memory dst
 
   let[@inline always] write_field (t : t) ~block ~field ~value =
-    let dst = block + field + 1 in
+    let dst = block + field in
     Array.set t.memory dst value
 end

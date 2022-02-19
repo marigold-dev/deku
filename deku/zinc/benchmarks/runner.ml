@@ -207,7 +207,6 @@ module Executor : Zinc_interpreter.Dummy.Executor = struct
 end
 
 open Caml
-open Vm
 
 let code =
   let open Vm in
@@ -268,13 +267,13 @@ let code_str =
 let s = Vm.make_default ()
 
 module Counter_toy_no_alias = struct
-  type instr = IADD | PUSH of int | HALT
+  type instr = IADDD | PUSH of int | HALT
 
   type instrs = instr array
 
   let code =
     let l = List.init 25000 (fun _ -> 1) in
-    let l = List.concat_map (fun x -> [IADD; PUSH x]) l in
+    let l = List.concat_map (fun x -> [IADDD; PUSH x]) l in
     Array.of_list ([PUSH 1; PUSH 1] @ l @ [HALT])
 
   exception Out_of_bound_write
@@ -293,7 +292,7 @@ module Counter_toy_no_alias = struct
     let instr = read2 instrs instr_pointer in
     let instr_pointer = instr_pointer + 1 in
     match instr with
-    | IADD ->
+    | IADDD ->
         let fst = read stack stack_pointer in
         let stack_pointer = stack_pointer - 1 in
         let snd = read stack stack_pointer in

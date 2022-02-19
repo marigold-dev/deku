@@ -1,33 +1,57 @@
 (setglobal Test!
   (let
-    (b/81 = "Test"
-     x/82 =
-       (function b/84 d/85 c/86 (makeblock 0 b/84 (makeblock 0 d/85 c/86)))
-     ress/87 = (apply x/82 2 3 [0: 3 0]))
-    (makeblock 0 b/81 x/82 ress/87)))
-	branch L2
+    (add/81 = (function a/83[int] b/84[int] : int (+ a/83 b/84))
+     dcr/85 = (function a/87[int] b/88[int] : int (- a/87 b/88))
+     main/93 =
+       (function parameter/95 storage/96[int] : int
+         (switch* parameter/95
+          case int 0: 0
+          case tag 0: (apply add/81 (field 0 parameter/95) storage/96)
+          case tag 1: (apply dcr/85 (field 0 parameter/95) storage/96))))
+    (makeblock 0 add/81 dcr/85 main/93)))
+	branch L4
 	restart
-L1:	grab 2
-	acc 2
-	push
-	acc 2
-	makeblock 2, 0
+L1:	grab 1
+	acc 0
+	switch 7/ 6 5
+L7:	const 0
+	return 2
+L6:	acc 1
 	push
 	acc 1
-	makeblock 2, 0
-	return 3
-L2:	const "Test"
+	getfield 0
 	push
-	closure L1, 0
+	envacc 2
+	appterm 2, 4
+L5:	acc 1
 	push
-	const [0: 3 0]
+	acc 1
+	getfield 0
 	push
-	const 3
+	envacc 3
+	appterm 2, 4
+	restart
+L2:	grab 1
+	acc 1
 	push
-	const 2
+	acc 1
+	subint
+	return 2
+	restart
+L3:	grab 1
+	acc 1
 	push
-	acc 3
-	apply 3
+	acc 1
+	addint
+	return 2
+L4:	closure L3, 0
+	push
+	closure L2, 0
+	push
+	acc 0
+	push
+	acc 2
+	closure L1, 2
 	push
 	acc 0
 	push

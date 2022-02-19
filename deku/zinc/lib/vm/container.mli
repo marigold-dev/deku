@@ -45,7 +45,7 @@ module Stack : Container with type entry := int
 module Memory : sig
   include Container with type entry := int
 
-  val allocate : t -> size:pointer -> tag:pointer -> pointer
+  val allocate : t -> size:pointer -> pointer
 
   val read_field : t -> block:pointer -> field:pointer -> pointer
 
