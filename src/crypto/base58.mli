@@ -48,6 +48,8 @@ module Prefix : sig
   val ed25519_signature : string
   val secp256k1_signature : string
   val p256_signature : string
+
+  val chain_id : string
 end
 
 module Alphabet : sig
