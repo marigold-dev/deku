@@ -47,6 +47,7 @@
     "@opam/data-encoding": "*"
   },
   "devDependencies": {
+    "@opam/core_bench": "*",
     "prettier": "^2.3.2",
     "@opam/ocaml-lsp-server": "1.10.1",
     "@opam/ocamlformat": "0.20.1",
@@ -106,7 +107,7 @@
     "@opam/biniou": "EduardoRFS/biniou:biniou.opam#b5f099b4ad594e68383e55ffde6d296439d341b8",
     "@opam/ppx_hash": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -114,7 +115,7 @@
     },
     "@opam/ppx_assert": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -122,7 +123,7 @@
     },
     "@opam/ppx_base": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }

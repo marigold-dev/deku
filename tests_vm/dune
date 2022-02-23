@@ -1,0 +1,10 @@
+(library
+ (name tests_vm)
+ (libraries vm)
+ (inline_tests)
+ (preprocess
+  (pps
+   ppx_inline_test
+   ppx_deriving.show
+   ppx_deriving_yojson
+   ppx_deriving.eq)))
