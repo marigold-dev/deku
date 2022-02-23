@@ -2,15 +2,12 @@ open Crypto
 
 (* TODO: operation here means Manager_operation *)
 
-type parameters = {
-  entrypoint : string;
-  (* WARNING: not lazy, only use with trusted communication *)
-  value : Michelson.t;
-}
 type transaction = {
   amount : Tez.t;
   destination : Address.t;
-  parameters : parameters option;
+  entrypoint : string;
+  (* WARNING: not lazy, only use with trusted communication *)
+  value : Michelson.t;
 }
 
 type content = Transaction of transaction
