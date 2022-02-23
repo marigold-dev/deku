@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "ocaml": "4.12.",
-    "@opam/dune": "*",
+    "@opam/dune": "~2.9.3",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/lwt": "*",
