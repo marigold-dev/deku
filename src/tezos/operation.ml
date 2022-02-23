@@ -5,9 +5,7 @@ let () = Printexc.record_backtrace true
 
 type parameters = {
   entrypoint : string;
-  value :
-    Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
-    Data_encoding.lazy_t;
+  value : Michelson.t;
 }
 type transaction = {
   amount : Tez.t;
@@ -74,7 +72,7 @@ let encoding =
         (opt "parameters"
            (obj2
               (req "entrypoint" entrypoint_encoding)
-              (req "value" Michelson.lazy_expr_encoding)))
+              (req "value" Michelson.expr_encoding)))
 
     let encoding =
       conv

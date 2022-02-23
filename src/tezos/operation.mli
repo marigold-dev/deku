@@ -4,7 +4,8 @@ open Crypto
 
 type parameters = {
   entrypoint : string;
-  value : Michelson.t Data_encoding.lazy_t;
+  (* WARNING: not lazy, only use with trusted communication *)
+  value : Michelson.t;
 }
 type transaction = {
   amount : Tez.t;
