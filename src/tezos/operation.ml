@@ -3,16 +3,11 @@ open Data_encoding
 
 let () = Printexc.record_backtrace true
 
-type parameters = {
-  entrypoint : string;
-  value :
-    Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
-    Data_encoding.lazy_t;
-}
 type transaction = {
   amount : Tez.t;
   destination : Address.t;
-  parameters : parameters option;
+  entrypoint : string;
+  value : Michelson.t;
 }
 type content = Transaction of transaction
 type t = {
@@ -74,22 +69,23 @@ let encoding =
         (opt "parameters"
            (obj2
               (req "entrypoint" entrypoint_encoding)
-              (req "value" Michelson.lazy_expr_encoding)))
+              (req "value" Michelson.expr_encoding)))
 
     let encoding =
       conv
-        (fun { amount; destination; parameters } ->
+        (fun { amount; destination; entrypoint; value } ->
           let parameters =
-            match parameters with
-            | Some { entrypoint; value } -> Some (entrypoint, value)
-            | None -> None in
+            if String.equal entrypoint "default" && Michelson.is_unit value then
+              None
+            else
+              Some (entrypoint, value) in
           (amount, destination, parameters))
         (fun (amount, destination, parameters) ->
-          let parameters =
+          let entrypoint, value =
             match parameters with
-            | Some (entrypoint, value) -> Some { entrypoint; value }
-            | None -> None in
-          { amount; destination; parameters })
+            | Some (entrypoint, value) -> (entrypoint, value)
+            | None -> ("default", Michelson.unit) in
+          { amount; destination; entrypoint; value })
         encoding
 
     let tag = 108

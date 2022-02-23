@@ -577,46 +577,80 @@ describe("operation_hash", ({test, _}) => {
   });
 });
 describe("operation forging", ({test, _}) => {
-  test("same result as taquito", ({expect, _}) => {
-    open Tezos.Operation;
+  open Tezos;
+  open Operation;
+  let forge_transaction =
+      (
+        ~branch,
+        ~fee,
+        ~gas_limit,
+        ~storage_limit,
+        ~amount,
+        ~destination,
+        ~source,
+        ~counter,
+        ~secret,
+        ~entrypoint,
+        ~value,
+      ) => {
+    let branch = Block_hash.of_string(branch) |> Option.get;
+    let fee = Tez.of_mutez(fee) |> Option.get;
+    let gas_limit = Gas.of_int(gas_limit) |> Option.get;
+    let storage_limit = Z.of_int(storage_limit);
+    let amount = Tez.of_mutez(amount) |> Option.get;
+    let destination = Address.of_string(destination) |> Option.get;
+    let source = Key_hash.of_string(source) |> Option.get;
+    let counter = Z.of_int(counter);
 
-    let forged_bytes = {
-      let branch =
-        Block_hash.of_string(
-          "BLBQQXyZ1qTwxZiT5FkJwvKj4YnCmx6xhqnhgaZg1Z13aQDJiCk",
-        )
-        |> Option.get;
-      let fee = Tez.of_mutez(443L) |> Option.get;
-      let gas_limit = Gas.of_int(1520) |> Option.get;
-      let storage_limit = Z.of_int(0);
-      let amount = Tez.of_mutez(2000000L) |> Option.get;
-      let destination =
-        Address.of_string("tz1ULf5uGJXefx8c8iLfHfuW1doMPpVicg7u")
-        |> Option.get;
-      let source =
-        Key_hash.of_string("tz1M6iKVFN8RhHjVSL3oF75nF2FJ1yMkrk5t")
-        |> Option.get;
-      let counter = Z.of_int(3305389);
-
-      let secret =
-        Secret.of_string(
-          "edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd",
-        )
-        |> Option.get;
-      let operation = {
-        source,
-        fee,
-        counter,
-        content: Transaction({amount, destination, parameters: None}),
-        gas_limit,
-        storage_limit,
-      };
-      Tezos.Operation.forge(~secret, ~branch, ~operations=[operation]);
+    let secret = Secret.of_string(secret) |> Option.get;
+    let operation = {
+      source,
+      fee,
+      counter,
+      content: Transaction({amount, destination, entrypoint, value}),
+      gas_limit,
+      storage_limit,
     };
+    Tezos.Operation.forge(~secret, ~branch, ~operations=[operation]);
+  };
+  test("same result as taquito", ({expect, _}) => {
+    let forged_bytes =
+      forge_transaction(
+        ~branch="BLBQQXyZ1qTwxZiT5FkJwvKj4YnCmx6xhqnhgaZg1Z13aQDJiCk",
+        ~fee=443L,
+        ~gas_limit=1520,
+        ~storage_limit=0,
+        ~amount=2000000L,
+        ~destination="tz1ULf5uGJXefx8c8iLfHfuW1doMPpVicg7u",
+        ~source="tz1M6iKVFN8RhHjVSL3oF75nF2FJ1yMkrk5t",
+        ~counter=3305389,
+        ~secret="edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd",
+        ~entrypoint="default",
+        ~value=Michelson.unit,
+      );
 
     let taquito_forged_bytes = "3d95683f0d29a6deb044f4ecd86efd9cbae6b373b7b9d7c2db16456783e664566c001004051072b588b39e25b9f4dbf4673abcd63147bb03addfc901f00b0080897a00005f70062003e798791cb04f51bcec1d3358ac64a600468a797b657cff8b585c18cb599443d7c0982220cfa9231270138c7a3e0996d8ea42a2912d51c44681877b2d3a3e8051ebd1498305f8f73cf68967f60349fc00";
     expect.string(forged_bytes).toEqual(taquito_forged_bytes);
-  })
+  });
+  test("parameter unit and entrypoint default", ({expect, _}) => {
+    let forged_bytes =
+      forge_transaction(
+        ~branch="BMb1r7vPdSkTb8ACDpuk4vKXPqEm6knqKjEzqpNj8Prxb2KWMP3",
+        ~fee=420L,
+        ~gas_limit=1303,
+        ~storage_limit=0,
+        ~amount=0L,
+        ~destination="KT1GAr6WWLeavRVHgxEJq1F7tNLzavCLu9YB",
+        ~source="tz1M6iKVFN8RhHjVSL3oF75nF2FJ1yMkrk5t",
+        ~counter=3305396,
+        ~secret="edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd",
+        ~entrypoint="default",
+        ~value=Michelson.unit,
+      );
+
+    let taquito_forged_bytes = "f6e43992b2f45aedbfdc7f5f6a21aa68c99973afffa0ddbe8b98e33672dec6396c001004051072b588b39e25b9f4dbf4673abcd63147a403b4dfc901970a000001533ace00d71497d23fdac2a8809bb1e9df14c579000048a432efc5ef0e700c2f696957996e90194787995d43826b18ade1823d05857f35787f4e7a223d3ea226f22b1809ee56a9046bd313f547e3746fb46bc8ed3803";
+    expect.string(forged_bytes).toEqual(taquito_forged_bytes);
+  });
 });
 describe("pack", ({test, _}) => {
   open Pack;
