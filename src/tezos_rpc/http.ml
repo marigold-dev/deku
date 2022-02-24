@@ -39,6 +39,9 @@ let http_get ~node_uri ~path ~of_yojson =
 let http_post ~node_uri ~path ~of_yojson ~data =
   let data = Yojson.Safe.to_string data in
   http_request ~node_uri ~path ~method_:POST of_yojson data
+let http_post_data_encoding ~node_uri ~path ~of_yojson ~data =
+  let data = Data_encoding.Json.to_string data in
+  http_request ~node_uri ~path ~method_:POST of_yojson data
 
 (* The two functions below, make_lazy_lexbuf and lazy_json_from_stream
    exists to provide a way to continuously transform an string Lwt_stream into
