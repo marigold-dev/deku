@@ -58,9 +58,21 @@ let listen_to_blocks () =
       stream
   | Error err -> failwith_err err
 
+let fetch_block_header ~block_hash () =
+  let open Tezos_rpc.Fetch_block_header in
+  let%await result = execute ~node_uri ~chain:None ~block_hash in
+  (match result with
+  | Ok header ->
+    Format.printf "header.hash: %s, header.level: %ld\n%!"
+      (Block_hash.to_string header.hash)
+      header.level
+  | Error err -> failwith_err err);
+  Lwt.return_unit
+
 let tests =
   [ (* fetch_block_operations ~block_hash:None; *)
     (* listen_to_chain_heads; *)
-    (* listen_to_blocks; *) ]
+    (* listen_to_blocks; *)
+    (* fetch_block_header ~block_hash:None; *) ]
 
 let () = Lwt_list.iter_s (fun test -> test ()) tests |> Lwt_main.run
