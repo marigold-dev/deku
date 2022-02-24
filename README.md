@@ -38,7 +38,7 @@ esy test
 
 ### Running a sidechain
 
-For convenient local development, we have a included two components:
+For convenient local development, we have included two components:
 - A `docker-compose.yml` file that setups a local Tezos network
   using [Flextesa](https://tezos.gitlab.io/flextesa/) running in Docker.
   Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance
