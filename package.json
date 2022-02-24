@@ -43,20 +43,19 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "*",
     "@opam/bigstring": "*",
-    "@opam/domainslib": "0.3.1",
+    "@opam/domainslib": "0.3.2",
     "@opam/data-encoding": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
-    "@opam/ocaml-lsp-server": "1.9.0",
+    "@opam/ocaml-lsp-server": "d4hines/ocaml-lsp:ocaml-lsp-server.opam#7851505365c93604de2ce57ff6f81944e254cff1",
     "@opam/ocamlformat": "0.19.0",
     "@opam/utop": "^2.8.0",
     "@opam/menhir": "20210419",
-    "@reason-native/rely": "^3.2.1",
     "@opam/ocamlformat-rpc": "*"
   },
   "resolutions": {
-    "ocaml": "github:esy-ocaml/ocaml#7af70dea28d218eb53bce7966e24dfe6762862ae",
+    "ocaml": "esy-ocaml/ocaml#c015cdcbb30e32ac025abaeb1f02c960dfaa5885",
     "@opam/base-domains": {
       "source": "no-source:",
       "override": {}
@@ -89,7 +88,16 @@
         }
       }
     },
-    "@opam/ssl": "firgeis/ocaml-ssl:ssl.opam#e6430aa",
+    "@opam/secp256k1-internal": {
+      "version": "opam:0.3.1",
+      "override": {
+        "build": [
+          "sed -i 's/alloc_custom/caml_alloc_custom/g' ./src/secp256k1_wrap.c",
+          "dune build -p secp256k1-internal"
+          ] 
+      }
+    },
+    "@opam/ssl": "savonet/ocaml-ssl:ssl.opam#a76f796a117ba4ce4b04703e77a9ffb53dfe4d07",
     "@opam/httpaf": "anmonteiro/httpaf:httpaf.opam#3a74fd8851e3019f5889ae1bf9350e90ed40017d",
     "@opam/httpaf-lwt": "anmonteiro/httpaf:httpaf-lwt.opam#3a74fd8851e3019f5889ae1bf9350e90ed40017d",
     "@opam/httpaf-lwt-unix": "anmonteiro/httpaf:httpaf-lwt-unix.opam#3a74fd8851e3019f5889ae1bf9350e90ed40017d",
@@ -98,6 +106,47 @@
     "@opam/h2-lwt-unix": "anmonteiro/ocaml-h2:h2-lwt-unix.opam#fa0c8a4746fdc50183e254f8c08239fc5b67717d",
     "@opam/websocketaf": "anmonteiro/websocketaf:websocketaf.opam#248a2cb0dcffa51996c3ad7643577dce75d67454",
     "@opam/websocketaf-lwt": "anmonteiro/websocketaf:websocketaf-lwt.opam#248a2cb0dcffa51996c3ad7643577dce75d67454",
-    "@opam/websocketaf-lwt-unix": "anmonteiro/websocketaf:websocketaf-lwt-unix.opam#248a2cb0dcffa51996c3ad7643577dce75d67454"
+    "@opam/websocketaf-lwt-unix": "anmonteiro/websocketaf:websocketaf-lwt-unix.opam#248a2cb0dcffa51996c3ad7643577dce75d67454",
+    "@opam/sexplib0": "kit-ty-kate/sexplib0:sexplib0.opam#359ea379d7f2931c8259e3a44d16885f6ec0760d",
+    "@opam/base": "patricoferris/base:base.opam#7822c87b994e022780e15893ccd5e5608c3ccbb5",
+    "@opam/stdio": "janestreet/stdio:stdio.opam#2357c0286d2040b8677e0e176c69b4070eb1a86a",
+    "@opam/ppxlib": "patricoferris/ppxlib:ppxlib.opam#91c39e958fca1dabf16f64dc7699ace7752f0014",
+    "@opam/easy-format": "nojb/easy-format:easy-format.opam#4568bfa1887146ab6ce41a48c9e00c8c1329c6e4",
+    "@opam/biniou": "EduardoRFS/biniou:biniou.opam#b5f099b4ad594e68383e55ffde6d296439d341b8",
+    "@opam/tezos-micheline": {
+      "version": "opam:11.1",
+      "override": {
+        "dependencies": {
+          "@opam/ppx_sexp_conv": "*",
+          "@opam/ppx_inline_test": "*"
+        }
+      }
+    },
+    "@opam/ppx_inline_test": "janestreet/ppx_inline_test:ppx_inline_test.opam#3b60b1da85d14369afb5ac21b2639aefc3322a2d",
+    "@opam/ppx_sexp_conv": "janestreet/ppx_sexp_conv:ppx_sexp_conv.opam#e16dff0eed85d8e49a3872ab6304560d697a1755",
+    "@opam/ppx_hash": {
+      "version": "opam:v0.14.0",
+      "override": {
+        "dependencies": {
+          "@opam/ppx_sexp_conv": "*"
+        }
+      }
+    },
+    "@opam/ppx_base":  {
+      "version": "opam:v0.14.0",
+      "override": {
+        "dependencies": {
+          "@opam/ppx_sexp_conv": "*"
+        }
+      }
+    },
+    "@opam/ppx_assert": {
+      "version": "opam:v0.14.0",
+      "override": {
+        "dependencies": {
+          "@opam/ppx_sexp_conv": "*"
+        }
+      }
+    }
   }
 }
