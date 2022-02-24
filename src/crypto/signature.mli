@@ -4,6 +4,8 @@ type t =
   | P256      of P256.Signature.t
 [@@deriving ord, eq, yojson]
 
+val size : int
+
 val sign : Secret.t -> BLAKE2B.t -> t
 val verify : Key.t -> t -> BLAKE2B.t -> bool
 

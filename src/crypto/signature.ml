@@ -5,6 +5,12 @@ type t =
   | P256      of P256.Signature.t
 [@@deriving ord, eq]
 
+let size =
+  assert (
+    Ed25519.Signature.size = Secp256k1.Signature.size
+    && Secp256k1.Signature.size = P256.Signature.size);
+  Ed25519.Signature.size
+
 let sign secret hash =
   match secret with
   | Secret.Ed25519 secret -> Ed25519 (Ed25519.sign secret hash)
