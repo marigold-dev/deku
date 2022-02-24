@@ -45,8 +45,22 @@ let listen_to_chain_heads () =
       stream
   | Error err -> failwith_err err
 
+(* WARNING: This will never stop.
+   It also doesn't show in the terminal, so use dune exec *)
+let listen_to_blocks () =
+  let%await result = Tezos_rpc.Listen_to_blocks.execute ~node_uri in
+  match result with
+  | Ok stream ->
+    Lwt_stream.iter
+      (fun header ->
+        let hash = header.Tezos_rpc.Block_header.hash in
+        Format.printf "header.hash: %s\n%!" (Block_hash.to_string hash))
+      stream
+  | Error err -> failwith_err err
+
 let tests =
   [ (* fetch_block_operations ~block_hash:None; *)
-    (* listen_to_chain_heads *) ]
+    (* listen_to_chain_heads; *)
+    (* listen_to_blocks; *) ]
 
 let () = Lwt_list.iter_s (fun test -> test ()) tests |> Lwt_main.run
