@@ -65,6 +65,7 @@ module Signature = struct
       | true -> Some string
       | false -> None
   end)
+  let zero = String.make size '\x00'
 end
 let sign secret hash =
   let r, s =

@@ -6,6 +6,8 @@ type t =
 
 val size : int
 
+val zero : t
+
 val sign : Secret.t -> BLAKE2B.t -> t
 val verify : Key.t -> t -> BLAKE2B.t -> bool
 

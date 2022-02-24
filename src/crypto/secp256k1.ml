@@ -64,6 +64,8 @@ module Signature = struct
   type t = Sign.plain Sign.t
   let equal = Sign.equal
   let compare a b = Bigstring.compare (Sign.buffer a) (Sign.buffer b)
+  let of_raw string =
+    string |> Bigstring.of_string |> Sign.read context |> Result.to_option
   include Encoding_helpers.Make_b58 (struct
     type nonrec t = t
     let name = "Secp256k1"
@@ -71,9 +73,9 @@ module Signature = struct
     let size = Sign.plain_bytes
     let prefix = Base58.Prefix.secp256k1_signature
     let to_raw t = Sign.to_bytes ~der:false context t |> Bigstring.to_string
-    let of_raw string =
-      string |> Bigstring.of_string |> Sign.read context |> Result.to_option
+    let of_raw = of_raw
   end)
+  let zero = of_raw (String.make size '\x00') |> Option.get
 end
 let generate () =
   let seed = Random.generate 32 |> Cstruct.to_bytes in

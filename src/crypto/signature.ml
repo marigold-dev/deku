@@ -5,6 +5,7 @@ type t =
   | P256      of P256.Signature.t
 [@@deriving ord, eq]
 
+let zero = Ed25519 Ed25519.Signature.zero
 let size =
   assert (
     Ed25519.Signature.size = Secp256k1.Signature.size
