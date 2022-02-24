@@ -39,6 +39,8 @@ module Prefix = struct
 
   let operation_hash = "\005\116" (* o(51) *)
 
+  let protocol_hash = "\002\170" (* P(51) *)
+
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
 
   let ed25519_seed = "\013\015\058\007" (* edsk(54) *)
