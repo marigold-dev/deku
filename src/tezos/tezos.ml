@@ -5,6 +5,7 @@ module Michelson = Michelson
 module Pack = Pack
 module Tez = Tez
 module Gas = Gas
+module Protocol_hash = Protocol_hash
 module Block_hash = Block_hash
 module Chain_id = Chain_id
 module Operation_hash = Operation_hash

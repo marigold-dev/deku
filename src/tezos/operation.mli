@@ -21,5 +21,13 @@ type t = {
 }
 
 (* TODO: better API for this *)
+val make_preapply_json :
+  secret:Secret.t ->
+  protocol:Protocol_hash.t ->
+  branch:Block_hash.t ->
+  operations:t list ->
+  Data_encoding.json
+
+(* TODO: better API for this *)
 val forge :
   secret:Secret.t -> branch:Block_hash.t -> operations:t list -> string

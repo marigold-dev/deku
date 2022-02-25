@@ -27,6 +27,8 @@ module type S = sig
   end
   module Signature : sig
     type t
+    val size : int
+    val zero : t
     val encoding : t Data_encoding.t
     val equal : t -> t -> bool
     val compare : t -> t -> int

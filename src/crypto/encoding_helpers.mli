@@ -24,6 +24,8 @@ module Make_b58 : functor
   -> sig
   open H
 
+  val size : int
+
   (* TODO: should this be exposed? *)
   val to_raw : t -> string
   (** [to_raw t] serialize t to a string containing raw bytes with no prefix *)
