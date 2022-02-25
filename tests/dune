@@ -4,9 +4,9 @@
   (:standard \ Test_runner))
  (library_flags
   (-linkall -g))
- (libraries rely.lib tezos_interop protocol node)
+ (libraries rely.lib tezos_interop protocol node tezos_rpc)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps ppx_deriving_yojson ppx_let_binding)))
 
 (executable
  (name Test_runner)
