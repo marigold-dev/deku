@@ -1,7 +1,20 @@
+# Esy things
+esy.lock/
 _esy
 _build
+package-lock.json
+
+# IDEs
+.vscode
+
+# nix-direnv cache
+.direnv
+
+# Deku nodes folder
+data/
+
+# Others
 node_modules
-data
 *.install
 *.bundle.js
 *.bundle.js.LICENSE.txt

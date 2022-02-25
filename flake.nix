@@ -7,14 +7,30 @@
 
   outputs = { self, nixpkgs, flake-utils, ocaml-overlays }:
     flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { inherit system; overlays = [ocaml-overlays.overlay]; };
-      in
-      {
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ ocaml-overlays.overlay ];
+        };
+      in {
         devShell = (pkgs.mkShell {
           shellHook = ''
             npm install
             export PATH="node_modules/.bin:_build/default/src/bin:$PATH"
           '';
+          buildInputs = with pkgs; [
+            # Make develop life easier
+            # General tooling
+            docker
+            docker-compose
+
+            # OCaml developer tooling
+            opam
+            pkgs.nodePackages.esy
+
+            # Nix files formatter
+            nixfmt
+          ];
 
           packages = with pkgs.ocaml-ng.ocamlPackages_multicore; [
             ocaml
@@ -48,6 +64,5 @@
             utop
           ];
         });
-      }
-    );
+      });
 }

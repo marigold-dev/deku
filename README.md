@@ -18,8 +18,23 @@ yarn global add esy
 ```
 
 Alternatively, you can use the `nix` package manager with
-[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an
-environment preloaded with the correct dependencies, including `esy`:
+[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter a preloaded
+environment with the correct dependencies, including `esy`.
+
+1. With [`direnv`](https://direnv.net/) (recommended):
+
+```shell script
+$ which docker
+docker not found
+$ cd deku
+$ direnv allow
+direnv: loading ~/workspace/marigold/deku/.envrc
+# [...]
+$ which docker
+/nix/store/aagbv31cpinw832vyhh9gscb29gi363c-docker-20.10.12/bin/docker
+```
+
+2. With `nix-command`:
 
 ```
 nix --experimental-features "nix-command flakes" run
