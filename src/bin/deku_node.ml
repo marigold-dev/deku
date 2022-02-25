@@ -122,7 +122,7 @@ let node folder =
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
   let port = Node.Server.get_port () |> Option.get in
-  Dream.run ~port
+  Dream.run ~interface:"0.0.0.0" ~port
   @@ Dream.router
        [
          handle_block_level;
