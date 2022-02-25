@@ -22,6 +22,11 @@
         };
 
         esy = esy-fhs.packages.${system}.esy;
+        rely = pkgs.ocaml-ng.ocamlPackages_5_00.reason-native.rely.overrideAttrs (_: {
+          postPatch = ''
+            substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
+          '';
+        });
       in
       {
         devShell = (pkgs.mkShell {
@@ -70,6 +75,8 @@
             bigstring
             domainslib
             utop
+            reason
+            rely
           ];
         });
       });
