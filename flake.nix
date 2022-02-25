@@ -1,17 +1,27 @@
 {
   description = "Deku development environment";
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.ocaml-overlays.url = "github:anmonteiro/nix-overlays";
-  inputs.ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, flake-utils, ocaml-overlays }:
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
+    ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
+
+    esy-fhs.url = "github:d4hines/esy-fhs";
+    esy-fhs.inputs.nixpkgs.follows = "nixpkgs";
+    esy-fhs.inputs.anmonteiro.follows = "ocaml-overlay";
+    esy-fhs.inputs.flake-utils.follows = "flake-utils";
+  };
+
+  outputs = { self, nixpkgs, flake-utils, ocaml-overlays, esy-fhs }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           overlays = [ ocaml-overlays.overlay ];
         };
+
+        esy = esy-fhs.packages.${system}.esy;
       in {
         devShell = (pkgs.mkShell {
           shellHook = ''
@@ -25,8 +35,7 @@
             docker-compose
 
             # OCaml developer tooling
-            opam
-            pkgs.nodePackages.esy
+            esy
 
             # Nix files formatter
             nixfmt
