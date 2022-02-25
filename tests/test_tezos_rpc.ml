@@ -3,13 +3,10 @@ open Crypto
 open Tezos
 open Tezos_rpc
 
-let failwith_err err =
-  let failwith s = Format.kasprintf failwith s in
-  match err with
-  | Tezos_rpc.Error.Json_error _ -> failwith "Json_error"
-  | Piaf_body err -> failwith "Piaf_body(%a)" Piaf.Error.pp_hum err
-  | Piaf_request err -> failwith "Piaf_request(%a)" Piaf.Error.pp_hum err
-  | Response_of_yojson err -> failwith "Response_of_yojson(%s)" err
+(* This file only contains manual tests, to run them you need to have a
+   Tezos node running and uncomment the tests on the tests list below.
+
+   You may also want to change the node_uri and/or the secret key below. *)
 
 let node_uri = Uri.of_string "http://localhost:8732"
 let secret =
@@ -17,6 +14,14 @@ let secret =
   |> Option.get
 let key = Key.of_secret secret
 let key_hash = Key_hash.of_key key
+
+let failwith_err err =
+  let failwith s = Format.kasprintf failwith s in
+  match err with
+  | Tezos_rpc.Error.Json_error _ -> failwith "Json_error"
+  | Piaf_body err -> failwith "Piaf_body(%a)" Piaf.Error.pp_hum err
+  | Piaf_request err -> failwith "Piaf_request(%a)" Piaf.Error.pp_hum err
+  | Response_of_yojson err -> failwith "Response_of_yojson(%s)" err
 
 let fetch_block_operations ~block_hash () =
   let open Fetch_block_operations in
@@ -69,6 +74,7 @@ let fetch_block_header ~block_hash () =
   | Error err -> failwith_err err);
   Lwt.return_unit
 
+(* to run a test, just uncomment it *)
 let tests =
   [ (* fetch_block_operations ~block_hash:None; *)
     (* listen_to_chain_heads; *)
