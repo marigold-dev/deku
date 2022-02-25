@@ -9,7 +9,7 @@
 
     esy-fhs.url = "github:d4hines/esy-fhs";
     esy-fhs.inputs.nixpkgs.follows = "nixpkgs";
-    esy-fhs.inputs.anmonteiro.follows = "ocaml-overlay";
+    esy-fhs.inputs.anmonteiro.follows = "ocaml-overlays";
     esy-fhs.inputs.flake-utils.follows = "flake-utils";
   };
 
@@ -22,36 +22,35 @@
         };
 
         esy = esy-fhs.packages.${system}.esy;
-      in {
+      in
+      {
         devShell = (pkgs.mkShell {
-          shellHook = ''
-            npm install
-            export PATH="node_modules/.bin:_build/default/src/bin:$PATH"
+          shellHook  = ''
+            mv package.json p.json
+            npm install webpack webpack-cli @taquito/taquito @taquito/signer @taquito/rpc
+            mv p.json package.json
+            export PATH=$PATH:./node_modules/.bin
           '';
-          buildInputs = with pkgs; [
+          buildInputs = (with pkgs; [
             # Make developer life easier
             ## General tooling
             docker
             docker-compose
-
-            # OCaml developer tooling
-            esy
+            nodejs
 
             # Nix files formatter
             nixfmt
-          ];
-
-          packages = with pkgs.ocaml-ng.ocamlPackages_multicore; [
+          ]) ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
+             # OCaml developer tooling
             ocaml
-            dune_2
             findlib
+            dune_2
+            esy
             ocaml-lsp
             ocamlformat-rpc
-            pkgs.nodejs
-            pkgs.nodePackages.npm
-          ];
+          ]);
 
-          propagatedBuildInputs = with pkgs.ocaml-ng.ocamlPackages_multicore; [
+          propagatedBuildInputs = with pkgs.ocaml-ng.ocamlPackages_5_00; [
             ppx_deriving
             ppx_deriving_yojson
             lwt

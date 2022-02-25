@@ -8,7 +8,7 @@ RUN apk add libexecinfo-dev
 WORKDIR /app
 
 # Add things that doesn't change much, or should bust cache when it does
-COPY ./esy.lock esy.json ./
+COPY ./esy.lock package.json ./
 
 RUN esy install
 RUN esy build-dependencies --release
