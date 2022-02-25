@@ -35,7 +35,7 @@ let append_block ~pool (block, signatures) t =
       additional_blocks = blocks @ [t.last_block] @ t.additional_blocks;
     }
 let add_snapshot ~new_snapshot ~block_height t =
-  Format.printf "\027[36m New protocol snapshot hash: %s\027[m\n%!"
+  Format.eprintf "\027[36mNew protocol snapshot hash: %s\027[m\n%!"
     (new_snapshot.hash |> BLAKE2B.to_string);
   {
     next_snapshots = t.next_snapshots @ [(block_height, new_snapshot)];

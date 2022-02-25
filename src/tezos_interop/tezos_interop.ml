@@ -70,7 +70,7 @@ module Run_contract = struct
         (Yojson.Safe.to_string (input_to_yojson input)) in
     match Yojson.Safe.from_string output |> output_of_yojson with
     | Ok data ->
-      Format.printf "Commit operation result: %s\n%!" output;
+      Format.eprintf "Commit operation result: %s\n%!" output;
       await data
     | Error error -> await (Error error)
 end
