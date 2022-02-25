@@ -74,11 +74,22 @@ let fetch_block_header ~block_hash () =
   | Error err -> failwith_err err);
   Lwt.return_unit
 
+let fetch_constants ~block_hash () =
+  let open Tezos_rpc.Fetch_constants in
+  let%await result = execute ~node_uri ~chain:None ~block_hash in
+  (match result with
+  | Ok constants ->
+    Format.printf "hard_storage_limit_per_operation: %a\n%!" Z.pp_print
+      constants.hard_storage_limit_per_operation
+  | Error err -> failwith_err err);
+  Lwt.return_unit
+
 (* to run a test, just uncomment it *)
 let tests =
   [ (* fetch_block_operations ~block_hash:None; *)
     (* listen_to_chain_heads; *)
     (* listen_to_blocks; *)
-    (* fetch_block_header ~block_hash:None; *) ]
+    (* fetch_block_header ~block_hash:None; *)
+    (* fetch_constants ~block_hash:None; *) ]
 
 let () = Lwt_list.iter_s (fun test -> test ()) tests |> Lwt_main.run
