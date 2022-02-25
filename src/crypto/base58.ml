@@ -58,6 +58,9 @@ module Prefix = struct
   let secp256k1_signature = "\013\115\101\019\063" (* spsig1(99) *)
 
   let p256_signature = "\054\240\044\052" (* p2sig(98) *)
+
+  (* 4 *)
+  let chain_id = "\087\082\000" (* Net(15) *)
 end
 
 let base = 58
