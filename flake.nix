@@ -19,8 +19,8 @@
             export PATH="node_modules/.bin:_build/default/src/bin:$PATH"
           '';
           buildInputs = with pkgs; [
-            # Make develop life easier
-            # General tooling
+            # Make developer life easier
+            ## General tooling
             docker
             docker-compose
 

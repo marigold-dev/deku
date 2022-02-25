@@ -1,8 +1,6 @@
 # Esy things
-esy.lock/
 _esy
 _build
-package-lock.json
 
 # IDEs
 .vscode
