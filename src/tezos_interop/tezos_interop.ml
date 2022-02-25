@@ -209,7 +209,7 @@ module Consensus = struct
         block_height : int64;
         block_payload_hash : BLAKE2B.t;
         signatures : string option list;
-        withdrawal_handles_hash : BLAKE2B.t;
+        handles_hash : BLAKE2B.t;
         state_hash : BLAKE2B.t;
         validators : string list;
         current_validator_keys : string option list;
@@ -234,7 +234,7 @@ module Consensus = struct
         block_height;
         block_payload_hash;
         signatures;
-        withdrawal_handles_hash;
+        handles_hash = withdrawal_handles_hash;
         state_hash;
         validators;
         current_validator_keys;
