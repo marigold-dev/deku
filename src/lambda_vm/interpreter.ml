@@ -39,7 +39,8 @@ end = struct
    fun value t ->
     match (t, value) with
     | Any, value -> value
-    | Pair (left_t, right_t), V_pair (left_value, right_value) ->
+    | Pair (left_t, right_t), V_pair { left = left_value; right = right_value }
+      ->
       let left = parse left_value left_t in
       let right = parse right_value right_t in
       (left, right)
@@ -128,7 +129,7 @@ let rec eval ~stack gas env code =
     | None ->
       (* TODO: could we eliminate this using GADTs? *) raise Undefined_variable)
   | E_lam (param, body) -> V_closure { env; param; body }
-  | E_app (funct, arg) -> (
+  | E_app { funct; arg } -> (
     let funct = eval_call env funct in
     let arg = eval_call env arg in
     match funct with
@@ -150,30 +151,26 @@ let rec eval ~stack gas env code =
     | V_closure _
     | V_primitive _ ->
       raise Value_is_not_int64)
-  | E_pair (left, right) ->
+  | E_pair { left; right } ->
     let left = eval_call env left in
     let right = eval_call env right in
-    V_pair (left, right)
-  | E_fst pair ->
+    V_pair { left; right }
+  | E_fst pair -> (
     let pair = eval_call env pair in
-    let left, _right =
-      match pair with
-      | V_pair (left, right) -> (left, right)
-      | V_int64 _
-      | V_closure _
-      | V_primitive _ ->
-        raise Value_is_not_pair in
-    left
-  | E_snd pair ->
+    match pair with
+    | V_pair { left; right = _ } -> left
+    | V_int64 _
+    | V_closure _
+    | V_primitive _ ->
+      raise Value_is_not_pair)
+  | E_snd pair -> (
     let pair = eval_call env pair in
-    let _left, right =
-      match pair with
-      | V_pair (left, right) -> (left, right)
-      | V_closure _
-      | V_int64 _
-      | V_primitive _ ->
-        raise Value_is_not_pair in
-    right
+    match pair with
+    | V_pair { left = _; right } -> right
+    | V_closure _
+    | V_int64 _
+    | V_primitive _ ->
+      raise Value_is_not_pair)
 let eval gas env code =
   let stack = max_stack_depth in
   eval ~stack gas env code

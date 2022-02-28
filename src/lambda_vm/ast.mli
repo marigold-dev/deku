@@ -18,7 +18,10 @@ type expr =
   (* calculus *)
   | Var   of ident
   | Lam   of ident * expr
-  | App   of expr * expr
+  | App   of {
+      funct : expr;
+      arg : expr;
+    }
   (* prims *)
   | Const of int64
   | Prim  of prim
@@ -30,7 +33,10 @@ type expr =
       else_ : expr;
     }
   (* memory *)
-  | Pair  of expr * expr
+  | Pair  of {
+      left : expr;
+      right : expr;
+    }
   | Fst   of expr
   | Snd   of expr
 

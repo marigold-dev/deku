@@ -63,10 +63,10 @@ let rec compile_expr ~stack gas next_ident vars code =
     let vars = Vars.add var ident vars in
     let body = compile_expr vars body in
     E_lam (ident, body)
-  | App (funct, body) ->
+  | App { funct; arg } ->
     let funct = compile_expr vars funct in
-    let body = compile_expr vars body in
-    E_app (funct, body)
+    let arg = compile_expr vars arg in
+    E_app { funct; arg }
   (* prims *)
   | Const value -> E_const value
   | Prim prim ->
@@ -79,10 +79,10 @@ let rec compile_expr ~stack gas next_ident vars code =
     let else_ = compile_expr vars else_ in
     E_if { condition; then_; else_ }
   (* memory *)
-  | Pair (left, right) ->
+  | Pair { left; right } ->
     let left = compile_expr vars left in
     let right = compile_expr vars right in
-    E_pair (left, right)
+    E_pair { left; right }
   | Fst pair ->
     let pair = compile_expr vars pair in
     E_fst pair
@@ -124,7 +124,7 @@ let rec compile_value ~stack gas value =
   | Pair (left, right) ->
     let left = compile_value left in
     let right = compile_value right in
-    V_pair (left, right)
+    V_pair { left; right }
 
 let compile_value gas value =
   let stack = max_stack_depth in
