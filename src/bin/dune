@@ -4,7 +4,7 @@
  (libraries dream bin_common node helpers cmdliner)
  (modules Deku_node)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding lwt_ppx)))
 
 (executable
  (name sidecli)
