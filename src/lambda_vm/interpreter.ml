@@ -61,6 +61,7 @@ let burn_gas gas env code =
   | E_lam _
   | E_const _
   | E_prim _
+  | E_if _
   | E_pair _
   | E_fst _
   | E_snd _ ->
@@ -140,6 +141,15 @@ let rec eval ~stack gas env code =
     | V_primitive { args; prim } -> eval_prim prim ~arg ~args)
   | E_const value -> V_int64 value
   | E_prim prim -> V_primitive { args = []; prim }
+  | E_if { condition; then_; else_ } -> (
+    let condition = eval_call env condition in
+    match condition with
+    | V_int64 0L -> eval_jump env else_
+    | V_int64 _ -> eval_jump env then_
+    | V_pair _
+    | V_closure _
+    | V_primitive _ ->
+      raise Value_is_not_int64)
   | E_pair (left, right) ->
     let left = eval_call env left in
     let right = eval_call env right in

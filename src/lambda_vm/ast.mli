@@ -22,6 +22,13 @@ type expr =
   (* prims *)
   | Const of int64
   | Prim  of prim
+  (* branching *)
+  | If    of {
+      (* condition <> 0 ? then_ : else_ *)
+      condition : expr;
+      then_ : expr;
+      else_ : expr;
+    }
   (* memory *)
   | Pair  of expr * expr
   | Fst   of expr

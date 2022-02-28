@@ -22,6 +22,13 @@ type expr =
   (* prims *)
   | E_const of int64
   | E_prim  of prim
+  (* branching *)
+  | E_if    of {
+      (* condition <> 0 ? then_ : else_ *)
+      condition : expr;
+      then_ : expr;
+      else_ : expr;
+    }
   (* memory *)
   | E_pair  of expr * expr
   | E_fst   of expr
