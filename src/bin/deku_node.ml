@@ -113,32 +113,74 @@ let handle_ticket_balance =
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
-let node folder =
+
+let addr_to_string addr =
+  let open Lwt_unix in
+  match addr with
+  | ADDR_UNIX a -> a
+  | ADDR_INET (ia, p) -> Printf.sprintf "%s:%d" (Unix.string_of_inet_addr ia) p
+
+(* Initializes a socket and binds it to localhost:<port>
+   before returning it *)
+let create_socket port =
+  let open Lwt_unix in
+  let addr = ADDR_INET (Unix.inet_addr_loopback, port) in
+  let f_descr = socket PF_INET SOCK_DGRAM 0 in
+  let _ = Printf.sprintf "Bound to address: %s\n" (addr_to_string addr) in
+  f_descr
+
+let read_bytes buffer_size = failwith "undefined"
+
+(* handle_message should match on header? to parse the correct message which can be:
+          handle_block_level;
+          handle_received_block_and_signature;
+          handle_received_signature;
+          handle_block_by_hash;
+          handle_protocol_snapshot;
+          handle_request_nonce;
+          handle_register_uri;
+          handle_receive_user_operation_gossip;
+          handle_receive_consensus_operation;
+          handle_withdraw_proof;
+          handle_ticket_balance;
+          handle_trusted_validators_membership; *)
+let handle_message buffer_size = failwith "undefined"
+
+(* udp_node should definitively be in a dedicated module *)
+let udp_node folder =
+  (* those first lines are copied/pasted from previous `node` function. I think they are in charge of getting the current node state from the files in folder data/ *)
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations
     ~context:node.Node.State.interop_context ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;
-  Dream.initialize_log ~level:`Warning ();
-  let port = Node.Server.get_port () |> Option.get in
-  Dream.run ~interface:"0.0.0.0" ~port
-  @@ Dream.router
-       [
-         handle_block_level;
-         handle_received_block_and_signature;
-         handle_received_signature;
-         handle_block_by_hash;
-         handle_protocol_snapshot;
-         handle_request_nonce;
-         handle_register_uri;
-         handle_receive_user_operation_gossip;
-         handle_receive_consensus_operation;
-         handle_withdraw_proof;
-         handle_ticket_balance;
-         handle_trusted_validators_membership;
-       ]
-  @@ Dream.not_found
+  let rec server () =
+    let open Lwt_unix in
+    (* find the good buffer size *)
+    let buffer_size = Bytes.create 100 in
+    let f_descr = create_socket 3001 in
+    let socket_address = getsockname f_descr in
+    match socket_address with
+    | ADDR_UNIX somethingBis -> failwith "undefined"
+    | ADDR_INET (inet_address, file_perm) ->
+      let _ = Printf.sprintf "Waiting on port: %d\n" file_perm in
+      let%lwt _, client_addr = recvfrom f_descr buffer_size 0 100 [] in
+      let%lwt _ = bind f_descr socket_address in
+      let _ =
+        Printf.sprintf "Bound to address: %s\n" @@ addr_to_string socket_address
+      in
+      let _ =
+        Printf.sprintf "Connected to client: %s\n" @@ addr_to_string client_addr
+      in
+      let msg_str = read_bytes buffer_size in
+      let%lwt () = Lwt_io.printf "Got message %s\n\n" msg_str in
+      (* Prepare a message to send back to the client, then send it
+         with sendto *)
+      let res, res_len = handle_message buffer_size in
+      let%lwt _ = sendto f_descr res 0 res_len [] client_addr in
+      server () in
+  server
 
 let node =
   let folder_node =
@@ -147,5 +189,5 @@ let node =
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const node $ folder_node
+  const udp_node $ folder_node
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")
