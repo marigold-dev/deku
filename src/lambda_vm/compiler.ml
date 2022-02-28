@@ -35,6 +35,7 @@ let burn_gas gas vars code =
   | App _
   | Const _
   | Prim _
+  | If _
   | Pair _
   | Fst _
   | Snd _ ->
@@ -71,6 +72,12 @@ let rec compile_expr ~stack gas next_ident vars code =
   | Prim prim ->
     let prim = compile_prim prim in
     E_prim prim
+  (* branching *)
+  | If { condition; then_; else_ } ->
+    let condition = compile_expr vars condition in
+    let then_ = compile_expr vars then_ in
+    let else_ = compile_expr vars else_ in
+    E_if { condition; then_; else_ }
   (* memory *)
   | Pair (left, right) ->
     let left = compile_expr vars left in
