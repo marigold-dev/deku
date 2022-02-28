@@ -18,7 +18,7 @@ sidecli() {
 }
 
 tezos-client() {
-  docker exec -it deku_flextesa_1 tezos-client "$@"
+  docker exec -it deku-flextesa-1 tezos-client "$@"
 }
 
 ligo() {
