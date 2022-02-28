@@ -12,13 +12,13 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-SIDECLI=$(esy x which sidecli)
 sidecli() {
+  SIDECLI=$(esy x which sidecli)
   eval $SIDECLI '"$@"'
 }
 
 tezos-client() {
-  docker exec -it deku_flextesa_1 tezos-client "$@"
+  docker exec -it deku-flextesa-1 tezos-client "$@"
 }
 
 ligo() {
