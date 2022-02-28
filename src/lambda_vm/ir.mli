@@ -18,7 +18,10 @@ type expr =
   (* calculus *)
   | E_var   of ident
   | E_lam   of ident * expr
-  | E_app   of expr * expr
+  | E_app   of {
+      funct : expr;
+      arg : expr;
+    }
   (* prims *)
   | E_const of int64
   | E_prim  of prim
@@ -30,13 +33,19 @@ type expr =
       else_ : expr;
     }
   (* memory *)
-  | E_pair  of expr * expr
+  | E_pair  of {
+      left : expr;
+      right : expr;
+    }
   | E_fst   of expr
   | E_snd   of expr
 
 type value =
   | V_int64     of int64
-  | V_pair      of value * value
+  | V_pair      of {
+      left : value;
+      right : value;
+    }
   | V_closure   of {
       env : env;
       param : Ident.t;
