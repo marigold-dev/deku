@@ -20,6 +20,7 @@ yarn global add esy
 Alternatively, you can use the `nix` package manager with
 [flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an
 environment preloaded with the correct dependencies, including `esy`:
+
 ```
 nix --experimental-features "nix-command flakes" run
 ```
@@ -39,6 +40,7 @@ esy test
 ### Running a sidechain
 
 For convenient local development, we have included two components:
+
 - A `docker-compose.yml` file that setups a local Tezos network
   using [Flextesa](https://tezos.gitlab.io/flextesa/) running in Docker.
   Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance
@@ -53,9 +55,10 @@ For convenient local development, we have included two components:
 
 The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
 in addition to the usual Deku pre-requisites.
+
 #### Setup
 
-Run `docker-compose up -d` to start a Tezos network and the BCD interface. 
+Run `docker-compose up -d` to start a Tezos network and the BCD interface.
 
 Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
 a Deku consensus contract configured for these validators to the local sandbox.
@@ -76,7 +79,7 @@ This starts 3 nodes as background processes.
 
 You may have to stop the session with `killall deku-node` to fully shutdown the cluster.
 
-In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so. 
+In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
 
 ## Contributing
 
