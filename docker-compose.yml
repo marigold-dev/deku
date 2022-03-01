@@ -2,19 +2,19 @@
 # Original License:
 #
 # MIT License
-# 
+#
 # Copyright (c) 2020 Baking Bad, Artem Poltorzhitskiy, Roman Serikov, Michael Zaikin
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,9 +23,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-version: "3.6"
+version: "3.8"
 services:
   elastic:
+    container_name: deku_elastic
     image: ghcr.io/baking-bad/bcdhub-elastic:master
     restart: always
     volumes:
@@ -34,8 +35,9 @@ services:
       - bootstrap.memory_lock=true
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
-    
+
   db:
+    container_name: deku_postgres
     image: postgres:12
     shm_size: 1g
     restart: always
@@ -48,6 +50,7 @@ services:
       - db:/var/lib/postgresql/data
 
   api:
+    container_name: deku_api
     restart: always
     image: ghcr.io/baking-bad/bcdhub-api:master
     environment:
@@ -68,6 +71,7 @@ services:
       - "flextesa:sandbox"
 
   indexer:
+    container_name: deku_indexer
     restart: always
     image: ghcr.io/baking-bad/bcdhub-indexer:master
     environment:
@@ -85,6 +89,7 @@ services:
       - bcdshare:/etc/bcd
 
   metrics:
+    container_name: deku_metrics
     restart: always
     image: ghcr.io/baking-bad/bcdhub-metrics:master
     environment:
@@ -102,6 +107,7 @@ services:
       - bcdshare:/etc/bcd
 
   flextesa:
+    container_name: deku_flextesa
     restart: always
     image: tqtezos/flextesa:20211206
     command: hangzbox start
@@ -113,7 +119,7 @@ services:
       - 20000/tcp
 
   gui:
-    container_name: sandbox-gui
+    container_name: sandbox_gui
     restart: always
     image: bakingbad/bcdhub-gui:4.0
     depends_on:
