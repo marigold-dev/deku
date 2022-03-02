@@ -123,7 +123,7 @@ let rec eval ~stack gas env code =
   match code with
   | E_var var -> (
     (* TODO: gas cost for this *)
-    (* TODO: shuold this be a hashtbl? Or an array? *)
+    (* TODO: should this be a hashtbl? Or an array? *)
     match Env.find var env with
     | Some value -> value
     | None ->
