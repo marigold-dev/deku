@@ -31,5 +31,4 @@ let rec reset_timeout server =
      Lwt.return_unit)
 ;;
 Flows.reset_timeout := fun () -> reset_timeout (get ());;
-Flows.get_state := get_state;;
-Flows.set_state := set_state
+Flows.get_state := get_state

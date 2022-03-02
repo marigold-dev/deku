@@ -57,7 +57,6 @@ type ignore =
   | `Added_block_has_lower_block_height ]
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
-let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -102,17 +101,11 @@ let rec request_block_by_hash tries ~hash =
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_block_by_hash (tries + 1) ~hash)
-let request_block ~hash =
+let request_block ~hash update_state =
   Lwt.async (fun () ->
       let%await block = request_block_by_hash 0 ~hash in
       let state = !get_state () in
-      match
-        !received_block' state
-          (fun state ->
-            !set_state state;
-            state)
-          block
-      with
+      match !received_block' state update_state block with
       | Ok () -> await ()
       | Error _err -> await ())
 let rec request_protocol_snapshot tries =
@@ -131,7 +124,7 @@ Lwt.async_exception_hook :=
     Printexc.to_string exn |> Format.eprintf "global_exception: %s\n%!";
     Printexc.print_backtrace stderr
 let pending = ref false
-let load_snapshot snapshot_data =
+let load_snapshot snapshot_data update_state =
   let open Network_schemas.Protocol_snapshot in
   let%ok state =
     Node.load_snapshot ~snapshot:snapshot_data.snapshot
@@ -139,23 +132,23 @@ let load_snapshot snapshot_data =
       ~last_block:snapshot_data.last_block
       ~last_block_signatures:snapshot_data.last_block_signatures (!get_state ())
   in
-  Ok (!set_state state)
-let request_protocol_snapshot () =
+  Ok (update_state state)
+let request_protocol_snapshot update_state =
   Lwt.async (fun () ->
       let%await snapshot = request_protocol_snapshot 0 in
-      (match load_snapshot snapshot with
+      (match load_snapshot snapshot update_state with
       | Ok _ -> ()
       | Error err -> print_error err);
       await ())
-let request_previous_blocks state block =
+let request_previous_blocks state block update_state =
   if
     block_matches_current_state_root_hash state block
     || block_matches_next_state_root_hash state block
   then
-    request_block ~hash:block.Block.previous_hash
+    request_block ~hash:block.Block.previous_hash update_state
   else if not !pending then (
     pending := true;
-    request_protocol_snapshot ())
+    request_protocol_snapshot update_state)
 let try_to_produce_block state update_state =
   let%assert () =
     ( `Not_current_block_producer,
@@ -263,7 +256,7 @@ and block_added_to_the_pool state update_state block =
     match Block_pool.find_block ~hash:block.previous_hash state.block_pool with
     | Some block -> block_added_to_the_pool state update_state block
     | None ->
-      request_previous_blocks state block;
+      request_previous_blocks state block update_state;
       Ok ()
 ;;
 block_added_to_the_pool' := block_added_to_the_pool
@@ -290,7 +283,7 @@ let received_signature state update_state ~hash ~signature =
   match Block_pool.find_block ~hash state.Node.block_pool with
   | Some block -> block_added_to_the_pool state update_state block
   | None ->
-    request_block ~hash;
+    request_block ~hash update_state;
     Ok ()
 let parse_internal_tezos_transaction transaction =
   match transaction with
