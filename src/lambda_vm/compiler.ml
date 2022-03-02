@@ -79,10 +79,10 @@ let rec compile_expr ~stack gas next_ident vars code =
     let alternative = compile_expr vars alternative in
     E_if { predicate; consequent; alternative }
   (* memory *)
-  | Pair { left; right } ->
-    let left = compile_expr vars left in
-    let right = compile_expr vars right in
-    E_pair { left; right }
+  | Pair { first; second } ->
+    let first = compile_expr vars first in
+    let second = compile_expr vars second in
+    E_pair { first; second }
   | Fst pair ->
     let pair = compile_expr vars pair in
     E_fst pair
@@ -121,10 +121,10 @@ let rec compile_value ~stack gas value =
 
   match value with
   | Int64 value -> V_int64 value
-  | Pair (left, right) ->
-    let left = compile_value left in
-    let right = compile_value right in
-    V_pair { left; right }
+  | Pair (first, second) ->
+    let first = compile_value first in
+    let second = compile_value second in
+    V_pair { first; second }
 
 let compile_value gas value =
   let stack = max_stack_depth in
