@@ -1,10 +1,19 @@
 {
   description = "Deku development environment";
 
+  # Setup trusted binary caches
+  nixConfig = {
+    trusted-substituters = [
+      "https://cache.nixos.org/"
+      "https://anmonteiro.cachix.org"
+    ];
+  };
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
+    # Use this branch until we can merge it in the overlays
+    ocaml-overlays.url = "github:anmonteiro/nix-overlays/ulrikstrid/ocaml-trunk";
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
     /*

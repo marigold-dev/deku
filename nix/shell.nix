@@ -43,7 +43,7 @@ pkgs.mkShell {
     mirage-crypto-pk
     mirage-crypto-rng
     mirage-crypto-ec
-    piaf
+    piaf-dream-compat
     mrmime
     hex
     tezos-micheline
