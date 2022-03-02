@@ -9,6 +9,7 @@ pkgs.mkShell {
     docker
     docker-compose
     nodejs-12_x
+    ligo
 
     # Nix files formatter
     nixfmt
