@@ -5,7 +5,7 @@
   nixConfig = {
     trusted-substituters = [
       "https://cache.nixos.org/"
-      "https://anmonteiro.cachix.org"
+      "https://deku.cachix.org"
     ];
   };
 
