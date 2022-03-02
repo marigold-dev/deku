@@ -16,24 +16,32 @@
     ocaml-overlays.url = "github:anmonteiro/nix-overlays/ulrikstrid/ocaml-trunk";
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
-    /*
-    TODO: Update build for esy-fhs
-    esy-fhs.url = "github:d4hines/esy-fhs";
-    esy-fhs.inputs.nixpkgs.follows = "nixpkgs";
-    esy-fhs.inputs.anmonteiro.follows = "ocaml-overlays";
-    esy-fhs.inputs.flake-utils.follows = "flake-utils";
-    */
+    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ocaml-overlays }:
+  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:
     flake-utils.lib.eachDefaultSystem (system:
-      let
+      let        
         pkgs = ocaml-overlays.legacyPackages."${system}";
+        bp = pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
+        npmPackages = bp.buildNpmPackage { src = ./.; npmBuild = "echo ok"; };
+        deku = pkgs.callPackage ./nix/deku.nix {
+          doCheck = true;
+          ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
+          nodejs = pkgs.nodejs-12_x;
+          inherit npmPackages;
+        };
+        sidecli = deku.overrideAttrs (o: {
+          buildPhase = "dune build src/bin/sidecli.exe --profile=release";
+        });
 
         # esy = esy-fhs.packages.${system}.esy;
-        devShell = import ./nix/shell.nix { inherit pkgs; };
+        devShell = import ./nix/shell.nix { inherit pkgs; inherit deku; inherit npmPackages; };
       in
       {
         inherit devShell;
+        packages = {
+          inherit deku sidecli;
+        };
       });
 }

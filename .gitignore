@@ -13,7 +13,6 @@ data/
 
 # Others
 node_modules
-package-lock.json
 *.install
 *.bundle.js
 *.bundle.js.LICENSE.txt
