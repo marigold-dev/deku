@@ -157,7 +157,8 @@
         }
       }
     },
-    "@opam/lwt": "ocsigen/lwt:lwt.opam#5c333d0754ccc50d1c26491bf88be92e659ad23e",
+    "@opam/lwt": "kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be",
+    "@opam/ocplib-endian": "kit-ty-kate/ocplib-endian:ocplib-endian.opam#8136732deb8e7f69ece0a19cfc9f9a141ebe1d2b",
     "@opam/domainslib": "ocaml-multicore/domainslib:domainslib.opam#4ac01e870615e32291f0145a7cbdd5528b88ea59",
     "@opam/omd": "EduardoRFS/omd:omd.opam#74477dafa064a621b585eb7b637ad3b1d1b3dfef",
     "@opam/camomile": "kit-ty-kate/camomile:camomile.opam#12e8baac3cedaa18b98cdcc2d84196f8e52ee31c",
