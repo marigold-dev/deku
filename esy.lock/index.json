@@ -1,5 +1,5 @@
 {
-  "checksum": "6e2cb1f2fdd1c555bf3cfa13869e5dd0",
+  "checksum": "afe1a6ec96e152decc17c0caf3878c7b",
   "root": "sidechain@link-dev:./esy.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -400,7 +400,9 @@
         "@opam/mirage-crypto-ec@opam:0.10.5@88b644fe",
         "@opam/mirage-crypto@opam:0.10.5@da64ef8f",
         "@opam/lwt@github:kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be@d41d8cd9",
-        "@opam/hex@opam:1.4.0@41725494", "@opam/dune@opam:3.0.3@2d9f4d6b",
+        "@opam/hex@opam:1.4.0@41725494",
+        "@opam/graphql@github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9@d41d8cd9",
+        "@opam/dune@opam:3.0.3@2d9f4d6b",
         "@opam/dream@github:EduardoRFS/dream:dream.opam#ae9b60f483abf1b5dccce906f3ae21df7bbd4fd1@5687a5d7",
         "@opam/domainslib@github:ocaml-multicore/domainslib:domainslib.opam#4ac01e870615e32291f0145a7cbdd5528b88ea59@d41d8cd9",
         "@opam/digestif@opam:1.1.0@a8d16625",
@@ -1654,14 +1656,14 @@
       ],
       "devDependencies": []
     },
-    "electron-to-chromium@1.4.75@d41d8cd9": {
-      "id": "electron-to-chromium@1.4.75@d41d8cd9",
+    "electron-to-chromium@1.4.76@d41d8cd9": {
+      "id": "electron-to-chromium@1.4.76@d41d8cd9",
       "name": "electron-to-chromium",
-      "version": "1.4.75",
+      "version": "1.4.76",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.75.tgz#sha1:d1ad9bb46f2f1bf432118c2be21d27ffeae82fdd"
+          "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.76.tgz#sha1:a0494baedaf51094b1c172999919becd9975a934"
         ]
       },
       "overrides": [],
@@ -1824,14 +1826,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "caniuse-lite@1.0.30001312@d41d8cd9": {
-      "id": "caniuse-lite@1.0.30001312@d41d8cd9",
+    "caniuse-lite@1.0.30001313@d41d8cd9": {
+      "id": "caniuse-lite@1.0.30001313@d41d8cd9",
       "name": "caniuse-lite",
-      "version": "1.0.30001312",
+      "version": "1.0.30001313",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001312.tgz#sha1:e11eba4b87e24d22697dae05455d5aea28550d5f"
+          "archive:https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001313.tgz#sha1:a380b079db91621e1b7120895874e2fd62ed2e2f"
         ]
       },
       "overrides": [],
@@ -1912,8 +1914,8 @@
       "overrides": [],
       "dependencies": [
         "picocolors@1.0.0@d41d8cd9", "node-releases@2.0.2@d41d8cd9",
-        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.75@d41d8cd9",
-        "caniuse-lite@1.0.30001312@d41d8cd9"
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.76@d41d8cd9",
+        "caniuse-lite@1.0.30001313@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -6496,31 +6498,27 @@
       "dependencies": [
         "ocaml@github:esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396@d41d8cd9",
         "@opam/lwt@github:kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be@d41d8cd9",
-        "@opam/graphql@opam:0.13.0@285512f9",
+        "@opam/graphql@github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9@d41d8cd9",
         "@opam/dune@opam:3.0.3@2d9f4d6b", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@github:esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396@d41d8cd9",
         "@opam/lwt@github:kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be@d41d8cd9",
-        "@opam/graphql@opam:0.13.0@285512f9",
+        "@opam/graphql@github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9@d41d8cd9",
         "@opam/dune@opam:3.0.3@2d9f4d6b"
       ]
     },
-    "@opam/graphql@opam:0.13.0@285512f9": {
-      "id": "@opam/graphql@opam:0.13.0@285512f9",
+    "@opam/graphql@github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9@d41d8cd9": {
+      "id":
+        "@opam/graphql@github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9@d41d8cd9",
       "name": "@opam/graphql",
-      "version": "opam:0.13.0",
+      "version":
+        "github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/08/089104444ae28ebcfa85fec88628507a#md5:089104444ae28ebcfa85fec88628507a",
-          "archive:https://github.com/andreas/ocaml-graphql-server/releases/download/0.13.0/graphql-0.13.0.tbz#md5:089104444ae28ebcfa85fec88628507a"
-        ],
-        "opam": {
-          "name": "graphql",
-          "version": "0.13.0",
-          "path": "esy.lock/opam/graphql.0.13.0"
-        }
+          "github:andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9"
+        ]
       },
       "overrides": [],
       "dependencies": [

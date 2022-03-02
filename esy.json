@@ -3,10 +3,7 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
-      "bin": [
-        "sidecli",
-        "deku-node"
-      ]
+      "bin": ["sidecli", "deku-node"]
     },
     "buildEnv": {
       "PATH": "%{localStore}%/../bin:$PATH"
@@ -43,7 +40,8 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "*",
     "@opam/domainslib": "0.4.1",
-    "@opam/data-encoding": "*"
+    "@opam/data-encoding": "*",
+    "@opam/graphql": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -125,7 +123,7 @@
     "@opam/stdio": "janestreet/stdio:stdio.opam#f006beb417ee568c612c3d89824cfb6e15a98568",
     "@opam/ppx_hash": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -133,7 +131,7 @@
     },
     "@opam/ppx_assert": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -141,7 +139,7 @@
     },
     "@opam/ppx_base": {
       "version": "opam:v0.14.0",
-      "override" : {
+      "override": {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -162,7 +160,6 @@
     "@opam/ocamlformat": "EduardoRFS/ocamlformat:ocamlformat.opam#832e0a33d5cc05a77a335e6b6fa369172c742c95",
     "@opam/ocamlformat-rpc": "EduardoRFS/ocamlformat:ocamlformat-rpc.opam#832e0a33d5cc05a77a335e6b6fa369172c742c95",
     "@opam/ocamlformat-rpc-lib": "EduardoRFS/ocamlformat:ocamlformat-rpc-lib.opam#832e0a33d5cc05a77a335e6b6fa369172c742c95",
-    "@opam/odoc": "ocaml/odoc:odoc.opam#d243b80287a73bf3f34292254b0e9d8b2f56cc47",
     "@opam/odoc-parser": {
       "source": "kit-ty-kate/odoc-parser:odoc-parser.opam#bfa00f8b36778e16166e17c529f289633caf9fa7",
       "override": {
@@ -186,6 +183,7 @@
           "@opam/multipart_form": "*"
         }
       }
-    }
+    },
+    "@opam/graphql": "andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9"
   }
 }
