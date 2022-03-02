@@ -58,9 +58,9 @@ let http_post_data_encoding ~node_uri ~path ~of_yojson ~data =
    resumed when `feed` is called, `feed` is then driven by an string Lwt_stream.
 *)
 let make_lazy_lexbuf read =
-  let open EffectHandlers in
+  let open Effect in
   let module M = struct
-    type _ eff += Poll_data : unit eff
+    type _ Effect.t += Poll_data : unit Effect.t
   end in
   let open M in
   let read_buf = ref "" in
@@ -86,7 +86,7 @@ let make_lazy_lexbuf read =
         (* TODO: this is clearly not optimal *)
         read_buf := String.sub s size (s_length - size);
         size) in
-  let handler (type a) (eff : a eff) :
+  let handler (type a) (eff : a Effect.t) :
       ((a, unit) Deep.continuation -> unit) option =
     match eff with
     | Poll_data ->
