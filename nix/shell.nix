@@ -1,7 +1,9 @@
 { pkgs, esy ? pkgs.nodePackages.esy, deku, npmPackages }:
 
 pkgs.mkShell {
-  shellHook = deku.configurePhase;
+  shellHook = ''
+    export PATH=${npmPackages}/node_modules/.bin:_build/install/bin:$PATH
+  '';
 
   nativeBuildInputs = (with pkgs; [
     # Make developer life easier
@@ -11,14 +13,15 @@ pkgs.mkShell {
     nodejs-12_x
     ligo
 
-    # Nix files formatter
+    # formatters
     nixfmt
+    nodePackages.prettier
+    ocamlformat_0_19_0
   ]) ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
     # OCaml developer tooling
     ocaml
     findlib
     dune_2
-    # esy
     ocaml-lsp
     ocamlformat-rpc
   ]) ++ deku.nativeBuildInputs;

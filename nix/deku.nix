@@ -19,7 +19,6 @@ ocamlPackages.buildDunePackage {
   };
 
   configurePhase = ''
-    export NODE_PATH=${npmPackages}/node_modules
     export PATH=${npmPackages}/node_modules/.bin:$PATH
 
     ln -s ${npmPackages}/node_modules ./node_modules

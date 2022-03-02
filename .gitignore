@@ -1,6 +1,11 @@
 # Esy things
 _esy
+
+# dune
 _build
+
+# nix
+result
 
 # IDEs
 .vscode
