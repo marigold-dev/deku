@@ -34,8 +34,8 @@ type expr =
     }
   (* memory *)
   | E_pair  of {
-      left : expr;
-      right : expr;
+      first : expr;
+      second : expr;
     }
   | E_fst   of expr
   | E_snd   of expr
@@ -43,8 +43,8 @@ type expr =
 type value =
   | V_int64     of int64
   | V_pair      of {
-      left : value;
-      right : value;
+      first : value;
+      second : value;
     }
   | V_closure   of {
       env : env;
