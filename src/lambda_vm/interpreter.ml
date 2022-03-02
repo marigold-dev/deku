@@ -25,11 +25,11 @@ end = struct
 
   type 'a t =
     | Any : value t
-    | Pair : 'left t * 'right t -> ('left * 'right) t
+    | Pair : 'first t * 'second t -> ('first * 'second) t
     | Nil : nil t
 
   let any = Any
-  let pair left right = Pair (left, right)
+  let pair first second = Pair (first, second)
   let nil = Nil
 
   let operations = nil
@@ -39,11 +39,11 @@ end = struct
    fun value t ->
     match (t, value) with
     | Any, value -> value
-    | Pair (left_t, right_t), V_pair { left = left_value; right = right_value }
-      ->
-      let left = parse left_value left_t in
-      let right = parse right_value right_t in
-      (left, right)
+    | ( Pair (first_t, second_t),
+        V_pair { first = first_value; second = second_value } ) ->
+      let first = parse first_value first_t in
+      let second = parse second_value second_t in
+      (first, second)
     | Pair _, (V_int64 _ | V_closure _ | V_primitive _) ->
       raise Value_is_not_pair
     | Nil, V_int64 0L -> ()
@@ -151,14 +151,14 @@ let rec eval ~stack gas env code =
     | V_closure _
     | V_primitive _ ->
       raise Value_is_not_int64)
-  | E_pair { left; right } ->
-    let left = eval_call env left in
-    let right = eval_call env right in
-    V_pair { left; right }
+  | E_pair { first; second } ->
+    let first = eval_call env first in
+    let second = eval_call env second in
+    V_pair { first; second }
   | E_fst pair -> (
     let pair = eval_call env pair in
     match pair with
-    | V_pair { left; right = _ } -> left
+    | V_pair { first; second = _ } -> first
     | V_int64 _
     | V_closure _
     | V_primitive _ ->
@@ -166,7 +166,7 @@ let rec eval ~stack gas env code =
   | E_snd pair -> (
     let pair = eval_call env pair in
     match pair with
-    | V_pair { left = _; right } -> right
+    | V_pair { first = _; second } -> second
     | V_closure _
     | V_int64 _
     | V_primitive _ ->

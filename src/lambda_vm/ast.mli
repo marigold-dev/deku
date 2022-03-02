@@ -34,8 +34,8 @@ type expr =
     }
   (* memory *)
   | Pair  of {
-      left : expr;
-      right : expr;
+      first : expr;
+      second : expr;
     }
   | Fst   of expr
   | Snd   of expr
