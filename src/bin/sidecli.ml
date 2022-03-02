@@ -331,7 +331,7 @@ let sign_block node_folder block_hash =
   let%await () =
     let open Networking in
     broadcast_to_list
-      (module Signature_spec)
+      (module Network_schemas.Signature_spec)
       validators_uris
       { hash = block_hash; signature } in
   Lwt.return (`Ok ())
@@ -364,7 +364,7 @@ let produce_block node_folder =
   let%await () =
     let open Networking in
     broadcast_to_list
-      (module Block_and_signature_spec)
+      (module Network_schemas.Block_and_signature_spec)
       validators_uris { block; signature } in
   Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
   Lwt.return (`Ok ())
@@ -499,7 +499,7 @@ let info_add_trusted_validator =
   Term.info "add-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
     ~exits ~man
 let add_trusted_validator node_folder address =
-  let open Networking in
+  let open Network_schemas in
   let%await identity = read_identity ~node_folder in
   let payload =
     let open Trusted_validators_membership_change in
@@ -530,7 +530,7 @@ let info_remove_trusted_validator =
   Term.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
     ~exits ~man
 let remove_trusted_validator node_folder address =
-  let open Networking in
+  let open Network_schemas in
   let%await identity = read_identity ~node_folder in
   let payload =
     let open Trusted_validators_membership_change in

@@ -132,7 +132,7 @@ Lwt.async_exception_hook :=
     Printexc.print_backtrace stderr
 let pending = ref false
 let load_snapshot snapshot_data =
-  let open Networking.Protocol_snapshot in
+  let open Network_schemas.Protocol_snapshot in
   let%ok state =
     Node.load_snapshot ~snapshot:snapshot_data.snapshot
       ~additional_blocks:snapshot_data.additional_blocks
@@ -330,7 +330,8 @@ let received_user_operation state update_state user_operation =
   in
   if not operation_exists then (
     Lwt.async (fun () ->
-        Networking.broadcast_user_operation_gossip state { user_operation });
+        Networking.broadcast_user_operation_gossip state
+          Network_schemas.User_operation_gossip.{ user_operation });
     let (_ : State.t) =
       update_state
         (let open Node in
@@ -384,7 +385,7 @@ let register_uri state update_state ~uri ~signature =
   Ok ()
 let request_withdraw_proof state ~hash =
   match state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt hash with
-  | None -> Networking.Withdraw_proof.Unknown_operation
+  | None -> Network_schemas.Withdraw_proof.Unknown_operation
   | Some (Receipt_tezos_withdraw withdrawal_handle) ->
     let last_block_hash = state.Node.protocol.last_block_hash in
     let withdrawal_handles_hash =
@@ -403,7 +404,7 @@ let request_ticket_balance state ~ticket ~address =
   |> Core.State.ledger
   |> Ledger.balance address ticket
 let trusted_validators_membership state update_state request =
-  let open Networking.Trusted_validators_membership_change in
+  let open Network_schemas.Trusted_validators_membership_change in
   let { signature; payload = { address; action } as payload } = request in
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
