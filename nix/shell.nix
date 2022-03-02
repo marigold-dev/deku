@@ -29,7 +29,7 @@ pkgs.mkShell {
     ocaml
     findlib
     dune_2
-    esy
+    # esy
     ocaml-lsp
     ocamlformat-rpc
   ]);

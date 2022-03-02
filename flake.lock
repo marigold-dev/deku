@@ -1,31 +1,5 @@
 {
   "nodes": {
-    "esy-fhs": {
-      "inputs": {
-        "anmonteiro": [
-          "ocaml-overlays"
-        ],
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1641514639,
-        "narHash": "sha256-DnMSUjeM/ZiK1lZxDIF+hIpoR0R7CkvyTefqRQZ8coQ=",
-        "owner": "d4hines",
-        "repo": "esy-fhs",
-        "rev": "03931b4b9d137ced5e5ec8030b761b0ef6a7a820",
-        "type": "github"
-      },
-      "original": {
-        "owner": "d4hines",
-        "repo": "esy-fhs",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "locked": {
         "lastModified": 1644229661,
@@ -77,11 +51,11 @@
         "flake-utils": "flake-utils_2"
       },
       "locked": {
-        "lastModified": 1645697731,
-        "narHash": "sha256-TraejZ3qnDlfUGzLJMq0tGQqJgcN1TwuUckRxIelrfo=",
+        "lastModified": 1646105286,
+        "narHash": "sha256-1vDZlcWkZHRKvIyDvB1Ffw1OnMzJsvO9+s5Ngiq9XJs=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "e9815a3c08a50bceacb79f8cb05f3ca21d3766fd",
+        "rev": "69827014f8e3cddc24c407a9b458acefcb12ebeb",
         "type": "github"
       },
       "original": {
@@ -92,7 +66,6 @@
     },
     "root": {
       "inputs": {
-        "esy-fhs": "esy-fhs",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays"
