@@ -27,10 +27,10 @@ type expr =
   | E_prim  of prim
   (* branching *)
   | E_if    of {
-      (* condition <> 0 ? then_ : else_ *)
-      condition : expr;
-      then_ : expr;
-      else_ : expr;
+      (* predicate <> 0 ? consequent : alternative *)
+      predicate : expr;
+      consequent : expr;
+      alternative : expr;
     }
   (* memory *)
   | E_pair  of {
