@@ -3,4 +3,4 @@ type t = int
 
 let compare = Int.compare
 let initial = 0
-let next t = t
+let next t = t + 1
