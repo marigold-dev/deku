@@ -1,6 +1,6 @@
 (library
- (name node)
+ (name networking_impl)
  (libraries protocol uri helpers piaf)
- (virtual_modules networking)
+ (implements node)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))

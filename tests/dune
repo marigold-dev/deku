@@ -10,7 +10,8 @@
   protocol
   node
   tezos_rpc
-  consensus_contract_interop_mock)
+  consensus_contract_interop_mock
+  networking_mock)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 

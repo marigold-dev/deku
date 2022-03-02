@@ -7,14 +7,21 @@
   node
   helpers
   cmdliner
-  consensus_contract_interop_impl)
+  consensus_contract_interop_impl
+  networking_impl)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
 
 (executable
  (name sidecli)
- (libraries node bin_common helpers cmdliner consensus_contract_interop_impl)
+ (libraries
+  node
+  bin_common
+  helpers
+  cmdliner
+  consensus_contract_interop_impl
+  networking_impl)
  (modules Sidecli)
  (public_name sidecli)
  (preprocess
