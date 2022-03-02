@@ -1,7 +1,7 @@
 { pkgs, esy ? pkgs.nodePackages.esy, deku, npmPackages }:
 
 pkgs.mkShell {
-  shellHook = deku.preBuild;
+  shellHook = deku.configurePhase;
 
   nativeBuildInputs = (with pkgs; [
     # Make developer life easier
