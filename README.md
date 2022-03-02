@@ -6,10 +6,8 @@ A sidechain to Tezos by Marigold focused on higher throughput.
 
 ### Pre-requisites
 
-#### Esy Package Manager
-
-Marigold Sidechain is being developed with
-[esy](https://esy.sh/). `esy` can be installed with NPM or Yarn.
+Marigold Sidechain is being developed with the
+[esy](https://esy.sh/) package manager. `esy` can be installed with NPM or Yarn.
 
 ```sh
 npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES issues
@@ -18,8 +16,8 @@ yarn global add esy
 ```
 
 Alternatively, you can use the `nix` package manager with
-[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter a preloaded
-environment with the correct dependencies, including `esy`.
+[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an environment
+preloaded with the correct dependencies and devtools.
 
 1. With [`direnv`](https://direnv.net/) (recommended):
 
@@ -37,11 +35,8 @@ $ which docker
 2. With `nix-command`:
 
 ```
-nix --experimental-features "nix-command flakes" run
+nix --experimental-features "nix-command flakes" develop -c $SHELL
 ```
-
-(We suggest using this [binary cache repository](https://app.cachix.org/cache/anmonteiro) to reduce
-build times)
 
 ### Testing
 
@@ -69,7 +64,7 @@ For convenient local development, we have included two components:
 #### Requirements
 
 The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
-in addition to the usual Deku pre-requisites.
+in addition to the usual Deku pre-requisites (alternatively, you can use `nix` to provide these).
 
 #### Setup
 
