@@ -73,11 +73,11 @@ let rec compile_expr ~stack gas next_ident vars code =
     let prim = compile_prim prim in
     E_prim prim
   (* branching *)
-  | If { condition; then_; else_ } ->
-    let condition = compile_expr vars condition in
-    let then_ = compile_expr vars then_ in
-    let else_ = compile_expr vars else_ in
-    E_if { condition; then_; else_ }
+  | If { predicate; consequent; alternative } ->
+    let predicate = compile_expr vars predicate in
+    let consequent = compile_expr vars consequent in
+    let alternative = compile_expr vars alternative in
+    E_if { predicate; consequent; alternative }
   (* memory *)
   | Pair { left; right } ->
     let left = compile_expr vars left in
