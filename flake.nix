@@ -22,26 +22,25 @@
   outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:
     flake-utils.lib.eachDefaultSystem (system:
       let        
-        pkgs = ocaml-overlays.legacyPackages."${system}";
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ ocaml-overlays.overlay ];
+        };
+
         bp = pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
         npmPackages = bp.buildNpmPackage { src = ./.; npmBuild = "echo ok"; };
+
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
           ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
           nodejs = pkgs.nodejs-12_x;
           inherit npmPackages;
         };
-        sidecli = deku.overrideAttrs (o: {
-          buildPhase = "dune build src/bin/sidecli.exe --profile=release";
-        });
-
-        # esy = esy-fhs.packages.${system}.esy;
-        devShell = import ./nix/shell.nix { inherit pkgs; inherit deku; inherit npmPackages; };
       in
       {
-        inherit devShell;
+        devShell = import ./nix/shell.nix {inherit pkgs deku npmPackages; };
         packages = {
-          inherit deku sidecli;
+          inherit deku;
         };
       });
 }
