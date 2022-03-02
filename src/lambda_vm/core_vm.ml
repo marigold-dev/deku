@@ -1,7 +1,8 @@
 module Ast = Ast
 module Gas = Gas
 
-include Ir
+type script = Ir.script
+type value = Ir.value
 
 type compile_error = Compiler.error =
   (* user program bugs *)

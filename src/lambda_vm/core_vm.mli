@@ -1,4 +1,4 @@
-module Ast : module type of Ast
+module Ast = Ast
 module Gas : module type of Gas
 
 (* ir *)
