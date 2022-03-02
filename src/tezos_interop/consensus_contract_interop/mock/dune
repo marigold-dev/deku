@@ -1,0 +1,4 @@
+(library
+ (name consensus_contract_interop_mock)
+ (implements tezos_interop)
+ (libraries helpers lwt.unix tezos-micheline crypto tezos))

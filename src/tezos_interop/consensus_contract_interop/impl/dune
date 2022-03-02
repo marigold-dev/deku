@@ -1,0 +1,31 @@
+(library
+ (name consensus_contract_interop_impl)
+ (implements tezos_interop)
+ (libraries helpers lwt.unix tezos-micheline crypto tezos)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.eq ppx_blob ppx_let_binding))
+ (preprocessor_deps
+  (file ./run_entrypoint.bundle.js)
+  (file ./fetch_storage.bundle.js)
+  (file ./listen_transactions.bundle.js)))
+
+(rule
+ (deps
+  ./webpack.config.js
+  ./listen_transactions.js
+  ./fetch_storage.js
+  ./run_entrypoint.js)
+ (targets
+  ./listen_transactions.bundle.js
+  ./fetch_storage.bundle.js
+  ./run_entrypoint.bundle.js)
+ (mode fallback)
+ (action
+  (run webpack --env=%{profile})))
+
+(rule
+ (deps ./webpack.config.js ./listen_transactions.js ./run_entrypoint.js)
+ (alias fmt)
+ (mode fallback)
+ (action
+  (run prettier -c %{deps})))
