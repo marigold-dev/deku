@@ -23,7 +23,6 @@ jobs:
 
       - uses: esy/github-action@master
         with:
-          manifest: esy.json
           cache-key: ${{ matrix.system }}-${{ hashFiles('esy.lock/index.json') }}
 
       - name: Run Code formatter
