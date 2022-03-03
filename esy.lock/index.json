@@ -1,6 +1,6 @@
 {
   "checksum": "06f9f237cf9dd0acc2174a26407cd7c3",
-  "root": "sidechain@link-dev:./package.json",
+  "root": "sidechain@link-dev:./esy.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
       "id":
@@ -377,14 +377,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "sidechain@link-dev:./package.json": {
-      "id": "sidechain@link-dev:./package.json",
+    "sidechain@link-dev:./esy.json": {
+      "id": "sidechain@link-dev:./esy.json",
       "name": "sidechain",
-      "version": "link-dev:./package.json",
+      "version": "link-dev:./esy.json",
       "source": {
         "type": "link-dev",
         "path": ".",
-        "manifest": "package.json"
+        "manifest": "esy.json"
       },
       "overrides": [],
       "dependencies": [

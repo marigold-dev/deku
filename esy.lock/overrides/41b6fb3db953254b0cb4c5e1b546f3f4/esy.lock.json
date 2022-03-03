@@ -1,12 +1,12 @@
 {
   "hash": "d10585b707b5ab54802c6c85154328fd",
-  "root": "root@path:./package.json",
+  "root": "root@path:./esy.json",
   "node": {
-    "root@path:./package.json": {
+    "root@path:./esy.json": {
       "record": {
         "name": "root",
-        "version": "path:./package.json",
-        "source": "path:./package.json",
+        "version": "path:./esy.json",
+        "source": "path:./esy.json",
         "files": [],
         "opam": null
       },
