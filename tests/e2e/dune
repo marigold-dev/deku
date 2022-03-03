@@ -1,0 +1,4 @@
+(executable
+ (name asserter)
+ (public_name asserter)
+ (libraries bin_common lwt cmdliner))
