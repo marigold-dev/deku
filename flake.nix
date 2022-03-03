@@ -13,7 +13,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     # Use this branch until we can merge it in the overlays
-    ocaml-overlays.url = "github:anmonteiro/nix-overlays/ulrikstrid/ocaml-trunk";
+    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";

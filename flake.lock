@@ -66,16 +66,15 @@
         "flake-utils": "flake-utils_2"
       },
       "locked": {
-        "lastModified": 1646216585,
-        "narHash": "sha256-sX26bJtFkSbfd4RbSkwUt0sE9lRs7TIPVprk4Jbnj3Q=",
+        "lastModified": 1646292920,
+        "narHash": "sha256-kHtEjxSK04bU58GLtJe3+/+ssqA5J0B0//MVgwgiQdk=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "f0bb801c567a8b705d5ec59067ddfe10f60f07af",
+        "rev": "33a06e0df673ac57269d785f284aaedb4cfee3d2",
         "type": "github"
       },
       "original": {
         "owner": "anmonteiro",
-        "ref": "ulrikstrid/ocaml-trunk",
         "repo": "nix-overlays",
         "type": "github"
       }
