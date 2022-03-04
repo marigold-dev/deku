@@ -6,6 +6,14 @@ Here are listed each of them, with a `curl` example command to play with them.
 
 Since we use RPC, all these endpoints are POST (only verb available over RPC).
 
+## Prerequisites
+
+In order to be able to play the following `curl` examples, you must have
+
+- run `docker compose upd -d`
+- run `./sandbox.sh setup`
+- run `./start.sh`
+
 ## `/append-block-and-signature`
 
 ### Purpose
