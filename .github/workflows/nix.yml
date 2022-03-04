@@ -13,7 +13,7 @@ jobs:
       - uses: cachix/cachix-action@v10
         with:
           name: deku
-          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - name: "Run nix flake check"
         run: nix flake check
       - name: "Build deku via flakes"
