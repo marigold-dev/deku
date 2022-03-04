@@ -14,3 +14,6 @@ type script_result = {
 }
 val execute :
   Gas.t -> arg:Ir.value -> Ir.script -> (script_result, error) result
+
+val pp_value : Format.formatter -> Ir.value -> unit
+
