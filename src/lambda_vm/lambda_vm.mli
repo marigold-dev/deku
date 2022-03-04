@@ -29,3 +29,6 @@ type script_result = {
 }
 val execute :
   Gas.t -> arg:value -> script -> (script_result, execution_error) result
+
+val pp_value : Format.formatter -> value -> unit
+
