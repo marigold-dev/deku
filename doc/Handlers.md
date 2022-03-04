@@ -6,7 +6,7 @@ Here are listed each of them, with a `curl` example command to play with them.
 
 Since we use RPC, all these endpoints are POST (only verb available over RPC).
 
-## /append-block-and-signature
+## `/append-block-and-signature`
 
 ### Purpose
 
@@ -17,10 +17,8 @@ Check if the provided block is valid, where `valid` means:
 
 ### Expected data
 
-The module [Block_and_signature_spec](../src/node/networking.ml#L53) expects to receive:
-
-- a [block](../src/protocol/block.mli#L2)
-- the corresponding [signature](../src/protocol/protocol_signature.ml#L3)
+- A [block](../src/protocol/block.mli#L2)
+- The corresponding [signature](../src/protocol/protocol_signature.ml#L3)
 
 ### curl example
 
@@ -35,8 +33,6 @@ $
 Add the provided signature to the provided hash.
 
 ### Expected data
-
-The module [Block_and_signature_spec](../src/node/networking.ml#L44) expect to receive:
 
 - An hash of type `BLAKE2B.t`
 - The corresponding [signature](../src/protocol/protocol_signature.ml#L3)
