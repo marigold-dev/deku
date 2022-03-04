@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "ocaml": "4.12.",
-    "@opam/dune": "~2.9.3",
+    "@opam/dune": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/lwt": "*",
@@ -42,7 +42,6 @@
     "webpack-cli": "^4.7.1",
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "*",
-    "@opam/bigstring": "*",
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*"
   },
@@ -57,16 +56,29 @@
   },
   "resolutions": {
     "ocaml": "esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396",
-    "@esy-ocaml/reason": "EduardoRFS/reason:reason.json#70984e94eae3084e56d0cfdf7d5d3be1ecda7b18",
-    "@opam/reason": "EduardoRFS/reason:reason.json#70984e94eae3084e56d0cfdf7d5d3be1ecda7b18",
+    "@opam/reason": "EduardoRFS/reason:reason.opam#70984e94eae3084e56d0cfdf7d5d3be1ecda7b18",
     "@reason-native/rely": "reasonml/reason-native:rely.json#7788757212c5b9365ed839b044c4840e3e917987",
     "@reason-native/cli": "reasonml/reason-native:cli.json#7788757212c5b9365ed839b044c4840e3e917987",
-    "@opam/base-domains": {
-      "source": "no-source:",
-      "override": {}
+    "@reason-native/pastel": {
+      "version": "0.3.0",
+      "override": {
+        "dependencies": {
+          "@esy-ocaml/reason": null,
+          "@opam/reason": "*"
+        }
+      }
+    },
+    "@reason-native/file-context-printer": {
+      "version": "0.0.3",
+      "override": {
+        "dependencies": {
+          "@esy-ocaml/reason": null,
+          "@opam/reason": "*"
+        }
+      }
     },
     "@opam/dream": {
-      "source": "EduardoRFS/dream:dream.opam#bd4c4b09b0ace2144384f97848bcfd6ad0856e7e",
+      "source": "EduardoRFS/dream:dream.opam#ae9b60f483abf1b5dccce906f3ae21df7bbd4fd1",
       "override": {
         "dependencies": {
           "@opam/websocketaf": "*",
@@ -75,7 +87,8 @@
           "@opam/httpaf-lwt-unix": "*",
           "@opam/h2": "*",
           "@opam/h2-lwt-unix": "*",
-          "@opam/multipart_form": "0.3.0",
+          "@opam/multipart_form": "*",
+          "@opam/multipart_form-lwt": "*",
           "@opam/camlp-streams": "*"
         }
       }
@@ -136,6 +149,7 @@
     },
     "@opam/ppx_inline_test": "janestreet/ppx_inline_test:ppx_inline_test.opam#54e0a1cd2402126998d40f653876e59a7011bf75",
     "@opam/ppx_sexp_conv": "janestreet/ppx_sexp_conv:ppx_sexp_conv.opam#3d413303de3f76fecb19dc51c85b81c33c5c872a",
+    "@opam/bigstring": "EduardoRFS/ocaml-bigstring:bigstring.opam#0c61b86549af6a383f3b34ec757fd3434acf4b94",
     "@opam/secp256k1-internal": "git:https://gitlab.com/marigold/ocaml-secp256k1-internal:secp256k1-internal.opam#964026bdb43db3ebffd1643599ec22e4caf8f2bc",
     "@opam/ocaml-lsp-server": {
       "source": "EduardoRFS/ocaml-lsp:ocaml-lsp-server.opam#24fcebcec9f1e99815b036a6d45c0f912e8e8a19",
@@ -160,9 +174,18 @@
     "@opam/lwt": "kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be",
     "@opam/ocplib-endian": "kit-ty-kate/ocplib-endian:ocplib-endian.opam#8136732deb8e7f69ece0a19cfc9f9a141ebe1d2b",
     "@opam/domainslib": "ocaml-multicore/domainslib:domainslib.opam#4ac01e870615e32291f0145a7cbdd5528b88ea59",
-    "@opam/omd": "EduardoRFS/omd:omd.opam#74477dafa064a621b585eb7b637ad3b1d1b3dfef",
+    "@opam/omd": "EduardoRFS/omd:omd.opam#7b866aacbc119e2be54b2dfcd198b860d3c497b1",
     "@opam/camomile": "kit-ty-kate/camomile:camomile.opam#12e8baac3cedaa18b98cdcc2d84196f8e52ee31c",
     "@opam/lwt_log": "kit-ty-kate/lwt_log:lwt_log.opam#604644d7c72af1f1e87ab4fc2d7e8f7376c9b906",
-    "@opam/utop": "EduardoRFS/utop:utop.opam#8f93be9019235ea7224cf792beacad045ba7de4d"
+    "@opam/utop": "EduardoRFS/utop:utop.opam#8f93be9019235ea7224cf792beacad045ba7de4d",
+    "@opam/multipart_form": "EduardoRFS/multipart_form:multipart_form.opam#6c4f5c72c71d9caebb4edac15be364717ddc1d7c",
+    "@opam/multipart_form-lwt": {
+      "source": "EduardoRFS/multipart_form:multipart_form-lwt.opam#6c4f5c72c71d9caebb4edac15be364717ddc1d7c",
+      "override": {
+        "dependencies": {
+          "@opam/multipart_form": "*"
+        }
+      }
+    }
   }
 }
