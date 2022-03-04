@@ -4,11 +4,11 @@ set -e
 data_directory="data"
 
 deku_cli () {
-  eval dune exec src/bin/deku_cli.exe -- '"$@"'
+  eval deku-cli '"$@"' 
 }
 
 deku_node () {
-  ./_build/default/src/bin/deku_node.exe "$@"
+  eval deku-node '"$@"' 
 }
 
 VALIDATORS=(0 1 2)
