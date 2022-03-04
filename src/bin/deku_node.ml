@@ -63,7 +63,7 @@ let handle_block_by_hash =
       Ok block)
 
 (* POST /block-level *)
-(* Retrieve length of the chain? *)
+(* Retrieve height of the chain? *)
 let handle_block_level =
   handle_request
     (module Networking.Block_level)
