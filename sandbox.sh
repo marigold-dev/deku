@@ -22,7 +22,7 @@ tezos-client() {
 }
 
 ligo() {
-  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.37.0 "$@"
 }
 
 VALIDATORS=(0 1 2)

@@ -17,11 +17,12 @@ npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES iss
 yarn global add esy
 ```
 
-Alternatively, you can use the `nix` package manager with
-[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an
-environment preloaded with the correct dependencies, including `esy`:
+#### Nix flakes (Esy alternative)
 
-```
+You can use the `nix` package manager with [flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes)
+to enter a preloaded environment with the correct dependencies, including `esy`:
+
+```sh
 nix --experimental-features "nix-command flakes" run
 ```
 
@@ -33,7 +34,7 @@ build times)
 We use [Rely](https://reason-native.com/docs/rely/) to write
 tests. These can be run with,
 
-```
+```sh
 esy test
 ```
 
@@ -46,32 +47,35 @@ For convenient local development, we have included two components:
   Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance
   for introspection of the deployed contract and its operations. The BCD interace is available in
   your browser at http://localhost:8000.
-- A script `./sandbox.sh` that sets up a identities for a local Deku cluster.
+- A script `./sandbox.sh` that sets up a identity for a local Deku cluster.
   This script is the easiest way to get started with Deku; however, it uses unsafe
   configuration options to lower the required Tezos confirmations to 1. This setting greatly
   speeds up local development, **but is not at all safe for production**!
 
 #### Requirements
 
-The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
-in addition to the usual Deku pre-requisites.
+The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/) in addition to the usual Deku pre-requisites.
 
 #### Setup
 
-Run `docker-compose up -d` to start a Tezos network and the BCD interface.
+To start the sandbox, run the following commands:
 
-Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
-a Deku consensus contract configured for these validators to the local sandbox.
+1. `docker compose up -d` to start a Tezos network and the BCD interface.
 
-Run `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku state.
+2. `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
+   a Deku consensus contract configured for these validators to the local sandbox.
 
-Run `docker-compose down -v` to stop the Tezos network and destroy the BCD database.
+To stop simply run:
+
+1. `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku state.
+
+2. `docker compose down -v` to stop the Tezos network and destroy the BCD database.
 
 #### Start
 
 Simply run:
 
-```
+```sh
 ./start.sh
 ```
 

@@ -24,6 +24,8 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
+(* POST /append-block-and-signature *)
+(* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block_and_signature =
   handle_request
     (module Networking.Block_and_signature_spec)
@@ -37,6 +39,9 @@ let handle_received_block_and_signature =
           ~hash:request.block.hash ~signature:request.signature
         |> ignore_some_errors in
       Ok ())
+
+(* POST /append-signature *)
+(* Append signature to an already existing block? *)
 let handle_received_signature =
   handle_request
     (module Networking.Signature_spec)
@@ -47,17 +52,26 @@ let handle_received_signature =
           ~signature:request.signature
         |> ignore_some_errors in
       Ok ())
+
+(* POST /block-by-hash *)
+(* Retrieve block by provided hash *)
 let handle_block_by_hash =
   handle_request
     (module Networking.Block_by_hash_spec)
     (fun _update_state request ->
       let block = Flows.find_block_by_hash (Server.get_state ()) request.hash in
       Ok block)
+
+(* POST /block-level *)
+(* Retrieve length of the chain? *)
 let handle_block_level =
   handle_request
     (module Networking.Block_level)
     (fun _update_state _request ->
       Ok { level = Flows.find_block_level (Server.get_state ()) })
+
+(* POST /protocol-snapshot *)
+(* Get the snapshot of the protocol (last block and associated signature) *)
 let handle_protocol_snapshot =
   handle_request
     (module Networking.Protocol_snapshot)
@@ -71,41 +85,62 @@ let handle_protocol_snapshot =
           last_block_signatures =
             Signatures.to_list snapshots.last_block_signatures;
         })
+
+(* POST /request-nonce *)
+(* Set a new nonce? *)
 let handle_request_nonce =
   handle_request
     (module Networking.Request_nonce)
     (fun update_state { uri } ->
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
       Ok { nonce })
+
+(* POST /register-uri *)
+(* Add the provided uri as new validator? *)
 let handle_register_uri =
   handle_request
     (module Networking.Register_uri)
     (fun update_state { uri; signature } ->
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
+
+(* POST /user-operation-gossip *)
+(* Propagate user operation (core_user.t) over gossip network *)
 let handle_receive_user_operation_gossip =
   handle_request
     (module Networking.User_operation_gossip)
     (fun update_state request ->
       Flows.received_user_operation (Server.get_state ()) update_state
         request.user_operation)
+
+(* POST /consensus-operation-gossip *)
+(* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
   handle_request
     (module Networking.Consensus_operation_gossip)
     (fun update_state request ->
       Flows.received_consensus_operation (Server.get_state ()) update_state
         request.consensus_operation request.signature)
+
+(* POST /trusted-validators-membership *)
+(* Add or Remove a new trusted validator *)
 let handle_trusted_validators_membership =
   handle_request
     (module Networking.Trusted_validators_membership_change)
     (fun update_state request ->
       Flows.trusted_validators_membership (Server.get_state ()) update_state
         request)
+
+(* POST /withdraw-proof *)
+(* What is it doing? *)
 let handle_withdraw_proof =
   handle_request
     (module Networking.Withdraw_proof)
     (fun _ { operation_hash } ->
       Ok
         (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
+
+(* POST /ticket-balance *)
+(* What is it doing? *)
 let handle_ticket_balance =
   handle_request
     (module Networking.Ticket_balance)
