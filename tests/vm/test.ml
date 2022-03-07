@@ -281,7 +281,7 @@ let test_fst_value_is_not_pair () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 2000 (Int64 0L) script)
+    (Vm_test.execute_ast 1001 (Int64 0L) script)
     Value_is_not_pair
 
 let test_snd_value_is_not_pair () =
@@ -297,7 +297,7 @@ let test_snd_value_is_not_pair () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 2000 (Int64 0L) script)
+    (Vm_test.execute_ast 1001 (Int64 0L) script)
     Value_is_not_pair
 
 let test_op1_value_is_not_int64 () =
@@ -318,7 +318,7 @@ let test_op1_value_is_not_int64 () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 2000 (Int64 0L) script)
+    (Vm_test.execute_ast 1601 (Int64 0L) script)
     Value_is_not_int64
 
 let test_op2_value_is_not_int64 () =
@@ -344,7 +344,7 @@ let test_op2_value_is_not_int64 () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 2001 (Int64 0L) script)
     Value_is_not_int64
 
 let test_if_value_is_not_int64 () =
@@ -366,7 +366,7 @@ let test_if_value_is_not_int64 () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 1601 (Int64 0L) script)
     Value_is_not_int64
 
 let test_value_is_not_function () =
@@ -382,7 +382,7 @@ let test_value_is_not_function () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 1201 (Int64 0L) script)
     Value_is_not_function
 
 let test_pattern1_value_is_not_pair () =
@@ -390,13 +390,13 @@ let test_pattern1_value_is_not_pair () =
     Ast.{ param = "_"; code = Pair { first = Const 0L; second = Const 0L } }
   in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 701 (Int64 0L) script)
     Value_is_not_pair
 
 let test_pattern2_value_is_not_pair () =
   let script = Ast.{ param = "_"; code = Const 0L } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 301 (Int64 0L) script)
     Value_is_not_pair
 
 let test_pattern3_value_is_not_zero () =
@@ -412,7 +412,7 @@ let test_pattern3_value_is_not_zero () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 1101 (Int64 0L) script)
     Value_is_not_zero
 
 let test_pattern4_value_is_not_zero () =
@@ -428,7 +428,7 @@ let test_pattern4_value_is_not_zero () =
             };
       } in
   check_execution_error
-    (Vm_test.execute_ast 3000 (Int64 0L) script)
+    (Vm_test.execute_ast 1101 (Int64 0L) script)
     Value_is_not_zero
 
 let () =
