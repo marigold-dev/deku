@@ -126,7 +126,7 @@ let create_socket port =
   let open Lwt_unix in
   let addr = ADDR_INET (Unix.inet_addr_loopback, port) in
   let f_descr = socket PF_INET SOCK_DGRAM 0 in
-  let _ = Printf.sprintf "Bound to address: %s\n" (addr_to_string addr) in
+  Printf.printf "Bound to address: %s\n" (addr_to_string addr);
   f_descr
 
 let read_bytes buffer_size = failwith "undefined"
@@ -163,16 +163,12 @@ let udp_node folder =
     let socket_address = getsockname f_descr in
     match socket_address with
     | ADDR_UNIX somethingBis -> failwith "undefined"
-    | ADDR_INET (inet_address, file_perm) ->
-      let _ = Printf.sprintf "Waiting on port: %d\n" file_perm in
+    | ADDR_INET (inet_address, port) ->
+      Printf.printf "Waiting on port: %d\n" port;
       let%lwt _, client_addr = recvfrom f_descr buffer_size 0 100 [] in
       let%lwt _ = bind f_descr socket_address in
-      let _ =
-        Printf.sprintf "Bound to address: %s\n" @@ addr_to_string socket_address
-      in
-      let _ =
-        Printf.sprintf "Connected to client: %s\n" @@ addr_to_string client_addr
-      in
+      Printf.printf "Bound to address: %s\n" @@ addr_to_string socket_address;
+      Printf.printf "Connected to client: %s\n" @@ addr_to_string client_addr;
       let msg_str = read_bytes buffer_size in
       let%lwt () = Lwt_io.printf "Got message %s\n\n" msg_str in
       (* Prepare a message to send back to the client, then send it
