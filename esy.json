@@ -184,6 +184,7 @@
         }
       }
     },
-    "@opam/graphql": "andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9"
+    "@opam/graphql": "andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9",
+    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
   }
 }
