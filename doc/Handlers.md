@@ -31,7 +31,41 @@ Check if the provided block is valid, where `valid` means:
 ### curl example
 
 ```shell script
-$
+$ curl -v -X POST http://127.0.0.1:4440/append-block-and-signature -d
+  '"block": {
+    "hash": "940eac02291b9b4fb1f02918830a20e28f484f9598ffffabb5f9dbcc6f56d3e1",
+    "payload_hash": "86ed99d235178e6f32bcc5b5dea894f6523bd8da4e5f98b62318c3a2138d086c",
+    "state_root_hash": "d4393a4cb29a09b62fbc4edc1b8414b27189bc0f6f569a205cebb1f2598e2047",
+    "withdrawal_handles_hash": "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8",
+    "validators_hash": "d139b7cda8577e16c79084a253d6e9ad5cfeb07e2e5ad46223fa0f87c500b9d8",
+    "previous_hash": "373e143b34f9be47404e9b0203857c1f55647cb55b5357bf38fd3d6d40c771d3",
+    "author": "tz1PmKMKTbSVcam69ssKUtmSpeBRkYPTBPvW",
+    "block_height": 56754568,
+    "operations": []
+  },
+  "signature": {
+    "signature": "edsigtujsQZBBvVy7p6oKbp44c9KP8qhkEfDrPh3W4hae8zmF1knPxVNTDZHhix3c7triJtVhPvDeWegrGaC7Xtfmy7iebhe75P",
+    "public_key": "edpkuqseqRnfW5ZWwpp2kWjdY2Tma8A8xhNND2Xgoos49gApQb46LP"
+  }
+}' -H "Content-type: application/json"
+
+*   Trying 127.0.0.1:4440...
+* Connected to 127.0.0.1 (127.0.0.1) port 4440 (#0)
+> POST /append-block-and-signature HTTP/1.1
+> Host: 127.0.0.1:4440
+> User-Agent: curl/7.74.0
+> Accept: */*
+> Content-type: application/json
+> Content-Length: 273
+>
+* upload completely sent off: 273 out of 273 bytes
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Content-Length: 4
+<
+* Connection #0 to host 127.0.0.1 left intact
+null
 ```
 
 ## `/append-signature`
@@ -48,7 +82,25 @@ Add the provided signature to the provided hash.
 ### curl example
 
 ```shell script
-$
+$ curl -v -X POST http://127.0.0.1:4440/append-signature -d '{"hash":"c6c1aa9fd3dbb1eb8cfc319b4524ddfb6ff6e26edb196ce0310a56c5ac1d7934","signature":{"signature":"edsigtmjX41ajHPEnUTohQ4Jjy2d1LWPdSb4u2GrvwgLk4aoHFwMVDadw5zRepHyK1mcbUTJ6PmxKe4PaoyivJtYPJevuiL8iTq","public_key":"edpkuy1Qjwo4X7a3r1wA1HLAx9s5kgp7b9xUxfSpQQcTpFnqyzyrzH"}}' -H "Content-type: application/json"
+
+*   Trying 127.0.0.1:4440...
+* Connected to 127.0.0.1 (127.0.0.1) port 4440 (#0)
+> POST /append-signature HTTP/1.1
+> Host: 127.0.0.1:4440
+> User-Agent: curl/7.74.0
+> Accept: */*
+> Content-type: application/json
+> Content-Length: 273
+>
+* upload completely sent off: 273 out of 273 bytes
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Content-Type: application/json
+< Content-Length: 4
+<
+* Connection #0 to host 127.0.0.1 left intact
+null
 ```
 
 ## `/block-by-hash`
@@ -241,6 +293,12 @@ A URI?
 ### Returned data
 
 The nonce of type `BLAKE2B.t`
+
+### curl example
+
+```shell script
+$
+```
 
 ## `/register-uri`
 
