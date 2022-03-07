@@ -1,3 +1,5 @@
 (library
  (name lambda_vm)
- (modules_without_implementation ir ast))
+ (modules_without_implementation ast)
+ (preprocess
+  (pps ppx_deriving.eq)))

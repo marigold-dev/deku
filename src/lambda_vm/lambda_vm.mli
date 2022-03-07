@@ -3,7 +3,7 @@ module Gas : module type of Gas
 
 (* ir *)
 type script
-type value
+type value [@@deriving eq]
 
 (* compiler *)
 type compile_error = (* user program bugs *)
