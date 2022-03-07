@@ -1,6 +1,6 @@
 # Marigold Sidechain
 
-The Marigold Sidechain to Tezos is designed to increase throughput.
+A Sidechain to Tezos by Marigold focused on higher throughput.
 
 ## Getting started
 
