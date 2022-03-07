@@ -5,8 +5,9 @@ open State
 open Protocol
 open Cmdliner
 open Core
-open Bin_common;;
-Printexc.record_backtrace true
+open Bin_common
+
+let () = Printexc.record_backtrace true
 let read_validators ~node_folder =
   Files.Validators.read ~file:(node_folder ^ "/validators.json")
 let read_identity ~node_folder =
