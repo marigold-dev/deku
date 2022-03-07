@@ -1,6 +1,6 @@
 # Marigold Sidechain
 
-A sidechain to Tezos by Marigold focused on higher throughput.
+The Marigold Sidechain to Tezos is designed to increase throughput.
 
 ## Getting started
 
@@ -9,7 +9,7 @@ A sidechain to Tezos by Marigold focused on higher throughput.
 #### Esy Package Manager
 
 Marigold Sidechain is being developed with
-[esy](https://esy.sh/). `esy` can be installed with NPM or Yarn.
+[esy](https://esy.sh/). Esy can be installed with [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/).
 
 ```sh
 npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES issues
@@ -28,6 +28,12 @@ nix --experimental-features "nix-command flakes" run
 (We suggest using this [binary cache repository](https://app.cachix.org/cache/anmonteiro) to reduce
 build times)
 
+### Installing and building Esy
+
+```
+esy install; esy build
+```
+
 ### Testing
 
 We use [Rely](https://reason-native.com/docs/rely/) to write
@@ -37,15 +43,13 @@ tests. These can be run with,
 esy test
 ```
 
-### Running a sidechain
+### Running a Sidechain
 
 For convenient local development, we have included two components:
 
 - A `docker-compose.yml` file that setups a local Tezos network
   using [Flextesa](https://tezos.gitlab.io/flextesa/) running in Docker.
-  Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance
-  for introspection of the deployed contract and its operations. The BCD interace is available in
-  your browser at http://localhost:8000.
+  Additionally, the network sets up a [Better Call Dev](https://github.com/baking-bad/bcdhub) instance for introspection of the deployed contract and its operations. The BCD interface is available in your browser at http://localhost:8000.
 - A script `./sandbox.sh` that sets up a identities for a local Deku cluster.
   This script is the easiest way to get started with Deku; however, it uses unsafe
   configuration options to lower the required Tezos confirmations to 1. This setting greatly
@@ -53,15 +57,13 @@ For convenient local development, we have included two components:
 
 #### Requirements
 
-The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
-in addition to the usual Deku pre-requisites.
+The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed, in addition to the usual Deku pre-requisites.
 
 #### Setup
 
 Run `docker-compose up -d` to start a Tezos network and the BCD interface.
 
-Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
-a Deku consensus contract configured for these validators to the local sandbox.
+Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy a Deku consensus contract configured for these validators to the local sandbox.
 
 Run `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku state.
 
