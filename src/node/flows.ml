@@ -125,11 +125,12 @@ let rec request_protocol_snapshot tries =
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_protocol_snapshot (tries + 1))
-;;
-Lwt.async_exception_hook :=
-  fun exn ->
-    Printexc.to_string exn |> Format.eprintf "global_exception: %s\n%!";
-    Printexc.print_backtrace stderr
+
+let () =
+  Lwt.async_exception_hook :=
+    fun exn ->
+      Printexc.to_string exn |> Format.eprintf "global_exception: %s\n%!";
+      Printexc.print_backtrace stderr
 let pending = ref false
 let load_snapshot snapshot_data =
   let open Networking.Protocol_snapshot in
@@ -265,8 +266,7 @@ and block_added_to_the_pool state update_state block =
     | None ->
       request_previous_blocks state block;
       Ok ()
-;;
-block_added_to_the_pool' := block_added_to_the_pool
+let () = block_added_to_the_pool' := block_added_to_the_pool
 let received_block state update_state block =
   let%ok () =
     is_valid_block state block
