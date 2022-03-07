@@ -8,11 +8,11 @@ Since we use RPC, all these endpoints are POST (only verb available over RPC).
 
 ## Prerequisites
 
-In order to be able to play the following `curl` examples, you must have
+In order to run the following `curl` examples, you must have
 
-- run `docker compose upd -d`
-- run `./sandbox.sh setup`
-- run `./start.sh`
+- `docker compose up -d`
+- `./sandbox.sh setup`
+- `./start.sh`
 
 ## `/append-block-and-signature`
 
@@ -111,7 +111,7 @@ Retrieve block corresponding to the provided hash.
 
 ### Expected data
 
-The hex representation of the Hash from which one we want to retrieve the block.
+The hex representation of the retrieved block hash.
 
 ### Returned data
 
@@ -322,7 +322,7 @@ $
 ### Purpose
 
 Add a user operation to the pending operations.
-If the operation does not already exist, it is broadcasted to the gossip network
+If the operation does not exist, it is then broadcasted to the gossip network
 
 ### Expected data
 
@@ -338,7 +338,7 @@ $
 
 ### Purpose
 
-Like a user operation, but from consensus: add a consensus operation to the pending operations.
+It is ike a user operation, but it is from consensus: add a consensus operation to the pending operations.
 
 ### Expected data
 
