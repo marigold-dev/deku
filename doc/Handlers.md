@@ -56,9 +56,9 @@ $ curl -v -X POST http://127.0.0.1:4440/append-block-and-signature -d
 > User-Agent: curl/7.74.0
 > Accept: */*
 > Content-type: application/json
-> Content-Length: 273
+> Content-Length: 880
 >
-* upload completely sent off: 273 out of 273 bytes
+* upload completely sent off: 880 out of 880 bytes
 * Mark bundle as not supporting multiuse
 < HTTP/1.1 200 OK
 < Content-Type: application/json
