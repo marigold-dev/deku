@@ -393,6 +393,7 @@ let setup_identity node_folder uri =
     let t = Key_hash.of_key (Ed25519 key) in
     { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
   let%await () = write_identity ~node_folder identity in
+  print_endline (identity.t |> Key_hash.to_string);
   await (`Ok ())
 let info_setup_identity =
   let doc = "Create a validator identity" in

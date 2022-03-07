@@ -26,8 +26,8 @@ RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'sidecli.exe'}" side
     esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_node.exe'}" deku_node.exe
 RUN strip ./deku_node.exe && strip ./sidecli.exe
 
-FROM scratch as runtime
-
+FROM alpine:latest as runtime
+RUN apk --update add gmp-dev libev nodejs
 # Setup OPENSSL so that it finds the certs
 ENV OPENSSL_STATIC=1
 ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -36,8 +36,7 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 WORKDIR /app
 
-COPY --from=builder /app/deku_node.exe deku_node.exe
-COPY --from=builder /app/sidecli.exe sidecli.exe
+COPY --from=builder /app/deku_node.exe deku-node
+COPY --from=builder /app/sidecli.exe sidecli
 
-ENTRYPOINT ["/app/deku_node.exe"]
-CMD ["/app/data"]
+CMD /app/deku-node /app/data
