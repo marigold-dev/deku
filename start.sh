@@ -6,9 +6,9 @@ data_directory="data"
 LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
 
-SIDECLI=$(esy x which sidecli)
-sidecli () {
-  eval $SIDECLI '"$@"'
+DEKU_CLI=$(esy x which deku-cli)
+deku_cli () {
+  eval $DEKU_CLI '"$@"'
 }
 
 DEKU_NODE=$(esy x which deku-node)
@@ -27,13 +27,13 @@ done
 sleep 1
 
 echo "Producing a block"
-HASH=$(sidecli produce-block "$data_directory/0" | awk '{ print $2 }')
+HASH=$(deku_cli produce-block "$data_directory/0" | awk '{ print $2 }')
 
 sleep 0.1
 
 echo "Signing"
 for i in ${VALIDATORS[@]}; do
-  sidecli sign-block "$data_directory/$i" $HASH
+  deku_cli sign-block "$data_directory/$i" $HASH
 done
 
 for PID in ${SERVERS[@]}; do

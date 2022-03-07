@@ -22,9 +22,9 @@ RUN esy build
 RUN esy build_static
 
 # Copy the static binaries to a known location
-RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'sidecli.exe'}" sidecli.exe && \
+RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_cli.exe'}" deku_cli.exe && \
     esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_node.exe'}" deku_node.exe
-RUN strip ./deku_node.exe && strip ./sidecli.exe
+RUN strip ./deku_node.exe && strip ./deku_cli.exe
 
 FROM scratch as runtime
 
@@ -37,7 +37,7 @@ COPY --from=certs /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 WORKDIR /app
 
 COPY --from=builder /app/deku_node.exe deku_node.exe
-COPY --from=builder /app/sidecli.exe sidecli.exe
+COPY --from=builder /app/deku_cli.exe deku_cli.exe
 
 ENTRYPOINT ["/app/deku_node.exe"]
 CMD ["/app/data"]

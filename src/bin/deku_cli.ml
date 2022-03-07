@@ -6,6 +6,7 @@ open Protocol
 open Cmdliner
 open Core
 open Bin_common;;
+
 Printexc.record_backtrace true
 let read_validators ~node_folder =
   Files.Validators.read ~file:(node_folder ^ "/validators.json")
@@ -473,7 +474,7 @@ let show_help =
   let exits = Term.default_exits in
   ( (let open Term in
     ret (const (`Help (`Pager, None)))),
-    Term.info "sidecli" ~version:"v0.0.1" ~doc ~sdocs ~exits ~man )
+    Term.info "deku-cli" ~version:"v0.0.1" ~doc ~sdocs ~exits ~man )
 let info_self =
   let doc = "Shows identity key and address of the node." in
   Term.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
@@ -483,6 +484,7 @@ let self node_folder =
   Format.printf "address: %s\n" (Key_hash.to_string identity.t);
   Format.printf "uri: %s\n" (Uri.to_string identity.uri);
   await (`Ok ())
+
 let self =
   let folder_dest =
     let docv = "folder_dest" in
