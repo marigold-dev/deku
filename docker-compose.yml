@@ -1,0 +1,134 @@
+# Adapted from https://github.com/baking-bad/bcdhub
+# Original License:
+#
+# MIT License
+#
+# Copyright (c) 2020 Baking Bad, Artem Poltorzhitskiy, Roman Serikov, Michael Zaikin
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+version: "3.8"
+services:
+  elastic:
+    container_name: deku_elastic
+    image: ghcr.io/baking-bad/bcdhub-elastic:master
+    restart: always
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
+
+  db:
+    container_name: deku_postgres
+    image: postgres:12
+    shm_size: 1g
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=indexer
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  api:
+    container_name: deku_api
+    restart: always
+    image: ghcr.io/baking-bad/bcdhub-api:master
+    environment:
+      - BCD_ENV=sandbox
+      - GIN_MODE=debug
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - SANDBOX_NODE_URI=http://sandbox:20000
+      - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
+    depends_on:
+      - elastic
+      - db
+    ports:
+      - 127.0.0.1:14000:14000
+    volumes:
+      - bcdshare:/etc/bcd
+    links:
+      - "flextesa:sandbox"
+
+  indexer:
+    container_name: deku_indexer
+    restart: always
+    image: ghcr.io/baking-bad/bcdhub-indexer:master
+    environment:
+      - BCD_ENV=sandbox
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - SANDBOX_NODE_URI=http://sandbox:20000
+      - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
+    depends_on:
+      - db
+      - metrics
+    links:
+      - "flextesa:sandbox"
+    volumes:
+      - bcdshare:/etc/bcd
+
+  metrics:
+    container_name: deku_metrics
+    restart: always
+    image: ghcr.io/baking-bad/bcdhub-metrics:master
+    environment:
+      - BCD_ENV=sandbox
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - SANDBOX_NODE_URI=http://sandbox:20000
+      - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
+    depends_on:
+      - elastic
+      - db
+    links:
+      - "flextesa:sandbox"
+    volumes:
+      - bcdshare:/etc/bcd
+
+  flextesa:
+    container_name: deku_flextesa
+    restart: always
+    image: tqtezos/flextesa:20211206
+    command: hangzbox start
+    environment:
+      - block_time=4
+    ports:
+      - "20000:20000"
+    expose:
+      - 20000/tcp
+
+  gui:
+    container_name: sandbox_gui
+    restart: always
+    image: bakingbad/bcdhub-gui:4.0
+    depends_on:
+      - api
+    ports:
+      - 127.0.0.1:8000:80
+
+volumes:
+  esdata:
+  bcdshare:
+  db:
+    driver: local
