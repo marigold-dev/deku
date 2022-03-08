@@ -45,7 +45,15 @@ const error = (error) =>
     .map(([_, value]) => value);
   const Tezos = new TezosToolkit(rpc_node);
   const signer = await InMemorySigner.fromSecretKey(secret);
-  Tezos.setProvider({ signer });
+  Tezos.setProvider({
+    signer,
+    config: {
+      shouldObservableSubscriptionRetry: true,
+      streamerPollingIntervalMilliseconds: 1000,
+      confirmationPollingIntervalSecond: 1,
+      confirmationPollingTimeoutSecond: 4,
+    },
+  });
 
   const contract = await Tezos.contract.at(destination);
   const operation = await contract.methods[entrypoint](...args).send();
