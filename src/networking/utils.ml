@@ -1,5 +1,3 @@
-open Lwt_unix
-
 type client_state =
   | Alive
   | Suspicious
