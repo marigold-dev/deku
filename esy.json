@@ -3,7 +3,7 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
-      "bin": ["sidecli", "deku-node"]
+      "bin": ["deku-cli", "deku-node"]
     },
     "buildEnv": {
       "PATH": "%{localStore}%/../bin:$PATH"
