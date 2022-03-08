@@ -40,15 +40,14 @@ module Vm_test = struct
 
   let execute_ast gas arg script =
     let gas = Gas.make ~initial_gas:gas in
-    match compile_value gas arg with
-    | Ok arg -> (
-      match compile gas script with
-      | Ok ir -> (
-        match execute gas ~arg ir with
-        | Ok result -> Ok result
-        | Error error -> Error (Execution_error error))
-      | Error error -> Error (Compilation_error error))
-    | Error error -> Error (Compilation_error error)
+    match (compile_value gas arg, compile gas script) with
+    | Ok arg, Ok ir -> (
+      match execute gas ~arg ir with
+      | Ok result -> Ok result
+      | Error error -> Error (Execution_error error))
+    | Error error, _
+    | _, Error error ->
+      Error (Compilation_error error)
 end
 
 module Testable = struct
@@ -241,6 +240,31 @@ module Simple_expressions = struct
       Vm_test.execute_ast_exn 6101 (Pair (Int64 0L, Int64 33L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L) in
+
+    Alcotest.(check Testable.value) "Same value" expected_value result.storage
+
+  let test_lambda_application () =
+    let script =
+      Ast.
+        {
+          param = "y";
+          code =
+            App
+              {
+                funct =
+                  Lam
+                    ( "x",
+                      Pair
+                        {
+                          first = Var "x";
+                          second = Pair { first = Const 0L; second = Const 0L };
+                        } );
+                arg = Var "y";
+              };
+        } in
+    let result = Vm_test.execute_ast_exn 2000 (Int64 45L) script in
+    let expected_value =
+      Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 45L) in
 
     Alcotest.(check Testable.value) "Same value" expected_value result.storage
 end
@@ -533,6 +557,7 @@ let () =
             test_case "Add pair" `Quick test_add_pair;
             test_case "If expr" `Quick test_if_expr;
             test_case "Lambda" `Quick test_lambda;
+            test_case "Lambda application" `Quick test_lambda_application;
           ] );
       ( "Compilation and execution errors",
         Compilation_and_execution_errors.
