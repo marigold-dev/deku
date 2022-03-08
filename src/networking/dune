@@ -1,5 +1,5 @@
 (library
  (name networking)
- (libraries lwt.unix bin_prot)
+ (libraries lwt.unix)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding lwt_ppx)))
