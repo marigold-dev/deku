@@ -33,6 +33,12 @@ let is_current_producer state ~key_hash =
   Some (current_producer.address = key_hash)
 let minimum_signable_time_between_epochs = 10.0
 let maximum_signable_time_between_epochs = 20.0
+
+(** Used to add a delay between a tezos operation being confirmed,
+  needs to be bigger than the polling interval for operations *)
+let minimum_waiting_period_for_tezos_operation = 5.0
+(* TODO: this is an workaround solution, replace it by Tezos_rpc *)
+
 let block_matches_current_state_root_hash state block =
   BLAKE2B.equal block.Block.state_root_hash state.Node.protocol.state_root_hash
 let block_matches_next_state_root_hash state block =
@@ -62,7 +68,7 @@ let is_signable state block =
     match operation with
     | Protocol.Operation.Core_tezos _ ->
       List.exists
-        (fun op -> Protocol.Operation.equal op operation)
+        (fun op -> Protocol.Operation.equal op.Node.operation operation)
         state.pending_operations
     | Core_user _ -> true
     | Consensus consensus_operation -> (
@@ -102,18 +108,38 @@ let should_start_new_epoch last_state_root_update current_time =
     \    The block producer uses this function to determine when to send a\n\
     \    block with an updated state root hash.\n"]
 
+(** Can only included a tezos operation if enough time has already elapsed *)
+let can_include_tezos_operation ~current_time pending_operation =
+  current_time -. pending_operation.Node.requested_at
+  > minimum_waiting_period_for_tezos_operation
+
 let produce_block state =
+  let current_time = Unix.time () in
   let start_new_epoch =
     should_start_new_epoch state.Node.protocol.last_state_root_update
-      (Unix.time ()) in
+      current_time in
   let next_state_root_hash =
     if start_new_epoch then
       let%some snapshot = Snapshots.get_next_snapshot state.snapshots in
       Some snapshot.hash
     else
       None in
+  let operations =
+    List.filter_map
+      (fun pending_operation ->
+        let operation = pending_operation.Node.operation in
+        match operation with
+        | Operation.Core_tezos _ ->
+          if can_include_tezos_operation ~current_time pending_operation then
+            Some operation
+          else
+            None
+        | Core_user _
+        | Consensus _ ->
+          Some operation)
+      state.pending_operations in
   Block.produce ~state:state.Node.protocol ~author:state.identity.t
-    ~next_state_root_hash ~operations:state.pending_operations
+    ~next_state_root_hash ~operations
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
 let signatures_required state =
@@ -138,7 +164,8 @@ let clean state update_state block =
   in
   let pending_operations =
     List.find_all
-      (fun operation -> not (operation_is_in_block operation))
+      (fun pending_operation ->
+        not (operation_is_in_block pending_operation.Node.operation))
       state.State.pending_operations in
   let trusted_validator_membership_change =
     List.fold_left
