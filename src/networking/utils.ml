@@ -1,7 +1,7 @@
 open Lwt_unix
 
 type client_state =
-  | Ok
+  | Alive
   | Suspicious
   | Failed
 
@@ -24,6 +24,8 @@ let knuth_shuffle_client_list client_list =
   done;
   Array.to_list copied_array
 
+(* Regarding the SWIM protocol, the list of peers is not ordered.
+   Hence, I basically went for a shuffle after adding the new peer *)
 let add_client client_to_add client =
   let new_client_list : client list = client_to_add :: client.known_clients in
   let shuffled_list = knuth_shuffle_client_list new_client_list in
@@ -33,3 +35,12 @@ let add_client client_to_add client =
     address = client.address;
     port = client.port;
   }
+
+(* Regarding the SWIM protocol, if peer A cannot get ACK from peer B (timeout):
+   A sets B as `suspicious`
+   A randomly picks one (or several, should it also be randomly determined?) peer(s) from its list
+   and ask him/them to ping B.*)
+(* This function return the random peer, to which we will ask to ping the first peer *)
+let pick_random_member client =
+  let random_int = Random.int @@ List.length client.known_clients in
+  List.nth client.known_clients random_int
