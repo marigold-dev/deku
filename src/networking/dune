@@ -1,0 +1,5 @@
+(library
+ (name networking)
+ (libraries lwt_unix)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding lwt_ppx)))
