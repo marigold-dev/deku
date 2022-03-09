@@ -1,6 +1,8 @@
 module Ast = Ast
 module Gas = Gas
 
+include Checks
+
 type script = Ir.script
 type value = Ir.value
 

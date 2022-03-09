@@ -1,6 +1,9 @@
 module Ast = Ast
 module Gas : module type of Gas
 
+exception Out_of_stack
+exception Out_of_gas
+
 (* ir *)
 type script
 type value

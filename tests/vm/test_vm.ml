@@ -545,6 +545,299 @@ module Primitive_operations = struct
             result.storage = expected_result))
 end
 
+module Recursion = struct
+  let factorial =
+    Ast.
+      {
+        param = "x";
+        code =
+          Pair
+            {
+              first =
+                App
+                  {
+                    funct =
+                      Lam
+                        ( "f",
+                          App
+                            {
+                              funct = App { funct = Var "f"; arg = Var "f" };
+                              arg = Var "x";
+                            } );
+                    arg =
+                      Lam
+                        ( "f",
+                          Lam
+                            ( "n",
+                              If
+                                {
+                                  predicate = Var "n";
+                                  consequent =
+                                    App
+                                      {
+                                        funct =
+                                          App
+                                            { funct = Prim Mul; arg = Var "n" };
+                                        arg =
+                                          App
+                                            {
+                                              funct =
+                                                App
+                                                  {
+                                                    funct = Var "f";
+                                                    arg = Var "f";
+                                                  };
+                                              arg =
+                                                App
+                                                  {
+                                                    funct =
+                                                      App
+                                                        {
+                                                          funct = Prim Sub;
+                                                          arg = Var "n";
+                                                        };
+                                                    arg = Const 1L;
+                                                  };
+                                            };
+                                      };
+                                  alternative = Const 1L;
+                                } ) );
+                  };
+              second = Pair { first = Const 0L; second = Const 0L };
+            };
+      }
+
+  let test_factorial =
+    let rec fac = function
+      | 0L -> 1L
+      | n -> Int64.(mul n (fac (sub n 1L))) in
+    QCheck_alcotest.to_alcotest
+      QCheck.(
+        Test.make ~name:"Recursion with factorial" ~count:10000 (1 -- 26)
+          (fun x ->
+            (* Less than 0 is infinite recursion, greater than 25 is integer overflow. *)
+            let x = Int64.of_int x in
+            let result = Vm_test.execute_ast_exn 1_000_000 (Int64 x) factorial in
+            let expected_result =
+              Vm_test.compile_value_exn
+                (Gas.make ~initial_gas:101)
+                (Int64 (fac x)) in
+            expected_result = result.storage))
+
+  let fibonacci =
+    Ast.
+      {
+        param = "x";
+        code =
+          Pair
+            {
+              first =
+                App
+                  {
+                    funct =
+                      Lam
+                        ( "f",
+                          App
+                            {
+                              funct = App { funct = Var "f"; arg = Var "f" };
+                              arg = Var "x";
+                            } );
+                    arg =
+                      Lam
+                        ( "f",
+                          Lam
+                            ( "n",
+                              If
+                                {
+                                  predicate =
+                                    (* (0 - n) * (1 - n) *)
+                                    App
+                                      {
+                                        funct =
+                                          App
+                                            {
+                                              funct = Prim Mul;
+                                              arg =
+                                                App
+                                                  {
+                                                    funct =
+                                                      App
+                                                        {
+                                                          funct = Prim Sub;
+                                                          arg = Const 0L;
+                                                        };
+                                                    arg = Var "n";
+                                                  };
+                                            };
+                                        arg =
+                                          App
+                                            {
+                                              funct =
+                                                App
+                                                  {
+                                                    funct = Prim Sub;
+                                                    arg = Const 1L;
+                                                  };
+                                              arg = Var "n";
+                                            };
+                                      };
+                                  consequent =
+                                    App
+                                      {
+                                        funct =
+                                          App
+                                            {
+                                              funct = Prim Add;
+                                              arg =
+                                                App
+                                                  {
+                                                    funct =
+                                                      App
+                                                        {
+                                                          funct = Var "f";
+                                                          arg = Var "f";
+                                                        };
+                                                    arg =
+                                                      App
+                                                        {
+                                                          funct =
+                                                            App
+                                                              {
+                                                                funct = Prim Sub;
+                                                                arg = Var "n";
+                                                              };
+                                                          arg = Const 1L;
+                                                        };
+                                                  };
+                                            };
+                                        arg =
+                                          App
+                                            {
+                                              funct =
+                                                App
+                                                  {
+                                                    funct = Var "f";
+                                                    arg = Var "f";
+                                                  };
+                                              arg =
+                                                App
+                                                  {
+                                                    funct =
+                                                      App
+                                                        {
+                                                          funct = Prim Sub;
+                                                          arg = Var "n";
+                                                        };
+                                                    arg = Const 2L;
+                                                  };
+                                            };
+                                      };
+                                  alternative = Const 1L;
+                                } ) );
+                  };
+              second = Pair { first = Const 0L; second = Const 0L };
+            };
+      }
+
+  let test_fibonacci =
+    let rec fib = function
+      | 0L
+      | 1L ->
+        1L
+      | n -> Int64.add (fib (Int64.sub n 1L)) (fib (Int64.sub n 2L)) in
+    QCheck_alcotest.to_alcotest
+      QCheck.(
+        Test.make ~name:"Fibonacci" ~count:100 (0 -- 25) (fun x ->
+            let x = Int64.of_int x in
+            let result =
+              Vm_test.execute_ast_exn 100000000000 (Int64 x) fibonacci in
+            let expected_value =
+              Vm_test.compile_value_exn
+                (Gas.make ~initial_gas:101)
+                (Int64 (fib x)) in
+            expected_value = result.storage))
+
+  let counter =
+    Ast.
+      {
+        param = "x";
+        code =
+          Pair
+            {
+              first =
+                App
+                  {
+                    funct =
+                      Lam
+                        ( "f",
+                          App
+                            {
+                              funct = App { funct = Var "f"; arg = Var "f" };
+                              arg = Var "x";
+                            } );
+                    arg =
+                      Lam
+                        ( "f",
+                          Lam
+                            ( "n",
+                              If
+                                {
+                                  predicate = Var "n";
+                                  consequent =
+                                    App
+                                      {
+                                        funct =
+                                          App
+                                            { funct = Prim Add; arg = Const 1L };
+                                        arg =
+                                          App
+                                            {
+                                              funct =
+                                                App
+                                                  {
+                                                    funct = Var "f";
+                                                    arg = Var "f";
+                                                  };
+                                              arg =
+                                                App
+                                                  {
+                                                    funct =
+                                                      App
+                                                        {
+                                                          funct = Prim Sub;
+                                                          arg = Var "n";
+                                                        };
+                                                    arg = Const 1L;
+                                                  };
+                                            };
+                                      };
+                                  alternative = Const 0L;
+                                } ) );
+                  };
+              second = Pair { first = Const 0L; second = Const 0L };
+            };
+      }
+
+  let test_counter =
+    QCheck_alcotest.to_alcotest
+      QCheck.(
+        Test.make ~name:"Counter" ~count:1000 (0 -- 10000) (fun x ->
+            let x = Int64.of_int x in
+            let result = Vm_test.execute_ast_exn 1000000000 (Int64 x) counter in
+            let expected_value =
+              Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 x)
+            in
+            expected_value = result.storage))
+
+  let test_stack_limit () =
+    Alcotest.check_raises "Stack has a limit" Out_of_stack (fun () ->
+        let _ =
+          Vm_test.execute_ast_exn 71_990_801
+            (Int64 19996L) (* Bare minimum close to the limit of 20k *)
+            counter in
+        ())
+end
+
 let () =
   let open Alcotest in
   run "Lambda VM"
@@ -604,5 +897,13 @@ let () =
             test_lsl;
             test_lsr;
             test_asr;
+          ] );
+      ( "Recursion",
+        Recursion.
+          [
+            test_factorial;
+            test_fibonacci;
+            test_counter;
+            test_case "Stack limit" `Slow test_stack_limit;
           ] );
     ]
