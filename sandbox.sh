@@ -5,7 +5,8 @@ set -e
 LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
 
-RPC_NODE=http://localhost:20000
+RPC_NODE="${RPC_NODE:-"http://localhost:20000"}"
+echo "Using $RPC_NODE as RPC Node"
 
 # This secret key never changes.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -18,7 +19,7 @@ sidecli() {
 }
 
 tezos-client() {
-  docker exec -it deku_flextesa tezos-client "$@"
+  docker exec -t deku_flextesa tezos-client "$@"
 }
 
 ligo() {

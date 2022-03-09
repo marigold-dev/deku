@@ -1,0 +1,30 @@
+name: Deku E2E Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          
+      # Running flextesa first because we need some time to bootstrap
+      - name: Run flextesa
+        run: docker-compose up -d flextesa
+
+      - name: Install esy
+        run: npm install -g @esy-nightly/esy
+
+      - uses: esy/github-action@master
+        with:
+          cache-key: e2e-${{ hashFiles('esy.lock/index.json') }}
+
+      - name: Run sandbox setup
+        run: ./sandbox.sh setup
+
+      - name: Run smoke test
+        run: ./e2e_smoke_test.sh
