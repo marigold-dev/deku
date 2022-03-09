@@ -41,6 +41,7 @@ const error = (error) =>
   const { rpc_node, contract_address, confirmation } = input();
   const client = new RpcClient(rpc_node);
   const Tezos = new TezosToolkit(rpc_node);
+  // This is also defined on the other JS scripts
   Tezos.setProvider({
     config: {
       shouldObservableSubscriptionRetry: true,

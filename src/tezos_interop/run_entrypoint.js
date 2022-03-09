@@ -45,6 +45,7 @@ const error = (error) =>
     .map(([_, value]) => value);
   const Tezos = new TezosToolkit(rpc_node);
   const signer = await InMemorySigner.fromSecretKey(secret);
+  // This is also defined on the other JS scripts
   Tezos.setProvider({
     signer,
     config: {
