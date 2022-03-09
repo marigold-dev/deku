@@ -42,6 +42,15 @@ const output = (operation) => {
 const { rpc_node, confirmation, destination } = input();
 
 const Tezos = new TezosToolkit(rpc_node);
+// This is also defined on the other JS scripts
+Tezos.setProvider({
+  config: {
+    shouldObservableSubscriptionRetry: true,
+    streamerPollingIntervalMilliseconds: 1000,
+    confirmationPollingIntervalSecond: 1,
+    confirmationPollingTimeoutSecond: 4,
+  },
+});
 
 const operationStream = Tezos.stream.subscribeOperation({
   kind: taquito.OpKind.TRANSACTION,
