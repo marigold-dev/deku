@@ -1,4 +1,4 @@
-type t [@@deriving eq]
+type t [@@deriving eq, show]
 
 val compare : t -> t -> int
 val initial : t

@@ -1,4 +1,4 @@
-type ident = Ident.t [@@deriving eq]
+type ident = Ident.t [@@deriving eq, show]
 
 type prim =
   | P_neg
@@ -13,7 +13,7 @@ type prim =
   | P_lsl
   | P_lsr
   | P_asr
-[@@deriving eq]
+[@@deriving eq, show]
 
 type expr =
   (* calculus *)
@@ -40,7 +40,7 @@ type expr =
     }
   | E_fst   of expr
   | E_snd   of expr
-[@@deriving eq]
+[@@deriving eq, show]
 
 module Ident_map = Map_with_cardinality.Make (Ident)
 
@@ -67,3 +67,4 @@ type script = {
   param : Ident.t;
   code : expr;
 }
+[@@deriving show]

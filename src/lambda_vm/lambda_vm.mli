@@ -2,7 +2,7 @@ module Ast = Ast
 module Gas : module type of Gas
 
 (* ir *)
-type script
+type script [@@deriving show]
 type value [@@deriving eq]
 
 (* compiler *)

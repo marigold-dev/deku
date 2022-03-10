@@ -1,4 +1,5 @@
 type ident = string
+[@@deriving show]
 
 type prim =
   | Neg
@@ -13,6 +14,7 @@ type prim =
   | Lsl
   | Lsr
   | Asr
+  [@@deriving show]
 
 type expr =
   (* calculus *)
@@ -39,12 +41,15 @@ type expr =
     }
   | Fst   of expr
   | Snd   of expr
+  [@@deriving show]
 
 type value =
   | Int64 of int64
   | Pair  of value * value
+  [@@deriving show]
 
 type script = {
   param : ident;
   code : expr;
 }
+[@@deriving show]
