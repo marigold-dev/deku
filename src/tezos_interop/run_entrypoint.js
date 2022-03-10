@@ -34,8 +34,10 @@ const output = (data) =>
   fs.writeFileSync(process.stdout.fd, JSON.stringify(data, null, 2));
 
 const finished = (status, hash) => output({ status, hash });
-const error = (error) =>
+const error = (error) => {
+  console.error(error);
   output({ status: "error", error: JSON.stringify(error) });
+};
 
 (async () => {
   const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
