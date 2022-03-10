@@ -56,7 +56,39 @@ let () =
         let let_in (var', let') in' =
           App { funct = Lam (var', in'); arg = let' } in
         let lam x f = Lam (x, f (Var x)) in
-        let funs = [("id", lam "x" (fun x -> x))] in
+        let lam2 x y f = Lam (x, Lam (y, f (Var x) (Var y))) in
+        let funs =
+          [
+            ("id", lam "x" (fun x -> x));
+            (*
+               Bignum data format format is (Int, (Int * (Int * ...)))
+                                             ╰┬╯  ╰────────┬────────╯
+                                             limb        number
+
+               Limb is the number of ints that are used to represent the number.
+               Number is a rope of tuples, each one more significant than the last
+
+               Limb is always at least 1.
+            *)
+            (*( "add_bignat",
+              lam2 "a" "b" (fun _a _b ->
+                  If
+                    {
+                      predicate = assert false;
+                      consequent = assert false;
+                      alternative = assert false;
+                    }) )
+              ("sub_bignat", lam2 "x" "y" (fun x y -> x - y));
+              ("mul_bignat", lam2 "x" "y" (fun x y -> x * y));
+              ("div_bignat", lam2 "x" "y" (fun x y -> x / y));
+              ("mod_bignat", lam2 "x" "y" (fun x y -> x % y));
+              ("eq_bignat", lam2 "x" "y" (fun x y -> x = y));
+              ("lt_bignat", lam2 "x" "y" (fun x y -> x < y));
+              ("gt_bignat", lam2 "x" "y" (fun x y -> x > y));
+              ("le_bignat", lam2 "x" "y" (fun x y -> x <= y));
+              ("ge_bignat", lam2 "x" "y" (fun x y -> x >= y));
+              ("ne_bignat", lam2 "x" "y" (fun x y -> x != y));*);
+          ] in
         List.fold_right let_in funs code in
       test "stdlibtest" (fun _ expect_ir ->
           let script =
@@ -79,8 +111,7 @@ let () =
                                  } );
                          arg = Var "y";
                        });
-              }
-             in
+              } in
           let script = script |> compile (Gas.make ~initial_gas:1000000) in
           let parameter =
             Ast.Int64 45L |> compile_value (Gas.make ~initial_gas:1000000) in
