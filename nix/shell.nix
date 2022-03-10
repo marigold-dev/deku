@@ -3,7 +3,7 @@
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
-    export PATH=${npmPackages}/node_modules/.bin:_build/install/bin:$PATH
+    export PATH=${npmPackages}/node_modules/.bin:_build/install/default/bin:$PATH
   '';
 
   nativeBuildInputs = (with pkgs; [
