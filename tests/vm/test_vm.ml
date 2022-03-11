@@ -5,16 +5,17 @@ module Vm_test = struct
     | Compilation_error of compile_error
     | Execution_error   of execution_error
 
-  let compilation_error_to_string : compile_error -> string = function
-    | Undefined_variable -> "Undefined_variable"
+  let pp_to_string f =
+    let buf = Buffer.create 20 in
+    let fmt = Format.formatter_of_buffer buf in
+    f fmt;
+    Buffer.contents buf
 
-  let execution_error_to_string = function
-    | Undefined_variable -> "Undefined_variable"
-    | Over_applied_primitives -> "Over_applied_primitives"
-    | Value_is_not_pair -> "Value_is_not_pair"
-    | Value_is_not_int64 -> "Value_is_not_int64"
-    | Value_is_not_function -> "Value_is_not_function"
-    | Value_is_not_zero -> "Value_is_not_zero"
+  let compilation_error_to_string error =
+    pp_to_string (fun fmt -> pp_compile_error fmt error)
+
+  let execution_error_to_string error =
+    pp_to_string (fun fmt -> pp_execution_error fmt error)
 
   let compile_exn gas script =
     match compile gas script with

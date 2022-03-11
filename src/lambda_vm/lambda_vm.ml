@@ -9,6 +9,7 @@ type value = Ir.value
 type compile_error = Compiler.error =
   (* user program bugs *)
   | Undefined_variable
+[@@deriving show]
 
 include Compiler
 
@@ -21,5 +22,6 @@ type execution_error = Interpreter.error =
   | Value_is_not_int64
   | Value_is_not_function
   | Value_is_not_zero
+[@@deriving show]
 
 include Interpreter
