@@ -837,6 +837,38 @@ module Recursion = struct
             (Int64 19996L) (* Bare minimum close to the limit of 20k *)
             counter in
         ())
+
+  let infinite_recursion =
+    Ast.
+      {
+        param = "_";
+        code =
+          App
+            {
+              funct = Lam ("f", App { funct = Var "f"; arg = Var "f" });
+              arg =
+                Lam
+                  ( "f",
+                    App
+                      {
+                        funct =
+                          App
+                            {
+                              funct = Prim Add;
+                              arg = App { funct = Var "f"; arg = Var "f" };
+                            };
+                        arg = Const 0L;
+                      } );
+            };
+      }
+
+  let test_infinite_recursion () =
+    Alcotest.check_raises "Stack limit avoids infinite recursion" Out_of_stack
+      (fun () ->
+        let _ =
+          Vm_test.execute_ast_exn 10000000000_000_000 (Int64 0L)
+            infinite_recursion in
+        ())
 end
 
 let () =
@@ -906,5 +938,6 @@ let () =
             test_fibonacci;
             test_counter;
             test_case "Stack limit" `Slow test_stack_limit;
+            test_case "Infinite recursion" `Slow test_infinite_recursion;
           ] );
     ]
