@@ -5,32 +5,22 @@ module Vm_test = struct
     | Compilation_error of compile_error
     | Execution_error   of execution_error
 
-  let pp_to_string f =
-    let buf = Buffer.create 20 in
-    let fmt = Format.formatter_of_buffer buf in
-    f fmt;
-    Buffer.contents buf
-
-  let compilation_error_to_string error =
-    pp_to_string (fun fmt -> pp_compile_error fmt error)
-
-  let execution_error_to_string error =
-    pp_to_string (fun fmt -> pp_execution_error fmt error)
+  let failwith s = Format.kasprintf failwith s
 
   let compile_exn gas script =
     match compile gas script with
     | Ok value -> value
-    | Error error -> failwith (compilation_error_to_string error)
+    | Error error -> failwith "Compilation_error(%a)" pp_compile_error error
 
   let compile_value_exn gas value =
     match compile_value gas value with
     | Ok value -> value
-    | Error error -> failwith (compilation_error_to_string error)
+    | Error error -> failwith "Compilation_error(%a)" pp_compile_error error
 
   let execute_exn gas arg script =
     match execute gas ~arg script with
     | Ok value -> value
-    | Error error -> failwith (execution_error_to_string error)
+    | Error error -> failwith "Execution_error(%a)" pp_execution_error error
 
   let execute_ast_exn gas arg script =
     (* TODO: Use different gas to different stuff *)
@@ -54,13 +44,9 @@ end
 module Testable = struct
   let value = Alcotest.of_pp Lambda_vm.pp_value
 
-  let execution_error =
-    Alcotest.of_pp (fun fmt error ->
-        Format.fprintf fmt "%s" (Vm_test.execution_error_to_string error))
+  let execution_error = Alcotest.of_pp pp_execution_error
 
-  let compilation_error =
-    Alcotest.of_pp (fun fmt error ->
-        Format.fprintf fmt "%s" (Vm_test.compilation_error_to_string error))
+  let compilation_error = Alcotest.of_pp pp_compile_error
 end
 
 module Simple_expressions = struct
@@ -279,7 +265,7 @@ module Compilation_and_execution_errors = struct
         "Same error" expected_error error
     | Ok _ -> Alcotest.fail "Ast shouldn't execute"
     | Error (Compilation_error error) ->
-      Alcotest.fail (Vm_test.compilation_error_to_string error)
+      Alcotest.failf "%a" pp_compile_error error
 
   let check_compilation_error result expected_error =
     let open Vm_test in
@@ -289,7 +275,7 @@ module Compilation_and_execution_errors = struct
         "Same error" expected_error error
     | Ok _ -> Alcotest.fail "Ast shouldn't execute"
     | Error (Execution_error error) ->
-      Alcotest.fail (Vm_test.execution_error_to_string error)
+      Alcotest.failf "%a" pp_execution_error error
 
   let test_compilation_undefined_variable () =
     let script = Ast.{ param = "_"; code = Var "x" } in
@@ -866,8 +852,70 @@ module Recursion = struct
     Alcotest.check_raises "Stack limit avoids infinite recursion" Out_of_stack
       (fun () ->
         let _ =
-          Vm_test.execute_ast_exn 10000000000_000_000 (Int64 0L)
+          Vm_test.execute_ast_exn 10000000000000000 (Int64 0L)
             infinite_recursion in
+        ())
+end
+
+module Gas_model = struct
+  let test_compile_value () =
+    Alcotest.check_raises "Gas limit for values" Out_of_gas (fun () ->
+        let _ =
+          Vm_test.compile_value_exn (Gas.make ~initial_gas:100) (Int64 0L) in
+        ())
+
+  let test_compile_expr () =
+    let ast =
+      Ast.
+        {
+          param = "x";
+          code =
+            App
+              (* 100 *)
+              {
+                funct =
+                  App
+                    (* 100 *)
+                    {
+                      funct = Prim Add (* 100 *);
+                      arg = Var "x" (* 100 + (100 * log 1) *);
+                    };
+                arg = Const 1L (* 100 *);
+              };
+        } in
+
+    let limit = 500 in
+
+    let _ =
+      let gas = Gas.make ~initial_gas:(limit + 1) in
+      Vm_test.compile_exn gas ast in
+    ();
+
+    Alcotest.check_raises "Should raise an Out_of_gas exn" Out_of_gas (fun () ->
+        let _ =
+          let gas = Gas.make ~initial_gas:limit in
+          Vm_test.compile_exn gas ast in
+        ())
+
+  let test_execute_expr () =
+    let x = 4096L in
+    let arg =
+      let gas = Gas.make ~initial_gas:101 in
+      Vm_test.compile_value_exn gas (Int64 x) in
+    let ir =
+      let gas = Gas.make ~initial_gas:4101 in
+      Vm_test.compile_exn gas Recursion.counter in
+
+    let limit = 14747900 in
+
+    let _ =
+      let gas = Gas.make ~initial_gas:(limit + 1) in
+      Vm_test.execute_exn gas arg ir in
+    ();
+
+    let gas = Gas.make ~initial_gas:limit in
+    Alcotest.check_raises "Should raise Out_of_gas" Out_of_gas (fun () ->
+        let _ = Vm_test.execute_exn gas arg ir in
         ())
 end
 
@@ -939,5 +987,12 @@ let () =
             test_counter;
             test_case "Stack limit" `Slow test_stack_limit;
             test_case "Infinite recursion" `Slow test_infinite_recursion;
+          ] );
+      ( "Gas model",
+        Gas_model.
+          [
+            test_case "Values" `Quick test_compile_value;
+            test_case "Compiling expressions" `Quick test_compile_expr;
+            test_case "Executing expressions" `Quick test_execute_expr;
           ] );
     ]
