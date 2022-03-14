@@ -106,15 +106,20 @@ module Simple_expressions = struct
                 first =
                   App
                     {
-                      funct = App { funct = Prim Add; arg = Fst (Var "pair") };
-                      arg = Snd (Var "pair");
+                      funct =
+                        App
+                          {
+                            funct = Prim Add;
+                            arg = App { funct = Prim Fst; arg = Var "pair" };
+                          };
+                      arg = App { funct = Prim Snd; arg = Var "pair" };
                     };
                 second = Pair { first = Const 0L; second = Const 0L };
               };
         } in
 
     let result =
-      Vm_test.execute_ast_exn 2501 (Pair (Int64 23L, Int64 28L)) script in
+      Vm_test.execute_ast_exn 2901 (Pair (Int64 23L, Int64 28L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 51L) in
 
@@ -131,19 +136,29 @@ module Simple_expressions = struct
                 first =
                   If
                     {
-                      predicate = Fst (Var "param");
+                      predicate = App { funct = Prim Fst; arg = Var "param" };
                       consequent =
                         App
                           {
                             funct =
-                              App { funct = Prim Add; arg = Snd (Var "param") };
+                              App
+                                {
+                                  funct = Prim Add;
+                                  arg =
+                                    App { funct = Prim Snd; arg = Var "param" };
+                                };
                             arg = Const 1L;
                           };
                       alternative =
                         App
                           {
                             funct =
-                              App { funct = Prim Sub; arg = Snd (Var "param") };
+                              App
+                                {
+                                  funct = Prim Sub;
+                                  arg =
+                                    App { funct = Prim Snd; arg = Var "param" };
+                                };
                             arg = Const 1L;
                           };
                     };
@@ -153,14 +168,14 @@ module Simple_expressions = struct
 
     (* Check increment *)
     let result =
-      Vm_test.execute_ast_exn 3501 (Pair (Int64 1L, Int64 51L)) script in
+      Vm_test.execute_ast_exn 4001 (Pair (Int64 1L, Int64 51L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 52L) in
     Alcotest.(check Testable.value) "Same value" expected_value result.storage;
 
     (* Check decrement *)
     let result =
-      Vm_test.execute_ast_exn 3501 (Pair (Int64 0L, Int64 33L)) script in
+      Vm_test.execute_ast_exn 4001 (Pair (Int64 0L, Int64 33L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L) in
     Alcotest.(check Testable.value) "Same value" expected_value result.storage
@@ -206,9 +221,9 @@ module Simple_expressions = struct
                                       consequent = increment_lambda;
                                       alternative = decrement_lambda;
                                     } );
-                            arg = Fst (Var "param");
+                            arg = App { funct = Prim Fst; arg = Var "param" };
                           };
-                      arg = Snd (Var "param");
+                      arg = App { funct = Prim Snd; arg = Var "param" };
                     };
                 second = Pair { first = Const 0L; second = Const 0L };
               };
@@ -216,7 +231,7 @@ module Simple_expressions = struct
 
     (* Check increment *)
     let result =
-      Vm_test.execute_ast_exn 6101 (Pair (Int64 1L, Int64 99L)) script in
+      Vm_test.execute_ast_exn 6501 (Pair (Int64 1L, Int64 99L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 100L) in
 
@@ -224,7 +239,7 @@ module Simple_expressions = struct
 
     (* Check decrement *)
     let result =
-      Vm_test.execute_ast_exn 6101 (Pair (Int64 0L, Int64 33L)) script in
+      Vm_test.execute_ast_exn 6501 (Pair (Int64 0L, Int64 33L)) script in
     let expected_value =
       Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L) in
 
@@ -291,12 +306,12 @@ module Compilation_and_execution_errors = struct
           code =
             Pair
               {
-                first = Fst (Const 1L);
+                first = App { funct = Prim Fst; arg = Const 1L };
                 second = Pair { first = Const 0L; second = Const 0L };
               };
         } in
     check_execution_error
-      (Vm_test.execute_ast 1001 (Int64 0L) script)
+      (Vm_test.execute_ast 1201 (Int64 0L) script)
       Value_is_not_pair
 
   let test_snd_value_is_not_pair () =
@@ -307,12 +322,12 @@ module Compilation_and_execution_errors = struct
           code =
             Pair
               {
-                first = Snd (Const 1L);
+                first = App { funct = Prim Snd; arg = Const 1L };
                 second = Pair { first = Const 0L; second = Const 0L };
               };
         } in
     check_execution_error
-      (Vm_test.execute_ast 1001 (Int64 0L) script)
+      (Vm_test.execute_ast 1201 (Int64 0L) script)
       Value_is_not_pair
 
   let test_op1_value_is_not_int64 () =
@@ -458,8 +473,13 @@ module Primitive_operations = struct
               first =
                 App
                   {
-                    funct = App { funct = Prim prim; arg = Fst (Var "param") };
-                    arg = Snd (Var "param");
+                    funct =
+                      App
+                        {
+                          funct = Prim prim;
+                          arg = App { funct = Prim Fst; arg = Var "param" };
+                        };
+                    arg = App { funct = Prim Snd; arg = Var "param" };
                   };
               second = Pair { first = Const 0L; second = Const 0L };
             };
@@ -482,7 +502,7 @@ module Primitive_operations = struct
       QCheck.(
         Test.make ~name ~count:10_000 (pair int64 int64) (fun (a, b) ->
             let result =
-              Vm_test.execute_ast_exn 2501
+              Vm_test.execute_ast_exn 2901
                 (Pair (Int64 a, Int64 b))
                 (script_op2 prim) in
             let expected_result =
@@ -501,11 +521,11 @@ module Primitive_operations = struct
 
   let test_rem = make_op2_test ~name:"Modulo pairs" Rem Int64.rem
 
-  let test_and = make_op2_test ~name:"Anding pairs" And Int64.logand
+  let test_and = make_op2_test ~name:"Anding pairs" Land Int64.logand
 
-  let test_or = make_op2_test ~name:"Oring pairs" Or Int64.logor
+  let test_or = make_op2_test ~name:"Oring pairs" Lor Int64.logor
 
-  let test_xor = make_op2_test ~name:"Xoring pairs" Xor Int64.logxor
+  let test_xor = make_op2_test ~name:"Xoring pairs" Lxor Int64.logxor
 
   let test_lsl =
     make_op2_test ~name:"Left shifting pairs" Lsl (fun a b ->
