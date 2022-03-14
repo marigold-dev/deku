@@ -23,6 +23,8 @@ let compile_prim prim =
   | Lsl -> P_lsl
   | Lsr -> P_lsr
   | Asr -> P_asr
+  | Fst -> P_fst
+  | Snd -> P_snd
 
 module Vars = Map_with_cardinality.Make (String)
 
@@ -36,9 +38,7 @@ let burn_gas gas vars code =
   | Const _
   | Prim _
   | If _
-  | Pair _
-  | Fst _
-  | Snd _ ->
+  | Pair _ ->
     Gas.burn_constant gas);
   check_gas gas
 
@@ -83,12 +83,7 @@ let rec compile_expr ~stack gas next_ident vars code =
     let first = compile_expr vars first in
     let second = compile_expr vars second in
     E_pair { first; second }
-  | Fst pair ->
-    let pair = compile_expr vars pair in
-    E_fst pair
-  | Snd pair ->
-    let pair = compile_expr vars pair in
-    E_snd pair
+
 let compile_expr gas next_ident vars code =
   let stack = max_stack_depth in
   compile_expr ~stack gas next_ident vars code

@@ -13,6 +13,8 @@ type prim =
   | P_lsl
   | P_lsr
   | P_asr
+  | P_fst
+  | P_snd
 
 type expr =
   (* calculus *)
@@ -37,8 +39,6 @@ type expr =
       first : expr;
       second : expr;
     }
-  | E_fst   of expr
-  | E_snd   of expr
 
 type value =
   | V_int64     of int64
