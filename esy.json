@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "ocaml": "4.12.",
-    "@opam/core_bench": "*",
     "@opam/dune": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
@@ -69,7 +68,6 @@
         }
       }
     },
-    "@opam/core_bench": "InfiniteSwerve/core_bench#713433213949af14aa88d21b53048a57d2cd6ae0",
     "@reason-native/file-context-printer": {
       "version": "0.0.3",
       "override": {
@@ -127,7 +125,7 @@
     "@opam/stdio": "janestreet/stdio:stdio.opam#f006beb417ee568c612c3d89824cfb6e15a98568",
     "@opam/ppx_hash": {
       "version": "opam:v0.14.0",
-      "override": {
+      "override" : {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -135,7 +133,7 @@
     },
     "@opam/ppx_assert": {
       "version": "opam:v0.14.0",
-      "override": {
+      "override" : {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -143,7 +141,7 @@
     },
     "@opam/ppx_base": {
       "version": "opam:v0.14.0",
-      "override": {
+      "override" : {
         "dependencies": {
           "@opam/ppx_sexp_conv": "*"
         }
@@ -188,7 +186,6 @@
           "@opam/multipart_form": "*"
         }
       }
-    },
-    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
+    }
   }
 }
