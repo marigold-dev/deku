@@ -30,7 +30,7 @@ ocamlPackages.buildDunePackage {
     nodejs
   ];
 
-  propagatedBuildInpits = [
+  propagatedBuildInputs = [
     npmPackages
   ];
 
