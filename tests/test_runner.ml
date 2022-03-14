@@ -1,2 +1,2 @@
-Printexc.record_backtrace true;;
-Protocol_test_lib.Setup.cli ()
+Printexc.record_backtrace true
+let () = Protocol_test_lib.Setup.cli ()
