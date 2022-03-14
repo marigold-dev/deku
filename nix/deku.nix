@@ -1,14 +1,6 @@
-{ pkgs, stdenv, lib, ocamlPackages, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
+{ pkgs, stdenv, lib, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
 
-let 
-  rely = pkgs.ocaml-ng.ocamlPackages_5_00.reason-native.rely.overrideAttrs (_: {
-    postPatch = ''
-      substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
-    '';
-  });
-in
-
-ocamlPackages.buildDunePackage {
+pkgs.ocamlPackages.buildDunePackage {
   pname = "sidechain";
   version = "0.0.0-dev";
 
@@ -20,6 +12,7 @@ ocamlPackages.buildDunePackage {
 
   configurePhase = ''
     export PATH=${npmPackages}/node_modules/.bin:$PATH
+    export NODE_PATH=${npmPackages}/node_modules
 
     ln -s ${npmPackages}/node_modules ./node_modules
   '';
@@ -28,13 +21,18 @@ ocamlPackages.buildDunePackage {
 
   nativeBuildInputs = [
     nodejs
-  ];
+  ] ++ (with pkgs.ocamlPackages; [
+    # For reasons I don't fully understand,
+    # builds inside the dev shell fail without
+    # adding cmdliner here.
+    cmdliner_1_0_4
+  ]);
 
   propagatedBuildInputs = [
     npmPackages
   ];
 
-  buildInputs = with ocamlPackages; [
+  buildInputs = with pkgs.ocamlPackages; [
     ppx_deriving
     ppx_deriving_yojson
     lwt
@@ -48,7 +46,7 @@ ocamlPackages.buildDunePackage {
     hex
     tezos-micheline
     digestif
-    cmdliner
+    cmdliner_1_0_4
     ppx_blob
     secp256k1-internal
     bigstring
@@ -57,7 +55,7 @@ ocamlPackages.buildDunePackage {
     reason
   ];
 
-  checkInputs = [
+  checkInputs = with pkgs.ocamlPackages; [
     rely
   ];
 }

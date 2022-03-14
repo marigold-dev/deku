@@ -21,10 +21,10 @@
 
   outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:
     flake-utils.lib.eachDefaultSystem (system:
-      let        
+      let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ ocaml-overlays.overlay ];
+          overlays = [ ocaml-overlays.overlay (import ./nix/overlay.nix) ];
         };
 
         bp = pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
@@ -32,13 +32,12 @@
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
           nodejs = pkgs.nodejs-12_x;
           inherit npmPackages;
         };
       in
       {
-        devShell = import ./nix/shell.nix {inherit pkgs deku npmPackages; };
+        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
         packages = {
           inherit deku;
         };
