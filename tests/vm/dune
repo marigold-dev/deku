@@ -1,3 +1,5 @@
 (test
-  (name test_vm)
-  (libraries lambda_vm alcotest qcheck qcheck-alcotest))
+ (name test_vm)
+ (libraries lambda_vm alcotest qcheck qcheck-alcotest)
+ (preprocess
+  (pps ppx_lambda_vm)))

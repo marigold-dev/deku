@@ -192,31 +192,33 @@ let prim_to_string = function
   | P_mul -> "P_mul"
   | P_div -> "P_div"
   | P_rem -> "P_rem"
-  | P_and -> "P_and"
-  | P_or  -> "P_or"
-  | P_xor -> "P_xor"
+  | P_land -> "P_land"
+  | P_lor -> "P_lor"
+  | P_lxor -> "P_lxor"
   | P_lsl -> "P_lsl"
   | P_lsr -> "P_lsr"
   | P_asr -> "P_asr"
+  | P_fst -> "P_fst"
+  | P_snd -> "P_snd"
 
 let rec pp_value fmt value =
   match value with
-  | V_int64 value ->
-     Format.fprintf fmt "V_int64 %LdL" value
-  | V_pair { first ; second } ->
-     Format.pp_print_string fmt "V_pair { first = ";
-     pp_value fmt first;
-     Format.pp_print_string fmt "; second = ";
-     pp_value fmt second;
-     Format.pp_print_string fmt " }"
+  | V_int64 value -> Format.fprintf fmt "V_int64 %LdL" value
+  | V_pair { first; second } ->
+    Format.pp_print_string fmt "V_pair { first = ";
+    pp_value fmt first;
+    Format.pp_print_string fmt "; second = ";
+    pp_value fmt second;
+    Format.pp_print_string fmt " }"
   | V_closure _ ->
-     (* TODO: Format this with an unique ID for different closures *)
-     Format.pp_print_string fmt "Closure"
-  | V_primitive { args ; prim } ->
-     Format.fprintf fmt "V_primitive { prim = %s ; args = [" (prim_to_string prim);
-     List.iter
-       (fun value ->
-         pp_value fmt value;
-         Format.pp_print_string fmt "; ")
-       args;
-     Format.pp_print_string fmt "] }"
+    (* TODO: Format this with an unique ID for different closures *)
+    Format.pp_print_string fmt "Closure"
+  | V_primitive { args; prim } ->
+    Format.fprintf fmt "V_primitive { prim = %s ; args = ["
+      (prim_to_string prim);
+    List.iter
+      (fun value ->
+        pp_value fmt value;
+        Format.pp_print_string fmt "; ")
+      args;
+    Format.pp_print_string fmt "] }"
