@@ -7,9 +7,9 @@ type prim =
   | P_mul
   | P_div
   | P_rem
-  | P_and
-  | P_or
-  | P_xor
+  | P_land
+  | P_lor
+  | P_lxor
   | P_lsl
   | P_lsr
   | P_asr

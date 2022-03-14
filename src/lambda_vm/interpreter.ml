@@ -105,9 +105,9 @@ let eval_prim prim ~arg ~args =
   | P_mul -> op2 Int64.mul
   | P_div -> op2 Int64.div
   | P_rem -> op2 Int64.rem
-  | P_and -> op2 Int64.logand
-  | P_or -> op2 Int64.logor
-  | P_xor -> op2 Int64.logxor
+  | P_land -> op2 Int64.logand
+  | P_lor -> op2 Int64.logor
+  | P_lxor -> op2 Int64.logxor
   | P_lsl -> op2_shift Int64.shift_left
   | P_lsr -> op2_shift Int64.shift_right_logical
   | P_asr -> op2_shift Int64.shift_right

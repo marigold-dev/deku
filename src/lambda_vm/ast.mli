@@ -7,9 +7,9 @@ type prim =
   | Mul
   | Div
   | Rem
-  | And
-  | Or
-  | Xor
+  | Land
+  | Lor
+  | Lxor
   | Lsl
   | Lsr
   | Asr

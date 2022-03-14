@@ -17,9 +17,9 @@ let compile_prim prim =
   | Mul -> P_mul
   | Div -> P_div
   | Rem -> P_rem
-  | And -> P_and
-  | Or -> P_or
-  | Xor -> P_xor
+  | Land -> P_land
+  | Lor -> P_lor
+  | Lxor -> P_lxor
   | Lsl -> P_lsl
   | Lsr -> P_lsr
   | Asr -> P_asr
