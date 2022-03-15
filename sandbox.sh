@@ -192,8 +192,8 @@ start_tezos_node() {
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
 }
 
+SERVERS=()
 start_deku_cluster() {
-  SERVERS=()
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]
@@ -227,6 +227,9 @@ start_deku_cluster() {
     fi
   done
 
+}
+
+wait_for_servers() {
   for PID in "${SERVERS[@]}"; do
     wait "$PID"
   done
@@ -262,6 +265,7 @@ setup)
   ;;
 start)
   start_deku_cluster
+  wait_for_servers
   ;;
 tear-down)
   tear-down
