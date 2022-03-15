@@ -53,19 +53,19 @@ For convenient local development, we have included two components:
 
 #### Requirements
 
-The sandbox requires Bash, [Docker](https://docs.docker.com/get-docker/), and docker-compose to be installed,
-in addition to the usual Deku pre-requisites.
+The sandbox requires Bash and [Docker](https://docs.docker.com/get-docker/) installed.
+in addition to the usual Deku pre-requisites (alternatively, you can use `nix` to provide these).
 
 #### Setup
 
-Run `docker-compose up -d` to start a Tezos network and the BCD interface.
+Run `docker compose up -d` to start a Tezos network and the BCD interface.
 
 Run `./sandbox.sh setup` to start a local Tezos sandbox network, setup three Deku validator node identities, and deploy
 a Deku consensus contract configured for these validators to the local sandbox.
 
 Run `./sandbox.sh tear-down` to kill the Tezos sandbox network and wipe the Deku state.
 
-Run `docker-compose down -v` to stop the Tezos network and destroy the BCD database.
+Run `docker compose down -v` to stop the Tezos network and destroy the BCD database.
 
 #### Start
 

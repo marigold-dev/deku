@@ -1,6 +1,23 @@
+# Esy things
 _esy
+
+# dune
+_build
+
+# nix
+result
+
+# IDEs
+.vscode
+
+# nix-direnv cache
+.direnv
+
+# Deku nodes folder
+data/
+
+# Others
 node_modules
-data
 *.install
 *.bundle.js
 *.bundle.js.LICENSE.txt
