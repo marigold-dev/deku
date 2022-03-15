@@ -41,6 +41,9 @@
     "webpack": "^5.47.1",
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 23668c20... lambda_vm: improve tests
 =======
 >>>>>>> 23668c20... lambda_vm: improve tests
     "webpack-cli": "^4.7.1",
@@ -48,11 +51,15 @@
     "@opam/secp256k1-internal": "*",
     "@opam/domainslib": "0.4.1",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "@opam/data-encoding": "*",
     "@opam/core_bench": "*"
 =======
     "webpack-cli": "^4.7.1"
 >>>>>>> 666e5bda... lambda_vm: testing with alcotest and qcheck
+=======
+    "@opam/data-encoding": "*"
+>>>>>>> 23668c20... lambda_vm: improve tests
 =======
     "@opam/data-encoding": "*"
 >>>>>>> 23668c20... lambda_vm: improve tests

@@ -1661,6 +1661,7 @@
       "devDependencies": []
     },
 <<<<<<< HEAD
+<<<<<<< HEAD
     "electron-to-chromium@1.4.86@d41d8cd9": {
       "id": "electron-to-chromium@1.4.86@d41d8cd9",
       "name": "electron-to-chromium",
@@ -1670,6 +1671,8 @@
         "source": [
           "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.86.tgz#sha1:90fe4a9787f48d6522957213408e08a8126b2ebc"
 =======
+=======
+>>>>>>> 23668c20... lambda_vm: improve tests
     "electron-to-chromium@1.4.85@d41d8cd9": {
       "id": "electron-to-chromium@1.4.85@d41d8cd9",
       "name": "electron-to-chromium",
@@ -1678,6 +1681,9 @@
         "type": "install",
         "source": [
           "archive:https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.85.tgz#sha1:a3666ba42147026b9f34d4d8d4caf0740e80f751"
+<<<<<<< HEAD
+>>>>>>> 23668c20... lambda_vm: improve tests
+=======
 >>>>>>> 23668c20... lambda_vm: improve tests
         ]
       },
@@ -1930,7 +1936,11 @@
       "dependencies": [
         "picocolors@1.0.0@d41d8cd9", "node-releases@2.0.2@d41d8cd9",
 <<<<<<< HEAD
+<<<<<<< HEAD
         "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.86@d41d8cd9",
+=======
+        "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.85@d41d8cd9",
+>>>>>>> 23668c20... lambda_vm: improve tests
 =======
         "escalade@3.1.1@d41d8cd9", "electron-to-chromium@1.4.85@d41d8cd9",
 >>>>>>> 23668c20... lambda_vm: improve tests
@@ -5072,6 +5082,7 @@
       ]
     },
 <<<<<<< HEAD
+<<<<<<< HEAD
     "@opam/ppx_fixed_literal@opam:v0.14.0@a07fb03e": {
       "id": "@opam/ppx_fixed_literal@opam:v0.14.0@a07fb03e",
       "name": "@opam/ppx_fixed_literal",
@@ -5147,6 +5158,8 @@
         "source": [
           "github:EduardoRFS/ppx_expect:ppx_expect.opam#5bd917215a86edcff003bcb4d3825620a94215c6"
 =======
+=======
+>>>>>>> 23668c20... lambda_vm: improve tests
     "@opam/ppx_expect@github:renatoalencar/ppx_expect:ppx_expect.opam#cfb5ad59a1b6bb9c50bec748e32d3421df3d5349@d41d8cd9": {
       "id":
         "@opam/ppx_expect@github:renatoalencar/ppx_expect:ppx_expect.opam#cfb5ad59a1b6bb9c50bec748e32d3421df3d5349@d41d8cd9",
@@ -5157,6 +5170,9 @@
         "type": "install",
         "source": [
           "github:renatoalencar/ppx_expect:ppx_expect.opam#cfb5ad59a1b6bb9c50bec748e32d3421df3d5349"
+<<<<<<< HEAD
+>>>>>>> 23668c20... lambda_vm: improve tests
+=======
 >>>>>>> 23668c20... lambda_vm: improve tests
         ]
       },
