@@ -101,6 +101,7 @@ let eval_prim prim ~arg ~args =
   match prim with
   | P_neg -> op1 Int64.neg
   | P_add -> op2 Int64.add
+  | P_add_with_carry -> failwith "todo!"
   | P_sub -> op2 Int64.sub
   | P_mul -> op2 Int64.mul
   | P_div -> op2 Int64.div

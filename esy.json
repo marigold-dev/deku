@@ -42,7 +42,7 @@
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
     "@opam/graphql": "*",
-    "@opam/stdint": "*"
+    "@opam/alcotest": "1.5.0"
   },
   "devDependencies": {
     "prettier": "^2.3.2",

@@ -3,6 +3,7 @@ type ident = Ident.t [@@deriving eq, show]
 type prim =
   | P_neg
   | P_add
+  | P_add_with_carry
   | P_sub
   | P_mul
   | P_div
@@ -59,9 +60,9 @@ type value =
       args : value list;
       prim : prim;
     }
-[@@deriving eq]
+[@@deriving eq, show]
 
-and env = value Ident_map.t
+and env = value Ident_map.t [@opaque]
 
 type script = {
   param : Ident.t;

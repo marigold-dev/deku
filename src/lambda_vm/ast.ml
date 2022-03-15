@@ -4,6 +4,7 @@ type ident = string
 type prim =
   | Neg
   | Add
+  | Add_with_carry
   | Sub
   | Mul
   | Div

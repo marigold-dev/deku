@@ -1,5 +1,6 @@
 module Ast = Ast
 module Gas = Gas
+module Ir = Ir
 
 type script = Ir.script 
 [@@deriving show]

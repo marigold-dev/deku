@@ -4,7 +4,7 @@
   (:standard \ Test_runner))
  (library_flags
   (-linkall -g))
- (libraries rely.lib tezos_interop protocol node tezos_rpc lambda_vm)
+ (libraries rely.lib tezos_interop protocol node tezos_rpc lambda_vm alcotest)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
