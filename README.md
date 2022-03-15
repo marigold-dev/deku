@@ -72,12 +72,12 @@ Run `docker-compose down -v` to stop the Tezos network and destroy the BCD datab
 Simply run:
 
 ```
-./start.sh
+./sandbox.sh start
 ```
 
 This starts 3 nodes as background processes.
 
-You may have to stop the session with `killall deku-node` to fully shutdown the cluster.
+You may have to stop the session with `killall Domain0` to fully shutdown the cluster.
 
 In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
 
