@@ -10,14 +10,15 @@ data_directory="data"
 [ "$USE_NIX" ] && dune build @install
 
 tezos-client() {
-  docker exec -it deku_flextesa tezos-client "$@"
+  docker exec -t deku_flextesa tezos-client "$@"
 }
 
 ligo() {
   docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
 }
 
-RPC_NODE=http://localhost:20000
+RPC_NODE="${RPC_NODE:-"http://localhost:20000"}"
+echo "Using $RPC_NODE as RPC Node"
 
 # This secret key never changes.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -171,8 +172,8 @@ start_tezos_node() {
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
 }
 
+SERVERS=()
 start_deku_cluster() {
-  SERVERS=()
   echo "Starting nodes."
   for i in ${VALIDATORS[@]}; do
     deku-node "$data_directory/$i" --listen-prometheus=900$i &
@@ -191,6 +192,9 @@ start_deku_cluster() {
     deku-cli sign-block "$data_directory/$i" $HASH
   done
 
+}
+
+wait_for_servers() {
   for PID in ${SERVERS[@]}; do
     wait $PID
   done
@@ -250,6 +254,7 @@ setup)
   ;;
 start)
   start_deku_cluster
+  wait_for_servers
   ;;
 tear-down)
   tear-down
