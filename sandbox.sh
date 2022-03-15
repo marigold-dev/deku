@@ -222,6 +222,25 @@ deposit_ticket() {
   --burn-cap 2
 }
 
+assert_deku_state() {
+  contract=$(cat "$data_directory/0/tezos.json" | jq '.consensus_contract' | xargs)
+  storage=$(curl "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  current_state_hash=$(echo $storage | jq '.args[0].args[0].args[2].bytes' | xargs)
+  current_block_height=$(echo $storage | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+
+  echo "The current block height is" $current_block_height
+
+  # Check that a state root hash was published recently
+  if [ $current_block_height -lt 20 ]; then
+    echo "Error: no recent state root hash update found. Exiting."
+    exit 1
+  fi
+
+  for i in ${VALIDATORS[@]}; do
+    esy x asserter "$data_directory/$i" $current_state_hash "$@"
+  done
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -241,6 +260,8 @@ help() {
   echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "smoke-test"
+  echo "  Starts a Deku cluster and performs some simple checks that its working."
 }
 
 case "$1" in
@@ -255,6 +276,13 @@ setup)
 start)
   start_deku_cluster
   wait_for_servers
+  ;;
+smoke-test)
+  start_deku_cluster
+  seconds=35
+  sleep $seconds
+  killall deku-node
+  assert_deku_state $seconds
   ;;
 tear-down)
   tear-down
