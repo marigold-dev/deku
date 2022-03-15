@@ -8,6 +8,8 @@ exception Out_of_gas
 type script
 type value
 
+val pp_value : Format.formatter -> value -> unit
+
 (* compiler *)
 type compile_error = (* user program bugs *)
   | Undefined_variable
@@ -34,6 +36,3 @@ type script_result = {
 }
 val execute :
   Gas.t -> arg:value -> script -> (script_result, execution_error) result
-
-val pp_value : Format.formatter -> value -> unit
-

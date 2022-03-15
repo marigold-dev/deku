@@ -6,6 +6,8 @@ include Checks
 type script = Ir.script
 type value = Ir.value
 
+let pp_value = Ir.pp_value
+
 type compile_error = Compiler.error =
   (* user program bugs *)
   | Undefined_variable
