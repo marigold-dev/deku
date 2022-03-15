@@ -6,35 +6,64 @@ A sidechain to Tezos by Marigold focused on higher throughput.
 
 ### Pre-requisites
 
-#### Esy Package Manager
+You'll need a one of the two package managers Deku is developed with:
 
-Marigold Sidechain is being developed with
-[esy](https://esy.sh/). `esy` can be installed with NPM or Yarn.
+#### [Esy](https://esy.sh)
+Esy can be installed with NPM or Yarn.
 
-```sh
+```shell
 npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES issues
 # or
 yarn global add esy
 ```
 
-Alternatively, you can use the `nix` package manager with
-[flakes enabled](https://nixos.wiki/wiki/Flakes#Installing_flakes) to enter an
-environment preloaded with the correct dependencies, including `esy`:
+#### Nix
 
-```
-nix --experimental-features "nix-command flakes" run
+Install Nix by following the [official guide](https://nixos.org/download.html).
+Additionally, you must enable the [flakes feature](https://nixos.wiki/wiki/Flakes):
+```shell
+echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
 ```
 
-(We suggest using this [binary cache repository](https://app.cachix.org/cache/anmonteiro) to reduce
-build times)
+Nix automatically installs all the dependencies and devtools needed for development,
+including Esy, Docker, etc.
+
+You can load the Nix development with the command:
+```shell
+cd deku
+nix develop -c $SHELL
+```
+
+We recommend installing [`direnv`](https://direnv.net/) to automatically load the
+Nix environment for you whenever you enter the directory. Once installed, you can
+enable `direnv` for Deku with:
+```shell
+cd deku
+direnv allow
+```
+
+### Building
+
+```shell
+# with esy
+esy
+esy dune build 
+
+# with nix
+dune build
+```
 
 ### Testing
 
 We use [Rely](https://reason-native.com/docs/rely/) to write
 tests. These can be run with,
 
-```
+```shell
+# with esy
 esy test
+
+# with nix
+dune build @runtest
 ```
 
 ### Running a sidechain
@@ -71,7 +100,7 @@ Run `docker compose down -v` to stop the Tezos network and destroy the BCD datab
 
 Simply run:
 
-```
+```shell
 ./sandbox.sh start
 ```
 
