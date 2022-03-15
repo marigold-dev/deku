@@ -235,6 +235,25 @@ wait_for_servers() {
   done
 }
 
+assert_deku_state() {
+  contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
+  storage=$(curl "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  current_state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  current_block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+
+  echo "The current block height is" "$current_block_height"
+
+  # Check that a state root hash was published recently
+  if [ "$current_block_height" -lt 20 ]; then
+    echo "Error: no recent state root hash update found. Exiting."
+    exit 1
+  fi
+
+  for i in "${VALIDATORS[@]}"; do
+    asserter "$data_directory/$i" "$current_state_hash" "$@"
+  done
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -250,6 +269,8 @@ help() {
   echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
+  echo "smoke-test"
+  echo "  Starts a Deku cluster and performs some simple checks that its working."
 }
 
 message "Running in $mode mode"
@@ -266,6 +287,13 @@ setup)
 start)
   start_deku_cluster
   wait_for_servers
+  ;;
+smoke-test)
+  start_deku_cluster
+  seconds=35
+  sleep $seconds
+  killall deku-node
+  assert_deku_state $seconds
   ;;
 tear-down)
   tear-down
