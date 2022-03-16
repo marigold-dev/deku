@@ -35,6 +35,7 @@ const output = (data) =>
 
 const finished = (status, hash) => output({ status, hash });
 const error = (error) => {
+  console.error("run_entrypoint.js error");
   console.error(error);
   output({ status: "error", error: JSON.stringify(error) });
 };
