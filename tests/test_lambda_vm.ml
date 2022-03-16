@@ -85,6 +85,28 @@ let add =
                 [Const 10L; y]))
        ~parameter:(Ast.Int64 44L) ~expectation:(Ir.V_int64 54L))
 
+let fst =
+  make_test "fst"
+    (expect_script_output
+       ~script:
+         (script "y" (fun y ->
+              app
+                (lam "x" (fun x -> pair (Fst x) (pair (Const 0L) (Const 0L))))
+                [y]))
+       ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
+       ~expectation:(Ir.V_int64 33L))
+
+let snd =
+  make_test "snd"
+    (expect_script_output
+       ~script:
+         (script "y" (fun y ->
+              app
+                (lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L))))
+                [y]))
+       ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
+       ~expectation:(Ir.V_int64 55L))
+
 let () =
   let open Alcotest in
   run "lambdavm"
@@ -95,6 +117,8 @@ let () =
           make_pair_with_useless_lambda;
           make_pair_with_useless_lambda';
           add;
+          fst;
+          snd;
         ] );
     ]
 
