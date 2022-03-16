@@ -2,6 +2,9 @@
 
 set -e
 
+LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
+export LD_LIBRARY_PATH
+
 RPC_NODE=http://localhost:20000
 
 # This secret key never changes.
@@ -9,13 +12,13 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-SIDECLI=$(esy x which sidecli)
-sidecli() {
-  eval $SIDECLI '"$@"'
+deku_cli() {
+  DEKU_CLI=$(esy x which sidecli)
+  eval $DEKU_CLI '"$@"'
 }
 
 tezos-client() {
-  docker exec -it my-sandbox tezos-client "$@"
+  docker exec -it deku_flextesa tezos-client "$@"
 }
 
 ligo() {
@@ -76,10 +79,10 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p $FOLDER
 
-    sidecli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(sidecli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(sidecli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(sidecli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    deku_cli setup-identity $FOLDER --uri "http://localhost:444$i"
+    KEY=$(deku_cli self $FOLDER | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku_cli self $FOLDER | grep "address:" | awk '{ print $2 }')
+    URI=$(deku_cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -143,29 +146,26 @@ EOF
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    sidecli setup-tezos "$FOLDER" \
+    deku_cli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1
   done
+  echo "Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS"
 }
 
 tear-down() {
-  if [[ $(docker ps | grep my-sandbox) ]]; then
-    docker kill my-sandbox
-    rm -r "$DATA_DIRECTORY"
-    echo "Stopped the sandbox and wiped all state."
-  fi
+  for i in ${VALIDATORS[@]}; do
+    FOLDER="$DATA_DIRECTORY/$i"
+    if [ -d $FOLDER ]; then
+      rm -r $FOLDER
+    fi
+  done
 }
 
 start_node() {
   tear-down
-  message "Starting sandbox"
-  docker run --rm --name my-sandbox --detach -p 20000:20000 \
-    tqtezos/flextesa:20210602 granabox start
-  sleep 3
-  message "Sandbox started"
   message "Configuring Tezos client"
   tezos-client --endpoint $RPC_NODE bootstrapped
   tezos-client --endpoint $RPC_NODE config update
