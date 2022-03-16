@@ -63,23 +63,19 @@ let test_neg =
               (Int64 Int64.(neg x)) in
           result.storage = expected_result))
 
-let () =
-  let open Alcotest in
-  run "Lambda VM"
+let test =
+  ( "Primitive operations",
     [
-      ( "Primitive operations",
-        [
-          test_sum;
-          test_sub;
-          test_mul;
-          test_div;
-          test_rem;
-          test_and;
-          test_or;
-          test_xor;
-          test_neg;
-          test_lsl;
-          test_lsr;
-          test_asr;
-        ] );
-    ]
+      test_sum;
+      test_sub;
+      test_mul;
+      test_div;
+      test_rem;
+      test_and;
+      test_or;
+      test_xor;
+      test_neg;
+      test_lsl;
+      test_lsr;
+      test_asr;
+    ] )

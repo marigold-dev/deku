@@ -10,36 +10,39 @@ let counter =
               0L),
         (0L, 0L) )]
 
-let%expect_test _ =
-  let gas = Gas.measure () in
-  let _ =
-    Vm_test.compile_value_exn gas (Int64 0L) in
+let test_compile_value () =
+  let gas = Gas.make ~initial_gas:100 in
+  let _ = Vm_test.compile_value_exn gas (Int64 0L) in
   ();
-  print_int (Gas.current gas);
-  [%expect{| 100 |}]
+  Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
 
-let%expect_test _ =
+let test_compile_ast () =
   let ast = [%lambda_vm.script fun x -> x + 1L] in
 
-  let gas = Gas.measure () in
-  let _ =
-    Vm_test.compile_exn gas ast in
+  let gas = Gas.make ~initial_gas:500 in
+  let _ = Vm_test.compile_exn gas ast in
   ();
-  print_int (Gas.current gas);
-  [%expect{| 500 |}]
+  Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
 
-let%expect_test _ =
+let test_execute_ir () =
   let x = 4096L in
   let arg =
-    let gas = Gas.measure () in
+    let gas = Gas.make ~initial_gas:101 in
     Vm_test.compile_value_exn gas (Int64 x) in
   let ir =
-    let gas = Gas.measure () in
+    let gas = Gas.make ~initial_gas:5000 in
     Vm_test.compile_exn gas counter in
 
-  let gas = Gas.measure () in
-  let _ =
-    Vm_test.execute_exn gas arg ir in
+  let gas = Gas.make ~initial_gas:14747900 in
+  let _ = Vm_test.execute_exn gas arg ir in
   ();
-  print_int (Gas.current gas);
-  [%expect{| 14747900 |}]
+  Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
+
+let test =
+  let open Alcotest in
+  ( "Gas model",
+    [
+      test_case "Compile value" `Quick test_compile_value;
+      test_case "Compile AST" `Quick test_compile_ast;
+      test_case "Execute IR" `Quick test_execute_ir;
+    ] )

@@ -74,8 +74,7 @@
     "@opam/ocamlformat-rpc": "0.20.1",
     "@opam/alcotest": "1.5.0",
     "@opam/qcheck": "0.18.1",
-    "@opam/qcheck-alcotest": "0.18.1",
-    "@opam/ppx_expect": "github:renatoalencar/ppx_expect:ppx_expect.opam#94d2862f6df315955de9951d8c77f47085a9a876"
+    "@opam/qcheck-alcotest": "0.18.1"
   },
   "resolutions": {
     "ocaml": "esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396",
@@ -171,7 +170,6 @@
       }
     },
     "@opam/ppx_inline_test": "janestreet/ppx_inline_test:ppx_inline_test.opam#54e0a1cd2402126998d40f653876e59a7011bf75",
-    "@opam/ppx_expect": "renatoalencar/ppx_expect:ppx_expect.opam#cfb5ad59a1b6bb9c50bec748e32d3421df3d5349",
     "@opam/ppx_sexp_conv": "janestreet/ppx_sexp_conv:ppx_sexp_conv.opam#3d413303de3f76fecb19dc51c85b81c33c5c872a",
     "@opam/bigstring": "EduardoRFS/ocaml-bigstring:bigstring.opam#0c61b86549af6a383f3b34ec757fd3434acf4b94",
     "@opam/secp256k1-internal": "git:https://gitlab.com/marigold/ocaml-secp256k1-internal:secp256k1-internal.opam#964026bdb43db3ebffd1643599ec22e4caf8f2bc",

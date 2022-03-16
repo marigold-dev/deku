@@ -22,7 +22,7 @@ type prim =
 module Env = struct
   include Map_with_cardinality.Make(Ident)
 
-  let pp _fmt _ _ = ()
+  let pp _ fmt _ = Format.fprintf fmt "<env>"
 end
 
 type expr =

@@ -80,17 +80,14 @@ let test_lambda_application () =
 
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
-let () =
+let test =
   let open Alcotest in
-  run "Lambda VM"
+  ( "Simple with simple expressions",
     [
-      ( "Simple with simple expressions",
-        [
-          test_case "Increment" `Quick test_increment;
-          test_case "Decrement" `Quick test_decrement;
-          test_case "Add pair" `Quick test_add_pair;
-          test_case "If expr" `Quick test_if_expr;
-          test_case "Lambda" `Quick test_lambda;
-          test_case "Lambda application" `Quick test_lambda_application;
-        ] );
-    ]
+      test_case "Increment" `Quick test_increment;
+      test_case "Decrement" `Quick test_decrement;
+      test_case "Add pair" `Quick test_add_pair;
+      test_case "If expr" `Quick test_if_expr;
+      test_case "Lambda" `Quick test_lambda;
+      test_case "Lambda application" `Quick test_lambda_application;
+    ] )

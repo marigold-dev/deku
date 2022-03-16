@@ -54,7 +54,8 @@ end
 module Env = Map_with_cardinality.Make (Ident)
 
 let burn_gas gas env code =
-  (match code with
+  check_gas gas;
+  match code with
   | E_var _
   | E_app _ ->
     let cardinality = Env.cardinal env in
@@ -64,8 +65,7 @@ let burn_gas gas env code =
   | E_prim _
   | E_if _
   | E_pair _ ->
-    Gas.burn_constant gas);
-  check_gas gas
+    Gas.burn_constant gas
 
 let eval_prim prim ~arg ~args =
   let op1_int64 f =
@@ -137,7 +137,8 @@ let rec eval ~stack gas env code =
     match Env.find var env with
     | Some value -> value
     | None ->
-      (* TODO: could we eliminate this using GADTs? *) raise Undefined_variable)
+      (* TODO: could we eliminate this using GADTs? *)
+      raise Undefined_variable)
   | E_lam (param, body) -> V_closure { env; param; body }
   | E_app { funct; arg } -> (
     let funct = eval_call env funct in
@@ -165,6 +166,7 @@ let rec eval ~stack gas env code =
     let first = eval_call env first in
     let second = eval_call env second in
     V_pair { first; second }
+
 let eval gas env code =
   let stack = max_stack_depth in
   eval ~stack gas env code

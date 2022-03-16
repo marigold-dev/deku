@@ -1,3 +1,5 @@
+open Lambda_vm
+
 let factorial =
   [%lambda_vm.script
     fun x ->
@@ -78,24 +80,35 @@ let test_stack_limit () =
           counter in
       ())
 
-let infinite_recursion =
+let infinite_recursion_y =
   [%lambda_vm.script fun _ -> (fun f -> f f) (fun f -> f f + 0L)]
 
-let test_infinite_recursion () =
+let test_y_combinator () =
   Alcotest.check_raises "Stack limit avoids infinite recursion" Out_of_stack
     (fun () ->
       let _ =
-        Vm_test.execute_ast_exn 10000000000000000 (Int64 0L) infinite_recursion
+        Vm_test.execute_ast_exn 10000000000000000 (Int64 0L) infinite_recursion_y
       in
       ())
 
-let () =
+let infinite_recursion_z =
+  [%lambda_vm.script fun _ -> (fun f -> f f 0L) (fun f v -> f f (v + 0L))]
+
+let test_z_combinator () =
+  Alcotest.check_raises "Gas limit is triggered" Out_of_gas (fun () ->
+      let _ =
+        Vm_test.execute_ast_exn 10000000000 (Int64 0L)
+          infinite_recursion_z in
+      ())
+
+let test =
   let open Alcotest in
-  run "Lambda VM"
+  ( "Recursion",
     [
-      (("Recursion", test_factorial);
-       test_fibonacci;
-       test_counter;
-       test_case "Stack limit" `Slow test_stack_limit;
-       test_case "Infinite recursion" `Slow test_infinite_recursion);
-    ]
+      test_factorial;
+      test_fibonacci;
+      test_counter;
+      test_case "Stack limit" `Slow test_stack_limit;
+      test_case "Infinite recursion - Y" `Slow test_y_combinator;
+      test_case "Infinite recursion - Z" `Slow test_z_combinator;
+    ] )
