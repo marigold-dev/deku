@@ -46,6 +46,9 @@ let script x f = { param = x; code = f (Var x) }
 let pair x y : Ast.expr = Ast.Pair { first = x; second = y }
 let app f ls =
   List.fold_left (fun acc x -> Ast.App { funct = acc; arg = x }) f ls
+let let_in letins x =
+  let let_in (var', let') in' = App { funct = Lam (var', in'); arg = let' } in
+  List.fold_right let_in letins x
 
 let make_pair =
   make_test "make_pair"
@@ -107,6 +110,40 @@ let snd =
        ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
        ~expectation:(Ir.V_int64 55L))
 
+let letin =
+  make_test "letin"
+    (expect_script_output
+       ~script:
+         (script "y" (fun y ->
+              let_in
+                [
+                  ( "makepair",
+                    lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L)))
+                  );
+                ]
+                (app (Var "makepair") [y])))
+       ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
+       ~expectation:(Ir.V_int64 55L))
+let letin' =
+  make_test "letin'"
+    (expect_script_output
+       ~script:
+         (script "y" (fun y ->
+              let_in
+                [
+                  ( "makepair_old",
+                    lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L)))
+                  );
+                  ( "makepair",
+                    Var "makepair_old"
+                  );
+                ]
+                (app (Var "makepair") [y])))
+       ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
+       ~expectation:(Ir.V_int64 55L))
+
+
+       
 let () =
   let open Alcotest in
   run "lambdavm"
@@ -119,6 +156,8 @@ let () =
           add;
           fst;
           snd;
+          letin;
+          letin';
         ] );
     ]
 
