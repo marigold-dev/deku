@@ -112,7 +112,7 @@ services:
     image: tqtezos/flextesa:20211206
     command: hangzbox start
     environment:
-      - block_time=4
+      - block_time=2
     ports:
       - "20000:20000"
     expose:
