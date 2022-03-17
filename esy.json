@@ -42,7 +42,8 @@
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
     "@opam/graphql": "*",
-    "@opam/alcotest": "1.5.0"
+    "@opam/alcotest": "1.5.0",
+    "@opam/stdint": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -186,6 +187,7 @@
       }
     },
     "@opam/graphql": "andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9",
-    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
+    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54",
+    "@opam/stdint": "andrenth/ocaml-stdint:stdint.opam#cb95ca6dff6bd58aa555b872a5db6558837d52db"
   }
 }

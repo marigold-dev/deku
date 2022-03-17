@@ -1,6 +1,7 @@
 module Ast = Ast
 module Gas : module type of Gas
 module Ir = Ir
+module Math = Math
 
 (* ir *)
 type script [@@deriving show]

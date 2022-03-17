@@ -10,10 +10,33 @@ let expect_ir_value =
          (fun ppf value -> Fmt.pf ppf "%s" (Ir.show_value value))
          Ir.equal_value))
 
-let test_lowercase () =
-  Alcotest.(check string)
-    "same string" "hello!"
-    (String.lowercase_ascii "hELLO!")
+let expect_uint64 =
+  Alcotest.(
+    check
+      (testable
+         (fun ppf value -> Fmt.pf ppf "%s" (Stdint.Uint64.to_string value))
+         (fun a b -> Stdint.Uint64.compare a b == 0)))
+
+let expect_int64 =
+  Alcotest.(
+    check
+      (testable
+         (fun ppf value -> Fmt.pf ppf "%s" (Int64.to_string value))
+         Int64.equal))
+let expect_uint128 =
+  Alcotest.(
+    check
+      (testable
+         (fun ppf value -> Fmt.pf ppf "%s" (Stdint.Uint128.to_string value))
+         (fun a b -> Stdint.Uint128.compare a b == 0)))
+
+let expect_int64_pair =
+  Alcotest.(
+    check
+      (testable
+         (fun ppf value ->
+           Fmt.pf ppf "%s" ([%derive.show: Int64.t * Int64.t] value))
+         [%derive.eq: Int64.t * Int64.t]))
 
 let expect_script_output ~script ~parameter ~expectation description =
   let script = script |> compile (Gas.make ~initial_gas:100000) in
@@ -133,16 +156,45 @@ let letin' =
                   ( "makepair_old",
                     lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L)))
                   );
-                  ( "makepair",
-                    Var "makepair_old"
-                  );
+                  ("makepair", Var "makepair_old");
                 ]
                 (app (Var "makepair") [y])))
        ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
        ~expectation:(Ir.V_int64 55L))
 
+let negative_uint_to_big_uint128 =
+  make_test "negative uint to big_uint128" (fun description ->
+      expect_uint128 description
+        (Stdint.Uint64.max_int |> Math.Uint128.of_uint64)
+        (Math.Uint128.of_int64 (-1L)))
+let add_with_carry =
+  [
+    make_test "Math.add_with_carry 33 11 (no overflow)" (fun description ->
+        expect_int64_pair description (44L, 0L) (Math.add_with_carry 33L 11L));
+    (* Recall that -1L is treated as max_int64 *)
+    make_test "Math.add_with_carry maxint 0 (no overflow)" (fun description ->
+        expect_int64_pair description (-1L, 0L) (Math.add_with_carry (-1L) 0L));
+    make_test "Math.add_with_carry maxint 1 (yes overflow)" (fun description ->
+        expect_int64_pair description (0L, 1L) (Math.add_with_carry (-1L) 1L));
+    make_test "Math.add_with_carry maxint maxint (yes overflow)"
+      (fun description ->
+        expect_int64_pair description (-2L, 1L)
+          (Math.add_with_carry (-1L) (-1L)));
+    make_test "interpreter add with carry"
+      (expect_script_output
+         ~script:
+           (script "y" (fun y ->
+                app
+                  (lam "y" (fun y ->
+                       pair
+                         (app (Prim Add_with_carry) [Fst y; Snd y])
+                         (pair (Const 0L) (Const 0L))))
+                  [y]))
+         ~parameter:(Ast.Pair (Ast.Int64 44L, Ast.Int64 11L))
+         ~expectation:
+           (Ir.V_pair { first = Ir.V_int64 55L; second = Ir.V_int64 0L }));
+  ]
 
-       
 let () =
   let open Alcotest in
   run "lambdavm"
@@ -158,4 +210,5 @@ let () =
           letin;
           letin';
         ] );
+      ("math", List.concat [[negative_uint_to_big_uint128]; add_with_carry]);
     ]
