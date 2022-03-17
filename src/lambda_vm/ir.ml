@@ -62,7 +62,7 @@ type value =
     }
 [@@deriving eq, show]
 
-and env = value Ident_map.t [@opaque]
+and env = (value Ident_map.t[@opaque])
 
 type script = {
   param : Ident.t;

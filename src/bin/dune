@@ -7,10 +7,10 @@
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
 
 (executable
- (name deku_cli)
+ (name sidecli)
  (libraries node bin_common helpers cmdliner)
- (modules Deku_cli)
- (public_name deku-cli)
+ (modules Sidecli)
+ (public_name sidecli)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 

@@ -3,8 +3,7 @@ module Gas = Gas
 module Ir = Ir
 module Math = Math
 
-type script = Ir.script 
-[@@deriving show]
+type script = Ir.script [@@deriving show]
 type value = Ir.value [@@deriving eq]
 
 type compile_error = Compiler.error =

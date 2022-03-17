@@ -12,9 +12,9 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-deku_cli() {
-  DEKU_CLI=$(esy x which deku-cli)
-  eval $DEKU_CLI '"$@"'
+sidecli() {
+  SIDECLI=$(esy x which sidecli)
+  eval $SIDECLI '"$@"'
 }
 
 tezos-client() {
@@ -79,10 +79,10 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p $FOLDER
 
-    deku_cli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(deku_cli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku_cli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(deku_cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    sidecli setup-identity $FOLDER --uri "http://localhost:444$i"
+    KEY=$(sidecli self $FOLDER | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(sidecli self $FOLDER | grep "address:" | awk '{ print $2 }')
+    URI=$(sidecli self $FOLDER | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -146,7 +146,7 @@ EOF
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    deku_cli setup-tezos "$FOLDER" \
+    sidecli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
