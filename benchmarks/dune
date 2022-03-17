@@ -1,0 +1,3 @@
+(executable
+ (name benchmarks)
+ (libraries core_bench lambda_vm))

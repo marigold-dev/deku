@@ -4,7 +4,7 @@ open Node
 open State
 open Protocol
 open Cmdliner
-open Core
+open Core_deku
 open Bin_common
 
 let () = Printexc.record_backtrace true
@@ -151,7 +151,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
       ~block_height:block_level
       ~data:
-        (Core.User_operation.make
+        (Core_deku.User_operation.make
            ~sender:(Address.of_key_hash wallet.address)
            (Transaction { destination = received_address; amount; ticket }))
   in
@@ -213,7 +213,7 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
       ~block_height:block_level
       ~data:
-        (Core.User_operation.make
+        (Core_deku.User_operation.make
            ~sender:(Address.of_key_hash wallet.address)
            (Tezos_withdraw { owner = tezos_address; amount; ticket })) in
   let%await () =

@@ -2,7 +2,7 @@ open Helpers
 open Crypto
 open State
 open Protocol
-open Core
+open Core_deku
 module type Request_endpoint = sig
   type request [@@deriving yojson]
   type response [@@deriving yojson]
