@@ -3,18 +3,12 @@
 set -e
 
 data_directory="data"
+
 LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
 
-DEKU_CLI=$(esy x which deku-cli)
-deku_cli() {
-  eval $DEKU_CLI '"$@"'
-}
-
-DEKU_NODE=$(esy x which deku-node)
-deku_node() {
-  eval $DEKU_NODE '"$@"'
-}
+PATH=$(esy x sh -c 'echo $PATH')
+export PATH
 
 tezos-client() {
   docker exec -it deku_flextesa tezos-client "$@"
@@ -85,10 +79,10 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p $FOLDER
 
-    deku_cli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(deku_cli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku_cli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(deku_cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    deku-cli setup-identity $FOLDER --uri "http://localhost:444$i"
+    KEY=$(deku-cli self $FOLDER | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku-cli self $FOLDER | grep "address:" | awk '{ print $2 }')
+    URI=$(deku-cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -152,7 +146,7 @@ EOF
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    deku_cli setup-tezos "$FOLDER" \
+    deku-cli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
@@ -182,20 +176,20 @@ start_deku_cluster() {
   SERVERS=()
   echo "Starting nodes."
   for i in ${VALIDATORS[@]}; do
-    deku_node "$data_directory/$i" &
+    deku-node "$data_directory/$i" &
     SERVERS+=($!)
   done
 
   sleep 1
 
   echo "Producing a block"
-  HASH=$(deku_cli produce-block "$data_directory/0" | awk '{ print $2 }')
+  HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
 
   sleep 0.1
 
   echo "Signing"
   for i in ${VALIDATORS[@]}; do
-    deku_cli sign-block "$data_directory/$i" $HASH
+    deku-cli sign-block "$data_directory/$i" $HASH
   done
 
   for PID in ${SERVERS[@]}; do
