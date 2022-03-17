@@ -1,0 +1,3 @@
+[submodule "ctez"]
+	path = ctez
+	url = git@github.com:tezos-checker/ctez.git
