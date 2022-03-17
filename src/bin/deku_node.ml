@@ -58,19 +58,30 @@ let handle_block_level =
     (module Networking.Block_level)
     (fun _update_state _request ->
       Ok { level = Flows.find_block_level (Server.get_state ()) })
+let latest_snapshot = ref None
 let handle_protocol_snapshot =
   handle_request
     (module Networking.Protocol_snapshot)
     (fun _update_state () ->
       let State.{ snapshots; _ } = Server.get_state () in
+      let%ok snapshot =
+        match Snapshots.get_current_snapshot snapshots with
+        | Some snapshot ->
+          latest_snapshot := Some snapshot;
+          Ok snapshot
+        | None ->
+        match !latest_snapshot with
+        | Some latest_snapshot -> Ok latest_snapshot
+        | None -> Error `Node_not_yet_initialized in
       Ok
-        {
-          snapshot = snapshots.current_snapshot;
-          additional_blocks = snapshots.additional_blocks;
-          last_block = snapshots.last_block;
-          last_block_signatures =
-            Signatures.to_list snapshots.last_block_signatures;
-        })
+        Networking.Protocol_snapshot.
+          {
+            snapshot;
+            additional_blocks = snapshots.additional_blocks;
+            last_block = snapshots.last_block;
+            last_block_signatures =
+              Signatures.to_list snapshots.last_block_signatures;
+          })
 let handle_request_nonce =
   handle_request
     (module Networking.Request_nonce)
