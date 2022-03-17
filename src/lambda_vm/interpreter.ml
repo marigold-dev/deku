@@ -63,14 +63,12 @@ let burn_gas gas env code =
   | E_const _
   | E_prim _
   | E_if _
-  | E_pair _
-  | E_fst _
-  | E_snd _ ->
+  | E_pair _ ->
     Gas.burn_constant gas);
   check_gas gas
 
 let eval_prim prim ~arg ~args =
-  let op1 f =
+  let op1_int64 f =
     let f value =
       match value with
       | V_int64 value -> V_int64 (f value)
@@ -81,7 +79,17 @@ let eval_prim prim ~arg ~args =
     match args with
     | [] -> f arg
     | _ -> raise Over_applied_primitives in
-
+  let op1_pair f =
+    let f value =
+      match value with
+      | V_pair { first; second } -> f first second
+      | V_int64 _
+      | V_closure _
+      | V_primitive _ ->
+        raise Value_is_not_pair in
+    match args with
+    | [] -> f arg
+    | _ -> raise Over_applied_primitives in
   let op2 f =
     (* error only happens after both are applied *)
     let f left right =
@@ -94,6 +102,10 @@ let eval_prim prim ~arg ~args =
     | [] -> V_primitive { args = [arg]; prim }
     | [left] -> f left arg
     | _ -> raise Over_applied_primitives in
+
+  let op2_shift f =
+    let f left right = f left (Int64.to_int right) in
+    op2 f in
 
   let op2_returning_pair f =
     (* error only happens after both are applied *)
@@ -110,23 +122,22 @@ let eval_prim prim ~arg ~args =
     | [left] -> f left arg
     | _ -> raise Over_applied_primitives in
 
-  let op2_shift f =
-    let f left right = f left (Int64.to_int right) in
-    op2 f in
   match prim with
-  | P_neg -> op1 Int64.neg
+  | P_neg -> op1_int64 Int64.neg
   | P_add -> op2 Int64.add
   | P_add_with_carry -> op2_returning_pair Math.add_with_carry
   | P_sub -> op2 Int64.sub
   | P_mul -> op2 Int64.mul
   | P_div -> op2 Int64.div
   | P_rem -> op2 Int64.rem
-  | P_and -> op2 Int64.logand
-  | P_or -> op2 Int64.logor
-  | P_xor -> op2 Int64.logxor
+  | P_land -> op2 Int64.logand
+  | P_lor -> op2 Int64.logor
+  | P_lxor -> op2 Int64.logxor
   | P_lsl -> op2_shift Int64.shift_left
   | P_lsr -> op2_shift Int64.shift_right_logical
   | P_asr -> op2_shift Int64.shift_right
+  | P_fst -> op1_pair (fun fst _snd -> fst)
+  | P_snd -> op1_pair (fun _fst snd -> snd)
 
 (* TODO: gas must be ref *)
 let rec eval ~stack gas env code =
@@ -171,22 +182,6 @@ let rec eval ~stack gas env code =
     let first = eval_call env first in
     let second = eval_call env second in
     V_pair { first; second }
-  | E_fst pair -> (
-    let pair = eval_call env pair in
-    match pair with
-    | V_pair { first; second = _ } -> first
-    | V_int64 _
-    | V_closure _
-    | V_primitive _ ->
-      raise Value_is_not_pair)
-  | E_snd pair -> (
-    let pair = eval_call env pair in
-    match pair with
-    | V_pair { first = _; second } -> second
-    | V_closure _
-    | V_int64 _
-    | V_primitive _ ->
-      raise Value_is_not_pair)
 let eval gas env code =
   let stack = max_stack_depth in
   eval ~stack gas env code

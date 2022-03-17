@@ -71,6 +71,8 @@ let app f ls =
 let let_in letins x =
   let let_in (var', let') in' = App { funct = Lam (var', in'); arg = let' } in
   List.fold_right let_in letins x
+let fst x = Ast.(App { funct = Prim Fst; arg = x })
+let snd x = Ast.(App { funct = Prim Snd; arg = x })
 
 let make_pair =
   make_test "make_pair"
@@ -110,24 +112,24 @@ let add =
                 [Const 10L; y]))
        ~parameter:(Ast.Int64 44L) ~expectation:(Ir.V_int64 54L))
 
-let fst =
+let test_fst =
   make_test "fst"
     (expect_script_output
        ~script:
          (script "y" (fun y ->
               app
-                (lam "x" (fun x -> pair (Fst x) (pair (Const 0L) (Const 0L))))
+                (lam "x" (fun x -> pair (fst x) (pair (Const 0L) (Const 0L))))
                 [y]))
        ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
        ~expectation:(Ir.V_int64 33L))
 
-let snd =
+let test_snd =
   make_test "snd"
     (expect_script_output
        ~script:
          (script "y" (fun y ->
               app
-                (lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L))))
+                (lam "x" (fun x -> pair (snd x) (pair (Const 0L) (Const 0L))))
                 [y]))
        ~parameter:(Ast.Pair (Int64 33L, Int64 55L))
        ~expectation:(Ir.V_int64 55L))
@@ -140,7 +142,7 @@ let letin =
               let_in
                 [
                   ( "makepair",
-                    lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L)))
+                    lam "x" (fun x -> pair (snd x) (pair (Const 0L) (Const 0L)))
                   );
                 ]
                 (app (Var "makepair") [y])))
@@ -154,7 +156,7 @@ let letin' =
               let_in
                 [
                   ( "makepair_old",
-                    lam "x" (fun x -> pair (Snd x) (pair (Const 0L) (Const 0L)))
+                    lam "x" (fun x -> pair (snd x) (pair (Const 0L) (Const 0L)))
                   );
                   ("makepair", Var "makepair_old");
                 ]
@@ -187,7 +189,7 @@ let add_with_carry =
                 app
                   (lam "y" (fun y ->
                        pair
-                         (app (Prim Add_with_carry) [Fst y; Snd y])
+                         (app (Prim Add_with_carry) [fst y; snd y])
                          (pair (Const 0L) (Const 0L))))
                   [y]))
          ~parameter:(Ast.Pair (Ast.Int64 44L, Ast.Int64 11L))
@@ -205,8 +207,8 @@ let () =
           make_pair_with_useless_lambda;
           make_pair_with_useless_lambda';
           add;
-          fst;
-          snd;
+          test_fst;
+          test_snd;
           letin;
           letin';
         ] );

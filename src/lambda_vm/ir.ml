@@ -8,12 +8,14 @@ type prim =
   | P_mul
   | P_div
   | P_rem
-  | P_and
-  | P_or
-  | P_xor
+  | P_land
+  | P_lor
+  | P_lxor
   | P_lsl
   | P_lsr
   | P_asr
+  | P_fst
+  | P_snd
 [@@deriving eq, show]
 
 type expr =
@@ -39,8 +41,6 @@ type expr =
       first : expr;
       second : expr;
     }
-  | E_fst   of expr
-  | E_snd   of expr
 [@@deriving eq, show]
 
 module Ident_map = Map_with_cardinality.Make (Ident)
@@ -61,7 +61,6 @@ type value =
       prim : prim;
     }
 [@@deriving eq, show]
-
 and env = (value Ident_map.t[@opaque])
 
 type script = {

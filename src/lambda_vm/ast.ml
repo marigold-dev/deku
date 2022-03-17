@@ -1,4 +1,4 @@
-type ident = string [@@deriving show]
+type ident = string
 
 type prim =
   | Neg
@@ -8,13 +8,14 @@ type prim =
   | Mul
   | Div
   | Rem
-  | And
-  | Or
-  | Xor
+  | Land
+  | Lor
+  | Lxor
   | Lsl
   | Lsr
   | Asr
-[@@deriving show]
+  | Fst
+  | Snd
 
 type expr =
   (* calculus *)
@@ -39,17 +40,12 @@ type expr =
       first : expr;
       second : expr;
     }
-  | Fst   of expr
-  | Snd   of expr
-[@@deriving show]
 
 type value =
   | Int64 of int64
   | Pair  of value * value
-[@@deriving show]
 
 type script = {
   param : ident;
   code : expr;
 }
-[@@deriving show]
