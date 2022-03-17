@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("fs");
+const { inspect } = require("util");
 const taquito = require("@taquito/taquito");
 const { RpcClient } = require("@taquito/rpc");
 const { InMemorySigner } = require("@taquito/signer");
@@ -34,8 +35,10 @@ const output = (data) =>
   fs.writeFileSync(process.stdout.fd, JSON.stringify(data, null, 2));
 
 const finished = (storage) => output({ status: "success", storage });
-const error = (error) =>
-  output({ status: "error", error: JSON.stringify(error) });
+const error = (error) => {
+  console.error(error);
+  output({ status: "error" });
+};
 
 (async () => {
   const { rpc_node, contract_address, confirmation } = input();

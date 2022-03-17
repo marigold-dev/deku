@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("fs");
+const { inspect } = require("util");
 const { TezosToolkit } = require("@taquito/taquito");
 const { InMemorySigner } = require("@taquito/signer");
 
@@ -34,8 +35,10 @@ const output = (data) =>
   fs.writeFileSync(process.stdout.fd, JSON.stringify(data, null, 2));
 
 const finished = (status, hash) => output({ status, hash });
-const error = (error) =>
-  output({ status: "error", error: JSON.stringify(error) });
+const error = (error) => {
+  console.error(error);
+  output({ status: "error" });
+};
 
 (async () => {
   const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
