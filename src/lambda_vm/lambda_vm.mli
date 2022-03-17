@@ -1,9 +1,11 @@
 module Ast = Ast
 module Gas : module type of Gas
+module Ir = Ir
+module Math = Math
 
 (* ir *)
-type script
-type value
+type script [@@deriving show]
+type value = Ir.value [@@deriving eq]
 
 (* compiler *)
 type compile_error = (* user program bugs *)

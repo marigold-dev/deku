@@ -1,8 +1,9 @@
-type ident = Ident.t
+type ident = Ident.t [@@deriving eq, show]
 
 type prim =
   | P_neg
   | P_add
+  | P_add_with_carry
   | P_sub
   | P_mul
   | P_div
@@ -15,6 +16,7 @@ type prim =
   | P_asr
   | P_fst
   | P_snd
+[@@deriving eq, show]
 
 type expr =
   (* calculus *)
@@ -39,6 +41,9 @@ type expr =
       first : expr;
       second : expr;
     }
+[@@deriving eq, show]
+
+module Ident_map = Map_with_cardinality.Make (Ident)
 
 type value =
   | V_int64     of int64
@@ -55,9 +60,11 @@ type value =
       args : value list;
       prim : prim;
     }
-and env = value Map_with_cardinality.Make(Ident).t
+[@@deriving eq, show]
+and env = (value Ident_map.t[@opaque])
 
 type script = {
   param : Ident.t;
   code : expr;
 }
+[@@deriving show]

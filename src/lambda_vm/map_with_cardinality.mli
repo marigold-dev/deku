@@ -13,6 +13,8 @@ module type S = sig
 
   (* O(log n) *)
   val find : key -> 'a t -> 'a option
+
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 end
 
 module Make (K : Map.OrderedType) : S with type key = K.t

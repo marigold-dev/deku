@@ -13,6 +13,7 @@ let compile_prim prim =
   match prim with
   | Neg -> P_neg
   | Add -> P_add
+  | Add_with_carry -> P_add_with_carry
   | Sub -> P_sub
   | Mul -> P_mul
   | Div -> P_div
