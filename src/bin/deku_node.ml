@@ -140,6 +140,9 @@ let node folder =
        ]
   @@ Dream.not_found
 
+(* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
+let () = Domain.set_name "deku-node"
+
 let node =
   let folder_node =
     let docv = "folder_node" in
