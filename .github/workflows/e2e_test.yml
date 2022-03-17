@@ -1,6 +1,6 @@
 name: Deku E2E Tests
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   test:
