@@ -68,6 +68,15 @@ let make_test description test =
 
 let lam x f = Lam (x, f (Var x))
 let lam2 x y f = Lam (x, Lam (y, f (Var x) (Var y)))
+let lam3 x y z f = Lam (x, Lam (y, Lam (z, f (Var x) (Var y) (Var z))))
+let lam4 w x y z f =
+  Lam (w, Lam (x, Lam (y, Lam (z, f (Var w) (Var x) (Var y) (Var z)))))
+let lam5 v w x y z f =
+  Lam
+    ( v,
+      Lam
+        (w, Lam (x, Lam (y, Lam (z, f (Var v) (Var w) (Var x) (Var y) (Var z)))))
+    )
 let script x f = { param = x; code = f (Var x) }
 let pair x y : Ast.expr = Ast.Pair { first = x; second = y }
 let app f ls =
@@ -196,6 +205,7 @@ type stdlib = {
 let stdlib x =
   let mklam name x = app (Var name) [x] in
   let mklam2 name x y = app (Var name) [x; y] in
+  let mklam3 name x y z = app (Var name) [x; y; z] in
   let ( lsl ) x y = app (Prim Lsl) [x; Const (Int64.of_int y)] in
   let ( lsr ) x y = app (Prim Lsr) [x; Const (Int64.of_int y)] in
   let* _id = ("id", lam "x" (fun x -> x)) in
@@ -237,8 +247,26 @@ let stdlib x =
   let uncurry f x = f (fst x) (snd x) in
   let* _to_bignat = ("to_bignat", lam "x" (fun x -> pair (Const 0L) x)) in
   let to_bignat = mklam "to_bignat" in
+  let* _triple_add_with_carry =
+    ( "triple_add_with_carry",
+      lam3 "x" "y" "z" (fun x y z ->
+          let* s1 = ("s1", add_with_carry x y) in
+          let* s2 = ("s2", add_with_carry (fst s1) z) in
+          pair (fst s2) (snd s1 + snd s2)) ) in
+  let triple_add_with_carry = mklam3 "triple_add_with_carry" in
   let* _add_bignat =
-    ("add_bignat", lam2 "x" "y" (fun x y -> add_with_carry x y)) in
+    ( "add_bignat",
+      lam2 "x" "y" (fun x y ->
+          let* x_limb = ("x_limb", fst x) in
+          let* y_limb = ("y_limb", fst y) in
+          let* x_body = ("x_body", snd x) in
+          let* y_body = ("y_body", snd y) in
+          let* add_bignat =
+            ( "add_bignat",
+              lam5 "recurse" "x_limb" "y_limb" "x_body" "y_body"
+                (fun recurse x_limb y_limb x_body y_body ->
+                  failwith "also undone") ) in
+          failwith "undone") ) in
   x { id; lower_bits; higher_bits; add_with_carry; uncurry; to_bignat; zcomb }
 
 let test_stdlib =
