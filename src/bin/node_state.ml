@@ -12,9 +12,13 @@ let get_initial_state ~folder =
     Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
   let%await interop_context =
-    Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
+    let%await { rpc_node; secret; consensus_contract; required_confirmations } =
+      Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
+    Lwt.return
+      (Tezos_interop.make ~rpc_node ~secret ~consensus_contract
+         ~required_confirmations) in
   let%await validator_res =
-    Tezos_interop.Consensus.fetch_validators ~context:interop_context in
+    Tezos_interop.Consensus.fetch_validators interop_context in
   let%await local_validators =
     Files.Validators.read ~file:(folder ^ "/validators.json") in
   let validators =
