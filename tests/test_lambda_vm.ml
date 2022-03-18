@@ -180,40 +180,49 @@ type stdlib = {
   lower_bits : Ast.expr -> Ast.expr;
   higher_bits : Ast.expr -> Ast.expr;
   add_with_carry : Ast.expr -> Ast.expr -> Ast.expr;
+  uncurry : Ast.expr -> Ast.expr -> Ast.expr;
+  to_bignat : Ast.expr -> Ast.expr;
 }
 let stdlib x =
-  let open Ast in
+  let mklam name x = app (Var name) [x] in
+  let mklam2 name x y = app (Var name) [x; y] in
   let ( lsl ) x y = app (Prim Lsl) [x; Const (Int64.of_int y)] in
   let ( lsr ) x y = app (Prim Lsr) [x; Const (Int64.of_int y)] in
+  let* _id = ("id", lam "x" (fun x -> x)) in
   let id x = app (Var "id") [x] in
-  let lower_bits x = app (Var "lower_bits") [x] in
-  let higher_bits x = app (Var "higher_bits") [x] in
-  let add_with_carry x y = app (Var "add_with_carry") [x; y] in
-  let_in
-    [
-      ("id", lam "x" (fun x -> x));
-      ("lower_bits", lam "x" (fun x -> (x lsl 32) lsr 32));
-      ("higher_bits", lam "x" (fun x -> x lsr 32));
-      ( "add_with_carry",
-        lam2 "x" "y" (fun x y ->
-            let* lx = ("lx", lower_bits x) in
-            let* ly = ("ly", lower_bits y) in
-            let* lz_lc = ("lz_lc", lx + ly) in
-            let* lz = ("lz", lower_bits lz_lc) in
-            (* lower carry *)
-            let* lc = ("lc", higher_bits lz_lc) in
 
-            let* hx = ("hx", higher_bits x) in
-            let* hy = ("hy", higher_bits y) in
-            let* hz_hc = ("hz_hc", hx + hy + lc) in
-            let* hz = ("hz", lower_bits hz_hc) in
-            (* higher carry *)
-            let* hc = ("hc", higher_bits hz_hc) in
-            let* z = ("z", (hz lsl 32) + lz) in
-            let* c = ("c", hc) in
-            pair z c) );
-    ]
-    (x { id; lower_bits; higher_bits; add_with_carry })
+  let* _lower_bits = ("lower_bits", lam "x" (fun x -> (x lsl 32) lsr 32)) in
+  let* _higher_bits = ("higher_bits", lam "x" (fun x -> x lsr 32)) in
+  let lower_bits = mklam "lower_bits" in
+  let higher_bits = mklam "higher_bits" in
+  let* _add_with_carry =
+    ( "add_with_carry",
+      lam2 "x" "y" (fun x y ->
+          let* lx = ("lx", lower_bits x) in
+          let* ly = ("ly", lower_bits y) in
+          let* lz_lc = ("lz_lc", lx + ly) in
+          let* lz = ("lz", lower_bits lz_lc) in
+          (* lower carry *)
+          let* lc = ("lc", higher_bits lz_lc) in
+
+          let* hx = ("hx", higher_bits x) in
+          let* hy = ("hy", higher_bits y) in
+          let* hz_hc = ("hz_hc", hx + hy + lc) in
+          let* hz = ("hz", lower_bits hz_hc) in
+          (* higher carry *)
+          let* hc = ("hc", higher_bits hz_hc) in
+          let* z = ("z", (hz lsl 32) + lz) in
+          let* c = ("c", hc) in
+          pair z c) ) in
+  let add_with_carry = mklam2 "add_with_carry" in
+  let* _uncurry =
+    ("uncurry", lam2 "f" "tup" (fun f tup -> app f [fst tup; snd tup])) in
+  let uncurry = mklam2 "uncurry" in
+  let* _to_bignat = ("to_bignat", lam "x" (fun x -> pair (Const 0L) x)) in
+  let to_bignat = mklam "to_bignat" in
+  let* _add_bignat =
+    ("add_bignat", lam2 "x" "y" (fun x y -> add_with_carry x y)) in
+  x { id; lower_bits; higher_bits; add_with_carry; uncurry; to_bignat }
 
 let test_stdlib =
   let test_stdlib_function description f ~parameter ~expectation =
@@ -277,9 +286,21 @@ let test_stdlib =
       ~parameter:(Ast.Pair (Int64 (-1L), Int64 (-1L)))
       ~expectation:
         (Ir.V_pair { first = Ir.V_int64 (-2L); second = Ir.V_int64 1L });
+    test_stdlib_function "to_bignat"
+      (fun { to_bignat; _ } -> to_bignat)
+      ~parameter:(Ast.Int64 44L)
+      ~expectation:
+        (Ir.V_pair { first = Ir.V_int64 0L; second = Ir.V_int64 44L });
   ]
 
 let add_with_carry =
+  let expect_int64_list =
+    Alcotest.(
+      check
+        (testable
+           (fun ppf value ->
+             Fmt.pf ppf "%s" ([%derive.show: Int64.t list] value))
+           [%derive.eq: Int64.t list])) in
   [
     make_test "Math.add_with_carry 33 11 (no overflow)" (fun description ->
         expect_int64_pair description (44L, 0L) (Math.add_with_carry 33L 11L));
@@ -291,21 +312,31 @@ let add_with_carry =
     make_test "Math.add_with_carry maxint maxint (yes overflow)"
       (fun description ->
         expect_int64_pair description (-2L, 1L)
-          (Math.add_with_carry (-1L) (-1L)))
-    (*
-    make_test "interpreter add with carry"
-      (expect_script_output
-         ~script:
-           (script "y" (fun y ->
-                app
-                  (lam "y" (fun y ->
-                       pair
-                         (app (Prim Add_with_carry) [fst y; snd y])
-                         (pair (Const 0L) (Const 0L))))
-                  [y]))
-         ~parameter:(Ast.Pair (Ast.Int64 44L, Ast.Int64 11L))
-         ~expectation:
-           (Ir.V_pair { first = Ir.V_int64 55L; second = Ir.V_int64 0L }));*);
+          (Math.add_with_carry (-1L) (-1L)));
+    make_test "Math.triple_add_with_carry maxint maxint maxint (yes overflow)"
+      (fun description ->
+        expect_int64_pair description (-3L, 2L)
+          (Math.triple_add_with_carry (-1L) (-1L) (-1L)));
+    (* Should never happen, but might as well test it anyway *)
+    make_test "Math.add_bignum empty" (fun description ->
+        expect_int64_list description [] (Math.add_bignum [] []));
+    make_test "Math.add_bignum empty zeros" (fun description ->
+        expect_int64_list description [0L] (Math.add_bignum [0L] [0L]));
+    make_test "Math.add_bignum maxint maxint" (fun description ->
+        expect_int64_list description [-2L; 1L] (Math.add_bignum [-1L] [-1L]));
+    make_test "Math.add_bignum maxint^2 1" (fun description ->
+        expect_int64_list description [0L; 0L; 1L]
+          (Math.add_bignum [1L] [-1L; -1L]));
+    (* result of this one is:
+       0111111111111111111111111111111111111111111111111111111111111111  = -2L
+       1111111111111111111111111111111111111111111111111111111111111111  = -1L
+       1111111111111111111111111111111111111111111111111111111111111111  = -1L
+       1000000000000000000000000000000000000000000000000000000000000000  = 1L
+       (little endian)
+    *)
+    make_test "Math.add_bignum maxint^3  maxint^3" (fun description ->
+        expect_int64_list description [-2L; -1L; -1L; 1L]
+          (Math.add_bignum [-1L; -1L; -1L] [-1L; -1L; -1L]));
   ]
 
 let () =
@@ -327,3 +358,22 @@ let () =
       ("stdlib", test_stdlib);
       ("math", List.concat [add_with_carry]);
     ]
+
+(*
+    
+        [4, 6, 10, 14, 22, 26, 34, 38, 46, 58, 62, 70, 74, 82, 86, 94, 98, 106,
+        110, 118, 122, 130, 134, 142, 146, 154, 158, 166, 170, 178, 182, 190,
+        194, 202, 206, 214, 218, 226, 230, 238, 242, 250, 254, 262, 266, 274,
+        278, 286, 290, 298, 302, 310, 314, 322, 326, 334, 338, 346, 350, 358,
+        362, 370, 374, 382, 386, 394, 398, 406, 410, 418, 422, 430, 434, 442,
+        446, 454, 458, 466, 470, 478, 482, 490, 494, 502, 506, 514, 518, 526,
+        530, 538, 542, 550, 554, 562, 566, 574, 578, 586, 590, 598, 602, 610,
+        614, 622, 626, 634, 638, 646, 650, 658, 662, 670, 674, 682, 686, 694,
+        698, 706, 710, 718, 722, 730, 734, 742, 746, 754, 758, 766, 770, 778,
+        782, 790, 794, 802, 806, 814, 818, 826, 830, 838, 842, 850, 854, 862,
+        866, 874, 878, 886, 890, 898, 902, 910, 914, 922, 926, 934, 938, 946,
+        950, 958, 962, 970, 974, 982, 986, 994, 998, 1006, 1010, 1018, 1022,
+        1030, 1034, 1042, 1046, 1054, 1058, 1066, 1070, 1078, 1082, 1090, 1094,
+        1102, 1106, 1114, 1118, 1126, 1130, 1138, 1142, 1150, 1154,
+
+    *)

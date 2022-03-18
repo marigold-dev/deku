@@ -24,3 +24,23 @@ let add_with_carry x y =
   let c = hc in
 
   (z, c)
+
+let triple_add_with_carry x y z =
+  let l, c1 = add_with_carry x y in
+  let l, c2 = add_with_carry l z in
+  (l, c1 + c2)
+
+let add_bignum x y =
+  let rec add_bignum x y c =
+    match (x, y) with
+    | x :: xs, y :: ys ->
+      let l, c = triple_add_with_carry x y c in
+      l :: add_bignum xs ys c
+    | ([] as xs), y :: ys ->
+      let l, c = add_with_carry y c in
+      l :: add_bignum xs ys c
+    | x :: xs, ([] as ys) ->
+      let l, c = add_with_carry x c in
+      l :: add_bignum xs ys c
+    | [], [] -> if c <> 0L then [c] else [] in
+  add_bignum x y 0L
