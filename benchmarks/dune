@@ -1,3 +1,8 @@
 (executable
  (name benchmarks)
- (libraries core_bench lambda_vm))
+ (libraries core core_bench core_unix.command_unix lambda_vm))
+
+(rule
+ (alias bench)
+ (action
+  (run %{exe:benchmarks.exe})))
