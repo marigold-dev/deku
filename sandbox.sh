@@ -20,7 +20,7 @@ deku_node() {
   eval $DEKU_NODE '"$@"'
 }
 
-DEKU_NODE_PROCESS_NAME="Domain0"
+DEKU_NODE_PROCESS_NAME="deku-node"
 
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
@@ -91,10 +91,10 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p $FOLDER
 
-    deku-cli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(deku-cli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku-cli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(deku-cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    deku_cli setup-identity $FOLDER --uri "http://localhost:444$i"
+    KEY=$(deku_cli self $FOLDER | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku_cli self $FOLDER | grep "address:" | awk '{ print $2 }')
+    URI=$(deku_cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -158,7 +158,7 @@ EOF
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    deku-cli setup-tezos "$FOLDER" \
+    deku_cli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
