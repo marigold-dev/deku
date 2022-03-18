@@ -39,12 +39,13 @@ let expect_int64_pair =
          [%derive.eq: Int64.t * Int64.t]))
 
 let expect_script_output ~script:script' ~parameter ~expectation description =
-  let script = script' |> compile (Gas.make ~initial_gas:100000) in
-  let parameter = parameter |> compile_value (Gas.make ~initial_gas:100000) in
+  let initial_gas = 10000000 in
+  let script = script' |> compile (Gas.make ~initial_gas) in
+  let parameter = parameter |> compile_value (Gas.make ~initial_gas) in
   match (script, parameter) with
   | Ok script, Ok parameter -> (
     let script_result =
-      script |> execute (Gas.make ~initial_gas:100000) ~arg:parameter in
+      script |> execute (Gas.make ~initial_gas) ~arg:parameter in
     match script_result with
     | Ok { storage; operations = _ } ->
       expect_ir_value description expectation storage
@@ -79,7 +80,15 @@ let ( let* ) (var', let') in' =
 let let' var ~eq ~in' = App { funct = Lam (var, in' (Var var)); arg = eq }
 let fst x = Ast.(App { funct = Prim Fst; arg = x })
 let snd x = Ast.(App { funct = Prim Snd; arg = x })
+let if' cond ~then' ~else' =
+  If { predicate = cond; consequent = then'; alternative = else' }
 let ( + ) x y = app (Prim Add) [x; y]
+let ( - ) x y = app (Prim Sub) [x; y]
+let ( * ) x y = app (Prim Mul) [x; y]
+let ( / ) x y = app (Prim Div) [x; y]
+
+(* Technically the if is unecessary *)
+let ( == ) x y = if' (x - y) ~then':(Const 0L) ~else':(Const 1L)
 
 let pair_wrapper f =
   script "y" (fun y ->
@@ -180,8 +189,9 @@ type stdlib = {
   lower_bits : Ast.expr -> Ast.expr;
   higher_bits : Ast.expr -> Ast.expr;
   add_with_carry : Ast.expr -> Ast.expr -> Ast.expr;
-  uncurry : Ast.expr -> Ast.expr -> Ast.expr;
+  uncurry : (Ast.expr -> Ast.expr -> Ast.expr) -> Ast.expr -> Ast.expr;
   to_bignat : Ast.expr -> Ast.expr;
+  zcomb : Ast.expr -> Ast.expr;
 }
 let stdlib x =
   let mklam name x = app (Var name) [x] in
@@ -191,6 +201,12 @@ let stdlib x =
   let* _id = ("id", lam "x" (fun x -> x)) in
   let id x = app (Var "id") [x] in
 
+  let* _zcomb =
+    ( "zcomb",
+      lam "f" (fun f ->
+          let d = lam "x" (fun x -> app f [lam "v" (fun v -> app x [x; v])]) in
+          app d [d]) ) in
+  let zcomb = mklam "zcomb" in
   let* _lower_bits = ("lower_bits", lam "x" (fun x -> (x lsl 32) lsr 32)) in
   let* _higher_bits = ("higher_bits", lam "x" (fun x -> x lsr 32)) in
   let lower_bits = mklam "lower_bits" in
@@ -215,14 +231,15 @@ let stdlib x =
           let* c = ("c", hc) in
           pair z c) ) in
   let add_with_carry = mklam2 "add_with_carry" in
-  let* _uncurry =
-    ("uncurry", lam2 "f" "tup" (fun f tup -> app f [fst tup; snd tup])) in
-  let uncurry = mklam2 "uncurry" in
+  (*let* _uncurry =
+      ("uncurry", lam2 "f" "tup" (fun f tup -> app f [fst tup; snd tup])) in
+    let uncurry = mklam2 "uncurry" in*)
+  let uncurry f x = f (fst x) (snd x) in
   let* _to_bignat = ("to_bignat", lam "x" (fun x -> pair (Const 0L) x)) in
   let to_bignat = mklam "to_bignat" in
   let* _add_bignat =
     ("add_bignat", lam2 "x" "y" (fun x y -> add_with_carry x y)) in
-  x { id; lower_bits; higher_bits; add_with_carry; uncurry; to_bignat }
+  x { id; lower_bits; higher_bits; add_with_carry; uncurry; to_bignat; zcomb }
 
 let test_stdlib =
   let test_stdlib_function description f ~parameter ~expectation =
@@ -291,6 +308,26 @@ let test_stdlib =
       ~parameter:(Ast.Int64 44L)
       ~expectation:
         (Ir.V_pair { first = Ir.V_int64 0L; second = Ir.V_int64 44L });
+    test_stdlib_function "uncurry & eq"
+      (fun { uncurry; _ } -> uncurry ( == ))
+      ~parameter:(Ast.Pair (Int64 33L, Int64 44L))
+      ~expectation:(Ir.V_int64 0L);
+    test_stdlib_function "uncurry & eq'"
+      (fun { uncurry; _ } -> uncurry ( == ))
+      ~parameter:(Ast.Pair (Int64 33L, Int64 33L))
+      ~expectation:(Ir.V_int64 1L);
+    make_test "zcomb (factorial test)'"
+      (expect_script_output
+         ~script:
+           (pair_wrapper (fun param ->
+                stdlib (fun { zcomb; _ } ->
+                    app
+                      (zcomb
+                         (lam2 "recurse" "n" (fun recurse n ->
+                              if' (n == Const 0L) ~then':(Const 1L)
+                                ~else':(n * app recurse [n - Const 1L]))))
+                      [param])))
+         ~parameter:(Ast.Int64 10L) ~expectation:(Ir.V_int64 3628800L));
   ]
 
 let add_with_carry =
@@ -358,22 +395,3 @@ let () =
       ("stdlib", test_stdlib);
       ("math", List.concat [add_with_carry]);
     ]
-
-(*
-    
-        [4, 6, 10, 14, 22, 26, 34, 38, 46, 58, 62, 70, 74, 82, 86, 94, 98, 106,
-        110, 118, 122, 130, 134, 142, 146, 154, 158, 166, 170, 178, 182, 190,
-        194, 202, 206, 214, 218, 226, 230, 238, 242, 250, 254, 262, 266, 274,
-        278, 286, 290, 298, 302, 310, 314, 322, 326, 334, 338, 346, 350, 358,
-        362, 370, 374, 382, 386, 394, 398, 406, 410, 418, 422, 430, 434, 442,
-        446, 454, 458, 466, 470, 478, 482, 490, 494, 502, 506, 514, 518, 526,
-        530, 538, 542, 550, 554, 562, 566, 574, 578, 586, 590, 598, 602, 610,
-        614, 622, 626, 634, 638, 646, 650, 658, 662, 670, 674, 682, 686, 694,
-        698, 706, 710, 718, 722, 730, 734, 742, 746, 754, 758, 766, 770, 778,
-        782, 790, 794, 802, 806, 814, 818, 826, 830, 838, 842, 850, 854, 862,
-        866, 874, 878, 886, 890, 898, 902, 910, 914, 922, 926, 934, 938, 946,
-        950, 958, 962, 970, 974, 982, 986, 994, 998, 1006, 1010, 1018, 1022,
-        1030, 1034, 1042, 1046, 1054, 1058, 1066, 1070, 1078, 1082, 1090, 1094,
-        1102, 1106, 1114, 1118, 1126, 1130, 1138, 1142, 1150, 1154,
-
-    *)
