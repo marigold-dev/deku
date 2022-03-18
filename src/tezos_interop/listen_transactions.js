@@ -48,7 +48,6 @@ Tezos.setProvider({
     shouldObservableSubscriptionRetry: true,
     streamerPollingIntervalMilliseconds: 1000,
     confirmationPollingIntervalSecond: 1,
-    confirmationPollingTimeoutSecond: 4,
   },
 });
 

@@ -47,7 +47,6 @@ const error = (error) =>
       shouldObservableSubscriptionRetry: true,
       streamerPollingIntervalMilliseconds: 1000,
       confirmationPollingIntervalSecond: 1,
-      confirmationPollingTimeoutSecond: 4,
     },
   });
   const block = await client.getBlock(); // fetches the head
