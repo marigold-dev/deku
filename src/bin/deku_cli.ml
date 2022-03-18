@@ -419,10 +419,9 @@ let info_setup_tezos =
 let setup_tezos node_folder rpc_node secret consensus_contract
     required_confirmations =
   let%await () = ensure_folder node_folder in
-  let context =
-    let open Tezos_interop.Context in
-    { rpc_node; secret; consensus_contract; required_confirmations } in
-  let%await () = write_interop_context ~node_folder context in
+  let%await () =
+    write_interop_context ~node_folder
+      { rpc_node; secret; consensus_contract; required_confirmations } in
   await (`Ok ())
 let setup_tezos =
   let folder_dest =

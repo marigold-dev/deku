@@ -115,8 +115,8 @@ let handle_ticket_balance =
       Ok { amount })
 let node folder =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
-  Tezos_interop.Consensus.listen_operations
-    ~context:node.Node.State.interop_context ~on_operation:(fun operation ->
+  Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
+    ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;
