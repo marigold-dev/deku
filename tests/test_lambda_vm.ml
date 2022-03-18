@@ -176,17 +176,19 @@ let monadic_let =
        ~parameter:(Int64 33L) ~expectation:(Ir.V_int64 48L))
 
 type stdlib = {
-  id : Ast.expr;
-  lower_bits : Ast.expr;
-  higher_bits : Ast.expr;
-  add_with_carry : Ast.expr;
+  id : Ast.expr -> Ast.expr;
+  lower_bits : Ast.expr -> Ast.expr;
+  higher_bits : Ast.expr -> Ast.expr;
+  add_with_carry : Ast.expr -> Ast.expr -> Ast.expr;
 }
 let stdlib x =
   let open Ast in
   let ( lsl ) x y = app (Prim Lsl) [x; Const (Int64.of_int y)] in
   let ( lsr ) x y = app (Prim Lsr) [x; Const (Int64.of_int y)] in
+  let id x = app (Var "id") [x] in
   let lower_bits x = app (Var "lower_bits") [x] in
   let higher_bits x = app (Var "higher_bits") [x] in
+  let add_with_carry x y = app (Var "add_with_carry") [x; y] in
   let_in
     [
       ("id", lam "x" (fun x -> x));
@@ -211,14 +213,7 @@ let stdlib x =
             let* c = ("c", hc) in
             pair z c) );
     ]
-    (x
-       Ast.
-         {
-           id = Var "id";
-           lower_bits = Var "lower_bits";
-           higher_bits = Var "higher_bits";
-           add_with_carry = Var "add_with_carry";
-         })
+    (x { id; lower_bits; higher_bits; add_with_carry })
 
 let test_stdlib =
   let test_stdlib_function description f ~parameter ~expectation =
@@ -229,7 +224,7 @@ let test_stdlib =
                 stdlib (fun r ->
                     app
                       (lam "x" (fun x ->
-                           pair (app (f r) [x]) (pair (Const 0L) (Const 0L))))
+                           pair ((f r) x) (pair (Const 0L) (Const 0L))))
                       [y])))
          ~parameter ~expectation) in
   let test_stdlib_function2 description f ~parameter ~expectation =
@@ -241,7 +236,7 @@ let test_stdlib =
                     app
                       (lam "x" (fun x ->
                            pair
-                             (app (f r) [fst x; snd x])
+                             ((f r) (fst x) (snd x))
                              (pair (Const 0L) (Const 0L))))
                       [y])))
          ~parameter ~expectation) in
