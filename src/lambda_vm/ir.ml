@@ -3,7 +3,6 @@ type ident = Ident.t [@@deriving eq, show]
 type prim =
   | P_neg
   | P_add
-  | P_add_with_carry
   | P_sub
   | P_mul
   | P_div

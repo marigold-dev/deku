@@ -107,25 +107,9 @@ let eval_prim prim ~arg ~args =
     let f left right = f left (Int64.to_int right) in
     op2 f in
 
-  let op2_returning_pair f =
-    (* error only happens after both are applied *)
-    let f left right =
-      match (left, right) with
-      | V_int64 left, V_int64 right ->
-        let first, second = f left right in
-        V_pair { first = V_int64 first; second = V_int64 second }
-      | ( (V_pair _ | V_int64 _ | V_closure _ | V_primitive _),
-          (V_pair _ | V_int64 _ | V_closure _ | V_primitive _) ) ->
-        raise Value_is_not_int64 in
-    match args with
-    | [] -> V_primitive { args = [arg]; prim }
-    | [left] -> f left arg
-    | _ -> raise Over_applied_primitives in
-
   match prim with
   | P_neg -> op1_int64 Int64.neg
   | P_add -> op2 Int64.add
-  | P_add_with_carry -> op2_returning_pair Math.add_with_carry
   | P_sub -> op2 Int64.sub
   | P_mul -> op2 Int64.mul
   | P_div -> op2 Int64.div
