@@ -72,7 +72,7 @@ Run `docker-compose down -v` to stop the Tezos network and destroy the BCD datab
 Simply run:
 
 ```
-./start.sh
+./sandbox.sh start
 ```
 
 This starts 3 nodes as background processes.

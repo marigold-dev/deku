@@ -6,6 +6,7 @@ const { RpcClient } = require("@taquito/rpc");
 const { InMemorySigner } = require("@taquito/signer");
 
 const { TezosToolkit } = taquito;
+
 /**
  * @typedef Input
  * @type {object}
@@ -40,6 +41,14 @@ const error = (error) =>
   const { rpc_node, contract_address, confirmation } = input();
   const client = new RpcClient(rpc_node);
   const Tezos = new TezosToolkit(rpc_node);
+  // This is also defined on the other JS scripts
+  Tezos.setProvider({
+    config: {
+      shouldObservableSubscriptionRetry: true,
+      streamerPollingIntervalMilliseconds: 1000,
+      confirmationPollingIntervalSecond: 1,
+    },
+  });
   const block = await client.getBlock(); // fetches the head
   const contract = await client.getContract(contract_address, {
     block: block.hash,

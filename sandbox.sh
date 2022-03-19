@@ -1,21 +1,14 @@
-#! /bin/bash
+#! /usr/bin/env bash
 
 set -e
+
+data_directory="data"
 
 LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
 
-RPC_NODE=http://localhost:20000
-
-# This secret key never changes.
-SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
-
-DATA_DIRECTORY="data"
-
-sidecli() {
-  SIDECLI=$(esy x which sidecli)
-  eval $SIDECLI '"$@"'
-}
+PATH=$(esy x sh -c 'echo $PATH')
+export PATH
 
 tezos-client() {
   docker exec -it deku_flextesa tezos-client "$@"
@@ -24,6 +17,13 @@ tezos-client() {
 ligo() {
   docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
 }
+
+RPC_NODE=http://localhost:20000
+
+# This secret key never changes.
+SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
+
+DATA_DIRECTORY="data"
 
 VALIDATORS=(0 1 2)
 
@@ -79,10 +79,10 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p $FOLDER
 
-    sidecli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(sidecli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(sidecli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(sidecli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    deku-cli setup-identity $FOLDER --uri "http://localhost:444$i"
+    KEY=$(deku-cli self $FOLDER | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku-cli self $FOLDER | grep "address:" | awk '{ print $2 }')
+    URI=$(deku-cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -146,7 +146,7 @@ EOF
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    sidecli setup-tezos "$FOLDER" \
+    deku-cli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
@@ -164,12 +164,37 @@ tear-down() {
   done
 }
 
-start_node() {
+start_tezos_node() {
   tear-down
   message "Configuring Tezos client"
   tezos-client --endpoint $RPC_NODE bootstrapped
   tezos-client --endpoint $RPC_NODE config update
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
+}
+
+start_deku_cluster() {
+  SERVERS=()
+  echo "Starting nodes."
+  for i in ${VALIDATORS[@]}; do
+    deku-node "$data_directory/$i" &
+    SERVERS+=($!)
+  done
+
+  sleep 1
+
+  echo "Producing a block"
+  HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
+
+  sleep 0.1
+
+  echo "Signing"
+  for i in ${VALIDATORS[@]}; do
+    deku-cli sign-block "$data_directory/$i" $HASH
+  done
+
+  for PID in ${SERVERS[@]}; do
+    wait $PID
+  done
 }
 
 help() {
@@ -183,18 +208,24 @@ help() {
   echo "  - Starts a Tezos sandbox network with Flextesa."
   echo "  - Generates new validator identities."
   echo "  - Deploys a new contract to the Tezos sandbox configured to use these validators."
+  echo "start"
+  echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
+
 }
 
 case "$1" in
 setup)
-  start_node
+  start_tezos_node
   create_new_deku_environment
   message "Warning"
   echo "This script creates a sandbox node and is for development purposes only."
   echo "It does unsafe things like lowering the required Tezos confirmations to limits unreasonable for production."
   message "Do not use these settings in production!"
+  ;;
+start)
+  start_deku_cluster
   ;;
 tear-down)
   tear-down
