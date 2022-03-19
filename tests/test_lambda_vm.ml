@@ -60,7 +60,7 @@ let expect_script_output ~script:script' ~parameter ~expectation description =
   | Error Undefined_variable, _ ->
     failwith
       (String.concat "\n"
-         ["undefined variable in script:"; Ast.show_script script'])
+         ["undefined variable in script:" (*Ast.show_script script'*)])
   | _, Error Undefined_variable -> failwith "undefined variable in parameter"
 
 let make_test description test =
@@ -111,8 +111,7 @@ let ( / ) x y = app (Prim Div) [x; y]
 (* Technically the if is unecessary *)
 let ( == ) x y = if' (x - y) ~then':(Const 0L) ~else':(Const 1L)
 let ( <> ) x y = if' (x - y) ~then':(Const 1L) ~else':(Const 0L)
-let ( && ) x y =
-  if' (app (Prim Land) [x; y]) ~then':(Const 1L) ~else':(Const 0L)
+let ( && ) x y = if' x ~then':y ~else':(Const 0L)
 let ( let* ) (var', let') in' =
   App { funct = Lam (var', in' (Var var')); arg = let' }
 let ( let*& ) (var', var'', let') in' =
@@ -287,44 +286,85 @@ let stdlib x =
           let* s2 = ("s2", add_with_carry (fst s1) z) in
           pair (fst s2) (snd s1 + snd s2)) ) in
   let triple_add_with_carry = mklam3 "triple_add_with_carry" in
+
+  let* _append_to_limb =
+    ( "append_to_limb",
+      lam2 "l" "nat" (fun l nat ->
+          let*& sublimb, nat = ("sublimb", "nat", nat) in
+          if' (sublimb == Const 0L) ~then':(to_bignat l)
+            ~else':
+              (if'
+                 (sublimb == Const 1L && nat == Const 0L)
+                 ~then':(to_bignat l)
+                 ~else':(pair (sublimb + Const 1L) (pair l nat)))) ) in
+  let append_to_limb = mklam2 "append_to_limb" in
+  let* add_int64_to_bignat =
+    ( "add_int64_to_bignat",
+      lam3 "recurse" "i" "nat" (fun _recurse i nat ->
+          let add_int64_to_bignat = mklam2 "recurse" in
+          let*& y_limb, ys = ("y_limb", "ys", nat) in
+          if' (y_limb == Const 1L)
+            ~then':
+              (let y = ys in
+               let*& l, c = ("l", "c", add_with_carry i y) in
+               let*& limb, body =
+                 ("limb", "body", append_to_limb l (to_bignat c)) in
+               pair limb body)
+            ~else':
+              (let*& y, ys = ("y", "ys", ys) in
+               let*& l, c = ("l", "c", add_with_carry i y) in
+               append_to_limb l
+                 (add_int64_to_bignat c (pair (y_limb - Const 1L) ys)))) ) in
+  let* _add_int64_to_bignat =
+    ("add_int64_to_bignat", zcomb add_int64_to_bignat) in
+  let add_int64_to_bignat = mklam2 "add_int64_to_bignat" in
   let* _add_bignat =
     ( "add_bignat",
       lam2 "x" "y" (fun x y ->
           let*& x_limb, xs = ("x_limb", "xs", x) in
           let*& y_limb, ys = ("y_limb", "ys", y) in
-let* add_bignat =
-  ( "add_bignat",
-    lam6 "recurse" "x_limb" "xs" "y_limb" "ys" "carry"
-      (fun _recurse x_limb xs y_limb ys carry ->
-        let add_bignat = mklam5 "recurse" in
-        if'
-          (x_limb <> Const 1L && y_limb <> Const 1L)
-          ~then':
-            (let*& x, xs = ("x", "xs", xs) in
-              let*& y, ys = ("y", "ys", ys) in
-              let*& l, carry =
-                ("l", "carry", triple_add_with_carry x y carry) in
-              let*& limb, ls =
-                ( "limb",
-                  "ls",
-                  add_bignat (x_limb - Const 1L) xs (y_limb - Const 1L)
-                    ys carry ) in
-              pair (limb + Const 1L) (pair l ls))
-          ~else':
-            (if'
-                (x_limb <> Const 1L && y_limb == Const 1L)
-                ~then':
-                  (let*& x, xs = ("x", "xs", xs) in
-                  let*& l, carry =
-                    ("l", "carry", add_with_carry x carry) in
-                  let*& limb, ls =
-                    ( "limb",
-                      "ls",
-                      (* this line is probably wrong *)
-                      add_bignat (x_limb - Const 1L) xs (Const 0L)
-                        (Const 0L) carry ) in
-                  pair (limb + Const 1L) (pair l ls))
-                ~else':(pair (Const 1L) (Const 0L)))) ) in
+          let* add_bignat =
+            ( "add_bignat",
+              lam6 "recurse" "x_limb" "xs" "y_limb" "ys" "c"
+                (fun _recurse x_limb xs y_limb ys c ->
+                  let add_bignat = mklam5 "recurse" in
+                  if'
+                    (x_limb <> Const 1L && y_limb <> Const 1L)
+                    ~then':
+                      (let*& x, xs = ("x", "xs", xs) in
+                       let*& y, ys = ("y", "ys", ys) in
+                       let*& l, c = ("l", "c", triple_add_with_carry x y c) in
+                       append_to_limb l
+                         (add_bignat (x_limb - Const 1L) xs (y_limb - Const 1L)
+                            ys c))
+                    ~else':
+                      (if'
+                         (x_limb <> Const 1L && y_limb == Const 1L)
+                         ~then':
+                           (let y = ys in
+                            let*& x, xs = ("x", "xs", xs) in
+                            let*& l, c =
+                              ("l", "c", triple_add_with_carry x y c) in
+                            append_to_limb l
+                              (add_int64_to_bignat c
+                                 (pair (x_limb - Const 1L) xs)))
+                         ~else':
+                           (if'
+                              (x_limb == Const 1L && y_limb <> Const 1L)
+                              ~then':
+                                (let x = xs in
+                                 let*& y, ys = ("x", "ys", ys) in
+                                 let*& l, c =
+                                   ("l", "c", triple_add_with_carry x y c) in
+                                 append_to_limb l
+                                   (add_int64_to_bignat c
+                                      (pair (y_limb - Const 1L) ys)))
+                              ~else':
+                                (let x = xs in
+                                 let y = ys in
+                                 let*& l, c =
+                                   ("l", "c", triple_add_with_carry x y c) in
+                                 append_to_limb l (to_bignat c))))) ) in
           let* _add_bignat = ("add_bignat", zcomb add_bignat) in
           let add_bignat = mklam5 "add_bignat" in
           add_bignat x_limb xs y_limb ys (Const 0L)) ) in
@@ -366,22 +406,45 @@ let test_stdlib =
                              (pair (Const 0L) (Const 0L))))
                       [y])))
          ~parameter ~expectation) in
-  let numlist_to_bignat_value pair i64 x =
-    let rec makepairs = function
-      | [x] -> i64 x
-      | x :: xs -> pair (i64 x, makepairs xs)
-      | _ ->
-        failwith "`numlist_to_bignat_ast_value` caller passed an empty list"
-    in
-    pair (i64 (List.length x |> Int64.of_int), makepairs x) in
-  let _numlist_to_bignat_ast_value =
-    numlist_to_bignat_value
-      (fun (x, y) -> Ast.Pair (x, y))
-      (fun i -> Ast.Int64 i) in
-  let _numlist_to_bignat_ir_value =
-    numlist_to_bignat_value
-      (fun (x, y) -> Ir.V_pair { first = x; second = y })
-      (fun i -> Ir.V_int64 i) in
+
+  let adder_test description x y ~expectation =
+    let numlist_to_bignat_value pair i64 x =
+      let rec makepairs = function
+        | [x] -> i64 x
+        | x :: xs -> pair (i64 x, makepairs xs)
+        | _ ->
+          failwith "`numlist_to_bignat_ast_value` caller passed an empty list"
+      in
+      pair (i64 (List.length x |> Int64.of_int), makepairs x) in
+    let numlist_to_bignat_ast_value =
+      numlist_to_bignat_value
+        (fun (x, y) -> Ast.Pair (x, y))
+        (fun i -> Ast.Int64 i) in
+    let numlist_to_bignat_ir_value =
+      numlist_to_bignat_value
+        (fun (x, y) -> Ir.V_pair { first = x; second = y })
+        (fun i -> Ir.V_int64 i) in
+    make_test description (fun description ->
+        expect_script_output
+          ~script:
+            (pair_wrapper (fun param ->
+                 stdlib (fun { add_bignat; uncurry; _ } ->
+                     uncurry add_bignat param)))
+          ~parameter:
+            (Ast.Pair
+               (numlist_to_bignat_ast_value x, numlist_to_bignat_ast_value y))
+          ~expectation:(numlist_to_bignat_ir_value expectation)
+          description;
+        expect_script_output
+          ~script:
+            (pair_wrapper (fun param ->
+                 stdlib (fun { add_bignat; uncurry; _ } ->
+                     uncurry add_bignat param)))
+          ~parameter:
+            (Ast.Pair
+               (numlist_to_bignat_ast_value y, numlist_to_bignat_ast_value x))
+          ~expectation:(numlist_to_bignat_ir_value expectation)
+          description) in
   [
     test_stdlib_function "id"
       (fun { id; _ } -> id)
@@ -443,56 +506,16 @@ let test_stdlib =
                               if' (n == Const 0L) ~then':(Const 1L)
                                 ~else':(n * app recurse [n - Const 1L]))))
                       [param])))
-         ~parameter:(Ast.Int64 10L) ~expectation:(Ir.V_int64 3628800L))
-    (*make_test "add_bignat 1+15"
-        (expect_script_output
-           ~script:
-             (pair_wrapper (fun param ->
-                  stdlib (fun { add_bignat; uncurry; _ } ->
-                      uncurry add_bignat param)))
-           ~parameter:
-             (Ast.Pair
-                ( numlist_to_bignat_ast_value [10L],
-                  numlist_to_bignat_ast_value [5L] ))
-           ~expectation:(numlist_to_bignat_ir_value [15L]));
-      make_test "add_bignat maxint64+1"
-        (expect_script_output
-           ~script:
-             (pair_wrapper (fun param ->
-                  stdlib (fun { add_bignat; uncurry; _ } ->
-                      uncurry add_bignat param)))
-           ~parameter:
-             (Ast.Pair
-                ( numlist_to_bignat_ast_value [-1L],
-                  numlist_to_bignat_ast_value [1L] ))
-           ~expectation:
-             (V_pair
-                {
-                  first = V_int64 2L;
-                  second = V_pair { first = V_int64 0L; second = V_int64 1L };
-                }));
-      make_test "add_bignat maxint64+maxint64"
-        (expect_script_output
-           ~script:
-             (pair_wrapper (fun param ->
-                  stdlib (fun { add_bignat; uncurry; _ } ->
-                      uncurry add_bignat param)))
-           ~parameter:
-             (Ast.Pair
-                ( numlist_to_bignat_ast_value [-1L],
-                  numlist_to_bignat_ast_value [-1L] ))
-           ~expectation:(numlist_to_bignat_ir_value [-1L; 1L]));
-      make_test "add_bignat maxint64^3  maxint64^3"
-        (expect_script_output
-           ~script:
-             (pair_wrapper (fun param ->
-                  stdlib (fun { add_bignat; uncurry; _ } ->
-                      uncurry add_bignat param)))
-           ~parameter:
-             (Ast.Pair
-                ( numlist_to_bignat_ast_value [-2L; -1L; -1L; -1L],
-                  numlist_to_bignat_ast_value [-1L; -1L; -1L] ))
-           ~expectation:(numlist_to_bignat_ir_value [-1L; 1L]))*);
+         ~parameter:(Ast.Int64 10L) ~expectation:(Ir.V_int64 3628800L));
+    adder_test "add_bignat 1+15" [10L] [5L] ~expectation:[15L];
+    adder_test "add_bignat maxint64+1" [-1L] [1L] ~expectation:[0L; 1L];
+    adder_test "add_bignat maxint64+maxint64" [-1L] [-1L] ~expectation:[-2L; 1L];
+    adder_test "add_bignat maxint64^2 + maxint64^2" [-1L; -1L] [-1L; -1L]
+      ~expectation:[-2L; -1L; 1L];
+    adder_test "add_bignat maxint64^3 + maxint64^3" [-1L; -1L; -1L]
+      [-1L; -1L; -1L] ~expectation:[-2L; -1L; -1L; 1L];
+    adder_test "add_bignat maxint64^2-1 + 1" [-1L; -1L] [1L]
+      ~expectation:[0L; 0L; 1L];
   ]
 
 let add_with_carry =

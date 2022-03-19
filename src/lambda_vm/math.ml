@@ -47,17 +47,15 @@ let add_bignat x y =
     | [], [] -> if c <> 0L then [c] else [] in
   add_bignat x y 0L
 
-let append_to_limb l (sublimb, rest) =
+let append_to_limb l (sublimb, nat) =
   if sublimb = 0 then
     (1, [l])
-  else if sublimb = 1 && List.hd rest = 0L then
+  else if sublimb = 1 && List.hd nat = 0L then
     (1, [l])
   else
-    (sublimb + 1, l :: rest)
+    (sublimb + 1, l :: nat)
 
 let rec add_int64_to_bignat' i (y_limb, ys) =
-  Printf.printf "add_int64_to_bignat' %s (%d, %s)\n" (Int64.to_string i) y_limb
-    ([%derive.show: Int64.t list] ys);
   if y_limb = 1 then
     let y = List.hd ys in
     let l, c = add_with_carry i y in
