@@ -7,16 +7,30 @@ type t = {
   secret : Secret.t;
   consensus_contract : Address.t;
   required_confirmations : int;
+  run_entrypoint_process : Run_entrypoint.Process.t;
 }
 let make ~rpc_node ~secret ~consensus_contract ~required_confirmations =
-  { rpc_node; secret; consensus_contract; required_confirmations }
+  let run_entrypoint_process = Run_entrypoint.Process.spawn () in
+  {
+    rpc_node;
+    secret;
+    consensus_contract;
+    required_confirmations;
+    run_entrypoint_process;
+  }
 
 module Run_contract = struct
   let run t ~destination ~entrypoint ~payload =
-    let { rpc_node; secret; required_confirmations; consensus_contract = _ } =
+    let {
+      rpc_node;
+      secret;
+      required_confirmations;
+      consensus_contract = _;
+      run_entrypoint_process;
+    } =
       t in
-    Run_entrypoint.run ~rpc_node ~secret ~required_confirmations ~destination
-      ~entrypoint ~payload
+    Run_entrypoint.run run_entrypoint_process ~rpc_node ~secret
+      ~required_confirmations ~destination ~entrypoint ~payload
 end
 
 let michelson_of_yojson json =
@@ -266,7 +280,13 @@ module Consensus = struct
       | None -> () in
     Listen_transactions.listen t ~destination:t.consensus_contract ~on_message
   let fetch_validators t =
-    let { rpc_node; required_confirmations; consensus_contract; secret = _ } =
+    let {
+      rpc_node;
+      required_confirmations;
+      consensus_contract;
+      secret = _;
+      run_entrypoint_process = _;
+    } =
       t in
     let micheline_to_validators = function
       | Ok
