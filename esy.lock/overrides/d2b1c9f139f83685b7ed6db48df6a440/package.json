@@ -1,9 +1,9 @@
 {
   "name": "esy-openssl",
-  "version": "1.1.1g",
+  "version": "1.1.1l",
   "description": "Mirror of OpenSSL",
   "license": "Apache 2.0",
-  "source": "https://github.com/openssl/openssl/archive/OpenSSL_1_1_1g.tar.gz#33324ff957edaae8ae575817b456320378da46ff",
+  "source": "https://www.openssl.org/source/openssl-1.1.1l.tar.gz#sha256:0b7a3e5e59c34827fe0c3a74b7ec8baef302b98fa80088d7f9153aa16fa76bd1",
   "override": {
     "build": [
       [

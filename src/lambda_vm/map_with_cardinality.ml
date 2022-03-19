@@ -13,6 +13,8 @@ module type S = sig
 
   (* O(log n) *)
   val find : key -> 'a t -> 'a option
+
+  val equal : ('a -> 'a -> bool) -> 'a t -> 'a t -> bool
 end
 
 (* Map.S + O(1) cardinal*)
@@ -40,4 +42,8 @@ module Make (K : Map.OrderedType) : S with type key = K.t = struct
 
   let cardinal t = t.cardinality
   let find key t = Map.find_opt key t.values
+
+  let equal f { cardinality = c1; values = m1 }
+      { cardinality = c2; values = m2 } =
+    Int.equal c1 c2 && Map.equal f m1 m2
 end
