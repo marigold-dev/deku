@@ -19,7 +19,7 @@ end = struct
 end
 
 exception Process_closed of Unix.process_status
-exception Failed_to_parse_json of string
+exception Failed_to_parse_json of string * Yojson.Safe.t
 exception Duplicated_id of Id.t
 exception Unknown_id of Id.t * Yojson.Safe.t
 
@@ -35,8 +35,11 @@ let () =
   let printer = function
     | Process_closed status ->
       Some (asprintf "Process_closed (%a)" pp_process_status status)
-    | Failed_to_parse_json message ->
-      Some (asprintf "Failed_to_parse_json (%s)" message)
+    | Failed_to_parse_json (message, json) ->
+      Some
+        (asprintf "Failed_to_parse_json (%s, %a)" message
+           (Yojson.Safe.pretty_print ~std:false)
+           json)
     | Duplicated_id id -> Some (asprintf "Duplicated_id (%a)" Id.pp id)
     | Unknown_id (id, json) ->
       Some
@@ -129,7 +132,7 @@ let request t ~to_yojson ~of_yojson content =
   let%await json = promise in
   match of_yojson json with
   | Ok value -> Lwt.return value
-  | Error error -> raise_and_exit (Failed_to_parse_json error)
+  | Error error -> raise_and_exit (Failed_to_parse_json (error, json))
 
 let spawn ~file =
   let message_stream, push = Lwt_stream.create () in
@@ -154,7 +157,8 @@ let spawn ~file =
         let message =
           match Message.of_yojson json with
           | Ok message -> message
-          | Error error -> raise_and_exit (Failed_to_parse_json error) in
+          | Error error -> raise_and_exit (Failed_to_parse_json (error, json))
+        in
         handle_message t message)
       output_stream in
   Lwt.async (fun () -> Lwt.catch (fun () -> handle_outputs ()) on_error);
