@@ -33,16 +33,6 @@ module Run_contract = struct
       ~required_confirmations ~destination ~entrypoint ~payload
 end
 
-let michelson_of_yojson json =
-  let%ok json = Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
-  try
-    Ok
-      (Tezos_micheline.Micheline.root
-         (Data_encoding.Json.destruct Michelson.expr_encoding json))
-  with
-  | _ -> Error "invalid json"
-type michelson =
-  (int, Michelson.Michelson_v1_primitives.prim) Tezos_micheline.Micheline.node
 module Fetch_storage : sig
   val run :
     t ->
@@ -57,62 +47,11 @@ end = struct
 end
 
 module Listen_transactions = struct
-  type transaction = {
-    entrypoint : string;
-    value : michelson;
-  }
-  [@@deriving of_yojson]
-  type output = {
-    hash : string;
-    transactions : transaction list;
-  }
-  [@@deriving of_yojson]
-  module CLI = struct
-    type input = {
-      rpc_node : string;
-      confirmation : int;
-      destination : string;
-    }
-    [@@deriving to_yojson]
-    let file = Scripts.file_listen_transactions
-    let node = "node"
-    let run (t : t) ~destination ~on_message ~on_fail =
-      let send f pr data =
-        let oc = pr#stdin in
-        Lwt.finalize (fun () -> f oc data) (fun () -> Lwt_io.close oc) in
-      let process = Lwt_process.open_process (node, [|node; file|]) in
-      let input =
-        {
-          rpc_node = Uri.to_string t.rpc_node;
-          confirmation = t.required_confirmations;
-          destination = Address.to_string destination;
-        }
-        |> input_to_yojson
-        |> Yojson.Safe.to_string in
-      let on_fail _exn =
-        let%await _status = process#close in
-        on_fail () in
-      let%await () = send Lwt_io.write process input in
-      let rec read_line_until_fails () =
-        Lwt.catch
-          (fun () ->
-            let%await line = Lwt_io.read_line process#stdout in
-            print_endline line;
-            Yojson.Safe.from_string line
-            |> output_of_yojson
-            |> Result.get_ok
-            |> on_message;
-            read_line_until_fails ())
-          on_fail in
-      read_line_until_fails ()
-  end
-  let listen t ~destination ~on_message =
-    let rec start () =
-      Lwt.catch
-        (fun () -> CLI.run t ~destination ~on_message ~on_fail)
-        (fun _exn -> on_fail ())
-    and on_fail () = start () in
-    Lwt.async start
+  let listen t ~rpc_node ~required_confirmations ~destination ~on_message =
+    let message_stream =
+      Tezos_bridge.listen_transaction t.bridge_process ~rpc_node
+        ~required_confirmations ~destination in
+    Lwt.async (fun () -> Lwt_stream.iter on_message message_stream)
 end
 module Consensus = struct
   open Michelson.Michelson_v1_primitives
@@ -172,7 +111,9 @@ module Consensus = struct
     transactions : transaction list;
   }
   let parse_transaction transaction =
-    match (transaction.Listen_transactions.entrypoint, transaction.value) with
+    let Tezos_bridge.Listen_transaction.{ entrypoint; value } = transaction in
+    let value = Micheline.root value in
+    match (entrypoint, value) with
     | ( "update_root_hash",
         Tezos_micheline.Micheline.Prim
           ( _,
@@ -234,15 +175,18 @@ module Consensus = struct
       Some (Deposit { ticket; destination; amount })
     | _ -> None
   let parse_operation output =
-    let%some hash = Operation_hash.of_string output.Listen_transactions.hash in
-    let transactions = List.filter_map parse_transaction output.transactions in
+    let Tezos_bridge.Listen_transaction.{ hash; transactions } = output in
+    let%some hash = Operation_hash.of_string hash in
+    let transactions = List.filter_map parse_transaction transactions in
     Some { hash; transactions }
   let listen_operations t ~on_operation =
     let on_message output =
       match parse_operation output with
       | Some operation -> on_operation operation
       | None -> () in
-    Listen_transactions.listen t ~destination:t.consensus_contract ~on_message
+    Listen_transactions.listen t ~rpc_node:t.rpc_node
+      ~required_confirmations:t.required_confirmations
+      ~destination:t.consensus_contract ~on_message
   let fetch_validators t =
     let {
       rpc_node;
