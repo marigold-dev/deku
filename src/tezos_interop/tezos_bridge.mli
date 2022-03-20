@@ -1,8 +1,19 @@
 open Crypto
 open Tezos
 
-type t
-val spawn : unit -> t
+(* push *)
+module Listen_transaction : sig
+  type transaction = {
+    entrypoint : string;
+    value : Michelson.t;
+  }
+  [@@deriving of_yojson]
+  type t = {
+    hash : string;
+    transactions : transaction list;
+  }
+  [@@deriving of_yojson]
+end
 
 (* response *)
 module Inject_transaction : sig
@@ -14,6 +25,16 @@ module Inject_transaction : sig
     | Unknown     of { hash : string option }
     | Error       of { error : string }
 end
+
+type t
+val spawn : unit -> t
+
+val listen_transaction :
+  t ->
+  rpc_node:Uri.t ->
+  required_confirmations:int ->
+  destination:Address.t ->
+  Listen_transaction.t Lwt_stream.t
 
 val inject_transaction :
   t ->
