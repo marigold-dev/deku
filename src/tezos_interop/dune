@@ -4,18 +4,17 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.eq ppx_blob ppx_let_binding))
  (preprocessor_deps
-  (file ./tezos_js_bridge.bundle.js)
-  (file ./listen_transactions.bundle.js)))
+  (file ./tezos_js_bridge.bundle.js)))
 
 (rule
- (deps ./webpack.config.js ./listen_transactions.js ./tezos_js_bridge.js)
- (targets ./listen_transactions.bundle.js ./tezos_js_bridge.bundle.js)
+ (deps ./webpack.config.js ./tezos_js_bridge.js)
+ (targets ./tezos_js_bridge.bundle.js)
  (mode fallback)
  (action
   (run webpack --env=%{profile})))
 
 (rule
- (deps ./webpack.config.js ./listen_transactions.js ./tezos_js_bridge.js)
+ (deps ./webpack.config.js ./tezos_js_bridge.js)
  (alias fmt)
  (mode fallback)
  (action
