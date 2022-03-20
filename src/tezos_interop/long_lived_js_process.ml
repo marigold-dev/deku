@@ -61,30 +61,40 @@ module Pending : sig
   type t
   type add_error = private Duplicated_id of Id.t
   type resolve_error = private Unknown_id of Id.t
-
+  type kind =
+    | Listen
+    | Request
   val make : unit -> t
-  val add : t -> Id.t -> Yojson.Safe.t Lwt.u -> (unit, add_error) result
-  val resolve : t -> Id.t -> Yojson.Safe.t -> (unit, resolve_error) result
+  val add :
+    t -> Id.t -> kind -> (Yojson.Safe.t -> unit) -> (unit, add_error) result
+  val push : t -> Id.t -> Yojson.Safe.t -> (unit, resolve_error) result
 end = struct
-  type t = Yojson.Safe.t Lwt.u Id.Map.t ref
   type add_error = Duplicated_id of Id.t
   type resolve_error = Unknown_id of Id.t
+  type kind =
+    | Listen
+    | Request
+  type t = (kind * (Yojson.Safe.t -> unit)) Id.Map.t ref
 
   let make () = ref Id.Map.empty
   let find t id = Id.Map.find_opt id !t
   let mem t id = Id.Map.mem id !t
 
-  let add t id resolver =
+  let add t id kind resolver =
     if mem t id then
       Error (Duplicated_id id)
     else (
-      t := Id.Map.add id resolver !t;
+      t := Id.Map.add id (kind, resolver) !t;
       Ok ())
 
-  let resolve t id json =
+  let push t id json =
     match find t id with
-    | Some resolver ->
-      Lwt.wakeup_later resolver json;
+    | Some (Request, resolver) ->
+      t := Id.Map.remove id !t;
+      resolver json;
+      Ok ()
+    | Some (Listen, resolver) ->
+      resolver json;
       Ok ()
     | None -> Error (Unknown_id id)
 end
@@ -107,24 +117,36 @@ let handle_message t message =
   Format.eprintf "js.message: %a\n%!"
     (Yojson.Safe.pretty_print ~std:false)
     content;
-  match Pending.resolve t.pending id content with
+  match Pending.push t.pending id content with
   | Ok () -> ()
   | Error (Unknown_id id) -> raise (Unknown_id (id, content))
 
 (* WHY: to_yojson and of_yojson here are designed so that all exceptions
    are handled here *)
-let request t ~to_yojson ~of_yojson content =
+let request t kind ~resolver ~to_yojson content =
   let id = t.next_id in
   let content = to_yojson content in
   let message = Message.{ id; content } in
-  let promise, wakeup = Lwt.wait () in
 
   t.next_id <- Id.next id;
   t.push message;
-  (match Pending.add t.pending id wakeup with
+  match Pending.add t.pending id kind resolver with
   | Ok () -> ()
-  | Error (Duplicated_id id) -> raise (Duplicated_id id));
+  | Error (Duplicated_id id) -> raise (Duplicated_id id)
 
+let listen t ~to_yojson ~of_yojson content =
+  let message_stream, push = Lwt_stream.create () in
+  let resolver json =
+    match of_yojson json with
+    | Ok value -> push (Some value)
+    | Error error -> raise (Failed_to_parse_json (error, json)) in
+  request t Listen ~resolver ~to_yojson content;
+  message_stream
+
+let request t ~to_yojson ~of_yojson content =
+  let promise, wakeup = Lwt.wait () in
+  let resolver json = Lwt.wakeup_later wakeup json in
+  request t Request ~resolver ~to_yojson content;
   let%await json = promise in
   match of_yojson json with
   | Ok value -> Lwt.return value
