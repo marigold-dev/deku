@@ -5,7 +5,7 @@ type t
 val spawn : unit -> t
 
 (* response *)
-module Transaction : sig
+module Inject_transaction : sig
   type t =
     | Applied     of { hash : string }
     | Failed      of { hash : string option }
@@ -15,7 +15,7 @@ module Transaction : sig
     | Error       of { error : string }
 end
 
-val transaction :
+val inject_transaction :
   t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
@@ -23,7 +23,7 @@ val transaction :
   destination:Address.t ->
   entrypoint:string ->
   payload:Yojson.Safe.t ->
-  Transaction.t Lwt.t
+  Inject_transaction.t Lwt.t
 
 val storage :
   t ->

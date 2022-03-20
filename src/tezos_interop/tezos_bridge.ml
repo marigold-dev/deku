@@ -2,7 +2,7 @@ open Helpers
 open Crypto
 open Tezos
 
-module Transaction = struct
+module Inject_transaction = struct
   type kind = Transaction
   let kind_to_yojson Transaction = `String "transaction"
   type request = {
@@ -93,10 +93,10 @@ type t = Long_lived_js_process.t
 let spawn () =
   let file = Scripts.file_tezos_js_bridge in
   Long_lived_js_process.spawn ~file
-let transaction t ~rpc_node ~secret ~required_confirmations ~destination
+let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
     ~entrypoint ~payload =
   let request =
-    Transaction.
+    Inject_transaction.
       {
         kind = Transaction;
         rpc_node = Uri.to_string rpc_node;
@@ -106,8 +106,9 @@ let transaction t ~rpc_node ~secret ~required_confirmations ~destination
         entrypoint;
         payload;
       } in
-  Long_lived_js_process.request t ~to_yojson:Transaction.request_to_yojson
-    ~of_yojson:Transaction.of_yojson request
+  Long_lived_js_process.request t
+    ~to_yojson:Inject_transaction.request_to_yojson
+    ~of_yojson:Inject_transaction.of_yojson request
 
 let storage t ~rpc_node ~required_confirmations ~destination =
   let request =

@@ -29,7 +29,7 @@ module Run_contract = struct
       bridge_process;
     } =
       t in
-    Tezos_bridge.transaction bridge_process ~rpc_node ~secret
+    Tezos_bridge.inject_transaction bridge_process ~rpc_node ~secret
       ~required_confirmations ~destination ~entrypoint ~payload
 end
 
