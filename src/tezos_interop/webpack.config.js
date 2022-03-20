@@ -1,7 +1,6 @@
 module.exports = (env) => ({
   entry: {
     tezos_js_bridge: "./tezos_js_bridge.js",
-    fetch_storage: "./fetch_storage.js",
     listen_transactions: "./listen_transactions.js",
   },
   output: {
