@@ -24,3 +24,10 @@ val transaction :
   entrypoint:string ->
   payload:Yojson.Safe.t ->
   Transaction.t Lwt.t
+
+val storage :
+  t ->
+  rpc_node:Uri.t ->
+  required_confirmations:int ->
+  destination:Address.t ->
+  (Michelson.t, string) result Lwt.t
