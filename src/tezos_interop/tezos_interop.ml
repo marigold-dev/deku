@@ -7,16 +7,16 @@ type t = {
   secret : Secret.t;
   consensus_contract : Address.t;
   required_confirmations : int;
-  run_entrypoint_process : Run_entrypoint.Process.t;
+  bridge_process : Tezos_bridge.t;
 }
 let make ~rpc_node ~secret ~consensus_contract ~required_confirmations =
-  let run_entrypoint_process = Run_entrypoint.Process.spawn () in
+  let bridge_process = Tezos_bridge.spawn () in
   {
     rpc_node;
     secret;
     consensus_contract;
     required_confirmations;
-    run_entrypoint_process;
+    bridge_process;
   }
 
 module Run_contract = struct
@@ -26,10 +26,10 @@ module Run_contract = struct
       secret;
       required_confirmations;
       consensus_contract = _;
-      run_entrypoint_process;
+      bridge_process;
     } =
       t in
-    Run_entrypoint.run run_entrypoint_process ~rpc_node ~secret
+    Tezos_bridge.transaction bridge_process ~rpc_node ~secret
       ~required_confirmations ~destination ~entrypoint ~payload
 end
 
@@ -191,6 +191,7 @@ module Consensus = struct
         validators;
         current_validator_keys;
       } in
+    (* TODO: check result *)
     let%await _ =
       Run_contract.run t ~destination:t.consensus_contract
         ~entrypoint:"update_root_hash"
@@ -285,7 +286,7 @@ module Consensus = struct
       required_confirmations;
       consensus_contract;
       secret = _;
-      run_entrypoint_process = _;
+      bridge_process = _;
     } =
       t in
     let micheline_to_validators = function
