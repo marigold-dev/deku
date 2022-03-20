@@ -45,52 +45,15 @@ type michelson =
   (int, Michelson.Michelson_v1_primitives.prim) Tezos_micheline.Micheline.node
 module Fetch_storage : sig
   val run :
+    t ->
     rpc_node:Uri.t ->
-    confirmation:int ->
+    required_confirmations:int ->
     contract_address:Address.t ->
-    (michelson, string) result Lwt.t
+    (Michelson.t, string) result Lwt.t
 end = struct
-  type input = {
-    rpc_node : string;
-    confirmation : int;
-    contract_address : string;
-  }
-  [@@deriving to_yojson]
-  let output_of_yojson json =
-    let module T = struct
-      type t = { status : string } [@@deriving of_yojson { strict = false }]
-
-      and finished = { storage : michelson }
-
-      and error = { error : string }
-    end in
-    let%ok { status } = T.of_yojson json in
-    match status with
-    | "success" ->
-      let%ok { storage } = T.finished_of_yojson json in
-      Ok storage
-    | "error" ->
-      let%ok T.{ error = errorMessage } = T.error_of_yojson json in
-      Error errorMessage
-    | _ ->
-      Error
-        "JSON output %s did not contain 'success' or 'error' for field `status`"
-  let command = "node"
-  let file = Scripts.file_fetch_storage
-  let run ~rpc_node ~confirmation ~contract_address =
-    let input =
-      {
-        rpc_node = Uri.to_string rpc_node;
-        confirmation;
-        contract_address = Address.to_string contract_address;
-      } in
-    let%await output =
-      Lwt_process.pmap
-        (command, [|command; file|])
-        (Yojson.Safe.to_string (input_to_yojson input)) in
-    match Yojson.Safe.from_string output |> output_of_yojson with
-    | Ok storage -> await (Ok storage)
-    | Error error -> await (Error error)
+  let run t ~rpc_node ~required_confirmations ~contract_address =
+    Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
+      ~destination:contract_address
 end
 
 module Listen_transactions = struct
@@ -289,10 +252,13 @@ module Consensus = struct
       bridge_process = _;
     } =
       t in
-    let micheline_to_validators = function
-      | Ok
-          (Micheline.Prim
-            (_, D_Pair, [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _], _))
+
+    let micheline_to_validators michelson =
+      let%ok michelson = michelson in
+      let michelson = Micheline.root michelson in
+      match michelson with
+      | Micheline.Prim
+          (_, D_Pair, [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _], _)
         ->
         List.fold_left_ok
           (fun acc k ->
@@ -303,10 +269,9 @@ module Consensus = struct
               | None -> Error ("Failed to parse " ^ k))
             | _ -> Error "Some key_hash wasn't of type string")
           [] (List.rev key_hashes)
-      | Ok _ -> Error "Failed to parse storage micheline expression"
-      | Error msg -> Error msg in
+      | _ -> Error "Failed to parse storage micheline expression" in
     let%await micheline_storage =
-      Fetch_storage.run ~confirmation:required_confirmations ~rpc_node
+      Fetch_storage.run t ~required_confirmations ~rpc_node
         ~contract_address:consensus_contract in
     Lwt.return (micheline_to_validators micheline_storage)
 end
