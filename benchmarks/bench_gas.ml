@@ -2,19 +2,13 @@ open Core_bench
 open Vm_utils
 
 (* compile value *)
-
-let test_compile_value_n ~initial_gas n =
-  let s = Int64.to_string n in
-  let name = "compile value " ^ s in
-  Bench.Test.create ~name (fun () ->
-      let _ = compile_value_n n ~initial_gas in
-      ())
 let test_compile_value_0 = bench_compile_value_n "" ~initial_gas:101 0L
 let test_compile_value_4096 = bench_compile_value_n "" ~initial_gas:101 4096L
 
 (* compile scripts *)
 let ast_script = [%lambda_vm.script fun x -> x + 1L]
 
+(*todo change to bench_compile, maybe move to utils?*)
 let test_compile_script s ~initial_gas ~script =
   let name = "compile script " ^ s in
   Bench.Test.create ~name (fun () ->

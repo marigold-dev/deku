@@ -29,6 +29,7 @@ let test_compile_factorial =
 let test_execute_factorial =
   Bench.Test.create_indexed ~name:"execute factorial" ~args:[1; 2; 3] (fun n ->
       Core.Staged.stage (fun () ->
+          (* TODO optimize it as bench_execute_n *)
           let n = fac (Int64.of_int n) in
           let arg = compile_value_n n ~initial_gas:101 in
           let ir = compile_script ~initial_gas:10_000 factorial_script in
