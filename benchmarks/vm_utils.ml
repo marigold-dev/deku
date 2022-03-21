@@ -27,3 +27,12 @@ let execute_exn gas arg script =
   match execute gas ~arg script with
   | Ok value -> value
   | Error error -> failwith "Execution_error(%a)" pp_execution_error error
+let counter_script =
+  [%lambda_vm.script
+    fun x ->
+      ( (fun f -> f f x) (fun f n ->
+            if n then
+              1L + f f (n - 1L)
+            else
+              0L),
+        (0L, 0L) )]

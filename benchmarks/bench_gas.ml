@@ -14,15 +14,6 @@ let test_compile_value_0 = test_compile_value_n ~initial_gas:101 0L
 let test_compile_value_4096 = test_compile_value_n ~initial_gas:101 4096L
 
 (* compile scripts *)
-let counter_script =
-  [%lambda_vm.script
-    fun x ->
-      ( (fun f -> f f x) (fun f n ->
-            if n then
-              1L + f f (n - 1L)
-            else
-              0L),
-        (0L, 0L) )]
 let ast_script = [%lambda_vm.script fun x -> x + 1L]
 
 let test_compile_script s ~initial_gas ~script =
