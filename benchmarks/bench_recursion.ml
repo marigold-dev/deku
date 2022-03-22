@@ -14,18 +14,28 @@ let factorial_script =
         (0L, 0L) )]
 
 (* Bench.Test.create_indexed creates a group of
-   benchmarks indexed by a size. *)
+   benchmarks indexed by a size. Which can be helpful in understanding
+   non-linearities in the execution profiles of functions
+*)
+
 let compile_value_f n f ~initial_gas =
   let n = f (Int64.of_int n) in
   let gas = Gas.make ~initial_gas in
   compile_value_exn gas (Int64 n)
 
+(* TODO Note:
+   loop from 0 to 1O times,
+   - is it necessary for benchmark this function?
+*)
+
 let test_compile_value_factorial =
   Bench.Test.create_indexed ~name:"compile value factorial" ~args:[1; 2; 3]
     (fun n ->
       Core.Staged.stage (fun () ->
-          let _ = compile_value_f n fac ~initial_gas:101 in
-          ()))
+          for _ = 0 to 10 do
+            let _ = compile_value_f n fac ~initial_gas:101 in
+            ()
+          done))
 
 let test_compile_factorial =
   bench_compile_script "factorial" ~initial_gas:10_000 ~script:factorial_script
@@ -100,6 +110,7 @@ let test_execute_counter =
 let tests =
   [
     test_compile_value_factorial;
+    test_execute_factorial;
     test_compile_factorial;
     test_execute_factorial;
     test_compile_value_fib;

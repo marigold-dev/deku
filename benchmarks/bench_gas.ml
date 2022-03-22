@@ -3,6 +3,7 @@ open Vm_utils
 
 (* compile value *)
 let test_compile_value_0 = bench_compile_value "" ~initial_gas:101 0L
+
 let test_compile_value_4096 = bench_compile_value "" ~initial_gas:101 4096L
 
 (* compile scripts *)
@@ -10,6 +11,7 @@ let ast_script = [%lambda_vm.script fun x -> x + 1L]
 
 let test_compile_ast =
   bench_compile_script "ast" ~initial_gas:501 ~script:ast_script
+
 let test_compile_counter =
   bench_compile_script "counter" ~initial_gas:14_747_900 ~script:counter_script
 

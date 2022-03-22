@@ -64,6 +64,7 @@ let bench_compile_value_pair s (n1, n2) ~initial_gas =
   Bench.Test.create ~name (fun () ->
       let _ = compile_value_pair (n1, n2) ~initial_gas in
       ())
+
 let bench_execute_exn_pair s (n1, n2) ~gas_value ~gas_compile ~gas_exe ~script =
   let name =
     "execute pair (" ^ Int64.to_string n1 ^ ", " ^ Int64.to_string n2 ^ ") " ^ s
@@ -75,6 +76,7 @@ let bench_execute_exn_pair s (n1, n2) ~gas_value ~gas_compile ~gas_exe ~script =
       let gas = Gas.make ~initial_gas:gas_exe in
       let _ = execute_exn gas arg ir in
       ())
+
 let counter_script =
   [%lambda_vm.script
     fun x ->
