@@ -23,17 +23,17 @@ let script_lambda =
           (fst param) (snd param),
         (0L, 0L) )]
 let test_compile_value_incr_lam =
-  bench_compile_value_n "incr_lambda" ~initial_gas:101 100L
+  bench_compile_value "incr_lambda" ~initial_gas:101 100L
 
 let test_compile_value_decr_lam =
-  bench_compile_value_n "decr_lambda" ~initial_gas:101 32L
+  bench_compile_value "decr_lambda" ~initial_gas:101 32L
 
 (*TODO execute pair first and then descr or incr *)
 
 (* lambda application *)
 let lambda_application = [%lambda_vm.script fun y -> (fun x -> (x, (0L, 0L))) y]
 let test_compile_value_lam_app =
-  bench_compile_value_n "lam_app" ~initial_gas:101 45L
+  bench_compile_value "lam_app" ~initial_gas:101 45L
 
 (*let test_execute_lam_app =
   test_execute_n 45L "lambda_app" ~gas_value:101 ~gas_compile:20_000
