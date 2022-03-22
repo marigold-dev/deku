@@ -14,6 +14,8 @@ let test_compile_counter =
   bench_compile_script "counter" ~initial_gas:14_747_900 ~script:counter_script
 
 (* execute scripts *)
+
+(* TODO execute ast script *)
 let test_execute_counter_0 =
   bench_execute_exn 0L "counter_0" ~gas_value:101 ~gas_compile:14_747_900
     ~gas_exe:15_000_000 ~script:counter_script
