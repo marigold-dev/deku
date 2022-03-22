@@ -1,0 +1,3 @@
+(library
+ (name lambda_vm)
+ (modules_without_implementation ir ast))
