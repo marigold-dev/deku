@@ -40,7 +40,6 @@ let bench_compile_script s ~initial_gas ~script =
 let bench_execute_exn n s ~gas_value ~gas_compile ~gas_exe ~script =
   let name = "execute " ^ s in
   Bench.Test.create ~name (fun () ->
-      (* TODO: same code at the one in bench_simple_expr *)
       let gas_value = Gas.make ~initial_gas:gas_value in
       let arg = compile_value_exn gas_value (Int64 n) in
       let gas_ir = Gas.make ~initial_gas:gas_compile in
