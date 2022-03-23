@@ -13,7 +13,9 @@ depends: [
   "ounit" {with-test}
   "ppx_sexp_conv" {with-test & >= "v0.9.0"}
 ]
-conflicts: [ "ipaddr" {< "3.0.0"} ]
+conflicts: [
+  "ipaddr" {< "3.0.0"}
+]
 build: [
   ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
@@ -32,10 +34,10 @@ Features:
  """
 url {
   src:
-    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.2.0/ipaddr-v5.2.0.tbz"
+    "https://github.com/mirage/ocaml-ipaddr/releases/download/v5.3.0/ipaddr-5.3.0.tbz"
   checksum: [
-    "sha256=f98d237cc1f783a0ba7dff0c6c69b5f519fec056950e3e3e7c15e5511ee5b7ec"
-    "sha512=28c8c4d525c2ab13e8561de5dfdb8922227ce652cd3c02e78c60daf2ba6844960864027c803f11fc3d1991a18ef864d8a0b95cd99e5f5d8452d3f66541367bd2"
+    "sha256=36979edf64b464d44055f3504b97d61e22050e7369d983052c4ecc3d2b1ab755"
+    "sha512=06b16e319672c8182210296ed005accd9a4e190f99bd019f24232e213be8de6d198f9e8cb40ee00ec226184e1dd4ebd7e589d890b1f88f40f17eaf785dae975c"
   ]
 }
-x-commit-hash: "7745ea4be2c1c5a7ab95908b26a6ed81a0947ab5"
+x-commit-hash: "842b88da1b699f8c087e15696f76f6e0f47055c8"
