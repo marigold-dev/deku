@@ -1,5 +1,7 @@
 type ident = Ident.t
 
+let pp_ident = Ident.pp
+
 type prim =
   | P_neg
   | P_add
@@ -15,6 +17,13 @@ type prim =
   | P_asr
   | P_fst
   | P_snd
+[@@deriving show]
+
+module Env = struct
+  include Map_with_cardinality.Make (Ident)
+
+  let pp _ fmt _ = Format.fprintf fmt "<env>"
+end
 
 type expr =
   (* calculus *)
@@ -39,6 +48,7 @@ type expr =
       first : expr;
       second : expr;
     }
+[@@deriving show]
 
 type value =
   | V_int64     of int64
@@ -47,7 +57,7 @@ type value =
       second : value;
     }
   | V_closure   of {
-      env : env;
+      env : value Env.t;
       param : Ident.t;
       body : expr;
     }
@@ -55,7 +65,7 @@ type value =
       args : value list;
       prim : prim;
     }
-and env = value Map_with_cardinality.Make(Ident).t
+[@@deriving show]
 
 type script = {
   param : Ident.t;
