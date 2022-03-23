@@ -27,8 +27,8 @@ for coq_file_name in coq_files.sort do
   system(command)
 end
 
-system("rsync --checksum #{full_path}/*.v #{vm_coq_path}") 
-system("rm #{full_path}/*.v")
+system("rsync --checksum #{deku_path}/lambda_vm_coq/*.v #{deku_path}/lambda_vm_coq") 
+
 
 # Generate _CoqProject
 system("./configure.sh")
