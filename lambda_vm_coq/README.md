@@ -20,3 +20,19 @@ For example:
 `ruby generate.rb ~/deku src/lambda_vm`
 
 Finally, to compile the `Coq` files do: `make`
+
+## Clean up
+
+For cleanup the generated, compiled Coq files do:
+
+`ruby clean.rb path_1 path_2`
+
+where:
+- `path_1` is the path of deku
+- `path_2` is the path of Coq Lambda_VM
+
+For example:
+
+`ruby clean.rb ~/deku lambda_vm_coq`
+
+it will do `make clean`, to clean up the `Coq` compiled files,  remove the generated `Coq` files all the `*.v`, remove the `_CoqProject`, and `Makefile`.
