@@ -19,7 +19,7 @@ for ocaml_file_name in generate_files.sort do
   system(command)
 end
 
-# Generate proofs by easier-proofs
+# Move the generated Coq file to the folder lambda_vm_coq
 coq_files =
   Dir.glob(File.join(full_path, "*.v")) 
 for coq_file_name in coq_files.sort do
