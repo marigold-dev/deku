@@ -29,7 +29,8 @@ let compile_prim prim =
 module Vars = Map_with_cardinality.Make (String)
 
 let burn_gas gas vars code =
-  (match code with
+  check_gas gas;
+  match code with
   | Var _
   | Lam _ ->
     let cardinality = Vars.cardinal vars in
@@ -39,8 +40,7 @@ let burn_gas gas vars code =
   | Prim _
   | If _
   | Pair _ ->
-    Gas.burn_constant gas);
-  check_gas gas
+    Gas.burn_constant gas
 
 let rec compile_expr ~stack gas next_ident vars code =
   let stack = stack - 1 in
@@ -105,8 +105,8 @@ let compile gas script =
   | Error error -> Error error
 
 let burn_gas gas =
-  Gas.burn_constant gas;
-  check_gas gas
+  check_gas gas;
+  Gas.burn_constant gas
 
 let rec compile_value ~stack gas value =
   let compile_value value = compile_value ~stack:(stack - 1) gas value in
