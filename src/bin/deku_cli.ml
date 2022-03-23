@@ -191,7 +191,7 @@ let create_transaction =
   let ticket =
     let doc = "The ticket to be transferred." in
     let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"MSG" ~doc in
+    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
     (const create_transaction
@@ -252,7 +252,7 @@ let withdraw =
   let ticket =
     let doc = "The ticket to be trasnsacted." in
     let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"MSG" ~doc in
+    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
     (const withdraw
