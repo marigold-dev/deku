@@ -113,6 +113,13 @@ let handle_ticket_balance =
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
+
+let resolve_height () = Flows.find_block_level (Server.get_state ())
+let schema = Rpc.make_schema ~resolve_height
+let graphql = Dream.graphql (fun _ -> Lwt.return_unit) schema
+
+let default_query = "{\\n  height \\n}\\n"
+
 let node folder =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations
@@ -125,6 +132,8 @@ let node folder =
   Dream.run ~interface:"0.0.0.0" ~port
   @@ Dream.router
        [
+         Dream.any "/graphql" graphql;
+         Dream.get "/" (Dream.graphiql ~default_query "/graphql");
          handle_block_level;
          handle_received_block_and_signature;
          handle_received_signature;

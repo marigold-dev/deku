@@ -1,0 +1,5 @@
+(library
+ (name rpc)
+ (libraries helpers crypto graphql-lwt)
+ (preprocess
+  (pps ppx_let_binding)))

@@ -60,6 +60,7 @@ module Run_contract = struct
         payload;
       } in
     let command = "node" in
+    let x = Lwt_process.open_process_full (assert false) in
     let%await output =
       Lwt_process.pmap
         (command, [|command; file|])

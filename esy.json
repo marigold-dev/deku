@@ -40,7 +40,9 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "*",
     "@opam/domainslib": "0.4.1",
-    "@opam/data-encoding": "*"
+    "@opam/data-encoding": "*",
+    "@opam/graphql": "*",
+    "@opam/graphql_ppx": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -52,7 +54,8 @@
     "@opam/ocamlformat-rpc": "0.20.1",
     "@opam/alcotest": "1.5.0",
     "@opam/qcheck": "0.18.1",
-    "@opam/qcheck-alcotest": "0.18.1"
+    "@opam/qcheck-alcotest": "0.18.1",
+    "get-graphql-schema": "*"
   },
   "resolutions": {
     "ocaml": "esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396",
@@ -187,6 +190,8 @@
         }
       }
     },
-    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
+    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54",
+    "@opam/graphql": "andreas/ocaml-graphql-server:graphql.opam#7e55d2112535b46b859ead22ec0e06a913ae05b9",
+    "@opam/graphql_ppx": "teamwalnut/graphql-ppx:graphql_ppx.opam#cb02945809133a9e9c1eec3bb0cf141a7b3cb0cd"
   }
 }
