@@ -4,11 +4,8 @@ set -e
 
 data_directory="data"
 
-LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-export LD_LIBRARY_PATH
-
-PATH=$(esy x sh -c 'echo $PATH')
-export PATH
+[ "$USE_NIX" ] || export LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
+[ "$USE_NIX" ] || export PATH=$(esy x sh -c 'echo $PATH')
 
 tezos-client() {
   docker exec -it deku_flextesa tezos-client "$@"
