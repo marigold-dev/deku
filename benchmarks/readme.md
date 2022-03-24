@@ -1,6 +1,6 @@
 # Benchmark Lambda Virtual Machine
 
-Laptop confirguation that run the benchmark:
+Computer configuation that run the benchmark:
 
 ```
 Memory: 15.3 GiB
@@ -10,14 +10,13 @@ OS Type: 64-bit
 GNOME version: 3.36.8
 ```
 
-We are using the micro-benchmarking library `core_bench` to get the measure execution costs of 
-operations in Lambda VM. 
+We are using the micro-benchmarking library [`core_bench`](https://github.com/janestreet/core_bench) to get the measure execution costs of operations in Lambda VM. 
 
 We have 3 mains benchmarking functions:
-- compiler `compiler.ml`:
+- compile:
     - bench `compile_value` function.
     - bench `compile` function.
-- execution function: it is the combine of 3 functions: `compile_value`, `compile` and `execute`.
+- execution function: it is the combination of 3 functions: `compile_value`, `compile` and `execute`.
 
 ## Run
 - dune:
@@ -76,6 +75,8 @@ The example:
 For more please read: [core_bench](https://github.com/janestreet/core_bench/blob/master/inline_benchmarks_runner_lib_public/bin/runner-help-for-review.org).
 
 ## Primitives
+
+Source: `bench_prim.ml`
 
 ### Compile value
 
@@ -147,7 +148,7 @@ Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 
 ## Expression function
 
-Benchmark of several simple expressions.
+Benchmark of several simple expressions. Source `bench_simple_expression.ml`.
 
 ### Compile value
 
@@ -210,7 +211,7 @@ Estimated testing time 1m20s (8 benchmarks x 10s). Change using '-quota'.
 
 ## Recursive functions
 
-Recursive functions: factorial and fibonacci. 
+Recursive functions: factorial and fibonacci. Source `bench_recursion.ml`.
 
 The benchmarks using the `Bench.Test.create_indexed`. It is a group of benchmarks indexed by size, 
 for instance `[1;2;3]` in the example of factorial below.
@@ -261,6 +262,8 @@ Estimated testing time 1m (6 benchmarks x 10s). Change using '-quota'.
 ```
 
 ## Gas
+
+Source `bench_gas.ml`
 
 ### Interpreter
 
