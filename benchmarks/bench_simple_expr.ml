@@ -126,36 +126,33 @@ let test_execute_lambda_app =
 let tests =
   [
     test_compile_value_incr;
-    test_compile_incr;
-    test_execute_incr;
-    (* descrement *)
     test_compile_value_decr;
-    test_compile_decr;
-    test_execute_decr;
-    (* pair *)
     test_compile_value_pair;
     test_compile_value_pair_pair;
-    test_compile_pair;
-    test_execute_pair;
-    (* if *)
     test_compile_value_if_true;
     test_compile_value_pair_if_true;
     test_compile_value_if_false;
     test_compile_value_pair_if_false;
-    test_compile_if;
-    test_execute_if_true;
-    test_execute_if_false;
-    (* lambda *)
     test_compile_value_incr_lam;
     test_compile_value_pair_incr_lam;
     test_compile_value_decr_lam;
     test_compile_value_pair_decr_lam;
+    test_compile_value_lam_app;
+    (* compile *)
+    test_compile_incr;
+    test_compile_decr;
+    test_compile_pair;
+    test_compile_if;
     test_compile_lambda;
+    test_compile_lambda_app;
+    (* execute *)
+    test_execute_incr;
+    test_execute_decr;
+    test_execute_pair;
+    test_execute_if_true;
+    test_execute_if_false;
     test_execute_pair_incr_lam;
     test_execute_pair_decr_lam;
-    (* lambda application *)
-    test_compile_value_lam_app;
-    test_compile_lambda_app;
     test_execute_lambda_app;
   ]
 let command = Bench.make_command tests

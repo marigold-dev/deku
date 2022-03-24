@@ -110,13 +110,14 @@ let test_execute_counter =
 let tests =
   [
     test_compile_value_factorial;
-    test_execute_factorial;
-    test_compile_factorial;
-    test_execute_factorial;
     test_compile_value_fib;
-    test_compile_fibonacci;
-    test_execute_fibonacci;
     test_compile_value_counter;
+    (* compile *)
+    test_compile_factorial;
+    test_compile_fibonacci;
+    (* execute *)
+    test_execute_factorial;
+    test_execute_fibonacci;
     test_execute_counter;
   ]
 
