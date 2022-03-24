@@ -1,5 +1,15 @@
 # Benchmark Lambda Virtual Machine
 
+Laptop confirguation that run the benchmark:
+
+```
+Memory: 15.3 GiB
+Processor: Intel® Core™ i7-8665U CPU @ 1.90GHz × 8 
+OS Name: Ubuntu 20.04.4 LTS
+OS Type: 64-bit
+GNOME version: 3.36.8
+```
+
 We are using the micro-benchmarking library `core_bench` to get the measure execution costs of 
 operations in Lambda VM. 
 
@@ -7,13 +17,70 @@ We have 3 mains benchmarking functions:
 - compiler `compiler.ml`:
     - bench `compile_value` function.
     - bench `compile` function.
-- interpreter `interpreter.ml`:
-    - bench `execute` function.
+- execution function: it is the combine of 3 functions: `compile_value`, `compile` and `execute`.
 
+## Run
+- dune:
+
+    - Build: `dune build @benchmarks/bench`
+
+    - Execute: `dune exec -- ./benchmarks/benchmarks.exe subcommand`
+
+Where `subcommand` is:
+- `gas`: for benchmark gas
+- `recursive`: for recursive functions
+- `prim`: for primitives
+- `expr`: for simple expressions
+
+For example: `dune exec -- ./benchmarks/benchmarks.exe gas` will return the benchmark for gas.
+
+- esy:
+
+    - Build: `esy b dune build`
+
+    - Execute: `esy b dune exec ./benchmarks/benchmarks.exe subcommand`
+
+## Understanding the results
+
+- Time: number of nano secs taken
+- Run: runs per sampled batch
+- mWd: minor words
+- mjWd: major words
+- Prom: promoted words
+- Percentage: relative execution time as a percentage
+
+Let's take this as an example:
+
+```
+┌───────────────────────────────┬──────────┬─────────┬────────────┐
+│ Name                          │ Time/Run │ mWd/Run │ Percentage │
+├───────────────────────────────┼──────────┼─────────┼────────────┤
+│ compile value add_lib (1, 2)  │ 115.39ns │  20.00w │     89.37% │
+```
+
+- Time/Run `115.39ns`: this mean that the cost of calling a function `compile value add_lib (1, 2)` is estimated to be about `115.39` nanos. 
+- mWd/Run `20.00w`: allocates `20.00` words on the minor heap.
+
+The example: 
+
+```
+┌──────────────────────────────────┬────────────┬─────────┬──────────┬──────────┬────────────┐
+│ Name                             │   Time/Run │ mWd/Run │ mjWd/Run │ Prom/Run │ Percentage │
+├──────────────────────────────────┼────────────┼─────────┼──────────┼──────────┼────────────┤
+│ execute pair (1, 99) incr_lambda │ 2_951.60ns │ 649.99w │    0.20w │    0.20w │    100.00% │
+```
+
+- mjWd/Run `0.20w`: allocates `0.20` words directly into the major heap.
+- Prom/Run `0.20w`: promoted words
+
+For more please read: [core_bench](https://github.com/janestreet/core_bench/blob/master/inline_benchmarks_runner_lib_public/bin/runner-help-for-review.org).
 
 ## Primitives
 
 ### Compile value
+
+Below is the benchmark of `compile_value` for primitives functions taken from the OCaml `Int64` library, for instance: `Int64.add` for addition.
+
 
 ```
 Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
@@ -35,6 +102,9 @@ Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 ```
 
 ### Compile script
+
+Benchmark for function `compile` primitives in VM, for instance: script add is the `Ast.Prim Add`.
+
 ```
 Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 ┌─────────────────────┬──────────┬─────────┬────────────┐
@@ -77,8 +147,11 @@ Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 
 ## Expression function
 
+Benchmark of several simple expressions.
 
 ### Compile value
+
+These are the results of `compile_value`. When it is a number for instance `43` it is a `Int64 43L` in VM, when it is for instance `pair (1, 51)`, it is a `Pair (Int64 1L, Int64 51L)` in VM.
 
 ```
 Estimated testing time 2m10s (13 benchmarks x 10s). Change using '-quota'.
@@ -137,6 +210,12 @@ Estimated testing time 1m20s (8 benchmarks x 10s). Change using '-quota'.
 
 ## Recursive functions
 
+Recursive functions: factorial and fibonacci. 
+
+The benchmarks using the `Bench.Test.create_indexed`. It is a group of benchmarks indexed by size, 
+for instance `[1;2;3]` in the example of factorial below.
+
+
 ### Compile value
 
 ```
@@ -187,7 +266,19 @@ Estimated testing time 1m (6 benchmarks x 10s). Change using '-quota'.
 
 Using the counter script as an example, keep the initial gas of `compile` and `execute`.
 
-Increase 100 times initial gas for each compile value.
+```
+let counter_script =
+  [%lambda_vm.script
+    fun x ->
+      ( (fun f -> f f x) (fun f n ->
+            if n then
+              1L + f f (n - 1L)
+            else
+              0L),
+        (0L, 0L) )]
+```
+
+Increase 100 times initial gas for each compile value (from 101 to 1001).
 
 ```
 Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
@@ -207,8 +298,7 @@ Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
 └───────────────────────┴──────────┴─────────┴──────────┴──────────┴────────────┘
 ```
 
-
-Increase 1000 times initial gas for each compile value.
+Increase 1000 times initial gas for each compile value (from 2001 to 10_001).
 
 ```
 Estimated testing time 1m30s (9 benchmarks x 10s). Change using '-quota'.
@@ -226,3 +316,7 @@ Estimated testing time 1m30s (9 benchmarks x 10s). Change using '-quota'.
 │ execute counter_gas_18 │   3.21us │ 619.93w │    0.18w │    0.18w │     66.82% │
 └────────────────────────┴──────────┴─────────┴──────────┴──────────┴────────────┘
 ```
+
+From the results:
+- The `mWd/Run` does not have a big different when given different gas value.
+- The value in `mjWd/Run`, and `Prom/Run` has the same value.
