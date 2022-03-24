@@ -89,7 +89,20 @@ deploy_ctez() {
     --entrypoint set_addresses --arg "Pair \"$CFMM_ADDRESS\" \"$FA12_CTEZ_ADDRESS\"" \
     --burn-cap 10
 
-  message finishe 
+  message finishe
+}
+
+deploy_fa12_to_ticket() {
+  contract=$(ligo compile contract ./src/tezos_interop/fa12_ticket_wrapper.religo)
+
+  message "Originating FA1.2 Ticket Wrapper contract"
+  sleep 2
+  tezos-client --endpoint $RPC_NODE originate contract "fa12_ticket_wrapper" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "Unit" \
+    --burn-cap 2 \
+    --force
 }
 
 validators_json() {
@@ -293,7 +306,8 @@ tear-down)
   ;;
 deploy-ticket)
   start_tezos_node
-  deploy_ctez
+  # deploy_ctez
+  deploy_fa12_to_ticket
   ;;
 *)
   help
