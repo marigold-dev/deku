@@ -12,7 +12,7 @@ tezos-client() {
 }
 
 ligo() {
-  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.27.0 "$@"
 }
 
 RPC_NODE=http://localhost:20000
@@ -26,6 +26,70 @@ VALIDATORS=(0 1 2)
 
 message() {
   echo "=========== $@ ==========="
+}
+
+deploy_ctez() {
+  # Modified version of ./ctez/deploy.sh
+
+  DEPLOYMENT_DATE=$(date '+%Y-%m-%d')
+
+  # Build and deploy ctez
+  contract=$(ligo compile contract ./ctez/ctez.mligo)
+  storage=$(ligo compile storage ./ctez/ctez.mligo "$(sed s/DEPLOYMENT_DATE/${DEPLOYMENT_DATE}/ <./ctez/ctez_initial_storage.mligo)")
+  tezos-client --endpoint $RPC_NODE originate contract "ctez" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 10 \
+    --force
+  CTEZ_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract ctez | grep KT1 | tr -d '\r')"
+
+  # Build and deploy the fa12 for ctez
+  contract=$(ligo compile contract ./ctez/fa12.mligo)
+  storage=$(ligo compile storage ./ctez/fa12.mligo "$(sed s/ADMIN_ADDRESS/$CTEZ_ADDRESS/ <./ctez/fa12_ctez_initial_storage.mligo)")
+  tezos-client --endpoint $RPC_NODE originate contract "fa12_ctez" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 10 \
+    --force
+  FA12_CTEZ_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract fa12_ctez | grep KT1 | tr -d '\r')"
+
+  # Build and deploy cfmm
+  contract=$(ligo compile contract ./ctez/cfmm_tez_ctez.mligo)
+  sed s/FA12_CTEZ/${FA12_CTEZ_ADDRESS}/ <./ctez/cfmm_initial_storage.mligo | sed s/CTEZ_ADDRESS/${CTEZ_ADDRESS}/ >_build/cfmm_storage.mligo
+
+  storage=$(ligo compile storage ./ctez/cfmm_tez_ctez.mligo "$(<_build/cfmm_storage.mligo)")
+  tezos-client --endpoint $RPC_NODE originate contract "cfmm" \
+    transferring 0.000001 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 10 \
+    --force
+  CFMM_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract cfmm | grep KT1 | tr -d '\r')"
+
+  # Build and deploy the fa12 for the cfmm lqt, specifying the cfmm as admin
+  contract=$(ligo compile contract ./ctez/fa12.mligo)
+  storage=$(ligo compile storage ./ctez/fa12.mligo "$(sed s/ADMIN_ADDRESS/$CFMM_ADDRESS/ <./ctez/fa12_ctez_initial_storage.mligo)")
+  tezos-client --endpoint $RPC_NODE originate contract "fa12_lqt" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 10 \
+    --force
+  FA12_LQT_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract fa12_lqt | grep KT1 | tr -d '\r')"
+
+  # Set the lqt fa12 address in the cfmm
+  tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to cfmm \
+    --entrypoint setLqtAddress --arg "\"$FA12_LQT_ADDRESS\"" \
+    --burn-cap 10
+
+  # Set the ctez fa12 address and the cfmm address in the oven management contract
+  tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to ctez \
+    --entrypoint set_addresses --arg "Pair \"$CFMM_ADDRESS\" \"$FA12_CTEZ_ADDRESS\"" \
+    --burn-cap 10
+
+  message finishe 
 }
 
 validators_json() {
@@ -226,6 +290,10 @@ start)
   ;;
 tear-down)
   tear-down
+  ;;
+deploy-ticket)
+  start_tezos_node
+  deploy_ctez
   ;;
 *)
   help
