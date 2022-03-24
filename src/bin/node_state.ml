@@ -15,13 +15,18 @@ let get_initial_state ~folder =
     Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
   let%await validator_res =
     Tezos_interop.Consensus.fetch_validators ~context:interop_context in
+  let%await local_validators =
+    Files.Validators.read ~file:(folder ^ "/validators.json") in
   let validators =
     match validator_res with
     | Ok current_validators ->
       current_validators
-      |> List.mapi (fun i validator ->
-             ( validator,
-               Printf.sprintf "http://localhost:444%d" i |> Uri.of_string ))
+      |> List.map (fun validator ->
+             (* TODO: URI's should be looked up from the discovery.mligo contract.
+                See https://github.com/marigold-dev/deku/pull/450 *)
+             List.find
+               (fun (v, _) -> Crypto.Key_hash.equal validator v)
+               local_validators)
     | Error err -> failwith err in
   let initial_validators_uri =
     List.fold_left
