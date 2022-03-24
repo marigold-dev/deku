@@ -50,7 +50,7 @@ let test_execute_counter_7 = bench_exe_counter_gas "7" ~gas_value:8_001
 
 let test_execute_counter_8 = bench_exe_counter_gas "8" ~gas_value:9_001
 
-let test_execute_counter_9 = bench_exe_counter_gas "9" ~gas_value:1001
+let test_execute_counter_9 = bench_exe_counter_gas "9" ~gas_value:10_001
 
 let tests =
   [
