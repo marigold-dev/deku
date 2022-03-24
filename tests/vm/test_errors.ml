@@ -9,7 +9,7 @@ let check_execution_error result expected_error =
     Alcotest.(check Testable.execution_error) "Same error" expected_error error
   | Ok _ -> Alcotest.fail "Ast shouldn't execute"
   | Error (Compilation_error error) ->
-    Alcotest.failf "%a" pp_compile_error error
+    Alcotest.failf "%a" Compiler.pp_error error
 
 let check_compilation_error result expected_error =
   let open Vm_test in
@@ -19,74 +19,74 @@ let check_compilation_error result expected_error =
       "Same error" expected_error error
   | Ok _ -> Alcotest.fail "Ast shouldn't execute"
   | Error (Execution_error error) ->
-    Alcotest.failf "%a" pp_execution_error error
+    Alcotest.failf "%a" Interpreter.pp_error error
 
 let test_compilation_undefined_variable () =
   let script = [%lambda_vm.script fun _ -> x] in
   check_compilation_error
     (Vm_test.execute_ast 2000 (Int64 0L) script)
-    Undefined_variable
+    `Undefined_variable
 
 let test_fst_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (fst 1L, (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1201 (Int64 0L) script)
-    Value_is_not_pair
+    `Value_is_not_pair
 
 let test_snd_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (snd 1L, (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1201 (Int64 0L) script)
-    Value_is_not_pair
+    `Value_is_not_pair
 
 let test_neg_value_is_not_int64 () =
   let script = [%lambda_vm.script fun _ -> (not (0L, 0L), (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1601 (Int64 0L) script)
-    Value_is_not_int64
+    `Value_is_not_int64
 
 let test_op2_value_is_not_int64 () =
   let script = [%lambda_vm.script fun _ -> ((0L, 0L) + 0L, (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 2001 (Int64 0L) script)
-    Value_is_not_int64
+    `Value_is_not_int64
 
 let test_if_value_is_not_int64 () =
   let script =
     [%lambda_vm.script fun _ -> if (0L, 0L) then 1L else (1L, (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1601 (Int64 0L) script)
-    Value_is_not_int64
+    `Value_is_not_int64
 
 let test_value_is_not_function () =
   let script = [%lambda_vm.script fun _ -> (0L 0L, (0L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1201 (Int64 0L) script)
-    Value_is_not_function
+    `Value_is_not_function
 
 let test_pattern1_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (0L, 0L)] in
   check_execution_error
     (Vm_test.execute_ast 701 (Int64 0L) script)
-    Value_is_not_pair
+    `Value_is_not_pair
 
 let test_pattern2_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> 0L] in
   check_execution_error
     (Vm_test.execute_ast 301 (Int64 0L) script)
-    Value_is_not_pair
+    `Value_is_not_pair
 
 let test_pattern3_value_is_not_zero () =
   let script = [%lambda_vm.script fun _ -> (0L, (1L, 0L))] in
   check_execution_error
     (Vm_test.execute_ast 1101 (Int64 0L) script)
-    Value_is_not_zero
+    `Value_is_not_zero
 
 let test_pattern4_value_is_not_zero () =
   let script = [%lambda_vm.script fun _ -> (0L, (0L, 1L))] in
   check_execution_error
     (Vm_test.execute_ast 1101 (Int64 0L) script)
-    Value_is_not_zero
+    `Value_is_not_zero
 
 let test_compilation =
   let open Alcotest in

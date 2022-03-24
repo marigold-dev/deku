@@ -72,34 +72,44 @@ let test_counter =
           in
           expected_value = result.storage))
 
+type error =
+  [ `Out_of_gas
+  | `Out_of_stack ]
+
+let testable_error =
+  Alcotest.of_pp (fun fmt -> function
+    | `Out_of_gas -> Format.fprintf fmt "Out_of_gas"
+    | `Out_of_stack -> Format.fprintf fmt "Out_of_stack")
+let check_error msg (expected_error : error) :
+    ('a, Vm_test.error) result -> unit = function
+  | Ok _ -> Alcotest.fail "Should be an error"
+  | Error (Vm_test.Execution_error (#error as exn)) ->
+    Alcotest.(check testable_error) msg expected_error exn
+  | Error (Vm_test.Compilation_error (#error as exn)) ->
+    Alcotest.(check testable_error) msg expected_error exn
+  | Error (Compilation_error error) ->
+    Format.asprintf "%a" Compiler.pp_error error |> Alcotest.fail
+  | Error (Execution_error error) ->
+    Format.asprintf "%a" Interpreter.pp_error error |> Alcotest.fail
 let test_stack_limit () =
-  Alcotest.check_raises "Stack has a limit" Out_of_stack (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 71_990_801
-          (Int64 19996L) (* Bare minimum close to the limit of 20k *)
-          counter in
-      ())
+  Vm_test.execute_ast 71_990_801
+    (Int64 19996L) (* Bare minimum close to the limit of 20k *)
+    counter
+  |> check_error "Stack has a limit" `Out_of_stack
 
 let infinite_recursion_y =
   [%lambda_vm.script fun _ -> (fun f -> f f) (fun f -> f f + 0L)]
 
 let test_y_combinator () =
-  Alcotest.check_raises "Stack limit avoids infinite recursion" Out_of_stack
-    (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 10000000000000000 (Int64 0L)
-          infinite_recursion_y in
-      ())
+  Vm_test.execute_ast 10000000000000000 (Int64 0L) infinite_recursion_y
+  |> check_error "Stack limit avoids infinite recursion" `Out_of_stack
 
 let infinite_recursion_z =
   [%lambda_vm.script fun _ -> (fun f -> f f 0L) (fun f v -> f f (v + 0L))]
 
 let test_z_combinator () =
-  Alcotest.check_raises "Gas limit is triggered" Out_of_gas (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 10000000000 (Int64 0L) infinite_recursion_z
-      in
-      ())
+  Vm_test.execute_ast 10000000000 (Int64 0L) infinite_recursion_z
+  |> check_error "Gas limit is triggered" `Out_of_gas
 
 let test =
   let open Alcotest in

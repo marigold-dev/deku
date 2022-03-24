@@ -14,7 +14,6 @@ let test_compile_value () =
   let gas = Gas.make ~initial_gas:100 in
   let _ = Vm_test.compile_value_exn gas (Int64 0L) in
   Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
-
 let test_compile_ast () =
   let ast = [%lambda_vm.script fun x -> x + 1L] in
 
@@ -25,7 +24,7 @@ let test_compile_ast () =
 let test_execute_ir () =
   let x = 4096L in
   let arg =
-    let gas = Gas.make ~initial_gas:101 in
+    let gas = Gas.make ~initial_gas:100 in
     Vm_test.compile_value_exn gas (Int64 x) in
   let ir =
     let gas = Gas.make ~initial_gas:5000 in
@@ -34,7 +33,6 @@ let test_execute_ir () =
   let gas = Gas.make ~initial_gas:14747900 in
   let _ = Vm_test.execute_exn gas arg ir in
   Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
-
 let test =
   let open Alcotest in
   ( "Gas model",

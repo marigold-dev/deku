@@ -3,13 +3,16 @@ open Checks
 
 type error =
   (* interpreter bugs *)
-  | Undefined_variable
-  | Over_applied_primitives
-  (* user program bugs *)
-  | Value_is_not_pair
-  | Value_is_not_int64
-  | Value_is_not_function
-  | Value_is_not_zero
+  [ `Undefined_variable
+  | `Over_applied_primitives
+  | (* user program bugs *)
+    `Value_is_not_pair
+  | `Value_is_not_int64
+  | `Value_is_not_function
+  | `Value_is_not_zero
+  | Gas.error
+  | Checks.error ]
+[@@deriving show]
 
 exception Error of error
 let raise error = raise (Error error)
@@ -45,16 +48,15 @@ end = struct
       let second = parse second_value second_t in
       (first, second)
     | Pair _, (V_int64 _ | V_closure _ | V_primitive _) ->
-      raise Value_is_not_pair
+      raise `Value_is_not_pair
     | Nil, V_int64 0L -> ()
     | Nil, (V_int64 _ | V_pair _ | V_closure _ | V_primitive _) ->
-      raise Value_is_not_zero
+      raise `Value_is_not_zero
 end
 
 module Env = Map_with_cardinality.Make (Ident)
 
 let burn_gas gas env code =
-  check_gas gas;
   match code with
   | E_var _
   | E_app _ ->
@@ -75,10 +77,10 @@ let eval_prim prim ~arg ~args =
       | V_pair _
       | V_closure _
       | V_primitive _ ->
-        raise Value_is_not_int64 in
+        raise `Value_is_not_int64 in
     match args with
     | [] -> f arg
-    | _ -> raise Over_applied_primitives in
+    | _ -> raise `Over_applied_primitives in
   let op1_pair f =
     let f value =
       match value with
@@ -86,10 +88,10 @@ let eval_prim prim ~arg ~args =
       | V_int64 _
       | V_closure _
       | V_primitive _ ->
-        raise Value_is_not_pair in
+        raise `Value_is_not_pair in
     match args with
     | [] -> f arg
-    | _ -> raise Over_applied_primitives in
+    | _ -> raise `Over_applied_primitives in
   let op2 f =
     (* error only happens after both are applied *)
     let f left right =
@@ -97,11 +99,11 @@ let eval_prim prim ~arg ~args =
       | V_int64 left, V_int64 right -> V_int64 (f left right)
       | ( (V_pair _ | V_int64 _ | V_closure _ | V_primitive _),
           (V_pair _ | V_int64 _ | V_closure _ | V_primitive _) ) ->
-        raise Value_is_not_int64 in
+        raise `Value_is_not_int64 in
     match args with
     | [] -> V_primitive { args = [arg]; prim }
     | [left] -> f left arg
-    | _ -> raise Over_applied_primitives in
+    | _ -> raise `Over_applied_primitives in
 
   let op2_shift f =
     let f left right = f left (Int64.to_int right) in
@@ -138,7 +140,7 @@ let rec eval ~stack gas env code =
     | Some value -> value
     | None ->
       (* TODO: could we eliminate this using GADTs? *)
-      raise Undefined_variable)
+      raise `Undefined_variable)
   | E_lam (param, body) -> V_closure { env; param; body }
   | E_app { funct; arg } -> (
     let funct = eval_call env funct in
@@ -146,7 +148,7 @@ let rec eval ~stack gas env code =
     match funct with
     | V_pair _
     | V_int64 _ ->
-      raise Value_is_not_function
+      raise `Value_is_not_function
     | V_closure { env; param; body } ->
       let env = Env.add param arg env in
       eval_jump env body
@@ -161,7 +163,7 @@ let rec eval ~stack gas env code =
     | V_pair _
     | V_closure _
     | V_primitive _ ->
-      raise Value_is_not_int64)
+      raise `Value_is_not_int64)
   | E_pair { first; second } ->
     let first = eval_call env first in
     let second = eval_call env second in
@@ -186,3 +188,5 @@ let execute gas ~arg script =
 let execute gas ~arg script =
   try Ok (execute gas ~arg script) with
   | Error error -> Error error
+  | Checks.Out_of_stack -> Error `Out_of_stack
+  | Gas.Out_of_gas -> Error `Out_of_gas

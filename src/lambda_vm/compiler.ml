@@ -4,8 +4,13 @@ open Checks
 
 module String_map = Map.Make (String)
 
-type error = (* user program bugs *)
-  | Undefined_variable
+type error =
+  (* user program bugs *)
+  [ `Undefined_variable
+  | Gas.error
+  | Checks.error ]
+[@@deriving show]
+
 exception Error of error
 let raise error = raise (Error error)
 
@@ -29,7 +34,6 @@ let compile_prim prim =
 module Vars = Map_with_cardinality.Make (String)
 
 let burn_gas gas vars code =
-  check_gas gas;
   match code with
   | Var _
   | Lam _ ->
@@ -54,7 +58,7 @@ let rec compile_expr ~stack gas next_ident vars code =
   | Var var -> (
     match Vars.find var vars with
     | Some ident -> E_var ident
-    | None -> raise Undefined_variable)
+    | None -> raise `Undefined_variable)
   | Lam (var, body) ->
     let ident =
       let ident = !next_ident in
@@ -104,9 +108,7 @@ let compile gas script =
   try Ok (compile gas script) with
   | Error error -> Error error
 
-let burn_gas gas =
-  check_gas gas;
-  Gas.burn_constant gas
+let burn_gas gas = Gas.burn_constant gas
 
 let rec compile_value ~stack gas value =
   let compile_value value = compile_value ~stack:(stack - 1) gas value in
@@ -127,3 +129,5 @@ let compile_value gas value =
 let compile_value gas value =
   try Ok (compile_value gas value) with
   | Error error -> Error error
+  | Checks.Out_of_stack -> Error `Out_of_stack
+  | Gas.Out_of_gas -> Error `Out_of_gas

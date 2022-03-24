@@ -1,5 +1,9 @@
-type error = (* user program bugs *)
-  | Undefined_variable
+type error =
+  (* user program bugs *)
+  [ `Undefined_variable
+  | Gas.error
+  | Checks.error ]
+[@@deriving show]
 
 (* TODO: compile or translate? *)
 val compile : Gas.t -> Ast.script -> (Ir.script, error) result

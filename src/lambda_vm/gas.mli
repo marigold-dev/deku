@@ -1,3 +1,6 @@
+exception Out_of_gas
+type error = [`Out_of_gas] [@@deriving show]
+
 type t
 
 val make : initial_gas:int -> t
