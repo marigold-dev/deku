@@ -1,6 +1,6 @@
 # Benchmark Lambda Virtual Machine
 
-Computer configuation that run the benchmark:
+Computer configuation that ran the benchmark:
 
 ```
 Memory: 15.3 GiB
@@ -10,13 +10,13 @@ OS Type: 64-bit
 GNOME version: 3.36.8
 ```
 
-We are using the micro-benchmarking library [`core_bench`](https://github.com/janestreet/core_bench) to get the measure execution costs of operations in Lambda VM. 
+We are using the micro-benchmarking library [`core_bench`](https://github.com/janestreet/core_bench) to measure the execution costs of operations in Lambda VM. 
 
 We have 3 mains benchmarking functions:
 - compile:
     - bench `compile_value` function.
     - bench `compile` function.
-- execution function: it is the combination of 3 functions: `compile_value`, `compile` and `execute`.
+- execution function: The combination of 3 functions: `compile_value`, `compile` and `execute`.
 
 ## Run
 - dune:
@@ -43,10 +43,10 @@ For example: `dune exec -- ./benchmarks/benchmarks.exe gas` will return the benc
 
 - Time: number of nano secs taken
 - Run: runs per sampled batch
-- mWd: minor words
-- mjWd: major words
+- mWd: words allocated to the minor heap
+- mjWd: words allocated to the major heap
 - Prom: promoted words
-- Percentage: relative execution time as a percentage
+- Percentage: relative execution time as a percentage of the longest execution time
 
 Let's take this as an example:
 
@@ -80,7 +80,7 @@ Source: `bench_prim.ml`
 
 ### Compile value
 
-Below is the benchmark of `compile_value` for primitives functions taken from the OCaml `Int64` library, for instance: `Int64.add` for addition.
+Below is the benchmark of `compile_value` for primitive functions taken from the OCaml `Int64` library, for instance: `Int64.add` for addition.
 
 
 ```
