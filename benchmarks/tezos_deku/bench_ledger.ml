@@ -85,33 +85,10 @@ let bench_setup_four_deposits =
       let _ = setup_four_deposits () in
       ())
 
-(*******************************************************************************)
-(** balance function *)
-
-(*
-TODO: optimization for the tests using describe? 
-let test_balance (_name : string) f =
-  let expect_balance address ticket_id expected ticket =
-    let get_balance = balance address ticket_id ticket in
-    Int.equal expected (Amount.to_int get_balance) in
-  f expect_balance*)
-
-(*let tests =
-    Bench.Test.create ~name:"test_eq_balance_one_deposit" (fun () ->
-        test_balance "balance" (fun _ expected_balance ->
-            let ticket, ticket_1, address_1 = setup_one_deposit () in
-            expected_balance address_1 ticket_1 100 ticket))
-
-  TODO: check amount if not equal return error
-  let bench_test_balance_3 =
-    Bench.Test.create ~name:"test balance 3" (fun () ->
-        let _test expect address ticket t =
-          let expected = balance address ticket t in
-          Int.equal expect (Amount.to_int expected) in
-        ())
+(*****************************************************************************)
+(* bench function [balance] with test
+   NOTE: do I need to get the bench of tests?
 *)
-
-(* bench function [balance] with test *)
 
 let test_balance () =
   describe "ledger" (fun { test; _ } ->
@@ -172,13 +149,6 @@ let bench_test_get_balance_one_deposit =
               expected_balance address_1 ticket_1 100 ticket);
           ()))
 
-(* bench function [balance] without test *)
-let bench_get_balance_one_deposit =
-  Bench.Test.create ~name:"deposit: get balance" (fun () ->
-      let ticket, ticket_1, address_1 = setup_one_deposit () in
-      let _amount_1 = balance address_1 ticket_1 ticket in
-      ())
-
 (* bench function [balance] with test of:
    - Balance in a setup four deposits *)
 let bench_test_get_balance_four_deposits =
@@ -199,7 +169,16 @@ let bench_test_get_balance_four_deposits =
               expected_balance address_2 ticket_2 400 ticket);
           ()))
 
-let bench_get_balance_four_deposits =
+(*****************************************************************************)
+(* bench function [balance] without test *)
+
+let bench_balance_one_deposit =
+  Bench.Test.create ~name:"deposit: get balance" (fun () ->
+      let ticket, ticket_1, address_1 = setup_one_deposit () in
+      let _amount_1 = balance address_1 ticket_1 ticket in
+      ())
+
+let bench_balance_four_deposits =
   Bench.Test.create ~name:"four deposits: get balance" (fun () ->
       let ticket, (ticket_1, ticket_2), (address_1, address_2) =
         setup_four_deposits () in
@@ -209,6 +188,87 @@ let bench_get_balance_four_deposits =
       let _amount_4 = balance address_2 ticket_2 ticket in
       ())
 
-let tests = [(* setup *) bench_test_amount_get_balance_one_deposit]
+(*****************************************************************************)
+(* bench function [transfer] without test *)
+
+let bench_transfer_1 =
+  Bench.Test.create ~name:"transfer 1" (fun () ->
+      let ticket, (ticket_1, _ticket_2), (address_1, address_2) =
+        setup_four_deposits () in
+      let _result =
+        transfer ~sender:address_1 ~destination:address_2 (Amount.of_int 10)
+          ticket_1 ticket in
+      ())
+
+let bench_transfer_4 =
+  Bench.Test.create ~name:"transfer 4" (fun () ->
+      let ticket, (ticket_1, ticket_2), (address_1, address_2) =
+        setup_four_deposits () in
+      let _op_1 =
+        transfer ~sender:address_1 ~destination:address_2 (Amount.of_int 10)
+          ticket_1 ticket in
+      let _op_2 =
+        transfer ~sender:address_1 ~destination:address_2 (Amount.of_int 10)
+          ticket_2 ticket in
+      let _op_3 =
+        transfer ~sender:address_2 ~destination:address_1 (Amount.of_int 10)
+          ticket_1 ticket in
+      let _op_4 =
+        transfer ~sender:address_2 ~destination:address_1 (Amount.of_int 10)
+          ticket_2 ticket in
+      ())
+
+(*****************************************************************************)
+(* bench function [withdrawal] without test *)
+
+let bench_withdraw_1 =
+  Bench.Test.create ~name:"withdraw 1" (fun () ->
+      let ticket, (ticket_1, _ticket_2), (address_1, _address_2) =
+        setup_four_deposits () in
+      let tezos_address = make_tezos_address () in
+      let _op_1 =
+        withdraw ~sender:address_1 ~destination:tezos_address (Amount.of_int 10)
+          ticket_1 ticket in
+      ())
+
+let bench_withdraw_4 =
+  Bench.Test.create ~name:"withdraw 4" (fun () ->
+      let ticket, (ticket_1, ticket_2), (address_1, address_2) =
+        setup_four_deposits () in
+      let tezos_address_1 = make_tezos_address () in
+      let tezos_address_2 = make_tezos_address () in
+      let _op_1 =
+        withdraw ~sender:address_1 ~destination:tezos_address_1
+          (Amount.of_int 10) ticket_1 ticket in
+      let _op_2 =
+        withdraw ~sender:address_1 ~destination:tezos_address_1
+          (Amount.of_int 20) ticket_1 ticket in
+      let _op_3 =
+        withdraw ~sender:address_2 ~destination:tezos_address_2
+          (Amount.of_int 30) ticket_1 ticket in
+      let _op_4 =
+        withdraw ~sender:address_2 ~destination:tezos_address_2
+          (Amount.of_int 40) ticket_2 ticket in
+      ())
+
+let tests =
+  [
+    (* setup *)
+    bench_make_ticket;
+    bench_make_address;
+    bench_make_tezos_address;
+    (* deposit *)
+    bench_setup_one_deposit;
+    bench_setup_four_deposits;
+    (* balance *)
+    bench_balance_one_deposit;
+    bench_balance_four_deposits;
+    (* transfer *)
+    bench_transfer_1;
+    bench_transfer_4;
+    (* withdrawal *)
+    bench_withdraw_1;
+    bench_withdraw_4;
+  ]
 
 let command = Bench.make_command tests
