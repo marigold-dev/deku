@@ -18,9 +18,9 @@ GNOME version: 3.36.8
     - Execute: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand`
 
 Where `subcommand` is:
-- `rpc`: for tezos rpc
-- `ledger`: for ledger
-- 
+- `rpc`: for tezos rpc (`src/tezos_rpc`)
+- `ledger`: for ledger (`src/core_deku/ledger.ml`)
+- `validators`: for validators (`src/protocol/validators.ml`)
 
 For example: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe ledger` will return the benchmark for ledger.
 
@@ -53,4 +53,28 @@ Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 │ withdraw 1                                │ 318.68us │ 2_231.21w │  143.14w │  143.14w │     79.58% │
 │ withdraw 4                                │ 400.45us │ 5_191.53w │  172.34w │  172.34w │    100.00% │
 └───────────────────────────────────────────┴──────────┴───────────┴──────────┴──────────┴────────────┘
+```
+
+
+## Validators
+
+Source `bench_validators.ml`
+
+```
+~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe validators
+Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
+┌──────────────────────┬──────────────┬───────────┬──────────┬──────────┬────────────┐
+│ Name                 │     Time/Run │   mWd/Run │ mjWd/Run │ Prom/Run │ Percentage │
+├──────────────────────┼──────────────┼───────────┼──────────┼──────────┼────────────┤
+│ make validator       │ 138_512.77ns │   215.55w │   29.05w │   29.05w │     27.97% │
+│ setup one validator  │  59_777.95ns │   722.76w │   28.04w │   28.04w │     12.07% │
+│ setup two validators │ 179_069.22ns │ 1_552.17w │   56.76w │   56.76w │     36.16% │
+│ current validator    │  74_848.88ns │   727.07w │   28.20w │   28.20w │     15.11% │
+│ to_list              │  58_424.35ns │   726.64w │   28.19w │   28.19w │     11.80% │
+│ length               │  68_805.86ns │   724.40w │   28.09w │   28.09w │     13.89% │
+│ remove validator     │ 164_190.49ns │ 1_821.04w │   56.84w │   56.84w │     33.15% │
+│ after_current        │      27.98ns │     5.00w │          │          │            │
+│ update_current       │ 235_630.52ns │ 1_576.85w │   57.11w │   57.11w │     47.58% │
+│ hash                 │ 495_235.44ns │ 1_570.81w │   57.41w │   57.41w │    100.00% │
+└──────────────────────┴──────────────┴───────────┴──────────┴──────────┴────────────┘
 ```
