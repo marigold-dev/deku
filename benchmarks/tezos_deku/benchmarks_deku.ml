@@ -8,6 +8,7 @@ open Core
     - rpc: for tezos_rpc
     - ledger: for src/core_deku/ledger.ml
     - validators: for src/protocol/validators.ml
+    - patricia: for incremental patricia tree
     -
 
     or using esy:
@@ -22,6 +23,7 @@ let main () =
          ("rpc", Bench_tezos_rpc.command);
          ("ledger", Bench_ledger.command);
          ("validators", Bench_validators.command);
+         ("patricia", Bench_patricia.command);
        ])
 
 let () = main ()

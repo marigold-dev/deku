@@ -10,7 +10,7 @@
   protocol
   tezos_interop)
  (preprocess
-  (pps ppx_let_binding)))
+  (pps ppx_deriving_yojson ppx_let_binding)))
 
 (rule
  (alias bench_deku)

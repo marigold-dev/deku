@@ -18,9 +18,10 @@ GNOME version: 3.36.8
     - Execute: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand`
 
 Where `subcommand` is:
-- `rpc`: for tezos rpc (`src/tezos_rpc`)
+- `rpc`: for tezos rpc
 - `ledger`: for ledger 
 - `validators`: for validators
+- `patricia`: for incremental patricia tree
 
 For example: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe ledger` will return the benchmark for ledger.
 
@@ -85,3 +86,21 @@ Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
 Source `bench_tezos_rpc.ml`. It is a benchmark of functions defined in `src/tezos_rpc/`
 
 TODO : run node
+
+
+## Patricia
+
+Source `bench_patricia.ml`. It is a benchmark for incremental Patricia tree, where the size of the tree is set to 10.
+
+
+```
+~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe patricia
+Estimated testing time 30s (3 benchmarks x 10s). Change using '-quota'.
+┌───────────────────┬──────────┬───────────┬──────────┬──────────┬────────────┐
+│ Name              │ Time/Run │   mWd/Run │ mjWd/Run │ Prom/Run │ Percentage │
+├───────────────────┼──────────┼───────────┼──────────┼──────────┼────────────┤
+│ add and find tree │   1.37us │   444.01w │    0.26w │    0.26w │      9.39% │
+│ hash tree         │   8.23us │   798.18w │    0.18w │    0.18w │     56.32% │
+│ hash values       │  14.62us │ 1_044.00w │    0.24w │    0.24w │    100.00% │
+└───────────────────┴──────────┴───────────┴──────────┴──────────┴────────────┘
+```
