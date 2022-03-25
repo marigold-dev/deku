@@ -174,6 +174,7 @@ let tests =
     bench_address_to_string;
     bench_address_of_string;
     bench_ticket_to_string;
+    bench_ticket_of_string;
     bench_address_of_string;
     bench_operation_hash_string;
   ]

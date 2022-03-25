@@ -115,22 +115,23 @@ TODO
 
 ```
 ~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe interop
-Estimated testing time 2m10s (13 benchmarks x 10s). Change using '-quota'.
+Estimated testing time 2m20s (14 benchmarks x 10s). Change using '-quota'.
 ┌──────────────────────────────────────┬─────────────┬─────────────┬─────────────┬─────────────┬────────────┐
 │ Name                                 │    Time/Run │     mWd/Run │    mjWd/Run │    Prom/Run │ Percentage │
 ├──────────────────────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┼────────────┤
-│ key: to_string                       │    101.91us │   2_653.50w │     196.49w │     196.49w │      0.56% │
-│ key: of_string                       │    934.02us │  32_543.89w │  18_416.21w │  18_416.21w │      5.12% │
-│ key: hash                            │    164.26us │     464.24w │     133.42w │     133.42w │      0.90% │
-│ secret: to_string                    │     40.81us │   2_427.22w │      91.23w │      91.23w │      0.22% │
-│ secret: of_string                    │    172.94us │   6_366.30w │     197.27w │     197.27w │      0.95% │
-│ verify signature                     │ 18_239.09us │ 248_880.21w │ 162_729.82w │ 162_729.82w │    100.00% │
-│ contract hash: to_string             │     15.26us │     509.89w │      21.03w │      21.03w │      0.08% │
-│ contract hash: of_string             │      8.02us │     655.21w │      21.09w │      21.09w │      0.04% │
-│ address: to_string                   │     79.12us │   2_568.63w │     105.20w │     105.20w │      0.43% │
-│ address: of_string                   │    100.16us │   8_799.69w │     232.21w │     232.21w │      0.55% │
-│ ticket: to_string                    │     55.80us │   2_886.26w │   1_280.10w │      27.98w │      0.31% │
-│ address: of_string                   │    142.79us │   8_804.22w │     232.34w │     232.34w │      0.78% │
-│ operation hash: to_string, of_string │     36.23us │   1_720.13w │      42.23w │      42.23w │      0.20% │
+│ key: to_string                       │    113.68us │   2_651.17w │     196.32w │     196.32w │      0.77% │
+│ key: of_string                       │  1_038.91us │  32_527.27w │  18_406.83w │  18_406.83w │      7.07% │
+│ key: hash                            │    133.53us │     471.81w │     135.59w │     135.59w │      0.91% │
+│ secret: to_string                    │     40.23us │   2_426.10w │      91.19w │      91.19w │      0.27% │
+│ secret: of_string                    │    140.78us │   6_351.96w │     196.82w │     196.82w │      0.96% │
+│ verify signature                     │ 14_700.34us │ 249_405.36w │ 163_075.61w │ 163_075.61w │    100.00% │
+│ contract hash: to_string             │     16.23us │     509.83w │      21.02w │      21.02w │      0.11% │
+│ contract hash: of_string             │     15.30us │     655.10w │      21.08w │      21.08w │      0.10% │
+│ address: to_string                   │     97.03us │   2_571.16w │     105.31w │     105.31w │      0.66% │
+│ address: of_string                   │    109.48us │   8_794.09w │     232.07w │     232.07w │      0.74% │
+│ ticket: to_string                    │     59.72us │   2_885.19w │   1_279.64w │      28.00w │      0.41% │
+│ ticket: of_string                    │     38.14us │   4_180.01w │      85.67w │      85.67w │      0.26% │
+│ address: of_string                   │    170.38us │   8_792.72w │     232.03w │     232.03w │      1.16% │
+│ operation hash: to_string, of_string │     25.41us │   1_718.88w │      42.20w │      42.20w │      0.17% │
 └──────────────────────────────────────┴─────────────┴─────────────┴─────────────┴─────────────┴────────────┘
 ```
