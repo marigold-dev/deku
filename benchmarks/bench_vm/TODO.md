@@ -15,7 +15,7 @@
 
 * [] script for benchmarking
 
-** [] exporting results
+** [X] exporting results
 
 ** [] plotting results
 

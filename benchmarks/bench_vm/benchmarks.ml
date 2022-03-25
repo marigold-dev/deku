@@ -16,6 +16,7 @@ let main () =
          ("recursive", Bench_recursion.command);
          ("expr", Bench_simple_expr.command);
          ("prim", Bench_prim.command);
+         ("trivial", Trivial_bench.command);
        ])
 
 let () = main ()
