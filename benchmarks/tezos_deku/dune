@@ -1,6 +1,14 @@
 (executable
  (name benchmarks_deku)
- (libraries core core_bench core_unix.command_unix tezos_rpc)
+ (libraries
+  core
+  core_bench
+  core_unix.command_unix
+  rely.lib
+  tezos_rpc
+  node
+  protocol
+  tezos_interop)
  (preprocess
   (pps ppx_let_binding)))
 
