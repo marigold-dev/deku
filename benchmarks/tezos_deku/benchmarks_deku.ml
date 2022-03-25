@@ -9,6 +9,7 @@ open Core
     - ledger: for src/core_deku/ledger.ml
     - validators: for src/protocol/validators.ml
     - patricia: for incremental patricia tree
+    - interop: for tezos internal operations
     -
 
     or using esy:
@@ -24,6 +25,7 @@ let main () =
          ("ledger", Bench_ledger.command);
          ("validators", Bench_validators.command);
          ("patricia", Bench_patricia.command);
+         ("interop", Bench_tezos_interop.command);
        ])
 
 let () = main ()

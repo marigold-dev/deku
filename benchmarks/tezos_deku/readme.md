@@ -22,6 +22,7 @@ Where `subcommand` is:
 - `ledger`: for ledger 
 - `validators`: for validators
 - `patricia`: for incremental patricia tree
+- `interop`: for tezos internal operations 
 
 For example: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe ledger` will return the benchmark for ledger.
 
@@ -103,4 +104,33 @@ Estimated testing time 30s (3 benchmarks x 10s). Change using '-quota'.
 │ hash tree         │   8.23us │   798.18w │    0.18w │    0.18w │     56.32% │
 │ hash values       │  14.62us │ 1_044.00w │    0.24w │    0.24w │    100.00% │
 └───────────────────┴──────────┴───────────┴──────────┴──────────┴────────────┘
+```
+
+
+## Tezos internal operations
+
+Source `bench_tezos_interop.ml`
+
+TODO
+
+```
+~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe interop
+Estimated testing time 2m10s (13 benchmarks x 10s). Change using '-quota'.
+┌──────────────────────────────────────┬─────────────┬─────────────┬─────────────┬─────────────┬────────────┐
+│ Name                                 │    Time/Run │     mWd/Run │    mjWd/Run │    Prom/Run │ Percentage │
+├──────────────────────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┼────────────┤
+│ key: to_string                       │    101.91us │   2_653.50w │     196.49w │     196.49w │      0.56% │
+│ key: of_string                       │    934.02us │  32_543.89w │  18_416.21w │  18_416.21w │      5.12% │
+│ key: hash                            │    164.26us │     464.24w │     133.42w │     133.42w │      0.90% │
+│ secret: to_string                    │     40.81us │   2_427.22w │      91.23w │      91.23w │      0.22% │
+│ secret: of_string                    │    172.94us │   6_366.30w │     197.27w │     197.27w │      0.95% │
+│ verify signature                     │ 18_239.09us │ 248_880.21w │ 162_729.82w │ 162_729.82w │    100.00% │
+│ contract hash: to_string             │     15.26us │     509.89w │      21.03w │      21.03w │      0.08% │
+│ contract hash: of_string             │      8.02us │     655.21w │      21.09w │      21.09w │      0.04% │
+│ address: to_string                   │     79.12us │   2_568.63w │     105.20w │     105.20w │      0.43% │
+│ address: of_string                   │    100.16us │   8_799.69w │     232.21w │     232.21w │      0.55% │
+│ ticket: to_string                    │     55.80us │   2_886.26w │   1_280.10w │      27.98w │      0.31% │
+│ address: of_string                   │    142.79us │   8_804.22w │     232.34w │     232.34w │      0.78% │
+│ operation hash: to_string, of_string │     36.23us │   1_720.13w │      42.23w │      42.23w │      0.20% │
+└──────────────────────────────────────┴─────────────┴─────────────┴─────────────┴─────────────┴────────────┘
 ```
