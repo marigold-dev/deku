@@ -1,0 +1,10 @@
+(executable
+ (name benchmarks_deku)
+ (libraries core core_bench core_unix.command_unix tezos_rpc)
+ (preprocess
+  (pps ppx_let_binding)))
+
+(rule
+ (alias bench_deku)
+ (action
+  (run %{exe:benchmarks_rpc.exe})))
