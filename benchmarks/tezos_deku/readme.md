@@ -19,8 +19,8 @@ GNOME version: 3.36.8
 
 Where `subcommand` is:
 - `rpc`: for tezos rpc (`src/tezos_rpc`)
-- `ledger`: for ledger (`src/core_deku/ledger.ml`)
-- `validators`: for validators (`src/protocol/validators.ml`)
+- `ledger`: for ledger 
+- `validators`: for validators
 
 For example: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe ledger` will return the benchmark for ledger.
 
@@ -58,7 +58,8 @@ Estimated testing time 1m50s (11 benchmarks x 10s). Change using '-quota'.
 
 ## Validators
 
-Source `bench_validators.ml`
+Source `bench_validators.ml`. It is a benchmark of functions defined in `src/protocol/validators.ml`
+
 
 ```
 ~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe validators
@@ -78,3 +79,9 @@ Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
 │ hash                 │ 495_235.44ns │ 1_570.81w │   57.41w │   57.41w │    100.00% │
 └──────────────────────┴──────────────┴───────────┴──────────┴──────────┴────────────┘
 ```
+
+## Tezos RPC
+
+Source `bench_tezos_rpc.ml`. It is a benchmark of functions defined in `src/tezos_rpc/`
+
+TODO : run node
