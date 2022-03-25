@@ -1,5 +1,35 @@
 # Benchmark of Deku
 
+Computer configuation that run the benchmark:
+
+```
+Memory: 15.3 GiB
+Processor: Intel® Core™ i7-8665U CPU @ 1.90GHz × 8 
+OS Name: Ubuntu 20.04.4 LTS
+OS Type: 64-bit
+GNOME version: 3.36.8
+```
+
+## Run
+- dune:
+
+    - Build: `dune build @benchmarks/bench_deku`
+
+    - Execute: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand`
+
+Where `subcommand` is:
+- `rpc`: for tezos rpc
+- `ledger`: for ledger
+- 
+
+For example: `dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe ledger` will return the benchmark for ledger.
+
+- esy:
+
+    - Build: `esy b dune build`
+
+    - Execute: `esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand`
+
 ## Ledger
 
 Source `bench_ledger.ml`. It is a benchmark of functions defined in `src/core_deku/ledger.ml`.

@@ -4,8 +4,7 @@ open Helpers
 open Tezos
 
 (* This file only contains manual tests, to run them you need to have a
-   Tezos node running and uncomment the tests on the tests list below.
-   You may also want to change the node_uri and/or the secret key below. *)
+   Tezos node running. You may also want to change the node_uri and/or the secret key below. *)
 
 let node_uri = Uri.of_string "http://localhost:8732"
 
