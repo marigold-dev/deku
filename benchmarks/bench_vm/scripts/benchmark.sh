@@ -10,9 +10,7 @@ esy b dune build @benchmarks/bench &> /dev/null
 
 touch ./benchmarks/bench_vm/results/bench.txt
 
-# "gas" "prim" "recursive"
-
-for benchmark in "trivial"
+for benchmark in "expr" "gas" "prim" "recursive"
   do
     ./_esy/default/build/default/benchmarks/bench_vm/benchmarks.exe $benchmark -sexp | \
     ./benchmarks/bench_vm/scripts/clean.sh | \
