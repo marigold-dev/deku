@@ -39,20 +39,24 @@ module Ast : sig
         first : expr;
         second : expr;
       }
+  [@@deriving yojson, show]
 
   type value =
     | Int64 of int64
     | Pair  of value * value
+  [@@deriving yojson, show]
 
   type script = {
     param : ident;
     code : expr;
   }
+  [@@deriving yojson, show]
 end
 module Gas : sig
   type t
 
   val make : initial_gas:int -> t
+  val to_int : t -> int
   val is_empty : t -> bool
 
   val burn_constant : t -> unit
@@ -67,10 +71,11 @@ module Runtime_limits_error : sig
 end
 
 module Ir : sig
-  type script
-  type value
+  type script [@@deriving yojson, eq]
+  type value [@@deriving yojson, eq]
 
   val pp_value : Format.formatter -> value -> unit
+  val pp_script : Format.formatter -> script -> unit
 end
 
 module Compiler : sig

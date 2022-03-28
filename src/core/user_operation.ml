@@ -1,12 +1,14 @@
 open Helpers
 open Crypto
+
 type initial_operation =
-  | Transaction    of {
+  | Transaction          of {
       destination : Key_hash.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-  | Tezos_withdraw of {
+  | Contract_origination of Contract_vm.Origination_payload.t
+  | Tezos_withdraw       of {
       owner : Tezos.Address.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
@@ -14,7 +16,7 @@ type initial_operation =
 [@@deriving yojson]
 type t = {
   hash : BLAKE2B.t;
-  sender : Address.t;
+  sender : Key_hash.t;
   initial_operation : initial_operation;
 }
 [@@deriving yojson]
@@ -22,13 +24,14 @@ let equal a b = BLAKE2B.equal a.hash b.hash
 let compare a b = BLAKE2B.compare a.hash b.hash
 let hash, verify =
   let to_yojson sender initial_operation =
-    [%to_yojson: Address.t * initial_operation] (sender, initial_operation)
+    [%to_yojson: Key_hash.t * initial_operation] (sender, initial_operation)
     |> Yojson.Safe.to_string in
   let hash sender initial_operation =
     to_yojson sender initial_operation |> BLAKE2B.hash in
   let verify hash sender initial_operation =
     to_yojson sender initial_operation |> BLAKE2B.verify ~hash in
   (hash, verify)
+
 let make ~sender initial_operation =
   let hash = hash sender initial_operation in
   { hash; sender; initial_operation }

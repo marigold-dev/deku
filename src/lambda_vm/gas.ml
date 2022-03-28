@@ -13,6 +13,8 @@ let log2_burn ~cardinality =
 
 let make ~initial_gas = ref initial_gas
 
+let to_int t = !t
+
 let is_empty t = !t <= 0
 
 let burn t amount =

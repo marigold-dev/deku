@@ -40,20 +40,17 @@ module Core_user = struct
   let sign ~secret ~nonce ~block_height ~data =
     let open User_operation in
     let key = Key.of_secret secret in
-    match Address.to_key_hash data.sender with
-    | Some sender when Key_hash.matches_key key sender ->
+    let sender = data.sender in
+    if Key_hash.matches_key key sender then
       let hash = hash ~nonce ~block_height ~data in
       let signature = Signature.sign secret hash in
       { hash; key; signature; nonce; block_height; data }
-    | _ ->
+    else
       failwith
         "Operations to be signed should come from a key_hash that matches the \
          secret"
   let verify ~hash ~key ~signature ~nonce ~block_height ~data =
-    let%ok sender =
-      match Address.to_key_hash data.User_operation.sender with
-      | Some sender -> Ok sender
-      | _ -> Error "Sender should be a key_hash" in
+    let sender = data.User_operation.sender in
     let%assert () =
       ( "Invalid core_user operation hash",
         verify ~hash ~nonce ~block_height ~data ) in
