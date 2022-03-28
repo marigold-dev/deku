@@ -37,8 +37,8 @@ let () =
       let setup_two () =
         let t1 = make_ticket () in
         let t2 = make_ticket () in
-        let a = make_address () in
-        let b = make_address () in
+        let a = make_address () |> Address.of_key_hash in
+        let b = make_address () |> Address.of_key_hash in
         let t =
           empty
           |> deposit a (Amount.of_int 100) t1
@@ -65,13 +65,13 @@ let () =
           expect_balance a t2 300 t;
           expect_balance b t1 200 t;
           expect_balance b t2 400 t;
-          expect_balance (make_address ()) t1 0 t;
-          expect_balance (make_address ()) t2 0 t;
+          expect_balance (make_address () |> Address.of_key_hash) t1 0 t;
+          expect_balance (make_address () |> Address.of_key_hash) t2 0 t;
           expect_balance a (make_ticket ()) 0 t;
           expect_balance b (make_ticket ()) 0 t);
       test "transfer" (fun expect expect_balance ->
           let t, (t1, t2), (a, b) = setup_two () in
-          let c = make_address () in
+          let c = make_address () |> Address.of_key_hash in
           let t = transfer ~sender:a ~destination:b (Amount.of_int 1) t1 t in
           (expect.result t).toBeOk ();
           let t = Result.get_ok t in
@@ -111,7 +111,7 @@ let () =
           (let t = transfer ~sender:b ~destination:c (Amount.of_int 202) t1 t in
            (expect.result t).toBeError ();
            expect.equal (Result.get_error t) `Not_enough_funds);
-          (let d = make_address () in
+          (let d = make_address () |> Address.of_key_hash in
            let t = transfer ~sender:d ~destination:c (Amount.of_int 1) t2 t in
            (expect.result t).toBeError ();
            expect.equal (Result.get_error t) `Not_enough_funds);
@@ -169,7 +169,7 @@ let () =
            (expect.result t).toBeError ());
           (let t = withdraw ~sender:b ~destination (Amount.of_int 203) t1 t in
            (expect.result t).toBeError ());
-          (let c = make_address () in
+          (let c = make_address () |> Address.of_key_hash in
            let t = withdraw ~sender:c ~destination (Amount.of_int 1) t1 t in
            (expect.result t).toBeError ());
           ());

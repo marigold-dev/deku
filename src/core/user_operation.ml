@@ -2,13 +2,14 @@ open Helpers
 open Crypto
 type initial_operation =
   | Transaction          of {
-      destination : Key_hash.t;
+      destination : Address.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
   | Contract_origination of {
       to_originate : Smart_contracts.Origination_payload.t;
       ticket : Ticket_id.t;
+      amount : Amount.t;
     }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;

@@ -2,7 +2,7 @@ open Helpers
 open Crypto
 module Address_and_ticket_map = struct
   type key = {
-    address : Key_hash.t;
+    address : Address.t;
     ticket : Ticket_id.t;
   }
   [@@deriving ord, yojson]

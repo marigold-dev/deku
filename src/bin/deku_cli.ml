@@ -83,6 +83,15 @@ let address_implicit =
     Format.fprintf fmt "%s" (wallet |> Key_hash.to_string) in
   let open Arg in
   conv (parser, printer)
+
+let address =
+  let parser string =
+    Address.of_string string
+    |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
+  let printer fmt wallet =
+    Format.fprintf fmt "%s" (wallet |> Address.to_string) in
+  let open Arg in
+  conv (parser, printer)
 let address_tezos_interop =
   let parser string =
     string
@@ -186,7 +195,7 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file ticket =
+    sender_wallet_file ticket amount =
   let open Networking in
   let module SM = Core.Smart_contracts in
   let%await validators_uris = validators_uris node_folder in
@@ -210,8 +219,8 @@ let originate_contract node_folder contract_json initial_storage
       ~storage:initial_storage
     |> Result.get_ok in
   let origination_op =
-    User_operation.Contract_origination { to_originate = origination; ticket }
-  in
+    User_operation.Contract_origination
+      { to_originate = origination; ticket; amount } in
   let originate_contract_op =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
       ~block_height:block_level
@@ -259,6 +268,11 @@ let originate_contract =
     let env = Arg.env_var "SENDER" ~doc in
     Arg.(required & pos 3 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
   in
+  let amount =
+    let doc = "The amount to be transferred." in
+    let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
+    let open Arg in
+    required & pos 5 (some amount) None & info [] ~env ~docv:"amount" ~doc in
   Term.(
     lwt_ret
       (const originate_contract
@@ -266,7 +280,8 @@ let originate_contract =
       $ contract_json
       $ initial_storage
       $ address_from
-      $ ticket))
+      $ ticket
+      $ amount))
 
 let folder_node =
   let docv = "folder_node" in
@@ -286,9 +301,8 @@ let create_transaction =
     let doc = "The receiving address." in
     let env = Arg.env_var "RECEIVER" ~doc in
     let open Arg in
-    required
-    & pos 2 (some address_implicit) None
-    & info [] ~env ~docv:"receiver" ~doc in
+    required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
+  in
   let amount =
     let doc = "The amount to be transferred." in
     let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
