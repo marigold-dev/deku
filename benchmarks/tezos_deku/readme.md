@@ -111,27 +111,55 @@ Estimated testing time 30s (3 benchmarks x 10s). Change using '-quota'.
 
 Source `bench_tezos_interop.ml`
 
-TODO
 
 ```
 ~/dekuꜩ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe interop
-Estimated testing time 2m20s (14 benchmarks x 10s). Change using '-quota'.
-┌──────────────────────────────────────┬─────────────┬─────────────┬─────────────┬─────────────┬────────────┐
-│ Name                                 │    Time/Run │     mWd/Run │    mjWd/Run │    Prom/Run │ Percentage │
-├──────────────────────────────────────┼─────────────┼─────────────┼─────────────┼─────────────┼────────────┤
-│ key: to_string                       │    113.68us │   2_651.17w │     196.32w │     196.32w │      0.77% │
-│ key: of_string                       │  1_038.91us │  32_527.27w │  18_406.83w │  18_406.83w │      7.07% │
-│ key: hash                            │    133.53us │     471.81w │     135.59w │     135.59w │      0.91% │
-│ secret: to_string                    │     40.23us │   2_426.10w │      91.19w │      91.19w │      0.27% │
-│ secret: of_string                    │    140.78us │   6_351.96w │     196.82w │     196.82w │      0.96% │
-│ verify signature                     │ 14_700.34us │ 249_405.36w │ 163_075.61w │ 163_075.61w │    100.00% │
-│ contract hash: to_string             │     16.23us │     509.83w │      21.02w │      21.02w │      0.11% │
-│ contract hash: of_string             │     15.30us │     655.10w │      21.08w │      21.08w │      0.10% │
-│ address: to_string                   │     97.03us │   2_571.16w │     105.31w │     105.31w │      0.66% │
-│ address: of_string                   │    109.48us │   8_794.09w │     232.07w │     232.07w │      0.74% │
-│ ticket: to_string                    │     59.72us │   2_885.19w │   1_279.64w │      28.00w │      0.41% │
-│ ticket: of_string                    │     38.14us │   4_180.01w │      85.67w │      85.67w │      0.26% │
-│ address: of_string                   │    170.38us │   8_792.72w │     232.03w │     232.03w │      1.16% │
-│ operation hash: to_string, of_string │     25.41us │   1_718.88w │      42.20w │      42.20w │      0.17% │
-└──────────────────────────────────────┴─────────────┴─────────────┴─────────────┴─────────────┴────────────┘
+Estimated testing time 7m10s (43 benchmarks x 10s). Change using '-quota'.
+┌──────────────────────────────────────┬─────────────────┬─────────────┬─────────────┬─────────────┬────────────┐
+│ Name                                 │        Time/Run │     mWd/Run │    mjWd/Run │    Prom/Run │ Percentage │
+├──────────────────────────────────────┼─────────────────┼─────────────┼─────────────┼─────────────┼────────────┤
+│ key: to_string                       │    149_074.63ns │   2_657.08w │     196.76w │     196.76w │      1.07% │
+│ key: of_string                       │    929_113.50ns │  32_551.12w │  18_420.48w │  18_420.48w │      6.70% │
+│ key: hash                            │     89_378.30ns │     463.82w │     133.29w │     133.29w │      0.64% │
+│ secret: to_string                    │     29_057.61ns │   2_427.75w │      91.25w │      91.25w │      0.21% │
+│ secret: of_string                    │     53_129.43ns │   6_357.94w │     197.00w │     197.00w │      0.38% │
+│ verify signature                     │ 13_877_639.87ns │ 249_299.26w │ 163_005.96w │ 163_005.96w │    100.00% │
+│ contract hash: to_string             │      6_840.48ns │     510.00w │      21.03w │      21.03w │      0.05% │
+│ contract hash: of_string             │      6_386.63ns │     655.02w │      21.08w │      21.08w │      0.05% │
+│ address: to_string                   │     35_188.41ns │   2_569.42w │     105.23w │     105.23w │      0.25% │
+│ address: of_string                   │     86_673.99ns │   8_798.55w │     232.18w │     232.18w │      0.62% │
+│ ticket: to_string                    │     27_761.34ns │   2_886.95w │   1_280.44w │      28.03w │      0.20% │
+│ ticket: of_string                    │     32_018.94ns │   4_179.84w │      85.66w │      85.66w │      0.23% │
+│ address: of_string                   │     79_700.51ns │   8_799.92w │     232.22w │     232.22w │      0.57% │
+│ operation hash: to_string, of_string │     17_075.38ns │   1_719.06w │      42.20w │      42.20w │      0.12% │
+│ forge transaction taquito            │    145_493.29ns │   3_970.93w │     161.77w │     161.77w │      1.05% │
+│ forge transaction bytes              │    194_147.37ns │   5_901.79w │     225.00w │     225.00w │      1.40% │
+│ pack: int 1                          │          5.79ns │       3.00w │             │             │            │
+│ pack: int -1                         │          5.40ns │       3.00w │             │             │            │
+│ pack: bytes 0x                       │         44.80ns │      10.00w │             │             │            │
+│ pack: bytes 050001                   │        121.05ns │      20.00w │             │             │            │
+│ pack: pair: (1, 0x)                  │         62.02ns │      24.00w │             │             │            │
+│ pack: (1, (0xAA, -1))                │        108.99ns │      48.00w │             │             │            │
+│ pack: list empty                     │          6.16ns │       3.00w │             │             │            │
+│ pack: list int 1                     │          9.22ns │       9.00w │             │             │            │
+│ pack: list pair                      │         82.13ns │      44.00w │             │             │            │
+│ pack: key                            │        166.16ns │      48.00w │             │             │            │
+│ pack: key_hash                       │        560.77ns │     100.02w │             │             │            │
+│ pack: address implicit               │        897.14ns │     134.00w │             │             │            │
+│ pack: address originated             │        298.10ns │      48.00w │             │             │            │
+│ pack: to_bytes int                   │        271.04ns │      75.00w │             │             │            │
+│ pack: to_bytes bytes                 │        399.51ns │      77.00w │             │             │            │
+│ pack: to_bytes list                  │        223.02ns │      79.00w │             │             │            │
+│ pack: to_bytes pair                  │        934.95ns │     162.98w │             │             │            │
+│ pack: to_bytes key                   │        508.12ns │     123.01w │             │             │            │
+│ pack: to_bytes key_hash              │        988.87ns │     173.00w │             │             │            │
+│ pack: to_bytes address implicit      │      1_328.53ns │     207.00w │             │             │            │
+│ pack: to_bytes address originated    │        524.70ns │     121.02w │             │             │            │
+│ consensus: address_exn               │      7_855.68ns │     672.97w │      21.07w │      21.07w │      0.06% │
+│ consensus: key_hash_exn              │      6_392.31ns │     666.89w │      21.03w │      21.03w │      0.05% │
+│ consensus: hash_validators           │     29_767.32ns │   3_077.47w │      84.51w │      84.51w │      0.21% │
+│ consensus: hash_block                │      7_088.17ns │     700.27w │       0.19w │       0.19w │      0.05% │
+│ consensus: hash_withdraw_handle      │     31_144.40ns │   3_888.99w │     105.60w │     105.60w │      0.22% │
+│ discovery                            │    123_859.03ns │   2_273.24w │      85.07w │      85.07w │      0.89% │
+└──────────────────────────────────────┴─────────────────┴─────────────┴─────────────┴─────────────┴────────────┘
 ```

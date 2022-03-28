@@ -76,12 +76,12 @@ let setup_four_deposits () =
 (* bench function [deposit] *)
 
 let bench_setup_one_deposit =
-  Bench.Test.create ~name:"one deposit: one ticket, one address" (fun () ->
+  Bench.Test.create ~name:"deposit: one ticket, one address" (fun () ->
       let _ = setup_one_deposit () in
       ())
 
 let bench_setup_four_deposits =
-  Bench.Test.create ~name:"four deposits: two tickets, two addresses" (fun () ->
+  Bench.Test.create ~name:"deposit: two tickets, two addresses" (fun () ->
       let _ = setup_four_deposits () in
       ())
 
@@ -173,13 +173,13 @@ let bench_test_get_balance_four_deposits =
 (* bench function [balance] without test *)
 
 let bench_balance_one_deposit =
-  Bench.Test.create ~name:"deposit: get balance" (fun () ->
+  Bench.Test.create ~name:"balance: 1 deposit" (fun () ->
       let ticket, ticket_1, address_1 = setup_one_deposit () in
       let _amount_1 = balance address_1 ticket_1 ticket in
       ())
 
 let bench_balance_four_deposits =
-  Bench.Test.create ~name:"four deposits: get balance" (fun () ->
+  Bench.Test.create ~name:"balance: four deposits" (fun () ->
       let ticket, (ticket_1, ticket_2), (address_1, address_2) =
         setup_four_deposits () in
       let _amount_1 = balance address_1 ticket_1 ticket in
