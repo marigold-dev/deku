@@ -28,6 +28,8 @@ module Prefix = struct
   (* 20 *)
   let contract_hash = "\002\090\121" (* KT1(36) *)
 
+  let deku_contract_hash = "\001\146\006" (* DK1(36) *)
+
   let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
 
   let secp256k1_public_key_hash = "\006\161\161" (* tz2(36) *)

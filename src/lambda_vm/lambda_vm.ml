@@ -15,12 +15,7 @@ let wrap compute =
   | exception Checks.Out_of_stack -> `Limits Runtime_limits_error.Out_of_stack
   | exception Gas.Out_of_gas -> `Limits Runtime_limits_error.Out_of_gas
 
-module Ir = struct
-  type script = Ir.script
-  type value = Ir.value
-
-  let pp_value = Ir.pp_value
-end
+module Ir = Ir
 
 module Compiler = struct
   include Compiler
