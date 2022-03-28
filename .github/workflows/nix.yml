@@ -1,9 +1,5 @@
 name: "Test in nix"
-on:
-  pull_request:
-  push:
-    branches:
-      - main
+on: [workflow_dispatch]
 jobs:
   linux:
     runs-on: ubuntu-latest
