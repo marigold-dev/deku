@@ -6,7 +6,7 @@ pkgs.ocamlPackages.buildDunePackage {
 
   src = lib.filterSource {
     src = ./..;
-    dirs = [ "src" "ppx_let_binding" "tests" ];
+    dirs = [ "src" "ppx_let_binding" "ppx_lambda_vm" "tests" ];
     files = [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };
 
@@ -22,7 +22,7 @@ pkgs.ocamlPackages.buildDunePackage {
   nativeBuildInputs = [
     nodejs
   ] ++ (with pkgs.ocamlPackages; [
-    cmdliner_1_0_4
+    cmdliner
     ppx_deriving
     ppx_deriving_yojson
     lwt
@@ -42,6 +42,7 @@ pkgs.ocamlPackages.buildDunePackage {
     domainslib
     utop
     reason
+    qcheck-alcotest
   ]);
 
   propagatedBuildInputs = [
