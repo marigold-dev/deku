@@ -9,6 +9,11 @@ let to_key_hash t =
   match t with
   | Implicit implicit -> Some implicit
   | _ -> None
+
+let is_implicit = function
+  | Implicit _ -> true
+  | Originated _ -> false
+
 let to_contract_hash t =
   match t with
   | Implicit _key_hash -> None

@@ -1,5 +1,5 @@
 (* TODO: should I care about overflowing this? *)
-type t = int
+type t = int [@@deriving yojson]
 
 let compare = Int.compare
 let initial = 0

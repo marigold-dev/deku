@@ -75,6 +75,18 @@ let deposit destination amount ticket t =
            (destination_balance + amount);
     withdrawal_handles = t.withdrawal_handles;
   }
+
+(* TODO: proper semantics ???  *)
+let burn t ~sender ~ticket ~amount =
+  let open Amount in
+  let sender_balance = balance sender ticket t in
+  {
+    t with
+    ledger =
+      t.ledger
+      |> Address_and_ticket_map.add sender ticket (sender_balance - amount);
+  }
+
 let withdraw ~sender ~destination amount ticket t =
   let open Amount in
   let owner = destination in

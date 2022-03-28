@@ -1,4 +1,4 @@
-type t
+type t [@@deriving yojson]
 
 val compare : t -> t -> int
 val initial : t

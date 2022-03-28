@@ -1,4 +1,4 @@
-type ident = string
+type ident = string [@@deriving yojson, show]
 
 type prim =
   | Neg
@@ -15,6 +15,7 @@ type prim =
   | Asr
   | Fst
   | Snd
+[@@deriving yojson, show]
 
 type expr =
   (* calculus *)
@@ -39,12 +40,15 @@ type expr =
       first : expr;
       second : expr;
     }
+[@@deriving yojson, show]
 
 type value =
   | Int64 of int64
   | Pair  of value * value
+[@@deriving yojson, show]
 
 type script = {
   param : ident;
   code : expr;
 }
+[@@deriving yojson, show]

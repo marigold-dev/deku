@@ -1,4 +1,4 @@
-type ident = Ident.t
+type ident = Ident.t [@@deriving yojson]
 
 let pp_ident = Ident.pp
 
@@ -17,7 +17,7 @@ type prim =
   | P_asr
   | P_fst
   | P_snd
-[@@deriving show]
+[@@deriving show, yojson]
 
 module Env = struct
   include Map_with_cardinality.Make (Ident)
@@ -48,7 +48,7 @@ type expr =
       first : expr;
       second : expr;
     }
-[@@deriving show]
+[@@deriving show, yojson]
 
 type value =
   | V_int64     of int64
@@ -65,9 +65,10 @@ type value =
       args : value list;
       prim : prim;
     }
-[@@deriving show]
+[@@deriving show, yojson]
 
 type script = {
   param : Ident.t;
   code : expr;
 }
+[@@deriving yojson]

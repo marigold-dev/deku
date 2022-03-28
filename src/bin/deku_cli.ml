@@ -47,6 +47,21 @@ let wallet =
     conv_printer non_dir_file in
   let open Arg in
   conv (parser, printer)
+
+let contract_code_path =
+  let parser file =
+    let non_dir_file = Arg.(conv_parser non_dir_file) in
+    match
+      (non_dir_file file, non_dir_file (make_filename_from_address file))
+    with
+    | Ok file, _
+    | _, Ok file ->
+      Ok file
+    | _ -> Error (`Msg "Expected path to contract JSON") in
+
+  let printer = Arg.(conv_printer non_dir_file) in
+  Arg.(conv (parser, printer))
+
 let edsk_secret_key =
   let parser key =
     match Crypto.Secret.of_string key with
@@ -162,6 +177,97 @@ let create_transaction node_folder sender_wallet_file received_address amount
       identity.uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
   Lwt.return (`Ok ())
+
+let info_originate_contract =
+  let doc =
+    "Originates a contract. Contract origination will be communicated to all \
+     known validators to be included in the next block." in
+  Term.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+    ~man
+
+let originate_contract node_folder contract_json initial_storage
+    sender_wallet_file ticket =
+  let open Networking in
+  let module SM = Core.Smart_contracts in
+  let%await validators_uris = validators_uris node_folder in
+  let validator_uri = List.hd validators_uris in
+  let%await block_level_response = request_block_level () validator_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+
+  let contract_program =
+    contract_json
+    |> Yojson.Safe.from_file
+    |> SM.Raw.Script.of_yojson
+    |> Result.get_ok in
+  let initial_storage =
+    initial_storage
+    |> Yojson.Safe.from_file
+    |> SM.Raw.Value.of_yojson
+    |> Result.get_ok in
+  let origination =
+    SM.Origination_payload.make_lambda ~code:contract_program
+      ~storage:initial_storage
+    |> Result.get_ok in
+  let origination_op =
+    User_operation.Contract_origination { to_originate = origination; ticket }
+  in
+  let originate_contract_op =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+      ~block_height:block_level
+      ~data:
+        (User_operation.make
+           ~sender:(Address.of_key_hash wallet.address)
+           origination_op) in
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Networking.request_user_operation_gossip
+      {
+        Networking.User_operation_gossip.user_operation = originate_contract_op;
+      }
+      identity.uri in
+  Lwt.return (`Ok ())
+
+let originate_contract =
+  let folder_node =
+    let docv = "folder_node" in
+    let doc = "The folder where the node lives." in
+    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv) in
+  let contract_json =
+    let doc =
+      "The path to the JSON output of compiling the LIGO contract to Lambda."
+    in
+    let open Arg in
+    required
+    & pos 1 (some contract_code_path) None
+    & info [] ~docv:"contract" ~doc in
+
+  let ticket =
+    let doc = "The ticket to be trasnsacted." in
+    let open Arg in
+    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+  let initial_storage =
+    let doc = "The string containing initial storage for Lambdavm" in
+    let open Arg in
+    required & pos 2 (some string) None & info [] ~docv:"initial_storage" ~doc
+  in
+  let address_from =
+    let doc =
+      "The sending address, or a path to a wallet. If a bare sending address \
+       is provided, the corresponding wallet is assumed to be in the working \
+       directory." in
+    let env = Arg.env_var "SENDER" ~doc in
+    Arg.(required & pos 3 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
+  in
+  Term.(
+    lwt_ret
+      (const originate_contract
+      $ folder_node
+      $ contract_json
+      $ initial_storage
+      $ address_from
+      $ ticket))
+
 let folder_node =
   let docv = "folder_node" in
   let doc = "The folder where the node lives." in
@@ -560,6 +666,7 @@ let () =
        [
          (create_wallet, info_create_wallet);
          (create_transaction, info_create_transaction);
+         (originate_contract, info_originate_contract);
          (withdraw, info_withdraw);
          (withdraw_proof, info_withdraw_proof);
          (sign_block_term, info_sign_block);

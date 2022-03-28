@@ -1,11 +1,15 @@
 open Crypto
 type initial_operation =
-  | Transaction    of {
+  | Transaction          of {
       destination : Key_hash.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-  | Tezos_withdraw of {
+  | Contract_origination of {
+      to_originate : Smart_contracts.Origination_payload.t;
+      ticket : Ticket_id.t;
+    }
+  | Tezos_withdraw       of {
       owner : Tezos.Address.t;
       amount : Amount.t;
       ticket : Ticket_id.t;

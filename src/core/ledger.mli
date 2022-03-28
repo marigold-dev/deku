@@ -20,6 +20,7 @@ val transfer :
   t ->
   (t, [> `Not_enough_funds]) result
 val deposit : Key_hash.t -> Amount.t -> Ticket_id.t -> t -> t
+val burn : t -> sender:Key_hash.t -> ticket:Ticket_id.t -> amount:Amount.t -> t
 val withdraw :
   sender:Key_hash.t ->
   destination:Tezos.Address.t ->
