@@ -109,6 +109,20 @@ module Consensus_operation_gossip = struct
   type response = unit [@@deriving yojson]
   let path = "/consensus-operation-gossip"
 end
+
+module Consensus_operation = struct
+  type request = {
+    operation : Tendermint_internals.sidechain_consensus_op;
+    sender : Crypto.Key_hash.t;
+    hash : BLAKE2B.t;
+    block_signature : Signature.t;
+    operation_signature : Signature.t;
+  }
+  [@@deriving yojson]
+  type response = unit [@@deriving yojson]
+  let path = "/consensus"
+end [@deriving yojson]
+
 module Withdraw_proof = struct
   type request = { operation_hash : BLAKE2B.t } [@@deriving yojson]
   type response =
@@ -164,5 +178,7 @@ let broadcast_user_operation_gossip_to_list =
   broadcast_to_list (module User_operation_gossip)
 let request_user_operation_gossip = request (module User_operation_gossip)
 let request_consensus_operation = request (module Consensus_operation_gossip)
+let broadcast_consensus_op =
+  broadcast_to_validators (module Consensus_operation)
 let request_trusted_validator_membership =
   request (module Trusted_validators_membership_change)

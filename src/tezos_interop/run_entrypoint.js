@@ -55,6 +55,7 @@ const error = (error) =>
     },
   });
 
+  console.error(args);
   const contract = await Tezos.contract.at(destination);
   const operation = await contract.methods[entrypoint](...args).send();
   await operation.confirmation(confirmation);

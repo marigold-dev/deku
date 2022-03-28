@@ -12,6 +12,7 @@ type root_hash_storage = {
   (* consensus proof *)
   current_block_hash: blake2b;
   current_block_height: int;
+  current_block_round: int;
   current_state_hash: blake2b;
   current_handles_hash: blake2b;
   current_validators: validators;
@@ -23,6 +24,7 @@ type root_hash_action = {
   block_height: int;
   block_payload_hash: blake2b;
 
+  block_round: int;
   state_hash: blake2b;
   handles_hash: blake2b;
   (* TODO: performance, can this blown up? *)
@@ -37,6 +39,7 @@ type root_hash_action = {
 type block_hash_structure = {
   block_height: int;
   block_payload_hash: blake2b;
+  block_round: int;
   state_hash: blake2b;
   handles_hash: blake2b;
   validators_hash: blake2b;
@@ -57,6 +60,7 @@ let root_hash_check_block_height
 let root_hash_block_hash (root_hash_update: root_hash_action) =
   let block_hash_structure = {
     block_height = root_hash_update.block_height;
+    block_round = root_hash_update.block_round;
     block_payload_hash = root_hash_update.block_payload_hash;
     state_hash = root_hash_update.state_hash;
     handles_hash = root_hash_update.handles_hash;
@@ -136,6 +140,7 @@ let root_hash_main
   (storage: root_hash_storage) =
     let block_hash = root_hash_block_hash root_hash_update in
     let block_height = root_hash_update.block_height in
+    let block_round = root_hash_update.block_round in
     let state_hash = root_hash_update.state_hash in
     let handles_hash = root_hash_update.handles_hash in
     let validators = root_hash_update.validators in
@@ -148,6 +153,7 @@ let root_hash_main
     {
       current_block_hash = block_hash;
       current_block_height = block_height;
+      current_block_round = block_round;
       current_state_hash = state_hash;
       current_handles_hash = handles_hash;
       current_validators = validators;
@@ -236,11 +242,11 @@ let vault_check_handle_proof
     let rec verify
       (bit, proof, parent: int * vault_handle_proof * blake2b): unit =
         match proof with
-        | [] -> 
+        | [] ->
           let calculated_hash = Crypto.blake2b (Bytes.pack handle) in
           assert_msg ("invalid handle data", parent = calculated_hash)
         | (left, right) :: tl ->
-          let () = 
+          let () =
             let calculated_hash = Crypto.blake2b (Bytes.concat left right) in
             assert_msg ("invalid proof hash", parent = calculated_hash) in
           verify (bit - 1, tl, (if bit_is_set bit then right else left)) in
@@ -276,7 +282,7 @@ let vault_withdraw (withdraw: vault_withdraw) (storage: vault_storage) =
 
   let (fragment, vault) =
     let (old_ticket, vault) =
-      match 
+      match
         Big_map.get_and_update
           (handle.ticketer, handle.data)
           (None: bytes ticket option)

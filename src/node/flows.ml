@@ -33,12 +33,14 @@ let string_of_error = function
   | `Pending_blocks -> "Pending_blocks"
   | `Unknown_uri -> "Unknown_uri"
   | `Not_a_user_opertaion -> "Not_a_user_opertaion"
-  | `Not_consensus_operation -> "Not_consensus_operation"
+  | `Not_consensus_operation msg ->
+    Format.sprintf "Not_consensus_operation: %s" msg
   | `Invalid_signature -> "Invalid_signature"
   | `Invalid_snapshot_height -> "Invalid_snapshot_height"
   | `Not_all_blocks_are_signed -> "Not_all_blocks_are_signed"
   | `State_root_not_the_expected -> "State_root_not_the_expected"
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
+  | `Signed_by_unauthorized_validator -> "Signed_by_unauthorized_validator"
 
 let print_error err =
   Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
@@ -56,8 +58,13 @@ type ignore =
   | `Pending_blocks
   | `Added_block_has_lower_block_height ]
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
+
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
+
+let get_consensus = (ref (fun _ -> assert false) : (unit -> Tendermint.t) ref)
+let set_consensus = (ref (fun _ -> assert false) : (Tendermint.t -> unit) ref)
+
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -102,19 +109,24 @@ let rec request_block_by_hash tries ~hash =
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_block_by_hash (tries + 1) ~hash)
+
 let request_block ~hash =
-  Lwt.async (fun () ->
-      let%await block = request_block_by_hash 0 ~hash in
-      let state = !get_state () in
-      match
-        !received_block' state
-          (fun state ->
-            !set_state state;
-            state)
-          block
-      with
-      | Ok () -> await ()
-      | Error _err -> await ())
+  (* Lwt.async (fun () -> *)
+  let%await block = request_block_by_hash 0 ~hash in
+  let state = !get_state () in
+  match
+    !received_block' state
+      (fun state ->
+        !set_state state;
+        state)
+      block
+  with
+  | Ok () -> await ()
+  | Error _err ->
+    Printf.eprintf "Error while requesting block!";
+    await ()
+(* ) *)
+
 let rec request_protocol_snapshot tries =
   if tries > 20 then raise Not_found;
   Lwt.catch
@@ -141,22 +153,31 @@ let load_snapshot snapshot_data =
       ~last_block_signatures:snapshot_data.last_block_signatures (!get_state ())
   in
   Ok (!set_state state)
+
 let request_protocol_snapshot () =
-  Lwt.async (fun () ->
-      let%await snapshot = request_protocol_snapshot 0 in
-      (match load_snapshot snapshot with
-      | Ok _ -> ()
-      | Error err -> print_error err);
-      await ())
+  (* Lwt.async (fun () -> *)
+  let%await snapshot = request_protocol_snapshot 0 in
+  (match load_snapshot snapshot with
+  | Ok _ -> ()
+  | Error err -> print_error err);
+  await ()
+
 let request_previous_blocks state block =
-  if
-    block_matches_current_state_root_hash state block
-    || block_matches_next_state_root_hash state block
-  then
-    request_block ~hash:block.Block.previous_hash
-  else if not !pending then (
-    pending := true;
-    request_protocol_snapshot ())
+  let%await () =
+    if
+      block_matches_current_state_root_hash state block
+      || block_matches_next_state_root_hash state block
+    then
+      request_block ~hash:block.Block.previous_hash
+    else (
+      (* if not !pending then *)
+      pending := true;
+      (* let%await () = *)
+      request_protocol_snapshot ()
+      (* in
+         request_block ~hash:block.Block.previous_hash *)) in
+  await @@ !get_state ()
+
 let try_to_produce_block state update_state =
   let%assert () =
     ( `Not_current_block_producer,
@@ -175,11 +196,11 @@ let try_to_sign_block state update_state block =
     state
 let commit_state_hash state =
   Tezos_interop.Consensus.commit_state_hash ~context:state.Node.interop_context
-let try_to_commit_state_hash ~prev_validators state block signatures =
+let try_to_commit_state_hash ~prev_validators state block round signatures =
   let open Node in
   let signatures_map =
     signatures
-    |> Signatures.to_list
+    (* FIXME? |> Signatures.to_list *)
     |> List.map (fun signature ->
            let address = Signature.address signature in
            let key = Signature.public_key signature in
@@ -203,9 +224,10 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
         | true -> Lwt.return_unit
         | false -> Lwt_unix.sleep 120.0 in
       commit_state_hash state ~block_height:block.block_height
-        ~block_payload_hash:block.payload_hash
+        ~block_payload_hash:block.payload_hash ~block_round:round
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~state_hash:block.state_root_hash ~validators ~signatures)
+
 let rec try_to_apply_block state update_state block =
   let%assert () =
     ( `Block_not_signed_enough_to_apply,
@@ -229,7 +251,8 @@ let rec try_to_apply_block state update_state block =
     match Block_pool.find_signatures ~hash:block.hash state.block_pool with
     | Some signatures when Signatures.is_self_signed signatures ->
       try_to_commit_state_hash ~prev_validators:prev_protocol.validators state
-        block signatures
+        block block.Block.consensus_round
+        (Signatures.to_list signatures)
     | _ -> ());
   match
     Block_pool.find_next_block_to_apply ~hash:block.Block.hash state.block_pool
@@ -237,7 +260,8 @@ let rec try_to_apply_block state update_state block =
   | Some block ->
     let state = try_to_sign_block state update_state block in
     try_to_apply_block state update_state block
-  | None -> try_to_produce_block state update_state
+  | None -> Ok ()
+(* try_to_produce_block state update_state *)
 
 and block_added_to_the_pool state update_state block =
   let state =
@@ -252,7 +276,7 @@ and block_added_to_the_pool state update_state block =
     | Some _signatures -> state
     | None -> state in
   if is_next state block then
-    let state = try_to_sign_block state update_state block in
+    (* let state = try_to_sign_block state update_state block in *)
     try_to_apply_block state update_state block
   else
     let%assert () =
@@ -264,7 +288,7 @@ and block_added_to_the_pool state update_state block =
     match Block_pool.find_block ~hash:block.previous_hash state.block_pool with
     | Some block -> block_added_to_the_pool state update_state block
     | None ->
-      request_previous_blocks state block;
+      ignore (request_previous_blocks state block);
       Ok ()
 let () = block_added_to_the_pool' := block_added_to_the_pool
 let received_block state update_state block =
@@ -290,7 +314,8 @@ let received_signature state update_state ~hash ~signature =
   match Block_pool.find_block ~hash state.Node.block_pool with
   | Some block -> block_added_to_the_pool state update_state block
   | None ->
-    request_block ~hash;
+    let _ = request_block ~hash in
+    (* FIXME: this is a hack. *)
     Ok ()
 let parse_internal_tezos_transaction transaction =
   match transaction with
@@ -372,6 +397,191 @@ let received_consensus_operation state update_state consensus_operation
         pending_operations = pending_operation :: state.pending_operations;
       }) in
   Ok ()
+
+let is_authorized_validator state ~signature =
+  let validators = state.Node.protocol.validators in
+  let public_key = Signature.public_key signature in
+  let key_hash = Key_hash.of_key public_key in
+  Validators.is_validator validators key_hash
+
+let already_committed state block =
+  state.Node.protocol.Protocol.last_block_hash = block.Block.hash
+
+(** Apply a block to Deku and commit the *previous previous block* to Tezos; does not check that the block should indeed be committed. *)
+let commit state update_state ~block ~hash ~height ~round:_ =
+  let prev_protocol = state.Node.protocol in
+  let is_new_state_root_hash =
+    not
+      (BLAKE2B.equal state.Node.protocol.state_root_hash
+         block.Block.state_root_hash) in
+
+  (* For security reason, we commit to tezos a block later *)
+  (* FIXME: this has to change when validator governance is live. *)
+  let prev_height = Int64.sub height 1L in
+  let () =
+    match Tendermint.get_block_opt (!get_consensus ()) prev_height with
+    | None -> ()
+    | Some (b, round) ->
+      let previous_hash = b.Block.hash in
+      let signatures =
+        Block_pool.find_signatures ~hash:previous_hash state.Node.block_pool
+      in
+      let signatures =
+        match signatures with
+        | None -> []
+        | Some sigs -> Signatures.to_list sigs in
+      try_to_commit_state_hash ~prev_validators:prev_protocol.validators state b
+        (* FIXME? previous_hash *)
+        round signatures in
+  let%ok state = apply_block state update_state block in
+  (* Save the state *)
+  write_state_to_file (state.Node.data_folder ^ "/state.bin") state.protocol;
+  let state = clean state update_state block in
+  if is_new_state_root_hash then
+    write_state_to_file
+      (state.data_folder ^ "/prev_epoch_state.bin")
+      prev_protocol;
+  let signatures =
+    match Block_pool.find_signatures ~hash state.Node.block_pool with
+    | Some signatures -> signatures
+    (* We already checked that the block is correct and signed (PRECOMMITted) *)
+    | None -> assert false in
+  (* let signatures = Staging_area.get state.Node.staging_area hash height round in *)
+  let snapshots =
+    Snapshots.append_block ~pool:state.Node.block_pool (block, signatures)
+      state.snapshots in
+  ignore (update_state { state with snapshots });
+  Result.ok ()
+
+(** Manages the block pool and signatures when we received a Precommit op (applies changes post-consensus) *)
+let received_precommit_block state update_state ~block ~sender:_ ~hash
+    ~hash_signature =
+  let module CI = Tendermint_internals in
+  let height, _ = (block.Block.block_height, block.Block.consensus_round) in
+  (* We check for the signature of the *hash* of the received hash, as this
+     is also what Tezos does. *)
+  let%assert () =
+    ( `Already_known_signature,
+      not (is_known_signature state ~hash ~signature:hash_signature) ) in
+
+  (* TODO: this saves signatures for blocks/hashes that are not valid for Tendermint.
+     - DDOS risk
+     - use case?  (if none: just save signatures when Tendermint agrees/is undecided) (possible use case: slashing?)*)
+  let state =
+    append_signature state update_state ~hash ~signature:hash_signature in
+  match Tendermint.get_block_opt (!get_consensus ()) height with
+  | Some (block, _) when not (block.Block.hash = hash) ->
+    Result.Error
+      (`Invalid_block
+        (Printf.sprintf
+           "Block hash does not match decision made by consensus, %s"
+           (Crypto.BLAKE2B.to_string block.Block.hash)))
+  (* TODO: move | Some (block, _round) when not (check_state_root_hash block) ->
+     Result.error `Invalid_state_root_hash *)
+  | Some (block, _) ->
+    (* Consensus has been reached normally for the received block *)
+    (* The block has been decided on, is valid, and we have enough signatures to commit *)
+    (* let state =
+       append_signature state update_state ~hash ~signature:hash_signature in *)
+    if not (already_committed state block) then
+      let state = Building_blocks.add_block_to_pool state update_state block in
+      (* commit ~block ~hash ~height ~round state update_state *)
+      block_added_to_the_pool state update_state block
+    else
+      Ok ()
+  | None ->
+    (* Consensus has not been reached yet *)
+    Ok ()
+
+let received_consensus_step state update_state operation sender hash
+    block_signature message_signature =
+  (* DEBUG: This can be quite useful:
+     Tendermint_internals.debug state
+       (Printf.sprintf "received consensus operation %s from %s"
+          (Tendermint_internals.string_of_op operation)
+          (Tendermint_internals.short sender)); *)
+  let open Tendermint in
+  let open Tendermint_internals in
+  (* TODO: put everything in Tendermint *)
+  let _check_state_root_hash block =
+    block_matches_current_state_root_hash state block
+    || block_matches_next_state_root_hash state block in
+
+  let*? () =
+    let hash = hash_of_consensus_op operation sender in
+    ensure
+      ( `Invalid_signature_for_this_hash,
+        Signature.verify ~signature:message_signature hash ) in
+
+  let*? () =
+    ensure
+      ( `Signed_by_unauthorized_validator,
+        is_authorized_validator state ~signature:message_signature ) in
+
+  (* FIXME: ConsensusStep2 this is a poor man's fast sync protocol. This should be implemented somewhere else, as
+     it creates a vulnerability and Tendermint can get stuck as it is implemented now. *)
+  let* state, _consensus =
+    let height = state.Node.protocol.Protocol.block_height in
+    match operation with
+    | ProposalOP (height', _, Block b, _) when height' > Int64.add height 1L ->
+      let* state = request_previous_blocks state b in
+      (* Start Tendermint process at the right height *)
+      let current_height = height' in
+      let consensus' = Tendermint.make state current_height in
+      !set_consensus consensus';
+      assert (Int64.add state.Node.protocol.Protocol.block_height 1L >= height');
+      Lwt.return (state, consensus')
+    | _ -> Lwt.return (state, !get_consensus ()) in
+
+  let*? () =
+    let op_height = Tendermint_internals.height operation in
+    let own_height = state.Node.protocol.Protocol.block_height in
+    ensure
+      ( `Not_consensus_operation
+          (Printf.sprintf "Wrong height for operation: %Ld, expected height %Ld"
+             op_height own_height),
+        Int64.abs (Int64.sub op_height own_height) <= 1L ) in
+
+  (* FIXME: @arthur, this is not working at the moment
+     let*? () =
+       ensure (`State_root_not_the_expected,
+       value_of_op operation |> on_block ~nil_default:true check_state_root_hash)
+     in
+  *)
+
+  (* TODO: ConsensusStep2 if received a block, check state root hash *)
+  match is_valid_consensus_op state operation with
+  | Ok () ->
+    (* TODO: ConsensusStep2, check if already seen this message? AKA enforce unique in input_log? *)
+    (* TODO: ConsensusStep2: add and check sender signature? *)
+    let consensus = !get_consensus () in
+    let%await consensus = add_consensus_op consensus sender operation in
+
+    (* Execute the consensus step and updates the consensus state.
+       In the case this step is a PrecommitOP, we may need to commit the whole block
+       and then reexecute the consensus to decide if we propose a new block! *)
+    let consensus = exec_consensus consensus in
+    !set_consensus consensus;
+    Lwt.return
+      begin
+        match operation with
+        | PrecommitOP (_, _, Block b) ->
+          (* Implicitly updates the node state *)
+          let%ok () =
+            received_precommit_block state update_state ~block:b ~sender ~hash
+              ~hash_signature:block_signature in
+          (* Not very elegant. We'll probably hide this global state in the future. *)
+          let state = !get_state () in
+          let consensus = { consensus with Tendermint.node_state = state } in
+
+          (* Rexec the consensus in case we need to send a proposal *)
+          let consensus = exec_consensus consensus in
+          !set_consensus consensus;
+          Ok ()
+        | _ -> Ok ()
+      end
+  | Error msg -> Lwt.return (Error (`Not_consensus_operation msg))
+
 let find_block_by_hash state hash =
   Block_pool.find_block ~hash state.Node.block_pool
 let find_block_level state = state.State.protocol.block_height

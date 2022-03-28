@@ -387,6 +387,50 @@ let ensure_folder folder =
       raise (Invalid_argument (folder ^ " is not a folder"))
   else
     Lwt_unix.mkdir folder 0o700
+
+let info_start_consensus =
+  let doc = "Runs a Tendermint consensus instance to decide on a block" in
+  Term.info "start-consensus" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+    ~man
+
+(* To test Tendermint consensus *)
+let start_consensus node_folder =
+  let%await identity = read_identity ~node_folder in
+  let%await state = Node_state.get_initial_state ~folder:node_folder in
+  let address = identity.t in
+  let block =
+    Block.produce ~state:state.protocol ~next_state_root_hash:None
+      ~author:address ~operations:[] in
+  let%await validators_uris = validators_uris node_folder in
+  let height = Int64.add state.protocol.Protocol.block_height 1L in
+  let operation = Node.Tendermint.make_proposal height 0 block in
+  let%await () =
+    let open Networking in
+    let sender = Key_hash.of_key identity.key in
+    let s1 = Node.Tendermint_internals.string_of_op operation in
+    let s2 = Crypto.Key_hash.to_string address in
+    let hash = Crypto.BLAKE2B.hash (s1 ^ s2) in
+    let operation_signature =
+      Protocol.Signature.sign ~key:state.identity.secret hash in
+    let block_hash = Tendermint_internals.hash_of_consensus_value operation in
+    let block_signature =
+      Protocol.Signature.sign ~key:state.identity.secret block_hash in
+    broadcast_to_list
+      (module Networking.Consensus_operation)
+      validators_uris
+      { operation; sender; hash; block_signature; operation_signature } in
+  Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+  Lwt.return (`Ok ())
+
+let start_consensus =
+  let folder_node =
+    let docv = "folder_node" in
+    let doc = "The folder where the node lives." in
+    let open Arg in
+    required & pos 0 (some string) None & info [] ~doc ~docv in
+  let open Term in
+  lwt_ret (const start_consensus $ folder_node)
+
 let setup_identity node_folder uri =
   let%await () = ensure_folder node_folder in
   let identity =
@@ -565,6 +609,7 @@ let () =
          (sign_block_term, info_sign_block);
          (produce_block, info_produce_block);
          (setup_identity, info_setup_identity);
+         (start_consensus, info_start_consensus);
          (setup_tezos, info_setup_tezos);
          (add_trusted_validator, info_add_trusted_validator);
          (remove_trusted_validator, info_remove_trusted_validator);

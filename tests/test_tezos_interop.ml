@@ -567,7 +567,7 @@ let () =
             "6d6ecacbc858e3a89d87f0d9bd76b0c11b07aa95191129104395d17c6c96d36b");
       test "hash_block" (fun { expect; _ } ->
           let hash =
-            hash_block ~block_height:121L
+            hash_block ~block_height:121L ~consensus_round:0
               ~block_payload_hash:
                 (hash_exn
                    "2d92960a592c56de3046e200969c230a2eda71fc4b775e0cc09a189e5ddc5dbd")
@@ -583,7 +583,7 @@ let () =
           in
           let hash = BLAKE2B.to_string hash in
           (expect.string hash).toEqual
-            "7cb600c19817b899d4c28c521dd9ebf95f688e1444afe7d0e7740bebe848b030");
+            "305db8c9f9100ade89982d6d07e51991679b7128b43f20fa2bcb733743fa6098");
       test "hash_withdraw_handle" (fun { expect; _ } ->
           let hash =
             hash_withdraw_handle ~id:(Z.of_int 0)
