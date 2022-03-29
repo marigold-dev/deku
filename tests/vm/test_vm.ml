@@ -9,4 +9,5 @@ let () =
       Test_simple_expr.test;
       Test_gas.test;
       Test_io.test;
+      Test_voting_contract.test;
     ]
