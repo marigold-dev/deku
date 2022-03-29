@@ -42,7 +42,6 @@ pkgs.ocamlPackages.buildDunePackage {
     domainslib
     utop
     reason
-    qcheck-alcotest
   ]);
 
   propagatedBuildInputs = [
@@ -50,6 +49,9 @@ pkgs.ocamlPackages.buildDunePackage {
   ];
 
   checkInputs = with pkgs.ocamlPackages; [
+    alcotest
+    qcheck
+    qcheck-alcotest
     rely
   ];
 }
