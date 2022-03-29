@@ -8,17 +8,18 @@ data_directory="data"
 [ "$USE_NIX" ] || export PATH=$(esy x sh -c 'echo $PATH')
 
 tezos-client() {
-  docker exec -it deku_flextesa tezos-client "$@"
+  # docker exec -it deku_flextesa tezos-client "$@"
+  ./hangzhounet.sh client "$@"
 }
 
 ligo() {
   docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
 }
 
-RPC_NODE=http://localhost:20000
+RPC_NODE=http://node:8732
 
 # This secret key never changes.
-SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
+SECRET_KEY="edsk3jTbdPzGGxcwT5fxdCiNSGULFb6RriePjGEFEr3kLz465mMBaw"
 
 DATA_DIRECTORY="data"
 
@@ -122,7 +123,7 @@ EOF
   message "Originating contract"
   sleep 2
   tezos-client --endpoint $RPC_NODE originate contract "consensus" \
-    transferring 0 from myWallet \
+    transferring 0 from faucetWallet \
     running "$contract" \
     --init "$storage" \
     --burn-cap 2 \
@@ -214,7 +215,7 @@ help() {
 
 case "$1" in
 setup)
-  start_tezos_node
+  # start_tezos_node
   create_new_deku_environment
   message "Warning"
   echo "This script creates a sandbox node and is for development purposes only."
