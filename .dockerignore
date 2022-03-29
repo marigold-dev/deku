@@ -1,9 +1,18 @@
 # folders
 _esy
+_build
 node_modules
+data
+nix
+result
+docker
+notes
 .github
 
 # files
 *.install
 *.md
 *.yml
+flake.*
+.ocamlformat
+.ocamlformat-ignore
