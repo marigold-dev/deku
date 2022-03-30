@@ -3,7 +3,7 @@ RUN apk --update add ca-certificates
 
 FROM esydev/esy:nightly-alpine-latest as builder
 
-RUN apk add libexecinfo-dev
+RUN apk add libexecinfo-dev libexecinfo-static
 
 WORKDIR /app
 
@@ -19,14 +19,16 @@ COPY . .
 # TODO: investigate why esy complains that it's not installed if we don't install again
 RUN esy install
 RUN esy build
-RUN esy build_static
+RUN esy dune build --profile=static src/bin/deku_cli.exe src/bin/deku_node.exe
 
 # Copy the static binaries to a known location
 RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_cli.exe'}" deku_cli.exe && \
     esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_node.exe'}" deku_node.exe
 RUN strip ./deku_node.exe && strip ./deku_cli.exe
 
-FROM scratch as runtime
+FROM alpine:latest as runtime
+
+RUN apk add nodejs
 
 # Setup OPENSSL so that it finds the certs
 ENV OPENSSL_STATIC=1
