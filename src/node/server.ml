@@ -36,6 +36,7 @@ let get_task_pool () =
   match !task_pool with
   | Some pool -> pool
   | None ->
+    (* TODO: proper number for additional domains *)
     let pool = Domainslib.Task.setup_pool ~num_additional_domains:4 () in
     let () = task_pool := Some pool in
     pool
