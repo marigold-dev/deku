@@ -37,18 +37,3 @@ jobs:
           tags: |
             ghcr.io/marigold-dev/deku:latest
             ghcr.io/marigold-dev/deku:${{ github.sha }}
-
-      - name: Build and push esy
-        # Only push if on main branch
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          file: ./docker/esy.Dockerfile
-          context: .
-          platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          tags: |
-            ghcr.io/marigold-dev/deku-esy:latest
-            ghcr.io/marigold-dev/deku-esy:${{ github.sha }}
