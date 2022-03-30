@@ -26,9 +26,7 @@ RUN esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_cli.exe'}" dek
     esy cp "#{self.target_dir / 'default' / 'src' / 'bin' / 'deku_node.exe'}" deku_node.exe
 RUN strip ./deku_node.exe && strip ./deku_cli.exe
 
-FROM alpine:latest as runtime
-
-RUN apk add nodejs
+FROM node:lts-slim as runtime
 
 # Setup OPENSSL so that it finds the certs
 ENV OPENSSL_STATIC=1
