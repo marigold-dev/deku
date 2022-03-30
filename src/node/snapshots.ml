@@ -73,7 +73,19 @@ let start_new_epoch t =
       additional_blocks;
     }
   | [] -> failwith "You must add a snapshot before you can start a new epoch"
-let get_current_snapshot t = Atomic.get t.current_snapshot
+
+let latest_finished_snapshot = ref None
+
+let get_most_recent_snapshot t =
+  match Atomic.get t.current_snapshot with
+  | Some snapshot ->
+    latest_finished_snapshot := Some snapshot;
+    Ok snapshot
+  | None ->
+  match !latest_finished_snapshot with
+  | Some latest_finished_snapshot -> Ok latest_finished_snapshot
+  | None -> Error `Node_not_yet_initialized
+
 let get_next_snapshot t =
   let%some _, snapshot = List.nth_opt t.next_snapshots 0 in
   Atomic.get snapshot

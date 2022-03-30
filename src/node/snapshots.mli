@@ -25,5 +25,6 @@ val append_block : pool:Block_pool.t -> Block.t * Signatures.t -> t -> t
 val add_snapshot_ref : block_height:int64 -> t -> snapshot_ref * t
 val set_snapshot_ref : snapshot_ref -> snapshot -> unit
 val start_new_epoch : t -> t
-val get_current_snapshot : t -> snapshot option
+val get_most_recent_snapshot :
+  t -> (snapshot, [> `Node_not_yet_initialized]) result
 val get_next_snapshot : t -> snapshot option
