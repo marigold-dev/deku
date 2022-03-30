@@ -91,7 +91,7 @@ module Process : sig
 end = struct
   exception Failed_to_parse_json of string
   exception Process_closed of Unix.process_status
-  exception Unknown_responde_id of Response.t
+  exception Unknown_response_id of Response.t
 
   type t = {
     mutable next_id : id;
@@ -110,6 +110,7 @@ end = struct
     }
 
   let on_fail exn =
+    (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
     Format.eprintf "tezos_interop failure: %s\n%!" (Printexc.to_string exn);
     exit 1
 
@@ -165,7 +166,7 @@ end = struct
     let id = response.Response.id in
     match Id_map.find_opt id process.response_pending with
     | Some resolver -> Lwt.wakeup_later resolver response.content
-    | None -> raise (Unknown_responde_id response)
+    | None -> raise (Unknown_response_id response)
   let handle_outputs process output_stream =
     Lwt_stream.iter (fun output -> handle_output process output) output_stream
 
