@@ -87,7 +87,9 @@ let handle_protocol_snapshot =
         })
 
 (* POST /request-nonce *)
-(* Set a new nonce? *)
+(* Unused fow now *)
+(* Set a new Number Only Used Once for the selected key *)
+(* so that the author can make a proof that he is the owner of the secret and can set the URI *)
 let handle_request_nonce =
   handle_request
     (module Networking.Request_nonce)
@@ -96,7 +98,7 @@ let handle_request_nonce =
       Ok { nonce })
 
 (* POST /register-uri *)
-(* Add the provided uri as new validator? *)
+(* Set the provided URI of the validator *)
 let handle_register_uri =
   handle_request
     (module Networking.Register_uri)
@@ -131,7 +133,7 @@ let handle_trusted_validators_membership =
         request)
 
 (* POST /withdraw-proof *)
-(* What is it doing? *)
+(* Returns a proof that can be provided to Tezos to fulfill a withdraw *)
 let handle_withdraw_proof =
   handle_request
     (module Networking.Withdraw_proof)
@@ -140,7 +142,7 @@ let handle_withdraw_proof =
         (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
 
 (* POST /ticket-balance *)
-(* What is it doing? *)
+(* Returns how much of a ticket a key has *)
 let handle_ticket_balance =
   handle_request
     (module Networking.Ticket_balance)
