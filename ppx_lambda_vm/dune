@@ -1,0 +1,7 @@
+(library
+ (name ppx_lambda_vm)
+ (kind ppx_rewriter)
+ (libraries ppxlib)
+ (ppx_runtime_libraries lambda_vm)
+ (preprocess
+  (pps ppxlib.metaquot)))

@@ -48,11 +48,7 @@ module Run_contract = struct
       let%ok { error } = T.error_of_yojson json in
       Ok (Error error)
     | _ -> Error "invalid status"
-  let file =
-    let%await file, oc = Lwt_io.open_temp_file ~suffix:".js" () in
-    let%await () = Lwt_io.write oc [%blob "run_entrypoint.bundle.js"] in
-    await file
-  let file = Lwt_main.run file
+  let file = Scripts.file_run_entrypoint
   let run ~context ~destination ~entrypoint ~payload =
     let input =
       {
@@ -117,11 +113,7 @@ end = struct
       Error
         "JSON output %s did not contain 'success' or 'error' for field `status`"
   let command = "node"
-  let file =
-    let%await file, oc = Lwt_io.open_temp_file ~suffix:".js" () in
-    let%await () = Lwt_io.write oc [%blob "fetch_storage.bundle.js"] in
-    await file
-  let file = Lwt_main.run file
+  let file = Scripts.file_fetch_storage
   let run ~rpc_node ~confirmation ~contract_address =
     let input =
       {
@@ -155,11 +147,7 @@ module Listen_transactions = struct
       destination : string;
     }
     [@@deriving to_yojson]
-    let file =
-      let%await file, oc = Lwt_io.open_temp_file ~suffix:".js" () in
-      let%await () = Lwt_io.write oc [%blob "listen_transactions.bundle.js"] in
-      await file
-    let file = Lwt_main.run file
+    let file = Scripts.file_listen_transactions
     let node = "node"
     let run ~context ~destination ~on_message ~on_fail =
       let send f pr data =
