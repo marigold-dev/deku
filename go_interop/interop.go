@@ -60,7 +60,7 @@ func Set(key string, value interface{}) {
 	write(message)
 }
 
-func Main(state_transition func(input []byte)) {
+func Main(state_transition func(input []byte) (err error)) {
 	println("Opening read")
 	fifo_path := os.Args[1]
 	fmt.Printf("fifo path: %s\n", fifo_path)
@@ -71,8 +71,14 @@ func Main(state_transition func(input []byte)) {
 	for {
 		input := read()
 		fmt.Printf("Read start message: %s\n", string(input))
-		state_transition(input)
-		end_message := []byte("[\"Stop\"]")
+		err := state_transition(input)
+		var end_message []byte
+		if err != nil {
+			end_message = []byte(fmt.Sprintf("[\"Error\", \"%s\"]", err.Error()))
+
+		} else {
+			end_message = []byte("[\"Stop\"]")
+		}
 		write(end_message)
 	}
 }
