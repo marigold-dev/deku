@@ -139,8 +139,7 @@ let info_create_transaction =
       (make_filename_from_address "address") in
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
-let create_transaction node_folder sender_wallet_file received_address amount
-    ticket =
+let create_transaction node_folder sender_wallet_file payload =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
@@ -153,8 +152,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
       ~data:
         (Core.User_operation.make
            ~sender:(Address.of_key_hash wallet.address)
-           (Transaction { destination = received_address; amount; ticket }))
-  in
+           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
   let%await identity = read_identity ~node_folder in
   let%await () =
     Networking.request_user_operation_gossip
@@ -176,30 +174,16 @@ let create_transaction =
     let env = Arg.env_var "SENDER" ~doc in
     let open Arg in
     required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
-  let address_to =
-    let doc = "The receiving address." in
-    let env = Arg.env_var "RECEIVER" ~doc in
-    let open Arg in
-    required
-    & pos 2 (some address_implicit) None
-    & info [] ~env ~docv:"receiver" ~doc in
-  let amount =
-    let doc = "The amount to be transferred." in
-    let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
-    let open Arg in
-    required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
-  let ticket =
-    let doc = "The ticket to be transferred." in
-    let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+  let payload =
+    let doc = "The payload as valid JSON string." in
+    let env = Arg.env_var "PAYLOAD" ~doc in
+    Arg.(
+      required & pos 2 (some string) None & info [] ~env ~docv:"payload" ~doc)
+  in
+
   let open Term in
-  lwt_ret
-    (const create_transaction
-    $ folder_node
-    $ address_from
-    $ address_to
-    $ amount
-    $ ticket)
+  lwt_ret (const create_transaction $ folder_node $ address_from $ payload)
+
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
@@ -394,6 +378,7 @@ let setup_identity node_folder uri =
     let t = Key_hash.of_key (Ed25519 key) in
     { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
   let%await () = write_identity ~node_folder identity in
+  print_endline (identity.t |> Key_hash.to_string);
   await (`Ok ())
 let info_setup_identity =
   let doc = "Create a validator identity" in

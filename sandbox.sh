@@ -176,7 +176,7 @@ SERVERS=()
 start_deku_cluster() {
   echo "Starting nodes."
   for i in ${VALIDATORS[@]}; do
-    deku-node "$data_directory/$i" --listen-prometheus=900$i &
+    deku-node "$data_directory/$i" --listen-prometheus=900$i "./state_transition/state_transition" &
     SERVERS+=($!)
   done
 

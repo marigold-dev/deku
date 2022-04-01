@@ -28,5 +28,10 @@ pkgs.mkShell {
       dune_2
       ocaml-lsp
       ocamlformat-rpc
+
+      # Go developer tooling
+      go
+      gopls
+      gore
     ]);
 }

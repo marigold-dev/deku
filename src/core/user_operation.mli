@@ -10,6 +10,7 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
+  | Vm_transaction of { payload : Yojson.Safe.t }
 type t = private {
   hash : BLAKE2B.t;
   sender : Address.t;
