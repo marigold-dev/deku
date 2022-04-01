@@ -41,5 +41,16 @@
       in {
         devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
         packages = { inherit deku; };
+
+        apps = {
+          deku-cli = {
+            type = "app";
+            program = "${deku}/bin/deku-cli";
+          };
+          deku-node = {
+            type = "app";
+            program = "${deku}/bin/deku-node";
+          };
+        };
       });
 }
