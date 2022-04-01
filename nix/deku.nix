@@ -7,7 +7,8 @@ pkgs.ocamlPackages.buildDunePackage {
   src = lib.filterSource {
     src = ./..;
     dirs = [ "src" "ppx_let_binding" "tests" ];
-    files = [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
+    files =
+      [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };
 
   configurePhase = ''
@@ -19,9 +20,7 @@ pkgs.ocamlPackages.buildDunePackage {
 
   inherit doCheck;
 
-  nativeBuildInputs = [
-    nodejs
-  ] ++ (with pkgs.ocamlPackages; [
+  nativeBuildInputs = [ nodejs ] ++ (with pkgs.ocamlPackages; [
     cmdliner_1_0_4
     ppx_deriving
     ppx_deriving_yojson
@@ -44,11 +43,7 @@ pkgs.ocamlPackages.buildDunePackage {
     reason
   ]);
 
-  propagatedBuildInputs = [
-    npmPackages
-  ];
+  propagatedBuildInputs = [ npmPackages pkgs.ocamlPackages.ppx_inline_test ];
 
-  checkInputs = with pkgs.ocamlPackages; [
-    rely
-  ];
+  checkInputs = with pkgs.ocamlPackages; [ rely ];
 }
