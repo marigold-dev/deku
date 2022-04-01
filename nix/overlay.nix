@@ -8,7 +8,7 @@ in {
           substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
         '';
       });
-      dream = osuper.dream.overrideAttr (o: {
+      dream = osuper.dream.overrideAttrs (o: {
         propagatedBuildInputs = o.propagatedBuildInputs
           ++ [ osuper.ppx_inline_test ];
       });
