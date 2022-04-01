@@ -1,5 +1,12 @@
 { pkgs, stdenv, lib, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
 
+let
+  dream' = pkgs.ocamlPackages.dream.overrideAttrs (o: {
+    propagatedBuildInputs = o.propagatedBuildInputs
+      ++ [ pkgs.ocamlPackages.ppx_inline_test ];
+  });
+in
+
 pkgs.ocamlPackages.buildDunePackage {
   pname = "sidechain";
   version = "0.0.0-dev";
@@ -22,6 +29,11 @@ pkgs.ocamlPackages.buildDunePackage {
 
   nativeBuildInputs = [ nodejs ] ++ (with pkgs.ocamlPackages; [
     cmdliner
+    utop
+    reason
+  ]);
+
+  buildInputs = with pkgs.ocamlPackages; [
     ppx_deriving
     ppx_deriving_yojson
     lwt
@@ -31,6 +43,7 @@ pkgs.ocamlPackages.buildDunePackage {
     mirage-crypto-rng
     mirage-crypto-ec
     piaf-dream-compat
+    dream'
     mrmime
     hex
     tezos-micheline
@@ -39,11 +52,9 @@ pkgs.ocamlPackages.buildDunePackage {
     secp256k1-internal
     bigstring
     domainslib
-    utop
-    reason
-  ]);
+  ];
 
-  propagatedBuildInputs = [ npmPackages ];
+  propagatedBuildInputs = [ npmPackages pkgs.ocamlPackages.ppx_inline_test ];
 
   checkInputs = with pkgs.ocamlPackages; [
     alcotest
