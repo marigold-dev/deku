@@ -6,7 +6,7 @@ pkgs.ocamlPackages.buildDunePackage {
 
   src = lib.filterSource {
     src = ./..;
-    dirs = [ "src" "ppx_let_binding" "tests" ];
+    dirs = [ "src" "ppx_let_binding" "tests" "ppx_lambda_vm" ];
     files =
       [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };
@@ -42,8 +42,7 @@ pkgs.ocamlPackages.buildDunePackage {
     reason
   ]);
 
-  propagatedBuildInputs = [ npmPackages ]
-    ++ (with pkgs.ocamlPackages; [ ppx_inline_test ]);
+  propagatedBuildInputs = [ npmPackages ];
 
   checkInputs = with pkgs.ocamlPackages; [
     alcotest
