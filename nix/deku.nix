@@ -41,6 +41,7 @@ pkgs.ocamlPackages.buildDunePackage {
     domainslib
     utop
     reason
+    prometheus
   ]);
 
   propagatedBuildInputs = [ npmPackages ];

@@ -27,10 +27,10 @@ build: [
 dev-repo: "git+https://github.com/mirage/mirage-clock.git"
 url {
   src:
-    "https://github.com/mirage/mirage-clock/releases/download/v4.1.0/mirage-clock-4.1.0.tbz"
+    "https://github.com/mirage/mirage-clock/releases/download/v4.2.0/mirage-clock-4.2.0.tbz"
   checksum: [
-    "sha256=b08d4e949336d3a678ade1807e83e74ca8a3f6ee68db00770277e19b3ee183b6"
-    "sha512=27f0e3527e1bd34dc93327e69a30ef8b92e158b03065a8bffa8d59fa45853ed4145c761f448be3c16246c0e1adb582e584ca8d73dca6b66b1f20657955b5a148"
+    "sha256=fa17d15d5be23c79ba741f5f7cb88ed7112de16a4410cea81c71b98086889847"
+    "sha512=05a359dc8400d4ca200ff255dbd030acd33d2c4acb5020838f772c02cdb5f243f3dbafbc43a8cd51e6b5923a140f84c9e7ea25b2c0fa277bb68b996190d36e3b"
   ]
 }
-x-commit-hash: "dd8fd33bb4e73ebe3710af4262192908db0ff7c3"
+x-commit-hash: "f457572bfedb9586c8bf9eaa9ece7e53677856e3"

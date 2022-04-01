@@ -113,7 +113,7 @@ let handle_ticket_balance =
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
-let node folder =
+let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations
     ~context:node.Node.State.interop_context ~on_operation:(fun operation ->
@@ -122,23 +122,29 @@ let node folder =
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
   let port = Node.Server.get_port () |> Option.get in
-  Dream.run ~interface:"0.0.0.0" ~port
-  @@ Dream.router
-       [
-         handle_block_level;
-         handle_received_block_and_signature;
-         handle_received_signature;
-         handle_block_by_hash;
-         handle_protocol_snapshot;
-         handle_request_nonce;
-         handle_register_uri;
-         handle_receive_user_operation_gossip;
-         handle_receive_consensus_operation;
-         handle_withdraw_proof;
-         handle_ticket_balance;
-         handle_trusted_validators_membership;
-       ]
-  @@ Dream.not_found
+  Lwt.all
+    [
+      Dream.serve ~interface:"0.0.0.0" ~port
+      @@ Dream.router
+           [
+             handle_block_level;
+             handle_received_block_and_signature;
+             handle_received_signature;
+             handle_block_by_hash;
+             handle_protocol_snapshot;
+             handle_request_nonce;
+             handle_register_uri;
+             handle_receive_user_operation_gossip;
+             handle_receive_consensus_operation;
+             handle_withdraw_proof;
+             handle_ticket_balance;
+             handle_trusted_validators_membership;
+           ]
+      @@ Dream.not_found;
+      Prometheus_dream.serve prometheus_port;
+    ]
+  |> Lwt_main.run
+  |> ignore
 
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-node"
@@ -150,5 +156,5 @@ let node =
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const node $ folder_node
+  const node $ folder_node $ Prometheus_dream.opts
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")

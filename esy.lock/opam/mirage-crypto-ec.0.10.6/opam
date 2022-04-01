@@ -55,10 +55,10 @@ dev-repo: "git+https://github.com/mirage/mirage-crypto.git"
 tags: ["org:mirage"]
 url {
   src:
-    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.5/mirage-crypto-v0.10.5.tbz"
+    "https://github.com/mirage/mirage-crypto/releases/download/v0.10.6/mirage-crypto-0.10.6.tbz"
   checksum: [
-    "sha256=79e28c49166b0624f358bbfcd0fe4b7a8b8f89bdb8b938a09361cbb4e44aa495"
-    "sha512=18b493be1e7909e8429bc5ddd1f0d1175aab9e21a10711e95749b74f1d9f851a5cfd3ee1a5b3b73a47b5fc54d6458a911ec586ab243e63bf276d2777a787ae51"
+    "sha256=01d6477a4edcad007b56983955d327f0e61c3f36494822f3755017d26e8f9410"
+    "sha512=870b7d0d32acde970afcd3fac2cb51131ac74bb20c887d07ddfccd239467a5dc8b700adf463427fa916393c503f106feb733cba5bf4b9d1f8eb57f52b5af9f9c"
   ]
 }
-x-commit-hash: "a671f107615837ac236c2238cb0668a68c2e0c84"
+x-commit-hash: "cb946119d60f180e2e5ff1eecfa3ff79c249cd9e"
