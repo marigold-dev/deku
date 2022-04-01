@@ -8,6 +8,10 @@ in {
           substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
         '';
       });
+      dream = osuper.dream.overrideAttr (o: {
+        propagatedBuildInputs = o.propagatedBuildInputs
+          ++ [ osuper.ppx_inline_test ];
+      });
       alcotest = osuper.alcotest.overrideAttrs (o: {
         src = prev.fetchurl {
           url =
