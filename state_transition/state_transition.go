@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -20,11 +21,11 @@ func check(e error) {
 
 func log(message string) {
 	colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m\n", 31, message)
-	fmt.Fprintln(os.Stderr,colored)
+	fmt.Fprintln(os.Stderr, colored)
 }
 
 func main() {
-	state_transition := func(input []byte) {
+	state_transition := func(input []byte) (return_err error) {
 		var message message
 		log(fmt.Sprintf("State transition received %s", string(input)))
 		err := json.Unmarshal(input, &message)
@@ -46,8 +47,12 @@ func main() {
 			} else {
 				log("Skipping counter increase")
 			}
+		default:
+			// Signal an invalid transaction by returning an error
+			return errors.New(fmt.Sprintf("Unrecognized action: %s", message.Action))
 		}
-
+		// Valid transactions produce nil results.
+		return
 	}
 	deku_interop.Main(state_transition)
 }

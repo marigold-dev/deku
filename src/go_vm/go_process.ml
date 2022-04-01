@@ -76,18 +76,17 @@ type ('a, 'b) t = {
 let spawn ~path ~named_pipe_path ~of_yojson ~to_yojson =
   let () = Named_pipe.make_pipe_pair named_pipe_path in
   let pid =
-    Unix.create_process path
-      [|path; named_pipe_path|]
-      Unix.stdin Unix.stdout Unix.stderr in
-   let promise = Lwt_unix.waitpid [ ] pid in
-   Lwt.async (fun () ->
-       let%await (_exit_code, status) = promise in
-       raise (Process_closed status));
-   let read, write = Named_pipe.get_pipe_pair_file_descriptors named_pipe_path in
-   let send x = to_yojson x |> send_to_vm ~fd:write in
-   let receive () =
-     let json = read_from_vm ~fd:read in
-     match of_yojson json with
-     | Ok x -> x
-     | Error error -> raise (Failed_to_parse_json (error, json)) in
-   { send; receive }
+    Unix.create_process path [|path; named_pipe_path|] Unix.stdin Unix.stdout
+      Unix.stderr in
+  let promise = Lwt_unix.waitpid [] pid in
+  Lwt.async (fun () ->
+      let%await _exit_code, status = promise in
+      raise (Process_closed status));
+  let read, write = Named_pipe.get_pipe_pair_file_descriptors named_pipe_path in
+  let send x = to_yojson x |> send_to_vm ~fd:write in
+  let receive () =
+    let json = read_from_vm ~fd:read in
+    match of_yojson json with
+    | Ok x -> x
+    | Error error -> raise (Failed_to_parse_json (error, json)) in
+  { send; receive }

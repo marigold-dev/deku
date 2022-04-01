@@ -4,11 +4,12 @@ type t = Yojson.Safe.t String_map.t [@@deriving yojson]
 let empty = String_map.empty |> String_map.add "counter" (`Int 0)
 type vm_message =
   | Stop
-  | Set  of {
+  | Set   of {
       key : string;
       value : Yojson.Safe.t;
     }
-  | Get  of string
+  | Get   of string
+  | Error of string
 [@@deriving yojson]
 
 let vm = ref None
@@ -33,6 +34,9 @@ let apply_vm_operation t operation =
         let value =
           String_map.find_opt key !state |> Option.value ~default:`Null in
         vm.send value
+      | Error message ->
+        Format.eprintf "VM error: %s\n%!" message;
+        finished := true
     done;
     !state
   | None -> failwith "TODO: better error"
