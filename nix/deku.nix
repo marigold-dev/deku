@@ -21,11 +21,10 @@ pkgs.ocamlPackages.buildDunePackage {
   inherit doCheck;
 
   nativeBuildInputs = [ nodejs ] ++ (with pkgs.ocamlPackages; [
-    cmdliner_1_0_4
+    cmdliner
     ppx_deriving
     ppx_deriving_yojson
     lwt
-    dream
     mirage-crypto
     mirage-crypto-pk
     mirage-crypto-rng
@@ -43,7 +42,13 @@ pkgs.ocamlPackages.buildDunePackage {
     reason
   ]);
 
-  propagatedBuildInputs = [ npmPackages pkgs.ocamlPackages.ppx_inline_test ];
+  propagatedBuildInputs = [ npmPackages ]
+    ++ (with pkgs.ocamlPackages; [ ppx_inline_test ]);
 
-  checkInputs = with pkgs.ocamlPackages; [ rely ];
+  checkInputs = with pkgs.ocamlPackages; [
+    alcotest
+    qcheck
+    qcheck-alcotest
+    rely
+  ];
 }
