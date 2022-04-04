@@ -16,3 +16,5 @@ val empty : t
 val add : validator -> t -> t
 val remove : validator -> t -> t
 val hash : t -> BLAKE2B.t
+val proposer : t -> int64 -> int -> validator
+val is_validator : t -> Key_hash.t -> bool
