@@ -15,6 +15,7 @@ let main () =
          ("gas", Bench_gas.command);
          ("prim", Bench_prim.command);
          ("simple_expr", Bench_simple_expr.command);
+         ("recursion", Bench_recursion.command);
        ])
 
 let () = main ()
