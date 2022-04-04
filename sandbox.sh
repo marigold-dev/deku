@@ -138,7 +138,7 @@ EOF
   done
 
   message "Getting contract address"
-  TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
 
   message "Configuring Deku nodes"
   for VALIDATOR in ${VALIDATORS[@]}; do
@@ -146,12 +146,12 @@ EOF
     FOLDER="$DATA_DIRECTORY/$i"
 
     deku-cli setup-tezos "$FOLDER" \
-      --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
+      --tezos_consensus_contract="$CONSENSUS_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1
   done
-  echo "Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS"
+  echo "Tezos Contract address: $CONSENSUS_ADDRESS"
 }
 
 tear-down() {
