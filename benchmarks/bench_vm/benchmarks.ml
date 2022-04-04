@@ -11,6 +11,10 @@ open Core
 let main () =
   Command_unix.run
     (Command.group ~summary:"Several benchmarks"
-       [("gas", Bench_gas.command); ("prim", Bench_prim.command)])
+       [
+         ("gas", Bench_gas.command);
+         ("prim", Bench_prim.command);
+         ("simple_expr", Bench_simple_expr.command);
+       ])
 
 let () = main ()
