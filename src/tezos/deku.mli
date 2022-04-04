@@ -3,6 +3,7 @@ module Consensus : sig
   val hash_validators : Key_hash.t list -> BLAKE2B.t
   val hash_block :
     block_height:int64 ->
+    consensus_round:int ->
     block_payload_hash:BLAKE2B.t ->
     state_root_hash:BLAKE2B.t ->
     withdrawal_handles_hash:BLAKE2B.t ->

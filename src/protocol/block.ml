@@ -10,12 +10,13 @@ type t = {
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;
   block_height : int64;
+  consensus_round : int;
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson]
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations =
+      ~previous_hash ~author ~block_height ~consensus_round ~operations =
     let to_yojson =
       [%to_yojson:
         BLAKE2B.t
@@ -24,6 +25,7 @@ let hash, verify =
         * BLAKE2B.t
         * Key_hash.t
         * int64
+        * int
         * Protocol_operation.t list] in
     let json =
       to_yojson
@@ -33,12 +35,14 @@ let hash, verify =
           previous_hash,
           author,
           block_height,
+          consensus_round,
           operations ) in
     let payload = Yojson.Safe.to_string json in
     let block_payload_hash = BLAKE2B.hash payload in
     let hash =
-      Tezos.Deku.Consensus.hash_block ~block_height ~block_payload_hash
-        ~state_root_hash ~withdrawal_handles_hash ~validators_hash in
+      Tezos.Deku.Consensus.hash_block ~block_height ~consensus_round
+        ~block_payload_hash ~state_root_hash ~withdrawal_handles_hash
+        ~validators_hash in
     let hash = BLAKE2B.hash (BLAKE2B.to_raw_string hash) in
     f (hash, block_payload_hash) in
   let hash = apply Fun.id in
@@ -46,10 +50,10 @@ let hash, verify =
     apply (fun (hash, _payload_hash) -> hash = expected_hash) in
   (hash, verify)
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-    ~previous_hash ~author ~block_height ~operations =
+    ~previous_hash ~author ~block_height ~consensus_round ~operations =
   let hash, payload_hash =
     hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations in
+      ~previous_hash ~author ~block_height ~consensus_round ~operations in
   {
     hash;
     payload_hash;
@@ -59,6 +63,7 @@ let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     validators_hash;
     author;
     block_height;
+    consensus_round;
     operations;
   }
 let of_yojson json =
@@ -69,7 +74,8 @@ let of_yojson json =
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~validators_hash:block.validators_hash
         ~previous_hash:block.previous_hash ~author:block.author
-        ~block_height:block.block_height ~operations:block.operations
+        ~block_height:block.block_height ~consensus_round:block.consensus_round
+        ~operations:block.operations
     with
     | true -> Ok ()
     | false -> Error "Invalid hash" in
@@ -80,8 +86,16 @@ let genesis =
     ~state_root_hash:(BLAKE2B.hash "mayuushi")
     ~withdrawal_handles_hash:(BLAKE2B.hash "desu")
     ~validators_hash:(Validators.hash Validators.empty)
-    ~block_height:0L ~operations:[]
+    ~block_height:0L ~consensus_round:0 ~operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
+
+let update_round block ~consensus_round =
+  make ~state_root_hash:block.state_root_hash
+    ~withdrawal_handles_hash:block.withdrawal_handles_hash
+    ~validators_hash:block.validators_hash ~previous_hash:block.previous_hash
+    ~author:block.author ~block_height:block.block_height ~consensus_round
+    ~operations:block.operations
+
 let produce ~state ~next_state_root_hash =
   let next_state_root_hash =
     Option.value ~default:state.Protocol_state.state_root_hash
@@ -92,6 +106,7 @@ let produce ~state ~next_state_root_hash =
       (Core.State.ledger state.core_state |> Ledger.withdrawal_handles_root_hash)
     ~validators_hash:(Validators.hash state.validators)
     ~block_height:(Int64.add state.block_height 1L)
+    ~consensus_round:0
 open Protocol_signature.Make (struct
   type nonrec t = t
   let hash t = t.hash
