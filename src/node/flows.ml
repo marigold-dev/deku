@@ -296,8 +296,8 @@ let parse_internal_tezos_transaction transaction =
   match transaction with
   | Tezos_interop.Consensus.Update_root_hash _ -> Error `Update_root_hash
   | Tezos_interop.Consensus.Deposit { ticket; amount; destination } ->
-    let amount = Core.Amount.of_int (Z.to_int amount) in
-    Ok (Core.Tezos_operation.Tezos_deposit { destination; amount; ticket })
+    let amount = Deku_core.Amount.of_int (Z.to_int amount) in
+    Ok (Deku_core.Tezos_operation.Tezos_deposit { destination; amount; ticket })
 let parse_internal_tezos_transactions tezos_internal_transactions =
   List.filter_map
     (fun transaction ->
@@ -310,7 +310,7 @@ let received_tezos_operation state update_state tezos_interop_operation =
   let open Protocol.Operation in
   let Tezos_interop.Consensus.{ hash; transactions } = tezos_interop_operation in
   let tezos_operation =
-    Core.Tezos_operation.make
+    Deku_core.Tezos_operation.make
       {
         tezos_operation_hash = hash;
         internal_operations = parse_internal_tezos_transactions transactions;
@@ -413,12 +413,12 @@ let request_withdraw_proof state ~hash =
       | Some block -> block.Block.withdrawal_handles_hash in
     let proof =
       state.Node.protocol.core_state
-      |> Core.State.ledger
+      |> Deku_core.State.ledger
       |> Ledger.withdrawal_handles_find_proof withdrawal_handle in
     Ok { withdrawal_handles_hash; withdrawal_handle; proof }
 let request_ticket_balance state ~ticket ~address =
   state.Node.protocol.core_state
-  |> Core.State.ledger
+  |> Deku_core.State.ledger
   |> Ledger.balance address ticket
 let trusted_validators_membership state update_state request =
   let open Networking.Trusted_validators_membership_change in

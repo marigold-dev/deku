@@ -1,5 +1,5 @@
 (library
- (name core)
+ (name deku_core)
  (libraries crypto tezos)
  (preprocess
   (pps ppx_deriving.eq ppx_deriving.ord ppx_deriving_yojson ppx_let_binding)))

@@ -1,5 +1,5 @@
 (library
  (name protocol)
- (libraries helpers tezos_interop core)
+ (libraries helpers tezos_interop deku_core)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.eq ppx_deriving.ord ppx_let_binding)))
