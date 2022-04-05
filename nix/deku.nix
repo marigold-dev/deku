@@ -22,6 +22,11 @@ pkgs.ocamlPackages.buildDunePackage {
 
   nativeBuildInputs = [ nodejs ] ++ (with pkgs.ocamlPackages; [
     cmdliner
+    utop
+    reason
+  ]);
+
+  buildInputs = with pkgs.ocamlPackages; [
     ppx_deriving
     ppx_deriving_yojson
     lwt
@@ -30,6 +35,7 @@ pkgs.ocamlPackages.buildDunePackage {
     mirage-crypto-rng
     mirage-crypto-ec
     piaf-dream-compat
+    dream
     mrmime
     hex
     tezos-micheline
@@ -38,9 +44,7 @@ pkgs.ocamlPackages.buildDunePackage {
     secp256k1-internal
     bigstring
     domainslib
-    utop
-    reason
-  ]);
+  ];
 
   propagatedBuildInputs = [ npmPackages ];
 
