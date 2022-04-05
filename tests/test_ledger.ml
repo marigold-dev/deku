@@ -1,7 +1,7 @@
 open Setup
 open Helpers
 open Crypto
-open Core
+open Deku_core
 open Ledger
 
 let () =
