@@ -22,7 +22,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-VALIDATORS=(0 1 2)
+VALIDATORS=(0 1 2 3)
 
 message() {
   echo "=========== $@ ==========="
@@ -94,6 +94,7 @@ create_new_deku_environment() {
   root_hash = {
     current_block_hash = 0x;
     current_block_height = 0;
+    current_block_round = 0;
     current_state_hash = 0x;
     current_handles_hash = 0x;
     current_validators = [
