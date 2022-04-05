@@ -24,6 +24,23 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
+(* Allows handlers to access Lwt instead of forcing them to hide it in Lwt.async calls *)
+let handle_request_lwt (type req res)
+    (module E : Networking.Request_endpoint
+      with type request = req
+       and type response = res) handler =
+  let handler request =
+    let%await body = Dream.body request in
+    match body |> Yojson.Safe.from_string |> E.request_of_yojson with
+    | Ok request -> (
+      let%await response = handler update_state request in
+      match response with
+      | Ok response ->
+        response |> E.response_to_yojson |> Yojson.Safe.to_string |> Dream.json
+      | Error err -> raise (Failure (Flows.string_of_error err)))
+    | Error err -> raise (Failure err) in
+  Dream.post E.path handler
+
 let handle_received_block_and_signature =
   handle_request
     (module Networking.Block_and_signature_spec)
@@ -94,6 +111,17 @@ let handle_receive_consensus_operation =
     (fun update_state request ->
       Flows.received_consensus_operation (Server.get_state ()) update_state
         request.consensus_operation request.signature)
+
+(** Consensus step as defined by Tendermint. *)
+let handle_receive_consensus_step =
+  handle_request_lwt
+    (module Networking.Consensus_operation)
+    (fun update_state request ->
+      let open Flows in
+      received_consensus_step (Server.get_state ()) update_state
+        request.operation request.sender request.hash request.block_signature
+        request.operation_signature)
+
 let handle_trusted_validators_membership =
   handle_request
     (module Networking.Trusted_validators_membership_change)
@@ -134,6 +162,7 @@ let node folder =
          handle_register_uri;
          handle_receive_user_operation_gossip;
          handle_receive_consensus_operation;
+         handle_receive_consensus_step;
          handle_withdraw_proof;
          handle_ticket_balance;
          handle_trusted_validators_membership;
