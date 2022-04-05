@@ -170,7 +170,6 @@ module Listen_transactions = struct
         Lwt.catch
           (fun () ->
             let%await line = Lwt_io.read_line process#stdout in
-            print_endline line;
             Yojson.Safe.from_string line
             |> output_of_yojson
             |> Result.get_ok
