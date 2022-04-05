@@ -1,12 +1,5 @@
 { pkgs, stdenv, lib, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
 
-let
-  dream' = pkgs.ocamlPackages.dream.overrideAttrs (o: {
-    propagatedBuildInputs = o.propagatedBuildInputs
-      ++ [ pkgs.ocamlPackages.ppx_inline_test ];
-  });
-in
-
 pkgs.ocamlPackages.buildDunePackage {
   pname = "sidechain";
   version = "0.0.0-dev";
@@ -43,7 +36,7 @@ pkgs.ocamlPackages.buildDunePackage {
     mirage-crypto-rng
     mirage-crypto-ec
     piaf-dream-compat
-    dream'
+    dream
     mrmime
     hex
     tezos-micheline
