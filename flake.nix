@@ -14,7 +14,7 @@
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
-  };
+  };  
 
   outputs =
     { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:
@@ -41,5 +41,16 @@
       in {
         devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
         packages = { inherit deku; };
+
+        apps = {
+          deku-cli = {
+            type = "app";
+            program = "${deku}/bin/deku-cli";
+          };
+          deku-node = {
+            type = "app";
+            program = "${deku}/bin/deku-node";
+          };
+        };
       });
 }

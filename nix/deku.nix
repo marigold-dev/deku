@@ -13,7 +13,7 @@ pkgs.ocamlPackages.buildDunePackage {
 
   src = lib.filterSource {
     src = ./..;
-    dirs = [ "src" "ppx_let_binding" "tests" "ppx_lambda_vm" ];
+    dirs = [ "src" "ppx_let_binding" "ppx_lambda_vm" "tests" ];
     files =
       [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };

@@ -16,5 +16,7 @@ jobs:
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - name: "Run nix flake check"
         run: nix flake check
+      - name: "Check nix formatting"
+        run: nix develop -c nixfmt --check ./flake.nix ./nix/*.nix
       - name: "Build deku via flakes"
         run: nix build --verbose .#deku
