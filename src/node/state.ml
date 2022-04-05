@@ -24,6 +24,9 @@ type t = {
   data_folder : string;
   pending_operations : pending_operation list;
   block_pool : Block_pool.t;
+  (* TODO: we need a bound on the size of this and put
+     behind an abstract type *)
+  applied_blocks : Block.t list;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;
@@ -55,6 +58,7 @@ let make ~identity ~trusted_validator_membership_change
     data_folder;
     pending_operations = [];
     block_pool = initial_block_pool;
+    applied_blocks = [];
     protocol = initial_protocol;
     snapshots = initial_snapshots;
     uri_state = Uri_map.empty;
@@ -82,7 +86,15 @@ let apply_block state block =
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
-  Ok { state with protocol; recent_operation_receipts; snapshots }
+  let applied_blocks = block :: state.applied_blocks in
+  Ok
+    {
+      state with
+      protocol;
+      recent_operation_receipts;
+      snapshots;
+      applied_blocks;
+    }
 let signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
   let open Float in

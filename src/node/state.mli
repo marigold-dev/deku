@@ -23,6 +23,7 @@ type t = {
   data_folder : string;
   pending_operations : pending_operation list;
   block_pool : Block_pool.t;
+  applied_blocks : Block.t list;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;

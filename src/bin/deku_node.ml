@@ -53,6 +53,17 @@ let handle_block_by_hash =
     (fun _update_state request ->
       let block = Flows.find_block_by_hash (Server.get_state ()) request.hash in
       Ok block)
+let handle_block_by_level =
+  handle_request
+    (module Networking.Block_by_level_spec)
+    (fun _update_state request ->
+      let state = Server.get_state () in
+      let block =
+        List.find_opt
+          (fun block ->
+            Int64.equal block.Protocol.Block.block_height request.level)
+          state.applied_blocks in
+      Ok block)
 let handle_block_level =
   handle_request
     (module Networking.Block_level)
@@ -131,6 +142,7 @@ let node folder prometheus_port =
              handle_received_block_and_signature;
              handle_received_signature;
              handle_block_by_hash;
+             handle_block_by_level;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;
