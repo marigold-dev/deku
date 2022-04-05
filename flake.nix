@@ -14,7 +14,7 @@
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
-  };  
+  };
 
   outputs =
     { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:

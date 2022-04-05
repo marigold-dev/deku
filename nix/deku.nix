@@ -5,9 +5,8 @@ let
     propagatedBuildInputs = o.propagatedBuildInputs
       ++ [ pkgs.ocamlPackages.ppx_inline_test ];
   });
-in
 
-pkgs.ocamlPackages.buildDunePackage {
+in pkgs.ocamlPackages.buildDunePackage {
   pname = "sidechain";
   version = "0.0.0-dev";
 
@@ -27,11 +26,8 @@ pkgs.ocamlPackages.buildDunePackage {
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs ] ++ (with pkgs.ocamlPackages; [
-    cmdliner
-    utop
-    reason
-  ]);
+  nativeBuildInputs = [ nodejs ]
+    ++ (with pkgs.ocamlPackages; [ cmdliner utop reason ]);
 
   buildInputs = with pkgs.ocamlPackages; [
     ppx_deriving
