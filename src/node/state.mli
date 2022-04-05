@@ -27,7 +27,7 @@ type t = {
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
-  recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
+  recent_operation_receipts : Deku_core.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
