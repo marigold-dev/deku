@@ -10,18 +10,18 @@ pkgs.mkShell {
     export USE_NIX=y
   '';
   inputsFrom = [ deku ];
-  packages = with pkgs; [
-    # Make developer life easier
-    ## General tooling
-    docker
-    nodejs-17_x
-
-    # formatters
-    nixfmt
-    nodePackages.prettier
-    ocamlformat
-  ] ++ (with pkgs.ocamlPackages;
+  packages = with pkgs;
     [
+      # Make developer life easier
+      ## General tooling
+      docker
+      nodejs-17_x
+
+      # formatters
+      nixfmt
+      nodePackages.prettier
+      ocamlformat
+    ] ++ (with pkgs.ocamlPackages; [
       # OCaml developer tooling
       ocaml
       findlib
