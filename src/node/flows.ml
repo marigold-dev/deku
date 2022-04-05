@@ -58,6 +58,9 @@ type ignore =
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
+let get_consensus = (ref (fun _ -> assert false) : (unit -> Tendermint.t) ref)
+let set_consensus = (ref (fun _ -> assert false) : (Tendermint.t -> unit) ref)
+
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
