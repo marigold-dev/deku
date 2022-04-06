@@ -18,5 +18,7 @@ jobs:
         run: nix flake check
       - name: "Check nix formatting"
         run: nix develop -c nixfmt --check ./flake.nix ./nix/*.nix
+      - name: "Run tests"
+        run: nix develop -c dune runtest --force --no-buffer
       - name: "Build deku via flakes"
         run: nix build --verbose .#deku

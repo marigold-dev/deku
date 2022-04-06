@@ -39,7 +39,8 @@
     "@opam/ppx_blob": "*",
     "@opam/secp256k1-internal": "*",
     "@opam/domainslib": "0.4.1",
-    "@opam/data-encoding": "*"
+    "@opam/data-encoding": "*",
+    "@opam/prometheus-dream": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -186,6 +187,23 @@
         }
       }
     },
-    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
+    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54",
+    "@opam/prometheus-app-pure": {
+      "source": "marigold-dev/prometheus-web:prometheus-app-pure.opam#9053674857f12c9d7983d0c23e58277bf0aeaab7",
+      "override": {
+        "dependencies": {
+          "@opam/prometheus": "1.1",
+          "@opam/cmdliner" : "1.0.4"
+        }
+      }
+    },
+    "@opam/prometheus-dream": {
+      "source": "marigold-dev/prometheus-web:prometheus-dream.opam#9053674857f12c9d7983d0c23e58277bf0aeaab7",
+      "override": {
+        "dependencies": {
+          "@opam/cmdliner": "1.0.4"
+        }
+      }
+    }
   }
 }

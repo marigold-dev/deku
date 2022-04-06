@@ -21,7 +21,7 @@ pkgs.mkShell {
       nixfmt
       nodePackages.prettier
       ocamlformat
-    ] ++ (with pkgs.ocamlPackages; [
+    ] ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
       # OCaml developer tooling
       ocaml
       findlib
