@@ -186,6 +186,7 @@
         }
       }
     },
-    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54"
+    "@opam/dune": "EduardoRFS/dune:dune.opam#b9d9eb13366d1edcdfbdb3afe3afa5c08ff87e54", 
+    "@opam/ppx_bench": "janestreet/ppx_bench:ppx_bench.opam#235db81cadf9fec7d48fbac5458f48830407b5b8"
   }
 }
