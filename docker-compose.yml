@@ -126,6 +126,17 @@ services:
       - api
     ports:
       - 127.0.0.1:8000:80
+  prometheus:
+    container_name: deku_prometheus
+    restart: always
+    image: prom/prometheus
+    network_mode: "host" 
+    ports:
+      - "9090:9090"
+    expose:
+      - 9090/tcp
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
 volumes:
   esdata:
