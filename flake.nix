@@ -13,17 +13,26 @@
     ocaml-overlays.url = "github:anmonteiro/nix-overlays";
     ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
 
+    prometheus-web.url =
+      "github:marigold-dev/prometheus-web/ulrikstrid/nix-stuff";
+    prometheus-web.inputs.nixpkgs.follows = "nixpkgs";
+    prometheus-web.inputs.ocaml-overlay.follows = "ocaml-overlays";
+
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
   };
 
-  outputs =
-    { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays }:
+  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
+    , prometheus-web }:
     with flake-utils.lib;
-    eachSystem [ system.x86_64-linux ] (system:
+    eachSystem defaultSystems (system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ ocaml-overlays.overlay (import ./nix/overlay.nix) ];
+          overlays = [
+            ocaml-overlays.overlay
+            (import ./nix/overlay.nix)
+            prometheus-web.overlay
+          ];
         };
 
         bp =
