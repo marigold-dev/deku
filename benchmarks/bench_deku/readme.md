@@ -86,7 +86,32 @@ Estimated testing time 1m40s (10 benchmarks x 10s). Change using '-quota'.
 
 Source `bench_tezos_rpc.ml`. It is a benchmark of functions defined in `src/tezos_rpc/`
 
-TODO : run node
+```
+~/dekuꜩ esy b dune exec ./benchmarks/bench_deku/bench_deku.exe rpc
+asset fetch_storage.bundle.js 2.03 MiB [emitted] (name: fetch_storage)
+asset run_entrypoint.bundle.js 2.03 MiB [emitted] (name: run_entrypoint)
+asset listen_transactions.bundle.js 1.45 MiB [emitted] (name: listen_transactions)
+orphan modules 201 KiB [orphan] 105 modules
+runtime modules 3.11 KiB 15 modules
+modules by path ../../../../../../../../../.esy/source/i/ 1.73 MiB 177 modules
+modules by path ./*.js 6.65 KiB
+  ./run_entrypoint.js 1.82 KiB [built] [code generated]
+  ./fetch_storage.js 2.31 KiB [built] [code generated]
+  ./listen_transactions.js 2.52 KiB [built] [code generated]
++ 9 modules
+webpack 5.71.0 compiled successfully in 5956 ms
+Estimated testing time 30s (3 benchmarks x 10s). Change using '-quota'.
+Error ("fetch constants"
+  "Regression failed. (In Bench, this is usually because the predictors were\
+ \nlinearly dependent, commonly as a result of having a predictor that is always\
+ \nzero, or having two predictors that are multiples of each other.)")
+┌────────────────────────┬──────────┬─────────┬──────────┬──────────┬────────────┐
+│ Name                   │ Time/Run │ mWd/Run │ mjWd/Run │ Prom/Run │ Percentage │
+├────────────────────────┼──────────┼─────────┼──────────┼──────────┼────────────┤
+│ fetch block operations │  42.05us │  1.07kw │  401.08w │  398.55w │     81.25% │
+│ fetch block header     │  51.75us │  1.07kw │  400.53w │  400.53w │    100.00% │
+└────────────────────────┴──────────┴─────────┴──────────┴──────────┴────────────┘
+```
 
 
 ## Patricia
