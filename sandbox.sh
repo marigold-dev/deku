@@ -237,7 +237,7 @@ wait_for_servers() {
 
 assert_deku_state() {
   contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
-  storage=$(curl "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
   current_state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
   current_block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
 
@@ -289,10 +289,6 @@ start)
   wait_for_servers
   ;;
 smoke-test)
-  if ! command -v jq; then
-    echo "Command jq not found, but it is required to verify the result of the test."
-    exit 1
-  fi
   start_deku_cluster
   seconds=35
   sleep $seconds
