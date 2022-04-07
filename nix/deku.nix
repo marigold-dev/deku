@@ -1,12 +1,8 @@
 { pkgs, stdenv, lib, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
 
-let
-  dream' = pkgs.ocamlPackages.dream.overrideAttrs (o: {
-    propagatedBuildInputs = o.propagatedBuildInputs
-      ++ [ pkgs.ocamlPackages.ppx_inline_test ];
-  });
+let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
-in pkgs.ocamlPackages.buildDunePackage {
+in ocamlPackages.buildDunePackage rec {
   pname = "sidechain";
   version = "0.0.0-dev";
 
@@ -26,35 +22,35 @@ in pkgs.ocamlPackages.buildDunePackage {
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs ]
-    ++ (with pkgs.ocamlPackages; [ cmdliner utop reason ]);
+  nativeBuildInputs = [ nodejs npmPackages ]
+    ++ (with ocamlPackages; [ utop reason ]);
 
-  buildInputs = with pkgs.ocamlPackages; [
-    ppx_deriving
-    ppx_deriving_yojson
-    lwt
-    mirage-crypto
-    mirage-crypto-pk
-    mirage-crypto-rng
-    mirage-crypto-ec
-    piaf-dream-compat
-    dream'
-    mrmime
-    hex
-    tezos-micheline
-    digestif
-    ppx_blob
-    secp256k1-internal
-    bigstring
-    domainslib
-  ];
+  propagatedBuildInputs = with ocamlPackages;
+    [
+      cmdliner
+      ppx_deriving
+      ppx_deriving_yojson
+      lwt
+      dream
+      mirage-crypto
+      mirage-crypto-pk
+      mirage-crypto-rng
+      mirage-crypto-ec
+      piaf-dream-compat
+      mrmime
+      hex
+      tezos-micheline
+      digestif
+      ppx_blob
+      secp256k1-internal
+      bigstring
+      domainslib
+      prometheus
+      prometheus-dream
+    ]
+    # checkInputs are here because when cross compiling dune needs test dependencies
+    # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
+    ++ checkInputs ++ [ npmPackages ];
 
-  propagatedBuildInputs = [ npmPackages ];
-
-  checkInputs = with pkgs.ocamlPackages; [
-    alcotest
-    qcheck
-    qcheck-alcotest
-    rely
-  ];
+  checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 }
