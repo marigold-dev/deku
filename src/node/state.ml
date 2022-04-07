@@ -87,6 +87,11 @@ let apply_block state block =
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
   let applied_blocks = block :: state.applied_blocks in
+  (* TODO: we might want to use a monotonic clock so we don't get weird things like
+     negative block rates. *)
+  let timestamp = Unix.time () in
+  let operation_count = List.length block.operations in
+  Metrics.Througput.collect_block_metrics ~timestamp ~operation_count;
   Ok
     {
       state with
