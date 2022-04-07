@@ -241,6 +241,11 @@ assert_deku_state() {
   done
 }
 
+load_test () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -262,6 +267,8 @@ help() {
   echo " Executes a deposit of a dummy ticket to Deku"
   echo "smoke-test"
   echo "  Starts a Deku cluster and performs some simple checks that its working."
+  echo "load-test (saturate | maximal-blocks)"
+  echo "  Performs the specified load test on a running cluster"
 }
 
 case "$1" in
@@ -292,6 +299,9 @@ deploy-dummy-ticket)
   ;;
 deposit-dummy-ticket)
   deposit_ticket
+  ;;
+load-test)
+  load_test "$2"
   ;;
 *)
   help
