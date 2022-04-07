@@ -1,4 +1,5 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC2155
 
 set -e
 
@@ -235,22 +236,41 @@ wait_for_servers() {
   done
 }
 
+deku_storage() {
+  local contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
+  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  echo "$storage"
+}
+
+deku_state_hash() {
+  local storage=$(deku_storage)
+  local state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  echo "$state_hash"
+}
+
+deku_height() {
+  local storage=$(deku_storage)
+  local block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  echo "$block_height"
+}
+
 assert_deku_state() {
-  contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
-  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
-  current_state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
-  current_block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  local current_state_hash=$(deku_state_hash)
+  local current_block_height=$(deku_height)
+  local starting_height=$1
+  local seconds=$2
+  local minimum_expected_height=$((starting_height + $2))
 
   echo "The current block height is" "$current_block_height"
 
-  # Check that a state root hash was published recently
-  if [ "$current_block_height" -lt 20 ]; then
-    echo "Error: no recent state root hash update found. Exiting."
+  # Check that a current height has progressed past the starting height sufficiently
+  if [ $((current_block_height - starting_height)) -lt 20 ]; then
+    echo "Error: less than 20 blocks were produced in $2 seconds."
     exit 1
   fi
 
   for i in "${VALIDATORS[@]}"; do
-    asserter "$data_directory/$i" "$current_state_hash" "$@"
+    asserter "$data_directory/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
 
@@ -289,11 +309,12 @@ start)
   wait_for_servers
   ;;
 smoke-test)
+  starting_height=$(deku_height)
   start_deku_cluster
   seconds=35
   sleep $seconds
   killall deku-node
-  assert_deku_state $seconds
+  assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down
