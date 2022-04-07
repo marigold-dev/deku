@@ -289,6 +289,10 @@ start)
   wait_for_servers
   ;;
 smoke-test)
+  if ! command -v jq; then
+    echo "Command jq not found, but it is required to verify the result of the test."
+    exit 1
+  fi
   start_deku_cluster
   seconds=35
   sleep $seconds

@@ -19,6 +19,7 @@ pkgs.mkShell {
       shellcheck
       tilt
       docker-compose # This is needed by tilt
+      jq
 
       # formatters
       nixfmt
