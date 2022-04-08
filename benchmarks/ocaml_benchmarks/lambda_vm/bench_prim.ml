@@ -48,7 +48,7 @@ let execute_neg_lib n script =
 *)
 
 (* benchmark compile value for negative *)
-let () =
+let bench_compile_value_neg () =
   let list_bench =
     [
       ( "compile value: n=0",
@@ -64,6 +64,8 @@ let () =
   (* benchmark for throughputN repeat 5 times, in 10 CPU seconds *)
   let res = throughputN ~repeat:5 10 list_bench in
   print_newline ();
+  print_endline
+    "Compile value negative primitive with n = 0, 1, 2; init_gas = 200";
   tabulate res;
 
   (* benchmark for latencyN:
@@ -73,11 +75,12 @@ let () =
   tabulate res
 
 (* benchmark compile for negative *)
-let () =
+let bench_compile_neg () =
   let list_bench =
     [("compile: negative", (fun () -> compile_neg_lib script_neg), ())] in
   let res = throughputN ~repeat:5 10 list_bench in
   print_newline ();
+  print_endline "Compile negative primitive script, init_gas = 1501";
   tabulate res;
 
   let res = latencyN 20000L list_bench in
@@ -85,7 +88,7 @@ let () =
   tabulate res
 
 (* benchmark iterpreter for negative *)
-let () =
+let bench_execute_neg () =
   let list_bench =
     [
       ("execute: n=0", (fun () -> execute_neg_lib 0 script_neg), ());
@@ -94,8 +97,14 @@ let () =
     ] in
   let res = throughputN ~repeat:5 10 list_bench in
   print_newline ();
+  print_endline "Execute negative primitive with n = 0, 1, 2";
   tabulate res;
 
   let res = latencyN 20000L list_bench in
   print_newline ();
   tabulate res
+
+let main =
+  bench_compile_value_neg ();
+  bench_compile_neg ();
+  bench_execute_neg ()
