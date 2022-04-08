@@ -1,0 +1,9 @@
+(executables
+ (names numbers tree)
+ (libraries benchmark unix))
+
+(rule
+ (alias runtest)
+ (deps numbers.exe tree.exe)
+ (action
+  (run %{deps})))

@@ -40,7 +40,8 @@
     "@opam/secp256k1-internal": "*",
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
-    "@opam/prometheus-dream": "*"
+    "@opam/prometheus-dream": "*",
+    "@opam/benchmark": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
