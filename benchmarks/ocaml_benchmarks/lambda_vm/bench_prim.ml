@@ -87,7 +87,11 @@ let () =
 (* benchmark iterpreter for negative *)
 let () =
   let list_bench =
-    [("execute: n=0", (fun () -> execute_neg_lib 0 script_neg), ())] in
+    [
+      ("execute: n=0", (fun () -> execute_neg_lib 0 script_neg), ());
+      ("execute: n=1", (fun () -> execute_neg_lib 1 script_neg), ());
+      ("execute: n=2", (fun () -> execute_neg_lib 2 script_neg), ());
+    ] in
   let res = throughputN ~repeat:5 10 list_bench in
   print_newline ();
   tabulate res;
