@@ -9,6 +9,7 @@ in {
         '';
       });
       dream = osuper.dream.overrideAttrs (o: {
+        doCheck = false;
         propagatedBuildInputs = o.propagatedBuildInputs
           ++ [ osuper.ppx_inline_test ];
       });
