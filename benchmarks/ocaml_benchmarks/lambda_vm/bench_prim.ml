@@ -2,6 +2,15 @@ open Lambda_vm
 open Vm_utils
 open Benchmark
 
+(*
+  TODO: write script
+  esy build:
+  - esy x dune build
+  run:
+  - esy x dune exec 
+    ~/deku/_build/default/benchmarks/ocaml_benchmarks/lambda_vm/bench_prim.exe
+*)
+
 let prim prim = Ast.Prim prim
 
 (* Primivites with 1 parameter *)
