@@ -47,22 +47,19 @@ let execute_neg_lib n script =
    for these benchmarks: n, initial gas, etc.
 *)
 
-let list_test l =
-  List.fold_left (fun r i -> compile_value_neg_lib ~initial_gas:200 i :: r) [] l
-
-let () =
-  let list_bench = [("[0,1,2]", (fun _ -> list_test [0; 1; 2]), ())] in
-  let res = throughputN ~repeat:5 10 list_bench in
-  print_newline ();
-  tabulate res
-
 (* benchmark compile value for negative *)
 let () =
   let list_bench =
     [
-      ("compile value: n=0", compile_value_neg_lib ~initial_gas:200, 0);
-      ("compile value: n=1", compile_value_neg_lib ~initial_gas:200, 1);
-      ("compile value: n=2", compile_value_neg_lib ~initial_gas:200, 2);
+      ( "compile value: n=0",
+        (fun () -> compile_value_neg_lib ~initial_gas:200 0),
+        () );
+      ( "compile value: n=1",
+        (fun () -> compile_value_neg_lib ~initial_gas:200 1),
+        () );
+      ( "compile value: n=2",
+        (fun () -> compile_value_neg_lib ~initial_gas:200 2),
+        () );
     ] in
   (* benchmark for throughputN repeat 5 times, in 10 CPU seconds *)
   let res = throughputN ~repeat:5 10 list_bench in
