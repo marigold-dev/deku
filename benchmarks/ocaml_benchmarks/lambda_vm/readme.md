@@ -25,7 +25,9 @@ Source `bench_prim.ml`
 TODO: remove: result of the first commit example
 
 ```
-~/deku/benchmarks/ocaml_benchmarks/lambda_vm$ esy x dune exec ~/deku/_build/default/benchmarks/ocaml_benchmarks/lambda_vm/bench_prim.exe
+~/deku/benchmarks/ocaml_benchmarks/lambda_vm$ 
+esy x dune exec ~/deku/_build/default/benchmarks/ocaml_benchmarks/\
+lambda_vm/bench_prim.exe
 Entering directory '/home/quyen/deku'  
 Throughputs for "n=1" running 5 times for at least 10 CPU seconds:
 n=1: 10.46 WALL (10.45 usr +  0.00 sys = 10.45 CPU) @ 47793454.06/s (n=499572549)
