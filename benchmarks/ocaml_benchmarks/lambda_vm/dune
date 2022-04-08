@@ -1,0 +1,11 @@
+(executables
+ (names bench_prim)
+ (libraries benchmark lambda_vm)
+ (preprocess
+ (pps ppx_lambda_vm)))
+
+(rule
+ (alias run_bench)
+ (deps bench_prim.exe)
+ (action
+  (run %{deps})))
