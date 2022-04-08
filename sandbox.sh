@@ -7,6 +7,8 @@ data_directory="data"
 [ "$USE_NIX" ] || export LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 [ "$USE_NIX" ] || export PATH=$(esy x sh -c 'echo $PATH')
 
+[ "$USE_NIX" ] && dune build @install
+
 tezos-client() {
   docker exec -it deku_flextesa tezos-client "$@"
 }

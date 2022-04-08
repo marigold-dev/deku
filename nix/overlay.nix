@@ -8,9 +8,7 @@ in {
           substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
         '';
       });
-      dream = osuper.dream.overrideAttrs (o: {
-        doCheck = false;
-      });
+      dream = osuper.dream.overrideAttrs (o: { doCheck = false; });
       alcotest = osuper.alcotest.overrideAttrs (o: {
         src = prev.fetchurl {
           url =
