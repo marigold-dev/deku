@@ -242,8 +242,7 @@ assert_deku_state() {
 }
 
 load_test () {
-  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+  load-test "saturate"
 }
 
 help() {
