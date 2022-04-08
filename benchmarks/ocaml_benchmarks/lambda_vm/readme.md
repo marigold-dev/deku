@@ -14,6 +14,8 @@
 
 ## Understanding the results
 
+[Benchmark documentation](https://chris00.github.io/ocaml-benchmark/doc/benchmark/Benchmark/index.html)
+
 TODO
 
 ## Primitives
