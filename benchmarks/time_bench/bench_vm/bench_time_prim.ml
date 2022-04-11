@@ -176,5 +176,5 @@ let bench_execute_two_parameters () =
   tabulate res
 
 let benchmark_prim () =
-  (*bench_negative ();*)
+  bench_negative ();
   bench_execute_two_parameters ()

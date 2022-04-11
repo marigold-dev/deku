@@ -22,7 +22,7 @@ We have 1 main benchmarking function:
 
 - esy:
     - Build: `esy x dune build`
-    - Executue: `esy x dune exec ~/deku/_build/default/benchmarks/ocaml_benchmarks/lambda_vm/*.exe` 
+    - Executue: `esy x dune exec ~/deku/_build/default/benchmarks/time_bench/bench_vm/bench_time_vm.exe` 
     or using alias:
     TODO
 
