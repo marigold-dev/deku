@@ -15,6 +15,7 @@ type prim =
   | Asr
   | Fst
   | Snd
+  | Sender
 [@@deriving yojson, show]
 
 type expr =
@@ -52,3 +53,18 @@ type script = {
   code : expr;
 }
 [@@deriving yojson, show]
+
+let value_of_string gas str =
+  let append list item = Pair (item, list) in
+  (* TODO: burn gas properly for conversions *)
+  Gas.burn_constant gas;
+  let rec aux idx list =
+    if idx >= 0 then
+      let c = str.[idx] |> Char.code |> Int64.of_int in
+      Int64 c |> append list |> aux (idx - 1)
+    else
+      list in
+  let length = String.length str in
+  let length' = Int64 (Int64.of_int length) in
+  let list = aux (length - 1) (Pair (Int64 0L, Int64 0L)) in
+  Pair (length', list)

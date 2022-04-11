@@ -8,4 +8,5 @@ let () =
       Test_recursion.test;
       Test_simple_expr.test;
       Test_gas.test;
+      Test_io.test;
     ]

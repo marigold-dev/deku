@@ -87,6 +87,7 @@ let rec expr_of_ocaml_expr expr =
     | "asr" -> [%expr Prim Asr]
     | "fst" -> [%expr Prim Fst]
     | "snd" -> [%expr Prim Snd]
+    | "sender" -> [%expr Prim Sender]
     | name ->
       let var = estring ~loc:var.loc name in
       [%expr Var [%e var]])

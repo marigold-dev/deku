@@ -41,6 +41,8 @@ module Compiler = struct
   let compile_value gas value = wrap (fun () -> compile_value gas value)
 end
 
+module Context = Context
+
 module Interpreter = struct
   include Interpreter
 
@@ -66,5 +68,6 @@ module Interpreter = struct
     | `Error error -> Error (Interpreter_error error)
     | `Limits error -> Error (Runtime_limits_error error)
 
-  let execute gas ~arg script = wrap (fun () -> execute gas ~arg script)
+  let execute ~context ~arg script =
+    wrap (fun () -> execute ~context ~arg script)
 end

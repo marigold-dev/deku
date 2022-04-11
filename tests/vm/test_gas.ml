@@ -1,5 +1,8 @@
 open Lambda_vm
 
+let sender =
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Core.Address.of_string |> Option.get
+
 let counter =
   [%lambda_vm.script
     fun x ->
@@ -32,7 +35,7 @@ let test_execute_ir () =
     Vm_test.compile_exn gas counter in
 
   let gas = Gas.make ~initial_gas:14747900 in
-  let _ = Vm_test.execute_exn gas arg ir in
+  let _ = Vm_test.execute_exn sender gas arg ir in
   Alcotest.(check bool) "Should be empty" (Gas.is_empty gas) true
 
 let test =

@@ -82,7 +82,8 @@ let apply_user_operation t user_operation =
       |> Option.fold ~none:(Error "Contract not found") ~some:Result.ok
       |> wrap_error in
     let%ok contract, _user_op_list =
-      Contract_vm.Interpreter.invoke ~arg:argument ~gas:initial_gas contract
+      Contract_vm.Interpreter.invoke ~source ~arg:argument ~gas:initial_gas
+        contract
       |> wrap_error in
     let contract_storage =
       Contract_storage.update_contract_storage contract_storage

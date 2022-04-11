@@ -21,6 +21,7 @@ module type VM = sig
   module Interpreter : sig
     val invoke :
       Contract.t ->
+      source:Crypto.Key_hash.t ->
       arg:Invocation_payload.t ->
       gas:int ->
       (* TODO: unit should be user operation list *)
@@ -122,14 +123,17 @@ module Lambda : VM = struct
       | Interpreter_error (Undefined_variable | Over_applied_primitives) ->
         "WOOOOOO!1!1! Bug within Lambda_vm interpreter"
 
-    let invoke contract ~(arg : Invocation_payload.t) ~gas =
+    let invoke contract ~source ~(arg : Invocation_payload.t) ~gas =
       let gas = Lambda_vm.Gas.make ~initial_gas:gas in
       let%ok argument =
         Raw_repr.Value.to_value ~gas arg.arg
         |> Result.map_error (fun x -> Compiler.error_to_string x) in
       (* TODO: use invoked operations for something *)
       let%ok invoked =
-        Lambda_vm.Interpreter.execute gas ~arg:argument contract.Contract.code
+        let sender = source |> Crypto.Key_hash.to_string in
+        let context = Lambda_vm.Context.make ~sender ~source:sender gas in
+        Lambda_vm.Interpreter.execute ~context ~arg:argument
+          contract.Contract.code
         |> Result.map_error (fun x -> error_to_string x) in
       let updated_contract =
         Contract.make ~code:contract.code ~storage:invoked.storage in

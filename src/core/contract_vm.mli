@@ -19,6 +19,7 @@ end
 module Interpreter : sig
   val invoke :
     Contract.t ->
+    source:Crypto.Key_hash.t ->
     arg:Invocation_payload.t ->
     gas:int ->
     (* TODO: unit should be user operation list *)

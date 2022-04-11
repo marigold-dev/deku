@@ -2,6 +2,9 @@ open Lambda_vm
 
 module Testable = Vm_test.Testable
 
+let sender =
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Core.Address.of_string |> Option.get
+
 let check_execution_error ~actual ~expected =
   let open Vm_test in
   match actual with
@@ -19,71 +22,72 @@ let check_compilation_error ~actual ~expected =
   | Ok _ -> Alcotest.fail "Ast shouldn't execute"
   | Error (Execution_error error) ->
     Alcotest.failf "%a" Interpreter.pp_error error
+
 let test_compilation_undefined_variable () =
   let script = [%lambda_vm.script fun _ -> x] in
   check_compilation_error
-    ~actual:(Vm_test.execute_ast 2000 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 2000 (Int64 0L) script)
     ~expected:(Compiler_error Compiler.Undefined_variable)
 
 let test_fst_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (fst 1L, (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1201 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1201 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_pair)
 
 let test_snd_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (snd 1L, (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1201 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1201 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_pair)
 
 let test_neg_value_is_not_int64 () =
   let script = [%lambda_vm.script fun _ -> (not (0L, 0L), (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1601 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1601 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_int64)
 
 let test_op2_value_is_not_int64 () =
   let script = [%lambda_vm.script fun _ -> ((0L, 0L) + 0L, (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 2001 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 2001 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_int64)
 
 let test_if_value_is_not_int64 () =
   let script =
     [%lambda_vm.script fun _ -> if (0L, 0L) then 1L else (1L, (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1601 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1601 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_int64)
 
 let test_value_is_not_function () =
   let script = [%lambda_vm.script fun _ -> (0L 0L, (0L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1201 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1201 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_function)
 
 let test_pattern1_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> (0L, 0L)] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 701 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 701 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_pair)
 
 let test_pattern2_value_is_not_pair () =
   let script = [%lambda_vm.script fun _ -> 0L] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 301 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 301 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_pair)
 
 let test_pattern3_value_is_not_zero () =
   let script = [%lambda_vm.script fun _ -> (0L, (1L, 0L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1101 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1101 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_zero)
 
 let test_pattern4_value_is_not_zero () =
   let script = [%lambda_vm.script fun _ -> (0L, (0L, 1L))] in
   check_execution_error
-    ~actual:(Vm_test.execute_ast 1101 (Int64 0L) script)
+    ~actual:(Vm_test.execute_ast sender 1101 (Int64 0L) script)
     ~expected:(Interpreter_error Interpreter.Value_is_not_zero)
 
 let test_compilation =
