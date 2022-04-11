@@ -86,3 +86,11 @@ let bench_execute_neg s () =
   let res = latencyN 20000L list_bench in
   print_newline ();
   tabulate res
+
+let bench_negative () =
+  bench_compile_value_neg
+    "Compile value negative primitive with n = 0, 1, 2; init_gas = 200" ();
+  bench_compile_neg "Compile negative primitive script, init_gas = 1501" ();
+  bench_execute_neg "Execute negative primitive with n = 0, 1, 2" ()
+
+let benchmark_prim () = bench_negative ()
