@@ -1,5 +1,6 @@
 open Core_bench
 open Vm_utils
+open Bench_vm_utils
 
 (* compile value *)
 let test_compile_value_0 = bench_compile_value "" ~initial_gas:101 0L

@@ -1,8 +1,9 @@
 open Core_bench
 open Lambda_vm
+open Bench_vm_utils
 open Vm_utils
 open Lambda_vm_tests
-open Primitives
+open Primitives_tests
 
 (* negative n : Int64 (Int64.neg n) *)
 let compile_value_neg_lib n ~initial_gas =

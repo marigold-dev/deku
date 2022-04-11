@@ -1,7 +1,7 @@
 open Core_bench
-open Vm_utils
+open Bench_vm_utils
 open Lambda_vm_tests
-open Simple_expr
+open Simple_expr_tests
 
 (* increment script *)
 let test_compile_value_incr = bench_compile_value "incr" ~initial_gas:101 43L

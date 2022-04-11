@@ -1,25 +1,6 @@
-open Lambda_vm
 open Core_bench
-
-let failwith s = Format.kasprintf failwith s
-
-(* compile value *)
-let compile_value_exn gas value =
-  match compile_value gas value with
-  | Ok value -> value
-  | Error error -> failwith "Compilation_error(%a)" pp_compile_error error
-
-(* compile script *)
-let compile_exn gas script =
-  match compile gas script with
-  | Ok value -> value
-  | Error error -> failwith "Compilation_error(%a)" pp_compile_error error
-
-(* execute script *)
-let execute_exn gas arg script =
-  match execute gas ~arg script with
-  | Ok value -> value
-  | Error error -> failwith "Execution_error(%a)" pp_execution_error error
+open Lambda_vm
+open Vm_utils
 
 let bench_compile_value s ~initial_gas n =
   let s = s ^ " " ^ Int64.to_string n in
@@ -76,13 +57,3 @@ let bench_execute_exn_pair s (n1, n2) ~gas_value ~gas_compile ~gas_exe ~script =
       let gas = Gas.make ~initial_gas:gas_exe in
       let _ = execute_exn gas arg ir in
       ())
-
-let counter_script =
-  [%lambda_vm.script
-    fun x ->
-      ( (fun f -> f f x) (fun f n ->
-            if n then
-              1L + f f (n - 1L)
-            else
-              0L),
-        (0L, 0L) )]

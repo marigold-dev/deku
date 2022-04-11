@@ -1,6 +1,12 @@
 (executable
  (name benchmarks)
- (libraries core core_bench core_unix.command_unix lambda_vm lambda_vm_tests)
+ (libraries
+  core
+  core_bench
+  core_unix.command_unix
+  lambda_vm
+  lambda_vm_tests
+  vm_utils)
  (preprocess
   (pps ppx_lambda_vm)))
 
