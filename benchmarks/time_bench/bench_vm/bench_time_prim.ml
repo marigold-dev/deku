@@ -6,6 +6,7 @@ open Benchmark
 
 (* negative n : Int64 (Int64.neg n),
    give an initial gas as 200 *)
+
 let compile_value_neg_lib n ~initial_gas =
   let n = Int64.(neg (Int64.of_int n)) in
   let gas = Gas.make ~initial_gas in
@@ -23,11 +24,10 @@ let execute_neg_lib n script =
   execute_exn gas arg ir
 
 (**********************************************************)
-(* TODO: optimizing later after being merged/or after done
-   writing test, share the same code with core_bench.
-   TODO: change the repeat times, iterations in latencyN, etc.
-   TODO: in readme, write details about the senario and input values
-   for these benchmarks: n, initial gas, etc.
+(*
+    TODO: change the repeat times, iterations in latencyN, etc.
+    TODO: in readme, write details about the senario and input values
+    for these benchmarks: n, initial gas, etc.
 *)
 
 (* benchmark compile value for negative *)
@@ -93,4 +93,88 @@ let bench_negative () =
   bench_compile_neg "Compile negative primitive script, init_gas = 1501" ();
   bench_execute_neg "Execute negative primitive with n = 0, 1, 2" ()
 
-let benchmark_prim () = bench_negative ()
+(************************************************************************)
+(* Primitives with 2 parameters*)
+
+let compile_value_pair (n1, n2) ~initial_gas =
+  let gas_value = Gas.make ~initial_gas in
+  compile_value_exn gas_value (Pair (Int64 n1, Int64 n2))
+
+let execute_script_exn_pair (n1, n2) ~gas_value ~gas_compile ~gas_exe ~script =
+  let arg = compile_value_pair (n1, n2) ~initial_gas:gas_value in
+  let gas_ir = Gas.make ~initial_gas:gas_compile in
+  let ir = compile_exn gas_ir script in
+  let gas = Gas.make ~initial_gas:gas_exe in
+  execute_exn gas arg ir
+
+let bench_execute_two_parameters () =
+  let list_bench =
+    [
+      ( "Execute: add",
+        (fun () ->
+          execute_script_exn_pair (1L, 2L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_add),
+        () );
+      ( "Execute: sub",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_sub),
+        () );
+      ( "Execute: mul",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_mul),
+        () );
+      ( "Execute: div",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_div),
+        () );
+      ( "Execute: rem",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_rem),
+        () );
+      ( "Execute: land",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_land),
+        () );
+      ( "Execute: lor",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_lor),
+        () );
+      ( "Execute: lxor",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_lxor),
+        () );
+      ( "Execute: lsl",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_lsl),
+        () );
+      ( "Execute: lsr",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_lsr),
+        () );
+      ( "Execute: asr",
+        (fun () ->
+          execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
+            ~gas_exe:2000 ~script:script_asr),
+        () );
+    ] in
+  let res = throughputN ~repeat:5 10 list_bench in
+  print_newline ();
+  print_endline "Bench two parameters";
+  tabulate res;
+
+  let res = latencyN 20_000L list_bench in
+  print_newline ();
+  tabulate res
+
+let benchmark_prim () =
+  (*bench_negative ();*)
+  bench_execute_two_parameters ()
