@@ -2,6 +2,22 @@
 
 [OCaml benchmark](https://github.com/Chris00/ocaml-benchmark) library provides functions to measure and compare the run-time of functions. It is inspired by the Perl module of the same name. 
 
+
+Computer configuation that ran the benchmark:
+
+```
+Memory: 16 GiB
+Processor: Intel® Core™ i7-8665U CPU @ 1.90GHz × 8 
+OS Name: Ubuntu Jammy Jellyfish 
+OS Type: 64-bit
+GNOME version: 42.0
+```
+
+We are using the library [`ocaml-benchmark`](https://github.com/Chris00/ocaml-benchmark) to measure the execution costs of operations in Lambda VM. 
+
+We have 1 main benchmarking functions:
+- execution function: The combination of 3 functions: `compile_value`, `compile` and `execute`.
+
 ## Run
 
 - esy:
@@ -41,110 +57,110 @@ n=1:  0.00 WALL ( 0.00 usr +  0.00 sys =  0.00 CPU) @ 49504950.50/s (n=20000)
           Rate n=1
 n=1 49504950/s  --
 
-Throughputs for "Execute: add", "Execute: sub", "Execute: mul", "Execute: div", "Execute: rem", "Execute: land", "Execute: lor", "Execute: lxor", "Execute: lsl", "Execute: lsr", "Execute: asr" each running 5 times for at least 10 CPU seconds:
- Execute: add: 10.24 WALL (10.22 usr +  0.00 sys = 10.22 CPU) @ 2117820.95/s (n=21636849)
-               10.17 WALL (10.16 usr +  0.00 sys = 10.16 CPU) @ 2129541.12/s (n=21636849)
-               11.31 WALL (11.30 usr +  0.00 sys = 11.31 CPU) @ 1913666.65/s (n=21636849)
-               11.33 WALL (11.31 usr +  0.00 sys = 11.31 CPU) @ 1912758.53/s (n=21636849)
-               11.15 WALL (11.15 usr +  0.00 sys = 11.15 CPU) @ 1941139.82/s (n=21636849)
- Execute: sub: 10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1779589.91/s (n=17976782)
-               10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1880192.03/s (n=18993102)
-               10.12 WALL (10.11 usr +  0.00 sys = 10.11 CPU) @ 1888832.17/s (n=19103692)
-               10.09 WALL (10.09 usr +  0.00 sys = 10.09 CPU) @ 1961360.54/s (n=19788090)
-               10.07 WALL (10.07 usr +  0.00 sys = 10.07 CPU) @ 1949582.58/s (n=19632669)
- Execute: mul: 11.14 WALL (11.13 usr +  0.00 sys = 11.13 CPU) @ 1779781.35/s (n=19814651)
-               10.63 WALL (10.63 usr +  0.00 sys = 10.63 CPU) @ 1863325.25/s (n=19814651)
-               10.51 WALL (10.50 usr +  0.00 sys = 10.50 CPU) @ 1886774.49/s (n=19814651)
-               10.40 WALL (10.40 usr +  0.00 sys = 10.40 CPU) @ 1905070.81/s (n=19814651)
-               10.04 WALL (10.04 usr +  0.00 sys = 10.04 CPU) @ 1973799.26/s (n=19814651)
- Execute: div: 11.08 WALL (11.07 usr +  0.00 sys = 11.07 CPU) @ 1904383.70/s (n=21088172)
-               12.43 WALL (12.42 usr +  0.00 sys = 12.42 CPU) @ 1698156.17/s (n=21088172)
-               11.27 WALL (11.26 usr +  0.00 sys = 11.26 CPU) @ 1872436.51/s (n=21088172)
-               11.34 WALL (11.33 usr +  0.00 sys = 11.33 CPU) @ 1861149.23/s (n=21088172)
-               10.90 WALL (10.90 usr +  0.00 sys = 10.90 CPU) @ 1934646.76/s (n=21088172)
- Execute: rem: 10.18 WALL (10.18 usr +  0.00 sys = 10.18 CPU) @ 1958794.20/s (n=19934104)
-               11.81 WALL (11.80 usr +  0.00 sys = 11.80 CPU) @ 1689227.49/s (n=19934104)
-               10.47 WALL (10.47 usr +  0.00 sys = 10.47 CPU) @ 1904675.38/s (n=19934104)
-               10.87 WALL (10.87 usr +  0.00 sys = 10.87 CPU) @ 1834098.75/s (n=19934104)
-               10.21 WALL (10.21 usr +  0.00 sys = 10.21 CPU) @ 1951943.32/s (n=19934104)
-Execute: land: 10.50 WALL (10.49 usr +  0.01 sys = 10.49 CPU) @ 1960203.28/s (n=20571122)
-               11.27 WALL (11.26 usr +  0.00 sys = 11.26 CPU) @ 1827010.63/s (n=20571122)
-               11.58 WALL (11.56 usr +  0.01 sys = 11.56 CPU) @ 1778843.45/s (n=20571122)
-               10.86 WALL (10.82 usr +  0.00 sys = 10.83 CPU) @ 1900008.48/s (n=20571122)
-               11.02 WALL (10.98 usr +  0.00 sys = 10.99 CPU) @ 1872206.02/s (n=20571122)
- Execute: lor: 10.45 WALL (10.42 usr +  0.00 sys = 10.43 CPU) @ 1965839.45/s (n=20501203)
-               10.37 WALL (10.37 usr +  0.00 sys = 10.37 CPU) @ 1977892.23/s (n=20501203)
-               11.97 WALL (11.97 usr +  0.00 sys = 11.97 CPU) @ 1712968.38/s (n=20501203)
-               10.55 WALL (10.54 usr +  0.00 sys = 10.54 CPU) @ 1944285.09/s (n=20501203)
-               10.91 WALL (10.90 usr +  0.00 sys = 10.90 CPU) @ 1880661.25/s (n=20501203)
-Execute: lxor: 10.19 WALL (10.18 usr +  0.00 sys = 10.18 CPU) @ 1975803.23/s (n=20114973)
-               10.16 WALL (10.16 usr +  0.00 sys = 10.16 CPU) @ 1980366.34/s (n=20114973)
-               11.28 WALL (11.26 usr +  0.00 sys = 11.26 CPU) @ 1786821.16/s (n=20114973)
-               11.31 WALL (11.29 usr +  0.00 sys = 11.29 CPU) @ 1782042.57/s (n=20114973)
-               10.64 WALL (10.61 usr +  0.00 sys = 10.61 CPU) @ 1895066.14/s (n=20114973)
- Execute: lsl: 10.57 WALL (10.57 usr +  0.00 sys = 10.57 CPU) @ 1890045.24/s (n=19977215)
-               10.46 WALL (10.45 usr +  0.00 sys = 10.45 CPU) @ 1911348.61/s (n=19977215)
-               10.37 WALL (10.36 usr +  0.00 sys = 10.36 CPU) @ 1927782.70/s (n=19977215)
-               11.71 WALL (11.70 usr +  0.00 sys = 11.70 CPU) @ 1706771.71/s (n=19977215)
-               10.55 WALL (10.54 usr +  0.00 sys = 10.54 CPU) @ 1894477.77/s (n=19977215)
- Execute: lsr: 10.10 WALL (10.09 usr +  0.00 sys = 10.09 CPU) @ 1843121.78/s (n=18595228)
-               10.12 WALL (10.11 usr +  0.00 sys = 10.11 CPU) @ 1955201.34/s (n=19774224)
-               10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1924548.22/s (n=19446813)
-               10.21 WALL (10.20 usr +  0.00 sys = 10.20 CPU) @ 1897990.09/s (n=19367015)
-               10.08 WALL (10.08 usr +  0.00 sys = 10.08 CPU) @ 1807780.90/s (n=18213812)
- Execute: asr: 10.54 WALL (10.54 usr +  0.00 sys = 10.54 CPU) @ 2024791.06/s (n=21339354)
-               10.66 WALL (10.66 usr +  0.00 sys = 10.66 CPU) @ 2002605.34/s (n=21339354)
-               10.59 WALL (10.59 usr +  0.00 sys = 10.59 CPU) @ 2015848.79/s (n=21339354)
-               10.57 WALL (10.56 usr +  0.00 sys = 10.56 CPU) @ 2020436.76/s (n=21339354)
-               10.82 WALL (10.82 usr +  0.00 sys = 10.82 CPU) @ 1972509.56/s (n=21339354)
+Throughputs for "add", "sub", "mul", "div", "rem", "land", "lor", "lxor", "lsl", "lsr", "asr" each running 5 times for at least 10 CPU seconds:
+ add: 10.74 WALL (10.73 usr +  0.00 sys = 10.73 CPU) @ 2105491.81/s (n=22593961)
+      10.70 WALL (10.69 usr +  0.00 sys = 10.69 CPU) @ 2112712.18/s (n=22593961)
+      11.25 WALL (11.23 usr +  0.00 sys = 11.23 CPU) @ 2011612.69/s (n=22593961)
+      11.54 WALL (11.54 usr +  0.00 sys = 11.54 CPU) @ 1958311.91/s (n=22593961)
+      13.18 WALL (13.16 usr +  0.00 sys = 13.17 CPU) @ 1716186.77/s (n=22593961)
+ sub: 10.88 WALL (10.86 usr +  0.00 sys = 10.86 CPU) @ 1788803.69/s (n=19433227)
+      10.83 WALL (10.82 usr +  0.00 sys = 10.82 CPU) @ 1795687.72/s (n=19433227)
+      10.79 WALL (10.79 usr +  0.00 sys = 10.79 CPU) @ 1801527.86/s (n=19433227)
+      10.56 WALL (10.56 usr +  0.00 sys = 10.56 CPU) @ 1840467.79/s (n=19433227)
+      11.81 WALL (11.80 usr +  0.00 sys = 11.80 CPU) @ 1647243.52/s (n=19433227)
+ mul: 10.12 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 1923682.83/s (n=19465735)
+      10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1859353.58/s (n=18780875)
+      10.12 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 1963063.67/s (n=19863723)
+      10.01 WALL (10.01 usr +  0.00 sys = 10.01 CPU) @ 1982929.99/s (n=19848223)
+      10.12 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 1988744.86/s (n=20127677)
+ div: 10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1677380.59/s (n=16945048)
+      10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 1904713.23/s (n=19246152)
+      10.09 WALL (10.09 usr +  0.00 sys = 10.09 CPU) @ 1824035.81/s (n=18405893)
+      10.13 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 1930525.33/s (n=19538455)
+      10.13 WALL (10.13 usr +  0.00 sys = 10.13 CPU) @ 1932513.07/s (n=19575194)
+ rem: 11.01 WALL (11.01 usr +  0.00 sys = 11.01 CPU) @ 1845839.92/s (n=20317819)
+      11.48 WALL (11.47 usr +  0.00 sys = 11.47 CPU) @ 1771106.54/s (n=20317819)
+      10.79 WALL (10.79 usr +  0.00 sys = 10.79 CPU) @ 1883330.62/s (n=20317819)
+      10.83 WALL (10.82 usr +  0.00 sys = 10.82 CPU) @ 1877359.51/s (n=20317819)
+      10.46 WALL (10.46 usr +  0.00 sys = 10.46 CPU) @ 1943237.32/s (n=20317819)
+land: 10.14 WALL (10.13 usr +  0.00 sys = 10.13 CPU) @ 1987888.98/s (n=20146404)
+      11.49 WALL (11.44 usr +  0.00 sys = 11.45 CPU) @ 1759700.61/s (n=20146404)
+      10.88 WALL (10.86 usr +  0.00 sys = 10.86 CPU) @ 1855771.17/s (n=20146404)
+      10.80 WALL (10.79 usr +  0.00 sys = 10.79 CPU) @ 1866746.48/s (n=20146404)
+      10.26 WALL (10.26 usr +  0.00 sys = 10.26 CPU) @ 1964447.01/s (n=20146404)
+ lor: 10.51 WALL (10.51 usr +  0.00 sys = 10.51 CPU) @ 1855206.20/s (n=19492505)
+      11.10 WALL (11.08 usr +  0.01 sys = 11.09 CPU) @ 1758071.00/s (n=19492505)
+      11.58 WALL (11.55 usr +  0.00 sys = 11.55 CPU) @ 1687349.11/s (n=19492505)
+      11.06 WALL (11.05 usr +  0.00 sys = 11.05 CPU) @ 1764222.86/s (n=19492505)
+      10.69 WALL (10.68 usr +  0.00 sys = 10.68 CPU) @ 1824738.21/s (n=19492505)
+lxor: 10.46 WALL (10.46 usr +  0.00 sys = 10.46 CPU) @ 2087698.14/s (n=21837761)
+      10.51 WALL (10.51 usr +  0.00 sys = 10.51 CPU) @ 2078326.79/s (n=21837761)
+      10.28 WALL (10.28 usr +  0.00 sys = 10.28 CPU) @ 2125213.71/s (n=21837761)
+      10.32 WALL (10.31 usr +  0.00 sys = 10.32 CPU) @ 2117054.17/s (n=21837761)
+      10.33 WALL (10.32 usr +  0.00 sys = 10.32 CPU) @ 2115324.82/s (n=21837761)
+ lsl: 10.46 WALL (10.46 usr +  0.00 sys = 10.46 CPU) @ 2118265.79/s (n=22164150)
+      10.44 WALL (10.43 usr +  0.00 sys = 10.43 CPU) @ 2124202.52/s (n=22164150)
+      10.49 WALL (10.49 usr +  0.00 sys = 10.49 CPU) @ 2112109.53/s (n=22164150)
+      10.97 WALL (10.96 usr +  0.00 sys = 10.96 CPU) @ 2021813.99/s (n=22164150)
+      10.68 WALL (10.68 usr +  0.00 sys = 10.68 CPU) @ 2076256.87/s (n=22164150)
+ lsr: 10.24 WALL (10.24 usr +  0.00 sys = 10.24 CPU) @ 2063093.99/s (n=21125022)
+      10.14 WALL (10.14 usr +  0.00 sys = 10.14 CPU) @ 2082974.58/s (n=21125022)
+      10.11 WALL (10.11 usr +  0.00 sys = 10.11 CPU) @ 2115180.56/s (n=21387166)
+      10.27 WALL (10.26 usr +  0.00 sys = 10.26 CPU) @ 2058393.02/s (n=21125022)
+      10.54 WALL (10.53 usr +  0.00 sys = 10.53 CPU) @ 2005667.51/s (n=21125022)
+ asr: 10.56 WALL (10.55 usr +  0.00 sys = 10.55 CPU) @ 2075221.25/s (n=21901441)
+      10.47 WALL (10.47 usr +  0.00 sys = 10.47 CPU) @ 2092662.24/s (n=21901441)
+      10.35 WALL (10.35 usr +  0.00 sys = 10.35 CPU) @ 2116358.53/s (n=21901441)
+      10.34 WALL (10.34 usr +  0.00 sys = 10.34 CPU) @ 2118466.22/s (n=21901441)
+      11.16 WALL (11.15 usr +  0.00 sys = 11.15 CPU) @ 1963609.54/s (n=21901441)
 
-Bench two parameters
-                   Rate        Execute: div Execute: lsl Execute: land Execute: rem Execute: mul Execute: lxor Execute: lsr Execute: sub Execute: lor Execute: add Execute: asr
- Execute: div 1854154+-78016/s           --        [-1%]         [-1%]        [-1%]        [-1%]         [-2%]        [-2%]        [-2%]        [-2%]          -7%          -8%
- Execute: lsl 1866085+-76728/s         [1%]           --         [-0%]        [-0%]        [-1%]         [-1%]        [-1%]        [-1%]        [-2%]        [-7%]          -7%
-Execute: land 1867654+-58827/s         [1%]         [0%]            --        [-0%]        [-1%]         [-1%]        [-1%]        [-1%]        [-2%]          -7%          -7%
- Execute: rem 1867748+-94756/s         [1%]         [0%]          [0%]           --        [-1%]         [-1%]        [-1%]        [-1%]        [-2%]        [-7%]          -7%
- Execute: mul 1881750+-59751/s         [1%]         [1%]          [1%]         [1%]           --         [-0%]        [-0%]        [-1%]        [-1%]        [-6%]          -6%
-Execute: lxor 1884020+-82465/s         [2%]         [1%]          [1%]         [1%]         [0%]            --        [-0%]        [-0%]        [-1%]        [-6%]          -6%
- Execute: lsr 1885728+-50938/s         [2%]         [1%]          [1%]         [1%]         [0%]          [0%]           --        [-0%]        [-1%]        [-6%]          -6%
- Execute: sub 1891911+-61438/s         [2%]         [1%]          [1%]         [1%]         [1%]          [0%]         [0%]           --        [-0%]        [-6%]          -6%
- Execute: lor 1896329+-92741/s         [2%]         [2%]          [2%]         [2%]         [1%]          [1%]         [1%]         [0%]           --        [-5%]        [-6%]
- Execute: add 2002985+-94186/s           8%         [7%]            7%         [7%]         [6%]          [6%]         [6%]         [6%]         [6%]           --        [-0%]
- Execute: asr 2007238+-17945/s           8%           8%            7%           7%           7%            7%           6%           6%         [6%]         [0%]           --
-Latencies for 20000 iterations of "Execute: add", "Execute: sub", "Execute: mul", "Execute: div", "Execute: rem", "Execute: land", "Execute: lor", "Execute: lxor", "Execute: lsl", "Execute: lsr", "Execute: asr":
- Execute: add:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1629062.47/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: sub:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 978186.44/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: mul:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 947014.54/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: div:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1236705.42/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: rem:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1443209.70/s (n=20000)
-               (warning: too few iterations for a reliable count)
-Execute: land:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 994035.79/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: lor:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1072903.81/s (n=20000)
-               (warning: too few iterations for a reliable count)
-Execute: lxor:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1296260.29/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: lsl:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1206854.94/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: lsr:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 981546.92/s (n=20000)
-               (warning: too few iterations for a reliable count)
- Execute: asr:  0.02 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1336451.72/s (n=20000)
-               (warning: too few iterations for a reliable count)
+Benchmark two parameters
+          Rate          sub   lor   div   rem  land   mul   add   lsr   asr   lsl  lxor
+ sub 1774746+- 62915/s   -- [-0%] [-4%] [-5%] [-6%]   -9%  -10%  -14%  -14%  -15%  -16%
+ lor 1777917+- 55312/s [0%]    -- [-4%] [-5%] [-6%]   -9%  -10%  -14%  -14%  -15%  -16%
+ div 1853834+- 91796/s [4%]  [4%]    -- [-1%] [-2%] [-5%] [-6%]  -10%  -11%  -11%  -12%
+ rem 1864175+- 53385/s [5%]  [5%]  [1%]    -- [-1%] [-4%] [-6%]  -10%  -10%  -11%  -11%
+land 1886911+- 78070/s [6%]  [6%]  [2%]  [1%]    -- [-3%] [-5%]   -9%   -9%  -10%  -10%
+ mul 1943555+- 45477/s  10%    9%  [5%]  [4%]  [3%]    -- [-2%]   -6%   -6%   -7%   -8%
+ add 1980863+-137290/s  12%   11%  [7%]  [6%]  [5%]  [2%]    -- [-4%] [-4%] [-5%] [-6%]
+ lsr 2065062+- 34012/s  16%   16%   11%   11%    9%    6%  [4%]    -- [-0%] [-1%] [-2%]
+ asr 2073264+- 54249/s  17%   17%   12%   11%   10%    7%  [5%]  [0%]    -- [-1%] [-1%]
+ lsl 2090530+- 36286/s  18%   18%   13%   12%   11%    8%  [6%]  [1%]  [1%]    -- [-1%]
+lxor 2104724+- 17367/s  19%   18%   14%   13%   12%    8%  [6%]  [2%]  [2%]  [1%]    --
+Latencies for 20000 iterations of "add", "sub", "mul", "div", "rem", "land", "lor", "lxor", "lsl", "lsr", "asr":
+ add:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1722207.87/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ sub:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1188707.28/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ mul:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 963623.22/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ div:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1948558.07/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ rem:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1823819.08/s (n=20000)
+      (warning: too few iterations for a reliable count)
+land:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1012043.32/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ lor:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1882175.80/s (n=20000)
+      (warning: too few iterations for a reliable count)
+lxor:  0.02 WALL ( 0.02 usr +  0.00 sys =  0.02 CPU) @ 1147842.06/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ lsl:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 2029632.64/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ lsr:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1369300.29/s (n=20000)
+      (warning: too few iterations for a reliable count)
+ asr:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 1561889.89/s (n=20000)
+      (warning: too few iterations for a reliable count)
 
-                   Rate Execute: mul Execute: sub Execute: lsr Execute: land Execute: lor Execute: lsl Execute: div Execute: lxor Execute: asr Execute: rem Execute: add
- Execute: mul  947015/s           --          -3%          -4%           -5%         -12%         -22%         -23%          -27%         -29%         -34%         -42%
- Execute: sub  978186/s           3%           --          -0%           -2%          -9%         -19%         -21%          -25%         -27%         -32%         -40%
- Execute: lsr  981547/s           4%           0%           --           -1%          -9%         -19%         -21%          -24%         -27%         -32%         -40%
-Execute: land  994036/s           5%           2%           1%            --          -7%         -18%         -20%          -23%         -26%         -31%         -39%
- Execute: lor 1072904/s          13%          10%           9%            8%           --         -11%         -13%          -17%         -20%         -26%         -34%
- Execute: lsl 1206855/s          27%          23%          23%           21%          12%           --          -2%           -7%         -10%         -16%         -26%
- Execute: div 1236705/s          31%          26%          26%           24%          15%           2%           --           -5%          -7%         -14%         -24%
-Execute: lxor 1296260/s          37%          33%          32%           30%          21%           7%           5%            --          -3%         -10%         -20%
- Execute: asr 1336452/s          41%          37%          36%           34%          25%          11%           8%            3%           --          -7%         -18%
- Execute: rem 1443210/s          52%          48%          47%           45%          35%          20%          17%           11%           8%           --         -11%
- Execute: add 1629062/s          72%          67%          66%           64%          52%          35%          32%           26%          22%          13%           --
+          Rate  mul land lxor  sub  lsr  asr  add  rem  lor  div  lsl
+ mul  963623/s   --  -5% -16% -19% -30% -38% -44% -47% -49% -51% -53%
+land 1012043/s   5%   -- -12% -15% -26% -35% -41% -45% -46% -48% -50%
+lxor 1147842/s  19%  13%   --  -3% -16% -27% -33% -37% -39% -41% -43%
+ sub 1188707/s  23%  17%   4%   -- -13% -24% -31% -35% -37% -39% -41%
+ lsr 1369300/s  42%  35%  19%  15%   -- -12% -20% -25% -27% -30% -33%
+ asr 1561890/s  62%  54%  36%  31%  14%   --  -9% -14% -17% -20% -23%
+ add 1722208/s  79%  70%  50%  45%  26%  10%   --  -6%  -8% -12% -15%
+ rem 1823819/s  89%  80%  59%  53%  33%  17%   6%   --  -3%  -6% -10%
+ lor 1882176/s  95%  86%  64%  58%  37%  21%   9%   3%   --  -3%  -7%
+ div 1948558/s 102%  93%  70%  64%  42%  25%  13%   7%   4%   --  -4%
+ lsl 2029633/s 111% 101%  77%  71%  48%  30%  18%  11%   8%   4%   --
 ```

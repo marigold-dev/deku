@@ -110,57 +110,57 @@ let execute_script_exn_pair (n1, n2) ~gas_value ~gas_compile ~gas_exe ~script =
 let bench_execute_two_parameters () =
   let list_bench =
     [
-      ( "Execute: add",
+      ( "add",
         (fun () ->
           execute_script_exn_pair (1L, 2L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_add),
         () );
-      ( "Execute: sub",
+      ( "sub",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_sub),
         () );
-      ( "Execute: mul",
+      ( "mul",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_mul),
         () );
-      ( "Execute: div",
+      ( "div",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_div),
         () );
-      ( "Execute: rem",
+      ( "rem",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_rem),
         () );
-      ( "Execute: land",
+      ( "land",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_land),
         () );
-      ( "Execute: lor",
+      ( "lor",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_lor),
         () );
-      ( "Execute: lxor",
+      ( "lxor",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_lxor),
         () );
-      ( "Execute: lsl",
+      ( "lsl",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_lsl),
         () );
-      ( "Execute: lsr",
+      ( "lsr",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_lsr),
         () );
-      ( "Execute: asr",
+      ( "asr",
         (fun () ->
           execute_script_exn_pair (2L, 1L) ~gas_value:2000 ~gas_compile:2000
             ~gas_exe:2000 ~script:script_asr),
@@ -168,7 +168,7 @@ let bench_execute_two_parameters () =
     ] in
   let res = throughputN ~repeat:5 10 list_bench in
   print_newline ();
-  print_endline "Bench two parameters";
+  print_endline "Benchmark two parameters";
   tabulate res;
 
   let res = latencyN 20_000L list_bench in
