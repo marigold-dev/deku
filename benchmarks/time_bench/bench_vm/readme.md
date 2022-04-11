@@ -1,4 +1,4 @@
-# Benchmark of Lambda VM by using the library ocaml-benchmarks
+# Benchmark of Lambda VM by using the library ocaml-benchmark
 
 [OCaml benchmark](https://github.com/Chris00/ocaml-benchmark) library provides functions to measure and compare the run-time of functions. It is inspired by the Perl module of the same name. 
 
@@ -15,7 +15,7 @@ GNOME version: 42.0
 
 We are using the library [`ocaml-benchmark`](https://github.com/Chris00/ocaml-benchmark) to measure the execution costs of operations in Lambda VM. 
 
-We have 1 main benchmarking functions:
+We have 1 main benchmarking function:
 - execution function: The combination of 3 functions: `compile_value`, `compile` and `execute`.
 
 ## Run
@@ -163,4 +163,38 @@ lxor 1147842/s  19%  13%   --  -3% -16% -27% -33% -37% -39% -41% -43%
  lor 1882176/s  95%  86%  64%  58%  37%  21%   9%   3%   --  -3%  -7%
  div 1948558/s 102%  93%  70%  64%  42%  25%  13%   7%   4%   --  -4%
  lsl 2029633/s 111% 101%  77%  71%  48%  30%  18%  11%   8%   4%   --
+```
+
+## Recursion
+
+Source `bench_time_recursion.ml`
+
+### Iterpreter
+
+```
+Throughputs for "factorial n=1", "fibonacci n=1" each running 5 times for at least 10 CPU seconds:
+factorial n=1: 11.56 WALL (11.51 usr +  0.00 sys = 11.51 CPU) @ 585876.36/s (n=6743315)
+               11.47 WALL (11.45 usr +  0.00 sys = 11.45 CPU) @ 588769.67/s (n=6743315)
+               12.33 WALL (12.32 usr +  0.00 sys = 12.32 CPU) @ 547203.62/s (n=6743315)
+               13.59 WALL (13.57 usr +  0.00 sys = 13.57 CPU) @ 496901.86/s (n=6743315)
+               14.38 WALL (14.34 usr +  0.00 sys = 14.34 CPU) @ 470365.96/s (n=6743315)
+fibonacci n=1: 11.89 WALL (11.89 usr +  0.00 sys = 11.89 CPU) @ 481982.15/s (n=5728874)
+               10.82 WALL (10.82 usr +  0.00 sys = 10.82 CPU) @ 529363.89/s (n=5728874)
+               10.71 WALL (10.71 usr +  0.00 sys = 10.71 CPU) @ 534889.64/s (n=5728874)
+               12.03 WALL (12.01 usr +  0.00 sys = 12.01 CPU) @ 477180.30/s (n=5728874)
+               11.40 WALL (11.39 usr +  0.00 sys = 11.39 CPU) @ 502918.95/s (n=5728874)
+
+Benchmark recursion
+                  Rate        fibonacci n=1 factorial n=1
+fibonacci n=1 505267+-22460/s            --         [-6%]
+factorial n=1 537823+-44998/s          [6%]            --
+Latencies for 20000 iterations of "factorial n=1", "fibonacci n=1":
+factorial n=1:  0.04 WALL ( 0.04 usr +  0.00 sys =  0.04 CPU) @ 449478.60/s (n=20000)
+               (warning: too few iterations for a reliable count)
+fibonacci n=1:  0.05 WALL ( 0.05 usr +  0.00 sys =  0.05 CPU) @ 409643.00/s (n=20000)
+               (warning: too few iterations for a reliable count)
+
+                  Rate fibonacci n=1 factorial n=1
+fibonacci n=1 409643/s            --           -9%
+factorial n=1 449479/s           10%            --
 ```

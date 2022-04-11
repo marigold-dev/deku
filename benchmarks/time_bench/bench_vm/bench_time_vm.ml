@@ -1,5 +1,3 @@
-open Bench_time_prim
-
 (*
   TODO: write script
   esy build:
@@ -9,4 +7,6 @@ open Bench_time_prim
     ~/deku/_build/default/benchmarks/time_bench/bench_vm/bench_time_vm.exe
 *)
 
-let main = benchmark_prim ()
+let main =
+  Bench_time_prim.benchmark_prim ();
+  Bench_time_recursion.benchmark_recursion ()
