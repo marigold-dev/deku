@@ -37,13 +37,10 @@ install:  [
 ]
 
 depends: [
-  "ocaml"           {>= "4.05.0"}
+  "ocaml"           {>= "4.08.0"}
   "dune"            {>= "2.6.0"}
   "conf-pkg-config" {build}
   "eqaf"
-  "base-bytes"
-  "bigarray-compat"
-  "stdlib-shims"
   "fmt"            {with-test}
   "alcotest"       {with-test}
   "bos"            {with-test}
@@ -62,10 +59,10 @@ conflicts: [
 ]
 url {
   src:
-    "https://github.com/mirage/digestif/releases/download/v1.1.1/digestif-1.1.1.tbz"
+    "https://github.com/mirage/digestif/releases/download/v1.1.2/digestif-1.1.2.tbz"
   checksum: [
-    "sha256=858fcaaf983c528f8e744f81accc7b0dd254c96b17222f12e1f270e8521d3799"
-    "sha512=019dfc8dd4a5e5f01fd142729d09135aca3d77a463c2910449203661f7e808ded68c9078b2cc1eb0f7acac7dcf21fa6250a93d8976ac94cd2cfd44b82eac8242"
+    "sha256=79d34ce513b114857e380aabdf6f1473218f1b05dd7e51d03890779ed01b4666"
+    "sha512=83e41de192443029baf86212488e986b2c73c19fb4ba59342685d44b36b2dcaf070aa9687277577058437c6513b76c204164ad96151dacdfb796b4080db7e50c"
   ]
 }
-x-commit-hash: "17b0dbc2d2b84769e63edcada0befaf0381809ff"
+x-commit-hash: "71af93d9608a4cb593ddd15763b69d42dd5c5262"
