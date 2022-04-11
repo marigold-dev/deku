@@ -1,15 +1,8 @@
 open Core_bench
 open Lambda_vm
 open Vm_utils
-
-let prim prim = Ast.Prim prim
-
-(* Primivites with 1 parameter *)
-let script_op1 prim =
-  [%lambda_vm.script fun param -> ([%e prim] param, (0L, 0L))]
-
-(* negation *)
-let script_neg = script_op1 (prim Neg)
+open Lambda_vm_tests
+open Primitives
 
 (* negative n : Int64 (Int64.neg n) *)
 let compile_value_neg_lib n ~initial_gas =
@@ -57,16 +50,6 @@ let test_execute_neg =
           ()))
 
 (* Primitives with 2 parameteres *)
-let script_op2 prim =
-  [%lambda_vm.script fun param -> ([%e prim] (fst param) (snd param), (0L, 0L))]
-
-(* addition *)
-
-(* Note: I cannot parse the execute of libary because the compile value of
-    Int64.add is (Int64 value) and not a (Pair value) while the script is a pair
-    value *)
-
-let script_add = script_op2 (prim Add)
 
 let compile_value_exn_lib f (n1, n2) ~initial_gas =
   let n = f n1 n2 in
@@ -102,8 +85,6 @@ let test_execute_add =
     ~gas_exe:2000 ~script:script_add
 
 (* subtraction *)
-let script_sub = script_op2 (prim Sub)
-
 let test_compile_value_sub =
   bench_compile_value_pair "sub" (2L, 1L) ~initial_gas:2000
 
@@ -118,7 +99,6 @@ let test_execute_sub =
     ~gas_exe:2000 ~script:script_sub
 
 (* Multiplication *)
-let script_mul = script_op2 (prim Mul)
 
 let test_compile_value_mul =
   bench_compile_value_pair "mul" (2L, 1L) ~initial_gas:2000
@@ -134,7 +114,6 @@ let test_execute_mul =
     ~gas_exe:2000 ~script:script_mul
 
 (* Division *)
-let script_div = script_op2 (prim Div)
 
 let test_compile_value_div =
   bench_compile_value_pair "div" (2L, 1L) ~initial_gas:2000
@@ -150,7 +129,6 @@ let test_execute_div =
     ~gas_exe:2000 ~script:script_div
 
 (* Remainder *)
-let script_rem = script_op2 (prim Rem)
 
 let test_compile_value_rem =
   bench_compile_value_pair "rem" (2L, 1L) ~initial_gas:2000
@@ -166,7 +144,6 @@ let test_execute_rem =
     ~gas_exe:2000 ~script:script_rem
 
 (* Bitwise logical and *)
-let script_land = script_op2 (prim Land)
 
 let test_compile_value_land =
   bench_compile_value_pair "land" (2L, 1L) ~initial_gas:2000
@@ -183,7 +160,6 @@ let test_execute_land =
     ~gas_exe:2000 ~script:script_land
 
 (* Bitwise logical or *)
-let script_lor = script_op2 (prim Lor)
 
 let test_compile_value_lor =
   bench_compile_value_pair "lor" (2L, 1L) ~initial_gas:2000
@@ -199,7 +175,6 @@ let test_execute_lor =
     ~gas_exe:2000 ~script:script_lor
 
 (* Bitwise logical exclusive or *)
-let script_lxor = script_op2 (prim Lxor)
 
 let test_compile_value_lxor =
   bench_compile_value_pair "lxor" (2L, 1L) ~initial_gas:2000
@@ -216,7 +191,6 @@ let test_execute_lxor =
     ~gas_exe:2000 ~script:script_lxor
 
 (* Shift left *)
-let script_lsl = script_op2 (prim Lsl)
 
 let test_compile_value_lsl =
   bench_compile_value_pair "lsl" (2L, 1L) ~initial_gas:2000
@@ -251,7 +225,6 @@ let test_execute_lsl =
     ~gas_exe:2000 ~script:script_lsl
 
 (* Shift right logical *)
-let script_lsr = script_op2 (prim Lsr)
 
 let test_compile_value_lsr_lib =
   bench_compile_value_shift_lib "lsr_lib" Int64.shift_right_logical 2L 1L
@@ -265,7 +238,6 @@ let test_execute_lsr =
     ~gas_exe:2000 ~script:script_lsr
 
 (* Shift right *)
-let script_asr = script_op2 (prim Asr)
 
 let test_compile_value_asr_lib =
   bench_compile_value_shift_lib "asr_lib" Int64.shift_right 2L 1L

@@ -1,0 +1,5 @@
+(library
+ (name lambda_vm_tests)
+ (libraries lambda_vm)
+ (preprocess
+  (pps ppx_lambda_vm)))
