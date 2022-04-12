@@ -73,23 +73,20 @@ const read = (callback) => {
       }
       buf = buf + chunk;
 
-      const newline = buf.indexOf("\n");
-      if (newline === -1) {
-        done();
-        return;
-      }
+      const parts = buf.split("\n");
+      const messages = parts.slice(0, -1); // everything except last
 
-      const message = buf.slice(0, newline);
-      // skips the newline
-      buf = buf.slice(newline + 1);
+      buf = parts.slice(-1)[0]; // last
 
-      try {
-        const json = JSON.parse(message);
-        this.push(json);
-        done();
-      } catch (err) {
-        done(err);
+      for (const message of messages) {
+        try {
+          const json = JSON.parse(message);
+          this.push(json);
+        } catch (err) {
+          return done(err);
+        }
       }
+      return done();
     },
   });
   const errorHandler = (err = "close") => failure(err);
