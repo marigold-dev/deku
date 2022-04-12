@@ -1,0 +1,11 @@
+(executables
+ (names bench_time_deku)
+ (libraries benchmark rely.lib tezos_rpc node protocol tezos_interop)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
+
+(rule
+ (alias bench_time_deku)
+ (deps bench_time_deku.exe)
+ (action
+  (run %{deps})))

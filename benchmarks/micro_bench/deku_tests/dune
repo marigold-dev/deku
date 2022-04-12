@@ -1,0 +1,5 @@
+(library
+ (name deku_tests)
+ (libraries rely.lib tezos_rpc node protocol tezos_interop)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))

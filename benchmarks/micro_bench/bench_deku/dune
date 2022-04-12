@@ -9,7 +9,7 @@
   node
   protocol
   tezos_interop
-  lambda_vm_tests)
+  deku_tests)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
