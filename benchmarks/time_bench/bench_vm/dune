@@ -1,6 +1,6 @@
 (executables
  (names bench_time_vm)
- (libraries benchmark lambda_vm lambda_vm_tests vm_utils)
+ (libraries benchmark lambda_vm lambda_vm_tests)
  (preprocess
   (pps ppx_lambda_vm)))
 

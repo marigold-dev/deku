@@ -1,5 +1,4 @@
 open Lambda_vm
-open Vm_utils
 open Lambda_vm_tests
 open Primitives_tests
 open Benchmark

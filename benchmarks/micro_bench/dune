@@ -1,5 +1,0 @@
-(library
- (name vm_utils)
- (libraries lambda_vm)
- (preprocess
-  (pps ppx_lambda_vm)))

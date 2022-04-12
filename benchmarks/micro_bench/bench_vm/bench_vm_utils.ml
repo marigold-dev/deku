@@ -1,6 +1,6 @@
 open Core_bench
 open Lambda_vm
-open Vm_utils
+open Lambda_vm_tests
 
 let bench_compile_value s ~initial_gas n =
   let s = s ^ " " ^ Int64.to_string n in

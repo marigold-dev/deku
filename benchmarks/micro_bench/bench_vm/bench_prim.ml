@@ -1,7 +1,6 @@
 open Core_bench
 open Lambda_vm
 open Bench_vm_utils
-open Vm_utils
 open Lambda_vm_tests
 open Primitives_tests
 

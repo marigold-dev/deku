@@ -1,5 +1,5 @@
 open Core_bench
-open Vm_utils
+open Lambda_vm_tests
 open Bench_vm_utils
 
 (* compile value *)

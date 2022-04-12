@@ -1,7 +1,6 @@
 open Lambda_vm
 open Core_bench
 open Bench_vm_utils
-open Vm_utils
 open Lambda_vm_tests
 open Recursion_tests
 
