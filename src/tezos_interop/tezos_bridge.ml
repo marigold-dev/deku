@@ -9,6 +9,12 @@ module Michelson = struct
     let%ok json = Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
     try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json) with
     | _ -> Error "invalid json"
+  let big_map_key_to_yojson (Key_hash key_hash) : Yojson.Safe.t =
+    `Assoc
+      [
+        ("key", `Assoc [("string", `String (Key_hash.to_string key_hash))]);
+        ("type", `Assoc [("prim", `String "key_hash")]);
+      ]
 end
 module Listen_transaction = struct
   type kind = Listen
@@ -112,6 +118,36 @@ module Storage = struct
     | _ -> Error "invalid status"
 end
 
+module Big_map = struct
+  type kind = Big_map
+  let kind_to_yojson Big_map = `String "big_map"
+  type request = {
+    kind : kind;
+    rpc_node : string;
+    confirmation : int;
+    destination : string;
+    key : Michelson.big_map_key;
+  }
+  [@@deriving to_yojson]
+
+  let of_yojson json =
+    let module T = struct
+      type t = { status : string } [@@deriving of_yojson { strict = false }]
+      type success = { value : Michelson.t }
+      [@@deriving of_yojson { strict = false }]
+      type error = { error : string } [@@deriving of_yojson { strict = false }]
+    end in
+    let%ok { status } = T.of_yojson json in
+    match status with
+    | "success" ->
+      let%ok { value } = T.success_of_yojson json in
+      Ok (Ok value)
+    | "error" ->
+      let%ok { error } = T.error_of_yojson json in
+      Ok (Error error)
+    | _ -> Error "invalid status"
+end
+
 type t = Long_lived_js_process.t
 let spawn () =
   let file = Scripts.file_tezos_js_bridge in
@@ -156,3 +192,16 @@ let storage t ~rpc_node ~required_confirmations ~destination =
       } in
   Long_lived_js_process.request t ~to_yojson:Storage.request_to_yojson
     ~of_yojson:Storage.of_yojson request
+
+let big_map t ~rpc_node ~required_confirmations ~destination ~key =
+  let request =
+    Big_map.
+      {
+        kind = Big_map;
+        rpc_node = Uri.to_string rpc_node;
+        confirmation = required_confirmations;
+        destination = Address.to_string destination;
+        key;
+      } in
+  Long_lived_js_process.request t ~to_yojson:Big_map.request_to_yojson
+    ~of_yojson:Big_map.of_yojson request

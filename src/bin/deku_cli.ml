@@ -8,8 +8,6 @@ open Core
 open Bin_common
 
 let () = Printexc.record_backtrace true
-let read_validators ~node_folder =
-  Files.Validators.read ~file:(node_folder ^ "/validators.json")
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
 let write_identity ~node_folder =
@@ -17,9 +15,16 @@ let write_identity ~node_folder =
 let write_interop_context ~node_folder =
   Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
-let validators_uris node_folder =
-  let%await validators = read_validators ~node_folder in
-  validators |> List.map snd |> await
+let interop_context node_folder =
+  let%await context =
+    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
+  Lwt.return
+    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
+       ~consensus_contract:context.consensus_contract
+       ~discovery_contract:context.discovery_contract
+       ~required_confirmations:context.required_confirmations)
+let validator_uris ~interop_context =
+  Tezos_interop.Consensus.fetch_validators interop_context
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 let exits =
@@ -142,26 +147,30 @@ let info_create_transaction =
 let create_transaction node_folder sender_wallet_file received_address amount
     ticket =
   let open Networking in
-  let%await validators_uris = validators_uris node_folder in
-  let validator_uri = List.hd validators_uris in
-  let%await block_level_response = request_block_level () validator_uri in
-  let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-  let transaction =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
-      ~block_height:block_level
-      ~data:
-        (Core.User_operation.make
-           ~sender:(Address.of_key_hash wallet.address)
-           (Transaction { destination = received_address; amount; ticket }))
-  in
-  let%await identity = read_identity ~node_folder in
-  let%await () =
-    Networking.request_user_operation_gossip
-      { user_operation = transaction }
-      identity.uri in
-  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
-  Lwt.return (`Ok ())
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok [] -> Lwt.return (`Error (false, "No validators found"))
+  | Ok ((_, validator_uri) :: _) ->
+    let%await block_level_response = request_block_level () validator_uri in
+    let block_level = block_level_response.level in
+    let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+    let transaction =
+      Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+        ~block_height:block_level
+        ~data:
+          (Core.User_operation.make
+             ~sender:(Address.of_key_hash wallet.address)
+             (Transaction { destination = received_address; amount; ticket }))
+    in
+    let%await identity = read_identity ~node_folder in
+    let%await () =
+      Networking.request_user_operation_gossip
+        { user_operation = transaction }
+        identity.uri in
+    Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+    Lwt.return (`Ok ())
 let folder_node =
   let docv = "folder_node" in
   let doc = "The folder where the node lives." in
@@ -328,14 +337,19 @@ let info_sign_block =
 let sign_block node_folder block_hash =
   let%await identity = read_identity ~node_folder in
   let signature = Signature.sign ~key:identity.secret block_hash in
-  let%await validators_uris = validators_uris node_folder in
-  let%await () =
-    let open Networking in
-    broadcast_to_list
-      (module Signature_spec)
-      validators_uris
-      { hash = block_hash; signature } in
-  Lwt.return (`Ok ())
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let validator_uris = List.map snd validator_uris in
+    let%await () =
+      let open Networking in
+      broadcast_to_list
+        (module Signature_spec)
+        validator_uris
+        { hash = block_hash; signature } in
+    Lwt.return (`Ok ())
 let sign_block_term =
   let folder_node =
     let docv = "folder_node" in
@@ -361,14 +375,19 @@ let produce_block node_folder =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
       ~author:address ~operations:[] in
   let signature = Block.sign ~key:identity.secret block in
-  let%await validators_uris = validators_uris node_folder in
-  let%await () =
-    let open Networking in
-    broadcast_to_list
-      (module Block_and_signature_spec)
-      validators_uris { block; signature } in
-  Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-  Lwt.return (`Ok ())
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let validator_uris = List.map snd validator_uris in
+    let%await () =
+      let open Networking in
+      broadcast_to_list
+        (module Block_and_signature_spec)
+        validator_uris { block; signature } in
+    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+    Lwt.return (`Ok ())
 let produce_block =
   let folder_node =
     let docv = "folder_node" in
@@ -417,11 +436,17 @@ let info_setup_tezos =
   let doc = "Setup Tezos identity" in
   Term.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
 let setup_tezos node_folder rpc_node secret consensus_contract
-    required_confirmations =
+    discovery_contract required_confirmations =
   let%await () = ensure_folder node_folder in
   let%await () =
     write_interop_context ~node_folder
-      { rpc_node; secret; consensus_contract; required_confirmations } in
+      {
+        rpc_node;
+        secret;
+        consensus_contract;
+        discovery_contract;
+        required_confirmations;
+      } in
   await (`Ok ())
 let setup_tezos =
   let folder_dest =
@@ -450,6 +475,13 @@ let setup_tezos =
     required
     & opt (some address_tezos_interop) None
     & info ["tezos_consensus_contract"] ~doc ~docv in
+  let tezos_discovery_contract_address =
+    let docv = "tezos_discovery_contract_address" in
+    let doc = "The address of the Tezos discovery contract." in
+    let open Arg in
+    required
+    & opt (some address_tezos_interop) None
+    & info ["tezos_discovery_contract"] ~doc ~docv in
   let tezos_required_confirmations =
     let docv = "int" in
     let doc =
@@ -466,6 +498,7 @@ let setup_tezos =
     $ tezos_node_uri
     $ tezos_secret
     $ tezos_consensus_contract_address
+    $ tezos_discovery_contract_address
     $ tezos_required_confirmations)
 let show_help =
   let doc = "a tool for interacting with the WIP Tezos Sidechain" in

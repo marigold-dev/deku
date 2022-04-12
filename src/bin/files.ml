@@ -24,22 +24,6 @@ module Wallet = struct
   let read = read_json of_yojson
   let write = write_json to_yojson
 end
-module Validators = struct
-  type t = {
-    address : Crypto.Key_hash.t;
-    uri : Uri.t;
-  }
-  [@@deriving yojson]
-  let read =
-    read_json (fun json ->
-        let%ok validators = [%of_yojson: t list] json in
-        Ok (List.map (fun { address; uri } -> (address, uri)) validators))
-  let write =
-    write_json (fun validators ->
-        validators
-        |> List.map (fun (address, uri) -> { address; uri })
-        |> [%to_yojson: t list])
-end
 module Interop_context = struct
   module Secret = struct
     include Crypto.Secret
@@ -53,6 +37,7 @@ module Interop_context = struct
     rpc_node : Uri.t;
     secret : Secret.t;
     consensus_contract : Tezos.Address.t;
+    discovery_contract : Tezos.Address.t;
     required_confirmations : int;
   }
   [@@deriving yojson]

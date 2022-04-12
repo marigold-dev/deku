@@ -6,15 +6,18 @@ type t = {
   rpc_node : Uri.t;
   secret : Secret.t;
   consensus_contract : Address.t;
+  discovery_contract : Address.t;
   required_confirmations : int;
   bridge_process : Tezos_bridge.t;
 }
-let make ~rpc_node ~secret ~consensus_contract ~required_confirmations =
+let make ~rpc_node ~secret ~consensus_contract ~discovery_contract
+    ~required_confirmations =
   let bridge_process = Tezos_bridge.spawn () in
   {
     rpc_node;
     secret;
     consensus_contract;
+    discovery_contract;
     required_confirmations;
     bridge_process;
   }
@@ -26,6 +29,7 @@ module Run_contract = struct
       secret;
       required_confirmations;
       consensus_contract = _;
+      discovery_contract = _;
       bridge_process;
     } =
       t in
@@ -44,6 +48,19 @@ end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address =
     Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
       ~destination:contract_address
+end
+module Fetch_big_map : sig
+  val run :
+    t ->
+    rpc_node:Uri.t ->
+    required_confirmations:int ->
+    contract_address:Address.t ->
+    key:Michelson.big_map_key ->
+    (Michelson.t, string) result Lwt.t
+end = struct
+  let run t ~rpc_node ~required_confirmations ~contract_address ~key =
+    Tezos_bridge.big_map t.bridge_process ~rpc_node ~required_confirmations
+      ~destination:contract_address ~key
 end
 
 module Listen_transactions = struct
@@ -187,15 +204,44 @@ module Consensus = struct
     Listen_transactions.listen t ~rpc_node:t.rpc_node
       ~required_confirmations:t.required_confirmations
       ~destination:t.consensus_contract ~on_message
+  let fetch_discovery t validator_key_hash =
+    let {
+      rpc_node;
+      required_confirmations;
+      consensus_contract = _;
+      discovery_contract;
+      secret = _;
+      bridge_process = _;
+    } =
+      t in
+    let micheline_to_validators (michelson : (Michelson.t, string) result) =
+      let%ok michelson = michelson in
+      let michelson = Micheline.root michelson in
+      match michelson with
+      | Micheline.Prim (_, D_Pair, [_; String (_, uri)], _) ->
+        Ok (Uri.of_string uri)
+      | _ -> Error "Failed to parse storage micheline expression" in
+    let%await micheline_storage =
+      Fetch_big_map.run t ~required_confirmations ~rpc_node
+        ~contract_address:discovery_contract ~key:(Key_hash validator_key_hash)
+    in
+    Lwt.return (micheline_to_validators micheline_storage)
+
   let fetch_validators t =
     let {
       rpc_node;
       required_confirmations;
       consensus_contract;
+      discovery_contract = _;
       secret = _;
       bridge_process = _;
     } =
       t in
+
+    let rec traverse_result = function
+      | [] -> Ok []
+      | Ok x :: xs -> Result.bind (traverse_result xs) (fun xs -> Ok (x :: xs))
+      | Error e :: _ -> Error e in
 
     let micheline_to_validators michelson =
       let%ok michelson = michelson in
@@ -217,7 +263,26 @@ module Consensus = struct
     let%await micheline_storage =
       Fetch_storage.run t ~required_confirmations ~rpc_node
         ~contract_address:consensus_contract in
-    Lwt.return (micheline_to_validators micheline_storage)
+    let validators = micheline_to_validators micheline_storage in
+    match validators with
+    | Ok validators ->
+      let rec lwt_traverse = function
+        | [] -> Lwt.return []
+        | x :: xs ->
+          let%await x = x in
+          let%await xs = lwt_traverse xs in
+          Lwt.return (x :: xs) in
+      let%await validator_pairs =
+        lwt_traverse
+          (List.map
+             (fun validator_key_hash ->
+               let%await uri = fetch_discovery t validator_key_hash in
+               match uri with
+               | Ok uri -> Lwt.return (Ok (validator_key_hash, uri))
+               | Error e -> Lwt.return (Error e))
+             validators) in
+      Lwt.return (traverse_result validator_pairs)
+    | Error e -> Lwt.return (Error e)
 end
 module Discovery = struct
   open Pack

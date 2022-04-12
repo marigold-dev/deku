@@ -28,25 +28,16 @@ message() {
   echo "=========== $@ ==========="
 }
 
-validators_json() {
+discovery_storage() {
   ## most of the noise in this function is because of indentation
-  echo "["
+  echo "Big_map.literal ["
   for VALIDATOR in "${VALIDATORS[@]}"; do
-    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
     URI=$(echo $VALIDATOR | awk -F';' '{ print $3 }')
-    if [ $i != 0 ]; then
-      printf ",
-"
-    fi
     cat <<EOF
-  {
-    "address": "$ADDRESS",
-    "uri": "$URI"
+  (("$ADDRESS" : key_hash), (0, "$URI"));
 EOF
-    printf "  }"
   done
-  echo ""
   echo "]"
 }
 
@@ -70,6 +61,21 @@ EOF
   echo "]"
 }
 
+deploy_contract () {
+  message "Deploying new $1 contract"
+  storage=$(ligo compile storage "$2" "$3")
+  contract=$(ligo compile contract $2)
+  
+  echo "Originating $1 contract"
+  sleep 2
+  tezos-client --endpoint $RPC_NODE originate contract "$1" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 2 \
+    --force
+}
+
 create_new_deku_environment() {
   message "Creating validator identities"
   for i in ${VALIDATORS[@]}; do
@@ -83,12 +89,11 @@ create_new_deku_environment() {
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
-  message "Deploying new consensus contract"
 
   # To register the validators, run consensus.mligo with the list of
   # validators. To do this quickly, open the LIGO IDE with the url
   # provided and paste the following storage as inputs to the contract.
-  storage=$(
+  consensus_storage=$(
     cat <<EOF
 {
   root_hash = {
@@ -116,27 +121,19 @@ EOF
   )
 
   consensus="./src/tezos_interop/consensus.mligo"
-  storage=$(ligo compile storage "$consensus" "$storage")
-  contract=$(ligo compile contract $consensus)
-
-  message "Originating contract"
-  sleep 2
-  tezos-client --endpoint $RPC_NODE originate contract "consensus" \
-    transferring 0 from myWallet \
-    running "$contract" \
-    --init "$storage" \
-    --burn-cap 2 \
-    --force
+  discovery="./src/tezos_interop/discovery.mligo"
+  deploy_contract "consensus" "$consensus" "$consensus_storage"
+  deploy_contract "discovery" "$discovery" "$(discovery_storage)"
 
   for VALIDATOR in ${VALIDATORS[@]}; do
     i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
-    validators_json >"$FOLDER/validators.json"
     trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
   done
 
   message "Getting contract address"
   TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
 
   message "Configuring Deku nodes"
   for VALIDATOR in ${VALIDATORS[@]}; do
@@ -145,6 +142,7 @@ EOF
 
     deku-cli setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
+      --tezos_discovery_contract="$TEZOS_DISCOVERY_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1

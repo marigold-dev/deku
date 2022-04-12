@@ -52,3 +52,11 @@ val storage :
   required_confirmations:int ->
   destination:Address.t ->
   (Michelson.t, string) result Lwt.t
+
+val big_map :
+  t ->
+  rpc_node:Uri.t ->
+  required_confirmations:int ->
+  destination:Address.t ->
+  key:Michelson.big_map_key ->
+  (Michelson.t, string) result Lwt.t
