@@ -1,28 +1,6 @@
 open Core_bench
-open Protocol
-open Validators
-
-let make_validator () =
-  let open Crypto in
-  let _key, wallet = Ed25519.generate () in
-  let address = Key_hash.of_key (Ed25519 wallet) in
-  let open Validators in
-  { address }
-
-(***************************************************************)
-(* [empty], [add] functions  *)
-
-let setup_one () =
-  let validator_1 = make_validator () in
-  let validators = empty |> add validator_1 in
-  (validators, validator_1)
-
-let setup_two () =
-  let validator_1 = make_validator () in
-  let validator_2 = make_validator () in
-  let validators = empty |> add validator_1 |> add validator_2 in
-  (validators, validator_1, validator_2)
-
+open Deku_tests
+open Validators_tests
 let bench_setup_one =
   Bench.Test.create ~name:"setup one validator" (fun () ->
       let _ = setup_one () in
@@ -43,8 +21,7 @@ let bench_make_validator =
 
 let bench_current_validator =
   Bench.Test.create ~name:"current validator" (fun () ->
-      let validators, _validator_1 = setup_one () in
-      let _ = current validators in
+      let _ = test_current_validator () in
       ())
 
 (***************************************************************)
@@ -52,8 +29,7 @@ let bench_current_validator =
 
 let bench_to_list =
   Bench.Test.create ~name:"to_list" (fun () ->
-      let validators, _validator_1 = setup_one () in
-      let _ = to_list validators in
+      let _ = test_to_list () in
       ())
 
 (***************************************************************)
@@ -61,8 +37,7 @@ let bench_to_list =
 
 let bench_length =
   Bench.Test.create ~name:"length" (fun () ->
-      let validators, _validator_1 = setup_one () in
-      let _ = length validators in
+      let _ = test_length () in
       ())
 
 (***************************************************************)
@@ -70,8 +45,7 @@ let bench_length =
 
 let bench_remove_validator =
   Bench.Test.create ~name:"remove validator" (fun () ->
-      let validators, validator_1, _validator_2 = setup_two () in
-      let _validators = validators |> remove validator_1 in
+      let _ = test_remove () in
       ())
 
 (***************************************************************)
@@ -79,7 +53,7 @@ let bench_remove_validator =
 
 let bench_after_current =
   Bench.Test.create ~name:"after_current" (fun () ->
-      let _ = after_current 0 empty in
+      let _ = test_after_current () in
       ())
 
 (***************************************************************)
@@ -87,8 +61,7 @@ let bench_after_current =
 
 let bench_update_current =
   Bench.Test.create ~name:"update_current" (fun () ->
-      let validators, _validator_1, validator_2 = setup_two () in
-      let _ = update_current validator_2.address validators in
+      let _ = test_update_current () in
       ())
 
 (***************************************************************)
@@ -96,8 +69,7 @@ let bench_update_current =
 
 let bench_hash =
   Bench.Test.create ~name:"hash" (fun () ->
-      let validators, _validator_1, _validator_2 = setup_two () in
-      let _ = hash validators in
+      let _ = test_hash () in
       ())
 
 let tests =
