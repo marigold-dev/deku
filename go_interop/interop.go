@@ -2,7 +2,6 @@ package deku_interop
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"os"
 )
@@ -52,10 +51,8 @@ func Get(key string) []byte {
 // Set(key,value) synchronously sets a key in the Deku state
 // to the given value. That value must be serializable
 // with json.Marshal.
-func Set(key string, value interface{}) {
-	b, err := json.Marshal(value)
-	check(err)
-	value_str := string(b)
+func Set(key string, value []byte) {
+	value_str := string(value)
 	message := []byte(fmt.Sprintf("[\"Set\",{\"key\":\"%s\",\"value\":%s}]", key, value_str))
 	write(message)
 }
