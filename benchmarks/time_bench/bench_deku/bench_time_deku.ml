@@ -11,4 +11,5 @@ let main =
   Bench_time_ledger.benchmark_ledger ();
   Bench_time_patricia.benchmark_patricia ();
   Bench_time_tezos_interop.benchmark_tezos_interop ();
-  Bench_time_validators.benchmark_validators ()
+  Bench_time_validators.benchmark_validators ();
+  Bench_time_tezos_rpc.benchmark_tezos_rpc ()

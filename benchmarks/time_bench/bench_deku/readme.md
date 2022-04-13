@@ -723,3 +723,19 @@ update_current     16455/s       11%       5%             --      -1%    -39%   
           make     32985/s      123%     110%           100%      99%     21%      4%      4%      2%      --         -100%
  after_current 168067227/s  1136282% 1068888%       1021293% 1011383% 618312% 531914% 529082% 520411% 509423%            --
 ```
+
+## Tezos_rpc
+
+Source `bench_time_tezos_rpc.ml` (Running Deku node before)
+
+TODO
+
+```
+Throughputs for "fetch block ops", "fetch block header", "fetch constants" each running 5 times for at least 10 CPU seconds:
+   fetch block ops:  3.97 WALL ( 5.28 usr +  4.75 sys = 10.03 CPU) @ 27178.68/s (n=272704)
+                     4.54 WALL ( 5.95 usr +  5.65 sys = 11.61 CPU) @ 22404.50/s (n=260009)
+                     5.32 WALL ( 6.77 usr +  5.91 sys = 12.68 CPU) @ 20498.13/s (n=260009)
+                     4.35 WALL ( 5.63 usr +  5.82 sys = 11.45 CPU) @ 22701.04/s (n=260009)
+                     5.23 WALL ( 5.99 usr +  6.83 sys = 12.81 CPU) @ 20293.71/s (n=260009)
+
+```
