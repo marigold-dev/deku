@@ -1,16 +1,6 @@
-open Benchmark
 open Deku_tests
 open Ledger_tests
-
-let bench_throughput_latency s ~repeat ~time:n list_bench ~latency:m =
-  let res = throughputN ~repeat n list_bench in
-  print_newline ();
-  print_endline s;
-  tabulate res;
-
-  let res = latencyN m list_bench in
-  print_newline ();
-  tabulate res
+open Bench_utils
 
 let bench_create () =
   let list_bench =

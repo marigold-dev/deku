@@ -140,3 +140,44 @@ withdraw 4:  3.01 WALL ( 3.01 usr +  0.00 sys =  3.01 CPU) @ 6652.29/s (n=20000)
 withdraw 4 6652/s         --       -29%
 withdraw 1 9412/s        41%         --
 ```
+
+## Patricia
+
+Source `bench_time_patricia.ml`
+
+```
+Throughputs for "add_find", "hash_tree", "hash_values" each running 5 times for at least 10 CPU seconds:
+   add_find: 10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 4025046.53/s (n=40650253)
+             10.04 WALL (10.03 usr +  0.00 sys = 10.03 CPU) @ 3866036.74/s (n=38768052)
+             12.10 WALL (12.10 usr +  0.00 sys = 12.10 CPU) @ 3077011.56/s (n=37236800)
+             10.88 WALL (10.87 usr +  0.00 sys = 10.87 CPU) @ 3426349.92/s (n=37236800)
+             10.19 WALL (10.19 usr +  0.00 sys = 10.19 CPU) @ 3655894.24/s (n=37236800)
+  hash_tree: 10.97 WALL (10.97 usr +  0.00 sys = 10.97 CPU) @ 356208.55/s (n=3906417)
+             10.23 WALL (10.23 usr +  0.00 sys = 10.23 CPU) @ 381958.37/s (n=3906417)
+             10.59 WALL (10.59 usr +  0.00 sys = 10.59 CPU) @ 368960.20/s (n=3906417)
+             10.94 WALL (10.94 usr +  0.00 sys = 10.94 CPU) @ 356990.13/s (n=3906417)
+             10.27 WALL (10.27 usr +  0.00 sys = 10.27 CPU) @ 380333.41/s (n=3906417)
+hash_values: 11.35 WALL (11.34 usr +  0.00 sys = 11.35 CPU) @ 282062.08/s (n=3200161)
+             10.77 WALL (10.77 usr +  0.00 sys = 10.77 CPU) @ 297216.12/s (n=3200161)
+             10.69 WALL (10.69 usr +  0.00 sys = 10.69 CPU) @ 299481.60/s (n=3200161)
+             12.18 WALL (12.16 usr +  0.00 sys = 12.16 CPU) @ 263086.67/s (n=3200161)
+             10.89 WALL (10.89 usr +  0.00 sys = 10.89 CPU) @ 293973.41/s (n=3200161)
+
+Benchmark Patricia
+                 Rate         hash_values   hash_tree    add_find
+hash_values  287164+- 12780/s          --        -22%        -92%
+  hash_tree  368890+- 10443/s         28%          --        -90%
+   add_find 3610068+-317285/s       1157%        879%          --
+Latencies for 20000 iterations of "add_find", "hash_tree", "hash_values":
+   add_find:  0.01 WALL ( 0.01 usr +  0.00 sys =  0.01 CPU) @ 3162555.34/s (n=20000)
+             (warning: too few iterations for a reliable count)
+  hash_tree:  0.07 WALL ( 0.07 usr +  0.00 sys =  0.07 CPU) @ 269687.16/s (n=20000)
+             (warning: too few iterations for a reliable count)
+hash_values:  0.09 WALL ( 0.09 usr +  0.00 sys =  0.09 CPU) @ 224159.96/s (n=20000)
+             (warning: too few iterations for a reliable count)
+
+                 Rate hash_values   hash_tree    add_find
+hash_values  224160/s          --        -17%        -93%
+  hash_tree  269687/s         20%          --        -91%
+   add_find 3162555/s       1311%       1073%          --
+```
