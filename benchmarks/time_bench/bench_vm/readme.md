@@ -32,7 +32,82 @@ We have 1 main benchmarking function:
 
 [Benchmark documentation](https://chris00.github.io/ocaml-benchmark/doc/benchmark/Benchmark/index.html)
 
-TODO
+### Throughput
+
+The `throughtputN` and its parameters that used in the benchmark.
+
+`val throughtputN: ?repeat:int -> int -> (string * ('a -> 'b) * 'a) list -> samples`
+
+- `repeat`: the number of times each function running time is measured. 
+
+For example:
+```
+Throughputs for "make_ticket", "make_address", "make_tezos_address" each running 5 times for at least 10 CPU seconds:
+```
+
+mean the functions: `make_ticket`, `make_address`, `make_tezos_address` each function is running 5 times.
+
+- `t: int`: is the running time of the functions, not of the repetition loop.
+As the example above, t is 10 seconds. If one is only interested in the relative times of fast functions and not in their real running times, it is recommanded that wrap each of the function in a loop. Because a very fast running function will need a lots of repetition to make a difference of `t` seconds to the empty loop. In this case, the running time of the loop will dominate the whole process which can be therefore take much longer time than `t` seconds.
+
+### Timing and samples structures
+
+```
+type t = {
+wall : float;	(** Wallclock time (in seconds) *)
+utime : float;	(** This process User CPU time (in seconds) *)
+stime : float;	(** This process System CPU time (in seconds) *)
+cutime : float; (** Child process User CPU time (in seconds) *)
+cstime : float; (** Child process System CPU time (in seconds) *)
+iters : Int64.t;  (** Number of iterations. *)
+}
+The information returned by timing tests.
+```
+
+- `samples`: association list that links the names of the tests to the list of their timings.
+
+### Latency
+
+The `latencyN` and its parameters that used in the benchmark.
+
+`val latencyN: ?repeat:int -> Int64.t -> (string * ('a -> 'b) * 'a) list -> samples`
+
+This function runs each function in list `funs` for `n` iterations. `n` must be at least 4.
+
+- `repeat`: number of times each function running time is meansured. It is hightly recommended to set it to a higher number to enable confidence statistics to be performed by `Benchmark.tabulate`.
+
+### Tabulate
+`tabulate results` function prints a comparision table for a list of `results` obtained by `latencyN` or `throughputN` wich each function compare to all of the others. The table is of the type
+
+```
+Rate         name1 name2 ...   
+name1  #/s   --    r12        
+name2  #/s   r21    --        
+...         ...
+```
+
+For example:
+
+```
+Rate                             hash_values   hash_tree    add_find
+hash_values  287164+- 12780/s          --        -22%        -92%
+  hash_tree  368890+- 10443/s         28%          --        -90%
+   add_find 3610068+-317285/s       1157%        879%          --
+
+```
+
+where:
+- name1, name2: are the labels of the tests sorted from slowest to fastest. As in the example: name1 is `hash_values`, name2 is `hash_tree` and name is `add_find`. `hash_values` is the fastest and `add_find` is the slowest.
+
+- rij: says how much name_i is faster (or slower if < 0) than name_j (technically it is equaly to (ri - rj) expressed in percents of rj where r_i and r_j are the rates of name_i and name_j respectively). As in the example: at r12 (row 1 `hash_values`, column 2 `hash_tree`), r12 is `22%`. It means that, `hash_values` is faster than `hash_tree` 22%.
+
+If r_i and r_j are not belived to be different, rij will be printed between brakets as the example below:
+
+```
+ Rate                       transfer 4 transfer 1
+transfer 4 15250+- 701/s         --      [-1%]
+transfer 1 15477+-1112/s       [1%]         --
+```
 
 ## Primitives
 
