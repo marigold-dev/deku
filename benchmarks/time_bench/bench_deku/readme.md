@@ -628,3 +628,98 @@ discovery:  1.50 WALL ( 1.49 usr +  0.00 sys =  1.49 CPU) @ 13382.46/s (n=20000)
              Rate discovery
 discovery 13382/s        --
 ```
+
+## Validators
+
+Source `bench_time_validators.ml`
+
+```
+Throughputs for "setup", "setup two", "make", "current", "to_list", "length", "remove", "after_current", "update_current", "hash" each running 5 times for at least 10 CPU seconds:
+         setup: 10.88 WALL (10.88 usr +  0.00 sys = 10.88 CPU) @ 37093.13/s (n=403398)
+                12.92 WALL (12.89 usr +  0.00 sys = 12.90 CPU) @ 31279.59/s (n=403398)
+                13.59 WALL (13.57 usr +  0.00 sys = 13.57 CPU) @ 29721.85/s (n=403398)
+                13.53 WALL (13.51 usr +  0.00 sys = 13.52 CPU) @ 29843.29/s (n=403398)
+                14.90 WALL (14.89 usr +  0.00 sys = 14.89 CPU) @ 27100.85/s (n=403398)
+     setup two: 12.10 WALL (12.05 usr +  0.00 sys = 12.05 CPU) @ 13344.79/s (n=160863)
+                10.82 WALL (10.79 usr +  0.00 sys = 10.79 CPU) @ 14908.31/s (n=160863)
+                10.76 WALL (10.70 usr +  0.00 sys = 10.70 CPU) @ 15030.33/s (n=160863)
+                10.74 WALL (10.70 usr +  0.00 sys = 10.70 CPU) @ 15034.05/s (n=160863)
+                13.64 WALL (13.57 usr +  0.00 sys = 13.57 CPU) @ 11851.59/s (n=160863)
+          make: 11.82 WALL (11.76 usr +  0.00 sys = 11.77 CPU) @ 30145.58/s (n=354665)
+                10.86 WALL (10.81 usr +  0.00 sys = 10.81 CPU) @ 32795.62/s (n=354665)
+                11.43 WALL (11.40 usr +  0.01 sys = 11.40 CPU) @ 31100.10/s (n=354665)
+                11.36 WALL (11.34 usr +  0.00 sys = 11.34 CPU) @ 31270.72/s (n=354665)
+                11.81 WALL (11.80 usr +  0.00 sys = 11.80 CPU) @ 30053.31/s (n=354665)
+       current: 11.33 WALL (11.32 usr +  0.00 sys = 11.32 CPU) @ 29346.96/s (n=332212)
+                10.47 WALL (10.47 usr +  0.00 sys = 10.47 CPU) @ 31726.89/s (n=332212)
+                10.47 WALL (10.45 usr +  0.00 sys = 10.45 CPU) @ 31800.78/s (n=332212)
+                10.35 WALL (10.34 usr +  0.00 sys = 10.34 CPU) @ 32136.93/s (n=332212)
+                12.05 WALL (12.03 usr +  0.01 sys = 12.04 CPU) @ 27598.97/s (n=332212)
+       to_list: 10.10 WALL (10.09 usr +  0.00 sys = 10.09 CPU) @ 30627.32/s (n=309005)
+                10.09 WALL (10.09 usr +  0.00 sys = 10.09 CPU) @ 30377.66/s (n=306575)
+                10.12 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 31992.41/s (n=323274)
+                10.13 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 31885.03/s (n=322539)
+                10.29 WALL (10.28 usr +  0.00 sys = 10.28 CPU) @ 27972.01/s (n=287455)
+        length: 10.94 WALL (10.89 usr +  0.00 sys = 10.89 CPU) @ 26773.36/s (n=291433)
+                10.03 WALL (10.01 usr +  0.00 sys = 10.01 CPU) @ 29547.89/s (n=295755)
+                10.14 WALL (10.12 usr +  0.00 sys = 10.12 CPU) @ 29654.81/s (n=300123)
+                10.14 WALL (10.10 usr +  0.01 sys = 10.11 CPU) @ 29233.65/s (n=295529)
+                10.11 WALL (10.08 usr +  0.00 sys = 10.08 CPU) @ 32559.25/s (n=328304)
+        remove: 11.19 WALL (11.18 usr +  0.00 sys = 11.18 CPU) @ 14120.97/s (n=157839)
+                13.14 WALL (13.10 usr +  0.01 sys = 13.11 CPU) @ 12039.07/s (n=157839)
+                11.67 WALL (11.61 usr +  0.01 sys = 11.62 CPU) @ 13588.24/s (n=157839)
+                10.28 WALL (10.26 usr +  0.00 sys = 10.26 CPU) @ 15377.13/s (n=157839)
+                10.37 WALL (10.37 usr +  0.00 sys = 10.37 CPU) @ 15225.67/s (n=157839)
+ after_current: 10.11 WALL (10.11 usr +  0.00 sys = 10.11 CPU) @ 186521974.69/s (n=1885511286)
+                10.18 WALL (10.15 usr +  0.01 sys = 10.16 CPU) @ 200214043.48/s (n=2034551885)
+                10.57 WALL (10.52 usr +  0.01 sys = 10.53 CPU) @ 178986858.43/s (n=1885511286)
+                10.14 WALL (10.14 usr +  0.00 sys = 10.14 CPU) @ 196669618.19/s (n=1993532538)
+                10.06 WALL (10.05 usr +  0.00 sys = 10.06 CPU) @ 214373800.75/s (n=2155672197)
+update_current: 10.09 WALL (10.08 usr +  0.00 sys = 10.08 CPU) @ 16683.39/s (n=168240)
+                10.01 WALL (10.01 usr +  0.00 sys = 10.01 CPU) @ 17646.84/s (n=176669)
+                10.00 WALL (10.00 usr +  0.00 sys = 10.00 CPU) @ 17838.53/s (n=178414)
+                10.11 WALL (10.10 usr +  0.00 sys = 10.10 CPU) @ 17657.98/s (n=178420)
+                10.09 WALL (10.07 usr +  0.00 sys = 10.08 CPU) @ 16621.46/s (n=167491)
+          hash: 12.24 WALL (12.21 usr +  0.00 sys = 12.22 CPU) @ 14855.09/s (n=181503)
+                11.28 WALL (11.23 usr +  0.00 sys = 11.23 CPU) @ 16162.15/s (n=181503)
+                10.93 WALL (10.91 usr +  0.00 sys = 10.91 CPU) @ 16633.93/s (n=181503)
+                10.50 WALL (10.49 usr +  0.00 sys = 10.49 CPU) @ 17296.18/s (n=181503)
+                12.03 WALL (11.96 usr +  0.01 sys = 11.98 CPU) @ 15155.41/s (n=181503)
+
+Benchmark validators 
+                      Rate           setup two   remove     hash update_current  length current to_list   setup    make after_current
+     setup two     14034+-    1201/s        --    [-0%]     -12%           -19%    -53%    -54%    -54%    -55%    -55%         -100%
+        remove     14070+-    1156/s      [0%]       --     -12%           -19%    -52%    -54%    -54%    -55%    -55%         -100%
+          hash     16021+-     863/s       14%      14%       --            -7%    -46%    -48%    -48%    -48%    -48%         -100%
+update_current     17290+-     499/s       23%      23%       8%             --    -41%    -43%    -43%    -44%    -44%         -100%
+        length     29554+-    1745/s      111%     110%      84%            71%      --   [-3%]   [-3%]   [-5%]   [-5%]         -100%
+       current     30522+-    1679/s      117%     117%      91%            77%    [3%]      --   [-0%]   [-2%]   [-2%]         -100%
+       to_list     30571+-    1379/s      118%     117%      91%            77%    [3%]    [0%]      --   [-1%]   [-2%]         -100%
+         setup     31008+-    3162/s      121%     120%      94%            79%    [5%]    [2%]    [1%]      --   [-0%]         -100%
+          make     31073+-     941/s      121%     121%      94%            80%    [5%]    [2%]    [2%]    [0%]      --         -100%
+ after_current 195353259+-11502391/s  1391918% 1388317% 1219291%       1129786% 660909% 639939% 638917% 629914% 628590%            --
+Latencies for 20000 iterations of "setup", "setup two", "make", "current", "to_list", "length", "remove", "after_current", "update_current", "hash":
+         setup:  0.74 WALL ( 0.74 usr +  0.00 sys =  0.74 CPU) @ 27177.24/s (n=20000)
+     setup two:  1.35 WALL ( 1.35 usr +  0.00 sys =  1.35 CPU) @ 14789.67/s (n=20000)
+          make:  0.61 WALL ( 0.61 usr +  0.00 sys =  0.61 CPU) @ 32985.23/s (n=20000)
+       current:  0.63 WALL ( 0.63 usr +  0.00 sys =  0.63 CPU) @ 31590.74/s (n=20000)
+       to_list:  0.62 WALL ( 0.62 usr +  0.00 sys =  0.62 CPU) @ 32288.90/s (n=20000)
+        length:  0.63 WALL ( 0.63 usr +  0.00 sys =  0.63 CPU) @ 31759.79/s (n=20000)
+        remove:  1.28 WALL ( 1.27 usr +  0.00 sys =  1.27 CPU) @ 15722.08/s (n=20000)
+ after_current:  0.00 WALL ( 0.00 usr +  0.00 sys =  0.00 CPU) @ 168067226.67/s (n=20000)
+                (warning: too few iterations for a reliable count)
+update_current:  1.23 WALL ( 1.22 usr +  0.00 sys =  1.22 CPU) @ 16454.70/s (n=20000)
+          hash:  1.21 WALL ( 1.20 usr +  0.00 sys =  1.20 CPU) @ 16615.92/s (n=20000)
+
+                      Rate setup two   remove update_current     hash   setup current  length to_list    make after_current
+     setup two     14790/s        --      -6%           -10%     -11%    -46%    -53%    -53%    -54%    -55%         -100%
+        remove     15722/s        6%       --            -4%      -5%    -42%    -50%    -50%    -51%    -52%         -100%
+update_current     16455/s       11%       5%             --      -1%    -39%    -48%    -48%    -49%    -50%         -100%
+          hash     16616/s       12%       6%             1%       --    -39%    -47%    -48%    -49%    -50%         -100%
+         setup     27177/s       84%      73%            65%      64%      --    -14%    -14%    -16%    -18%         -100%
+       current     31591/s      114%     101%            92%      90%     16%      --     -1%     -2%     -4%         -100%
+        length     31760/s      115%     102%            93%      91%     17%      1%      --     -2%     -4%         -100%
+       to_list     32289/s      118%     105%            96%      94%     19%      2%      2%      --     -2%         -100%
+          make     32985/s      123%     110%           100%      99%     21%      4%      4%      2%      --         -100%
+ after_current 168067227/s  1136282% 1068888%       1021293% 1011383% 618312% 531914% 529082% 520411% 509423%            --
+```
