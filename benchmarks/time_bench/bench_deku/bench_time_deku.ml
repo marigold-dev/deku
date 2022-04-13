@@ -7,4 +7,4 @@
     ~/deku/_build/default/benchmarks/time_bench/bench_deku/bench_time_deku.exe
 *)
 
-let main = ()
+let main = Bench_time_ledger.benchmark_ledger ()
