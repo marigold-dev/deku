@@ -64,6 +64,24 @@ iters : Int64.t;  (** Number of iterations. *)
 The information returned by timing tests.
 ```
 
+The output of the option with `no_child` is as follow:
+```
+name: t1 WALL (t2 usr + t3 sys = t4 CPU) @ i/s (n=#)
+```
+
+For example:
+```
+n=1: 10.46 WALL (10.45 usr +  0.00 sys = 10.45 CPU) @ 47793454.06/s (n=499572549)
+```
+
+Where:
+- t1: `wall` is the wallclock time in seconds. In the example it is 10.46 wallclock time seconds.
+- t2: `utime` is the process user CPU time in seconds. It is 10.45 user CPU.
+- t3: `stime` is the process system CPU time in seconds. It is 0 system CPU.
+- t4:  is the cpu_process (`utime + stime`). It is 10.45/s (10.45 + 0) for cpu_process.
+- i: is the `iters / cpu_process`. It is 47793454.06.
+- n=#: `iters` is the number of iterations. It is 499572549 iterations.
+
 - `samples`: association list that links the names of the tests to the list of their timings.
 
 ### Latency
@@ -97,7 +115,7 @@ hash_values  287164+- 12780/s          --        -22%        -92%
 ```
 
 where:
-- name1, name2: are the labels of the tests sorted from slowest to fastest. As in the example: name1 is `hash_values`, name2 is `hash_tree` and name is `add_find`. `hash_values` is the fastest and `add_find` is the slowest.
+- name1, name2: are the labels of the tests sorted from slowest to fastest. As in the example: name1 is `hash_values`, name2 is `hash_tree` and name3 is `add_find`. `hash_values` is the fastest and `add_find` is the slowest.
 
 - rij: says how much name_i is faster (or slower if < 0) than name_j (technically it is equaly to (ri - rj) expressed in percents of rj where r_i and r_j are the rates of name_i and name_j respectively). As in the example: at r12 (row 1 `hash_values`, column 2 `hash_tree`), r12 is `22%`. It means that, `hash_values` is faster than `hash_tree` 22%.
 
