@@ -130,9 +130,7 @@ services:
     container_name: deku_prometheus
     restart: always
     image: prom/prometheus
-    network_mode: "host" 
-    ports:
-      - "9090:9090"
+    network_mode: "host"
     expose:
       - 9090/tcp
     volumes:
