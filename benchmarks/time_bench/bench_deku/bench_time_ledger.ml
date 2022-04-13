@@ -35,18 +35,6 @@ let bench_deposit () =
     ~latency:20_000L
 
 (*****************************************************************************)
-(* bench function [balance] with test *)
-
-let bench_balance () =
-  let list_bench =
-    [
-      ("balance_deposit", (fun () -> ignore (test_one_deposit ())), ());
-      ("balance_4_deposits", (fun () -> ignore (test_four_deposits ())), ());
-    ] in
-  bench_throughput_latency "Balance" ~repeat:5 ~time:10 list_bench
-    ~latency:20_000L
-
-(*****************************************************************************)
 (* bench function [transfer] without test *)
 
 let bench_transfer () =
@@ -73,6 +61,5 @@ let bench_withdraw () =
 let benchmark_ledger () =
   bench_create ();
   bench_deposit ();
-  bench_balance ();
   bench_transfer ();
   bench_withdraw ()

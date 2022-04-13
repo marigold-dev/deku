@@ -93,29 +93,6 @@ Latencies for 20000 iterations of "deposit", "4_deposits":
               Rate 4_deposits    deposit
 4_deposits 14597/s         --       -49%
    deposit 28415/s        95%         --
-Throughputs for "balance_deposit", "balance_4_deposits" each running 5 times for at least 10 CPU seconds:
-   balance_deposit: 11.95 WALL (11.95 usr +  0.00 sys = 11.95 CPU) @ 28843.15/s (n=344619)
-                    12.02 WALL (12.02 usr +  0.00 sys = 12.02 CPU) @ 28668.54/s (n=344619)
-                    11.40 WALL (11.39 usr +  0.00 sys = 11.39 CPU) @ 30245.89/s (n=344619)
-                    11.44 WALL (11.43 usr +  0.00 sys = 11.43 CPU) @ 30147.17/s (n=344619)
-                    11.65 WALL (11.65 usr +  0.00 sys = 11.65 CPU) @ 29582.46/s (n=344619)
-balance_4_deposits: 12.82 WALL (12.74 usr +  0.00 sys = 12.74 CPU) @ 13044.12/s (n=166202)
-                    10.76 WALL (10.75 usr +  0.00 sys = 10.75 CPU) @ 15465.46/s (n=166202)
-                    12.25 WALL (12.23 usr +  0.00 sys = 12.23 CPU) @ 13586.71/s (n=166202)
-                    12.36 WALL (12.35 usr +  0.00 sys = 12.35 CPU) @ 13454.74/s (n=166202)
-                    12.07 WALL (12.03 usr +  0.00 sys = 12.03 CPU) @ 13812.55/s (n=166202)
-
-Balance
-                      Rate      balance_4_deposits    balance_deposit
-balance_4_deposits 13873+-793/s                 --               -53%
-   balance_deposit 29497+-616/s               113%                 --
-Latencies for 20000 iterations of "balance_deposit", "balance_4_deposits":
-   balance_deposit:  0.67 WALL ( 0.67 usr +  0.00 sys =  0.67 CPU) @ 30057.83/s (n=20000)
-balance_4_deposits:  1.35 WALL ( 1.35 usr +  0.00 sys =  1.35 CPU) @ 14824.92/s (n=20000)
-
-                      Rate balance_4_deposits    balance_deposit
-balance_4_deposits 14825/s                 --               -51%
-   balance_deposit 30058/s               103%                 --
 Throughputs for "transfer 1", "transfer 4" each running 5 times for at least 10 CPU seconds:
 transfer 1: 11.09 WALL (11.09 usr +  0.00 sys = 11.09 CPU) @ 16576.61/s (n=183771)
             11.96 WALL (11.95 usr +  0.00 sys = 11.95 CPU) @ 15377.33/s (n=183771)
