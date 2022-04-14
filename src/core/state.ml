@@ -78,8 +78,8 @@ let apply_user_operation t user_operation =
     let initial_gas = Amount.(to_int (balance - burn_cap)) in
     let wrap_error t = Result.map_error (fun x -> `Invocation_error x) t in
     let%ok contract =
-      Contract_storage.get_contract contract_storage ~address:to_invoke
-      |> Option.fold ~none:(Error "Contract not found") ~some:Result.ok
+      Contract_storage.get_contract t.contract_storage ~address:to_invoke
+      |> Option.to_result ~none:"Contract not found"
       |> wrap_error in
     let%ok contract, _user_op_list =
       Contract_vm.Interpreter.invoke ~source ~arg:argument ~gas:initial_gas
