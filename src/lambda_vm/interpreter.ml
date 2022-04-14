@@ -10,6 +10,7 @@ type error =
   | Value_is_not_int64
   | Value_is_not_function
   | Value_is_not_zero
+[@@deriving show]
 
 exception Error of error
 let raise error = raise (Error error)
@@ -54,7 +55,6 @@ end
 module Env = Map_with_cardinality.Make (Ident)
 
 let burn_gas gas env code =
-  check_gas gas;
   match code with
   | E_var _
   | E_app _ ->
@@ -185,4 +185,4 @@ let execute gas ~arg script =
 
 let execute gas ~arg script =
   try Ok (execute gas ~arg script) with
-  | Error error -> Error error
+  | Error error -> Result.error error

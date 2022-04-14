@@ -1,5 +1,4 @@
 (library
  (name lambda_vm)
- (modules_without_implementation ast)
  (preprocess
   (pps ppx_deriving.show)))
