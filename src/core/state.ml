@@ -64,10 +64,32 @@ let apply_user_operation t user_operation =
       Contract_storage.originate_contract t.contract_storage ~address ~contract
     in
     Ok ({ contract_storage; ledger }, None)
+  | Contract_invocation { to_invoke; argument } ->
+    let balance = max_int |> Amount.of_int in
+    (* TODO: find good transaction cost *)
+    let invocation_cost = 250 |> Amount.of_int in
+    let%assert () =
+      Amount.
+        ( `Invocation_error "Not enought funds",
+          let comparison_result = compare balance invocation_cost in
+          comparison_result >= 0 ) in
 
+    let burn_cap = invocation_cost in
+    let initial_gas = Amount.(to_int (balance - burn_cap)) in
+    let wrap_error t = Result.map_error (fun x -> `Invocation_error x) t in
+    let%ok contract =
+      Contract_storage.get_contract t.contract_storage ~address:to_invoke
+      |> Option.fold ~none:(Error "Contract not found") ~some:Result.ok
+      |> wrap_error in
+    let%ok contract, _user_op_list =
+      Contract_vm.Interpreter.invoke ~arg:argument ~gas:initial_gas contract
+      |> wrap_error in
+    let contract_storage =
+      Contract_storage.update_contract_storage t.contract_storage
+        ~address:to_invoke ~updated_contract:contract in
+    Ok ({ contract_storage; ledger = t.ledger }, None)
 let apply_user_operation t user_operation =
   match apply_user_operation t user_operation with
   | Ok (t, receipt) -> (t, receipt)
-  (* TODO: use this origination_error for something *)
-  | Error (`Origination_error _) -> (t, None)
+  | Error (`Origination_error _ | `Invocation_error _) -> (t, None)
   | Error `Not_enough_funds -> (t, None)
