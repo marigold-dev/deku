@@ -14,7 +14,7 @@ export PATH
 [ "$USE_NIX" ] && dune build @install
 
 tezos-client() {
-  docker exec -it deku_flextesa tezos-client "$@"
+  docker exec -t deku_flextesa tezos-client "$@"
 }
 
 ligo() {
