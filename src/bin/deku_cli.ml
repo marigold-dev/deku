@@ -86,6 +86,20 @@ let address_tezos_interop =
     Format.fprintf fmt "%s" (Tezos.Address.to_string address) in
   let open Arg in
   conv (parser, printer)
+let argument =
+  let parser string = Ok (Yojson.Safe.from_string string) in
+  let printer fmt arg =
+    Format.fprintf fmt "%s" (Yojson.Safe.pretty_to_string arg) in
+  let open Arg in
+  conv ~docv:"A valid contract argument" (parser, printer)
+let address =
+  let parser string =
+    Address.of_string string
+    |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
+  let printer fmt wallet =
+    Format.fprintf fmt "%s" (wallet |> Address.to_string) in
+  let open Arg in
+  conv (parser, printer)
 let amount =
   let parser string =
     let%ok int =
@@ -149,21 +163,32 @@ let info_create_transaction =
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 let create_transaction node_folder sender_wallet_file received_address amount
-    ticket =
+    ticket argument =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    match (Address.to_key_hash received_address, argument) with
+    | Some addr, None ->
+      Core.User_operation.make ~source:wallet.address
+        (Transaction { destination = addr; amount; ticket })
+    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
+    | None, None -> failwith "Invalid transaction"
+    | None, Some arg ->
+      let arg = Contract_vm.Invocation_payload.make ~arg |> Result.get_ok in
+      Core.User_operation.make ~source:wallet.address
+        (Contract_invocation
+           {
+             to_invoke = Address.to_contract_hash received_address |> Option.get;
+             argument = arg;
+           }) in
   let transaction =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
-      ~block_height:block_level
-      ~data:
-        (Core.User_operation.make ~source:wallet.address
-           (Transaction { destination = received_address; amount; ticket }))
-  in
+      ~block_height:block_level ~data:operation in
   let%await identity = read_identity ~node_folder in
   let%await () =
     Networking.request_user_operation_gossip
@@ -196,7 +221,8 @@ let originate_contract node_folder contract_json initial_storage
     |> Result.get_ok in
   let origination_op = User_operation.Contract_origination origination in
   let originate_contract_op =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:(User_operation.make ~source:wallet.address origination_op) in
   let%await identity = read_identity ~node_folder in
@@ -259,9 +285,8 @@ let create_transaction =
     let doc = "The receiving address." in
     let env = Arg.env_var "RECEIVER" ~doc in
     let open Arg in
-    required
-    & pos 2 (some address_implicit) None
-    & info [] ~env ~docv:"receiver" ~doc in
+    required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
+  in
   let amount =
     let doc = "The amount to be transferred." in
     let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
@@ -271,6 +296,11 @@ let create_transaction =
     let doc = "The ticket to be transferred." in
     let open Arg in
     required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+  let argument =
+    let doc = "Argument to be passed to transaction" in
+    let open Arg in
+    value @@ (opt (some argument) None & info ["--arg"] ~docv:"argument" ~doc)
+  in
   let open Term in
   lwt_ret
     (const create_transaction
@@ -278,7 +308,8 @@ let create_transaction =
     $ address_from
     $ address_to
     $ amount
-    $ ticket)
+    $ ticket
+    $ argument)
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
