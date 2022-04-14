@@ -5,7 +5,8 @@ open Checks
 module String_map = Map.Make (String)
 
 type error = (* user program bugs *)
-  | Undefined_variable
+  | Undefined_variable [@@deriving show]
+
 exception Error of error
 let raise error = raise (Error error)
 
@@ -29,7 +30,6 @@ let compile_prim prim =
 module Vars = Map_with_cardinality.Make (String)
 
 let burn_gas gas vars code =
-  check_gas gas;
   match code with
   | Var _
   | Lam _ ->
@@ -104,9 +104,7 @@ let compile gas script =
   try Ok (compile gas script) with
   | Error error -> Error error
 
-let burn_gas gas =
-  check_gas gas;
-  Gas.burn_constant gas
+let burn_gas gas = Gas.burn_constant gas
 
 let rec compile_value ~stack gas value =
   let compile_value value = compile_value ~stack:(stack - 1) gas value in

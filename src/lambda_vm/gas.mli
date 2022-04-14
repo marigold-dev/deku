@@ -1,3 +1,5 @@
+exception Out_of_gas
+
 type t
 
 val make : initial_gas:int -> t
