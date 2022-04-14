@@ -43,3 +43,19 @@ jobs:
           tags: |
             ghcr.io/marigold-dev/deku:latest
             ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+
+      - name: Build and push - PR
+        # Only push if on main branch
+        id: docker_build_pr
+        uses: docker/build-push-action@v2
+        # Run this if the PR has the "docker" label
+        if: contains(github.event.pull_request.labels.*.name, 'docker')
+        with:
+          file: ./docker/static.Dockerfile
+          context: .
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: |
+            ghcr.io/marigold-dev/deku:pr-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
