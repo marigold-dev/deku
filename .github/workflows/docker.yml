@@ -23,6 +23,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m-%d)"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
       - name: Build and push
         # Only push if on main branch
         id: docker_build
@@ -36,4 +42,4 @@ jobs:
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: |
             ghcr.io/marigold-dev/deku:latest
-            ghcr.io/marigold-dev/deku:${{ github.sha }}
+            ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
