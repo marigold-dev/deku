@@ -8,7 +8,8 @@ RUN apk add libexecinfo-dev libexecinfo-static
 WORKDIR /app
 
 # Add things that doesn't change much, or should bust cache when it does
-COPY ./esy.lock esy.json ./
+COPY ./esy.lock ./esy.lock
+COPY esy.json ./
 
 RUN esy install
 RUN esy build-dependencies --release
@@ -16,8 +17,6 @@ RUN esy build-dependencies --release
 # Copy the rest of the files
 COPY . .
 
-# TODO: investigate why esy complains that it's not installed if we don't install again
-RUN esy install
 RUN esy build
 RUN esy dune build --profile=static src/bin/deku_cli.exe src/bin/deku_node.exe
 
