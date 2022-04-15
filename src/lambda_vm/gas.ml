@@ -1,3 +1,5 @@
+exception Out_of_gas
+
 (* TODO: satured arithmetic *)
 type t = int ref
 
@@ -13,7 +15,12 @@ let make ~initial_gas = ref initial_gas
 
 let is_empty t = !t <= 0
 
-let burn t amount = t := !t - amount
+let burn t amount =
+  let gas = !t in
+  if gas >= amount then
+    t := gas - amount
+  else
+    raise Out_of_gas
 
 let burn_constant t = burn t constant_burn
 let burn_log2 t ~cardinality = burn t (log2_burn ~cardinality)

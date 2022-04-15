@@ -72,34 +72,37 @@ let test_counter =
           in
           expected_value = result.storage))
 
+let check_runtime_error ~msg ~actual ~expected =
+  let open Vm_test in
+  match actual with
+  | Error
+      ( Compilation_error (Runtime_limits_error error)
+      | Execution_error (Runtime_limits_error error) ) ->
+    Alcotest.(check Testable.runtime_limits_error) msg expected error
+  | Ok _ -> Alcotest.fail "Ast shouldn't execute"
+  | _ -> Alcotest.fail "unexpected error"
 let test_stack_limit () =
-  Alcotest.check_raises "Stack has a limit" Out_of_stack (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 71_990_801
-          (Int64 19996L) (* Bare minimum close to the limit of 20k *)
-          counter in
-      ())
+  check_runtime_error ~msg:"Stack has a limit" ~expected:Out_of_stack
+    ~actual:
+      (Vm_test.execute_ast 71_990_801
+         (Int64 19996L) (* Bare minimum close to the limit of 20k *)
+         counter)
 
 let infinite_recursion_y =
   [%lambda_vm.script fun _ -> (fun f -> f f) (fun f -> f f + 0L)]
 
 let test_y_combinator () =
-  Alcotest.check_raises "Stack limit avoids infinite recursion" Out_of_stack
-    (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 10000000000000000 (Int64 0L)
-          infinite_recursion_y in
-      ())
+  check_runtime_error ~msg:"Stack limit avoids infinite recursion"
+    ~expected:Out_of_stack
+    ~actual:
+      (Vm_test.execute_ast 10000000000000000 (Int64 0L) infinite_recursion_y)
 
 let infinite_recursion_z =
   [%lambda_vm.script fun _ -> (fun f -> f f 0L) (fun f v -> f f (v + 0L))]
 
 let test_z_combinator () =
-  Alcotest.check_raises "Gas limit is triggered" Out_of_gas (fun () ->
-      let _ =
-        Vm_test.execute_ast_exn 10000000000 (Int64 0L) infinite_recursion_z
-      in
-      ())
+  check_runtime_error ~msg:"Gas limit is triggered" ~expected:Out_of_gas
+    ~actual:(Vm_test.execute_ast 10000000000 (Int64 0L) infinite_recursion_z)
 
 let test =
   let open Alcotest in
