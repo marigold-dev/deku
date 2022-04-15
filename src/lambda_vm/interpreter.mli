@@ -7,6 +7,7 @@ type error =
   | Value_is_not_int64
   | Value_is_not_function
   | Value_is_not_zero
+[@@deriving show]
 
 type script_result = {
   storage : Ir.value;

@@ -1,0 +1,3 @@
+(library
+ (name metrics)
+ (libraries prometheus lwt dream cmdliner fmt re))

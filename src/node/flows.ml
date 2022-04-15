@@ -165,11 +165,13 @@ let try_to_produce_block state update_state =
   let signature = sign ~key:state.identity.secret block in
   let state = append_signature state update_state ~signature ~hash:block.hash in
   broadcast_block_and_signature state ~block ~signature;
+  Metrics.Blocks.inc_block_produced ();
   Ok ()
 let try_to_sign_block state update_state block =
   if is_signable state block then (
     let signature = sign ~key:state.identity.secret block in
     broadcast_signature state ~hash:block.hash ~signature;
+    Metrics.Blocks.inc_block_signed ();
     append_signature state update_state ~hash:block.hash ~signature)
   else
     state

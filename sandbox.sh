@@ -7,6 +7,8 @@ data_directory="data"
 [ "$USE_NIX" ] || export LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 [ "$USE_NIX" ] || export PATH=$(esy x sh -c 'echo $PATH')
 
+[ "$USE_NIX" ] && dune build @install
+
 tezos-client() {
   docker exec -it deku_flextesa tezos-client "$@"
 }
@@ -175,7 +177,7 @@ start_deku_cluster() {
   SERVERS=()
   echo "Starting nodes."
   for i in ${VALIDATORS[@]}; do
-    deku-node "$data_directory/$i" &
+    deku-node "$data_directory/$i" --listen-prometheus=900$i &
     SERVERS+=($!)
   done
 
