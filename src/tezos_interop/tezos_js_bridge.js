@@ -1,6 +1,6 @@
 "use strict";
 
-const { TezosToolkit } = require("@taquito/taquito");
+const { TezosToolkit, OpKind } = require("@taquito/taquito");
 const { RpcClient } = require("@taquito/rpc");
 const { InMemorySigner } = require("@taquito/signer");
 const { pipeline, Transform } = require("stream");
@@ -24,10 +24,20 @@ const { inspect } = require("util");
  * @property {number} confirmation
  * @property {string} destination
 
+ * @typedef ListenTransaction
+ * @type {object}
+ * @property {"listen"} kind
+ * @property {string} rpc_node
+ * @property {number} confirmation
+ * @property {string} destination
+
+ * @typedef RequestContent
+ * @type {TransactionRequest | StorageRequest | ListenTransaction}
+ 
  * @typedef Request
  * @type {object}
  * @property {number} id
- * @property {TransactionRequest | StorageRequest} content
+ * @property {RequestContent} content
 
  * @typedef ErrorResponse
  * @type {object}
@@ -44,10 +54,24 @@ const { inspect } = require("util");
  * @property {"success"} status
  * @property {rpc.MichelsonV1Expression} storage
 
+ * @typedef Transaction
+ * @type {object}
+ * @property {string} entrypoint
+ * @property {rpc.MichelsonV1Expression} value
+
+ * @typedef Operation
+ * @type {object}
+ 
+ * @typedef TransactionMessage
+ * @type {object}
+ * @property {"success"} status
+ * @property {string} hash
+ * @property {Transaction[]} transactions
+
  * @typedef Response
  * @type {object}
  * @property {number} id
- * @property {TransactionResponse | StorageResponse | ErrorResponse} content
+ * @property {TransactionResponse | StorageResponse | TransactionMessage | ErrorResponse} content
  */
 
 const failure = (err) => {
@@ -65,6 +89,8 @@ const write = (message) => {
   const messageString = JSON.stringify(message);
   process.stdout.write(messageString + "\n", callback);
 };
+
+const respond = (id, content) => write({ id, content });
 
 /**
  * @callback RequestCallback
@@ -108,17 +134,16 @@ const read = (callback) => {
   pipeline(process.stdin, parseStream, errorHandler).on("data", callback);
 };
 
-// This is also defined on the other JS scripts
 const config = {
   shouldObservableSubscriptionRetry: true,
   streamerPollingIntervalMilliseconds: 1000,
   confirmationPollingIntervalSecond: 1,
 };
 
-/** @param {TransactionRequest} request */
-const onTransactionRequest = async (request) => {
+/** @param {TransactionRequest} content */
+const onTransactionRequest = async (id, content) => {
   const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
-    request;
+    content;
 
   const args = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -133,12 +158,12 @@ const onTransactionRequest = async (request) => {
 
   const status = operation.status;
   const hash = operation.hash;
-  return { status, hash };
+  respond(id, { status, hash });
 };
 
-/** @param {StorageRequest} request */
-const onStorageRequest = async (request) => {
-  const { rpc_node, confirmation, destination } = request;
+/** @param {StorageRequest} content */
+const onStorageRequest = async (id, content) => {
+  const { rpc_node, confirmation, destination } = content;
   const client = new RpcClient(rpc_node);
   const Tezos = new TezosToolkit(rpc_node);
   Tezos.setProvider({ config });
@@ -165,29 +190,85 @@ const onStorageRequest = async (request) => {
     throw new Error("Not in current Branch");
   }
 
-  return { status: "success", storage };
+  respond(id, { status: "success", storage });
 };
 
-/** @param {Request} request */
-const onRequest = async (request) => {
-  if (request.kind === "transaction") {
-    return onTransactionRequest(request);
-  } else if (request.kind === "storage") {
-    return onStorageRequest(request);
+/** @param {ListenTransaction} content */
+const onListenTransaction = async (id, content) => {
+  const { rpc_node, confirmation, destination } = content;
+  const Tezos = new TezosToolkit(rpc_node);
+  Tezos.setProvider({ config });
+
+  const operationStream = Tezos.stream.subscribeOperation({
+    kind: OpKind.TRANSACTION,
+  });
+
+  operationStream.on("error", (error) =>
+    respond(id, { status: "error", error })
+  );
+  operationStream.on("data", async (content) => {
+    /** @type {rpc.OperationContentsAndResultMetadataTransaction} */
+    const metadata = content.metadata;
+    if (
+      content.kind !== OpKind.TRANSACTION ||
+      metadata.operation_result.status !== "applied"
+    ) {
+      return;
+    }
+
+    try {
+      const hash = content.hash;
+
+      let transactions = (metadata.internal_operation_results || [])
+        .filter(
+          (operation) =>
+            operation.kind === OpKind.TRANSACTION &&
+            operation.destination === destination
+        )
+        .map((operation) => operation.parameters);
+
+      transactions =
+        content.destination === destination
+          ? [content.parameters, ...transactions]
+          : transactions;
+      transactions = transactions.filter(Boolean);
+
+      if (transactions.length === 0) {
+        return;
+      }
+
+      const operation = await Tezos.operation.createTransactionOperation(hash);
+
+      const result = await operation.confirmation(confirmation);
+      if (await result.isInCurrentBranch()) {
+        respond(id, { hash, transactions });
+      }
+    } catch (err) {
+      console.error(err);
+      // TODO: what happens here? I feel like this is a noop
+    }
+  });
+};
+
+const onRequest = (id, content) => {
+  if (content.kind === "transaction") {
+    return onTransactionRequest(id, content);
+  } else if (content.kind === "storage") {
+    return onStorageRequest(id, content);
+  } else if (content.kind === "listen") {
+    return onListenTransaction(id, content);
   } else {
-    failure(new Error("invalid request.kind: " + JSON.stringify(request.kind)));
+    failure(new Error("invalid content.kind: " + JSON.stringify(content.kind)));
   }
 };
 
 read((request) => {
   const { id, content } = request;
-  onRequest(content)
-    .then((content) => write({ id, content }))
+  onRequest(id, content)
     .catch((err) => {
       const status = "error";
       const error = inspect(err);
-      const content = { status, error };
-      write({ id, content });
+      respond(id, { status, error });
     })
     .catch(failure);
 });
