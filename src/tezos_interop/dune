@@ -5,19 +5,11 @@
   (pps ppx_deriving_yojson ppx_deriving.eq ppx_blob ppx_let_binding))
  (preprocessor_deps
   (file ./tezos_js_bridge.bundle.js)
-  (file ./fetch_storage.bundle.js)
   (file ./listen_transactions.bundle.js)))
 
 (rule
- (deps
-  ./webpack.config.js
-  ./listen_transactions.js
-  ./fetch_storage.js
-  ./tezos_js_bridge.js)
- (targets
-  ./listen_transactions.bundle.js
-  ./fetch_storage.bundle.js
-  ./tezos_js_bridge.bundle.js)
+ (deps ./webpack.config.js ./listen_transactions.js ./tezos_js_bridge.js)
+ (targets ./listen_transactions.bundle.js ./tezos_js_bridge.bundle.js)
  (mode fallback)
  (action
   (run webpack --env=%{profile})))
