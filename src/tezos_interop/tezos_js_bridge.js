@@ -14,32 +14,25 @@ const { pipeline, Transform } = require("stream");
  * @property {string} entrypoint
  * @property {object} payload
 
- * @typedef RequestHeader
- * @type {object}
- * @property {number} id
-
  * @typedef Request
- * @type {RequestHeader & TransactionRequest}
-
- * @typedef ResponseHeader
  * @type {object}
  * @property {number} id
+ * @property {TransactionRequest} content
 
- * @typedef TransactionResponseSuccess
- * @type {object}
- * @property {"applied" | "failed" | "skipped" | "backtracked" | "unknown"} status
- * @property {string} hash
-
- * @typedef TransactionResponseError
+ * @typedef ErrorResponse
  * @type {object}
  * @property {"error"} status
  * @property {string} error
 
  * @typedef TransactionResponse
- * @type {TransactionResponseSuccess | TransactionResponseError}
+ * @type {object}
+ * @property {"applied" | "failed" | "skipped" | "backtracked" | "unknown"} status
+ * @property {string} hash
 
  * @typedef Response
- * @type {ResponseHeader & TransactionResponse}
+ * @type {object}
+ * @property {number} id
+ * @property {TransactionResponse | ErrorResponse} content
  */
 
 const failure = (err) => {
@@ -58,6 +51,12 @@ const write = (message) => {
   process.stdout.write(messageString + "\n", callback);
 };
 
+/**
+ * @callback RequestCallback
+ * @param {Request} request
+ */
+
+/** @param {RequestCallback} callback */
 const read = (callback) => {
   let buf = "";
   /* WARNING: inputs are separated by new lines,
@@ -101,17 +100,10 @@ const config = {
   confirmationPollingIntervalSecond: 1,
 };
 
-/** @param {Request} request */
+/** @param {TransactionRequest} request */
 const onRequest = async (request) => {
-  const {
-    id,
-    rpc_node,
-    secret,
-    confirmation,
-    destination,
-    entrypoint,
-    payload,
-  } = request;
+  const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
+    request;
 
   const args = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -126,16 +118,18 @@ const onRequest = async (request) => {
 
   const status = operation.status;
   const hash = operation.hash;
-  write({ id, status, hash });
+  return { status, hash };
 };
 
-read((request) =>
-  onRequest(request)
+read((request) => {
+  const { id, content } = request;
+  onRequest(content)
+    .then((content) => write({ id, content }))
     .catch((err) => {
-      const id = request.id;
       const status = "error";
       const error = JSON.stringify(err);
-      write({ id, status, error });
+      const content = { status, error };
+      write({ id, content });
     })
-    .catch(failure)
-);
+    .catch(failure);
+});
