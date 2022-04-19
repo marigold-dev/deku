@@ -19,7 +19,7 @@ type t = {
   identity : identity;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
-  interop_context : Tezos_interop.Context.t;
+  interop_context : Tezos_interop.t;
   data_folder : string;
   pending_operations : pending_operation list;
   block_pool : Block_pool.t;
@@ -36,7 +36,7 @@ val make :
   trusted_validator_membership_change:Trusted_validators_membership_change.Set.t ->
   persist_trusted_membership_change:
     (Trusted_validators_membership_change.t list -> unit Lwt.t) ->
-  interop_context:Tezos_interop.Context.t ->
+  interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->
   t

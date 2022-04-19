@@ -176,7 +176,7 @@ let try_to_sign_block state update_state block =
   else
     state
 let commit_state_hash state =
-  Tezos_interop.Consensus.commit_state_hash ~context:state.Node.interop_context
+  Tezos_interop.Consensus.commit_state_hash state.Node.interop_context
 let try_to_commit_state_hash ~prev_validators state block signatures =
   let open Node in
   let signatures_map =

@@ -18,8 +18,14 @@ module Validators : sig
   val write : (Crypto.Key_hash.t * Uri.t) list -> file:string -> unit Lwt.t
 end
 module Interop_context : sig
-  val read : file:string -> Tezos_interop.Context.t Lwt.t
-  val write : Tezos_interop.Context.t -> file:string -> unit Lwt.t
+  type t = {
+    rpc_node : Uri.t;
+    secret : Crypto.Secret.t;
+    consensus_contract : Tezos.Address.t;
+    required_confirmations : int;
+  }
+  val read : file:string -> t Lwt.t
+  val write : t -> file:string -> unit Lwt.t
 end
 module State_bin : sig
   val read : file:string -> Protocol.t Lwt.t
