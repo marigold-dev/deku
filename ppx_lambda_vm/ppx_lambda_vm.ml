@@ -79,7 +79,7 @@ let rec expr_of_ocaml_expr expr =
     | "*" -> [%expr Prim Mul]
     | "/" -> [%expr Prim Div]
     | "mod" -> [%expr Prim Rem]
-    | "land" -> [%expr Prim And]
+    | "land" -> [%expr Prim Land]
     | "lor" -> [%expr Prim Lor]
     | "lxor" -> [%expr Prim Lxor]
     | "lsl" -> [%expr Prim Lsl]
