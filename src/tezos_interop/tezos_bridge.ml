@@ -2,7 +2,37 @@ open Helpers
 open Crypto
 open Tezos
 
-module Transaction = struct
+module Michelson = struct
+  include Michelson
+  type t = Michelson.t
+  let of_yojson json =
+    let%ok json = Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
+    try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json) with
+    | _ -> Error "invalid json"
+end
+module Listen_transaction = struct
+  type kind = Listen
+  let kind_to_yojson Listen = `String "listen"
+  type request = {
+    kind : kind;
+    rpc_node : string;
+    confirmation : int;
+    destination : string;
+  }
+  [@@deriving to_yojson]
+
+  type transaction = {
+    entrypoint : string;
+    value : Michelson.t;
+  }
+  [@@deriving of_yojson]
+  type t = {
+    hash : string;
+    transactions : transaction list;
+  }
+  [@@deriving of_yojson]
+end
+module Inject_transaction = struct
   type kind = Transaction
   let kind_to_yojson Transaction = `String "transaction"
   type request = {
@@ -66,15 +96,8 @@ module Storage = struct
 
   let of_yojson json =
     let module T = struct
-      type michelson = Michelson.t
-      let michelson_of_yojson json =
-        let%ok json =
-          Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
-        try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json) with
-        | _ -> Error "invalid json"
-
       type t = { status : string } [@@deriving of_yojson { strict = false }]
-      type success = { storage : michelson }
+      type success = { storage : Michelson.t }
       [@@deriving of_yojson { strict = false }]
       type error = { error : string } [@@deriving of_yojson { strict = false }]
     end in
@@ -93,10 +116,22 @@ type t = Long_lived_js_process.t
 let spawn () =
   let file = Scripts.file_tezos_js_bridge in
   Long_lived_js_process.spawn ~file
-let transaction t ~rpc_node ~secret ~required_confirmations ~destination
+let listen_transaction t ~rpc_node ~required_confirmations ~destination =
+  let request =
+    Listen_transaction.
+      {
+        kind = Listen;
+        rpc_node = Uri.to_string rpc_node;
+        confirmation = required_confirmations;
+        destination = Address.to_string destination;
+      } in
+  Long_lived_js_process.listen t ~to_yojson:Listen_transaction.request_to_yojson
+    ~of_yojson:Listen_transaction.of_yojson request
+
+let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
     ~entrypoint ~payload =
   let request =
-    Transaction.
+    Inject_transaction.
       {
         kind = Transaction;
         rpc_node = Uri.to_string rpc_node;
@@ -106,8 +141,9 @@ let transaction t ~rpc_node ~secret ~required_confirmations ~destination
         entrypoint;
         payload;
       } in
-  Long_lived_js_process.request t ~to_yojson:Transaction.request_to_yojson
-    ~of_yojson:Transaction.of_yojson request
+  Long_lived_js_process.request t
+    ~to_yojson:Inject_transaction.request_to_yojson
+    ~of_yojson:Inject_transaction.of_yojson request
 
 let storage t ~rpc_node ~required_confirmations ~destination =
   let request =

@@ -1,11 +1,22 @@
 open Crypto
 open Tezos
 
-type t
-val spawn : unit -> t
+(* push *)
+module Listen_transaction : sig
+  type transaction = {
+    entrypoint : string;
+    value : Michelson.t;
+  }
+  [@@deriving of_yojson]
+  type t = {
+    hash : string;
+    transactions : transaction list;
+  }
+  [@@deriving of_yojson]
+end
 
 (* response *)
-module Transaction : sig
+module Inject_transaction : sig
   type t =
     | Applied     of { hash : string }
     | Failed      of { hash : string option }
@@ -15,7 +26,17 @@ module Transaction : sig
     | Error       of { error : string }
 end
 
-val transaction :
+type t
+val spawn : unit -> t
+
+val listen_transaction :
+  t ->
+  rpc_node:Uri.t ->
+  required_confirmations:int ->
+  destination:Address.t ->
+  Listen_transaction.t Lwt_stream.t
+
+val inject_transaction :
   t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
@@ -23,7 +44,7 @@ val transaction :
   destination:Address.t ->
   entrypoint:string ->
   payload:Yojson.Safe.t ->
-  Transaction.t Lwt.t
+  Inject_transaction.t Lwt.t
 
 val storage :
   t ->
