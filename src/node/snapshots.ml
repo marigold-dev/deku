@@ -74,6 +74,7 @@ let start_new_epoch t =
     }
   | [] -> failwith "You must add a snapshot before you can start a new epoch"
 
+(* THIS IS GLOBAL STATE OUTSIDE OF ./server.ml. CAUTION *)
 let latest_finished_snapshot = ref None
 
 let get_most_recent_snapshot t =
