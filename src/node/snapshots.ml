@@ -52,7 +52,7 @@ let add_snapshot_ref ~block_height t =
       additional_blocks = t.additional_blocks;
     } )
 let set_snapshot_ref ref_ snapshot =
-  Format.printf "\027[36m New protocol snapshot hash: %s\027[m\n%!"
+  Format.eprintf "\027[36m New protocol snapshot hash: %s\027[m\n%!"
     (snapshot.hash |> BLAKE2B.to_string);
   Atomic.set ref_ (Some snapshot)
 let start_new_epoch t =
