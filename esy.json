@@ -45,7 +45,9 @@
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
     "@opam/prometheus-dream": "*",
-    "@opam/benchmark": "*"
+    "@opam/benchmark": "*",
+    "@opam/landmarks": "*",
+    "@opam/landmarks-ppx": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
