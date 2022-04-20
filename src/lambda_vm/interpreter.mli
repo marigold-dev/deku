@@ -13,5 +13,4 @@ type script_result = {
   storage : Ir.value;
   operations : unit;
 }
-val execute :
-  Gas.t -> arg:Ir.value -> Ir.script -> (script_result, error) result
+val execute : Gas.t -> arg:Ir.value -> Ir.code -> (script_result, error) result

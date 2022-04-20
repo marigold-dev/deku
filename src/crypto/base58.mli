@@ -28,6 +28,7 @@
 
 module Prefix : sig
   val contract_hash : string
+  val deku_contract_hash : string
 
   val block_hash : string
   val operation_hash : string

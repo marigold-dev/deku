@@ -1,7 +1,7 @@
 module type S = sig
   type key
 
-  type 'a t
+  type 'a t [@@deriving yojson, eq]
 
   val empty : 'a t
 
@@ -15,4 +15,7 @@ module type S = sig
   val find : key -> 'a t -> 'a option
 end
 
-module Make (K : Map.OrderedType) : S with type key = K.t
+module Make (K : sig
+  type t [@@deriving yojson]
+  val compare : t -> t -> int
+end) : S with type key = K.t
