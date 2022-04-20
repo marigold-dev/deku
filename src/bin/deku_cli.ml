@@ -157,7 +157,8 @@ let create_transaction node_folder sender_wallet_file received_address amount
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let transaction =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:
         (Core.User_operation.make ~source:wallet.address
@@ -288,7 +289,8 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:
         (Core.User_operation.make ~source:wallet.address
