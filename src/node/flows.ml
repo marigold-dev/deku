@@ -227,6 +227,13 @@ let rec try_to_apply_block state update_state block =
     ( `Block_not_signed_enough_to_apply,
       Block_pool.is_signed ~hash:block.Block.hash state.Node.block_pool ) in
   let prev_protocol = state.protocol in
+  (* If the [block.state_root_hash] is not equal to either the
+     current state root hash or the next calculated state root hash, then
+     the node has become out of sync with the chain. In this case we will not sign
+     blocks, but will still apply blocks with enough signatures.
+     TODO: we currently stay out of sync until the next state root hash update that
+     we finish on time. But it would be good to be able to get back in sync
+     as soon as we finish hashing. See https://github.com/marigold-dev/deku/pull/250 *)
   let is_new_state_root_hash =
     not (BLAKE2B.equal state.protocol.state_root_hash block.state_root_hash)
   in
