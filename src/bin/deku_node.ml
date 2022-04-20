@@ -63,14 +63,16 @@ let handle_protocol_snapshot =
     (module Networking.Protocol_snapshot)
     (fun _update_state () ->
       let State.{ snapshots; _ } = Server.get_state () in
+      let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       Ok
-        {
-          snapshot = snapshots.current_snapshot;
-          additional_blocks = snapshots.additional_blocks;
-          last_block = snapshots.last_block;
-          last_block_signatures =
-            Signatures.to_list snapshots.last_block_signatures;
-        })
+        Networking.Protocol_snapshot.
+          {
+            snapshot;
+            additional_blocks = snapshots.additional_blocks;
+            last_block = snapshots.last_block;
+            last_block_signatures =
+              Signatures.to_list snapshots.last_block_signatures;
+          })
 let handle_request_nonce =
   handle_request
     (module Networking.Request_nonce)

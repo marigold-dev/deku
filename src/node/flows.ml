@@ -2,6 +2,7 @@ open Helpers
 open Crypto
 open Protocol
 open Building_blocks
+open Domainslib
 module Node = State
 let write_state_to_file path protocol =
   let protocol_bin = Marshal.to_string protocol [] in
@@ -39,6 +40,7 @@ let string_of_error = function
   | `Not_all_blocks_are_signed -> "Not_all_blocks_are_signed"
   | `State_root_not_the_expected -> "State_root_not_the_expected"
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
+  | `Node_not_yet_initialized -> "Node_not_yet_initialized"
 
 let print_error err =
   Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
@@ -58,6 +60,7 @@ type ignore =
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
+let get_task_pool = (ref (fun () -> assert false) : (unit -> Task.pool) ref)
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -208,15 +211,29 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
         ~block_payload_hash:block.payload_hash
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~state_hash:block.state_root_hash ~validators ~signatures)
+let hash_new_state_root state protocol update_state =
+  let task_pool = !get_task_pool () in
+  let snapshot_ref, snapshots =
+    Snapshots.add_snapshot_ref ~block_height:protocol.block_height
+      state.Node.snapshots in
+  let _task : unit Task.promise =
+    Task.async task_pool (fun () ->
+        let hash, data = Protocol.hash protocol in
+        Snapshots.set_snapshot_ref snapshot_ref { hash; data }) in
+  update_state { state with snapshots }
+
 let rec try_to_apply_block state update_state block =
   let%assert () =
     ( `Block_not_signed_enough_to_apply,
       Block_pool.is_signed ~hash:block.Block.hash state.Node.block_pool ) in
-  let%assert () =
-    ( `Invalid_state_root_hash,
-      block_matches_current_state_root_hash state block
-      || block_matches_next_state_root_hash state block ) in
   let prev_protocol = state.protocol in
+  (* If the [block.state_root_hash] is not equal to either the
+     current state root hash or the next calculated state root hash, then
+     the node has become out of sync with the chain. In this case we will not sign
+     blocks, but will still apply blocks with enough signatures.
+     TODO: we currently stay out of sync until the next state root hash update that
+     we finish on time. But it would be good to be able to get back in sync
+     as soon as we finish hashing. See https://github.com/marigold-dev/deku/pull/250 *)
   let is_new_state_root_hash =
     not (BLAKE2B.equal state.protocol.state_root_hash block.state_root_hash)
   in
@@ -224,15 +241,22 @@ let rec try_to_apply_block state update_state block =
   write_state_to_file (state.Node.data_folder ^ "/state.bin") state.protocol;
   !reset_timeout ();
   let state = clean state update_state block in
-  if is_new_state_root_hash then (
-    write_state_to_file
-      (state.data_folder ^ "/prev_epoch_state.bin")
-      prev_protocol;
-    match Block_pool.find_signatures ~hash:block.hash state.block_pool with
-    | Some signatures when Signatures.is_self_signed signatures ->
-      try_to_commit_state_hash ~prev_validators:prev_protocol.validators state
-        block signatures
-    | _ -> ());
+  let state =
+    if is_new_state_root_hash then (
+      write_state_to_file
+        (state.data_folder ^ "/prev_epoch_state.bin")
+        prev_protocol;
+      let state = hash_new_state_root state prev_protocol update_state in
+      (match
+         Block_pool.find_signatures ~hash:block.hash state.Node.block_pool
+       with
+      | Some signatures when Signatures.is_self_signed signatures ->
+        try_to_commit_state_hash ~prev_validators:prev_protocol.validators state
+          block signatures
+      | _ -> ());
+      state)
+    else
+      state in
   match
     Block_pool.find_next_block_to_apply ~hash:block.Block.hash state.block_pool
   with
