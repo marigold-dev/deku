@@ -19,13 +19,23 @@
     prometheus-web.inputs.ocaml-overlay.follows = "ocaml-overlays";
 
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
+    tezos.url = "github:marigold-dev/tezos-nix";
+    tezos.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
-    , prometheus-web }:
+  outputs =
+    { self
+    , nixpkgs
+    , flake-utils
+    , nix-npm-buildpackage
+    , ocaml-overlays
+    , prometheus-web
+    , tezos
+    }:
     with flake-utils.lib;
     eachSystem defaultSystems (system:
       let
+        ligo = (import nixpkgs { inherit system; }).ligo;
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
@@ -58,7 +68,7 @@
           inherit npmPackages;
         };
       in {
-        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
+        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages ligo; };
         packages = {
           inherit deku deku-static;
           docker = import ./nix/docker.nix {
