@@ -18,13 +18,18 @@ let main = Landmark.register "main"
 
 let call_ticket = Landmark.register "make_ticket"
 
-let call_ledger_make_ticket =
-  Landmark.wrap call_ticket (fun () -> make_ticket ()) ()
+let call_address = Landmark.register "make_address"
+
+let call_make_ticket = Landmark.wrap call_ticket (fun () -> make_ticket ()) ()
+
+let call_make_address =
+  Landmark.wrap call_address (fun () -> make_address ()) ()
 
 let benchmark_ledger () =
   let open Landmark in
   (* uncomment this function when one wants to use the --context profiling/profiling-auto *)
-  (*start_profiling ();*)
+  start_profiling ();
   enter main;
-  ignore call_ledger_make_ticket;
+  ignore call_make_ticket;
+  ignore call_make_address;
   exit main
