@@ -12,11 +12,19 @@
 
   # git clone https://github.com/brendangregg/FlameGraph 
   # cd FlameGraph
-  
+
   # perf record --callgraph dwarf -- program-to-run program-arguments
 
   $ sudo perf record --call-graph dwarf -- ~/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe
   # sudo perf script | ./stackcollapse-perf.pl | ./flamegraph.pl > perf-deku-flamegraph.svg
+
+  # profile for sandbox deku run
+  sudo perf record -F 99 --call-graph dwarf -- ./sandbox.sh start
+
+  --using hospot to read perf.data
+  https://github.com/KDAB/hotspot
+  hotspot /path/to/perf.data
+
 *)
 let main () =
   Profile_ledger.profile_ledger ();
