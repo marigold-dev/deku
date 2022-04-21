@@ -14,6 +14,18 @@ module type VM = sig
     val compile :
       Origination_payload.t -> gas:int -> (Contract.t, string) result
   end
+  module Invocation_payload : sig
+    type t [@@deriving yojson]
+    val make : arg:Yojson.Safe.t -> (t, string) result
+  end
+  module Interpreter : sig
+    val invoke :
+      Contract.t ->
+      arg:Invocation_payload.t ->
+      gas:int ->
+      (* TODO: unit should be user operation list *)
+      (Contract.t * unit, string) result
+  end
 end
 
 module Lambda : VM = struct
@@ -88,6 +100,40 @@ module Lambda : VM = struct
         Raw_repr.Value.to_value ~gas storage |> Result.map_error error_to_string
       in
       Ok (Contract.make ~code ~storage)
+  end
+  module Invocation_payload = struct
+    type t = { arg : Raw_repr.Value.t } [@@deriving yojson]
+    let handle_failure t ~msg = Result.map_error (fun _ -> msg) t
+
+    let make ~arg =
+      let%ok arg =
+        Raw_repr.Value.of_yojson arg
+        |> handle_failure ~msg:"failed to parse the argument" in
+      Ok { arg }
+  end
+  module Interpreter = struct
+    let error_to_string : Lambda_vm.Interpreter.error -> string = function
+      | Runtime_limits_error Out_of_gas -> "Out of gas"
+      | Runtime_limits_error Out_of_stack -> "Out of stack"
+      | Interpreter_error
+          ( Value_is_not_pair | Value_is_not_function | Value_is_not_zero
+          | Value_is_not_int64 ) ->
+        "Invalid argument passed to the contract/Error within contract code"
+      | Interpreter_error (Undefined_variable | Over_applied_primitives) ->
+        "WOOOOOO!1!1! Bug within Lambda_vm interpreter"
+
+    let invoke contract ~(arg : Invocation_payload.t) ~gas =
+      let gas = Lambda_vm.Gas.make ~initial_gas:gas in
+      let%ok argument =
+        Raw_repr.Value.to_value ~gas arg.arg
+        |> Result.map_error (fun x -> Compiler.error_to_string x) in
+      (* TODO: use invoked operations for something *)
+      let%ok invoked =
+        Lambda_vm.Interpreter.execute gas ~arg:argument contract.Contract.code
+        |> Result.map_error (fun x -> error_to_string x) in
+      let updated_contract =
+        Contract.make ~code:contract.code ~storage:invoked.storage in
+      Ok (updated_contract, ())
   end
 end
 
