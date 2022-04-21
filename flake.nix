@@ -35,6 +35,8 @@
           ];
         };
 
+        pkgs_static = pkgs.pkgsCross.musl64;
+
         bp =
           pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
         npmPackages = bp.buildNpmPackage {
@@ -47,9 +49,23 @@
           nodejs = pkgs.nodejs-12_x;
           inherit npmPackages;
         };
+
+        deku-static = pkgs_static.callPackage ./nix/deku.nix {
+          pkgs = pkgs_static;
+          doCheck = true;
+          static = true;
+          nodejs = pkgs.nodejs-12_x;
+          inherit npmPackages;
+        };
       in {
         devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
-        packages = { inherit deku; };
+        packages = {
+          inherit deku deku-static;
+          docker = import ./nix/docker.nix {
+            inherit pkgs;
+            deku = deku-static;
+          };
+        };
 
         apps = {
           deku-cli = {

@@ -1,4 +1,5 @@
-{ pkgs, stdenv, lib, doCheck ? true, npmPackages, nodejs ? pkgs.nodejs }:
+{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, npmPackages
+, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -20,9 +21,17 @@ in ocamlPackages.buildDunePackage rec {
     ln -s ${npmPackages}/node_modules ./node_modules
   '';
 
+  # This is the same as standard dune build but with static support
+  buildPhase = ''
+    runHook preBuild
+    echo "running ${if static then "static" else "release"} build"
+    dune build -p ${pname} --profile=${if static then "static" else "release"}
+    runHook postBuild
+  '';
+
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs npmPackages ]
+  nativeBuildInputs = [ nodejs npmPackages removeReferencesTo ]
     ++ (with ocamlPackages; [ utop reason ]);
 
   propagatedBuildInputs = with ocamlPackages;
@@ -47,10 +56,30 @@ in ocamlPackages.buildDunePackage rec {
       domainslib
       prometheus
       prometheus-dream
+      cacert
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
     ++ checkInputs ++ [ npmPackages ];
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
+
+  # Remove every directory which could have links to other store paths.
+  # This makes the result much smaller
+  isLibrary = false;
+  postFixup = ''
+    rm -rf $out/lib $out/nix-support $out/share/doc
+    remove-references-to \
+      -t ${ocamlPackages.ocaml} \
+      $out/bin/deku-{node,cli}
+  '' + (if static then ''
+    # If we're building statically linked binaries everything should be possible to remove
+    remove-references-to \
+      -t ${pkgs.gmp} \
+      $out/bin/deku-{node,cli}
+    remove-references-to \
+      -t ${pkgs.libffi} \
+      $out/bin/deku-{node,cli}
+  '' else
+    "");
 }
