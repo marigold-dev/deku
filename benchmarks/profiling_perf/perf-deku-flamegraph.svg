@@ -1,0 +1,768 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="422" onload="init(evt)" viewBox="0 0 1200 422" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+
+		// use GET parameters to restore a flamegraphs state.
+		var params = get_params();
+		if (params.x && params.y)
+			zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+                if (params.s) search(params.s);
+	}
+
+	// event listeners
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom();
+			zoom(target);
+			if (!document.querySelector('.parent')) {
+				clearzoom();
+				return;
+			}
+
+			// set parameters for zoom state
+			var el = target.querySelector("rect");
+			if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+				var params = get_params()
+				params.x = el.attributes._orig_x.value;
+				params.y = el.attributes.y.value;
+				history.replaceState(null, null, parse_params(params));
+			}
+		}
+		else if (e.target.id == "unzoom") clearzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+		else if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function get_params() {
+		var params = {};
+		var paramsarr = window.location.search.substr(1).split('&');
+		for (var i = 0; i < paramsarr.length; ++i) {
+			var tmp = paramsarr[i].split("=");
+			if (!tmp[0] || !tmp[1]) continue;
+			params[tmp[0]]  = decodeURIComponent(tmp[1]);
+		}
+		return params;
+	}
+	function parse_params(params) {
+		var uri = "?";
+		for (var key in params) {
+			uri += key + '=' + encodeURIComponent(params[key]) + '&';
+		}
+		if (uri.slice(-1) == "&")
+			uri = uri.substring(0, uri.length - 1);
+		if (uri == '?')
+			uri = window.location.href.split('?')[0];
+		return uri;
+	}
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x = txt.length - 2; x > 0; x--) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom() {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+		search();
+	}
+	function clearzoom() {
+		unzoom();
+
+		// remove zoom state
+		var params = get_params();
+		if (params.x) delete params.x;
+		if (params.y) delete params.y;
+		history.replaceState(null, null, parse_params(params));
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+		var params = get_params();
+		delete params.s;
+		history.replaceState(null, null, parse_params(params));
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) search(term);
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (term) currentSearchTerm = term;
+
+		var re = new RegExp(currentSearchTerm, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+		var params = get_params();
+		params.s = currentSearchTerm;
+		history.replaceState(null, null, parse_params(params));
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="422.0" fill="url(#background)"  />
+<text id="title" x="600.00" y="24" >Flame Graph</text>
+<text id="details" x="10.00" y="405" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1090.00" y="24" >Search</text>
+<text id="ignorecase" x="1174.00" y="24" >ic</text>
+<text id="matched" x="1090.00" y="405" > </text>
+<g id="frames">
+<g >
+<title>do_sys_poll (1 samples, 2.44%)</title><rect x="211.5" y="277" width="28.7" height="15.0" fill="rgb(250,44,12)" rx="2" ry="2" />
+<text  x="214.46" y="287.5" >do..</text>
+</g>
+<g >
+<title>do_idle (28 samples, 68.29%)</title><rect x="240.2" y="293" width="805.9" height="15.0" fill="rgb(226,127,36)" rx="2" ry="2" />
+<text  x="243.24" y="303.5" >do_idle</text>
+</g>
+<g >
+<title>dl_main (5 samples, 12.20%)</title><rect x="67.6" y="309" width="143.9" height="15.0" fill="rgb(247,16,25)" rx="2" ry="2" />
+<text  x="70.56" y="319.5" >dl_main</text>
+</g>
+<g >
+<title>x86_64_start_reservations (5 samples, 12.20%)</title><rect x="1046.1" y="309" width="143.9" height="15.0" fill="rgb(249,85,32)" rx="2" ry="2" />
+<text  x="1049.10" y="319.5" >x86_64_start_reser..</text>
+</g>
+<g >
+<title>pthread_cond_signal@@GLIBC_2.3.2 (1 samples, 2.44%)</title><rect x="10.0" y="341" width="28.8" height="15.0" fill="rgb(247,127,17)" rx="2" ry="2" />
+<text  x="13.00" y="351.5" >pt..</text>
+</g>
+<g >
+<title>all (41 samples, 100%)</title><rect x="10.0" y="373" width="1180.0" height="15.0" fill="rgb(245,21,33)" rx="2" ry="2" />
+<text  x="13.00" y="383.5" ></text>
+</g>
+<g >
+<title>exc_page_fault (4 samples, 9.76%)</title><rect x="96.3" y="261" width="115.2" height="15.0" fill="rgb(239,42,39)" rx="2" ry="2" />
+<text  x="99.34" y="271.5" >exc_page_fault</text>
+</g>
+<g >
+<title>sysvec_apic_timer_interrupt (25 samples, 60.98%)</title><rect x="240.2" y="213" width="719.6" height="15.0" fill="rgb(232,86,34)" rx="2" ry="2" />
+<text  x="243.24" y="223.5" >sysvec_apic_timer_interrupt</text>
+</g>
+<g >
+<title>x86_pmu_enable (4 samples, 9.76%)</title><rect x="1046.1" y="69" width="115.1" height="15.0" fill="rgb(246,25,36)" rx="2" ry="2" />
+<text  x="1049.10" y="79.5" >x86_pmu_enable</text>
+</g>
+<g >
+<title>native_write_msr (4 samples, 9.76%)</title><rect x="1046.1" y="37" width="115.1" height="15.0" fill="rgb(223,89,34)" rx="2" ry="2" />
+<text  x="1049.10" y="47.5" >native_write_msr</text>
+</g>
+<g >
+<title>schedule_idle (1 samples, 2.44%)</title><rect x="1017.3" y="277" width="28.8" height="15.0" fill="rgb(231,151,20)" rx="2" ry="2" />
+<text  x="1020.32" y="287.5" >sc..</text>
+</g>
+<g >
+<title>__sysvec_apic_timer_interrupt (24 samples, 58.54%)</title><rect x="240.2" y="197" width="690.8" height="15.0" fill="rgb(231,177,44)" rx="2" ry="2" />
+<text  x="243.24" y="207.5" >__sysvec_apic_timer_interrupt</text>
+</g>
+<g >
+<title>sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="1046.1" y="149" width="115.1" height="15.0" fill="rgb(249,162,7)" rx="2" ry="2" />
+<text  x="1049.10" y="159.5" >sysvec_apic_ti..</text>
+</g>
+<g >
+<title>sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="96.3" y="213" width="115.2" height="15.0" fill="rgb(239,126,11)" rx="2" ry="2" />
+<text  x="99.34" y="223.5" >sysvec_apic_ti..</text>
+</g>
+<g >
+<title>intel_pmu_enable_all (4 samples, 9.76%)</title><rect x="1046.1" y="53" width="115.1" height="15.0" fill="rgb(233,203,19)" rx="2" ry="2" />
+<text  x="1049.10" y="63.5" >intel_pmu_enab..</text>
+</g>
+<g >
+<title>asm_exc_page_fault (4 samples, 9.76%)</title><rect x="96.3" y="277" width="115.2" height="15.0" fill="rgb(211,221,31)" rx="2" ry="2" />
+<text  x="99.34" y="287.5" >asm_exc_page_f..</text>
+</g>
+<g >
+<title>profile_deku.ex (5 samples, 12.20%)</title><rect x="67.6" y="357" width="143.9" height="15.0" fill="rgb(209,188,10)" rx="2" ry="2" />
+<text  x="70.56" y="367.5" >profile_deku.ex</text>
+</g>
+<g >
+<title>Domain0 (1 samples, 2.44%)</title><rect x="10.0" y="357" width="28.8" height="15.0" fill="rgb(224,201,15)" rx="2" ry="2" />
+<text  x="13.00" y="367.5" >Do..</text>
+</g>
+<g >
+<title>__sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="96.3" y="197" width="115.2" height="15.0" fill="rgb(210,73,6)" rx="2" ry="2" />
+<text  x="99.34" y="207.5" >__sysvec_apic_..</text>
+</g>
+<g >
+<title>do_syscall_64 (1 samples, 2.44%)</title><rect x="10.0" y="309" width="28.8" height="15.0" fill="rgb(228,106,16)" rx="2" ry="2" />
+<text  x="13.00" y="319.5" >do..</text>
+</g>
+<g >
+<title>futex_wake (1 samples, 2.44%)</title><rect x="10.0" y="261" width="28.8" height="15.0" fill="rgb(227,96,49)" rx="2" ry="2" />
+<text  x="13.00" y="271.5" >fu..</text>
+</g>
+<g >
+<title>cpuidle_enter (5 samples, 12.20%)</title><rect x="1046.1" y="197" width="143.9" height="15.0" fill="rgb(229,124,34)" rx="2" ry="2" />
+<text  x="1049.10" y="207.5" >cpuidle_enter</text>
+</g>
+<g >
+<title>mwait_idle_with_hints.constprop.0 (2 samples, 4.88%)</title><rect x="959.8" y="229" width="57.5" height="15.0" fill="rgb(220,85,48)" rx="2" ry="2" />
+<text  x="962.76" y="239.5" >mwait_..</text>
+</g>
+<g >
+<title>cpuidle_enter_state (27 samples, 65.85%)</title><rect x="240.2" y="245" width="777.1" height="15.0" fill="rgb(246,149,28)" rx="2" ry="2" />
+<text  x="243.24" y="255.5" >cpuidle_enter_state</text>
+</g>
+<g >
+<title>pick_next_task (1 samples, 2.44%)</title><rect x="1017.3" y="261" width="28.8" height="15.0" fill="rgb(220,144,23)" rx="2" ry="2" />
+<text  x="1020.32" y="271.5" >pi..</text>
+</g>
+<g >
+<title>hrtimer_interrupt (24 samples, 58.54%)</title><rect x="240.2" y="181" width="690.8" height="15.0" fill="rgb(220,99,48)" rx="2" ry="2" />
+<text  x="243.24" y="191.5" >hrtimer_interrupt</text>
+</g>
+<g >
+<title>alsa-sink-HDA_A (1 samples, 2.44%)</title><rect x="38.8" y="357" width="28.8" height="15.0" fill="rgb(243,174,0)" rx="2" ry="2" />
+<text  x="41.78" y="367.5" >al..</text>
+</g>
+<g >
+<title>x86_64_start_kernel (5 samples, 12.20%)</title><rect x="1046.1" y="325" width="143.9" height="15.0" fill="rgb(249,18,25)" rx="2" ry="2" />
+<text  x="1049.10" y="335.5" >x86_64_start_kernel</text>
+</g>
+<g >
+<title>cpuidle_idle_call (5 samples, 12.20%)</title><rect x="1046.1" y="213" width="143.9" height="15.0" fill="rgb(234,80,35)" rx="2" ry="2" />
+<text  x="1049.10" y="223.5" >cpuidle_idle_call</text>
+</g>
+<g >
+<title>ttwu_do_activate (1 samples, 2.44%)</title><rect x="10.0" y="213" width="28.8" height="15.0" fill="rgb(246,160,1)" rx="2" ry="2" />
+<text  x="13.00" y="223.5" >tt..</text>
+</g>
+<g >
+<title>cpuidle_enter (27 samples, 65.85%)</title><rect x="240.2" y="261" width="777.1" height="15.0" fill="rgb(239,182,16)" rx="2" ry="2" />
+<text  x="243.24" y="271.5" >cpuidle_enter</text>
+</g>
+<g >
+<title>perf_mux_hrtimer_handler (4 samples, 9.76%)</title><rect x="1046.1" y="85" width="115.1" height="15.0" fill="rgb(220,130,14)" rx="2" ry="2" />
+<text  x="1049.10" y="95.5" >perf_mux_hrtim..</text>
+</g>
+<g >
+<title>__hrtimer_run_queues (4 samples, 9.76%)</title><rect x="1046.1" y="101" width="115.1" height="15.0" fill="rgb(205,46,43)" rx="2" ry="2" />
+<text  x="1049.10" y="111.5" >__hrtimer_run_..</text>
+</g>
+<g >
+<title>cpu_startup_entry (28 samples, 68.29%)</title><rect x="240.2" y="309" width="805.9" height="15.0" fill="rgb(208,103,45)" rx="2" ry="2" />
+<text  x="243.24" y="319.5" >cpu_startup_entry</text>
+</g>
+<g >
+<title>_dl_sysdep_start (5 samples, 12.20%)</title><rect x="67.6" y="325" width="143.9" height="15.0" fill="rgb(220,194,10)" rx="2" ry="2" />
+<text  x="70.56" y="335.5" >_dl_sysdep_start</text>
+</g>
+<g >
+<title>__sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="1046.1" y="133" width="115.1" height="15.0" fill="rgb(207,120,5)" rx="2" ry="2" />
+<text  x="1049.10" y="143.5" >__sysvec_apic_..</text>
+</g>
+<g >
+<title>rest_init (5 samples, 12.20%)</title><rect x="1046.1" y="261" width="143.9" height="15.0" fill="rgb(230,212,20)" rx="2" ry="2" />
+<text  x="1049.10" y="271.5" >rest_init</text>
+</g>
+<g >
+<title>hrtimer_interrupt (4 samples, 9.76%)</title><rect x="96.3" y="181" width="115.2" height="15.0" fill="rgb(226,79,27)" rx="2" ry="2" />
+<text  x="99.34" y="191.5" >hrtimer_interr..</text>
+</g>
+<g >
+<title>__x64_sys_futex (1 samples, 2.44%)</title><rect x="10.0" y="293" width="28.8" height="15.0" fill="rgb(236,45,53)" rx="2" ry="2" />
+<text  x="13.00" y="303.5" >__..</text>
+</g>
+<g >
+<title>irq_exit_rcu (1 samples, 2.44%)</title><rect x="931.0" y="197" width="28.8" height="15.0" fill="rgb(223,5,45)" rx="2" ry="2" />
+<text  x="933.98" y="207.5" >ir..</text>
+</g>
+<g >
+<title>arch_call_rest_init (5 samples, 12.20%)</title><rect x="1046.1" y="277" width="143.9" height="15.0" fill="rgb(233,74,34)" rx="2" ry="2" />
+<text  x="1049.10" y="287.5" >arch_call_rest_init</text>
+</g>
+<g >
+<title>wake_up_q (1 samples, 2.44%)</title><rect x="10.0" y="245" width="28.8" height="15.0" fill="rgb(229,172,45)" rx="2" ry="2" />
+<text  x="13.00" y="255.5" >wa..</text>
+</g>
+<g >
+<title>[libspeexdsp.so.1.5.0] (1 samples, 2.44%)</title><rect x="38.8" y="325" width="28.8" height="15.0" fill="rgb(205,188,18)" rx="2" ry="2" />
+<text  x="41.78" y="335.5" >[l..</text>
+</g>
+<g >
+<title>__softirqentry_text_start (1 samples, 2.44%)</title><rect x="931.0" y="181" width="28.8" height="15.0" fill="rgb(210,181,25)" rx="2" ry="2" />
+<text  x="933.98" y="191.5" >__..</text>
+</g>
+<g >
+<title>run_rebalance_domains (1 samples, 2.44%)</title><rect x="931.0" y="165" width="28.8" height="15.0" fill="rgb(230,132,27)" rx="2" ry="2" />
+<text  x="933.98" y="175.5" >ru..</text>
+</g>
+<g >
+<title>asm_sysvec_apic_timer_interrupt (25 samples, 60.98%)</title><rect x="240.2" y="229" width="719.6" height="15.0" fill="rgb(219,117,29)" rx="2" ry="2" />
+<text  x="243.24" y="239.5" >asm_sysvec_apic_timer_interrupt</text>
+</g>
+<g >
+<title>hrtimer_interrupt (4 samples, 9.76%)</title><rect x="1046.1" y="117" width="115.1" height="15.0" fill="rgb(212,58,17)" rx="2" ry="2" />
+<text  x="1049.10" y="127.5" >hrtimer_interr..</text>
+</g>
+<g >
+<title>cpuidle_enter_state (5 samples, 12.20%)</title><rect x="1046.1" y="181" width="143.9" height="15.0" fill="rgb(247,125,3)" rx="2" ry="2" />
+<text  x="1049.10" y="191.5" >cpuidle_enter_state</text>
+</g>
+<g >
+<title>do_user_addr_fault (4 samples, 9.76%)</title><rect x="96.3" y="245" width="115.2" height="15.0" fill="rgb(222,19,40)" rx="2" ry="2" />
+<text  x="99.34" y="255.5" >do_user_addr_f..</text>
+</g>
+<g >
+<title>[unknown] (1 samples, 2.44%)</title><rect x="38.8" y="341" width="28.8" height="15.0" fill="rgb(244,70,24)" rx="2" ry="2" />
+<text  x="41.78" y="351.5" >[u..</text>
+</g>
+<g >
+<title>do_idle (5 samples, 12.20%)</title><rect x="1046.1" y="229" width="143.9" height="15.0" fill="rgb(248,0,24)" rx="2" ry="2" />
+<text  x="1049.10" y="239.5" >do_idle</text>
+</g>
+<g >
+<title>pulseaudio (1 samples, 2.44%)</title><rect x="211.5" y="357" width="28.7" height="15.0" fill="rgb(224,146,17)" rx="2" ry="2" />
+<text  x="214.46" y="367.5" >pu..</text>
+</g>
+<g >
+<title>asm_sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="96.3" y="229" width="115.2" height="15.0" fill="rgb(227,3,3)" rx="2" ry="2" />
+<text  x="99.34" y="239.5" >asm_sysvec_api..</text>
+</g>
+<g >
+<title>ppoll (1 samples, 2.44%)</title><rect x="211.5" y="341" width="28.7" height="15.0" fill="rgb(225,45,37)" rx="2" ry="2" />
+<text  x="214.46" y="351.5" >pp..</text>
+</g>
+<g >
+<title>do_futex (1 samples, 2.44%)</title><rect x="10.0" y="277" width="28.8" height="15.0" fill="rgb(244,87,47)" rx="2" ry="2" />
+<text  x="13.00" y="287.5" >do..</text>
+</g>
+<g >
+<title>enqueue_task (1 samples, 2.44%)</title><rect x="10.0" y="197" width="28.8" height="15.0" fill="rgb(222,116,20)" rx="2" ry="2" />
+<text  x="13.00" y="207.5" >en..</text>
+</g>
+<g >
+<title>psi_task_change (1 samples, 2.44%)</title><rect x="10.0" y="181" width="28.8" height="15.0" fill="rgb(252,35,38)" rx="2" ry="2" />
+<text  x="13.00" y="191.5" >ps..</text>
+</g>
+<g >
+<title>start_kernel (5 samples, 12.20%)</title><rect x="1046.1" y="293" width="143.9" height="15.0" fill="rgb(226,225,39)" rx="2" ry="2" />
+<text  x="1049.10" y="303.5" >start_kernel</text>
+</g>
+<g >
+<title>start_secondary (28 samples, 68.29%)</title><rect x="240.2" y="325" width="805.9" height="15.0" fill="rgb(209,60,39)" rx="2" ry="2" />
+<text  x="243.24" y="335.5" >start_secondary</text>
+</g>
+<g >
+<title>perf_mux_hrtimer_handler (24 samples, 58.54%)</title><rect x="240.2" y="149" width="690.8" height="15.0" fill="rgb(236,124,45)" rx="2" ry="2" />
+<text  x="243.24" y="159.5" >perf_mux_hrtimer_handler</text>
+</g>
+<g >
+<title>native_write_msr (4 samples, 9.76%)</title><rect x="96.3" y="101" width="115.2" height="15.0" fill="rgb(213,17,47)" rx="2" ry="2" />
+<text  x="99.34" y="111.5" >native_write_msr</text>
+</g>
+<g >
+<title>[unknown] (5 samples, 12.20%)</title><rect x="67.6" y="341" width="143.9" height="15.0" fill="rgb(243,152,48)" rx="2" ry="2" />
+<text  x="70.56" y="351.5" >[unknown]</text>
+</g>
+<g >
+<title>entry_SYSCALL_64_after_hwframe (1 samples, 2.44%)</title><rect x="211.5" y="325" width="28.7" height="15.0" fill="rgb(208,210,42)" rx="2" ry="2" />
+<text  x="214.46" y="335.5" >en..</text>
+</g>
+<g >
+<title>x86_pmu_enable (4 samples, 9.76%)</title><rect x="96.3" y="133" width="115.2" height="15.0" fill="rgb(219,93,50)" rx="2" ry="2" />
+<text  x="99.34" y="143.5" >x86_pmu_enable</text>
+</g>
+<g >
+<title>psi_group_change (1 samples, 2.44%)</title><rect x="10.0" y="165" width="28.8" height="15.0" fill="rgb(238,126,24)" rx="2" ry="2" />
+<text  x="13.00" y="175.5" >ps..</text>
+</g>
+<g >
+<title>sock_poll (1 samples, 2.44%)</title><rect x="211.5" y="261" width="28.7" height="15.0" fill="rgb(218,16,51)" rx="2" ry="2" />
+<text  x="214.46" y="271.5" >so..</text>
+</g>
+<g >
+<title>perf_mux_hrtimer_handler (4 samples, 9.76%)</title><rect x="96.3" y="149" width="115.2" height="15.0" fill="rgb(228,174,33)" rx="2" ry="2" />
+<text  x="99.34" y="159.5" >perf_mux_hrtim..</text>
+</g>
+<g >
+<title>cpu_startup_entry (5 samples, 12.20%)</title><rect x="1046.1" y="245" width="143.9" height="15.0" fill="rgb(227,135,7)" rx="2" ry="2" />
+<text  x="1049.10" y="255.5" >cpu_startup_entry</text>
+</g>
+<g >
+<title>swapper (33 samples, 80.49%)</title><rect x="240.2" y="357" width="949.8" height="15.0" fill="rgb(217,17,43)" rx="2" ry="2" />
+<text  x="243.24" y="367.5" >swapper</text>
+</g>
+<g >
+<title>cpuidle_idle_call (27 samples, 65.85%)</title><rect x="240.2" y="277" width="777.1" height="15.0" fill="rgb(212,5,10)" rx="2" ry="2" />
+<text  x="243.24" y="287.5" >cpuidle_idle_call</text>
+</g>
+<g >
+<title>native_write_msr (24 samples, 58.54%)</title><rect x="240.2" y="101" width="690.8" height="15.0" fill="rgb(224,17,18)" rx="2" ry="2" />
+<text  x="243.24" y="111.5" >native_write_msr</text>
+</g>
+<g >
+<title>update_blocked_averages (1 samples, 2.44%)</title><rect x="931.0" y="149" width="28.8" height="15.0" fill="rgb(222,47,48)" rx="2" ry="2" />
+<text  x="933.98" y="159.5" >up..</text>
+</g>
+<g >
+<title>__update_blocked_fair (1 samples, 2.44%)</title><rect x="931.0" y="133" width="28.8" height="15.0" fill="rgb(239,79,19)" rx="2" ry="2" />
+<text  x="933.98" y="143.5" >__..</text>
+</g>
+<g >
+<title>try_to_wake_up (1 samples, 2.44%)</title><rect x="10.0" y="229" width="28.8" height="15.0" fill="rgb(250,58,11)" rx="2" ry="2" />
+<text  x="13.00" y="239.5" >tr..</text>
+</g>
+<g >
+<title>_dl_relocate_object (5 samples, 12.20%)</title><rect x="67.6" y="293" width="143.9" height="15.0" fill="rgb(229,135,47)" rx="2" ry="2" />
+<text  x="70.56" y="303.5" >_dl_relocate_object</text>
+</g>
+<g >
+<title>__hrtimer_run_queues (24 samples, 58.54%)</title><rect x="240.2" y="165" width="690.8" height="15.0" fill="rgb(234,214,13)" rx="2" ry="2" />
+<text  x="243.24" y="175.5" >__hrtimer_run_queues</text>
+</g>
+<g >
+<title>do_syscall_64 (1 samples, 2.44%)</title><rect x="211.5" y="309" width="28.7" height="15.0" fill="rgb(236,100,17)" rx="2" ry="2" />
+<text  x="214.46" y="319.5" >do..</text>
+</g>
+<g >
+<title>asm_sysvec_apic_timer_interrupt (4 samples, 9.76%)</title><rect x="1046.1" y="165" width="115.1" height="15.0" fill="rgb(220,125,4)" rx="2" ry="2" />
+<text  x="1049.10" y="175.5" >asm_sysvec_api..</text>
+</g>
+<g >
+<title>__x64_sys_ppoll (1 samples, 2.44%)</title><rect x="211.5" y="293" width="28.7" height="15.0" fill="rgb(231,64,35)" rx="2" ry="2" />
+<text  x="214.46" y="303.5" >__..</text>
+</g>
+<g >
+<title>intel_pmu_enable_all (4 samples, 9.76%)</title><rect x="96.3" y="117" width="115.2" height="15.0" fill="rgb(238,30,51)" rx="2" ry="2" />
+<text  x="99.34" y="127.5" >intel_pmu_enab..</text>
+</g>
+<g >
+<title>entry_SYSCALL_64_after_hwframe (1 samples, 2.44%)</title><rect x="10.0" y="325" width="28.8" height="15.0" fill="rgb(225,22,48)" rx="2" ry="2" />
+<text  x="13.00" y="335.5" >en..</text>
+</g>
+<g >
+<title>__hrtimer_run_queues (4 samples, 9.76%)</title><rect x="96.3" y="165" width="115.2" height="15.0" fill="rgb(251,162,18)" rx="2" ry="2" />
+<text  x="99.34" y="175.5" >__hrtimer_run_..</text>
+</g>
+<g >
+<title>mwait_idle_with_hints.constprop.0 (1 samples, 2.44%)</title><rect x="1161.2" y="165" width="28.8" height="15.0" fill="rgb(248,220,17)" rx="2" ry="2" />
+<text  x="1164.22" y="175.5" >mw..</text>
+</g>
+<g >
+<title>secondary_startup_64_no_verify (33 samples, 80.49%)</title><rect x="240.2" y="341" width="949.8" height="15.0" fill="rgb(253,93,3)" rx="2" ry="2" />
+<text  x="243.24" y="351.5" >secondary_startup_64_no_verify</text>
+</g>
+<g >
+<title>intel_pmu_enable_all (24 samples, 58.54%)</title><rect x="240.2" y="117" width="690.8" height="15.0" fill="rgb(242,60,46)" rx="2" ry="2" />
+<text  x="243.24" y="127.5" >intel_pmu_enable_all</text>
+</g>
+<g >
+<title>x86_pmu_enable (24 samples, 58.54%)</title><rect x="240.2" y="133" width="690.8" height="15.0" fill="rgb(229,208,41)" rx="2" ry="2" />
+<text  x="243.24" y="143.5" >x86_pmu_enable</text>
+</g>
+</g>
+</svg>
