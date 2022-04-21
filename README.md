@@ -115,7 +115,7 @@ In either case, if all goes well, you should see the block height displayed in t
 
 #### Experimental: Tilt
 
-Our experimental workflow uses [Tilt](https://tilt.dev) which is an advanced orchestrator. If you're using `nix` everything is already provided. If not, you will have to install the things in [requirements](#requirements) + `tilt` and `docker-compose`.
+Our experimental workflow uses [Tilt](https://tilt.dev) which is an advanced orchestrator. If you're using `nix` everything is already provided. If not, you will have to install the things in [requirements](#requirements) + [tilt](https://docs.tilt.dev/install.html) and [docker-compose](https://docs.docker.com/compose/install/).
 
 When the requirements are in place you should just have to run `tilt up` and everything will be running.
 
