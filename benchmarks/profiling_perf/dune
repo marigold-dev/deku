@@ -1,10 +1,12 @@
 (executable
  (name profile_deku)
- (libraries rely.lib tezos_rpc node protocol tezos_interop deku_tests)
+ (libraries
+  rely.lib
+  tezos_rpc
+  node
+  protocol
+  tezos_interop
+  deku_tests
+  memtrace)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
-
-(rule
- (alias profile_deku)
- (action
-  (run %{exe:profile_deku.exe})))

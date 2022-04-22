@@ -1,0 +1,959 @@
+desc: (none)
+cmd: /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=3036611
+mem_heap_B=176
+mem_heap_extra_B=8
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=3082351
+mem_heap_B=2108416
+mem_heap_extra_B=5312
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=8145411
+mem_heap_B=2109416
+mem_heap_extra_B=5328
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=8740150
+mem_heap_B=3472418
+mem_heap_extra_B=5766
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=10474874
+mem_heap_B=3472418
+mem_heap_extra_B=5774
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=11009971
+mem_heap_B=4002679
+mem_heap_extra_B=5969
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=11992804
+mem_heap_B=4065674
+mem_heap_extra_B=9214
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=12576534
+mem_heap_B=4067312
+mem_heap_extra_B=9352
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=16515045
+mem_heap_B=4173808
+mem_heap_extra_B=9368
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=17235326
+mem_heap_B=4214768
+mem_heap_extra_B=9376
+mem_stacks_B=0
+heap_tree=detailed
+n5: 4214768 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2307002 0xF8BA14: caml_stat_alloc_noexc (memory.c:488)
+  n3: 2307002 0xF8BA14: caml_stat_alloc (memory.c:542)
+   n1: 2097152 0xF96A84: build_frame_descriptors (frame_descriptors.c:81)
+    n1: 2097152 0xF96C43: caml_init_frame_descriptors (frame_descriptors.c:141)
+     n1: 2097152 0xF80C21: caml_init_gc (gc_ctrl.c:317)
+      n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:109)
+       n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:85)
+        n1: 2097152 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+         n1: 2097152 0xF96FBE: caml_startup (startup_nat.c:135)
+          n1: 2097152 0xF96FBE: caml_main (startup_nat.c:142)
+           n0: 2097152 0x7BD5A1: main (main.c:37)
+   n2: 196968 0xF85F26: caml_open_descriptor_in (io.c:169)
+    n1: 131312 0xF86A5C: caml_open_descriptor_out (io.c:191)
+     n1: 131312 0xF86A5C: caml_ml_open_descriptor_out (io.c:592)
+      n1: 131312 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 131312 0x4E43A7F: ???
+        n0: 131312 0x4E4BA67: ???
+    n1: 65656 0xF86A1C: caml_ml_open_descriptor_in (io.c:585)
+     n1: 65656 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65656 0x4E43A7F: ???
+       n0: 65656 0x4E4BA67: ???
+   n0: 12882 in 17 places, all below massif's threshold (1.00%)
+ n1: 1585152 0xF8C2B9: alloc_generic_table (minor_gc.c:58)
+  n3: 1585152 0xF8C2B9: realloc_generic_table.constprop.0 (minor_gc.c:816)
+   n1: 792576 0xF78775: add_to_custom_table (minor_gc.h:115)
+    n1: 792576 0xF78775: alloc_custom_gen (custom.c:59)
+     n1: 792576 0xF86A3F: caml_alloc_channel (io.c:577)
+      n1: 792576 0xF86A3F: caml_ml_open_descriptor_in (io.c:587)
+       n1: 792576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+        n1: 792576 0x4E43A7F: ???
+         n0: 792576 0x4E4BA67: ???
+   n1: 528384 0xF94EC5: add_to_ephe_ref_table (minor_gc.h:101)
+    n1: 528384 0xF94EC5: do_set (weak.c:186)
+     n1: 528384 0xF94EC5: do_set (weak.c:180)
+      n1: 528384 0xF95A6F: ephe_set_field (weak.c:198)
+       n1: 528384 0xF95A6F: caml_ephe_set_data (weak.c:233)
+        n1: 528384 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+         n1: 528384 0x4E43A7F: ???
+          n0: 528384 0x4E4BA07: ???
+   n1: 264192 0xF8B317: caml_initialize (memory.c:218)
+    n1: 264192 0xE6B338: camlStdlib__entry (stdlib.ml:32)
+     n1: 264192 0x4E43A7F: ???
+      n0: 264192 0x4E4BA67: ???
+ n0: 191542 in 21 places, all below massif's threshold (1.00%)
+ n1: 65536 0xEEF41D: checked_malloc (util.h:72)
+  n1: 65536 0xEEF41D: secp256k1_ecmult_gen_context_build (ecmult_gen_impl.h:33)
+   n1: 65536 0xEEFB9F: secp256k1_context_create (secp256k1.c:75)
+    n1: 65536 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 65536 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65536 0x4E43A7F: ???
+       n0: 65536 0x4E4BA57: ???
+ n1: 65536 0xF8A1D1: caml_init_major_gc (major_gc.c:1509)
+  n1: 65536 0xF79441: create_domain (domain.c:539)
+   n1: 65536 0xF79D01: caml_init_domains (domain.c:681)
+    n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:109)
+     n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:85)
+      n1: 65536 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+       n1: 65536 0xF96FBE: caml_startup (startup_nat.c:135)
+        n1: 65536 0xF96FBE: caml_main (startup_nat.c:142)
+         n0: 65536 0x7BD5A1: main (main.c:37)
+#-----------
+snapshot=11
+#-----------
+time=18103719
+mem_heap_B=4132848
+mem_heap_extra_B=9360
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=18706694
+mem_heap_B=5181424
+mem_heap_extra_B=9368
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=81898135
+mem_heap_B=9375728
+mem_heap_extra_B=9392
+mem_stacks_B=0
+heap_tree=peak
+n7: 9375728 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2307002 0xF8BA14: caml_stat_alloc_noexc (memory.c:488)
+  n3: 2307002 0xF8BA14: caml_stat_alloc (memory.c:542)
+   n1: 2097152 0xF96A84: build_frame_descriptors (frame_descriptors.c:81)
+    n1: 2097152 0xF96C43: caml_init_frame_descriptors (frame_descriptors.c:141)
+     n1: 2097152 0xF80C21: caml_init_gc (gc_ctrl.c:317)
+      n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:109)
+       n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:85)
+        n1: 2097152 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+         n1: 2097152 0xF96FBE: caml_startup (startup_nat.c:135)
+          n1: 2097152 0xF96FBE: caml_main (startup_nat.c:142)
+           n0: 2097152 0x7BD5A1: main (main.c:37)
+   n2: 196968 0xF85F26: caml_open_descriptor_in (io.c:169)
+    n1: 131312 0xF86A5C: caml_open_descriptor_out (io.c:191)
+     n1: 131312 0xF86A5C: caml_ml_open_descriptor_out (io.c:592)
+      n1: 131312 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 131312 0x4E43A7F: ???
+        n0: 131312 0x4E4BA67: ???
+    n0: 65656 in 1 place, below massif's threshold (1.00%)
+   n0: 12882 in 17 places, all below massif's threshold (1.00%)
+ n1: 2097152 0xEEFC7E: checked_malloc (util.h:72)
+  n1: 2097152 0xEEFC7E: secp256k1_ecmult_odd_multiples_table_storage_var (ecmult_impl.h:140)
+   n1: 2097152 0xEEFC7E: secp256k1_ecmult_context_build (ecmult_impl.h:204)
+    n1: 2097152 0xEEFC7E: secp256k1_context_create (secp256k1.c:78)
+     n1: 2097152 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+      n1: 2097152 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 2097152 0x4E43A7F: ???
+        n0: 2097152 0x4E4BA57: ???
+ n1: 1585152 0xF8C2B9: alloc_generic_table (minor_gc.c:58)
+  n3: 1585152 0xF8C2B9: realloc_generic_table.constprop.0 (minor_gc.c:816)
+   n1: 792576 0xF78775: add_to_custom_table (minor_gc.h:115)
+    n1: 792576 0xF78775: alloc_custom_gen (custom.c:59)
+     n1: 792576 0xF86A3F: caml_alloc_channel (io.c:577)
+      n1: 792576 0xF86A3F: caml_ml_open_descriptor_in (io.c:587)
+       n1: 792576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+        n1: 792576 0x4E43A7F: ???
+         n0: 792576 0x4E4BA67: ???
+   n1: 528384 0xF94EC5: add_to_ephe_ref_table (minor_gc.h:101)
+    n1: 528384 0xF94EC5: do_set (weak.c:186)
+     n1: 528384 0xF94EC5: do_set (weak.c:180)
+      n1: 528384 0xF95A6F: ephe_set_field (weak.c:198)
+       n1: 528384 0xF95A6F: caml_ephe_set_data (weak.c:233)
+        n1: 528384 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+         n1: 528384 0x4E43A7F: ???
+          n0: 528384 0x4E4BA07: ???
+   n1: 264192 0xF8B317: caml_initialize (memory.c:218)
+    n1: 264192 0xE6B338: camlStdlib__entry (stdlib.ml:32)
+     n1: 264192 0x4E43A7F: ???
+      n0: 264192 0x4E4BA67: ???
+ n1: 1441792 0xEEFC96: checked_malloc (util.h:72)
+  n1: 1441792 0xEEFC96: secp256k1_ecmult_odd_multiples_table_storage_var (ecmult_impl.h:141)
+   n1: 1441792 0xEEFC96: secp256k1_ecmult_context_build (ecmult_impl.h:204)
+    n1: 1441792 0xEEFC96: secp256k1_context_create (secp256k1.c:78)
+     n1: 1441792 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+      n1: 1441792 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 1441792 0x4E43A7F: ???
+        n0: 1441792 0x4E4BA57: ???
+ n1: 1048576 0xEEFC5E: checked_malloc (util.h:72)
+  n1: 1048576 0xEEFC5E: secp256k1_ecmult_context_build (ecmult_impl.h:201)
+   n1: 1048576 0xEEFC5E: secp256k1_context_create (secp256k1.c:78)
+    n1: 1048576 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 1048576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 1048576 0x4E43A7F: ???
+       n0: 1048576 0x4E4BA57: ???
+ n1: 655360 0xEEFCAE: checked_malloc (util.h:72)
+  n1: 655360 0xEEFCAE: secp256k1_ecmult_odd_multiples_table_storage_var (ecmult_impl.h:142)
+   n1: 655360 0xEEFCAE: secp256k1_ecmult_context_build (ecmult_impl.h:204)
+    n1: 655360 0xEEFCAE: secp256k1_context_create (secp256k1.c:78)
+     n1: 655360 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+      n1: 655360 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 655360 0x4E43A7F: ???
+        n0: 655360 0x4E4BA57: ???
+ n0: 240694 in 23 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=14
+#-----------
+time=82982395
+mem_heap_B=5201135
+mem_heap_extra_B=9465
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=83906326
+mem_heap_B=5203223
+mem_heap_extra_B=9481
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=84612377
+mem_heap_B=5205311
+mem_heap_extra_B=9497
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=85237502
+mem_heap_B=5226647
+mem_heap_extra_B=9657
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=86143146
+mem_heap_B=5232031
+mem_heap_extra_B=9713
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=19
+#-----------
+time=87465404
+mem_heap_B=5233079
+mem_heap_extra_B=9729
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=87848353
+mem_heap_B=5254039
+mem_heap_extra_B=10049
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=88805991
+mem_heap_B=5255087
+mem_heap_extra_B=10065
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=89023157
+mem_heap_B=5258775
+mem_heap_extra_B=10097
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=90697005
+mem_heap_B=5260863
+mem_heap_extra_B=10113
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=24
+#-----------
+time=91402824
+mem_heap_B=5262951
+mem_heap_extra_B=10129
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=92108486
+mem_heap_B=5265039
+mem_heap_extra_B=10145
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=93201756
+mem_heap_B=5267127
+mem_heap_extra_B=10161
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=94293777
+mem_heap_B=5269215
+mem_heap_extra_B=10177
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=28
+#-----------
+time=95388262
+mem_heap_B=5271303
+mem_heap_extra_B=10193
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=96118102
+mem_heap_B=5273391
+mem_heap_extra_B=10209
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=97339369
+mem_heap_B=5275479
+mem_heap_extra_B=10225
+mem_stacks_B=0
+heap_tree=detailed
+n7: 5275479 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2307746 0xF8BA14: caml_stat_alloc_noexc (memory.c:488)
+  n3: 2307746 0xF8BA14: caml_stat_alloc (memory.c:542)
+   n1: 2097152 0xF96A84: build_frame_descriptors (frame_descriptors.c:81)
+    n1: 2097152 0xF96C43: caml_init_frame_descriptors (frame_descriptors.c:141)
+     n1: 2097152 0xF80C21: caml_init_gc (gc_ctrl.c:317)
+      n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:109)
+       n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:85)
+        n1: 2097152 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+         n1: 2097152 0xF96FBE: caml_startup (startup_nat.c:135)
+          n1: 2097152 0xF96FBE: caml_main (startup_nat.c:142)
+           n0: 2097152 0x7BD5A1: main (main.c:37)
+   n2: 196968 0xF85F26: caml_open_descriptor_in (io.c:169)
+    n1: 131312 0xF86A5C: caml_open_descriptor_out (io.c:191)
+     n1: 131312 0xF86A5C: caml_ml_open_descriptor_out (io.c:592)
+      n1: 131312 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 131312 0x4E43A7F: ???
+        n0: 131312 0x4E4BA67: ???
+    n1: 65656 0xF86A1C: caml_ml_open_descriptor_in (io.c:585)
+     n1: 65656 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65656 0x4E43A7F: ???
+       n0: 65656 0x4E4BA67: ???
+   n0: 13626 in 18 places, all below massif's threshold (1.00%)
+ n1: 1585152 0xF8C2B9: alloc_generic_table (minor_gc.c:58)
+  n3: 1585152 0xF8C2B9: realloc_generic_table.constprop.0 (minor_gc.c:816)
+   n1: 792576 0xF78775: add_to_custom_table (minor_gc.h:115)
+    n1: 792576 0xF78775: alloc_custom_gen (custom.c:59)
+     n1: 792576 0xF86A3F: caml_alloc_channel (io.c:577)
+      n1: 792576 0xF86A3F: caml_ml_open_descriptor_in (io.c:587)
+       n1: 792576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+        n1: 792576 0x4E43A7F: ???
+         n0: 792576 0x4E4BA67: ???
+   n1: 528384 0xF94EC5: add_to_ephe_ref_table (minor_gc.h:101)
+    n1: 528384 0xF94EC5: do_set (weak.c:186)
+     n1: 528384 0xF94EC5: do_set (weak.c:180)
+      n1: 528384 0xF95A6F: ephe_set_field (weak.c:198)
+       n1: 528384 0xF95A6F: caml_ephe_set_data (weak.c:233)
+        n1: 528384 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+         n1: 528384 0x4E43A7F: ???
+          n0: 528384 0x4E4BA07: ???
+   n1: 264192 0xF8B317: caml_initialize (memory.c:218)
+    n1: 264192 0xE6B338: camlStdlib__entry (stdlib.ml:32)
+     n1: 264192 0x4E43A7F: ???
+      n0: 264192 0x4E4BA67: ???
+ n1: 1048576 0xEEFC5E: checked_malloc (util.h:72)
+  n1: 1048576 0xEEFC5E: secp256k1_ecmult_context_build (ecmult_impl.h:201)
+   n1: 1048576 0xEEFC5E: secp256k1_context_create (secp256k1.c:78)
+    n1: 1048576 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 1048576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 1048576 0x4E43A7F: ???
+       n0: 1048576 0x4E4BA57: ???
+ n0: 110077 in 24 places, all below massif's threshold (1.00%)
+ n1: 92856 0xF8FDEF: large_allocate (shared_heap.c:380)
+  n1: 92856 0xF8FDEF: caml_shared_try_alloc (shared_heap.c:412)
+   n0: 92856 in 3 places, all below massif's threshold (1.00%)
+ n1: 65536 0xEEF41D: checked_malloc (util.h:72)
+  n1: 65536 0xEEF41D: secp256k1_ecmult_gen_context_build (ecmult_gen_impl.h:33)
+   n1: 65536 0xEEFB9F: secp256k1_context_create (secp256k1.c:75)
+    n1: 65536 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 65536 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65536 0x4E43A7F: ???
+       n0: 65536 0x4E4BA57: ???
+ n1: 65536 0xF8A1D1: caml_init_major_gc (major_gc.c:1509)
+  n1: 65536 0xF79441: create_domain (domain.c:539)
+   n1: 65536 0xF79D01: caml_init_domains (domain.c:681)
+    n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:109)
+     n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:85)
+      n1: 65536 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+       n1: 65536 0xF96FBE: caml_startup (startup_nat.c:135)
+        n1: 65536 0xF96FBE: caml_main (startup_nat.c:142)
+         n0: 65536 0x7BD5A1: main (main.c:37)
+#-----------
+snapshot=31
+#-----------
+time=98447871
+mem_heap_B=5277567
+mem_heap_extra_B=10241
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=99432442
+mem_heap_B=5278943
+mem_heap_extra_B=10249
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=100463898
+mem_heap_B=5287007
+mem_heap_extra_B=10321
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=101594041
+mem_heap_B=5289095
+mem_heap_extra_B=10337
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=102701747
+mem_heap_B=5291183
+mem_heap_extra_B=10353
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=103830798
+mem_heap_B=5293271
+mem_heap_extra_B=10369
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=104944920
+mem_heap_B=5295359
+mem_heap_extra_B=10385
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=106463630
+mem_heap_B=5297447
+mem_heap_extra_B=10401
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=107577093
+mem_heap_B=5299535
+mem_heap_extra_B=10417
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=108613378
+mem_heap_B=5306199
+mem_heap_extra_B=10473
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=109373348
+mem_heap_B=5314935
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=110022952
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=110636944
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=111619246
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=112540066
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=113368492
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=114074482
+mem_heap_B=5316983
+mem_heap_extra_B=10553
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=115223437
+mem_heap_B=5318497
+mem_heap_extra_B=11095
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=116020927
+mem_heap_B=5350658
+mem_heap_extra_B=24870
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=116066915
+mem_heap_B=5352530
+mem_heap_extra_B=25678
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=116113325
+mem_heap_B=5354410
+mem_heap_extra_B=26478
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=116159707
+mem_heap_B=5356314
+mem_heap_extra_B=27294
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=116206093
+mem_heap_B=5358218
+mem_heap_extra_B=28110
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=116252081
+mem_heap_B=5360090
+mem_heap_extra_B=28918
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=116298491
+mem_heap_B=5361970
+mem_heap_extra_B=29718
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=116344873
+mem_heap_B=5363874
+mem_heap_extra_B=30534
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=57
+#-----------
+time=116391259
+mem_heap_B=5365778
+mem_heap_extra_B=31350
+mem_stacks_B=0
+heap_tree=detailed
+n7: 5365778 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2307770 0xF8BA14: caml_stat_alloc_noexc (memory.c:488)
+  n3: 2307770 0xF8BA14: caml_stat_alloc (memory.c:542)
+   n1: 2097152 0xF96A84: build_frame_descriptors (frame_descriptors.c:81)
+    n1: 2097152 0xF96C43: caml_init_frame_descriptors (frame_descriptors.c:141)
+     n1: 2097152 0xF80C21: caml_init_gc (gc_ctrl.c:317)
+      n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:109)
+       n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:85)
+        n1: 2097152 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+         n1: 2097152 0xF96FBE: caml_startup (startup_nat.c:135)
+          n1: 2097152 0xF96FBE: caml_main (startup_nat.c:142)
+           n0: 2097152 0x7BD5A1: main (main.c:37)
+   n2: 196968 0xF85F26: caml_open_descriptor_in (io.c:169)
+    n1: 131312 0xF86A5C: caml_open_descriptor_out (io.c:191)
+     n1: 131312 0xF86A5C: caml_ml_open_descriptor_out (io.c:592)
+      n1: 131312 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 131312 0x4E43A7F: ???
+        n0: 131312 0x4E4BA67: ???
+    n1: 65656 0xF86A1C: caml_ml_open_descriptor_in (io.c:585)
+     n1: 65656 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65656 0x4E43A7F: ???
+       n0: 65656 0x4E4BA67: ???
+   n0: 13650 in 19 places, all below massif's threshold (1.00%)
+ n1: 1585152 0xF8C2B9: alloc_generic_table (minor_gc.c:58)
+  n3: 1585152 0xF8C2B9: realloc_generic_table.constprop.0 (minor_gc.c:816)
+   n1: 792576 0xF78775: add_to_custom_table (minor_gc.h:115)
+    n1: 792576 0xF78775: alloc_custom_gen (custom.c:59)
+     n1: 792576 0xF86A3F: caml_alloc_channel (io.c:577)
+      n1: 792576 0xF86A3F: caml_ml_open_descriptor_in (io.c:587)
+       n1: 792576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+        n1: 792576 0x4E43A7F: ???
+         n0: 792576 0x4E4BA67: ???
+   n1: 528384 0xF94EC5: add_to_ephe_ref_table (minor_gc.h:101)
+    n1: 528384 0xF94EC5: do_set (weak.c:186)
+     n1: 528384 0xF94EC5: do_set (weak.c:180)
+      n1: 528384 0xF95A6F: ephe_set_field (weak.c:198)
+       n1: 528384 0xF95A6F: caml_ephe_set_data (weak.c:233)
+        n1: 528384 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+         n1: 528384 0x4E43A7F: ???
+          n0: 528384 0x4E4BA07: ???
+   n1: 264192 0xF8B317: caml_initialize (memory.c:218)
+    n1: 264192 0xE6B338: camlStdlib__entry (stdlib.ml:32)
+     n1: 264192 0x4E43A7F: ???
+      n0: 264192 0x4E4BA67: ???
+ n1: 1048576 0xEEFC5E: checked_malloc (util.h:72)
+  n1: 1048576 0xEEFC5E: secp256k1_ecmult_context_build (ecmult_impl.h:201)
+   n1: 1048576 0xEEFC5E: secp256k1_context_create (secp256k1.c:78)
+    n1: 1048576 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 1048576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 1048576 0x4E43A7F: ???
+       n0: 1048576 0x4E4BA57: ???
+ n0: 163432 in 25 places, all below massif's threshold (1.00%)
+ n1: 129776 0xF8FDEF: large_allocate (shared_heap.c:380)
+  n3: 129776 0xF8FDEF: caml_shared_try_alloc (shared_heap.c:412)
+   n1: 68144 0xF8C43C: alloc_shared (minor_gc.c:147)
+    n1: 68144 0xF8C43C: oldify_one (minor_gc.c:285)
+     n0: 68144 in 2 places, all below massif's threshold (1.00%)
+   n1: 58176 0xF8B6D9: alloc_shr (memory.c:333)
+    n1: 58176 0xF8B6D9: caml_alloc_shr (memory.c:359)
+     n0: 58176 in 4 places, all below massif's threshold (1.00%)
+   n0: 3456 in 1 place, below massif's threshold (1.00%)
+ n1: 65536 0xEEF41D: checked_malloc (util.h:72)
+  n1: 65536 0xEEF41D: secp256k1_ecmult_gen_context_build (ecmult_gen_impl.h:33)
+   n1: 65536 0xEEFB9F: secp256k1_context_create (secp256k1.c:75)
+    n1: 65536 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 65536 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65536 0x4E43A7F: ???
+       n0: 65536 0x4E4BA57: ???
+ n1: 65536 0xF8A1D1: caml_init_major_gc (major_gc.c:1509)
+  n1: 65536 0xF79441: create_domain (domain.c:539)
+   n1: 65536 0xF79D01: caml_init_domains (domain.c:681)
+    n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:109)
+     n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:85)
+      n1: 65536 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+       n1: 65536 0xF96FBE: caml_startup (startup_nat.c:135)
+        n1: 65536 0xF96FBE: caml_main (startup_nat.c:142)
+         n0: 65536 0x7BD5A1: main (main.c:37)
+#-----------
+snapshot=58
+#-----------
+time=116437247
+mem_heap_B=5367650
+mem_heap_extra_B=32158
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=59
+#-----------
+time=116483657
+mem_heap_B=5369530
+mem_heap_extra_B=32958
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=116530039
+mem_heap_B=5371434
+mem_heap_extra_B=33774
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=61
+#-----------
+time=116576425
+mem_heap_B=5373338
+mem_heap_extra_B=34590
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=116622413
+mem_heap_B=5375210
+mem_heap_extra_B=35398
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=63
+#-----------
+time=116668823
+mem_heap_B=5377090
+mem_heap_extra_B=36198
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=116715205
+mem_heap_B=5378994
+mem_heap_extra_B=37014
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=65
+#-----------
+time=116761591
+mem_heap_B=5380898
+mem_heap_extra_B=37830
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=66
+#-----------
+time=116807579
+mem_heap_B=5382770
+mem_heap_extra_B=38638
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=67
+#-----------
+time=116853989
+mem_heap_B=5384650
+mem_heap_extra_B=39438
+mem_stacks_B=0
+heap_tree=detailed
+n8: 5384650 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2307770 0xF8BA14: caml_stat_alloc_noexc (memory.c:488)
+  n3: 2307770 0xF8BA14: caml_stat_alloc (memory.c:542)
+   n1: 2097152 0xF96A84: build_frame_descriptors (frame_descriptors.c:81)
+    n1: 2097152 0xF96C43: caml_init_frame_descriptors (frame_descriptors.c:141)
+     n1: 2097152 0xF80C21: caml_init_gc (gc_ctrl.c:317)
+      n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:109)
+       n1: 2097152 0xF96E98: caml_startup_common (startup_nat.c:85)
+        n1: 2097152 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+         n1: 2097152 0xF96FBE: caml_startup (startup_nat.c:135)
+          n1: 2097152 0xF96FBE: caml_main (startup_nat.c:142)
+           n0: 2097152 0x7BD5A1: main (main.c:37)
+   n2: 196968 0xF85F26: caml_open_descriptor_in (io.c:169)
+    n1: 131312 0xF86A5C: caml_open_descriptor_out (io.c:191)
+     n1: 131312 0xF86A5C: caml_ml_open_descriptor_out (io.c:592)
+      n1: 131312 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+       n1: 131312 0x4E43A7F: ???
+        n0: 131312 0x4E4BA67: ???
+    n1: 65656 0xF86A1C: caml_ml_open_descriptor_in (io.c:585)
+     n1: 65656 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65656 0x4E43A7F: ???
+       n0: 65656 0x4E4BA67: ???
+   n0: 13650 in 19 places, all below massif's threshold (1.00%)
+ n1: 1585152 0xF8C2B9: alloc_generic_table (minor_gc.c:58)
+  n3: 1585152 0xF8C2B9: realloc_generic_table.constprop.0 (minor_gc.c:816)
+   n1: 792576 0xF78775: add_to_custom_table (minor_gc.h:115)
+    n1: 792576 0xF78775: alloc_custom_gen (custom.c:59)
+     n1: 792576 0xF86A3F: caml_alloc_channel (io.c:577)
+      n1: 792576 0xF86A3F: caml_ml_open_descriptor_in (io.c:587)
+       n1: 792576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+        n1: 792576 0x4E43A7F: ???
+         n0: 792576 0x4E4BA67: ???
+   n1: 528384 0xF94EC5: add_to_ephe_ref_table (minor_gc.h:101)
+    n1: 528384 0xF94EC5: do_set (weak.c:186)
+     n1: 528384 0xF94EC5: do_set (weak.c:180)
+      n1: 528384 0xF95A6F: ephe_set_field (weak.c:198)
+       n1: 528384 0xF95A6F: caml_ephe_set_data (weak.c:233)
+        n1: 528384 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+         n1: 528384 0x4E43A7F: ???
+          n0: 528384 0x4E4BA07: ???
+   n1: 264192 0xF8B317: caml_initialize (memory.c:218)
+    n1: 264192 0xE6B338: camlStdlib__entry (stdlib.ml:32)
+     n1: 264192 0x4E43A7F: ???
+      n0: 264192 0x4E4BA67: ???
+ n1: 1048576 0xEEFC5E: checked_malloc (util.h:72)
+  n1: 1048576 0xEEFC5E: secp256k1_ecmult_context_build (ecmult_impl.h:201)
+   n1: 1048576 0xEEFC5E: secp256k1_context_create (secp256k1.c:78)
+    n1: 1048576 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 1048576 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 1048576 0x4E43A7F: ???
+       n0: 1048576 0x4E4BA57: ???
+ n1: 129776 0xF8FDEF: large_allocate (shared_heap.c:380)
+  n3: 129776 0xF8FDEF: caml_shared_try_alloc (shared_heap.c:412)
+   n1: 68144 0xF8C43C: alloc_shared (minor_gc.c:147)
+    n1: 68144 0xF8C43C: oldify_one (minor_gc.c:285)
+     n0: 68144 in 2 places, all below massif's threshold (1.00%)
+   n1: 58176 0xF8B6D9: alloc_shr (memory.c:333)
+    n1: 58176 0xF8B6D9: caml_alloc_shr (memory.c:359)
+     n0: 58176 in 4 places, all below massif's threshold (1.00%)
+   n0: 3456 in 1 place, below massif's threshold (1.00%)
+ n0: 118128 in 24 places, all below massif's threshold (1.00%)
+ n1: 65536 0xEEF41D: checked_malloc (util.h:72)
+  n1: 65536 0xEEF41D: secp256k1_ecmult_gen_context_build (ecmult_gen_impl.h:33)
+   n1: 65536 0xEEFB9F: secp256k1_context_create (secp256k1.c:75)
+    n1: 65536 0xEE3227: caml_secp256k1_context_create (secp256k1_wrap.c:35)
+     n1: 65536 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+      n1: 65536 0x4E43A7F: ???
+       n0: 65536 0x4E4BA57: ???
+ n1: 65536 0xF8A1D1: caml_init_major_gc (major_gc.c:1509)
+  n1: 65536 0xF79441: create_domain (domain.c:539)
+   n1: 65536 0xF79D01: caml_init_domains (domain.c:681)
+    n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:109)
+     n1: 65536 0xF96E98: caml_startup_common (startup_nat.c:85)
+      n1: 65536 0xF96FBE: caml_startup_exn (startup_nat.c:130)
+       n1: 65536 0xF96FBE: caml_startup (startup_nat.c:135)
+        n1: 65536 0xF96FBE: caml_main (startup_nat.c:142)
+         n0: 65536 0x7BD5A1: main (main.c:37)
+ n1: 64176 0xF7564C: caml_ba_alloc (bigarray.c:111)
+  n1: 64176 0xF7588A: caml_ba_create (bigarray.c:520)
+   n1: 64176 0xF974CE: caml_c_call (in /home/quyen/deku/_build/default/benchmarks/profiling_perf/profile_deku.exe)
+    n1: 64176 0x4E43A7F: ???
+     n0: 64176 in 22 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=68
+#-----------
+time=116900371
+mem_heap_B=5386554
+mem_heap_extra_B=40254
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=69
+#-----------
+time=116946757
+mem_heap_B=5388458
+mem_heap_extra_B=41070
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=70
+#-----------
+time=116992745
+mem_heap_B=5390330
+mem_heap_extra_B=41878
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=71
+#-----------
+time=117039134
+mem_heap_B=5391355
+mem_heap_extra_B=42301
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=72
+#-----------
+time=117587527
+mem_heap_B=5391723
+mem_heap_extra_B=42469
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=73
+#-----------
+time=117707620
+mem_heap_B=5392096
+mem_heap_extra_B=42664
+mem_stacks_B=0
+heap_tree=empty

@@ -47,7 +47,8 @@
     "@opam/prometheus-dream": "*",
     "@opam/benchmark": "*",
     "@opam/landmarks": "*",
-    "@opam/landmarks-ppx": "*"
+    "@opam/landmarks-ppx": "*",
+    "@opam/memtrace": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
