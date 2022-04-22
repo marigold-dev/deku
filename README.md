@@ -66,6 +66,9 @@ esy test
 dune build @runtest
 ```
 
+`esy test` will only run tests that the dependencies have changed since the last time
+you've ran it, so in order to run all the testsuite you must run `esy test -f` instead.
+
 ### Running a sidechain
 
 For convenient local development, we have included two components:

@@ -20,7 +20,7 @@ type t = {
   identity : identity;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
-  interop_context : Tezos_interop.Context.t;
+  interop_context : Tezos_interop.t;
   data_folder : string;
   pending_operations : pending_operation list;
   block_pool : Block_pool.t;
@@ -70,14 +70,7 @@ let apply_block state block =
     then
       state.snapshots
     else
-      let hash, data = Protocol.hash prev_protocol in
-      state.snapshots
-      |> Snapshots.start_new_epoch
-      |> Snapshots.add_snapshot
-           ~new_snapshot:
-             (let open Snapshots in
-             { hash; data })
-           ~block_height:prev_protocol.block_height in
+      Snapshots.start_new_epoch state.snapshots in
   let recent_operation_receipts =
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
@@ -150,8 +143,33 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       last_applied_block_timestamp = 0.0;
       last_seen_membership_change_timestamp = 0.0;
     } in
+  (* TODO: this causes syncing to fail unless the snapshot is newer than the
+     current block height, which is not always true (i.e, if you restart
+     a node that's in sync very quickly. We need to have a more discerning
+     validation here. *)
   let%assert () =
     (`Invalid_snapshot_height, protocol.block_height > t.protocol.block_height)
   in
   let t = { t with protocol; block_pool } in
-  List.fold_left_ok apply_block t all_blocks
+  (* TODO: it doesn't seem valid to add a snapshot here based on the information received
+     from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
+     the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
+     In the future, we should only add snapshots once we're in sync. *)
+  List.fold_left_ok
+    (fun prev_state block ->
+      let%ok state = apply_block prev_state block in
+      if
+        BLAKE2B.equal prev_state.protocol.state_root_hash
+          state.protocol.state_root_hash
+      then
+        Ok state
+      else
+        (* TODO: this should be done in parallel, as otherwise the node
+           may not be able to load the snapshot fast enough. *)
+        let hash, data = Protocol.hash prev_state.protocol in
+        let snapshot_ref, snapshots =
+          Snapshots.add_snapshot_ref
+            ~block_height:prev_state.protocol.block_height state.snapshots in
+        let () = Snapshots.set_snapshot_ref snapshot_ref { hash; data } in
+        Ok { state with snapshots })
+    t all_blocks

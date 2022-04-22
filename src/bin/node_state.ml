@@ -12,9 +12,13 @@ let get_initial_state ~folder =
     Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
   let%await interop_context =
-    Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
+    let%await { rpc_node; secret; consensus_contract; required_confirmations } =
+      Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
+    Lwt.return
+      (Tezos_interop.make ~rpc_node ~secret ~consensus_contract
+         ~required_confirmations) in
   let%await validator_res =
-    Tezos_interop.Consensus.fetch_validators ~context:interop_context in
+    Tezos_interop.Consensus.fetch_validators interop_context in
   let%await local_validators =
     Files.Validators.read ~file:(folder ^ "/validators.json") in
   let validators =
@@ -68,14 +72,11 @@ let get_initial_state ~folder =
       let%await prev_protocol =
         Files.State_bin.read ~file:prev_epoch_state_bin in
       let hash, data = Protocol.hash prev_protocol in
-      let snapshots =
-        Snapshots.add_snapshot
-          ~new_snapshot:
-            (let open Snapshots in
-            { hash; data })
-          ~block_height:prev_protocol.block_height node.snapshots
-        |> Snapshots.start_new_epoch in
-      await snapshots
+      let snapshot_ref, snapshots =
+        Snapshots.add_snapshot_ref ~block_height:prev_protocol.block_height
+          node.snapshots in
+      let () = Snapshots.set_snapshot_ref snapshot_ref { hash; data } in
+      await (Snapshots.start_new_epoch snapshots)
     else
       await node.snapshots in
   let node = { node with snapshots; protocol } in

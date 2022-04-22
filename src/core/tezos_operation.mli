@@ -1,4 +1,5 @@
 open Crypto
+
 type internal_operation =
   | Tezos_deposit of {
       destination : Tezos.Address.t;

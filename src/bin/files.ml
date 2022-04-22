@@ -49,7 +49,7 @@ module Interop_context = struct
       | _ -> Error "expected a string"
     let to_yojson t = `String (to_string t)
   end
-  type t = Tezos_interop.Context.t = {
+  type t = {
     rpc_node : Uri.t;
     secret : Secret.t;
     consensus_contract : Tezos.Address.t;

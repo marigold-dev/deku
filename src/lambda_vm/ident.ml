@@ -1,7 +1,6 @@
 (* TODO: should I care about overflowing this? *)
-type t = int
+type t = int [@@deriving yojson, eq, ord]
 
-let compare = Int.compare
 let initial = 0
 let next t = t + 1
 

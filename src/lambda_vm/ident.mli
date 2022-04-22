@@ -1,6 +1,5 @@
-type t
+type t [@@deriving yojson, eq, ord]
 
-val compare : t -> t -> int
 val initial : t
 val next : t -> t
 
