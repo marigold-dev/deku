@@ -67,7 +67,7 @@ let burn_gas gas env code =
   | E_pair _ ->
     Gas.burn_constant gas
 
-let eval_prim prim ~arg ~args =
+let eval_prim context prim ~arg ~args =
   let op1_int64 f =
     let f value =
       match value with
@@ -121,14 +121,18 @@ let eval_prim prim ~arg ~args =
   | P_asr -> op2_shift Int64.shift_right
   | P_fst -> op1_pair (fun fst _snd -> fst)
   | P_snd -> op1_pair (fun _fst snd -> snd)
+  | P_sender ->
+  match Context.sender context () with
+  | value -> value
+  | exception Context.Invalid_value -> raise Value_is_not_function
 
 (* TODO: gas must be ref *)
-let rec eval ~stack gas env code =
-  let eval_call env code = eval ~stack:(stack - 1) gas env code in
-  let eval_jump env code = eval ~stack gas env code in
+let rec eval ~stack context env code =
+  let eval_call env code = eval ~stack:(stack - 1) context env code in
+  let eval_jump env code = eval ~stack context env code in
 
   check_stack ~stack;
-  burn_gas gas env code;
+  burn_gas (Context.gas context) env code;
 
   match code with
   | E_var var -> (
@@ -150,7 +154,7 @@ let rec eval ~stack gas env code =
     | V_closure { env; param; body } ->
       let env = Env.add param arg env in
       eval_jump env body
-    | V_primitive { args; prim } -> eval_prim prim ~arg ~args)
+    | V_primitive { args; prim } -> eval_prim context prim ~arg ~args)
   | E_const value -> V_int64 value
   | E_prim prim -> V_primitive { args = []; prim }
   | E_if { predicate; consequent; alternative } -> (
@@ -167,22 +171,22 @@ let rec eval ~stack gas env code =
     let second = eval_call env second in
     V_pair { first; second }
 
-let eval gas env code =
+let eval context env code =
   let stack = max_stack_depth in
-  eval ~stack gas env code
+  eval ~stack context env code
 
 type script_result = {
   storage : Ir.value;
   operations : unit;
 }
 
-let execute gas ~arg script =
+let execute ~context ~arg script =
   let { param; code } = script in
   let env = Env.add param arg Env.empty in
-  let output = eval gas env code in
+  let output = eval context env code in
   let storage, (operations, ()) = Pattern.(parse output script_result) in
   { storage; operations }
 
-let execute gas ~arg script =
-  try Ok (execute gas ~arg script) with
+let execute ~context ~arg script =
+  try Ok (execute ~context ~arg script) with
   | Error error -> Result.error error

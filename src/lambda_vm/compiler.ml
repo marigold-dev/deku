@@ -26,6 +26,7 @@ let compile_prim prim =
   | Asr -> P_asr
   | Fst -> P_fst
   | Snd -> P_snd
+  | Sender -> P_sender
 
 module Vars = Map_with_cardinality.Make (struct
   include String

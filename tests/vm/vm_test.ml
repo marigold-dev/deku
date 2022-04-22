@@ -20,23 +20,29 @@ let compile_value_exn gas value =
     ~computation:(Compiler.compile_value gas value)
     ~error_pp:Compiler.pp_error
 
-let execute_exn gas arg script =
-  wrap ~msg:"Execution_error(%a)"
-    ~computation:(Interpreter.execute gas ~arg script)
-    ~error_pp:Interpreter.pp_error
+let execute_exn sender gas arg script =
+  let sender = Core.Address.to_string sender in
+  let sender = sender in
+  let context = Context.make ~sender ~source:sender gas in
+  match Interpreter.execute ~context ~arg script with
+  | Ok value -> value
+  | Error error -> failwith "Execution_error(%a)" Interpreter.pp_error error
 
-let execute_ast_exn gas arg script =
+let execute_ast_exn sender gas arg script =
   (* TODO: Use different gas to different stuff *)
   let gas = Gas.make ~initial_gas:gas in
   let script = compile_exn gas script in
   let arg = compile_value_exn gas arg in
-  execute_exn gas arg script
+  execute_exn sender gas arg script
 
-let execute_ast gas arg script =
+let execute_ast sender gas arg script =
   let gas = Gas.make ~initial_gas:gas in
   match (Compiler.compile_value gas arg, Compiler.compile gas script) with
   | Ok arg, Ok ir -> (
-    match Interpreter.execute gas ~arg ir with
+    let sender = Core.Address.to_string sender in
+    let sender = sender in
+    let context = Context.make ~sender ~source:sender gas in
+    match Interpreter.execute ~context ~arg ir with
     | Ok result -> Ok result
     | Error error -> Error (Execution_error error))
   | Error error, _

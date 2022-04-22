@@ -15,6 +15,7 @@ type prim =
   | P_asr
   | P_fst
   | P_snd
+  | P_sender
 [@@deriving show, yojson, eq]
 
 module Env = struct
