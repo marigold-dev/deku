@@ -1,0 +1,5 @@
+(test
+ (name test_contracts)
+ (libraries core crypto alcotest qcheck-alcotest helpers yojson tezos)
+ (preprocess
+  (pps ppx_lambda_vm ppx_let_binding ppx_deriving.show)))

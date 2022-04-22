@@ -29,6 +29,19 @@ let rec reset_timeout server =
      | Error `Not_current_block_producer -> ());
      reset_timeout server;
      Lwt.return_unit)
+
+let task_pool = ref None
+
+let get_task_pool () =
+  match !task_pool with
+  | Some pool -> pool
+  | None ->
+    (* TODO: proper number for additional domains *)
+    let pool = Domainslib.Task.setup_pool ~num_additional_domains:4 () in
+    let () = task_pool := Some pool in
+    pool
+
 let () = Flows.reset_timeout := fun () -> reset_timeout (get ())
 let () = Flows.get_state := get_state
 let () = Flows.set_state := set_state
+let () = Flows.get_task_pool := get_task_pool

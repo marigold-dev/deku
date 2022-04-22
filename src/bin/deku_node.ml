@@ -77,14 +77,16 @@ let handle_protocol_snapshot =
     (module Networking.Protocol_snapshot)
     (fun _update_state () ->
       let State.{ snapshots; _ } = Server.get_state () in
+      let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       Ok
-        {
-          snapshot = snapshots.current_snapshot;
-          additional_blocks = snapshots.additional_blocks;
-          last_block = snapshots.last_block;
-          last_block_signatures =
-            Signatures.to_list snapshots.last_block_signatures;
-        })
+        Networking.Protocol_snapshot.
+          {
+            snapshot;
+            additional_blocks = snapshots.additional_blocks;
+            last_block = snapshots.last_block;
+            last_block_signatures =
+              Signatures.to_list snapshots.last_block_signatures;
+          })
 
 (* POST /request-nonce *)
 (* Unused fow now *)
@@ -152,8 +154,8 @@ let handle_ticket_balance =
       Ok { amount })
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
-  Tezos_interop.Consensus.listen_operations
-    ~context:node.Node.State.interop_context ~on_operation:(fun operation ->
+  Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
+    ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;

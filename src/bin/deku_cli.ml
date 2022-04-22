@@ -47,6 +47,15 @@ let wallet =
     conv_printer non_dir_file in
   let open Arg in
   conv (parser, printer)
+
+let contract_code_path =
+  let parser file =
+    let non_dir_file = Arg.(conv_parser non_dir_file) in
+    non_dir_file file
+    |> Result.map_error (fun _ -> `Msg "Expected path to contract JSON") in
+  let printer = Arg.(conv_printer non_dir_file) in
+  Arg.(conv (parser, printer))
+
 let edsk_secret_key =
   let parser key =
     match Crypto.Secret.of_string key with
@@ -75,6 +84,20 @@ let address_tezos_interop =
     |> Option.to_result ~none:(`Msg "Expected a wallet address.") in
   let printer fmt address =
     Format.fprintf fmt "%s" (Tezos.Address.to_string address) in
+  let open Arg in
+  conv (parser, printer)
+let argument =
+  let parser string = Ok (Yojson.Safe.from_string string) in
+  let printer fmt arg =
+    Format.fprintf fmt "%s" (Yojson.Safe.pretty_to_string arg) in
+  let open Arg in
+  conv ~docv:"A valid contract argument" (parser, printer)
+let address =
+  let parser string =
+    Address.of_string string
+    |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
+  let printer fmt wallet =
+    Format.fprintf fmt "%s" (wallet |> Address.to_string) in
   let open Arg in
   conv (parser, printer)
 let amount =
@@ -140,21 +163,32 @@ let info_create_transaction =
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 let create_transaction node_folder sender_wallet_file received_address amount
-    ticket =
+    ticket argument =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    match (Address.to_key_hash received_address, argument) with
+    | Some addr, None ->
+      Core.User_operation.make ~source:wallet.address
+        (Transaction { destination = addr; amount; ticket })
+    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
+    | None, None -> failwith "Invalid transaction"
+    | None, Some arg ->
+      let arg = Contract_vm.Invocation_payload.make ~arg |> Result.get_ok in
+      Core.User_operation.make ~source:wallet.address
+        (Contract_invocation
+           {
+             to_invoke = Address.to_contract_hash received_address |> Option.get;
+             argument = arg;
+           }) in
   let transaction =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
-      ~block_height:block_level
-      ~data:
-        (Core.User_operation.make
-           ~sender:(Address.of_key_hash wallet.address)
-           (Transaction { destination = received_address; amount; ticket }))
-  in
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
   let%await identity = read_identity ~node_folder in
   let%await () =
     Networking.request_user_operation_gossip
@@ -162,6 +196,77 @@ let create_transaction node_folder sender_wallet_file received_address amount
       identity.uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
   Lwt.return (`Ok ())
+
+let info_originate_contract =
+  let doc =
+    "Originates a contract. Contract origination will be communicated to all \
+     known validators to be included in the next block." in
+  Term.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+    ~man
+
+let originate_contract node_folder contract_json initial_storage
+    sender_wallet_file =
+  let open Networking in
+  let%await validators_uris = validators_uris node_folder in
+  let validator_uri = List.hd validators_uris in
+  let%await block_level_response = request_block_level () validator_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+
+  let contract_program = Yojson.Safe.from_file contract_json in
+  let initial_storage = Yojson.Safe.from_file initial_storage in
+  let origination =
+    Contract_vm.Origination_payload.lambda_of_yojson ~code:contract_program
+      ~storage:initial_storage
+    |> Result.get_ok in
+  let origination_op = User_operation.Contract_origination origination in
+  let originate_contract_op =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level
+      ~data:(User_operation.make ~source:wallet.address origination_op) in
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Networking.request_user_operation_gossip
+      {
+        Networking.User_operation_gossip.user_operation = originate_contract_op;
+      }
+      identity.uri in
+  Lwt.return (`Ok ())
+
+let originate_contract =
+  let folder_node =
+    let docv = "folder_node" in
+    let doc = "The folder where the node lives." in
+    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv) in
+  let contract_json =
+    let doc =
+      "The path to the JSON output of compiling the contract to Lambda." in
+    let open Arg in
+    required
+    & pos 1 (some contract_code_path) None
+    & info [] ~docv:"contract" ~doc in
+  let initial_storage =
+    let doc = "The string containing initial storage for Lambdavm" in
+    let open Arg in
+    required & pos 2 (some string) None & info [] ~docv:"initial_storage" ~doc
+  in
+  let address_from =
+    let doc =
+      "The sending address, or a path to a wallet. If a bare address is \
+       provided, the corresponding wallet is assumed to be in the working \
+       directory." in
+    let env = Arg.env_var "SENDER" ~doc in
+    Arg.(required & pos 3 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
+  in
+  Term.(
+    lwt_ret
+      (const originate_contract
+      $ folder_node
+      $ contract_json
+      $ initial_storage
+      $ address_from))
+
 let folder_node =
   let docv = "folder_node" in
   let doc = "The folder where the node lives." in
@@ -180,9 +285,8 @@ let create_transaction =
     let doc = "The receiving address." in
     let env = Arg.env_var "RECEIVER" ~doc in
     let open Arg in
-    required
-    & pos 2 (some address_implicit) None
-    & info [] ~env ~docv:"receiver" ~doc in
+    required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
+  in
   let amount =
     let doc = "The amount to be transferred." in
     let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
@@ -192,6 +296,11 @@ let create_transaction =
     let doc = "The ticket to be transferred." in
     let open Arg in
     required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+  let argument =
+    let doc = "Argument to be passed to transaction" in
+    let open Arg in
+    value @@ (opt (some argument) None & info ["--arg"] ~docv:"argument" ~doc)
+  in
   let open Term in
   lwt_ret
     (const create_transaction
@@ -199,7 +308,8 @@ let create_transaction =
     $ address_from
     $ address_to
     $ amount
-    $ ticket)
+    $ ticket
+    $ argument)
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
@@ -210,11 +320,11 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key ~nonce:0l
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:
-        (Core.User_operation.make
-           ~sender:(Address.of_key_hash wallet.address)
+        (Core.User_operation.make ~source:wallet.address
            (Tezos_withdraw { owner = tezos_address; amount; ticket })) in
   let%await () =
     Networking.request_user_operation_gossip
@@ -419,10 +529,9 @@ let info_setup_tezos =
 let setup_tezos node_folder rpc_node secret consensus_contract
     required_confirmations =
   let%await () = ensure_folder node_folder in
-  let context =
-    let open Tezos_interop.Context in
-    { rpc_node; secret; consensus_contract; required_confirmations } in
-  let%await () = write_interop_context ~node_folder context in
+  let%await () =
+    write_interop_context ~node_folder
+      { rpc_node; secret; consensus_contract; required_confirmations } in
   await (`Ok ())
 let setup_tezos =
   let folder_dest =
@@ -560,6 +669,7 @@ let () =
        [
          (create_wallet, info_create_wallet);
          (create_transaction, info_create_transaction);
+         (originate_contract, info_originate_contract);
          (withdraw, info_withdraw);
          (withdraw_proof, info_withdraw_proof);
          (sign_block_term, info_sign_block);

@@ -75,6 +75,7 @@ let deposit destination amount ticket t =
            (destination_balance + amount);
     withdrawal_handles = t.withdrawal_handles;
   }
+
 let withdraw ~sender ~destination amount ticket t =
   let open Amount in
   let owner = destination in

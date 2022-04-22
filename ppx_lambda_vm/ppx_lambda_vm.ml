@@ -37,21 +37,19 @@ let assert_label ~loc label =
   | Nolabel -> ()
   | Labelled _ -> raise ~loc Unsupported_labelled_parameters
   | Optional _ -> raise ~loc Unsupported_optional_parameters
+
 let assert_default default =
   match default with
   | Some default ->
     let loc = default.pexp_loc in
     raise ~loc Unsupported_optional_parameters
   | None -> ()
+
 let assert_int64 ~loc constant =
   match constant with
-  | Pconst_integer (_int, l) -> (
-    match l with
-    | Some 'L' -> ()
-    | Some _
-    | None ->
-      raise ~loc Only_int64_constant_is_supported)
+  | Pconst_integer (_int, Some 'L') -> ()
   | _ -> raise ~loc Only_int64_constant_is_supported
+
 let parse_escape_extension ~loc (name, payload) =
   (match name.txt with
   | "e" -> ()
@@ -62,6 +60,7 @@ let parse_escape_extension ~loc (name, payload) =
     | PStr [{ pstr_desc = Pstr_eval (content, []); pstr_loc = _ }] -> content
     | _ -> raise ~loc Extension_escape_needs_to_contain_an_expression in
   content
+
 let rec expr_of_ocaml_expr expr =
   let loc = expr.pexp_loc in
   match expr.pexp_desc with
@@ -80,7 +79,7 @@ let rec expr_of_ocaml_expr expr =
     | "*" -> [%expr Prim Mul]
     | "/" -> [%expr Prim Div]
     | "mod" -> [%expr Prim Rem]
-    | "land" -> [%expr Prim And]
+    | "land" -> [%expr Prim Land]
     | "lor" -> [%expr Prim Lor]
     | "lxor" -> [%expr Prim Lxor]
     | "lsl" -> [%expr Prim Lsl]
@@ -143,6 +142,15 @@ let rec expr_of_ocaml_expr expr =
     let first = expr_of_ocaml_expr first in
     let second = expr_of_ocaml_expr second in
     [%expr Pair { first = [%e first]; second = [%e second] }]
+  | Pexp_let
+      (* TODO: should let be removed? *)
+      ( Nonrecursive,
+        [{ pvb_pat = { ppat_desc = Ppat_var { txt; loc }; _ }; pvb_expr; _ }],
+        expr ) ->
+    let body = expr_of_ocaml_expr expr in
+    let value = expr_of_ocaml_expr pvb_expr in
+    let param = estring ~loc txt in
+    [%expr App { funct = Lam ([%e param], [%e body]); arg = [%e value] }]
   | Pexp_extension extension -> parse_escape_extension ~loc extension
   | _ -> raise ~loc Unsupported_expression
 
@@ -191,29 +199,34 @@ let rec value_of_ocaml_expr expr =
     [%expr Pair ([%e first], [%e second])]
   | Pexp_extension extension -> parse_escape_extension ~loc extension
   | _ -> raise ~loc Unsupported_expression
+
 let value_of_ocaml_expr expr =
   let loc = expr.pexp_loc in
   let expr = value_of_ocaml_expr expr in
   [%expr Lambda_vm.Ast.(([%e expr] : value))]
 
 let expr_pattern = Ast_pattern.(pstr (pstr_eval __ nil ^:: nil))
+
 let expr_rule =
   let transform ~loc:_ ~path:_ expr = expr_of_ocaml_expr expr in
   let extension =
     Extension.(declare "lambda_vm" Expression expr_pattern transform) in
   Context_free.Rule.extension extension
+
 let value_rule =
   let transform ~loc:_ ~path:_ expr = value_of_ocaml_expr expr in
   let extension =
     Extension.(declare "lambda_vm.value" Expression expr_pattern transform)
   in
   Context_free.Rule.extension extension
+
 let script_rule =
   let transform ~loc:_ ~path:_ expr = script_of_ocaml_expr expr in
   let extension =
     Extension.(declare "lambda_vm.script" Expression expr_pattern transform)
   in
   Context_free.Rule.extension extension
+
 let () =
   Driver.register_transformation
     ~rules:[expr_rule; value_rule; script_rule]

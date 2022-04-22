@@ -39,15 +39,18 @@ module Ast : sig
         first : expr;
         second : expr;
       }
+  [@@deriving yojson, show]
 
   type value =
     | Int64 of int64
     | Pair  of value * value
+  [@@deriving yojson, show]
 
   type script = {
     param : ident;
     code : expr;
   }
+  [@@deriving yojson, show]
 end
 module Gas : sig
   type t
@@ -67,10 +70,11 @@ module Runtime_limits_error : sig
 end
 
 module Ir : sig
-  type script
-  type value
+  type code [@@deriving yojson, eq]
+  type value [@@deriving yojson, eq]
 
   val pp_value : Format.formatter -> value -> unit
+  val pp_code : Format.formatter -> code -> unit
 end
 
 module Compiler : sig
@@ -83,7 +87,7 @@ module Compiler : sig
     | Runtime_limits_error of Runtime_limits_error.t
   [@@deriving show]
 
-  val compile : Gas.t -> Ast.script -> (Ir.script, error) result
+  val compile : Gas.t -> Ast.script -> (Ir.code, error) result
   val compile_value : Gas.t -> Ast.value -> (Ir.value, error) result
 end
 
@@ -109,5 +113,5 @@ module Interpreter : sig
     operations : unit;
   }
   val execute :
-    Gas.t -> arg:Ir.value -> Ir.script -> (script_result, error) result
+    Gas.t -> arg:Ir.value -> Ir.code -> (script_result, error) result
 end

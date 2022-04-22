@@ -1,5 +1,10 @@
 (library
  (name core)
- (libraries crypto tezos)
+ (libraries crypto tezos lambda_vm)
  (preprocess
-  (pps ppx_deriving.eq ppx_deriving.ord ppx_deriving_yojson ppx_let_binding)))
+  (pps
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_deriving_yojson
+   ppx_deriving.show
+   ppx_let_binding)))
