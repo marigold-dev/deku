@@ -129,6 +129,20 @@ let ticket =
     Format.fprintf fmt "%S" (Tezos.Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
+let vm_flavor =
+  let parser string =
+    (match string with
+    | "Lambda" -> Some `Lambda
+    | "Dummy" -> Some `Dummy
+    | _ -> None)
+    |> Option.to_result ~none:(`Msg "Expected a valid Vm_flavor") in
+  let printer fmt flavor =
+    Format.fprintf fmt "%S"
+      (match flavor with
+      | `Lambda -> "Lambda"
+      | `Dummy -> "Dummy") in
+  let open Arg in
+  conv ~docv:"Vm_flavor" (parser, printer)
 let hash =
   let parser string =
     BLAKE2B.of_string string
@@ -163,7 +177,7 @@ let info_create_transaction =
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 let create_transaction node_folder sender_wallet_file received_address amount
-    ticket argument =
+    ticket argument vm_flavor =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
@@ -178,7 +192,11 @@ let create_transaction node_folder sender_wallet_file received_address amount
     | Some _, Some _ -> failwith "can't pass an argument to implicit account"
     | None, None -> failwith "Invalid transaction"
     | None, Some arg ->
-      let arg = Contract_vm.Invocation_payload.make ~arg |> Result.get_ok in
+      let payload =
+        match vm_flavor with
+        | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
+        | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
+      let arg = payload |> Result.get_ok in
       Core.User_operation.make ~source:wallet.address
         (Contract_invocation
            {
@@ -205,21 +223,27 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file =
+    sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-
   let contract_program = Yojson.Safe.from_file contract_json in
   let initial_storage = Yojson.Safe.from_file initial_storage in
-  let origination =
-    Contract_vm.Origination_payload.lambda_of_yojson ~code:contract_program
-      ~storage:initial_storage
-    |> Result.get_ok in
-  let origination_op = User_operation.Contract_origination origination in
+  let payload =
+    match vm_flavor with
+    | `Lambda ->
+      Contract_vm.Origination_payload.lambda_of_yojson ~code:contract_program
+        ~storage:initial_storage
+      |> Result.get_ok
+    | `Dummy ->
+      let int =
+        try Yojson.Safe.Util.to_int initial_storage with
+        | _ -> failwith "Invalid storage fro contract" in
+      Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
+  let origination_op = User_operation.Contract_origination payload in
   let originate_contract_op =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
@@ -259,13 +283,21 @@ let originate_contract =
     let env = Arg.env_var "SENDER" ~doc in
     Arg.(required & pos 3 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
   in
+  let vm_flavor =
+    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
+    let env = Arg.env_var "VM_FLAVOR" ~doc in
+    Arg.(
+      Arg.value
+      & opt ~vopt:`Lambda vm_flavor `Lambda
+      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   Term.(
     lwt_ret
       (const originate_contract
       $ folder_node
       $ contract_json
       $ initial_storage
-      $ address_from))
+      $ address_from
+      $ vm_flavor))
 
 let folder_node =
   let docv = "folder_node" in
@@ -301,6 +333,13 @@ let create_transaction =
     let open Arg in
     value @@ (opt (some argument) None & info ["--arg"] ~docv:"argument" ~doc)
   in
+  let vm_flavor =
+    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
+    let env = Arg.env_var "VM_FLAVOR" ~doc in
+    Arg.(
+      Arg.value
+      & opt ~vopt:`Lambda vm_flavor `Lambda
+      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let open Term in
   lwt_ret
     (const create_transaction
@@ -309,7 +348,8 @@ let create_transaction =
     $ address_to
     $ amount
     $ ticket
-    $ argument)
+    $ argument
+    $ vm_flavor)
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
