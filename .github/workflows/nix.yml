@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
@@ -24,3 +25,55 @@ jobs:
         run: nix develop -c dune runtest --force --no-buffer
       - name: "Build deku via flakes"
         run: nix build --verbose .#deku
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - uses: cachix/install-nix-action@v16
+      - uses: cachix/cachix-action@v10
+        with:
+          name: deku
+          authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+
+      - name: "Build static deku via flakes"
+        run: nix build --verbose .#deku-static
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: static # static should add things to cache for docker build
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      
+      - uses: cachix/install-nix-action@v16
+      - uses: cachix/cachix-action@v10
+        with:
+          name: deku
+          authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m-%d)"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+      - name: "Build docker image"
+        run: nix build .#docker
+      - name: "Load docker image"
+        run: docker load < ./result
+      - name: "Re-tag image"
+        run: |
+          docker image tag deku:latest ghcr.io/marigold-dev/deku:latest
+          docker image tag deku:latest ${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: "Push image"
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        run: |
+          docker image push ghcr.io/marigold-dev/deku:latest
+          docker image push ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: "Push image for PR"
+        # Run this if the PR has the "docker" label
+        if: contains(github.event.pull_request.labels.*.name, 'docker')
+        run: |
+          docker image push ghcr.io/marigold-dev/deku:pr-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
