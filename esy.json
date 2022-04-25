@@ -48,8 +48,7 @@
     "@opam/benchmark": "*",
     "@opam/landmarks": "*",
     "@opam/landmarks-ppx": "*",
-    "@opam/memtrace": "*",
-    "@opam/statmemprof-emacs": "*"
+    "@opam/memtrace": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -288,6 +287,5 @@
     "@opam/timezone": "janestreet/timezone:timezone.opam#e7a86ae5c833de8615265b9d8f598653b5593b91",
     "@opam/ocaml_intrinsics": "janestreet/ocaml_intrinsics:ocaml_intrinsics.opam#98af7a639c1b4a50c9e4b04e9b070a28129ca6a9",
     "@opam/sexp_pretty": "EduardoRFS/sexp_pretty:sexp_pretty.opam#50f666f9c464ab8e080f585a0ce72d5b0da43452"
-  },
-  "@opam/inuit": "let-def/inuit:inuit.opam#fdea894112fa804e32d4ae230b172d17997db49d"
+  }
 }
