@@ -4,8 +4,12 @@ set -e
 
 data_directory="data"
 
-[ "$USE_NIX" ] || export LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-[ "$USE_NIX" ] || export PATH=$(esy x sh -c 'echo $PATH')
+# shellcheck disable=SC2016
+[ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
+export LD_LIBRARY_PATH
+# shellcheck disable=SC2016
+[ "$USE_NIX" ] || PATH=$(esy x sh -c 'echo $PATH')
+export PATH
 
 [ "$USE_NIX" ] && dune build @install
 
@@ -29,17 +33,17 @@ DATA_DIRECTORY="data"
 VALIDATORS=(0 1 2)
 
 message() {
-  echo -e "\e[35m\e[1m**************************    $@    ********************************\e[0m"
+  echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
 }
 
 validators_json() {
   ## most of the noise in this function is because of indentation
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
-    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-    ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
-    URI=$(echo $VALIDATOR | awk -F';' '{ print $3 }')
-    if [ $i != 0 ]; then
+    i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
+    ADDRESS=$(echo "$VALIDATOR" | awk -F';' '{ print $4 }')
+    URI=$(echo "$VALIDATOR" | awk -F';' '{ print $3 }')
+    if [ "$i" != 0 ]; then
       printf ",
 "
     fi
@@ -57,9 +61,9 @@ EOF
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
-    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
-    ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
-    if [ $i != 0 ]; then
+    i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
+    ADDRESS=$(echo "$VALIDATOR" | awk -F';' '{ print $4 }')
+    if [ "$i" != 0 ]; then
       printf ",
 "
     fi
@@ -76,14 +80,14 @@ EOF
 
 create_new_deku_environment() {
   message "Creating validator identities"
-  for i in ${VALIDATORS[@]}; do
+  for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
-    mkdir -p $FOLDER
+    mkdir -p "$FOLDER"
 
-    deku-cli setup-identity $FOLDER --uri "http://localhost:444$i"
-    KEY=$(deku-cli self $FOLDER | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku-cli self $FOLDER | grep "address:" | awk '{ print $2 }')
-    URI=$(deku-cli self $FOLDER | grep "uri:" | awk '{ print $2 }')
+    deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+    KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
+    URI=$(deku-cli self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -103,8 +107,8 @@ create_new_deku_environment() {
     current_validators = [
 EOF
     ## this iteration is done here just to ensure the indentation
-    for VALIDATOR in ${VALIDATORS[@]}; do
-      ADDRESS=$(echo $VALIDATOR | awk -F';' '{ print $4 }')
+    for VALIDATOR in "${VALIDATORS[@]}"; do
+      ADDRESS=$(echo "$VALIDATOR" | awk -F';' '{ print $4 }')
       echo "      (\"$ADDRESS\": key_hash);"
     done
     cat <<EOF
@@ -132,8 +136,8 @@ EOF
     --burn-cap 2 \
     --force
 
-  for VALIDATOR in ${VALIDATORS[@]}; do
-    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
+  for VALIDATOR in "${VALIDATORS[@]}"; do
+    i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
     validators_json >"$FOLDER/validators.json"
     trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
@@ -143,8 +147,8 @@ EOF
   TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
 
   message "Configuring Deku nodes"
-  for VALIDATOR in ${VALIDATORS[@]}; do
-    i=$(echo $VALIDATOR | awk -F';' '{ print $1 }')
+  for VALIDATOR in "${VALIDATORS[@]}"; do
+    i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
     deku-cli setup-tezos "$FOLDER" \
@@ -157,10 +161,10 @@ EOF
 }
 
 tear-down() {
-  for i in ${VALIDATORS[@]}; do
+  for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
-    if [ -d $FOLDER ]; then
-      rm -r $FOLDER
+    if [ -d "$FOLDER" ]; then
+      rm -r "$FOLDER"
     fi
   done
 }
@@ -176,8 +180,8 @@ start_tezos_node() {
 start_deku_cluster() {
   SERVERS=()
   echo "Starting nodes."
-  for i in ${VALIDATORS[@]}; do
-    deku-node "$data_directory/$i" --listen-prometheus=900$i &
+  for i in "${VALIDATORS[@]}"; do
+    deku-node "$data_directory/$i" --listen-prometheus="900$i" &
     SERVERS+=($!)
   done
 
@@ -189,12 +193,12 @@ start_deku_cluster() {
   sleep 0.1
 
   echo "Signing"
-  for i in ${VALIDATORS[@]}; do
-    deku-cli sign-block "$data_directory/$i" $HASH
+  for i in "${VALIDATORS[@]}"; do
+    deku-cli sign-block "$data_directory/$i" "$HASH"
   done
 
-  for PID in ${SERVERS[@]}; do
-    wait $PID
+  for PID in "${SERVERS[@]}"; do
+    wait "$PID"
   done
 }
 

@@ -16,6 +16,7 @@ pkgs.mkShell {
       ## General tooling
       docker
       nodejs-17_x
+      shellcheck
 
       # formatters
       nixfmt
