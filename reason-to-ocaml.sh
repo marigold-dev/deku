@@ -14,12 +14,12 @@ fi
 
 fix_let_syntax() {
     extensions=("await" "some" "default" "ok" "assert")
-    for extension in ${extensions[@]}; do
+    for extension in "${extensions[@]}"; do
         # Install comby with `bash <(curl -sL get.comby.dev)` or nix-shell -p comby
         comby \
             "[%$extension let :[var_name]]" \
             "let%$extension :[var_name]" \
-            -i -match-newline-at-toplevel $1
+            -i -match-newline-at-toplevel "$1"
     done
 }
 fix_let_syntax_recursive() {
@@ -28,7 +28,7 @@ fix_let_syntax_recursive() {
     while ! [[ "$file_contents" == "$new_file_contents" ]]; do
         echo "$1: recursively fixing let syntax"
         file_contents=$(cat "$1")
-        fix_let_syntax $1
+        fix_let_syntax "$1"
         new_file_contents=$(cat "$1")
     done
 }
@@ -36,11 +36,11 @@ fix_let_syntax_recursive() {
 files=("$@")
 for i in "${files[@]}"; do
     echo "$i: Converting syntax with refmt."
-    if [[ $i == *.re* ]]; then
-        esy refmt --in-place --parse=re --print=ml $i
+    if [[ "$i" == *.re* ]]; then
+        esy refmt --in-place --parse=re --print=ml "$i"
     fi
     echo "$i Stripping annotations"
-    comby "[@reason.:[any]]" "" -i $i
-    comby "[@explicit_:[any]]" "" -i $i
-    fix_let_syntax_recursive $i
+    comby "[@reason.:[any]]" "" -i "$i"
+    comby "[@explicit_:[any]]" "" -i "$i"
+    fix_let_syntax_recursive "$i"
 done

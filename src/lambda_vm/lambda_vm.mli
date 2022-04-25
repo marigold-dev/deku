@@ -1,3 +1,12 @@
+module Gas : sig
+  type t
+
+  val make : initial_gas:int -> t
+  val is_empty : t -> bool
+
+  val burn_constant : t -> unit
+  val burn_log2 : t -> cardinality:int -> unit
+end
 module Ast : sig
   type ident = string
 
@@ -16,6 +25,7 @@ module Ast : sig
     | Asr
     | Fst
     | Snd
+    | Sender
 
   type expr =
     (* calculus *)
@@ -51,15 +61,8 @@ module Ast : sig
     code : expr;
   }
   [@@deriving yojson, show]
-end
-module Gas : sig
-  type t
 
-  val make : initial_gas:int -> t
-  val is_empty : t -> bool
-
-  val burn_constant : t -> unit
-  val burn_log2 : t -> cardinality:int -> unit
+  val value_of_string : Gas.t -> string -> value
 end
 
 module Runtime_limits_error : sig
@@ -91,6 +94,13 @@ module Compiler : sig
   val compile_value : Gas.t -> Ast.value -> (Ir.value, error) result
 end
 
+module Context : sig
+  type t
+
+  (* TODO: decide on whether we accept crypto primitives or michelson*)
+  val make : sender:string -> source:string -> Gas.t -> t
+end
+
 module Interpreter : sig
   type interpreter_error =
     (* interpreter bugs *)
@@ -112,6 +122,10 @@ module Interpreter : sig
     storage : Ir.value;
     operations : unit;
   }
+
   val execute :
-    Gas.t -> arg:Ir.value -> Ir.code -> (script_result, error) result
+    context:Context.t ->
+    arg:Ir.value ->
+    Ir.code ->
+    (script_result, error) result
 end

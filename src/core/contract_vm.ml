@@ -1,34 +1,6 @@
 open Helpers
 
-module type VM = sig
-  module Contract : sig
-    type t [@@deriving yojson, eq]
-  end
-  module Origination_payload : sig
-    type t [@@deriving yojson]
-    val lambda_of_yojson :
-      code:Yojson.Safe.t -> storage:Yojson.Safe.t -> (t, string) result
-  end
-
-  module Compiler : sig
-    val compile :
-      Origination_payload.t -> gas:int -> (Contract.t, string) result
-  end
-  module Invocation_payload : sig
-    type t [@@deriving yojson]
-    val make : arg:Yojson.Safe.t -> (t, string) result
-  end
-  module Interpreter : sig
-    val invoke :
-      Contract.t ->
-      arg:Invocation_payload.t ->
-      gas:int ->
-      (* TODO: unit should be user operation list *)
-      (Contract.t * unit, string) result
-  end
-end
-
-module Lambda : VM = struct
+module Lambda = struct
   module Contract = struct
     type code = Lambda_vm.Ir.code [@@deriving yojson, eq]
     type value = Lambda_vm.Ir.value [@@deriving yojson, eq]
@@ -78,11 +50,6 @@ module Lambda : VM = struct
       storage : Raw_repr.Value.t;
     }
     [@@deriving yojson]
-
-    let lambda_of_yojson ~code ~storage =
-      let%ok code = Raw_repr.Script.of_yojson code in
-      let%ok storage = Raw_repr.Value.of_yojson storage in
-      Ok { code; storage }
   end
   module Compiler = struct
     let error_to_string : Raw_repr.Errors.t -> string = function
@@ -102,14 +69,7 @@ module Lambda : VM = struct
       Ok (Contract.make ~code ~storage)
   end
   module Invocation_payload = struct
-    type t = { arg : Raw_repr.Value.t } [@@deriving yojson]
-    let handle_failure t ~msg = Result.map_error (fun _ -> msg) t
-
-    let make ~arg =
-      let%ok arg =
-        Raw_repr.Value.of_yojson arg
-        |> handle_failure ~msg:"failed to parse the argument" in
-      Ok { arg }
+    type t = Raw_repr.Value.t [@@deriving yojson]
   end
   module Interpreter = struct
     let error_to_string : Lambda_vm.Interpreter.error -> string = function
@@ -122,19 +82,102 @@ module Lambda : VM = struct
       | Interpreter_error (Undefined_variable | Over_applied_primitives) ->
         "WOOOOOO!1!1! Bug within Lambda_vm interpreter"
 
-    let invoke contract ~(arg : Invocation_payload.t) ~gas =
+    let invoke contract ~source ~(arg : Invocation_payload.t) ~gas =
       let gas = Lambda_vm.Gas.make ~initial_gas:gas in
       let%ok argument =
-        Raw_repr.Value.to_value ~gas arg.arg
+        Raw_repr.Value.to_value ~gas arg
         |> Result.map_error (fun x -> Compiler.error_to_string x) in
       (* TODO: use invoked operations for something *)
       let%ok invoked =
-        Lambda_vm.Interpreter.execute gas ~arg:argument contract.Contract.code
+        let sender = source |> Crypto.Key_hash.to_string in
+        let context = Lambda_vm.Context.make ~sender ~source:sender gas in
+        Lambda_vm.Interpreter.execute ~context ~arg:argument
+          contract.Contract.code
         |> Result.map_error (fun x -> error_to_string x) in
       let updated_contract =
         Contract.make ~code:contract.code ~storage:invoked.storage in
       Ok (updated_contract, ())
   end
 end
+module Dummy = struct
+  module Contract = struct
+    type t = int [@@deriving yojson, eq]
+  end
+  module Origination_payload = struct
+    type t = int [@@deriving yojson]
+  end
+  module Compiler = struct
+    let compile payload ~gas:_ = Ok payload
+  end
+  module Invocation_payload = struct
+    type t = int * int [@@deriving yojson]
+  end
+  module Interpreter = struct
+    let invoke storage ~arg ~gas:_ =
+      let result =
+        match arg with
+        | 0, num -> Ok (storage + num, ())
+        | 1, num -> Ok (storage - num, ())
+        | _, _ -> Error "Invalid arg" in
+      result |> Result.map (fun (c, ops) -> (c, ops))
+  end
+end
 
-include Lambda
+module External_vm = struct
+  module Contract = struct
+    type t =
+      | Lambda of Lambda.Contract.t
+      | Dummy  of Dummy.Contract.t
+    [@@deriving yojson, eq]
+  end
+  module Origination_payload = struct
+    type t =
+      | Dummy  of int
+      | Lambda of Lambda.Origination_payload.t
+    [@@deriving yojson]
+    let lambda_of_yojson ~code ~storage =
+      let%ok code = Lambda.Raw_repr.Script.of_yojson code in
+      let%ok storage = Lambda.Raw_repr.Value.of_yojson storage in
+      Ok (Lambda { code; storage })
+
+    let dummy_of_yojson ~storage = Dummy storage
+  end
+  module Compiler = struct
+    let compile payload ~gas =
+      match payload with
+      | Origination_payload.Dummy contract ->
+        let%ok contract = Dummy.Compiler.compile contract ~gas in
+        Ok (Contract.Dummy contract)
+      | Lambda contract ->
+        let%ok contract = Lambda.Compiler.compile contract ~gas in
+        Ok (Contract.Lambda contract)
+  end
+  module Invocation_payload = struct
+    type t =
+      | Lambda of Lambda.Invocation_payload.t
+      | Dummy  of (int * int)
+    [@@deriving yojson]
+
+    let lambda_of_yojson ~arg =
+      let%ok arg = Lambda.Invocation_payload.of_yojson arg in
+      Ok (Lambda arg)
+
+    let dummy_of_yojson ~arg =
+      let%ok arg = Dummy.Invocation_payload.of_yojson arg in
+      Ok (Dummy arg)
+  end
+  module Interpreter = struct
+    let invoke code ~source ~arg ~gas =
+      match (code, arg) with
+      | Contract.Dummy contract, Invocation_payload.Dummy arg ->
+        let%ok contract, operations =
+          Dummy.Interpreter.invoke contract ~arg ~gas in
+        Ok (Contract.Dummy contract, operations)
+      | Lambda contract, Invocation_payload.Lambda arg ->
+        let%ok contract, operations =
+          Lambda.Interpreter.invoke contract ~source ~arg ~gas in
+        Ok (Contract.Lambda contract, operations)
+      | _, _ -> Error "Invocation failure"
+  end
+end
+include External_vm

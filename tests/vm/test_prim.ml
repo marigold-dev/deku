@@ -2,6 +2,9 @@ open Lambda_vm
 
 module Testable = Vm_test.Testable
 
+let sender =
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Core.Address.of_string |> Option.get
+
 let script_op2 prim =
   let prim = Ast.Prim prim in
   [%lambda_vm.script fun param -> ([%e prim] (fst param) (snd param), (0L, 0L))]
@@ -15,7 +18,7 @@ let make_op2_test ~name prim f =
     QCheck.(
       Test.make ~name ~count:10_000 (pair int64 int64) (fun (a, b) ->
           let result =
-            Vm_test.execute_ast_exn 2901
+            Vm_test.execute_ast_exn sender 2901
               (Pair (Int64 a, Int64 b))
               (script_op2 prim) in
           let expected_result =
@@ -56,7 +59,8 @@ let test_neg =
   QCheck_alcotest.to_alcotest
     QCheck.(
       Test.make ~name:"Negative numbers" ~count:10_000 int64 (fun x ->
-          let result = Vm_test.execute_ast_exn 1501 (Int64 x) (script_op1 Neg) in
+          let result =
+            Vm_test.execute_ast_exn sender 1501 (Int64 x) (script_op1 Neg) in
           let expected_result =
             Vm_test.compile_value_exn
               (Gas.make ~initial_gas:200)
