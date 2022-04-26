@@ -1,0 +1,8 @@
+(executables
+ (names test)
+ (libraries memtrace))
+
+(rule
+ (alias runtest)
+ (action
+  (run ./test.exe)))
