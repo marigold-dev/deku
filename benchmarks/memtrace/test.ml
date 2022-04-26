@@ -1,23 +1,23 @@
 (* Prepare the file generate for memtrace with the 'ctf' extension
-   This file will be store in the folder /usr/tmp when execute:
+      This file will be store in the folder /usr/tmp when execute:
 
-   dune exec -- ./test.exe
+      dune exec -- ./test.exe
 
-   REMARK TODO:
-   Running this raise an error in deku:
-   esy x dune exec ~/deku/_build/default/benchmarks/memtrace/test.exe
-   Entering directory '/home/quyen/deku'     
-  Fatal error: exception Failure("Gc.memprof.start: not implemented in multicore")
+      REMARK TODO:
+      Running this raise an error in deku:
+      esy x dune exec ~/deku/_build/default/benchmarks/memtrace/test.exe
+      Entering directory '/home/quyen/deku'
+     Fatal error: exception Failure("Gc.memprof.start: not implemented in multicore")
 
-  even if it raises error it also generate the ctf file (but no data)
-  
-  using : esy x dune build
+     even if it raises error it also generate the ctf file (but no data)
 
-  For the test alone without interact with deku code, the test run:
-  dune build
-  dune exec ./test.exe
+     using : esy x dune build
 
-TODO: remove by make clean all the file *.ctf (if we need to clean up)
+     For the test alone without interact with deku code, the test run:
+     dune build
+     dune exec ./test.exe
+
+   TODO: remove by make clean all the file *.ctf (if we need to clean up)
 *)
 
 (*
@@ -156,8 +156,8 @@ let test_fork ~quick_exit () =
   R.iter trace (fun _time ev ->
       match ev with
       | Alloc a ->
-        Hashtbl.add sizes a.length
-          () (* add the allocation length a into the hash table*)
+        Hashtbl.add sizes a.length ()
+        (* add the allocation length a into the hash table*)
       | _ -> ());
 
   (* check the size of alloc_before/alloca_after is it a member of the hash table *)
