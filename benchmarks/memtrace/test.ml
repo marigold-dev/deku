@@ -16,7 +16,10 @@
   For the test alone without interact with deku code, the test run:
   dune build
   dune exec ./test.exe
+
+TODO: remove by make clean all the file *.ctf (if we need to clean up)
 *)
+
 (*
 let globs = Array.make 1000 [||]
 
