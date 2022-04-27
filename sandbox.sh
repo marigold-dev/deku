@@ -264,6 +264,28 @@ assert_deku_state() {
   done
 }
 
+deploy_dummy_ticket() {
+  contract=$(ligo compile contract ./dummy_ticket.mligo)
+  tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "Pair 0 {}" \
+    --burn-cap 2 \
+    --force
+}
+
+
+
+# A hard-coded Deku wallet to use in development
+DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+deposit_ticket() {
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
+  --entrypoint deposit --arg "Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\"" \
+  --burn-cap 2
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -281,6 +303,10 @@ help() {
   echo "  Stops the Tezos node and destroys the Deku state"
   echo "smoke-test"
   echo "  Starts a Deku cluster and performs some simple checks that its working."
+  echo "deploy-dummy-ticket"
+  echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
+  echo "deposit-dummy-ticket"
+  echo " Executes a deposit of a dummy ticket to Deku"
 }
 
 message "Running in $mode mode"
@@ -308,6 +334,12 @@ smoke-test)
   ;;
 tear-down)
   tear-down
+  ;;
+deploy-dummy-ticket)
+  deploy_dummy_ticket
+  ;;
+deposit-dummy-ticket)
+  deposit_ticket
   ;;
 *)
   help
