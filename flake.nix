@@ -32,8 +32,8 @@
     , prometheus-web
     , tezos
     }:
-    with flake-utils.lib;
-    eachSystem defaultSystems (system:
+      with flake-utils.lib;
+      eachSystem defaultSystems (system:
       let
         ligo = (import nixpkgs { inherit system; }).ligo;
         pkgs = import nixpkgs {
@@ -67,10 +67,15 @@
           nodejs = pkgs.nodejs-12_x;
           inherit npmPackages;
         };
-      in {
-        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages ligo; };
+
+        sandbox = pkgs.callPackage ./nix/sandbox.nix {
+          inherit pkgs deku ligo;
+        };
+      in
+      {
+        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages sandbox; };
         packages = {
-          inherit deku deku-static;
+          inherit deku deku-static sandbox;
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;
@@ -85,6 +90,10 @@
           deku-node = {
             type = "app";
             program = "${deku}/bin/deku-node";
+          };
+          sandbox = {
+            type = "app";
+            program = "${sandbox}/bin/sandbox.sh";
           };
         };
       });

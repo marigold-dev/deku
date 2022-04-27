@@ -1,4 +1,4 @@
-{ pkgs, esy ? pkgs.nodePackages.esy, deku, npmPackages, ligo }:
+{ pkgs, esy ? pkgs.nodePackages.esy, deku, npmPackages, sandbox }:
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
@@ -18,10 +18,6 @@ pkgs.mkShell {
       shellcheck
       tilt
       docker-compose # This is needed by tilt
-      jq
-
-      # Tezos tooling
-      ligo
 
       # formatters
       nixfmt
