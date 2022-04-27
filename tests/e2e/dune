@@ -1,4 +1,13 @@
 (executable
  (name asserter)
  (public_name asserter)
+ (modules asserter)
+ (libraries bin_common lwt cmdliner))
+
+(executable
+ (name load_test)
+ (public_name load-test)
+ (modules load_test)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
  (libraries bin_common lwt cmdliner))
