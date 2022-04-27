@@ -45,6 +45,21 @@
         "type": "github"
       }
     },
+    "flake-utils_4": {
+      "locked": {
+        "lastModified": 1648297722,
+        "narHash": "sha256-W+qlPsiZd8F3XkzXOzAoR+mpFqzm3ekQkJNa+PIh1BQ=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "0f8662f1319ad6abf89b3380dd2722369fc51ade",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "nix-npm-buildpackage": {
       "locked": {
         "lastModified": 1648040270,
@@ -125,7 +140,29 @@
         "nix-npm-buildpackage": "nix-npm-buildpackage",
         "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays",
-        "prometheus-web": "prometheus-web"
+        "prometheus-web": "prometheus-web",
+        "tezos": "tezos"
+      }
+    },
+    "tezos": {
+      "inputs": {
+        "flake-utils": "flake-utils_4",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1650261357,
+        "narHash": "sha256-PzjxPs5O1BhHjyCBLUAQ1Ft1VGBRIl2Qmvyliw5ToV8=",
+        "owner": "marigold-dev",
+        "repo": "tezos-nix",
+        "rev": "4227f1800f2562bee67ba143d98ccbad03115af2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "repo": "tezos-nix",
+        "type": "github"
       }
     }
   },
