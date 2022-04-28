@@ -15,7 +15,14 @@ let wrap compute =
   | exception Checks.Out_of_stack -> `Limits Runtime_limits_error.Out_of_stack
   | exception Gas.Out_of_gas -> `Limits Runtime_limits_error.Out_of_gas
 
-module Ir = Ir
+module Ir = struct
+  include Ir
+
+  module Value_syntax = struct
+    let int t = Ir.V_int64 t
+    let pair fst snd = Ir.V_pair { first = fst; second = snd }
+  end
+end
 
 module Compiler = struct
   include Compiler

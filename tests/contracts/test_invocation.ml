@@ -62,7 +62,11 @@ let amount =
 
 let test_ok msg =
   let initial_state, address = setup () in
-  let script = [%lambda_vm.script fun x -> (x + 1L, (0L, 0L))] in
+  let script =
+    [%lambda_vm.script
+      fun param ->
+        ((if fst param then snd param + 1L else snd param - 1L), (0L, 0L))]
+  in
   let value = Lambda_vm.(Ast.Int64 1L) in
   let code = Lambda_vm.Ast.script_to_yojson script in
   let storage = Lambda_vm.Ast.value_to_yojson value in
