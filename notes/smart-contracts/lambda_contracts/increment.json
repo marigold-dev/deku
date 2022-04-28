@@ -1,0 +1,45 @@
+{
+    "param": "x",
+    "code": [
+        "Pair",
+        {
+            "first": [
+                "App",
+                {
+                    "funct": [
+                        "App",
+                        {
+                            "funct": [
+                                "Prim",
+                                [
+                                    "Add"
+                                ]
+                            ],
+                            "arg": [
+                                "Var",
+                                "x"
+                            ]
+                        }
+                    ],
+                    "arg": [
+                        "Const",
+                        1
+                    ]
+                }
+            ],
+            "second": [
+                "Pair",
+                {
+                    "first": [
+                        "Const",
+                        0
+                    ],
+                    "second": [
+                        "Const",
+                        0
+                    ]
+                }
+            ]
+        }
+    ]
+}
