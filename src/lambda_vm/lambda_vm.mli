@@ -75,6 +75,10 @@ end
 module Ir : sig
   type code [@@deriving yojson, eq]
   type value [@@deriving yojson, eq]
+  module Value_syntax : sig
+    val int : int64 -> value
+    val pair : value -> value -> value
+  end
 
   val pp_value : Format.formatter -> value -> unit
   val pp_code : Format.formatter -> code -> unit
