@@ -331,7 +331,7 @@ let create_transaction =
   let argument =
     let doc = "Argument to be passed to transaction" in
     let open Arg in
-    value @@ (opt (some argument) None & info ["--arg"] ~docv:"argument" ~doc)
+    value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
   in
   let vm_flavor =
     let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
