@@ -4,29 +4,24 @@ type error =
   | Compilation_error of Compiler.error
   | Execution_error   of Interpreter.error
 
-let failwith s = Format.kasprintf failwith s
+exception Vm_test_error of error
 
-let wrap ~msg ~computation ~error_pp =
-  match computation with
-  | Ok value -> value
-  | Error error -> failwith msg error_pp error
 let compile_exn gas script =
-  wrap ~msg:"Compilation_error(%a)"
-    ~computation:(Compiler.compile gas script)
-    ~error_pp:Compiler.pp_error
+  match Compiler.compile gas script with
+  | Ok ir -> ir
+  | Error error -> raise (Vm_test_error (Compilation_error error))
 
 let compile_value_exn gas value =
-  wrap ~msg:"Compilation_error(%a)"
-    ~computation:(Compiler.compile_value gas value)
-    ~error_pp:Compiler.pp_error
+  match Compiler.compile_value gas value with
+  | Ok value -> value
+  | Error error -> raise (Vm_test_error (Compilation_error error))
 
 let execute_exn sender gas arg script =
   let sender = Core.Address.to_string sender in
-  let sender = sender in
   let context = Context.make ~sender ~source:sender gas in
   match Interpreter.execute ~context ~arg script with
   | Ok value -> value
-  | Error error -> failwith "Execution_error(%a)" Interpreter.pp_error error
+  | Error error -> raise (Vm_test_error (Execution_error error))
 
 let execute_ast_exn sender gas arg script =
   (* TODO: Use different gas to different stuff *)
@@ -40,7 +35,6 @@ let execute_ast sender gas arg script =
   match (Compiler.compile_value gas arg, Compiler.compile gas script) with
   | Ok arg, Ok ir -> (
     let sender = Core.Address.to_string sender in
-    let sender = sender in
     let context = Context.make ~sender ~source:sender gas in
     match Interpreter.execute ~context ~arg ir with
     | Ok result -> Ok result

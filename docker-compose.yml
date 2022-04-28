@@ -109,7 +109,7 @@ services:
   flextesa:
     container_name: deku_flextesa
     restart: always
-    image: tqtezos/flextesa:20211206
+    image: oxheadalpha/flextesa:20220127
     command: hangzbox start
     environment:
       - block_time=4
@@ -130,7 +130,6 @@ services:
     container_name: deku_prometheus
     restart: always
     image: prom/prometheus
-    network_mode: "host"  
     ports:
       - "9090:9090"
     expose:

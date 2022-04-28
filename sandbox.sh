@@ -1,6 +1,14 @@
 #! /usr/bin/env bash
+# shellcheck disable=SC2155
 
 set -e
+
+if [ "$2" = "docker" ]
+then
+  mode="docker"
+else
+  mode="local"
+fi
 
 data_directory="data"
 
@@ -14,7 +22,7 @@ export PATH
 [ "$USE_NIX" ] && dune build @install
 
 tezos-client() {
-  docker exec -it deku_flextesa tezos-client "$@"
+  docker exec -t deku_flextesa tezos-client "$@"
 }
 
 # LIGO is necessary for executing smart contracts
@@ -23,7 +31,12 @@ ligo() {
   docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.37.0 "$@"
 }
 
-RPC_NODE=http://localhost:20000
+if [ $mode  = "docker" ]
+then
+  RPC_NODE=http://flextesa:20000
+else
+  RPC_NODE=http://localhost:20000
+fi
 
 # This secret key never changes.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -84,7 +97,12 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
 
-    deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+    if [ $mode = "docker" ]
+    then
+      deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
+    else
+      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+    fi
     KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
     ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
     URI=$(deku-cli self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
@@ -177,28 +195,84 @@ start_tezos_node() {
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
 }
 
+SERVERS=()
 start_deku_cluster() {
-  SERVERS=()
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
-    deku-node "$data_directory/$i" --listen-prometheus="900$i" &
-    SERVERS+=($!)
+    if [ "$mode" = "local" ]
+    then
+      deku-node "$data_directory/$i" --listen-prometheus="900$i" &
+      SERVERS+=($!)
+    fi
   done
 
   sleep 1
 
   echo "Producing a block"
-  HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
+  if [ "$mode" = "docker" ]
+  then
+    HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r" )
+  else
+    HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
+  fi
 
   sleep 0.1
 
   echo "Signing"
   for i in "${VALIDATORS[@]}"; do
-    deku-cli sign-block "$data_directory/$i" "$HASH"
+    if [ "$mode" = "docker" ]
+    then
+      echo "hash: $HASH"
+      echo "deku-node-$i"
+      docker exec -t "deku-node-$i" /app/deku_cli.exe sign-block /app/data "$HASH"
+    else
+      deku-cli sign-block "$data_directory/$i" "$HASH"
+    fi
   done
 
+}
+
+wait_for_servers() {
   for PID in "${SERVERS[@]}"; do
     wait "$PID"
+  done
+}
+
+deku_storage() {
+  local contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
+  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  echo "$storage"
+}
+
+deku_state_hash() {
+  local storage=$(deku_storage)
+  local state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  echo "$state_hash"
+}
+
+deku_height() {
+  local storage=$(deku_storage)
+  local block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  echo "$block_height"
+}
+
+assert_deku_state() {
+  local current_state_hash=$(deku_state_hash)
+  local current_block_height=$(deku_height)
+  local starting_height=$1
+  local seconds=$2
+  local minimum_expected_height=$((starting_height + $2))
+
+  echo "The current block height is" "$current_block_height"
+
+  # Check that a current height has progressed past the starting height sufficiently
+  if [ $((current_block_height - starting_height)) -lt 20 ]; then
+    echo "Error: less than 20 blocks were produced in $2 seconds."
+    exit 1
+  fi
+
+  for i in "${VALIDATORS[@]}"; do
+    asserter "$data_directory/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
 
@@ -217,8 +291,11 @@ help() {
   echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
-
+  echo "smoke-test"
+  echo "  Starts a Deku cluster and performs some simple checks that its working."
 }
+
+message "Running in $mode mode"
 
 case "$1" in
 setup)
@@ -231,6 +308,15 @@ setup)
   ;;
 start)
   start_deku_cluster
+  wait_for_servers
+  ;;
+smoke-test)
+  starting_height=$(deku_height)
+  start_deku_cluster
+  seconds=35
+  sleep $seconds
+  killall deku-node
+  assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down

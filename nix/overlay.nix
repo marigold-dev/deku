@@ -3,11 +3,17 @@ let disableCheck = package: package.overrideAttrs (o: { doCheck = false; });
 in {
   ocaml-ng = builtins.mapAttrs (_: ocamlVersion:
     ocamlVersion.overrideScope' (oself: osuper: rec {
+      lwt_react = osuper.lwt_react.overrideAttrs
+        (o: { nativeBuildInputs = o.nativeBuildInputs ++ [ oself.cppo ]; });
+      utop = osuper.utop.overrideAttrs (o: {
+        propagatedBuildInputs = o.propagatedBuildInputs ++ [ oself.findlib ];
+      });
       rely = osuper.reason-native.rely.overrideAttrs (_: {
         postPatch = ''
           substituteInPlace src/rely/TestSuiteRunner.re --replace "Pervasives" "Stdlib"
         '';
       });
+      dream = osuper.dream.overrideAttrs (o: { doCheck = false; });
       alcotest = osuper.alcotest.overrideAttrs (o: {
         src = prev.fetchurl {
           url =

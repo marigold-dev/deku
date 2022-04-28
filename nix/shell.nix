@@ -17,6 +17,9 @@ pkgs.mkShell {
       docker
       nodejs-17_x
       shellcheck
+      tilt
+      docker-compose # This is needed by tilt
+      jq
 
       # formatters
       nixfmt

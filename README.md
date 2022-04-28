@@ -113,6 +113,12 @@ You may have to stop the session with `killall deku-node` to fully shutdown the 
 
 In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
 
+#### Experimental: Tilt
+
+Our experimental workflow uses [Tilt](https://tilt.dev) which is an advanced orchestrator. If you're using `nix` everything is already provided. If not, you will have to install the things in [requirements](#requirements) + [tilt](https://docs.tilt.dev/install.html) and [docker-compose](https://docs.docker.com/compose/install/).
+
+When the requirements are in place you should just have to run `tilt up` and everything will be running.
+
 ## Contributing
 
 Please refer the developer wiki [here](https://github.com/marigold-dev/sidechain/wiki)
