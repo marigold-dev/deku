@@ -253,13 +253,14 @@ start_deku_cluster() {
 
 }
 
-# For smoke-tests purpose
 wait_for_servers() {
   for PID in "${SERVERS[@]}"; do
     wait "$PID"
   done
 }
 
+# =======================
+# For smoke-tests purpose
 deku_storage() {
   local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
   local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
@@ -303,6 +304,7 @@ assert_deku_state() {
     asserter "$DATA_DIRECTORY/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
+# =======================
 
 help() {
   # FIXME: fix these docs
