@@ -12,30 +12,29 @@ let get_initial_state ~folder =
     Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
   let%await interop_context =
-    let%await { rpc_node; secret; consensus_contract; required_confirmations } =
+    let%await {
+            rpc_node;
+            secret;
+            consensus_contract;
+            discovery_contract;
+            required_confirmations;
+          } =
       Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
     Lwt.return
       (Tezos_interop.make ~rpc_node ~secret ~consensus_contract
-         ~required_confirmations) in
+         ~discovery_contract ~required_confirmations) in
   let%await validator_res =
     Tezos_interop.Consensus.fetch_validators interop_context in
-  let%await local_validators =
-    Files.Validators.read ~file:(folder ^ "/validators.json") in
   let validators =
     match validator_res with
-    | Ok current_validators ->
-      current_validators
-      |> List.map (fun validator ->
-             (* TODO: URI's should be looked up from the discovery.mligo contract.
-                See https://github.com/marigold-dev/deku/pull/450 *)
-             List.find
-               (fun (v, _) -> Crypto.Key_hash.equal validator v)
-               local_validators)
+    | Ok current_validators -> current_validators
     | Error err -> failwith err in
   let initial_validators_uri =
     List.fold_left
       (fun validators_uri (address, uri) ->
-        State.Address_map.add address uri validators_uri)
+        match uri with
+        | Some uri -> State.Address_map.add address uri validators_uri
+        | None -> validators_uri)
       State.Address_map.empty validators in
   let persist_trusted_membership_change =
     Files.Trusted_validators_membership_change.write

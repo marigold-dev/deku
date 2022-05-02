@@ -13,15 +13,12 @@ module Wallet : sig
   val read : file:string -> t Lwt.t
   val write : t -> file:string -> unit Lwt.t
 end
-module Validators : sig
-  val read : file:string -> (Crypto.Key_hash.t * Uri.t) list Lwt.t
-  val write : (Crypto.Key_hash.t * Uri.t) list -> file:string -> unit Lwt.t
-end
 module Interop_context : sig
   type t = {
     rpc_node : Uri.t;
     secret : Crypto.Secret.t;
     consensus_contract : Tezos.Address.t;
+    discovery_contract : Tezos.Address.t;
     required_confirmations : int;
   }
   val read : file:string -> t Lwt.t

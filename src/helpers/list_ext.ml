@@ -28,3 +28,9 @@ let rec fold_left_ok f state = function
   match f state head with
   | Ok state -> fold_left_ok f state tl
   | Error error -> Error error
+let somes l = List.filter_map (fun x -> x) l
+let fold_right_ok f l state =
+  let rec go = function
+    | [] -> Ok state
+    | head :: tl -> Result.bind (go tl) (fun tl -> f head tl) in
+  go l
