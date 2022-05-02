@@ -82,7 +82,7 @@ EOF
   echo "]"
 }
 
-# Create a json files containing the trusted validators (subset of validators.json created before)
+# Create a json file containing the trusted validators (subset of all validators.json created before)
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -103,11 +103,12 @@ EOF
   echo "]"
 }
 
-# Business!
+# Business happen here!
 create_new_deku_environment() {
   message "Creating validator identities"
   # Create folder for each validator
-  # And setup its identity using deku-cli
+  # And setup its identity using `deku-cli setup-identity``
+  # See ./src/bin/deku_cli.ml:setup_identity
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
@@ -199,7 +200,8 @@ EOF
   echo -e "\e[32m\e[1m### Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS ###\e[0m"
 }
 
-# Get rid of the data/ subfolder
+# Get rid of the data/ subfolder when stopping
+# This avoids having wrong state when starting again
 tear-down() {
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
@@ -230,6 +232,7 @@ start_deku_cluster() {
   sleep 1
 
   # Produce a block using `deku-cli produce-block`
+  # See ./src/bin/deku_cli.ml:produce_block
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
     HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
@@ -240,6 +243,7 @@ start_deku_cluster() {
   sleep 0.1
 
   # Sign the previously produced block using `deku-cli sign-block`
+  # See ./src/bin/deku_cli.ml:sign_block
   echo "Signing"
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "docker" ]; then
