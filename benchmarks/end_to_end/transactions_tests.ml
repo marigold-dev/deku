@@ -116,26 +116,25 @@ let load_test_transactions ticketer = test_transactions ticketer |> Lwt_main.run
 
 (***************************************************************************************)
 (* Define cli args
-  Build: esy x dune build
-  Run:
-  Step 1
-    - Run Deku node in one terminal
-      + List dockers and give permission: docker ps (sudo chmod +666 /var/run/docker.sock)
-      + Run docker: docker compose up -d
-      + Tear down all deku: ./sandbox.sh tear-down
-      + Setup sandbox: ./sandbox.sh setup
-      + Start deku node: ./sandbox.sh start
-  Step 2:
-      - esy x dune exec ~/deku/_build/default/benchmarks/end_to_end/transactions_tests.exe KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb
-        Entering directory '/home/quyen/deku'     
-        Running 10000 ticket transfers 
-        Starting block level: 15
+   Build: esy x dune build
+   Run:
+   Step 1
+     - Run Deku node in one terminal
+       + List dockers and give permission: docker ps (sudo chmod +666 /var/run/docker.sock)
+       + Run docker: docker compose up -d
+       + Tear down all deku: ./sandbox.sh tear-down
+       + Setup sandbox: ./sandbox.sh setup
+       + Start deku node: ./sandbox.sh start
+   Step 2:
+       - esy x dune exec ~/deku/_build/default/benchmarks/end_to_end/transactions_tests.exe KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb
+         Entering directory '/home/quyen/deku'
+         Running 10000 ticket transfers
+         Starting block level: 15
 
-  Wait for awhile for the test to finish, then stop the deku node
+   Wait for awhile for the test to finish, then stop the deku node
 
-  Step 3: 
-  How do I check the information of 10_000 transactions starting from level 15?
-
+   Step 3:
+   How do I check the information of 10_000 transactions starting from level 15?
 *)
 
 [@@@part "6"]
