@@ -9,8 +9,11 @@ module Block = Block
 module Operation = Protocol_operation
 include Protocol_state
 open Protocol_operation
+
 let maximum_old_block_height_operation = 60L
+
 let maximum_stored_block_height = 75L
+
 let apply_core_tezos_operation state tezos_operation =
   let%assert () =
     ( `Duplicated_operation,
@@ -23,10 +26,12 @@ let apply_core_tezos_operation state tezos_operation =
   let core_state =
     Deku_core.State.apply_tezos_operation state.core_state tezos_operation in
   Ok { state with core_state; included_tezos_operations }
+
 let apply_core_tezos_operation state tezos_operation =
   match apply_core_tezos_operation state tezos_operation with
   | Ok state -> state
   | Error `Duplicated_operation -> state
+
 let apply_core_user_operation state user_operation =
   let Core_user.
         { hash = _; key = _; signature = _; nonce = _; block_height; data } =
@@ -45,11 +50,13 @@ let apply_core_user_operation state user_operation =
   let core_state, receipt =
     Deku_core.State.apply_user_operation state.core_state data in
   Ok ({ state with core_state; included_user_operations }, receipt)
+
 let apply_core_user_operation state tezos_operation =
   match apply_core_user_operation state tezos_operation with
   | Ok (state, receipts) -> (state, receipts)
   | Error (`Block_in_the_future | `Old_operation | `Duplicated_operation) ->
     (state, None)
+
 let apply_consensus_operation state consensus_operation =
   let validators = state.validators in
   let validators =
@@ -59,9 +66,11 @@ let apply_consensus_operation state consensus_operation =
       Validators.remove validator validators in
   let last_seen_membership_change_timestamp = Unix.time () in
   { state with validators; last_seen_membership_change_timestamp }
+
 let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
+
 let apply_operation (state, receipts) operation =
   match operation with
   | Core_tezos tezos_operation ->
@@ -77,6 +86,7 @@ let apply_operation (state, receipts) operation =
   | Consensus consensus_operation ->
     let state = apply_consensus_operation state consensus_operation in
     (state, receipts)
+
 let apply_block state block =
   Format.eprintf "\027[32mblock: %Ld\027[m\n%!" block.Block.block_height;
   let state, receipts =
@@ -104,6 +114,7 @@ let apply_block state block =
       validators_hash = block.validators_hash;
     },
     receipts )
+
 let make ~initial_block =
   let empty =
     {
@@ -120,10 +131,12 @@ let make ~initial_block =
       last_seen_membership_change_timestamp = 0.0;
     } in
   apply_block empty initial_block |> fst
+
 let apply_block state block =
   let%assert () = (`Invalid_block_when_applying, is_next state block) in
   let state, result = apply_block state block in
   Ok (state, result)
+
 let get_current_block_producer state =
   if state.last_applied_block_timestamp = 0.0 then
     None
