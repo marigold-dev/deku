@@ -221,8 +221,7 @@ SERVERS=()
 start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "local" ]
-    then
+    if [ "$mode" = "local" ]; then
       deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
@@ -233,7 +232,7 @@ start_deku_cluster() {
   # Produce a block using `deku-cli produce-block`
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
+    HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
     HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk '{ print $2 }')
   fi
@@ -262,7 +261,7 @@ wait_for_servers() {
 }
 
 deku_storage() {
-  local contract=$(< "$DATA_DIRECTORY/0/tezos.json" jq '.consensus_contract' | xargs)
+  local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
   local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
   echo "$storage"
 }
