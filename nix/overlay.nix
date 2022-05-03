@@ -47,6 +47,16 @@ in {
           sha256 = "13c53b1cxkq2nj444655skw5a1mcxzbaqwqsqjf7jbwradb3hmxa";
         };
       });
+      odoc = osuper.odoc.overrideAttrs (o: {
+        patches = [
+          (prev.fetchpatch {
+            name = "ocaml5-compat.patch";
+            url =
+              "https://patch-diff.githubusercontent.com/raw/ocaml/odoc/pull/831.patch";
+            sha256 = "sha256-vTzbMwa2WA/3xTzCP6SGX+BZSroOwUG5w/FLQIYIkB0=";
+          })
+        ];
+      });
       odoc-parser = osuper.odoc-parser.overrideAttrs (o: {
         propagatedBuildInputs = o.propagatedBuildInputs
           ++ (with oself; [ camlp-streams result astring ]);

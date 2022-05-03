@@ -32,5 +32,6 @@ pkgs.mkShell {
       dune_2
       ocaml-lsp
       ocamlformat-rpc
+      odoc
     ]);
 }
