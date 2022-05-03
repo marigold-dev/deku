@@ -73,7 +73,8 @@ jobs:
       - name: "Re-tag image"
         run: |
           docker image tag deku:latest ghcr.io/marigold-dev/deku:latest
-          docker image tag deku:latest ${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+          docker image tag deku:latest ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+          docker image tag deku:latest ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
       - name: "Push image"
         if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
         run: |
@@ -83,4 +84,4 @@ jobs:
         # Run this if the PR has the "docker" label
         if: contains(github.event.pull_request.labels.*.name, 'docker')
         run: |
-          docker image push ghcr.io/marigold-dev/deku:pr-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+          docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
