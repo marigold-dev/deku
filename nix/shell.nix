@@ -18,10 +18,6 @@ pkgs.mkShell {
       shellcheck
       tilt
       docker-compose # This is needed by tilt
-      jq
-
-      # Tezos tooling
-      ligo
 
       # formatters
       nixfmt
