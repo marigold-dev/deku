@@ -58,7 +58,7 @@ let do_transaction ~validator_uri ~block_level ~ticket ~sender ~recipient
       ~block_height:block_level
       ~data:
         (Core.User_operation.make
-           ~sender:(Core.Address.of_key_hash sender.key_hash)
+           ~source:(sender.key_hash)
            (Transaction { destination = recipient.key_hash; amount; ticket }))
   in
   Lwt.async (fun () ->
