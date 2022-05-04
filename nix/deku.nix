@@ -45,7 +45,7 @@ in ocamlPackages.buildDunePackage rec {
       mirage-crypto-pk
       mirage-crypto-rng
       mirage-crypto-ec
-      piaf-dream-compat
+      piaf
       mrmime
       hex
       tezos-micheline
