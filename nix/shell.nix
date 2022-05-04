@@ -21,6 +21,9 @@ pkgs.mkShell {
       docker-compose # This is needed by tilt
       jq
 
+      # Tezos tooling
+      ligo
+
       # formatters
       nixfmt
       nodePackages.prettier

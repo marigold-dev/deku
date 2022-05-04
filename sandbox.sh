@@ -25,10 +25,6 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
-ligo() {
-  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
-}
-
 if [ $mode  = "docker" ]
 then
   RPC_NODE=http://flextesa:20000
