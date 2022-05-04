@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  node0:
+    container_name: deku_node_0
+    image: deku
+    volumes:
+      - ./data/0:/app/data
+    network_mode: "host"
+  node1:
+    container_name: deku_node_1
+    image: deku
+    volumes:
+      - ./data/1:/app/data
+    network_mode: "host"  
+  node2:
+    container_name: deku_node_2
+    image: deku
+    volumes:
+      - ./data/2:/app/data
+    network_mode: "host" 
