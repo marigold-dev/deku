@@ -10,8 +10,6 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
-
     ocaml-overlays.url = "github:anmonteiro/nix-overlays";
     ocaml-overlays.inputs = {
       nixpkgs.follows = "nixpkgs";
@@ -30,12 +28,24 @@
       ocaml-overlay.follows = "ocaml-overlays";
       flake-utils.follows = "flake-utils";
     };
+
+    dream2nix.url = "github:nix-community/dream2nix";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
-    , prometheus-web, tezos }:
-    with flake-utils.lib;
-    eachSystem defaultSystems (system:
+  outputs =
+    { self, nixpkgs, flake-utils, ocaml-overlays, prometheus-web, tezos, dream2nix }:
+    let
+      dream2nix-lib = dream2nix.lib2.init {
+        systems = [
+          "x86_64-linux"
+          "x86_64-darwin"
+          "aarch64-linux"
+          "aarch64-darwin"
+          "i686-linux"
+        ];
+        config.projectRoot = ./.;
+      };
+    in flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = ocaml-overlays.makePkgs {
           inherit system;
@@ -46,33 +56,47 @@
           ];
         };
 
+        # Note: In-case this is changed, dream2nix's nodejs setting must also be changed
+        nodejs = pkgs.nodejs-16_x;
         pkgs_static = pkgs.pkgsCross.musl64;
 
-        bp =
-          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
-        npmPackages = bp.buildNpmPackage {
-          src = ./.;
-          npmBuild = "echo ok";
-        };
+        sidechain = (dream2nix-lib.makeFlakeOutputs {
+          source = ./.;
+
+          packageOverrides = {
+            webpack-cli = {
+              remove-webpack-check = {
+                patches = [ ./nix/patches/remove-webpack-check.patch ];
+              };
+            };
+          };
+
+          inject = { acorn-import-assertions."1.8.0" = [[ "acorn" "8.7.1" ]]; };
+
+          settings = [{ subsystemInfo.nodejs = "16"; }];
+        }).packages.${system}.sidechain;
+
+        npmPackages =
+          builtins.attrValues self.packages.${system}.sidechain.dependencies;
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          nodejs = pkgs.nodejs-16_x;
-          inherit npmPackages;
+          inherit nodejs sidechain npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          nodejs = pkgs.nodejs-16_x;
-          inherit npmPackages;
+          inherit nodejs sidechain npmPackages;
         };
       in {
-        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
-        packages = {
-          inherit deku deku-static npmPackages;
+        devShell = import ./nix/shell.nix {
+          inherit pkgs npmPackages sidechain nodejs deku;
+        };
 
+        packages = {
+          inherit deku deku-static sidechain;
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;

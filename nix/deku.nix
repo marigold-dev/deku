@@ -1,9 +1,19 @@
-{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, npmPackages
-, nodejs ? pkgs.nodejs, static ? false }:
+{ pkgs
+, stdenv
+, lib
+, removeReferencesTo
+, doCheck ? true
+, cacert
+, npmPackages
+, sidechain
+, nodejs
+, static ? false
+}:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
-in ocamlPackages.buildDunePackage rec {
+in
+ocamlPackages.buildDunePackage rec {
   pname = "sidechain";
   version = "0.0.0-dev";
 
@@ -15,23 +25,21 @@ in ocamlPackages.buildDunePackage rec {
   };
 
   configurePhase = ''
-    export PATH=${npmPackages}/node_modules/.bin:$PATH
-    export NODE_PATH=${npmPackages}/node_modules
-
-    ln -s ${npmPackages}/node_modules ./node_modules
+    export NODE_PATH=${sidechain}/lib/node_modules/sidechain/node_modules
   '';
 
   # This is the same as standard dune build but with static support
   buildPhase = ''
     runHook preBuild
     echo "running ${if static then "static" else "release"} build"
+    echo $PATH
     dune build -p ${pname} --profile=${if static then "static" else "release"}
     runHook postBuild
   '';
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs npmPackages removeReferencesTo ]
+  nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages
     ++ (with ocamlPackages; [ utop reason ]);
 
   propagatedBuildInputs = with ocamlPackages;
@@ -60,7 +68,7 @@ in ocamlPackages.buildDunePackage rec {
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs ++ [ npmPackages ];
+    ++ checkInputs;
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 

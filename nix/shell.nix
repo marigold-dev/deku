@@ -1,8 +1,8 @@
-{ pkgs, deku, npmPackages }:
+{ pkgs, deku, npmPackages, nodejs, sidechain }:
 pkgs.mkShell {
   shellHook = ''
-    export NODE_PATH=${npmPackages}/node_modules
-    export PATH=${npmPackages}/node_modules/.bin:_build/install/default/bin:$PATH
+    export NODE_PATH=${sidechain}/lib/node_modules/sidechain/node_modules
+    export PATH=_build/install/default/bin:$PATH
 
     # This is a flag picked up by our sandbox.sh that's used
     # to know when to use esy instead of nix.
@@ -15,7 +15,7 @@ pkgs.mkShell {
       # Make developer life easier
       ## General tooling
       docker
-      nodejs-16_x
+      nodejs
       shellcheck
       tilt
       docker-compose # This is needed by tilt
@@ -33,5 +33,5 @@ pkgs.mkShell {
       odoc
       ocaml-lsp
       ocamlformat-rpc_0_20_1 # 0.21 is incompatible with latest cmdliner
-    ]);
+    ]) ++ npmPackages;
 }
