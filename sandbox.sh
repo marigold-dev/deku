@@ -12,14 +12,7 @@ fi
 
 data_directory="data"
 
-# shellcheck disable=SC2016
-[ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-export LD_LIBRARY_PATH
-# shellcheck disable=SC2016
-[ "$USE_NIX" ] || PATH=$(esy x sh -c 'echo $PATH')
-export PATH
-
-[ "$USE_NIX" ] && dune build @install
+[ "$REBUILD" ] && dune build @install
 
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
