@@ -1,19 +1,9 @@
-{ pkgs
-, stdenv
-, lib
-, removeReferencesTo
-, doCheck ? true
-, cacert
-, npmPackages
-, sidechain
-, nodejs
-, static ? false
-}:
+{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, nodejs
+, npm-deps, npmPackages, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
-in
-ocamlPackages.buildDunePackage rec {
+in ocamlPackages.buildDunePackage rec {
   pname = "sidechain";
   version = "0.0.0-dev";
 
@@ -25,14 +15,15 @@ ocamlPackages.buildDunePackage rec {
   };
 
   configurePhase = ''
-    export NODE_PATH=${sidechain}/lib/node_modules/sidechain/node_modules
+    export NODE_PATH=${npm-deps}/lib/node_modules/sidechain/node_modules:${
+      npm-deps.dependencies."@taquito/taquito"
+    }/lib/node_modules/@taquito/taquito/node_modules
   '';
 
   # This is the same as standard dune build but with static support
   buildPhase = ''
     runHook preBuild
     echo "running ${if static then "static" else "release"} build"
-    echo $PATH
     dune build -p ${pname} --profile=${if static then "static" else "release"}
     runHook postBuild
   '';

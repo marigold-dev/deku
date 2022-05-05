@@ -5,8 +5,7 @@
   "dependencies": {
     "@taquito/rpc": "^11.0.1",
     "@taquito/signer": "^11.0.1",
-    "@taquito/taquito": "^11.0.1",
-    "rxjs": "^6.6.7"
+    "@taquito/taquito": "^11.0.1"
   },
   "devDependencies": {
     "prettier": "^2.3.2",

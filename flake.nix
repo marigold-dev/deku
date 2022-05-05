@@ -30,22 +30,20 @@
     };
 
     dream2nix.url = "github:nix-community/dream2nix";
+    nix-filter.url = "github:numtide/nix-filter";
   };
 
-  outputs =
-    { self, nixpkgs, flake-utils, ocaml-overlays, prometheus-web, tezos, dream2nix }:
+  outputs = { self, nixpkgs, flake-utils, ocaml-overlays, prometheus-web, tezos
+    , dream2nix, nix-filter }:
     let
+      supportedSystems =
+        [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+
       dream2nix-lib = dream2nix.lib2.init {
-        systems = [
-          "x86_64-linux"
-          "x86_64-darwin"
-          "aarch64-linux"
-          "aarch64-darwin"
-          "i686-linux"
-        ];
+        systems = supportedSystems;
         config.projectRoot = ./.;
       };
-    in flake-utils.lib.eachDefaultSystem (system:
+    in flake-utils.lib.eachSystem supportedSystems (system:
       let
         pkgs = ocaml-overlays.makePkgs {
           inherit system;
@@ -56,47 +54,55 @@
           ];
         };
 
-        # Note: In-case this is changed, dream2nix's nodejs setting must also be changed
-        nodejs = pkgs.nodejs-16_x;
         pkgs_static = pkgs.pkgsCross.musl64;
 
-        sidechain = (dream2nix-lib.makeFlakeOutputs {
-          source = ./.;
+        # Note: In-case this is changed, dream2nix's nodejs setting must also be changed
+        nodejs = pkgs.nodejs-16_x;
 
-          packageOverrides = {
-            webpack-cli = {
-              remove-webpack-check = {
-                patches = [ ./nix/patches/remove-webpack-check.patch ];
-              };
-            };
-          };
+        npm-deps = self.packages.${system}.npm-deps;
 
-          inject = { acorn-import-assertions."1.8.0" = [[ "acorn" "8.7.1" ]]; };
-
-          settings = [{ subsystemInfo.nodejs = "16"; }];
-        }).packages.${system}.sidechain;
-
-        npmPackages =
-          builtins.attrValues self.packages.${system}.sidechain.dependencies;
+        npmPackages = builtins.attrValues npm-deps.dependencies;
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          inherit nodejs sidechain npmPackages;
+          inherit nodejs npm-deps npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          inherit nodejs sidechain npmPackages;
+          inherit nodejs npm-deps npmPackages;
         };
       in {
         devShell = import ./nix/shell.nix {
-          inherit pkgs npmPackages sidechain nodejs deku;
+          inherit pkgs npm-deps npmPackages nodejs deku;
         };
 
         packages = {
-          inherit deku deku-static sidechain;
+          inherit deku deku-static;
+
+          npm-deps = (dream2nix-lib.makeFlakeOutputs {
+            source = nix-filter.lib.filter {
+              root = ./.;
+              include = [ ./package-lock.json ./package.json ];
+            };
+
+            packageOverrides = {
+              webpack-cli = {
+                remove-webpack-check = {
+                  patches = [ ./nix/patches/remove-webpack-check.patch ];
+                };
+              };
+            };
+
+            inject = {
+              acorn-import-assertions."1.8.0" = [[ "acorn" "8.7.1" ]];
+            };
+
+            settings = [{ subsystemInfo.nodejs = "16"; }];
+          }).packages.${system}.sidechain;
+
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;

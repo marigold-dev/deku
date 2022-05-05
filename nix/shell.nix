@@ -1,7 +1,9 @@
-{ pkgs, deku, npmPackages, nodejs, sidechain }:
+{ pkgs, deku, nodejs, npm-deps, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
-    export NODE_PATH=${sidechain}/lib/node_modules/sidechain/node_modules
+    export NODE_PATH=${npm-deps}/lib/node_modules/sidechain/node_modules:${
+      npm-deps.dependencies."@taquito/taquito"
+    }/lib/node_modules/@taquito/taquito/node_modules
     export PATH=_build/install/default/bin:$PATH
 
     # This is a flag picked up by our sandbox.sh that's used
