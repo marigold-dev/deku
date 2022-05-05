@@ -10,28 +10,39 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
-    ocaml-overlays.inputs.nixpkgs.follows = "nixpkgs";
-
-    prometheus-web.url =
-      "github:marigold-dev/prometheus-web/ulrikstrid/nix-stuff";
-    prometheus-web.inputs.nixpkgs.follows = "nixpkgs";
-    prometheus-web.inputs.ocaml-overlay.follows = "ocaml-overlays";
-
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
+
+    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
+    ocaml-overlays.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      flake-utils.follows = "flake-utils";
+    };
+
+    tezos.url = "github:marigold-dev/tezos-nix";
+    tezos.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      flake-utils.follows = "flake-utils";
+    };
+
+    prometheus-web.url = "github:marigold-dev/prometheus-web";
+    prometheus-web.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      ocaml-overlay.follows = "ocaml-overlays";
+      flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
-    , prometheus-web }:
+    , prometheus-web, tezos }:
     with flake-utils.lib;
     eachSystem defaultSystems (system:
       let
-        pkgs = import nixpkgs {
+        pkgs = ocaml-overlays.makePkgs {
           inherit system;
-          overlays = [
-            ocaml-overlays.overlay
+          extraOverlays = [
             (import ./nix/overlay.nix)
-            prometheus-web.overlay
+            prometheus-web.overlays.default
+            tezos.overlays.default
           ];
         };
 
@@ -46,7 +57,7 @@
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          nodejs = pkgs.nodejs-12_x;
+          nodejs = pkgs.nodejs-16_x;
           inherit npmPackages;
         };
 
@@ -54,13 +65,14 @@
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          nodejs = pkgs.nodejs-12_x;
+          nodejs = pkgs.nodejs-16_x;
           inherit npmPackages;
         };
       in {
         devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
         packages = {
-          inherit deku deku-static;
+          inherit deku deku-static npmPackages;
+
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;

@@ -141,8 +141,7 @@ let node folder prometheus_port =
              handle_withdraw_proof;
              handle_ticket_balance;
              handle_trusted_validators_membership;
-           ]
-      @@ Dream.not_found;
+           ];
       Prometheus_dream.serve prometheus_port;
     ]
   |> Lwt_main.run
