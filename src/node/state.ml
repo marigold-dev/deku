@@ -31,7 +31,10 @@ type t = {
   recent_operation_receipts : Deku_core.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
+  (* define new field for metrics *)
+  applied_blocks : Block.t list;
 }
+
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
@@ -61,7 +64,9 @@ let make ~identity ~trusted_validator_membership_change
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
+    applied_blocks = [];
   }
+
 let apply_block state block =
   let prev_protocol = state.protocol in
   let%ok protocol, receipts = Protocol.apply_block state.protocol block in
@@ -82,11 +87,25 @@ let apply_block state block =
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
-  Ok { state with protocol; recent_operation_receipts; snapshots }
+  (* define the applied_block for metrics *)
+  let applied_blocks = block :: state.applied_blocks in
+  let timestamp = Unix.time () in
+  let operation_count = List.length block.operations in
+  Metrics.Throughput.collect_block_metrics ~timestamp ~operation_count;
+  Ok
+    {
+      state with
+      protocol;
+      recent_operation_receipts;
+      snapshots;
+      applied_blocks;
+    }
+
 let signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
+
 let load_snapshot ~snapshot ~additional_blocks ~last_block
     ~last_block_signatures t =
   let all_blocks =

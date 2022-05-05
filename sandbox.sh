@@ -211,8 +211,98 @@ help() {
   echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
+  # Add smoke-tests
+  echo "smoke-test"
+  echo " Start a Deku cluster and performs some simple checks that its working"
+  # Add deploy-dummy-ticket
+  echo "deploy-dummy-ticket"
+  echo " Deploys a contract that forges dummy tickets and deposits to Deku"
+  # Add deposit-dummy-ticket
+  echo "deposit-dummy-ticket"
+  echo " Executes a deposit of a dummy ticket to Deku"
 
 }
+
+
+# Declare deku_storage use in deku_height and deku_state_hash
+
+deku_storage(){
+  local contract
+  contract=$(jq <"$data_directory/0/tezos.json" '.consensus_contract' | xargs)
+  local storage 
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contract/$contract/storage")
+  echo "$storage"
+}
+
+# Declare deku_height use in the smoke_test at starting_height
+
+deku_height(){
+  local storage
+  storage=$(deku_storage)
+  local block_height 
+  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  echo "$block_height"
+}
+
+# Declare deku_state_hash use in assert_deku_state 
+
+deku_state_hash(){
+  local storage 
+  storage=$(deku_storage)
+  local state_hash 
+  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  echo "$state_hash"
+}
+
+# Declare the function assert_deku_state() use in smoke-test
+
+assert_deku_state(){
+  local current_state_hash 
+  current_state_hash=$(deku_state_hash)
+  local current_block_height
+  current_block_height=$(deku_height)
+  local starting_height=$1
+  local seconds=$2
+  local minimum_expected_height=$((starting_height + $2))
+
+  echo "The current block height is" "$current_block_height"
+
+  # Check that a current height has progressed past the starting height sufficiently
+  if [ $((current_block_height - starting_height)) -lt 20]; then 
+    echo "Error: less than 20 blocks were produced in $2 seconds."
+    exit 1
+  fi
+
+  for i in "${VALIDATORS[@]}"; do 
+    asserter "$data_directory/$i" "$current_state_hash" "$minimum_expected_height"
+  done 
+}
+
+# Declare deploy_dummy_ticket(), the contract dummy_ticket.mligo is called from here
+
+deploy_dummy_ticket(){
+  contract=$(ligo compile contract ./dummy_ticket.mligo)
+  tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "{}" \
+    --burn-cap 2 \
+    --force
+}
+
+# A hard-code deku wallet to use in development for deposit_ticket
+
+DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+
+deposit_ticket(){
+  TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
+  --entrypoint deposit \
+  --arg "Pair (Pair 0x \"$TEZOS_CONSENSUS_ADDRESS\") \"$DEKU_ADDRESS\"" \
+  --burn-cap 2
+}
+
 
 case "$1" in
 setup)
@@ -225,9 +315,27 @@ setup)
   ;;
 start)
   start_deku_cluster
+  wait_for_servers
+  ;;
+  # Add smoke-test
+  smoke-test)
+  starting_height=$(deku_height)
+  start_deku_cluster
+  seconds=35
+  sleep $seconds
+  killall deku-node
+  assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down
+  ;;
+  # Add deploy-dummy-ticket
+  deploy-dummy-ticket)
+  deploy_dummy_ticket
+  ;;
+  # Add deposit-dummy-ticket
+  deposit-dummy-ticket)
+  deposit_ticket
   ;;
 *)
   help
