@@ -61,22 +61,32 @@
 
         npm-deps = self.packages.${system}.npm-deps;
 
-        npmPackages = builtins.attrValues npm-deps.dependencies;
+        npmPackages = with builtins;
+          attrValues (removeAttrs npm-deps.dependencies [ "webpack" ]);
+
+        patched-webpack = npm-deps.dependencies.webpack.overrideAttrs (_: {
+          postFixup = ''
+            wrapProgram $out/bin/webpack \
+            --set NODE_PATH ${npm-deps}/lib/node_modules/sidechain/node_modules:${
+              npm-deps.dependencies."@taquito/taquito"
+            }/lib/node_modules/@taquito/taquito/node_modules:$NODE_PATH
+          '';
+        });
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          inherit nodejs npm-deps npmPackages;
+          inherit nodejs npm-deps npmPackages patched-webpack;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          inherit nodejs npm-deps npmPackages;
+          inherit nodejs npm-deps npmPackages patched-webpack;
         };
       in {
         devShell = import ./nix/shell.nix {
-          inherit pkgs npm-deps npmPackages nodejs deku;
+          inherit pkgs npm-deps npmPackages nodejs deku patched-webpack;
         };
 
         packages = {
