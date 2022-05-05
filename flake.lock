@@ -45,17 +45,19 @@
         "flake-utils-pre-commit": "flake-utils-pre-commit",
         "gomod2nix": "gomod2nix",
         "mach-nix": "mach-nix",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
         "node2nix": "node2nix",
         "poetry2nix": "poetry2nix",
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1651609988,
-        "narHash": "sha256-oMjBD+noDmqTs3p31S+YES0zo0LTZ8GNe8klIre5NXQ=",
+        "lastModified": 1651701506,
+        "narHash": "sha256-xayxl1OWJe2fbpJXuAqaS1g30b3xvaJ/PbinJ5C19hg=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "6672d1f3d966c4d1e36ae66d156c0b1caec62dac",
+        "rev": "d9fbf0d0a84c659f91eb28ccd1aa5f784d19319c",
         "type": "github"
       },
       "original": {
@@ -71,6 +73,21 @@
         "owner": "numtide",
         "repo": "flake-utils",
         "rev": "a4b154ebbdc88c8498a5c7b01589addc9e9cb678",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "flake-utils-pre-commit": {
+      "locked": {
+        "lastModified": 1644229661,
+        "narHash": "sha256-1YdnJAsNy69bpcjuoKdOYQX0YxZBiCYZo4Twxerqv7k=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "3cecb5b042f7f209c56ffd8371b2711a290ec797",
         "type": "github"
       },
       "original": {
@@ -183,11 +200,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1651742952,
-        "narHash": "sha256-rphbWT3vPKdDv/z6CvylxDyjlQjzYVvN8VMe96yc1i0=",
+        "lastModified": 1651765692,
+        "narHash": "sha256-LHRFtAbgMRz/9bAhq6AMf2sWEINGd/UmmVP/0Z2ZTCA=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "a6807f0800b901393167b19138628729d69efc5d",
+        "rev": "7347ef3d12825dac76b6f9f24075b9fc07bee5bb",
         "type": "github"
       },
       "original": {
@@ -269,7 +286,7 @@
         "dream2nix": "dream2nix",
         "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays",
         "prometheus-web": "prometheus-web",
         "tezos": "tezos"
