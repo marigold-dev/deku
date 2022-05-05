@@ -12,7 +12,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
 
-    ocaml-overlays.url = "github:anmonteiro/nix-overlays/anmonteiro/fix-lsp";
+    ocaml-overlays.url = "github:anmonteiro/nix-overlays";
     ocaml-overlays.inputs = {
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";

@@ -56,16 +56,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1651734956,
+        "lastModified": 1651742952,
         "narHash": "sha256-rphbWT3vPKdDv/z6CvylxDyjlQjzYVvN8VMe96yc1i0=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "b145dce8656f71f151f3f3a167851d85844b8350",
+        "rev": "a6807f0800b901393167b19138628729d69efc5d",
         "type": "github"
       },
       "original": {
         "owner": "anmonteiro",
-        "ref": "anmonteiro/fix-lsp",
         "repo": "nix-overlays",
         "type": "github"
       }

@@ -33,9 +33,5 @@ pkgs.mkShell {
       odoc
       ocaml-lsp
       ocamlformat-rpc_0_20_1 # 0.21 is incompatible with latest cmdliner
-      core_bench
-      landmarks
-      benchmark
-      memtrace
     ]);
 }
