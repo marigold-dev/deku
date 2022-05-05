@@ -1,4 +1,4 @@
-{ pkgs, deku, nodejs, npm-deps, npmPackages }:
+{ pkgs, deku, nodejs, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
     export PATH=_build/install/default/bin:$PATH

@@ -76,19 +76,18 @@
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          inherit nodejs npm-deps npmPackages;
+          inherit nodejs npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          inherit nodejs npm-deps npmPackages;
+          inherit nodejs npmPackages;
         };
       in {
-        devShell = import ./nix/shell.nix {
-          inherit pkgs npm-deps npmPackages nodejs deku;
-        };
+        devShell =
+          import ./nix/shell.nix { inherit pkgs npmPackages nodejs deku; };
 
         packages = {
           inherit deku deku-static;

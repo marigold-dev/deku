@@ -1,5 +1,5 @@
 { pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, nodejs
-, npm-deps, npmPackages, static ? false }:
+, npmPackages, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
