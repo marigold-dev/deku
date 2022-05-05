@@ -3,8 +3,10 @@ package deku_go_interop
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -83,7 +85,7 @@ func Main(state_transition func(sender string, input []byte) (err error)) {
 		if string(control) == "\"close\"" {
 			break
 		}
-		sender := strings.Trim(string(read()),"\"")
+		sender := strings.Trim(string(read()), "\"")
 		input := read()
 		log(fmt.Sprintf("Read start message: %s", string(input)))
 		err := state_transition(sender, input)

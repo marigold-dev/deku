@@ -1,0 +1,17 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "typescript interop for deku",
+  "main": "example.js",
+  "scripts": {
+    "build": "pkg example.js -o vm"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "pkg": "^5.6.0"
+  },
+  "dependencies": {
+    "deku_js_interop": "file:../../sdks/deku_js_interop"
+  }
+}
