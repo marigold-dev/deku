@@ -61,9 +61,6 @@
 
         npm-deps = self.packages.${system}.npm-deps;
 
-        npmPackages = with builtins;
-          attrValues (removeAttrs npm-deps.dependencies [ "webpack" ]);
-
         patched-webpack = npm-deps.dependencies.webpack.overrideAttrs (_: {
           postFixup = ''
             wrapProgram $out/bin/webpack \
@@ -73,20 +70,24 @@
           '';
         });
 
+        npmPackages = with builtins;
+          attrValues (removeAttrs npm-deps.dependencies [ "webpack" ])
+          ++ [ patched-webpack ];
+
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          inherit nodejs npm-deps npmPackages patched-webpack;
+          inherit nodejs npm-deps npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          inherit nodejs npm-deps npmPackages patched-webpack;
+          inherit nodejs npm-deps npmPackages;
         };
       in {
         devShell = import ./nix/shell.nix {
-          inherit pkgs npm-deps npmPackages nodejs deku patched-webpack;
+          inherit pkgs npm-deps npmPackages nodejs deku;
         };
 
         packages = {

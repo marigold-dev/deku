@@ -1,4 +1,4 @@
-{ pkgs, deku, nodejs, npm-deps, npmPackages, patched-webpack }:
+{ pkgs, deku, nodejs, npm-deps, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
     export PATH=_build/install/default/bin:$PATH
@@ -11,8 +11,6 @@ pkgs.mkShell {
   inputsFrom = [ deku ];
   packages = with pkgs;
     [
-      patched-webpack
-
       # Make developer life easier
       ## General tooling
       docker

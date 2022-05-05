@@ -1,5 +1,5 @@
 { pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, nodejs
-, npm-deps, npmPackages, patched-webpack, static ? false }:
+, npm-deps, npmPackages, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -13,13 +13,6 @@ in ocamlPackages.buildDunePackage rec {
     files =
       [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };
-
-  configurePhase = ''
-    export NODE_PATH=${npm-deps}/lib/node_modules/sidechain/node_modules:${
-      npm-deps.dependencies."@taquito/taquito"
-    }/lib/node_modules/@taquito/taquito/node_modules:$NODE_PATH
-  '';
-
   # This is the same as standard dune build but with static support
   buildPhase = ''
     runHook preBuild
@@ -30,8 +23,8 @@ in ocamlPackages.buildDunePackage rec {
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs removeReferencesTo patched-webpack ]
-    ++ npmPackages ++ (with ocamlPackages; [ utop reason ]);
+  nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages
+    ++ (with ocamlPackages; [ utop reason ]);
 
   propagatedBuildInputs = with ocamlPackages;
     [
