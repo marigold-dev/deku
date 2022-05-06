@@ -5,9 +5,8 @@ pkgs.mkShell {
     export PATH=${npmPackages}/node_modules/.bin:_build/install/default/bin:$PATH
 
     # This is a flag picked up by our sandbox.sh that's used
-    # to know when to use esy instead of nix.
-    # You can turn this off with the command 'unset USE_NIX'.
-    export USE_NIX=y
+    # to know when to rebuild the binaries.
+    export REBUILD=y
   '';
   inputsFrom = [ deku ];
   packages = with pkgs;
