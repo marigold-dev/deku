@@ -1,5 +1,5 @@
-{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, npmPackages
-, nodejs ? pkgs.nodejs, static ? false }:
+{ pkgs, stdenv, lib, removeReferencesTo, esbuild, doCheck ? true, cacert
+, npmPackages, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -17,8 +17,6 @@ in ocamlPackages.buildDunePackage rec {
   configurePhase = ''
     export PATH=${npmPackages}/node_modules/.bin:$PATH
     export NODE_PATH=${npmPackages}/node_modules
-
-    ln -s ${npmPackages}/node_modules ./node_modules
   '';
 
   # This is the same as standard dune build but with static support
@@ -31,7 +29,7 @@ in ocamlPackages.buildDunePackage rec {
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs npmPackages removeReferencesTo ]
+  nativeBuildInputs = [ nodejs npmPackages removeReferencesTo esbuild ]
     ++ (with ocamlPackages; [ utop reason ]);
 
   propagatedBuildInputs = with ocamlPackages;

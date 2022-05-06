@@ -7,11 +7,11 @@
   (file ./tezos_js_bridge.bundle.js)))
 
 (rule
- (deps ./webpack.config.js ./tezos_js_bridge.js)
- (targets ./tezos_js_bridge.bundle.js)
+ (deps ./tezos_js_bridge.js)
+ (target ./tezos_js_bridge.bundle.js)
  (mode fallback)
  (action
-  (run webpack --env=%{profile})))
+  (run esbuild %{deps} --bundle --minify --platform=node --outfile=%{target})))
 
 (rule
  (deps ./webpack.config.js ./tezos_js_bridge.js)
