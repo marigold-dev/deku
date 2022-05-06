@@ -73,7 +73,8 @@
         packages = {
           inherit deku deku-static npmPackages;
         sandbox = pkgs.callPackage ./nix/sandbox.nix {
-          inherit pkgs deku;
+          inherit deku;
+          pkgs = import nixpkgs { inherit system; };
         };
           docker = import ./nix/docker.nix {
             inherit pkgs;
