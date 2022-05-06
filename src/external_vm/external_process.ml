@@ -50,7 +50,6 @@ let write_all fd bytes_ =
   done
 
 let send_to_vm ~fd (message : Yojson.Safe.t) =
-  Format.printf "Sending message: %s\n%!" (message |> Yojson.Safe.to_string);
   let message = Bytes.of_string (Yojson.Safe.to_string message) in
   let message_length = Bytes.create 8 in
   Bytes.set_int64_ne message_length 0 (Int64.of_int (Bytes.length message));
@@ -63,7 +62,6 @@ let read_from_vm ~fd =
   let _ = Unix.read fd message_length 0 8 in
   let message_length = Bytes.get_int64_ne message_length 0 |> Int64.to_int in
   let message = read_all fd message_length |> Bytes.to_string in
-  Format.printf "Got message from machine: %s\n%!" message;
   Yojson.Safe.from_string message
 
 type ('a, 'b) t = {
