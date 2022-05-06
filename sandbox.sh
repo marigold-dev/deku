@@ -2,7 +2,7 @@
 
 set -e
 
-if [ "$2" = "docker" ]; then
+if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
   mode="local"
