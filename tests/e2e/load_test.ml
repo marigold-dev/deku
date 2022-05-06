@@ -50,30 +50,26 @@ let make_ticket ticketer =
 
 let nonce = ref 0l
 
-let do_transaction ~validator_uri ~block_level ~ticket ~sender ~recipient
-    ~amount =
+let do_transaction ~validator_uri ~block_level ~sender =
   nonce := Int32.add 1l !nonce;
-  let amount = Core_deku.Amount.of_int amount in
+  let payload = {|{"Action":"Increment"}|} in
   let transaction =
     Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
       ~block_height:block_level
       ~data:
         (Core_deku.User_operation.make ~source:sender.key_hash
-           (Transaction { destination = recipient.key_hash; amount; ticket }))
-  in
+           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
   Lwt.async (fun () ->
       Network.request_user_operation_gossip
         { user_operation = transaction }
         validator_uri);
   transaction
 
-let spam_transactions ~ticketer n () =
+let spam_transactions n () =
   List.init n (fun _ ->
       let validator_uri = get_random_validator_uri () in
       let block_level = get_current_block_level () in
-      let ticket = make_ticket ticketer in
-      do_transaction ~validator_uri ~block_level ~ticket ~sender:alice_wallet
-        ~recipient:bob_wallet ~amount:1)
+      do_transaction ~validator_uri ~block_level ~sender:alice_wallet)
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
@@ -107,13 +103,13 @@ module Test_kind = struct
     Arg.info [] ~doc ~docv
 end
 
-let load_test_transactions test_kind ticketer =
+let load_test_transactions test_kind =
   let test =
     match test_kind with
     | Test_kind.Saturate ->
       let n = 10000 in
       Format.printf "Running %i ticket transfers\n%!" n;
-      spam_transactions ~ticketer n
+      spam_transactions n
     | Test_kind.Maximal_blocks ->
       (* TODO: write a test that maximally packs blocks and transmits them. *)
       assert false in
@@ -122,21 +118,15 @@ let load_test_transactions test_kind ticketer =
   let _ = test () in
   await ()
 
-let load_test_transactions test_kind ticketer =
-  load_test_transactions test_kind ticketer |> Lwt_main.run
+let load_test_transactions test_kind =
+  load_test_transactions test_kind |> Lwt_main.run
 
 let args =
   let open Arg in
   let test_kind =
     required & pos 0 (some Test_kind.test_kind_conv) None & Test_kind.arg_info
   in
-  let ticketer =
-    let docv = "ticketer" in
-    let doc =
-      "Tezos address of the contract issuing the ticket (e.g. \
-       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)" in
-    required & pos 1 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const load_test_transactions $ test_kind $ ticketer
+  const load_test_transactions $ test_kind
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "load-test") args
