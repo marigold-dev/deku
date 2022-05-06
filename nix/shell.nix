@@ -25,6 +25,11 @@ pkgs.mkShell {
       # Tezos tooling
       ligo
 
+      # Go developer tooling
+      go
+      gopls
+      gore
+
       # formatters
       nixfmt
       nodePackages.prettier
