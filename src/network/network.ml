@@ -30,3 +30,5 @@ let request_consensus_operation = request (module Consensus_operation_gossip)
 
 let request_trusted_validator_membership =
   request (module Trusted_validators_membership_change)
+
+let request_ticket_balance = request (module Ticket_balance)
