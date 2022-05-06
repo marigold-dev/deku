@@ -26,6 +26,11 @@ module Block_by_hash_spec = struct
   type response = Block.t option [@@deriving yojson]
   let path = "/block-by-hash"
 end
+module Block_by_level_spec = struct
+  type request = { level : int64 } [@@deriving yojson]
+  type response = Block.t option [@@deriving yojson]
+  let path = "/block-by-level"
+end
 module Block_level = struct
   type request = unit [@@deriving yojson]
   type response = { level : int64 } [@@deriving yojson]
