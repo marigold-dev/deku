@@ -1,5 +1,28 @@
+def get_services(compose):
+    return compose.get("services").keys()
+
+def make_deku_yaml(n):
+  services = []
+
+  for i in range(n):
+    deku_node_name = "deku-node-%s" % i
+    services.append((deku_node_name, {
+    'container_name': deku_node_name,
+    'restart': 'always',
+    'image': 'ghcr.io/marigold-dev/deku',
+    'expose': [ 4040 ],
+    'volumes': [ ("./data/%s:/app/data" % i) ],
+    }))
+
+  services = {k: v for k, v in services}
+  return encode_yaml({
+    'version': '3.8',
+    'services': services
+  })
+
+deku_yaml = make_deku_yaml(3)
 # Run docker-compose
-docker_compose(["./docker-compose.yml", "./docker-compose.override.yml"])
+docker_compose(["./docker-compose.yml", deku_yaml])
 
 dc_resource("db", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
 dc_resource("elastic", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
@@ -12,10 +35,8 @@ dc_resource("metrics", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_
 dc_resource("indexer", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
 dc_resource("prometheus", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
 
-# deku nodes should not start before we have run the setup since they depend on state generated there
-dc_resource("deku-node-0", labels=["deku"], resource_deps=["deku-setup"])
-dc_resource("deku-node-1", labels=["deku"], resource_deps=["deku-setup", "deku-node-0"])
-dc_resource("deku-node-2", labels=["deku"], resource_deps=["deku-setup", "deku-node-1"])
+for deku_service in get_services(decode_yaml(deku_yaml)):
+    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
 
 custom_build(
   'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
