@@ -26,6 +26,9 @@ let start_vm_ipc ~named_pipe_path =
 let apply_vm_operation ~state ~source operation =
   match !vm with
   | Some vm ->
+    (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
+       For now, I send an empty message if there's nothing extra to do. *)
+    vm.send (`String "");
     (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
     let source = `String (Key_hash.to_string source) in
     vm.send source;
