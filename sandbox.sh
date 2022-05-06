@@ -441,6 +441,11 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
+load_test () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -464,6 +469,8 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "load-test (saturate | maximal-blocks)"
+  echo "  Performs the specified load test on a running cluster"
 }
 
 message "Running in $mode mode"
@@ -504,6 +511,9 @@ deploy-dummy-ticket)
   ;;
 deposit-dummy-ticket)
   deposit_ticket
+  ;;
+load-test)
+  load_test "$2"
   ;;
 *)
   help
