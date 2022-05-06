@@ -31,9 +31,11 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
-ligo() {
-  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
-}
+if ! [ "$USE_NIX" ]; then
+  ligo() {
+    docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+  }
+fi
 
 if [ $mode = "docker" ]; then
   RPC_NODE=http://flextesa:20000
@@ -47,7 +49,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 DATA_DIRECTORY="data"
 
 # shellcheck disable=SC2207
-VALIDATORS=( $(seq 0 "$NUMBER_OF_NODES") )
+VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
 message() {
   echo "=========== $* ==========="
@@ -212,7 +214,7 @@ start_deku_cluster() {
 
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r" )
+    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
     HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
   fi
