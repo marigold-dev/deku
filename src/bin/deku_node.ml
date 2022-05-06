@@ -69,11 +69,26 @@ let handle_block_by_hash =
 
 (* POST /block-level *)
 (* Retrieve height of the chain? *)
+
 let handle_block_level =
   handle_request
     (module Network.Block_level)
     (fun _update_state _request ->
       Ok { level = Flows.find_block_level (Server.get_state ()) })
+
+(* POST /block-by-level *)
+(* Retrieves the block at the given level if it exists *)
+let handle_block_by_level =
+  handle_request
+    (module Network.Block_by_level_spec)
+    (fun _update_state request ->
+      let state = Server.get_state () in
+      let block =
+        List.find_opt
+          (fun block ->
+            Int64.equal block.Protocol.Block.block_height request.level)
+          state.applied_blocks in
+      Ok block)
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
@@ -176,6 +191,7 @@ let node folder prometheus_port =
              handle_received_block_and_signature;
              handle_received_signature;
              handle_block_by_hash;
+             handle_block_by_level;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;
