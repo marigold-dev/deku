@@ -11,7 +11,7 @@ let
   };
 
 in pkgs.dockerTools.buildImage {
-  name = "deku";
+  name = "ghcr.io/marigold-dev/deku";
   tag = "latest";
 
   fromImage = baseImage;
