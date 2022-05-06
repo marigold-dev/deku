@@ -186,7 +186,7 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$data_directory/$i" --listen-prometheus="900$i" &
+      deku-node "$data_directory/$i" "$data_directory/state_transition" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
@@ -281,7 +281,6 @@ deploy_dummy_ticket() {
 
 # A hard-coded Deku wallet to use in development
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
-DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 deposit_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
@@ -290,8 +289,7 @@ deposit_ticket() {
 }
 
 load_test () {
-  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+  load-test "saturate"
 }
 
 help() {
