@@ -130,6 +130,9 @@ services:
     container_name: deku_prometheus
     restart: always
     image: prom/prometheus
+    # Needed for using Prometheus without Tilt, which is helpful
+    # when debugging the e2e benchmarks.
+    network_mode: host
     ports:
       - "9090:9090"
     expose:
