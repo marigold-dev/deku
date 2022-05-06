@@ -47,23 +47,6 @@ in
             sha256 = "13c53b1cxkq2nj444655skw5a1mcxzbaqwqsqjf7jbwradb3hmxa";
           };
         });
-        crowbar = osuper.crowbar.overrideAttrs (o:
-          # TODO: I think this can be refactored away but I'm not sure how.
-          let
-            x = builtins.throw "foo";
-            cmdliner = osuper.cmdliner.overrideAttrs (_: {
-              src = builtins.fetchurl {
-                url =
-                  "https://github.com/dbuenzli/cmdliner/archive/refs/tags/v1.1.1.tar.gz";
-                sha256 = "07846phk06hi90a764ijlrkv9xh69bdn2msi5ah6c43s8pcf7rnv";
-              };
-            }); in
-          {
-            propagatedBuildInputs = prev.lib.remove osuper.cmdliner o.propagatedBuildInputs ++ [ cmdliner ];
-          });
-        ligo = osuper.ligo.overrideAttrs (o: {
-          meta = { platforms = oself.ocaml.meta.platforms; };
-        });
       }))
     prev.ocaml-ng;
 }
