@@ -1,10 +1,14 @@
+config.define_string("nodes", False, "specify number of deku nodes to run")
+cfg = config.parse()
+no_of_deku_nodes = int(cfg.get('nodes', "3"))
+
 def get_services(compose):
     return compose.get("services").keys()
 
 def make_deku_yaml(n):
   services = []
 
-  for i in range(n):
+  for i in range(n + 1):
     deku_node_name = "deku-node-%s" % i
     services.append((deku_node_name, {
     'container_name': deku_node_name,
@@ -20,7 +24,8 @@ def make_deku_yaml(n):
     'services': services
   })
 
-deku_yaml = make_deku_yaml(3)
+deku_yaml = make_deku_yaml(no_of_deku_nodes)
+
 # Run docker-compose
 docker_compose(["./docker-compose.yml", deku_yaml])
 
@@ -63,7 +68,7 @@ custom_build(
 # run setup when we build
 local_resource(
   "deku-setup",
-  "sleep 10 && ./sandbox.sh setup docker",
+  "sleep 10 && ./sandbox.sh setup docker %s" % no_of_deku_nodes,
   resource_deps=["flextesa"],
   labels=["scripts"],
   )
@@ -71,7 +76,7 @@ local_resource(
 # bootstrap the deku network, it will be run after deku-setup and the nodes have started
 local_resource(
   "deku-net",
-  "./sandbox.sh start docker",
+  "./sandbox.sh start docker %s" % no_of_deku_nodes,
   resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
   labels=["scripts"],
   auto_init=True, # trigger once at start

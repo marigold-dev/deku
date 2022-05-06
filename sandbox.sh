@@ -10,6 +10,8 @@ else
   mode="local"
 fi
 
+NUMBER_OF_NODES=${3:-"3"}
+
 data_directory="data"
 
 # shellcheck disable=SC2016
@@ -41,7 +43,8 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-VALIDATORS=(0 1 2)
+# shellcheck disable=SC2207
+VALIDATORS=( $(seq 0 "$NUMBER_OF_NODES") )
 
 message() {
   echo "=========== $* ==========="
