@@ -176,37 +176,20 @@ let info_create_transaction =
       (make_filename_from_address "address") in
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
-let create_transaction node_folder sender_wallet_file received_address amount
-    ticket argument vm_flavor =
+let create_transaction node_folder sender_wallet_file payload =
   let open Networking in
   let%await validators_uris = validators_uris node_folder in
   let validator_uri = List.hd validators_uris in
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-  let operation =
-    match (Address.to_key_hash received_address, argument) with
-    | Some addr, None ->
-      Core.User_operation.make ~source:wallet.address
-        (Transaction { destination = addr; amount; ticket })
-    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
-    | None, None -> failwith "Invalid transaction"
-    | None, Some arg ->
-      let payload =
-        match vm_flavor with
-        | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-        | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
-      let arg = payload |> Result.get_ok in
-      Core.User_operation.make ~source:wallet.address
-        (Contract_invocation
-           {
-             to_invoke = Address.to_contract_hash received_address |> Option.get;
-             argument = arg;
-           }) in
   let transaction =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
-      ~block_height:block_level ~data:operation in
+      ~block_height:block_level
+      ~data:
+        (Core.User_operation.make ~source:wallet.address
+           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
   let%await identity = read_identity ~node_folder in
   let%await () =
     Networking.request_user_operation_gossip
@@ -313,43 +296,16 @@ let create_transaction =
     let env = Arg.env_var "SENDER" ~doc in
     let open Arg in
     required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
-  let address_to =
-    let doc = "The receiving address." in
-    let env = Arg.env_var "RECEIVER" ~doc in
-    let open Arg in
-    required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
-  in
-  let amount =
-    let doc = "The amount to be transferred." in
-    let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
-    let open Arg in
-    required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
-  let ticket =
-    let doc = "The ticket to be transferred." in
-    let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
-  let argument =
-    let doc = "Argument to be passed to transaction" in
-    let open Arg in
-    value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
-  in
-  let vm_flavor =
-    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
-    let env = Arg.env_var "VM_FLAVOR" ~doc in
+  let payload =
+    let doc = "The payload as valid JSON string." in
+    let env = Arg.env_var "PAYLOAD" ~doc in
     Arg.(
-      Arg.value
-      & opt ~vopt:`Lambda vm_flavor `Lambda
-      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
+      required & pos 2 (some string) None & info [] ~env ~docv:"payload" ~doc)
+  in
+
   let open Term in
-  lwt_ret
-    (const create_transaction
-    $ folder_node
-    $ address_from
-    $ address_to
-    $ amount
-    $ ticket
-    $ argument
-    $ vm_flavor)
+  lwt_ret (const create_transaction $ folder_node $ address_from $ payload)
+
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
@@ -544,6 +500,7 @@ let setup_identity node_folder uri =
     let t = Key_hash.of_key (Ed25519 key) in
     { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
   let%await () = write_identity ~node_folder identity in
+  Format.printf "%s\n%!" (identity.t |> Key_hash.to_string);
   await (`Ok ())
 let info_setup_identity =
   let doc = "Create a validator identity" in
