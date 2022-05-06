@@ -72,7 +72,7 @@
         devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
         packages = {
           inherit deku deku-static npmPackages;
-
+          sandbox = pkgs.callPackage ./nix/sandbox.nix { inherit pkgs deku; };
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;
@@ -87,6 +87,10 @@
           deku-node = {
             type = "app";
             program = "${deku}/bin/deku-node";
+          };
+          sandbox = {
+            type = "app";
+            program = "${sandbox}/bin/sandbox.sh";
           };
         };
       });

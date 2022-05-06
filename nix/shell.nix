@@ -8,6 +8,9 @@ pkgs.mkShell {
     # to know when to use esy instead of nix.
     # You can turn this off with the command 'unset USE_NIX'.
     export USE_NIX=y
+    # Similar to above, but triggers a rebuild before executing
+    # the rest of the script.
+    export REBUILD=y
   '';
   inputsFrom = [ deku ];
   packages = with pkgs;
