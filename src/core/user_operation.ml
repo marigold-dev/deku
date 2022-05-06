@@ -17,6 +17,7 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
+  | Vm_transaction       of { payload : Yojson.Safe.t }
 [@@deriving yojson]
 type t = {
   hash : BLAKE2B.t;

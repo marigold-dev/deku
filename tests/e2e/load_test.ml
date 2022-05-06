@@ -55,24 +55,21 @@ let make_ticket ticketer =
 
 let nonce = ref 0l
 
-let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
+let make_transaction ~block_level ~sender =
   nonce := Int32.add 1l !nonce;
-  let amount = Core.Amount.of_int amount in
+  let payload = {|{"Action":"Increment"}|} in
   Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
     ~block_height:block_level
     ~data:
       (Core.User_operation.make ~source:sender.key_hash
-         (Transaction { destination = recipient.key_hash; amount; ticket }))
+         (Vm_transaction { payload = Yojson.Safe.from_string payload }))
 
-let spam_transactions ~ticketer ~n () =
+let spam_transactions ~n () =
   let validator_uri = get_random_validator_uri () in
   let%await block_level = get_current_block_level () in
-  let ticket = make_ticket ticketer in
-
   let transactions =
     List.init n (fun _ ->
-        make_transaction ~block_level ~ticket ~sender:alice_wallet
-          ~recipient:bob_wallet ~amount:1) in
+        make_transaction ~block_level ~sender:alice_wallet ~amount:1) in
   Format.eprintf "packed: %d\n%!" (List.length transactions);
   let%await _ =
     Network.request_user_operations_gossip
@@ -122,21 +119,15 @@ let load_test_transactions _test_kind ticketer =
   Format.printf "Starting block level: %Li\n%!" starting_block_level;
   spam ~ticketer
 
-let load_test_transactions test_kind ticketer =
-  load_test_transactions test_kind ticketer |> Lwt_main.run
+let load_test_transactions test_kind =
+  load_test_transactions test_kind |> Lwt_main.run
 
 let args =
   let open Arg in
   let test_kind =
     required & pos 0 (some Test_kind.test_kind_conv) None & Test_kind.arg_info
   in
-  let ticketer =
-    let docv = "ticketer" in
-    let doc =
-      "Tezos address of the contract issuing the ticket (e.g. \
-       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)" in
-    required & pos 1 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const load_test_transactions $ test_kind $ ticketer
+  const load_test_transactions $ test_kind
 
 let () = Term.exit @@ Term.eval (args, Term.info "load-test")
