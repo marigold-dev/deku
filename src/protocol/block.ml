@@ -89,7 +89,8 @@ let produce ~state ~next_state_root_hash =
   make ~previous_hash:state.Protocol_state.last_block_hash
     ~state_root_hash:next_state_root_hash
     ~withdrawal_handles_hash:
-      (Deku_core.State.ledger state.core_state |> Ledger.withdrawal_handles_root_hash)
+      (Deku_core.State.ledger state.core_state
+      |> Ledger.withdrawal_handles_root_hash)
     ~validators_hash:(Validators.hash state.validators)
     ~block_height:(Int64.add state.block_height 1L)
 open Protocol_signature.Make (struct

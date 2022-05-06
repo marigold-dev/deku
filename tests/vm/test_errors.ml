@@ -3,7 +3,9 @@ open Lambda_vm
 module Testable = Vm_test.Testable
 
 let sender =
-  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Deku_core.Address.of_string |> Option.get
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z"
+  |> Deku_core.Address.of_string
+  |> Option.get
 
 let check_execution_error ~actual ~expected =
   let open Vm_test in
