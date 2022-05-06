@@ -32,7 +32,7 @@
     "@opam/hex": "*",
     "@opam/tezos-micheline": "11.1",
     "@opam/digestif": "*",
-    "@opam/cmdliner": "1.0.4",
+    "@opam/cmdliner": "^1.1.1",
     "@taquito/taquito": "^11.0.1",
     "@taquito/signer": "^11.0.1",
     "@taquito/rpc": "^11.0.1",
@@ -214,7 +214,7 @@
       "override": {
         "dependencies": {
           "@opam/prometheus": "1.1",
-          "@opam/cmdliner": "1.0.4"
+          "@opam/cmdliner": "^1.1.1"
         }
       }
     },
@@ -222,7 +222,7 @@
       "source": "marigold-dev/prometheus-web:prometheus-dream.opam#9053674857f12c9d7983d0c23e58277bf0aeaab7",
       "override": {
         "dependencies": {
-          "@opam/cmdliner": "1.0.4"
+          "@opam/cmdliner": "^1.1.1"
         }
       }
     }
