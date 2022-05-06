@@ -1,4 +1,4 @@
-{ pkgs, deku, npmPackages }:
+{ pkgs, deku, ligo, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
@@ -19,6 +19,9 @@ pkgs.mkShell {
       tilt
       docker-compose # This is needed by tilt
       jq
+
+      # Tezos tooling
+      ligo
 
       # formatters
       nixfmt
