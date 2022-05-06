@@ -43,6 +43,10 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
+consensus_wallet="myWallet"
+
+# Used to interact with ticket contract to prevent clashes in tezos-client counter
+ticket_wallet="bob"
 
 # https://github.com/koalaman/shellcheck/wiki/SC2016
 # shellcheck disable=SC2016
@@ -147,7 +151,7 @@ deploy_contract () {
   echo "Originating $1 contract"
   sleep 2
   tezos-client --endpoint $RPC_NODE originate contract "$1" \
-    transferring 0 from myWallet \
+    transferring 0 from $consensus_wallet \
     running "$contract" \
     --init "$storage" \
     --burn-cap 2 \
@@ -251,7 +255,6 @@ EOF
 # Steps for the command: ./sandbox start
 # - start_deku_cluster()
 # - wait_for_servers()
-
 SERVERS=()
 start_deku_cluster() {
   # The steps are:
@@ -385,10 +388,58 @@ start_tezos_node() {
   tezos-client --endpoint $RPC_NODE config update
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
 }
+deploy_dummy_ticket() {
+  contract=$(ligo compile contract ./dummy_ticket.mligo)
+  tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
+    transferring 0 from $ticket_wallet \
+    running "$contract" \
+    --init "Unit" \
+    --burn-cap 2 \
+    --force
+}
 
 
 
 # =======================
+# A hard-coded Deku wallet to use in development
+DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+deposit_ticket() {
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to dummy_ticket \
+  --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
+  --burn-cap 2
+}
+
+deposit_withdraw_test() {
+  # Deposit 100 tickets
+  deposit_ticket | grep tezos-client | tr -d '\r'
+  sleep 10
+
+  echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
+
+  DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
+
+  # # We can withdraw 10 tickets from deku
+  OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
+  sleep 10
+
+  WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
+  if [ -z "$WITHDRAW_PROOF" ]; then
+    echo Withdraw failed!
+    killall deku-node
+    exit 1
+  fi
+  sleep 10
+
+  PROOF=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*\({.*}\).*/\1/p')
+  ID=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*[[:space:]]\([0-9]\+\)[[:space:]]\".*/\1/p')
+  HANDLE_HASH=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*\(0x.*\).*{.*/\1/p')
+
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+
+  tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
+}
 
 help() {
   # FIXME: fix these docs
@@ -407,6 +458,12 @@ help() {
   echo "  Stops the Tezos node and destroys the Deku state"
   echo "smoke-test"
   echo "  Starts a Deku cluster and performs some simple checks that its working."
+  echo "deploy-dummy-ticket"
+  echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
+  echo "deposit-withdraw-test"
+  echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
+  echo "deposit-dummy-ticket"
+  echo " Executes a deposit of a dummy ticket to Deku"
 }
 
 message "Running in $mode mode"
@@ -415,7 +472,7 @@ case "$1" in
 setup)
   start_tezos_node
   create_new_deku_environment
-  echo -e "\e[33m\e[1m### Warnning! ###\e[0m"
+  echo -e "\e[33m\e[1m### Warning! ###\e[0m"
   echo -e "\e[33m\e[1m### This script creates a sandbox node and is for development purposes only. ###\e[0m"
   echo -e "\e[33m\e[1m### It does unsafe things like lowering the required Tezos confirmations to limits unreasonable for production. ###\e[0m"
   echo -e "\e[33m\e[1m### Do not use these settings in production! ###\e[0m"
@@ -434,6 +491,19 @@ smoke-test)
   ;;
 tear-down)
   tear-down
+  ;;
+deposit-withdraw-test)
+  start_deku_cluster
+  sleep 5
+  deploy_dummy_ticket
+  deposit_withdraw_test
+  killall deku-node
+  ;;
+deploy-dummy-ticket)
+  deploy_dummy_ticket
+  ;;
+deposit-dummy-ticket)
+  deposit_ticket
   ;;
 *)
   help
