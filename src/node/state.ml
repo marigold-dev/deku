@@ -27,7 +27,7 @@ type t = {
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
-  recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
+  recent_operation_receipts : Deku_core.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
@@ -110,7 +110,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       BLAKE2B.verify ~hash:snapshot.hash snapshot.data ) in
   let of_yojson =
     [%of_yojson:
-      Core.State.t
+      Deku_core.State.t
       * Tezos_operation_set.t
       * User_operation_set.t
       * Validators.t

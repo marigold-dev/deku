@@ -1,6 +1,6 @@
 open Crypto
 open Helpers
-open Core
+open Deku_core
 
 let make_ticket ?ticketer ?data () =
   let open Tezos in

@@ -1,6 +1,6 @@
 open Helpers
 open Crypto
-open Core
+open Deku_core
 module Consensus = struct
   type t =
     | Add_validator    of Validators.validator
@@ -66,7 +66,7 @@ module Core_user = struct
     { hash; key; signature; nonce; block_height; data }
 end
 type t =
-  | Core_tezos of Core.Tezos_operation.t
+  | Core_tezos of Deku_core.Tezos_operation.t
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
 [@@deriving eq, ord, yojson]

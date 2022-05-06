@@ -4,7 +4,7 @@ open Node
 open State
 open Protocol
 open Cmdliner
-open Core
+open Deku_core
 open Bin_common
 
 let () = Printexc.record_backtrace true
@@ -187,7 +187,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
   let operation =
     match (Address.to_key_hash received_address, argument) with
     | Some addr, None ->
-      Core.User_operation.make ~source:wallet.address
+      Deku_core.User_operation.make ~source:wallet.address
         (Transaction { destination = addr; amount; ticket })
     | Some _, Some _ -> failwith "can't pass an argument to implicit account"
     | None, None -> failwith "Invalid transaction"
@@ -197,7 +197,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
         | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
         | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
       let arg = payload |> Result.get_ok in
-      Core.User_operation.make ~source:wallet.address
+      Deku_core.User_operation.make ~source:wallet.address
         (Contract_invocation
            {
              to_invoke = Address.to_contract_hash received_address |> Option.get;
@@ -362,7 +362,7 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:
-        (Core.User_operation.make ~source:wallet.address
+        (Deku_core.User_operation.make ~source:wallet.address
            (Tezos_withdraw { owner = tezos_address; amount; ticket })) in
   let%await () =
     Network.request_user_operation_gossip
