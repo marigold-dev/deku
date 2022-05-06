@@ -17,11 +17,12 @@ dc_resource("deku-node-0", labels=["deku"], resource_deps=["deku-setup"])
 dc_resource("deku-node-1", labels=["deku"], resource_deps=["deku-setup", "deku-node-0"])
 dc_resource("deku-node-2", labels=["deku"], resource_deps=["deku-setup", "deku-node-1"])
 
-docker_build(
+custom_build(
   'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
-  '.', # context
-  dockerfile='./docker/static.Dockerfile',
-  ignore=["data"])
+  'nix build .#docker && docker load < ./result',
+  ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
+  skips_local_docker=False,
+  tag = "latest")
 
 # since everyone won't have dune available in their environment these are removed for now
 # run dune build and tests on changes
