@@ -237,7 +237,7 @@ let node =
       "Path to the named pipes used for IPC with the VM. Will suffix with \
        '_read' and '_write' respectively." in
     let open Arg in
-    required & pos 2 (some string) None & info [] ~doc ~docv in
+    required & pos 1 (some string) None & info [] ~doc ~docv in
   let open Term in
   const node $ folder_node $ named_pipe $ Prometheus_dream.opts
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")

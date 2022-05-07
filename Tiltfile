@@ -27,18 +27,24 @@ def make_deku_yaml(n):
 deku_yaml = make_deku_yaml(no_of_deku_nodes)
 
 # Run docker-compose
-docker_compose(["./docker-compose.yml", deku_yaml])
+tezos_yaml = "./docker-compose.yml"
+docker_compose([deku_yml, tezos_yaml])
 
-dc_resource("db", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("elastic", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+for deku_service in get_services(decode_yaml(deku_yml)):
+    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
 
-dc_resource("flextesa", labels=["tezos"])
-dc_resource("gui", labels=["tezos"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("api", labels=["tezos"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+for tezos_service in get_services(read_yaml(tezos_yaml)):
+    dc_resource(tezos_service, labels=["tezos"])
 
-dc_resource("metrics", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("indexer", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("prometheus", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+def deku_vm_setup(n, vm_args):
+  for i in range(n):
+    local_resource(
+      "deku-vm-%s" % i,
+      "%s ./data/%s/state_transition" % (vm_args, i,),
+      resource_deps=["deku-setup"],
+      labels=["vms"],
+    )
+
 
 for deku_service in get_services(decode_yaml(deku_yaml)):
     dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
@@ -50,20 +56,6 @@ custom_build(
   skips_local_docker=False,
   tag = "latest")
 
-# since everyone won't have dune available in their environment these are removed for now
-# run dune build and tests on changes
-# local_resource(
-#   "build",
-#   "dune build @install --force",
-#   deps=["src", "nix", "ppx_lambda_vm", "ppx_let_binding"],
-#   labels=["deku"],
-#   )
-# local_resource(
-#   "tests",
-#   "dune runtest --force",
-#   deps=["src", "tests"],
-#   labels=["deku"],
-#   )
 
 # run setup when we build
 local_resource(
@@ -78,9 +70,10 @@ local_resource(
   "deku-net",
   "./sandbox.sh start docker %s" % no_of_deku_nodes,
   resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+  "nix run .#sandbox -- start docker use_nix",
+  resource_deps=(["deku-setup"] + get_services(decode_yaml(deku_yml))),
+  env = {'NODES': str(DEKU_NODES)},
   labels=["scripts"],
-  auto_init=True, # trigger once at start
-  trigger_mode=TRIGGER_MODE_MANUAL,
   )
 
 # action to manually trigger a teardown, this should almost never be needed

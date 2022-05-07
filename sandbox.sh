@@ -2,6 +2,12 @@
 
 set -e
 
+: "${VM_PATH:="node ./examples/js-counter/example.js"}"
+
+ligo() {
+  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+}
+
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
@@ -102,6 +108,8 @@ create_new_deku_environment() {
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
+    mkfifo "$FOLDER/state_transition_read"
+    mkfifo "$FOLDER/state_transition_write"
 
     if [ $mode = "docker" ]; then
       deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
@@ -205,7 +213,8 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$data_directory/$i" "$data_directory/state_transition" --listen-prometheus="900$i" &
+      $VM_PATH "$data_directory/$i/state_transition"&
+      deku-node "$data_directory/$i" "$data_directory/$i/state_transition" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done

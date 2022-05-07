@@ -207,7 +207,7 @@ let info_create_mock_transaction =
        resultant VM state to stdout." in
   Term.info "create-mock-transaction" ~version:"%\226\128\140%VERSION%%" ~doc
     ~exits ~man
-let create_mock_transaction sender_wallet_file vm_binary_path payload =
+let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
   let rec read_all acc =
     try read_all (acc ^ read_line ()) with
     | End_of_file -> acc in
@@ -230,10 +230,11 @@ let create_mock_transaction sender_wallet_file vm_binary_path payload =
            (Vm_transaction { payload })) in
   let named_pipe_path = "/tmp/deku/named_pipe" in
   let stdin, _ = Unix.pipe () in
+  let args =
+    Array.concat
+      [[|vm_binary_path|]; Array.of_list vm_args; [|named_pipe_path|]] in
   let _pid =
-    Unix.create_process vm_binary_path
-      [|vm_binary_path; named_pipe_path|]
-      stdin Unix.stdout Unix.stderr in
+    Unix.create_process vm_binary_path args stdin Unix.stdout Unix.stderr in
   External_vm.start_vm_ipc ~named_pipe_path;
   External_vm.apply_vm_operation ~state ~source:wallet.address payload
   |> External_vm.to_yojson
@@ -357,19 +358,25 @@ let create_mock_transaction =
     let env = Arg.env_var "SENDER" ~doc in
     let open Arg in
     required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
-  let vm_path =
-    let docv = "vm_path" in
-    let doc = "Path to the binary to execute the transaction against. " in
-    let open Arg in
-    required & pos 1 (some string) None & info [] ~doc ~docv in
   let payload =
     let doc = "The payload as valid JSON string." in
     let env = Arg.env_var "PAYLOAD" ~doc in
     Arg.(
-      required & pos 2 (some string) None & info [] ~env ~docv:"payload" ~doc)
+      required & pos 1 (some string) None & info [] ~env ~docv:"payload" ~doc)
   in
+  let vm_path =
+    let docv = "vm_path" in
+    let doc = "Path to the binary to execute the transaction against. " in
+    let open Arg in
+    required & pos 2 (some string) None & info [] ~doc ~docv in
+  let vm_args =
+    let docv = "vm_args" in
+    let doc = "Arguments of the vm. " in
+    let open Arg in
+    value & pos_right 2 string [] & info [] ~doc ~docv in
   let open Term in
-  lwt_ret (const create_mock_transaction $ address_from $ vm_path $ payload)
+  lwt_ret
+    (const create_mock_transaction $ address_from $ payload $ vm_path $ vm_args)
 
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
