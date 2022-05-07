@@ -2,7 +2,7 @@
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
-    export PATH=${npmPackages}/node_modules/.bin:_build/install/default/bin:$PATH
+    export PATH=${npmPackages}/node_modules/.bin:$PWD/_build/install/default/bin:$PATH
 
     # This is a flag picked up by our sandbox.sh that's used
     # to know when to rebuild the binaries.
@@ -22,6 +22,11 @@ pkgs.mkShell {
 
       # Tezos tooling
       ligo
+
+      # Go developer tooling
+      go
+      gopls
+      gore
 
       # Go developer tooling
       go
