@@ -228,7 +228,10 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
       ~data:
         (Core.User_operation.make ~source:wallet.address
            (Vm_transaction { payload })) in
-  let named_pipe_path = "/tmp/deku/named_pipe" in
+  let suffix =
+    Stdlib.Random.bits () |> string_of_int |> BLAKE2B.hash |> BLAKE2B.to_string
+  in
+  let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
   let stdin, _ = Unix.pipe () in
   let args =
     Array.concat
