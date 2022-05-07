@@ -25,9 +25,13 @@ func log(message string) {
 }
 
 func main() {
-	state_transition := func(sender_address string, input []byte) (return_err error) {
+	state_transition := func(sender_address string, tx_hash string, input []byte) (return_err error) {
 		var message message
-		log(fmt.Sprintf("State transition received. Sender: %s, Payload: %s", sender_address, string(input)))
+		log(fmt.Sprintf(
+				"State transition received. Sender: %s, Tx hash: %s, Payload: %s,",
+				sender_address,
+				tx_hash,
+				string(input)))
 		err := json.Unmarshal(input, &message)
 		check(err)
 		counter_bytes := deku_go_interop.Get("counter")
