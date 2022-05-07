@@ -3,10 +3,8 @@ package deku_go_interop
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 )
 

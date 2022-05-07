@@ -76,7 +76,7 @@ const main = (
 ) => {
   init_fifo();
 
-  for (; ;) {
+  for (;;) {
     const control = read().toString();
     if (control === '"close"') {
       break;
