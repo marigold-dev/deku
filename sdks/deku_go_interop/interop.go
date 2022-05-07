@@ -3,10 +3,8 @@ package deku_go_interop
 import (
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -71,7 +69,7 @@ func Set(key string, value interface{}) {
 	write(message)
 }
 
-func Main(state_transition func(sender string, input []byte) (err error)) {
+func Main(state_transition func(sender string, tx_hash string, input []byte) (err error)) {
 	log("Opening read")
 	fifo_path := os.Args[1]
 	log(fmt.Sprintf("fifo path: %s", fifo_path))
@@ -86,9 +84,10 @@ func Main(state_transition func(sender string, input []byte) (err error)) {
 			break
 		}
 		sender := strings.Trim(string(read()), "\"")
+		tx_hash := strings.Trim(string(read()), "\"")
 		input := read()
 		log(fmt.Sprintf("Read start message: %s", string(input)))
-		err := state_transition(sender, input)
+		err := state_transition(sender, tx_hash, input)
 		var end_message []byte
 		if err != nil {
 			end_message = []byte(fmt.Sprintf("[\"Error\", \"%s\"]", err.Error()))

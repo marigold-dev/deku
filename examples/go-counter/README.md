@@ -15,5 +15,5 @@ the Deku CLI. For example:
 alias deku-cli='nix run github:marigold-dev/deku/parametric#deku-cli --'
 action='{"Action": "Increment"}'
 db='[["counter", 41]]'
-echo "$db" | deku-cli create-mock-transaction ./wallet.json ./vm $action
+echo "$db" | deku-cli create-mock-transaction ./wallet.json $action ./vm
 ```
