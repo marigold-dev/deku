@@ -25,18 +25,24 @@ make_deku_yaml = symbols['make_deku_yaml']
 deku_yaml = make_deku_yaml(no_of_deku_nodes)
 
 # Run docker-compose
-docker_compose(["./docker-compose.yml", deku_yaml])
+tezos_yaml = "./docker-compose.yml"
+docker_compose([deku_yml, tezos_yaml])
 
-dc_resource("db", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("elastic", labels=["database"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+for deku_service in get_services(decode_yaml(deku_yml)):
+    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
 
-dc_resource("flextesa", labels=["tezos"])
-dc_resource("gui", labels=["tezos"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("api", labels=["tezos"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+for tezos_service in get_services(read_yaml(tezos_yaml)):
+    dc_resource(tezos_service, labels=["tezos"])
 
-dc_resource("metrics", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("indexer", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
-dc_resource("prometheus", labels=["infra"], trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+def deku_vm_setup(n, vm_args):
+  for i in range(n):
+    local_resource(
+      "deku-vm-%s" % i,
+      "%s ./data/%s/state_transition" % (vm_args, i,),
+      resource_deps=["deku-setup"],
+      labels=["vms"],
+    )
+
 
 load_deku_services(deku_yaml)
 

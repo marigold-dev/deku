@@ -25,6 +25,6 @@ in pkgs.dockerTools.buildImage {
 
     WorkingDir = "/app";
     Entrypoint = [ "${deku}/bin/deku-node" ];
-    Cmd = [ "/app/data" ];
+    Cmd = [ "/app/data" "/app/data/state_transition" ];
   };
 }

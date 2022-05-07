@@ -29,6 +29,8 @@ VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 # =======================
 # Running environments
 # Docker mode is to run Deku nodes from docker-compose file
+: "${VM_PATH:="node ./examples/js-counter/example.js"}"
+
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
@@ -137,7 +139,7 @@ EOF
 
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
 # the [initial_storage] expression and originates the contract as myWallet on Tezos.
-deploy_contract () {
+deploy_contract() {
   message "Deploying new $1 contract"
 
   # Compiles an initial storage for a given contract to a Michelson expression.
@@ -169,6 +171,8 @@ create_new_deku_environment() {
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
+    mkfifo "$FOLDER/state_transition_read"
+    mkfifo "$FOLDER/state_transition_write"
 
     if [ $mode = "docker" ]; then
       # Using the deku-cli to generate identities for each node
@@ -187,8 +191,8 @@ create_new_deku_environment() {
   done
 
   consensus_storage=$(
-  # Step 3: After having the Deku identities, we will configure and deploy
-  # a Deku consensus contract to the Tezos testnet.
+    # Step 3: After having the Deku identities, we will configure and deploy
+    # a Deku consensus contract to the Tezos testnet.
     cat <<EOF
   {
   root_hash = {
@@ -214,7 +218,7 @@ EOF
 }
 EOF
 
-)
+  )
 
   # Step 4: deploying the consensus and validators discovery contracts
   consensus="./src/tezos_interop/consensus.mligo"
@@ -266,7 +270,8 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" "$DATA_DIRECTORY/state_transition" --listen-prometheus="900$i" &
+      $VM_PATH "$DATA_DIRECTORY/$i/state_transition" &
+      deku-node "$DATA_DIRECTORY/$i" "$DATA_DIRECTORY/$i/state_transition" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
@@ -398,16 +403,14 @@ deploy_dummy_ticket() {
     --force
 }
 
-
-
 # =======================
 # A hard-coded Deku wallet to use in development
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
 deposit_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to dummy_ticket \
-  --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
-  --burn-cap 2
+    --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
+    --burn-cap 2
 }
 
 deposit_withdraw_test() {
@@ -415,7 +418,7 @@ deposit_withdraw_test() {
   deposit_ticket | grep tezos-client | tr -d '\r'
   sleep 10
 
-  echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
+  echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" >wallet.json
 
   DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
 
@@ -440,7 +443,7 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
-load_test () {
+load_test() {
   load-test "saturate"
 }
 

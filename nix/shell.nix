@@ -30,6 +30,11 @@ pkgs.mkShell {
       gopls
       gore
 
+      # Go developer tooling
+      go
+      gopls
+      gore
+
       # formatters
       nixfmt
       nodePackages.prettier
