@@ -17,22 +17,33 @@ We define the KPIs into 3 states, and by priority order.
 ### State 1
 
 Focus on getting the number of TPS, hardware configurations, etc.
- 
-There are two enviroments we will do the benchmark:
-- Local environment existing on a single machine
-- Cloud: run Deku's chain on different hardware configurations
 
+#### TPS 
 For transactions, there are two kinds of transactions we are taking into account:
 - Normal transaction (A sends 10 xtz to B)
 - Smart contract call (A calls a smart contract C)
 
-For the latter, we need to identify what kind of smart contract we are interested to get the benchmark for. This will require an input from team leader.
+For the latter, we need to identify what kind of smart contract we are interested to get the benchmark for. This will require an input from team leader(s).
 
 The scenario that we have in mind are:
 - Base case: increase the number of transactions (10, 100, 1000, etc.) with the base number of validators (e.g. minimum 4 for Tendermint consensus).
 - Growing transactions, validators: the same pack of growing transactions (10, 100, 1000, etc.) with the growing of number of valiators (4, 6, 8, 10, etc.)
 
-Different hardware configurations (cloud) set up for same pack of the scenario above.
+#### Setting
+
+Recommand setting from @ulrik
+
+We can run benchmarks in 3 different environments scenarios:
+- Locally to easily see some regressions when working on performance sensitive code.
+- In CI (GitHub Actions) which should be more stable to see that we do not introduce big regressions.
+- In a testnet to see that we do not slow down over time. This is more likely some cronjob that creates different transactions and then we can look at graphs from prometheus data.
+
+Currently, Deku runs the network in kubernetes. For benchmarks, we can be more "relaxed" with the initial benchmarking and just run it in CI if that is possible.
+
+In longer term we probably want to do what we do in Tezos, and have 1 specific machine that we benchmark on.
+
+If we want to find what changes will increase throughput (stronger CPU, more memory, etc.) then we can probably do that manually.
+
 
 ### State 2
 - Profile Deku-node
@@ -41,7 +52,7 @@ By profiling the functions responsible for running a Deku node we can get a clos
 
 - Hashing the state root hash of block
 
-Focus on answering a question: how many GB a state root hash of a block can have?
+Focus on answering a question: how many GB a state root hash of a block can archive?
 
 ### State 3:
 - Memory consumption
