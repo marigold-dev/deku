@@ -301,6 +301,14 @@ load_test () {
   load-test "saturate"
 }
 
+
+start_vm() {
+  echo "Starting vm"
+  : "${STATE_TRANSITION_PATH:=./data/0}"
+  $VM_PATH "$STATE_TRANSITION_PATH"&
+  sleep 1 
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -324,6 +332,9 @@ help() {
   echo " Executes a deposit of a dummy ticket to Deku"
   echo "load-test (saturate | maximal-blocks)"
   echo "  Performs the specified load test on a running cluster"
+  echo "start-vm"
+  echo " Start a vm in background"
+  echo " You need to provide a STATE_TRANSITION_PATH variable which is the path to the fifo file"
 }
 
 message "Running in $mode mode"
@@ -360,6 +371,9 @@ deposit-dummy-ticket)
   ;;
 load-test)
   load_test "$2"
+  ;;
+start-vm)
+  start_vm
   ;;
 *)
   help
