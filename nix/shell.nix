@@ -1,4 +1,4 @@
-{ pkgs, deku, npmPackages }:
+{ pkgs, deku, ligo, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
@@ -8,6 +8,9 @@ pkgs.mkShell {
     # to know when to use esy instead of nix.
     # You can turn this off with the command 'unset USE_NIX'.
     export USE_NIX=y
+    # Similar to above, but triggers a rebuild before executing
+    # the rest of the script.
+    export REBUILD=y
   '';
   inputsFrom = [ deku ];
   packages = with pkgs;
@@ -20,6 +23,9 @@ pkgs.mkShell {
       tilt
       docker-compose # This is needed by tilt
       jq
+
+      # Tezos tooling
+      ligo
 
       # formatters
       nixfmt

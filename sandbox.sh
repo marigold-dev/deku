@@ -1,10 +1,8 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC2155
 
 set -e
 
-if [ "$2" = "docker" ]
-then
+if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
   mode="local"
@@ -21,18 +19,25 @@ export LD_LIBRARY_PATH
 [ "$USE_NIX" ] || PATH=$(esy x sh -c 'echo $PATH')
 export PATH
 
-[ "$USE_NIX" ] && dune build @install
+if [ "${REBUILD:-}" ]; then
+  if [ "$USE_NIX" ]; then
+    dune build @install
+  else
+    esy dune build @install
+  fi
+fi
 
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
-ligo() {
-  docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
-}
+if ! [ "$USE_NIX" ]; then
+  ligo() {
+    docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+  }
+fi
 
-if [ $mode  = "docker" ]
-then
+if [ $mode = "docker" ]; then
   RPC_NODE=http://flextesa:20000
 else
   RPC_NODE=http://localhost:20000
@@ -44,7 +49,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 DATA_DIRECTORY="data"
 
 # shellcheck disable=SC2207
-VALIDATORS=( $(seq 0 "$NUMBER_OF_NODES") )
+VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
 message() {
   echo "=========== $* ==========="
@@ -98,8 +103,7 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
 
-    if [ $mode = "docker" ]
-    then
+    if [ $mode = "docker" ]; then
       deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
     else
       deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
@@ -200,8 +204,7 @@ SERVERS=()
 start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "local" ]
-    then
+    if [ "$mode" = "local" ]; then
       deku-node "$data_directory/$i" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
@@ -210,9 +213,8 @@ start_deku_cluster() {
   sleep 1
 
   echo "Producing a block"
-  if [ "$mode" = "docker" ]
-  then
-    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r" )
+  if [ "$mode" = "docker" ]; then
+    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
     HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
   fi
@@ -221,8 +223,7 @@ start_deku_cluster() {
 
   echo "Signing"
   for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "docker" ]
-    then
+    if [ "$mode" = "docker" ]; then
       echo "hash: $HASH"
       echo "deku-node-$i"
       docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
@@ -240,26 +241,34 @@ wait_for_servers() {
 }
 
 deku_storage() {
-  local contract=$(< "$data_directory/0/tezos.json" jq '.consensus_contract' | xargs)
-  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  local contract
+  contract=$(jq <"$data_directory/0/tezos.json" '.consensus_contract' | xargs)
+  local storage
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
   echo "$storage"
 }
 
 deku_state_hash() {
-  local storage=$(deku_storage)
-  local state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  local storage
+  storage=$(deku_storage)
+  local state_hash
+  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
   echo "$state_hash"
 }
 
 deku_height() {
-  local storage=$(deku_storage)
-  local block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  local storage
+  storage=$(deku_storage)
+  local block_height
+  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
   echo "$block_height"
 }
 
 assert_deku_state() {
-  local current_state_hash=$(deku_state_hash)
-  local current_block_height=$(deku_height)
+  local current_state_hash
+  current_state_hash=$(deku_state_hash)
+  local current_block_height
+  current_block_height=$(deku_height)
   local starting_height=$1
   local seconds=$2
   local minimum_expected_height=$((starting_height + $2))

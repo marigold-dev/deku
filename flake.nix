@@ -37,6 +37,9 @@
     with flake-utils.lib;
     eachSystem defaultSystems (system:
       let
+        ligo = (import nixpkgs { inherit system; }).ligo.overrideAttrs
+          (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
+
         pkgs = ocaml-overlays.makePkgs {
           inherit system;
           extraOverlays = [
@@ -68,11 +71,16 @@
           nodejs = pkgs.nodejs-16_x;
           inherit npmPackages;
         };
+
+        sandbox = pkgs.callPackage ./nix/sandbox.nix {
+          inherit deku ligo;
+          pkgs = import nixpkgs { inherit system; };
+        };
       in {
-        devShell = import ./nix/shell.nix { inherit pkgs deku npmPackages; };
+        devShell =
+          import ./nix/shell.nix { inherit pkgs deku ligo npmPackages; };
         packages = {
           inherit deku deku-static npmPackages;
-
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;
@@ -87,6 +95,10 @@
           deku-node = {
             type = "app";
             program = "${deku}/bin/deku-node";
+          };
+          sandbox = {
+            type = "app";
+            program = "${sandbox}/bin/sandbox.sh";
           };
         };
       });

@@ -2,7 +2,7 @@ final: prev:
 let disableCheck = package: package.overrideAttrs (o: { doCheck = false; });
 in {
   ocaml-ng = builtins.mapAttrs (_: ocamlVersion:
-    ocamlVersion.overrideScope' (oself: osuper: rec {
+    ocamlVersion.overrideScope' (oself: osuper: {
       lwt_react = osuper.lwt_react.overrideAttrs
         (o: { nativeBuildInputs = o.nativeBuildInputs ++ [ oself.cppo ]; });
       utop = osuper.utop.overrideAttrs (o: {
