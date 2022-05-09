@@ -10,6 +10,8 @@ else
   mode="local"
 fi
 
+NUMBER_OF_NODES=${3:-"3"}
+
 data_directory="data"
 
 # shellcheck disable=SC2016
@@ -43,7 +45,8 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 DATA_DIRECTORY="data"
 
-VALIDATORS=(0 1 2)
+# shellcheck disable=SC2207
+VALIDATORS=( $(seq 0 "$NUMBER_OF_NODES") )
 
 message() {
   echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
@@ -211,7 +214,7 @@ start_deku_cluster() {
   echo "Producing a block"
   if [ "$mode" = "docker" ]
   then
-    HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r" )
+    HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r" )
   else
     HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
   fi
@@ -224,7 +227,7 @@ start_deku_cluster() {
     then
       echo "hash: $HASH"
       echo "deku-node-$i"
-      docker exec -t "deku-node-$i" /app/deku_cli.exe sign-block /app/data "$HASH"
+      docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
     else
       deku-cli sign-block "$data_directory/$i" "$HASH"
     fi

@@ -15,11 +15,6 @@ in {
       });
       dream = osuper.dream.overrideAttrs (o: { doCheck = false; });
       alcotest = osuper.alcotest.overrideAttrs (o: {
-        src = prev.fetchurl {
-          url =
-            "https://github.com/mirage/alcotest/releases/download/1.5.0/alcotest-js-1.5.0.tbz";
-          sha256 = "0v4ghia378g3l53r61fj98ljha0qxl82xp26y9frjy1dw03ija2l";
-        };
         propagatedBuildInputs =
           prev.lib.lists.remove osuper.uuidm o.propagatedBuildInputs;
       });
@@ -46,10 +41,6 @@ in {
             "https://github.com/dbuenzli/cmdliner/archive/refs/tags/v1.0.4.tar.gz";
           sha256 = "13c53b1cxkq2nj444655skw5a1mcxzbaqwqsqjf7jbwradb3hmxa";
         };
-      });
-      odoc-parser = osuper.odoc-parser.overrideAttrs (o: {
-        propagatedBuildInputs = o.propagatedBuildInputs
-          ++ (with oself; [ camlp-streams result astring ]);
       });
     })) prev.ocaml-ng;
 }

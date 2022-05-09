@@ -1,4 +1,4 @@
-{ pkgs, esy ? pkgs.nodePackages.esy, deku, npmPackages }:
+{ pkgs, deku, npmPackages }:
 pkgs.mkShell {
   shellHook = ''
     export NODE_PATH=${npmPackages}/node_modules
@@ -15,7 +15,7 @@ pkgs.mkShell {
       # Make developer life easier
       ## General tooling
       docker
-      nodejs-17_x
+      nodejs-16_x
       shellcheck
       tilt
       docker-compose # This is needed by tilt
@@ -30,7 +30,8 @@ pkgs.mkShell {
       ocaml
       findlib
       dune_2
+      odoc
       ocaml-lsp
-      ocamlformat-rpc
+      ocamlformat-rpc_0_20_1 # 0.21 is incompatible with latest cmdliner
     ]);
 }

@@ -2,12 +2,9 @@ open Helpers
 
 module Lambda = struct
   module Contract = struct
-    type code = Lambda_vm.Ir.code [@@deriving yojson, eq]
-    type value = Lambda_vm.Ir.value [@@deriving yojson, eq]
-
     type t = {
-      code : code;
-      storage : value;
+      code : Lambda_vm.Ir.code;
+      storage : Lambda_vm.Ir.value;
     }
     [@@deriving yojson, eq]
 
@@ -83,17 +80,20 @@ module Lambda = struct
         "WOOOOOO!1!1! Bug within Lambda_vm interpreter"
 
     let invoke contract ~source ~(arg : Invocation_payload.t) ~gas =
-      let gas = Lambda_vm.Gas.make ~initial_gas:gas in
+      let compiler_error_to_string = Compiler.error_to_string in
+      let open Lambda_vm in
+      let storage = contract.Contract.storage in
+      let gas = Gas.make ~initial_gas:gas in
       let%ok argument =
         Raw_repr.Value.to_value ~gas arg
-        |> Result.map_error (fun x -> Compiler.error_to_string x) in
+        |> Result.map_error compiler_error_to_string in
+      let arg = Ir.Value_syntax.pair argument storage in
       (* TODO: use invoked operations for something *)
       let%ok invoked =
         let sender = source |> Crypto.Key_hash.to_string in
-        let context = Lambda_vm.Context.make ~sender ~source:sender gas in
-        Lambda_vm.Interpreter.execute ~context ~arg:argument
-          contract.Contract.code
-        |> Result.map_error (fun x -> error_to_string x) in
+        let context = Context.make ~sender ~source:sender gas in
+        Interpreter.execute ~context ~arg contract.Contract.code
+        |> Result.map_error error_to_string in
       let updated_contract =
         Contract.make ~code:contract.code ~storage:invoked.storage in
       Ok (updated_contract, ())

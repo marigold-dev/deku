@@ -1,0 +1,111 @@
+{
+    "param": "param",
+    "code": [
+        "Pair",
+        {
+            "first": [
+                "If",
+                {
+                    "predicate": [
+                        "App",
+                        {
+                            "funct": [
+                                "Prim",
+                                [
+                                    "Fst"
+                                ]
+                            ],
+                            "arg": [
+                                "Var",
+                                "param"
+                            ]
+                        }
+                    ],
+                    "consequent": [
+                        "App",
+                        {
+                            "funct": [
+                                "App",
+                                {
+                                    "funct": [
+                                        "Prim",
+                                        [
+                                            "Add"
+                                        ]
+                                    ],
+                                    "arg": [
+                                        "App",
+                                        {
+                                            "funct": [
+                                                "Prim",
+                                                [
+                                                    "Snd"
+                                                ]
+                                            ],
+                                            "arg": [
+                                                "Var",
+                                                "param"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "arg": [
+                                "Const",
+                                1
+                            ]
+                        }
+                    ],
+                    "alternative": [
+                        "App",
+                        {
+                            "funct": [
+                                "App",
+                                {
+                                    "funct": [
+                                        "Prim",
+                                        [
+                                            "Sub"
+                                        ]
+                                    ],
+                                    "arg": [
+                                        "App",
+                                        {
+                                            "funct": [
+                                                "Prim",
+                                                [
+                                                    "Snd"
+                                                ]
+                                            ],
+                                            "arg": [
+                                                "Var",
+                                                "param"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "arg": [
+                                "Const",
+                                1
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "second": [
+                "Pair",
+                {
+                    "first": [
+                        "Const",
+                        0
+                    ],
+                    "second": [
+                        "Const",
+                        0
+                    ]
+                }
+            ]
+        }
+    ]
+}
