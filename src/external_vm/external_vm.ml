@@ -23,7 +23,7 @@ let start_vm_ipc ~named_pipe_path =
       (External_process.open_pipes ~named_pipe_path ~to_yojson:Fun.id
          ~of_yojson:vm_message_of_yojson)
 
-let apply_vm_operation ~state ~source operation =
+let apply_vm_operation ~state ~source ~tx_hash operation =
   match !vm with
   | Some vm ->
     (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
@@ -32,6 +32,7 @@ let apply_vm_operation ~state ~source operation =
     (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
     let source = `String (Key_hash.to_string source) in
     vm.send source;
+    vm.send (`String (BLAKE2B.to_string tx_hash));
     vm.send operation;
     let finished = ref false in
     let state = ref state in
