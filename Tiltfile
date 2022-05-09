@@ -14,7 +14,7 @@ def make_deku_yaml(n):
     'container_name': deku_node_name,
     'restart': 'always',
     'image': 'ghcr.io/marigold-dev/deku',
-    'expose': [ 4040 ],
+    'expose': [ 4440 ],
     'volumes': [ ("./data/%s:/app/data" % i) ],
     }))
 
