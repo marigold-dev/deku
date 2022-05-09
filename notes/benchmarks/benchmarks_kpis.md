@@ -31,7 +31,7 @@ The scenario that we have in mind are:
 
 #### Setting
 
-Recommand setting from @ulrik
+Recommend setting from @ulrik
 
 We can run benchmarks in 3 different environments scenarios:
 - Locally to easily see some regressions when working on performance sensitive code.
