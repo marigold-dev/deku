@@ -1,6 +1,6 @@
 # Document and validate KPIs for Deku benchmarks
 
-Open [issue 574](https://github.com/marigold-dev/deku/issues/574)
+Close [issue 574](https://github.com/marigold-dev/deku/issues/574)
 
 ## Summary
 
@@ -14,7 +14,7 @@ We want to measure Deku's ability to handle an important number of transactions.
 
 We define the KPIs into 3 states, and by priority order.
 
-### State 1
+### Stage 1
 
 Focus on getting the number of TPS, hardware configurations, etc.
 
@@ -45,7 +45,7 @@ In longer term we probably want to do what we do in Tezos, and have 1 specific m
 If we want to find what changes will increase throughput (stronger CPU, more memory, etc.) then we can probably do that manually.
 
 
-### State 2
+### Stage 2
 - Profile Deku-node
  
 By profiling the functions responsible for running a Deku node we can get a closer look at the efficiency of the node itself, which will be running all the time, which means that any small efficiency increases will have much larger payoffs.
@@ -54,7 +54,7 @@ By profiling the functions responsible for running a Deku node we can get a clos
 
 Focus on answering a question: how many GB a state root hash of a block can archive?
 
-### State 3:
+### Stage 3:
 - Memory consumption
  
 Deku run on RAM, we want to find out how much memory (minimal) is required for transactions.
