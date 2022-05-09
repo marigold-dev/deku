@@ -99,7 +99,8 @@ let apply_user_operation t user_operation =
     Ok ({ ledger; contract_storage; vm_state }, None)
   | Vm_transaction { payload } ->
     let vm_state =
-      External_vm.apply_vm_operation ~state:t.vm_state ~source payload in
+      External_vm.apply_vm_operation ~state:t.vm_state ~source ~tx_hash:hash
+        payload in
     Ok ({ contract_storage; ledger; vm_state }, None)
 let apply_user_operation t user_operation =
   match apply_user_operation t user_operation with
