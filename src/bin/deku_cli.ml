@@ -221,7 +221,7 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
   let payload = Yojson.Safe.from_string payload in
   (* We sign the payload just to make sure the wallet is an actual wallet.
      This adds to the realism of the test. *)
-  let _transaction =
+  let transaction =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:0L
@@ -239,7 +239,8 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
   let _pid =
     Unix.create_process vm_binary_path args stdin Unix.stdout Unix.stderr in
   External_vm.start_vm_ipc ~named_pipe_path;
-  External_vm.apply_vm_operation ~state ~source:wallet.address payload
+  External_vm.apply_vm_operation ~state ~source:wallet.address
+    ~tx_hash:transaction.hash payload
   |> External_vm.to_yojson
   |> Yojson.Safe.to_string
   |> print_endline;
