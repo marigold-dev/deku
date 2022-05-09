@@ -12,7 +12,7 @@ We want to measure Deku's ability to handle an important number of transactions.
 
 ## Production
 
-We define the KPIs into 3 states, and by priority order.
+We define the KPIs into 3 stages, and by priority order.
 
 ### Stage 1
 
