@@ -8,7 +8,7 @@ def get_services(compose):
 def make_deku_yaml(n):
   services = []
 
-  for i in range(n + 1):
+  for i in range(n):
     deku_node_name = "deku-node-%s" % i
     services.append((deku_node_name, {
     'container_name': deku_node_name,
@@ -74,6 +74,7 @@ local_resource(
   resource_deps=(["deku-setup"] + get_services(decode_yaml(deku_yml))),
   env = {'NODES': str(DEKU_NODES)},
   labels=["scripts"],
+  resource_deps=["deku-setup"] + ["deku-vm-%s" % i for i in range(0, no_of_deku_nodes)],
   )
 
 # action to manually trigger a teardown, this should almost never be needed

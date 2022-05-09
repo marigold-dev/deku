@@ -36,7 +36,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 DATA_DIRECTORY="data"
 
 # shellcheck disable=SC2207
-VALIDATORS=( $(seq 0 "$NUMBER_OF_NODES") )
+VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
 message() {
   echo "=========== $* ==========="
