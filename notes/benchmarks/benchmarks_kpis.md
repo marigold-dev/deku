@@ -14,17 +14,17 @@ We want to measure Deku's ability to handle an important number of transactions.
 
 We define the KPIs into 3 states, and by priority order.
 
- ### State 1
+### State 1
 
- Focus on getting the number of TPS, hardware configurations, etc.
+Focus on getting the number of TPS, hardware configurations, etc.
  
- There are two enviroments we will do the benchmark:
- - Local environment existing on a single machine
- - Cloud: run Deku's chain on different hardware configurations
+There are two enviroments we will do the benchmark:
+- Local environment existing on a single machine
+- Cloud: run Deku's chain on different hardware configurations
 
- For transactions, there are two kinds of transactions we are taking into account:
- - Normal transaction (A sends 10 xtz to B)
- - Smart contract call (A calls a smart contract C)
+For transactions, there are two kinds of transactions we are taking into account:
+- Normal transaction (A sends 10 xtz to B)
+- Smart contract call (A calls a smart contract C)
 
 For the latter, we need to identify what kind of smart contract we are interested to get the benchmark for. This will require an input from team leader.
 
