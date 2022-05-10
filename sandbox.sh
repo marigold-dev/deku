@@ -303,8 +303,10 @@ wait_for_servers() {
 # For smoke-tests purpose
 
 deku_storage() {
-  local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
-  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  local contract
+  contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
+  local storage
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
   echo "$storage"
 }
 
