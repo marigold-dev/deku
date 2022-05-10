@@ -309,20 +309,26 @@ deku_storage() {
 }
 
 deku_state_hash() {
-  local storage=$(deku_storage)
-  local state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  local storage
+  storage=$(deku_storage)
+  local state_hash
+  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
   echo "$state_hash"
 }
 
 deku_height() {
-  local storage=$(deku_storage)
-  local block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  local storage
+  storage=$(deku_storage)
+  local block_height
+  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
   echo "$block_height"
 }
 
 assert_deku_state() {
-  local current_state_hash=$(deku_state_hash)
-  local current_block_height=$(deku_height)
+  local current_state_hash
+  current_state_hash=$(deku_state_hash)
+  local current_block_height
+  current_block_height=$(deku_height)
   local starting_height=$1
   local seconds=$2
   local minimum_expected_height=$((starting_height + $2))
