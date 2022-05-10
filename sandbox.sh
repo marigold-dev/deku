@@ -160,13 +160,8 @@ deploy_contract () {
 # creates the trusted_validator_membership_change JSON file in $DATA_DIRECTORY subfolders,
 # writes Tezos identity files in $DATA_DIRECTORY subfolders
 create_new_deku_environment() {
-  # Step 1: We first need to compile the Ligo contract
-  message "Compiling Ligo contract and storage"
-  consensus="./src/tezos_interop/consensus.mligo"
-  storage=$(ligo compile storage "$consensus" "$storage")
-  contract=$(ligo compile contract $consensus)
 
-  # Step 2: Set up validator identities for each node
+  # Step 1: Set up validator identities for each node
   message "Creating validator identities"
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
