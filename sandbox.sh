@@ -175,13 +175,8 @@ start_tezos_node() {
 }
 
 create_new_deku_environment() {
-  # Step 1: We first need to compile the Ligo contract
-  message "Compiling Ligo contract and storage"
-  consensus="./src/tezos_interop/consensus.mligo"
-  storage=$(ligo compile storage "$consensus" "$storage")
-  contract=$(ligo compile contract $consensus)
 
-  # Step 2: Set up validator identities for each node
+  # Step 1: Set up validator identities for each node
   message "Creating validator identities"
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
@@ -203,7 +198,7 @@ create_new_deku_environment() {
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
-  # Step 3: After having the Deku identities, we will configure and deploy
+  # Step 2: After having the Deku identities, we will configure and deploy
   # a Deku consensus contract to the Tezos testnet.
   message "Deploying new consensus contract"
   # storage: generate storage code to include the new Deku identities for each node
@@ -233,6 +228,12 @@ EOF
 }
 EOF
 )
+
+  # Step 3: We first need to compile the Ligo contract
+  message "Compiling Ligo contract and storage"
+  consensus="./src/tezos_interop/consensus.mligo"
+  storage=$(ligo compile storage "$consensus" "$storage")
+  contract=$(ligo compile contract $consensus)
 
   # Step 4: Now we will deploy the contract. Lauched with docker-compose
   message "Originating contract"
