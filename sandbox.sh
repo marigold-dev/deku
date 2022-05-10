@@ -10,8 +10,6 @@ fi
 
 NUMBER_OF_NODES=${3:-"3"}
 
-data_directory="data"
-
 # shellcheck disable=SC2016
 [ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
@@ -27,11 +25,14 @@ if [ "${REBUILD:-}" ]; then
   fi
 fi
 
+# Use tezos-client to interact with the node.
+# See https://tezos.gitlab.io/introduction/howtouse.html#client
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
 if ! [ "$USE_NIX" ]; then
+  # Necessary to write tezos smart contracts
   ligo() {
     docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.37.0 "$@"
   }
@@ -43,18 +44,22 @@ else
   RPC_NODE=http://localhost:20000
 fi
 
+# Tezos secret key?
 # This secret key never changes.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
+# Folder containing the data of each nodes (identity.json)
 DATA_DIRECTORY="data"
 
 # shellcheck disable=SC2207
 VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
+# Helper to print message
 message() {
   echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
 }
 
+# Create validators.json containing the URL and the tezos address of each validator (see data folder)
 validators_json() {
   ## most of the noise in this function is because of indentation
   echo "["
@@ -77,6 +82,7 @@ EOF
   echo "]"
 }
 
+# Create a json files containing the trusted validators (subset of validators.json created before)
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -97,8 +103,11 @@ EOF
   echo "]"
 }
 
+# Business!
 create_new_deku_environment() {
   message "Creating validator identities"
+  # Create folder for each validator
+  # And setup its identity using deku-cli
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
@@ -146,8 +155,15 @@ EOF
 EOF
   )
 
+  # Consensus to use
   consensus="./src/tezos_interop/consensus.mligo"
+
+  # Compiles an initial storage for a given contract to a Michelson expression.
+  # The resulting Michelson expression can be passed as an argument in a transaction which originates a contract.
   storage=$(ligo compile storage "$consensus" "$storage")
+
+  # Compiles a contract to Michelson code.
+  # It expects a source file and an entrypoint function.
   contract=$(ligo compile contract $consensus)
 
   message "Originating contract"
@@ -183,6 +199,7 @@ EOF
   echo -e "\e[32m\e[1m### Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS ###\e[0m"
 }
 
+# Get rid of the data/ subfolder
 tear-down() {
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
@@ -204,23 +221,26 @@ SERVERS=()
 start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "local" ]; then
-      deku-node "$data_directory/$i" --listen-prometheus="900$i" &
+    if [ "$mode" = "local" ]
+    then
+      deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
 
   sleep 1
 
+  # Produce a block using `deku-cli produce-block`
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
     HASH=$(docker exec -t deku-node-0 deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
-    HASH=$(deku-cli produce-block "$data_directory/0" | awk '{ print $2 }')
+    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk '{ print $2 }')
   fi
 
   sleep 0.1
 
+  # Sign the previously produced block using `deku-cli sign-block`
   echo "Signing"
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "docker" ]; then
@@ -228,12 +248,13 @@ start_deku_cluster() {
       echo "deku-node-$i"
       docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
     else
-      deku-cli sign-block "$data_directory/$i" "$HASH"
+      deku-cli sign-block "$DATA_DIRECTORY/$i" "$HASH"
     fi
   done
 
 }
 
+# For smoke-tests purpose
 wait_for_servers() {
   for PID in "${SERVERS[@]}"; do
     wait "$PID"
@@ -241,10 +262,8 @@ wait_for_servers() {
 }
 
 deku_storage() {
-  local contract
-  contract=$(jq <"$data_directory/0/tezos.json" '.consensus_contract' | xargs)
-  local storage
-  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  local contract=$(< "$DATA_DIRECTORY/0/tezos.json" jq '.consensus_contract' | xargs)
+  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
   echo "$storage"
 }
 
@@ -282,7 +301,7 @@ assert_deku_state() {
   fi
 
   for i in "${VALIDATORS[@]}"; do
-    asserter "$data_directory/$i" "$current_state_hash" "$minimum_expected_height"
+    asserter "$DATA_DIRECTORY/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
 
@@ -290,7 +309,7 @@ help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|tear-down"
+  echo "Usage: $0 setup|start|tear-down|smoke-test"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
