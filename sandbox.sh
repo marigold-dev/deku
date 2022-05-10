@@ -10,6 +10,8 @@ ligo() {
 
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
+elif [ "${2:-local}" = "tilt" ]; then
+  mode="tilt"
 else
   mode="local"
 fi
@@ -26,6 +28,8 @@ tezos-client() {
 
 if [ $mode = "docker" ]; then
   RPC_NODE=http://flextesa:20000
+elif [ $mode = "tilt" ]; then
+  RPC_NODE=http://localhost:20000
 else
   RPC_NODE=http://localhost:20000
 fi
@@ -94,8 +98,10 @@ create_new_deku_environment() {
 
     if [ $mode = "docker" ]; then
       deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
+    elif [ $mode = "tilt" ]; then
+      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i" # Just to test something
     else
-      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i" # Just to test something
     fi
     KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
     ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
@@ -301,14 +307,6 @@ load_test () {
   load-test "saturate"
 }
 
-
-start_vm() {
-  echo "Starting vm"
-  : "${STATE_TRANSITION_PATH:=./data/0}"
-  $VM_PATH "$STATE_TRANSITION_PATH"&
-  sleep 1 
-}
-
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -371,9 +369,6 @@ deposit-dummy-ticket)
   ;;
 load-test)
   load_test "$2"
-  ;;
-start-vm)
-  start_vm
   ;;
 *)
   help

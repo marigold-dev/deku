@@ -17,8 +17,9 @@ def make_deku_yaml(n):
     'container_name': deku_node_name,
     'restart': 'always',
     'image': 'ghcr.io/marigold-dev/deku',
-    'expose': [ 4440 ],
+    'expose': [ '444%s' % i ],
     'volumes': [ ("./data/%s:/app/data" % i) ],
+    'network_mode': 'host' # So that each node can access localhost host
     }))
 
   services = {k: v for k, v in services}
@@ -42,15 +43,15 @@ for tezos_service in get_services(read_yaml(tezos_yaml)):
 def deku_vm_setup(n, vm_args):
   for i in range(n):
     local_resource(
-      "deku-vm-%s" % i,
-      "./sandbox.sh start-vm",
-      resource_deps=["deku-setup", "deku-node-%s" % i],
-      labels=["vms"],
-      env={
-        "VM_PATH": vm_args,
-        "STATE_TRANSITION_PATH": './data/%s/state_transition' % i
-      },
-      allow_parallel=True
+      "deku-vm-%s" % i, 
+      serve_cmd="%s data/%s/state_transition" % (vm_args, i),
+      allow_parallel=True,
+      labels="vms",
+      resource_deps=["deku-setup", "deku-node-0"],
+      readiness_probe=probe( # I have to use a readiness probe because when putting the vm in background there is no more reader on the fifo pipe, so when the node try to send the tx to the vm it fails with a Unix.EPIPE error
+        initial_delay_secs=1,
+        exec=exec_action(['true'])  # After one seconds, the vm is considered running # TODO: find a better probe
+      )
     )
 
 deku_vm_setup(no_of_deku_nodes, path_to_the_vm)
@@ -69,7 +70,7 @@ custom_build(
 # run setup when we build
 local_resource(
   "deku-setup",
-  "sleep 10 && ./sandbox.sh setup docker %s" % no_of_deku_nodes,
+  "sleep 10 && ./sandbox.sh setup tilt %s" % no_of_deku_nodes,
   resource_deps=["flextesa"],
   labels=["scripts"],
   )
@@ -77,7 +78,7 @@ local_resource(
 # bootstrap the deku network, it will be run after deku-setup and the nodes have started
 local_resource(
   "deku-net",
-  "./sandbox.sh start docker %s" % no_of_deku_nodes,
+  "./sandbox.sh start tilt %s" % no_of_deku_nodes,
   env = {'NODES': str(no_of_deku_nodes)},
   labels=["scripts"],
   resource_deps=["deku-setup"] + ["deku-vm-%s" % i for i in range(0, no_of_deku_nodes)],
@@ -91,3 +92,4 @@ local_resource(
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
   )
+  
