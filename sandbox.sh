@@ -2,20 +2,50 @@
 
 set -e
 
+# =======================
+# Parameters declarations
+
+# Starting from 0
+NUMBER_OF_NODES=${3:-"3"}
+
+# This secret key never changes.
+# We need this secret key for sigining Tezos operations.
+# We have to give the secret key to the Deku node as part of configuration.
+SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
+
+# Folder containing the data of each nodes: 
+# - identity.json
+# - pre_epoch_state.json
+# - state.bin
+# - tezos.json
+# - trusted-validator-membership-change.json
+# - validators.json
+
+DATA_DIRECTORY="data"
+
+# https://github.com/koalaman/shellcheck/wiki/SC2207
+# shellcheck disable=SC2207
+
+VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
+
+# =======================
+# Running environments
+
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
   mode="local"
 fi
 
-NUMBER_OF_NODES=${3:-"3"}
-
+# https://github.com/koalaman/shellcheck/wiki/SC2016
 # shellcheck disable=SC2016
 [ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
 # shellcheck disable=SC2016
 [ "$USE_NIX" ] || PATH=$(esy x sh -c 'echo $PATH')
 export PATH
+
+# Building using Nix or Esy
 
 if [ "${REBUILD:-}" ]; then
   if [ "$USE_NIX" ]; then
@@ -39,27 +69,27 @@ if ! [ "$USE_NIX" ]; then
 fi
 
 if [ $mode = "docker" ]; then
+  # Flextesa: Flexible Tezos Sandboxes
+  # https://gitlab.com/tezos/flextesa
   RPC_NODE=http://flextesa:20000
 else
   RPC_NODE=http://localhost:20000
 fi
 
-# Tezos secret key?
-# This secret key never changes.
-SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
-
-# Folder containing the data of each nodes (identity.json)
-DATA_DIRECTORY="data"
-
-# shellcheck disable=SC2207
-VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
-
+# =======================
 # Helper to print message
+
 message() {
   echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
 }
 
-# Create validators.json containing the URL and the tezos address of each validator (see data folder)
+# =======================
+# Generate Json files
+
+# The validator addresses in Deku are not Tezos addresses.
+# Their addresses begin with `tz1` or `tz2`.
+# These addresses are to support Tezos' hashing scheme.
+# They don't correlate to actual Tezos wallets.
 validators_json() {
   ## most of the noise in this function is because of indentation
   echo "["
@@ -82,7 +112,10 @@ EOF
   echo "]"
 }
 
-# Create a json file containing the trusted validators (subset of all validators.json created before)
+# Create a json file containing the trusted validators.
+# This list is not a subset of validators.json.
+# This list is provided at the moment merely as a convenience for 
+# more efficient hacking on Deku.
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -265,6 +298,7 @@ wait_for_servers() {
 
 # =======================
 # For smoke-tests purpose
+
 deku_storage() {
   local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
   local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
@@ -272,26 +306,20 @@ deku_storage() {
 }
 
 deku_state_hash() {
-  local storage
-  storage=$(deku_storage)
-  local state_hash
-  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  local storage=$(deku_storage)
+  local state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
   echo "$state_hash"
 }
 
 deku_height() {
-  local storage
-  storage=$(deku_storage)
-  local block_height
-  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
+  local storage=$(deku_storage)
+  local block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
   echo "$block_height"
 }
 
 assert_deku_state() {
-  local current_state_hash
-  current_state_hash=$(deku_state_hash)
-  local current_block_height
-  current_block_height=$(deku_height)
+  local current_state_hash=$(deku_state_hash)
+  local current_block_height=$(deku_height)
   local starting_height=$1
   local seconds=$2
   local minimum_expected_height=$((starting_height + $2))
@@ -308,6 +336,7 @@ assert_deku_state() {
     asserter "$DATA_DIRECTORY/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
+
 # =======================
 
 help() {
