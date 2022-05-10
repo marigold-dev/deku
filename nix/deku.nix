@@ -40,6 +40,7 @@ in ocamlPackages.buildDunePackage rec {
       ppx_deriving
       ppx_deriving_yojson
       lwt
+      lwt_domain
       dream
       mirage-crypto
       mirage-crypto-pk
