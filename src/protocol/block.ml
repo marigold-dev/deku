@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Core
+
 type t = {
   hash : BLAKE2B.t;
   payload_hash : BLAKE2B.t;
@@ -24,7 +25,13 @@ let hash, verify =
         * BLAKE2B.t
         * Key_hash.t
         * int64
-        * Protocol_operation.t list] in
+        * BLAKE2B.t] in
+    let operations_hash =
+      List.fold_left
+        (fun operations_hash operation ->
+          let operation_hash = Protocol_operation.hash operation in
+          BLAKE2B.both operations_hash operation_hash)
+        (BLAKE2B.hash "") operations in
     let json =
       to_yojson
         ( state_root_hash,
@@ -33,7 +40,7 @@ let hash, verify =
           previous_hash,
           author,
           block_height,
-          operations ) in
+          operations_hash ) in
     let payload = Yojson.Safe.to_string json in
     let block_payload_hash = BLAKE2B.hash payload in
     let hash =
