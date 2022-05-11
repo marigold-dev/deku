@@ -34,7 +34,8 @@ let request (type req res)
   await response
 let broadcast_to_list endpoint uris data =
   uris
-  |> Lwt_list.iter_s (fun uri ->
+  (* TODO: limit concurrency here *)
+  |> Lwt_list.iter_p (fun uri ->
          Lwt.catch (fun () -> post endpoint data uri) (fun _exn -> await ()))
 let broadcast_to_validators endpoint state data =
   Validators.to_list state.protocol.validators
