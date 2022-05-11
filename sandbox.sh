@@ -454,7 +454,10 @@ deposit_withdraw_test() {
 
 load_test() {
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+  node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
+  # TODO: make load-test poll to know when to exit.
+  perf record -g -p "$node_pid" sh -c "deku-load-test \"saturate\" \"$DUMMY_TICKET_ADDRESS\" && sleep 10"
+  perf script -i perf.data >profile.linux-perf.txt
 }
 
 deposit_withdraw_test() {

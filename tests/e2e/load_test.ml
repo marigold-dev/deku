@@ -1,6 +1,13 @@
 open Cmdliner
 open Crypto
+open Node
 open Helpers
+
+open (
+  struct
+    include Server
+  end :
+    sig end)
 
 type wallet = {
   key_hash : Key_hash.t;
@@ -32,13 +39,13 @@ let validators_uris =
   ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
 
 let get_random_validator_uri () =
-  List.nth validators_uris (Stdlib.Random.int 3) |> Uri.of_string
+  (* TODO: make random again *)
+  List.nth validators_uris 0 |> Uri.of_string
 
 let get_current_block_level () =
   let validator_uri = get_random_validator_uri () in
-  let block_level =
-    Lwt_main.run @@ Network.request_block_level () validator_uri in
-  block_level.level
+  let%await block_level = Network.request_block_level () validator_uri in
+  Lwt.return block_level.level
 
 (* Assumes that the bytes of the ticket are empty. This simplifies things
    quite a bit, since we don't have to query the contents of the ticket
@@ -50,26 +57,30 @@ let make_ticket ticketer =
 
 let nonce = ref 0l
 
-let do_transaction ~validator_uri ~block_level ~sender =
+let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
   nonce := Int32.add 1l !nonce;
-  let payload = {|{"Action":"Increment"}|} in
-  let transaction =
-    Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
-      ~block_height:block_level
-      ~data:
-        (Core_deku.User_operation.make ~source:sender.key_hash
-           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
-  Lwt.async (fun () ->
-      Network.request_user_operation_gossip
-        { user_operation = transaction }
-        validator_uri);
-  transaction
+  let amount = Core_deku.Amount.of_int amount in
+  Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
+    ~block_height:block_level
+    ~data:
+      (Core_deku.User_operation.make ~source:sender.key_hash
+         (Transaction { destination = recipient.key_hash; amount; ticket }))
 
-let spam_transactions ~ticketer:_ n () =
-  List.init n (fun _ ->
-      let validator_uri = get_random_validator_uri () in
-      let block_level = get_current_block_level () in
-      do_transaction ~validator_uri ~block_level ~sender:alice_wallet)
+let spam_transactions ~ticketer ~n () =
+  let validator_uri = get_random_validator_uri () in
+  let%await block_level = get_current_block_level () in
+  let ticket = make_ticket ticketer in
+
+  let transactions =
+    List.init n (fun _ ->
+        make_transaction ~block_level ~ticket ~sender:alice_wallet
+          ~recipient:bob_wallet ~amount:1) in
+  Format.eprintf "packed: %d\n%!" (List.length transactions);
+  let%await _ =
+    Network.request_user_operations_gossip
+      { user_operations = transactions }
+      validator_uri in
+  Lwt.return transactions
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
@@ -103,20 +114,23 @@ module Test_kind = struct
     Arg.info [] ~doc ~docv
 end
 
-let load_test_transactions test_kind ticketer =
-  let test =
-    match test_kind with
-    | Test_kind.Saturate ->
-      let n = 10000 in
-      Format.printf "Running %i ticket transfers\n%!" n;
-      spam_transactions ~ticketer n
-    | Test_kind.Maximal_blocks ->
-      (* TODO: write a test that maximally packs blocks and transmits them. *)
-      assert false in
-  let starting_block_level = get_current_block_level () in
+let rec spam ~ticketer =
+  let n = 1000 in
+  let%await _ =
+    Lwt.both
+      (Lwt.both
+         (spam_transactions ~ticketer ~n ())
+         (spam_transactions ~ticketer ~n ()))
+      (Lwt.both
+         (spam_transactions ~ticketer ~n ())
+         (spam_transactions ~ticketer ~n ())) in
+  let%await () = Lwt_unix.sleep 5.0 in
+  spam ~ticketer
+
+let load_test_transactions _test_kind ticketer =
+  let%await starting_block_level = get_current_block_level () in
   Format.printf "Starting block level: %Li\n%!" starting_block_level;
-  let _ = test () in
-  await ()
+  spam ~ticketer
 
 let load_test_transactions test_kind ticketer =
   load_test_transactions test_kind ticketer |> Lwt_main.run
