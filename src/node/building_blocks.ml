@@ -183,12 +183,7 @@ let clean state update_state block =
       |> state.persist_trusted_membership_change);
   update_state
     { state with trusted_validator_membership_change; pending_operations }
-let broadcast_signature state ~hash ~signature =
-  Lwt.async (fun () -> Networking.broadcast_signature state { hash; signature })
-let broadcast_block_and_signature state ~block ~signature =
-  Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
-      Networking.broadcast_block_and_signature state { block; signature })
+
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
   let validators = Validators.to_list state.Node.protocol.validators in
@@ -203,3 +198,21 @@ let find_random_validator_uri state =
       | Some uri -> uri
       | None -> safe_validator_uri () in
   safe_validator_uri ()
+
+let validator_uris state =
+  let validators = Validators.to_list state.Node.protocol.validators in
+  List.filter_map
+    (fun Validators.{ address; _ } ->
+      Node.Address_map.find_opt address state.Node.validators_uri)
+    validators
+let broadcast_signature state ~hash ~signature =
+  let uris = validator_uris state in
+  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
+let broadcast_block_and_signature state ~block ~signature =
+  let uris = validator_uris state in
+  Lwt.async (fun () ->
+      let%await () = Lwt_unix.sleep 1.0 in
+      Network.broadcast_block_and_signature uris { block; signature })
+let broadcast_user_operation_gossip state operation =
+  let uris = validator_uris state in
+  Network.broadcast_user_operation_gossip uris operation
