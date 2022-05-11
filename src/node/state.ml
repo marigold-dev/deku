@@ -80,6 +80,8 @@ let apply_block state block =
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
   let applied_blocks = block :: state.applied_blocks in
+  Metrics.Blocks.inc_operations_processed
+    ~operation_count:(List.length block.operations);
   Ok
     {
       state with
