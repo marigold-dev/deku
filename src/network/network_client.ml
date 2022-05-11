@@ -1,4 +1,5 @@
 open Helpers
+
 module type Request_endpoint = sig
   type request [@@deriving yojson]
   type response [@@deriving yojson]
@@ -20,7 +21,7 @@ let raw_request path raw_data uri =
   | Error _err -> Lwt.fail Error_status
 
 let request request_to_yojson path data uri =
-  let raw_data = request_to_yojson data |> Yojson.Safe.to_string in
+  let%await raw_data = Parallel.encode request_to_yojson data in
   raw_request path raw_data uri
 
 let raw_post path raw_data uri =
@@ -36,14 +37,14 @@ let request (type req res)
     (module E : Request_endpoint with type request = req and type response = res)
     data uri =
   let%await body = request E.request_to_yojson E.path data uri in
-  let response =
-    Yojson.Safe.from_string body |> E.response_of_yojson |> Result.get_ok in
+  let%await response = Parallel.decode E.response_of_yojson body in
+  let response = Result.get_ok response in
   await response
 
 let broadcast_to_list (type req res)
     (module E : Request_endpoint with type request = req and type response = res)
     uris data =
-  let data = E.request_to_yojson data |> Yojson.Safe.to_string in
+  let%await data = Parallel.encode E.request_to_yojson data in
   uris
   (* TODO: limit concurrency here *)
   |> Lwt_list.iter_p (fun uri ->
