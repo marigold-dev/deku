@@ -1,3 +1,4 @@
+
 {
   "name": "sidechain",
   "esy": {
@@ -20,6 +21,7 @@
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/lwt": "*",
+    "@opam/lwt_domain": "*",
     "@opam/mirage-crypto": "*",
     "@opam/mirage-crypto-pk": "*",
     "@opam/mirage-crypto-rng": "*",
@@ -180,6 +182,7 @@
       }
     },
     "@opam/lwt": "kit-ty-kate/lwt:lwt.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be",
+    "@opam/lwt_domain": "kit-ty-kate/lwt:lwt_domain.opam#0c4cc9d1238461b82b92d61c1c007cb1048509be",
     "@opam/ocplib-endian": "kit-ty-kate/ocplib-endian:ocplib-endian.opam#8136732deb8e7f69ece0a19cfc9f9a141ebe1d2b",
     "@opam/domainslib": "ocaml-multicore/domainslib:domainslib.opam#4ac01e870615e32291f0145a7cbdd5528b88ea59",
     "@opam/omd": "EduardoRFS/omd:omd.opam#7b866aacbc119e2be54b2dfcd198b860d3c497b1",
