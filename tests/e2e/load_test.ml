@@ -42,7 +42,7 @@ let get_random_validator_uri () =
 
 let get_current_block_level () =
   let validator_uri = get_random_validator_uri () in
-  let%await block_level = Networking.request_block_level () validator_uri in
+  let%await block_level = Network.request_block_level () validator_uri in
   Lwt.return block_level.level
 
 (* Assumes that the bytes of the ticket are empty. This simplifies things
@@ -75,7 +75,7 @@ let spam_transactions ~ticketer ~n () =
           ~recipient:bob_wallet ~amount:1) in
   Format.eprintf "packed: %d\n%!" (List.length transactions);
   let%await _ =
-    Networking.request_user_operations_gossip
+    Network.request_user_operations_gossip
       { user_operations = transactions }
       validator_uri in
   Lwt.return transactions
