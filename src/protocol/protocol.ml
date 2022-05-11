@@ -78,7 +78,7 @@ let apply_operation (state, receipts) operation =
     let state = apply_consensus_operation state consensus_operation in
     (state, receipts)
 let apply_block state block =
-  Format.eprintf "\027[32mblock: %Ld\027[m\n%!" block.Block.block_height;
+  Logs.info (fun m -> m "block: %Ld" block.Block.block_height);
   let state, receipts =
     List.fold_left apply_operation (state, []) block.operations in
   let state =

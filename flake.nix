@@ -30,10 +30,16 @@
       ocaml-overlay.follows = "ocaml-overlays";
       flake-utils.follows = "flake-utils";
     };
+
+    json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
+    json-logs-reporter.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
-    , prometheus-web, tezos }:
+    , prometheus-web, tezos, json-logs-reporter }:
     with flake-utils.lib;
     eachSystem defaultSystems (system:
       let
@@ -46,13 +52,14 @@
             (import ./nix/overlay.nix)
             prometheus-web.overlays.default
             tezos.overlays.default
+            json-logs-reporter.overlays.default
           ];
         };
 
         pkgs_static = pkgs.pkgsCross.musl64;
 
         bp =
-          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
+          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-14_x; };
         npmPackages = bp.buildNpmPackage {
           src = ./.;
           npmBuild = "echo ok";

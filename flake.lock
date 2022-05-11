@@ -15,6 +15,45 @@
         "type": "github"
       }
     },
+    "json-logs-reporter": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nix-filter": "nix-filter",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1652298385,
+        "narHash": "sha256-+utBO2RQlo5ufd6vRpoDA3o+TaYu6IAV/D3hbTaBLjc=",
+        "owner": "marigold-dev",
+        "repo": "json-logs-reporter",
+        "rev": "298a1ade7b95831c43997b6b3b6efcdd7803d974",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "repo": "json-logs-reporter",
+        "type": "github"
+      }
+    },
+    "nix-filter": {
+      "locked": {
+        "lastModified": 1649838635,
+        "narHash": "sha256-P1h48+l9vUvMz4JwHBgkTXiX6mE8oYR75vBVUbe6Cuc=",
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "rev": "40a58baa248a8b335e2d66ca258a74248af9d834",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "type": "github"
+      }
+    },
     "nix-npm-buildpackage": {
       "locked": {
         "lastModified": 1648040270,
@@ -32,11 +71,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1651558728,
-        "narHash": "sha256-8HzyRnWlgZluUrVFNOfZAOlA1fghpOSezXvxhalGMUo=",
+        "lastModified": 1652172129,
+        "narHash": "sha256-8e2JMrswaKe02P8rYfvIMoc59pNuw6h/GYu8DBE1c+0=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "cbe587c735b734405f56803e267820ee1559e6c1",
+        "rev": "f419dc5763c2b3c5580e396dea065b6d8b58ee27",
         "type": "github"
       },
       "original": {
@@ -56,11 +95,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1651742952,
-        "narHash": "sha256-rphbWT3vPKdDv/z6CvylxDyjlQjzYVvN8VMe96yc1i0=",
+        "lastModified": 1652259764,
+        "narHash": "sha256-B5PWrg5aHza98ZvYt5f88CakBeaYiEXB67JTsBEF1o8=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "a6807f0800b901393167b19138628729d69efc5d",
+        "rev": "e581cf0116b382ccc3d9e2aba76455a99287cb1c",
         "type": "github"
       },
       "original": {
@@ -98,6 +137,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "json-logs-reporter": "json-logs-reporter",
         "nix-npm-buildpackage": "nix-npm-buildpackage",
         "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays",

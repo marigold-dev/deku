@@ -118,9 +118,9 @@ let raise_and_exit exn =
 
 let handle_message t message =
   let Message.{ id; content } = message in
-  Format.eprintf "js.message: %a\n%!"
+  Logs.debug (fun m -> m "js.message: %a"
     (Yojson.Safe.pretty_print ~std:false)
-    content;
+    content);
   match Pending.push t.pending id content with
   | Ok () -> ()
   | Error (Unknown_id id) -> raise_and_exit (Unknown_id (id, content))

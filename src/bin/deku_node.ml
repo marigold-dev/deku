@@ -150,6 +150,12 @@ let node folder prometheus_port =
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-node"
 
+let () =
+  (* This is needed because Dream will initialize logs lazily *)
+  Dream.initialize_log ~enable:false ();
+  Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout);
+  Logs.set_level (Some Info)
+
 let node =
   let folder_node =
     let docv = "folder_node" in
