@@ -296,16 +296,22 @@ deploy_dummy_ticket() {
     --force
 }
 
-
-
 # A hard-coded Deku wallet to use in development
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
 DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 deposit_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
-  --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
-  --burn-cap 2
+    --entrypoint deposit --arg "Pair (Pair 0x \"$CONSENSUS_ADDRESS\") \"$DEKU_ADDRESS\"" \
+    --burn-cap 2
+}
+
+load_test() {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
+  # TODO: make load-test poll to know when to exit.
+  perf record -g -p "$node_pid" sh -c "deku-load-test \"saturate\" \"$DUMMY_TICKET_ADDRESS\" && sleep 10"
+  perf script -i perf.data >profile.linux-perf.txt
 }
 
 deposit_withdraw_test() {
@@ -356,6 +362,8 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "load-test (saturate | maximal-blocks)"
+  echo "  Performs the specified load test on a running cluster"
 }
 
 message "Running in $mode mode"
@@ -396,6 +404,9 @@ deploy-dummy-ticket)
   ;;
 deposit-dummy-ticket)
   deposit_ticket
+  ;;
+load-test)
+  load_test "$2"
   ;;
 *)
   help
