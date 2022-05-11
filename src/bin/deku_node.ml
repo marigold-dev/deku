@@ -14,12 +14,14 @@ let handle_request (type req res)
        and type response = res) handler =
   let handler request =
     let%await body = Dream.body request in
-    match body |> Yojson.Safe.from_string |> E.request_of_yojson with
+    let%await request = Parallel.decode E.request_of_yojson body in
+    match request with
     | Ok request -> (
       let response = handler update_state request in
       match response with
       | Ok response ->
-        response |> E.response_to_yojson |> Yojson.Safe.to_string |> Dream.json
+        let%await response = Parallel.encode E.response_to_yojson response in
+        Dream.json response
       | Error err -> raise (Failure (Flows.string_of_error err)))
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
