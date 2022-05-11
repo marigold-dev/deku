@@ -70,3 +70,9 @@ type t =
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
 [@@deriving eq, ord, yojson]
+
+let hash t =
+  match t with
+  | Core_tezos tezos_operation -> tezos_operation.hash
+  | Core_user user_operation -> user_operation.hash
+  | Consensus consensus_operation -> Consensus.hash consensus_operation
