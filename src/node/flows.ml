@@ -41,6 +41,7 @@ let string_of_error = function
   | `State_root_not_the_expected -> "State_root_not_the_expected"
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
   | `Node_not_yet_initialized -> "Node_not_yet_initialized"
+  | `Not_a_validator -> "Not_a_validator"
 
 let print_error err =
   Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
@@ -306,6 +307,17 @@ let () = received_block' := received_block
 let received_signature state update_state ~hash ~signature =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
+  (* TODO: consider edge-cases related to the node being out sync.
+     If validators changed and you are out of sync, you will reject valid
+     signatures (the node can wait and restart to back in sync by querying
+     the Tezos contract) *)
+  let%assert () =
+    ( `Not_a_validator,
+      List.exists
+        (fun validator ->
+          Key_hash.equal validator.Validators.address
+            (Signature.address signature))
+        (Validators.to_list state.Node.protocol.validators) ) in
   let%assert () =
     (`Already_known_signature, not (is_known_signature state ~hash ~signature))
   in
