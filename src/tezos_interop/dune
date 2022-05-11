@@ -14,7 +14,7 @@
   (run node ../../esbuild.js ./tezos_js_bridge.js %{target})))
 
 (rule
- (deps ./webpack.config.js ./tezos_js_bridge.js)
+ (deps ./tezos_js_bridge.js)
  (alias fmt)
  (mode fallback)
  (action
