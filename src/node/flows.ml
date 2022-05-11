@@ -344,6 +344,15 @@ let parse_internal_tezos_transactions tezos_internal_transactions =
         Some core_tezos_internal_transactions
       | Error `Update_root_hash -> None)
     tezos_internal_transactions
+
+let append_operation state update_state operation =
+  let current_time = Unix.time () in
+  let pending_operations =
+    Node.Operation_map.add operation current_time state.Node.pending_operations
+  in
+  let (_ : State.t) = update_state Node.{ state with pending_operations } in
+  ()
+
 let received_tezos_operation state update_state tezos_interop_operation =
   let open Protocol.Operation in
   let Tezos_interop.Consensus.{ hash; transactions } = tezos_interop_operation in
@@ -353,42 +362,19 @@ let received_tezos_operation state update_state tezos_interop_operation =
         tezos_operation_hash = hash;
         internal_operations = parse_internal_tezos_transactions transactions;
       } in
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.{ requested_at = current_time; operation = Core_tezos tezos_operation }
-  in
-  let (_ : State.t) =
-    update_state
-      (let open Node in
-      {
-        state with
-        pending_operations = pending_operation :: state.pending_operations;
-      }) in
-  ()
+  let operation = Core_tezos tezos_operation in
+  append_operation state update_state operation
+
 let received_user_operation state update_state user_operation =
   let open Protocol.Operation in
   let operation = Core_user user_operation in
   let operation_exists =
-    List.exists
-      (fun pending_operation ->
-        equal pending_operation.Node.operation operation)
-      state.Node.pending_operations in
+    Node.Operation_map.mem operation state.Node.pending_operations in
 
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.{ requested_at = current_time; operation = Core_user user_operation }
-  in
   if not operation_exists then (
     Lwt.async (fun () ->
         Networking.broadcast_user_operation_gossip state { user_operation });
-    let (_ : State.t) =
-      update_state
-        (let open Node in
-        {
-          state with
-          pending_operations = pending_operation :: state.pending_operations;
-        }) in
-    ());
+    append_operation state update_state operation);
   Ok ()
 let received_consensus_operation state update_state consensus_operation
     signature =
@@ -397,19 +383,10 @@ let received_consensus_operation state update_state consensus_operation
     ( `Invalid_signature,
       Consensus.verify state.Node.identity.key signature consensus_operation )
   in
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.
-      { requested_at = current_time; operation = Consensus consensus_operation }
-  in
-  let (_ : State.t) =
-    update_state
-      (let open Node in
-      {
-        state with
-        pending_operations = pending_operation :: state.pending_operations;
-      }) in
+  let operation = Consensus consensus_operation in
+  append_operation state update_state operation;
   Ok ()
+
 let find_block_by_hash state hash =
   Block_pool.find_block ~hash state.Node.block_pool
 let find_block_level state = state.State.protocol.block_height
