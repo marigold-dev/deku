@@ -28,6 +28,10 @@ jobs:
       - uses: esy/github-action@master
         with:
           cache-key: ${{ matrix.system }}-${{ hashFiles('esy.lock/index.json') }}
+        continue-on-error: true
+
+      - name: Run esy build with sandbox disabled because of esbuild
+        run: esy b --disable-sandbox
 
       - name: Run Code formatter
         run: esy b dune build @fmt
