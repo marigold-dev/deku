@@ -18,8 +18,8 @@ let handle_request (type req res)
   let handler request =
     let%await body = Dream.body request in
     let%await request = Parallel.decode E.request_of_yojson body in
-    Metrics.Networking.inc_network_messages_received ();
-    Metrics.Networking.measure_network_received_message_size
+    Metrics.Networking.inc_network_messages_received E.path;
+    Metrics.Networking.measure_network_received_message_size E.path
       (String.length body);
     match request with
     | Ok request -> (

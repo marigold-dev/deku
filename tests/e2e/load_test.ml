@@ -115,15 +115,12 @@ module Test_kind = struct
 end
 
 let rec spam ~ticketer =
-  let n = 3000 in
+  let n = 2000 in
   let%await _ =
-    Lwt.both
-      (Lwt.both
-         (spam_transactions ~ticketer ~n ())
-         (spam_transactions ~ticketer ~n ()))
-      (Lwt.both
-         (spam_transactions ~ticketer ~n ())
-         (spam_transactions ~ticketer ~n ())) in
+    Lwt_list.iter_p Fun.id
+    @@ List.init 4 (fun _ ->
+           let%await _ = spam_transactions ~ticketer ~n () in
+           await ()) in
   let%await () = Lwt_unix.sleep 1.0 in
   spam ~ticketer
 
