@@ -398,8 +398,8 @@ let received_user_operation state update_state user_operation =
 
   if not operation_exists then (
     (* TODO: this broadcast is unnecessary in many case. We should optimize the messages sent. *)
-    Lwt.async (fun () ->
-        broadcast_user_operation_gossip state { user_operation });
+    (* Lwt.async (fun () ->
+        broadcast_user_operation_gossip state { user_operation }); *)
     append_operation state update_state operation);
   Ok ()
 

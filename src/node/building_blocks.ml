@@ -232,7 +232,7 @@ let broadcast_signature state ~hash ~signature =
 let broadcast_block_and_signature state ~block ~signature =
   let uris = validator_uris state in
   Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
+      let%await () = Lwt_unix.sleep 0.1 in
       Network.broadcast_block_and_signature uris { block; signature })
 
 let broadcast_user_operation_gossip state operation =

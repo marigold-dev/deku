@@ -115,7 +115,7 @@ module Test_kind = struct
 end
 
 let rec spam ~ticketer =
-  let n = 1000 in
+  let n = 3000 in
   let%await _ =
     Lwt.both
       (Lwt.both
@@ -124,7 +124,7 @@ let rec spam ~ticketer =
       (Lwt.both
          (spam_transactions ~ticketer ~n ())
          (spam_transactions ~ticketer ~n ())) in
-  let%await () = Lwt_unix.sleep 5.0 in
+  let%await () = Lwt_unix.sleep 1.0 in
   spam ~ticketer
 
 let load_test_transactions _test_kind ticketer =
