@@ -5,3 +5,4 @@
    data leaking into the metrics. *)
 module Config = Config
 module Blocks = Blocks
+module Networking = Networking
