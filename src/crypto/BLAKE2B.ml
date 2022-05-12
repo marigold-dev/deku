@@ -10,6 +10,7 @@ end) : sig
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val hash : string -> t
+  val hash_v : string list -> t
   val verify : hash:t -> string -> bool
   val both : t -> t -> t
   val size : int
@@ -35,7 +36,9 @@ end = struct
   let equal = equal
   let compare = unsafe_compare
   let hash data = digest_string data
-  let verify ~hash:expected_hash data = expected_hash = hash data
+  let hash_v lst = digestv_string lst
+
+  let verify ~hash:expected_hash data = equal expected_hash (hash data)
   let both a b = hash (to_raw_string a ^ to_raw_string b)
   module Map = Map.Make (struct
     type nonrec t = t
