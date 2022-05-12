@@ -63,7 +63,8 @@ in ocamlPackages.buildDunePackage rec {
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs ++ [ npmPackages ] ++ (if system != "aarch64-darwin" then [ landmarks ] else []);
+    ++ checkInputs ++ [ npmPackages ]
+    ++ (if system != "aarch64-darwin" then [ landmarks ] else [ ]);
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 
