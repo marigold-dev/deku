@@ -7,13 +7,8 @@ in {
         (o: { nativeBuildInputs = o.nativeBuildInputs ++ [ oself.cppo ]; });
       lwt_domain = osuper.buildDunePackage {
         pname = "lwt_domain";
-        src = prev.fetchFromGitHub {
-          owner = "ocsigen";
-          repo = "lwt";
-          rev = "654952b62dccea63f186747be79916dbfdccf48d";
-          sha256 = "sha256-j+ufbnovlcJnKM0DwU3Z/DRLeyJ9+AmhKSrJCpMVW7w=";
-        };
-        version = "dev";
+        version = "0.2.0-dev";
+        inherit (osuper.lwt) src;
         propagatedBuildInputs = with osuper; [ domainslib lwt ];
       };
       utop = osuper.utop.overrideAttrs (o: {
