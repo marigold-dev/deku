@@ -1,6 +1,6 @@
 open Crypto
 open Protocol
-type snapshot = {
+type snapshot = Networking.Protocol_snapshot.snapshot = {
   hash : BLAKE2B.t;
   data : string;
 }

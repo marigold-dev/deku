@@ -373,7 +373,7 @@ let received_user_operation state update_state user_operation =
 
   if not operation_exists then (
     Lwt.async (fun () ->
-        Networking.broadcast_user_operation_gossip state { user_operation });
+        broadcast_user_operation_gossip state { user_operation });
     append_operation state update_state operation);
   Ok ()
 let received_consensus_operation state update_state consensus_operation

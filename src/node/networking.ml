@@ -1,6 +1,5 @@
 open Helpers
 open Crypto
-open State
 open Protocol
 open Core
 module type Request_endpoint = sig
@@ -53,11 +52,6 @@ let broadcast_to_list (type req res)
   |> Lwt_list.iter_p (fun uri ->
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
-let broadcast_to_validators endpoint state data =
-  Validators.to_list state.protocol.validators
-  |> List.filter_map (fun Validators.{ address; _ } ->
-         Address_map.find_opt address state.validators_uri)
-  |> fun uris -> broadcast_to_list endpoint uris data
 module Signature_spec = struct
   type request = {
     hash : BLAKE2B.t;
@@ -88,8 +82,14 @@ module Block_level = struct
 end
 module Protocol_snapshot = struct
   type request = unit [@@deriving yojson]
+
+  type snapshot = {
+    hash : BLAKE2B.t;
+    data : string;
+  }
+  [@@deriving yojson]
   type response = {
-    snapshot : Snapshots.snapshot;
+    snapshot : snapshot;
     additional_blocks : Block.t list;
     last_block : Block.t;
     last_block_signatures : Signature.t list;
@@ -172,11 +172,11 @@ let request_protocol_snapshot = request (module Protocol_snapshot)
 let request_nonce = request (module Request_nonce)
 let request_register_uri = request (module Register_uri)
 let request_withdraw_proof = request (module Withdraw_proof)
-let broadcast_signature = broadcast_to_validators (module Signature_spec)
+let broadcast_signature = broadcast_to_list (module Signature_spec)
 let broadcast_block_and_signature =
-  broadcast_to_validators (module Block_and_signature_spec)
+  broadcast_to_list (module Block_and_signature_spec)
 let broadcast_user_operation_gossip =
-  broadcast_to_validators (module User_operation_gossip)
+  broadcast_to_list (module User_operation_gossip)
 let broadcast_user_operation_gossip_to_list =
   broadcast_to_list (module User_operation_gossip)
 let request_user_operation_gossip = request (module User_operation_gossip)
