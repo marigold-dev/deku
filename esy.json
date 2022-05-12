@@ -3,7 +3,10 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
-      "bin": ["deku-cli", "deku-node"]
+      "bin": [
+        "deku-cli",
+        "deku-node"
+      ]
     },
     "buildEnv": {
       "PATH": "%{localStore}%/../bin:$PATH"
@@ -41,7 +44,8 @@
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
     "@opam/prometheus-dream": "*",
-    "@opam/conf-libssl": "3"
+    "@opam/conf-libssl": "3",
+    "@opam/wasm": "*"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
@@ -57,6 +61,7 @@
   },
   "resolutions": {
     "ocaml": "esy-ocaml/ocaml#65e3f82dcd867d2b1f27c84597b3c25259b09396",
+    "@opam/wasm": "zett98/spec:wasm.opam#c7f05aaf96c9e13de3f3f822cd679c3fd32a108d",
     "@opam/reason": "EduardoRFS/reason:reason.opam#70984e94eae3084e56d0cfdf7d5d3be1ecda7b18",
     "@reason-native/rely": "reasonml/reason-native:rely.json#7788757212c5b9365ed839b044c4840e3e917987",
     "@reason-native/cli": "reasonml/reason-native:cli.json#7788757212c5b9365ed839b044c4840e3e917987",

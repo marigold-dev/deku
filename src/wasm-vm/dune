@@ -1,0 +1,3 @@
+(library
+ (name wasm_vm)
+ (libraries wasm))
