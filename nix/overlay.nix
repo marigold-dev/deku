@@ -40,7 +40,7 @@ in {
         else
           o.src;
       });
-
+      wasm = oself.callPackage ./packages/wasm.nix { };
       # Fix packages that don't have checkInputs as buildInputs (bug in nixpkgs)
       # This is a problem for static builds mainly
       stringext = addCheckInputs osuper.stringext;
@@ -55,7 +55,6 @@ in {
       multipart_form = addCheckInputs osuper.multipart_form;
       uri = addCheckInputs osuper.uri;
       caqti = addCheckInputs osuper.caqti;
-
       # disable broken tests
       dream = disableCheck osuper.dream;
       data-encoding = disableCheck osuper.data-encoding;

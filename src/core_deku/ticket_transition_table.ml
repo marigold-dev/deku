@@ -3,9 +3,11 @@ module Table = Ticket_handle.Table
 
 module Errors = struct
   type t =
-    [ `Ticket_doesnt_exist
+    [ `Insufficient_funds
+    | `Ticket_doesnt_exist
     | `Ticket_ownership_violation
-    | `Ticket_split_invalid_amount ]
+    | `Ticket_split_invalid_amount
+    | `Attempted_to_merge_different_tickets ]
   [@@deriving show]
 
   let doesnt_exist = Error `Ticket_doesnt_exist

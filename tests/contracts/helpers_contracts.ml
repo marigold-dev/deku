@@ -20,6 +20,10 @@ let make_ticket ?ticketer ?data () =
   let open Ticket_id in
   { ticketer; data }
 
+let make_address () =
+  let _secret, _key, key_hash = Key_hash.make_ed25519 () in
+  key_hash
+
 let make_tezos_address () =
   let open Crypto in
   let open Tezos in
@@ -50,7 +54,7 @@ let setup ?(initial_amount = 10000) () =
   let make_address =
     tezos_address |> Tezos.Address.to_string |> Key_hash.of_string |> Option.get
   in
-  (State.apply_tezos_operation s opp, make_address)
+  (State.apply_tezos_operation s opp, make_address, t2)
 
 let amount =
   Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%d" (Amount.to_int x))

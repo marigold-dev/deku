@@ -1,6 +1,8 @@
 module Errors : sig
   type t =
-    [ `Ticket_doesnt_exist
+    [ `Attempted_to_merge_different_tickets
+    | `Insufficient_funds
+    | `Ticket_doesnt_exist
     | `Ticket_ownership_violation
     | `Ticket_split_invalid_amount ]
   [@@deriving show]

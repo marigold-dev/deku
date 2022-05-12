@@ -15,7 +15,11 @@ type t [@@deriving yojson]
 
 val empty : t
 
-val balance : Key_hash.t -> Ticket_id.t -> t -> Amount.t
+val balance : Address.t -> Ticket_id.t -> t -> Amount.t
+
+val ticket_table : t -> Ticket_table.t
+
+val update_ticket_table : Ticket_table.t -> t -> t
 
 val transfer :
   sender:Address.t ->
@@ -25,7 +29,7 @@ val transfer :
   t ->
   (t, [> `Insufficient_funds]) result
 
-val deposit : Key_hash.t -> Amount.t -> Ticket_id.t -> t -> t
+val deposit : Address.t -> Amount.t -> Ticket_id.t -> t -> t
 
 val withdraw :
   sender:Key_hash.t ->
