@@ -52,7 +52,7 @@
         pkgs_static = pkgs.pkgsCross.musl64;
 
         bp =
-          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
+          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-14_x; };
         npmPackages = bp.buildNpmPackage {
           src = ./.;
           npmBuild = "echo ok";
