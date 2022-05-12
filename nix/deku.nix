@@ -1,4 +1,4 @@
-{ pkgs, stdenv, lib, removeReferencesTo, esbuild, doCheck ? true, cacert
+{ pkgs, stdenv, system, lib, removeReferencesTo, esbuild, doCheck ? true, cacert
 , npmPackages, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
@@ -17,6 +17,8 @@ in ocamlPackages.buildDunePackage rec {
   configurePhase = ''
     export PATH=${npmPackages}/node_modules/.bin:$PATH
     export NODE_PATH=${npmPackages}/node_modules
+
+    ln -s ${npmPackages}/node_modules ./node_modules
   '';
 
   # This is the same as standard dune build but with static support
@@ -57,12 +59,11 @@ in ocamlPackages.buildDunePackage rec {
       cacert
       core_bench
       memtrace
-      landmarks
       benchmark
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs ++ [ npmPackages ];
+    ++ checkInputs ++ [ npmPackages ] ++ (if system != "aarch64-darwin" then [ landmarks ] else []);
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 
