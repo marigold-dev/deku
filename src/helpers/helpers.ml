@@ -18,6 +18,7 @@ module Int64_map = Map.Make_with_yojson (struct
   type t = int64 [@@deriving yojson]
   let compare = Int64.compare
 end)
+module Parallel = Parallel
 include Lwt_ext.Let_syntax
 include Result.Let_syntax
 include Option.Let_syntax
