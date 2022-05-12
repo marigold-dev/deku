@@ -216,27 +216,25 @@ module Consensus = struct
     let micheline_yojson_to_key_hash = function
       | `String uri -> Ok (Uri.of_string uri)
       | _ -> Error "Failed to parse storage micheline expression" in
-    let%await micheline_storage =
+    let%await micheline_uris =
       Fetch_big_map_keys.run t ~required_confirmations ~rpc_node
         ~contract_address:discovery_contract
         ~keys:
           (List.map
              (fun key_hash -> Michelson.Key_hash key_hash)
              validator_key_hashes) in
-    match micheline_storage with
+    match micheline_uris with
     | Error e -> Lwt.return (Error e)
-    | Ok micheline_storage ->
+    | Ok micheline_uris ->
       let uris =
-        List.fold_right_ok
-          (fun micheline l ->
+        List.map_ok
+          (fun micheline ->
             match micheline with
-            | None -> Ok (None :: l)
-            | Some a ->
-              Result.map
-                (fun key_hash -> Some key_hash :: l)
-                (micheline_yojson_to_key_hash a))
-          micheline_storage
-          ([] : Uri.t option list) in
+            | None -> Ok None
+            | Some uri ->
+              let%ok key_hash = micheline_yojson_to_key_hash uri in
+              Ok (Some key_hash))
+          micheline_uris in
       let key_hash_uri_pairs =
         Result.map (List.combine validator_key_hashes) uris in
       Lwt.return key_hash_uri_pairs
