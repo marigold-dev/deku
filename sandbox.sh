@@ -33,7 +33,7 @@ tezos-client() {
 
 if ! [ "$USE_NIX" ]; then
   ligo() {
-    docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.28.0 "$@"
+    docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.37.0 "$@"
   }
 fi
 
@@ -52,7 +52,7 @@ DATA_DIRECTORY="data"
 VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
 message() {
-  echo "=========== $* ==========="
+  echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
 }
 
 validators_json() {
@@ -180,7 +180,7 @@ EOF
       --tezos_secret="$SECRET_KEY" \
       --unsafe_tezos_required_confirmations 1
   done
-  echo "Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS"
+  echo -e "\e[32m\e[1m### Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS ###\e[0m"
 }
 
 tear-down() {
@@ -311,10 +311,10 @@ case "$1" in
 setup)
   start_tezos_node
   create_new_deku_environment
-  message "Warning"
-  echo "This script creates a sandbox node and is for development purposes only."
-  echo "It does unsafe things like lowering the required Tezos confirmations to limits unreasonable for production."
-  message "Do not use these settings in production!"
+  echo -e "\e[33m\e[1m### Warnning! ###\e[0m"
+  echo -e "\e[33m\e[1m### This script creates a sandbox node and is for development purposes only. ###\e[0m"
+  echo -e "\e[33m\e[1m### It does unsafe things like lowering the required Tezos confirmations to limits unreasonable for production. ###\e[0m"
+  echo -e "\e[33m\e[1m### Do not use these settings in production! ###\e[0m"
   ;;
 start)
   start_deku_cluster
