@@ -9,19 +9,15 @@ type identity = {
 [@@deriving yojson]
 module Address_map : Map.S with type key = Key_hash.t
 module Uri_map : Map.S with type key = Uri.t
+module Operation_map : Map.S with type key = Protocol.Operation.t
 
-type pending_operation = {
-  (* TODO: proper type for timestamps *)
-  requested_at : float;
-  operation : Protocol.Operation.t;
-}
 type t = {
   identity : identity;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
-  pending_operations : pending_operation list;
+  pending_operations : float Operation_map.t;
   block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;

@@ -41,6 +41,7 @@ let string_of_error = function
   | `State_root_not_the_expected -> "State_root_not_the_expected"
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
   | `Node_not_yet_initialized -> "Node_not_yet_initialized"
+  | `Not_a_validator -> "Not_a_validator"
 
 let print_error err =
   Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
@@ -99,8 +100,7 @@ let rec request_block_by_hash tries ~hash =
     (fun () ->
       let state = !get_state () in
       let validator_uri = find_random_validator_uri state in
-      let%await block =
-        Networking.request_block_by_hash { hash } validator_uri in
+      let%await block = Network.request_block_by_hash { hash } validator_uri in
       await (Option.get block))
     (fun _exn ->
       Printexc.print_backtrace stdout;
@@ -124,7 +124,7 @@ let rec request_protocol_snapshot tries =
     (fun () ->
       let state = !get_state () in
       let validator_uri = find_random_validator_uri state in
-      Networking.request_protocol_snapshot () validator_uri)
+      Network.request_protocol_snapshot () validator_uri)
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_protocol_snapshot (tries + 1))
@@ -136,7 +136,7 @@ let () =
       Printexc.print_backtrace stderr
 let pending = ref false
 let load_snapshot snapshot_data =
-  let open Networking.Protocol_snapshot in
+  let open Network.Protocol_snapshot in
   let%ok state =
     Node.load_snapshot ~snapshot:snapshot_data.snapshot
       ~additional_blocks:snapshot_data.additional_blocks
@@ -306,6 +306,17 @@ let () = received_block' := received_block
 let received_signature state update_state ~hash ~signature =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
+  (* TODO: consider edge-cases related to the node being out sync.
+     If validators changed and you are out of sync, you will reject valid
+     signatures (the node can wait and restart to back in sync by querying
+     the Tezos contract) *)
+  let%assert () =
+    ( `Not_a_validator,
+      List.exists
+        (fun validator ->
+          Key_hash.equal validator.Validators.address
+            (Signature.address signature))
+        (Validators.to_list state.Node.protocol.validators) ) in
   let%assert () =
     (`Already_known_signature, not (is_known_signature state ~hash ~signature))
   in
@@ -332,6 +343,15 @@ let parse_internal_tezos_transactions tezos_internal_transactions =
         Some core_tezos_internal_transactions
       | Error `Update_root_hash -> None)
     tezos_internal_transactions
+
+let append_operation state update_state operation =
+  let current_time = Unix.time () in
+  let pending_operations =
+    Node.Operation_map.add operation current_time state.Node.pending_operations
+  in
+  let (_ : State.t) = update_state Node.{ state with pending_operations } in
+  ()
+
 let received_tezos_operation state update_state tezos_interop_operation =
   let open Protocol.Operation in
   let Tezos_interop.Consensus.{ hash; transactions } = tezos_interop_operation in
@@ -341,42 +361,19 @@ let received_tezos_operation state update_state tezos_interop_operation =
         tezos_operation_hash = hash;
         internal_operations = parse_internal_tezos_transactions transactions;
       } in
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.{ requested_at = current_time; operation = Core_tezos tezos_operation }
-  in
-  let (_ : State.t) =
-    update_state
-      (let open Node in
-      {
-        state with
-        pending_operations = pending_operation :: state.pending_operations;
-      }) in
-  ()
+  let operation = Core_tezos tezos_operation in
+  append_operation state update_state operation
+
 let received_user_operation state update_state user_operation =
   let open Protocol.Operation in
   let operation = Core_user user_operation in
   let operation_exists =
-    List.exists
-      (fun pending_operation ->
-        equal pending_operation.Node.operation operation)
-      state.Node.pending_operations in
+    Node.Operation_map.mem operation state.Node.pending_operations in
 
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.{ requested_at = current_time; operation = Core_user user_operation }
-  in
   if not operation_exists then (
     Lwt.async (fun () ->
-        Networking.broadcast_user_operation_gossip state { user_operation });
-    let (_ : State.t) =
-      update_state
-        (let open Node in
-        {
-          state with
-          pending_operations = pending_operation :: state.pending_operations;
-        }) in
-    ());
+        broadcast_user_operation_gossip state { user_operation });
+    append_operation state update_state operation);
   Ok ()
 let received_consensus_operation state update_state consensus_operation
     signature =
@@ -385,19 +382,10 @@ let received_consensus_operation state update_state consensus_operation
     ( `Invalid_signature,
       Consensus.verify state.Node.identity.key signature consensus_operation )
   in
-  let current_time = Unix.time () in
-  let pending_operation =
-    Node.
-      { requested_at = current_time; operation = Consensus consensus_operation }
-  in
-  let (_ : State.t) =
-    update_state
-      (let open Node in
-      {
-        state with
-        pending_operations = pending_operation :: state.pending_operations;
-      }) in
+  let operation = Consensus consensus_operation in
+  append_operation state update_state operation;
   Ok ()
+
 let find_block_by_hash state hash =
   Block_pool.find_block ~hash state.Node.block_pool
 let find_block_level state = state.State.protocol.block_height
@@ -428,7 +416,7 @@ let register_uri state update_state ~uri ~signature =
   Ok ()
 let request_withdraw_proof state ~hash =
   match state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt hash with
-  | None -> Networking.Withdraw_proof.Unknown_operation
+  | None -> Network.Withdraw_proof.Unknown_operation
   | Some (Receipt_tezos_withdraw withdrawal_handle) ->
     let last_block_hash = state.Node.protocol.last_block_hash in
     let withdrawal_handles_hash =
@@ -447,7 +435,7 @@ let request_ticket_balance state ~ticket ~address =
   |> Core.State.ledger
   |> Ledger.balance address ticket
 let trusted_validators_membership state update_state request =
-  let open Networking.Trusted_validators_membership_change in
+  let open Network.Trusted_validators_membership_change in
   let { signature; payload = { address; action } as payload } = request in
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
