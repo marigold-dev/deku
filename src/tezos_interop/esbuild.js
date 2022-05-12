@@ -1,9 +1,9 @@
-const { pnpPlugin } = require("./esbuild-plugin-esy.js");
-
 require("esbuild")
   .build({
-    plugins: process.env["NODE_PATH"] ? [] : [pnpPlugin()],
     platform: "node",
+    plugins: process.env["NODE_PATH"]
+      ? []
+      : [require("./esbuild-plugin-esy.js").pnpPlugin()],
     entryPoints: [process.argv[2]],
     minify: true,
     bundle: true,

@@ -7,11 +7,11 @@
   (file ./tezos_js_bridge.bundle.js)))
 
 (rule
- (deps ../../esbuild.js ../../esbuild-plugin-esy.js ./tezos_js_bridge.js)
+ (deps ./esbuild.js ./esbuild-plugin-esy.js ./tezos_js_bridge.js)
  (target ./tezos_js_bridge.bundle.js)
  (mode fallback)
  (action
-  (run node ../../esbuild.js ./tezos_js_bridge.js %{target})))
+  (run node ./esbuild.js ./tezos_js_bridge.js %{target})))
 
 (rule
  (deps ./tezos_js_bridge.js)
