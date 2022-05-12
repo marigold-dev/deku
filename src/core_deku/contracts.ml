@@ -1,4 +1,8 @@
-module Conversions : Smart_contracts.Conversions = struct
+module Conversions :
+  Smart_contracts.Conversions
+    with type Address.t = Address.t
+     and type Amount.t = Amount.t
+     and type Ticket_id.t = Ticket_id.t = struct
   open Core
 
   module Address = struct
@@ -36,5 +40,11 @@ module Conversions : Smart_contracts.Conversions = struct
   end
 end
 
-module Context = Smart_contracts.Make_ffi (Conversions)
-module Contract_vm = Smart_contracts.Contract_vm
+module Context :
+  Smart_contracts.CTX
+    with module Address = Conversions.Address
+     and module Ticket_id = Conversions.Ticket_id
+     and module Amount = Conversions.Amount =
+  Smart_contracts.Make_ffi (Conversions)
+
+module Contract_vm = Smart_contracts.Contract_vm.Make (Context)

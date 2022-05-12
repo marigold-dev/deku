@@ -1,15 +1,24 @@
 module type S = sig
   include Conversions.S
 
+  module Ticket_handle :
+    Ticket_handle.S
+      with module Address = Address
+       and module Amount = Amount
+       and module Ticket_id = Ticket_id
+
   module Ticket_transition_table :
     Ticket_transition_table.S
       with module Address = Address
        and module Amount = Amount
-
-  module Ticket_handle = Ticket_transition_table.Ticket_handle
+       and module Ticket_id = Ticket_id
+       and module Ticket_handle = Ticket_handle
 
   module Operation :
-    Operation.S with module Address = Address and module Amount = Amount
+    Operation.S
+      with module Address = Address
+       and module Amount = Amount
+       and module Ticket_id = Ticket_id
 
   module State : sig
     class virtual finalization :
@@ -55,4 +64,8 @@ module type S = sig
   end
 end
 
-module Make (CC : Conversions.S) : S
+module Make (CC : Conversions.S) :
+  S
+    with module Address = CC.Address
+     and module Ticket_id = CC.Ticket_id
+     and module Amount = CC.Amount

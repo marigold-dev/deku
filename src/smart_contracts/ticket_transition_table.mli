@@ -11,7 +11,11 @@ end
 module type S = sig
   include Conversions.S
 
-  module Ticket_handle : Ticket_handle.S
+  module Ticket_handle :
+    Ticket_handle.S
+      with module Address = Address
+       and module Amount = Amount
+       and module Ticket_id = Ticket_id
 
   type t
 
@@ -51,7 +55,6 @@ module type S = sig
     result
 
   val init :
-    sender:Address.t ->
     self:Address.t ->
     tickets:(Ticket_id.t * Amount.t) Seq.t ->
     temporary_tickets:(Ticket_id.t * Amount.t) Seq.t ->
@@ -60,5 +63,14 @@ module type S = sig
   val finalize : t -> (Ticket_id.t * Amount.t) Seq.t
 end
 
-module Make (CC : Conversions.S) :
-  S with module Address = CC.Address and module Amount = CC.Amount
+module Make
+    (CC : Conversions.S)
+    (Ticket_handle : Ticket_handle.S
+                       with module Address = CC.Address
+                        and module Amount = CC.Amount
+                        and module Ticket_id = CC.Ticket_id) :
+  S
+    with module Address = CC.Address
+     and module Amount = CC.Amount
+     and module Ticket_id = CC.Ticket_id
+     and module Ticket_handle = Ticket_handle

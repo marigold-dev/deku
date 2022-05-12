@@ -9,7 +9,11 @@ let get_or_raise t =
     t
   |> Result.ok_or_failwith
 
-module Make (CC : Conversions.S) = struct
+module Make (CC : Conversions.S) :
+  Context.CTX
+    with module Address = CC.Address
+     and module Ticket_id = CC.Ticket_id
+     and module Amount = CC.Amount = struct
   include CC
   include State.Make (CC)
 
@@ -66,12 +70,10 @@ module Make (CC : Conversions.S) = struct
     let transaction t (param, (ticket_handle, amount), address) =
       let sender = t#self in
       let table = t#table in
-      let ticket, amount2, handle =
+      let ticket, amount2, _handle =
         Ticket_transition_table.read_ticket ~sender ~ticket_handle table
         |> get_or_raise in
       if not (Amount.equal amount amount2) then failwith "execution error";
-      let handle =
-        Ticket_transition_table.own table sender handle |> get_or_raise in
       let operation =
         if Address.is_implicit address then
           Operation.Transfer { ticket; amount; destination = address }
@@ -79,7 +81,7 @@ module Make (CC : Conversions.S) = struct
           let param =
             Core.String.substr_replace_all (Bytes.to_string param)
               ~pattern:(Ticket_handle.to_bytes ticket_handle |> Bytes.to_string)
-              ~with_:(Ticket_handle.to_bytes handle |> Bytes.to_string)
+              ~with_:(Ticket_handle.to_bytes Int64.zero |> Bytes.to_string)
             |> Bytes.of_string in
           Operation.Invoke
             { param; tickets = [(ticket, amount)]; destination = address } in
@@ -120,8 +122,8 @@ module Make (CC : Conversions.S) = struct
       inherit addressable ~self ~source ~sender ~get_contract_opt
 
       val ticket_table =
-        Ticket_transition_table.init ~self ~sender
-          ~tickets:contract_owned_tickets ~temporary_tickets:provided_tickets
+        Ticket_transition_table.init ~self ~tickets:contract_owned_tickets
+          ~temporary_tickets:provided_tickets
 
       method table = ticket_table
 

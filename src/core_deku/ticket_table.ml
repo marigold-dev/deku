@@ -9,6 +9,8 @@ module Tickets = struct
 
   let to_seq map = Ticket_map.to_seq map
 
+  let of_seq seq = Ticket_map.of_seq seq
+
   let singleton ~ticket ~amount =
     Ticket_map.of_seq (Seq.return (ticket, amount))
 
@@ -71,6 +73,12 @@ let update_or_create ~amount ~ticket t =
     ~none:(Tickets.singleton ~amount ~ticket)
     t
   |> Option.some
+
+let update_tickets t ~sender ~tickets =
+  if Seq.is_empty tickets then
+    Address_map.remove sender t
+  else
+    Address_map.add sender (Tickets.of_seq tickets) t
 
 let deposit t ~destination ~ticket ~amount =
   Address_map.update destination (update_or_create ~amount ~ticket) t

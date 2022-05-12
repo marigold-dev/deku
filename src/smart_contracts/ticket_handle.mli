@@ -1,21 +1,17 @@
 module type S = sig
   include Conversions.S
 
-  type t [@@deriving yojson, ord, eq]
+  type t = Int64.t [@@deriving ord, eq]
 
   val to_string : t -> string
 
-  val of_string : string -> t option
+  val of_string : string -> t
 
-  val make : Address.t -> Ticket_id.t -> Amount.t -> t
+  val size : int
 
   val to_bytes : t -> bytes
 
-  val of_bytes : bytes -> t option
-
-  module Table : sig
-    include Hashtbl.S with type key := t
-  end
+  val of_bytes : bytes -> t
 end
 
 module Make (CC : Conversions.S) :
