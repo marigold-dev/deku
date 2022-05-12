@@ -210,22 +210,11 @@ const onBigMapMultipleKeyRequest = async (id, content) => {
 
   const block = await client.getBlock(); // fetches the head
 
-  let contract = await Tezos.contract.at(destination);
-  let storage = await contract.storage();
-  let big_map_abstraction = await storage.getMultipleValues(keys);
-  let values = new Array(keys.length);
-  // Need to convert the `big_map_abstraction` to an array of values,
-  // where the order of the values matches the order of the keys.
-  // Also big_map_abstraction will give us the value `undefined` if a key is not present,
-  // but deriving_yojson's option deserializer expects `null`.
-  await big_map_abstraction.forEach((value, key) => {
-    let index = keys.indexOf(key);
-    if (value !== undefined) {
-      values[index] = value[1];
-    } else {
-      values[index] = null;
-    }
-  });
+  const contract = await Tezos.contract.at(destination);
+  const storage = await contract.storage();
+  const valuesMap = await storage.getMultipleValues(keys);
+
+  const values = keys.map(key => valuesMap.get(key) ?? null);
 
   /* To make sure the storage state is finalized, we query the last
      block and any one of it's operation, and wait till it receives
