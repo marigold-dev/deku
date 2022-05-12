@@ -5,9 +5,7 @@
   "dependencies": {
     "@taquito/taquito": "^11.0.1",
     "@taquito/signer": "^11.0.1",
-    "@taquito/rpc": "^11.0.1"
-  },
-  "devDependencies": {
+    "@taquito/rpc": "^11.0.1",
     "esbuild": "*"
   }
 }
