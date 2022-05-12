@@ -101,5 +101,13 @@
             program = "${sandbox}/bin/sandbox.sh";
           };
         };
-      });
+      }) // {
+        hydraJobs = {
+          x86_64-linux = self.packages.x86_64-linux;
+          aarch64-darwin = {
+            # darwin doesn't support static builds and docker
+            inherit (self.packages.aarch64-darwin) deku npmPackages;
+          };
+        };
+      };
 }
