@@ -279,7 +279,6 @@ start_deku_cluster() {
   # are aware of each other which is done in ./sandbox.sh setup.
   # This command will start Deku nodes and listening to the prometheus
   # https://prometheus.io/
-
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
