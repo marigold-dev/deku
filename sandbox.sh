@@ -278,7 +278,7 @@ start_deku_cluster() {
   # See deku-cli produce-block --help
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
+    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
     HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk '{ print $2 }')
   fi
