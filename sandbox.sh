@@ -291,7 +291,7 @@ deploy_dummy_ticket() {
   tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
     transferring 0 from myWallet \
     running "$contract" \
-    --init "{}" \
+    --init "Unit" \
     --burn-cap 2 \
     --force
 }
@@ -304,7 +304,7 @@ DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 deposit_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
-  --entrypoint deposit --arg "Pair (Pair 0x \"$CONSENSUS_ADDRESS\") \"$DEKU_ADDRESS\"" \
+  --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
   --burn-cap 2
 }
 
