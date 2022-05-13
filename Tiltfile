@@ -9,6 +9,11 @@ cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 mode = cfg.get('mode', 'docker')
+config.define_string("vm", False, "specify the command of the vm")
+cfg = config.parse()
+
+no_of_deku_nodes = int(cfg.get('nodes', "3"))
+path_to_the_vm = cfg.get("vm", 'node ./examples/js-counter/example.js')
 
 def load_config ():
   if mode == "docker" :
@@ -26,9 +31,9 @@ deku_yaml = make_deku_yaml(no_of_deku_nodes)
 
 # Run docker-compose
 tezos_yaml = "./docker-compose.yml"
-docker_compose([deku_yml, tezos_yaml])
+docker_compose([deku_yaml, tezos_yaml])
 
-for deku_service in get_services(decode_yaml(deku_yml)):
+for deku_service in get_services(decode_yaml(deku_yaml)):
     dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
 
 for tezos_service in get_services(read_yaml(tezos_yaml)):
@@ -37,12 +42,18 @@ for tezos_service in get_services(read_yaml(tezos_yaml)):
 def deku_vm_setup(n, vm_args):
   for i in range(n):
     local_resource(
-      "deku-vm-%s" % i,
-      "%s ./data/%s/state_transition" % (vm_args, i,),
-      resource_deps=["deku-setup"],
-      labels=["vms"],
+      "deku-vm-%s" % i, 
+      serve_cmd="%s data/%s/state_transition" % (vm_args, i),
+      allow_parallel=True,
+      labels="vms",
+      resource_deps=["deku-setup", "deku-node-0"],
+      readiness_probe=probe( # I have to use a readiness probe because when putting the vm in background there is no more reader on the fifo pipe, so when the node try to send the tx to the vm it fails with a Unix.EPIPE error
+        initial_delay_secs=1,
+        exec=exec_action(['true'])  # After one seconds, the vm is considered running # TODO: find a better probe
+      )
     )
 
+deku_vm_setup(no_of_deku_nodes, path_to_the_vm)
 
 load_deku_services(deku_yaml)
 
@@ -56,3 +67,4 @@ local_resource(
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
   )
+  
