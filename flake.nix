@@ -92,10 +92,12 @@
             inherit pkgs;
             deku = deku-static;
           };
-        } // (builtins.listToAttrs (builtins.map (p: {
-          name = p.pname;
-          value = p;
-        }) npmPackages));
+        }
+        # Add npm packages as exposed packages
+          // (builtins.listToAttrs (builtins.map (p: {
+            name = p.pname;
+            value = p;
+          }) npmPackages));
 
         apps = {
           deku-cli = {
@@ -114,10 +116,11 @@
       }) // {
         hydraJobs = {
           x86_64-linux = self.packages.x86_64-linux;
-          aarch64-darwin = {
-            # darwin doesn't support static builds and docker
-            inherit (self.packages.aarch64-darwin) deku npmPackages;
-          };
+          # darwin doesn't support static builds and docker
+          aarch64-darwin = builtins.removeAttrs self.packages.aarch64-darwin [
+            "deku-static"
+            "docker"
+          ];
         };
       };
 }

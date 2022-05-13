@@ -1,5 +1,5 @@
-{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, npmPackages
-, nodejs ? pkgs.nodejs, static ? false }:
+{ pkgs, stdenv, lib, system, removeReferencesTo, doCheck ? true, cacert
+, npmPackages, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -55,12 +55,13 @@ in ocamlPackages.buildDunePackage rec {
       cacert
       core_bench
       memtrace
-      landmarks
       benchmark
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs;
+    ++ checkInputs
+    # some benchmarking libraries are broken om m1, so we make them optional
+    ++ (if system != "aarch64-darwin" then [ landmarks ] else [ ]);
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 

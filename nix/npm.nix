@@ -15,6 +15,7 @@ let
       };
     };
 
+    # TODO: If we remove this Webpack will fail, not sure why
     inject = { acorn-import-assertions."1.8.0" = [[ "acorn" "8.7.1" ]]; };
 
     settings =
