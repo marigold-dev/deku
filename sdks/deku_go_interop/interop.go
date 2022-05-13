@@ -69,7 +69,7 @@ func Set(key string, value interface{}) {
 	write(message)
 }
 
-func Main(state_transition func(sender string, tx_hash string, input []byte) (err error)) {
+func Main(initial_state map[string]any, state_transition func(sender string, tx_hash string, input []byte) (err error)) {
 	log("Opening read")
 	fifo_path := os.Args[1]
 	log(fmt.Sprintf("fifo path: %s", fifo_path))
@@ -77,6 +77,11 @@ func Main(state_transition func(sender string, tx_hash string, input []byte) (er
 	log("Opening write")
 	chain_to_machine, _ = os.OpenFile(fifo_path+"_write", os.O_RDONLY, 0666)
 	log("done")
+
+	for key, val := range initial_state {
+		Set(key, val)
+	}
+
 	for {
 		// TODO: replace this with a control pipe
 		control := read()

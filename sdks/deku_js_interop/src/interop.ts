@@ -69,12 +69,19 @@ const set = (key: string, value: string) => {
 
 /**
  * The main function
+ * @param initial_state the initial state of your vm
  * @param state_transition the function called when there is an new input
  */
 const main = (
+  initial_state: {[key: string]: any},
   state_transition: (address: string, tx_hash: string, input: Buffer) => string
 ) => {
   init_fifo();
+
+  Object.keys(initial_state)
+    .forEach(key => {
+      set(key, JSON.stringify(initial_state[key]));
+    });
 
   for (;;) {
     const control = read().toString();

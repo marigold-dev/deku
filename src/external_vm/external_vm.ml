@@ -3,7 +3,7 @@ open Crypto
 
 type t = Yojson.Safe.t String_map.t [@@deriving yojson]
 
-let empty = String_map.empty |> String_map.add "counter" (`Int 0)
+let empty = String_map.empty
 
 type vm_message =
   | Stop

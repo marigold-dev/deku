@@ -20,4 +20,4 @@ const transition = (sender, tx_hash, action_buffer) => {
   }
 }
 
-main(transition);
+main({counter: 0}, transition);
