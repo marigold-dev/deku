@@ -28,7 +28,7 @@ VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
 # =======================
 # Running environments
-
+# Docker mode is to run Deku nodes from docker-compose file
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
@@ -111,7 +111,6 @@ EOF
 # This information will be stored in the trusted_validator_membership_change.json
 # This list is provided at the moment merely as a convenience for
 # more efficient hacking on Deku.
-
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -261,7 +260,6 @@ start_deku_cluster() {
   #           are aware of each other
   # (Step 1 and 2 are ./sandbox.sh setup)
   # - Step 3: Start each node
-
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
@@ -312,7 +310,6 @@ wait_for_servers() {
 # - start_deku_cluster()
 # - killall deku-node
 # - assert_deku_state()
-
 deku_storage() {
   local contract
   contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
