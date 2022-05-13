@@ -15,7 +15,7 @@ let of_string hexdump =
         | Some d1, Some d2, buff, idx ->
           let byte = (d1 lsl 4) lor d2 in
           Bytes.set_int8 buff idx byte;
-          (None, None, buff, idx + 1)
+          (digit c, None, buff, idx + 1)
         | _ -> assert false)
       (None, None, Bytes.create 65536, 0)
       hexdump in
