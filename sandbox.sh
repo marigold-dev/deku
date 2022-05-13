@@ -28,7 +28,7 @@ VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
 
 # =======================
 # Running environments
-
+# Docker mode is to run Deku nodes from docker-compose file
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
 else
@@ -83,7 +83,6 @@ message() {
 # Their addresses begin with `tz1` or `tz2`.
 # These addresses are to support Tezos' hashing scheme.
 # They don't correlate to actual Tezos wallets.
-
 validators_json() {
   ## most of the noise in this function is because of indentation
   echo "["
@@ -112,7 +111,6 @@ EOF
 # This information will be stored in the trusted_validator_membership_change.json
 # This list is provided at the moment merely as a convenience for 
 # more efficient hacking on Deku.
-
 trusted_validator_membership_change_json() {
   echo "["
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -137,7 +135,6 @@ EOF
 # We need the tezos-client to deploy the contract.
 # We will use the binary included in the Tezos testnet deployment
 # See https://tezos.gitlab.io/introduction/howtouse.html#client
-
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
@@ -148,7 +145,6 @@ tezos-client() {
 # Get rid of the data/ subfolder when stopping
 # This avoids having wrong state when starting again
 # tear-down will be called first when start_tezos_node()
-
 tear-down() {
   for i in "${VALIDATORS[@]}"; do
     FOLDER="$DATA_DIRECTORY/$i"
@@ -162,10 +158,8 @@ tear-down() {
 # Steps for the command: ./sandbox.sh setup
 # - start_tezos_node ()
 # - create_new_deku_environment()
-
 # We need a Tezos wallet to deploy the contract with. 
 # For convenience, we are using a hard-code secret key to create this wallet
-
 start_tezos_node() {
   tear-down
   message "Configuring Tezos client"
@@ -280,12 +274,11 @@ EOF
 
 SERVERS=()
 start_deku_cluster() {
-  # The steps are:
-  # - Step 1: Lauch a Tezos testnet
-  # - Step 2: Configure the Deku nodes that will run in the cluster such that they 
-  #           are aware of each other 
-  # (Step 1 and 2 are ./sandbox.sh setup)
-  # - Step 3: Start each node
+  # After launch a Tezos testnet and 
+  # configure the Deku nodes that will run in the cluster such that they 
+  # are aware of each other which is done in ./sandbox.sh setup.
+  # This command will start Deku nodes and listening to the prometheus
+  # https://prometheus.io/
 
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
@@ -337,7 +330,6 @@ wait_for_servers() {
 # - start_deku_cluster()
 # - killall deku-node
 # - assert_deku_state()
-
 deku_storage() {
   local contract
   contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
