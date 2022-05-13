@@ -1,3 +1,5 @@
 (library
  (name wasm_vm)
- (libraries wasm))
+ (libraries wasm helpers)
+ (preprocess
+  (pps ppx_let_binding)))
