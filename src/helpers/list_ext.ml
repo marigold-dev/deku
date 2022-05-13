@@ -36,6 +36,6 @@ let rec kmap_ok k f l =
   | [] -> Ok (k [])
   | el :: tl ->
   match f el with
-  | Ok el -> kmap_ok (fun tl -> el :: tl) f tl
+  | Ok el -> kmap_ok (fun tl -> k (el :: tl)) f tl
   | Error error -> Error error
 let map_ok f l = kmap_ok (fun x -> x) f l

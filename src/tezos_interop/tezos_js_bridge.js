@@ -214,7 +214,15 @@ const onBigMapMultipleKeyRequest = async (id, content) => {
   const storage = await contract.storage();
   const valuesMap = await storage.getMultipleValues(keys);
 
-  const values = keys.map(key => valuesMap.get(key) ?? null);
+  
+  const values = keys.map(key => {
+    const value = valuesMap.get(key);
+    if (value === undefined) {
+      return null;
+    } else {
+      return value[1];
+    }
+  });
 
   /* To make sure the storage state is finalized, we query the last
      block and any one of it's operation, and wait till it receives
