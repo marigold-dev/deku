@@ -214,8 +214,7 @@ const onBigMapMultipleKeyRequest = async (id, content) => {
   const storage = await contract.storage();
   const valuesMap = await storage.getMultipleValues(keys);
 
-  
-  const values = keys.map(key => {
+  const values = keys.map((key) => {
     const value = valuesMap.get(key);
     if (value === undefined) {
       return null;
