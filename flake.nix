@@ -82,14 +82,14 @@
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          inherit nodejs npmPackages;
+          inherit nix-filter nodejs npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          inherit nodejs npmPackages;
+          inherit nix-filter nodejs npmPackages;
         };
 
         sandbox = pkgs.callPackage ./nix/sandbox.nix {
