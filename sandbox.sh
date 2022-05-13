@@ -10,6 +10,8 @@ ligo() {
 
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
+elif [ "${2:-local}" = "tilt" ]; then
+  mode="tilt"
 else
   mode="local"
 fi
@@ -45,6 +47,8 @@ fi
 
 if [ $mode = "docker" ]; then
   RPC_NODE=http://flextesa:20000
+elif [ $mode = "tilt" ]; then
+  RPC_NODE=http://localhost:20000
 else
   RPC_NODE=http://localhost:20000
 fi
@@ -55,7 +59,7 @@ SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 DATA_DIRECTORY="data"
 
 # shellcheck disable=SC2207
-VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
+VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
 message() {
   echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
@@ -113,8 +117,10 @@ create_new_deku_environment() {
 
     if [ $mode = "docker" ]; then
       deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
+    elif [ $mode = "tilt" ]; then
+      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i" # Just to test something
     else
-      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i" # Just to test something
     fi
     KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
     ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
@@ -372,6 +378,9 @@ help() {
   echo " Executes a deposit of a dummy ticket to Deku"
   echo "load-test (saturate | maximal-blocks)"
   echo "  Performs the specified load test on a running cluster"
+  echo "start-vm"
+  echo " Start a vm in background"
+  echo " You need to provide a STATE_TRANSITION_PATH variable which is the path to the fifo file"
 }
 
 message "Running in $mode mode"
