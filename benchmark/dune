@@ -1,0 +1,20 @@
+(library
+ (name transfers_tests)
+ (modules transfers_tests)
+ (library_flags
+  (-linkall -g))
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries bin_common network cmdliner lwt))
+
+(executable
+ (name bench_tps)
+ (public_name deku-bench-tps)
+ (modules bench_tps)
+ (libraries transfers_tests)
+ (flags (:standard)))
+
+(rule
+ (alias bench_tps)
+ (action
+  (run %{exe:bench_tps.exe})))
