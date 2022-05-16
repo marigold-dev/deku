@@ -356,7 +356,6 @@ assert_deku_state() {
   done
 }
 
-<<<<<<< HEAD
 # =======================
 # ./sandbox.sh tear-down
 # Removes the DATA_DIRECTORY subfolders
@@ -387,10 +386,6 @@ start_tezos_node() {
   tezos-client --endpoint $RPC_NODE import secret key myWallet "unencrypted:$SECRET_KEY" --force
 }
 
-
-
-# =======================
-=======
 ##########################
 # Add load-test
 # - Deploy dummy ticket: deploy this dummy_ticket once times
@@ -400,7 +395,7 @@ start_tezos_node() {
 # main deku chain)
 
 deploy_dummy_ticket() {
-  contract=$(ligo compile contract ./dummy_ticket.mligo)
+  contract=$(ligo compile contract ./benchmark/dummy_ticket.mligo)
   # name the originated contract address is dummy_ticket
   tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
     transferring 0 from myWallet \
@@ -413,7 +408,7 @@ deploy_dummy_ticket() {
 # Deposit dummy_ticket one times
 # A hard-coded Deku wallet to use in development
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
-deposit_ticket() {
+deposit_dummy_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
     --entrypoint deposit --arg "Pair (Pair 0x \"$CONSENSUS_ADDRESS\") \"$DEKU_ADDRESS\"" \
@@ -440,6 +435,17 @@ load_test() {
   perf script -i perf.data >profile.linux-perf.txt
 }
 
+# need to run parallel with ./sandbox.sh start 
+bench_tps() {
+  # Search in tezos chain the address of dummy_ticket that origniated
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  # searching for deku-node pid
+  # node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
+
+  # deku-bench-tps ticketer
+  sh -c deku-bench-tps \"$DUMMY_TICKET_ADDRESS\" && sleep 10
+}
+
 ################
 # Main
 >>>>>>> 5e6c8f96 (comment on load test for benchmark in sandbox)
@@ -448,11 +454,7 @@ help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-<<<<<<< HEAD
-  echo "Usage: $0 setup|start|tear-down|smoke-test"
-=======
-  echo "Usage: $0 setup|tear-down|load-test"
->>>>>>> 5e6c8f96 (comment on load test for benchmark in sandbox)
+  echo "Usage: $0 setup|tear-down|load-test|deploy-dummy-ticket|deposit-dummy-ticket|bench-tps"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -470,6 +472,8 @@ help() {
   echo "deposit-dummy-ticket"
   echo "load-test (saturate | maximal-blocks)"
   echo "  Performs the specified load test on a running cluster"
+  echo "bench-tps"
+  echo "  Benchmarking tps"
 }
 
 message "Running in $mode mode"
@@ -503,6 +507,9 @@ deposit-dummy-ticket)
   ;;
 load-test)
   load_test "$2"
+  ;;
+bench-tps)
+  bench_tps
   ;;
 tear-down)
   tear-down

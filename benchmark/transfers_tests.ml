@@ -1,27 +1,16 @@
-open Node
 open Helpers
 open Bin_common
 
-open (
-  struct
-    include Server
-  end :
-    sig end)
-
 (*************************************************************************)
-(* making Deku accounts - wallet *)
-
-type wallet = {
-  key_hash : Crypto.Key_hash.t;
-  secret : Crypto.Secret.t;
-}
+(* create Deku accounts - wallets *)
 
 let make_wallet key_hash secret =
   {
-    key_hash = Crypto.Key_hash.of_string key_hash |> Option.get;
-    secret = Crypto.Secret.of_string secret |> Option.get;
+    Files.Wallet.address = Crypto.Key_hash.of_string key_hash |> Option.get;
+    Files.Wallet.priv_key = Crypto.Secret.of_string secret |> Option.get;
   }
 
+(* Currently hardcode the addresses *)
 let alice_wallet =
   make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
     "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
@@ -94,16 +83,16 @@ let make_ticket ticketer =
 (*************************************************************************)
 (* Transactions *)
 
-let nonce = ref 0l
-
 let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
-  nonce := Int32.add 1l !nonce;
   let amount = Core.Amount.of_int amount in
   let transaction =
     Core.User_operation.Transaction
-      { destination = recipient.key_hash; amount; ticket } in
-  let data = Core.User_operation.make ~source:sender.key_hash transaction in
-  Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
+      { destination = recipient.Files.Wallet.address; amount; ticket } in
+  let data =
+    Core.User_operation.make ~source:sender.Files.Wallet.address transaction
+  in
+  Protocol.Operation.Core_user.sign ~secret:sender.Files.Wallet.priv_key
+    ~nonce:(Crypto.Random.int32 Int32.max_int)
     ~block_height:block_level ~data
 
 let spam_transactions ~ticketer ~n () =
