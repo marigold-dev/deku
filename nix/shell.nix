@@ -1,9 +1,7 @@
-{ pkgs, deku, ligo, npmPackages }:
+{ pkgs, deku, ligo, nodejs ? pkgs.nodejs }:
 pkgs.mkShell {
   shellHook = ''
-    export NODE_PATH=${npmPackages}/node_modules
-    export PATH=${npmPackages}/node_modules/.bin:_build/install/default/bin:$PATH
-
+    export PATH=_build/install/default/bin:$PATH
     # This is a flag picked up by our sandbox.sh that's used
     # to know when to use esy instead of nix.
     # You can turn this off with the command 'unset USE_NIX'.
@@ -18,7 +16,7 @@ pkgs.mkShell {
       # Make developer life easier
       ## General tooling
       docker
-      nodejs-16_x
+      nodejs
       shellcheck
       tilt
       docker-compose # This is needed by tilt

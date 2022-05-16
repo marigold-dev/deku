@@ -14,3 +14,5 @@ let is_unit value =
   match Micheline.root value with
   | Prim (_, Michelson_v1_primitives.D_Unit, [], []) -> true
   | _ -> false
+
+type big_map_key = Key_hash of Crypto.Key_hash.t
