@@ -10,21 +10,31 @@ let
     finalImageName = "node";
   };
 
-in pkgs.dockerTools.buildImage {
-  name = "ghcr.io/marigold-dev/deku";
-  tag = "latest";
+in rec {
+  image = pkgs.dockerTools.buildImage {
+    name = "ghcr.io/marigold-dev/deku";
+    tag = "latest";
 
-  fromImage = baseImage;
+    fromImage = baseImage;
 
-  contents = [ deku ];
+    contents = [ deku ];
 
-  config = {
-    author = "marigold.dev";
-    architecture = "amd64";
-    os = "linux";
+    config = {
+      author = "marigold.dev";
+      architecture = "amd64";
+      os = "linux";
 
-    WorkingDir = "/app";
-    Entrypoint = [ "${deku}/bin/deku-node" ];
-    Cmd = [ "/app/data" ];
+      WorkingDir = "/app";
+      Entrypoint = [ "${deku}/bin/deku-node" ];
+      Cmd = [ "/app/data" ];
+    };
   };
+
+  image_export = pkgs.runCommand "deku-docker" {
+    meta.descritpion = "Deku docker image";
+    buildInputs = [ ];
+  } ''
+    mkdir -p $out/nix-support/hydra-build-products
+    cp ${image} $out/nix-support/hydra-build-products/deku-docker-image
+  '';
 }
