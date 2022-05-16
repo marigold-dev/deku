@@ -1,5 +1,11 @@
 open Helpers
 open Bin_common
+open Node
+open (
+  struct
+    include Server
+  end :
+    sig end)
 
 (*************************************************************************)
 (* create Deku accounts - wallets *)
@@ -62,7 +68,8 @@ let validators_uris =
   ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
 
 let get_random_validator_uri () =
-  List.nth validators_uris (Random.int 0) |> Uri.of_string
+  (*List.nth validators_uris (Random.int 0) |> Uri.of_string*)
+    List.nth validators_uris 0 |> Uri.of_string
 
 (*************************************************************************)
 (* Current block level *)

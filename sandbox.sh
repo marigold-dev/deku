@@ -436,14 +436,16 @@ load_test() {
 }
 
 # need to run parallel with ./sandbox.sh start 
-bench_tps() {
+# KT1UkGRU4mgg323qFTijRrKWxtETGUJVDrKT
+deku_bench_tps() {
   # Search in tezos chain the address of dummy_ticket that origniated
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  echo "dummy_ticket: $DUMMY_TICKET_ADDRESS"
   # searching for deku-node pid
   # node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
 
   # deku-bench-tps ticketer
-  sh -c deku-bench-tps \"$DUMMY_TICKET_ADDRESS\" && sleep 10
+  sh -c "deku-bench-tps \"$DUMMY_TICKET_ADDRESS\" && sleep 10"
 }
 
 ################
@@ -454,7 +456,7 @@ help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|tear-down|load-test|deploy-dummy-ticket|deposit-dummy-ticket|bench-tps"
+  echo "Usage: $0 setup|tear-down|load-test|deploy-dummy-ticket|deposit-dummy-ticket|deku-bench-tps"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -472,7 +474,7 @@ help() {
   echo "deposit-dummy-ticket"
   echo "load-test (saturate | maximal-blocks)"
   echo "  Performs the specified load test on a running cluster"
-  echo "bench-tps"
+  echo "deku-bench-tps"
   echo "  Benchmarking tps"
 }
 
@@ -508,8 +510,8 @@ deposit-dummy-ticket)
 load-test)
   load_test "$2"
   ;;
-bench-tps)
-  bench_tps
+deku-bench-tps)
+  deku_bench_tps "$1"
   ;;
 tear-down)
   tear-down
