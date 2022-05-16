@@ -8,6 +8,30 @@ open (
   end :
     sig end)
 
+(*************************************************************************)
+(* making Deku accounts - wallet *)
+
+type wallet = {
+  key_hash : Crypto.Key_hash.t;
+  secret : Crypto.Secret.t;
+}
+
+let make_wallet key_hash secret =
+  {
+    key_hash = Crypto.Key_hash.of_string key_hash |> Option.get;
+    secret = Crypto.Secret.of_string secret |> Option.get;
+  }
+
+let alice_wallet =
+  make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+    "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+
+let bob_wallet =
+  make_wallet "tz1h1oFuYsCorjxekQ59bUe1uDGhuYvEx9ob"
+    "edsk326F1xfCvHFw1LWhgtrwcm6DnFoHCmjjWX4vcWsJCbqmujJQVs"
+
+(*************************************************************************)
+
 let interop_context node_folder =
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
@@ -46,43 +70,65 @@ let validator_uris ~interop_context =
 let validators_uris =
   ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
 
-let get_random_validator_uri () = List.nth validators_uris 0 |> Uri.of_string
+let get_random_validator_uri () =
+  List.nth validators_uris (Random.int 0) |> Uri.of_string
 
 let get_current_block_level () =
   let validator_uri = get_random_validator_uri () in
   let%await block_level = Network.request_block_level () validator_uri in
   Lwt.return block_level.level
 
-let spam_transactions ~ticketer ~n () = Lwt.return ""
+let make_ticket ticketer =
+  let contract = Tezos.Contract_hash.of_string ticketer |> Option.get in
+  let ticketer = Tezos.Address.Originated { contract; entrypoint = None } in
+  Core.Ticket_id.{ ticketer; data = Bytes.empty }
 
-let rec transfers_spam_tickets ~ticketer =
+(*************************************************************************)
+
+let nonce = ref 0l
+
+let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
+  nonce := Int32.add 1l !nonce;
+  let amount = Core.Amount.of_int amount in
+  (*let transaction =
+    Transaction { destination = recipient.key_hash; amount; ticket } in*)
+  let data =
+    Core.User_operation.make ~source:sender.key_hash
+      (Transaction { destination = recipient.key_hash; amount; ticket }) in
+  Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
+    ~block_height:block_level ~data
+
+let spam_transactions ~ticketer ~n () =
+  let validator_uri = get_random_validator_uri () in
+  let%await block_level = get_current_block_level () in
+  let ticket = make_ticket ticketer in
+  let transactions =
+    List.init n (fun _ ->
+        make_transaction ~block_level ~ticket ~sender:alice_wallet
+          ~recipient:bob_wallet ~amount:1) in
+  Format.eprintf "Number of transactions - packed: %d\n%!"
+    (List.length transactions);
+  let%await _ =
+    Network.request_user_operations_gossip
+      { user_operations = transactions }
+      validator_uri in
+  Lwt.return transactions
+
+let rec spam ~ticketer =
   let n = 2000 in
   let%await _ =
-    (* Fun.id: is the identity function. For any argument x, id x is x *)
     Lwt_list.iter_p Fun.id
-    @@ (* List.init len f:
-          let make_list n = List.init n ~f:(fun x -> x)
-          create lists using List.init, which takes an integer n and a function f,
-          and create a list of length n, where the data for each element is create by
-          calling f on the index of that element.
-           List.init 5 ~f:(Fn.id);;
-              - : int list = [0; 1; 2; 3; 4]
-          making a list of spam_transactions of length 4,
-          each time transfers this ticketer n:2000 times
-       *)
+    @@ (* REMARK: list 4 *)
     List.init 4 (fun _ ->
         let%await _ = spam_transactions ~ticketer ~n () in
         await ()) in
-  (* sleep d: is a promise that remains in a pending state for d
-     seconds and after that it is resolved with value ().
-  *)
   let%await () = Lwt_unix.sleep 1.0 in
-  transfers_spam_tickets ~ticketer
+  spam ~ticketer
 
 let load_test_transactions ticketer =
   let%await starting_block_level = get_current_block_level () in
   Format.printf "Starting block level: %Li\n%!" starting_block_level;
-  transfers_spam_tickets ~ticketer
+  spam ~ticketer
 
 let load_test_transactions ticketer =
   load_test_transactions ticketer |> Lwt_main.run

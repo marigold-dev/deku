@@ -12,6 +12,7 @@ module Signature_spec = struct
   type response = unit [@@deriving yojson]
   let path = "/append-signature"
 end
+
 module Block_and_signature_spec = struct
   type request = {
     block : Block.t;
@@ -21,16 +22,19 @@ module Block_and_signature_spec = struct
   type response = unit [@@deriving yojson]
   let path = "/append-block-and-signature"
 end
+
 module Block_by_hash_spec = struct
   type request = { hash : BLAKE2B.t } [@@deriving yojson]
   type response = Block.t option [@@deriving yojson]
   let path = "/block-by-hash"
 end
+
 module Block_level = struct
   type request = unit [@@deriving yojson]
   type response = { level : int64 } [@@deriving yojson]
   let path = "/block-level"
 end
+
 module Protocol_snapshot = struct
   type request = unit [@@deriving yojson]
 
@@ -48,11 +52,13 @@ module Protocol_snapshot = struct
   [@@deriving yojson]
   let path = "/protocol-snapshot"
 end
+
 module Request_nonce = struct
   type request = { uri : Uri.t } [@@deriving yojson]
   type response = { nonce : BLAKE2B.t } [@@deriving yojson]
   let path = "/request-nonce"
 end
+
 module Register_uri = struct
   type request = {
     uri : Uri.t;
@@ -62,12 +68,21 @@ module Register_uri = struct
   type response = unit [@@deriving yojson]
   let path = "/register-uri"
 end
+
 module User_operation_gossip = struct
   type request = { user_operation : Protocol.Operation.Core_user.t }
   [@@deriving yojson]
   type response = unit [@@deriving yojson]
   let path = "/user-operation-gossip"
 end
+
+module User_operations_gossip = struct
+  type request = { user_operations : Protocol.Operation.Core_user.t list }
+  [@@deriving yojson]
+  type response = unit [@@deriving yojson]
+  let path = "/user-operations-gossip"
+end
+
 module Consensus_operation_gossip = struct
   type request = {
     consensus_operation : Protocol.Operation.Consensus.t;
@@ -77,6 +92,7 @@ module Consensus_operation_gossip = struct
   type response = unit [@@deriving yojson]
   let path = "/consensus-operation-gossip"
 end
+
 module Withdraw_proof = struct
   type request = { operation_hash : BLAKE2B.t } [@@deriving yojson]
   type response =
@@ -90,6 +106,7 @@ module Withdraw_proof = struct
   [@@deriving yojson]
   let path = "/withdraw-proof"
 end
+
 module Ticket_balance = struct
   type request = {
     address : Key_hash.t;
@@ -99,6 +116,7 @@ module Ticket_balance = struct
   type response = { amount : Amount.t } [@@deriving yojson]
   let path = "/ticket-balance"
 end
+
 module Trusted_validators_membership_change = struct
   type action =
     | Add
