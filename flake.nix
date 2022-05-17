@@ -63,15 +63,12 @@
         ligo = (import nixpkgs { inherit system; }).ligo.overrideAttrs
           (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
 
-        pkgs = ocaml-overlays.makePkgs {
-          inherit system;
-          extraOverlays = [
-            (import ./nix/overlay.nix)
-            prometheus-web.overlays.default
-            tezos.overlays.default
-            json-logs-reporter.overlays.default
-          ];
-        };
+        pkgs = (ocaml-overlays.makePkgs { inherit system; }).appendOverlays [
+          (import ./nix/overlay.nix)
+          prometheus-web.overlays.default
+          tezos.overlays.default
+          json-logs-reporter.overlays.default
+        ];
 
         pkgs_static = pkgs.pkgsCross.musl64;
 
@@ -96,7 +93,7 @@
           pkgs = import nixpkgs { inherit system; };
         };
       in {
-        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
+        devShell = import ./nix/shell.nix { inherit pkgs system deku ligo; };
         packages = {
           inherit deku deku-static;
           docker = import ./nix/docker.nix {
