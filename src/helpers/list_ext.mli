@@ -3,3 +3,5 @@ val find_index : ('a -> bool) -> 'a t -> int option
 val in_order_uniq : ('a -> 'a -> int) -> 'a t -> 'a t
 val fold_left_ok :
   ('a -> 'b -> ('a, 'c) result) -> 'a -> 'b list -> ('a, 'c) result
+val somes : 'a option list -> 'a list
+val map_ok : ('a -> ('b, 'c) result) -> 'a t -> ('b t, 'c) result

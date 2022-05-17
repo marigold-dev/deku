@@ -23,6 +23,14 @@ const { inspect } = require("util");
  * @property {string} rpc_node
  * @property {number} confirmation
  * @property {string} destination
+ * 
+ * @typedef BigMapMultipleKeysRequest
+ * @type {object}
+ * @property {"storage"} kind
+ * @property {string} rpc_node
+ * @property {number} confirmation
+ * @property {string} destination
+ * @property {string[]} keys
 
  * @typedef ListenTransaction
  * @type {object}
@@ -193,6 +201,48 @@ const onStorageRequest = async (id, content) => {
   respond(id, { status: "success", storage });
 };
 
+/** @param {BigMapMultipleKeysRequest} content */
+const onBigMapMultipleKeyRequest = async (id, content) => {
+  const { rpc_node, confirmation, destination, keys } = content;
+  const client = new RpcClient(rpc_node);
+  const Tezos = new TezosToolkit(rpc_node);
+  Tezos.setProvider({ config });
+
+  const block = await client.getBlock(); // fetches the head
+
+  const contract = await Tezos.contract.at(destination);
+  const storage = await contract.storage();
+  const valuesMap = await storage.getMultipleValues(keys);
+
+  const values = keys.map((key) => {
+    const value = valuesMap.get(key);
+    if (value === undefined) {
+      return null;
+    } else {
+      return value[1];
+    }
+  });
+
+  /* To make sure the storage state is finalized, we query the last
+     block and any one of it's operation, and wait till it receives
+     `n` confirmations (where n is the minimum blocks needs to
+     consider reorg highly unlikely. ie finality) */
+  const operationFromHead = block.operations.flat()[0];
+  if (!operationFromHead) {
+    throw new Error("Internal error: operationFromHead was undefined");
+  }
+
+  const operation = await Tezos.operation.createTransactionOperation(
+    operationFromHead.hash
+  );
+  const result = await operation.confirmation(confirmation);
+  if (!(await result.isInCurrentBranch())) {
+    throw new Error("Not in current Branch");
+  }
+
+  respond(id, { status: "success", values });
+};
+
 /** @param {ListenTransaction} content */
 const onListenTransaction = async (id, content) => {
   const { rpc_node, confirmation, destination } = content;
@@ -255,6 +305,8 @@ const onRequest = (id, content) => {
     return onTransactionRequest(id, content);
   } else if (content.kind === "storage") {
     return onStorageRequest(id, content);
+  } else if (content.kind === "big_map_keys") {
+    return onBigMapMultipleKeyRequest(id, content);
   } else if (content.kind === "listen") {
     return onListenTransaction(id, content);
   } else {

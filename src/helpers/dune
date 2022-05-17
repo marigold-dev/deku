@@ -1,5 +1,5 @@
 (library
  (name helpers)
- (libraries lwt uri zarith hex digestif data-encoding)
+ (libraries lwt uri zarith hex digestif data-encoding lwt_domain)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))

@@ -1,5 +1,5 @@
-{ pkgs, stdenv, lib, removeReferencesTo, doCheck ? true, cacert, npmPackages
-, nodejs ? pkgs.nodejs, static ? false }:
+{ pkgs, stdenv, lib, system, removeReferencesTo, doCheck ? true, cacert
+, npmPackages, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -14,15 +14,10 @@ in ocamlPackages.buildDunePackage rec {
       [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
   };
 
-  configurePhase = ''
-    export PATH=${npmPackages}/node_modules/.bin:$PATH
-    export NODE_PATH=${npmPackages}/node_modules
-
-    ln -s ${npmPackages}/node_modules ./node_modules
-  '';
-
   # This is the same as standard dune build but with static support
   buildPhase = ''
+    echo NODE_PATH
+    echo $NODE_PATH
     runHook preBuild
     echo "running ${if static then "static" else "release"} build"
     dune build -p ${pname} --profile=${if static then "static" else "release"}
@@ -31,7 +26,7 @@ in ocamlPackages.buildDunePackage rec {
 
   inherit doCheck;
 
-  nativeBuildInputs = [ nodejs npmPackages removeReferencesTo ]
+  nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages
     ++ (with ocamlPackages; [ utop reason ]);
 
   propagatedBuildInputs = with ocamlPackages;
@@ -40,6 +35,7 @@ in ocamlPackages.buildDunePackage rec {
       ppx_deriving
       ppx_deriving_yojson
       lwt
+      lwt_domain
       dream
       mirage-crypto
       mirage-crypto-pk
@@ -59,13 +55,14 @@ in ocamlPackages.buildDunePackage rec {
       cacert
       core_bench
       memtrace
-      landmarks
       benchmark
       pollinate
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs ++ [ npmPackages ];
+    ++ checkInputs
+    # some benchmarking libraries are broken om m1, so we make them optional
+    ++ (if system != "aarch64-darwin" then [ landmarks ] else [ ]);
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 

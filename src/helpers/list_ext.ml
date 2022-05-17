@@ -28,3 +28,14 @@ let rec fold_left_ok f state = function
   match f state head with
   | Ok state -> fold_left_ok f state tl
   | Error error -> Error error
+let somes l = List.filter_map (fun x -> x) l
+
+(* NOT TCO *)
+let rec kmap_ok k f l =
+  match l with
+  | [] -> Ok (k [])
+  | el :: tl ->
+  match f el with
+  | Ok el -> kmap_ok (fun tl -> k (el :: tl)) f tl
+  | Error error -> Error error
+let map_ok f l = kmap_ok (fun x -> x) f l
