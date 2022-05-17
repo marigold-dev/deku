@@ -2,20 +2,42 @@ def add_sandbox (no_of_deku_nodes):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && ./sandbox.sh setup local %s" % no_of_deku_nodes,
+    "sleep 5 && nix run .#sandbox setup local %s" % no_of_deku_nodes,
     resource_deps=["flextesa"],
     labels=["scripts"],
     )
 
-  # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-  local_resource(
-    "deku-net",
-    serve_cmd= "./sandbox.sh start local %s" % no_of_deku_nodes,
-    resource_deps=["deku-setup"],
-    labels=["scripts"],
-    auto_init=True, # trigger once at start
-    trigger_mode=TRIGGER_MODE_MANUAL,
-    )
+  if config.tilt_subcommand == "ci":
+    # bootstrap the deku network and run some tests
+    local_resource(
+      "smoke-test",
+      "sleep 5 && nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      allow_parallel=True,
+      )
+
+    local_resource(
+      "deposit-withdraw-test",
+      "sleep 5 && nix run .#sandbox deposit-withdraw-test",
+      resource_deps=["smoke-test"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      allow_parallel=True,
+      )
+  else:
+    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
+    local_resource(
+      "deku-net",
+      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      )
 
 def load_deku_services (_):
   print('no-op')

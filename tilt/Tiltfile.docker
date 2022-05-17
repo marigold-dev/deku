@@ -72,17 +72,29 @@ def add_sandbox (no_of_deku_nodes):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && ./sandbox.sh setup docker %s" % no_of_deku_nodes,
+    "sleep 5 && nix run .#sandbox setup docker %s" % no_of_deku_nodes,
     resource_deps=["flextesa"],
     labels=["scripts"],
     )
 
-  # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-  local_resource(
-    "deku-net",
-    "./sandbox.sh start docker %s" % no_of_deku_nodes,
-    resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
-    labels=["scripts"],
-    auto_init=True, # trigger once at start
-    trigger_mode=TRIGGER_MODE_MANUAL,
-    )
+  if config.tilt_subcommand == "ci":
+    # bootstrap the deku network and run some tests
+    local_resource(
+      "smoke-test",
+      "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      )
+  else:
+    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
+    local_resource(
+      "deku-net",
+      "nix run .#sandbox start docker %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      )
+    

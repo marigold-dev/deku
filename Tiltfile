@@ -2,6 +2,9 @@
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'docker' (default) or 'local'")
 
+if config.tilt_subcommand == "down":
+  local("nix run .#sandbox tear-down")
+
 cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
@@ -42,7 +45,7 @@ add_sandbox(no_of_deku_nodes)
 # action to manually trigger a teardown, this should almost never be needed
 local_resource(
   "deku-tear-down",
-  "./sandbox.sh tear-down",
+  "nix run .#sandbox tear-down",
   auto_init=False,
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],

@@ -13,11 +13,13 @@ result
 # nix-direnv cache
 .direnv
 
-# Deku nodes folder
+# Deku-specific
 data/
+wallet.json
 
 # Others
 node_modules
 *.install
 *.bundle.js
 *.bundle.js.LICENSE.txt
+
