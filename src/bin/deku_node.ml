@@ -5,9 +5,11 @@ open Bin_common
 let ignore_some_errors = function
   | Error #Flows.ignore -> Ok ()
   | v -> v
+
 let update_state state =
   Server.set_state state;
   state
+
 let handle_request (type req res)
     (module E : Network.Request_endpoint
       with type request = req
@@ -15,9 +17,17 @@ let handle_request (type req res)
   let handler request =
     let%await body = Dream.body request in
     let%await request = Parallel.decode E.request_of_yojson body in
+    (* Add Metrics prometheus for node operations per block *)
+    Metrics.Networking.inc_network_messages_received E.path;
+    Metrics.Networking.measure_network_received_message_size E.path
+      (String.length body);
     match request with
     | Ok request -> (
       let response = handler update_state request in
+      (* Add Metrics prometheus for node response *)
+      Metrics.Networking.inc_network_messages_response E.path;
+      Metrics.Networking.measure_network_response_message_size
+        (String.length body);
       match response with
       | Ok response ->
         let%await response = Parallel.encode E.response_to_yojson response in
