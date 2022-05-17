@@ -118,6 +118,23 @@ let handle_receive_user_operation_gossip =
       Flows.received_user_operation (Server.get_state ()) update_state
         request.user_operation)
 
+(* Adding handle receive user operations gossip in the node *)
+(* POST /user-operations-gossip *)
+(* Propagate a batch of user operations (core_user.t) over gossip network *)
+let handle_receive_user_operations_gossip =
+  handle_request
+    (module Network.User_operations_gossip)
+    (fun update_state request ->
+      let operations = request.user_operations in
+      Format.eprintf "Number of transactions - packed: %i\n%!"
+        (List.length operations);
+      List.fold_left_ok
+        (fun () operation ->
+          (* TODO quadratic function *)
+          Flows.received_user_operation (Server.get_state ()) update_state
+            operation)
+        () operations)
+
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
@@ -154,6 +171,7 @@ let handle_ticket_balance =
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
+
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
@@ -176,6 +194,7 @@ let node folder prometheus_port =
              handle_request_nonce;
              handle_register_uri;
              handle_receive_user_operation_gossip;
+             handle_receive_user_operations_gossip;
              handle_receive_consensus_operation;
              handle_withdraw_proof;
              handle_ticket_balance;

@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Core
+
 type t = {
   hash : BLAKE2B.t;
   payload_hash : BLAKE2B.t;
@@ -13,6 +14,7 @@ type t = {
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson]
+
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
       ~previous_hash ~author ~block_height ~operations =
@@ -24,7 +26,15 @@ let hash, verify =
         * BLAKE2B.t
         * Key_hash.t
         * int64
-        * Protocol_operation.t list] in
+        * BLAKE2B.t] in
+    (* define operations_hash from a list of operations instead of using list,
+       using BLAKE2B.t *)
+    let operations_hash =
+      List.fold_left
+        (fun operations_hash operation ->
+          let operation_hash = Protocol_operation.hash operation in
+          BLAKE2B.both operations_hash operation_hash)
+        (BLAKE2B.hash "") operations in
     let json =
       to_yojson
         ( state_root_hash,
@@ -33,7 +43,7 @@ let hash, verify =
           previous_hash,
           author,
           block_height,
-          operations ) in
+          operations_hash ) in
     let payload = Yojson.Safe.to_string json in
     let block_payload_hash = BLAKE2B.hash payload in
     let hash =
@@ -45,6 +55,7 @@ let hash, verify =
   let verify ~hash:expected_hash =
     apply (fun (hash, _payload_hash) -> hash = expected_hash) in
   (hash, verify)
+
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     ~previous_hash ~author ~block_height ~operations =
   let hash, payload_hash =
@@ -61,6 +72,7 @@ let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     block_height;
     operations;
   }
+
 let of_yojson json =
   let%ok block = of_yojson json in
   let%ok () =
@@ -74,6 +86,7 @@ let of_yojson json =
     | true -> Ok ()
     | false -> Error "Invalid hash" in
   Ok block
+
 let compare a b = BLAKE2B.compare a.hash b.hash
 let genesis =
   make ~previous_hash:(BLAKE2B.hash "tuturu")
@@ -82,6 +95,7 @@ let genesis =
     ~validators_hash:(Validators.hash Validators.empty)
     ~block_height:0L ~operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
+
 let produce ~state ~next_state_root_hash =
   let next_state_root_hash =
     Option.value ~default:state.Protocol_state.state_root_hash
@@ -96,5 +110,7 @@ open Protocol_signature.Make (struct
   type nonrec t = t
   let hash t = t.hash
 end)
+
 let sign ~key t = (sign ~key t).signature
+
 let verify ~signature t = verify ~signature t

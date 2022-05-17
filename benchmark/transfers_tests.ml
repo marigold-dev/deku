@@ -69,7 +69,7 @@ let validators_uris =
 
 let get_random_validator_uri () =
   (*List.nth validators_uris (Random.int 0) |> Uri.of_string*)
-    List.nth validators_uris 0 |> Uri.of_string
+  List.nth validators_uris 0 |> Uri.of_string
 
 (*************************************************************************)
 (* Current block level *)

@@ -70,6 +70,7 @@ module Register_uri = struct
 end
 
 module User_operation_gossip = struct
+  (* Need to add type hash in protocol_operation.core_user *)
   type request = { user_operation : Protocol.Operation.Core_user.t }
   [@@deriving yojson]
   type response = unit [@@deriving yojson]
