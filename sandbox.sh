@@ -43,6 +43,14 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
+<<<<<<< HEAD
+=======
+data_directory="data"
+consensus_wallet="myWallet"
+
+# Used to interact with ticket contract to prevent clashes in tezos-client counter
+ticket_wallet="bob"
+>>>>>>> d4183ae1 (fix deposit dummy ticket)
 
 # https://github.com/koalaman/shellcheck/wiki/SC2016
 # shellcheck disable=SC2016
@@ -147,7 +155,7 @@ deploy_contract () {
   echo "Originating $1 contract"
   sleep 2
   tezos-client --endpoint $RPC_NODE originate contract "$1" \
-    transferring 0 from myWallet \
+    transferring 0 from $consensus_wallet \
     running "$contract" \
     --init "$storage" \
     --burn-cap 2 \
@@ -247,10 +255,13 @@ EOF
   echo -e "\e[32m\e[1m### Tezos Contract address: $TEZOS_CONSENSUS_ADDRESS ###\e[0m"
 }
 
-# =======================
-# Steps for the command: ./sandbox start
-# - start_deku_cluster()
-# - wait_for_servers()
+start_tezos_node() {
+  tear-down
+  message "Configuring Tezos client"
+  tezos-client --endpoint $RPC_NODE bootstrapped
+  tezos-client --endpoint $RPC_NODE config update
+  tezos-client --endpoint $RPC_NODE import secret key $consensus_wallet "unencrypted:$SECRET_KEY" --force
+}
 
 SERVERS=()
 start_deku_cluster() {
@@ -398,21 +409,26 @@ deploy_dummy_ticket() {
   contract=$(ligo compile contract ./benchmark/dummy_ticket.mligo)
   # name the originated contract address is dummy_ticket
   tezos-client --endpoint $RPC_NODE originate contract "dummy_ticket" \
-    transferring 0 from myWallet \
+    transferring 0 from $ticket_wallet \
     running "$contract" \
-    --init "{}" \
+    --init "Unit" \
     --burn-cap 2 \
     --force
 }
 
-# Deposit dummy_ticket one times
-# A hard-coded Deku wallet to use in development
+#####################################################
+# deposit dummy_ticket 100 times from bob
+# mint_to_deku: parameter type in ligo
+# deposit_to_deku (consensus:address)(recipient:address)(ticket_amount:nat, ticket_data:bytes)
+
+
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 deposit_dummy_ticket() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
-  tezos-client --endpoint $RPC_NODE transfer 0 from myWallet to dummy_ticket \
-    --entrypoint deposit --arg "Pair (Pair 0x \"$CONSENSUS_ADDRESS\") \"$DEKU_ADDRESS\"" \
-    --burn-cap 2
+  tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to dummy_ticket \
+  --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
+  --burn-cap 2
 }
 
 load_test() {
@@ -444,7 +460,7 @@ deku_bench_tps() {
   # searching for deku-node pid
   # node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
 
-  # deku-bench-tps ticketer
+  # sh -c: using shell script: deku-bench-tps ticketer
   sh -c "deku-bench-tps \"$DUMMY_TICKET_ADDRESS\" && sleep 10"
 }
 
