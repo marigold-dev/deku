@@ -1,7 +1,14 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries dream bin_common node helpers cmdliner prometheus-dream json-logs-reporter)
+ (libraries
+  dream
+  bin_common
+  node
+  helpers
+  cmdliner
+  prometheus-dream
+  json-logs-reporter)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
