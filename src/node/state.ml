@@ -11,18 +11,17 @@ type identity = {
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 
-type pending_operation = {
-  (* TODO: proper type for timestamps *)
-  requested_at : float;
-  operation : Protocol.Operation.t;
-}
+module Operation_map = Map.Make (Operation)
+
+(* TODO: proper type for timestamps *)
+type timestamp = float
 type t = {
   identity : identity;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
-  pending_operations : pending_operation list;
+  pending_operations : timestamp Operation_map.t;
   block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
@@ -53,7 +52,7 @@ let make ~identity ~trusted_validator_membership_change
     trusted_validator_membership_change;
     interop_context;
     data_folder;
-    pending_operations = [];
+    pending_operations = Operation_map.empty;
     block_pool = initial_block_pool;
     protocol = initial_protocol;
     snapshots = initial_snapshots;

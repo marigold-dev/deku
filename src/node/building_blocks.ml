@@ -67,9 +67,7 @@ let is_signable state block =
   let is_trusted_operation operation =
     match operation with
     | Protocol.Operation.Core_tezos _ ->
-      List.exists
-        (fun op -> Protocol.Operation.equal op.Node.operation operation)
-        state.pending_operations
+      Node.Operation_map.mem operation state.pending_operations
     | Core_user _ -> true
     | Consensus consensus_operation -> (
       current_time > next_allowed_membership_change_timestamp
@@ -109,9 +107,8 @@ let should_start_new_epoch last_state_root_update current_time =
     \    block with an updated state root hash.\n"]
 
 (** Can only included a tezos operation if enough time has already elapsed *)
-let can_include_tezos_operation ~current_time pending_operation =
-  current_time -. pending_operation.Node.requested_at
-  > minimum_waiting_period_for_tezos_operation
+let can_include_tezos_operation ~current_time ~requested_at =
+  current_time -. requested_at > minimum_waiting_period_for_tezos_operation
 
 let produce_block state =
   let current_time = Unix.time () in
@@ -125,19 +122,19 @@ let produce_block state =
     else
       None in
   let operations =
-    List.filter_map
-      (fun pending_operation ->
-        let operation = pending_operation.Node.operation in
+    (* TODO: fold into list on Helpers *)
+    Node.Operation_map.fold
+      (fun operation requested_at operations ->
         match operation with
         | Operation.Core_tezos _ ->
-          if can_include_tezos_operation ~current_time pending_operation then
-            Some operation
+          if can_include_tezos_operation ~current_time ~requested_at then
+            operation :: operations
           else
-            None
+            operations
         | Core_user _
         | Consensus _ ->
-          Some operation)
-      state.pending_operations in
+          operation :: operations)
+      state.pending_operations [] in
   Block.produce ~state:state.Node.protocol ~author:state.identity.t
     ~next_state_root_hash ~operations
 let is_valid_block_height state block_height =
@@ -159,14 +156,11 @@ let apply_block state update_state block =
   let%ok state = Node.apply_block state block in
   Ok (update_state state)
 let clean state update_state block =
-  let operation_is_in_block operation =
-    List.exists (fun op -> Operation.equal op operation) block.Block.operations
-  in
   let pending_operations =
-    List.find_all
-      (fun pending_operation ->
-        not (operation_is_in_block pending_operation.Node.operation))
-      state.State.pending_operations in
+    List.fold_left
+      (fun pending_operations operation ->
+        Node.Operation_map.remove operation pending_operations)
+      state.State.pending_operations block.Block.operations in
   let trusted_validator_membership_change =
     List.fold_left
       (fun trusted_validator_membership_change operation ->
@@ -189,12 +183,7 @@ let clean state update_state block =
       |> state.persist_trusted_membership_change);
   update_state
     { state with trusted_validator_membership_change; pending_operations }
-let broadcast_signature state ~hash ~signature =
-  Lwt.async (fun () -> Networking.broadcast_signature state { hash; signature })
-let broadcast_block_and_signature state ~block ~signature =
-  Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
-      Networking.broadcast_block_and_signature state { block; signature })
+
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
   let validators = Validators.to_list state.Node.protocol.validators in
@@ -209,3 +198,21 @@ let find_random_validator_uri state =
       | Some uri -> uri
       | None -> safe_validator_uri () in
   safe_validator_uri ()
+
+let validator_uris state =
+  let validators = Validators.to_list state.Node.protocol.validators in
+  List.filter_map
+    (fun Validators.{ address; _ } ->
+      Node.Address_map.find_opt address state.Node.validators_uri)
+    validators
+let broadcast_signature state ~hash ~signature =
+  let uris = validator_uris state in
+  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
+let broadcast_block_and_signature state ~block ~signature =
+  let uris = validator_uris state in
+  Lwt.async (fun () ->
+      let%await () = Lwt_unix.sleep 1.0 in
+      Network.broadcast_block_and_signature uris { block; signature })
+let broadcast_user_operation_gossip state operation =
+  let uris = validator_uris state in
+  Network.broadcast_user_operation_gossip uris operation

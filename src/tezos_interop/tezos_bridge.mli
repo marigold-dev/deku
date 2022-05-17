@@ -52,3 +52,11 @@ val storage :
   required_confirmations:int ->
   destination:Address.t ->
   (Michelson.t, string) result Lwt.t
+
+val big_map_keys :
+  t ->
+  rpc_node:Uri.t ->
+  required_confirmations:int ->
+  destination:Address.t ->
+  keys:Michelson.big_map_key list ->
+  (Yojson.Safe.t option list, string) result Lwt.t

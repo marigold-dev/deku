@@ -5,12 +5,19 @@
   nixConfig = {
     trusted-substituters =
       [ "https://cache.nixos.org/" "https://deku.cachix.org" ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "deku.cachix.org-1:9zYY9BUBDV9xiXj8C0uCy+hkgjyDVRdH932KHmqVwYg="
+    ];
   };
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
+    nix-filter.url = "github:numtide/nix-filter";
+
+    dream2nix.url = "github:nix-community/dream2nix";
+    dream2nix.inputs.nixpkgs.follows = "nixpkgs";
 
     ocaml-overlays.url = "github:anmonteiro/nix-overlays";
     ocaml-overlays.inputs = {
@@ -32,11 +39,21 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, ocaml-overlays
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
     , prometheus-web, tezos }:
-    with flake-utils.lib;
-    eachSystem defaultSystems (system:
+    let
+      supportedSystems =
+        [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+
+      dream2nix-lib = dream2nix.lib2.init {
+        systems = supportedSystems;
+        config.projectRoot = ./.;
+      };
+    in with flake-utils.lib;
+    eachSystem supportedSystems (system:
       let
+        nodejs = pkgs.nodejs-16_x;
+
         ligo = (import nixpkgs { inherit system; }).ligo.overrideAttrs
           (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
 
@@ -51,25 +68,20 @@
 
         pkgs_static = pkgs.pkgsCross.musl64;
 
-        bp =
-          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-12_x; };
-        npmPackages = bp.buildNpmPackage {
-          src = ./.;
-          npmBuild = "echo ok";
+        npmPackages = import ./nix/npm.nix {
+          inherit system dream2nix-lib nix-filter nodejs;
         };
 
         deku = pkgs.callPackage ./nix/deku.nix {
           doCheck = true;
-          nodejs = pkgs.nodejs-16_x;
-          inherit npmPackages;
+          inherit nodejs npmPackages;
         };
 
         deku-static = pkgs_static.callPackage ./nix/deku.nix {
           pkgs = pkgs_static;
           doCheck = true;
           static = true;
-          nodejs = pkgs.nodejs-16_x;
-          inherit npmPackages;
+          inherit nodejs npmPackages;
         };
 
         sandbox = pkgs.callPackage ./nix/sandbox.nix {
@@ -77,15 +89,19 @@
           pkgs = import nixpkgs { inherit system; };
         };
       in {
-        devShell =
-          import ./nix/shell.nix { inherit pkgs deku ligo npmPackages; };
+        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
         packages = {
-          inherit deku deku-static npmPackages;
+          inherit deku deku-static;
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;
           };
-        };
+        }
+        # Add npm packages as exposed packages
+          // (builtins.listToAttrs (builtins.map (p: {
+            name = p.pname;
+            value = p;
+          }) npmPackages));
 
         apps = {
           deku-cli = {
@@ -101,5 +117,14 @@
             program = "${sandbox}/bin/sandbox.sh";
           };
         };
-      });
+      }) // {
+        hydraJobs = {
+          x86_64-linux = self.packages.x86_64-linux;
+          # darwin doesn't support static builds and docker
+          aarch64-darwin = builtins.removeAttrs self.packages.aarch64-darwin [
+            "deku-static"
+            "docker"
+          ];
+        };
+      };
 }

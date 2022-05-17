@@ -9,6 +9,8 @@ module Michelson = struct
     let%ok json = Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
     try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json) with
     | _ -> Error "invalid json"
+  let big_map_key_to_yojson (Key_hash key_hash) : Yojson.Safe.t =
+    `String (Key_hash.to_string key_hash)
 end
 module Listen_transaction = struct
   type kind = Listen
@@ -112,6 +114,42 @@ module Storage = struct
     | _ -> Error "invalid status"
 end
 
+module Big_map_keys = struct
+  type kind = Big_map_keys
+  let kind_to_yojson Big_map_keys = `String "big_map_keys"
+  type request = {
+    kind : kind;
+    rpc_node : string;
+    confirmation : int;
+    destination : string;
+    keys : Michelson.big_map_key list;
+  }
+  [@@deriving to_yojson]
+
+  let of_yojson json =
+    let module T = struct
+      type t = { status : string } [@@deriving of_yojson { strict = false }]
+
+      (*
+         TODO: Yojson.Safe.t is taking the place of a "well-formatted json object"
+         See: https://github.com/ecadlabs/taquito/blob/fcee40a6235ed0dd56ff6a8f3e64fb9d0c16cab3/packages/taquito/src/contract/big-map.ts#L46
+         It would be better to parse it to a micheline node.
+      *)
+      type success = { values : Yojson.Safe.t option list }
+      [@@deriving of_yojson { strict = false }]
+      type error = { error : string } [@@deriving of_yojson { strict = false }]
+    end in
+    let%ok { status } = T.of_yojson json in
+    match status with
+    | "success" ->
+      let%ok { values } = T.success_of_yojson json in
+      Ok (Ok values)
+    | "error" ->
+      let%ok { error } = T.error_of_yojson json in
+      Ok (Error error)
+    | _ -> Error "invalid status"
+end
+
 type t = Long_lived_js_process.t
 let spawn () =
   let file = Scripts.file_tezos_js_bridge in
@@ -156,3 +194,16 @@ let storage t ~rpc_node ~required_confirmations ~destination =
       } in
   Long_lived_js_process.request t ~to_yojson:Storage.request_to_yojson
     ~of_yojson:Storage.of_yojson request
+
+let big_map_keys t ~rpc_node ~required_confirmations ~destination ~keys =
+  let request =
+    Big_map_keys.
+      {
+        kind = Big_map_keys;
+        rpc_node = Uri.to_string rpc_node;
+        confirmation = required_confirmations;
+        destination = Address.to_string destination;
+        keys;
+      } in
+  Long_lived_js_process.request t ~to_yojson:Big_map_keys.request_to_yojson
+    ~of_yojson:Big_map_keys.of_yojson request

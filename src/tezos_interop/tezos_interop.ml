@@ -6,15 +6,18 @@ type t = {
   rpc_node : Uri.t;
   secret : Secret.t;
   consensus_contract : Address.t;
+  discovery_contract : Address.t;
   required_confirmations : int;
   bridge_process : Tezos_bridge.t;
 }
-let make ~rpc_node ~secret ~consensus_contract ~required_confirmations =
+let make ~rpc_node ~secret ~consensus_contract ~discovery_contract
+    ~required_confirmations =
   let bridge_process = Tezos_bridge.spawn () in
   {
     rpc_node;
     secret;
     consensus_contract;
+    discovery_contract;
     required_confirmations;
     bridge_process;
   }
@@ -26,6 +29,7 @@ module Run_contract = struct
       secret;
       required_confirmations;
       consensus_contract = _;
+      discovery_contract = _;
       bridge_process;
     } =
       t in
@@ -45,7 +49,19 @@ end = struct
     Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
       ~destination:contract_address
 end
-
+module Fetch_big_map_keys : sig
+  val run :
+    t ->
+    rpc_node:Uri.t ->
+    required_confirmations:int ->
+    contract_address:Address.t ->
+    keys:Michelson.big_map_key list ->
+    (Yojson.Safe.t option list, string) result Lwt.t
+end = struct
+  let run t ~rpc_node ~required_confirmations ~contract_address ~keys =
+    Tezos_bridge.big_map_keys t.bridge_process ~rpc_node ~required_confirmations
+      ~destination:contract_address ~keys
+end
 module Listen_transactions = struct
   let listen t ~rpc_node ~required_confirmations ~destination ~on_message =
     let message_stream =
@@ -187,16 +203,58 @@ module Consensus = struct
     Listen_transactions.listen t ~rpc_node:t.rpc_node
       ~required_confirmations:t.required_confirmations
       ~destination:t.consensus_contract ~on_message
+  let fetch_uris_from_discovery t validator_key_hashes =
+    let {
+      rpc_node;
+      required_confirmations;
+      consensus_contract = _;
+      discovery_contract;
+      secret = _;
+      bridge_process = _;
+    } =
+      t in
+    let micheline_yojson_to_key_hash = function
+      | `String uri -> Ok (Uri.of_string uri)
+      | _ -> Error "Failed to parse storage micheline expression" in
+    let%await micheline_uris =
+      Fetch_big_map_keys.run t ~required_confirmations ~rpc_node
+        ~contract_address:discovery_contract
+        ~keys:
+          (List.map
+             (fun key_hash -> Michelson.Key_hash key_hash)
+             validator_key_hashes) in
+    match micheline_uris with
+    | Error e -> Lwt.return (Error e)
+    | Ok micheline_uris ->
+      let uris =
+        List.map_ok
+          (fun micheline ->
+            match micheline with
+            | None -> Ok None
+            | Some uri ->
+              let%ok key_hash = micheline_yojson_to_key_hash uri in
+              Ok (Some key_hash))
+          micheline_uris in
+      let key_hash_uri_pairs =
+        Result.map
+          (fun uris ->
+            Format.eprintf "%d : %d\n%!"
+              (List.length validator_key_hashes)
+              (List.length uris);
+            List.combine validator_key_hashes uris)
+          uris in
+      Lwt.return key_hash_uri_pairs
+
   let fetch_validators t =
     let {
       rpc_node;
       required_confirmations;
       consensus_contract;
+      discovery_contract;
       secret = _;
       bridge_process = _;
     } =
       t in
-
     let micheline_to_validators michelson =
       let%ok michelson = michelson in
       let michelson = Micheline.root michelson in
@@ -217,7 +275,26 @@ module Consensus = struct
     let%await micheline_storage =
       Fetch_storage.run t ~required_confirmations ~rpc_node
         ~contract_address:consensus_contract in
-    Lwt.return (micheline_to_validators micheline_storage)
+    let validators = micheline_to_validators micheline_storage in
+    match validators with
+    | Ok validators -> (
+      let%await validator_uri_pairs = fetch_uris_from_discovery t validators in
+      match validator_uri_pairs with
+      | Error e -> Lwt.return (Error e)
+      | Ok validator_uri_pairs ->
+        List.iter
+          (function
+            | key_hash, None ->
+              Format.eprintf
+                "Validator with key_hash %s not found in discovery contract \
+                 (%s).\n\
+                 %!"
+                (Key_hash.to_string key_hash)
+                (Address.to_string discovery_contract)
+            | _, Some _ -> ())
+          validator_uri_pairs;
+        Lwt.return (Ok validator_uri_pairs))
+    | Error e -> Lwt.return (Error e)
 end
 module Discovery = struct
   open Pack
