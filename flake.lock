@@ -53,11 +53,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1651844867,
-        "narHash": "sha256-a+bAmmeIudRVY23ZkEB5W5xJumBY3ydsiDIGN/56NmQ=",
+        "lastModified": 1652634247,
+        "narHash": "sha256-uh5dNzchbStytxtvxP/cR8G+ZvGWNwxCQoh7nhL6fkk=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "e5d0e9cdb00695b0b63d1f52ff3b39c0e3035fe3",
+        "rev": "9003aed816a3237342d85250c347622647f6cfb3",
         "type": "github"
       },
       "original": {
@@ -158,6 +158,21 @@
         "type": "github"
       }
     },
+    "nix-filter_2": {
+      "locked": {
+        "lastModified": 1649838635,
+        "narHash": "sha256-P1h48+l9vUvMz4JwHBgkTXiX6mE8oYR75vBVUbe6Cuc=",
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "rev": "40a58baa248a8b335e2d66ca258a74248af9d834",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1652231724,
@@ -227,6 +242,33 @@
         "owner": "nix-community",
         "ref": "1.21.0",
         "repo": "poetry2nix",
+        "type": "github"
+      }
+    },
+    "pollinate": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nix-filter": "nix-filter_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "ocaml-overlay": [
+          "ocaml-overlays"
+        ]
+      },
+      "locked": {
+        "lastModified": 1652687538,
+        "narHash": "sha256-+zhZt3U1JfAzU/x/gLaLUc/3PIU2Vg3SoVzBCG5ENFw=",
+        "owner": "marigold-dev",
+        "repo": "pollinate",
+        "rev": "cac87e848685934cfced156575e399912bfa1ffa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "repo": "pollinate",
         "type": "github"
       }
     },

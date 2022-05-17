@@ -38,7 +38,7 @@
       flake-utils.follows = "flake-utils";
     };
 
-    pollinate.url = "github:marigold-dev/pollinate/ulrikstrid--nix-refactor";
+    pollinate.url = "github:marigold-dev/pollinate";
     pollinate.inputs = {
       nixpkgs.follows = "nixpkgs";
       ocaml-overlay.follows = "ocaml-overlays";
@@ -47,7 +47,7 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
-    , prometheus-web, tezos }:
+    , prometheus-web, tezos, pollinate }:
     let
       supportedSystems =
         [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
@@ -75,6 +75,8 @@
         };
 
         pkgs_static = pkgs.pkgsCross.musl64;
+        bp =
+          pkgs.callPackage nix-npm-buildpackage { nodejs = pkgs.nodejs-14_x; };
 
         npmPackages = import ./nix/npm.nix {
           inherit system dream2nix-lib nix-filter nodejs;
