@@ -43,16 +43,10 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
-<<<<<<< HEAD
-=======
-data_directory="data"
 consensus_wallet="myWallet"
 
-# Used to interact with ticket contract to prevent clashes in tezos-client counter
-ticket_wallet="bob"
->>>>>>> d4183ae1 (fix deposit dummy ticket)
-
 # https://github.com/koalaman/shellcheck/wiki/SC2016
+
 # shellcheck disable=SC2016
 [ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
 export LD_LIBRARY_PATH
@@ -405,6 +399,9 @@ start_tezos_node() {
 # it can be from the different account deku_address (to the same consensus_address because it is to the
 # main deku chain)
 
+# Used to interact with ticket contract to prevent clashes in tezos-client counter
+ticket_wallet="bob"
+
 deploy_dummy_ticket() {
   contract=$(ligo compile contract ./benchmark/dummy_ticket.mligo)
   # name the originated contract address is dummy_ticket
@@ -417,10 +414,9 @@ deploy_dummy_ticket() {
 }
 
 #####################################################
-# deposit dummy_ticket 100 times from bob
+# deposit dummy_ticket 100 times from bob: (Pair 100 0x)
 # mint_to_deku: parameter type in ligo
 # deposit_to_deku (consensus:address)(recipient:address)(ticket_amount:nat, ticket_data:bytes)
-
 
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
 DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
@@ -429,26 +425,6 @@ deposit_dummy_ticket() {
   tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to dummy_ticket \
   --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
   --burn-cap 2
-}
-
-load_test() {
-  # Search in tezos chain the address of dummy_ticket that origniated
-  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  # searching for deku-node pid
-  node_pid=$(ps -A | grep deku-node | head -n 1 | cut -d ' ' -f 1)
-
-  # TODO: make load-test poll to know when to exit.
-  # perf record 
-  # -p, --pid=: record events on existing process ID
-  # -g: enables call-graph 
-  # -c: --count=: event period to sample
-  # sh -c ...: is a shell command to run the deku-load-test ...
-  # echo 0 | sudo tee /proc/sys/kernel/perf_event_paranoid
-  # profiling the action deku-load-test with saturate option for the dummy_ticket 
-  perf record -a -F 99 -g -p "$node_pid" sh -c "deku-load-test \"saturate\" \"$DUMMY_TICKET_ADDRESS\" && sleep 10"
-  # extract perf.data to profile.linux-perf.txt to use in graph in 
-  # http://www.speedscope.app
-  perf script -i perf.data >profile.linux-perf.txt
 }
 
 # need to run parallel with ./sandbox.sh start 
@@ -466,13 +442,12 @@ deku_bench_tps() {
 
 ################
 # Main
->>>>>>> 5e6c8f96 (comment on load test for benchmark in sandbox)
 
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|tear-down|load-test|deploy-dummy-ticket|deposit-dummy-ticket|deku-bench-tps"
+  echo "Usage: $0 setup|tear-down|deploy-dummy-ticket|deposit-dummy-ticket|deku-bench-tps"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -488,8 +463,6 @@ help() {
   echo "deploy-dummy-ticket"
   echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
   echo "deposit-dummy-ticket"
-  echo "load-test (saturate | maximal-blocks)"
-  echo "  Performs the specified load test on a running cluster"
   echo "deku-bench-tps"
   echo "  Benchmarking tps"
 }
@@ -522,9 +495,6 @@ deploy-dummy-ticket)
   ;;
 deposit-dummy-ticket)
   deposit_dummy_ticket
-  ;;
-load-test)
-  load_test "$2"
   ;;
 deku-bench-tps)
   deku_bench_tps "$1"
