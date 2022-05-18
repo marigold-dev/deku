@@ -2,8 +2,6 @@
 # but ocamlformat's version check won't work for both of them simultaneously.
 # version = 0.20.1
 
-
-
 version=0.20.1
 wrap-fun-args=false
 let-binding-spacing=compact
@@ -20,7 +18,6 @@ doc-comments=before
 margin=80
 module-item-spacing=sparse
 parens-tuple=always
-
 if-then-else = fit-or-vertical
 let-and = sparse
 type-decl = sparse
