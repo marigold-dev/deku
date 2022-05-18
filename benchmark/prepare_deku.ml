@@ -46,7 +46,6 @@ let bob_wallet =
      Lwt.return block_level
     ) *)
 
-
 let interop_context node_folder =
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
