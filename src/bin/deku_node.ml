@@ -213,10 +213,10 @@ let () = Domain.set_name "deku-node"
 
 let () =
   (* This is needed because Dream will initialize logs lazily *)
-  Dream.initialize_log ~enable:false ();
+  Dream.initialize_log ~enable:false () ;
   match Sys.getenv_opt "DEKU_LOGS" |> Option.map String.lowercase_ascii with
   | Some "json" ->
-    Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout);
+    Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout) ;
     Logs.set_level (Some Info)
   | _ -> Logs.set_reporter (Logs.format_reporter ~app:Fmt.stdout ())
 

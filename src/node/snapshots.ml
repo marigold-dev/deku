@@ -60,7 +60,7 @@ let add_snapshot_ref ~block_height t =
 
 let set_snapshot_ref ref_ snapshot =
   Logs.info (fun m ->
-      m "New protocol snapshot hash: %s" (snapshot.hash |> BLAKE2B.to_string));
+      m "New protocol snapshot hash: %s" (snapshot.hash |> BLAKE2B.to_string)) ;
   Atomic.set ref_ (Some snapshot)
 
 let start_new_epoch t =
