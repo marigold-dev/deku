@@ -11,6 +11,7 @@ type transaction = {
 }
 
 type content = Transaction of transaction
+
 type t = {
   source : Key_hash.t;
   fee : Tez.t;

@@ -2,7 +2,7 @@ open Crypto
 
 module Consensus : sig
   type t =
-    | Add_validator    of Validators.validator
+    | Add_validator of Validators.validator
     | Remove_validator of Validators.validator
   [@@deriving eq, ord, yojson]
 
@@ -45,8 +45,8 @@ end
 
 type t =
   | Core_tezos of Core.Tezos_operation.t
-  | Core_user  of Core_user.t
-  | Consensus  of Consensus.t
+  | Core_user of Core_user.t
+  | Consensus of Consensus.t
 [@@deriving eq, ord, yojson]
 
 val hash : t -> BLAKE2B.t

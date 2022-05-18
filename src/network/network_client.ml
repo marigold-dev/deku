@@ -2,9 +2,12 @@ open Helpers
 
 module type Request_endpoint = sig
   type request [@@deriving yojson]
+
   type response [@@deriving yojson]
+
   val path : string
 end
+
 exception Error_status
 
 let raw_request path raw_data uri =
@@ -14,10 +17,10 @@ let raw_request path raw_data uri =
   let%await response = Client.Oneshot.post ~body uri in
   match response with
   | Ok response -> (
-    let%await body = Piaf.Body.to_string response.body in
-    match body with
-    | Ok body -> await body
-    | Error _err -> Lwt.fail Error_status)
+      let%await body = Piaf.Body.to_string response.body in
+      match body with
+      | Ok body -> await body
+      | Error _err -> Lwt.fail Error_status)
   | Error _err -> Lwt.fail Error_status
 
 let request request_to_yojson path data uri =

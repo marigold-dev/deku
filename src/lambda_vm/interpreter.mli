@@ -9,10 +9,7 @@ type error =
   | Value_is_not_zero
 [@@deriving show]
 
-type script_result = {
-  storage : Ir.value;
-  operations : unit;
-}
+type script_result = {storage : Ir.value; operations : unit}
 
 val execute :
   context:Context.t -> arg:Ir.value -> Ir.code -> (script_result, error) result

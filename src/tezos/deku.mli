@@ -1,6 +1,8 @@
 open Crypto
+
 module Consensus : sig
   val hash_validators : Key_hash.t list -> BLAKE2B.t
+
   val hash_block :
     block_height:int64 ->
     block_payload_hash:BLAKE2B.t ->
@@ -8,6 +10,7 @@ module Consensus : sig
     withdrawal_handles_hash:BLAKE2B.t ->
     validators_hash:BLAKE2B.t ->
     BLAKE2B.t
+
   val hash_withdraw_handle :
     id:Z.t ->
     owner:Address.t ->

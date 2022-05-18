@@ -5,7 +5,11 @@ open Config
 (* Metrics for messages received. Call in deku_node *)
 let network_received_message_size =
   let help = "Size of received message in bytes" in
-  Gauge.v_label ~label_name:"route" ~help ~namespace ~subsystem
+  Gauge.v_label
+    ~label_name:"route"
+    ~help
+    ~namespace
+    ~subsystem
     "network_received_message_size"
 
 let measure_network_received_message_size route size =
@@ -13,7 +17,11 @@ let measure_network_received_message_size route size =
 
 let network_received_message_count =
   let help = "Count of total message received" in
-  Counter.v_label ~label_name:"route" ~help ~namespace ~subsystem
+  Counter.v_label
+    ~label_name:"route"
+    ~help
+    ~namespace
+    ~subsystem
     "network_received_message_count"
 
 let inc_network_messages_received route =
@@ -30,7 +38,11 @@ let measure_network_response_message_size size =
 
 let network_response_message_count =
   let help = "Count of total respond message sent" in
-  Counter.v_label ~label_name:"route" ~help ~namespace ~subsystem
+  Counter.v_label
+    ~label_name:"route"
+    ~help
+    ~namespace
+    ~subsystem
     "network_response_message_count"
 
 let inc_network_messages_response route =
@@ -47,7 +59,11 @@ let measure_network_snapshot_size size =
 
 let network_snapshot_count =
   let help = "Count of total snapshot" in
-  Counter.v_label ~label_name:"route" ~help ~namespace ~subsystem
+  Counter.v_label
+    ~label_name:"route"
+    ~help
+    ~namespace
+    ~subsystem
     "network_snapshot_count"
 
 let inc_network_snapshot_size route =

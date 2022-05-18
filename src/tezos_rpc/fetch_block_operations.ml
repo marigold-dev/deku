@@ -10,10 +10,12 @@ type block_operation = {
   branch : Block_hash.t;
   contents : Operation_content_with_result.t list;
 }
+
 type response = block_operation list
 
 module Decoder = struct
   type operation_content_with_result = Operation_content_with_result.t
+
   let operation_content_with_result_of_yojson =
     Operation_content_with_result.of_tezos_json
 
@@ -24,7 +26,7 @@ module Decoder = struct
     (* TODO: can this be empty? *)
     contents : operation_content_with_result list;
   }
-  [@@deriving of_yojson { strict = false }]
+  [@@deriving of_yojson {strict = false}]
 
   let of_yojson json =
     let%ok operations = [%of_yojson: response_block_operation list list] json in
@@ -38,15 +40,15 @@ let path ~chain ~block_hash =
 
 let execute ~node_uri ~chain ~block_hash =
   let chain =
-    match chain with
-    | Some chain -> Chain_id.to_string chain
-    | None -> "main" in
+    match chain with Some chain -> Chain_id.to_string chain | None -> "main"
+  in
 
   let block_hash =
     match block_hash with
     | Some block_hash -> Block_hash.to_string block_hash
     (* TODO: we could also query by height *)
-    | None -> "head" in
+    | None -> "head"
+  in
 
   let path = path ~chain ~block_hash in
   http_get ~node_uri ~path ~of_yojson:Decoder.of_yojson

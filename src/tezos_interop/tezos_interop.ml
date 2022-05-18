@@ -10,6 +10,7 @@ type t = {
   required_confirmations : int;
   bridge_process : Tezos_bridge.t;
 }
+
 let make ~rpc_node ~secret ~consensus_contract ~discovery_contract
     ~required_confirmations =
   let bridge_process = Tezos_bridge.spawn () in
@@ -32,9 +33,16 @@ module Run_contract = struct
       discovery_contract = _;
       bridge_process;
     } =
-      t in
-    Tezos_bridge.inject_transaction bridge_process ~rpc_node ~secret
-      ~required_confirmations ~destination ~entrypoint ~payload
+      t
+    in
+    Tezos_bridge.inject_transaction
+      bridge_process
+      ~rpc_node
+      ~secret
+      ~required_confirmations
+      ~destination
+      ~entrypoint
+      ~payload
 end
 
 module Fetch_storage : sig
@@ -46,9 +54,13 @@ module Fetch_storage : sig
     (Michelson.t, string) result Lwt.t
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address =
-    Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
+    Tezos_bridge.storage
+      t.bridge_process
+      ~rpc_node
+      ~required_confirmations
       ~destination:contract_address
 end
+
 module Fetch_big_map_keys : sig
   val run :
     t ->
@@ -59,19 +71,30 @@ module Fetch_big_map_keys : sig
     (Yojson.Safe.t option list, string) result Lwt.t
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address ~keys =
-    Tezos_bridge.big_map_keys t.bridge_process ~rpc_node ~required_confirmations
-      ~destination:contract_address ~keys
+    Tezos_bridge.big_map_keys
+      t.bridge_process
+      ~rpc_node
+      ~required_confirmations
+      ~destination:contract_address
+      ~keys
 end
+
 module Listen_transactions = struct
   let listen t ~rpc_node ~required_confirmations ~destination ~on_message =
     let message_stream =
-      Tezos_bridge.listen_transaction t.bridge_process ~rpc_node
-        ~required_confirmations ~destination in
+      Tezos_bridge.listen_transaction
+        t.bridge_process
+        ~rpc_node
+        ~required_confirmations
+        ~destination
+    in
     Lwt.async (fun () -> Lwt_stream.iter on_message message_stream)
 end
+
 module Consensus = struct
   open Michelson.Michelson_v1_primitives
   open Tezos_micheline
+
   let commit_state_hash t ~block_height ~block_payload_hash ~state_hash
       ~withdrawal_handles_hash ~validators ~signatures =
     let module Payload = struct
@@ -92,12 +115,13 @@ module Consensus = struct
         (fun signature ->
           match signature with
           | Some (key, signature) ->
-            let key = Key.to_string key in
-            let signature = Signature.to_string signature in
-            (Some key, Some signature)
+              let key = Key.to_string key in
+              let signature = Signature.to_string signature in
+              (Some key, Some signature)
           | None -> (None, None))
         signatures
-      |> List.split in
+      |> List.split
+    in
     let validators = List.map Key_hash.to_string validators in
     let payload =
       {
@@ -108,26 +132,26 @@ module Consensus = struct
         state_hash;
         validators;
         current_validator_keys;
-      } in
+      }
+    in
     (* TODO: check result *)
     let%await _ =
-      Run_contract.run t ~destination:t.consensus_contract
+      Run_contract.run
+        t
+        ~destination:t.consensus_contract
         ~entrypoint:"update_root_hash"
-        ~payload:(Payload.to_yojson payload) in
+        ~payload:(Payload.to_yojson payload)
+    in
     await ()
+
   type transaction =
-    | Deposit          of {
-        ticket : Ticket_id.t;
-        amount : Z.t;
-        destination : Address.t;
-      }
+    | Deposit of {ticket : Ticket_id.t; amount : Z.t; destination : Address.t}
     | Update_root_hash of BLAKE2B.t
-  type operation = {
-    hash : Operation_hash.t;
-    transactions : transaction list;
-  }
+
+  type operation = {hash : Operation_hash.t; transactions : transaction list}
+
   let parse_transaction transaction =
-    let Tezos_bridge.Listen_transaction.{ entrypoint; value } = transaction in
+    let Tezos_bridge.Listen_transaction.{entrypoint; value} = transaction in
     let value = Micheline.root value in
     match (entrypoint, value) with
     | ( "update_root_hash",
@@ -162,9 +186,10 @@ module Consensus = struct
                   _ );
             ],
             _ ) ) ->
-      let%some state_root_hash =
-        state_root_hash |> Bytes.to_string |> BLAKE2B.of_raw_string in
-      Some (Update_root_hash state_root_hash)
+        let%some state_root_hash =
+          state_root_hash |> Bytes.to_string |> BLAKE2B.of_raw_string
+        in
+        Some (Update_root_hash state_root_hash)
     | ( "deposit",
         Micheline.Prim
           ( _,
@@ -181,28 +206,38 @@ module Consensus = struct
                   _ );
             ],
             _ ) ) ->
-      let%some destination =
-        Data_encoding.Binary.of_bytes_opt Address.encoding destination in
-      let%some ticketer =
-        Data_encoding.Binary.of_bytes_opt Address.encoding ticketer in
-      let ticket =
-        let open Ticket_id in
-        { ticketer; data } in
-      Some (Deposit { ticket; destination; amount })
+        let%some destination =
+          Data_encoding.Binary.of_bytes_opt Address.encoding destination
+        in
+        let%some ticketer =
+          Data_encoding.Binary.of_bytes_opt Address.encoding ticketer
+        in
+        let ticket =
+          let open Ticket_id in
+          {ticketer; data}
+        in
+        Some (Deposit {ticket; destination; amount})
     | _ -> None
+
   let parse_operation output =
-    let Tezos_bridge.Listen_transaction.{ hash; transactions } = output in
+    let Tezos_bridge.Listen_transaction.{hash; transactions} = output in
     let%some hash = Operation_hash.of_string hash in
     let transactions = List.filter_map parse_transaction transactions in
-    Some { hash; transactions }
+    Some {hash; transactions}
+
   let listen_operations t ~on_operation =
     let on_message output =
       match parse_operation output with
       | Some operation -> on_operation operation
-      | None -> () in
-    Listen_transactions.listen t ~rpc_node:t.rpc_node
+      | None -> ()
+    in
+    Listen_transactions.listen
+      t
+      ~rpc_node:t.rpc_node
       ~required_confirmations:t.required_confirmations
-      ~destination:t.consensus_contract ~on_message
+      ~destination:t.consensus_contract
+      ~on_message
+
   let fetch_uris_from_discovery t validator_key_hashes =
     let {
       rpc_node;
@@ -212,38 +247,47 @@ module Consensus = struct
       secret = _;
       bridge_process = _;
     } =
-      t in
+      t
+    in
     let micheline_yojson_to_key_hash = function
       | `String uri -> Ok (Uri.of_string uri)
-      | _ -> Error "Failed to parse storage micheline expression" in
+      | _ -> Error "Failed to parse storage micheline expression"
+    in
     let%await micheline_uris =
-      Fetch_big_map_keys.run t ~required_confirmations ~rpc_node
+      Fetch_big_map_keys.run
+        t
+        ~required_confirmations
+        ~rpc_node
         ~contract_address:discovery_contract
         ~keys:
           (List.map
              (fun key_hash -> Michelson.Key_hash key_hash)
-             validator_key_hashes) in
+             validator_key_hashes)
+    in
     match micheline_uris with
     | Error e -> Lwt.return (Error e)
     | Ok micheline_uris ->
-      let uris =
-        List.map_ok
-          (fun micheline ->
-            match micheline with
-            | None -> Ok None
-            | Some uri ->
-              let%ok key_hash = micheline_yojson_to_key_hash uri in
-              Ok (Some key_hash))
-          micheline_uris in
-      let key_hash_uri_pairs =
-        Result.map
-          (fun uris ->
-            Format.eprintf "%d : %d\n%!"
-              (List.length validator_key_hashes)
-              (List.length uris);
-            List.combine validator_key_hashes uris)
-          uris in
-      Lwt.return key_hash_uri_pairs
+        let uris =
+          List.map_ok
+            (fun micheline ->
+              match micheline with
+              | None -> Ok None
+              | Some uri ->
+                  let%ok key_hash = micheline_yojson_to_key_hash uri in
+                  Ok (Some key_hash))
+            micheline_uris
+        in
+        let key_hash_uri_pairs =
+          Result.map
+            (fun uris ->
+              Format.eprintf
+                "%d : %d\n%!"
+                (List.length validator_key_hashes)
+                (List.length uris) ;
+              List.combine validator_key_hashes uris)
+            uris
+        in
+        Lwt.return key_hash_uri_pairs
 
   let fetch_validators t =
     let {
@@ -254,7 +298,8 @@ module Consensus = struct
       secret = _;
       bridge_process = _;
     } =
-      t in
+      t
+    in
     let micheline_to_validators michelson =
       let%ok michelson = michelson in
       let michelson = Micheline.root michelson in
@@ -262,48 +307,56 @@ module Consensus = struct
       | Micheline.Prim
           (_, D_Pair, [Prim (_, D_Pair, [_; Seq (_, key_hashes)], _); _; _], _)
         ->
-        List.fold_left_ok
-          (fun acc k ->
-            match k with
-            | Micheline.String (_, k) -> (
-              match Key_hash.of_string k with
-              | Some k -> Ok (k :: acc)
-              | None -> Error ("Failed to parse " ^ k))
-            | _ -> Error "Some key_hash wasn't of type string")
-          [] (List.rev key_hashes)
-      | _ -> Error "Failed to parse storage micheline expression" in
+          List.fold_left_ok
+            (fun acc k ->
+              match k with
+              | Micheline.String (_, k) -> (
+                  match Key_hash.of_string k with
+                  | Some k -> Ok (k :: acc)
+                  | None -> Error ("Failed to parse " ^ k))
+              | _ -> Error "Some key_hash wasn't of type string")
+            []
+            (List.rev key_hashes)
+      | _ -> Error "Failed to parse storage micheline expression"
+    in
     let%await micheline_storage =
-      Fetch_storage.run t ~required_confirmations ~rpc_node
-        ~contract_address:consensus_contract in
+      Fetch_storage.run
+        t
+        ~required_confirmations
+        ~rpc_node
+        ~contract_address:consensus_contract
+    in
     let validators = micheline_to_validators micheline_storage in
     match validators with
     | Ok validators -> (
-      let%await validator_uri_pairs = fetch_uris_from_discovery t validators in
-      match validator_uri_pairs with
-      | Error e -> Lwt.return (Error e)
-      | Ok validator_uri_pairs ->
-        List.iter
-          (function
-            | key_hash, None ->
-              Format.eprintf
-                "Validator with key_hash %s not found in discovery contract \
-                 (%s).\n\
-                 %!"
-                (Key_hash.to_string key_hash)
-                (Address.to_string discovery_contract)
-            | _, Some _ -> ())
-          validator_uri_pairs;
-        Lwt.return (Ok validator_uri_pairs))
+        let%await validator_uri_pairs =
+          fetch_uris_from_discovery t validators
+        in
+        match validator_uri_pairs with
+        | Error e -> Lwt.return (Error e)
+        | Ok validator_uri_pairs ->
+            List.iter
+              (function
+                | key_hash, None ->
+                    Format.eprintf
+                      "Validator with key_hash %s not found in discovery \
+                       contract (%s).\n\
+                       %!"
+                      (Key_hash.to_string key_hash)
+                      (Address.to_string discovery_contract)
+                | _, Some _ -> ())
+              validator_uri_pairs ;
+            Lwt.return (Ok validator_uri_pairs))
     | Error e -> Lwt.return (Error e)
 end
+
 module Discovery = struct
   open Pack
+
   let sign secret ~nonce uri =
     to_bytes
       (pair
          (int (Z.of_int64 nonce))
          (bytes (Bytes.of_string (Uri.to_string uri))))
-    |> Bytes.to_string
-    |> BLAKE2B.hash
-    |> Signature.sign secret
+    |> Bytes.to_string |> BLAKE2B.hash |> Signature.sign secret
 end

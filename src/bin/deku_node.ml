@@ -2,12 +2,11 @@ open Cmdliner
 open Helpers
 open Node
 open Bin_common
-let ignore_some_errors = function
-  | Error #Flows.ignore -> Ok ()
-  | v -> v
+
+let ignore_some_errors = function Error #Flows.ignore -> Ok () | v -> v
 
 let update_state state =
-  Server.set_state state;
+  Server.set_state state ;
   state
 
 let handle_request (type req res)
@@ -18,22 +17,26 @@ let handle_request (type req res)
     let%await body = Dream.body request in
     let%await request = Parallel.decode E.request_of_yojson body in
     (* Add Metrics prometheus for node operations per block *)
-    Metrics.Networking.inc_network_messages_received E.path;
-    Metrics.Networking.measure_network_received_message_size E.path
-      (String.length body);
+    Metrics.Networking.inc_network_messages_received E.path ;
+    Metrics.Networking.measure_network_received_message_size
+      E.path
+      (String.length body) ;
     match request with
     | Ok request -> (
-      let response = handler update_state request in
-      (* Add Metrics prometheus for node response *)
-      Metrics.Networking.inc_network_messages_response E.path;
-      Metrics.Networking.measure_network_response_message_size
-        (String.length body);
-      match response with
-      | Ok response ->
-        let%await response = Parallel.encode E.response_to_yojson response in
-        Dream.json response
-      | Error err -> raise (Failure (Flows.string_of_error err)))
-    | Error err -> raise (Failure err) in
+        let response = handler update_state request in
+        (* Add Metrics prometheus for node response *)
+        Metrics.Networking.inc_network_messages_response E.path ;
+        Metrics.Networking.measure_network_response_message_size
+          (String.length body) ;
+        match response with
+        | Ok response ->
+            let%await response =
+              Parallel.encode E.response_to_yojson response
+            in
+            Dream.json response
+        | Error err -> raise (Failure (Flows.string_of_error err)))
+    | Error err -> raise (Failure err)
+  in
   Dream.post E.path handler
 
 (* POST /append-block-and-signature *)
@@ -45,11 +48,16 @@ let handle_received_block_and_signature =
       let open Flows in
       let%ok () =
         received_block (Server.get_state ()) update_state request.block
-        |> ignore_some_errors in
+        |> ignore_some_errors
+      in
       let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
-        |> ignore_some_errors in
+        received_signature
+          (Server.get_state ())
+          update_state
+          ~hash:request.block.hash
+          ~signature:request.signature
+        |> ignore_some_errors
+      in
       Ok ())
 
 (* POST /append-signature *)
@@ -60,9 +68,13 @@ let handle_received_signature =
     (fun update_state request ->
       let open Flows in
       let%ok () =
-        received_signature (Server.get_state ()) update_state ~hash:request.hash
+        received_signature
+          (Server.get_state ())
+          update_state
+          ~hash:request.hash
           ~signature:request.signature
-        |> ignore_some_errors in
+        |> ignore_some_errors
+      in
       Ok ())
 
 (* POST /block-by-hash *)
@@ -80,7 +92,7 @@ let handle_block_level =
   handle_request
     (module Network.Block_level)
     (fun _update_state _request ->
-      Ok { level = Flows.find_block_level (Server.get_state ()) })
+      Ok {level = Flows.find_block_level (Server.get_state ())})
 
 (* POST /block-by-level *)
 (* Retrieve the block at a particular level (or nothing) *)
@@ -94,7 +106,8 @@ let handle_block_by_level =
         List.find_opt
           (fun block ->
             Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks in
+          state.applied_blocks
+      in
       Ok block)
 
 (* POST /protocol-snapshot *)
@@ -103,12 +116,12 @@ let handle_protocol_snapshot =
   handle_request
     (module Network.Protocol_snapshot)
     (fun _update_state () ->
-      let State.{ snapshots; _ } = Server.get_state () in
+      let State.{snapshots; _} = Server.get_state () in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       (* Add Metrics prometheus for snapshot size *)
-      Metrics.Networking.inc_network_snapshot_size snapshot.data;
+      Metrics.Networking.inc_network_snapshot_size snapshot.data ;
       Metrics.Networking.measure_network_snapshot_size
-        (String.length (Crypto.BLAKE2B.to_string snapshot.hash));
+        (String.length (Crypto.BLAKE2B.to_string snapshot.hash)) ;
       Ok
         Network.Protocol_snapshot.
           {
@@ -126,16 +139,16 @@ let handle_protocol_snapshot =
 let handle_request_nonce =
   handle_request
     (module Network.Request_nonce)
-    (fun update_state { uri } ->
+    (fun update_state {uri} ->
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
-      Ok { nonce })
+      Ok {nonce})
 
 (* POST /register-uri *)
 (* Set the provided URI of the validator *)
 let handle_register_uri =
   handle_request
     (module Network.Register_uri)
-    (fun update_state { uri; signature } ->
+    (fun update_state {uri; signature} ->
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
 
 (* POST /user-operation-gossip *)
@@ -144,7 +157,9 @@ let handle_receive_user_operation_gossip =
   handle_request
     (module Network.User_operation_gossip)
     (fun update_state request ->
-      Flows.received_user_operation (Server.get_state ()) update_state
+      Flows.received_user_operation
+        (Server.get_state ())
+        update_state
         request.user_operation)
 
 (* Adding handle receive user operations gossip in the node *)
@@ -155,14 +170,18 @@ let handle_receive_user_operations_gossip =
     (module Network.User_operations_gossip)
     (fun update_state request ->
       let operations = request.user_operations in
-      Format.eprintf "Deku-node: Number of transactions - packed: %i\n%!"
-        (List.length operations);
+      Format.eprintf
+        "Deku-node: Number of transactions - packed: %i\n%!"
+        (List.length operations) ;
       List.fold_left_ok
         (fun () operation ->
           (* TODO quadratic function *)
-          Flows.received_user_operation (Server.get_state ()) update_state
+          Flows.received_user_operation
+            (Server.get_state ())
+            update_state
             operation)
-        () operations)
+        ()
+        operations)
 
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
@@ -170,8 +189,11 @@ let handle_receive_consensus_operation =
   handle_request
     (module Network.Consensus_operation_gossip)
     (fun update_state request ->
-      Flows.received_consensus_operation (Server.get_state ()) update_state
-        request.consensus_operation request.signature)
+      Flows.received_consensus_operation
+        (Server.get_state ())
+        update_state
+        request.consensus_operation
+        request.signature)
 
 (* POST /trusted-validators-membership *)
 (* Add or Remove a new trusted validator *)
@@ -179,7 +201,9 @@ let handle_trusted_validators_membership =
   handle_request
     (module Network.Trusted_validators_membership_change)
     (fun update_state request ->
-      Flows.trusted_validators_membership (Server.get_state ()) update_state
+      Flows.trusted_validators_membership
+        (Server.get_state ())
+        update_state
         request)
 
 (* POST /withdraw-proof *)
@@ -187,28 +211,33 @@ let handle_trusted_validators_membership =
 let handle_withdraw_proof =
   handle_request
     (module Network.Withdraw_proof)
-    (fun _ { operation_hash } ->
+    (fun _ {operation_hash} ->
       Ok
-        (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
+        (Flows.request_withdraw_proof
+           (Server.get_state ())
+           ~hash:operation_hash))
 
 (* POST /ticket-balance *)
 (* Returns how much of a ticket a key has *)
 let handle_ticket_balance =
   handle_request
     (module Network.Ticket_balance)
-    (fun _update_state { ticket; address } ->
+    (fun _update_state {ticket; address} ->
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
-      Ok { amount })
+      Ok {amount})
 
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
-  Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
+  Tezos_interop.Consensus.listen_operations
+    node.Node.State.interop_context
     ~on_operation:(fun operation ->
-      Flows.received_tezos_operation (Server.get_state ()) update_state
-        operation);
-  Node.Server.start ~initial:node;
-  Dream.initialize_log ~level:`Warning ();
+      Flows.received_tezos_operation
+        (Server.get_state ())
+        update_state
+        operation) ;
+  Node.Server.start ~initial:node ;
+  Dream.initialize_log ~level:`Warning () ;
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
     [
@@ -232,8 +261,7 @@ let node folder prometheus_port =
            ];
       Prometheus_dream.serve prometheus_port;
     ]
-  |> Lwt_main.run
-  |> ignore
+  |> Lwt_main.run |> ignore
 
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-node"
@@ -252,7 +280,9 @@ let node =
     let docv = "folder_node" in
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+    required & pos 0 (some string) None & info [] ~doc ~docv
+  in
   let open Term in
   const node $ folder_node $ Prometheus_dream.opts
+
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")

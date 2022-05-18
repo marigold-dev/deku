@@ -8,18 +8,19 @@ let make_ticket ?ticketer ?data () =
     match ticketer with
     | Some ticketer -> ticketer
     | None ->
-      let random_hash =
-        Random.generate 20
-        |> Cstruct.to_string
-        |> BLAKE2B_20.of_raw_string
-        |> Option.get in
-      Address.Originated { contract = random_hash; entrypoint = None } in
+        let random_hash =
+          Random.generate 20 |> Cstruct.to_string |> BLAKE2B_20.of_raw_string
+          |> Option.get
+        in
+        Address.Originated {contract = random_hash; entrypoint = None}
+  in
   let data =
     match data with
     | Some data -> data
-    | None -> Random.generate 256 |> Cstruct.to_bytes in
+    | None -> Random.generate 256 |> Cstruct.to_bytes
+  in
   let open Ticket_id in
-  { ticketer; data }
+  {ticketer; data}
 
 let make_address () =
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in
@@ -41,24 +42,23 @@ let setup ?(initial_amount = 10000) () =
         destination = tezos_address;
         ticket = t2;
         amount = Amount.of_int initial_amount;
-      } in
+      }
+  in
   let s = State.empty in
   let opp =
     {
       Tezos_operation.tezos_operation_hash =
         "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
-        |> Tezos.Operation_hash.of_string
-        |> Option.get;
+        |> Tezos.Operation_hash.of_string |> Option.get;
       internal_operations = [op];
-    } in
+    }
+  in
   let opp = Tezos_operation.make opp in
   let make_address =
-    tezos_address
-    |> Tezos.Address.to_string
-    |> Address.of_string
+    tezos_address |> Tezos.Address.to_string |> Address.of_string
     |> Option.map Address.to_key_hash
-    |> Option.join
-    |> Option.get in
+    |> Option.join |> Option.get
+  in
   (State.apply_tezos_operation s opp, make_address)
 
 let amount =
@@ -72,19 +72,22 @@ let test msg =
   let storage = Lambda_vm.Ast.value_to_yojson value in
   let payload =
     Contract_vm.Origination_payload.lambda_of_yojson ~code ~storage
-    |> Result.get_ok in
+    |> Result.get_ok
+  in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation initial_state user_op in
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
-          ~msg ~expected:false
+          ~msg
+          ~expected:false
           ~actual:
             (Contract_storage.equal
                (State.contract_storage state)
                Contract_storage.empty));
   ]
+
 let test_dummy msg =
   let initial_state, address = setup () in
   let storage = 0 in
@@ -95,7 +98,8 @@ let test_dummy msg =
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
-          ~msg ~expected:false
+          ~msg
+          ~expected:false
           ~actual:
             (Contract_storage.equal
                (State.contract_storage state)

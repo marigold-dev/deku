@@ -1,6 +1,7 @@
 let () =
   let open Alcotest in
-  run "Lambda VM"
+  run
+    "Lambda VM"
     [
       Test_errors.test_compilation;
       Test_errors.test_execution;

@@ -3,6 +3,7 @@ open Crypto
 open Tezos
 
 type t
+
 val make :
   rpc_node:Uri.t ->
   secret:Secret.t ->
@@ -12,6 +13,7 @@ val make :
   t
 
 module Consensus : sig
+  (** ~signatures should be in the same order as the old validators *)
   val commit_state_hash :
     t ->
     block_height:int64 ->
@@ -21,23 +23,19 @@ module Consensus : sig
     validators:Key_hash.t list ->
     signatures:(Key.t * Signature.t) option list ->
     unit Lwt.t
-  (** ~signatures should be in the same order as the old validators *)
 
   type transaction =
-    | Deposit          of {
-        ticket : Ticket_id.t;
-        amount : Z.t;
-        destination : Address.t;
-      }
+    | Deposit of {ticket : Ticket_id.t; amount : Z.t; destination : Address.t}
     | Update_root_hash of BLAKE2B.t
-  type operation = {
-    hash : Operation_hash.t;
-    transactions : transaction list;
-  }
+
+  type operation = {hash : Operation_hash.t; transactions : transaction list}
+
   val listen_operations : t -> on_operation:(operation -> unit) -> unit
+
   val fetch_validators :
     t -> ((Key_hash.t * Uri.t option) list, string) result Lwt.t
 end
+
 module Discovery : sig
   val sign : Secret.t -> nonce:int64 -> Uri.t -> Signature.t
 end

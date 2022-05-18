@@ -1,14 +1,13 @@
 open Crypto
 open Protocol
-type identity = {
-  secret : Secret.t;
-  key : Key.t;
-  t : Key_hash.t;
-  uri : Uri.t;
-}
+
+type identity = {secret : Secret.t; key : Key.t; t : Key_hash.t; uri : Uri.t}
 [@@deriving yojson]
+
 module Address_map : Map.S with type key = Key_hash.t
+
 module Uri_map : Map.S with type key = Uri.t
+
 module Operation_map : Map.S with type key = Protocol.Operation.t
 
 type t = {
@@ -28,6 +27,7 @@ type t = {
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
+
 val make :
   identity:identity ->
   trusted_validator_membership_change:Trusted_validators_membership_change.Set.t ->
@@ -37,10 +37,12 @@ val make :
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->
   t
+
 val apply_block :
   t ->
   Block.t ->
   (t, [> `Invalid_block_when_applying | `Invalid_state_root_hash]) result
+
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
   additional_blocks:Block.t list ->

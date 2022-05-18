@@ -9,10 +9,13 @@ open Tezos_rpc
    You may also want to change the node_uri and/or the secret key below. *)
 
 let node_uri = Uri.of_string "http://localhost:8732"
+
 let secret =
   Secret.of_string "edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd"
   |> Option.get
+
 let key = Key.of_secret secret
+
 let key_hash = Key_hash.of_key key
 
 let failwith_err err =
@@ -28,26 +31,28 @@ let fetch_block_operations ~block_hash () =
   let%await result = execute ~node_uri ~chain:None ~block_hash in
   (match result with
   | Ok operations ->
-    List.iter
-      (fun operation ->
-        Format.printf "operation.hash: %s\n%!"
-          (Operation_hash.to_string operation.hash))
-      operations
-  | Error err -> failwith_err err);
+      List.iter
+        (fun operation ->
+          Format.printf
+            "operation.hash: %s\n%!"
+            (Operation_hash.to_string operation.hash))
+        operations
+  | Error err -> failwith_err err) ;
   Lwt.return_unit
 
 (* WARNING: This will never stop.
    It also doesn't show in the terminal, so use dune exec *)
 let listen_to_chain_heads () =
   let%await result =
-    Tezos_rpc.Listen_to_chain_heads.execute ~node_uri ~chain:None in
+    Tezos_rpc.Listen_to_chain_heads.execute ~node_uri ~chain:None
+  in
   match result with
   | Ok stream ->
-    Lwt_stream.iter
-      (fun header ->
-        let hash = header.Tezos_rpc.Block_header.hash in
-        Format.eprintf "header.hash: %s\n%!" (Block_hash.to_string hash))
-      stream
+      Lwt_stream.iter
+        (fun header ->
+          let hash = header.Tezos_rpc.Block_header.hash in
+          Format.eprintf "header.hash: %s\n%!" (Block_hash.to_string hash))
+        stream
   | Error err -> failwith_err err
 
 (* WARNING: This will never stop.
@@ -56,11 +61,11 @@ let listen_to_blocks () =
   let%await result = Tezos_rpc.Listen_to_blocks.execute ~node_uri in
   match result with
   | Ok stream ->
-    Lwt_stream.iter
-      (fun header ->
-        let hash = header.Tezos_rpc.Block_header.hash in
-        Format.printf "header.hash: %s\n%!" (Block_hash.to_string hash))
-      stream
+      Lwt_stream.iter
+        (fun header ->
+          let hash = header.Tezos_rpc.Block_header.hash in
+          Format.printf "header.hash: %s\n%!" (Block_hash.to_string hash))
+        stream
   | Error err -> failwith_err err
 
 let fetch_block_header ~block_hash () =
@@ -68,10 +73,11 @@ let fetch_block_header ~block_hash () =
   let%await result = execute ~node_uri ~chain:None ~block_hash in
   (match result with
   | Ok header ->
-    Format.printf "header.hash: %s, header.level: %ld\n%!"
-      (Block_hash.to_string header.hash)
-      header.level
-  | Error err -> failwith_err err);
+      Format.printf
+        "header.hash: %s, header.level: %ld\n%!"
+        (Block_hash.to_string header.hash)
+        header.level
+  | Error err -> failwith_err err) ;
   Lwt.return_unit
 
 let fetch_constants ~block_hash () =
@@ -79,9 +85,11 @@ let fetch_constants ~block_hash () =
   let%await result = execute ~node_uri ~chain:None ~block_hash in
   (match result with
   | Ok constants ->
-    Format.printf "hard_storage_limit_per_operation: %a\n%!" Z.pp_print
-      constants.hard_storage_limit_per_operation
-  | Error err -> failwith_err err);
+      Format.printf
+        "hard_storage_limit_per_operation: %a\n%!"
+        Z.pp_print
+        constants.hard_storage_limit_per_operation
+  | Error err -> failwith_err err) ;
   Lwt.return_unit
 
 (* to run a test, just uncomment it *)

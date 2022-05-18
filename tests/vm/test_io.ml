@@ -5,20 +5,14 @@ let compare =
     let delta f = f f in
     let aux aux size a b =
       if size then
-        if fst a - fst b then
-          0L
-        else
-          aux aux (size - 1L) (snd a) (snd b)
-      else
-        1L in
+        if fst a - fst b then 0L else aux aux (size - 1L) (snd a) (snd b)
+      else 1L
+    in
     let aux = delta aux in
     fun a b ->
       let size_a = fst a in
       let size_b = fst b in
-      if size_a - size_b then
-        0L
-      else
-        aux size_a (snd a) (snd b)]
+      if size_a - size_b then 0L else aux size_a (snd a) (snd b)]
 
 let code =
   [%lambda_vm.script
@@ -29,9 +23,12 @@ let test_sender () =
   let result =
     let sender = address |> Core.Address.of_string |> Option.get in
     let gas = Gas.make ~initial_gas:10000 in
-    Vm_test.execute_ast_exn sender 1000000
+    Vm_test.execute_ast_exn
+      sender
+      1000000
       (Ast.value_of_string gas address)
-      code in
+      code
+  in
   let expected =
     Vm_test.compile_value_exn (Gas.make ~initial_gas:100) [%lambda_vm.value 1L]
   in

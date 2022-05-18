@@ -11,13 +11,13 @@ val http_post :
   data:Yojson.Safe.t ->
   ('a, Error.error) result Lwt.t
 
+(** Makes a forever-lived HTTP request and return a stream with each
+  entry on the response body. Used with Tezos /monitor endpoints. *)
 val http_get_listen :
   node_uri:Uri.t ->
   path:string ->
   of_yojson:(Yojson.Safe.t -> ('a, string) result) ->
   ('a Lwt_stream.t, Error.error) result Lwt.t
-(** Makes a forever-lived HTTP request and return a stream with each
-  entry on the response body. Used with Tezos /monitor endpoints. *)
 
 val http_post_data_encoding :
   node_uri:Uri.t ->

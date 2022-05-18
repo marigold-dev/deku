@@ -3,30 +3,26 @@ open Tezos
 
 (* push *)
 module Listen_transaction : sig
-  type transaction = {
-    entrypoint : string;
-    value : Michelson.t;
-  }
+  type transaction = {entrypoint : string; value : Michelson.t}
   [@@deriving of_yojson]
-  type t = {
-    hash : string;
-    transactions : transaction list;
-  }
+
+  type t = {hash : string; transactions : transaction list}
   [@@deriving of_yojson]
 end
 
 (* response *)
 module Inject_transaction : sig
   type t =
-    | Applied     of { hash : string }
-    | Failed      of { hash : string option }
-    | Skipped     of { hash : string option }
-    | Backtracked of { hash : string option }
-    | Unknown     of { hash : string option }
-    | Error       of { error : string }
+    | Applied of {hash : string}
+    | Failed of {hash : string option}
+    | Skipped of {hash : string option}
+    | Backtracked of {hash : string option}
+    | Unknown of {hash : string option}
+    | Error of {error : string}
 end
 
 type t
+
 val spawn : unit -> t
 
 val listen_transaction :

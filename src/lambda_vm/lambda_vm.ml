@@ -2,10 +2,7 @@ module Ast = Ast
 module Gas = Gas
 
 module Runtime_limits_error = struct
-  type t =
-    | Out_of_gas
-    | Out_of_stack
-  [@@deriving show]
+  type t = Out_of_gas | Out_of_stack [@@deriving show]
 end
 
 let wrap compute =
@@ -20,7 +17,8 @@ module Ir = struct
 
   module Value_syntax = struct
     let int t = Ir.V_int64 t
-    let pair fst snd = Ir.V_pair { first = fst; second = snd }
+
+    let pair fst snd = Ir.V_pair {first = fst; second = snd}
   end
 end
 
@@ -33,7 +31,7 @@ module Compiler = struct
   [@@deriving show]
 
   type error =
-    | Compiler_error       of compiler_error
+    | Compiler_error of compiler_error
     | Runtime_limits_error of Runtime_limits_error.t
   [@@deriving show]
 
@@ -65,7 +63,7 @@ module Interpreter = struct
   [@@deriving show]
 
   type error =
-    | Interpreter_error    of interpreter_error
+    | Interpreter_error of interpreter_error
     | Runtime_limits_error of Runtime_limits_error.t
   [@@deriving show]
 
