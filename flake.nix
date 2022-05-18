@@ -37,10 +37,17 @@
       ocaml-overlay.follows = "ocaml-overlays";
       flake-utils.follows = "flake-utils";
     };
+
+    json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
+    json-logs-reporter.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      nix-filter.follows = "nix-filter";
+      flake-utils.follows = "flake-utils";
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
-    , prometheus-web, tezos }:
+    , prometheus-web, tezos, json-logs-reporter }:
     let
       supportedSystems =
         [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
@@ -63,6 +70,7 @@
             (import ./nix/overlay.nix)
             prometheus-web.overlays.default
             tezos.overlays.default
+            json-logs-reporter.overlays.default
           ];
         };
 
