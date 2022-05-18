@@ -15,6 +15,7 @@ module Operation_map = Map.Make (Operation)
 
 (* TODO: proper type for timestamps *)
 type timestamp = float
+
 type t = {
   identity : identity;
   trusted_validator_membership_change :

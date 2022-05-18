@@ -105,6 +105,10 @@ let handle_protocol_snapshot =
     (fun _update_state () ->
       let State.{ snapshots; _ } = Server.get_state () in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
+      (* Add Metrics prometheus for snapshot size *)
+      Metrics.Networking.inc_network_snapshot_size snapshot.data;
+      Metrics.Networking.measure_network_snapshot_size
+        (String.length (Crypto.BLAKE2B.to_string snapshot.hash));
       Ok
         Network.Protocol_snapshot.
           {
@@ -151,7 +155,7 @@ let handle_receive_user_operations_gossip =
     (module Network.User_operations_gossip)
     (fun update_state request ->
       let operations = request.user_operations in
-      Format.eprintf "Number of transactions - packed: %i\n%!"
+      Format.eprintf "Deku-node: Number of transactions - packed: %i\n%!"
         (List.length operations);
       List.fold_left_ok
         (fun () operation ->
