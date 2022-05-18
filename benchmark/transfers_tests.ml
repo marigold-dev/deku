@@ -1,11 +1,5 @@
 open Helpers
 open Bin_common
-open Node
-open (
-  struct
-    include Server
-  end :
-    sig end)
 
 (*************************************************************************)
 (* create Deku accounts - wallets *)

@@ -1,3 +1,7 @@
+open Helpers
+open Bin_common
+open Cmdliner
+
 (*************************************************************************)
 (* making Deku accounts - wallet *)
 
@@ -47,7 +51,10 @@ let bob_wallet =
      Lwt.return block_level
     ) *)
 
-let interop_context node_folder =
+open Pipeline
+
+let interop_context =
+  let node_folder = read_file "./data/tezos.json" in
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
@@ -59,8 +66,21 @@ let interop_context node_folder =
 let validator_uris ~interop_context =
   Tezos_interop.Consensus.fetch_validators interop_context
 
-let validators_uris =
-  ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
+(*let validators_uris =
+  ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]*)
+
+let validator_uris =
+  let open Network in
+  let%await interop_context = interop_context in
+  let%await validators_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    List.filter_map
+      (function
+        | key_hash, Some uri -> Some (key_hash, uri)
+        | _ -> None)
+      validator_uris
 
 let get_random_validator_uri () =
   List.nth validators_uris (Random.int 0) |> Uri.of_string
