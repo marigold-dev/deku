@@ -31,7 +31,7 @@ module Consensus : sig
         destination : Address.t;
       }
     | Update_root_hash of BLAKE2B.t
-    *
+    
   type operation = {
     hash : Operation_hash.t;
     transactions : transaction list;
