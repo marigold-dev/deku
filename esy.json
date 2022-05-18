@@ -43,7 +43,8 @@
     "@opam/domainslib": "0.4.1",
     "@opam/data-encoding": "*",
     "@opam/prometheus-dream": "*",
-    "@opam/conf-libssl": "3"
+    "@opam/conf-libssl": "3",
+    "@opam/json-logs-reporter": "marigold-dev/json-logs-reporter:json-logs-reporter.opam#ff835c33b45eb619a79d42dbce0eb88d16bc27db"
   },
   "devDependencies": {
     "prettier": "^2.3.2",
