@@ -7,6 +7,7 @@ module type S = sig
     val to_string : t -> string
     val of_string : string -> t option
   end
+
   module Key : sig
     type t
     val of_secret : Secret.t -> t
@@ -16,6 +17,7 @@ module type S = sig
     val to_string : t -> string
     val of_string : string -> t option
   end
+
   module Key_hash : sig
     type t
     val of_key : Key.t -> t
@@ -25,6 +27,7 @@ module type S = sig
     val to_string : t -> string
     val of_string : string -> t option
   end
+
   module Signature : sig
     type t
     val size : int
@@ -36,6 +39,7 @@ module type S = sig
     val to_string : t -> string
     val of_string : string -> t option
   end
+
   val sign : Secret.t -> BLAKE2B.t -> Signature.t
   val verify : Key.t -> Signature.t -> BLAKE2B.t -> bool
   val generate : unit -> Secret.t * Key.t

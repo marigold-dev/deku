@@ -1,10 +1,12 @@
 open Tezos_micheline
 open Helpers
+
 type t = {
   ticketer : Address.t;
   data : bytes;
 }
 [@@deriving eq, ord]
+
 let parse_micheline string =
   let tokens, errors = Micheline_parser.tokenize string in
   match errors with
@@ -14,6 +16,7 @@ let parse_micheline string =
     | [] -> Some micheline
     | _ -> None)
   | _ -> None
+
 let to_string t =
   let loc =
     let open Micheline_printer in
@@ -25,6 +28,7 @@ let to_string t =
         [String (loc, Address.to_string t.ticketer); Bytes (loc, t.data)],
         [] ) in
   Format.asprintf "%a" Micheline_printer.print_expr micheline
+
 let of_string string =
   let%some micheline = parse_micheline string in
   let%some ticketer, data =

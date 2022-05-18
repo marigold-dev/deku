@@ -13,6 +13,7 @@ type error =
 [@@deriving show]
 
 exception Error of error
+
 let raise error = raise (Error error)
 
 module Pattern : sig
@@ -30,7 +31,9 @@ end = struct
     | Nil : nil t
 
   let any = Any
+
   let pair first second = Pair (first, second)
+
   let nil = Nil
 
   let operations = nil

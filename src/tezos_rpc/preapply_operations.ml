@@ -4,6 +4,7 @@ open Http
 
 module Decoder = struct
   type operation_content_with_result = Operation_content_with_result.t
+
   let operation_content_with_result_of_yojson =
     Operation_content_with_result.of_tezos_json
 
@@ -14,6 +15,7 @@ module Decoder = struct
 end
 
 type response = Operation_content_with_result.t list
+
 let response_of_yojson json =
   let%ok next_operations = Decoder.of_yojson json in
   match next_operations with
@@ -25,6 +27,7 @@ let response_of_yojson json =
 let path ~chain ~branch =
   (* TODO: I don't like this Format.sprintf *)
   Format.sprintf "/chains/%s/blocks/%s/helpers/preapply/operations" chain branch
+
 let execute ~node_uri ~secret ~chain ~protocol ~branch ~operations =
   let path =
     let chain =

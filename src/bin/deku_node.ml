@@ -2,12 +2,15 @@ open Cmdliner
 open Helpers
 open Node
 open Bin_common
+
 let ignore_some_errors = function
   | Error #Flows.ignore -> Ok ()
   | v -> v
+
 let update_state state =
   Server.set_state state;
   state
+
 let handle_request (type req res)
     (module E : Network.Request_endpoint
       with type request = req
@@ -154,6 +157,7 @@ let handle_ticket_balance =
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
+
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
@@ -197,4 +201,5 @@ let node =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   const node $ folder_node $ Prometheus_dream.opts
+
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")

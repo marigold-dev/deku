@@ -9,7 +9,9 @@ type transaction = {
   entrypoint : string;
   value : Michelson.t;
 }
+
 type content = Transaction of transaction
+
 type t = {
   source : Key_hash.t;
   fee : Tez.t;
@@ -29,6 +31,7 @@ let encoding =
         | None -> None
         | Some x -> Some ((), x))
       (fun ((), x) -> inj x) in
+
   let operation_header_encoding =
     obj5
       (req "source" Key_hash.encoding)
@@ -98,7 +101,9 @@ let encoding =
         encoding
 
     let tag = 108
+
     let name = "transaction"
+
     let case =
       make_operation_case ~tag ~name ~encoding
         (fun (Transaction transaction) -> Some transaction)
@@ -109,7 +114,9 @@ let encoding =
 let shell_header_encoding =
   def "operation.shell_header" ~description:"An operation's shell header."
   @@ obj1 (req "branch" Block_hash.encoding)
+
 let contents_list_encoding = Variable.list encoding
+
 let injection_encoding =
   merge_objs shell_header_encoding
     (obj1 (req "contents" contents_list_encoding))
@@ -153,6 +160,7 @@ let next_operation_encoding next_protocol_hash =
           (merge_objs
              (dynamic_size shell_header_encoding)
              (dynamic_size operation_data_encoding)))
+
 let preapply_input_encoding next_protocol_hash =
   list (next_operation_encoding next_protocol_hash)
 

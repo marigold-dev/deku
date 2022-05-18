@@ -4,7 +4,9 @@ open Http
 
 let _z_integral_to_yojson, z_integral_of_yojson =
   Yojson_ext.with_data_encoding Gas.z_integral_encoding
+
 type gas_z_integral = Gas.integral
+
 let gas_z_integral_of_yojson = z_integral_of_yojson
 
 type response = {

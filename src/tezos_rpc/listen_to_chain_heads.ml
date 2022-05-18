@@ -10,6 +10,7 @@ let path ~chain =
   Format.sprintf "/monitor/heads/%s" chain
 
 type response = Block_header.t Lwt_stream.t
+
 let execute ~node_uri ~chain =
   let path = path ~chain in
   http_get_listen ~node_uri ~path ~of_yojson:Block_header.of_yojson

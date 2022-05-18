@@ -23,4 +23,5 @@ let burn t amount =
     raise Out_of_gas
 
 let burn_constant t = burn t constant_burn
+
 let burn_log2 t ~cardinality = burn t (log2_burn ~cardinality)

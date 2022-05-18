@@ -21,6 +21,7 @@ let spawn ~file ~on_error ~on_close input_stream =
 
   (* TODO: test that exception on input and output kill the node *)
   let input_stream = Lwt_stream.map Yojson.Safe.to_string input_stream in
+
   (* handle input exceptions *)
   Lwt.async (fun () ->
       Lwt.catch
@@ -34,6 +35,7 @@ let spawn ~file ~on_error ~on_close input_stream =
         (* TODO: are exceptions on Lwt_stream.map safe? *)
         Yojson.Safe.from_string line)
       output_stream in
+
   (* handle output exceptions *)
   let output_stream =
     Lwt_stream.map

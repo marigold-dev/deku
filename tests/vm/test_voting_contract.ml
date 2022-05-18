@@ -126,7 +126,7 @@ let vote_contract =
         reset storage]
 
 let run_contract sender storage =
-  let sender = Core.Address.of_string sender |> Option.get in
+  let sender = Core_deku.Address.of_string sender |> Option.get in
   let value = Vm_test.execute_ast_exn sender 9250000 storage vote_contract in
   value.storage
 

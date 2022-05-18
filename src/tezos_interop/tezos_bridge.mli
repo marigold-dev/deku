@@ -27,6 +27,7 @@ module Inject_transaction : sig
 end
 
 type t
+
 val spawn : unit -> t
 
 val listen_transaction :

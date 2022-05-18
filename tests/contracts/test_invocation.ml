@@ -1,6 +1,6 @@
 open Crypto
 open Helpers
-open Core
+open Core_deku
 
 let make_ticket ?ticketer ?data () =
   let open Tezos in
@@ -102,6 +102,7 @@ let test_ok msg =
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:false);
   ]
+
 let test_failure msg =
   let initial_state, address = setup () in
   let script = [%lambda_vm.script fun x -> (x + 1L, (0L, 0L))] in
@@ -174,6 +175,7 @@ let test_dummy_ok msg =
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:false);
   ]
+
 let test_dummy_failure msg =
   let initial_state, address = setup () in
   let payload = Contract_vm.Origination_payload.dummy_of_yojson ~storage:0 in
@@ -207,6 +209,7 @@ let test_dummy_failure msg =
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:true);
   ]
+
 let test_invocation =
   ( "Invocation",
     [

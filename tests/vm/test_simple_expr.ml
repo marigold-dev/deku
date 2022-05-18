@@ -2,7 +2,9 @@ open Lambda_vm
 module Testable = Vm_test.Testable
 
 let sender =
-  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Core.Address.of_string |> Option.get
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z"
+  |> Core_deku.Address.of_string
+  |> Option.get
 
 let test_increment () =
   let script = [%lambda_vm.script fun x -> (x + 1L, (0L, 0L))] in

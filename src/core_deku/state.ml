@@ -1,16 +1,23 @@
 open Helpers
 open Crypto
+
 type t = {
   ledger : Ledger.t;
   contract_storage : Contract_storage.t;
 }
 [@@deriving yojson]
+
 type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
 [@@deriving yojson]
+
 let empty = { ledger = Ledger.empty; contract_storage = Contract_storage.empty }
+
 let ledger t = t.ledger
+
 let contract_storage t = t.contract_storage
+
 let hash t = to_yojson t |> Yojson.Safe.to_string |> BLAKE2B.hash
+
 let apply_tezos_operation t tezos_operation =
   let open Tezos_operation in
   let apply_internal_operation t internal_operation =
@@ -89,6 +96,7 @@ let apply_user_operation t user_operation =
       Contract_storage.update_contract_storage contract_storage
         ~address:to_invoke ~updated_contract:contract in
     Ok ({ ledger; contract_storage }, None)
+
 let apply_user_operation t user_operation =
   match apply_user_operation t user_operation with
   | Ok (t, receipt) -> (t, receipt)

@@ -10,9 +10,11 @@ include Encoding_helpers.Make_b58 (struct
   let title = "A Tezos protocol ID"
 
   let size = BLAKE2B.size
+
   let prefix = Base58.Prefix.protocol_hash
 
   let to_raw = BLAKE2B.to_raw_string
+
   let of_raw = BLAKE2B.of_raw_string
 end)
 

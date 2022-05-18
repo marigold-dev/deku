@@ -1,6 +1,6 @@
 open Crypto
 open Helpers
-open Core
+open Core_deku
 
 let make_ticket ?ticketer ?data () =
   let open Tezos in
@@ -85,6 +85,7 @@ let test msg =
                (State.contract_storage state)
                Contract_storage.empty));
   ]
+
 let test_dummy msg =
   let initial_state, address = setup () in
   let storage = 0 in

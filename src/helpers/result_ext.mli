@@ -1,6 +1,7 @@
 include module type of struct
   include Result
 end
+
 module Let_syntax : sig
   val ok : 'a -> ('a, 'b) result
   [%%let

@@ -18,6 +18,7 @@ end
 (* Map.S + O(1) cardinal*)
 module Make (K : sig
   type t [@@deriving yojson]
+
   val compare : t -> t -> int
 end) : S with type key = K.t = struct
   type key = K.t
@@ -26,11 +27,13 @@ end) : S with type key = K.t = struct
     include Map.Make (K)
 
     let to_yojson f t = t |> bindings |> [%to_yojson: (K.t * 'a) list] f
+
     let of_yojson f json =
       json
       |> [%of_yojson: (K.t * 'a) list] f
       |> Result.map (fun l -> l |> List.to_seq |> of_seq)
   end
+
   type 'a t = {
     cardinality : int;
     values : 'a Map.t;
@@ -51,5 +54,6 @@ end) : S with type key = K.t = struct
     { cardinality; values }
 
   let cardinal t = t.cardinality
+
   let find key t = Map.find_opt key t.values
 end

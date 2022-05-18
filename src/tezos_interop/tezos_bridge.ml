@@ -4,17 +4,23 @@ open Tezos
 
 module Michelson = struct
   include Michelson
+
   type t = Michelson.t
+
   let of_yojson json =
     let%ok json = Yojson.Safe.to_string json |> Data_encoding.Json.from_string in
     try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json) with
     | _ -> Error "invalid json"
+
   let big_map_key_to_yojson (Key_hash key_hash) : Yojson.Safe.t =
     `String (Key_hash.to_string key_hash)
 end
+
 module Listen_transaction = struct
   type kind = Listen
+
   let kind_to_yojson Listen = `String "listen"
+
   type request = {
     kind : kind;
     rpc_node : string;
@@ -28,15 +34,19 @@ module Listen_transaction = struct
     value : Michelson.t;
   }
   [@@deriving of_yojson]
+
   type t = {
     hash : string;
     transactions : transaction list;
   }
   [@@deriving of_yojson]
 end
+
 module Inject_transaction = struct
   type kind = Transaction
+
   let kind_to_yojson Transaction = `String "transaction"
+
   type request = {
     kind : kind;
     rpc_node : string;
@@ -87,7 +97,9 @@ end
 
 module Storage = struct
   type kind = Storage
+
   let kind_to_yojson Storage = `String "storage"
+
   type request = {
     kind : kind;
     rpc_node : string;
@@ -116,7 +128,9 @@ end
 
 module Big_map_keys = struct
   type kind = Big_map_keys
+
   let kind_to_yojson Big_map_keys = `String "big_map_keys"
+
   type request = {
     kind : kind;
     rpc_node : string;
@@ -151,9 +165,11 @@ module Big_map_keys = struct
 end
 
 type t = Long_lived_js_process.t
+
 let spawn () =
   let file = Scripts.file_tezos_js_bridge in
   Long_lived_js_process.spawn ~file
+
 let listen_transaction t ~rpc_node ~required_confirmations ~destination =
   let request =
     Listen_transaction.

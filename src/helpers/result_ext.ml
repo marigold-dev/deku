@@ -1,4 +1,5 @@
 include Result
+
 module Let_syntax = struct
   let ok = Result.ok
   [%%let "let.ok", Result.bind]

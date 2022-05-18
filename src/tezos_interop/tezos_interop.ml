@@ -10,6 +10,7 @@ type t = {
   required_confirmations : int;
   bridge_process : Tezos_bridge.t;
 }
+
 let make ~rpc_node ~secret ~consensus_contract ~discovery_contract
     ~required_confirmations =
   let bridge_process = Tezos_bridge.spawn () in
@@ -49,6 +50,7 @@ end = struct
     Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
       ~destination:contract_address
 end
+
 module Fetch_big_map_keys : sig
   val run :
     t ->
@@ -62,6 +64,7 @@ end = struct
     Tezos_bridge.big_map_keys t.bridge_process ~rpc_node ~required_confirmations
       ~destination:contract_address ~keys
 end
+
 module Listen_transactions = struct
   let listen t ~rpc_node ~required_confirmations ~destination ~on_message =
     let message_stream =
@@ -69,9 +72,11 @@ module Listen_transactions = struct
         ~required_confirmations ~destination in
     Lwt.async (fun () -> Lwt_stream.iter on_message message_stream)
 end
+
 module Consensus = struct
   open Michelson.Michelson_v1_primitives
   open Tezos_micheline
+
   let commit_state_hash t ~block_height ~block_payload_hash ~state_hash
       ~withdrawal_handles_hash ~validators ~signatures =
     let module Payload = struct
@@ -98,7 +103,9 @@ module Consensus = struct
           | None -> (None, None))
         signatures
       |> List.split in
+
     let validators = List.map Key_hash.to_string validators in
+
     let payload =
       {
         block_height;
@@ -115,6 +122,7 @@ module Consensus = struct
         ~entrypoint:"update_root_hash"
         ~payload:(Payload.to_yojson payload) in
     await ()
+
   type transaction =
     | Deposit          of {
         ticket : Ticket_id.t;
@@ -122,10 +130,12 @@ module Consensus = struct
         destination : Address.t;
       }
     | Update_root_hash of BLAKE2B.t
+
   type operation = {
     hash : Operation_hash.t;
     transactions : transaction list;
   }
+
   let parse_transaction transaction =
     let Tezos_bridge.Listen_transaction.{ entrypoint; value } = transaction in
     let value = Micheline.root value in
@@ -190,11 +200,13 @@ module Consensus = struct
         { ticketer; data } in
       Some (Deposit { ticket; destination; amount })
     | _ -> None
+
   let parse_operation output =
     let Tezos_bridge.Listen_transaction.{ hash; transactions } = output in
     let%some hash = Operation_hash.of_string hash in
     let transactions = List.filter_map parse_transaction transactions in
     Some { hash; transactions }
+
   let listen_operations t ~on_operation =
     let on_message output =
       match parse_operation output with
@@ -203,6 +215,7 @@ module Consensus = struct
     Listen_transactions.listen t ~rpc_node:t.rpc_node
       ~required_confirmations:t.required_confirmations
       ~destination:t.consensus_contract ~on_message
+
   let fetch_uris_from_discovery t validator_key_hashes =
     let {
       rpc_node;
@@ -296,8 +309,10 @@ module Consensus = struct
         Lwt.return (Ok validator_uri_pairs))
     | Error e -> Lwt.return (Error e)
 end
+
 module Discovery = struct
   open Pack
+
   let sign secret ~nonce uri =
     to_bytes
       (pair

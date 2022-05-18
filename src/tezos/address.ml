@@ -1,5 +1,6 @@
 open Crypto
 open Helpers
+
 type t =
   | Implicit   of Key_hash.t
   | Originated of {
@@ -7,12 +8,14 @@ type t =
       entrypoint : string option;
     }
 [@@deriving eq, ord]
+
 let to_string = function
   | Implicit key_hash -> Key_hash.to_string key_hash
   | Originated { contract; entrypoint = None } ->
     Contract_hash.to_string contract
   | Originated { contract; entrypoint = Some entrypoint } ->
     Contract_hash.to_string contract ^ "%" ^ entrypoint
+
 let of_string =
   let implicit string =
     let%some implicit = Key_hash.of_string string in
@@ -50,6 +53,7 @@ let contract_encoding =
              | _ -> None)
            (fun contract -> Originated { contract; entrypoint = None });
        ]
+
 let encoding =
   let open Data_encoding in
   let name = "address" in
@@ -71,5 +75,6 @@ let encoding =
       (tup2 contract_encoding Variable.string) in
   Encoding_helpers.make_encoding ~name ~title ~to_string ~of_string
     ~raw_encoding
+
 let to_yojson, of_yojson =
   Yojson_ext.with_yojson_string "address" to_string of_string

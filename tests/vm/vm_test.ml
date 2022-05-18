@@ -17,7 +17,7 @@ let compile_value_exn gas value =
   | Error error -> raise (Vm_test_error (Compilation_error error))
 
 let execute_exn sender gas arg script =
-  let sender = Core.Address.to_string sender in
+  let sender = Core_deku.Address.to_string sender in
   let context = Context.make ~sender ~source:sender gas in
   match Interpreter.execute ~context ~arg script with
   | Ok value -> value
@@ -34,7 +34,7 @@ let execute_ast sender gas arg script =
   let gas = Gas.make ~initial_gas:gas in
   match (Compiler.compile_value gas arg, Compiler.compile gas script) with
   | Ok arg, Ok ir -> (
-    let sender = Core.Address.to_string sender in
+    let sender = Core_deku.Address.to_string sender in
     let context = Context.make ~sender ~source:sender gas in
     match Interpreter.execute ~context ~arg ir with
     | Ok result -> Ok result

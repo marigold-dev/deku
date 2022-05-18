@@ -1,5 +1,6 @@
 open Setup
 open Crypto
+
 module M = struct
   type t = {
     key : int;
@@ -7,10 +8,14 @@ module M = struct
   }
   [@@deriving yojson]
   let hash t = t.hash
+
   let make key = { key; hash = BLAKE2B.hash (string_of_int key) }
 end
+
 open M
+
 open Incremental_patricia.Make (M)
+
 let () =
   describe "incremental Patricia" (fun { test; _ } ->
       test "add and find" (fun { expect; _ } ->
