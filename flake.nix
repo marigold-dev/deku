@@ -41,6 +41,7 @@
     json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
     json-logs-reporter.inputs = {
       nixpkgs.follows = "nixpkgs";
+      nix-filter.follows = "nix-filter";
       flake-utils.follows = "flake-utils";
     };
   };
