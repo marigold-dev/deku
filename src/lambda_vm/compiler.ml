@@ -1,13 +1,13 @@
 open Ast
 open Ir
 open Checks
-
 module String_map = Map.Make (String)
 
 type error = (* user program bugs *)
   | Undefined_variable [@@deriving show]
 
 exception Error of error
+
 let raise error = raise (Error error)
 
 let compile_prim prim =
@@ -30,6 +30,7 @@ let compile_prim prim =
 
 module Vars = Map_with_cardinality.Make (struct
   include String
+
   type t = string [@@deriving yojson]
 end)
 
@@ -49,8 +50,8 @@ let burn_gas gas vars code =
 let rec compile_expr ~stack gas next_ident vars code =
   let stack = stack - 1 in
 
-  check_stack ~stack;
-  burn_gas gas vars code;
+  check_stack ~stack ;
+  burn_gas gas vars code ;
 
   let compile_expr vars code = compile_expr ~stack gas next_ident vars code in
 
@@ -62,38 +63,38 @@ let rec compile_expr ~stack gas next_ident vars code =
   | Lam (var, body) ->
     let ident =
       let ident = !next_ident in
-      next_ident := Ident.next ident;
+      next_ident := Ident.next ident ;
       ident in
     let vars = Vars.add var ident vars in
     let body = compile_expr vars body in
     E_lam (ident, body)
-  | App { funct; arg } ->
+  | App {funct; arg} ->
     let funct = compile_expr vars funct in
     let arg = compile_expr vars arg in
-    E_app { funct; arg }
+    E_app {funct; arg}
   (* prims *)
   | Const value -> E_const value
   | Prim prim ->
     let prim = compile_prim prim in
     E_prim prim
   (* branching *)
-  | If { predicate; consequent; alternative } ->
+  | If {predicate; consequent; alternative} ->
     let predicate = compile_expr vars predicate in
     let consequent = compile_expr vars consequent in
     let alternative = compile_expr vars alternative in
-    E_if { predicate; consequent; alternative }
+    E_if {predicate; consequent; alternative}
   (* memory *)
-  | Pair { first; second } ->
+  | Pair {first; second} ->
     let first = compile_expr vars first in
     let second = compile_expr vars second in
-    E_pair { first; second }
+    E_pair {first; second}
 
 let compile_expr gas next_ident vars code =
   let stack = max_stack_depth in
   compile_expr ~stack gas next_ident vars code
 
 let compile gas script =
-  let Ast.{ param; code } = script in
+  let Ast.{param; code} = script in
 
   let param_ident, next_ident =
     let param_ident = Ident.initial in
@@ -102,25 +103,26 @@ let compile gas script =
   let vars = Vars.add param param_ident Vars.empty in
 
   let code = compile_expr gas next_ident vars code in
-  { param = param_ident; code }
+  {param = param_ident; code}
 
 let compile gas script =
   try Ok (compile gas script) with
   | Error error -> Error error
+
 let burn_gas gas = Gas.burn_constant gas
 
 let rec compile_value ~stack gas value =
   let compile_value value = compile_value ~stack:(stack - 1) gas value in
 
-  check_stack ~stack;
-  burn_gas gas;
+  check_stack ~stack ;
+  burn_gas gas ;
 
   match value with
   | Int64 value -> V_int64 value
   | Pair (first, second) ->
     let first = compile_value first in
     let second = compile_value second in
-    V_pair { first; second }
+    V_pair {first; second}
 
 let compile_value gas value =
   let stack = max_stack_depth in

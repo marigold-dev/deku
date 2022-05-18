@@ -13,13 +13,13 @@ let make_ticket ?ticketer ?data () =
         |> Cstruct.to_string
         |> BLAKE2B_20.of_raw_string
         |> Option.get in
-      Address.Originated { contract = random_hash; entrypoint = None } in
+      Address.Originated {contract = random_hash; entrypoint = None} in
   let data =
     match data with
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  { ticketer; data }
+  {ticketer; data}
 
 let make_address () =
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in
@@ -85,7 +85,7 @@ let test_ok msg =
     |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
-      { to_invoke = contract_address; argument = payload } in
+      {to_invoke = contract_address; argument = payload} in
   let operation = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation state operation in
   let new_storage = State.contract_storage state in
@@ -102,6 +102,7 @@ let test_ok msg =
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:false);
   ]
+
 let test_failure msg =
   let initial_state, address = setup () in
   let script = [%lambda_vm.script fun x -> (x + 1L, (0L, 0L))] in
@@ -123,7 +124,7 @@ let test_failure msg =
     |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
-      { to_invoke = contract_address; argument = payload } in
+      {to_invoke = contract_address; argument = payload} in
   let operation = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation state operation in
   let new_storage = State.contract_storage state in
@@ -134,8 +135,10 @@ let test_failure msg =
     Contract_storage.get_contract ~address:contract_address new_storage
     |> Option.get in
   [
-    Alcotest.test_case "contract storage doesnt change when invocation failed"
-      `Quick (fun () ->
+    Alcotest.test_case
+      "contract storage doesnt change when invocation failed"
+      `Quick
+      (fun () ->
         Alcotest.(check' bool)
           ~msg
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
@@ -156,7 +159,7 @@ let test_dummy_ok msg =
     |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
-      { to_invoke = contract_address; argument = payload } in
+      {to_invoke = contract_address; argument = payload} in
   let operation = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation state operation in
   let new_storage = State.contract_storage state in
@@ -167,13 +170,16 @@ let test_dummy_ok msg =
     Contract_storage.get_contract ~address:contract_address new_storage
     |> Option.get in
   [
-    Alcotest.test_case "contract storage changes when dummy contract is invoked"
-      `Quick (fun () ->
+    Alcotest.test_case
+      "contract storage changes when dummy contract is invoked"
+      `Quick
+      (fun () ->
         Alcotest.(check' bool)
           ~msg
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:false);
   ]
+
 let test_dummy_failure msg =
   let initial_state, address = setup () in
   let payload = Contract_vm.Origination_payload.dummy_of_yojson ~storage:0 in
@@ -189,7 +195,7 @@ let test_dummy_failure msg =
     |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
-      { to_invoke = contract_address; argument = payload } in
+      {to_invoke = contract_address; argument = payload} in
   let operation = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation state operation in
   let new_storage = State.contract_storage state in
@@ -200,13 +206,16 @@ let test_dummy_failure msg =
     Contract_storage.get_contract ~address:contract_address new_storage
     |> Option.get in
   [
-    Alcotest.test_case "contract invocation for dummy should fail" `Quick
+    Alcotest.test_case
+      "contract invocation for dummy should fail"
+      `Quick
       (fun () ->
         Alcotest.(check' bool)
           ~msg
           ~expected:(Contract_vm.Contract.equal new_contract old_contract)
           ~actual:true);
   ]
+
 let test_invocation =
   ( "Invocation",
     [

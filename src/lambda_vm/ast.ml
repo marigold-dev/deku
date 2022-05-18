@@ -57,7 +57,7 @@ type script = {
 let value_of_string gas str =
   let append list item = Pair (item, list) in
   (* TODO: burn gas properly for conversions *)
-  Gas.burn_constant gas;
+  Gas.burn_constant gas ;
   let rec aux idx list =
     if idx >= 0 then
       let c = str.[idx] |> Char.code |> Int64.of_int in

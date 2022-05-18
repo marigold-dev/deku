@@ -8,6 +8,7 @@ type block_operation = {
   branch : Block_hash.t;
   contents : Operation_content_with_result.t list;
 }
+
 type response = block_operation list
 
 val execute :

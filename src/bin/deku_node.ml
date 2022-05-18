@@ -2,12 +2,15 @@ open Cmdliner
 open Helpers
 open Node
 open Bin_common
+
 let ignore_some_errors = function
   | Error #Flows.ignore -> Ok ()
   | v -> v
+
 let update_state state =
-  Server.set_state state;
+  Server.set_state state ;
   state
+
 let handle_request (type req res)
     (module E : Network.Request_endpoint
       with type request = req
@@ -37,8 +40,11 @@ let handle_received_block_and_signature =
         received_block (Server.get_state ()) update_state request.block
         |> ignore_some_errors in
       let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
+        received_signature
+          (Server.get_state ())
+          update_state
+          ~hash:request.block.hash
+          ~signature:request.signature
         |> ignore_some_errors in
       Ok ())
 
@@ -50,7 +56,10 @@ let handle_received_signature =
     (fun update_state request ->
       let open Flows in
       let%ok () =
-        received_signature (Server.get_state ()) update_state ~hash:request.hash
+        received_signature
+          (Server.get_state ())
+          update_state
+          ~hash:request.hash
           ~signature:request.signature
         |> ignore_some_errors in
       Ok ())
@@ -70,7 +79,7 @@ let handle_block_level =
   handle_request
     (module Network.Block_level)
     (fun _update_state _request ->
-      Ok { level = Flows.find_block_level (Server.get_state ()) })
+      Ok {level = Flows.find_block_level (Server.get_state ())})
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
@@ -78,7 +87,7 @@ let handle_protocol_snapshot =
   handle_request
     (module Network.Protocol_snapshot)
     (fun _update_state () ->
-      let State.{ snapshots; _ } = Server.get_state () in
+      let State.{snapshots; _} = Server.get_state () in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       Ok
         Network.Protocol_snapshot.
@@ -97,16 +106,16 @@ let handle_protocol_snapshot =
 let handle_request_nonce =
   handle_request
     (module Network.Request_nonce)
-    (fun update_state { uri } ->
+    (fun update_state {uri} ->
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
-      Ok { nonce })
+      Ok {nonce})
 
 (* POST /register-uri *)
 (* Set the provided URI of the validator *)
 let handle_register_uri =
   handle_request
     (module Network.Register_uri)
-    (fun update_state { uri; signature } ->
+    (fun update_state {uri; signature} ->
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
 
 (* POST /user-operation-gossip *)
@@ -115,7 +124,9 @@ let handle_receive_user_operation_gossip =
   handle_request
     (module Network.User_operation_gossip)
     (fun update_state request ->
-      Flows.received_user_operation (Server.get_state ()) update_state
+      Flows.received_user_operation
+        (Server.get_state ())
+        update_state
         request.user_operation)
 
 (* POST /consensus-operation-gossip *)
@@ -124,8 +135,11 @@ let handle_receive_consensus_operation =
   handle_request
     (module Network.Consensus_operation_gossip)
     (fun update_state request ->
-      Flows.received_consensus_operation (Server.get_state ()) update_state
-        request.consensus_operation request.signature)
+      Flows.received_consensus_operation
+        (Server.get_state ())
+        update_state
+        request.consensus_operation
+        request.signature)
 
 (* POST /trusted-validators-membership *)
 (* Add or Remove a new trusted validator *)
@@ -133,7 +147,9 @@ let handle_trusted_validators_membership =
   handle_request
     (module Network.Trusted_validators_membership_change)
     (fun update_state request ->
-      Flows.trusted_validators_membership (Server.get_state ()) update_state
+      Flows.trusted_validators_membership
+        (Server.get_state ())
+        update_state
         request)
 
 (* POST /withdraw-proof *)
@@ -141,27 +157,33 @@ let handle_trusted_validators_membership =
 let handle_withdraw_proof =
   handle_request
     (module Network.Withdraw_proof)
-    (fun _ { operation_hash } ->
+    (fun _ {operation_hash} ->
       Ok
-        (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
+        (Flows.request_withdraw_proof
+           (Server.get_state ())
+           ~hash:operation_hash))
 
 (* POST /ticket-balance *)
 (* Returns how much of a ticket a key has *)
 let handle_ticket_balance =
   handle_request
     (module Network.Ticket_balance)
-    (fun _update_state { ticket; address } ->
+    (fun _update_state {ticket; address} ->
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
-      Ok { amount })
+      Ok {amount})
+
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
-  Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
+  Tezos_interop.Consensus.listen_operations
+    node.Node.State.interop_context
     ~on_operation:(fun operation ->
-      Flows.received_tezos_operation (Server.get_state ()) update_state
-        operation);
-  Node.Server.start ~initial:node;
-  Dream.initialize_log ~level:`Warning ();
+      Flows.received_tezos_operation
+        (Server.get_state ())
+        update_state
+        operation) ;
+  Node.Server.start ~initial:node ;
+  Dream.initialize_log ~level:`Warning () ;
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
     [
@@ -197,4 +219,5 @@ let node =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   const node $ folder_node $ Prometheus_dream.opts
+
 let () = Term.exit @@ Term.eval (node, Term.info "deku-node")

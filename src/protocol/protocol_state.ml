@@ -2,6 +2,7 @@ open Helpers
 open Crypto
 module Tezos_operation_set = Set.Make_with_yojson (Protocol_operation.Core_tezos)
 module User_operation_set = Set.Make_with_yojson (Protocol_operation.Core_user)
+
 type t = {
   core_state : Core.State.t;
   included_tezos_operations : Tezos_operation_set.t;
@@ -15,6 +16,7 @@ type t = {
   last_applied_block_timestamp : float;
   last_seen_membership_change_timestamp : float;
 }
+
 let hash t =
   let to_yojson =
     [%to_yojson:

@@ -5,6 +5,7 @@ type parameters = {
   entrypoint : string;
   value : Michelson.t;
 }
+
 type internal_operation =
   | Internal_transaction     of {
       sender : Address.t;
@@ -12,9 +13,11 @@ type internal_operation =
       parameters : parameters option;
     }
   | Internal_non_transaction
+
 type status =
   | Applied
   | Other
+
 type t =
   | Transaction     of {
       source : Key_hash.t;

@@ -8,20 +8,14 @@ let compare =
     let delta f = f f in
     let aux aux size a b =
       if size then
-        if fst a - fst b then
-          0L
-        else
-          aux aux (size - 1L) (snd a) (snd b)
+        if fst a - fst b then 0L else aux aux (size - 1L) (snd a) (snd b)
       else
         1L in
     let aux = delta aux in
     fun a b ->
       let size_a = fst a in
       let size_b = fst b in
-      if size_a - size_b then
-        0L
-      else
-        aux size_a (snd a) (snd b)]
+      if size_a - size_b then 0L else aux size_a (snd a) (snd b)]
 
 let vote_contract =
   (* Reference: https://github.com/juanProject/tezosVote/blob/master/src/voteContract.ligo *)
@@ -52,11 +46,7 @@ let vote_contract =
           if size then
             let pair = fst votes in
             let value = snd pair in
-            let count =
-              if value then
-                count + 1L
-              else
-                count - 1L in
+            let count = if value then count + 1L else count - 1L in
             aux aux (size - 1L) (snd votes) count
           else
             count in
@@ -97,11 +87,7 @@ let vote_contract =
                 else
                   3L
               (* egalite *) in
-            let paused =
-              if vote_count - 10L then
-                paused
-              else
-                1L in
+            let paused = if vote_count - 10L then paused else 1L in
             let storage = (admin, (votes, (vote_count, (paused, result)))) in
             (storage, (0L, 0L)) in
 
@@ -120,10 +106,7 @@ let vote_contract =
       let action = fst pair in
       let storage = snd pair in
 
-      if fst action then
-        sub_vote (snd action) storage
-      else
-        reset storage]
+      if fst action then sub_vote (snd action) storage else reset storage]
 
 let run_contract sender storage =
   let sender = Core.Address.of_string sender |> Option.get in
@@ -147,26 +130,34 @@ let storage_with_vote admin vote =
 let reset = [%lambda_vm.value 0L, 0L]
 
 let vote vote =
-  if vote then
-    [%lambda_vm.value 1L, 1L]
-  else
-    [%lambda_vm.value 1L, 0L]
+  if vote then [%lambda_vm.value 1L, 1L] else [%lambda_vm.value 1L, 0L]
 
 let admin = "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z"
+
 let alice = "tz1L738ifd66ah69PrmKAZzckvvHnbcSeqjf"
+
 let bob = "tz1LFuHW4Z9zsCwg1cgGTKU12WZAs27ZD14v"
+
 let frank = "tz1Qd971cetwNr5f4oKp9xno6jBvghZHRsDr"
+
 let pascal = "tz1TgK3oaBaqcCHankT97AUNMjcs87Tfj5vb"
+
 let jacob = "tz1VphG4Lgp39MfQ9rTUnsm7BBWyXeXnJSMZ"
+
 let lucina = "tz1ZAZo1xW4Veq5t7YqWy2SMbLdskmeBmzqs"
+
 let mark = "tz1ccWCuJqMxG4hoa1g5SKhgdTwXoJBM8kpc"
+
 let jean = "tz1hQzKQpprB5JhNxZZRowEDRBoieHRAL84b"
+
 let boby = "tz1hTic2GpaNumpTtYwqyPSBd9KcWifRMuEN"
+
 let bartholome = "tz1hv9CrgtaxiCayc567KUvCyWDQRF9sVNuf"
 
 let test_vote () =
   let value =
-    run_contract alice
+    run_contract
+      alice
       [%lambda_vm.value [%e vote true], [%e empty_storage admin]] in
   let expected =
     Vm_test.compile_value_exn
@@ -177,29 +168,34 @@ let test_vote () =
   Alcotest.(check Vm_test.Testable.value) "Same value" expected value
 
 let test_no_second_vote () =
-  Alcotest.check_raises "Interpreter error"
+  Alcotest.check_raises
+    "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
       let alice_vote = [%lambda_vm.value [%e str alice], 1L] in
       let _ =
-        run_contract admin
+        run_contract
+          admin
           [%lambda_vm.value
             [%e vote true], [%e storage_with_vote admin alice_vote]] in
       ())
 
 let test_admin_vote () =
-  Alcotest.check_raises "Interpreter error"
+  Alcotest.check_raises
+    "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
       let _ =
-        run_contract admin
+        run_contract
+          admin
           [%lambda_vm.value [%e vote true], [%e empty_storage admin]] in
       ())
 
 let test_contract_paused () =
-  Alcotest.check_raises "Interpreter error"
+  Alcotest.check_raises
+    "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
@@ -286,7 +282,8 @@ let test_reset () =
   Alcotest.check Vm_test.Testable.value "Same value" expected value
 
 let test_reset_not_admin () =
-  Alcotest.check_raises "Interpreter error"
+  Alcotest.check_raises
+    "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->

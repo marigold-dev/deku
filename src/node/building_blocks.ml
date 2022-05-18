@@ -2,36 +2,46 @@ open Helpers
 open Crypto
 open Protocol
 module Node = State
+
 let is_valid_block state block =
   let is_all_operations_properly_signed _block = true in
   let%assert () =
     ( Printf.sprintf
         "new block has a lower block height (%Ld) than the current state (%Ld)"
-        block.Block.block_height state.Node.protocol.block_height,
+        block.Block.block_height
+        state.Node.protocol.block_height,
       block.Block.block_height >= state.Node.protocol.block_height ) in
   let%assert () =
     ( "some operation in the block is not properly signed",
       is_all_operations_properly_signed block ) in
   Ok ()
+
 let is_next state block = Protocol.is_next state.Node.protocol block
+
 let has_next_block_to_apply state ~hash =
   Block_pool.find_next_block_to_apply ~hash state.Node.block_pool
   |> Option.is_some
+
 let is_known_block state ~hash =
   Option.is_some (Block_pool.find_block state.Node.block_pool ~hash)
+
 let is_known_signature state ~hash ~signature =
   let%default () = false in
   let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
   Some (Signatures.mem signature signatures)
+
 let is_signed_by_self state ~hash =
   let%default () = false in
   let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
   Some (Signatures.is_self_signed signatures)
+
 let is_current_producer state ~key_hash =
   let%default () = false in
   let%some current_producer = get_current_block_producer state.Node.protocol in
   Some (current_producer.address = key_hash)
+
 let minimum_signable_time_between_epochs = 10.0
+
 let maximum_signable_time_between_epochs = 20.0
 
 (** Used to add a delay between a tezos operation being confirmed,
@@ -41,11 +51,13 @@ let minimum_waiting_period_for_tezos_operation = 5.0
 
 let block_matches_current_state_root_hash state block =
   BLAKE2B.equal block.Block.state_root_hash state.Node.protocol.state_root_hash
+
 let block_matches_next_state_root_hash state block =
   let%default () = false in
-  let%some { hash = next_state_root_hash; _ } =
+  let%some {hash = next_state_root_hash; _} =
     Snapshots.get_next_snapshot state.Node.snapshots in
   Some (BLAKE2B.equal block.Block.state_root_hash next_state_root_hash)
+
 let block_has_signable_state_root_hash ~current_time state block =
   let time_since_last_epoch =
     current_time -. state.Node.protocol.last_state_root_update in
@@ -54,10 +66,11 @@ let block_has_signable_state_root_hash ~current_time state block =
   else
     block_matches_next_state_root_hash state block
     && time_since_last_epoch >= minimum_signable_time_between_epochs
+
 let is_signable state block =
   let {
     Node.trusted_validator_membership_change;
-    protocol = { last_seen_membership_change_timestamp; _ };
+    protocol = {last_seen_membership_change_timestamp; _};
     _;
   } =
     state in
@@ -75,11 +88,11 @@ let is_signable state block =
       match consensus_operation with
       | Add_validator validator ->
         Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Add }
+          {address = validator.address; action = Add}
           trusted_validator_membership_change
       | Remove_validator validator ->
         Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Remove }
+          {address = validator.address; action = Remove}
           trusted_validator_membership_change) in
   let all_operations_are_trusted =
     List.for_all is_trusted_operation block.Block.operations in
@@ -89,6 +102,7 @@ let is_signable state block =
   && (not (has_next_block_to_apply state ~hash:block.hash))
   && all_operations_are_trusted
   && block_has_signable_state_root_hash ~current_time state block
+
 let sign ~key block = Block.sign ~key block
 
 let should_start_new_epoch last_state_root_update current_time =
@@ -113,7 +127,8 @@ let can_include_tezos_operation ~current_time ~requested_at =
 let produce_block state =
   let current_time = Unix.time () in
   let start_new_epoch =
-    should_start_new_epoch state.Node.protocol.last_state_root_update
+    should_start_new_epoch
+      state.Node.protocol.last_state_root_update
       current_time in
   let next_state_root_hash =
     if start_new_epoch then
@@ -134,33 +149,46 @@ let produce_block state =
         | Core_user _
         | Consensus _ ->
           operation :: operations)
-      state.pending_operations [] in
-  Block.produce ~state:state.Node.protocol ~author:state.identity.t
-    ~next_state_root_hash ~operations
+      state.pending_operations
+      [] in
+  Block.produce
+    ~state:state.Node.protocol
+    ~author:state.identity.t
+    ~next_state_root_hash
+    ~operations
+
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
+
 let signatures_required state =
   let number_of_validators = Validators.length state.Node.protocol.validators in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
+
 let append_signature state update_state ~hash ~signature =
   let block_pool =
     Block_pool.append_signature
       ~signatures_required:(signatures_required state)
-      ~hash signature state.Node.block_pool in
-  update_state { state with block_pool }
+      ~hash
+      signature
+      state.Node.block_pool in
+  update_state {state with block_pool}
+
 let add_block_to_pool state update_state block =
   let block_pool = Block_pool.append_block block state.Node.block_pool in
-  update_state { state with block_pool }
+  update_state {state with block_pool}
+
 let apply_block state update_state block =
   let%ok state = Node.apply_block state block in
   Ok (update_state state)
+
 let clean state update_state block =
   let pending_operations =
     List.fold_left
       (fun pending_operations operation ->
         Node.Operation_map.remove operation pending_operations)
-      state.State.pending_operations block.Block.operations in
+      state.State.pending_operations
+      block.Block.operations in
   let trusted_validator_membership_change =
     List.fold_left
       (fun trusted_validator_membership_change operation ->
@@ -170,19 +198,20 @@ let clean state update_state block =
           trusted_validator_membership_change
         | Consensus (Add_validator validator) ->
           Trusted_validators_membership_change.Set.remove
-            { address = validator.address; action = Add }
+            {address = validator.address; action = Add}
             trusted_validator_membership_change
         | Consensus (Remove_validator validator) ->
           Trusted_validators_membership_change.Set.remove
-            { address = validator.address; action = Remove }
+            {address = validator.address; action = Remove}
             state.Node.trusted_validator_membership_change)
-      state.Node.trusted_validator_membership_change block.operations in
+      state.Node.trusted_validator_membership_change
+      block.operations in
   Lwt.async (fun () ->
       trusted_validator_membership_change
       |> Trusted_validators_membership_change.Set.elements
-      |> state.persist_trusted_membership_change);
+      |> state.persist_trusted_membership_change) ;
   update_state
-    { state with trusted_validator_membership_change; pending_operations }
+    {state with trusted_validator_membership_change; pending_operations}
 
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
@@ -202,17 +231,20 @@ let find_random_validator_uri state =
 let validator_uris state =
   let validators = Validators.to_list state.Node.protocol.validators in
   List.filter_map
-    (fun Validators.{ address; _ } ->
+    (fun Validators.{address; _} ->
       Node.Address_map.find_opt address state.Node.validators_uri)
     validators
+
 let broadcast_signature state ~hash ~signature =
   let uris = validator_uris state in
-  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
+  Lwt.async (fun () -> Network.broadcast_signature uris {hash; signature})
+
 let broadcast_block_and_signature state ~block ~signature =
   let uris = validator_uris state in
   Lwt.async (fun () ->
       let%await () = Lwt_unix.sleep 1.0 in
-      Network.broadcast_block_and_signature uris { block; signature })
+      Network.broadcast_block_and_signature uris {block; signature})
+
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in
   Network.broadcast_user_operation_gossip uris operation

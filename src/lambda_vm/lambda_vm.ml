@@ -20,7 +20,8 @@ module Ir = struct
 
   module Value_syntax = struct
     let int t = Ir.V_int64 t
-    let pair fst snd = Ir.V_pair { first = fst; second = snd }
+
+    let pair fst snd = Ir.V_pair {first = fst; second = snd}
   end
 end
 

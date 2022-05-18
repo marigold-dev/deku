@@ -10,10 +10,11 @@ let memo f =
   let memoized = ref None in
   fun () ->
     !memoized
-    |> Option.fold ~some:Fun.id
+    |> Option.fold
+         ~some:Fun.id
          ~none:
            (let res = f () in
-            memoized := Some res;
+            memoized := Some res ;
             res)
 
 let make : sender:string -> source:string -> Gas.t -> t =
@@ -30,8 +31,10 @@ let make : sender:string -> source:string -> Gas.t -> t =
         |> Ast.value_of_string gas
         |> Compiler.compile_value gas
         |> Result.fold ~ok:Fun.id ~error:(fun _ -> raise Invalid_value)) in
-  { sender; source; gas }
+  {sender; source; gas}
 
 let[@inline always] sender t = t.sender
+
 let[@inline always] source t = t.source
+
 let[@inline always] gas t = t.gas

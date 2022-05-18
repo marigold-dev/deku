@@ -53,11 +53,11 @@ let assert_int64 ~loc constant =
 let parse_escape_extension ~loc (name, payload) =
   (match name.txt with
   | "e" -> ()
-  | _ -> raise ~loc:name.loc Unsupported_extension);
+  | _ -> raise ~loc:name.loc Unsupported_extension) ;
 
   let content =
     match payload with
-    | PStr [{ pstr_desc = Pstr_eval (content, []); pstr_loc = _ }] -> content
+    | PStr [{pstr_desc = Pstr_eval (content, []); pstr_loc = _}] -> content
     | _ -> raise ~loc Extension_escape_needs_to_contain_an_expression in
   content
 
@@ -92,18 +92,18 @@ let rec expr_of_ocaml_expr expr =
       let var = estring ~loc:var.loc name in
       [%expr Var [%e var]])
   | Pexp_fun (label, default, param, body) ->
-    assert_label ~loc:param.ppat_loc label;
-    assert_default default;
+    assert_label ~loc:param.ppat_loc label ;
+    assert_default default ;
 
     let param =
       match param.ppat_desc with
-      | Ppat_any -> { loc; txt = "_" }
+      | Ppat_any -> {loc; txt = "_"}
       | Ppat_var param -> param
       | _ ->
         let loc = param.ppat_loc in
         raise ~loc Only_simple_var_pattern_is_supported in
     let param =
-      let { loc; txt = param } = param in
+      let {loc; txt = param} = param in
       estring ~loc param in
     let body = expr_of_ocaml_expr body in
 
@@ -112,13 +112,14 @@ let rec expr_of_ocaml_expr expr =
     let funct = expr_of_ocaml_expr funct in
     List.fold_left
       (fun funct (label, arg) ->
-        assert_label ~loc:arg.pexp_loc label;
+        assert_label ~loc:arg.pexp_loc label ;
 
         let arg = expr_of_ocaml_expr arg in
-        [%expr App { funct = [%e funct]; arg = [%e arg] }])
-      funct args
+        [%expr App {funct = [%e funct]; arg = [%e arg]}])
+      funct
+      args
   | Pexp_constant constant ->
-    assert_int64 ~loc constant;
+    assert_int64 ~loc constant ;
     [%expr Const [%e expr]]
   | Pexp_ifthenelse (predicate, consequent, alternative) ->
     let predicate = expr_of_ocaml_expr predicate in
@@ -142,16 +143,16 @@ let rec expr_of_ocaml_expr expr =
 
     let first = expr_of_ocaml_expr first in
     let second = expr_of_ocaml_expr second in
-    [%expr Pair { first = [%e first]; second = [%e second] }]
+    [%expr Pair {first = [%e first]; second = [%e second]}]
   | Pexp_let
       (* TODO: should let be removed? *)
       ( Nonrecursive,
-        [{ pvb_pat = { ppat_desc = Ppat_var { txt; loc }; _ }; pvb_expr; _ }],
+        [{pvb_pat = {ppat_desc = Ppat_var {txt; loc}; _}; pvb_expr; _}],
         expr ) ->
     let body = expr_of_ocaml_expr expr in
     let value = expr_of_ocaml_expr pvb_expr in
     let param = estring ~loc txt in
-    [%expr App { funct = Lam ([%e param], [%e body]); arg = [%e value] }]
+    [%expr App {funct = Lam ([%e param], [%e body]); arg = [%e value]}]
   | Pexp_extension extension -> parse_escape_extension ~loc extension
   | _ -> raise ~loc Unsupported_expression
 
@@ -165,29 +166,29 @@ let script_of_ocaml_expr expr =
   match expr.pexp_desc with
   (* TODO: duplicated code*)
   | Pexp_fun (label, default, param, body) ->
-    assert_label ~loc:param.ppat_loc label;
-    assert_default default;
+    assert_label ~loc:param.ppat_loc label ;
+    assert_default default ;
 
     let param =
       match param.ppat_desc with
-      | Ppat_any -> { loc; txt = "_" }
+      | Ppat_any -> {loc; txt = "_"}
       | Ppat_var param -> param
       | _ ->
         let loc = param.ppat_loc in
         raise ~loc Only_simple_var_pattern_is_supported in
     let param =
-      let { loc; txt = param } = param in
+      let {loc; txt = param} = param in
       estring ~loc param in
     let body = expr_of_ocaml_expr body in
 
-    [%expr Lambda_vm.Ast.{ param = [%e param]; code = [%e body] }]
+    [%expr Lambda_vm.Ast.{param = [%e param]; code = [%e body]}]
   | _ -> raise ~loc Unsupported_expression
 
 let rec value_of_ocaml_expr expr =
   let loc = expr.pexp_loc in
   match expr.pexp_desc with
   | Pexp_constant constant ->
-    assert_int64 ~loc constant;
+    assert_int64 ~loc constant ;
     [%expr Int64 [%e expr]]
   | Pexp_tuple tuple ->
     let first, second =

@@ -13,13 +13,13 @@ let make_ticket ?ticketer ?data () =
         |> Cstruct.to_string
         |> BLAKE2B_20.of_raw_string
         |> Option.get in
-      Address.Originated { contract = random_hash; entrypoint = None } in
+      Address.Originated {contract = random_hash; entrypoint = None} in
   let data =
     match data with
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  { ticketer; data }
+  {ticketer; data}
 
 let make_address () =
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in
@@ -79,12 +79,14 @@ let test msg =
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
-          ~msg ~expected:false
+          ~msg
+          ~expected:false
           ~actual:
             (Contract_storage.equal
                (State.contract_storage state)
                Contract_storage.empty));
   ]
+
 let test_dummy msg =
   let initial_state, address = setup () in
   let storage = 0 in
@@ -95,7 +97,8 @@ let test_dummy msg =
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
-          ~msg ~expected:false
+          ~msg
+          ~expected:false
           ~actual:
             (Contract_storage.equal
                (State.contract_storage state)

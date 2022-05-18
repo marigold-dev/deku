@@ -79,18 +79,20 @@ module Alphabet = struct
 
   let make alphabet =
     if String.length alphabet <> base then
-      invalid_arg "Base58: invalid alphabet (length)";
+      invalid_arg "Base58: invalid alphabet (length)" ;
     let str = Bytes.make 256 '\255' in
     for i = 0 to String.length alphabet - 1 do
       let char = int_of_char alphabet.[i] in
       if Bytes.get str char <> '\255' then
-        Format.kasprintf invalid_arg "Base58: invalid alphabet (dup '%c' %d %d)"
+        Format.kasprintf
+          invalid_arg
+          "Base58: invalid alphabet (dup '%c' %d %d)"
           (char_of_int char)
           (int_of_char @@ Bytes.get str char)
-          i;
+          i ;
       Bytes.set str char (char_of_int i)
-    done;
-    { encode = alphabet; decode = Bytes.to_string str }
+    done ;
+    {encode = alphabet; decode = Bytes.to_string str}
 
   let bitcoin =
     make "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -124,7 +126,7 @@ let raw_encode ?(alphabet = Alphabet.default) s =
       i
     else
       let s, r = Z.div_rem s zbase in
-      Bytes.set res i (to_char ~alphabet (Z.to_int r));
+      Bytes.set res i (to_char ~alphabet (Z.to_int r)) ;
       loop s (i - 1) in
   let i = loop s (res_len - 1) in
   let ress = Bytes.sub_string res (i + 1) (res_len - i - 1) in
@@ -143,7 +145,7 @@ let simple_encode ?alphabet ~prefix ~to_raw d =
 module TzString = struct
   let fold_left f init s =
     let acc = ref init in
-    String.iter (fun c -> acc := f !acc c) s;
+    String.iter (fun c -> acc := f !acc c) s ;
     !acc
 
   let remove_prefix ~prefix s =
@@ -173,7 +175,8 @@ let raw_decode ?(alphabet = Alphabet.default) s =
       match (a, of_char ~alphabet c) with
       | Some a, Some i -> Some Z.(add (of_int i) (mul a zbase))
       | _ -> None)
-    (Some Z.zero) s
+    (Some Z.zero)
+    s
   |> Option.map (fun res ->
          let res = Z.to_bits res in
          let res_tzeros = count_trailing_char res '\000' in

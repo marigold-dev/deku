@@ -9,8 +9,11 @@ val size : int
 val zero : t
 
 val sign : Secret.t -> BLAKE2B.t -> t
+
 val verify : Key.t -> t -> BLAKE2B.t -> bool
 
 val to_raw : t -> string
+
 val to_string : t -> string
+
 val of_string : string -> t option

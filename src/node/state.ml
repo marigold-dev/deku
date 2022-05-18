@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Protocol
+
 type identity = {
   secret : Secret.t;
   key : Key.t;
@@ -8,13 +9,14 @@ type identity = {
   uri : Uri.t;
 }
 [@@deriving yojson]
+
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
-
 module Operation_map = Map.Make (Operation)
 
 (* TODO: proper type for timestamps *)
 type timestamp = float
+
 type t = {
   identity : identity;
   trusted_validator_membership_change :
@@ -31,6 +33,7 @@ type t = {
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
+
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
@@ -44,7 +47,7 @@ let make ~identity ~trusted_validator_membership_change
   let hash, data = Protocol.hash initial_protocol in
   let initial_snapshot =
     let open Snapshots in
-    { hash; data } in
+    {hash; data} in
   let initial_snapshots =
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
   {
@@ -61,6 +64,7 @@ let make ~identity ~trusted_validator_membership_change
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
   }
+
 let apply_block state block =
   let prev_protocol = state.protocol in
   let%ok protocol, receipts = Protocol.apply_block state.protocol block in
@@ -73,12 +77,15 @@ let apply_block state block =
   let recent_operation_receipts =
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
-      state.recent_operation_receipts receipts in
-  Ok { state with protocol; recent_operation_receipts; snapshots }
+      state.recent_operation_receipts
+      receipts in
+  Ok {state with protocol; recent_operation_receipts; snapshots}
+
 let signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
+
 let load_snapshot ~snapshot ~additional_blocks ~last_block
     ~last_block_signatures t =
   let all_blocks =
@@ -90,13 +97,18 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
     let block_pool =
       List.fold_left
         (fun block_pool block -> Block_pool.append_block block block_pool)
-        t.block_pool all_blocks in
+        t.block_pool
+        all_blocks in
     let signatures_required = signatures_required t in
     List.fold_left
       (fun block_pool signature ->
-        Block_pool.append_signature ~signatures_required
-          ~hash:last_block.Block.hash signature block_pool)
-      block_pool last_block_signatures in
+        Block_pool.append_signature
+          ~signatures_required
+          ~hash:last_block.Block.hash
+          signature
+          block_pool)
+      block_pool
+      last_block_signatures in
   let%assert () =
     ( `Not_all_blocks_are_signed,
       List.for_all
@@ -149,7 +161,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
   let%assert () =
     (`Invalid_snapshot_height, protocol.block_height > t.protocol.block_height)
   in
-  let t = { t with protocol; block_pool } in
+  let t = {t with protocol; block_pool} in
   (* TODO: it doesn't seem valid to add a snapshot here based on the information received
      from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
      the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
@@ -158,7 +170,8 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
     (fun prev_state block ->
       let%ok state = apply_block prev_state block in
       if
-        BLAKE2B.equal prev_state.protocol.state_root_hash
+        BLAKE2B.equal
+          prev_state.protocol.state_root_hash
           state.protocol.state_root_hash
       then
         Ok state
@@ -168,7 +181,9 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
         let hash, data = Protocol.hash prev_state.protocol in
         let snapshot_ref, snapshots =
           Snapshots.add_snapshot_ref
-            ~block_height:prev_state.protocol.block_height state.snapshots in
-        let () = Snapshots.set_snapshot_ref snapshot_ref { hash; data } in
-        Ok { state with snapshots })
-    t all_blocks
+            ~block_height:prev_state.protocol.block_height
+            state.snapshots in
+        let () = Snapshots.set_snapshot_ref snapshot_ref {hash; data} in
+        Ok {state with snapshots})
+    t
+    all_blocks

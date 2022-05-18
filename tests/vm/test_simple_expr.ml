@@ -42,7 +42,7 @@ let test_if_expr () =
   in
   let expected_value =
     Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 52L) in
-  Alcotest.(check Testable.value) "Same value" expected_value result.storage;
+  Alcotest.(check Testable.value) "Same value" expected_value result.storage ;
 
   (* Check decrement *)
   let result =
@@ -60,7 +60,8 @@ let test_lambda () =
       fun param ->
         ( (fun inc ->
             if inc then [%e increment_lambda] else [%e decrement_lambda])
-            (fst param) (snd param),
+            (fst param)
+            (snd param),
           (0L, 0L) )] in
   (* Check increment *)
   let result =
@@ -69,7 +70,7 @@ let test_lambda () =
   let expected_value =
     Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 100L) in
 
-  Alcotest.(check Testable.value) "Same value" expected_value result.storage;
+  Alcotest.(check Testable.value) "Same value" expected_value result.storage ;
 
   (* Check decrement *)
   let result =

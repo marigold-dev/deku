@@ -1,6 +1,7 @@
 open Helpers
 open Protocol
 open Node
+
 let get_initial_state ~folder =
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
@@ -21,8 +22,12 @@ let get_initial_state ~folder =
           } =
       Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
     Lwt.return
-      (Tezos_interop.make ~rpc_node ~secret ~consensus_contract
-         ~discovery_contract ~required_confirmations) in
+      (Tezos_interop.make
+         ~rpc_node
+         ~secret
+         ~consensus_contract
+         ~discovery_contract
+         ~required_confirmations) in
   let%await validator_res =
     Tezos_interop.Consensus.fetch_validators interop_context in
   let validators =
@@ -35,13 +40,18 @@ let get_initial_state ~folder =
         match uri with
         | Some uri -> State.Address_map.add address uri validators_uri
         | None -> validators_uri)
-      State.Address_map.empty validators in
+      State.Address_map.empty
+      validators in
   let persist_trusted_membership_change =
     Files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
   let node =
-    State.make ~identity ~trusted_validator_membership_change ~interop_context
-      ~data_folder:folder ~initial_validators_uri
+    State.make
+      ~identity
+      ~trusted_validator_membership_change
+      ~interop_context
+      ~data_folder:folder
+      ~initial_validators_uri
       ~persist_trusted_membership_change in
   let node =
     {
@@ -52,8 +62,9 @@ let get_initial_state ~folder =
           validators =
             List.fold_left
               (fun validators (address, _) ->
-                Validators.add { address } validators)
-              Validators.empty validators;
+                Validators.add {address} validators)
+              Validators.empty
+              validators;
         };
     } in
   let state_bin = folder ^ "/state.bin" in
@@ -72,11 +83,12 @@ let get_initial_state ~folder =
         Files.State_bin.read ~file:prev_epoch_state_bin in
       let hash, data = Protocol.hash prev_protocol in
       let snapshot_ref, snapshots =
-        Snapshots.add_snapshot_ref ~block_height:prev_protocol.block_height
+        Snapshots.add_snapshot_ref
+          ~block_height:prev_protocol.block_height
           node.snapshots in
-      let () = Snapshots.set_snapshot_ref snapshot_ref { hash; data } in
+      let () = Snapshots.set_snapshot_ref snapshot_ref {hash; data} in
       await (Snapshots.start_new_epoch snapshots)
     else
       await node.snapshots in
-  let node = { node with snapshots; protocol } in
+  let node = {node with snapshots; protocol} in
   await node

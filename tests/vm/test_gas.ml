@@ -6,11 +6,7 @@ let sender =
 let counter =
   [%lambda_vm.script
     fun x ->
-      ( (fun f -> f f x) (fun f n ->
-            if n then
-              1L + f f (n - 1L)
-            else
-              0L),
+      ( (fun f -> f f x) (fun f n -> if n then 1L + f f (n - 1L) else 0L),
         (0L, 0L) )]
 
 let test_compile_value () =

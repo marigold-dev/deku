@@ -1,12 +1,15 @@
 open Crypto
 open Protocol
 open Helpers
+
 type snapshot = Network.Protocol_snapshot.snapshot = {
   hash : BLAKE2B.t;
   data : string;
 }
 [@@deriving yojson]
+
 type snapshot_ref = snapshot option Atomic.t
+
 type t = {
   current_snapshot : snapshot_ref;
   next_snapshots : (int64 * snapshot_ref) list;
@@ -14,6 +17,7 @@ type t = {
   last_block_signatures : Signatures.t;
   additional_blocks : Block.t list;
 }
+
 let make ~initial_snapshot ~initial_block ~initial_signatures =
   {
     current_snapshot =
@@ -21,13 +25,14 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
         (* TODO: if a snapshot is requested before first epoch starts, we will send meaningless data.
            We need to have logic in the snapshot request handler such that we send a 503 error or something
            instead of sending bad data. *)
-        (Some { hash = initial_block.Block.state_root_hash; data = "" });
+        (Some {hash = initial_block.Block.state_root_hash; data = ""});
     next_snapshots =
       [(initial_block.block_height, Atomic.make (Some initial_snapshot))];
     last_block = initial_block;
     last_block_signatures = initial_signatures;
     additional_blocks = [];
   }
+
 let append_block ~pool (block, signatures) t =
   if t.last_block.block_height > block.Block.block_height then
     t
@@ -41,6 +46,7 @@ let append_block ~pool (block, signatures) t =
       last_block_signatures = signatures;
       additional_blocks = blocks @ [t.last_block] @ t.additional_blocks;
     }
+
 let add_snapshot_ref ~block_height t =
   let atom = Atomic.make None in
   ( atom,
@@ -51,10 +57,13 @@ let add_snapshot_ref ~block_height t =
       last_block_signatures = t.last_block_signatures;
       additional_blocks = t.additional_blocks;
     } )
+
 let set_snapshot_ref ref_ snapshot =
-  Format.eprintf "\027[36m New protocol snapshot hash: %s\027[m\n%!"
-    (snapshot.hash |> BLAKE2B.to_string);
+  Format.eprintf
+    "\027[36m New protocol snapshot hash: %s\027[m\n%!"
+    (snapshot.hash |> BLAKE2B.to_string) ;
   Atomic.set ref_ (Some snapshot)
+
 let start_new_epoch t =
   let rec truncate_additional_blocks block_height blocks =
     match blocks with
@@ -80,7 +89,7 @@ let latest_finished_snapshot = ref None
 let get_most_recent_snapshot t =
   match Atomic.get t.current_snapshot with
   | Some snapshot ->
-    latest_finished_snapshot := Some snapshot;
+    latest_finished_snapshot := Some snapshot ;
     Ok snapshot
   | None ->
   match !latest_finished_snapshot with

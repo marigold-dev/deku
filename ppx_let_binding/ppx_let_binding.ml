@@ -5,7 +5,7 @@ open Ast_helper
 let str_let_ident_rule =
   let expand ~ctxt name value =
     let loc = Expansion_context.Extension.extension_point_loc ctxt in
-    let pattern = Pat.var ~loc { txt = name; loc } in
+    let pattern = Pat.var ~loc {txt = name; loc} in
     [%stri let [%p pattern] = [%e value]] in
 
   let pattern =
@@ -20,7 +20,7 @@ let str_let_ident_rule =
 let sig_let_ident_rule =
   let expand ~ctxt name typ =
     let loc = Expansion_context.Extension.extension_point_loc ctxt in
-    let val_desc = Val.mk ~loc { txt = name; loc } typ in
+    let val_desc = Val.mk ~loc {txt = name; loc} typ in
     Sig.value val_desc in
 
   let pattern =
@@ -32,7 +32,7 @@ let sig_let_ident_rule =
 
 (* let%ok p = e1 in e2 *)
 let make_let_binding loc name var value body =
-  let name = { txt = "let." ^ name; loc } in
+  let name = {txt = "let." ^ name; loc} in
   let binding_op = Exp.binding_op name var value loc in
   Exp.letop ~loc binding_op [] body
 
@@ -45,11 +45,15 @@ let make_let_extension_rule name =
         [%e? body]] ->
       make_let_binding loc name var value body
     | _ ->
-      Location.raise_errorf ~loc
+      Location.raise_errorf
+        ~loc
         "Extension %%%s can only be used with a let, e.g. let%%%s a = b in ..."
-        name name in
+        name
+        name in
   let extension =
-    Extension.V3.declare name Extension.Context.expression
+    Extension.V3.declare
+      name
+      Extension.Context.expression
       Ast_pattern.(single_expr_payload __)
       expand in
   Ppxlib.Context_free.Rule.extension extension

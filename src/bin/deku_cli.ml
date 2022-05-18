@@ -8,33 +8,45 @@ open Core
 open Bin_common
 
 let () = Printexc.record_backtrace true
+
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
+
 let write_identity ~node_folder =
   Files.Identity.write ~file:(node_folder ^ "/identity.json")
+
 let write_interop_context ~node_folder =
   Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
+
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
 let interop_context node_folder =
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
-    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
+    (Tezos_interop.make
+       ~rpc_node:context.rpc_node
+       ~secret:context.secret
        ~consensus_contract:context.consensus_contract
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
+
 let validator_uris ~interop_context =
   Tezos_interop.Consensus.fetch_validators interop_context
+
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
+
 let exits =
   Term.default_exits
   @
   let open Term in
   [exit_info 1 ~doc:"expected failure (might not be a bug)"]
+
 let lwt_ret p =
   let open Term in
   ret (const Lwt_main.run $ p)
+
 let wallet =
   let parser file =
     let non_dir_file =
@@ -69,11 +81,13 @@ let edsk_secret_key =
   let printer ppf key = Format.fprintf ppf "%s" (Crypto.Secret.to_string key) in
   let open Arg in
   conv (parser, printer)
+
 let uri =
   let parser uri = Ok (uri |> Uri.of_string) in
   let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
   let open Arg in
   conv (parser, printer)
+
 let address_implicit =
   let parser string =
     Option.bind (Address.of_string string) Address.to_key_hash
@@ -82,6 +96,7 @@ let address_implicit =
     Format.fprintf fmt "%s" (wallet |> Key_hash.to_string) in
   let open Arg in
   conv (parser, printer)
+
 let address_tezos_interop =
   let parser string =
     string
@@ -91,12 +106,14 @@ let address_tezos_interop =
     Format.fprintf fmt "%s" (Tezos.Address.to_string address) in
   let open Arg in
   conv (parser, printer)
+
 let argument =
   let parser string = Ok (Yojson.Safe.from_string string) in
   let printer fmt arg =
     Format.fprintf fmt "%s" (Yojson.Safe.pretty_to_string arg) in
   let open Arg in
   conv ~docv:"A valid contract argument" (parser, printer)
+
 let address =
   let parser string =
     Address.of_string string
@@ -105,6 +122,7 @@ let address =
     Format.fprintf fmt "%s" (wallet |> Address.to_string) in
   let open Arg in
   conv (parser, printer)
+
 let amount =
   let parser string =
     let%ok int =
@@ -115,6 +133,7 @@ let amount =
   let printer fmt amount = Format.fprintf fmt "%d" (Amount.to_int amount) in
   let open Arg in
   conv ~docv:"A positive amount" (parser, printer)
+
 let tezos_required_confirmations =
   let msg = "Expected an integer greater than 0" in
   let parser string =
@@ -126,6 +145,7 @@ let tezos_required_confirmations =
   let printer fmt int = Format.fprintf fmt "%d" int in
   let open Arg in
   conv ~docv:"An integer greater than 0" (parser, printer)
+
 let ticket =
   let parser string =
     Tezos.Ticket_id.of_string string
@@ -134,6 +154,7 @@ let ticket =
     Format.fprintf fmt "%S" (Tezos.Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
+
 let vm_flavor =
   let parser string =
     (match string with
@@ -142,12 +163,15 @@ let vm_flavor =
     | _ -> None)
     |> Option.to_result ~none:(`Msg "Expected a valid Vm_flavor") in
   let printer fmt flavor =
-    Format.fprintf fmt "%S"
+    Format.fprintf
+      fmt
+      "%S"
       (match flavor with
       | `Lambda -> "Lambda"
       | `Dummy -> "Dummy") in
   let open Arg in
   conv ~docv:"Vm_flavor" (parser, printer)
+
 let hash =
   let parser string =
     BLAKE2B.of_string string
@@ -155,21 +179,25 @@ let hash =
   let printer fmt wallet = Format.fprintf fmt "%s" (BLAKE2B.to_string wallet) in
   let open Arg in
   conv (parser, printer)
+
 let info_create_wallet =
   let doc =
     "Creates a wallet file. The wallet file's filename is its address. The \
      wallet file contains the private uri corresponding to that address." in
   Term.info "create-wallet" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let create_wallet () =
   let secret, _key, key_hash = Key_hash.make_ed25519 () in
   let address_string = Address.to_string (key_hash |> Address.of_key_hash) in
   let file = make_filename_from_address address_string in
   let%await () =
-    Files.Wallet.write { priv_key = secret; address = key_hash } ~file in
+    Files.Wallet.write {priv_key = secret; address = key_hash} ~file in
   await (`Ok ())
+
 let create_wallet =
   let open Term in
   lwt_ret (const create_wallet $ const ())
+
 let info_create_transaction =
   let doc =
     Printf.sprintf
@@ -179,8 +207,13 @@ let info_create_transaction =
        not provided, a wallet file with the correct filename (%s) must be \
        present in the current working directory"
       (make_filename_from_address "address") in
-  Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+  Term.info
+    "create-transaction"
+    ~version:"%\226\128\140%VERSION%%"
+    ~doc
+    ~exits
     ~man
+
 let create_transaction node_folder sender_wallet_file received_address amount
     ticket argument vm_flavor =
   let open Network in
@@ -204,8 +237,9 @@ let create_transaction node_folder sender_wallet_file received_address amount
       let operation =
         match (Address.to_key_hash received_address, argument) with
         | Some addr, None ->
-          Core.User_operation.make ~source:wallet.address
-            (Transaction { destination = addr; amount; ticket })
+          Core.User_operation.make
+            ~source:wallet.address
+            (Transaction {destination = addr; amount; ticket})
         | Some _, Some _ ->
           failwith "can't pass an argument to implicit account"
         | None, None -> failwith "Invalid transaction"
@@ -216,7 +250,8 @@ let create_transaction node_folder sender_wallet_file received_address amount
             | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
           in
           let arg = payload |> Result.get_ok in
-          Core.User_operation.make ~source:wallet.address
+          Core.User_operation.make
+            ~source:wallet.address
             (Contract_invocation
                {
                  to_invoke =
@@ -224,24 +259,31 @@ let create_transaction node_folder sender_wallet_file received_address amount
                  argument = arg;
                }) in
       let transaction =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+        Protocol.Operation.Core_user.sign
+          ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level ~data:operation in
+          ~block_height:block_level
+          ~data:operation in
 
       let%await identity = read_identity ~node_folder in
       let%await () =
         Network.request_user_operation_gossip
-          { user_operation = transaction }
+          {user_operation = transaction}
           identity.uri in
-      Format.printf "operation.hash: %s\n%!"
-        (BLAKE2B.to_string transaction.hash);
+      Format.printf
+        "operation.hash: %s\n%!"
+        (BLAKE2B.to_string transaction.hash) ;
       Lwt.return (`Ok ()))
 
 let info_originate_contract =
   let doc =
     "Originates a contract. Contract origination will be communicated to all \
      known validators to be included in the next block." in
-  Term.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+  Term.info
+    "originate-contract"
+    ~version:"%\226\128\140%VERSION%%"
+    ~doc
+    ~exits
     ~man
 
 let originate_contract node_folder contract_json initial_storage
@@ -270,7 +312,8 @@ let originate_contract node_folder contract_json initial_storage
         match vm_flavor with
         | `Lambda ->
           Contract_vm.Origination_payload.lambda_of_yojson
-            ~code:contract_program ~storage:initial_storage
+            ~code:contract_program
+            ~storage:initial_storage
           |> Result.get_ok
         | `Dummy ->
           let int =
@@ -279,7 +322,8 @@ let originate_contract node_folder contract_json initial_storage
           Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
       let origination_op = User_operation.Contract_origination payload in
       let originate_contract_op =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+        Protocol.Operation.Core_user.sign
+          ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
           ~block_height:block_level
           ~data:(User_operation.make ~source:wallet.address origination_op)
@@ -287,9 +331,7 @@ let originate_contract node_folder contract_json initial_storage
       let%await identity = read_identity ~node_folder in
       let%await () =
         Network.request_user_operation_gossip
-          {
-            Network.User_operation_gossip.user_operation = originate_contract_op;
-          }
+          {Network.User_operation_gossip.user_operation = originate_contract_op}
           identity.uri in
       Lwt.return (`Ok ()))
 
@@ -339,6 +381,7 @@ let folder_node =
   let doc = "The folder where the node lives." in
   let open Arg in
   required & pos 0 (some string) None & info [] ~doc ~docv
+
 let create_transaction =
   let address_from =
     let doc =
@@ -385,9 +428,11 @@ let create_transaction =
     $ ticket
     $ argument
     $ vm_flavor)
+
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let open Network in
   let%await identity = read_identity ~node_folder in
@@ -395,18 +440,21 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
-    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+    Protocol.Operation.Core_user.sign
+      ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:
-        (Core.User_operation.make ~source:wallet.address
-           (Tezos_withdraw { owner = tezos_address; amount; ticket })) in
+        (Core.User_operation.make
+           ~source:wallet.address
+           (Tezos_withdraw {owner = tezos_address; amount; ticket})) in
   let%await () =
     Network.request_user_operation_gossip
-      { user_operation = operation }
+      {user_operation = operation}
       identity.uri in
-  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash);
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash) ;
   Lwt.return (`Ok ())
+
 let withdraw =
   let folder_node =
     let docv = "folder_node" in
@@ -446,10 +494,11 @@ let withdraw =
     $ tezos_address
     $ amount
     $ ticket)
+
 let withdraw_proof node_folder operation_hash callback =
   let open Network in
   let%await identity = read_identity ~node_folder in
-  let%await result = request_withdraw_proof { operation_hash } identity.uri in
+  let%await result = request_withdraw_proof {operation_hash} identity.uri in
   match result with
   | Unknown_operation ->
     let message = BLAKE2B.to_string operation_hash ^ " is unknown" in
@@ -457,7 +506,7 @@ let withdraw_proof node_folder operation_hash callback =
   | Operation_is_not_a_withdraw ->
     let message = BLAKE2B.to_string operation_hash ^ " is not a withdraw" in
     await (`Error (false, message))
-  | Ok { withdrawal_handles_hash; withdrawal_handle; proof } ->
+  | Ok {withdrawal_handles_hash; withdrawal_handle; proof} ->
     let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
     Format.printf
       {|(Pair (Pair %S
@@ -474,15 +523,19 @@ let withdraw_proof node_folder operation_hash callback =
       (BLAKE2B.to_string withdrawal_handles_hash)
       (List.map
          (fun (left, right) ->
-           Format.sprintf "        Pair 0x%s\n             0x%s"
-             (BLAKE2B.to_string left) (BLAKE2B.to_string right))
+           Format.sprintf
+             "        Pair 0x%s\n             0x%s"
+             (BLAKE2B.to_string left)
+             (BLAKE2B.to_string right))
          proof
       |> String.concat " ;\n"
-      |> String.trim);
+      |> String.trim) ;
     await (`Ok ())
+
 let info_withdraw_proof =
   let doc = "Find withdraw proof from operation hash" in
   Term.info "withdraw-proof" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let withdraw_proof =
   let folder_dest =
     let docv = "folder_dest" in
@@ -505,11 +558,13 @@ let withdraw_proof =
   let open Term in
   lwt_ret
     (const withdraw_proof $ folder_dest $ operation_hash $ contract_callback)
+
 let info_sign_block =
   let doc =
     "Sign a block hash and broadcast to the network manually, useful when the \
      chain is stale." in
   Term.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let sign_block node_folder block_hash =
   let%await identity = read_identity ~node_folder in
   let signature = Signature.sign ~key:identity.secret block_hash in
@@ -524,8 +579,9 @@ let sign_block node_folder block_hash =
       broadcast_to_list
         (module Signature_spec)
         validator_uris
-        { hash = block_hash; signature } in
+        {hash = block_hash; signature} in
     Lwt.return (`Ok ())
+
 let sign_block_term =
   let folder_node =
     let docv = "folder_node" in
@@ -538,18 +594,23 @@ let sign_block_term =
     required & pos 1 (some hash) None & info [] ~doc in
   let open Term in
   lwt_ret (const sign_block $ folder_node $ block_hash)
+
 let info_produce_block =
   let doc =
     "Produce and sign a block and broadcast to the network manually, useful \
      when the chain is stale." in
   Term.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state = Node_state.get_initial_state ~folder:node_folder in
   let address = identity.t in
   let block =
-    Block.produce ~state:state.protocol ~next_state_root_hash:None
-      ~author:address ~operations:[] in
+    Block.produce
+      ~state:state.protocol
+      ~next_state_root_hash:None
+      ~author:address
+      ~operations:[] in
   let signature = Block.sign ~key:identity.secret block in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -561,9 +622,11 @@ let produce_block node_folder =
       let open Network in
       broadcast_to_list
         (module Block_and_signature_spec)
-        validator_uris { block; signature } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+        validator_uris
+        {block; signature} in
+    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash) ;
     Lwt.return (`Ok ())
+
 let produce_block =
   let folder_node =
     let docv = "folder_node" in
@@ -572,6 +635,7 @@ let produce_block =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   lwt_ret (const produce_block $ folder_node)
+
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
   if exists then
@@ -582,17 +646,20 @@ let ensure_folder folder =
       raise (Invalid_argument (folder ^ " is not a folder"))
   else
     Lwt_unix.mkdir folder 0o700
+
 let setup_identity node_folder uri =
   let%await () = ensure_folder node_folder in
   let identity =
     let secret, key = Crypto.Ed25519.generate () in
     let t = Key_hash.of_key (Ed25519 key) in
-    { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
+    {uri; t; key = Ed25519 key; secret = Ed25519 secret} in
   let%await () = write_identity ~node_folder identity in
   await (`Ok ())
+
 let info_setup_identity =
   let doc = "Create a validator identity" in
   Term.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let setup_identity =
   let folder_dest =
     let docv = "folder_dest" in
@@ -608,14 +675,17 @@ let setup_identity =
     required & opt (some uri) None & info ["uri"] ~doc ~docv in
   let open Term in
   lwt_ret (const setup_identity $ folder_dest $ self_uri)
+
 let info_setup_tezos =
   let doc = "Setup Tezos identity" in
   Term.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
+
 let setup_tezos node_folder rpc_node secret consensus_contract
     discovery_contract required_confirmations =
   let%await () = ensure_folder node_folder in
   let%await () =
-    write_interop_context ~node_folder
+    write_interop_context
+      ~node_folder
       {
         rpc_node;
         secret;
@@ -624,6 +694,7 @@ let setup_tezos node_folder rpc_node secret consensus_contract
         required_confirmations;
       } in
   await (`Ok ())
+
 let setup_tezos =
   let folder_dest =
     let docv = "folder_dest" in
@@ -676,6 +747,7 @@ let setup_tezos =
     $ tezos_consensus_contract_address
     $ tezos_discovery_contract_address
     $ tezos_required_confirmations)
+
 let show_help =
   let doc = "a tool for interacting with the WIP Tezos Sidechain" in
   let sdocs = Manpage.s_common_options in
@@ -683,14 +755,16 @@ let show_help =
   ( (let open Term in
     ret (const (`Help (`Pager, None)))),
     Term.info "deku-cli" ~version:"v0.0.1" ~doc ~sdocs ~exits ~man )
+
 let info_self =
   let doc = "Shows identity key and address of the node." in
   Term.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
 let self node_folder =
   let%await identity = read_identity ~node_folder in
-  Format.printf "key: %s\n" (Wallet.to_string identity.key);
-  Format.printf "address: %s\n" (Key_hash.to_string identity.t);
-  Format.printf "uri: %s\n" (Uri.to_string identity.uri);
+  Format.printf "key: %s\n" (Wallet.to_string identity.key) ;
+  Format.printf "address: %s\n" (Key_hash.to_string identity.t) ;
+  Format.printf "uri: %s\n" (Uri.to_string identity.uri) ;
   await (`Ok ())
 
 let self =
@@ -701,19 +775,25 @@ let self =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   lwt_ret (const self $ folder_dest)
+
 let info_add_trusted_validator =
   let doc =
     "Helps node operators maintain a list of trusted validators they verified \
      off-chain which can later be used to make sure only trusted validators \
      are added as new validators in the network." in
-  Term.info "add-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
+  Term.info
+    "add-trusted-validator"
+    ~version:"%\226\128\140%VERSION%%"
+    ~doc
+    ~exits
+    ~man
+
 let add_trusted_validator node_folder address =
   let open Network in
   let%await identity = read_identity ~node_folder in
   let payload =
     let open Trusted_validators_membership_change in
-    { address; action = Add } in
+    {address; action = Add} in
   let payload_json_str =
     payload
     |> Trusted_validators_membership_change.payload_to_yojson
@@ -721,30 +801,39 @@ let add_trusted_validator node_folder address =
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in
   let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
+    Network.request_trusted_validator_membership
+      {signature; payload}
       identity.uri in
   await (`Ok ())
+
 let validator_address =
   let docv = "validator_address" in
   let doc = "The validator address to be added/removed as trusted" in
   let open Arg in
   required & pos 1 (some address_implicit) None & info [] ~docv ~doc
+
 let add_trusted_validator =
   let open Term in
   lwt_ret (const add_trusted_validator $ folder_node $ validator_address)
+
 let info_remove_trusted_validator =
   let doc =
     "Helps node operators maintain a list of trusted validators they verified \
      off-chain which can later be used to make sure only trusted validators \
      are added as new validators in the network." in
-  Term.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
+  Term.info
+    "remove-trusted-validator"
+    ~version:"%\226\128\140%VERSION%%"
+    ~doc
+    ~exits
+    ~man
+
 let remove_trusted_validator node_folder address =
   let open Network in
   let%await identity = read_identity ~node_folder in
   let payload =
     let open Trusted_validators_membership_change in
-    { address; action = Remove } in
+    {address; action = Remove} in
   let payload_json_str =
     payload
     |> Trusted_validators_membership_change.payload_to_yojson
@@ -752,9 +841,11 @@ let remove_trusted_validator node_folder address =
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in
   let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
+    Network.request_trusted_validator_membership
+      {signature; payload}
       identity.uri in
   await (`Ok ())
+
 let remove_trusted_validator =
   let open Term in
   lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
@@ -764,7 +855,8 @@ let () = Domain.set_name "deku-cli"
 
 let () =
   Term.exit
-  @@ Term.eval_choice show_help
+  @@ Term.eval_choice
+       show_help
        [
          (create_wallet, info_create_wallet);
          (create_transaction, info_create_transaction);

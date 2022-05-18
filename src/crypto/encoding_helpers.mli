@@ -14,11 +14,17 @@ val parse_string_variant : (string -> 'a option) list -> string -> 'a option
 module Make_b58 : functor
   (H : sig
      type t
+
      val name : string
+
      val title : string
+
      val prefix : string
+
      val size : int
+
      val to_raw : t -> string
+
      val of_raw : string -> t option
    end)
   -> sig
@@ -27,8 +33,9 @@ module Make_b58 : functor
   val size : int
 
   (* TODO: should this be exposed? *)
-  val to_raw : t -> string
+
   (** [to_raw t] serialize t to a string containing raw bytes with no prefix *)
+  val to_raw : t -> string
 
   val to_string : t -> string
     [@@ocaml.doc " [to_string t] encodeds t as a b58 string "]

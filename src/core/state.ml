@@ -1,47 +1,54 @@
 open Helpers
 open Crypto
+
 type t = {
   ledger : Ledger.t;
   contract_storage : Contract_storage.t;
 }
 [@@deriving yojson]
+
 type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
 [@@deriving yojson]
-let empty = { ledger = Ledger.empty; contract_storage = Contract_storage.empty }
+
+let empty = {ledger = Ledger.empty; contract_storage = Contract_storage.empty}
+
 let ledger t = t.ledger
+
 let contract_storage t = t.contract_storage
+
 let hash t = to_yojson t |> Yojson.Safe.to_string |> BLAKE2B.hash
+
 let apply_tezos_operation t tezos_operation =
   let open Tezos_operation in
   let apply_internal_operation t internal_operation =
-    let { ledger; contract_storage } = t in
+    let {ledger; contract_storage} = t in
     match internal_operation with
-    | Tezos_deposit { destination; amount; ticket } ->
+    | Tezos_deposit {destination; amount; ticket} ->
       let ledger =
         match destination with
         | Implicit key_hash ->
           let destination = key_hash in
           Ledger.deposit destination amount ticket ledger
         | Originated _ -> failwith "not implemented" in
-      { ledger; contract_storage } in
-  let { hash = _; payload } = tezos_operation in
-  let { tezos_operation_hash = _; internal_operations } = payload in
+      {ledger; contract_storage} in
+  let {hash = _; payload} = tezos_operation in
+  let {tezos_operation_hash = _; internal_operations} = payload in
   List.fold_left apply_internal_operation t internal_operations
 
 let apply_user_operation t user_operation =
   let open User_operation in
-  let { source; initial_operation; hash } = user_operation in
-  let { ledger; contract_storage } = t in
+  let {source; initial_operation; hash} = user_operation in
+  let {ledger; contract_storage} = t in
   match initial_operation with
-  | Transaction { destination; amount; ticket } ->
+  | Transaction {destination; amount; ticket} ->
     let%ok ledger =
       Ledger.transfer ~sender:source ~destination amount ticket ledger in
-    Ok ({ contract_storage; ledger }, None)
-  | Tezos_withdraw { owner; amount; ticket } ->
+    Ok ({contract_storage; ledger}, None)
+  | Tezos_withdraw {owner; amount; ticket} ->
     let%ok ledger, handle =
       Ledger.withdraw ~sender:source ~destination:owner amount ticket ledger
     in
-    Ok ({ ledger; contract_storage }, Some (Receipt_tezos_withdraw handle))
+    Ok ({ledger; contract_storage}, Some (Receipt_tezos_withdraw handle))
   | Contract_origination to_originate ->
     (* @TODO: deduct gas from account and check *)
     let balance = Int.max_int |> Amount.of_int in
@@ -63,8 +70,8 @@ let apply_user_operation t user_operation =
     let contract_storage =
       Contract_storage.originate_contract t.contract_storage ~address ~contract
     in
-    Ok ({ contract_storage; ledger }, None)
-  | Contract_invocation { to_invoke; argument } ->
+    Ok ({contract_storage; ledger}, None)
+  | Contract_invocation {to_invoke; argument} ->
     let balance = max_int |> Amount.of_int in
     (* TODO: find good transaction cost *)
     let invocation_cost = 250 |> Amount.of_int in
@@ -82,13 +89,19 @@ let apply_user_operation t user_operation =
       |> Option.to_result ~none:"Contract not found"
       |> wrap_error in
     let%ok contract, _user_op_list =
-      Contract_vm.Interpreter.invoke ~source ~arg:argument ~gas:initial_gas
+      Contract_vm.Interpreter.invoke
+        ~source
+        ~arg:argument
+        ~gas:initial_gas
         contract
       |> wrap_error in
     let contract_storage =
-      Contract_storage.update_contract_storage contract_storage
-        ~address:to_invoke ~updated_contract:contract in
-    Ok ({ ledger; contract_storage }, None)
+      Contract_storage.update_contract_storage
+        contract_storage
+        ~address:to_invoke
+        ~updated_contract:contract in
+    Ok ({ledger; contract_storage}, None)
+
 let apply_user_operation t user_operation =
   match apply_user_operation t user_operation with
   | Ok (t, receipt) -> (t, receipt)

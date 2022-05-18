@@ -13,13 +13,16 @@ type error =
 [@@deriving show]
 
 exception Error of error
+
 let raise error = raise (Error error)
 
 module Pattern : sig
   type 'a t
+
   type nil = unit
 
   val script_result : (value * (nil * nil)) t
+
   val parse : value -> 'a t -> 'a
 end = struct
   type nil = unit
@@ -30,10 +33,13 @@ end = struct
     | Nil : nil t
 
   let any = Any
+
   let pair first second = Pair (first, second)
+
   let nil = Nil
 
   let operations = nil
+
   let script_result = pair any (pair operations nil)
 
   let rec parse : type a. value -> a t -> a =
@@ -41,7 +47,7 @@ end = struct
     match (t, value) with
     | Any, value -> value
     | ( Pair (first_t, second_t),
-        V_pair { first = first_value; second = second_value } ) ->
+        V_pair {first = first_value; second = second_value} ) ->
       let first = parse first_value first_t in
       let second = parse second_value second_t in
       (first, second)
@@ -82,7 +88,7 @@ let eval_prim context prim ~arg ~args =
   let op1_pair f =
     let f value =
       match value with
-      | V_pair { first; second } -> f first second
+      | V_pair {first; second} -> f first second
       | V_int64 _
       | V_closure _
       | V_primitive _ ->
@@ -99,7 +105,7 @@ let eval_prim context prim ~arg ~args =
           (V_pair _ | V_int64 _ | V_closure _ | V_primitive _) ) ->
         raise Value_is_not_int64 in
     match args with
-    | [] -> V_primitive { args = [arg]; prim }
+    | [] -> V_primitive {args = [arg]; prim}
     | [left] -> f left arg
     | _ -> raise Over_applied_primitives in
 
@@ -131,8 +137,8 @@ let rec eval ~stack context env code =
   let eval_call env code = eval ~stack:(stack - 1) context env code in
   let eval_jump env code = eval ~stack context env code in
 
-  check_stack ~stack;
-  burn_gas (Context.gas context) env code;
+  check_stack ~stack ;
+  burn_gas (Context.gas context) env code ;
 
   match code with
   | E_var var -> (
@@ -143,21 +149,21 @@ let rec eval ~stack context env code =
     | None ->
       (* TODO: could we eliminate this using GADTs? *)
       raise Undefined_variable)
-  | E_lam (param, body) -> V_closure { env; param; body }
-  | E_app { funct; arg } -> (
+  | E_lam (param, body) -> V_closure {env; param; body}
+  | E_app {funct; arg} -> (
     let funct = eval_call env funct in
     let arg = eval_call env arg in
     match funct with
     | V_pair _
     | V_int64 _ ->
       raise Value_is_not_function
-    | V_closure { env; param; body } ->
+    | V_closure {env; param; body} ->
       let env = Env.add param arg env in
       eval_jump env body
-    | V_primitive { args; prim } -> eval_prim context prim ~arg ~args)
+    | V_primitive {args; prim} -> eval_prim context prim ~arg ~args)
   | E_const value -> V_int64 value
-  | E_prim prim -> V_primitive { args = []; prim }
-  | E_if { predicate; consequent; alternative } -> (
+  | E_prim prim -> V_primitive {args = []; prim}
+  | E_if {predicate; consequent; alternative} -> (
     let predicate = eval_call env predicate in
     match predicate with
     | V_int64 0L -> eval_jump env alternative
@@ -166,10 +172,10 @@ let rec eval ~stack context env code =
     | V_closure _
     | V_primitive _ ->
       raise Value_is_not_int64)
-  | E_pair { first; second } ->
+  | E_pair {first; second} ->
     let first = eval_call env first in
     let second = eval_call env second in
-    V_pair { first; second }
+    V_pair {first; second}
 
 let eval context env code =
   let stack = max_stack_depth in
@@ -181,11 +187,11 @@ type script_result = {
 }
 
 let execute ~context ~arg script =
-  let { param; code } = script in
+  let {param; code} = script in
   let env = Env.add param arg Env.empty in
   let output = eval context env code in
   let storage, (operations, ()) = Pattern.(parse output script_result) in
-  { storage; operations }
+  {storage; operations}
 
 let execute ~context ~arg script =
   try Ok (execute ~context ~arg script) with

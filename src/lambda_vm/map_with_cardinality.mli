@@ -17,5 +17,6 @@ end
 
 module Make (K : sig
   type t [@@deriving yojson]
+
   val compare : t -> t -> int
 end) : S with type key = K.t

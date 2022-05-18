@@ -10,10 +10,12 @@ type block_operation = {
   branch : Block_hash.t;
   contents : Operation_content_with_result.t list;
 }
+
 type response = block_operation list
 
 module Decoder = struct
   type operation_content_with_result = Operation_content_with_result.t
+
   let operation_content_with_result_of_yojson =
     Operation_content_with_result.of_tezos_json
 
@@ -24,7 +26,7 @@ module Decoder = struct
     (* TODO: can this be empty? *)
     contents : operation_content_with_result list;
   }
-  [@@deriving of_yojson { strict = false }]
+  [@@deriving of_yojson {strict = false}]
 
   let of_yojson json =
     let%ok operations = [%of_yojson: response_block_operation list list] json in

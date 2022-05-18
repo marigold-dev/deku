@@ -2,9 +2,12 @@ open Helpers
 
 module type Request_endpoint = sig
   type request [@@deriving yojson]
+
   type response [@@deriving yojson]
+
   val path : string
 end
+
 exception Error_status
 
 let raw_request path raw_data uri =

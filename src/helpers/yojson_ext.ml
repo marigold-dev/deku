@@ -1,4 +1,5 @@
 open Result_ext.Let_syntax
+
 let with_yojson_string name to_string of_string =
   let to_yojson t = `String (to_string t) in
   let of_yojson json =
@@ -38,6 +39,7 @@ let rec to_data_encoding_json (json : Yojson.Basic.t) : Data_encoding.Json.t =
   | `Null -> `Null
   | `String string -> `String string
   | `Int int -> `Float (float_of_int int)
+
 let to_data_encoding_json json =
   json |> Yojson.Safe.to_basic |> to_data_encoding_json
 

@@ -10,7 +10,9 @@ let encoding =
 let to_yojson, of_yojson = Yojson_ext.with_data_encoding encoding
 
 let zero = 0L
+
 let one_mutez = 1L
+
 let one = 1_000_000L
 
 let of_mutez t = if t < 0L then None else Some t

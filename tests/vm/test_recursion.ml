@@ -15,7 +15,10 @@ let test_factorial =
     | n -> Int64.(mul n (fac (sub n 1L))) in
   QCheck_alcotest.to_alcotest
     QCheck.(
-      Test.make ~name:"Recursion with factorial" ~count:10000 (1 -- 26)
+      Test.make
+        ~name:"Recursion with factorial"
+        ~count:10000
+        (1 -- 26)
         (fun x ->
           (* Less than 0 is infinite recursion, greater than 25 is integer overflow. *)
           let x = Int64.of_int x in
@@ -31,10 +34,7 @@ let fibonacci =
   [%lambda_vm.script
     fun x ->
       ( (fun f -> f f x) (fun f n ->
-            if (0L - n) * (1L - n) then
-              f f (n - 2L) + f f (n - 1L)
-            else
-              1L),
+            if (0L - n) * (1L - n) then f f (n - 2L) + f f (n - 1L) else 1L),
         (0L, 0L) )]
 
 let test_fibonacci =
@@ -59,11 +59,7 @@ let test_fibonacci =
 let counter =
   [%lambda_vm.script
     fun x ->
-      ( (fun f -> f f x) (fun f n ->
-            if n then
-              1L + f f (n - 1L)
-            else
-              0L),
+      ( (fun f -> f f x) (fun f n -> if n then 1L + f f (n - 1L) else 0L),
         (0L, 0L) )]
 
 let test_counter =
@@ -87,10 +83,15 @@ let check_runtime_error ~msg ~actual ~expected =
     Alcotest.(check Testable.runtime_limits_error) msg expected error
   | Ok _ -> Alcotest.fail "Ast shouldn't execute"
   | _ -> Alcotest.fail "unexpected error"
+
 let test_stack_limit () =
-  check_runtime_error ~msg:"Stack has a limit" ~expected:Out_of_stack
+  check_runtime_error
+    ~msg:"Stack has a limit"
+    ~expected:Out_of_stack
     ~actual:
-      (Vm_test.execute_ast sender 71_990_801
+      (Vm_test.execute_ast
+         sender
+         71_990_801
          (Int64 19996L) (* Bare minimum close to the limit of 20k *)
          counter)
 
@@ -98,17 +99,23 @@ let infinite_recursion_y =
   [%lambda_vm.script fun _ -> (fun f -> f f) (fun f -> f f + 0L)]
 
 let test_y_combinator () =
-  check_runtime_error ~msg:"Stack limit avoids infinite recursion"
+  check_runtime_error
+    ~msg:"Stack limit avoids infinite recursion"
     ~expected:Out_of_stack
     ~actual:
-      (Vm_test.execute_ast sender 10000000000000000 (Int64 0L)
+      (Vm_test.execute_ast
+         sender
+         10000000000000000
+         (Int64 0L)
          infinite_recursion_y)
 
 let infinite_recursion_z =
   [%lambda_vm.script fun _ -> (fun f -> f f 0L) (fun f v -> f f (v + 0L))]
 
 let test_z_combinator () =
-  check_runtime_error ~msg:"Gas limit is triggered" ~expected:Out_of_gas
+  check_runtime_error
+    ~msg:"Gas limit is triggered"
+    ~expected:Out_of_gas
     ~actual:
       (Vm_test.execute_ast sender 10000000000 (Int64 0L) infinite_recursion_z)
 

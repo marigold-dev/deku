@@ -1,5 +1,4 @@
 open Lambda_vm
-
 module Testable = Vm_test.Testable
 
 let sender =
@@ -18,7 +17,9 @@ let make_op2_test ~name prim f =
     QCheck.(
       Test.make ~name ~count:10_000 (pair int64 int64) (fun (a, b) ->
           let result =
-            Vm_test.execute_ast_exn sender 2901
+            Vm_test.execute_ast_exn
+              sender
+              2901
               (Pair (Int64 a, Int64 b))
               (script_op2 prim) in
           let expected_result =
