@@ -128,11 +128,10 @@
       }) // {
         hydraJobs = {
           x86_64-linux = self.packages.x86_64-linux;
-          # darwin doesn't support static builds and docker
-          aarch64-darwin = builtins.removeAttrs self.packages.aarch64-darwin [
-            "deku-static"
-            "docker"
-          ];
+          aarch64-darwin = {
+            # darwin doesn't support static builds and docker
+            inherit (self.packages.aarch64-darwin) deku npmPackages;
+          };
         };
       };
 }
