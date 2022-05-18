@@ -3,7 +3,7 @@ open Crypto
 module Tezos_operation_set = Set.Make_with_yojson (Protocol_operation.Core_tezos)
 module User_operation_set = Set.Make_with_yojson (Protocol_operation.Core_user)
 type t = {
-  core_state : Core.State.t;
+  core_state : Core_deku.State.t;
   included_tezos_operations : Tezos_operation_set.t;
   included_user_operations : User_operation_set.t;
   validators : Validators.t;
@@ -18,7 +18,7 @@ type t = {
 let hash t =
   let to_yojson =
     [%to_yojson:
-      Core.State.t
+      Core_deku.State.t
       * Tezos_operation_set.t
       * User_operation_set.t
       * Validators.t

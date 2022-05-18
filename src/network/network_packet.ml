@@ -1,7 +1,7 @@
 open Helpers
 open Crypto
 open Protocol
-open Core
+open Core_deku
 
 module Signature_spec = struct
   type request = {

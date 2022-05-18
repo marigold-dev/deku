@@ -27,7 +27,7 @@ let code =
 let test_sender () =
   let address = "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" in
   let result =
-    let sender = address |> Core.Address.of_string |> Option.get in
+    let sender = address |> Core_deku.Address.of_string |> Option.get in
     let gas = Gas.make ~initial_gas:10000 in
     Vm_test.execute_ast_exn sender 1000000
       (Ast.value_of_string gas address)

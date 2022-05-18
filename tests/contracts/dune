@@ -1,7 +1,7 @@
 (test
  (name test_contracts)
  (libraries
-  core
+  core_deku
   crypto
   alcotest
   qcheck-alcotest
