@@ -1,21 +1,16 @@
 open Helpers
 open Bin_common
-open Cmdliner
 
 (*************************************************************************)
 (* making Deku accounts - wallet *)
 
-type wallet = {
-  key_hash : Crypto.Key_hash.t;
-  secret : Crypto.Secret.t;
-}
-
 let make_wallet key_hash secret =
   {
-    key_hash = Crypto.Key_hash.of_string key_hash |> Option.get;
-    secret = Crypto.Secret.of_string secret |> Option.get;
+    Files.Wallet.address = Crypto.Key_hash.of_string key_hash |> Option.get;
+    Files.Wallet.priv_key = Crypto.Secret.of_string secret |> Option.get;
   }
 
+(* Currently hardcode the addresses *)
 let alice_wallet =
   make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
     "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
@@ -51,10 +46,8 @@ let bob_wallet =
      Lwt.return block_level
     ) *)
 
-open Pipeline
 
-let interop_context =
-  let node_folder = read_file "./data/tezos.json" in
+let interop_context node_folder =
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
@@ -66,10 +59,10 @@ let interop_context =
 let validator_uris ~interop_context =
   Tezos_interop.Consensus.fetch_validators interop_context
 
-(*let validators_uris =
-  ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]*)
+let validators_uris =
+  ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
 
-let validator_uris =
+(*let validator_uris =
   let open Network in
   let%await interop_context = interop_context in
   let%await validators_uris = validator_uris ~interop_context in
@@ -80,7 +73,7 @@ let validator_uris =
       (function
         | key_hash, Some uri -> Some (key_hash, uri)
         | _ -> None)
-      validator_uris
+      validator_uris*)
 
 let get_random_validator_uri () =
   List.nth validators_uris (Random.int 0) |> Uri.of_string

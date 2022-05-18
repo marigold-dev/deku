@@ -1,6 +1,6 @@
 (library
  (name transfers_tests)
- (modules transfers_tests)
+ (modules :standard \ bench_tps)
  (library_flags
   (-linkall -g))
  (preprocess
