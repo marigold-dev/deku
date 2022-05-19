@@ -59,8 +59,15 @@ let add_snapshot_ref ~block_height t =
     } )
 
 let set_snapshot_ref ref_ snapshot =
+  (* DEBUG *)
+  (*Format.eprintf "\027[36m Format New protocol snapshot hash: %s\027[m\n%!"
+    (snapshot.hash |> BLAKE2B.to_string);*)
+  (* Note: using Logs.app to print out to the terminal *)
+  Logs.app (fun m ->
+      m "Log New protocol snapshot hash: %s" (snapshot.hash |> BLAKE2B.to_string));
   Logs.info (fun m ->
-      m "New protocol snapshot hash: %s" (snapshot.hash |> BLAKE2B.to_string));
+      m "Info New protocol snapshot hash: %s"
+        (snapshot.hash |> BLAKE2B.to_string));
   Atomic.set ref_ (Some snapshot)
 
 let start_new_epoch t =

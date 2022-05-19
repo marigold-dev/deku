@@ -140,6 +140,14 @@ let raise_and_exit exn =
 
 let handle_message t message =
   let Message.{ id; content } = message in
+  (* DEBUG *)
+  (*Format.eprintf "js.message content: %a\n%!"
+    (Yojson.Safe.pretty_print ~std:false)
+    content;*)
+  Logs.app (fun m ->
+      m "Logs js process: js.message: %a"
+        (Yojson.Safe.pretty_print ~std:false)
+        content);
   Logs.debug (fun m ->
       m "js.message: %a" (Yojson.Safe.pretty_print ~std:false) content);
   match Pending.push t.pending id content with

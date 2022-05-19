@@ -88,9 +88,15 @@ let apply_operation (state, receipts) operation =
     (state, receipts)
 
 let apply_block state block =
-  Logs.app (fun m -> m "block: %Ld" block.Block.block_height);
+  (* DEBUG *)
+  (* Format.eprintf "\027[32mblock height: %Ld\027[m\n%!" block.Block.block_height;*)
+  (*Logs.app (fun m ->
+        m "Protocol - apply_block: block height: %Ld" block.Block.block_height);
+    Logs.app (fun m -> m "Operations: %i" (List.length block.operations));
+    Logs.app (fun m ->
+        m "Validators: %s" (Crypto.BLAKE2B.to_string block.validators_hash));*)
   let state, receipts =
-    List.fold_left apply_operation (state, []) block.operations in
+    List.fold_left apply_operation (state, []) block.Block.operations in
   let state =
     {
       state with
@@ -100,6 +106,16 @@ let apply_block state block =
                Int64.sub state.block_height op.block_height
                <= maximum_stored_block_height);
     } in
+  (* DEBUG *)
+  Logs.app (fun m ->
+      m
+        "Protocol - Apply_lock:\n\
+        \ - state_root_hash_size: %i; - block_author: %s; - block height: %Ld; \
+         - operations: %i"
+        (String.length (Crypto.BLAKE2B.to_string block.state_root_hash))
+        (Crypto.Key_hash.to_string block.author)
+        block.Block.block_height
+        (List.length block.operations));
   ( {
       state with
       block_height = block.block_height;
