@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Core
+
 module Consensus = struct
   type t =
     | Add_validator    of Validators.validator

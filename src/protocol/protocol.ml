@@ -50,15 +50,21 @@ let apply_core_user_operation state tezos_operation =
   | Ok (state, receipts) -> (state, receipts)
   | Error (`Block_in_the_future | `Old_operation | `Duplicated_operation) ->
     (state, None)
-let apply_consensus_operation state consensus_operation =
-  let validators = state.validators in
-  let validators =
-    match consensus_operation with
-    | Consensus.Add_validator validator -> Validators.add validator validators
-    | Consensus.Remove_validator validator ->
-      Validators.remove validator validators in
+
+(* This applies Validators operations. *)
+let apply_consensus_operation :
+    Protocol_state.t ->
+    Prenode.Message.t ->
+    Protocol_state.t * Prenode.Message.t list =
+ fun state msg ->
+  let block_height = state.block_height in
+  let validators_prenode, msgs =
+    Prenode.Validators_Prenode.process_message msg state.validators_prenode
+  in
   let last_seen_membership_change_timestamp = Unix.time () in
-  { state with validators; last_seen_membership_change_timestamp }
+  ( { state with validators_prenode; last_seen_membership_change_timestamp },
+    msgs )
+
 let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
@@ -93,7 +99,9 @@ let apply_block state block =
   ( {
       state with
       block_height = block.block_height;
-      validators = state.validators |> Validators.update_current block.author;
+      validators_prenode =
+        Prenode.Validators_Prenode.update_block_proposer block.block_height
+          block.author state.validators_prenode;
       last_block_hash = block.hash;
       last_state_root_update =
         (match block.state_root_hash <> state.state_root_hash with
@@ -104,13 +112,14 @@ let apply_block state block =
       validators_hash = block.validators_hash;
     },
     receipts )
+
 let make ~initial_block =
   let empty =
     {
       core_state = Core.State.empty;
       included_tezos_operations = Tezos_operation_set.empty;
       included_user_operations = User_operation_set.empty;
-      validators = Validators.empty;
+      validators_prenode = Prenode.Validators_Prenode.empty;
       validators_hash = Validators.hash Validators.empty;
       block_height = Int64.sub initial_block.Block.block_height 1L;
       last_block_hash = initial_block.Block.previous_hash;

@@ -192,6 +192,9 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
            (address, (key, signature)))
     |> List.to_seq
     |> Address_map.of_seq in
+  let height = block.Block.block_height in
+  let validators, _ =
+    Validators_prenode.get height state.protocol.validators_prenode in
   let validators =
     state.protocol.validators
     |> Validators.to_list

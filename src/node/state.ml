@@ -113,7 +113,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       Core.State.t
       * Tezos_operation_set.t
       * User_operation_set.t
-      * Validators.t
+      * Prenode.Validators_Prenode.t
       * BLAKE2B.t
       * int64
       * BLAKE2B.t
@@ -121,7 +121,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
   let ( core_state,
         included_tezos_operations,
         included_user_operations,
-        validators,
+        validators_prenode,
         validators_hash,
         block_height,
         last_block_hash,
@@ -133,7 +133,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       core_state;
       included_tezos_operations;
       included_user_operations;
-      validators;
+      validators_prenode;
       validators_hash;
       block_height;
       last_block_hash;
