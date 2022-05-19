@@ -259,16 +259,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1652883634,
-        "narHash": "sha256-eUjwg9x1T6/cHcxwlt3aPLV6m6uXxjVfLdaymGipny0=",
+        "lastModified": 1652944800,
+        "narHash": "sha256-8aHHlbSrxwpnDmuCXa1IjZKnhBLFcbrhvq7WEK/4jGc=",
         "owner": "marigold-dev",
         "repo": "pollinate",
-        "rev": "a80008f847da63f07f4456f15ea0106094dfa988",
+        "rev": "82f273e708a141c162f8f71b16c04e0b306b29a2",
         "type": "github"
       },
       "original": {
         "owner": "marigold-dev",
-        "ref": "chore/stateIsUseless",
         "repo": "pollinate",
         "type": "github"
       }

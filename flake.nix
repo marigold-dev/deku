@@ -38,7 +38,7 @@
       flake-utils.follows = "flake-utils";
     };
 
-    pollinate.url = "github:marigold-dev/pollinate/chore/stateIsUseless";
+    pollinate.url = "github:marigold-dev/pollinate";
     pollinate.inputs = {
       nixpkgs.follows = "nixpkgs";
       ocaml-overlay.follows = "ocaml-overlays";

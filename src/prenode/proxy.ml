@@ -43,12 +43,12 @@ module PROXY_POLLINATE = struct
 
   let msg_handler : Pollinate.Node.Message.t -> bytes =
    fun _msg ->
-    (* match msg.Pollinate.Node.Message.sub_category with
-       | ("Consensus_governance_operation", _) -> incoming_consensus_governance_operation msg
+    (* match msg.Pollinate.Node.Message.sub_category_opt with
+       | Some ("Consensus_governance_operation", _) -> incoming_consensus_governance_operation msg
        | _ -> *)
     failwith "Bored now"
 
   let deku_pollinate_node =
     Lwt_main.run
-      (Pollinate.Node.init ~router:preprocess ~msg_handler ("", 3000))
+      (Pollinate.Node.init ~preprocess:preprocess ~msg_handler ("", 3000))
 end
