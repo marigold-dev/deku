@@ -94,4 +94,4 @@ let apply_user_operation t user_operation =
   | Ok (t, receipt) -> (t, receipt)
   (* TODO: use this erros for something *)
   | Error (`Origination_error _ | `Invocation_error _) -> (t, None)
-  | Error `Not_enough_funds -> (t, None)
+  | Error `Insufficient_funds -> (t, None)

@@ -1,19 +1,6 @@
 open Helpers
 open Crypto
-module Address_and_ticket_map = struct
-  type key = {
-    address : Key_hash.t;
-    ticket : Ticket_id.t;
-  }
-  [@@deriving ord, yojson]
-  module Map = Map.Make_with_yojson (struct
-    type t = key [@@deriving ord, yojson]
-  end)
-  type t = Amount.t Map.t [@@deriving yojson]
-  let empty = Map.empty
-  let find_opt address ticket = Map.find_opt { address; ticket }
-  let add address ticket = Map.add { address; ticket }
-end
+
 module Withdrawal_handle = struct
   type t = {
     hash : BLAKE2B.t;
@@ -34,66 +21,48 @@ module Withdrawal_handle_tree = Incremental_patricia.Make (struct
   let hash t = t.Withdrawal_handle.hash
 end)
 type t = {
-  ledger : Address_and_ticket_map.t;
+  ledger : Ticket_table.t;
   withdrawal_handles : Withdrawal_handle_tree.t;
 }
 [@@deriving yojson]
 let empty =
   {
-    ledger = Address_and_ticket_map.empty;
+    ledger = Ticket_table.empty;
     withdrawal_handles = Withdrawal_handle_tree.empty;
   }
 let balance address ticket t =
-  Address_and_ticket_map.find_opt address ticket t.ledger
+  Ticket_table.amount t.ledger (Address.of_key_hash address) ticket
   |> Option.value ~default:Amount.zero
-let assert_available ~sender ~(amount : Amount.t) =
-  if sender >= amount then
-    Ok ()
-  else
-    Error `Not_enough_funds
+
 let transfer ~sender ~destination amount ticket t =
-  let open Amount in
-  let sender_balance = balance sender ticket t in
-  let%ok () = assert_available ~sender:sender_balance ~amount in
-  let destination_balance = balance destination ticket t in
-  Ok
-    {
-      ledger =
-        t.ledger
-        |> Address_and_ticket_map.add sender ticket (sender_balance - amount)
-        |> Address_and_ticket_map.add destination ticket
-             (destination_balance + amount);
-      withdrawal_handles = t.withdrawal_handles;
-    }
+  let%ok ledger =
+    Ticket_table.transfer t.ledger
+      ~sender:(Address.of_key_hash sender)
+      ~destination:(Address.of_key_hash destination)
+      ~amount ~ticket
+    |> Result.map_error (fun _ -> `Insufficient_funds) in
+  Ok { ledger; withdrawal_handles = t.withdrawal_handles }
 let deposit destination amount ticket t =
-  let open Amount in
-  let destination_balance = balance destination ticket t in
-  {
-    ledger =
-      t.ledger
-      |> Address_and_ticket_map.add destination ticket
-           (destination_balance + amount);
-    withdrawal_handles = t.withdrawal_handles;
-  }
+  let ledger =
+    Ticket_table.unsafe_deposit_ticket t.ledger ~ticket
+      ~destination:(Address.of_key_hash destination)
+      ~amount in
+  { ledger; withdrawal_handles = t.withdrawal_handles }
 
 let withdraw ~sender ~destination amount ticket t =
-  let open Amount in
-  let owner = destination in
-  let sender_balance = balance sender ticket t in
-  let%ok () = assert_available ~sender:sender_balance ~amount in
+  let%ok ledger =
+    Ticket_table.unsafe_withdraw t.ledger
+      ~sender:(Address.of_key_hash sender)
+      ~amount ~ticket
+    |> Result.map_error (function _ -> `Insufficient_funds) in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add
       (fun id ->
-        let hash = Withdrawal_handle.hash ~id ~owner ~amount ~ticket in
-        { id; hash; owner; amount; ticket })
+        let hash =
+          Withdrawal_handle.hash ~id ~owner:destination ~amount ~ticket in
+        { id; hash; owner = destination; amount; ticket })
       t.withdrawal_handles in
-  let t =
-    {
-      ledger =
-        t.ledger
-        |> Address_and_ticket_map.add sender ticket (sender_balance - amount);
-      withdrawal_handles;
-    } in
+  let t = { ledger; withdrawal_handles } in
   Ok (t, handle)
 let withdrawal_handles_find_proof handle t =
   match
