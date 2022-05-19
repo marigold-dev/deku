@@ -106,7 +106,8 @@ let handle_protocol_snapshot =
     (fun _update_state () ->
       let State.{ snapshots; _ } = Server.get_state () in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
-      (* Add Metrics prometheus for snapshot size *)
+      (* NOTE: should I put it here or in State.apply_block?
+         Add Metrics prometheus for snapshot size *)
       Metrics.Networking.inc_network_snapshot_size snapshot.data;
       Metrics.Networking.measure_network_snapshot_size
         (String.length (Crypto.BLAKE2B.to_string snapshot.hash));

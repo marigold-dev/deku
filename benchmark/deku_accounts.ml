@@ -10,7 +10,7 @@ let make_wallet key_hash secret =
   }
 
 (* Currently hardcode the addresses
-   In sandbox.sh, alice_wallet is the deku_address   
+   In sandbox.sh, alice_wallet is the deku_address
 *)
 let alice_wallet =
   make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"

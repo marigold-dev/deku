@@ -40,7 +40,7 @@ let inc_network_messages_response route =
 (* Metrics for protocol snapshot. Call in deku_node *)
 let network_snapshot_size =
   let help = "Size of snapshot in bytes" in
-  Gauge.v ~help ~namespace ~subsystem "network_snapshot_ize"
+  Gauge.v ~help ~namespace ~subsystem "network_snapshot_size"
 
 let measure_network_snapshot_size size =
   Gauge.set network_snapshot_size (Float.of_int size)

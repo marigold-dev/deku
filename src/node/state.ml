@@ -83,8 +83,12 @@ let apply_block state block =
       state.recent_operation_receipts receipts in
   (* add applied_blocks to get the metrics of number of operations per block *)
   let applied_blocks = block :: state.applied_blocks in
-  Metrics.Blocks.inc_operations_processed
-    ~operation_count:(List.length block.operations);
+  (* Add Metrics for a list of operations in a block *)
+  let operation_count = List.length block.operations in
+  Metrics.Blocks.inc_operations_processed ~operation_count;
+  (* Add Metrics for block_metrics (time between blocks) *)
+  let timestamp = Unix.time () in
+  Metrics.Blocks.block_metrics ~timestamp ~operation_count;
   Ok
     {
       state with

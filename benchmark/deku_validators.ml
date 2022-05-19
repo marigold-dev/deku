@@ -14,8 +14,9 @@ let validators_uris =
 
 let get_random_validator_uri () =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
-  let validator = List.nth validators_uris (random_int (List.length validators_uris)) in
-  Format.eprintf "Validator: %s\n%!" validator;
+  let validator =
+    List.nth validators_uris (random_int (List.length validators_uris)) in
+  Format.eprintf "Random validator: %s\n%!" validator;
   validator |> Uri.of_string
 
 (********************************************************************)
