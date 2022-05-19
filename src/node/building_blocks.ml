@@ -232,6 +232,7 @@ let broadcast_signature state ~hash ~signature =
 let broadcast_block_and_signature state ~block ~signature =
   let uris = validator_uris state in
   Lwt.async (fun () ->
+      (* DEBUG: control to make block build faster for testing *)
       let%await () = Lwt_unix.sleep 1.0 in
       Network.broadcast_block_and_signature uris { block; signature })
 
