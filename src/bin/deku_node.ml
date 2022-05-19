@@ -189,14 +189,16 @@ let node folder prometheus_port =
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-node"
 
-let () =
+let setup_log level () =
   (* This is needed because Dream will initialize logs lazily *)
   Dream.initialize_log ~enable:false ();
-  match Sys.getenv_opt "DEKU_LOGS" |> Option.map String.lowercase_ascii with
-  | Some "json" ->
-    Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout);
-    Logs.set_level (Some Info)
-  | _ -> Logs.set_reporter (Logs.format_reporter ~app:Fmt.stdout ())
+  (match Sys.getenv_opt "DEKU_LOGS" |> Option.map String.lowercase_ascii with
+  | Some "json" -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
+  | _ -> Logs.set_reporter (Logs.format_reporter ~app:Fmt.stdout ()));
+  Logs.set_level level;
+  ()
+
+let setup_log = Term.(const setup_log $ Logs_cli.level ())
 
 let node =
   let folder_node =
@@ -205,5 +207,6 @@ let node =
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const node $ folder_node $ Prometheus_dream.opts
-let () = Term.exit @@ Term.eval (node, Term.info "deku-node")
+  setup_log $ (const node $ folder_node $ Prometheus_dream.opts)
+
+let () = Term.exit @@ Term.(eval (node, Term.info "deku-node"))

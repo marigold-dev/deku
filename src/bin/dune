@@ -7,6 +7,8 @@
   node
   helpers
   cmdliner
+  logs
+  logs.cli
   prometheus-dream
   json-logs-reporter)
  (modules Deku_node)
@@ -15,7 +17,7 @@
 
 (executable
  (name deku_cli)
- (libraries node bin_common helpers cmdliner)
+ (libraries node bin_common helpers cmdliner logs)
  (modules Deku_cli)
  (public_name deku-cli)
  (preprocess
