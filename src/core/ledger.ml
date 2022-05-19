@@ -2,7 +2,10 @@ open Helpers
 open Crypto
 
 module Address_and_ticket_map = struct
-  type key = {address : Key_hash.t; ticket : Ticket_id.t}
+  type key = {
+    address : Key_hash.t;
+    ticket : Ticket_id.t;
+  }
   [@@deriving ord, yojson]
 
   module Map = Map.Make_with_yojson (struct
@@ -13,9 +16,9 @@ module Address_and_ticket_map = struct
 
   let empty = Map.empty
 
-  let find_opt address ticket = Map.find_opt {address; ticket}
+  let find_opt address ticket = Map.find_opt { address; ticket }
 
-  let add address ticket = Map.add {address; ticket}
+  let add address ticket = Map.add { address; ticket }
 end
 
 module Withdrawal_handle = struct
@@ -29,13 +32,10 @@ module Withdrawal_handle = struct
   [@@deriving yojson]
 
   let hash ~id ~owner ~amount ~ticket =
-    let Ticket_id.{ticketer; data} = ticket in
-    Tezos.Deku.Consensus.hash_withdraw_handle
-      ~id:(Z.of_int id)
-      ~owner
+    let Ticket_id.{ ticketer; data } = ticket in
+    Tezos.Deku.Consensus.hash_withdraw_handle ~id:(Z.of_int id) ~owner
       ~amount:(Z.of_int (Amount.to_int amount))
-      ~ticketer
-      ~data
+      ~ticketer ~data
 end
 
 module Withdrawal_handle_tree = Incremental_patricia.Make (struct
@@ -73,9 +73,7 @@ let transfer ~sender ~destination amount ticket t =
       ledger =
         t.ledger
         |> Address_and_ticket_map.add sender ticket (sender_balance - amount)
-        |> Address_and_ticket_map.add
-             destination
-             ticket
+        |> Address_and_ticket_map.add destination ticket
              (destination_balance + amount);
       withdrawal_handles = t.withdrawal_handles;
     }
@@ -86,9 +84,7 @@ let deposit destination amount ticket t =
   {
     ledger =
       t.ledger
-      |> Address_and_ticket_map.add
-           destination
-           ticket
+      |> Address_and_ticket_map.add destination ticket
            (destination_balance + amount);
     withdrawal_handles = t.withdrawal_handles;
   }
@@ -102,17 +98,15 @@ let withdraw ~sender ~destination amount ticket t =
     Withdrawal_handle_tree.add
       (fun id ->
         let hash = Withdrawal_handle.hash ~id ~owner ~amount ~ticket in
-        {id; hash; owner; amount; ticket})
-      t.withdrawal_handles
-  in
+        { id; hash; owner; amount; ticket })
+      t.withdrawal_handles in
   let t =
     {
       ledger =
         t.ledger
         |> Address_and_ticket_map.add sender ticket (sender_balance - amount);
       withdrawal_handles;
-    }
-  in
+    } in
   Ok (t, handle)
 
 let withdrawal_handles_find_proof handle t =

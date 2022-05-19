@@ -4,11 +4,12 @@ open Libsecp256k1
 let context =
   let c = Context.create () in
   let rand_value =
-    Random.generate 32 |> Cstruct.to_bytes |> Bigstring.of_bytes
-  in
+    Random.generate 32 |> Cstruct.to_bytes |> Bigstring.of_bytes in
   let randomized = Context.randomize c rand_value in
-  if randomized then c
-  else failwith "Secp256k1 context randomization failed. Aborting."
+  if randomized then
+    c
+  else
+    failwith "Secp256k1 context randomization failed. Aborting."
 
 module Key = struct
   type t = Libsecp256k1.Key.public Libsecp256k1.Key.t
@@ -36,7 +37,8 @@ module Key = struct
     let to_raw = to_raw
 
     let of_raw string =
-      string |> Bigstring.of_string
+      string
+      |> Bigstring.of_string
       |> Libsecp256k1.Key.read_pk context
       |> Result.to_option
   end)
@@ -127,12 +129,11 @@ let generate () =
   (sk, pk)
 
 let sign secret hash =
-  BLAKE2B.to_raw_string hash |> Bigstring.of_string
+  BLAKE2B.to_raw_string hash
+  |> Bigstring.of_string
   |> Sign.sign_exn context ~sk:secret
 
 let verify public signature hash =
-  Sign.verify_exn
-    context
-    ~pk:public
+  Sign.verify_exn context ~pk:public
     ~msg:(Bigstring.of_string (BLAKE2B.to_raw_string hash))
     ~signature

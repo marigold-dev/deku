@@ -12,7 +12,10 @@ type payload = {
   internal_operations : internal_operation list;
 }
 
-type t = private {hash : BLAKE2B.t; payload : payload}
+type t = private {
+  hash : BLAKE2B.t;
+  payload : payload;
+}
 [@@deriving eq, ord, yojson]
 
 val make : payload -> t

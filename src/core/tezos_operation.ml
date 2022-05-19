@@ -15,7 +15,11 @@ type payload = {
 }
 [@@deriving yojson]
 
-type t = {hash : BLAKE2B.t; payload : payload} [@@deriving yojson]
+type t = {
+  hash : BLAKE2B.t;
+  payload : payload;
+}
+[@@deriving yojson]
 
 let equal a b = BLAKE2B.equal a.hash b.hash
 
@@ -29,11 +33,11 @@ let hash, verify =
 
 let make payload =
   let hash = hash payload in
-  {hash; payload}
+  { hash; payload }
 
 let verify hash payload =
   let%assert () = ("Invalid_tezos_operation_hash", verify hash payload) in
-  Ok {hash; payload}
+  Ok { hash; payload }
 
 let of_yojson json =
   let%ok t = of_yojson json in

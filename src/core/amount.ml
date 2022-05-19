@@ -6,11 +6,11 @@ let ( + ) = ( + )
 
 let ( - ) a b =
   let t = a - b in
-  if t < 0 then raise (Invalid_argument "Negative amount") ;
+  if t < 0 then raise (Invalid_argument "Negative amount");
   t
 
 let of_int t =
-  if t < 0 then raise (Invalid_argument "Negative amount") ;
+  if t < 0 then raise (Invalid_argument "Negative amount");
   t
 
 let to_int t = t

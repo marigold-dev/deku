@@ -1,13 +1,17 @@
 open Crypto
 open Helpers
 
-type t = Implicit of Key_hash.t | Originated of Contract_address.t
+type t =
+  | Implicit   of Key_hash.t
+  | Originated of Contract_address.t
 [@@deriving eq, ord, yojson]
 
 let of_key_hash implicit = Implicit implicit
 
 let to_key_hash t =
-  match t with Implicit implicit -> Some implicit | _ -> None
+  match t with
+  | Implicit implicit -> Some implicit
+  | _ -> None
 
 let to_contract_hash t =
   match t with
@@ -23,10 +27,8 @@ let to_string = function
 let of_string =
   let implicit string =
     let%some key_hash = Key_hash.of_string string in
-    Some (Implicit key_hash)
-  in
+    Some (Implicit key_hash) in
   let contract string =
     let%some contract_hash = Contract_address.of_string string in
-    Some (Originated contract_hash)
-  in
+    Some (Originated contract_hash) in
   Encoding_helpers.parse_string_variant [implicit; contract]

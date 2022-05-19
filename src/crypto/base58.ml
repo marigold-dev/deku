@@ -72,24 +72,25 @@ let base = 58
 let zbase = Z.of_int base
 
 module Alphabet = struct
-  type t = {encode : string; decode : string}
+  type t = {
+    encode : string;
+    decode : string;
+  }
 
   let make alphabet =
     if String.length alphabet <> base then
-      invalid_arg "Base58: invalid alphabet (length)" ;
+      invalid_arg "Base58: invalid alphabet (length)";
     let str = Bytes.make 256 '\255' in
     for i = 0 to String.length alphabet - 1 do
       let char = int_of_char alphabet.[i] in
       if Bytes.get str char <> '\255' then
-        Format.kasprintf
-          invalid_arg
-          "Base58: invalid alphabet (dup '%c' %d %d)"
+        Format.kasprintf invalid_arg "Base58: invalid alphabet (dup '%c' %d %d)"
           (char_of_int char)
           (int_of_char @@ Bytes.get str char)
-          i ;
+          i;
       Bytes.set str char (char_of_int i)
-    done ;
-    {encode = alphabet; decode = Bytes.to_string str}
+    done;
+    { encode = alphabet; decode = Bytes.to_string str }
 
   let bitcoin =
     make "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -119,20 +120,18 @@ let raw_encode ?(alphabet = Alphabet.default) s =
   let res = Bytes.make res_len '\000' in
   let s = Z.of_bits s in
   let rec loop s i =
-    if s = Z.zero then i
+    if s = Z.zero then
+      i
     else
       let s, r = Z.div_rem s zbase in
-      Bytes.set res i (to_char ~alphabet (Z.to_int r)) ;
-      loop s (i - 1)
-  in
+      Bytes.set res i (to_char ~alphabet (Z.to_int r));
+      loop s (i - 1) in
   let i = loop s (res_len - 1) in
   let ress = Bytes.sub_string res (i + 1) (res_len - i - 1) in
   String.make zeros zero ^ ress
 
 let checksum s =
-  let hash =
-    Mirage_crypto.Hash.SHA256.(digest (digest (Cstruct.of_string s)))
-  in
+  let hash = Mirage_crypto.Hash.SHA256.(digest (digest (Cstruct.of_string s))) in
   String.sub (Cstruct.to_string hash) 0 4
 
 (* Append a 4-bytes cryptographic checksum before encoding string s *)
@@ -144,26 +143,29 @@ let simple_encode ?alphabet ~prefix ~to_raw d =
 module TzString = struct
   let fold_left f init s =
     let acc = ref init in
-    String.iter (fun c -> acc := f !acc c) s ;
+    String.iter (fun c -> acc := f !acc c) s;
     !acc
 
   let remove_prefix ~prefix s =
     let x = String.length prefix in
     let n = String.length s in
-    if n >= x && String.sub s 0 x = prefix then Some (String.sub s x (n - x))
-    else None
+    if n >= x && String.sub s 0 x = prefix then
+      Some (String.sub s x (n - x))
+    else
+      None
 end
 
 let count_leading_char s c =
   let len = String.length s in
   let rec loop i =
-    if i = len then len else if s.[i] <> c then i else loop (i + 1)
-  in
+    if i = len then len else if s.[i] <> c then i else loop (i + 1) in
   loop 0
 
 let of_char ?(alphabet = Alphabet.default) x =
   let pos = alphabet.decode.[int_of_char x] in
-  match pos with '\255' -> None | _ -> Some (int_of_char pos)
+  match pos with
+  | '\255' -> None
+  | _ -> Some (int_of_char pos)
 
 let raw_decode ?(alphabet = Alphabet.default) s =
   TzString.fold_left
@@ -171,8 +173,7 @@ let raw_decode ?(alphabet = Alphabet.default) s =
       match (a, of_char ~alphabet c) with
       | Some a, Some i -> Some Z.(add (of_int i) (mul a zbase))
       | _ -> None)
-    (Some Z.zero)
-    s
+    (Some Z.zero) s
   |> Option.map (fun res ->
          let res = Z.to_bits res in
          let res_tzeros = count_trailing_char res '\000' in
@@ -183,7 +184,8 @@ let raw_decode ?(alphabet = Alphabet.default) s =
 let safe_decode ?alphabet s =
   Option.bind (raw_decode ?alphabet s) (fun s ->
       let len = String.length s in
-      if len < 4 then None
+      if len < 4 then
+        None
       else
         (* only if the string is long enough to extract a checksum do we check it *)
         let msg = String.sub s 0 (len - 4) in

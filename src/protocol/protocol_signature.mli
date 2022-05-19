@@ -19,7 +19,10 @@ module type S = sig
 
   type signature = t
 
-  type t = private {value : value; signature : signature}
+  type t = private {
+    value : value;
+    signature : signature;
+  }
 
   val sign : key:Secret.t -> value -> t
 

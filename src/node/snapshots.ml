@@ -25,7 +25,7 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
         (* TODO: if a snapshot is requested before first epoch starts, we will send meaningless data.
            We need to have logic in the snapshot request handler such that we send a 503 error or something
            instead of sending bad data. *)
-        (Some {hash = initial_block.Block.state_root_hash; data = ""});
+        (Some { hash = initial_block.Block.state_root_hash; data = "" });
     next_snapshots =
       [(initial_block.block_height, Atomic.make (Some initial_snapshot))];
     last_block = initial_block;
@@ -34,11 +34,11 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
   }
 
 let append_block ~pool (block, signatures) t =
-  if t.last_block.block_height > block.Block.block_height then t
+  if t.last_block.block_height > block.Block.block_height then
+    t
   else
     let blocks, (block, signatures) =
-      Block_pool.find_all_signed_blocks_above (block, signatures) pool
-    in
+      Block_pool.find_all_signed_blocks_above (block, signatures) pool in
     {
       current_snapshot = t.current_snapshot;
       next_snapshots = t.next_snapshots;
@@ -67,21 +67,19 @@ let start_new_epoch t =
   let rec truncate_additional_blocks block_height blocks =
     match blocks with
     | hd :: tl when hd.Block.block_height > block_height ->
-        hd :: truncate_additional_blocks block_height tl
-    | _ -> []
-  in
+      hd :: truncate_additional_blocks block_height tl
+    | _ -> [] in
   match t.next_snapshots with
   | (height, snapshot) :: tl ->
-      let additional_blocks =
-        truncate_additional_blocks height t.additional_blocks
-      in
-      {
-        current_snapshot = snapshot;
-        next_snapshots = tl;
-        last_block = t.last_block;
-        last_block_signatures = t.last_block_signatures;
-        additional_blocks;
-      }
+    let additional_blocks =
+      truncate_additional_blocks height t.additional_blocks in
+    {
+      current_snapshot = snapshot;
+      next_snapshots = tl;
+      last_block = t.last_block;
+      last_block_signatures = t.last_block_signatures;
+      additional_blocks;
+    }
   | [] -> failwith "You must add a snapshot before you can start a new epoch"
 
 (* THIS IS GLOBAL STATE OUTSIDE OF ./server.ml. CAUTION *)
@@ -90,12 +88,12 @@ let latest_finished_snapshot = ref None
 let get_most_recent_snapshot t =
   match Atomic.get t.current_snapshot with
   | Some snapshot ->
-      latest_finished_snapshot := Some snapshot ;
-      Ok snapshot
-  | None -> (
-      match !latest_finished_snapshot with
-      | Some latest_finished_snapshot -> Ok latest_finished_snapshot
-      | None -> Error `Node_not_yet_initialized)
+    latest_finished_snapshot := Some snapshot;
+    Ok snapshot
+  | None ->
+  match !latest_finished_snapshot with
+  | Some latest_finished_snapshot -> Ok latest_finished_snapshot
+  | None -> Error `Node_not_yet_initialized
 
 let get_next_snapshot t =
   let%some _, snapshot = List.nth_opt t.next_snapshots 0 in

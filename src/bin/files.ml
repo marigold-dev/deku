@@ -22,7 +22,10 @@ module Identity = struct
 end
 
 module Wallet = struct
-  type t = {address : Crypto.Key_hash.t; priv_key : Crypto.Secret.t}
+  type t = {
+    address : Crypto.Key_hash.t;
+    priv_key : Crypto.Secret.t;
+  }
   [@@deriving yojson]
 
   let read = read_json of_yojson
@@ -36,7 +39,7 @@ module Interop_context = struct
 
     let of_yojson = function
       | `String string ->
-          of_string string |> Option.to_result ~none:"invalid secret"
+        of_string string |> Option.to_result ~none:"invalid secret"
       | _ -> Error "expected a string"
 
     let to_yojson t = `String (to_string t)

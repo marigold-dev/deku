@@ -34,18 +34,21 @@ end) : S with type key = K.t = struct
       |> Result.map (fun l -> l |> List.to_seq |> of_seq)
   end
 
-  type 'a t = {cardinality : int; values : 'a Map.t} [@@deriving yojson, eq]
+  type 'a t = {
+    cardinality : int;
+    values : 'a Map.t;
+  }
+  [@@deriving yojson, eq]
 
-  let empty = {cardinality = 0; values = Map.empty}
+  let empty = { cardinality = 0; values = Map.empty }
 
   let add key value t =
-    let {cardinality; values} = t in
+    let { cardinality; values } = t in
     let cardinality =
       (* TODO: this could be fused with Ident.Map.add by using Ident.Map.update *)
-      if Map.mem key values then cardinality else cardinality + 1
-    in
+      if Map.mem key values then cardinality else cardinality + 1 in
     let values = Map.add key value values in
-    {cardinality; values}
+    { cardinality; values }
 
   let cardinal t = t.cardinality
 

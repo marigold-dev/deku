@@ -18,10 +18,12 @@ let decode of_yojson data =
   try
     let json = Yojson.Safe.from_string data in
     Ok (of_yojson json)
-  with exn -> Error exn
+  with
+  | exn -> Error exn
 
 let decode of_yojson data =
   let%await data =
-    Lwt_domain.detach (pool ()) (fun () -> decode of_yojson data) ()
-  in
-  match data with Ok data -> await data | Error exn -> raise exn
+    Lwt_domain.detach (pool ()) (fun () -> decode of_yojson data) () in
+  match data with
+  | Ok data -> await data
+  | Error exn -> raise exn

@@ -8,29 +8,24 @@ let test_increment () =
   let script = [%lambda_vm.script fun x -> (x + 1L, (0L, 0L))] in
   let result = Vm_test.execute_ast_exn sender 1901 (Int64 42L) script in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 43L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 43L) in
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
 let test_decrement () =
   let script = [%lambda_vm.script fun x -> (x - 1L, (0L, 0L))] in
   let result = Vm_test.execute_ast_exn sender 1901 (Int64 42L) script in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 41L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 41L) in
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
 let test_add_pair () =
-  let script =
-    [%lambda_vm.script fun pair -> (fst pair + snd pair, (0L, 0L))]
-  in
+  let script = [%lambda_vm.script fun pair -> (fst pair + snd pair, (0L, 0L))] in
 
   let result =
     Vm_test.execute_ast_exn sender 2901 (Pair (Int64 23L, Int64 28L)) script
   in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 51L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 51L) in
 
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
@@ -46,17 +41,15 @@ let test_if_expr () =
     Vm_test.execute_ast_exn sender 4001 (Pair (Int64 1L, Int64 51L)) script
   in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 52L)
-  in
-  Alcotest.(check Testable.value) "Same value" expected_value result.storage ;
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 52L) in
+  Alcotest.(check Testable.value) "Same value" expected_value result.storage;
 
   (* Check decrement *)
   let result =
     Vm_test.execute_ast_exn sender 4001 (Pair (Int64 0L, Int64 33L)) script
   in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L) in
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
 let test_lambda () =
@@ -67,27 +60,23 @@ let test_lambda () =
       fun param ->
         ( (fun inc ->
             if inc then [%e increment_lambda] else [%e decrement_lambda])
-            (fst param)
-            (snd param),
-          (0L, 0L) )]
-  in
+            (fst param) (snd param),
+          (0L, 0L) )] in
   (* Check increment *)
   let result =
     Vm_test.execute_ast_exn sender 6501 (Pair (Int64 1L, Int64 99L)) script
   in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 100L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 100L) in
 
-  Alcotest.(check Testable.value) "Same value" expected_value result.storage ;
+  Alcotest.(check Testable.value) "Same value" expected_value result.storage;
 
   (* Check decrement *)
   let result =
     Vm_test.execute_ast_exn sender 6501 (Pair (Int64 0L, Int64 33L)) script
   in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 32L) in
 
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 
@@ -95,8 +84,7 @@ let test_lambda_application () =
   let script = [%lambda_vm.script fun y -> (fun x -> (x, (0L, 0L))) y] in
   let result = Vm_test.execute_ast_exn sender 2000 (Int64 45L) script in
   let expected_value =
-    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 45L)
-  in
+    Vm_test.compile_value_exn (Gas.make ~initial_gas:101) (Int64 45L) in
 
   Alcotest.(check Testable.value) "Same value" expected_value result.storage
 

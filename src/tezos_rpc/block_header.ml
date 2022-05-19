@@ -6,4 +6,4 @@ type t = {
   proto : int;
   predecessor : Block_hash.t;
 }
-[@@deriving of_yojson {strict = false}]
+[@@deriving of_yojson { strict = false }]

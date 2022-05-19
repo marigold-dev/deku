@@ -9,8 +9,8 @@ let compare =
     let aux aux size a b =
       if size then
         if fst a - fst b then 0L else aux aux (size - 1L) (snd a) (snd b)
-      else 1L
-    in
+      else
+        1L in
     let aux = delta aux in
     fun a b ->
       let size_a = fst a in
@@ -25,21 +25,21 @@ let vote_contract =
 
       let is_admin storage address =
         let admin = fst storage in
-        compare admin address
-      in
+        compare admin address in
 
       let find_voter votes address =
         let aux aux size votes =
           if size then
             let pair = fst votes in
             let key = fst pair in
-            if compare key address then (1L, snd pair)
-            else aux aux (size - 1L) (snd votes)
-          else (0L, 0L)
-        in
+            if compare key address then
+              (1L, snd pair)
+            else
+              aux aux (size - 1L) (snd votes)
+          else
+            (0L, 0L) in
         let aux = (fun f -> f f) aux in
-        aux (fst votes) (snd votes)
-      in
+        aux (fst votes) (snd votes) in
 
       let count_votes votes =
         let aux aux size votes count =
@@ -48,45 +48,48 @@ let vote_contract =
             let value = snd pair in
             let count = if value then count + 1L else count - 1L in
             aux aux (size - 1L) (snd votes) count
-          else count
-        in
+          else
+            count in
         let aux = (fun f -> f f) aux in
-        aux (fst votes) (snd votes) 0L
-      in
+        aux (fst votes) (snd votes) 0L in
 
       let append_list lst value =
         let size = fst lst in
         let lst = snd lst in
-        (size + 1L, (value, lst))
-      in
+        (size + 1L, (value, lst)) in
 
       let sub_vote vote storage =
         let admin = fst storage in
         let paused = fst (snd (snd (snd storage))) in
-        if paused then 0L
-        else if is_admin storage (sender 0L) then 0L
+        if paused then
+          0L
+        else if is_admin storage (sender 0L) then
+          0L
         else
           let storage = snd storage in
           let votes = fst storage in
           let voter = find_voter votes (sender 0L) in
-          if fst voter then 1L
+          if fst voter then
+            1L
           else
             let votes = append_list votes (sender 0L, vote) in
             let vote_count = fst (snd storage) + 1L in
             let result =
-              if vote_count - 10L then snd (snd (snd storage))
+              if vote_count - 10L then
+                snd (snd (snd storage))
               else
                 let count = count_votes votes in
                 (* Checks if count is negative *)
-                if count land 0x8000000000000000L then 1L (* non *)
-                else if count then 2L (* oui *)
-                else 3L
-              (* egalite *)
-            in
+                if count land 0x8000000000000000L then
+                  1L (* non *)
+                else if count then
+                  2L (* oui *)
+                else
+                  3L
+              (* egalite *) in
             let paused = if vote_count - 10L then paused else 1L in
             let storage = (admin, (votes, (vote_count, (paused, result)))) in
-            (storage, (0L, 0L))
-      in
+            (storage, (0L, 0L)) in
 
       let reset storage =
         if is_admin storage (sender 0L) then
@@ -97,8 +100,8 @@ let vote_contract =
           let result = 0L in
           let storage = (admin, (votes, (vote_count, (paused, result)))) in
           (storage, (0L, 0L))
-        else 0L
-      in
+        else
+          0L in
 
       let action = fst pair in
       let storage = snd pair in
@@ -153,10 +156,8 @@ let bartholome = "tz1hv9CrgtaxiCayc567KUvCyWDQRF9sVNuf"
 
 let test_vote () =
   let value =
-    run_contract
-      alice
-      [%lambda_vm.value [%e vote true], [%e empty_storage admin]]
-  in
+    run_contract alice
+      [%lambda_vm.value [%e vote true], [%e empty_storage admin]] in
   let expected =
     Vm_test.compile_value_exn
       (Gas.make ~initial_gas:10000000)
@@ -166,36 +167,29 @@ let test_vote () =
   Alcotest.(check Vm_test.Testable.value) "Same value" expected value
 
 let test_no_second_vote () =
-  Alcotest.check_raises
-    "Interpreter error"
+  Alcotest.check_raises "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
       let alice_vote = [%lambda_vm.value [%e str alice], 1L] in
       let _ =
-        run_contract
-          admin
+        run_contract admin
           [%lambda_vm.value
-            [%e vote true], [%e storage_with_vote admin alice_vote]]
-      in
+            [%e vote true], [%e storage_with_vote admin alice_vote]] in
       ())
 
 let test_admin_vote () =
-  Alcotest.check_raises
-    "Interpreter error"
+  Alcotest.check_raises "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
       let _ =
-        run_contract
-          admin
-          [%lambda_vm.value [%e vote true], [%e empty_storage admin]]
-      in
+        run_contract admin
+          [%lambda_vm.value [%e vote true], [%e empty_storage admin]] in
       ())
 
 let test_contract_paused () =
-  Alcotest.check_raises
-    "Interpreter error"
+  Alcotest.check_raises "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
@@ -214,11 +208,9 @@ let test_contract_paused () =
                                 ( ([%e str boby], 0L),
                                   (([%e str bartholome], 0L), (0L, 0L)) ) ) ) )
                         ) ) ) ) ) ),
-              (10L, (1L, 1L)) )]
-      in
+              (10L, (1L, 1L)) )] in
       let _ =
-        run_contract alice [%lambda_vm.value [%e vote true], [%e storage]]
-      in
+        run_contract alice [%lambda_vm.value [%e vote true], [%e storage]] in
       ())
 
 let test_auto_pause () =
@@ -236,11 +228,9 @@ let test_auto_pause () =
                           ( ([%e str boby], 0L),
                             (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) ) ) )
             ) ),
-          (9L, (0L, 0L)) )]
-  in
+          (9L, (0L, 0L)) )] in
   let value =
-    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]]
-  in
+    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]] in
   let expected =
     Vm_test.compile_value_exn
       (Gas.make ~initial_gas:10000000)
@@ -258,8 +248,7 @@ let test_auto_pause () =
                               ( ([%e str boby], 0L),
                                 (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) )
                     ) ) ) ) ),
-            (10L, (1L, 1L)) )]
-  in
+            (10L, (1L, 1L)) )] in
   Alcotest.check Vm_test.Testable.value "Same value" expected value
 
 let test_reset () =
@@ -278,19 +267,16 @@ let test_reset () =
                             ( ([%e str boby], 0L),
                               (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) ) )
                 ) ) ) ),
-          (10L, (1L, 1L)) )]
-  in
+          (10L, (1L, 1L)) )] in
   let value = run_contract admin [%lambda_vm.value [%e reset], [%e storage]] in
   let expected =
     Vm_test.compile_value_exn
       (Gas.make ~initial_gas:10000000)
-      (empty_storage admin)
-  in
+      (empty_storage admin) in
   Alcotest.check Vm_test.Testable.value "Same value" expected value
 
 let test_reset_not_admin () =
-  Alcotest.check_raises
-    "Interpreter error"
+  Alcotest.check_raises "Interpreter error"
     Vm_test.(
       Vm_test_error (Execution_error (Interpreter_error Value_is_not_pair)))
     (fun () ->
@@ -309,8 +295,7 @@ let test_reset_not_admin () =
                                 ( ([%e str boby], 0L),
                                   (([%e str bartholome], 0L), (0L, 0L)) ) ) ) )
                         ) ) ) ) ) ),
-              (10L, (1L, 1L)) )]
-      in
+              (10L, (1L, 1L)) )] in
       let _ = run_contract alice [%lambda_vm.value [%e reset], [%e storage]] in
       ())
 
@@ -329,11 +314,9 @@ let test_get_result () =
                           ( ([%e str boby], 0L),
                             (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) ) ) )
             ) ),
-          (9L, (0L, 0L)) )]
-  in
+          (9L, (0L, 0L)) )] in
   let value =
-    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]]
-  in
+    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]] in
   let expected =
     Vm_test.compile_value_exn
       (Gas.make ~initial_gas:10000000)
@@ -351,8 +334,7 @@ let test_get_result () =
                               ( ([%e str boby], 0L),
                                 (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) )
                     ) ) ) ) ),
-            (10L, (1L, 2L)) )]
-  in
+            (10L, (1L, 2L)) )] in
   Alcotest.check Vm_test.Testable.value "Same value" expected value
 
 let test_draw () =
@@ -370,11 +352,9 @@ let test_draw () =
                           ( ([%e str boby], 0L),
                             (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) ) ) )
             ) ),
-          (9L, (0L, 0L)) )]
-  in
+          (9L, (0L, 0L)) )] in
   let value =
-    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]]
-  in
+    run_contract alice [%lambda_vm.value [%e vote true], [%e storage]] in
   let expected =
     Vm_test.compile_value_exn
       (Gas.make ~initial_gas:10000000)
@@ -392,8 +372,7 @@ let test_draw () =
                               ( ([%e str boby], 0L),
                                 (([%e str bartholome], 0L), (0L, 0L)) ) ) ) ) )
                     ) ) ) ) ),
-            (10L, (1L, 3L)) )]
-  in
+            (10L, (1L, 3L)) )] in
   Alcotest.check Vm_test.Testable.value "Same value" expected value
 
 let test =

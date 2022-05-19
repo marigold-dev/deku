@@ -1,7 +1,12 @@
 open Crypto
 open Protocol
 
-type identity = {secret : Secret.t; key : Key.t; t : Key_hash.t; uri : Uri.t}
+type identity = {
+  secret : Secret.t;
+  key : Key.t;
+  t : Key_hash.t;
+  uri : Uri.t;
+}
 [@@deriving yojson]
 
 module Address_map : Map.S with type key = Key_hash.t

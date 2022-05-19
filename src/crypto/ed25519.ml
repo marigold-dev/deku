@@ -107,11 +107,11 @@ end
 
 let sign secret hash =
   Cstruct.of_string (BLAKE2B.to_raw_string hash)
-  |> Ed25519.sign ~key:secret |> Cstruct.to_string
+  |> Ed25519.sign ~key:secret
+  |> Cstruct.to_string
 
 let verify public signature hash =
-  verify
-    ~key:public
+  verify ~key:public
     ~msg:(Cstruct.of_string (BLAKE2B.to_raw_string hash))
     (Cstruct.of_string signature)
 

@@ -25,12 +25,10 @@ let test_execute_ir () =
   let x = 4096L in
   let arg =
     let gas = Gas.make ~initial_gas:101 in
-    Vm_test.compile_value_exn gas (Int64 x)
-  in
+    Vm_test.compile_value_exn gas (Int64 x) in
   let ir =
     let gas = Gas.make ~initial_gas:5000 in
-    Vm_test.compile_exn gas counter
-  in
+    Vm_test.compile_exn gas counter in
 
   let gas = Gas.make ~initial_gas:14747900 in
   let _ = Vm_test.execute_exn sender gas arg ir in

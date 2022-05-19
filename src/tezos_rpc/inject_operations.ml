@@ -8,8 +8,5 @@ let path = "/injection/operation"
 
 let execute ~node_uri ~secret ~branch ~operations =
   let signed_forged_operation = Operation.forge ~secret ~branch ~operations in
-  http_post
-    ~node_uri
-    ~path
-    ~of_yojson:response_of_yojson
+  http_post ~node_uri ~path ~of_yojson:response_of_yojson
     ~data:(`String signed_forged_operation)

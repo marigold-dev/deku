@@ -12,13 +12,11 @@ let make_wallet key_hash secret =
 
 (* Currently hardcode the addresses *)
 let alice_wallet =
-  make_wallet
-    "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+  make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
     "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 
 let bob_wallet =
-  make_wallet
-    "tz1h1oFuYsCorjxekQ59bUe1uDGhuYvEx9ob"
+  make_wallet "tz1h1oFuYsCorjxekQ59bUe1uDGhuYvEx9ob"
     "edsk326F1xfCvHFw1LWhgtrwcm6DnFoHCmjjWX4vcWsJCbqmujJQVs"
 
 (*************************************************************************)
@@ -50,12 +48,9 @@ let bob_wallet =
 
 let interop_context node_folder =
   let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json")
-  in
+    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
-    (Tezos_interop.make
-       ~rpc_node:context.rpc_node
-       ~secret:context.secret
+    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
        ~consensus_contract:context.consensus_contract
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
@@ -95,5 +90,5 @@ let get_current_block_level () =
 
 let make_ticket ticketer =
   let contract = Tezos.Contract_hash.of_string ticketer |> Option.get in
-  let ticketer = Tezos.Address.Originated {contract; entrypoint = None} in
-  Core.Ticket_id.{ticketer; data = Bytes.empty}
+  let ticketer = Tezos.Address.Originated { contract; entrypoint = None } in
+  Core.Ticket_id.{ ticketer; data = Bytes.empty }

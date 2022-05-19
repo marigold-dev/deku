@@ -32,28 +32,47 @@ module Ast : sig
 
   type expr =
     (* calculus *)
-    | Var of ident
-    | Lam of ident * expr
-    | App of {funct : expr; arg : expr}
+    | Var   of ident
+    | Lam   of ident * expr
+    | App   of {
+        funct : expr;
+        arg : expr;
+      }
     (* prims *)
     | Const of int64
-    | Prim of prim
+    | Prim  of prim
     (* branching *)
-    | If of {predicate : expr; consequent : expr; alternative : expr}
+    | If    of {
+        predicate : expr;
+        consequent : expr;
+        alternative : expr;
+      }
     (* memory *)
-    | Pair of {first : expr; second : expr}
+    | Pair  of {
+        first : expr;
+        second : expr;
+      }
   [@@deriving yojson, show]
 
-  type value = Int64 of int64 | Pair of value * value
+  type value =
+    | Int64 of int64
+    | Pair  of value * value
   [@@deriving yojson, show]
 
-  type script = {param : ident; code : expr} [@@deriving yojson, show]
+  type script = {
+    param : ident;
+    code : expr;
+  }
+  [@@deriving yojson, show]
 
   val value_of_string : Gas.t -> string -> value
 end
 
 module Runtime_limits_error : sig
-  type t = Out_of_gas | Out_of_stack [@@deriving show]
+  type t =
+    | Out_of_gas
+    | Out_of_stack
+  [@@deriving show]
 end
 
 module Ir : sig
@@ -78,7 +97,7 @@ module Compiler : sig
   [@@deriving show]
 
   type error =
-    | Compiler_error of compiler_error
+    | Compiler_error       of compiler_error
     | Runtime_limits_error of Runtime_limits_error.t
   [@@deriving show]
 
@@ -107,11 +126,14 @@ module Interpreter : sig
   [@@deriving show]
 
   type error =
-    | Interpreter_error of interpreter_error
+    | Interpreter_error    of interpreter_error
     | Runtime_limits_error of Runtime_limits_error.t
   [@@deriving show]
 
-  type script_result = {storage : Ir.value; operations : unit}
+  type script_result = {
+    storage : Ir.value;
+    operations : unit;
+  }
 
   val execute :
     context:Context.t ->

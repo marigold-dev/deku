@@ -1,7 +1,7 @@
 type t =
-  | Ed25519 of Ed25519.Signature.t
+  | Ed25519   of Ed25519.Signature.t
   | Secp256k1 of Secp256k1.Signature.t
-  | P256 of P256.Signature.t
+  | P256      of P256.Signature.t
 [@@deriving ord, eq, yojson]
 
 val size : int

@@ -10,7 +10,10 @@ module Identity : sig
 end
 
 module Wallet : sig
-  type t = {address : Crypto.Key_hash.t; priv_key : Crypto.Secret.t}
+  type t = {
+    address : Crypto.Key_hash.t;
+    priv_key : Crypto.Secret.t;
+  }
 
   val read : file:string -> t Lwt.t
 

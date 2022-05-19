@@ -74,15 +74,15 @@ module Alphabet : sig
   val flickr : t
 end
 
-(** Encoder for a given kind of data. *)
 val simple_encode :
   ?alphabet:Alphabet.t -> prefix:string -> to_raw:('a -> string) -> 'a -> string
+(** Encoder for a given kind of data. *)
 
-(** Decoder for a given kind of data. It returns [None] when
-  the decoded data does not start with the expected prefix. *)
 val simple_decode :
   ?alphabet:Alphabet.t ->
   prefix:string ->
   of_raw:(string -> 'a option) ->
   string ->
   'a option
+(** Decoder for a given kind of data. It returns [None] when
+  the decoded data does not start with the expected prefix. *)

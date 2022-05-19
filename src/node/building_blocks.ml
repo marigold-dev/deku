@@ -8,14 +8,11 @@ let is_valid_block state block =
   let%assert () =
     ( Printf.sprintf
         "new block has a lower block height (%Ld) than the current state (%Ld)"
-        block.Block.block_height
-        state.Node.protocol.block_height,
-      block.Block.block_height >= state.Node.protocol.block_height )
-  in
+        block.Block.block_height state.Node.protocol.block_height,
+      block.Block.block_height >= state.Node.protocol.block_height ) in
   let%assert () =
     ( "some operation in the block is not properly signed",
-      is_all_operations_properly_signed block )
-  in
+      is_all_operations_properly_signed block ) in
   Ok ()
 
 let is_next state block = Protocol.is_next state.Node.protocol block
@@ -29,16 +26,12 @@ let is_known_block state ~hash =
 
 let is_known_signature state ~hash ~signature =
   let%default () = false in
-  let%some signatures =
-    Block_pool.find_signatures ~hash state.Node.block_pool
-  in
+  let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
   Some (Signatures.mem signature signatures)
 
 let is_signed_by_self state ~hash =
   let%default () = false in
-  let%some signatures =
-    Block_pool.find_signatures ~hash state.Node.block_pool
-  in
+  let%some signatures = Block_pool.find_signatures ~hash state.Node.block_pool in
   Some (Signatures.is_self_signed signatures)
 
 let is_current_producer state ~key_hash =
@@ -60,15 +53,13 @@ let block_matches_current_state_root_hash state block =
 
 let block_matches_next_state_root_hash state block =
   let%default () = false in
-  let%some {hash = next_state_root_hash; _} =
-    Snapshots.get_next_snapshot state.Node.snapshots
-  in
+  let%some { hash = next_state_root_hash; _ } =
+    Snapshots.get_next_snapshot state.Node.snapshots in
   Some (BLAKE2B.equal block.Block.state_root_hash next_state_root_hash)
 
 let block_has_signable_state_root_hash ~current_time state block =
   let time_since_last_epoch =
-    current_time -. state.Node.protocol.last_state_root_update
-  in
+    current_time -. state.Node.protocol.last_state_root_update in
   if block_matches_current_state_root_hash state block then
     time_since_last_epoch <= maximum_signable_time_between_epochs
   else
@@ -78,36 +69,32 @@ let block_has_signable_state_root_hash ~current_time state block =
 let is_signable state block =
   let {
     Node.trusted_validator_membership_change;
-    protocol = {last_seen_membership_change_timestamp; _};
+    protocol = { last_seen_membership_change_timestamp; _ };
     _;
   } =
-    state
-  in
+    state in
   let current_time = Unix.time () in
   let next_allowed_membership_change_timestamp =
-    last_seen_membership_change_timestamp +. (24. *. 60. *. 60.)
-  in
+    last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
   let is_trusted_operation operation =
     match operation with
     | Protocol.Operation.Core_tezos _ ->
-        Node.Operation_map.mem operation state.pending_operations
+      Node.Operation_map.mem operation state.pending_operations
     | Core_user _ -> true
     | Consensus consensus_operation -> (
-        current_time > next_allowed_membership_change_timestamp
-        &&
-        match consensus_operation with
-        | Add_validator validator ->
-            Trusted_validators_membership_change.Set.mem
-              {address = validator.address; action = Add}
-              trusted_validator_membership_change
-        | Remove_validator validator ->
-            Trusted_validators_membership_change.Set.mem
-              {address = validator.address; action = Remove}
-              trusted_validator_membership_change)
-  in
+      current_time > next_allowed_membership_change_timestamp
+      &&
+      match consensus_operation with
+      | Add_validator validator ->
+        Trusted_validators_membership_change.Set.mem
+          { address = validator.address; action = Add }
+          trusted_validator_membership_change
+      | Remove_validator validator ->
+        Trusted_validators_membership_change.Set.mem
+          { address = validator.address; action = Remove }
+          trusted_validator_membership_change) in
   let all_operations_are_trusted =
-    List.for_all is_trusted_operation block.Block.operations
-  in
+    List.for_all is_trusted_operation block.Block.operations in
   is_next state block
   && (not (is_signed_by_self state ~hash:block.hash))
   && is_current_producer state ~key_hash:block.author
@@ -139,34 +126,30 @@ let can_include_tezos_operation ~current_time ~requested_at =
 let produce_block state =
   let current_time = Unix.time () in
   let start_new_epoch =
-    should_start_new_epoch
-      state.Node.protocol.last_state_root_update
-      current_time
-  in
+    should_start_new_epoch state.Node.protocol.last_state_root_update
+      current_time in
   let next_state_root_hash =
     if start_new_epoch then
       let%some snapshot = Snapshots.get_next_snapshot state.snapshots in
       Some snapshot.hash
-    else None
-  in
+    else
+      None in
   let operations =
     (* TODO: fold into list on Helpers *)
     Node.Operation_map.fold
       (fun operation requested_at operations ->
         match operation with
         | Operation.Core_tezos _ ->
-            if can_include_tezos_operation ~current_time ~requested_at then
-              operation :: operations
-            else operations
-        | Core_user _ | Consensus _ -> operation :: operations)
-      state.pending_operations
-      []
-  in
-  Block.produce
-    ~state:state.Node.protocol
-    ~author:state.identity.t
-    ~next_state_root_hash
-    ~operations
+          if can_include_tezos_operation ~current_time ~requested_at then
+            operation :: operations
+          else
+            operations
+        | Core_user _
+        | Consensus _ ->
+          operation :: operations)
+      state.pending_operations [] in
+  Block.produce ~state:state.Node.protocol ~author:state.identity.t
+    ~next_state_root_hash ~operations
 
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
@@ -180,15 +163,12 @@ let append_signature state update_state ~hash ~signature =
   let block_pool =
     Block_pool.append_signature
       ~signatures_required:(signatures_required state)
-      ~hash
-      signature
-      state.Node.block_pool
-  in
-  update_state {state with block_pool}
+      ~hash signature state.Node.block_pool in
+  update_state { state with block_pool }
 
 let add_block_to_pool state update_state block =
   let block_pool = Block_pool.append_block block state.Node.block_pool in
-  update_state {state with block_pool}
+  update_state { state with block_pool }
 
 let apply_block state update_state block =
   let%ok state = Node.apply_block state block in
@@ -199,64 +179,61 @@ let clean state update_state block =
     List.fold_left
       (fun pending_operations operation ->
         Node.Operation_map.remove operation pending_operations)
-      state.State.pending_operations
-      block.Block.operations
-  in
+      state.State.pending_operations block.Block.operations in
   let trusted_validator_membership_change =
     List.fold_left
       (fun trusted_validator_membership_change operation ->
         match operation with
-        | Operation.Core_tezos _ | Core_user _ ->
-            trusted_validator_membership_change
+        | Operation.Core_tezos _
+        | Core_user _ ->
+          trusted_validator_membership_change
         | Consensus (Add_validator validator) ->
-            Trusted_validators_membership_change.Set.remove
-              {address = validator.address; action = Add}
-              trusted_validator_membership_change
+          Trusted_validators_membership_change.Set.remove
+            { address = validator.address; action = Add }
+            trusted_validator_membership_change
         | Consensus (Remove_validator validator) ->
-            Trusted_validators_membership_change.Set.remove
-              {address = validator.address; action = Remove}
-              state.Node.trusted_validator_membership_change)
-      state.Node.trusted_validator_membership_change
-      block.operations
-  in
+          Trusted_validators_membership_change.Set.remove
+            { address = validator.address; action = Remove }
+            state.Node.trusted_validator_membership_change)
+      state.Node.trusted_validator_membership_change block.operations in
   Lwt.async (fun () ->
       trusted_validator_membership_change
       |> Trusted_validators_membership_change.Set.elements
-      |> state.persist_trusted_membership_change) ;
+      |> state.persist_trusted_membership_change);
   update_state
-    {state with trusted_validator_membership_change; pending_operations}
+    { state with trusted_validator_membership_change; pending_operations }
 
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
   let validators = Validators.to_list state.Node.protocol.validators in
   let rec safe_validator_uri () =
     let validator = List.nth validators (random_int (List.length validators)) in
-    if state.Node.identity.t = validator.address then safe_validator_uri ()
+    if state.Node.identity.t = validator.address then
+      safe_validator_uri ()
     else
       match
         Node.Address_map.find_opt validator.address state.validators_uri
       with
       | Some uri -> uri
-      | None -> safe_validator_uri ()
-  in
+      | None -> safe_validator_uri () in
   safe_validator_uri ()
 
 let validator_uris state =
   let validators = Validators.to_list state.Node.protocol.validators in
   List.filter_map
-    (fun Validators.{address; _} ->
+    (fun Validators.{ address; _ } ->
       Node.Address_map.find_opt address state.Node.validators_uri)
     validators
 
 let broadcast_signature state ~hash ~signature =
   let uris = validator_uris state in
-  Lwt.async (fun () -> Network.broadcast_signature uris {hash; signature})
+  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
 
 let broadcast_block_and_signature state ~block ~signature =
   let uris = validator_uris state in
   Lwt.async (fun () ->
       let%await () = Lwt_unix.sleep 1.0 in
-      Network.broadcast_block_and_signature uris {block; signature})
+      Network.broadcast_block_and_signature uris { block; signature })
 
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in

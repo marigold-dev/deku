@@ -31,12 +31,9 @@ open Prepare_deku
 
 let interop_context node_folder =
   let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json")
-  in
+    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
-    (Tezos_interop.make
-       ~rpc_node:context.rpc_node
-       ~secret:context.secret
+    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
        ~consensus_contract:context.consensus_contract
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
@@ -64,8 +61,8 @@ let get_current_block_level () =
 
 let make_ticket ticketer =
   let contract = Tezos.Contract_hash.of_string ticketer |> Option.get in
-  let ticketer = Tezos.Address.Originated {contract; entrypoint = None} in
-  Core.Ticket_id.{ticketer; data = Bytes.empty}
+  let ticketer = Tezos.Address.Originated { contract; entrypoint = None } in
+  Core.Ticket_id.{ ticketer; data = Bytes.empty }
 
 (*************************************************************************)
 (* Transactions *)
@@ -74,16 +71,13 @@ let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
   let amount = Core.Amount.of_int amount in
   let transaction =
     Core.User_operation.Transaction
-      {destination = recipient.Files.Wallet.address; amount; ticket}
-  in
+      { destination = recipient.Files.Wallet.address; amount; ticket } in
   let data =
     Core.User_operation.make ~source:sender.Files.Wallet.address transaction
   in
-  Protocol.Operation.Core_user.sign
-    ~secret:sender.Files.Wallet.priv_key
+  Protocol.Operation.Core_user.sign ~secret:sender.Files.Wallet.priv_key
     ~nonce:(Crypto.Random.int32 Int32.max_int)
-    ~block_height:block_level
-    ~data
+    ~block_height:block_level ~data
 
 let spam_transactions ~ticketer ~n () =
   let validator_uri = get_random_validator_uri () in
@@ -91,21 +85,14 @@ let spam_transactions ~ticketer ~n () =
   let ticket = make_ticket ticketer in
   let transactions =
     List.init n (fun _ ->
-        make_transaction
-          ~block_level
-          ~ticket
-          ~sender:alice_wallet
-          ~recipient:bob_wallet
-          ~amount:1)
-  in
-  Format.eprintf
-    "Number of transactions - packed: %d\n%!"
-    (List.length transactions) ;
+        make_transaction ~block_level ~ticket ~sender:alice_wallet
+          ~recipient:bob_wallet ~amount:1) in
+  Format.eprintf "Number of transactions - packed: %d\n%!"
+    (List.length transactions);
   let%await _ =
     Network.request_user_operations_gossip
-      {user_operations = transactions}
-      validator_uri
-  in
+      { user_operations = transactions }
+      validator_uri in
   Lwt.return transactions
 
 let rec spam ~ticketer =
@@ -115,14 +102,13 @@ let rec spam ~ticketer =
     @@ (* REMARK: list 4 *)
     List.init 4 (fun _ ->
         let%await _ = spam_transactions ~ticketer ~n () in
-        await ())
-  in
+        await ()) in
   let%await () = Lwt_unix.sleep 1.0 in
   spam ~ticketer
 
 let load_test_transactions ticketer =
   let%await starting_block_level = get_current_block_level () in
-  Format.printf "Starting block level: %Li\n%!" starting_block_level ;
+  Format.printf "Starting block level: %Li\n%!" starting_block_level;
   spam ~ticketer
 
 let load_test_transactions ticketer =

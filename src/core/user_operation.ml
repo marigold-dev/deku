@@ -2,17 +2,17 @@ open Helpers
 open Crypto
 
 type initial_operation =
-  | Transaction of {
+  | Transaction          of {
       destination : Key_hash.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-  | Contract_invocation of {
+  | Contract_invocation  of {
       to_invoke : Contract_address.t;
       argument : Contract_vm.Invocation_payload.t;
     }
   | Contract_origination of Contract_vm.Origination_payload.t
-  | Tezos_withdraw of {
+  | Tezos_withdraw       of {
       owner : Tezos.Address.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
@@ -33,25 +33,21 @@ let compare a b = BLAKE2B.compare a.hash b.hash
 let hash, verify =
   let to_yojson sender initial_operation =
     [%to_yojson: Key_hash.t * initial_operation] (sender, initial_operation)
-    |> Yojson.Safe.to_string
-  in
+    |> Yojson.Safe.to_string in
   let hash sender initial_operation =
-    to_yojson sender initial_operation |> BLAKE2B.hash
-  in
+    to_yojson sender initial_operation |> BLAKE2B.hash in
   let verify hash sender initial_operation =
-    to_yojson sender initial_operation |> BLAKE2B.verify ~hash
-  in
+    to_yojson sender initial_operation |> BLAKE2B.verify ~hash in
   (hash, verify)
 
 let make ~source initial_operation =
   let hash = hash source initial_operation in
-  {hash; source; initial_operation}
+  { hash; source; initial_operation }
 
 let verify hash source initial_operation =
   let%assert () =
-    ("Invalid_user_operation_hash", verify hash source initial_operation)
-  in
-  Ok {hash; source; initial_operation}
+    ("Invalid_user_operation_hash", verify hash source initial_operation) in
+  Ok { hash; source; initial_operation }
 
 let of_yojson json =
   let%ok t = of_yojson json in

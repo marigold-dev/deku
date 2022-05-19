@@ -3,8 +3,9 @@ open Http
 
 let path ~chain =
   let chain =
-    match chain with Some chain -> Chain_id.to_string chain | None -> "main"
-  in
+    match chain with
+    | Some chain -> Chain_id.to_string chain
+    | None -> "main" in
   (* TODO: I don't like this Format.sprintf *)
   Format.sprintf "/monitor/heads/%s" chain
 

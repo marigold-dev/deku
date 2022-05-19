@@ -38,10 +38,9 @@ let update_block_and_signatures block_and_signatures t =
     signed_by_previous =
       (match (is_signed, block_and_signatures.block) with
       | true, Some block ->
-          Hash_map.add
-            block.previous_hash
-            (block, block_and_signatures.signatures)
-            t.signed_by_previous
+        Hash_map.add block.previous_hash
+          (block, block_and_signatures.signatures)
+          t.signed_by_previous
       | _ -> t.signed_by_previous);
   }
 
@@ -49,46 +48,47 @@ let find_block_and_signature_or_return_empty ~hash t =
   match Hash_map.find_opt hash t.available with
   | Some block_and_signatures -> block_and_signatures
   | None ->
-      let signatures = Signatures.make ~self_key:t.self_key in
-      {signatures; block = None; hash}
+    let signatures = Signatures.make ~self_key:t.self_key in
+    { signatures; block = None; hash }
 
 let is_signed block_and_signatures =
   Signatures.is_signed block_and_signatures.signatures
 
 let rec set_signed block_and_signatures t =
   let signatures = Signatures.set_signed block_and_signatures.signatures in
-  let block_and_signatures = {block_and_signatures with signatures} in
+  let block_and_signatures = { block_and_signatures with signatures } in
   let t = update_block_and_signatures block_and_signatures t in
   ensure_previous_is_signed block_and_signatures t
 
 and ensure_previous_is_signed block_and_signatures t =
   match block_and_signatures.block with
   | Some block ->
-      let previous_block_and_signatures =
-        find_block_and_signature_or_return_empty ~hash:block.previous_hash t
-      in
-      if is_signed previous_block_and_signatures then t
-      else set_signed previous_block_and_signatures t
+    let previous_block_and_signatures =
+      find_block_and_signature_or_return_empty ~hash:block.previous_hash t in
+    if is_signed previous_block_and_signatures then
+      t
+    else
+      set_signed previous_block_and_signatures t
   | None -> t
 
 let append_block block t =
   let block_and_signatures =
-    find_block_and_signature_or_return_empty ~hash:block.Block.hash t
-  in
-  let block_and_signatures = {block_and_signatures with block = Some block} in
+    find_block_and_signature_or_return_empty ~hash:block.Block.hash t in
+  let block_and_signatures = { block_and_signatures with block = Some block } in
   let block_and_signatures =
     {
       block_and_signatures with
       signatures =
         (if block.hash = Block.genesis.hash then
-         Signatures.set_signed block_and_signatures.signatures
-        else block_and_signatures.signatures);
-    }
-  in
+           Signatures.set_signed block_and_signatures.signatures
+        else
+          block_and_signatures.signatures);
+    } in
   let t = update_block_and_signatures block_and_signatures t in
   if is_signed block_and_signatures then
     ensure_previous_is_signed block_and_signatures t
-  else t
+  else
+    t
 
 let append_signature ~signatures_required ~hash signature t =
   let block_and_signatures = find_block_and_signature_or_return_empty ~hash t in
@@ -96,25 +96,23 @@ let append_signature ~signatures_required ~hash signature t =
     {
       block_and_signatures with
       signatures =
-        Signatures.add
-          ~signatures_required
-          signature
+        Signatures.add ~signatures_required signature
           block_and_signatures.signatures;
-    }
-  in
+    } in
   let t = update_block_and_signatures block_and_signatures t in
   if is_signed block_and_signatures then
     ensure_previous_is_signed block_and_signatures t
-  else t
+  else
+    t
 
 let is_signed ~hash t = Hash_map.mem hash t.signed
 
 let find_block ~hash t =
-  let%some {block; _} = Hash_map.find_opt hash t.available in
+  let%some { block; _ } = Hash_map.find_opt hash t.available in
   block
 
 let find_signatures ~hash t =
-  let%some {signatures; _} = Hash_map.find_opt hash t.available in
+  let%some { signatures; _ } = Hash_map.find_opt hash t.available in
   Some signatures
 
 let find_next_block_to_apply ~hash t =
@@ -124,10 +122,7 @@ let find_next_block_to_apply ~hash t =
 let rec find_all_signed_blocks_above blocks (block, signatures) t =
   match Hash_map.find_opt block.Block.hash t.signed_by_previous with
   | Some (another_block, signatures) ->
-      find_all_signed_blocks_above
-        (block :: blocks)
-        (another_block, signatures)
-        t
+    find_all_signed_blocks_above (block :: blocks) (another_block, signatures) t
   | None -> (blocks, (block, signatures))
 
 let find_all_signed_blocks_above = find_all_signed_blocks_above []
@@ -140,6 +135,5 @@ let make ~self_key =
       available_by_previous = Hash_map.empty;
       signed = Hash_map.empty;
       signed_by_previous = Hash_map.empty;
-    }
-  in
+    } in
   append_block Block.genesis empty
