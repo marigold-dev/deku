@@ -9,7 +9,9 @@ let make_wallet key_hash secret =
     Files.Wallet.priv_key = Crypto.Secret.of_string secret |> Option.get;
   }
 
-(* Currently hardcode the addresses *)
+(* Currently hardcode the addresses
+   In sandbox.sh, alice_wallet is the deku_address   
+*)
 let alice_wallet =
   make_wallet "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
     "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"

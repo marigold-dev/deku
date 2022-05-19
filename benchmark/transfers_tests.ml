@@ -1,9 +1,6 @@
 open Helpers
 open Bin_common
 open Deku_accounts
-open Deku_validators
-open Deku_tickets
-open Deku_block_queries
 
 (*************************************************************************)
 (* Transactions *)
@@ -21,9 +18,9 @@ let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
     ~block_height:block_level ~data
 
 let spam_transactions ~ticketer ~n () =
-  let validator_uri = get_random_validator_uri () in
-  let%await block_level = get_current_block_level () in
-  let ticket = make_ticket ticketer in
+  let validator_uri = Deku_validators.get_random_validator_uri () in
+  let%await block_level = Deku_block_queries.get_current_block_level () in
+  let ticket = Deku_tickets.make_ticket ticketer in
   let transactions =
     List.init n (fun _ ->
         make_transaction ~block_level ~ticket ~sender:alice_wallet
@@ -48,7 +45,8 @@ let rec spam ~ticketer =
   spam ~ticketer
 
 let load_test_transactions ticketer =
-  let%await starting_block_level = get_current_block_level () in
+  let%await starting_block_level =
+    Deku_block_queries.get_current_block_level () in
   Format.printf "Starting block level: %Li\n%!" starting_block_level;
   spam ~ticketer
 
