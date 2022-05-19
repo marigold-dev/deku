@@ -291,6 +291,11 @@ let originate_contract node_folder contract_json initial_storage
             Network.User_operation_gossip.user_operation = originate_contract_op;
           }
           identity.uri in
+      Format.printf "operation_hash: %s\n%!"
+        (BLAKE2B.to_string originate_contract_op.hash);
+      Format.printf "contract_address: %s\n%!"
+        (Contract_address.of_user_operation_hash originate_contract_op.hash
+        |> Contract_address.to_string);
       Lwt.return (`Ok ()))
 
 let originate_contract =
@@ -298,25 +303,25 @@ let originate_contract =
     let docv = "folder_node" in
     let doc = "The folder where the node lives." in
     Arg.(required & pos 0 (some string) None & info [] ~doc ~docv) in
-  let contract_json =
-    let doc =
-      "The path to the JSON output of compiling the contract to Lambda." in
-    let open Arg in
-    required
-    & pos 1 (some contract_code_path) None
-    & info [] ~docv:"contract" ~doc in
-  let initial_storage =
-    let doc = "The string containing initial storage for Lambdavm" in
-    let open Arg in
-    required & pos 2 (some string) None & info [] ~docv:"initial_storage" ~doc
-  in
   let address_from =
     let doc =
       "The sending address, or a path to a wallet. If a bare address is \
        provided, the corresponding wallet is assumed to be in the working \
        directory." in
     let env = Arg.env_var "SENDER" ~doc in
-    Arg.(required & pos 3 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
+    Arg.(required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
+  in
+  let contract_json =
+    let doc =
+      "The path to the JSON output of compiling the contract to Lambda." in
+    let open Arg in
+    required
+    & pos 2 (some contract_code_path) None
+    & info [] ~docv:"contract" ~doc in
+  let initial_storage =
+    let doc = "The string containing initial storage for Lambdavm" in
+    let open Arg in
+    required & pos 3 (some string) None & info [] ~docv:"initial_storage" ~doc
   in
   let vm_flavor =
     let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
@@ -339,6 +344,7 @@ let folder_node =
   let doc = "The folder where the node lives." in
   let open Arg in
   required & pos 0 (some string) None & info [] ~doc ~docv
+
 let create_transaction =
   let address_from =
     let doc =
