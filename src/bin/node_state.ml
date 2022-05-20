@@ -72,6 +72,11 @@ let get_initial_state ~folder =
       let%await prev_protocol =
         Files.State_bin.read ~file:prev_epoch_state_bin in
       let hash, data = Protocol.hash prev_protocol in
+      (* DEBUG *)
+      let _ =
+        let hash_size = Crypto.BLAKE2B.to_string hash in
+        Format.printf "Protocol_hash: %s - data_length: %i" hash_size
+          (String.length data) in
       let snapshot_ref, snapshots =
         Snapshots.add_snapshot_ref ~block_height:prev_protocol.block_height
           node.snapshots in

@@ -85,6 +85,47 @@ let apply_block state block =
   let applied_blocks = block :: state.applied_blocks in
   (* Add Metrics for a list of operations in a block *)
   let operation_count = List.length block.operations in
+  (* DEBUG *)
+  (* Protocol_state.hash
+      + data is the json file which include:
+       - core_state
+       - included_tezos_operations
+       - included_user_operation
+       - validators
+       - validators_hash
+       - block_height
+       - last_block_hash
+       - state_root_hash
+     + hash is the hash of data
+  *)
+  let hash, data = Protocol.hash protocol in
+  let _ =
+    Format.printf
+      "APPLY BLOCK DEBUG \n\
+       %!Protocol information: \n\
+       %!- Protocol_hash: %i\n\
+       %!- Protocol data length: %i\n\
+       %!- Block height: %Li\n\
+       %! - Last block hash: %s\n\
+       %!- State root hash: %s\n\
+       %!Block information: \n\
+       %!- Block hash: %s\n\
+       %!- State root hash: %s\n\
+       %!- Author: %s\n\
+       %!- Block height: %Li\n\
+       %!- Operations: %i\n\
+       %!\n\
+      \    "
+      (String.length (Crypto.BLAKE2B.to_string hash))
+      (String.length data) protocol.block_height
+      (Crypto.BLAKE2B.to_string protocol.last_block_hash)
+      (Crypto.BLAKE2B.to_string protocol.state_root_hash)
+      (Crypto.BLAKE2B.to_string block.hash)
+      (Crypto.BLAKE2B.to_string block.state_root_hash)
+      (Key_hash.to_string block.author)
+      block.block_height operation_count in
+
+  (* Add Metrics for the number of operations in a block *)
   Metrics.Blocks.inc_operations_processed ~operation_count;
   (* Add Metrics for block_metrics (time between blocks) *)
   let timestamp = Unix.time () in

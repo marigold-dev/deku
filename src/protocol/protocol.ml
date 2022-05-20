@@ -106,8 +106,8 @@ let apply_block state block =
                Int64.sub state.block_height op.block_height
                <= maximum_stored_block_height);
     } in
-  (* DEBUG *)
-  Logs.app (fun m ->
+  (* DEBUG: this information can be print out at the state.apply_block *)
+  (*Logs.app (fun m ->
       m
         "Protocol - Apply_lock:\n\
         \ - state_root_hash_size: %i; - block_author: %s; - block height: %Ld; \
@@ -115,7 +115,7 @@ let apply_block state block =
         (String.length (Crypto.BLAKE2B.to_string block.state_root_hash))
         (Crypto.Key_hash.to_string block.author)
         block.Block.block_height
-        (List.length block.operations));
+        (List.length block.operations));*)
   ( {
       state with
       block_height = block.block_height;
