@@ -1,7 +1,9 @@
 open Lambda_vm
 
 let sender =
-  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z" |> Core.Address.of_string |> Option.get
+  "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z"
+  |> Core_deku.Address.of_string
+  |> Option.get
 
 let factorial =
   [%lambda_vm.script

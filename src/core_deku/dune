@@ -1,5 +1,5 @@
 (library
- (name core)
+ (name core_deku)
  (libraries crypto tezos lambda_vm)
  (preprocess
   (pps
