@@ -54,16 +54,24 @@ let block_has_signable_state_root_hash ~current_time state block =
   else
     block_matches_next_state_root_hash state block
     && time_since_last_epoch >= minimum_signable_time_between_epochs
+
 let is_signable state block =
-  let {
-    Node.trusted_validator_membership_change;
-    protocol = { last_seen_membership_change_timestamp; _ };
-    _;
-  } =
-    state in
+  (* WE ARE HERE WE NEED UPDATES*)
+  let state =
+    Prenode.Validators_Prenode.update_membership state.validators_prenode in
+  let last_seen_membership_change_timestamp =
+    Prenode.Validators_Prenode.get_last_change_timestamp state in
+
   let current_time = Unix.time () in
   let next_allowed_membership_change_timestamp =
     last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
+
+  let is_trusted_protocol_operation : State.t -> Block.t -> bool =
+   fun state block ->
+    (* TODO: HERE craft a message for Prenode.Validators with block as payload *)
+    let msg = Prenode.Message.empty in
+    Prenode.Validators_Prenode.is_validator_already_registered msg
+      state.validators_prenode in
   let is_trusted_operation operation =
     match operation with
     | Protocol.Operation.Core_tezos _ ->
@@ -140,7 +148,10 @@ let produce_block state =
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
 let signatures_required state =
-  let number_of_validators = Validators.length state.Node.protocol.validators in
+  let number_of_validators =
+    Prenode.Validators_Prenode.get_number_of_validators state.validators_prenode
+  in
+
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
 let append_signature state update_state ~hash ~signature =
@@ -186,7 +197,9 @@ let clean state update_state block =
 
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
-  let validators = Validators.to_list state.Node.protocol.validators in
+  let validators =
+    Prenode.Validators_Prenode.get_validators_list state.validators_prenode
+  in
   let rec safe_validator_uri () =
     let validator = List.nth validators (random_int (List.length validators)) in
     if state.Node.identity.t = validator.address then
@@ -200,11 +213,13 @@ let find_random_validator_uri state =
   safe_validator_uri ()
 
 let validator_uris state =
-  let validators = Validators.to_list state.Node.protocol.validators in
+  let validators_addresses =
+    Prenode.Validators_Prenode.get_validators_address_list
+      state.validators_prenode in
   List.filter_map
-    (fun Validators.{ address; _ } ->
-      Node.Address_map.find_opt address state.Node.validators_uri)
-    validators
+    (fun address -> Node.Address_map.find_opt address state.Node.validators_uri)
+    validators_addresses
+
 let broadcast_signature state ~hash ~signature =
   let uris = validator_uris state in
   Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })

@@ -1,8 +1,8 @@
 open Crypto
 module Consensus : sig
   type t =
-    | Add_validator    of Validators.validator
-    | Remove_validator of Validators.validator
+    | Add_validator    of Validator_internals.Validators.validator
+    | Remove_validator of Validator_internals.Validators.validator
   [@@deriving eq, ord, yojson]
   val sign : Secret.t -> t -> Signature.t
   val verify : Key.t -> Signature.t -> t -> bool

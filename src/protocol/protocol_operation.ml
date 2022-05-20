@@ -2,10 +2,11 @@ open Helpers
 open Crypto
 open Core
 
+(* TODO: FIXME: should not exist anymore *)
 module Consensus = struct
   type t =
-    | Add_validator    of Validators.validator
-    | Remove_validator of Validators.validator
+    | Add_validator    of Validator_internals.Validators.validator
+    | Remove_validator of Validator_internals.Validators.validator
   [@@deriving eq, ord, yojson]
   let hash payload = to_yojson payload |> Yojson.Safe.to_string |> BLAKE2B.hash
   let sign secret t =

@@ -6,7 +6,7 @@ type consensus_operation =
   | Precommit
 [@@deriving eq, ord, bin_io, show { with_path = false }]
 
-type block_operation =
+type block_pool_operation =
   | Block_by_hash
   | Block_level
 [@@deriving eq, ord, bin_io, show { with_path = false }]
@@ -19,13 +19,14 @@ type validators_operation =
 type operation_family =
   | Consensus
   | Validators
-  | Block
+  | Block_pool
 [@@deriving eq, ord, bin_io, show { with_path = false }]
 
 type operation_detail =
   | Consensus_operation
-  | Consensus_governance_operation
+  | Validators_operation of validators_operation
   | Block_operation
+  | Block_pool_operation
 [@@deriving eq, ord, bin_io, show { with_path = false }]
 
 type t = {

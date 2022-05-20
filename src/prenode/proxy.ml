@@ -42,6 +42,11 @@ module PROXY_POLLINATE = struct
       Pollinate.Util.Encoding.pack bin_writer_response Ack
     | _ -> failwith "Bored now"
 
+  (* TODO: implement SIGN *)
+  let sign : bytes -> bytes option -> bytes option = fun _payload _key -> None
+
   let deku_pollinate_node =
-    Lwt_main.run (Pollinate.Node.init ~preprocess ~msg_handler ("", 3000))
+    Lwt_main.run
+      (Pollinate.Node.init ~preprocess ~msg_handler ~sign_payload:sign ~key:None
+         ("", 3000))
 end

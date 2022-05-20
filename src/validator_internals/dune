@@ -1,5 +1,5 @@
 (library
- (name validators)
+ (name validator_internals)
  (libraries helpers crypto tezos)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.eq ppx_deriving.ord ppx_let_binding)))

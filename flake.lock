@@ -259,15 +259,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1652944800,
-        "narHash": "sha256-8aHHlbSrxwpnDmuCXa1IjZKnhBLFcbrhvq7WEK/4jGc=",
+        "lastModified": 1653036245,
+        "narHash": "sha256-g6XGbY9DDeSfWv3WpxqGV/I5MG5v1wHDNmJ+IkseQrs=",
         "owner": "marigold-dev",
         "repo": "pollinate",
-        "rev": "82f273e708a141c162f8f71b16c04e0b306b29a2",
+        "rev": "5106dd6661db6b1bdfd99ef252d799466b784ff1",
         "type": "github"
       },
       "original": {
         "owner": "marigold-dev",
+        "ref": "feat/dekuIntegration",
         "repo": "pollinate",
         "type": "github"
       }

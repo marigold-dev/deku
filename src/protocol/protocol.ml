@@ -4,7 +4,6 @@ include Exn_noop
 module Signature = Protocol_signature
 module Wallet = Wallet
 module Ledger = Ledger
-module Validators = Validators
 module Block = Block
 module Operation = Protocol_operation
 include Protocol_state
@@ -51,13 +50,12 @@ let apply_core_user_operation state tezos_operation =
   | Error (`Block_in_the_future | `Old_operation | `Duplicated_operation) ->
     (state, None)
 
-(* This applies Validators operations. *)
-let apply_consensus_operation :
+(* Validators ops coming through network, see Validators prenode. *)
+let apply_validators_operation :
     Protocol_state.t ->
     Prenode.Message.t ->
     Protocol_state.t * Prenode.Message.t list =
  fun state msg ->
-  let block_height = state.block_height in
   let validators_prenode, msgs =
     Prenode.Validators_Prenode.process_message msg state.validators_prenode
   in
@@ -68,7 +66,25 @@ let apply_consensus_operation :
 let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
-let apply_operation (state, receipts) operation =
+
+let apply_protocol_operations :
+    Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list ->
+    Prenode.Message.t ->
+    (Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list)
+    * Prenode.Message.t list =
+ fun (state, receipts) msg ->
+  let deku_op = Prenode.Message.get_sub_category_opt msg in
+  match deku_op with
+  | None -> failwith "Operation family is mandatory in deku ops"
+  | Some deku_op ->
+  match deku_op.operation_family with
+  | Validators ->
+    let state, msgs = apply_validators_operation state msg in
+    ((state, receipts), msgs)
+  | _ -> ((state, receipts), [])
+
+(* TODO: remove after full pollinate integration *)
+let apply_old_operation (state, receipts) operation =
   match operation with
   | Core_tezos tezos_operation ->
     let state = apply_core_tezos_operation state tezos_operation in
@@ -80,13 +96,26 @@ let apply_operation (state, receipts) operation =
       | Some receipt -> (user_operation.hash, receipt) :: receipts
       | None -> receipts in
     (state, receipts)
-  | Consensus consensus_operation ->
-    let state = apply_consensus_operation state consensus_operation in
-    (state, receipts)
+  | _ -> (state, receipts)
+(* FIXME: remove after full pollinate integration*)
+
+let apply_operation :
+    Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list ->
+    (Prenode.Message.t, Operation.t) Either.t ->
+    (Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list)
+    * Prenode.Message.t list =
+ fun (state, receipts) msg ->
+  match msg with
+  | Left msg -> apply_protocol_operations (state, receipts) msg
+  | Right msg ->
+    let state, receipts = apply_old_operation (state, receipts) msg in
+    ((state, receipts), [])
+
+(* TODO: update using new protocol operations *)
 let apply_block state block =
   Format.eprintf "\027[32mblock: %Ld\027[m\n%!" block.Block.block_height;
   let state, receipts =
-    List.fold_left apply_operation (state, []) block.operations in
+    List.fold_left apply_old_operation (state, []) block.operations in
   let state =
     {
       state with
@@ -100,8 +129,8 @@ let apply_block state block =
       state with
       block_height = block.block_height;
       validators_prenode =
-        Prenode.Validators_Prenode.update_block_proposer block.block_height
-          block.author state.validators_prenode;
+        Prenode.Validators_Prenode.update_block_proposer block.author
+          state.validators_prenode;
       last_block_hash = block.hash;
       last_state_root_update =
         (match block.state_root_hash <> state.state_root_hash with
@@ -109,7 +138,6 @@ let apply_block state block =
         | false -> state.last_state_root_update);
       last_applied_block_timestamp = Unix.time ();
       state_root_hash = block.state_root_hash;
-      validators_hash = block.validators_hash;
     },
     receipts )
 
@@ -120,7 +148,6 @@ let make ~initial_block =
       included_tezos_operations = Tezos_operation_set.empty;
       included_user_operations = User_operation_set.empty;
       validators_prenode = Prenode.Validators_Prenode.empty;
-      validators_hash = Validators.hash Validators.empty;
       block_height = Int64.sub initial_block.Block.block_height 1L;
       last_block_hash = initial_block.Block.previous_hash;
       state_root_hash = initial_block.Block.state_root_hash;
@@ -139,4 +166,5 @@ let get_current_block_producer state =
   else
     let diff = Unix.time () -. state.last_applied_block_timestamp in
     let skips = Float.to_int (diff /. 10.0) in
-    Validators.after_current skips state.validators
+    Prenode.Validators_Prenode.get_new_block_proposer skips
+      state.validators_prenode

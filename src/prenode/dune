@@ -1,6 +1,6 @@
 (library
  (name prenode)
- (libraries crypto pollinate validators)
+ (libraries crypto pollinate validator_internals block_internals)
  (preprocess
   (pps
    ppx_deriving.ord

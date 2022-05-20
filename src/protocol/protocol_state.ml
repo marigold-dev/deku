@@ -8,7 +8,6 @@ type t = {
   included_user_operations : User_operation_set.t;
   validators_prenode : Prenode.Validators_Prenode.t;
       [@to_yojson Prenode.Validators_prenode.yojson_of_t]
-  validators_hash : BLAKE2B.t;
   block_height : int64;
   last_block_hash : BLAKE2B.t;
   state_root_hash : BLAKE2B.t;
@@ -23,7 +22,6 @@ let hash t =
       * Tezos_operation_set.t
       * User_operation_set.t
       * Prenode.Validators_Prenode.t
-      * BLAKE2B.t
       * int64
       * BLAKE2B.t
       * BLAKE2B.t] in
@@ -33,7 +31,6 @@ let hash t =
         t.included_tezos_operations,
         t.included_user_operations,
         t.validators_prenode,
-        t.validators_hash,
         t.block_height,
         t.last_block_hash,
         t.state_root_hash ) in

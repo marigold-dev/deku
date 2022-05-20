@@ -10,12 +10,13 @@ type t = {
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;
   block_height : int64;
+  validators_prenode : Prenode.Validators_Prenode.t;
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson]
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations =
+      ~previous_hash ~author ~block_height ~validators_prenode =
     let to_yojson =
       [%to_yojson:
         BLAKE2B.t
@@ -69,7 +70,7 @@ let of_yojson json =
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~validators_hash:block.validators_hash
         ~previous_hash:block.previous_hash ~author:block.author
-        ~block_height:block.block_height ~operations:block.operations
+        ~block_height:block.block_height ~operation:block.operations
     with
     | true -> Ok ()
     | false -> Error "Invalid hash" in
@@ -79,7 +80,9 @@ let genesis =
   make ~previous_hash:(BLAKE2B.hash "tuturu")
     ~state_root_hash:(BLAKE2B.hash "mayuushi")
     ~withdrawal_handles_hash:(BLAKE2B.hash "desu")
-    ~validators_hash:(Validators.hash Validators.empty)
+    ~validators_hash:
+      (Prenode.Validators_Prenode.get_validators_hash
+         Prenode.Validators_Prenode.empty)
     ~block_height:0L ~operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
 let produce ~state ~next_state_root_hash =
@@ -90,7 +93,8 @@ let produce ~state ~next_state_root_hash =
     ~state_root_hash:next_state_root_hash
     ~withdrawal_handles_hash:
       (Core.State.ledger state.core_state |> Ledger.withdrawal_handles_root_hash)
-    ~validators_hash:(Validators.hash state.validators)
+    ~validators_hash:
+      (Prenode.Validators_Prenode.get_validators_hash state.validators_prenode)
     ~block_height:(Int64.add state.block_height 1L)
 open Protocol_signature.Make (struct
   type nonrec t = t

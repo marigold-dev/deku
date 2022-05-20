@@ -7,6 +7,7 @@ type t = {
   sender : Crypto.Key_hash.t;
   recipient_opt : Crypto.Key_hash.t option;
 }
+[@@deriving eq, ord]
 (** Those messages only exist inside Deku. *)
 
 let get_category t = t.category
