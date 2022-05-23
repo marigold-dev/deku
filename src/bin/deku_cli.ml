@@ -476,14 +476,6 @@ let withdraw_proof node_folder operation_hash callback =
       |> String.trim);
     await (`Ok ())
 
-let folder_dest =
-  let docv = "folder_dest" in
-  let doc =
-    "The folder the files will be created in. The folder must exist and be \
-     empty." in
-  let open Arg in
-  required & pos 0 (some string) None & info [] ~doc ~docv
-
 let info_withdraw_proof =
   let doc = "Find withdraw proof from operation hash" in
   Cmd.info "withdraw-proof" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
@@ -501,7 +493,7 @@ let withdraw_proof =
   in
   let open Term in
   lwt_ret
-    (const withdraw_proof $ folder_dest $ operation_hash $ contract_callback)
+    (const withdraw_proof $ folder_node $ operation_hash $ contract_callback)
 let info_sign_block =
   let doc =
     "Sign a block hash and broadcast to the network manually, useful when the \
@@ -587,7 +579,7 @@ let setup_identity =
     let open Arg in
     required & opt (some uri) None & info ["uri"] ~doc ~docv in
   let open Term in
-  lwt_ret (const setup_identity $ folder_dest $ self_uri)
+  lwt_ret (const setup_identity $ folder_node $ self_uri)
 let info_setup_tezos =
   let doc = "Setup Tezos identity" in
   Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
@@ -643,7 +635,7 @@ let setup_tezos =
   let open Term in
   lwt_ret
     (const setup_tezos
-    $ folder_dest
+    $ folder_node
     $ tezos_node_uri
     $ tezos_secret
     $ tezos_consensus_contract_address
