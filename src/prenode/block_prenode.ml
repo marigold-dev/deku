@@ -11,6 +11,8 @@ module Raw (P : BLOCK_PARAMETER) = struct
 
   let process_message : Message.t -> t -> t * Message.t list =
    fun _msg _t -> failwith "Not implemenetd"
+
+  let filter_msgs _msgs = failwith "Not implemented"
 end
 
 module Make (P : BLOCK_PARAMETER) : MAIN = Raw (P)

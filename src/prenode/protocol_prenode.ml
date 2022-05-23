@@ -11,6 +11,8 @@ module Raw (P : PROTOCOL_PARAMETER) = struct
 
   let process_message : Message.t -> t -> t * Message.t list =
    fun _msg _t -> failwith "Not implemented"
+
+  let filter_msgs _msgs = failwith "Not implemented"
 end
 
 module Make (P : PROTOCOL_PARAMETER) : MAIN = Raw (P)

@@ -1,4 +1,5 @@
 open Helpers
+open Prenode.Helpers
 open Crypto
 open Protocol
 module Node = State
@@ -55,8 +56,10 @@ let block_has_signable_state_root_hash ~current_time state block =
     block_matches_next_state_root_hash state block
     && time_since_last_epoch >= minimum_signable_time_between_epochs
 
-let is_signable state block =
-  (* WE ARE HERE WE NEED UPDATES*)
+let is_signable_validators_ops : State.t -> Message.t -> bool =
+  state block
+  =
+  (* NEW VERSION HERE *)
   let state =
     Prenode.Validators_Prenode.update_membership state.validators_prenode in
   let last_seen_membership_change_timestamp =
@@ -72,23 +75,36 @@ let is_signable state block =
     let msg = Prenode.Message.empty in
     Prenode.Validators_Prenode.is_validator_already_registered msg
       state.validators_prenode in
+
+  current_time > next_allowed_membership_change_timestamp
+  && Prenode.Validators_Prenode.is_validator_already_registered msg state
+
+let is_signable_msgs : State.t -> Message.t list -> bool =
+ fun state msgs ->
+  let validators_msgs = Prenode.Validators_Prenode.filter_msgs msgs in
+  let validators_results =
+    List.map (is_signable_validators_ops state) validators_msgs in
+
+  List.for_all (fun x -> True) validators_results
+
+let is_signable state block =
+  (* WE ARE HERE WE NEED UPDATES*)
+  let state =
+    Prenode.Validators_Prenode.update_membership state.validators_prenode in
+  let last_seen_membership_change_timestamp =
+    Prenode.Validators_Prenode.get_last_change_timestamp state in
+
+  let current_time = Unix.time () in
+  let next_allowed_membership_change_timestamp =
+    last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
+
   let is_trusted_operation operation =
     match operation with
     | Protocol.Operation.Core_tezos _ ->
       Node.Operation_map.mem operation state.pending_operations
     | Core_user _ -> true
-    | Consensus consensus_operation -> (
-      current_time > next_allowed_membership_change_timestamp
-      &&
-      match consensus_operation with
-      | Add_validator validator ->
-        Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Add }
-          trusted_validator_membership_change
-      | Remove_validator validator ->
-        Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Remove }
-          trusted_validator_membership_change) in
+    | Consensus consensus_operation ->
+      failwith "Consensus operation do not exist anymore" in
   let all_operations_are_trusted =
     List.for_all is_trusted_operation block.Block.operations in
   is_next state block

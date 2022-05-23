@@ -11,10 +11,11 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
   module Action = struct
     open Bin_prot.Std
     type t =
-      | Add_validator                   of string
-      | Remove_validator                of string
-      | Is_validator_already_registered of Protocol.Block.t
-    [@@deriving ord, bin_io]
+      | Add_validator    of string
+      | Remove_validator of string
+    (*       | Is_validator_already_registered of Protocol.Block.t
+ *)
+    [@@deriving ord, bin_io, yojson]
   end
 
   let yojson_of_set m =
@@ -25,13 +26,31 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
            Validator_internals.Trusted_validators_membership_change.t list]
     | None -> `Null
 
+  let set_of_yojson s =
+    match s with
+    | `List l ->
+      let list =
+        List.map
+          Validator_internals.Trusted_validators_membership_change.of_yojson l
+      in
+      let b = List.exists (fun m -> m = Error "fail") list in
+      if b then
+        Result.Error "Fail"
+      else
+        let values = List.map (fun m -> Result.get_ok m) list in
+        Result.Ok
+          (Some
+             (Validator_internals.Trusted_validators_membership_change.Set
+              .of_list values))
+    | _ -> Result.Error "Fail"
+
   type t = {
     validators : Validator_internals.Validators.t;
     membership :
       Validator_internals.Trusted_validators_membership_change.t option;
     trusted_change :
       Validator_internals.Trusted_validators_membership_change.Set.t option;
-        [@to_yojson yojson_of_set]
+        [@of_yojson set_of_yojson] [@to_yojson yojson_of_set]
     persist_trusted_change :
       Validator_internals.Trusted_validators_membership_change.t list option;
     (* ->
@@ -39,7 +58,7 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
     last_seen_membership_change_timestamp : float;
         (* TODO: use proper Timestamp *)
   }
-  [@@deriving to_yojson]
+  [@@deriving to_yojson, of_yojson]
 
   let empty =
     {
@@ -178,6 +197,20 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
       process_add_validator new_validator_str t
     | Remove_validator old_validator_str ->
       process_remove_validator old_validator_str t
+
+  let filter_msgs : Message.t list -> Message.t list =
+   fun msgs ->
+    let filtered =
+      List.filter
+        (fun msg ->
+          match Message.get_sub_category_opt msg with
+          | None -> false
+          | Some deku_op ->
+          match deku_op.operation_family with
+          | Deku_operation.Validators -> true
+          | _ -> false)
+        msgs in
+    filtered
 end
 
 module Make (P : VALIDATORS_PARAMETER) : MAIN = Raw (P)

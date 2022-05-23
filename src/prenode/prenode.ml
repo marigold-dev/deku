@@ -11,9 +11,7 @@ module Block_Pool_Parameter = struct
     let get _height = 3 (* TODO: FIXME: not 3 *)
   end
 end
-module Block_pool = Block_pool.Raw (Block_Pool_Parameter)
-
-module Message = Message
+module Block_pool = Block_pool_prenode.Raw (Block_Pool_Parameter)
 
 module Protocol_Parameter = struct
   let toto _msg = "toto"

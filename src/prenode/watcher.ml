@@ -3,4 +3,6 @@ module type MAIN = sig
   val process_message : Message.t -> t -> t * Message.t list
 
   val tick : Time.Timestep.t -> t -> t * Message.t list
+
+  val filter_msgs : Message.t list -> Message.t list
 end
