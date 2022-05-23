@@ -5,6 +5,8 @@
 # - Start deku clusters and use perf to get the profiling data
 #  + -F 99: Sampling CPU stacks at 99 Hertz*
 #  + --callgraph dwarf: last branch record
+#  + -g: capturing stack traces so that a call graph (-g)
+#  of function ancestry can be generated later.
 #  + -a: samples across all CPUs
 # - Sleep for 10 seconds
 #
@@ -17,10 +19,11 @@
 #
 # Note: Setting `perf` to run without super-user permission (allow non-root users)
 # sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
+# perf record -F 99 -a -g --call-graph dwarf ./sandbox.sh start
 
 profile_node=
 command ="cd .. && cd .. && ./sandbox.sh tear-down \
           && ./sandbox.sh setup \
-          && perf record -F 99 -a --call-graph dwarf ./sandbox.sh start \
+          && perf record -F 99 -a -g ./sandbox.sh start
           && sleep 10"
 system (command)
