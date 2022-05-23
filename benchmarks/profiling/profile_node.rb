@@ -24,8 +24,3 @@ command ="cd .. && cd .. && ./sandbox.sh tear-down \
           && perf record -F 99 -a --call-graph dwarf ./sandbox.sh start \
           && sleep 10"
 system (command)
-
-
-
-#perf record -g -p "$node_pid" sh -c "./sandbox start && sleep 10"
-#perf script -i perf.data > profile.linux-perf.txt
