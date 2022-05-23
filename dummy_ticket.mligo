@@ -38,7 +38,7 @@ type parameter =
       handle : vault_handle_structure;
       proof : vault_handle_proof;
     }
-  | Burn_callback of bytes ticket
+  | Burn_callback of vault_deposit
 
 type return = operation list * unit
 
@@ -74,7 +74,7 @@ let main ((param, ()) : parameter * unit) : return =
     -> 
       let ticket = Tezos.create_ticket ticket_data ticket_amount in
       let deposit_operation  = deposit_to_deku deku_consensus ticket deku_recipient in
-      ([ deposit_operation  ], ())
+      ([ deposit_operation ], ())
   | Withdraw_from_deku {deku_consensus; handles_hash; handle; proof} ->
       let callback : vault_ticket contract = Tezos.self "%burn_callback" in
       let withdraw_operation =
