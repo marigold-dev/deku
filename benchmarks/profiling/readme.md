@@ -11,14 +11,16 @@ Profile deku node with perf:
 - Setup deku environments
 - Start deku clusters and use `perf` to get the profiling data
   + `-F 99`: Sampling CPU stacks at 99 Hertz*
-  + `-g`: capturing stack traces so that a call graph of function ancestry can be generated later
+  + `-g`: enable call-graph (stack chain/backtrace) recording for both kernel space 
+        and user space
+  + `--call-graph dwarf`: set up and enable call-graph mode, get backtraces by using `dwarf` option
   + `-a`: samples across all CPUs
 
   The samples are saved in a `perf.data` file. This does involve CPU, file system, and disk overheads to save the samples to the file system for later processing.
  - Sleep for 10 seconds
 
 **Note:**
-The rate for perf is 99 Hertz, the generated flame graph from a 1000 Hertz profile.
+The rate for perf is 99 Hertz, the generated FlameGraph from a 1000 Hertz profile.
 Choosing 99 Hertz instead of 100 Hertz, is to avoid accidentally sampling in 
 lockstep with some periodic activity, which would produce skewed results.
 You can also increase to higher rates (eg, up to 997 Hertz) for finer resolution.
@@ -45,7 +47,7 @@ in `/etc/sysctl.conf` (e.g. `kernel.perf_event_paranoid = <setting>`)
 ## Flamegraph
 
 Read `perf.data` using FlameGraph. FlameGraph needs to be downloaded at:
- `git clone https://github.com/brendangregg/FlameGraph `
+ [FlameGraph](git clone https://github.com/brendangregg/FlameGraph)
 
 Run this script only when `perf record` is **properly terminated** (a.k.a: `ruby profile_node.rb`).
 
@@ -73,9 +75,28 @@ It shows:
 Install on Debian/Ubuntu run first:
 
 ```
- sudo apt-get install python3 graphviz (install dot)
+ sudo apt-get install python3 graphviz
  sudo apt-get install python3-pip
  sudo pip install gprof2dot
 ```
 
 Wait for awhile to let the graph generated. The result in picture as `callgraphs_deku_node.png`. You can use internet browser to see it `firefox callgraphs_deku_node.png` or chrome, etc.
+
+
+## Read `perf.data` with [Hotspot](https://github.com/KDAB/hotspot)
+
+Install hotspot on Debian/Ubuntu
+
+```
+add-apt-repository ppa:kubuntu-ppa/backports
+apt-get update
+apt-get install libkf5threadweaver-dev libkf5i18n-dev libkf5configwidgets-dev \
+    libkf5coreaddons-dev libkf5itemviews-dev libkf5itemmodels-dev libkf5kio-dev libkf5parts-dev \
+    libkf5solid-dev libkf5windowsystem-dev libkf5notifications-dev libkf5iconthemes-dev libelf-dev \
+    libdw-dev cmake extra-cmake-modules gettext libqt5svg5-dev
+
+apt-get install hotspot
+```
+
+Use hotspot to read `perf.data`: 
+`hotspot /path/to/perf.data`
