@@ -23,6 +23,7 @@ let () =
         Errors.raise `Module_validation_error)
 
 type t = Ast.module_
+
 let get_memory t =
   let memory = Utf8.decode "memory" in
   match Instance.export t memory with
@@ -37,7 +38,9 @@ let validate_main t s1 ~gas =
         (ExternFunc
           (Func.AstFunc
             ( Types.(
-                FuncType ([NumType I32Type], [NumType I64Type; NumType I64Type])),
+                FuncType
+                  ( [NumType I32Type],
+                    [NumType I64Type; NumType I64Type; NumType I64Type] )),
               _,
               _ ))) ->
       ()
@@ -58,13 +61,13 @@ let validate t ~gas =
   else
     Errors.raise `Module_validation_error
 
-let of_string ~gas ~code =
+let of_string ~code =
   try
     let module_ =
       match Parse.string_to_module code with
       | { it = Script.Textual module_; at = _ } ->
         Valid.check_module module_;
-        let () = validate ~gas module_ in
+        let () = validate ~gas:(ref max_int) module_ in
         module_
       | { it = Script.Quoted _; at = _ }
       | { it = Script.Encoded _; at = _ } ->
@@ -82,5 +85,16 @@ let encode t =
   | Encode.Code (_, string) -> Error string
 
 let decode t =
-  try Ok (Decode.decode "" t) with
-  | Decode.Code (_, string) -> Error string
+  try
+    let decoded = Decode.decode "" t in
+    Valid.check_module decoded;
+    let () = validate ~gas:(ref max_int) decoded in
+    Ok decoded
+  with
+  | Errors.Error err -> Error err
+  | Decode.Code (_, _) -> Error `Module_validation_error
+
+let to_yojson t = `String (encode t |> Result.get_ok)
+let of_yojson = function
+  | `String t -> decode t |> Result.map_error Errors.show
+  | #Yojson.Safe.t -> Error "invalid payload"

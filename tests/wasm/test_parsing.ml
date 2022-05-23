@@ -1,7 +1,7 @@
 exception Parse_error
 
 let parse code =
-  match Wasm_vm.Module.of_string ~gas:(ref max_int) ~code with
+  match Wasm_vm.Module.of_string ~code with
   | Ok module_ -> module_
   | Error _ -> raise Parse_error
 
@@ -13,7 +13,7 @@ let test_successful_parsing () =
       (memory $mem 1)
       (export "memory" (memory $mem))
       (type $sum_t (func (param i32 i32) (result i32)))
-      (type $main_t (func (param i32) (result i64 i64)))
+      (type $main_t (func (param i32) (result i64 i64 i64)))
       (func $sum_f (type $sum_t) (param $x i32) (param $y i32) (result i32)
         i32.const 0
         local.get $x
@@ -22,7 +22,8 @@ let test_successful_parsing () =
         i32.store
         i32.const 0
         i32.load)
-      (func $main (type $main_t) (param i32) (result i64 i64) 
+      (func $main (type $main_t) (param i32) (result i64 i64 i64) 
+         i64.const 0
          i64.const 0
          i64.const 0)
       (export "main" (func $main)))

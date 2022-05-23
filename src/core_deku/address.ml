@@ -4,6 +4,11 @@ type t =
   | Implicit   of Key_hash.t
   | Originated of Contract_address.t
 [@@deriving eq, ord, yojson]
+
+let is_implicit = function
+  | Implicit _ -> true
+  | Originated _ -> false
+let is_originated t = not (is_implicit t)
 let of_key_hash implicit = Implicit implicit
 let to_key_hash t =
   match t with

@@ -1,5 +1,5 @@
 (library
  (name wasm_vm)
- (libraries wasm helpers yojson)
+ (libraries wasm helpers yojson core)
  (preprocess
-  (pps ppx_let_binding ppx_deriving.show)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving_yojson)))

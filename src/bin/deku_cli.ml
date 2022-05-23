@@ -134,6 +134,7 @@ let ticket =
     Format.fprintf fmt "%S" (Tezos.Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
+
 let vm_flavor =
   let parser string =
     (match string with
@@ -184,7 +185,7 @@ let info_create_transaction =
   Term.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 let create_transaction node_folder sender_wallet_file received_address amount
-    ticket argument vm_flavor =
+    ticket argument vm_flavor tickets =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -224,6 +225,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
                  to_invoke =
                    Address.to_contract_hash received_address |> Option.get;
                  argument = arg;
+                 tickets;
                }) in
       let transaction =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
@@ -247,7 +249,7 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda | `Wasm]) =
+    sender_wallet_file (vm_flavor : [`Dummy | `Lambda | `Wasm]) tickets =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -287,7 +289,8 @@ let originate_contract node_folder contract_json initial_storage
             | _ -> assert false in
           Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
           |> Result.get_ok in
-      let origination_op = User_operation.Contract_origination payload in
+      let origination_op =
+        User_operation.Contract_origination { payload; tickets } in
       let originate_contract_op =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
@@ -323,16 +326,22 @@ let originate_contract =
   in
   let contract_json =
     let doc =
-      "The path to the JSON output of compiling the contract to Lambda." in
+      "The path to the JSON output of compiling the contract to bytecode." in
     let open Arg in
     required
     & pos 2 (some contract_code_path) None
     & info [] ~docv:"contract" ~doc in
   let initial_storage =
-    let doc = "The string containing initial storage for Lambdavm" in
+    let doc = "The string containing initial storage for the VM" in
     let open Arg in
     required & pos 3 (some string) None & info [] ~docv:"initial_storage" ~doc
   in
+  let tickets =
+    let doc = "The string containing initial tickets for storage" in
+    Arg.(
+      Arg.value
+      & opt ~vopt:[] (list ticket) []
+      & info ["tickets"] ~docv:"tickets" ~doc) in
   let vm_flavor =
     let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
     let env = Arg.env_var "VM_FLAVOR" ~doc in
@@ -347,7 +356,8 @@ let originate_contract =
       $ contract_json
       $ initial_storage
       $ address_from
-      $ vm_flavor))
+      $ vm_flavor
+      $ tickets))
 
 let folder_node =
   let docv = "folder_node" in
@@ -375,6 +385,12 @@ let create_transaction =
     let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
     let open Arg in
     required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
+  let tickets =
+    let doc = "The string containing tickets for vm argument" in
+    Arg.(
+      Arg.value
+      & opt ~vopt:[] (list ticket) []
+      & info ["tickets"] ~docv:"tickets" ~doc) in
   let ticket =
     let doc = "The ticket to be transferred." in
     let open Arg in
@@ -385,7 +401,7 @@ let create_transaction =
     value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
   in
   let vm_flavor =
-    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
+    let doc = "Virtual machine flavor. can be Lambda/Dummy/Wasm" in
     let env = Arg.env_var "VM_FLAVOR" ~doc in
     Arg.(
       Arg.value
@@ -400,7 +416,9 @@ let create_transaction =
     $ amount
     $ ticket
     $ argument
-    $ vm_flavor)
+    $ vm_flavor
+    $ tickets)
+
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Term.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man

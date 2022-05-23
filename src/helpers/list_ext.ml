@@ -22,6 +22,7 @@ let in_order_uniq (type a) compare l =
       else
         go (x :: acc) (S.add x seen_set) xs in
   go [] S.empty l
+
 let rec fold_left_ok f state = function
   | [] -> Ok state
   | head :: tl ->
