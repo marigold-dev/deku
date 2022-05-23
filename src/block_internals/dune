@@ -1,0 +1,5 @@
+(library
+ (name block_internals)
+ (libraries helpers crypto core)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.eq ppx_deriving.ord ppx_let_binding)))
