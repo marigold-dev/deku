@@ -1,3 +1,5 @@
 (test
  (name test_wasm)
- (libraries wasm_vm alcotest))
+ (libraries wasm_vm alcotest helpers)
+ (preprocess
+  (pps ppx_let_binding)))

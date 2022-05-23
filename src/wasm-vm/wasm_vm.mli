@@ -1,10 +1,9 @@
-module Contract : sig
-  type t
-
-  val make : storage:bytes -> code:string -> (t, string) result
-  (** [make ~storage ~code] creates new contract instance with [storage] and [code]. 
-        [storage] can be the initial storage of the updated one
-        and [code] is a WebAssembly Text Format for now. *)
+module Errors : sig
+  type t =
+    [ `Initialization_error
+    | `Module_validation_error
+    | `Execution_error ]
+  [@@deriving show]
 end
 
 module Value : sig
@@ -29,34 +28,29 @@ end
 
 module Memory : sig
   type t
-
-  type address = int64
-
-  val blit : t -> address -> bytes -> unit
-
-  val sub : t -> address -> int -> bytes
+  val load : t -> address:int64 -> int
+  val store_bytes : t -> address:int64 -> content:bytes -> unit
+  val load_bytes : t -> address:int64 -> size:int -> bytes
 end
 
-module Extern : sig
-  type t = Func of func_type * (Memory.t -> Value.t list -> Value.t option)
-  and func_type = value_type list * value_type option
-  and value_type =
-    | I32
-    | I64
-
-  val func : func_type -> (Memory.t -> Value.t list -> Value.t option) -> t
+module Module : sig
+  type t
+  val of_string : gas:int ref -> code:string -> (t, Errors.t) result
+  val encode : t -> (string, string) result
+  val decode : string -> (t, string) result
 end
 
 module Runtime : sig
-  type t
-
-  val make : contract:Contract.t -> imports:Extern.t list -> int ref -> t
-  (** [make contract gas] instantiates a new contract runtime to be invoked. *)
-
-  val invoke : t -> int ref -> bytes -> (bytes, string) result
+  val invoke :
+    (Memory.t -> int64 -> unit) ->
+    module_:Module.t ->
+    gas:int ref ->
+    argument:bytes ->
+    storage:bytes ->
+    (bytes, Errors.t) result
   (** [invoke runtime gas argument] invokes the entrypoint of the contract
         with a given argument.
-        
+
         The contract will receive two arguments: a pointer to the argument
         in memory and a pointer to the storage. The contract should return
         the size of the new storage that should be on the same place as before. *)
