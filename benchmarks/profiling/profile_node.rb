@@ -16,10 +16,10 @@
 # Bear in mind that higher frequencies means higher overhead
 #
 # Note: Setting `perf` to run without super-user permission (allow non-root users)
-# sudo sh -c 'echo kernel.perf_event_paranoid=0 > /etc/sysctl.d/local.conf'
+# sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
 
 profile_node=
-command ="./sandbox.sh tear-down \
+command ="cd .. && cd .. && ./sandbox.sh tear-down \
           && ./sandbox.sh setup \
           && perf record -F 99 -a --call-graph dwarf ./sandbox.sh start \
           && sleep 10"
