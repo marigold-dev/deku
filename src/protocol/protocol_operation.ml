@@ -70,5 +70,5 @@ end
 type t =
   | Core_tezos of Core.Tezos_operation.t
   | Core_user  of Core_user.t
-  | Consensus  of Consensus.t
+  | Consensus  of Consensus.t (* Now in Validators Prenode *)
 [@@deriving eq, ord, yojson]

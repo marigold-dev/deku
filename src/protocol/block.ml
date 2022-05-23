@@ -10,13 +10,12 @@ type t = {
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;
   block_height : int64;
-  validators_prenode : Prenode.Validators_Prenode.t;
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson]
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~validators_prenode ~operations =
+      ~previous_hash ~author ~block_height ~operations =
     let to_yojson =
       [%to_yojson:
         BLAKE2B.t
@@ -25,7 +24,6 @@ let hash, verify =
         * BLAKE2B.t
         * Key_hash.t
         * int64
-        * Prenode.Validators_Prenode.t
         * Protocol_operation.t list] in
     let json =
       to_yojson
@@ -35,7 +33,6 @@ let hash, verify =
           previous_hash,
           author,
           block_height,
-          validators_prenode,
           operations ) in
     let payload = Yojson.Safe.to_string json in
     let block_payload_hash = BLAKE2B.hash payload in
@@ -49,10 +46,10 @@ let hash, verify =
     apply (fun (hash, _payload_hash) -> hash = expected_hash) in
   (hash, verify)
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-    ~previous_hash ~author ~block_height ~operations ~validators_prenode =
+    ~previous_hash ~author ~block_height ~operations =
   let hash, payload_hash =
     hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations ~validators_prenode in
+      ~previous_hash ~author ~block_height ~operations in
   {
     hash;
     payload_hash;
@@ -62,7 +59,6 @@ let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     validators_hash;
     author;
     block_height;
-    validators_prenode;
     operations;
   }
 let of_yojson json =
@@ -74,7 +70,6 @@ let of_yojson json =
         ~validators_hash:block.validators_hash
         ~previous_hash:block.previous_hash ~author:block.author
         ~block_height:block.block_height ~operations:block.operations
-        ~validators_prenode:block.validators_prenode
     with
     | true -> Ok ()
     | false -> Error "Invalid hash" in
@@ -89,7 +84,6 @@ let genesis =
          Prenode.Validators_Prenode.empty)
     ~block_height:0L ~operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
-    ~validators_prenode:Prenode.Validators_Prenode.empty
 let produce ~state ~next_state_root_hash =
   let next_state_root_hash =
     Option.value ~default:state.Protocol_state.state_root_hash
@@ -101,7 +95,6 @@ let produce ~state ~next_state_root_hash =
     ~validators_hash:
       (Prenode.Validators_Prenode.get_validators_hash state.validators_prenode)
     ~block_height:(Int64.add state.block_height 1L)
-    ~validators_prenode:state.Protocol_state.validators_prenode
 open Protocol_signature.Make (struct
   type nonrec t = t
   let hash t = t.hash

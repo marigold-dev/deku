@@ -35,6 +35,11 @@ type t = {
 }
 [@@deriving eq, ord, bin_io, show { with_path = false }]
 
+let make :
+    operation_family:operation_family -> operation_detail:operation_detail -> t
+    =
+ fun ~operation_family ~operation_detail ->
+  { operation_family; operation_detail }
 let get_operation_family t = t.operation_family
 
 let get_operatil_detail t = t.operation_detail

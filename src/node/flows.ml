@@ -180,7 +180,7 @@ let try_to_sign_block state update_state block =
     state
 let commit_state_hash state =
   Tezos_interop.Consensus.commit_state_hash state.Node.interop_context
-let try_to_commit_state_hash ~prev_validators state block signatures =
+let try_to_commit_state_hash ~prev_validators_prenode state block signatures =
   let open Node in
   let signatures_map =
     signatures
@@ -196,13 +196,15 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
   let validators, _ =
     Validators_prenode.get height state.protocol.validators_prenode in
   let validators =
-    state.protocol.validators
-    |> Validators.to_list
-    |> List.map (fun validator -> validator.Validators.address) in
+    Prenode.Validators_Prenode.get_validators_hash
+      state.protocol.validators_prenode
+    |> List.map (fun validator ->
+           validator.Validator_internals.Validators.address) in
   let signatures =
-    prev_validators
-    |> Validators.to_list
-    |> List.map (fun validator -> validator.Validators.address)
+    prev_validators_prenode
+    |> Prenode.Validators_Prenode.get_validators_list
+    |> List.map (fun validator ->
+           validator.Validator_internals.Validators.address)
     |> List.map (fun address -> Address_map.find_opt address signatures_map)
   in
   Lwt.async (fun () ->
@@ -254,8 +256,9 @@ let rec try_to_apply_block state update_state block =
          Block_pool.find_signatures ~hash:block.hash state.Node.block_pool
        with
       | Some signatures when Signatures.is_self_signed signatures ->
-        try_to_commit_state_hash ~prev_validators:prev_protocol.validators state
-          block signatures
+        try_to_commit_state_hash
+          ~prev_validators_prenode:prev_protocol.validators_prenode state block
+          signatures
       | _ -> ());
       state)
     else
@@ -317,9 +320,10 @@ let received_signature state update_state ~hash ~signature =
     ( `Not_a_validator,
       List.exists
         (fun validator ->
-          Key_hash.equal validator.Validators.address
+          Key_hash.equal validator.Validator_internals.Validators.address
             (Signature.address signature))
-        (Validators.to_list state.Node.protocol.validators) ) in
+        (Prenode.Validators_Prenode.get_validators_list state.validators_prenode)
+    ) in
   let%assert () =
     (`Already_known_signature, not (is_known_signature state ~hash ~signature))
   in
@@ -450,17 +454,10 @@ let trusted_validators_membership state update_state request =
     (`Failed_to_verify_payload, payload_hash |> Signature.verify ~signature)
   in
   let new_validators =
-    match action with
-    | Add ->
-      Trusted_validators_membership_change.Set.add { action = Add; address }
-        state.Node.trusted_validator_membership_change
-    | Remove ->
-      Trusted_validators_membership_change.Set.add
-        { action = Remove; address }
-        state.Node.trusted_validator_membership_change in
+    Prenode.Validators_Prenode.update_trusted { address; action }
+      state.validators_prenode in
   let (_ : State.t) =
-    update_state
-      { state with trusted_validator_membership_change = new_validators } in
+    update_state { state with validators_prenode = new_validators } in
   Lwt.async (fun () ->
       state.persist_trusted_membership_change
         (new_validators |> Trusted_validators_membership_change.Set.elements));

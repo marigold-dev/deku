@@ -31,7 +31,7 @@ let is_signed_by_self state ~hash =
 let is_current_producer state ~key_hash =
   let%default () = false in
   let%some current_producer = get_current_block_producer state.Node.protocol in
-  Some (current_producer.address = key_hash)
+  Some (current_producer.Validator_internals.Validators.address = key_hash)
 let minimum_signable_time_between_epochs = 10.0
 let maximum_signable_time_between_epochs = 20.0
 
@@ -91,12 +91,6 @@ let is_signable state block =
   (* WE ARE HERE WE NEED UPDATES*)
   let state =
     Prenode.Validators_Prenode.update_membership state.validators_prenode in
-  let last_seen_membership_change_timestamp =
-    Prenode.Validators_Prenode.get_last_change_timestamp state in
-
-  let current_time = Unix.time () in
-  let next_allowed_membership_change_timestamp =
-    last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
 
   let is_trusted_operation operation =
     match operation with
@@ -182,7 +176,31 @@ let add_block_to_pool state update_state block =
 let apply_block state update_state block =
   let%ok state = Node.apply_block state block in
   Ok (update_state state)
+
+(*
+
+TODO: HERE
+
+let _ops_from_msgs : Prenode.Message.t list -> Validator_internals.Action.t list =
+     fun msgs ->
+       let ops =
+
+   let _clean_operations : State.t -> Message.t list -> State.t * Message.t list =
+     fun state msgs ->
+       (* Remove ops that match Validators *)
+       state, msgs
+
+
+   let clean_msgs : State.t -> (State.t -> State.t) -> Message.t list -> State.t =
+     fun state update_state msgs ->
+       (* Remove operations included in Block from pending operation *)
+       (* TODO: FIXME: call ops prenode to remove ops included in msgs from pendings ops *)
+       (* First, only _clean_operations  *)
+       state
+*)
+
 let clean state update_state block =
+  (* TODO: HERE *)
   let pending_operations =
     List.fold_left
       (fun pending_operations operation ->
@@ -195,21 +213,29 @@ let clean state update_state block =
         | Operation.Core_tezos _
         | Core_user _ ->
           trusted_validator_membership_change
-        | Consensus (Add_validator validator) ->
-          Trusted_validators_membership_change.Set.remove
-            { address = validator.address; action = Add }
-            trusted_validator_membership_change
-        | Consensus (Remove_validator validator) ->
-          Trusted_validators_membership_change.Set.remove
-            { address = validator.address; action = Remove }
-            state.Node.trusted_validator_membership_change)
-      state.Node.trusted_validator_membership_change block.operations in
+        | Consensus action ->
+          Prenode.Validators_Prenode.update_trusted action
+            state.validators_prenode)
+      (Prenode.Validators_Prenode.get_membership state.validators_prenode)
+      block.operations in
+
+  let validators_prenode =
+    Prenode.Validators_Prenode.set_trusted_change
+      trusted_validator_membership_change state.validators_prenode in
+
+  let trusted_set =
+    Prenode.Validators_Prenode.get_trusted_change_opt validators_prenode in
+  let trusted_set =
+    match trusted_set with
+    | None -> failwith "WHAT"
+    | Some trusted_set -> trusted_set in
+
   Lwt.async (fun () ->
       trusted_validator_membership_change
-      |> Trusted_validators_membership_change.Set.elements
-      |> state.persist_trusted_membership_change);
-  update_state
-    { state with trusted_validator_membership_change; pending_operations }
+      |> trusted_set.elements
+      |> t.persist_trusted_change);
+  (* TODO: this should be in Prenode validators *)
+  update_state { state with validators_prenode; pending_operations }
 
 let find_random_validator_uri state =
   let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int in
@@ -218,11 +244,13 @@ let find_random_validator_uri state =
   in
   let rec safe_validator_uri () =
     let validator = List.nth validators (random_int (List.length validators)) in
-    if state.Node.identity.t = validator.address then
+    if state.Node.identity.t = validator.Validator_internals.Validators.address
+    then
       safe_validator_uri ()
     else
       match
-        Node.Address_map.find_opt validator.address state.validators_uri
+        Node.Address_map.find_opt
+          validator.Validator_internals.Validators.address state.validators_uri
       with
       | Some uri -> uri
       | None -> safe_validator_uri () in

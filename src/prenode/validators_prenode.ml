@@ -13,10 +13,12 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
     type t =
       | Add_validator    of string
       | Remove_validator of string
-    (*       | Is_validator_already_registered of Protocol.Block.t
- *)
     [@@deriving ord, bin_io, yojson]
   end
+
+  (*********************************************************************)
+  (* UTILS                                                             *)
+  (*********************************************************************)
 
   let yojson_of_set m =
     match m with
@@ -44,6 +46,17 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
               .of_list values))
     | _ -> Result.Error "Fail"
 
+  let string_to_key : string -> Crypto.Key_hash.t =
+   fun my_str ->
+    let key_opt = Crypto.Key_hash.of_string my_str in
+    match key_opt with
+    | None -> failwith "Couldn't retrive key from string!"
+    | Some key -> key
+
+  (*********************************************************************)
+  (* TYPE             F                                                 *)
+  (*********************************************************************)
+
   type t = {
     validators : Validator_internals.Validators.t;
     membership :
@@ -69,22 +82,26 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
       last_seen_membership_change_timestamp = 0.0;
     }
 
-  let tick _timestamp t = (t, [])
+  (*********************************************************************)
+  (* MEMBERSHIP/TRUST                                                  *)
+  (*********************************************************************)
 
-  let string_to_key : string -> Crypto.Key_hash.t =
-   fun my_str ->
-    let key_opt = Crypto.Key_hash.of_string my_str in
-    match key_opt with
-    | None -> failwith "Couldn't retrive key from string!"
-    | Some key -> key
+  let get_membership :
+      t -> Validator_internals.Trusted_validators_membership_change.t option =
+   fun t -> t.membership
 
   let update_membership :
       Validator_internals.Trusted_validators_membership_change.t -> t -> t =
    fun membership t -> { t with membership = Some membership }
 
-  let get_membership :
-      t -> Validator_internals.Trusted_validators_membership_change.t option =
-   fun t -> t.membership
+  let get_trusted_change_opt :
+      t -> Validator_internals.Trusted_validators_membership_change.Set.t option
+      =
+   fun t -> t.trusted_change
+
+  let set_trusted_change :
+      Validator_internals.Trusted_validators_membership_change.Set.t -> t -> t =
+   fun trusted_change t -> { t with trusted_change = Some trusted_change }
 
   let is_validator_already_registered : Message.t -> t -> bool =
    fun msg t ->
@@ -124,12 +141,44 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
         trusted_change
     | _ -> return false
 
+  let update_trusted : Action.t -> t -> t =
+   fun action t ->
+    let trusted_change = get_trusted_change_opt t in
+    match trusted_change with
+    | None -> failwith "Trusted change is None, you moron"
+    | Some x ->
+      let address, action =
+        match action with
+        | Add_validator validator ->
+          ( Crypto.Key_hash.of_string validator,
+            Validator_internals.Trusted_validators_membership_change.Add )
+        | Remove_validator validator ->
+          ( Crypto.Key_hash.of_string validator,
+            Validator_internals.Trusted_validators_membership_change.Remove )
+      in
+      let address =
+        match address with
+        | None -> failwith "give me an address!!!"
+        | Some address -> address in
+      let trusted_change =
+        Validator_internals.Trusted_validators_membership_change.Set.remove
+          { address; action } x in
+      { t with trusted_change = Some trusted_change }
+
+  (*********************************************************************)
+  (* LAST CHANGE TIMESTAMP                                             *)
+  (*********************************************************************)
+
+  let get_last_change_timestamp : t -> float =
+   fun t -> t.last_seen_membership_change_timestamp
+
   let update_last_change_timestamp : float -> t -> t =
    fun timestamp t ->
     { t with last_seen_membership_change_timestamp = timestamp }
 
-  let get_last_change_timestamp : t -> float =
-   fun t -> t.last_seen_membership_change_timestamp
+  (*********************************************************************)
+  (* BLOCK PROPOSER                                                    *)
+  (*********************************************************************)
 
   let get_new_block_proposer :
       int -> t -> Validator_internals.Validators.validator option =
@@ -145,6 +194,9 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
         Validator_internals.Validators.update_current block_author t.validators;
     }
 
+  (*********************************************************************)
+  (* VALIDATORS (list, number, etc)                                    *)
+  (*********************************************************************)
   let get_number_of_validators : t -> int =
    fun t -> Validator_internals.Validators.length t.validators
 
@@ -158,6 +210,10 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
    fun t ->
     let validators_list = get_validators_list t in
     List.map (fun v -> v.Validator_internals.Validators.address) validators_list
+
+  (*********************************************************************)
+  (* VALIDATORS (modifying)                                            *)
+  (*********************************************************************)
 
   let process_add_validator : string -> t -> t * Message.t list =
    fun new_validator_str t ->
@@ -184,6 +240,12 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
             t.validators;
       },
       [] )
+
+  (*********************************************************************)
+  (* MANDATORY                                                         *)
+  (*********************************************************************)
+
+  let tick _timestamp t = (t, [])
 
   let process_message : Message.t -> t -> t * Message.t list =
    fun msg t ->

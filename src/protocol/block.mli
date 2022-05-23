@@ -8,7 +8,6 @@ type t = private {
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;
   block_height : int64;
-  validators_prenode: Prenode.Validators_Prenode.t;
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson, ord]
