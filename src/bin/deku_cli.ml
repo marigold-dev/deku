@@ -296,11 +296,13 @@ let originate_contract node_folder contract_json initial_storage
         |> Contract_address.to_string);
       Lwt.return (`Ok ()))
 
+let folder_node =
+  let docv = "folder_node" in
+  let doc = "The folder where the node lives." in
+  let open Arg in
+  required & pos 0 (some string) None & info [] ~doc ~docv
+
 let originate_contract =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "The folder where the node lives." in
-    Arg.(required & pos 0 (some string) None & info [] ~doc ~docv) in
   let address_from =
     let doc =
       "The sending address, or a path to a wallet. If a bare address is \
@@ -336,12 +338,6 @@ let originate_contract =
       $ initial_storage
       $ address_from
       $ vm_flavor))
-
-let folder_node =
-  let docv = "folder_node" in
-  let doc = "The folder where the node lives." in
-  let open Arg in
-  required & pos 0 (some string) None & info [] ~doc ~docv
 
 let create_transaction =
   let address_from =
@@ -412,11 +408,6 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash);
   Lwt.return (`Ok ())
 let withdraw =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "The folder where the node lives." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let address_from =
     let doc =
       "The sending address, or a path to a wallet% If a bare sending address \
@@ -484,17 +475,19 @@ let withdraw_proof node_folder operation_hash callback =
       |> String.concat " ;\n"
       |> String.trim);
     await (`Ok ())
+
+let folder_dest =
+  let docv = "folder_dest" in
+  let doc =
+    "The folder the files will be created in. The folder must exist and be \
+     empty." in
+  let open Arg in
+  required & pos 0 (some string) None & info [] ~doc ~docv
+
 let info_withdraw_proof =
   let doc = "Find withdraw proof from operation hash" in
   Cmd.info "withdraw-proof" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 let withdraw_proof =
-  let folder_dest =
-    let docv = "folder_dest" in
-    let doc =
-      "The folder the files will be created in. The folder must exist and be \
-       empty." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let operation_hash =
     let docv = "operation_hash" in
     let doc = "The operation hash used on the withdraw." in
@@ -531,11 +524,6 @@ let sign_block node_folder block_hash =
         { hash = block_hash; signature } in
     Lwt.return (`Ok ())
 let sign_block_term =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "The folder where the node lives." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let block_hash =
     let doc = "The block hash to be signed." in
     let open Arg in
@@ -569,11 +557,6 @@ let produce_block node_folder =
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 let produce_block =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "The folder where the node lives." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   lwt_ret (const produce_block $ folder_node)
 let ensure_folder folder =
@@ -598,13 +581,6 @@ let info_setup_identity =
   let doc = "Create a validator identity" in
   Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 let setup_identity =
-  let folder_dest =
-    let docv = "folder_dest" in
-    let doc =
-      "The folder the files will be created in. The folder must exist and be \
-       empty." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let self_uri =
     let docv = "self_uri" in
     let doc = "The uri that other nodes should use to connect to this node." in
@@ -629,13 +605,6 @@ let setup_tezos node_folder rpc_node secret consensus_contract
       } in
   await (`Ok ())
 let setup_tezos =
-  let folder_dest =
-    let docv = "folder_dest" in
-    let doc =
-      "The folder the files will be created in. The folder must exist and be \
-       empty." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let tezos_node_uri =
     let docv = "tezos_node_uri" in
     let doc = "The uri of the tezos node." in
@@ -699,13 +668,8 @@ let self node_folder =
   await (`Ok ())
 
 let self =
-  let folder_dest =
-    let docv = "folder_dest" in
-    let doc = "The folder of the node." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
-  lwt_ret (const self $ folder_dest)
+  lwt_ret (const self $ folder_node)
 let info_add_trusted_validator =
   let doc =
     "Helps node operators maintain a list of trusted validators they verified \
