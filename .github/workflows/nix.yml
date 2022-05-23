@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      
+
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
@@ -42,17 +42,23 @@ jobs:
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - name: "Run flextesa"
         run: nix develop -c docker-compose up -d flextesa
-      - name: "Set up sandbox"
+      - name: "Set up sandbox before smoke test"
         run: nix run .#sandbox setup
       - name: "Run smoke test"
         run: nix run .#sandbox smoke-test
+      # We want fresh nodes before the next test to be sure there
+      # is no spooky interaction
+      - name: "Set up sandbox before deposit withdraw test"
+        run: nix run .#sandbox tear-down && nix run .#sandbox setup
+      - name: "Run deposit-withdraw test"
+        run: nix run .#sandbox deposit-withdraw-test
 
   # Static and docker are linked because we're using the static build in docker
   static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
@@ -71,12 +77,12 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
@@ -107,4 +113,3 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'docker')
         run: |
           docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
-
