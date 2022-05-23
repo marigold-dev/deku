@@ -33,8 +33,8 @@ deku_yaml = make_deku_yaml(no_of_deku_nodes)
 tezos_yaml = "./docker-compose.yml"
 docker_compose([deku_yaml, tezos_yaml])
 
-for deku_service in get_services(decode_yaml(deku_yaml)):
-    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
+for index, deku_service in enumerate(get_services(decode_yaml(deku_yaml))):
+    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup", "deku-vm-%s" % index])
 
 for tezos_service in get_services(read_yaml(tezos_yaml)):
     dc_resource(tezos_service, labels=["tezos"])
@@ -46,7 +46,7 @@ def deku_vm_setup(n, vm_args):
       serve_cmd="%s data/%s/state_transition" % (vm_args, i),
       allow_parallel=True,
       labels="vms",
-      resource_deps=["deku-setup", "deku-node-0"],
+      resource_deps=["deku-setup"],
       readiness_probe=probe( # I have to use a readiness probe because when putting the vm in background there is no more reader on the fifo pipe, so when the node try to send the tx to the vm it fails with a Unix.EPIPE error
         initial_delay_secs=1,
         exec=exec_action(['true'])  # After one seconds, the vm is considered running # TODO: find a better probe

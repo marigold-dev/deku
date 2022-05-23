@@ -174,8 +174,8 @@ let handle_ticket_balance =
       Ok { amount })
 
 let node folder named_pipe_path prometheus_port =
-  let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   External_vm.start_vm_ipc ~named_pipe_path;
+  let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state

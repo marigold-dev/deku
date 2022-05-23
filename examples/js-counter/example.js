@@ -5,6 +5,7 @@ const transition = (sender, tx_hash, action_buffer) => {
   const action = JSON.parse(action_buffer.toString());
   let counter = get("counter");
   counter = Number.parseFloat(counter);
+  console.log(`current counter: ${counter}`);
 
   switch (action.Action) {
     case "Increment": {
@@ -20,4 +21,4 @@ const transition = (sender, tx_hash, action_buffer) => {
   }
 }
 
-main({counter: 0}, transition);
+main({counter: 42}, transition);
