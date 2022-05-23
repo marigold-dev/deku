@@ -1,5 +1,5 @@
-{ pkgs, stdenv, lib, system, removeReferencesTo, doCheck ? true, cacert
-, npmPackages, nodejs ? pkgs.nodejs, static ? false }:
+{ pkgs, stdenv, lib, system, nix-filter, removeReferencesTo, doCheck ? true
+, cacert, npmPackages, nodejs ? pkgs.nodejs, static ? false }:
 
 let ocamlPackages = pkgs.ocaml-ng.ocamlPackages_5_00;
 
@@ -7,12 +7,20 @@ in ocamlPackages.buildDunePackage rec {
   pname = "sidechain";
   version = "0.0.0-dev";
 
-  src = lib.filterSource {
-    src = ./..;
-    dirs = [ "src" "ppx_let_binding" "ppx_lambda_vm" "tests" ];
-    files =
-      [ "dune-project" "sidechain.opam" "package.json" "package-lock.json" ];
-  };
+  src = with nix-filter.lib;
+    filter {
+      root = ../.;
+      include = [
+        (inDirectory "src")
+        (inDirectory "ppx_let_binding")
+        (inDirectory "ppx_lambda_vm")
+        (inDirectory "tests")
+        "dune-project"
+        "sidechain.opam"
+        "package.json"
+        "package-lock.json"
+      ];
+    };
 
   # This is the same as standard dune build but with static support
   buildPhase = ''
