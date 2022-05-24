@@ -27,7 +27,9 @@ type t = {
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
-  persist_trusted_membership_change : Prenode.Validators_Prenode.t -> unit Lwt.t;
+  persist_trusted_membership_change :
+    Validator_internals.Trusted_validators_membership_change.t list ->
+    unit Lwt.t;
 }
 let make ~identity ~validators_prenode ~persist_trusted_membership_change
     ~interop_context ~data_folder ~initial_validators_uri =

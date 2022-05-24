@@ -780,7 +780,7 @@ let () =
          (produce_block, info_produce_block);
          (setup_identity, info_setup_identity);
          (setup_tezos, info_setup_tezos);
-         (add_trusted_validator, info_add_trusted_validator);
-         (remove_trusted_validator, info_remove_trusted_validator);
+         (* (add_trusted_validator, info_add_trusted_validator);
+            (remove_trusted_validator, info_remove_trusted_validator); *)
          (self, info_self);
        ]

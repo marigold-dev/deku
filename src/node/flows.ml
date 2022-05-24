@@ -63,23 +63,42 @@ let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
 let get_task_pool = (ref (fun () -> assert false) : (unit -> Task.pool) ref)
 
-type received_block_result =
-  ( unit,
-    [ `Added_block_not_signed_enough_to_desync
-    | `Already_known_block
-    | `Block_already_in_the_pool
-    | `Block_not_signed_enough_to_apply
-    | `Invalid_block                                of string
-    | `Invalid_block_when_applying
-    | `Invalid_state_root_hash
-    | `Not_current_block_producer
-    | `Pending_blocks
-    | `Added_block_has_lower_block_height
-    | `Added_signature_not_signed_enough_to_request
-    | `Already_known_signature
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ] )
-  result
+(* type received_signature_result =
+   ( unit,
+     [ `Added_block_not_signed_enough_to_desync
+     | `Already_known_block
+     | `Block_already_in_the_pool
+     | `Block_not_signed_enough_to_apply
+     | `Invalid_block                                of string
+     | `Invalid_block_when_applying
+     | `Invalid_state_root_hash
+     | `Not_current_block_producer
+     | `Pending_blocks
+     | `Added_block_has_lower_block_height
+     | `Added_signature_not_signed_enough_to_request
+     | `Already_known_signature
+     | `Invalid_signature_for_this_hash
+     | `Not_a_validator ] )
+   result *)
+
+(* type received_block_result =
+   ( unit,
+     [ `Added_block_has_lower_block_height
+     | `Added_block_not_signed_enough_to_desync
+     | `Added_block_not_signed_enough_to_request
+     | `Already_known_block
+     | `Already_known_signature
+     | `Block_already_in_the_pool
+     | `Block_not_signed_enough_to_apply
+     | `Invalid_block                            of string
+     | `Invalid_block_when_applying
+     | `Invalid_signature_for_this_hash
+     | `Invalid_state_root_hash
+     | `Not_a_validator
+     | `Not_current_block_producer
+     | `Pending_blocks ] )
+   result *)
+
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -323,13 +342,7 @@ let received_block state update_state block =
   let state = add_block_to_pool state update_state block in
   block_added_to_the_pool state update_state block
 let () = received_block' := received_block
-let received_signature :
-    Node.t ->
-    (Node.t -> Node.t) ->
-    hash:BLAKE2B.t ->
-    signature:Protocol.Signature.t ->
-    received_block_result =
- fun state update_state ~hash ~signature ->
+let received_signature (state : Node.t) update_state ~hash ~signature =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
   (* TODO: consider edge-cases related to the node being out sync.
@@ -484,5 +497,13 @@ let trusted_validators_membership state update_state request =
 
   let (_ : State.t) =
     update_state { state with validators_prenode = new_validators } in
-  Lwt.async (fun () -> state.persist_trusted_membership_change new_validators);
+
+  let trusted =
+    match Prenode.Validators_Prenode.get_trusted_change_opt new_validators with
+    | None -> failwith "No trusted change here, oupsie"
+    | Some trusted ->
+      Validator_internals.Trusted_validators_membership_change.Set.elements
+        trusted in
+
+  Lwt.async (fun () -> state.persist_trusted_membership_change trusted);
   Ok ()

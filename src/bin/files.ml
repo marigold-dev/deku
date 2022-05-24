@@ -51,7 +51,9 @@ module State_bin = struct
         Lwt_io.write_value __x protocol)
 end
 module Trusted_validators_membership_change = struct
-  type t = Trusted_validators_membership_change.t [@@deriving yojson]
+  (* TODO: POLLIANTE refacto *)
+  type t = Validator_internals.Trusted_validators_membership_change.t
+  [@@deriving yojson]
   let read = read_json [%of_yojson: t list]
   let write = write_json [%to_yojson: t list]
 end

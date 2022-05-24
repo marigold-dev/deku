@@ -24,13 +24,13 @@ type t = {
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
-  Prenode.Validators_Prenode.t -> unit Lwt.t;
+  Validator_internals.Trusted_validators_membership_change.t list-> unit Lwt.t;
 }
 val make :
   identity:identity ->
   validators_prenode:Prenode.Validators_Prenode.t ->
   persist_trusted_membership_change:
-    (Prenode.Validators_Prenode.t -> unit Lwt.t) ->
+    (Validator_internals.Trusted_validators_membership_change.t list -> unit Lwt.t) ->
   interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->

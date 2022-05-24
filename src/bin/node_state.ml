@@ -11,6 +11,18 @@ let get_initial_state ~folder =
   let trusted_validator_membership_change =
     Validator_internals.Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
+
+  let relevant_addresses :
+      Validator_internals.Trusted_validators_membership_change.t list =
+    Validator_internals.Trusted_validators_membership_change.Set.elements
+      trusted_validator_membership_change in
+
+  let relevant_addresses =
+    List.map
+      (fun (x : Validator_internals.Trusted_validators_membership_change.t) ->
+        x.address)
+      relevant_addresses in
+
   let%await interop_context =
     let%await {
             rpc_node;
@@ -44,9 +56,17 @@ let get_initial_state ~folder =
     List.fold_left
       (fun validators (address, _) ->
         (* Here, we assume that initial only has ADD operations for validators *)
-        Prenode.Validators_Prenode.add_add_validator_operation address
-          validators)
+        Prenode.Validators_Prenode.add_validator address validators)
+      (* ADD in membership *and* add in validators *)
       Prenode.Validators_Prenode.empty validators in
+
+  let validators_prenode =
+    List.fold_left
+      (fun val_prenode address ->
+        Prenode.Validators_Prenode.add_add_validator_operation address
+          val_prenode)
+      validators_prenode relevant_addresses in
+
   let node =
     State.make ~identity ~validators_prenode ~interop_context
       ~data_folder:folder ~initial_validators_uri

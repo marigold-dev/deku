@@ -98,6 +98,14 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
 
     { t with validators = new_validators }
 
+  let add_validator : Crypto.Key_hash.t -> t -> t =
+   fun validator t ->
+    let validator : Validator_internals.Validators.validator =
+      { address = validator } in
+    let new_validators =
+      Validator_internals.Validators.add validator (get_validators t) in
+    { t with validators = new_validators }
+
   (*********************************************************************)
   (* MEMBERSHIP/TRUST                                                  *)
   (*********************************************************************)
