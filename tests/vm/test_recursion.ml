@@ -89,6 +89,7 @@ let check_runtime_error ~msg ~actual ~expected =
     Alcotest.(check Testable.runtime_limits_error) msg expected error
   | Ok _ -> Alcotest.fail "Ast shouldn't execute"
   | _ -> Alcotest.fail "unexpected error"
+
 let test_stack_limit () =
   check_runtime_error ~msg:"Stack has a limit" ~expected:Out_of_stack
     ~actual:

@@ -153,15 +153,25 @@ let vote vote =
     [%lambda_vm.value 1L, 0L]
 
 let admin = "tz1ibMpWS6n6MJn73nQHtK5f4ogyYC1z9T9z"
+
 let alice = "tz1L738ifd66ah69PrmKAZzckvvHnbcSeqjf"
+
 let bob = "tz1LFuHW4Z9zsCwg1cgGTKU12WZAs27ZD14v"
+
 let frank = "tz1Qd971cetwNr5f4oKp9xno6jBvghZHRsDr"
+
 let pascal = "tz1TgK3oaBaqcCHankT97AUNMjcs87Tfj5vb"
+
 let jacob = "tz1VphG4Lgp39MfQ9rTUnsm7BBWyXeXnJSMZ"
+
 let lucina = "tz1ZAZo1xW4Veq5t7YqWy2SMbLdskmeBmzqs"
+
 let mark = "tz1ccWCuJqMxG4hoa1g5SKhgdTwXoJBM8kpc"
+
 let jean = "tz1hQzKQpprB5JhNxZZRowEDRBoieHRAL84b"
+
 let boby = "tz1hTic2GpaNumpTtYwqyPSBd9KcWifRMuEN"
+
 let bartholome = "tz1hv9CrgtaxiCayc567KUvCyWDQRF9sVNuf"
 
 let test_vote () =

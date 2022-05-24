@@ -1,13 +1,13 @@
 open Ast
 open Ir
 open Checks
-
 module String_map = Map.Make (String)
 
 type error = (* user program bugs *)
   | Undefined_variable [@@deriving show]
 
 exception Error of error
+
 let raise error = raise (Error error)
 
 let compile_prim prim =
@@ -30,6 +30,7 @@ let compile_prim prim =
 
 module Vars = Map_with_cardinality.Make (struct
   include String
+
   type t = string [@@deriving yojson]
 end)
 
@@ -107,6 +108,7 @@ let compile gas script =
 let compile gas script =
   try Ok (compile gas script) with
   | Error error -> Error error
+
 let burn_gas gas = Gas.burn_constant gas
 
 let rec compile_value ~stack gas value =

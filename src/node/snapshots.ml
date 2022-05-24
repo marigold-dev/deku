@@ -1,12 +1,15 @@
 open Crypto
 open Protocol
 open Helpers
+
 type snapshot = Network.Protocol_snapshot.snapshot = {
   hash : BLAKE2B.t;
   data : string;
 }
 [@@deriving yojson]
+
 type snapshot_ref = snapshot option Atomic.t
+
 type t = {
   current_snapshot : snapshot_ref;
   next_snapshots : (int64 * snapshot_ref) list;
@@ -14,6 +17,7 @@ type t = {
   last_block_signatures : Signatures.t;
   additional_blocks : Block.t list;
 }
+
 let make ~initial_snapshot ~initial_block ~initial_signatures =
   {
     current_snapshot =
@@ -28,6 +32,7 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
     last_block_signatures = initial_signatures;
     additional_blocks = [];
   }
+
 let append_block ~pool (block, signatures) t =
   if t.last_block.block_height > block.Block.block_height then
     t
@@ -41,6 +46,7 @@ let append_block ~pool (block, signatures) t =
       last_block_signatures = signatures;
       additional_blocks = blocks @ [t.last_block] @ t.additional_blocks;
     }
+
 let add_snapshot_ref ~block_height t =
   let atom = Atomic.make None in
   ( atom,
@@ -51,10 +57,12 @@ let add_snapshot_ref ~block_height t =
       last_block_signatures = t.last_block_signatures;
       additional_blocks = t.additional_blocks;
     } )
+
 let set_snapshot_ref ref_ snapshot =
   Logs.app (fun m ->
       m "New protocol snapshot hash: %s" (snapshot.hash |> BLAKE2B.to_string));
   Atomic.set ref_ (Some snapshot)
+
 let start_new_epoch t =
   let rec truncate_additional_blocks block_height blocks =
     match blocks with

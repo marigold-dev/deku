@@ -1,5 +1,4 @@
 open Tezos_micheline
-
 module Michelson_v1_primitives = Michelson_v1_primitives
 
 type t = Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
@@ -10,6 +9,7 @@ let expr_encoding =
 
 let unit =
   Micheline.strip_locations (Prim (-1, Michelson_v1_primitives.D_Unit, [], []))
+
 let is_unit value =
   match Micheline.root value with
   | Prim (_, Michelson_v1_primitives.D_Unit, [], []) -> true

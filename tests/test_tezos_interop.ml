@@ -4,22 +4,27 @@ open Wallet
 open Crypto
 open Tezos
 open Tezos_interop
+
 module TZ2_ex = struct
   let sk =
     Secret.of_string "spsk3LfH15rYByf7whY9YNAxS5ghpjzCr96jZ16Jt4pv2mnshf8Tcy"
     |> Option.get
+
   let pk =
     Key.of_string "sppk7aCim2kYBWGoEQGezcg8LbHi99XxrAE5dh6DDUru26pT93V2c5U"
     |> Option.get
 end
+
 module TZ3_ex = struct
   let sk =
     Secret.of_string "p2sk2s8WFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"
     |> Option.get
+
   let pk =
     Key.of_string "p2pk67mCLEZ2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"
     |> Option.get
 end
+
 let some_contract_hash =
   Contract_hash.of_string "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" |> Option.get
 
@@ -92,6 +97,7 @@ let () =
              (of_string "p2pk67mCLE2iFivprKpjugLakXfahdq9VUqmiTho1fhtv9P3AeJoc7"))
             .toBeNone
             ()))
+
 let () =
   describe "key_hash" (fun { test; _ } ->
       let open Key_hash in
@@ -133,6 +139,7 @@ let () =
             .toBeNone ();
           (expect.option (of_string "tz38hJcRfJzz5ZNCTepE9kU1QnTrL8Acy3y"))
             .toBeNone ()))
+
 let () =
   describe "secret" (fun { test; _ } ->
       let open Secret in
@@ -198,6 +205,7 @@ let () =
              (of_string "p2sk2s8wFJdvL6J9JxY7R3tWwMnaqJotbcTFgXg3pSVNPvrxKL1AkQ"))
             .toBeNone
             ()))
+
 let () =
   describe "signature" (fun { test; _ } ->
       let open BLAKE2B in
@@ -311,6 +319,7 @@ let () =
                 "p2sigt13usEEBeyJkpRCarwHnMUZ744xeAQFv65ZT5UZeNgoGaFDdFfw27MEGpGSSAdxpSyBdfBhkrtUf7cwHx6NQnCpjWbpo"))
             .toBeNone
             ()))
+
 let () =
   describe "contract_hash" (fun { test; _ } ->
       let open Contract_hash in
@@ -330,6 +339,7 @@ let () =
       test "invalid size" (fun { expect; _ } ->
           (expect.option (of_string "KT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABT"))
             .toBeNone ()))
+
 let () =
   describe "address" (fun { test; _ } ->
       let open Address in
@@ -388,6 +398,7 @@ let () =
             .toBeNone ();
           (expect.option (of_string "tz3b8hJRfJzz5ZNCTepE9kU1QnTrL8Acy3y"))
             .toBeNone ()))
+
 let () =
   describe "ticket" (fun { test; _ } ->
       let open Ticket_id in
@@ -413,6 +424,7 @@ let () =
              (of_string {|(Pair "BT1Dbav7SYrJFpd3bT7sVFDS9MPp4F5gABTc" 0x6Z)|}))
             .toBeNone
             ()))
+
 let () =
   describe "operation_hash" (fun { test; _ } ->
       let open Operation_hash in
@@ -442,6 +454,7 @@ let () =
              (of_string "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW"))
             .toBeNone
             ()))
+
 let () =
   describe "operation forging" (fun { test; _ } ->
       let open Tezos in
@@ -493,6 +506,7 @@ let () =
             "f6e43992b2f45aedbfdc7f5f6a21aa68c99973afffa0ddbe8b98e33672dec6396c001004051072b588b39e25b9f4dbf4673abcd63147a403b4dfc901970a000001533ace00d71497d23fdac2a8809bb1e9df14c579000048a432efc5ef0e700c2f696957996e90194787995d43826b18ade1823d05857f35787f4e7a223d3ea226f22b1809ee56a9046bd313f547e3746fb46bc8ed3803"
           in
           (expect.string forged_bytes).toEqual taquito_forged_bytes))
+
 let () =
   describe "pack" (fun { test; _ } ->
       let open Pack in
@@ -546,6 +560,7 @@ let () =
         (address
            (Originated { contract = some_contract_hash; entrypoint = None }))
         "050a0000001601370027c6c8f3fbafda4f9bfd08b14f45e6a29ce300")
+
 let () =
   describe "consensus" (fun { test; _ } ->
       let open Helpers in
@@ -594,6 +609,7 @@ let () =
           let hash = BLAKE2B.to_string hash in
           (expect.string hash).toEqual
             "63dfd90ec7be98a9c23bf374692de4d36f41fe03c4c768fc0c650641d3ed4f86"))
+
 let () =
   describe "discovery" (fun { test; _ } ->
       let open Discovery in

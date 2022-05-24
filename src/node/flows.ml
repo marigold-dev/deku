@@ -4,6 +4,7 @@ open Protocol
 open Building_blocks
 open Domainslib
 module Node = State
+
 let write_state_to_file path protocol =
   let protocol_bin = Marshal.to_string protocol [] in
   Lwt.async (fun () ->
@@ -49,6 +50,7 @@ let print_error err =
 type flag_node =
   [ `Invalid_block
   | `Invalid_signature ]
+
 type ignore =
   [ `Added_block_not_signed_enough_to_desync
   | `Added_signature_not_signed_enough_to_request
@@ -58,10 +60,15 @@ type ignore =
   | `Not_current_block_producer
   | `Pending_blocks
   | `Added_block_has_lower_block_height ]
+
 let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
+
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
+
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
+
 let get_task_pool = (ref (fun () -> assert false) : (unit -> Task.pool) ref)
+
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -80,6 +87,7 @@ let received_block' =
         | `Added_block_has_lower_block_height ] )
       result)
       ref)
+
 let block_added_to_the_pool' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -94,6 +102,7 @@ let block_added_to_the_pool' =
         | `Added_block_has_lower_block_height ] )
       result)
       ref)
+
 let rec request_block_by_hash tries ~hash =
   if tries > 20 then raise Not_found;
   Lwt.catch
@@ -105,6 +114,7 @@ let rec request_block_by_hash tries ~hash =
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_block_by_hash (tries + 1) ~hash)
+
 let request_block ~hash =
   Lwt.async (fun () ->
       let%await block = request_block_by_hash 0 ~hash in
@@ -118,6 +128,7 @@ let request_block ~hash =
       with
       | Ok () -> await ()
       | Error _err -> await ())
+
 let rec request_protocol_snapshot tries =
   if tries > 20 then raise Not_found;
   Lwt.catch
@@ -134,7 +145,9 @@ let () =
     fun exn ->
       Printexc.to_string exn |> Format.eprintf "global_exception: %s\n%!";
       Printexc.print_backtrace stderr
+
 let pending = ref false
+
 let load_snapshot snapshot_data =
   let open Network.Protocol_snapshot in
   let%ok state =
@@ -144,6 +157,7 @@ let load_snapshot snapshot_data =
       ~last_block_signatures:snapshot_data.last_block_signatures (!get_state ())
   in
   Ok (!set_state state)
+
 let request_protocol_snapshot () =
   Lwt.async (fun () ->
       let%await snapshot = request_protocol_snapshot 0 in
@@ -151,6 +165,7 @@ let request_protocol_snapshot () =
       | Ok _ -> ()
       | Error err -> print_error err);
       await ())
+
 let request_previous_blocks state block =
   if
     block_matches_current_state_root_hash state block
@@ -160,6 +175,7 @@ let request_previous_blocks state block =
   else if not !pending then (
     pending := true;
     request_protocol_snapshot ())
+
 let try_to_produce_block state update_state =
   let%assert () =
     ( `Not_current_block_producer,
@@ -170,6 +186,7 @@ let try_to_produce_block state update_state =
   broadcast_block_and_signature state ~block ~signature;
   Metrics.Blocks.inc_block_produced ();
   Ok ()
+
 let try_to_sign_block state update_state block =
   if is_signable state block then (
     let signature = sign ~key:state.identity.secret block in
@@ -178,8 +195,10 @@ let try_to_sign_block state update_state block =
     append_signature state update_state ~hash:block.hash ~signature)
   else
     state
+
 let commit_state_hash state =
   Tezos_interop.Consensus.commit_state_hash state.Node.interop_context
+
 let try_to_commit_state_hash ~prev_validators state block signatures =
   let open Node in
   let signatures_map =
@@ -211,6 +230,7 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
         ~block_payload_hash:block.payload_hash
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~state_hash:block.state_root_hash ~validators ~signatures)
+
 let hash_new_state_root state protocol update_state =
   let task_pool = !get_task_pool () in
   let snapshot_ref, snapshots =
@@ -292,7 +312,9 @@ and block_added_to_the_pool state update_state block =
     | None ->
       request_previous_blocks state block;
       Ok ()
+
 let () = block_added_to_the_pool' := block_added_to_the_pool
+
 let received_block state update_state block =
   let%ok () =
     is_valid_block state block
@@ -302,7 +324,9 @@ let received_block state update_state block =
   in
   let state = add_block_to_pool state update_state block in
   block_added_to_the_pool state update_state block
+
 let () = received_block' := received_block
+
 let received_signature state update_state ~hash ~signature =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
@@ -329,12 +353,14 @@ let received_signature state update_state ~hash ~signature =
   | None ->
     request_block ~hash;
     Ok ()
+
 let parse_internal_tezos_transaction transaction =
   match transaction with
   | Tezos_interop.Consensus.Update_root_hash _ -> Error `Update_root_hash
   | Tezos_interop.Consensus.Deposit { ticket; amount; destination } ->
     let amount = Core_deku.Amount.of_int (Z.to_int amount) in
     Ok (Core_deku.Tezos_operation.Tezos_deposit { destination; amount; ticket })
+
 let parse_internal_tezos_transactions tezos_internal_transactions =
   List.filter_map
     (fun transaction ->
@@ -375,6 +401,7 @@ let received_user_operation state update_state user_operation =
         broadcast_user_operation_gossip state { user_operation });
     append_operation state update_state operation);
   Ok ()
+
 let received_consensus_operation state update_state consensus_operation
     signature =
   let open Protocol.Operation in
@@ -388,7 +415,9 @@ let received_consensus_operation state update_state consensus_operation
 
 let find_block_by_hash state hash =
   Block_pool.find_block ~hash state.Node.block_pool
+
 let find_block_level state = state.State.protocol.block_height
+
 let request_nonce state update_state uri =
   let nonce = Random.generate 32 |> Cstruct.to_string in
   let _state =
@@ -397,6 +426,7 @@ let request_nonce state update_state uri =
       { state with uri_state = Node.Uri_map.add uri nonce state.uri_state })
   in
   BLAKE2B.hash nonce
+
 let register_uri state update_state ~uri ~signature =
   let%ok nonce =
     Node.Uri_map.find_opt uri state.Node.uri_state
@@ -414,6 +444,7 @@ let register_uri state update_state ~uri ~signature =
             uri state.validators_uri;
       } in
   Ok ()
+
 let request_withdraw_proof state ~hash =
   match state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt hash with
   | None -> Network.Withdraw_proof.Unknown_operation
@@ -430,10 +461,12 @@ let request_withdraw_proof state ~hash =
       |> Core_deku.State.ledger
       |> Ledger.withdrawal_handles_find_proof withdrawal_handle in
     Ok { withdrawal_handles_hash; withdrawal_handle; proof }
+
 let request_ticket_balance state ~ticket ~address =
   state.Node.protocol.core_state
   |> Core_deku.State.ledger
   |> Ledger.balance address ticket
+
 let trusted_validators_membership state update_state request =
   let open Network.Trusted_validators_membership_change in
   let { signature; payload = { address; action } as payload } = request in

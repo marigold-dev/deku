@@ -33,5 +33,7 @@ let make : sender:string -> source:string -> Gas.t -> t =
   { sender; source; gas }
 
 let[@inline always] sender t = t.sender
+
 let[@inline always] source t = t.source
+
 let[@inline always] gas t = t.gas

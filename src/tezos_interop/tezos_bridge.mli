@@ -8,6 +8,7 @@ module Listen_transaction : sig
     value : Michelson.t;
   }
   [@@deriving of_yojson]
+
   type t = {
     hash : string;
     transactions : transaction list;
@@ -27,6 +28,7 @@ module Inject_transaction : sig
 end
 
 type t
+
 val spawn : unit -> t
 
 val listen_transaction :

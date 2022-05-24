@@ -1,5 +1,4 @@
 open Lambda_vm
-
 module Testable = Vm_test.Testable
 
 let sender =

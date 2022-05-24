@@ -4,6 +4,7 @@ exception Out_of_gas
 type t = int ref
 
 let constant_burn = 100
+
 let log2_burn ~cardinality =
   let log2_cardinality =
     let open Float in
@@ -23,4 +24,5 @@ let burn t amount =
     raise Out_of_gas
 
 let burn_constant t = burn t constant_burn
+
 let burn_log2 t ~cardinality = burn t (log2_burn ~cardinality)
