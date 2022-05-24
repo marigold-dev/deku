@@ -206,4 +206,4 @@ let node =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   const node $ folder_node $ Prometheus_dream.opts
-let () = Term.exit @@ Term.eval (node, Term.info "deku-node")
+let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node

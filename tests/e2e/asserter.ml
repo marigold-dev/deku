@@ -41,4 +41,4 @@ let args =
   $ expected_state_root_hash
   $ expected_block_height
 
-let () = Term.exit @@ Term.eval (args, Term.info "asserter")
+let _ = Cmd.eval @@ Cmd.v (Cmd.info "asserter") args
