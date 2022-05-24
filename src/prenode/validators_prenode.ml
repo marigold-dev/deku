@@ -1,9 +1,9 @@
 open Watcher
-open Helpers
+open Phelpers
 
 module type VALIDATORS_PARAMETER = sig
   module Threshold : sig
-    val get : Helpers.Height.t -> int
+    val get : Phelpers.Height.t -> int
   end
 end
 
@@ -54,7 +54,7 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
     | Some key -> key
 
   (*********************************************************************)
-  (* TYPE             F                                                 *)
+  (* TYPE                                                               *)
   (*********************************************************************)
 
   type t = {
@@ -83,10 +83,26 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
     }
 
   (*********************************************************************)
+  (* VALIDATORS                                                        *)
+  (*********************************************************************)
+
+  let get_validators : t -> Validator_internals.Validators.t =
+   fun t -> t.validators
+  let update_validators :
+      Validator_internals.Validators.validator list -> t -> t =
+   fun validators t ->
+    let new_validators =
+      List.fold_left
+        (fun s v -> Validator_internals.Validators.add v s)
+        (get_validators t) validators in
+
+    { t with validators = new_validators }
+
+  (*********************************************************************)
   (* MEMBERSHIP/TRUST                                                  *)
   (*********************************************************************)
 
-  let get_membership :
+  let get_membership_opt :
       t -> Validator_internals.Trusted_validators_membership_change.t option =
    fun t -> t.membership
 
@@ -141,29 +157,70 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
         trusted_change
     | _ -> return false
 
-  let update_trusted : Action.t -> t -> t =
-   fun action t ->
-    let trusted_change = get_trusted_change_opt t in
-    match trusted_change with
+  let is_add_validator_operation_trusted : Crypto.Key_hash.t -> t -> bool =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> false
+    | Some trusted ->
+      Validator_internals.Trusted_validators_membership_change.Set.mem
+        { address; action = Add } trusted
+
+  let is_remove_validator_operation_trusted : Crypto.Key_hash.t -> t -> bool =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> false
+    | Some trusted ->
+      Validator_internals.Trusted_validators_membership_change.Set.mem
+        { address; action = Remove }
+        trusted
+
+  let delete_add_validator_operation : Crypto.Key_hash.t -> t -> t =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
     | None -> failwith "Trusted change is None, you moron"
-    | Some x ->
-      let address, action =
-        match action with
-        | Add_validator validator ->
-          ( Crypto.Key_hash.of_string validator,
-            Validator_internals.Trusted_validators_membership_change.Add )
-        | Remove_validator validator ->
-          ( Crypto.Key_hash.of_string validator,
-            Validator_internals.Trusted_validators_membership_change.Remove )
-      in
-      let address =
-        match address with
-        | None -> failwith "give me an address!!!"
-        | Some address -> address in
-      let trusted_change =
+    | Some trusted ->
+      let trusted =
         Validator_internals.Trusted_validators_membership_change.Set.remove
-          { address; action } x in
-      { t with trusted_change = Some trusted_change }
+          { address; action = Add } trusted in
+      { t with trusted_change = Some trusted }
+
+  let add_add_validator_operation : Crypto.Key_hash.t -> t -> t =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> failwith "Trusted change is None, you moron"
+    | Some trusted ->
+      let trusted =
+        Validator_internals.Trusted_validators_membership_change.Set.add
+          { address; action = Add } trusted in
+      { t with trusted_change = Some trusted }
+
+  let delete_remove_validator_operation : Crypto.Key_hash.t -> t -> t =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> failwith "Trusted change is None, you moron"
+    | Some trusted ->
+      let trusted =
+        Validator_internals.Trusted_validators_membership_change.Set.remove
+          { address; action = Remove }
+          trusted in
+      { t with trusted_change = Some trusted }
+
+  let add_remove_validator_operation : Crypto.Key_hash.t -> t -> t =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> failwith "Trusted change is None, you moron"
+    | Some trusted ->
+      let trusted =
+        Validator_internals.Trusted_validators_membership_change.Set.add
+          { address; action = Remove }
+          trusted in
+      { t with trusted_change = Some trusted }
 
   (*********************************************************************)
   (* LAST CHANGE TIMESTAMP                                             *)

@@ -9,7 +9,7 @@ let get_initial_state ~folder =
     Files.Trusted_validators_membership_change.read
       ~file:trusted_validator_membership_change_file in
   let trusted_validator_membership_change =
-    Trusted_validators_membership_change.Set.of_list
+    Validator_internals.Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
   let%await interop_context =
     let%await {
@@ -39,23 +39,21 @@ let get_initial_state ~folder =
   let persist_trusted_membership_change =
     Files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
+
+  let validators_prenode =
+    List.fold_left
+      (fun validators (address, _) ->
+        (* Here, we assume that initial only has ADD operations for validators *)
+        Prenode.Validators_Prenode.add_add_validator_operation address
+          validators)
+      Prenode.Validators_Prenode.empty validators in
   let node =
-    State.make ~identity ~trusted_validator_membership_change ~interop_context
+    State.make ~identity ~validators_prenode ~interop_context
       ~data_folder:folder ~initial_validators_uri
       ~persist_trusted_membership_change in
+
   let node =
-    {
-      node with
-      protocol =
-        {
-          node.protocol with
-          validators =
-            List.fold_left
-              (fun validators (address, _) ->
-                Validators.add { address } validators)
-              Validators.empty validators;
-        };
-    } in
+    { node with protocol = { node.protocol with validators_prenode } } in
   let state_bin = folder ^ "/state.bin" in
   let%await state_bin_exists = Lwt_unix.file_exists state_bin in
   let%await protocol =

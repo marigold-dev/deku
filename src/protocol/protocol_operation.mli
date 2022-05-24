@@ -1,5 +1,5 @@
 open Crypto
-module Consensus : sig
+module Validators : sig
   type t =
     | Add_validator    of Validator_internals.Validators.validator
     | Remove_validator of Validator_internals.Validators.validator
@@ -38,5 +38,5 @@ end
 type t =
   | Core_tezos of Core.Tezos_operation.t
   | Core_user  of Core_user.t
-  | Consensus  of Consensus.t
+  | Validators  of Validators.t
 [@@deriving eq, ord, yojson]

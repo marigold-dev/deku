@@ -62,6 +62,24 @@ let reset_timeout = (ref (fun () -> assert false) : (unit -> unit) ref)
 let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
 let get_task_pool = (ref (fun () -> assert false) : (unit -> Task.pool) ref)
+
+type received_block_result =
+  ( unit,
+    [ `Added_block_not_signed_enough_to_desync
+    | `Already_known_block
+    | `Block_already_in_the_pool
+    | `Block_not_signed_enough_to_apply
+    | `Invalid_block                                of string
+    | `Invalid_block_when_applying
+    | `Invalid_state_root_hash
+    | `Not_current_block_producer
+    | `Pending_blocks
+    | `Added_block_has_lower_block_height
+    | `Added_signature_not_signed_enough_to_request
+    | `Already_known_signature
+    | `Invalid_signature_for_this_hash
+    | `Not_a_validator ] )
+  result
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -192,14 +210,9 @@ let try_to_commit_state_hash ~prev_validators_prenode state block signatures =
            (address, (key, signature)))
     |> List.to_seq
     |> Address_map.of_seq in
-  let height = block.Block.block_height in
-  let validators, _ =
-    Validators_prenode.get height state.protocol.validators_prenode in
-  let validators =
-    Prenode.Validators_Prenode.get_validators_hash
-      state.protocol.validators_prenode
-    |> List.map (fun validator ->
-           validator.Validator_internals.Validators.address) in
+  let validator_addresses =
+    Prenode.Validators_Prenode.get_validators_address_list
+      state.validators_prenode in
   let signatures =
     prev_validators_prenode
     |> Prenode.Validators_Prenode.get_validators_list
@@ -215,7 +228,8 @@ let try_to_commit_state_hash ~prev_validators_prenode state block signatures =
       commit_state_hash state ~block_height:block.block_height
         ~block_payload_hash:block.payload_hash
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
-        ~state_hash:block.state_root_hash ~validators ~signatures)
+        ~state_hash:block.state_root_hash ~validators:validator_addresses
+        ~signatures)
 let hash_new_state_root state protocol update_state =
   let task_pool = !get_task_pool () in
   let snapshot_ref, snapshots =
@@ -309,7 +323,13 @@ let received_block state update_state block =
   let state = add_block_to_pool state update_state block in
   block_added_to_the_pool state update_state block
 let () = received_block' := received_block
-let received_signature state update_state ~hash ~signature =
+let received_signature :
+    Node.t ->
+    (Node.t -> Node.t) ->
+    hash:BLAKE2B.t ->
+    signature:Protocol.Signature.t ->
+    received_block_result =
+ fun state update_state ~hash ~signature ->
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
   (* TODO: consider edge-cases related to the node being out sync.
@@ -387,9 +407,9 @@ let received_consensus_operation state update_state consensus_operation
   let open Protocol.Operation in
   let%assert () =
     ( `Invalid_signature,
-      Consensus.verify state.Node.identity.key signature consensus_operation )
+      Validators.verify state.Node.identity.key signature consensus_operation )
   in
-  let operation = Consensus consensus_operation in
+  let operation = Validators consensus_operation in
   append_operation state update_state operation;
   Ok ()
 
@@ -454,11 +474,15 @@ let trusted_validators_membership state update_state request =
     (`Failed_to_verify_payload, payload_hash |> Signature.verify ~signature)
   in
   let new_validators =
-    Prenode.Validators_Prenode.update_trusted { address; action }
-      state.validators_prenode in
+    match action with
+    | Add ->
+      Prenode.Validators_Prenode.add_add_validator_operation address
+        state.validators_prenode
+    | Remove ->
+      Prenode.Validators_Prenode.add_remove_validator_operation address
+        state.validators_prenode in
+
   let (_ : State.t) =
     update_state { state with validators_prenode = new_validators } in
-  Lwt.async (fun () ->
-      state.persist_trusted_membership_change
-        (new_validators |> Trusted_validators_membership_change.Set.elements));
+  Lwt.async (fun () -> state.persist_trusted_membership_change new_validators);
   Ok ()

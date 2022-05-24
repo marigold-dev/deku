@@ -1,5 +1,5 @@
 type t = {
-  category : Pollinate.Node.Message.category;
+  category : Pollinate.PNode.Message.category;
       (** Request, Response, Failure_dectection, Custom, ... *)
   sub_category_opt : Deku_operation.t option;
       (** (Consensus, Proposal) or (Consensus_governance, Add_validator) *)
@@ -21,7 +21,7 @@ let get_sender t = t.sender
 let get_recipient_opt t = t.recipient_opt
 
 let make :
-    category:Pollinate.Node.Message.category ->
+    category:Pollinate.PNode.Message.category ->
     sub_category_opt:Deku_operation.t option ->
     payload:bytes ->
     sender:Crypto.Key_hash.t ->

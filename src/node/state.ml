@@ -11,7 +11,7 @@ type identity = {
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 
-module Operation_map = Map.Make (Operation)
+module Operation_map = Map.Make (Protocol.Operation)
 
 (* TODO: proper type for timestamps *)
 type timestamp = float
@@ -74,8 +74,8 @@ let apply_block state block =
   Ok { state with protocol; recent_operation_receipts; snapshots }
 let signatures_required state =
   let number_of_validators =
-    Prenode.Validators_Prenode.get_number_of_validators
-      state.protocol.validators_prenode in
+    Prenode.Validators_Prenode.get_number_of_validators state.validators_prenode
+  in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
 let load_snapshot ~snapshot ~additional_blocks ~last_block

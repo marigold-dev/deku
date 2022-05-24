@@ -259,11 +259,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1653036245,
-        "narHash": "sha256-g6XGbY9DDeSfWv3WpxqGV/I5MG5v1wHDNmJ+IkseQrs=",
+        "lastModified": 1653385052,
+        "narHash": "sha256-rYBMecxN+c+Vv3HDG7uvz9GiaDCDFZPp8ZBXErV3qSk=",
         "owner": "marigold-dev",
         "repo": "pollinate",
-        "rev": "5106dd6661db6b1bdfd99ef252d799466b784ff1",
+        "rev": "8d34a2ee8cc9da9b9fd909b418b0b97709b30f65",
         "type": "github"
       },
       "original": {

@@ -3,7 +3,7 @@ open Crypto
 open Core
 
 (* TODO: FIXME: should not exist anymore *)
-module Consensus = struct
+module Validators = struct
   type t =
     | Add_validator    of Validator_internals.Validators.validator
     | Remove_validator of Validator_internals.Validators.validator
@@ -70,5 +70,5 @@ end
 type t =
   | Core_tezos of Core.Tezos_operation.t
   | Core_user  of Core_user.t
-  | Consensus  of Consensus.t (* Now in Validators Prenode *)
+  | Validators of Validators.t (* Now in Validators Prenode *)
 [@@deriving eq, ord, yojson]

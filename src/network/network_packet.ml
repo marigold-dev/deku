@@ -70,7 +70,7 @@ module User_operation_gossip = struct
 end
 module Consensus_operation_gossip = struct
   type request = {
-    consensus_operation : Protocol.Operation.Consensus.t;
+    consensus_operation : Protocol.Operation.Validators.t;
     signature : Crypto.Signature.t;
   }
   [@@deriving yojson]
@@ -99,6 +99,11 @@ module Ticket_balance = struct
   type response = { amount : Amount.t } [@@deriving yojson]
   let path = "/ticket-balance"
 end
+
+(*
+
+TODO: POLLINATE
+*)
 module Trusted_validators_membership_change = struct
   type action =
     | Add

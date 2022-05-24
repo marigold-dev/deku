@@ -701,6 +701,11 @@ let self =
     required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   lwt_ret (const self $ folder_dest)
+
+(*
+
+TODO: POLLINATE
+
 let info_add_trusted_validator =
   let doc =
     "Helps node operators maintain a list of trusted validators they verified \
@@ -758,7 +763,7 @@ let remove_trusted_validator node_folder address =
 let remove_trusted_validator =
   let open Term in
   lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
-
+ *)
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-cli"
 

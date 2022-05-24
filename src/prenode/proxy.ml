@@ -1,11 +1,11 @@
 module type PROXY_POLLINATE = sig
   type t
 
-  val of_deku : Message.t -> Pollinate.Node.Message.t
+  val of_deku : Message.t -> Pollinate.PNode.Message.t
 
-  val of_pollinate : Pollinate.Node.Message.t -> Message.t
+  val of_pollinate : Pollinate.PNode.Message.t -> Message.t
 
-  val preprocess : Pollinate.Node.Message.t -> Pollinate.Node.Message.t
+  val preprocess : Pollinate.PNode.Message.t -> Pollinate.PNode.Message.t
   (** Properly encodes requests and responses to ensure category definition and such. *)
 
   val received_messages_of_pollinate : t -> Message.t list * t
@@ -16,24 +16,24 @@ module type PROXY_POLLINATE = sig
 end
 
 module PROXY_POLLINATE = struct
-  let preprocess : Pollinate.Node.Message.t -> Pollinate.Node.Message.t =
+  let preprocess : Pollinate.PNode.Message.t -> Pollinate.PNode.Message.t =
    fun msg -> msg
 
   let incoming_consensus_governance_operation :
-      Pollinate.Node.Message.t -> Message.t =
+      Pollinate.PNode.Message.t -> Message.t =
    fun msg ->
     (* Logique *)
-    match msg.Pollinate.Node.Message.category with
+    match msg.Pollinate.PNode.Message.category with
     | Request -> failwith "Consensus governance request op"
     | _ -> failwith "Consensus governance unknown op"
 
   (* TODO: Ack is not ok, we should send back a way to ID what msg we ack for. *)
   type response = Ack [@@deriving bin_io]
 
-  let msg_handler : Pollinate.Node.Message.t -> bytes =
+  let msg_handler : Pollinate.PNode.Message.t -> bytes =
    fun msg ->
     (* TODO: verify signature, reject wrong signatures. *)
-    match msg.Pollinate.Node.Message.sub_category_opt with
+    match msg.Pollinate.PNode.Message.sub_category_opt with
     | None -> failwith "Sub category is mandatory in deku"
     | Some (family, _) ->
     match family with
@@ -47,6 +47,6 @@ module PROXY_POLLINATE = struct
 
   let deku_pollinate_node =
     Lwt_main.run
-      (Pollinate.Node.init ~preprocess ~msg_handler ~sign_payload:sign ~key:None
-         ("", 3000))
+      (Pollinate.PNode.init ~preprocess ~msg_handler ~sign_payload:sign
+         ~key:None ("", 3000))
 end
