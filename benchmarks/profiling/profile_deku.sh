@@ -25,11 +25,23 @@ call_graph(){
       | dot -Tpng -o ~/deku/benchmarks/profiling/perf-deku-callgraph.png
 }
 
+# Memory profiling using valgrind
+memory_profile(){
+   cd .. && cd .. && ./sandbox.sh tear-down \
+         && ./sandbox.sh setup \
+         && time valgrind --tool=massif \
+             --xtree-memory=full \
+             --verbose \
+             --massif-out-file=~/deku/benchmarks/profiling/massif.out.%p \
+            ./sandbox.sh start
+}
+
+
 # Main
 help(){
   echo "$0 automates profiling a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 run|flame-graph|call-graph"
+  echo "Usage: $0 run|flame-graph|call-graph|memory-profile"
   echo "Commands:"
   echo "run"
   echo " Profiling deku node"
@@ -38,6 +50,8 @@ help(){
          and the perf.data"
   echo "callgraph"
   echo " Read perf.data using gprof2dot, need to have the perf.data"
+  echo "memory-profile"
+  echo " Memory profiling the C heap of deku node using valgrind"
 }
 
 case "$1" in 
@@ -49,6 +63,9 @@ flame-graph)
   ;;
 call-graph)
   call_graph
+  ;;
+memory-profile)
+  memory_profile
   ;;
 *)
   help 
