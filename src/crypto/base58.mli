@@ -28,27 +28,37 @@
 
 module Prefix : sig
   val contract_hash : string
+
   val deku_contract_hash : string
 
   val block_hash : string
+
   val operation_hash : string
+
   val protocol_hash : string
 
   val ed25519_public_key_hash : string
+
   val secp256k1_public_key_hash : string
+
   val p256_public_key_hash : string
 
   val ed25519_public_key : string
+
   val secp256k1_public_key : string
+
   val p256_public_key : string
 
   val ed25519_seed : string
 
   val secp256k1_secret_key : string
+
   val p256_secret_key : string
 
   val ed25519_signature : string
+
   val secp256k1_signature : string
+
   val p256_signature : string
 
   val chain_id : string

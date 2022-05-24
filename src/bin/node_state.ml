@@ -1,6 +1,7 @@
 open Helpers
 open Protocol
 open Node
+
 let get_initial_state ~folder =
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =

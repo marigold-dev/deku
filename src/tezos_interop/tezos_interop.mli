@@ -3,6 +3,7 @@ open Crypto
 open Tezos
 
 type t
+
 val make :
   rpc_node:Uri.t ->
   secret:Secret.t ->
@@ -30,14 +31,18 @@ module Consensus : sig
         destination : Address.t;
       }
     | Update_root_hash of BLAKE2B.t
+
   type operation = {
     hash : Operation_hash.t;
     transactions : transaction list;
   }
+
   val listen_operations : t -> on_operation:(operation -> unit) -> unit
+
   val fetch_validators :
     t -> ((Key_hash.t * Uri.t option) list, string) result Lwt.t
 end
+
 module Discovery : sig
   val sign : Secret.t -> nonce:int64 -> Uri.t -> Signature.t
 end

@@ -1,4 +1,5 @@
 open Tezos
+
 type t = {
   hash : Block_hash.t;
   level : int32;

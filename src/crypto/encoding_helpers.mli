@@ -14,11 +14,17 @@ val parse_string_variant : (string -> 'a option) list -> string -> 'a option
 module Make_b58 : functor
   (H : sig
      type t
+
      val name : string
+
      val title : string
+
      val prefix : string
+
      val size : int
+
      val to_raw : t -> string
+
      val of_raw : string -> t option
    end)
   -> sig

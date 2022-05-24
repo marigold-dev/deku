@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Protocol
+
 type identity = {
   secret : Secret.t;
   key : Key.t;
@@ -8,13 +9,14 @@ type identity = {
   uri : Uri.t;
 }
 [@@deriving yojson]
+
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
-
 module Operation_map = Map.Make (Operation)
 
 (* TODO: proper type for timestamps *)
 type timestamp = float
+
 type t = {
   identity : identity;
   trusted_validator_membership_change :
@@ -31,6 +33,7 @@ type t = {
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
+
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
@@ -61,6 +64,7 @@ let make ~identity ~trusted_validator_membership_change
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
   }
+
 let apply_block state block =
   let prev_protocol = state.protocol in
   let%ok protocol, receipts = Protocol.apply_block state.protocol block in
@@ -75,10 +79,12 @@ let apply_block state block =
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
   Ok { state with protocol; recent_operation_receipts; snapshots }
+
 let signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
+
 let load_snapshot ~snapshot ~additional_blocks ~last_block
     ~last_block_signatures t =
   let all_blocks =

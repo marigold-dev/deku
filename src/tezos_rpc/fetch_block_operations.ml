@@ -10,10 +10,12 @@ type block_operation = {
   branch : Block_hash.t;
   contents : Operation_content_with_result.t list;
 }
+
 type response = block_operation list
 
 module Decoder = struct
   type operation_content_with_result = Operation_content_with_result.t
+
   let operation_content_with_result_of_yojson =
     Operation_content_with_result.of_tezos_json
 

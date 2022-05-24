@@ -166,6 +166,7 @@ type prim =
   | T_bls12_381_g2
   | T_bls12_381_fr
   | T_ticket
+
 let prim_encoding =
   let open Data_encoding in
   def "michelson.v1.primitives"

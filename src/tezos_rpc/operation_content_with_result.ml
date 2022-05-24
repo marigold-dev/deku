@@ -6,6 +6,7 @@ type parameters = {
   entrypoint : string;
   value : Michelson.t;
 }
+
 type internal_operation =
   | Internal_transaction     of {
       sender : Address.t;
@@ -13,9 +14,11 @@ type internal_operation =
       parameters : parameters option;
     }
   | Internal_non_transaction
+
 type status =
   | Applied
   | Other
+
 type t =
   | Transaction     of {
       source : Key_hash.t;
@@ -31,6 +34,7 @@ module Decoder = struct
   type kind =
     | Kind_transaction
     | Kind_not_transaction
+
   let kind_of_yojson json =
     (* TODO: probably can be done better *)
     let%ok kind = [%of_yojson: string] json in

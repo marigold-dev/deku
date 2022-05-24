@@ -1,4 +1,5 @@
 open Crypto
+
 type t = private {
   hash : BLAKE2B.t;
   payload_hash : BLAKE2B.t;
@@ -11,9 +12,13 @@ type t = private {
   operations : Protocol_operation.t list;
 }
 [@@deriving yojson, ord]
+
 val sign : key:Secret.t -> t -> Protocol_signature.t
+
 val verify : signature:Protocol_signature.t -> t -> bool
+
 val genesis : t
+
 val produce :
   state:Protocol_state.t ->
   next_state_root_hash:BLAKE2B.t option ->

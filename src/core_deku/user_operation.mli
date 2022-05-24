@@ -16,10 +16,12 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
+
 type t = private {
   hash : BLAKE2B.t;
   source : Key_hash.t;
   initial_operation : initial_operation;
 }
 [@@deriving eq, ord, yojson]
+
 val make : source:Key_hash.t -> initial_operation -> t

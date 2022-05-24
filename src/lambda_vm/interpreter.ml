@@ -13,13 +13,16 @@ type error =
 [@@deriving show]
 
 exception Error of error
+
 let raise error = raise (Error error)
 
 module Pattern : sig
   type 'a t
+
   type nil = unit
 
   val script_result : (value * (nil * nil)) t
+
   val parse : value -> 'a t -> 'a
 end = struct
   type nil = unit
@@ -30,10 +33,13 @@ end = struct
     | Nil : nil t
 
   let any = Any
+
   let pair first second = Pair (first, second)
+
   let nil = Nil
 
   let operations = nil
+
   let script_result = pair any (pair operations nil)
 
   let rec parse : type a. value -> a t -> a =

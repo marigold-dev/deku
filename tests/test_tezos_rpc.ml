@@ -9,10 +9,13 @@ open Tezos_rpc
    You may also want to change the node_uri and/or the secret key below. *)
 
 let node_uri = Uri.of_string "http://localhost:8732"
+
 let secret =
   Secret.of_string "edsk4RbgwutwsEdVNuJsE5JDsxeJ6qFcG8F5rKFGnj5finT6FV46sd"
   |> Option.get
+
 let key = Key.of_secret secret
+
 let key_hash = Key_hash.of_key key
 
 let failwith_err err =

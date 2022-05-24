@@ -1,6 +1,7 @@
 open Setup
 open Protocol
 open Validators
+
 let () =
   describe "validators" (fun { test; _ } ->
       let make_validator () =

@@ -5,22 +5,32 @@ open Helpers
 
 module Id : sig
   type t [@@deriving yojson]
+
   val pp : Format.formatter -> t -> unit
 
   val initial : t
+
   val next : t -> t
+
   module Map : Map.S with type key = t
 end = struct
   type t = int [@@deriving yojson]
+
   let pp fmt t = Format.fprintf fmt "%d" t
+
   let initial = 0
+
   let next t = t + 1
+
   module Map = Map.Make (Int)
 end
 
 exception Process_closed of Unix.process_status
+
 exception Failed_to_parse_json of string * Yojson.Safe.t
+
 exception Duplicated_id of Id.t
+
 exception Unknown_id of Id.t * Yojson.Safe.t
 
 (* enhance error messages *)
@@ -59,25 +69,36 @@ end
 
 module Pending : sig
   type t
+
   type add_error = private Duplicated_id of Id.t
+
   type resolve_error = private Unknown_id of Id.t
+
   type kind =
     | Listen
     | Request
+
   val make : unit -> t
+
   val add :
     t -> Id.t -> kind -> (Yojson.Safe.t -> unit) -> (unit, add_error) result
+
   val push : t -> Id.t -> Yojson.Safe.t -> (unit, resolve_error) result
 end = struct
   type add_error = Duplicated_id of Id.t
+
   type resolve_error = Unknown_id of Id.t
+
   type kind =
     | Listen
     | Request
+
   type t = (kind * (Yojson.Safe.t -> unit)) Id.Map.t ref
 
   let make () = ref Id.Map.empty
+
   let find t id = Id.Map.find_opt id !t
+
   let mem t id = Id.Map.mem id !t
 
   let add t id kind resolver =
@@ -111,6 +132,7 @@ type t = {
    must kill the node.
      Use [raise_and_exit] instead. *)
 let[@warning "-unused-value-declaration"] raise = ()
+
 let raise_and_exit exn =
   (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
   Format.eprintf "tezos_interop failure: %s\n%!" (Printexc.to_string exn);

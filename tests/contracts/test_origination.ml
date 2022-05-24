@@ -85,6 +85,7 @@ let test msg =
                (State.contract_storage state)
                Contract_storage.empty));
   ]
+
 let test_dummy msg =
   let initial_state, address = setup () in
   let storage = 0 in

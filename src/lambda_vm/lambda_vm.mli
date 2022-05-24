@@ -2,11 +2,14 @@ module Gas : sig
   type t
 
   val make : initial_gas:int -> t
+
   val is_empty : t -> bool
 
   val burn_constant : t -> unit
+
   val burn_log2 : t -> cardinality:int -> unit
 end
+
 module Ast : sig
   type ident = string
 
@@ -74,13 +77,17 @@ end
 
 module Ir : sig
   type code [@@deriving yojson, eq]
+
   type value [@@deriving yojson, eq]
+
   module Value_syntax : sig
     val int : int64 -> value
+
     val pair : value -> value -> value
   end
 
   val pp_value : Format.formatter -> value -> unit
+
   val pp_code : Format.formatter -> code -> unit
 end
 
@@ -95,6 +102,7 @@ module Compiler : sig
   [@@deriving show]
 
   val compile : Gas.t -> Ast.script -> (Ir.code, error) result
+
   val compile_value : Gas.t -> Ast.value -> (Ir.value, error) result
 end
 
