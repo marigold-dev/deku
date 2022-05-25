@@ -114,14 +114,26 @@ hotspot /path/to/perf.data
 
 ## Memory profiling the C heap
 
- Using [valgrind](https://valgrind.org/) with [massif](https://valgrind.org/docs/manual/ms-manual.html). Massif is a heap profiler. It measures how much heap memory your program uses. This includes both the useful space, and the extra bytes allocated for book-keeping and alignment purposes. It can also measure the size of your program's stack(s), although it does not do so by default.
+ Using [valgrind](https://valgrind.org/) with [massif](https://valgrind.org/docs/manual/ms-manual.html). 
+ 
+ Valgrind bassically runs the program in a "sandbox". While running in this sandbox, it is able to insert its own instructions to do advanced debugging and profiling.
+ Before the application instructions are processed, they are passed to tools (such as memcheck (default)). These tools like plugins, and they are able to modify the program before it it run on the processor.
+ Valgrind does cause the program to run slower, however it is not meant to measure performance. 
+
+ ``` 
+   valgrind tool = valgrind core + tool plugin
+  ```
+
+ Massif is a heap profiler. It measures how much heap memory your program uses. This includes both the useful space, and the extra bytes allocated for book-keeping and alignment purposes. It can also measure the size of your program's stack(s), although it does not do so by default.
 
 ### Setup
 - Install `valgrind` : `sudo apt install valgrind`
 
 - Install viewer `massif-visualizer`:
 
-  Run `valgrind` with the option `--tool=massif`
+  Run `valgrind` with the option `--tool=massif`.
+  Massif will print summary space statistics. It puts detailed information about heap consumption in a file `massif.pid.out`, where `pid` is the program's process id. 
+  
 
 ```
 sudo add-apt-repository ppa:kubuntu-ppa/backports 
@@ -147,3 +159,11 @@ Profile deku node with valgrind:
 ```
 ./profile_deku.sh memory-profile
 ```
+
+### Understand the graph
+#### Massif
+
+The graph is broken into several bands. 
+
+- x-axis: the time on the x-axis is wallclock time.
+- y-axis: It is the height of a band that's important. Most bands represent a single line of the program that does some heap allocation; each such band represents all the allocations and deallocations done from that line. 

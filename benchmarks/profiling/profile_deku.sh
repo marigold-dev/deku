@@ -52,6 +52,15 @@ call_graph(){
 #   which is less often than the default of every 10th snapshot.  
 #   This makes it run a bit faster. This is fine because Massif always 
 #   takes a detailed snapshot at the peak memory consumption point.
+# --leak-check=full: turns on the detailed memory leak detector. When using this
+#   the program will run much slower (eg. 20 to 30 times) than normal, and use a lot 
+# --log-file=valgrind-out.txt: write to a file. Useful when output exceeds terminal space.
+#   of memory. Memcheck will issue messages about memory errors and leaks that it detects.
+# --trace-children=yes: valgrind will trace into sub-processes initated via the `exec`
+#   system call. This is necessary for multi-process programs.
+# -v: be more verbose. Gives extra information on various aspects of the program, such as:
+#   the shared objects loaded, the suppressions used, the progress of the instrumentation
+#   and execution engines.
 #
 # - Generate a call tree:
 #  --xtree-memory=full: which can then be inspected using kcachegrind. 
@@ -70,6 +79,7 @@ memory_profile(){
              --smc-check=all \
              --detailed-freq=1000000 \
              --trace-children=yes \
+             --leak-check=full
              --xtree-memory=full \
              -v -d --trace-signals=yes\
              --tool=massif \
