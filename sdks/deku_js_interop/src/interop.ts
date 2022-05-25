@@ -73,15 +73,18 @@ const set = (key: string, value: string) => {
  * @param state_transition the function called when there is an new input
  */
 const main = (
-  initial_state: {[key: string]: any},
+  initial_state: {[key: string]: any}, // TODO: add a better type for JSON values
   state_transition: (address: string, tx_hash: string, input: Buffer) => string
 ) => {
   init_fifo();
 
-  Object.keys(initial_state)
-    .forEach(key => {
-      set(key, JSON.stringify(initial_state[key]));
-    });
+  const init = JSON.parse(read().toString());
+  if(init === "init") {
+    const initial_message = Object.keys(initial_state)
+      .map(key => ({key, value:initial_state[key]}));
+    const init_message = `["Init", ${JSON.stringify(initial_message)}]`;
+    write(Buffer.from(init_message))
+  }
 
   for (;;) {
     const control = read().toString();

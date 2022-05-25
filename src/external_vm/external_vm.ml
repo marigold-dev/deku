@@ -3,14 +3,16 @@ open Crypto
 
 type t = Yojson.Safe.t String_map.t [@@deriving yojson]
 
-let empty = String_map.empty
+type set = {
+  key : string;
+  value : Yojson.Safe.t;
+}
+[@@deriving yojson]
 
 type vm_message =
+  | Init  of set list
   | Stop
-  | Set   of {
-      key : string;
-      value : Yojson.Safe.t;
-    }
+  | Set   of set
   | Get   of string
   | Error of string
 [@@deriving yojson]
@@ -23,9 +25,23 @@ let start_vm_ipc ~named_pipe_path =
       (External_process.open_pipes ~named_pipe_path ~to_yojson:Fun.id
          ~of_yojson:vm_message_of_yojson)
 
-let apply_vm_operation ~state ~source ~tx_hash operation =
+let initial_state () =
   match !vm with
-  | Some vm ->
+  | None ->
+    failwith
+      "You must initialize the external VM IPC before getting the initial state"
+  | Some vm -> (
+    vm.send (`String "init");
+    match vm.receive () with
+    | Init set_list ->
+      List.fold_left
+        (fun state { key; value } -> String_map.add key value state)
+        String_map.empty set_list
+    | _ -> failwith "received a different message from Init")
+
+let apply_vm_operation ~state ~source ~tx_hash operation =
+  match (state, !vm) with
+  | Some state, Some vm ->
     (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
        For now, I send an empty message if there's nothing extra to do. *)
     vm.send (`String "");
@@ -38,6 +54,7 @@ let apply_vm_operation ~state ~source ~tx_hash operation =
     let state = ref state in
     while not !finished do
       match vm.receive () with
+      | Init _ -> failwith "Init shouldn't be received, TODO: better error"
       | Stop -> finished := true
       | Set { key; value } -> state := String_map.add key value !state
       | Get key ->
@@ -49,7 +66,10 @@ let apply_vm_operation ~state ~source ~tx_hash operation =
         finished := true
     done;
     !state
-  | None -> failwith "TODO: better error"
+  | None, Some _vm ->
+    failwith "You must intialize the Vm state before applying a Vm transaction"
+  | _, None ->
+    failwith "You must initialize the Vm IPC before applying a Vm transaction"
 
 let close_vm_ipc () =
   match !vm with

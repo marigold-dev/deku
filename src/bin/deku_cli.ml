@@ -325,8 +325,9 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
   let _pid =
     Unix.create_process vm_binary_path args stdin Unix.stdout Unix.stderr in
   External_vm.start_vm_ipc ~named_pipe_path;
-  External_vm.apply_vm_operation ~state:External_vm.empty ~source:wallet.address
-    ~tx_hash:transaction.hash payload
+  External_vm.apply_vm_operation
+    ~state:(Some (External_vm.initial_state ()))
+    ~source:wallet.address ~tx_hash:transaction.hash payload
   |> External_vm.to_yojson
   |> Yojson.Safe.to_string
   |> print_endline;

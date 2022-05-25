@@ -69,7 +69,12 @@ func Set(key string, value interface{}) {
 	write(message)
 }
 
-func Main(initial_state map[string]any, state_transition func(sender string, tx_hash string, input []byte) (err error)) {
+type init_entry struct {
+	Key  string `json:"key"`
+	Value interface{} `json:"value"`
+}
+
+func Main(initial_state map[string]interface{}, state_transition func(sender string, tx_hash string, input []byte) (err error)) {
 	log("Opening read")
 	fifo_path := os.Args[1]
 	log(fmt.Sprintf("fifo path: %s", fifo_path))
@@ -78,8 +83,17 @@ func Main(initial_state map[string]any, state_transition func(sender string, tx_
 	chain_to_machine, _ = os.OpenFile(fifo_path+"_write", os.O_RDONLY, 0666)
 	log("done")
 
-	for key, val := range initial_state {
-		Set(key, val)
+	init := string(read())
+	if init == "\"init\"" {
+		counter := initial_state["counter"];
+		var initial_message []init_entry
+		for key, value := range initial_state {
+			initial_message = append(initial_message, init_entry{Key: key, Value: value})
+		}
+		b, err := json.Marshal(initial_message)
+		check(err)
+		init_message := fmt.Sprintf("[\"Init\", %s]", string(b))
+		write([]byte(init_message))
 	}
 
 	for {
@@ -96,7 +110,6 @@ func Main(initial_state map[string]any, state_transition func(sender string, tx_
 		var end_message []byte
 		if err != nil {
 			end_message = []byte(fmt.Sprintf("[\"Error\", \"%s\"]", err.Error()))
-
 		} else {
 			end_message = []byte("[\"Stop\"]")
 		}

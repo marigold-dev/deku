@@ -44,6 +44,10 @@ let get_initial_state ~folder =
     State.make ~identity ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri
       ~persist_trusted_membership_change in
+  let external_vm_state = External_vm.initial_state () in
+  let core_state =
+    Core_deku.State.intialize_external_vm_state external_vm_state
+      node.protocol.core_state in
   let node =
     {
       node with
@@ -55,6 +59,7 @@ let get_initial_state ~folder =
               (fun validators (address, _) ->
                 Validators.add { address } validators)
               Validators.empty validators;
+          core_state;
         };
     } in
   let state_bin = folder ^ "/state.bin" in

@@ -58,7 +58,7 @@ func main() {
 		// Valid transactions produce nil results.
 		return
 	}
-	var initial_state = make(map[string]any)
+	var initial_state = make(map[string]interface{})
 	initial_state["counter"] = 4;
 	deku_go_interop.Main(initial_state, state_transition)
 }
