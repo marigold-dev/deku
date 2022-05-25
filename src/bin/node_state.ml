@@ -44,10 +44,6 @@ let get_initial_state ~folder =
     State.make ~identity ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri
       ~persist_trusted_membership_change in
-  let external_vm_state = External_vm.initial_state () in
-  let core_state =
-    Core_deku.State.intialize_external_vm_state external_vm_state
-      node.protocol.core_state in
   let node =
     {
       node with
@@ -59,7 +55,6 @@ let get_initial_state ~folder =
               (fun validators (address, _) ->
                 Validators.add { address } validators)
               Validators.empty validators;
-          core_state;
         };
     } in
   let state_bin = folder ^ "/state.bin" in
@@ -68,7 +63,13 @@ let get_initial_state ~folder =
     if state_bin_exists then
       Files.State_bin.read ~file:state_bin
     else
-      await node.protocol in
+      let external_vm_state = External_vm.initial_state () in
+      let core_state =
+        Core_deku.State.intialize_external_vm_state external_vm_state
+          node.protocol.core_state in
+      let protocol = { node.protocol with core_state } in
+      let%await () = Files.State_bin.write protocol ~file:state_bin in
+      await protocol in
   let prev_epoch_state_bin = folder ^ "/prev_epoch_state.bin" in
   let%await prev_epoch_state_bin_exists =
     Lwt_unix.file_exists prev_epoch_state_bin in
