@@ -1,0 +1,5 @@
+(copy_files# ../../../sdks/deku_ocaml_interop/lib/*.ml)
+
+(copy_files# ../../../sdks/deku_ocaml_interop/lib/*.mli)
+
+(include ../../../sdks/deku_ocaml_interop/lib/dune)

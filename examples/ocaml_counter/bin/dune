@@ -1,0 +1,6 @@
+(executable
+ (name counter)
+ (public_name counter)
+ (libraries interop yojson)
+ (preprocess
+  (pps ppx_deriving_yojson)))
