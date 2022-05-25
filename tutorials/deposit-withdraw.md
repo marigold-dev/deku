@@ -2,28 +2,28 @@
 
 Here is the scenario of this end to end test:
 
-- start deku
-- originate a ticket contract
-- deposit ticket on deku
-- transfer to alice
-- withdraw as alice
+1. Start Deku
+2. Originate a ticket contract
+3. Deposit ticket on Deku
+4. Transfer to Alice
+5. Withdraw as Alice
 
-## Start deku cluster
+## Prerequisites: start Deku cluster
 
-```bash
-docker compose up -d # To start flextesa (sandbox tezos node)
-./sandbox.sh setup
-./sandbox.sh start # (blocks should appear)
+```shell script
+$ docker compose up -d #To start flextesa (sandbox tezos node)
+$ ./sandbox.sh setup
+$ ./sandbox.sh start #blocks should appear
 ```
 
-## Deploy a contract that holds tickets
+## Deploy a contract holding tickets
 
-Creates a contract which can deposit or withraw tickets from the conscensus contract
+Creates a contract which can deposit or withdraw tickets from the consensus contract:
 
-```
-./sandbox.sh deploy-dummy-ticket
+```shell script
+$ ./sandbox.sh deploy-dummy-ticket
 
-> =========== Running in local mode ===========
+=========== Running in local mode ===========
 Node is bootstrapped.
 Estimated gas: 1428.723 units (will add 100 for safety)
 Estimated storage: 547 bytes added (will add 20 for safety)
@@ -95,30 +95,21 @@ Contract memorized as dummy_ticket.
 
 Save the contract address `KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82` from the previous command output:
 
+> [...]
 > New contract KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82 originated.
+> [...]
 
-### Possible error (solved by retrying):
+_From now, we will replace `KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82` by `CONTRACT_ADDRESS`._
 
-```bash
-=========== Running in local mode ===========
-Node is bootstrapped.
-Estimated gas: 1428.723 units (will add 100 for safety)
-Estimated storage: 547 bytes added (will add 20 for safety)
-Error while applying operation ooZ7rLm9EF1paqBGb9s2Ddv2GDR2dqkV9QbLMXBpJ4ary5UtUxS:
-Error:
-  Counter 4 already used for contract tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb (expected 5)
-Fatal error:
-  origination simulation failed
-```
+## Deposit tickets from your contract to Deku
 
-## Deposit tickets from your contract to deku
+Creates `n` tickets (10000000 defined in the contract) and deposit them in the consensus contract so they are available in Deku for the address `tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf` (Deku address hard coded in the `sandbox.sh` script)
 
-Creates `n` tickets (10000000 defined in the contract) and deposit them in the conscensus contract so that there are available in deku for the address `tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf` (deku address hard coded in the `sandbox.sh` script)
+_From now, we will replace `tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf` by `DEKU_ADDRESS`._
 
-```bash
-./sandbox.sh deposit-dummy-ticket
+```shell script
+$ ./sandbox.sh deposit-dummy-ticket
 
->
 =========== Running in local mode ===========
 Node is bootstrapped.
 Estimated gas: 4624.858 units (will add 100 for safety)
@@ -140,10 +131,10 @@ This sequence of operations was run:
     Transaction:
       Amount: ꜩ0
       From: tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb
-      To: KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82
+      To: CONTRACT_ADDRESS
       Entrypoint: deposit
       Parameter: (Pair (Pair 0x "KT1DNb3Hap4DwkpVmiYxH7UmcjmZANtQLEFv")
-                       "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf")
+                       "DEKU_ADDRESS")
       This transaction was successfully applied
       Updated storage: {}
       Storage size: 290 bytes
@@ -151,7 +142,7 @@ This sequence of operations was run:
     Internal operations:
       Transaction:
         Amount: ꜩ0
-        From: KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82
+        From: CONTRACT_ADDRESS
         To: KT1DNb3Hap4DwkpVmiYxH7UmcjmZANtQLEFv
         Entrypoint: deposit
         Parameter: (Pair 0x00003f0b3dd85deb3013c6a239fe9e3783ace4f8e37c
@@ -181,46 +172,52 @@ Use command
 and/or an external block explorer.
 ```
 
-## Wallet creation
+## Deku wallet creation
 
-Alice need an address on deku
+Create an address on Deku for Alice:
 
-```bash
-deku-cli create-wallet
+```shell script
+$ deku-cli create-wallet
 ```
 
-and save the field `address`
+Save the field `address` and rename the generated `*.tzsidewallet` file to `alice.wallet`.
 
-and rename it to alice.wallet
+Create a wallet for the ticket holder named `wallet.json` with:
 
-Creates a wallet for the ticket holder named wallet.json:
-
-```json
+```JSON
 {
-  "address": "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf", // deku address from sandbox script
-  "priv_key": "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK" // deku secret from sandbox script
+  "address": "DEKU_ADDRESS",
+  "priv_key": "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
 }
 ```
 
-## Transfer ticket to alice
+Where:
+- `DEKU_ADDRESS` is the Deku address _(from `sandbox.sh` script)_
+- `edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK` is the secret _(from `sandbox.sh` script)_.
 
-Transfer 10 tickets from `wallet.json` to alice
+## Transfer tickets to Alice
 
-```bash
-deku-cli create-transaction data/0 wallet.json "tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa" 10 "(Pair \"KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82\" 0x)"
-> operation.hash: a4ebc04591f2806045ede1dbc4be9b4a4eff503be69cc970132a2ec1ec7f05db
+Create a transaction to transfer 10 tickets from `wallet.json` to Alice:
+
+```shell script
+$ deku-cli create-transaction data/0 wallet.json "tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa" 10 "(Pair \"CONTRACT_ADDRESS\" 0x)"
+
+operation.hash: a4ebc04591f2806045ede1dbc4be9b4a4eff503be69cc970132a2ec1ec7f05db
 ```
 
-where `tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa` is the public address of alice
-and `KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82` the dummy ticket contract address
+where:
+- `tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa` is the public address of Alice
+- `CONTRACT_ADDRESS` is the dummy ticket contract address (see [deploy a contract holding tickets](./deposit-withdraw.md#Deploy-a-contract-holding-tickets))
 
-So now alice has 10 tickets
+Now Alice has 10 tickets!
 
-### Possible error:
+_From now, we will replace `tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa` by `ALICE_PUBLIC_ADDRESS`._
+
+### Known error
 
 If you have this following error:
 
-```
+```shell script
 deku-cli: internal error, uncaught exception:
           Node.Networking.Error_status
           Raised at Lwt.Miscellaneous.poll in file "src/core/lwt.ml", line 3095, characters 20-29
@@ -232,62 +229,72 @@ deku-cli: internal error, uncaught exception:
           Called from Cmdliner.Term.run in file "cmdliner.ml", line 117, characters 32-39
 ```
 
-Verify if your nodes are running correctly (you should see blocks appearing in the terminal where you did `./sandbox.sh start`)
+Verify if your nodes are running correctly _(you should see blocks appearing in the terminal running `./sandbox.sh start`)_
 
-`deku-cli` can't resolve the `~` character to your home, so if you want it you can use `$HOME`
+⚠️ `deku-cli` can't resolve the `~` character to your home, you can use `$HOME` instead.
 
-## Alice withdraw
+## Alice withdraws
 
-We supposed that alice has the same address on tezos and deku
+**We supposed that Alice has the same address on tezos and Deku.**
 
-```bash
-deku-cli withdraw "./data/0" alice.wallet "tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa" 10 "(Pair \"KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82\" 0x)"
-> operation.hash: 66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f
+```shell script
+$ deku-cli withdraw "./data/0" alice.wallet "ALICE_PUBLIC_ADDRESS" 10 "(Pair \"CONTRACT_ADDRESS\" 0x)"
+
+operation.hash: 66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f
 ```
 
-To retrieve the tickets on tezos you have to generate of proof of your withdrawal
+To retrieve the tickets on tezos you have to generate of proof of your withdrawal _(using the previous `operation.hash`)_:
 
-```
-deku-cli withdraw-proof data/0 "66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f" "KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82%withdraw"
->
-(Pair (Pair "KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82%withdraw"
-            (Pair (Pair 10 0x) 0 "tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa")
-            "KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82")
+```shell script
+$ deku-cli withdraw-proof data/0 "66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f" "CONTRACT_ADDRESS%withdraw"
+
+(Pair (Pair "CONTRACT_ADDRESS%withdraw"
+            (Pair (Pair 10 0x) 0 "ALICE_PUBLIC_ADDRESS")
+            "CONTRACT_ADDRESS")
       0x2f79bd7d82e8df3edeb5c23d8655366f3c00dc0afa13c03b9556b59f414b5819
       {  })
 ```
 
-where `KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82%withdraw` is the address of the dummy ticket contract and its entrypoint
-where `66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f`is the hash of the withdrawal operation
-where the output is the argument of the entrypoint of withdraw of conscensus
+where 
+- `CONTRACT_ADDRESS%withdraw` is the address of the dummy ticket contract _(`CONTRACT_ADDRESS`)_ and its entrypoint _(`withdraw`)_ separated by `%`
+- `66af83d433d69b867a00f5c9b27af92aa3ce3564e651b4b53ff17bf8a9b92f4f` is the `operation.hash` of the withdrawal operation
 
-### Alice account has to exists in tezos, so we import it
+Save the output, as it will be used as the argument of the entrypoint of withdraw of conscensus.
 
-```bash
-tezos-client import secret key alice "unencrypted:edsk4Ye1jZ5B8t4XX1Uuxma1qB1MfkBeaasZ2NeuDvZYKCKsDHWrMa" --force
+### Import Alice account to Tezos
+
+Alice must own an account on Tezos, so let's import it:
+
+```shell script
+$ tezos-client import secret key alice "unencrypted:edsk4Ye1jZ5B8t4XX1Uuxma1qB1MfkBeaasZ2NeuDvZYKCKsDHWrMa" --force
 ```
 
 where `edsk4Ye1jZ5B8t4XX1Uuxma1qB1MfkBeaasZ2NeuDvZYKCKsDHWrMa` is the private key
 
-Alice must have tez in its tezos account to pay the fees of the withdraw
+Alice must have ꜩ in her Tezos account to pay the fees of the withdrawal:
 
+```shell script
+$ tezos-client transfer 10 from my_custom_wallet to alice --burn-cap 0.5
 ```
-tezos-client transfer 10 from my_custom_wallet to alice --burn-cap 0.5 # Just to give some tez to alice
-```
+
+_Give some tez to alice_
+
+Where `my_custom_wallet` is a wallet owning ꜩ.
 
 ### Withdraw the ticket to the dummy contract
 
-```bash
-tezos-client transfer 0 from alice to "KT1DNb3Hap4DwkpVmiYxH7UmcjmZANtQLEFv" --entrypoint withdraw --arg "(Pair (Pair \"KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82%withdraw\" (Pair (Pair 10 0x) 0 \"tz1N781N76jRmVZgzZFgoNfyi77rw6f7WoDa\") \"KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82\") 0x2f79bd7d82e8df3edeb5c23d8655366f3c00dc0afa13c03b9556b59f414b5819 {  })" --burn-cap 2
+```shell script
+$ tezos-client transfer 0 from alice to "KT1DNb3Hap4DwkpVmiYxH7UmcjmZANtQLEFv" --entrypoint withdraw --arg "(Pair (Pair \"CONTRACT_ADDRESS%withdraw\" (Pair (Pair 10 0x) 0 \"ALICE_PUBLIC_ADDRESS\") \"CONTRACT_ADDRESS\") 0x2f79bd7d82e8df3edeb5c23d8655366f3c00dc0afa13c03b9556b59f414b5819 {  })" --burn-cap 2
 ```
 
-where the arg is the output of the withdraw-proof command.
+where `-arg` is the output of the `deku-cli withdraw-proof` command.
 
 ## Verification
 
-```bash
-tezos-client get contract storage for "KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82"
-> { Pair "KT1WyREzcYATwbcbGPnLvDvUAHQcY7SJLm82" 0x 10 }
+```shell script
+$ tezos-client get contract storage for "CONTRACT_ADDRESS"
+
+{ Pair "CONTRACT_ADDRESS" 0x 10 }
 ```
 
-where 10 is the amount of ticket you withdrawed
+where 10 is the amount of ticket you withdrawed!! 🎉
