@@ -44,8 +44,7 @@ let string_of_error = function
   | `Node_not_yet_initialized -> "Node_not_yet_initialized"
   | `Not_a_validator -> "Not_a_validator"
 
-let print_error err =
-  Format.eprintf "\027[31mError: %s\027[m\n%!" (string_of_error err)
+let print_error err = Log.error "%s" (string_of_error err)
 
 type flag_node =
   [ `Invalid_block
@@ -143,7 +142,7 @@ let rec request_protocol_snapshot tries =
 let () =
   Lwt.async_exception_hook :=
     fun exn ->
-      Printexc.to_string exn |> Format.eprintf "global_exception: %s\n%!";
+      Log.error "global_exception:  %a" Fmt.exn exn;
       Printexc.print_backtrace stderr
 
 let pending = ref false

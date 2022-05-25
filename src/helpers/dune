@@ -1,5 +1,18 @@
 (library
  (name helpers)
- (libraries lwt uri zarith hex digestif data-encoding lwt_domain)
+ (libraries
+  lwt
+  uri
+  zarith
+  hex
+  digestif
+  data-encoding
+  lwt_domain
+  cmdliner
+  logs.fmt
+  fmt.cli
+  logs.cli
+  fmt.tty
+  json-logs-reporter)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))

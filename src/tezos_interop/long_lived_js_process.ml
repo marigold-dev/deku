@@ -135,7 +135,7 @@ let[@warning "-unused-value-declaration"] raise = ()
 
 let raise_and_exit exn =
   (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
-  Format.eprintf "tezos_interop failure: %s\n%!" (Printexc.to_string exn);
+  Log.error "tezos_interop failure: %s" (Printexc.to_string exn);
   exit 1
 
 let handle_message t message =

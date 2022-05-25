@@ -247,13 +247,8 @@ module Consensus = struct
               Ok (Some key_hash))
           micheline_uris in
       let key_hash_uri_pairs =
-        Result.map
-          (fun uris ->
-            Format.eprintf "%d : %d\n%!"
-              (List.length validator_key_hashes)
-              (List.length uris);
-            List.combine validator_key_hashes uris)
-          uris in
+        Result.map (fun uris -> List.combine validator_key_hashes uris) uris
+      in
       Lwt.return key_hash_uri_pairs
 
   let fetch_validators t =
@@ -296,10 +291,9 @@ module Consensus = struct
         List.iter
           (function
             | key_hash, None ->
-              Format.eprintf
+              Log.info
                 "Validator with key_hash %s not found in discovery contract \
-                 (%s).\n\
-                 %!"
+                 (%s)."
                 (Key_hash.to_string key_hash)
                 (Address.to_string discovery_contract)
             | _, Some _ -> ())

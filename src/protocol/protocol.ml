@@ -88,7 +88,7 @@ let apply_operation (state, receipts) operation =
     (state, receipts)
 
 let apply_block state block =
-  Logs.app (fun m -> m "block: %Ld" block.Block.block_height);
+  Log.info "block: %Ld" block.Block.block_height;
   let state, receipts =
     List.fold_left apply_operation (state, []) block.operations in
   let state =
