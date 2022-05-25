@@ -79,7 +79,6 @@ memory_profile(){
              --smc-check=all \
              --detailed-freq=1000000 \
              --trace-children=yes \
-             --leak-check=full
              --xtree-memory=full \
              -v -d --trace-signals=yes\
              --tool=massif \
