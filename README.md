@@ -6,6 +6,9 @@ A sidechain to Tezos by Marigold focused on higher throughput.
 
 ### Pre-requisites
 
+Deku supports the following platforms: x86_64-linux, aarch64-linux, and
+aarch64-darwin (Mac M1).
+
 You'll need a one of the two package managers Deku is developed with:
 
 #### [Esy](https://esy.sh)

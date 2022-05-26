@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        system: [ubuntu, macos]
+        system: [ubuntu]
 
     runs-on: ${{ matrix.system }}-latest
 
