@@ -1,0 +1,18 @@
+(executable
+ (name benchmarks_deku)
+ (libraries
+  core
+  core_bench
+  core_unix.command_unix
+  rely.lib
+  tezos_rpc
+  node
+  protocol
+  tezos_interop)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
+
+(rule
+ (alias bench_deku)
+ (action
+  (run %{exe:benchmarks_rpc.exe})))
