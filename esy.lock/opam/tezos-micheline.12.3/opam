@@ -21,9 +21,9 @@ build: [
 synopsis: "Tezos: internal AST and parser for the Michelson language"
 
 url {
-  src: "https://gitlab.com/tezos/tezos/-/archive/v11.1/tezos-v11.1.tar.bz2"
+  src: "https://gitlab.com/tezos/tezos/-/archive/v12.3/tezos-v12.3.tar.bz2"
   checksum: [
-    "sha256=31548ca8962ee9e3e55feb160776b3698ac8d94d4837f09058d3a54685aba10b"
-    "sha512=59b4ea5652b26f48800c95b0cb4296fda8a62f5ddc3490831152c2a6cd55632b60c957eed9f37195d616deeff968bf03f3fb060453bdff3df5a2f290a2d734c4"
+    "sha256=296bb5674bc6050afe6330326fbdd0dfc2255d414bfd6b79cc7666ac6b39316d"
+    "sha512=c061cd300a9410300851158d77bf8e56ca3c568b0b1161b38305e5b2efdcd9c746d391f832fdb2826f9a1d6babce10a9b764a4b04f5df42699f7314b9863123a"
   ]
 }

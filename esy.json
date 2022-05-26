@@ -4,7 +4,10 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "release": {
-      "bin": ["deku-cli", "deku-node"]
+      "bin": [
+        "deku-cli",
+        "deku-node"
+      ]
     },
     "buildEnv": {
       "PATH": "%{localStore}%/../bin:$PATH"
@@ -30,7 +33,7 @@
     "@opam/piaf": "*",
     "@opam/mrmime": "0.3.2",
     "@opam/hex": "*",
-    "@opam/tezos-micheline": "11.1",
+    "@opam/tezos-micheline": "12.3",
     "@opam/digestif": "*",
     "@opam/cmdliner": "^1.1.1",
     "@taquito/taquito": "^11.0.1",
