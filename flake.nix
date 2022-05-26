@@ -49,8 +49,7 @@
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
     , prometheus-web, tezos, json-logs-reporter }:
     let
-      supportedSystems =
-        [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
 
       dream2nix-lib = dream2nix.lib2.init {
         systems = supportedSystems;
