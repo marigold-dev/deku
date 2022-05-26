@@ -27,7 +27,7 @@ version: "3.8"
 services:
   elastic:
     container_name: deku_elastic
-    image: ghcr.io/baking-bad/bcdhub-elastic:master
+    image: ghcr.io/baking-bad/bcdhub-elastic:4.1.0
     restart: always
     volumes:
       - esdata:/usr/share/elasticsearch/data
@@ -52,7 +52,7 @@ services:
   api:
     container_name: deku_api
     restart: always
-    image: ghcr.io/baking-bad/bcdhub-api:master
+    image: ghcr.io/baking-bad/bcdhub-api:4.1.0
     environment:
       - BCD_ENV=sandbox
       - GIN_MODE=debug
@@ -73,7 +73,7 @@ services:
   indexer:
     container_name: deku_indexer
     restart: always
-    image: ghcr.io/baking-bad/bcdhub-indexer:master
+    image: ghcr.io/baking-bad/bcdhub-indexer:4.1.0
     environment:
       - BCD_ENV=sandbox
       - POSTGRES_USER=root
@@ -91,7 +91,7 @@ services:
   metrics:
     container_name: deku_metrics
     restart: always
-    image: ghcr.io/baking-bad/bcdhub-metrics:master
+    image: ghcr.io/baking-bad/bcdhub-metrics:4.1.0
     environment:
       - BCD_ENV=sandbox
       - POSTGRES_USER=root
