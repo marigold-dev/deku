@@ -50,30 +50,26 @@ let make_ticket ticketer =
 
 let nonce = ref 0l
 
-let do_transaction ~validator_uri ~block_level ~ticket ~sender ~recipient
-    ~amount =
+let do_transaction ~validator_uri ~block_level ~sender =
   nonce := Int32.add 1l !nonce;
-  let amount = Core_deku.Amount.of_int amount in
+  let payload = {|{"Action":"Increment"}|} in
   let transaction =
     Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
       ~block_height:block_level
       ~data:
         (Core_deku.User_operation.make ~source:sender.key_hash
-           (Transaction { destination = recipient.key_hash; amount; ticket }))
-  in
+           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
   Lwt.async (fun () ->
       Network.request_user_operation_gossip
         { user_operation = transaction }
         validator_uri);
   transaction
 
-let spam_transactions ~ticketer n () =
+let spam_transactions ~ticketer:_ n () =
   List.init n (fun _ ->
       let validator_uri = get_random_validator_uri () in
       let block_level = get_current_block_level () in
-      let ticket = make_ticket ticketer in
-      do_transaction ~validator_uri ~block_level ~ticket ~sender:alice_wallet
-        ~recipient:bob_wallet ~amount:1)
+      do_transaction ~validator_uri ~block_level ~sender:alice_wallet)
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
