@@ -24,7 +24,7 @@ DATA_DIRECTORY="data"
 
 # https://github.com/koalaman/shellcheck/wiki/SC2207
 # shellcheck disable=SC2207
-VALIDATORS=($(seq 0 "$NUMBER_OF_NODES"))
+VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
 # =======================
 # Running environments
