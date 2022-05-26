@@ -1,0 +1,20 @@
+(executable
+ (name test)
+ (public_name my-test)
+ (modules test)
+ (libraries unix coz))
+
+(library
+ (name coz)
+ (libraries ctypes)
+ (modules coz)
+ (foreign_stubs
+  (language c)
+  (names shim))
+ (c_library_flags
+  /nix/store/7vvbds8bhify8ri7xnwl65w60v9ij929-coz-0.2.1/lib/coz-profiler/libcoz.so))
+
+(rule
+ (targets c_flags.sexp c_library_flags.sexp)
+ (action
+  (run ./config/discover.exe)))

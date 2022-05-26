@@ -17,6 +17,5 @@ let collect_block_metrics ~timestamp ~operation_count =
   | Some previous_timestamp ->
     let delta = timestamp -. previous_timestamp in
     Gauge.set block_rate delta
-  | None ->
-    ());
-    previous_timestamp := Some timestamp
+  | None -> ());
+  previous_timestamp := Some timestamp
