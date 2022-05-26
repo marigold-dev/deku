@@ -1,7 +1,8 @@
 { pkgs, system, deku, ligo, nodejs ? pkgs.nodejs }:
 pkgs.mkShell {
   shellHook = ''
-    export PATH=_build/install/default/bin:$PATH
+    export PATH="$(pwd)/_build/install/default/bin:$PATH"
+
     # This is a flag picked up by our sandbox.sh that's used
     # to know when to use esy instead of nix.
     # You can turn this off with the command 'unset USE_NIX'.
