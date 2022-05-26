@@ -1,0 +1,100 @@
+# If `USE_NIX` is not set to 'y' we won't build the image
+if os.environ.get('USE_NIX', 'n') == 'y':
+  custom_build(
+    'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
+    'nix build .#docker && docker load < ./result',
+    ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
+    skips_local_docker=False,
+    tag = "latest")
+
+def get_services(compose):
+    return compose.get("services").keys()
+
+def make_deku_yaml(n):
+  services = []
+
+  for i in range(n + 1):
+    deku_node_name = "deku-node-%s" % i
+    services.append((deku_node_name, {
+    'container_name': deku_node_name,
+    'restart': 'always',
+    'image': 'ghcr.io/marigold-dev/deku',
+    'expose': [ 4040, 9000 ],
+    'ports': [ "444%s:4040" % i ],
+    'volumes': [ ("./data/%s:/app/data" % i) ],
+    'command': [ "/app/data", "--listen-prometheus=9000" ]
+    }))
+
+
+  prometheus_config = {
+    'scrape_configs': [
+      {
+        'job_name': 'deku',
+        'scrape_interval': '1s',
+        'metrics_path': '/',
+        'static_configs': [
+          {
+            'targets': [ s[0] + ":9000" for s in services]
+          }
+        ]
+      }
+    ]
+  }
+
+
+  prometheus_config_yaml = encode_yaml(prometheus_config)
+  output_path = "/tmp/prometheus_config.yaml"
+
+  # Print prometheus_config_yaml into tmp
+  local('cat > {}'.format(output_path), stdin=prometheus_config_yaml, echo_off=True, quiet=True)
+
+  # override prometheus with one that works in docker
+  services.append(("prometheus", {
+    'container_name': 'deku_prometheus',
+    'restart': 'always',
+    'image': 'prom/prometheus',
+    'ports': ['9090:9090'],
+    'expose': [ 9090 ],
+    'volumes': [ output_path + ':/etc/prometheus/prometheus.yml' ],
+  }))
+
+  services = {k: v for k, v in services}
+  return encode_yaml({
+    'version': '3.8',
+    'services': services
+  })
+
+def load_deku_services (deku_yaml):
+  for deku_service in get_services(decode_yaml(deku_yaml)):
+      dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
+
+def add_sandbox (no_of_deku_nodes):
+  # run setup when we build
+  local_resource(
+    "deku-setup",
+    "sleep 5 && nix run .#sandbox setup docker %s" % no_of_deku_nodes,
+    resource_deps=["flextesa"],
+    labels=["scripts"],
+    )
+
+  if config.tilt_subcommand == "ci":
+    # bootstrap the deku network and run some tests
+    local_resource(
+      "smoke-test",
+      "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      )
+  else:
+    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
+    local_resource(
+      "deku-net",
+      "nix run .#sandbox start docker %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      )
+    

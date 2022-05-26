@@ -1,4 +1,4 @@
-{ pkgs, deku, ligo, nodejs ? pkgs.nodejs }:
+{ pkgs, system, deku, ligo, nodejs ? pkgs.nodejs }:
 pkgs.mkShell {
   shellHook = ''
     export PATH=_build/install/default/bin:$PATH
@@ -18,7 +18,7 @@ pkgs.mkShell {
       docker
       nodejs
       shellcheck
-      tilt
+
       docker-compose # This is needed by tilt
       jq
 
@@ -29,7 +29,8 @@ pkgs.mkShell {
       nixfmt
       nodePackages.prettier
       ocamlformat
-    ] ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
+    ] ++ (pkgs.lib.optional (system != "x86_64-darwin") tilt)
+    ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
       # OCaml developer tooling
       ocaml
       findlib

@@ -30,28 +30,21 @@ jobs:
         run: nix develop -c dune runtest --force --no-buffer
       - name: "Build deku via flakes"
         run: nix build --verbose .#deku
-  e2e_test:
+  # Includes all our e2e tests
+  tilt_ci:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - uses: actions/checkout@v2
+      
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
-      - name: "Run flextesa"
-        run: nix develop -c docker-compose up -d flextesa
-      - name: "Set up sandbox before smoke test"
-        run: nix run .#sandbox setup
-      - name: "Run smoke test"
-        run: nix run .#sandbox smoke-test
-      # We want fresh nodes before the next test to be sure there
-      # is no spooky interaction
-      - name: "Set up sandbox before deposit withdraw test"
-        run: nix run .#sandbox tear-down && nix run .#sandbox setup
-      - name: "Run deposit-withdraw test"
-        run: nix run .#sandbox deposit-withdraw-test
+
+      - name: "tilt ci"
+        run: "nix develop -c tilt ci -- --mode=local"
 
   # Static and docker are linked because we're using the static build in docker
   static:

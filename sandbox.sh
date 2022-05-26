@@ -278,7 +278,7 @@ start_deku_cluster() {
   # See deku-cli produce-block --help
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 /app/deku_cli.exe produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
+    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | awk '{ print $2 }' | tail -n1 | tr -d " \t\n\r")
   else
     HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk '{ print $2 }')
   fi
@@ -311,7 +311,7 @@ wait_for_servers() {
 # Steps for the command: ./sandbox.sh smoke-test
 # - deku_height()
 # - start_deku_cluster()
-# - killall deku-node
+# - pkill -x deku-node
 # - assert_deku_state()
 deku_storage() {
   local contract
@@ -427,7 +427,7 @@ deposit_withdraw_test() {
   WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
-    killall deku-node
+    pkill -x deku-node
     exit 1
   fi
   sleep 10
@@ -486,7 +486,7 @@ smoke-test)
   start_deku_cluster
   seconds=35
   sleep $seconds
-  killall deku-node
+  pkill -x deku-node
   assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
@@ -497,7 +497,7 @@ deposit-withdraw-test)
   sleep 5
   deploy_dummy_ticket
   deposit_withdraw_test
-  killall deku-node
+  pkill -x deku-node
   ;;
 deploy-dummy-ticket)
   deploy_dummy_ticket
