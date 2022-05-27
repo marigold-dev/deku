@@ -16,10 +16,3 @@ let broadcast_user_operation_gossip_to_list =
   broadcast_to_list (module User_operation_gossip)
 let request_user_operation_gossip = request (module User_operation_gossip)
 let request_consensus_operation = request (module Consensus_operation_gossip)
-(*
-
-   TODO: POLLINATE
-
-   let request_trusted_validator_membership =
-     request (module Trusted_validators_membership_change)
-*)

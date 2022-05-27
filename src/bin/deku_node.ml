@@ -127,15 +127,6 @@ let handle_receive_consensus_operation =
       Flows.received_consensus_operation (Server.get_state ()) update_state
         request.consensus_operation request.signature)
 
-(* POST /trusted-validators-membership *)
-(* Add or Remove a new trusted validator *)
-let handle_trusted_validators_membership =
-  handle_request
-    (module Network.Trusted_validators_membership_change)
-    (fun update_state request ->
-      Flows.trusted_validators_membership (Server.get_state ()) update_state
-        request)
-
 (* POST /withdraw-proof *)
 (* Returns a proof that can be provided to Tezos to fulfill a withdraw *)
 let handle_withdraw_proof =
@@ -179,7 +170,6 @@ let node folder prometheus_port =
              handle_receive_consensus_operation;
              handle_withdraw_proof;
              handle_ticket_balance;
-             handle_trusted_validators_membership;
            ];
       Prometheus_dream.serve prometheus_port;
     ]

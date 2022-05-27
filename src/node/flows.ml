@@ -63,42 +63,6 @@ let get_state = (ref (fun () -> assert false) : (unit -> State.t) ref)
 let set_state = (ref (fun _ -> assert false) : (State.t -> unit) ref)
 let get_task_pool = (ref (fun () -> assert false) : (unit -> Task.pool) ref)
 
-(* type received_signature_result =
-   ( unit,
-     [ `Added_block_not_signed_enough_to_desync
-     | `Already_known_block
-     | `Block_already_in_the_pool
-     | `Block_not_signed_enough_to_apply
-     | `Invalid_block                                of string
-     | `Invalid_block_when_applying
-     | `Invalid_state_root_hash
-     | `Not_current_block_producer
-     | `Pending_blocks
-     | `Added_block_has_lower_block_height
-     | `Added_signature_not_signed_enough_to_request
-     | `Already_known_signature
-     | `Invalid_signature_for_this_hash
-     | `Not_a_validator ] )
-   result *)
-
-(* type received_block_result =
-   ( unit,
-     [ `Added_block_has_lower_block_height
-     | `Added_block_not_signed_enough_to_desync
-     | `Added_block_not_signed_enough_to_request
-     | `Already_known_block
-     | `Already_known_signature
-     | `Block_already_in_the_pool
-     | `Block_not_signed_enough_to_apply
-     | `Invalid_block                            of string
-     | `Invalid_block_when_applying
-     | `Invalid_signature_for_this_hash
-     | `Invalid_state_root_hash
-     | `Not_a_validator
-     | `Not_current_block_producer
-     | `Pending_blocks ] )
-   result *)
-
 let received_block' =
   (ref (fun _ -> assert false)
     : (Node.t ->
@@ -474,7 +438,7 @@ let request_ticket_balance state ~ticket ~address =
   state.Node.protocol.core_state
   |> Core.State.ledger
   |> Ledger.balance address ticket
-let trusted_validators_membership state update_state request =
+let update_validators state update_state request =
   let open Network.Trusted_validators_membership_change in
   let { signature; payload = { address; action } as payload } = request in
   let payload_hash =

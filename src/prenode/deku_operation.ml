@@ -20,6 +20,7 @@ type operation_family =
   | Consensus
   | Validators
   | Block_pool
+  | Proxy (* Things to be sent to the proxy for outside world *)
 [@@deriving eq, ord, bin_io, show { with_path = false }]
 
 type operation_detail =
@@ -34,6 +35,25 @@ type t = {
   operation_detail : operation_detail;
 }
 [@@deriving eq, ord, bin_io, show { with_path = false }]
+
+let family_of_string : string -> operation_family =
+ fun family_str ->
+  match family_str with
+  | "Consensus" -> Consensus
+  | "Validators" -> Validators
+  | "Block_pool" -> Block_pool
+  | "Proxy" -> Proxy
+  | _ -> failwith "unknwon operation family"
+
+let detail_of_string : string -> operation_detail =
+ fun detail_str ->
+  match detail_str with
+  | "Consensus_operation" -> Consensus_operation
+  | "Add_validator" -> Validators_operation Add_validator
+  | "Remove_validator" -> Validators_operation Remove_validator
+  | "Block_operation" -> Block_operation
+  | "Block_pool_operation" -> Block_pool_operation
+  | _ -> failwith "unknwon operation detail"
 
 let make :
     operation_family:operation_family -> operation_detail:operation_detail -> t

@@ -173,6 +173,18 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
         { address; action = Remove }
         trusted
 
+  let delete_remove_validator_operation : Crypto.Key_hash.t -> t -> t =
+   fun address t ->
+    let trusted_opt = get_trusted_change_opt t in
+    match trusted_opt with
+    | None -> failwith "Trusted change is None, you moron"
+    | Some trusted ->
+      let trusted =
+        Validator_internals.Trusted_validators_membership_change.Set.remove
+          { address; action = Remove }
+          trusted in
+      { t with trusted_change = Some trusted }
+
   let delete_add_validator_operation : Crypto.Key_hash.t -> t -> t =
    fun address t ->
     let trusted_opt = get_trusted_change_opt t in
@@ -193,18 +205,6 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
       let trusted =
         Validator_internals.Trusted_validators_membership_change.Set.add
           { address; action = Add } trusted in
-      { t with trusted_change = Some trusted }
-
-  let delete_remove_validator_operation : Crypto.Key_hash.t -> t -> t =
-   fun address t ->
-    let trusted_opt = get_trusted_change_opt t in
-    match trusted_opt with
-    | None -> failwith "Trusted change is None, you moron"
-    | Some trusted ->
-      let trusted =
-        Validator_internals.Trusted_validators_membership_change.Set.remove
-          { address; action = Remove }
-          trusted in
       { t with trusted_change = Some trusted }
 
   let add_remove_validator_operation : Crypto.Key_hash.t -> t -> t =
@@ -271,29 +271,42 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
 
   let process_add_validator : string -> t -> t * Message.t list =
    fun new_validator_str t ->
+    let open Bin_prot.Std in
     let new_validator = string_to_key new_validator_str in
-    (* TODO: add msg *)
-    ( {
-        t with
-        validators =
-          Validator_internals.Validators.add
-            { address = new_validator }
-            t.validators;
-      },
-      [] )
+    (* Add in t.validators *)
+    let t = add_validator new_validator t in
+    (* Add in t.trusted_change *)
+    let t = add_add_validator_operation new_validator t in
+
+    let detail =
+      Deku_operation.Validators_operation Deku_operation.Add_validator in
+    let operation =
+      Deku_operation.make ~operation_family:Deku_operation.Validators
+        ~operation_detail:detail in
+    let recipient = Deku_operation.Proxy in
+    let payload = Message.pack bin_writer_string new_validator_str in
+    let msg = Message.make ~operation ~payload ~recipient ~signature_opt:None in
+
+    (t, [msg])
 
   let process_remove_validator : string -> t -> t * Message.t list =
    fun old_validator_str t ->
+    let open Bin_prot.Std in
     let old_validator = string_to_key old_validator_str in
-    (* TODO: send response with rm validator *)
-    ( {
-        t with
-        validators =
-          Validator_internals.Validators.remove
-            { address = old_validator }
-            t.validators;
-      },
-      [] )
+
+    let t = remove_validator old_validator t in
+    let t = add_remove_validator_operation old_validator t in
+
+    let detail =
+      Deku_operation.Validators_operation Deku_operation.Remove_validator in
+    let operation =
+      Deku_operation.make ~operation_family:Deku_operation.Validators
+        ~operation_detail:detail in
+    let recipient = Deku_operation.Proxy in
+    let payload = Message.pack bin_writer_string old_validator_str in
+    let msg = Message.make ~operation ~payload ~recipient ~signature_opt:None in
+
+    (t, [msg])
 
   (*********************************************************************)
   (* MANDATORY                                                         *)

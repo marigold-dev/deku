@@ -19,28 +19,51 @@ module PROXY_POLLINATE = struct
   let preprocess : Pollinate.PNode.Message.t -> Pollinate.PNode.Message.t =
    fun msg -> msg
 
-  let incoming_consensus_governance_operation :
-      Pollinate.PNode.Message.t -> Message.t =
-   fun msg ->
-    (* Logique *)
-    match msg.Pollinate.PNode.Message.category with
-    | Request -> failwith "Consensus governance request op"
-    | _ -> failwith "Consensus governance unknown op"
-
   (* TODO: Ack is not ok, we should send back a way to ID what msg we ack for. *)
   type response = Ack [@@deriving bin_io]
+
+  (* (* (* POST /trusted-validators-membership *)
+     (* Add or Remove a new trusted validator *)
+     let handle_trusted_validators_membership =
+       handle_request
+         (module Network.Trusted_validators_membership_change)
+         (fun update_state request ->
+           Flows.trusted_validators_membership (Server.get_state ()) update_state
+             request) *)
+
+             let process_validators_msg : Pollinate.PNode.Message.t -> bytes =
+              fun msg ->
+               (* Logique *)
+               let operation_family_str, operation_detail_str =
+                 match msg.Pollinate.PNode.Message.sub_category_opt with
+                 | None -> failwith "Sub category is mandatory in deku"
+                 | Some (family, detail) -> (family, detail) in
+               let operation_family = Deku_operation.family_of_string operation_family_str in
+               let operation_detail = Deku_operation.detail_of_string operation_detail_str in
+               let operation = Deku_operation.make ~operation_family ~operation_detail in
+               let msg =
+                 Message.make ~operation ~payload:msg.Pollinate.PNode.Message.payload
+                   ~recipient:operation_family in
+
+               let node_state = Node.Server.get_state () in
+               Flows.update_validators (Server.get_state ()) update_state in
+  *)
 
   let msg_handler : Pollinate.PNode.Message.t -> bytes =
    fun msg ->
     (* TODO: verify signature, reject wrong signatures. *)
-    match msg.Pollinate.PNode.Message.sub_category_opt with
-    | None -> failwith "Sub category is mandatory in deku"
-    | Some (family, _) ->
-    match family with
-    | "Consensus_govenance" ->
-      let _ = incoming_consensus_governance_operation msg in
-      Pollinate.Util.Encoding.pack bin_writer_response Ack
-    | _ -> failwith "Bored now"
+    match
+      ( msg.Pollinate.PNode.Message.category,
+        msg.Pollinate.PNode.Message.sub_category_opt )
+    with
+    | Request, Some (family, _) -> (
+      match family with
+      | "Validators" -> failwith "TODO"
+      (* let response = process_validators_msg msg in
+         response *)
+      | _ -> failwith "Bored now")
+    | _, Some (_, _) -> failwith "I am expecting a request"
+    | _, None -> failwith "Sub category is mandatory in deku"
 
   (* TODO: implement SIGN *)
   let sign : bytes -> bytes option -> bytes option = fun _payload _key -> None
