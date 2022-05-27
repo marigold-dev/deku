@@ -130,12 +130,7 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
   let is_validator_already_registered : Message.t -> t -> bool =
    fun msg t ->
     PseudoEffect.returner @@ fun { return } ->
-    let deku_op = Message.get_sub_category_opt msg in
-
-    let deku_op =
-      match deku_op with
-      | None -> return false
-      | Some deku_op -> deku_op in
+    let deku_op = Message.get_operation msg in
 
     assert (deku_op.operation_family = Deku_operation.Validators);
 
@@ -330,9 +325,7 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
     let filtered =
       List.filter
         (fun msg ->
-          match Message.get_sub_category_opt msg with
-          | None -> false
-          | Some deku_op ->
+          let deku_op = Message.get_operation msg in
           match deku_op.operation_family with
           | Deku_operation.Validators -> true
           | _ -> false)

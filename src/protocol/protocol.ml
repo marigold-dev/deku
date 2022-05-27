@@ -73,10 +73,7 @@ let apply_protocol_operations :
     (Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list)
     * Prenode.Message.t list =
  fun (state, receipts) msg ->
-  let deku_op = Prenode.Message.get_sub_category_opt msg in
-  match deku_op with
-  | None -> failwith "Operation family is mandatory in deku ops"
-  | Some deku_op ->
+  let deku_op = Prenode.Message.get_operation msg in
   match deku_op.operation_family with
   | Validators ->
     let state, msgs = apply_validators_operation state msg in
