@@ -1,3 +1,5 @@
+allow_k8s_contexts('gke_marigold-k8s-npr_europe-west1_euw1-marigold-k8s-npr-gke')
+
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'docker' (default) or 'local'")
@@ -50,3 +52,26 @@ local_resource(
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
   )
+
+local_resource(
+  "restart network",
+  """tilt disable deku-node-0
+tilt disable deku-node-1
+tilt disable deku-node-2
+tilt trigger deku-tear-down
+tilt wait --for=condition=Ready "uiresource/deku-tear-down"
+tilt trigger deku-setup
+tilt wait --for=condition=Ready "uiresource/deku-setup"
+tilt enable deku-node-0
+tilt enable deku-node-1
+tilt enable deku-node-2
+tilt wait --for=condition=Ready "uiresource/deku-node-0"
+tilt wait --for=condition=Ready "uiresource/deku-node-1"
+tilt wait --for=condition=Ready "uiresource/deku-node-2"
+tilt trigger deku-net
+""",
+  auto_init=False,
+  trigger_mode=TRIGGER_MODE_MANUAL,
+  labels=["scripts"],
+  allow_parallel=True,
+)
