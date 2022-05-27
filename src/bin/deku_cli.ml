@@ -139,13 +139,15 @@ let vm_flavor =
     (match string with
     | "Lambda" -> Some `Lambda
     | "Dummy" -> Some `Dummy
+    | "Wasm" -> Some `Wasm
     | _ -> None)
     |> Option.to_result ~none:(`Msg "Expected a valid Vm_flavor") in
   let printer fmt flavor =
     Format.fprintf fmt "%S"
       (match flavor with
       | `Lambda -> "Lambda"
-      | `Dummy -> "Dummy") in
+      | `Dummy -> "Dummy"
+      | `Wasm -> "Wasm") in
   let open Arg in
   conv ~docv:"Vm_flavor" (parser, printer)
 let hash =
@@ -214,7 +216,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
             match vm_flavor with
             | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
             | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
-          in
+            | `Wasm -> Contract_vm.Invocation_payload.wasm_of_yojson ~arg in
           let arg = payload |> Result.get_ok in
           Core_deku.User_operation.make ~source:wallet.address
             (Contract_invocation
@@ -245,7 +247,7 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
+    sender_wallet_file (vm_flavor : [`Dummy | `Lambda | `Wasm]) =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -276,7 +278,15 @@ let originate_contract node_folder contract_json initial_storage
           let int =
             try Yojson.Safe.Util.to_int initial_storage with
             | _ -> failwith "Invalid storage fro contract" in
-          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
+          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int
+        | `Wasm ->
+          let code, storage =
+            match (contract_program, initial_storage) with
+            | `String code, `String storage ->
+              (Bytes.of_string code, Bytes.of_string storage)
+            | _ -> assert false in
+          Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
+          |> Result.get_ok in
       let origination_op = User_operation.Contract_origination payload in
       let originate_contract_op =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
