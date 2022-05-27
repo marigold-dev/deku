@@ -498,12 +498,5 @@ let trusted_validators_membership state update_state request =
   let (_ : State.t) =
     update_state { state with validators_prenode = new_validators } in
 
-  let trusted =
-    match Prenode.Validators_Prenode.get_trusted_change_opt new_validators with
-    | None -> failwith "No trusted change here, oupsie"
-    | Some trusted ->
-      Validator_internals.Trusted_validators_membership_change.Set.elements
-        trusted in
-
-  Lwt.async (fun () -> state.persist_trusted_membership_change trusted);
+  Lwt.async (fun () -> Prenode.Validators_Prenode.dump state.validators_prenode);
   Ok ()

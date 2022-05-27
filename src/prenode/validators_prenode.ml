@@ -1,5 +1,7 @@
+open Helpers
 open Watcher
 open Phelpers
+exception Invalid_json of string
 
 module type VALIDATORS_PARAMETER = sig
   module Threshold : sig
@@ -59,26 +61,18 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
 
   type t = {
     validators : Validator_internals.Validators.t;
-    membership :
-      Validator_internals.Trusted_validators_membership_change.t option;
     trusted_change :
       Validator_internals.Trusted_validators_membership_change.Set.t option;
         [@of_yojson set_of_yojson] [@to_yojson yojson_of_set]
-    persist_trusted_change :
-      Validator_internals.Trusted_validators_membership_change.t list option;
-    (* ->
-       unit Lwt.t *)
+    (* TODO: use proper Timestamp *)
     last_seen_membership_change_timestamp : float;
-        (* TODO: use proper Timestamp *)
   }
   [@@deriving to_yojson, of_yojson]
 
   let empty =
     {
       validators = Validator_internals.Validators.empty;
-      membership = None;
       trusted_change = None;
-      persist_trusted_change = None;
       last_seen_membership_change_timestamp = 0.0;
     }
 
@@ -106,17 +100,17 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
       Validator_internals.Validators.add validator (get_validators t) in
     { t with validators = new_validators }
 
-  (*********************************************************************)
-  (* MEMBERSHIP/TRUST                                                  *)
-  (*********************************************************************)
+  let remove_validator : Crypto.Key_hash.t -> t -> t =
+   fun validator t ->
+    let validator : Validator_internals.Validators.validator =
+      { address = validator } in
+    let new_validators =
+      Validator_internals.Validators.remove validator (get_validators t) in
+    { t with validators = new_validators }
 
-  let get_membership_opt :
-      t -> Validator_internals.Trusted_validators_membership_change.t option =
-   fun t -> t.membership
-
-  let update_membership :
-      Validator_internals.Trusted_validators_membership_change.t -> t -> t =
-   fun membership t -> { t with membership = Some membership }
+  (*********************************************************************)
+  (* MEMBERSHIP/TRUSTED                                                *)
+  (*********************************************************************)
 
   let get_trusted_change_opt :
       t -> Validator_internals.Trusted_validators_membership_change.Set.t option
@@ -331,6 +325,53 @@ module Raw (P : VALIDATORS_PARAMETER) = struct
           | _ -> false)
         msgs in
     filtered
-end
 
+  (*********************************************************************)
+  (* DUMP/LOAD/PERSIST                                                 *)
+  (*********************************************************************)
+
+  (* write_json and read_json stolen from files.ml due to dep. TODO: refacto. *)
+  let write_json to_yojson data ~file =
+    Lwt_io.with_file ~mode:Output file (fun oc ->
+        Lwt_io.write oc (Yojson.Safe.pretty_to_string (to_yojson data)))
+
+  let read_json of_yojson ~file =
+    let%await string = Lwt_io.with_file ~mode:Input file Lwt_io.read in
+    let json = Yojson.Safe.from_string string in
+    match of_yojson json with
+    | Ok data -> await data
+    | Error error -> raise (Invalid_json error)
+
+  (* Should it be replaced by: *)
+  (* write_json yojson_of_set t.trusted_change ~file:t.file + add t.file *)
+  let dump : t -> unit Lwt.t =
+   fun _t -> failwith "Not implemented yet because not needed yet"
+
+  (* NOTE: load still uses trusted validators membership change to minimize changes in deku in this PR. *)
+  let load : file:string -> t Lwt.t =
+   fun ~file ->
+    let%lwt trusted_change_list =
+      read_json
+        [%of_yojson:
+          Validator_internals.Trusted_validators_membership_change.t list] ~file
+    in
+
+    let prenode = empty in
+
+    let trusted_change_set =
+      Validator_internals.Trusted_validators_membership_change.Set.of_list
+        trusted_change_list in
+
+    let prenode = set_trusted_change trusted_change_set prenode in
+
+    let prenode =
+      List.fold_left
+        (fun prenode
+             (elem : Validator_internals.Trusted_validators_membership_change.t) ->
+          match elem.action with
+          | Add -> add_validator elem.address prenode
+          | Remove -> remove_validator elem.address prenode)
+        prenode trusted_change_list in
+    Lwt.return prenode
+end
 module Make (P : VALIDATORS_PARAMETER) : MAIN = Raw (P)

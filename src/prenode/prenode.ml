@@ -6,10 +6,4 @@ end
 
 module Validators_Prenode = Validators_prenode.Raw (Validators_Parameter)
 
-module Protocol_Parameter = struct
-  let toto _msg = "toto"
-end
-
-module Protocol = Protocol_prenode.Raw (Protocol_Parameter)
-
 module Message = Message

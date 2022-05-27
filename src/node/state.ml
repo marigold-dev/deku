@@ -27,12 +27,9 @@ type t = {
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core.State.receipt BLAKE2B.Map.t;
-  persist_trusted_membership_change :
-    Validator_internals.Trusted_validators_membership_change.t list ->
-    unit Lwt.t;
 }
-let make ~identity ~validators_prenode ~persist_trusted_membership_change
-    ~interop_context ~data_folder ~initial_validators_uri =
+let make ~identity ~validators_prenode ~interop_context ~data_folder
+    ~initial_validators_uri =
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
@@ -58,7 +55,6 @@ let make ~identity ~validators_prenode ~persist_trusted_membership_change
     uri_state = Uri_map.empty;
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
-    persist_trusted_membership_change;
   }
 let apply_block state block =
   let prev_protocol = state.protocol in

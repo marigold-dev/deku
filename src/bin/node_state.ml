@@ -5,23 +5,9 @@ let get_initial_state ~folder =
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
-  let%await trusted_validator_membership_change_list =
-    Files.Trusted_validators_membership_change.read
+  let%await validators_prenode =
+    Prenode.Validators_Prenode.load
       ~file:trusted_validator_membership_change_file in
-  let trusted_validator_membership_change =
-    Validator_internals.Trusted_validators_membership_change.Set.of_list
-      trusted_validator_membership_change_list in
-
-  let relevant_addresses :
-      Validator_internals.Trusted_validators_membership_change.t list =
-    Validator_internals.Trusted_validators_membership_change.Set.elements
-      trusted_validator_membership_change in
-
-  let relevant_addresses =
-    List.map
-      (fun (x : Validator_internals.Trusted_validators_membership_change.t) ->
-        x.address)
-      relevant_addresses in
 
   let%await interop_context =
     let%await {
@@ -48,32 +34,24 @@ let get_initial_state ~folder =
         | Some uri -> State.Address_map.add address uri validators_uri
         | None -> validators_uri)
       State.Address_map.empty validators in
-  let persist_trusted_membership_change =
-    Files.Trusted_validators_membership_change.write
-      ~file:trusted_validator_membership_change_file in
 
-  let validators_prenode =
+  let validators_prenode_protocol =
     List.fold_left
       (fun validators (address, _) ->
-        (* Here, we assume that initial only has ADD operations for validators *)
         Prenode.Validators_Prenode.add_validator address validators)
       (* ADD in membership *and* add in validators *)
       Prenode.Validators_Prenode.empty validators in
 
-  let validators_prenode =
-    List.fold_left
-      (fun val_prenode address ->
-        Prenode.Validators_Prenode.add_add_validator_operation address
-          val_prenode)
-      validators_prenode relevant_addresses in
-
   let node =
     State.make ~identity ~validators_prenode ~interop_context
-      ~data_folder:folder ~initial_validators_uri
-      ~persist_trusted_membership_change in
+      ~data_folder:folder ~initial_validators_uri in
 
   let node =
-    { node with protocol = { node.protocol with validators_prenode } } in
+    {
+      node with
+      protocol =
+        { node.protocol with validators_prenode = validators_prenode_protocol };
+    } in
   let state_bin = folder ^ "/state.bin" in
   let%await state_bin_exists = Lwt_unix.file_exists state_bin in
   let%await protocol =

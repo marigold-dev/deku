@@ -209,16 +209,10 @@ let clean state update_state block =
             validator.address val_prenode)
       state.validators_prenode block.operations in
 
-  let trusted =
-    match Prenode.Validators_Prenode.get_trusted_change_opt val_prenode with
-    | None -> failwith "No trusted membership here"
-    | Some trusted ->
-      Validator_internals.Trusted_validators_membership_change.Set.elements
-        trusted in
-  Lwt.async (fun () -> trusted |> state.persist_trusted_membership_change);
-  (* TODO: this should be in Prenode validators *)
-  update_state
-    { state with validators_prenode = val_prenode; pending_operations }
+  let state =
+    { state with validators_prenode = val_prenode; pending_operations } in
+  Lwt.async (fun () -> Prenode.Validators_Prenode.dump state.validators_prenode);
+  update_state state
 
 let find_random_validator_uri : Node.t -> Uri.t =
  fun state ->
