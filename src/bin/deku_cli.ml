@@ -525,6 +525,36 @@ let withdraw_proof =
   lwt_ret
     (const withdraw_proof $ folder_node $ operation_hash $ contract_callback)
 
+let info_get_ticket_balance =
+  let doc = "Get balance of a ticket for an account." in
+  Cmd.info "get-balance" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
+let get_ticket_balance node_folder address ticket =
+  let open Network in
+  let%await identity = read_identity ~node_folder in
+  let%await result = request_ticket_balance { address; ticket } identity.uri in
+  Format.printf "Balance: %i\n%!" (Amount.to_int result.amount);
+  await (`Ok ())
+
+let get_ticket_balance =
+  let open Term in
+  let folder_node =
+    let docv = "folder_node" in
+    let doc = "The folder where the node lives." in
+    let open Arg in
+    required & pos 0 (some string) None & info [] ~doc ~docv in
+  let address =
+    let docv = "address" in
+    let doc = "The account address to get the balance." in
+    let open Arg in
+    required & pos 1 (some address_implicit) None & info [] ~docv ~doc in
+  let ticket =
+    let docv = "ticket" in
+    let doc = "The ticket to get the balance." in
+    let open Arg in
+    required & pos 2 (some ticket) None & info [] ~docv ~doc in
+  lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
+
 let info_sign_block =
   let doc =
     "Sign a block hash and broadcast to the network manually, useful when the \
@@ -797,5 +827,6 @@ let _ =
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
          Cmd.v info_remove_trusted_validator remove_trusted_validator;
+         Cmd.v info_get_ticket_balance get_ticket_balance;
          Cmd.v info_self self;
        ]

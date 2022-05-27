@@ -420,6 +420,15 @@ deposit_withdraw_test() {
 
   DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
 
+  # Check that the ticket has been deposited on deku
+  BALANCE=$(deku-cli get-balance data/0 $DEKU_ADDRESS "(Pair \"$DUMMY_TICKET\" 0x)" | sed -n "s/Balance: \([0-9]*\)/\1/p")
+  if ((BALANCE == 0))
+  then
+    echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
+    pkill -x deku-node
+    exit 1
+  fi
+
   # # We can withdraw 10 tickets from deku
   OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
   sleep 10
