@@ -422,7 +422,7 @@ deposit_withdraw_test() {
 
   # Check that the ticket has been deposited on deku
   BALANCE=$(deku-cli get-balance data/0 $DEKU_ADDRESS "(Pair \"$DUMMY_TICKET\" 0x)" | sed -n "s/Balance: \([0-9]*\)/\1/p")
-  if (($BALANCE == 0))
+  if ((BALANCE == 0))
   then
     echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
     pkill -x deku-node
