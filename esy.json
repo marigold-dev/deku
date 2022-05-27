@@ -229,6 +229,7 @@
           "@opam/cmdliner": "^1.1.1"
         }
       }
-    }
+    },
+    "@opam/landmarks": "renatoalencar/landmarks:landmarks.opam#91f75a5ddc38e40bcd8f1dd10b68e88a5c169e0d"
   }
 }
