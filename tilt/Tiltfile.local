@@ -30,17 +30,44 @@ def add_sandbox (no_of_deku_nodes):
       )
   else:
     # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    local_resource(
-      "deku-net",
-      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
+    # local_resource(
+    #  "deku-net",
+    #  serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
+    #  resource_deps=["deku-setup"],
+    #  labels=["scripts"],
+    #  auto_init=True, # trigger once at start
+    #  trigger_mode=TRIGGER_MODE_MANUAL,
+    #  )
+    print("nothing")
 
 def load_deku_services (_):
-  print('no-op')
+  lines = ["""export HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk \'{ print $2 }\')"""];
+
+  for i in range(3):
+    local_resource(
+      "deku-node-%s" % i,
+      "dune build",
+      serve_cmd='deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900%s"' % i,
+      serve_env={"DATA_DIRECTORY": "./data/%s" % i},
+      labels=["deku"],
+      resource_deps=["deku-setup"],
+    )
+
+    lines.append('deku-cli sign-block "$DATA_DIRECTORY/%s" "$HASH"' % i)
+
+  start_script = " && ".join(lines)
+
+  print(start_script)
+
+  local_resource(
+    'deku-net',
+    start_script,
+    env={"DATA_DIRECTORY": "./data"},
+    resource_deps=["deku-setup"],
+    labels=["scripts"],
+    auto_init=True, # trigger once at start
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    )
 
 def make_deku_yaml (_):
   print('no-op')
