@@ -35,9 +35,9 @@ let apply_tezos_operation t tezos_operation =
   let { tezos_operation_hash = _; internal_operations } = payload in
   List.fold_left apply_internal_operation t internal_operations
 
-let apply_user_operation t user_operation =
+let apply_user_operation t operation_hash user_operation =
   let open User_operation in
-  let { source; initial_operation; hash } = user_operation in
+  let { source; initial_operation; hash = _ } = user_operation in
   let { ledger; contract_storage } = t in
   match initial_operation with
   | Transaction { destination; amount; ticket } ->
@@ -66,7 +66,7 @@ let apply_user_operation t user_operation =
     let%ok contract =
       Contract_vm.Compiler.compile ~gas:initial_gas to_originate |> wrap_error
     in
-    let address = Contract_address.of_user_operation_hash hash in
+    let address = Contract_address.of_user_operation_hash operation_hash in
     let contract_storage =
       Contract_storage.originate_contract t.contract_storage ~address ~contract
     in
@@ -97,8 +97,8 @@ let apply_user_operation t user_operation =
         ~address:to_invoke ~updated_contract:contract in
     Ok ({ ledger; contract_storage }, None)
 
-let apply_user_operation t user_operation =
-  match apply_user_operation t user_operation with
+let apply_user_operation t hash user_operation =
+  match apply_user_operation t hash user_operation with
   | Ok (t, receipt) -> (t, receipt)
   (* TODO: use this erros for something *)
   | Error (`Origination_error _ | `Invocation_error _) -> (t, None)

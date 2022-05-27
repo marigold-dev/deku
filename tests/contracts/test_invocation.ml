@@ -75,9 +75,9 @@ let test_ok msg =
     |> Result.get_ok in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let contract_address =
-    user_op.hash |> Contract_address.of_user_operation_hash in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let contract_address = mock_hash |> Contract_address.of_user_operation_hash in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   let init_storage = State.contract_storage state in
   let payload =
     Contract_vm.Invocation_payload.lambda_of_yojson
@@ -87,7 +87,7 @@ let test_ok msg =
     User_operation.Contract_invocation
       { to_invoke = contract_address; argument = payload } in
   let operation = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation state operation in
+  let state, _ = State.apply_user_operation state mock_hash operation in
   let new_storage = State.contract_storage state in
   let old_contract =
     Contract_storage.get_contract ~address:contract_address init_storage
@@ -114,9 +114,9 @@ let test_failure msg =
     |> Result.get_ok in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let contract_address =
-    user_op.hash |> Contract_address.of_user_operation_hash in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let contract_address = mock_hash |> Contract_address.of_user_operation_hash in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   let init_storage = State.contract_storage state in
   let payload =
     Contract_vm.Invocation_payload.lambda_of_yojson
@@ -126,7 +126,7 @@ let test_failure msg =
     User_operation.Contract_invocation
       { to_invoke = contract_address; argument = payload } in
   let operation = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation state operation in
+  let state, _ = State.apply_user_operation state mock_hash operation in
   let new_storage = State.contract_storage state in
   let old_contract =
     Contract_storage.get_contract ~address:contract_address init_storage
@@ -148,9 +148,9 @@ let test_dummy_ok msg =
   let payload = Contract_vm.Origination_payload.dummy_of_yojson ~storage:0 in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let contract_address =
-    user_op.hash |> Contract_address.of_user_operation_hash in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let contract_address = mock_hash |> Contract_address.of_user_operation_hash in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   let init_storage = State.contract_storage state in
   let payload =
     Contract_vm.Invocation_payload.dummy_of_yojson ~arg:(`List [`Int 0; `Int 1])
@@ -159,7 +159,7 @@ let test_dummy_ok msg =
     User_operation.Contract_invocation
       { to_invoke = contract_address; argument = payload } in
   let operation = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation state operation in
+  let state, _ = State.apply_user_operation state mock_hash operation in
   let new_storage = State.contract_storage state in
   let old_contract =
     Contract_storage.get_contract ~address:contract_address init_storage
@@ -181,9 +181,9 @@ let test_dummy_failure msg =
   let payload = Contract_vm.Origination_payload.dummy_of_yojson ~storage:0 in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let contract_address =
-    user_op.hash |> Contract_address.of_user_operation_hash in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let contract_address = mock_hash |> Contract_address.of_user_operation_hash in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   let init_storage = State.contract_storage state in
   let payload =
     Contract_vm.Invocation_payload.lambda_of_yojson
@@ -193,7 +193,7 @@ let test_dummy_failure msg =
     User_operation.Contract_invocation
       { to_invoke = contract_address; argument = payload } in
   let operation = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation state operation in
+  let state, _ = State.apply_user_operation state mock_hash operation in
   let new_storage = State.contract_storage state in
   let old_contract =
     Contract_storage.get_contract ~address:contract_address init_storage

@@ -75,7 +75,8 @@ let test msg =
     |> Result.get_ok in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
@@ -92,7 +93,8 @@ let test_dummy msg =
   let payload = Contract_vm.Origination_payload.dummy_of_yojson ~storage in
   let operation = User_operation.Contract_origination payload in
   let user_op = User_operation.make ~source:address operation in
-  let state, _ = State.apply_user_operation initial_state user_op in
+  let mock_hash = BLAKE2B.hash "mocked op hash" in
+  let state, _ = State.apply_user_operation initial_state mock_hash user_op in
   [
     Alcotest.test_case msg `Quick (fun () ->
         Alcotest.(check' bool)
