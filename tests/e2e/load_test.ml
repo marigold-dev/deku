@@ -57,14 +57,14 @@ let make_ticket ticketer =
 
 let nonce = ref 0l
 
-let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
+let make_transaction ~block_level ~ticket:_ ~sender ~recipient:_ ~amount:_ =
   nonce := Int32.add 1l !nonce;
-  let amount = Core_deku.Amount.of_int amount in
+  let payload = {|{"Action":"Increment"}|} in
   Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
     ~block_height:block_level
     ~data:
       (Core_deku.User_operation.make ~source:sender.key_hash
-         (Transaction { destination = recipient.key_hash; amount; ticket }))
+         (Vm_transaction { payload = Yojson.Safe.from_string payload }))
 
 let spam_transactions ~ticketer ~n () =
   let validator_uri = get_random_validator_uri () in

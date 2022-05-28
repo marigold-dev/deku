@@ -194,6 +194,7 @@ let create_wallet =
 
 let info_create_transaction =
   let doc =
+    (* TODO: these docs are out of sync for deku-p *)
     Printf.sprintf
       "Submits a transaction to the sidechain. The transaction will be \
        communicated to all known validators to be included in the next block. \
@@ -258,6 +259,81 @@ let create_transaction node_folder sender_wallet_file received_address amount
       identity.uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
   Lwt.return (`Ok ())
+
+let info_create_custom_transaction =
+  let doc =
+    Printf.sprintf
+      "Submits a transaction to Parametric Deku. The transaction will be \
+       communicated to all known validators and included in the next block. If \
+       the path to the wallet file corresponding to the sending address is not \
+       proivded. a wallet file with the correct filename (%s) must be present \
+       in the working directory"
+      (make_filename_from_address "address") in
+  Cmd.info "create-custom-transaction" ~version:"%\226\128\140%VERSION%%" ~doc
+    ~exits ~man
+
+let create_custom_transaction node_folder sender_wallet_file payload =
+  let open Network in
+  with_validator_uri node_folder @@ fun (_, validator_uri) ->
+  let%await block_level_response = request_block_level () validator_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level
+      ~data:
+        (Core_deku.User_operation.make ~source:wallet.address
+           (Vm_transaction { payload = Yojson.Safe.from_string payload })) in
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    request_user_operation_gossip { user_operation = transaction } identity.uri
+  in
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+  Lwt.return (`Ok ())
+
+let info_create_mock_transaction =
+  let doc =
+    Printf.sprintf
+      "Reads a VM state from stdin, simulates a transaction against the VM \
+       listening listening at the named pipes  specified, then prints the \
+       resultant VM state to stdout." in
+  Cmd.info "create-mock-transaction" ~version:"%\226\128\140%VERSION%%" ~doc
+    ~exits ~man
+
+let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let payload = Yojson.Safe.from_string payload in
+  (* We sign the payload just to make sure the wallet is an actual wallet.
+     This adds to the realism of the test. *)
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:0L
+      ~data:
+        (Core_deku.User_operation.make ~source:wallet.address
+           (Vm_transaction { payload })) in
+  let suffix =
+    Stdlib.Random.bits () |> string_of_int |> BLAKE2B.hash |> BLAKE2B.to_string
+  in
+  let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
+  let stdin, _ = Unix.pipe () in
+  let args =
+    Array.concat
+      [[|vm_binary_path|]; Array.of_list vm_args; [|named_pipe_path|]] in
+  let _pid =
+    Unix.create_process vm_binary_path args stdin Unix.stdout Unix.stderr in
+  (* FIXME: shouldn't use the initial state before it's given *)
+  External_vm.External_vm_client.start_vm_ipc ~named_pipe_path;
+  External_vm.External_vm_client.apply_vm_operation
+    ~state:(Some (External_vm.External_vm_client.initial_state ()))
+    ~source:wallet.address ~tx_hash:transaction.hash payload
+  |> External_vm.External_vm_protocol.State.to_yojson
+  |> Yojson.Safe.to_string
+  |> print_endline;
+  (* The created process should close itself when we send the close signal. *)
+  External_vm.External_vm_client.close_vm_ipc ();
+  await (`Ok ())
 
 let info_originate_contract =
   let doc =
@@ -410,6 +486,46 @@ let create_transaction =
     $ ticket
     $ argument
     $ vm_flavor)
+
+let create_custom_transaction =
+  let payload =
+    let doc = "The payload as valid JSON string." in
+    let env = Cmd.Env.info "PAYLOAD" ~doc in
+    Arg.(
+      required & pos 2 (some string) None & info [] ~env ~docv:"payload" ~doc)
+  in
+  let open Term in
+  lwt_ret
+    (const create_custom_transaction $ folder_node 0 $ address_from 1 $ payload)
+
+let create_mock_transaction =
+  let address_from =
+    let doc =
+      "The sending address, or a path to a wallet% If a bare sending address \
+       is provided, the corresponding wallet is assumed to be in the working \
+       directory." in
+    let env = Cmd.Env.info "SENDER" ~doc in
+    let open Arg in
+    required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
+  let payload =
+    let doc = "The payload as valid JSON string." in
+    let env = Cmd.Env.info "PAYLOAD" ~doc in
+    Arg.(
+      required & pos 1 (some string) None & info [] ~env ~docv:"payload" ~doc)
+  in
+  let vm_path =
+    let docv = "vm_path" in
+    let doc = "Path to the binary to execute the transaction against. " in
+    let open Arg in
+    required & pos 2 (some string) None & info [] ~doc ~docv in
+  let vm_args =
+    let docv = "vm_args" in
+    let doc = "Arguments of the vm. " in
+    let open Arg in
+    value & pos_right 2 string [] & info [] ~doc ~docv in
+  let open Term in
+  lwt_ret
+    (const create_mock_transaction $ address_from $ payload $ vm_path $ vm_args)
 
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
@@ -814,6 +930,8 @@ let _ =
        [
          Cmd.v info_create_wallet create_wallet;
          Cmd.v info_create_transaction create_transaction;
+         Cmd.v info_create_custom_transaction create_custom_transaction;
+         Cmd.v info_create_mock_transaction create_mock_transaction;
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;

@@ -14,6 +14,12 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
+(executable
+ (name deku_vm)
+ (libraries node bin_common helpers cmdliner)
+ (modules Deku_vm)
+ (public_name deku-vm))
+
 (library
  (name bin_common)
  (modules Files Node_state)

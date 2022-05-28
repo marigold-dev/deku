@@ -32,17 +32,40 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network, it will be run after deku-setup and the nodes have started
     local_resource(
       "deku-net",
-      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
+      "nix run .#sandbox start tilt %s" % no_of_deku_nodes, 
+      resource_deps=["deku-setup"] + ["deku-vm-%s" % i for i in range(0, no_of_deku_nodes)] + ["deku-node-%s" % i for i in range(0, no_of_deku_nodes)],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
       )
 
-def load_deku_services (_):
-  print('no-op')
+def load_deku_services(_, no_of_deku_nodes, path_to_the_vm):
+  # creates a resource for a node and its corresponding vm
+  for i in range(0, no_of_deku_nodes):
+    local_resource(
+      "deku-node-%s" % i,
+      "dune build",
+      serve_cmd='deku-node "$DATA_DIRECTORY" "$PATH_TO_FIFO" --listen-prometheus="900%s" --verbosity=debug' % i,
+      serve_env={
+        "DATA_DIRECTORY": "./data/%s" % i,
+        "PATH_TO_FIFO": "./data/%s/state_transition" % i
+      },
+      labels=["deku"],
+      resource_deps=["deku-setup", "deku-vm-%s" % i],
+    )
 
-def make_deku_yaml (_):
+    local_resource(
+      "deku-vm-%s" % i,
+      serve_cmd="$VM_PATH $DATA_TRANSITION",
+      serve_env={
+        "VM_PATH": path_to_the_vm,
+        "DATA_TRANSITION": "./data/%s/state_transition" % i
+      },
+      labels=["deku-vms"],
+      resource_deps=["deku-setup"]
+    )
+
+def make_deku_yaml(_):
   print('no-op')
   # We must return a valid (but empty) docker-compose configuration
   return encode_yaml({'version': '3.8', 'services': {}})
