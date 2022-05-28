@@ -173,7 +173,8 @@ let handle_ticket_balance =
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
 
-let node folder prometheus_port =
+let node folder named_pipe_path prometheus_port =
+  External_vm.start_vm_ipc ~named_pipe_path;
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->
@@ -224,7 +225,14 @@ let node =
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
+  let named_pipe =
+    let docv = "named_pipe" in
+    let doc =
+      "Path to the named pipes used for IPC with the VM. Will suffix with \
+       '_read' and '_write' respectively." in
+    let open Arg in
+    required & pos 1 (some string) None & info [] ~doc ~docv in
   let open Term in
-  const node $ folder_node $ Prometheus_dream.opts
+  const node $ folder_node $ named_pipe $ Prometheus_dream.opts
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
