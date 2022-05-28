@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    /* List of folders to include type definitions from. */
+  },
+}

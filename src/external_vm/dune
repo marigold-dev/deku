@@ -1,0 +1,5 @@
+(library
+ (name external_vm)
+ (libraries helpers crypto lwt.unix tezos-micheline)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.eq ppx_let_binding)))

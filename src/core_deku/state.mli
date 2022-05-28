@@ -5,7 +5,14 @@ type t [@@deriving yojson]
 type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
 [@@deriving yojson]
 
-val empty : t
+val empty : unit -> t
+
+(* To allow constructing and testing the core ledgers without
+   running an external VM, the initialization of the VM state
+   is delayed. This leaks some abstraction about a State.t, but
+   it's worth it to not break our unit tests.
+   TODO: figure out a better abstraction. *)
+val intialize_external_vm_state : External_vm.t -> t -> t
 
 val ledger : t -> Ledger.t
 
