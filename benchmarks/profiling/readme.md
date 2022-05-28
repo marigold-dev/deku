@@ -116,7 +116,7 @@ hotspot /path/to/perf.data
 
  Using [valgrind](https://valgrind.org/) with [massif](https://valgrind.org/docs/manual/ms-manual.html). 
  
- Valgrind bassically runs the program in a "sandbox". While running in this sandbox, it is able to insert its own instructions to do advanced debugging and profiling.
+ Valgrind basically runs the program in a "sandbox". While running in this sandbox, it is able to insert its own instructions to do advanced debugging and profiling.
  Before the application instructions are processed, they are passed to tools (such as memcheck (default)). These tools like plugins, and they are able to modify the program before it it run on the processor.
  Valgrind does cause the program to run slower, however it is not meant to measure performance. 
 
