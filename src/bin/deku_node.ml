@@ -194,7 +194,8 @@ let handle_ticket_balance =
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
 
-let node folder minimum_block_delay prometheus_port =
+let node folder named_pipe_path minimum_block_delay prometheus_port =
+  External_vm.start_vm_ipc ~named_pipe_path;
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
   in
@@ -265,6 +266,13 @@ let node =
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
+  let named_pipe =
+    let docv = "named_pipe" in
+    let doc =
+      "Path to the named pipes used for IPC with the VM. Will suffix with \
+       '_read' and '_write' respectively." in
+    let open Arg in
+    required & pos 1 (some string) None & info [] ~doc ~docv in
   let minimum_block_delay =
     let docv = "minimum_block_delay" in
     let doc =
@@ -282,6 +290,7 @@ let node =
   $ Fmt_cli.style_renderer ()
   $ Logs_cli.level ()
   $ folder_node
+  $ named_pipe
   $ minimum_block_delay
   $ Prometheus_dream.opts
 
