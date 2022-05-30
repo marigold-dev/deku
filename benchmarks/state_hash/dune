@@ -1,5 +1,5 @@
 (executable
- (name benchmarks_deku)
+ (name state_hash)
  (libraries
   core
   core_bench
@@ -8,12 +8,11 @@
   tezos_rpc
   node
   protocol
-  tezos_interop
-  map_hash)
+  tezos_interop)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
 (rule
- (alias bench_deku)
+ (alias bench_state_hash)
  (action
-  (run %{exe:benchmarks_deku.exe})))
+  (run %{exe:state_hash.exe})))

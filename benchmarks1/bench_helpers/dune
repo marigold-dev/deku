@@ -1,5 +1,0 @@
-(library
- (name map_hash)
- (libraries core_deku protocol lambda_vm)
- (preprocess
-  (pps ppx_lambda_vm ppx_deriving_yojson)))
