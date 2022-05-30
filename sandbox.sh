@@ -121,8 +121,7 @@ trusted_validator_membership_change_json() {
     i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
     ADDRESS=$(echo "$VALIDATOR" | awk -F';' '{ print $4 }')
     if [ "$i" != 0 ]; then
-      printf ",
-"
+      printf ","
     fi
     cat <<EOF
   {
@@ -187,7 +186,7 @@ create_new_deku_environment() {
   done
 
   consensus_storage=$(
-  # Step 3: After having the Deku identities, we will configure and deploy
+  # Step 2: After having the Deku identities, we will configure and deploy
   # a Deku consensus contract to the Tezos testnet.
     cat <<EOF
   {
@@ -213,10 +212,9 @@ EOF
   }
 }
 EOF
-
 )
 
-  # Step 4: deploying the consensus and validators discovery contracts
+  # Step 3: deploying the consensus and validators discovery contracts
   consensus="./src/tezos_interop/consensus.mligo"
   discovery="./src/tezos_interop/discovery.mligo"
   deploy_contract "consensus" "$consensus" "$consensus_storage"
@@ -229,12 +227,12 @@ EOF
     trusted_validator_membership_change_json >"$FOLDER/trusted-validator-membership-change.json"
   done
 
-  # Step 5: Look up the address of the contract we just deployed.
+  # Step 4: Look up the address of the contract we just deployed.
   message "Getting contract address"
   TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
 
-  # Step 6: Finally we need to configure each Deku node to communicate with the Tezos testnet.
+  # Step 5: Finally we need to configure each Deku node to communicate with the Tezos testnet.
   # This configuration is stored in a file named `tezos.json`, and is created with the `deku-cli setup-tezos``
   message "Configuring Deku nodes"
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -399,8 +397,6 @@ deploy_dummy_ticket() {
     --burn-cap 2 \
     --force
 }
-
-
 
 # =======================
 # A hard-coded Deku wallet to use in development
