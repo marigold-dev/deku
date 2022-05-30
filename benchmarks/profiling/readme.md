@@ -36,7 +36,6 @@ Profile deku node with perf:
   The samples are saved in a `perf.data` file. This does involve CPU, file system, and disk overheads to save the samples to the file system for later processing.
  - Sleep for 10 seconds
 
-
 <!------------------------------------------------------------------------>
 
 ##  Read `perf.data`
