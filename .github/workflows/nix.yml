@@ -42,7 +42,10 @@ jobs:
         with:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
-
+      - name:
+        run: "nix develop -c npm i --prefix ./sdks/deku_js_interop"
+      - name:
+        run: "nix develop -c npm run build --prefix ./sdks/deku_js_interop"
       - name: "tilt ci"
         run: "nix develop -c tilt ci -- --mode=local"
 
