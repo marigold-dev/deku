@@ -7,6 +7,7 @@
   }
 *)
 
+(* TODO : not complete yet *)
 let build_state () =
   let ledger = Ledger.empty in
   let contract_storage = Build_contract_storage.build_contract () in

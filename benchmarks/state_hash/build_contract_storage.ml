@@ -86,3 +86,9 @@ let build_contract () : Contract.t =
   let code = build_code_pair () in
   let storage = build_storage_value () in
   { code; storage }
+
+(* TODO: type t = Contract.t Map.t
+
+   Contract.originate_contract takes a look at the Contract_vm at function:
+   Origination_payload
+*)
