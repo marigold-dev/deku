@@ -32,8 +32,8 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network, it will be run after deku-setup and the nodes have started
     local_resource(
       "deku-net",
-      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
+      serve_cmd="nix run .#sandbox start tilt %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup"] + ["deku-vm-%s" % i for i in range(0, no_of_deku_nodes)],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,

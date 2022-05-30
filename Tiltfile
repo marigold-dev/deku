@@ -1,16 +1,14 @@
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'docker' (default) or 'local'")
+config.define_string("vm", False, "specify the command of the vm")
+cfg = config.parse()
 
 if config.tilt_subcommand == "down":
   local("nix run .#sandbox tear-down")
 
-cfg = config.parse()
-
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 mode = cfg.get('mode', 'docker')
-config.define_string("vm", False, "specify the command of the vm")
-cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 path_to_the_vm = cfg.get("vm", 'node ./examples/js-counter/example.js')
@@ -20,6 +18,9 @@ def load_config ():
     return load_dynamic('./tilt/Tiltfile.docker')
   else:
     return load_dynamic('./tilt/Tiltfile.local')
+
+def get_services(compose):
+  return compose.get("services").keys()
 
 symbols = load_config()
 
@@ -33,7 +34,8 @@ deku_yaml = make_deku_yaml(no_of_deku_nodes)
 tezos_yaml = "./docker-compose.yml"
 docker_compose([deku_yaml, tezos_yaml])
 
-for index, deku_service in enumerate(get_services(decode_yaml(deku_yaml))):
+deku_nodes = [deku_service for deku_service in get_services(decode_yaml(deku_yaml)) if deku_service != "prometheus"]
+for index, deku_service in enumerate(deku_nodes):
     dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup", "deku-vm-%s" % index])
 
 for tezos_service in get_services(read_yaml(tezos_yaml)):

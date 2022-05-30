@@ -29,10 +29,13 @@ VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 # =======================
 # Running environments
 # Docker mode is to run Deku nodes from docker-compose file
+# Tilt mode is to prevent the vm to start (they are started from tilt)
 : "${VM_PATH:="node ./examples/js-counter/example.js"}"
 
 if [ "${2:-local}" = "docker" ]; then
   mode="docker"
+elif [ "${2:-local}" = "tilt" ]; then
+  mode="tilt"
 else
   mode="local"
 fi
@@ -270,12 +273,13 @@ start_deku_cluster() {
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
       $VM_PATH "$DATA_DIRECTORY/$i/state_transition" &
+    elif [ "$mode" = "local" ] || [ "$mode" = "tilt" ]; then
       deku-node "$DATA_DIRECTORY/$i" "$DATA_DIRECTORY/$i/state_transition" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
 
-  sleep 1
+  sleep 3
 
   # Step 4: Manually produce the block
   # Produce a block using `deku-cli produce-block`
