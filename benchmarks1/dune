@@ -16,4 +16,4 @@
 (rule
  (alias bench_deku)
  (action
-  (run %{exe:benchmarks_rpc.exe})))
+  (run %{exe:benchmarks_deku.exe})))

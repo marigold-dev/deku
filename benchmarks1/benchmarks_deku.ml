@@ -1,14 +1,10 @@
 open Core
 
 (* TODO: script for running benchmark
-   $ dune build @benchmarks/bench_deku
-   $ dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand
-    - rpc: for tezos_rpc
-    - ledger: for src/core_deku/ledger.ml
-    - validators: for src/protocol/validators.ml
-    - patricia: for incremental patricia tree
-    - interop: for tezos internal operations
-    -
+   $ nix develop -c dune build
+   $ nix develope -c dune exec -- ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand
+    - state-hash: benchmark the state root hash
+
     or using esy:
    $ esy b dune build
    $ esy b dune exec ./benchmarks/tezos_deku/benchmarks_deku.exe subcommand

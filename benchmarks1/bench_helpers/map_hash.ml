@@ -1,8 +1,12 @@
-(* Constructing a large deku state to test state hashing is too awkward. The only parts of the Deku state that can be large are the ledger and the contract storage. Both are hash maps, so this is a good substitute.
-   This is an easy way to test the speed of a bigmap -> yojson -> BLAKE2B function.
-*)
 open Helpers
 open Crypto
+
+(* - Constructing a large deku state to test state hashing is too awkward.
+   - The only parts of the Deku state that can be large are the ledger
+   and the contract storage.
+   - Both are hash maps, so this is a good substitute.
+   - This is an easy way to test the speed of a bigmap -> yojson -> BLAKE2B function.
+*)
 
 (* Big map has ints as keys and small maps as values
    small maps have ints as keys and strings as values *)
