@@ -1,16 +1,15 @@
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'docker' (default) or 'local'")
-
-if config.tilt_subcommand == "down":
-  local("nix run .#sandbox tear-down")
-
+config.define_string("vm", False, "specify the command of the vm")
 cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 mode = cfg.get('mode', 'docker')
-config.define_string("vm", False, "specify the command of the vm")
-cfg = config.parse()
+
+if config.tilt_subcommand == "down":
+  local("nix run .#sandbox tear-down")
+
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 path_to_the_vm = cfg.get("vm", 'node ./examples/js-counter/example.js')
@@ -20,6 +19,9 @@ def load_config ():
     return load_dynamic('./tilt/Tiltfile.docker')
   else:
     return load_dynamic('./tilt/Tiltfile.local')
+
+def get_services(compose):
+  return compose.get("services").keys()
 
 symbols = load_config()
 
