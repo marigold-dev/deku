@@ -18,7 +18,7 @@ open Crypto
    }
 
    And Address_and_ticket_map.t of type:
-    
+
     type t = Amount.t Map.t
 
      ++ Amount: type t = int
@@ -34,8 +34,8 @@ open Crypto
 
    type t = Contract.t Map.t [@@deriing yojson, eq]
 
-      ++ Contract_vm.ml: 
-         Contract.t : 
+      ++ Contract_vm.ml:
+         Contract.t :
            type t = {
              code: Lamda_vm.Ir.code;
              storage: Lamda_vm.Ir.value
