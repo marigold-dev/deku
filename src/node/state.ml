@@ -1,21 +1,11 @@
-open Helpers
 open Crypto
 open Protocol
 open Consensus
-
-type identity = Consensus.identity = {
-  secret : Secret.t;
-  key : Key.t;
-  t : Key_hash.t;
-  uri : Uri.t;
-}
-[@@deriving yojson]
-
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 
 type t = {
-  identity : identity;
+  config : Config.t;
   consensus : Consensus.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
@@ -30,14 +20,15 @@ type t = {
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
 
-let make ~identity ~trusted_validator_membership_change
+let make ~config ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
   let consensus =
-    Consensus.make ~identity ~trusted_validator_membership_change in
+    Consensus.make ~identity:config.Config.identity
+      ~trusted_validator_membership_change in
 
   {
-    identity;
+    config;
     consensus;
     interop_context;
     data_folder;

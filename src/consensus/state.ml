@@ -1,5 +1,6 @@
 open Crypto
 open Protocol
+open Helpers
 module Operation_map = Map.Make (Operation)
 
 type identity = {
@@ -8,6 +9,10 @@ type identity = {
   t : Key_hash.t;
   uri : Uri.t;
 }
+[@@deriving yojson]
+
+let make_identity ~secret ~key ~uri =
+  { secret; key; t = Key_hash.of_key key; uri }
 
 type state = {
   (* TODO: duplicated on Node.State.t *)

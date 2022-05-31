@@ -3,12 +3,16 @@ open Protocol
 
 module Operation_map : Map.S with type key = Protocol.Operation.t
 
-type identity = {
+type identity = private {
   secret : Secret.t;
   key : Key.t;
   t : Key_hash.t;
   uri : Uri.t;
 }
+[@@deriving yojson]
+
+val make_identity :
+  secret:Crypto.Secret.t -> key:Crypto.Key.t -> uri:Uri.t -> identity
 
 type state = {
   (* TODO: duplicated on Node.State.t *)

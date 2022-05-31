@@ -17,7 +17,7 @@ let get () =
   | Some state -> state
   | None -> failwith "get called before start"
 
-let get_port () = (get ()).state.identity.uri |> Uri.port
+let get_port () = (get ()).state.config.identity.uri |> Uri.port
 
 let get_state () = (get ()).state
 
