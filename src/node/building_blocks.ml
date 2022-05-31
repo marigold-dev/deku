@@ -33,8 +33,15 @@ let broadcast_signature state ~hash ~signature =
 let broadcast_block state ~block =
   let uris = validator_uris state in
   Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
-      Network.broadcast_block uris { block })
+      let delay = state.config.minimum_block_delay in
+      let broadcast () = Network.broadcast_block uris { block } in
+      (* TODO: modify consensus engine to immediately broadcast
+         the block if there are any pending transactions. *)
+      if Float.equal delay 0. then
+        broadcast ()
+      else
+        let%await () = Lwt_unix.sleep delay in
+        broadcast ())
 
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in
