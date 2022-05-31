@@ -112,8 +112,9 @@ let user_op_contract_invocation user_operation =
   let invocation_payload =
     Core_deku.Contract_vm.Invocation_payload.lambda_of_yojson ~arg
     |> Result.get_ok in
-  Core_deku.User_operation.Contract_invocation
-    { to_invoke = contract_address; argument = invocation_payload }
+  ( Core_deku.User_operation.Contract_invocation
+      { to_invoke = contract_address; argument = invocation_payload },
+    contract_address )
 
 (* Transaction
    - destination address is a deku_address
@@ -133,7 +134,7 @@ let user_op_withdraw ~owner ~amount ~ticket =
    - Add a lot of user_operation(s) and then apply each of them to build the
    size of state
 *)
-let build_state () : Core_deku.State.t =
+let build_state () =
   let ( init_state,
         (tezos_add_1, _tezos_add_2),
         (deku_add_1, deku_add_2),
@@ -146,10 +147,10 @@ let build_state () : Core_deku.State.t =
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state op1 in
+  let init_storage = Core_deku.State.contract_storage state in
   (* second user operation as contract invocation payload same source *)
-  let op2 =
-    Core_deku.User_operation.make ~source:deku_add_1
-      (user_op_contract_invocation op1) in
+  let user_op, contract_address = user_op_contract_invocation op1 in
+  let op2 = Core_deku.User_operation.make ~source:deku_add_1 user_op in
   let state, _receipt_option = Core_deku.State.apply_user_operation state op2 in
   (* third user operation as transfer same source *)
   let op3 =
@@ -165,4 +166,23 @@ let build_state () : Core_deku.State.t =
          ~amount:(Core_deku.Amount.of_int 2)
          ~ticket:ticket_1) in
   let state, _ = Core_deku.State.apply_user_operation state op4 in
-  state
+  let new_storage = Core_deku.State.contract_storage state in
+  (* CHECK the storage of the inital and the new one *)
+  let old_contract =
+    Core_deku.Contract_storage.get_contract ~address:contract_address
+      init_storage
+    |> Option.get in
+  let new_contract =
+    Core_deku.Contract_storage.get_contract ~address:contract_address
+      new_storage
+    |> Option.get in
+  let test =
+    [
+      Alcotest.test_case "contract storage change" `Quick (fun () ->
+          Alcotest.(check' bool)
+            ~msg:"correct"
+            ~expected:
+              (Core_deku.Contract_vm.Contract.equal new_contract old_contract)
+            ~actual:false);
+    ] in
+  (test, state)

@@ -6,9 +6,18 @@ let bench_big_map_hash =
       let _ = Map_hash.hash_the_map ~bmap_size:200_000 ~smap_size:5 in
       ())
 
+(* Test with alcotest first *)
+let test_state_hash =
+  let test_list, _state = Build_state.build_state () in
+  ("Alcotest - State hash", [test_list] |> List.concat)
+
 let bench_state_hash =
-  Bench.Test.create ~name:"state hash" (fun () ->
-      let _ = Core_deku.State.hash (Build_state.build_state ()) in
+  let _ =
+    let open Alcotest in
+    run "Alcotest state hash" [test_state_hash] in
+  Bench.Test.create ~name:"Bench state hash" (fun () ->
+      let _test_list, state = Build_state.build_state () in
+      let _ = Core_deku.State.hash state in
       ())
 
 let tests = [bench_big_map_hash; bench_state_hash]
