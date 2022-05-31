@@ -32,6 +32,7 @@ let make_ticket ?ticketer ?data () =
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
+(* TODO: make the list of tezos_address; tickets, and n deposits *)
 let init_state () =
   let tezos_add_1 = make_tezos_address () in
   let tezos_add_2 = make_tezos_address () in
@@ -79,7 +80,10 @@ let init_state () =
     |> Option.join
     |> Option.get in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
-  (state, (deku_add_1, deku_add_2), (ticket_1, ticket_2))
+  ( state,
+    (tezos_add_1, tezos_add_2),
+    (deku_add_1, deku_add_2),
+    (ticket_1, ticket_2) )
 
 (*******************************************************************************)
 (* User operations *)
@@ -115,9 +119,14 @@ let user_op_contract_invocation user_operation =
    - destination address is a deku_address
    - ticket can be store in the ticket that deposited(s)
 *)
-let user_op_transaction deku_add amount ticket () =
-  Core_deku.User_operation.Transaction
-    { destination = deku_add; amount; ticket }
+let user_op_transaction ~destination ~amount ~ticket =
+  Core_deku.User_operation.Transaction { destination; amount; ticket }
+
+(* Withdraw where the:
+   - owner: is the tezos address
+*)
+let user_op_withdraw ~owner ~amount ~ticket =
+  Core_deku.User_operation.Tezos_withdraw { owner; amount; ticket }
 
 (*******************************************************************************)
 (* Build state:
@@ -125,7 +134,11 @@ let user_op_transaction deku_add amount ticket () =
    size of state
 *)
 let build_state () : Core_deku.State.t =
-  let init_state, (deku_add_1, _), (_ticket_1, _) = init_state () in
+  let ( init_state,
+        (tezos_add_1, _tezos_add_2),
+        (deku_add_1, deku_add_2),
+        (ticket_1, _) ) =
+    init_state () in
   let initial_operation = user_op_contract_origination () in
   (* first user operation as contract origination,
      source is the destination address of tezos_operation
@@ -138,5 +151,18 @@ let build_state () : Core_deku.State.t =
     Core_deku.User_operation.make ~source:deku_add_1
       (user_op_contract_invocation op1) in
   let state, _receipt_option = Core_deku.State.apply_user_operation state op2 in
-  (* TODO: add transaction here *)
+  (* third user operation as transfer same source *)
+  let op3 =
+    Core_deku.User_operation.make ~source:deku_add_1
+      (user_op_transaction ~destination:deku_add_2
+         ~amount:(Core_deku.Amount.of_int 10)
+         ~ticket:ticket_1) in
+  let state, _ = Core_deku.State.apply_user_operation state op3 in
+  (* fourth user operation as withdraw *)
+  let op4 =
+    Core_deku.User_operation.make ~source:deku_add_1
+      (user_op_withdraw ~owner:tezos_add_1
+         ~amount:(Core_deku.Amount.of_int 2)
+         ~ticket:ticket_1) in
+  let state, _ = Core_deku.State.apply_user_operation state op4 in
   state
