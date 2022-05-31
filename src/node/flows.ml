@@ -179,9 +179,9 @@ let request_previous_blocks state block =
 let try_to_produce_block state update_state =
   let%assert () =
     ( `Not_current_block_producer,
-      is_current_producer state ~key_hash:state.identity.t ) in
+      is_current_producer state ~key_hash:state.config.identity.t ) in
   let block = produce_block state in
-  let signature = sign ~key:state.identity.secret block in
+  let signature = sign ~key:state.config.identity.secret block in
   let state = append_signature state update_state ~signature ~hash:block.hash in
   broadcast_block_and_signature state ~block ~signature;
   Metrics.Blocks.inc_block_produced ();
@@ -189,7 +189,7 @@ let try_to_produce_block state update_state =
 
 let try_to_sign_block state update_state block =
   if is_signable state block then (
-    let signature = sign ~key:state.identity.secret block in
+    let signature = sign ~key:state.config.identity.secret block in
     broadcast_signature state ~hash:block.hash ~signature;
     Metrics.Blocks.inc_block_signed ();
     append_signature state update_state ~hash:block.hash ~signature)
@@ -223,7 +223,7 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
   in
   Lwt.async (fun () ->
       let%await () =
-        match state.identity.t = block.Block.author with
+        match state.config.identity.t = block.Block.author with
         | true -> Lwt.return_unit
         | false -> Lwt_unix.sleep 120.0 in
       commit_state_hash state ~block_height:block.block_height
@@ -409,8 +409,8 @@ let received_consensus_operation state update_state consensus_operation
   let open Protocol.Operation in
   let%assert () =
     ( `Invalid_signature,
-      Consensus.verify state.Node.identity.key signature consensus_operation )
-  in
+      Consensus.verify state.Node.config.identity.key signature
+        consensus_operation ) in
   let operation = Consensus consensus_operation in
   append_operation state update_state operation;
   Ok ()
@@ -476,8 +476,9 @@ let trusted_validators_membership state update_state request =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
   let%assert () =
     ( `Invalid_signature_author,
-      Key_hash.compare state.Node.identity.t (Signature.address signature) = 0
-    ) in
+      Key_hash.compare state.Node.config.identity.t
+        (Signature.address signature)
+      = 0 ) in
   let%assert () =
     (`Failed_to_verify_payload, payload_hash |> Signature.verify ~signature)
   in
