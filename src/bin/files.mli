@@ -1,13 +1,11 @@
 open Consensus
-open Node
-open State
 
 exception Invalid_json of string
 
 module Identity : sig
-  val read : file:string -> identity Lwt.t
+  val read : file:string -> Consensus.identity Lwt.t
 
-  val write : identity -> file:string -> unit Lwt.t
+  val write : Consensus.identity -> file:string -> unit Lwt.t
 end
 
 module Wallet : sig
