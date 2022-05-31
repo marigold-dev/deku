@@ -2,7 +2,7 @@ open Helpers
 open Protocol
 open Node
 
-let get_initial_state ~folder =
+let get_initial_state ~folder ~minimum_block_delay =
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
@@ -40,7 +40,7 @@ let get_initial_state ~folder =
   let persist_trusted_membership_change =
     Files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
-  let config = Config.make ~identity in
+  let config = Config.make ~identity ~minimum_block_delay in
   let node =
     State.make ~config ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri
