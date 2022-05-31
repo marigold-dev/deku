@@ -41,8 +41,9 @@ let get_initial_state ~folder =
   let persist_trusted_membership_change =
     Files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
+  let config = Config.make ~identity in
   let node =
-    State.make ~identity ~trusted_validator_membership_change ~interop_context
+    State.make ~config ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri
       ~persist_trusted_membership_change in
 
