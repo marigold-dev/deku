@@ -148,7 +148,7 @@ let produce_block state =
         | Consensus _ ->
           operation :: operations)
       state.pending_operations [] in
-  Block.produce ~state:state.Node.protocol ~author:state.identity.t
+  Block.produce ~state:state.Node.protocol ~author:state.config.identity.t
     ~next_state_root_hash ~operations
 
 let is_valid_block_height state block_height =
@@ -208,7 +208,7 @@ let find_random_validator_uri state =
   let validators = Validators.to_list state.Node.protocol.validators in
   let rec safe_validator_uri () =
     let validator = List.nth validators (random_int (List.length validators)) in
-    if state.Node.identity.t = validator.address then
+    if state.Node.config.identity.t = validator.address then
       safe_validator_uri ()
     else
       match
