@@ -48,3 +48,5 @@ type t =
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
 [@@deriving eq, ord, yojson]
+
+val hash : t -> BLAKE2B.t
