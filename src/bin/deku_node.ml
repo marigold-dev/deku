@@ -178,8 +178,10 @@ let handle_ticket_balance =
           ~address:(Core_deku.Address.of_key_hash address) in
       Ok { amount })
 
-let node folder port prometheus_port =
-  let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
+let node folder port minimum_block_delay prometheus_port =
+  let node =
+    Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
+  in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
@@ -249,7 +251,13 @@ let node =
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
-
+  let minimum_block_delay =
+    let docv = "minimum_block_delay" in
+    let doc =
+      "Determines the minimum time the node will wait before propagating a \
+       newly produced block." in
+    let open Arg in
+    value & opt float 1. & info ["minimum_block_delay"] ~doc ~docv in
   let json_logs =
     let docv = "Json logs" in
     let doc = "This determines whether logs will be printed in json format." in
@@ -267,6 +275,7 @@ let node =
   $ Logs_cli.level ()
   $ folder_node
   $ port
+  $ minimum_block_delay
   $ Prometheus_dream.opts
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
