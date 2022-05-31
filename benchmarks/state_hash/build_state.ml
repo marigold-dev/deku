@@ -33,22 +33,22 @@ let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
 let init_state () =
-  let destination_1 = make_tezos_address () in
+  let tezos_add_1 = make_tezos_address () in
+  let tezos_add_2 = make_tezos_address () in
   let ticket_1 = make_ticket () in
-  let destination_2 = make_tezos_address () in
   let ticket_2 = make_ticket () in
   (* build a list of deposits *)
   let op1 =
     Core_deku.Tezos_operation.Tezos_deposit
       {
-        destination = destination_1;
+        destination = tezos_add_1;
         ticket = ticket_1;
         amount = Core_deku.Amount.of_int 10_000;
       } in
   let op2 =
     Core_deku.Tezos_operation.Tezos_deposit
       {
-        destination = destination_2;
+        destination = tezos_add_2;
         ticket = ticket_2;
         amount = Core_deku.Amount.of_int 20_000;
       } in
@@ -63,23 +63,23 @@ let init_state () =
       internal_operations = [op1; op2];
     } in
   let tezos_operation = Core_deku.Tezos_operation.make payload in
-  (* make tezos address as a source addresses for this operation *)
-  let source_1 =
-    destination_1
+  (* convert Tezos addresses into Deku addresses *)
+  let deku_add_1 : Crypto.Key_hash.t =
+    tezos_add_1
     |> Tezos.Address.to_string
     |> Core_deku.Address.of_string
     |> Option.map Core_deku.Address.to_key_hash
     |> Option.join
     |> Option.get in
-  let source_2 =
-    destination_2
+  let deku_add_2 : Crypto.Key_hash.t =
+    tezos_add_2
     |> Tezos.Address.to_string
     |> Core_deku.Address.of_string
     |> Option.map Core_deku.Address.to_key_hash
     |> Option.join
     |> Option.get in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
-  (state, (source_1, source_2), (ticket_1, ticket_2))
+  (state, (deku_add_1, deku_add_2), (ticket_1, ticket_2))
 
 (*******************************************************************************)
 (* User operations *)
@@ -99,7 +99,7 @@ let user_op_contract_origination () : Core_deku.User_operation.initial_operation
     |> Result.get_ok in
   Core_deku.User_operation.Contract_origination payload
 
-(* The contract_address is a hash of the previous operation if any*)
+(* The contract_address is a hash of the contract origination operation *)
 let user_op_contract_invocation user_operation =
   let contract_address =
     user_operation.Core_deku.User_operation.hash
@@ -111,14 +111,13 @@ let user_op_contract_invocation user_operation =
   Core_deku.User_operation.Contract_invocation
     { to_invoke = contract_address; argument = invocation_payload }
 
-(* Transaction *)
-let make_address () =
-  let _secret, _key, key_hash = Crypto.Key_hash.make_ed25519 () in
-  key_hash
-
-let user_op_transaction amount ticket () =
-  let destination = make_address () in
-  Core_deku.User_operation.Transaction { destination; amount; ticket }
+(* Transaction
+   - destination address is a deku_address
+   - ticket can be store in the ticket that deposited(s)
+*)
+let user_op_transaction deku_add amount ticket () =
+  Core_deku.User_operation.Transaction
+    { destination = deku_add; amount; ticket }
 
 (*******************************************************************************)
 (* Build state:
@@ -126,17 +125,18 @@ let user_op_transaction amount ticket () =
    size of state
 *)
 let build_state () : Core_deku.State.t =
-  let init_state, (source_1, _), (_ticket_1, _) = init_state () in
+  let init_state, (deku_add_1, _), (_ticket_1, _) = init_state () in
   let initial_operation = user_op_contract_origination () in
   (* first user operation as contract origination,
      source is the destination address of tezos_operation
   *)
-  let op1 = Core_deku.User_operation.make ~source:source_1 initial_operation in
+  let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state op1 in
   (* second user operation as contract invocation payload same source *)
   let op2 =
-    Core_deku.User_operation.make ~source:source_1
+    Core_deku.User_operation.make ~source:deku_add_1
       (user_op_contract_invocation op1) in
   let state, _receipt_option = Core_deku.State.apply_user_operation state op2 in
+  (* TODO: add transaction here *)
   state
