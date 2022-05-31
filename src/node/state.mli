@@ -1,14 +1,6 @@
 open Crypto
 open Protocol
 
-type identity = {
-  secret : Secret.t;
-  key : Key.t;
-  t : Key_hash.t;
-  uri : Uri.t;
-}
-[@@deriving yojson]
-
 module Address_map : Map.S with type key = Key_hash.t
 
 module Uri_map : Map.S with type key = Uri.t
@@ -16,7 +8,7 @@ module Uri_map : Map.S with type key = Uri.t
 module Operation_map : Map.S with type key = Protocol.Operation.t
 
 type t = {
-  identity : identity;
+  config : Config.t;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
   interop_context : Tezos_interop.t;
@@ -34,7 +26,7 @@ type t = {
 }
 
 val make :
-  identity:identity ->
+  config:Config.t ->
   trusted_validator_membership_change:Trusted_validators_membership_change.Set.t ->
   persist_trusted_membership_change:
     (Trusted_validators_membership_change.t list -> unit Lwt.t) ->
