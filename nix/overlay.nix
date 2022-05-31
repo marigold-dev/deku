@@ -23,6 +23,18 @@ in {
         propagatedBuildInputs =
           prev.lib.lists.remove osuper.uuidm o.propagatedBuildInputs;
       });
+      jsonrpc = osuper.jsonrpc.overrideAttrs (o: {
+        src = if prev.lib.versionAtLeast oself.ocaml.version "5.00" then
+          prev.fetchFromGitHub {
+            owner = "ulrikstrid";
+            repo = "ocaml-lsp";
+            fetchSubmodules = true;
+            rev = "191f65ab82efc56c370e9e3122123590b96071fd";
+            sha256 = "sha256-FqQzh+SvRmZ6xTdcyr0iF3EE+8o+I9LSUJ5FgI5UyoU=";
+          }
+        else
+          o.src;
+      });
 
       # disable broken tests
       dream = disableCheck osuper.dream;
