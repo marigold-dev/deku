@@ -24,7 +24,7 @@ in {
           prev.lib.lists.remove osuper.uuidm o.propagatedBuildInputs;
       });
       jsonrpc = osuper.jsonrpc.overrideAttrs (o: {
-        src = if prev.lib.versionAtLeast ocamlVersion "5.00" then
+        src = if prev.lib.versionAtLeast oself.ocaml.version "5.00" then
           prev.fetchFromGitHub {
             owner = "ulrikstrid";
             repo = "ocaml-lsp";
