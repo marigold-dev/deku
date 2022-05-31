@@ -6,16 +6,8 @@ let bench_big_map_hash =
       let _ = Map_hash.hash_the_map ~bmap_size:200_000 ~smap_size:5 in
       ())
 
-(* Test with alcotest first *)
-let test_state_hash =
-  let test_list, _state = Build_state.build_state () in
-  ("Alcotest - State hash", [test_list] |> List.concat)
-
 let bench_state_hash =
-  let _ =
-    let open Alcotest in
-    run "Alcotest state hash" [test_state_hash] in
-  Bench.Test.create ~name:"Bench state hash" (fun () ->
+  Bench.Test.create ~name:"bench state hash" (fun () ->
       let _test_list, state = Build_state.build_state () in
       let _ = Core_deku.State.hash state in
       ())
@@ -39,3 +31,14 @@ let main () =
     (Command.group ~summary:"Several benchmarks" [("state-hash", command)])
 
 let () = main ()
+
+(*******************************************************************************)
+(* TODO: make option to run core-bench or test with with alcotest *)
+
+let test_state_hash =
+  let test_list, _state = Build_state.build_state () in
+  ("Alcotest - State hash", [test_list] |> List.concat)
+
+let _main_alco () =
+  let open Alcotest in
+  run "Alcotest state hash" [test_state_hash]
