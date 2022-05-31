@@ -633,9 +633,10 @@ let ensure_folder folder =
 let setup_identity node_folder uri =
   let%await () = ensure_folder node_folder in
   let identity =
-    let secret, key = Crypto.Ed25519.generate () in
-    let t = Key_hash.of_key (Ed25519 key) in
-    { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
+    let open Crypto in
+    let secret, key = Ed25519.generate () in
+    let secret, key = (Secret.Ed25519 secret, Key.Ed25519 key) in
+    Config.make_identity ~secret ~key ~uri in
   let%await () = write_identity ~node_folder identity in
   await (`Ok ())
 
