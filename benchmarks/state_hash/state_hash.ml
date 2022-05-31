@@ -6,7 +6,12 @@ let bench_big_map_hash =
       let _ = Map_hash.hash_the_map ~bmap_size:200_000 ~smap_size:5 in
       ())
 
-let tests = [bench_big_map_hash]
+let bench_state_hash =
+  Bench.Test.create ~name:"state hash" (fun () ->
+      let _ = Core_deku.State.hash (Build_state.build_state ()) in
+      ())
+
+let tests = [bench_big_map_hash; bench_state_hash]
 
 let command = Bench.make_command tests
 

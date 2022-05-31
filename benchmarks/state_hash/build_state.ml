@@ -1,72 +1,112 @@
-(*
-  A Deku state is of:
-  type t =
-  {
-    ledger : Ledger.t;
-    contract_storage: Contract_storage.t
-  }
-*)
-
-(* TODO : not complete yet *)
-(* Reference:
-   https://github.com/marigold-dev/deku/blob/quyen%40copy_swerve_benchmarks/tests/contracts/test_invocation.ml
-*)
-
 (* Build initial state with the tezos operations *)
+
+(* The address of a destination of a withdraw must be a tezos_address *)
+let make_tezos_address () =
+  let open Tezos in
+  let _key, address = Crypto.Ed25519.generate () in
+  let hash = Crypto.Ed25519.Key_hash.of_key address in
+  Address.Implicit (Ed25519 hash)
+
+let make_ticket ?ticketer ?data () =
+  let open Tezos in
+  let ticketer =
+    match ticketer with
+    | Some ticketer -> ticketer
+    | None ->
+      let random_hash =
+        Crypto.Random.generate 20
+        |> Cstruct.to_string
+        |> Crypto.BLAKE2B_20.of_raw_string
+        |> Option.get in
+      Address.Originated { contract = random_hash; entrypoint = None } in
+  let data =
+    match data with
+    | Some data -> data
+    | None -> Crypto.Random.generate 256 |> Cstruct.to_bytes in
+  let open Ticket_id in
+  { ticketer; data }
+
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
-let init_state ?(init_amount = 10_000) () : State.t =
-  let destination = Build_ledger.make_tezos_address () in
-  let ticket = Build_ledger.make_ticket () in
+let init_state ?(init_amount = 10_000) () =
+  let destination = make_tezos_address () in
+  let ticket = make_ticket () in
+  (* TODO: build a list of deposits *)
   let internal_operation =
-    Tezos_operation.Tezos_deposit
-      { destination; ticket; amount = Amount.of_int init_amount } in
-  let state = State.empty in
+    Core_deku.Tezos_operation.Tezos_deposit
+      { destination; ticket; amount = Core_deku.Amount.of_int init_amount }
+  in
+  let state = Core_deku.State.empty in
   let tezos_operation_hash =
-    init_tezos_operation_hash
-    |> Tezos.Operation_hash.of_raw_string
-    |> Option.get in
+    init_tezos_operation_hash |> Tezos.Operation_hash.of_string |> Option.get
+  in
   let payload =
     {
-      Tezos_operation.tezos_operation_hash;
+      Core_deku.Tezos_operation.tezos_operation_hash;
       internal_operations = [internal_operation];
     } in
-  let tezos_operation = Tezos_operation.make payload in
+  let tezos_operation = Core_deku.Tezos_operation.make payload in
   (* make tezos address as a source address for this operation *)
   let make_address =
     destination
     |> Tezos.Address.to_string
-    |> Address.of_string
-    |> Option.map Address.to_key_hash
+    |> Core_deku.Address.of_string
+    |> Option.map Core_deku.Address.to_key_hash
     |> Option.join
     |> Option.get in
-  let state = State.apply_tezos_operation state tezos_operation in
+  let state = Core_deku.State.apply_tezos_operation state tezos_operation in
   (state, make_address)
 
-(* Build user init operation as a contract origination where 
+(* Build user init operation as a contract origination where
     we choose the Origination_payload as Lambda type
 *)
-let user_operation_contract_origination () : User_operation.initial_operation =
+let user_op_contract_origination () : Core_deku.User_operation.initial_operation
+    =
   let script =
-    [%lamda_vm.script
+    [%lambda_vm.script
       fun param ->
         ((if fst param then snd param + 1L else snd param - 1L), (0L, 0L))]
   in
-  let value = Lambda_vm.(Ast.int64 1L) in
+  let value = Lambda_vm.(Ast.Int64 1L) in
   let code = Lambda_vm.Ast.script_to_yojson script in
-  let storage = Lambda_vm.Ast.value_to_yoson value in
+  let storage = Lambda_vm.Ast.value_to_yojson value in
   let payload =
-    Contract_vm.Origination_payload.lamda_of_yojson ~code ~storage
+    Core_deku.Contract_vm.Origination_payload.lambda_of_yojson ~code ~storage
     |> Result.get_ok in
-  User_operation.Contract_origination payload
+  Core_deku.User_operation.Contract_origination payload
 
-(* TODO other user operation like transfer, withdraw, etc. *)
+(* TODO other user operation like transfer, withdraw these will call
+   the ledger.transfer, ledger.withdraw; etc. *)
 
-(* Build state *)
-let build_state () : State.t =
+(* The contract_address is a hash of the previous operation  if any*)
+let user_op_contract_invocation user_operation =
+  let contract_address =
+    user_operation.Core_deku.User_operation.hash
+    |> Core_deku.Contract_address.of_user_operation_hash in
+  let arg = Lambda_vm.Ast.(Int64 1L |> value_to_yojson) in
+  let invocation_payload =
+    Core_deku.Contract_vm.Invocation_payload.lambda_of_yojson ~arg
+    |> Result.get_ok in
+  Core_deku.User_operation.Contract_invocation
+    { to_invoke = contract_address; argument = invocation_payload }
+
+(* Build state:
+   - Add a lot of user_operation(s) and then apply each of them to build the
+   size of state
+*)
+let build_state () : Core_deku.State.t =
   let init_state, source = init_state () in
-  let initial_operation = user_operation_contract_origination () in
-  let user_operation = User_operation.make ~source initial_operation in
-  let state, _ = State.apply_user_operation init_state user_operation in
+  let initial_operation = user_op_contract_origination () in
+  (* first user operation as contract origination,
+     source is the destination address of tezos_operation
+  *)
+  let op1 = Core_deku.User_operation.make ~source initial_operation in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation init_state op1 in
+  (* second user operation as contract invocation payload same source *)
+  let op2 =
+    Core_deku.User_operation.make ~source (user_op_contract_invocation op1)
+  in
+  let state, _receipt_option = Core_deku.State.apply_user_operation state op2 in
   state

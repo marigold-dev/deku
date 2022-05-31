@@ -9,6 +9,8 @@
   node
   protocol
   lambda_vm
+  core_deku
+  tezos
   tezos_interop)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding ppx_lambda_vm)))
