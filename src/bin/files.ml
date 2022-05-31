@@ -1,6 +1,5 @@
 open Helpers
 open Node
-open State
 
 exception Invalid_json of string
 
@@ -16,9 +15,9 @@ let write_json to_yojson data ~file =
       Lwt_io.write oc (Yojson.Safe.pretty_to_string (to_yojson data)))
 
 module Identity = struct
-  let read = read_json identity_of_yojson
+  let read = read_json Config.identity_of_yojson
 
-  let write = write_json identity_to_yojson
+  let write = write_json Config.identity_to_yojson
 end
 
 module Wallet = struct

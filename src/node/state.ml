@@ -1,15 +1,6 @@
 open Helpers
 open Crypto
 open Protocol
-
-type identity = {
-  secret : Secret.t;
-  key : Key.t;
-  t : Key_hash.t;
-  uri : Uri.t;
-}
-[@@deriving yojson]
-
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 module Operation_map = Map.Make (Operation)
@@ -18,7 +9,7 @@ module Operation_map = Map.Make (Operation)
 type timestamp = float
 
 type t = {
-  identity : identity;
+  config : Config.t;
   trusted_validator_membership_change :
     Trusted_validators_membership_change.Set.t;
   interop_context : Tezos_interop.t;
@@ -38,15 +29,16 @@ type t = {
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
 
-let make ~identity ~trusted_validator_membership_change
+let make ~config ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
-    Signatures.make ~self_key:identity.key |> Signatures.set_signed in
+    Signatures.make ~self_key:config.Config.identity.Config.key
+    |> Signatures.set_signed in
   let initial_block_pool =
-    Block_pool.make ~self_key:identity.key
+    Block_pool.make ~self_key:config.identity.key
     |> Block_pool.append_block initial_block in
   let hash, data = Protocol.hash initial_protocol in
   let initial_snapshot =
@@ -55,7 +47,7 @@ let make ~identity ~trusted_validator_membership_change
   let initial_snapshots =
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
   {
-    identity;
+    config;
     trusted_validator_membership_change;
     interop_context;
     data_folder;
