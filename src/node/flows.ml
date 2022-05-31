@@ -181,7 +181,7 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
   in
   Lwt.async (fun () ->
       let%await () =
-        match state.identity.t = block.Block.author with
+        match state.config.identity.t = block.Block.author with
         | true -> Lwt.return_unit
         | false -> Lwt_unix.sleep 120.0 in
       commit_state_hash state ~block_height:block.block_height
@@ -325,8 +325,8 @@ let received_consensus_operation state consensus_operation signature =
   let open Protocol.Operation in
   let%assert () =
     ( `Invalid_signature,
-      Consensus.verify state.Node.identity.key signature consensus_operation )
-  in
+      Consensus.verify state.Node.config.identity.key signature
+        consensus_operation ) in
   append_operation (Consensus consensus_operation);
   Ok ()
 
