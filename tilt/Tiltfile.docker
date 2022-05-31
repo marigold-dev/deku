@@ -13,7 +13,7 @@ def get_services(compose):
 def make_deku_yaml(n):
   services = []
 
-  for i in range(n + 1):
+  for i in range(n):
     deku_node_name = "deku-node-%s" % i
     services.append((deku_node_name, {
     'container_name': deku_node_name,
