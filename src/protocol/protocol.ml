@@ -28,8 +28,8 @@ let apply_core_tezos_operation state tezos_operation =
   | Ok state -> state
   | Error `Duplicated_operation -> state
 let apply_core_user_operation state user_operation =
-  let Core_user.
-        { hash = _; key = _; signature = _; nonce = _; block_height; data } =
+  let Core_user.{ hash; key = _; signature = _; nonce = _; block_height; data }
+      =
     user_operation in
   let%assert () = (`Block_in_the_future, block_height <= state.block_height) in
   let%assert () =
@@ -43,7 +43,7 @@ let apply_core_user_operation state user_operation =
   let included_user_operations =
     User_operation_set.add user_operation state.included_user_operations in
   let core_state, receipt =
-    Core_deku.State.apply_user_operation state.core_state data in
+    Core_deku.State.apply_user_operation state.core_state hash data in
   Ok ({ state with core_state; included_user_operations }, receipt)
 let apply_core_user_operation state tezos_operation =
   match apply_core_user_operation state tezos_operation with
