@@ -48,12 +48,8 @@ let setup ?(initial_amount = 10000) () =
     } in
   let opp = Tezos_operation.make opp in
   let make_address =
-    tezos_address
-    |> Tezos.Address.to_string
-    |> Address.of_string
-    |> Option.map Address.to_key_hash
-    |> Option.join
-    |> Option.get in
+    tezos_address |> Tezos.Address.to_string |> Key_hash.of_string |> Option.get
+  in
   (State.apply_tezos_operation s opp, make_address)
 
 let amount =
