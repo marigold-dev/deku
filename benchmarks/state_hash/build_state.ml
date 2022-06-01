@@ -6,8 +6,8 @@ let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
 let init_state' () =
-  let tezos_addresses = Build_usage.make_n_tezos_address 1 in
-  let tickets = Build_usage.make_n_tickets 1 in
+  let tezos_addresses = Build_usage.make_n_tezos_address 3 in
+  let tickets = Build_usage.make_n_tickets 3 in
   let ops = Build_operations.deposits_n tezos_addresses tickets 10_000 in
   (* init state *)
   let state = Core_deku.State.empty in
@@ -144,10 +144,17 @@ let build_state' () =
     Core_deku.State.apply_user_operation state mock_hash op2 in
   (* transfers *)
   let amount = Core_deku.Amount.of_int 10 in
+  (* todo: create sources *)
   let sources = [deku_add_1; deku_add_2] in
   let triples =
-    Stdlib.List.fold_left2
-      (fun result destination ticket -> (destination, amount, ticket) :: result)
-      [] sources tickets in
+    let len_sources = List.length sources in
+    let len_tickets = List.length tickets in
+    if len_sources = len_tickets then
+      List.fold_left2
+        (fun result destination ticket ->
+          (destination, amount, ticket) :: result)
+        [] sources tickets
+    else
+      raise Build_operations.Length_not_equal in
   let states = Build_operations.n_transactions state sources triples mock_hash in
   states

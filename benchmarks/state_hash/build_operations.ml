@@ -13,7 +13,7 @@ let deposits_n tezos_addresses tickets amount =
   let len_add = List.length tezos_addresses in
   let len_tick = List.length tickets in
   if len_add = len_tick then
-    Stdlib.List.fold_left2
+    List.fold_left2
       (fun result tezos_address ticket ->
         let op = deposit_op ~destination:tezos_address ~ticket ~amount in
         op :: result)
@@ -63,15 +63,20 @@ let user_op_transaction ~destination ~amount ~ticket =
   Core_deku.User_operation.Transaction { destination; amount; ticket }
 
 let n_transactions state sources triples mock_hash =
-  (* TODO check length *)
-  Stdlib.List.fold_left2
-    (fun _result source (destination, amount, ticket) ->
-      (* each time transfer add it into state *)
-      let user_op = user_op_transaction ~destination ~amount ~ticket in
-      let op = Core_deku.User_operation.make ~source user_op in
-      let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
-      state)
-    Core_deku.State.empty sources triples
+  let len_souces = List.length sources in
+  let len_trips = List.length triples in
+  if len_souces = len_trips then (* TODO check length *)
+    List.fold_left2
+      (fun _result source (destination, amount, ticket) ->
+        (* todo: check the storage before and after *)
+        (* each time transfer add it into state *)
+        let user_op = user_op_transaction ~destination ~amount ~ticket in
+        let op = Core_deku.User_operation.make ~source user_op in
+        let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
+        state)
+      Core_deku.State.empty sources triples
+  else
+    raise Length_not_equal
 
 (* Withdraw where the:
    - owner: is the tezos address

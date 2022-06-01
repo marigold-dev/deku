@@ -57,7 +57,7 @@ let make_ticket ?ticketer ?data () : Tezos.Ticket_id.t =
 (* Generate n numbers of tickets *)
 let make_n_tickets size : Tezos.Ticket_id.t list =
   List.fold_left
-    (fun result _ ->
+    (fun result _i ->
       let ticket_id = make_ticket () in
       ticket_id :: result)
     []
