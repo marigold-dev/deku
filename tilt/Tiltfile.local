@@ -5,14 +5,15 @@ def add_sandbox (no_of_deku_nodes):
     "sleep 5 && nix run .#sandbox setup local %s" % no_of_deku_nodes,
     resource_deps=["flextesa"],
     labels=["scripts"],
+    allow_parallel=True,
     )
 
   if config.tilt_subcommand == "ci":
     # bootstrap the deku network and run some tests
     local_resource(
       "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
+      "nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
+      resource_deps=["deku-setup", "deku-net"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
@@ -21,33 +22,25 @@ def add_sandbox (no_of_deku_nodes):
 
     local_resource(
       "deposit-withdraw-test",
-      "sleep 5 && nix run .#sandbox deposit-withdraw-test",
-      resource_deps=["smoke-test"],
+      "nix run .#sandbox deposit-withdraw-test",
+      resource_deps=["smoke-test", "deku-net"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
-      allow_parallel=True,
       )
   else:
-    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    # local_resource(
-    #  "deku-net",
-    #  serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
-    #  resource_deps=["deku-setup"],
-    #  labels=["scripts"],
-    #  auto_init=True, # trigger once at start
-    #  trigger_mode=TRIGGER_MODE_MANUAL,
-    #  )
     print("nothing")
 
 def load_deku_services (_):
+  cfg = config.parse()
+  no_of_deku_nodes = int(cfg.get('nodes', "3"))
   lines = ["""export HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk \'{ print $2 }\')"""];
 
-  for i in range(3):
+  for i in range(no_of_deku_nodes):
     local_resource(
       "deku-node-%s" % i,
-      "dune build",
-      serve_cmd='deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900%s"' % i,
+      "dune build @install",
+      serve_cmd='deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900%s" -v' % i,
       serve_env={"DATA_DIRECTORY": "./data/%s" % i},
       labels=["deku"],
       resource_deps=["deku-setup"],
@@ -66,10 +59,10 @@ def load_deku_services (_):
     resource_deps=["deku-setup"],
     labels=["scripts"],
     auto_init=True, # trigger once at start
+    allow_parallel=True,
     trigger_mode=TRIGGER_MODE_MANUAL,
     )
 
 def make_deku_yaml (_):
-  print('no-op')
   # We must return a valid (but empty) docker-compose configuration
   return encode_yaml({'version': '3.8', 'services': {}})

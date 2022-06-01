@@ -51,25 +51,12 @@ local_resource(
   auto_init=False,
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
+  allow_parallel=True,
   )
 
 local_resource(
   "restart network",
-  """tilt disable deku-node-0
-tilt disable deku-node-1
-tilt disable deku-node-2
-tilt trigger deku-tear-down
-tilt wait --for=condition=Ready "uiresource/deku-tear-down"
-tilt trigger deku-setup
-tilt wait --for=condition=Ready "uiresource/deku-setup"
-tilt enable deku-node-0
-tilt enable deku-node-1
-tilt enable deku-node-2
-tilt wait --for=condition=Ready "uiresource/deku-node-0"
-tilt wait --for=condition=Ready "uiresource/deku-node-1"
-tilt wait --for=condition=Ready "uiresource/deku-node-2"
-tilt trigger deku-net
-""",
+  "./tilt/restart-network.sh %s" % no_of_deku_nodes,
   auto_init=False,
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
