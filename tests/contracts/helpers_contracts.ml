@@ -20,10 +20,6 @@ let make_ticket ?ticketer ?data () =
   let open Ticket_id in
   { ticketer; data }
 
-let make_address () =
-  let _secret, _key, key_hash = Key_hash.make_ed25519 () in
-  key_hash
-
 let make_tezos_address () =
   let open Crypto in
   let open Tezos in
