@@ -1,18 +1,13 @@
 open Core_bench
 open Core
 
-let bench_big_map_hash =
-  Bench.Test.create ~name:"consensus: hash big map" (fun () ->
-      let _ = Map_hash.hash_the_map ~bmap_size:200_000 ~smap_size:5 in
-      ())
-
 let bench_state_hash =
   Bench.Test.create ~name:"bench state hash" (fun () ->
       let _test_list, state = Build_state.build_state () in
       let _ = Core_deku.State.hash state in
       ())
 
-let tests = [bench_big_map_hash; bench_state_hash]
+let tests = [bench_state_hash]
 
 let command = Bench.make_command tests
 

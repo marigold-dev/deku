@@ -1,5 +1,7 @@
 # Build state root hash
 
+TODO
+
 A Deku state is defined at `src/core_deku/state.ml`. It has type:
 
 ```
