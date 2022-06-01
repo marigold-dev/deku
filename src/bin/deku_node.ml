@@ -1,5 +1,5 @@
-open Cmdliner
 open Helpers
+open Cmdliner
 open Node
 open Bin_common
 
@@ -195,12 +195,29 @@ let () = Domain.set_name "deku-node"
 
 let () =
   (* This is needed because Dream will initialize logs lazily *)
-  Dream.initialize_log ~enable:false ();
-  match Sys.getenv_opt "DEKU_LOGS" |> Option.map String.lowercase_ascii with
-  | Some "json" ->
-    Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout);
-    Logs.set_level (Some Info)
-  | _ -> Logs.set_reporter (Logs.format_reporter ~app:Fmt.stdout ())
+  Dream.initialize_log ~enable:false ()
+
+let node json_logs style_renderer level folder prometheus_port =
+  (match style_renderer with
+  | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
+  | None -> Fmt_tty.setup_std_outputs ());
+  Logs.set_level level;
+
+  (match json_logs with
+  | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
+  | false -> Logs.set_reporter (Logs_fmt.reporter ()));
+
+  (* disable all non-deku logs *)
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if
+        (not (String.starts_with ~prefix:"deku" src_name))
+        && not (String.equal src_name "application")
+      then
+        Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ());
+  node folder prometheus_port
 
 let node =
   let folder_node =
@@ -208,7 +225,17 @@ let node =
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
+
+  let json_logs =
+    let docv = "Json logs" in
+    let doc = "This determines whether logs will be printed in json format." in
+    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
   let open Term in
-  const node $ folder_node $ Prometheus_dream.opts
+  const node
+  $ json_logs
+  $ Fmt_cli.style_renderer ()
+  $ Logs_cli.level ()
+  $ folder_node
+  $ Prometheus_dream.opts
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node

@@ -135,13 +135,12 @@ let[@warning "-unused-value-declaration"] raise = ()
 
 let raise_and_exit exn =
   (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
-  Format.eprintf "tezos_interop failure: %s\n%!" (Printexc.to_string exn);
+  Log.error "tezos_interop failure: %s" (Printexc.to_string exn);
   exit 1
 
 let handle_message t message =
   let Message.{ id; content } = message in
-  Logs.debug (fun m ->
-      m "js.message: %a" (Yojson.Safe.pretty_print ~std:false) content);
+  Log.debug "js.message: %a" (Yojson.Safe.pretty_print ~std:false) content;
   match Pending.push t.pending id content with
   | Ok () -> ()
   | Error (Unknown_id id) -> raise_and_exit (Unknown_id (id, content))

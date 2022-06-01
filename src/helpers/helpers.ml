@@ -26,6 +26,7 @@ module Int64_map = Map.Make_with_yojson (struct
 end)
 
 module Parallel = Parallel
+module Log = Log
 include Lwt_ext.Let_syntax
 include Result.Let_syntax
 include Option.Let_syntax
