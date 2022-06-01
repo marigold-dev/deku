@@ -103,11 +103,10 @@ let user_op_contract_origination () : Core_deku.User_operation.initial_operation
     |> Result.get_ok in
   Core_deku.User_operation.Contract_origination payload
 
-(* The contract_address is a hash of the contract origination operation *)
-let user_op_contract_invocation user_operation =
+(* The contract_address is a protocol operation hash  *)
+let user_op_contract_invocation mock_hash =
   let contract_address =
-    user_operation.Core_deku.User_operation.hash
-    |> Core_deku.Contract_address.of_user_operation_hash in
+    mock_hash |> Core_deku.Contract_address.of_user_operation_hash in
   let arg = Lambda_vm.Ast.(Int64 1L |> value_to_yojson) in
   let invocation_payload =
     Core_deku.Contract_vm.Invocation_payload.lambda_of_yojson ~arg
@@ -145,27 +144,29 @@ let build_state () =
      source is the destination address of tezos_operation
   *)
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
+  let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
-    Core_deku.State.apply_user_operation init_state op1 in
+    Core_deku.State.apply_user_operation init_state mock_hash op1 in
   let init_storage = Core_deku.State.contract_storage state in
   (* second user operation as contract invocation payload same source *)
-  let user_op, contract_address = user_op_contract_invocation op1 in
+  let user_op, contract_address = user_op_contract_invocation mock_hash in
   let op2 = Core_deku.User_operation.make ~source:deku_add_1 user_op in
-  let state, _receipt_option = Core_deku.State.apply_user_operation state op2 in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation state mock_hash op2 in
   (* third user operation as transfer same source *)
   let op3 =
     Core_deku.User_operation.make ~source:deku_add_1
       (user_op_transaction ~destination:deku_add_2
          ~amount:(Core_deku.Amount.of_int 10)
          ~ticket:ticket_1) in
-  let state, _ = Core_deku.State.apply_user_operation state op3 in
+  let state, _ = Core_deku.State.apply_user_operation state mock_hash op3 in
   (* fourth user operation as withdraw *)
   let op4 =
     Core_deku.User_operation.make ~source:deku_add_1
       (user_op_withdraw ~owner:tezos_add_1
          ~amount:(Core_deku.Amount.of_int 2)
          ~ticket:ticket_1) in
-  let state, _ = Core_deku.State.apply_user_operation state op4 in
+  let state, _ = Core_deku.State.apply_user_operation state mock_hash op4 in
   let new_storage = Core_deku.State.contract_storage state in
   (* CHECK the storage of the inital and the new one *)
   let old_contract =
