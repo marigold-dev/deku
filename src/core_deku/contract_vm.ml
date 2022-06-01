@@ -123,17 +123,60 @@ module Dummy = struct
   end
 end
 
+module Wasm = struct
+  module Contract = struct
+    type t = {
+      code : bytes;
+      storage : bytes;
+    }
+    [@@deriving yojson, eq]
+  end
+
+  module Origination_payload = struct
+    type t = {
+      code : bytes;
+      storage : bytes;
+    }
+    [@@deriving yojson]
+
+    let make ~code ~storage = { code; storage }
+  end
+
+  module Compiler = struct
+    let compile ~gas:_ (code : Origination_payload.t) =
+      Ok Contract.{ code = code.code; storage = code.storage }
+  end
+
+  module Invocation_payload = struct
+    type t = bytes [@@deriving yojson]
+  end
+
+  module Interpreter = struct
+    let invoke contract arg ~gas =
+      let Contract.{ code; storage } = contract in
+      let%ok contract =
+        Wasm_vm.Contract.make ~code:(Bytes.to_string code) ~storage in
+      let gas = ref gas in
+      let runtime = Wasm_vm.Runtime.make ~contract ~imports:[] gas in
+      let%ok storage = Wasm_vm.Runtime.invoke runtime gas arg in
+      let contract = Contract.{ code; storage } in
+      Ok (contract, ())
+  end
+end
+
 module External_vm = struct
   module Contract = struct
     type t =
       | Lambda of Lambda.Contract.t
       | Dummy  of Dummy.Contract.t
+      | Wasm   of Wasm.Contract.t
     [@@deriving yojson, eq]
   end
   module Origination_payload = struct
     type t =
       | Dummy  of int
       | Lambda of Lambda.Origination_payload.t
+      | Wasm   of Wasm.Origination_payload.t
     [@@deriving yojson]
     let lambda_of_yojson ~code ~storage =
       let%ok code = Lambda.Raw_repr.Script.of_yojson code in
@@ -141,6 +184,9 @@ module External_vm = struct
       Ok (Lambda { code; storage })
 
     let dummy_of_yojson ~storage = Dummy storage
+
+    let wasm_of_yojson ~code ~storage =
+      Ok (Wasm (Wasm.Origination_payload.make ~code ~storage))
   end
   module Compiler = struct
     let compile payload ~gas =
@@ -151,11 +197,15 @@ module External_vm = struct
       | Lambda contract ->
         let%ok contract = Lambda.Compiler.compile contract ~gas in
         Ok (Contract.Lambda contract)
+      | Wasm contract ->
+        let%ok contract = Wasm.Compiler.compile contract ~gas in
+        Ok (Contract.Wasm contract)
   end
   module Invocation_payload = struct
     type t =
       | Lambda of Lambda.Invocation_payload.t
       | Dummy  of (int * int)
+      | Wasm   of Wasm.Invocation_payload.t
     [@@deriving yojson]
 
     let lambda_of_yojson ~arg =
@@ -165,6 +215,10 @@ module External_vm = struct
     let dummy_of_yojson ~arg =
       let%ok arg = Dummy.Invocation_payload.of_yojson arg in
       Ok (Dummy arg)
+
+    let wasm_of_yojson ~arg =
+      let%ok arg = Wasm.Invocation_payload.of_yojson arg in
+      Ok (Wasm arg)
   end
   module Interpreter = struct
     let invoke code ~source ~arg ~gas =
@@ -177,6 +231,10 @@ module External_vm = struct
         let%ok contract, operations =
           Lambda.Interpreter.invoke contract ~source ~arg ~gas in
         Ok (Contract.Lambda contract, operations)
+      | Wasm contract, Invocation_payload.Wasm arg ->
+        let%ok contract, operations =
+          Wasm.Interpreter.invoke contract arg ~gas in
+        Ok (Contract.Wasm contract, operations)
       | _, _ -> Error "Invocation failure"
   end
 end
