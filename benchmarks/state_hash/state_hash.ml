@@ -3,7 +3,7 @@ open Core
 
 let bench_state_hash =
   Bench.Test.create ~name:"bench state hash" (fun () ->
-      let _test_list, state = Build_state.build_state () in
+      let state = Build_state.build_state' () in
       let _ = Core_deku.State.hash state in
       ())
 

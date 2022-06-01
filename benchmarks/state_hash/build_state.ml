@@ -5,6 +5,24 @@ open Build_usage
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
+let init_state' () =
+  let tezos_addresses = Build_usage.make_n_tezos_address 1 in
+  let tickets = Build_usage.make_n_tickets 1 in
+  let ops = Build_operations.deposits_n tezos_addresses tickets 10_000 in
+  (* init state *)
+  let state = Core_deku.State.empty in
+  let tezos_operation_hash =
+    init_tezos_operation_hash |> Tezos.Operation_hash.of_string |> Option.get
+  in
+  let payload =
+    {
+      Core_deku.Tezos_operation.tezos_operation_hash;
+      internal_operations = ops;
+    } in
+  let tezos_operation = Core_deku.Tezos_operation.make payload in
+  let state = Core_deku.State.apply_tezos_operation state tezos_operation in
+  (state, tezos_addresses, tickets)
+
 let init_state () =
   let tezos_add_1 = make_tezos_address () in
   let tezos_add_2 = make_tezos_address () in
@@ -101,3 +119,35 @@ let build_state () =
             ~actual:false);
     ] in
   (test, state)
+
+let build_state' () =
+  (* todo *)
+  let deku_add_1 = make_address () in
+  let deku_add_2 = make_address () in
+  (* deposits *)
+  let init_state, _tezos_addresses, tickets = init_state' () in
+  (* contract origination *)
+  let code, storage = Build_operations.contract_vm in
+  let initial_operation =
+    Build_operations.user_op_contract_origination code storage in
+  let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
+  let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation init_state mock_hash op1 in
+  let _init_storage = Core_deku.State.contract_storage state in
+  (* contract invocation payload same source *)
+  let arg = Build_operations.contract_arg () in
+  let user_op, _contract_address =
+    Build_operations.user_op_contract_invocation mock_hash arg in
+  let op2 = Core_deku.User_operation.make ~source:deku_add_1 user_op in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation state mock_hash op2 in
+  (* transfers *)
+  let amount = Core_deku.Amount.of_int 10 in
+  let sources = [deku_add_1; deku_add_2] in
+  let triples =
+    Stdlib.List.fold_left2
+      (fun result destination ticket -> (destination, amount, ticket) :: result)
+      [] sources tickets in
+  let states = Build_operations.n_transactions state sources triples mock_hash in
+  states

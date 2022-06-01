@@ -6,12 +6,20 @@ let deposit_op ~destination ~ticket ~amount =
     { destination; ticket; amount = Core_deku.Amount.of_int amount }
 
 (* Deposits n times, where the amount is the same *)
+
+exception Length_not_equal
+
 let deposits_n tezos_addresses tickets amount =
-  List.fold_left2
-    (fun result tezos_address ticket ->
-      let op = deposit_op ~destination:tezos_address ~ticket ~amount in
-      op :: result)
-    [] tezos_addresses tickets
+  let len_add = List.length tezos_addresses in
+  let len_tick = List.length tickets in
+  if len_add = len_tick then
+    Stdlib.List.fold_left2
+      (fun result tezos_address ticket ->
+        let op = deposit_op ~destination:tezos_address ~ticket ~amount in
+        op :: result)
+      [] tezos_addresses tickets
+  else
+    raise Length_not_equal
 
 (*********************************************************************************)
 (* User operations *)
@@ -54,8 +62,26 @@ let user_op_contract_invocation mock_hash arg =
 let user_op_transaction ~destination ~amount ~ticket =
   Core_deku.User_operation.Transaction { destination; amount; ticket }
 
+let n_transactions state sources triples mock_hash =
+  (* TODO check length *)
+  Stdlib.List.fold_left2
+    (fun _result source (destination, amount, ticket) ->
+      (* each time transfer add it into state *)
+      let user_op = user_op_transaction ~destination ~amount ~ticket in
+      let op = Core_deku.User_operation.make ~source user_op in
+      let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
+      state)
+    Core_deku.State.empty sources triples
+
 (* Withdraw where the:
    - owner: is the tezos address
 *)
 let user_op_withdraw ~owner ~amount ~ticket =
   Core_deku.User_operation.Tezos_withdraw { owner; amount; ticket }
+
+let n_withdraw triples =
+  List.fold_left
+    (fun result (owner, amount, ticket) ->
+      let user_op = user_op_withdraw ~owner ~amount ~ticket in
+      user_op :: result)
+    [] triples
