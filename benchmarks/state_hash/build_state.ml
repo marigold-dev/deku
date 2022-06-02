@@ -123,7 +123,6 @@ let init_state_n n () =
 (* The number of n in init_state and build_state_n are the same *)
 
 let build_state_n n () =
-  (* todo *)
   let deku_addresses = Build_usage.make_n_address n in
   let deku_add_1 = List.nth deku_addresses 0 in
   (* deposits *)
