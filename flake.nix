@@ -3,12 +3,9 @@
 
   # Setup trusted binary caches
   nixConfig = {
-    trusted-substituters =
-      [ "https://cache.nixos.org/" "https://deku.cachix.org" ];
-    trusted-public-keys = [
-      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "deku.cachix.org-1:9zYY9BUBDV9xiXj8C0uCy+hkgjyDVRdH932KHmqVwYg="
-    ];
+    extra-substituters = [ "https://deku.cachix.org" ];
+    extra-public-keys =
+      [ "deku.cachix.org-1:9zYY9BUBDV9xiXj8C0uCy+hkgjyDVRdH932KHmqVwYg=" ];
   };
 
   inputs = {
