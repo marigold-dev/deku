@@ -84,6 +84,7 @@ Wait for awhile to let the graph generated. The result in picture as `perf-deku-
 This is the generated call-graph of deku-node running with 1012 blocks: 
 [call-graph.svg](https://github.com/lykimq/deku_docs/blob/main/benchmarking/graphs/perf-deku-callgraph.svg)
 
+Note that, it may happen that you cannot see this graph on a browser of Github, you can download this file and open it on local.
 
 #### Run
 
