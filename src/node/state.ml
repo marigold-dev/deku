@@ -19,7 +19,7 @@ type t = {
   (* TODO: we need a bound on the size of this and put
      behind an abstract type. We should also change how
      this works once we have an indexer. See https://github.com/marigold-dev/deku/issues/535 *)
-  applied_blocks : Block.t list;
+  applied_blocks : (timestamp * Block.t) list;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;
@@ -75,7 +75,7 @@ let apply_block state block =
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
-  let applied_blocks = block :: state.applied_blocks in
+  let applied_blocks = (Unix.gettimeofday (), block) :: state.applied_blocks in
   Metrics.Blocks.inc_operations_processed
     ~operation_count:(List.length block.operations);
   Ok
