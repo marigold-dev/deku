@@ -53,6 +53,7 @@ Run this script only when `perf record` is **properly terminated** (a.k.a: `./pr
 Wait for awhile to let the graph generated. The result in picture as `perf-deku-flamegraph.svg`. You can use internet browser to see it `firefox perf-deku-flamegraph.svg` or chrome, etc. 
 
 This is the generated flame-graph of deku-node running with 1012 blocks:
+[flame-graph.svg](https://github.com/lykimq/deku_docs/blob/main/benchmarking/graphs/perf-deku-flamegraph.svg)
 
 
 #### Understand Flamegraph
@@ -80,7 +81,8 @@ Install on Debian/Ubuntu run first:
 
 Wait for awhile to let the graph generated. The result in picture as `perf-deku-callgraph.png`. You can use internet browser to see it `firefox perf-deku-call-graph.png` or chrome, etc.
 
-This is the generated call-graph of deku-node running with 1012 blocks:
+This is the generated call-graph of deku-node running with 1012 blocks: 
+[call-graph.svg](https://github.com/lykimq/deku_docs/blob/main/benchmarking/graphs/perf-deku-callgraph.svg)
 
 
 #### Run
