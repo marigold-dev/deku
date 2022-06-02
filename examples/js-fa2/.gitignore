@@ -1,0 +1,6 @@
+.vscode
+build/
+node_modules
+.direnv
+result
+vm
