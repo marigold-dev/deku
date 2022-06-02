@@ -5,24 +5,6 @@ open Build_usage
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
-let init_state' () =
-  let tezos_addresses = Build_usage.make_n_tezos_address 3 in
-  let tickets = Build_usage.make_n_tickets 3 in
-  let ops = Build_operations.deposits_n tezos_addresses tickets 10_000 in
-  (* init state *)
-  let state = Core_deku.State.empty in
-  let tezos_operation_hash =
-    init_tezos_operation_hash |> Tezos.Operation_hash.of_string |> Option.get
-  in
-  let payload =
-    {
-      Core_deku.Tezos_operation.tezos_operation_hash;
-      internal_operations = ops;
-    } in
-  let tezos_operation = Core_deku.Tezos_operation.make payload in
-  let state = Core_deku.State.apply_tezos_operation state tezos_operation in
-  (state, tezos_addresses, tickets)
-
 let init_state () =
   let tezos_add_1 = make_tezos_address () in
   let tezos_add_2 = make_tezos_address () in
@@ -58,10 +40,7 @@ let init_state () =
   (state, (tezos_add_1, tezos_add_2), (ticket_1, ticket_2))
 
 (*******************************************************************************)
-(* Build state:
-   - Add a lot of user_operation(s) and then apply each of them to build the
-   size of state
-*)
+(* Build basic case for state *)
 
 let build_state () =
   let init_state, (tezos_add_1, _tezos_add_2), (ticket_1, _) = init_state () in
@@ -120,12 +99,35 @@ let build_state () =
     ] in
   (test, state)
 
-let build_state' () =
+(*********************************************************************************)
+(* Build n times state *)
+
+let init_state_n n () =
+  let tezos_addresses = Build_usage.make_n_tezos_address n in
+  let tickets = Build_usage.make_n_tickets n in
+  let ops = Build_operations.deposits_n tezos_addresses tickets 10_000 in
+  (* init state *)
+  let state = Core_deku.State.empty in
+  let tezos_operation_hash =
+    init_tezos_operation_hash |> Tezos.Operation_hash.of_string |> Option.get
+  in
+  let payload =
+    {
+      Core_deku.Tezos_operation.tezos_operation_hash;
+      internal_operations = ops;
+    } in
+  let tezos_operation = Core_deku.Tezos_operation.make payload in
+  let state = Core_deku.State.apply_tezos_operation state tezos_operation in
+  (state, tezos_addresses, tickets)
+
+(* The number of n in init_state and build_state_n are the same *)
+
+let build_state_n n () =
   (* todo *)
-  let deku_addresses = Build_usage.make_n_address 3 in
+  let deku_addresses = Build_usage.make_n_address n in
   let deku_add_1 = List.nth deku_addresses 0 in
   (* deposits *)
-  let init_state, _tezos_addresses, tickets = init_state' () in
+  let init_state, _tezos_addresses, tickets = init_state_n n () in
   (* contract origination *)
   let code, storage = Build_operations.contract_vm in
   let initial_operation =
@@ -144,6 +146,9 @@ let build_state' () =
     Core_deku.State.apply_user_operation state mock_hash op2 in
   (* transfers with the same amount *)
   let amount = Core_deku.Amount.of_int 10 in
+  (* NOTE: The source and destination coming from the same list.
+     To make it different, the destination is a reverse list of source
+  *)
   let sources = deku_addresses in
   let triples =
     let len_sources = List.length sources in
@@ -152,7 +157,7 @@ let build_state' () =
       List.fold_left2
         (fun result destination ticket ->
           (destination, amount, ticket) :: result)
-        [] sources tickets
+        [] (List.rev sources) tickets
     else
       raise Build_operations.Length_not_equal in
   let states = Build_operations.n_transactions state sources triples mock_hash in
@@ -176,3 +181,7 @@ let build_state' () =
             ~actual:false);
     ] in
   (test, states)
+
+let build_state_3 () = build_state_n 3 ()
+
+let build_state_10 () = build_state_n 10 ()

@@ -32,6 +32,11 @@ let make_n_address size : Crypto.Key_hash.t list =
     []
     (Core.List.range 0 (size - 1))
 
+let print_address add =
+  Printf.printf "address: %s \n" (Crypto.Key_hash.to_string add)
+
+let print_addresses l = List.iter (fun add -> print_address add) l
+
 (*********************************************************************************)
 (* Ticket *)
 

@@ -16,24 +16,26 @@ let bench_state_hash_basic =
 (* Increase case 
    
 *)
-let bench_state_hash_n =
-  Bench.Test.create ~name:"bench state hash" (fun () ->
-      let _test, state = Build_state.build_state' () in
+let bench_state_hash_3 =
+  Bench.Test.create ~name:"bench 3" (fun () ->
+      let _test, state = Build_state.build_state_3 () in
       let _ = Core_deku.State.hash state in
       ())
 
-let tests = [bench_state_hash_basic; bench_state_hash_n]
+let bench_state_hash_10 =
+  Bench.Test.create ~name:"bench 10" (fun () ->
+      let _test, state = Build_state.build_state_10 () in
+      let _ = Core_deku.State.hash state in
+      ())
+
+let tests = [bench_state_hash_basic; bench_state_hash_3; bench_state_hash_10]
 
 let command = Bench.make_command tests
 
 (* Build
    $ nix develop -c dune build
-   $ nix develope -c dune exec -- ./benchmarks/state_hash/state_hash.exe subcommand
+   $ nix develope -c dune exec -- ./benchmarks/state_hash/bench_state_hash_main.exe subcommand
     - state-hash: benchmark the state root hash
-
-    or using esy:
-   $ esy b dune build
-   $ esy b dune exec ./benchmarks/state_hash/state_hash.exe subcommand
 *)
 
 let main () =
