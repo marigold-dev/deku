@@ -10,11 +10,10 @@ if os.environ.get('USE_NIX', 'n') == 'y':
 def get_services(compose):
     return compose.get("services").keys()
 
-def make_deku_yaml(n):
+def make_deku_yaml(deku_nodes):
   services = []
 
-  for i in range(n):
-    deku_node_name = "deku-node-%s" % i
+  for deku_node_name in deku_nodes:
     services.append((deku_node_name, {
     'container_name': deku_node_name,
     'restart': 'always',
@@ -64,37 +63,24 @@ def make_deku_yaml(n):
     'services': services
   })
 
-def load_deku_services (deku_yaml):
-  for deku_service in get_services(decode_yaml(deku_yaml)):
+def load_deku_services (deku_nodes):
+  lines = ["""docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r" """];
+
+  for deku_service in deku_nodes:
       dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
-
-def add_sandbox (no_of_deku_nodes):
-  # run setup when we build
-  local_resource(
-    "deku-setup",
-    "sleep 5 && nix run .#sandbox setup docker %s" % no_of_deku_nodes,
-    resource_deps=["flextesa"],
-    labels=["scripts"],
-    )
-
-  if config.tilt_subcommand == "ci":
-    # bootstrap the deku network and run some tests
-    local_resource(
-      "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
-  else:
-    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    local_resource(
-      "deku-net",
-      "nix run .#sandbox start docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
+      lines.append('docker exec -t %s deku-cli sign-block /app/data "$HASH"' % deku_service)
     
+  start_script = " && ".join(lines)
+
+  print(start_script)
+
+  local_resource(
+    'deku-net',
+    start_script,
+    env={"DATA_DIRECTORY": "./data"},
+    resource_deps=deku_nodes,
+    labels=["scripts"],
+    auto_init=True, # trigger once at start
+    allow_parallel=True,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    )

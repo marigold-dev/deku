@@ -1,49 +1,17 @@
-def add_sandbox (no_of_deku_nodes):
-  # run setup when we build
-  local_resource(
-    "deku-setup",
-    "sleep 5 && nix run .#sandbox setup local %s" % no_of_deku_nodes,
-    resource_deps=["flextesa"],
-    labels=["scripts"],
-    allow_parallel=True,
-    )
-
-  if config.tilt_subcommand == "ci":
-    # bootstrap the deku network and run some tests
-    local_resource(
-      "smoke-test",
-      "nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-net"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      allow_parallel=True,
-      )
-
-    local_resource(
-      "deposit-withdraw-test",
-      "nix run .#sandbox deposit-withdraw-test",
-      resource_deps=["smoke-test", "deku-net"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
-  else:
-    print("nothing")
-
-def load_deku_services (_):
-  cfg = config.parse()
-  no_of_deku_nodes = int(cfg.get('nodes', "3"))
+def load_deku_services (deku_nodes):
   lines = ["""export HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | awk \'{ print $2 }\')"""];
 
-  for i in range(no_of_deku_nodes):
+  for i in range(len(deku_nodes)):
+    http_request = http_get_action(9000 + i)
     local_resource(
-      "deku-node-%s" % i,
+      deku_nodes[i],
       "dune build @install",
       serve_cmd='deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900%s" -v' % i,
       serve_env={"DATA_DIRECTORY": "./data/%s" % i},
       labels=["deku"],
       resource_deps=["deku-setup"],
+      readiness_probe=probe(http_get=http_request),
+      allow_parallel=True,
     )
 
     lines.append('deku-cli sign-block "$DATA_DIRECTORY/%s" "$HASH"' % i)
@@ -56,10 +24,10 @@ def load_deku_services (_):
     'deku-net',
     start_script,
     env={"DATA_DIRECTORY": "./data"},
-    resource_deps=["deku-setup"],
+    resource_deps=deku_nodes,
     labels=["scripts"],
     auto_init=True, # trigger once at start
-    allow_parallel=True,
+    allow_parallel=False,
     trigger_mode=TRIGGER_MODE_MANUAL,
     )
 
