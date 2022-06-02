@@ -494,21 +494,16 @@ start)
   ;;
 smoke-test)
   starting_height=$(deku_height)
-  start_deku_cluster
   seconds=35
   sleep $seconds
-  pkill -x deku-node
   assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down
   ;;
 deposit-withdraw-test)
-  start_deku_cluster
-  sleep 5
   deploy_dummy_ticket
   deposit_withdraw_test
-  pkill -x deku-node
   ;;
 deploy-dummy-ticket)
   deploy_dummy_ticket
