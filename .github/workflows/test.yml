@@ -9,13 +9,6 @@ on:
 jobs:
   test:
     name: Tests
-
-    strategy:
-      matrix:
-        system: [ubuntu]
-
-    runs-on: ${{ matrix.system }}-latest
-
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -27,7 +20,7 @@ jobs:
 
       - uses: esy/github-action@master
         with:
-          cache-key: ${{ matrix.system }}-${{ hashFiles('esy.lock/index.json') }}
+          cache-key: ${{ hashFiles('esy.lock/index.json') }}
 
       - name: Run Code formatter
         run: esy b dune build @fmt
