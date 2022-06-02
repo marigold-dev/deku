@@ -1,6 +1,7 @@
 final: prev:
 let disableCheck = package: package.overrideAttrs (o: { doCheck = false; });
 in {
+  pollinate = disableCheck prev.pollinate;
   ocaml-ng = builtins.mapAttrs (_: ocamlVersion:
     ocamlVersion.overrideScope' (oself: osuper: {
       lwt_react = osuper.lwt_react.overrideAttrs

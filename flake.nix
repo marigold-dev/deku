@@ -72,11 +72,11 @@
           (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
 
         pkgs = (ocaml-overlays.makePkgs { inherit system; }).appendOverlays [
-          (import ./nix/overlay.nix)
           prometheus-web.overlays.default
           tezos.overlays.default
           json-logs-reporter.overlays.default
           pollinate.overlays.default
+          (import ./nix/overlay.nix)
         ];
 
         pkgs_static = pkgs.pkgsCross.musl64;
