@@ -7,6 +7,9 @@ module Uri_map : Map.S with type key = Uri.t
 
 module Operation_map : Map.S with type key = Protocol.Operation.t
 
+(* TODO: proper type for timestamps *)
+type timestamp = float
+
 type t = {
   config : Config.t;
   trusted_validator_membership_change :
@@ -15,7 +18,7 @@ type t = {
   data_folder : string;
   pending_operations : float Operation_map.t;
   block_pool : Block_pool.t;
-  applied_blocks : Block.t list;
+  applied_blocks : (timestamp * Block.t) list;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
   uri_state : string Uri_map.t;
