@@ -54,8 +54,8 @@ call_graph(){
 #   takes a detailed snapshot at the peak memory consumption point.
 # --leak-check=full: turns on the detailed memory leak detector. When using this
 #   the program will run much slower (eg. 20 to 30 times) than normal, and use a lot 
-# --log-file=valgrind-out.txt: write to a file. Useful when output exceeds terminal space.
 #   of memory. Memcheck will issue messages about memory errors and leaks that it detects.
+# --log-file=valgrind-out.txt: write to a file. Useful when output exceeds terminal space.
 # --trace-children=yes: valgrind will trace into sub-processes initated via the `exec`
 #   system call. This is necessary for multi-process programs.
 # -v: be more verbose. Gives extra information on various aspects of the program, such as:
