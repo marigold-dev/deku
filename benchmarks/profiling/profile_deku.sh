@@ -36,7 +36,7 @@ flame_graph(){
 call_graph(){
   cd .. && cd .. && perf script \
       | c++filt | gprof2dot -f perf \
-      | dot -Tpng -o ~/deku/benchmarks/profiling/perf-deku-callgraph.png
+      | dot -Tpng -o ~/deku/benchmarks/profiling/perf-deku-callgraph.svg
 }
 
 # Memory profiling using valgrind
