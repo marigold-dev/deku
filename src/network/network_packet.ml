@@ -38,7 +38,10 @@ end
 module Block_by_level_spec = struct
   type request = { level : int64 } [@@deriving yojson]
 
-  type response = Block.t option [@@deriving yojson]
+  type response =
+    | Ok        of Protocol.Block.t
+    | Not_found
+  [@@deriving yojson]
 
   let path = "/block-by-level"
 end

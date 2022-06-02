@@ -82,11 +82,7 @@ let handle_block_by_level =
     (module Network.Block_by_level_spec)
     (fun _update_state request ->
       let state = Server.get_state () in
-      let block =
-        List.find_opt
-          (fun block ->
-            Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks in
+      let block = Flows.find_block_by_level state request.level in
       Ok block)
 
 (* POST /protocol-snapshot *)

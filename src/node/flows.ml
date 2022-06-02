@@ -417,6 +417,21 @@ let find_block_by_hash state hash =
 
 let find_block_level state = state.State.protocol.block_height
 
+let find_block_by_level state level =
+  let open Base.Continue_or_stop in
+  let open Base.Int64 in
+  let open Protocol.Block in
+  let open Network.Block_by_level_spec in
+  Base.List.fold_until state.State.applied_blocks ~init:Not_found
+    ~f:(fun _accum block ->
+      if level > block.block_height then
+        Stop Not_found
+      else if level = block.block_height then
+        Stop (Ok block)
+      else
+        Continue Not_found)
+    ~finish:(fun x -> x)
+
 let request_nonce state update_state uri =
   let nonce = Random.generate 32 |> Cstruct.to_string in
   let _state =
