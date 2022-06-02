@@ -38,18 +38,19 @@
       flake-utils.follows = "flake-utils";
     };
 
-    pollinate.url = "github:marigold-dev/pollinate/feat/dekuIntegrationAct2";
-    pollinate.inputs = {
-      nixpkgs.follows = "nixpkgs";
-      ocaml-overlay.follows = "ocaml-overlays";
-      flake-utils.follows = "flake-utils";
-    };
-
     json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
     json-logs-reporter.inputs = {
       nixpkgs.follows = "nixpkgs";
       nix-filter.follows = "nix-filter";
       flake-utils.follows = "flake-utils";
+    };
+
+    pollinate.url = "github:marigold-dev/pollinate/feat/dekuIntegrationAct2";
+    pollinate.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      ocaml-overlay.follows = "ocaml-overlays";
+      flake-utils.follows = "flake-utils";
+      nix-filter.follows = "nix-filter";
     };
   };
 
