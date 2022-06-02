@@ -1,5 +1,5 @@
-(executable
- (name state_hash)
+(executables
+ (names state_hash test_main)
  (libraries
   core
   core_bench
@@ -15,3 +15,8 @@
  (alias bench_state_hash)
  (action
   (run %{exe:state_hash.exe})))
+
+(rule
+ (alias test_state_hash)
+ (action
+  (run %{exe:test_main.exe})))

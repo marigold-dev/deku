@@ -1,13 +1,28 @@
 open Core_bench
 open Core
 
-let bench_state_hash =
-  Bench.Test.create ~name:"bench state hash" (fun () ->
-      let state = Build_state.build_state' () in
+(* state hash with base case:
+   - 2 deposits
+   - 4 basic user operation: contract origination;
+    contract invocation; transfer and withdraw (2 accounts)
+*)
+
+let bench_state_hash_basic =
+  Bench.Test.create ~name:"bench basic" (fun () ->
+      let _test, state = Build_state.build_state () in
       let _ = Core_deku.State.hash state in
       ())
 
-let tests = [bench_state_hash]
+(* Increase case 
+   
+*)
+let bench_state_hash_n =
+  Bench.Test.create ~name:"bench state hash" (fun () ->
+      let _test, state = Build_state.build_state' () in
+      let _ = Core_deku.State.hash state in
+      ())
+
+let tests = [bench_state_hash_basic; bench_state_hash_n]
 
 let command = Bench.make_command tests
 
@@ -26,14 +41,3 @@ let main () =
     (Command.group ~summary:"Several benchmarks" [("state-hash", command)])
 
 let () = main ()
-
-(*******************************************************************************)
-(* TODO: make option to run core-bench or test with with alcotest *)
-
-let test_state_hash =
-  let test_list, _state = Build_state.build_state () in
-  ("Alcotest - State hash", [test_list] |> List.concat)
-
-let _main_alco () =
-  let open Alcotest in
-  run "Alcotest state hash" [test_state_hash]

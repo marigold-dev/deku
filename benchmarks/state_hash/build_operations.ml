@@ -65,7 +65,7 @@ let user_op_transaction ~destination ~amount ~ticket =
 let n_transactions state sources triples mock_hash =
   let len_souces = List.length sources in
   let len_trips = List.length triples in
-  if len_souces = len_trips then (* TODO check length *)
+  if len_souces = len_trips then
     List.fold_left2
       (fun _result source (destination, amount, ticket) ->
         (* todo: check the storage before and after *)

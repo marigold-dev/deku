@@ -122,8 +122,8 @@ let build_state () =
 
 let build_state' () =
   (* todo *)
-  let deku_add_1 = make_address () in
-  let deku_add_2 = make_address () in
+  let deku_addresses = Build_usage.make_n_address 3 in
+  let deku_add_1 = List.nth deku_addresses 0 in
   (* deposits *)
   let init_state, _tezos_addresses, tickets = init_state' () in
   (* contract origination *)
@@ -134,18 +134,17 @@ let build_state' () =
   let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state mock_hash op1 in
-  let _init_storage = Core_deku.State.contract_storage state in
+  let init_storage = Core_deku.State.contract_storage state in
   (* contract invocation payload same source *)
   let arg = Build_operations.contract_arg () in
-  let user_op, _contract_address =
+  let user_op, contract_address =
     Build_operations.user_op_contract_invocation mock_hash arg in
   let op2 = Core_deku.User_operation.make ~source:deku_add_1 user_op in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation state mock_hash op2 in
-  (* transfers *)
+  (* transfers with the same amount *)
   let amount = Core_deku.Amount.of_int 10 in
-  (* todo: create sources *)
-  let sources = [deku_add_1; deku_add_2] in
+  let sources = deku_addresses in
   let triples =
     let len_sources = List.length sources in
     let len_tickets = List.length tickets in
@@ -157,4 +156,23 @@ let build_state' () =
     else
       raise Build_operations.Length_not_equal in
   let states = Build_operations.n_transactions state sources triples mock_hash in
-  states
+  (* CHECK state storage *)
+  let new_storage = Core_deku.State.contract_storage state in
+  let old_contract =
+    Core_deku.Contract_storage.get_contract ~address:contract_address
+      init_storage
+    |> Option.get in
+  let new_contract =
+    Core_deku.Contract_storage.get_contract ~address:contract_address
+      new_storage
+    |> Option.get in
+  let test =
+    [
+      Alcotest.test_case "contract storage change" `Quick (fun () ->
+          Alcotest.(check' bool)
+            ~msg:"correct"
+            ~expected:
+              (Core_deku.Contract_vm.Contract.equal new_contract old_contract)
+            ~actual:false);
+    ] in
+  (test, states)
