@@ -34,7 +34,7 @@ let command = Bench.make_command tests
 
 (* Build
    $ nix develop -c dune build
-   $ nix develope -c dune exec -- ./benchmarks/state_hash/bench_state_hash_main.exe subcommand
+   $ nix develope -c dune exec -- ./benchmarks/state_hash/bench_main.exe subcommand
     - state-hash: benchmark the state root hash
 *)
 

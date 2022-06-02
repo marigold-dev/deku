@@ -1,5 +1,5 @@
 (executables
- (names bench_state_hash_main test_main)
+ (names bench_main test_main)
  (libraries
   core
   core_bench
@@ -12,9 +12,9 @@
   (pps ppx_deriving_yojson ppx_let_binding ppx_lambda_vm)))
 
 (rule
- (alias bench_state_hash)
+ (alias bench_state_main)
  (action
-  (run %{exe:bench_state_hash_main.exe})))
+  (run %{exe:bench_main.exe})))
 
 (rule
  (alias test_state_hash)
