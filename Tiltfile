@@ -1,5 +1,3 @@
-allow_k8s_contexts('gke_marigold-k8s-npr_europe-west1_euw1-marigold-k8s-npr-gke')
-
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'local' (default) or 'docker'")
