@@ -118,7 +118,7 @@ let apply_block state block =
 let make ~initial_block =
   let empty =
     {
-      core_state = Core_deku.State.empty;
+      core_state = Core_deku.State.empty ();
       included_tezos_operations = Tezos_operation_set.empty;
       included_user_operations = User_operation_set.empty;
       validators = Validators.empty;

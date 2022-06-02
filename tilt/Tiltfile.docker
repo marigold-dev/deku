@@ -10,10 +10,10 @@ if os.environ.get('USE_NIX', 'n') == 'y':
 def get_services(compose):
     return compose.get("services").keys()
 
-def make_deku_yaml(n):
+def make_deku_yaml(no_of_nodes):
   services = []
 
-  for i in range(n):
+  for i in range(no_of_nodes):
     deku_node_name = "deku-node-%s" % i
     services.append((deku_node_name, {
     'container_name': deku_node_name,
@@ -22,7 +22,7 @@ def make_deku_yaml(n):
     'expose': [ 4040, 9000 ],
     'ports': [ "444%s:4040" % i ],
     'volumes': [ ("./data/%s:/app/data" % i) ],
-    'command': [ "/app/data", "--listen-prometheus=9000" ]
+    'command': [ "/app/data", "/app/data/state_transition", "--listen-prometheus=9000" ]
     }))
 
 
@@ -64,9 +64,22 @@ def make_deku_yaml(n):
     'services': services
   })
 
-def load_deku_services (deku_yaml):
+def load_deku_services (deku_yaml, no_of_deku_nodes, path_to_the_vm):
   for deku_service in get_services(decode_yaml(deku_yaml)):
       dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
+
+  # TODO: this should be replaced with a docker container provided by the user.
+  for i in range(0, no_of_deku_nodes): 
+    local_resource(
+      "deku-vm-%s" % i,
+      serve_cmd="$VM_PATH $DATA_TRANSITION",
+      serve_env={
+        "VM_PATH": path_to_the_vm,
+        "DATA_TRANSITION": "./data/%s/state_transition" % i
+      },
+      labels=["deku-vms"],
+      resource_deps=["deku-setup"]
+    )
 
 def add_sandbox (no_of_deku_nodes):
   # run setup when we build
@@ -82,7 +95,7 @@ def add_sandbox (no_of_deku_nodes):
     local_resource(
       "smoke-test",
       "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      resource_deps=["deku-setup"] + ["deku-node-%s" % i for i in range(0, no_of_deku_nodes)],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
@@ -92,9 +105,9 @@ def add_sandbox (no_of_deku_nodes):
     local_resource(
       "deku-net",
       "nix run .#sandbox start docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
+      resource_deps=["deku-setup"] + ["deku-node-%s" % i for i in range(0, no_of_deku_nodes)],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
       )
-    
+  

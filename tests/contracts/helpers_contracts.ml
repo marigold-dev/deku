@@ -37,7 +37,7 @@ let setup ?(initial_amount = 10000) () =
         ticket = t2;
         amount = Amount.of_int initial_amount;
       } in
-  let s = State.empty in
+  let s = State.empty () in
   let opp =
     {
       Tezos_operation.tezos_operation_hash =

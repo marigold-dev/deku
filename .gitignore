@@ -15,7 +15,6 @@ result
 
 # Deku-specific
 data/
-wallet.json
 
 # Others
 node_modules

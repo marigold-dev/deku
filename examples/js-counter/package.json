@@ -1,0 +1,11 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "typescript interop for deku",
+  "main": "example.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "deku_js_interop": "file:../../sdks/deku_js_interop"
+  }
+}
