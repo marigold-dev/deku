@@ -80,18 +80,22 @@ let handle_block_level =
       Ok { level = Flows.find_block_level (Server.get_state ()) })
 
 (* POST /block-by-level *)
-(* Retrieves the block at the given level if it exists *)
+(* Retrieves the block at the given level if it exists, along with
+   the timestamp at which it was applied (note the timestamp will be
+   slightly different across nodes). *)
 let handle_block_by_level =
   handle_request
     (module Network.Block_by_level_spec)
     (fun _update_state request ->
       let state = Server.get_state () in
-      let block =
+      let block_and_timestamp =
         List.find_opt
-          (fun block ->
+          (fun (_, block) ->
             Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks in
-      Ok block)
+          state.applied_blocks
+        |> Option.map (fun (timestamp, block) ->
+               Network.Block_by_level_spec.{ block; timestamp }) in
+      Ok block_and_timestamp)
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
