@@ -38,6 +38,13 @@
       flake-utils.follows = "flake-utils";
     };
 
+    pollinate.url = "github:marigold-dev/pollinate/feat/dekuIntegrationAct2";
+    pollinate.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      ocaml-overlay.follows = "ocaml-overlays";
+      flake-utils.follows = "flake-utils";
+    };
+
     json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
     json-logs-reporter.inputs = {
       nixpkgs.follows = "nixpkgs";
@@ -47,7 +54,7 @@
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
-    , prometheus-web, tezos, json-logs-reporter }:
+    , prometheus-web, tezos, json-logs-reporter, pollinate }:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
 
@@ -68,6 +75,7 @@
           prometheus-web.overlays.default
           tezos.overlays.default
           json-logs-reporter.overlays.default
+          pollinate.overlays.default
         ];
 
         pkgs_static = pkgs.pkgsCross.musl64;
