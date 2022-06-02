@@ -5,6 +5,11 @@ open Build_usage
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
+let check_balance address ticket expected ledger =
+  let amount = Core_deku.of_int expected in
+  let balance = Core_deku.Ledger.balance address ticket ledger in
+  amount = balance
+
 let init_state () =
   let tezos_add_1 = make_tezos_address () in
   let tezos_add_2 = make_tezos_address () in
@@ -37,6 +42,7 @@ let init_state () =
     } in
   let tezos_operation = Core_deku.Tezos_operation.make payload in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
+  (* Check deposit balance *)
   (state, (tezos_add_1, tezos_add_2), (ticket_1, ticket_2))
 
 (*******************************************************************************)
@@ -71,6 +77,11 @@ let build_state () =
          ~amount:(Core_deku.Amount.of_int 10)
          ~ticket:ticket_1) in
   let state, _ = Core_deku.State.apply_user_operation state mock_hash op3 in
+  let _ =
+    let balance =
+      Core_deku.Ledger.balance deku_add_2 ticket_1
+        (Core_deku.State.ledger state) in
+    Printf.printf "balance here: %i \n" (Core_deku.Amount.to_int balance) in
   (* fourth user operation as withdraw *)
   let op4 =
     Core_deku.User_operation.make ~source:deku_add_1
@@ -148,6 +159,9 @@ let build_state_n n () =
   (* NOTE: The source and destination coming from the same list.
      To make it different, the destination is a reverse list of source
   *)
+  (* TODO: check balance in the ledger
+     Ledger.balance address ticket t
+  *)
   let sources = deku_addresses in
   let triples =
     let len_sources = List.length sources in
@@ -155,6 +169,20 @@ let build_state_n n () =
     if len_sources = len_tickets then
       List.fold_left2
         (fun result destination ticket ->
+          (* CHECK balance *)
+          (*let _ =
+            let ledger = Core_deku.State.ledger state in
+            let _ =
+              List.iter
+                (fun source ->
+                  let balance = Core_deku.Ledger.balance source ticket ledger in
+                  let _ =
+                    Printf.printf "balance : %i\n "
+                      (Core_deku.Amount.to_int balance) in
+
+                  ())
+                sources in
+            () in*)
           (destination, amount, ticket) :: result)
         [] (List.rev sources) tickets
     else
