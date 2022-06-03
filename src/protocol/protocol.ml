@@ -73,6 +73,7 @@ let is_next state block =
 
 let apply_block state block =
   Log.info "block: %Ld" block.Block.block_height;
+  let user_operations = Block.parse_user_operations block in
   let state =
     List.fold_left apply_consensus_operation state block.consensus_operations
   in
@@ -87,7 +88,7 @@ let apply_block state block =
           | Some receipt -> (user_operation.hash, receipt) :: receipts
           | None -> receipts in
         (state, receipts))
-      (state, []) block.user_operations in
+      (state, []) user_operations in
   let state =
     {
       state with
@@ -110,6 +111,7 @@ let apply_block state block =
       state_root_hash = block.state_root_hash;
       validators_hash = block.validators_hash;
     },
+    user_operations,
     receipts )
 
 let make ~initial_block =
@@ -127,12 +129,13 @@ let make ~initial_block =
       last_applied_block_timestamp = 0.0;
       last_seen_membership_change_timestamp = 0.0;
     } in
-  apply_block empty initial_block |> fst
+  let state, _user_operations, _receipts = apply_block empty initial_block in
+  state
 
 let apply_block state block =
   let%assert () = (`Invalid_block_when_applying, is_next state block) in
-  let state, result = apply_block state block in
-  Ok (state, result)
+  let state, user_operations, result = apply_block state block in
+  Ok (state, user_operations, result)
 
 let get_current_block_producer state =
   if state.last_applied_block_timestamp = 0.0 then

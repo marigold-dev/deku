@@ -256,10 +256,10 @@ let rec try_to_apply_block state update_state block =
   let is_new_state_root_hash =
     not (BLAKE2B.equal state.protocol.state_root_hash block.state_root_hash)
   in
-  let%ok state = apply_block state update_state block in
+  let%ok state, user_operations = apply_block state update_state block in
   write_state_to_file (state.Node.data_folder ^ "/state.bin") state.protocol;
   !reset_timeout ();
-  let state = clean state update_state block in
+  let state = clean state update_state user_operations block in
   let state =
     if is_new_state_root_hash then (
       write_state_to_file

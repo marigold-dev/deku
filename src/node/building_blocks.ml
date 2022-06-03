@@ -193,10 +193,10 @@ let add_block_to_pool state update_state block =
   update_state { state with block_pool }
 
 let apply_block state update_state block =
-  let%ok state = Node.apply_block state block in
-  Ok (update_state state)
+  let%ok state, user_operations = Node.apply_block state block in
+  Ok (update_state state, user_operations)
 
-let clean state update_state block =
+let clean state update_state user_operations block =
   (* TODO: definitely should separate on the pending *)
   let pending_operations =
     let remove_operations operations pending_operations =
@@ -218,7 +218,7 @@ let clean state update_state block =
       List.map
         (fun consensus_operation ->
           Protocol.Operation.Core_user consensus_operation)
-        block.Block.user_operations in
+        user_operations in
     state.State.pending_operations
     |> remove_operations consensus_operations
     |> remove_operations tezos_operations

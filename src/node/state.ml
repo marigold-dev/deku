@@ -72,7 +72,8 @@ let make ~identity ~trusted_validator_membership_change
 
 let apply_block state block =
   let prev_protocol = state.protocol in
-  let%ok protocol, receipts = Protocol.apply_block state.protocol block in
+  let%ok protocol, user_operations, receipts =
+    Protocol.apply_block state.protocol block in
   let snapshots =
     if Crypto.BLAKE2B.equal block.state_root_hash prev_protocol.state_root_hash
     then
@@ -85,13 +86,14 @@ let apply_block state block =
       state.recent_operation_receipts receipts in
   let applied_blocks = block :: state.applied_blocks in
   Ok
-    {
-      state with
-      protocol;
-      recent_operation_receipts;
-      snapshots;
-      applied_blocks;
-    }
+    ( {
+        state with
+        protocol;
+        recent_operation_receipts;
+        snapshots;
+        applied_blocks;
+      },
+      user_operations )
 
 let signatures_required state =
   let number_of_validators = Validators.length state.protocol.validators in
@@ -175,7 +177,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
      In the future, we should only add snapshots once we're in sync. *)
   List.fold_left_ok
     (fun prev_state block ->
-      let%ok state = apply_block prev_state block in
+      let%ok state, _user_operations = apply_block prev_state block in
       if
         BLAKE2B.equal prev_state.protocol.state_root_hash
           state.protocol.state_root_hash

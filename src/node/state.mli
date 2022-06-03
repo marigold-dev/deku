@@ -46,7 +46,9 @@ val make :
 val apply_block :
   t ->
   Block.t ->
-  (t, [> `Invalid_block_when_applying | `Invalid_state_root_hash]) result
+  ( t * Protocol.Operation.Core_user.t list,
+    [> `Invalid_block_when_applying | `Invalid_state_root_hash] )
+  result
 
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
