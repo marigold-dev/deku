@@ -9,6 +9,7 @@ val main :
   (storage ->
   Crypto.Key_hash.t ->
   Crypto.BLAKE2B.t ->
+  Crypto.BLAKE2B.t ->
   Yojson.Safe.t ->
   (unit, string) result) ->
   unit
