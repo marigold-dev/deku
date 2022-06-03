@@ -105,11 +105,11 @@ let build_state () =
          ~ticket:ticket_1) in
   let state, _ = Core_deku.State.apply_user_operation state mock_hash op3 in
   (*let _ =
-    let balance =
-      Core_deku.Ledger.balance deku_add_2 ticket_1
-        (Core_deku.State.ledger state) in
-    Printf.printf "balance basic here: %i \n" (Core_deku.Amount.to_int balance)
-  in*)
+      let balance =
+        Core_deku.Ledger.balance deku_add_2 ticket_1
+          (Core_deku.State.ledger state) in
+      Printf.printf "balance basic here: %i \n" (Core_deku.Amount.to_int balance)
+    in*)
   (* fourth user operation as withdraw *)
   let op4 =
     Core_deku.User_operation.make ~source:deku_add_1
@@ -184,10 +184,10 @@ let build_state_n n () =
   let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state mock_hash op1 in
-  let init_storage = Core_deku.State.contract_storage state in
+  let _init_storage = Core_deku.State.contract_storage state in
   (* contract invocation payload same source *)
   let arg = Build_operations.contract_arg () in
-  let user_op, contract_address =
+  let user_op, _contract_address =
     Build_operations.user_op_contract_invocation mock_hash arg in
   let op2 = Core_deku.User_operation.make ~source:deku_add_1 user_op in
   let state, _receipt_option =
@@ -212,6 +212,30 @@ let build_state_n n () =
         [] destinations tickets
     else
       raise Build_operations.Length_not_equal in
+  let ops = Build_operations.n_transactions' sources triples in
+  let ops_len = List.length ops in
+  let () =
+    for i = 0 to ops_len - 1 do
+      let op = List.nth ops i in
+      let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
+      let hash = Core_deku.State.hash state in 
+      let _ =
+        List.fold_left2
+          (fun _ des ticket ->
+            let balance =
+              Core_deku.Ledger.balance des ticket
+                (Core_deku.State.ledger state) in
+            let _ =
+              Printf.printf "balance %i - ops len: %i \n" (Core_deku.Amount.to_int balance)
+            ops_len
+            in
+            ())()
+          destinations tickets in
+      ignore hash
+    done in
+()
+
+   (* 
   let states = Build_operations.n_transactions state sources triples mock_hash in
   (* CHECK balance *)
   (*let _ =
@@ -237,7 +261,7 @@ let build_state_n n () =
         () destinations tickets in
     () in*)
   (* CHECK state storage *)
-  let new_storage = Core_deku.State.contract_storage state in
+  let new_storage = Core_deku.State.contract_storage states in
   let old_contract =
     Core_deku.Contract_storage.get_contract ~address:contract_address
       init_storage
@@ -255,7 +279,7 @@ let build_state_n n () =
               (Core_deku.Contract_vm.Contract.equal new_contract old_contract)
             ~actual:false);
     ] in
-  (test, states)
+  (test, states)*)
 
 let build_state_3 () = build_state_n 3 ()
 

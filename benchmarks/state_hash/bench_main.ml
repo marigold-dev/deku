@@ -18,18 +18,18 @@ let bench_state_hash_basic =
 *)
 let bench_state_hash_3 =
   Bench.Test.create ~name:"bench 3" (fun () ->
-      let _test, state = Build_state.build_state_3 () in
-      let _ = Core_deku.State.hash state in
+      let () = Build_state.build_state_3 () in
+      (*let _ = Core_deku.State.hash state in*)
       ())
 
-      (*
+(*
 let bench_state_hash_10 =
   Bench.Test.create ~name:"bench 10" (fun () ->
       let _test, state = Build_state.build_state_10 () in
       let _ = Core_deku.State.hash state in
       ())*)
 
-let tests = [ bench_state_hash_3]
+let tests = [bench_state_hash_3]
 
 let command = Bench.make_command tests
 
