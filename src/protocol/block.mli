@@ -15,8 +15,6 @@ type t = private {
 
 val sign : key:Secret.t -> t -> Protocol_signature.t
 
-val verify : signature:Protocol_signature.t -> t -> bool
-
 val genesis : t
 
 val produce :
