@@ -1,0 +1,17 @@
+(executables
+ (names bench_main)
+ (libraries
+  core
+  core_bench
+  core_unix.command_unix
+  lambda_vm
+  core_deku
+  tezos
+  alcotest)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding ppx_lambda_vm)))
+
+(rule
+ (alias bench_state)
+ (action
+  (run %{exe:bench_main.exe})))
