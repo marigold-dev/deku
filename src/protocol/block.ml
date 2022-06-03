@@ -44,8 +44,10 @@ let hash, verify =
     let hash = BLAKE2B.hash (BLAKE2B.to_raw_string hash) in
     f (hash, block_payload_hash) in
   let hash = apply Fun.id in
-  let verify ~hash:expected_hash =
-    apply (fun (hash, _payload_hash) -> hash = expected_hash) in
+  let verify ~hash:expected_hash ~payload_hash:expected_payload_hash =
+    apply (fun (hash, payload_hash) ->
+        BLAKE2B.equal hash expected_hash
+        && BLAKE2B.equal payload_hash expected_payload_hash) in
   (hash, verify)
 
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
@@ -69,7 +71,8 @@ let of_yojson json =
   let%ok block = of_yojson json in
   let%ok () =
     match
-      verify ~hash:block.hash ~state_root_hash:block.state_root_hash
+      verify ~hash:block.hash ~payload_hash:block.payload_hash
+        ~state_root_hash:block.state_root_hash
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
         ~validators_hash:block.validators_hash
         ~previous_hash:block.previous_hash ~author:block.author
@@ -108,4 +111,3 @@ open Protocol_signature.Make (struct
 end)
 
 let sign ~key t = (sign ~key t).signature
-
