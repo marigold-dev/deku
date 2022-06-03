@@ -7,7 +7,7 @@ module Make_with_yojson : functor
      val of_yojson : Yojson.Safe.t -> (t, string) result
    end)
   -> sig
-  include module type of Set.Make (K)
+  include Set.S with type elt = K.t
   val to_yojson : t -> Yojson.Safe.t
   val of_yojson : Yojson.Safe.t -> (t, string) result
 end

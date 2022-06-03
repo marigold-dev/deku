@@ -7,7 +7,7 @@ module Make_with_yojson : functor
      val of_yojson : Yojson.Safe.t -> (t, string) result
    end)
   -> sig
-  include module type of Map.Make (K)
+  include Map.S with type key = K.t
   val to_yojson : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
   val of_yojson :
     (Yojson.Safe.t -> ('a, string) result) ->

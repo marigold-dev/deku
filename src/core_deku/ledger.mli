@@ -11,6 +11,8 @@ module Withdrawal_handle : sig
 end
 type t [@@deriving yojson]
 val empty : t
+val ticket_table : t -> Ticket_table.t
+val update_ticket_table : Ticket_table.t -> t -> t
 val balance : Key_hash.t -> Ticket_id.t -> t -> Amount.t
 val transfer :
   sender:Key_hash.t ->

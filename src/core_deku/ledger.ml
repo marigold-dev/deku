@@ -30,6 +30,10 @@ let empty =
     ledger = Ticket_table.empty;
     withdrawal_handles = Withdrawal_handle_tree.empty;
   }
+
+let ticket_table t = t.ledger
+let update_ticket_table table t =
+  { ledger = table; withdrawal_handles = t.withdrawal_handles }
 let balance address ticket t =
   Ticket_table.amount t.ledger (Address.of_key_hash address) ticket
   |> Option.value ~default:Amount.zero

@@ -9,8 +9,12 @@ type initial_operation =
   | Contract_invocation  of {
       to_invoke : Contract_address.t;
       argument : Contract_vm.Invocation_payload.t;
+      tickets : Ticket_id.t list;
     }
-  | Contract_origination of Contract_vm.Origination_payload.t
+  | Contract_origination of {
+      payload : Contract_vm.Origination_payload.t;
+      tickets : Ticket_id.t list;
+    }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;
       amount : Amount.t;

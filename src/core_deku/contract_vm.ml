@@ -1,4 +1,5 @@
 open Helpers
+open Core
 
 module Lambda = struct
   module Contract = struct
@@ -22,7 +23,7 @@ module Lambda = struct
     end
     let wrap_error x =
       Result.map_error
-        (function
+        ~f:(function
           (* TODO: use this compiler_error properly *)
           | Compiler.Compiler_error _compiler_error -> `Invalid_contract
           | Runtime_limits_error Out_of_gas -> `Out_of_gas
@@ -58,11 +59,11 @@ module Lambda = struct
       let open Lambda_vm in
       let gas = Gas.make ~initial_gas:gas in
       let%ok code =
-        Raw_repr.Script.to_code ~gas code |> Result.map_error error_to_string
+        Raw_repr.Script.to_code ~gas code |> Result.map_error ~f:error_to_string
       in
       let%ok storage =
-        Raw_repr.Value.to_value ~gas storage |> Result.map_error error_to_string
-      in
+        Raw_repr.Value.to_value ~gas storage
+        |> Result.map_error ~f:error_to_string in
       Ok (Contract.make ~code ~storage)
   end
   module Invocation_payload = struct
@@ -86,14 +87,18 @@ module Lambda = struct
       let gas = Gas.make ~initial_gas:gas in
       let%ok argument =
         Raw_repr.Value.to_value ~gas arg
-        |> Result.map_error compiler_error_to_string in
+        |> Result.map_error ~f:compiler_error_to_string in
       let arg = Ir.Value_syntax.pair argument storage in
       (* TODO: use invoked operations for something *)
       let%ok invoked =
-        let sender = source |> Crypto.Key_hash.to_string in
+        let%ok sender =
+          source
+          |> Address.to_key_hash
+          |> Result.of_option ~error:"invalid source" in
+        let sender = sender |> Crypto.Key_hash.to_string in
         let context = Context.make ~sender ~source:sender gas in
         Interpreter.execute ~context ~arg contract.Contract.code
-        |> Result.map_error error_to_string in
+        |> Result.map_error ~f:error_to_string in
       let updated_contract =
         Contract.make ~code:contract.code ~storage:invoked.storage in
       Ok (updated_contract, ())
@@ -119,17 +124,20 @@ module Dummy = struct
         | 0, num -> Ok (storage + num, ())
         | 1, num -> Ok (storage - num, ())
         | _, _ -> Error "Invalid arg" in
-      result |> Result.map (fun (c, ops) -> (c, ops))
+      Result.map ~f:(fun (c, ops) -> (c, ops)) result
   end
 end
 
 module Wasm = struct
   module Contract = struct
     type t = {
-      code : bytes;
+      code : Wasm_vm.Module.t;
       storage : bytes;
     }
-    [@@deriving yojson, eq]
+    [@@deriving yojson]
+
+    (* TODO: this is bad *)
+    let equal a b = Poly.( = ) a b
   end
 
   module Origination_payload = struct
@@ -144,7 +152,9 @@ module Wasm = struct
 
   module Compiler = struct
     let compile ~gas:_ (code : Origination_payload.t) =
-      Ok Contract.{ code = code.code; storage = code.storage }
+      let%ok compiled =
+        Wasm_vm.Module.of_string ~code:(Bytes.to_string code.code) in
+      Ok Contract.{ code = compiled; storage = code.storage }
   end
 
   module Invocation_payload = struct
@@ -152,15 +162,14 @@ module Wasm = struct
   end
 
   module Interpreter = struct
-    let invoke contract arg ~gas =
+    let invoke custom contract arg ~gas =
       let Contract.{ code; storage } = contract in
-      let%ok contract =
-        Wasm_vm.Contract.make ~code:(Bytes.to_string code) ~storage in
       let gas = ref gas in
-      let runtime = Wasm_vm.Runtime.make ~contract ~imports:[] gas in
-      let%ok storage = Wasm_vm.Runtime.invoke runtime gas arg in
-      let contract = Contract.{ code; storage } in
-      Ok (contract, ())
+      let%ok updated, operations =
+        Wasm_vm.Runtime.invoke custom ~module_:code ~storage ~gas ~argument:arg
+      in
+      let contract = Contract.{ code; storage = updated } in
+      Ok (contract, operations)
   end
 end
 
@@ -189,7 +198,7 @@ module External_vm = struct
       Ok (Wasm (Wasm.Origination_payload.make ~code ~storage))
   end
   module Compiler = struct
-    let compile payload ~gas =
+    let compile payload ~gas ~tickets =
       match payload with
       | Origination_payload.Dummy contract ->
         let%ok contract = Dummy.Compiler.compile contract ~gas in
@@ -198,7 +207,17 @@ module External_vm = struct
         let%ok contract = Lambda.Compiler.compile contract ~gas in
         Ok (Contract.Lambda contract)
       | Wasm contract ->
-        let%ok contract = Wasm.Compiler.compile contract ~gas in
+        let replaced_tickets =
+          let str = Bytes.to_string contract.storage in
+          List.fold_left
+            ~f:(fun acc (prev, new_) ->
+              String.substr_replace_all acc ~pattern:prev ~with_:new_)
+            ~init:str tickets in
+        let contract =
+          { contract with storage = Bytes.of_string replaced_tickets } in
+        let%ok contract =
+          Wasm.Compiler.compile contract ~gas
+          |> Result.map_error ~f:Wasm_vm.Errors.show in
         Ok (Contract.Wasm contract)
   end
   module Invocation_payload = struct
@@ -219,22 +238,30 @@ module External_vm = struct
     let wasm_of_yojson ~arg =
       let%ok arg = Wasm.Invocation_payload.of_yojson arg in
       Ok (Wasm arg)
+    let of_bytes ~arg = Ok (Wasm arg)
   end
   module Interpreter = struct
-    let invoke code ~source ~arg ~gas =
+    let invoke code ~ctx ~arg ~gas =
       match (code, arg) with
       | Contract.Dummy contract, Invocation_payload.Dummy arg ->
-        let%ok contract, operations =
-          Dummy.Interpreter.invoke contract ~arg ~gas in
-        Ok (Contract.Dummy contract, operations)
+        let%ok contract, _ = Dummy.Interpreter.invoke contract ~arg ~gas in
+        Ok (Contract.Dummy contract, [])
       | Lambda contract, Invocation_payload.Lambda arg ->
-        let%ok contract, operations =
-          Lambda.Interpreter.invoke contract ~source ~arg ~gas in
-        Ok (Contract.Lambda contract, operations)
+        let module M = (val ctx : Contract_context.CTX) in
+        let%ok contract, _ =
+          Lambda.Interpreter.invoke contract ~source:M.get_source ~arg ~gas
+        in
+        Ok (Contract.Lambda contract, [])
       | Wasm contract, Invocation_payload.Wasm arg ->
+        let module C = Wasm_vm.Ffi.Make ((val ctx)) in
         let%ok contract, operations =
-          Wasm.Interpreter.invoke contract arg ~gas in
-        Ok (Contract.Wasm contract, operations)
+          Wasm.Interpreter.invoke C.custom contract arg ~gas
+          |> Result.map_error ~f:Wasm_vm.Errors.show in
+        let module M = (val ctx : Contract_context.CTX) in
+        let%ok ops =
+          M.get_ops operations
+          |> Result.map_error ~f:(fun _ -> "Invocation failure") in
+        Ok (Contract.Wasm contract, ops)
       | _, _ -> Error "Invocation failure"
   end
 end

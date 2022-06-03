@@ -1,61 +1,40 @@
-module M = Memory
-open Wasm
 open Helpers
-
-type t = {
-  contract : Contract.t;
-  instance : Instance.module_inst;
-}
-
-let main = Utf8.decode "main"
-let memory = Utf8.decode "memory"
-
-let make ~contract ~imports gas =
-  let instance_ref = ref None in
-  let memory () =
-    (* Is ok to raise an error here since this is called only from the
-       inside of the module after it has been validated. *)
-    match Instance.export (Option.get !instance_ref) memory with
-    | Some (ExternMemory memory) -> memory
-    | _ -> assert false in
-  let imports = List.map (Extern.to_wasm memory) imports in
-  (* TODO: Missing proper error handling *)
-  let instance = Eval.init gas contract.Contract.module_ imports in
-  (* XXX: Is this the better way of doing this? *)
-  instance_ref := Some instance;
-  { contract; instance }
-
-let invoke t gas argument =
-  let%ok memory =
-    match Instance.export t.instance memory with
-    | Some (ExternMemory memory) -> Ok memory
-    | Some _ -> Error "Memory exported is not a memory"
-    | None -> Error "Should export a memory" in
-  let%ok entrypoint =
-    (* TODO: Verify entrypoint signature beforehand? *)
-    match Instance.export t.instance main with
-    | Some (ExternFunc func) -> Ok func
-    | Some _ -> Error "Exported entrypoint is not a function"
-    | None -> Error "Entrypoint not found, should export a main function." in
-  let argument, storage =
-    let argument, storage =
-      M.blit memory 0L argument;
-      (* It is trivial to have an arugment 0 when the argument position is known,
-         * but then we can make sure that we can put the argument wherever we want to. *)
-      (0L, Int64.of_int @@ Bytes.length argument) in
-    M.blit memory storage t.contract.storage;
-    (Int64.to_int32 argument, Int64.to_int32 storage) in
-  match
-    (* TODO: Encode operations on the return *)
-    Eval.invoke gas entrypoint [Value.i32 argument; Value.i32 storage]
-  with
-  | [Values.Num (I32 size)] ->
-    Ok
-      (Bytes.of_string
-         (Memory.load_bytes memory (Int64.of_int32 storage) (Int32.to_int size)))
-  | _ -> Error "Wrong return type"
-  | (exception Eval.Link (_, error))
-  | (exception Eval.Crash (_, error))
-  | (exception Eval.Exhaustion (_, error))
-  | (exception Eval.Trap (_, error)) ->
-    Error error
+open Core
+module Bytes = Stdlib.Bytes
+let main = Wasm.Utf8.decode "main"
+let invoke custom ~module_ ~gas ~argument ~storage =
+  let t = Module_instance.make ~gas ~module_ ~custom in
+  let%ok memory = Module_instance.get_memory t in
+  let%ok entrypoint = Module_instance.get_entrypoint t in
+  let storage_size = Int64.of_int (Bytes.length storage) in
+  let () = Memory.store_bytes memory ~address:0L ~content:storage in
+  let () = Memory.store_bytes memory ~address:storage_size ~content:argument in
+  Result.try_with (fun () ->
+      (* TODO: Encode operations on the return *)
+      let[@warning "-8"] Wasm.
+                           [
+                             Values.Num (I64 address);
+                             Values.Num (I64 size);
+                             Values.Num (I64 op_offset);
+                           ] =
+        Wasm.Eval.invoke gas entrypoint
+          [Value.i32 (Int64.to_int32_exn storage_size)] in
+      let op_size =
+        Bytes.get_int32_le
+          (Memory.load_bytes memory ~address:op_offset ~size:4)
+          0
+        |> Int.of_int32_exn in
+      let rec go acc ptr to_go =
+        if to_go = 0 then
+          List.rev acc
+        else
+          let loaded = Memory.load_bytes memory ~size:4 ~address:ptr in
+          let parsed = Bytes.get_int32_le loaded 0 |> Int.of_int32_exn in
+          go (parsed :: acc) Int64.(ptr + 5L) (to_go - 1) in
+      let ops =
+        if op_size = 0 then [] else go [] Int64.(op_offset + 5L) op_size in
+      let result =
+        (Memory.load_bytes memory ~address ~size:Int.(of_int64_exn size), ops)
+      in
+      result)
+  |> Result.map_error ~f:(fun _ -> `Execution_error)

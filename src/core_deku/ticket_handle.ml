@@ -16,17 +16,5 @@ let make_temp owner ticket amount =
 let to_bytes t = BLAKE2B_20.to_raw_string t |> Bytes.of_string
 let of_bytes t = Bytes.to_string t |> BLAKE2B_20.of_raw_string
 
-module Map = Helpers.Map.Make_with_yojson (struct
-  type nonrec t = t
-
-  let to_yojson = to_yojson
-  let of_yojson = of_yojson
-  let compare = compare
-end)
-module Set = Helpers.Set.Make_with_yojson (struct
-  type nonrec t = t
-
-  let to_yojson = to_yojson
-  let of_yojson = of_yojson
-  let compare = compare
-end)
+module Map = Helpers.Map.Make_with_yojson (BLAKE2B_20)
+module Set = Helpers.Set.Make_with_yojson (BLAKE2B_20)

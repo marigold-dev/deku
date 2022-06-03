@@ -33,6 +33,7 @@ let () =
         let open Tezos in
         let _key, address = Ed25519.generate () in
         let hash = Ed25519.Key_hash.of_key address in
+
         Address.Implicit (Ed25519 hash) in
       let setup_two () =
         let t1 = make_ticket () in

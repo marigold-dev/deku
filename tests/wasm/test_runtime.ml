@@ -1,255 +1,497 @@
-exception Invocation_error
-
-let invoke ?(imports = []) ~storage ~argument code =
-  let contract =
-    match Wasm_vm.Contract.make ~storage ~code with
-    | Ok contract -> contract
-    | Error msg -> Alcotest.fail msg in
-  let gas = ref 10000 in
-  let runtime = Wasm_vm.Runtime.make ~contract ~imports gas in
-  match Wasm_vm.Runtime.invoke runtime gas argument with
-  | Ok storage -> storage
-  | Error msg ->
-    Printf.eprintf "%s\n" msg;
-    raise Invocation_error
-
+open Helpers
+open Test_helpers
 let test_simple_invocation () =
   let code =
     {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "main") (param i32) (param i32) (result i32)
-        local.get 1
-        local.get 0
-        i64.load
-        local.get 1
-        i64.load
-        i64.add
-        i64.store
-        i32.const 8))
-  |}
+          (module
+            (import "env" "syscall" (func $syscall (param i64) (result i32)))
+            (memory (export "memory") 1)
+            (func (export "main")  (param i32) (result i64 i64 i64)
+              i32.const 0
+              i32.const 0
+              i64.load
+              local.get 0
+              i64.load
+              i64.add
+              i64.store
+              (i64.const 0)
+              (i64.const 8)
+              (i64.const 8)
+              ))
+        |}
   in
-  let storage = Hexdump.of_string {|
-      01 00 00 00 00 00 00 00
-    |} in
-  let argument = Hexdump.of_string {|
-      2A 00 00 00 00 00 00 00
-    |} in
-  let storage = invoke ~storage ~argument code in
-  Alcotest.(check Hexdump.hex)
+  let storage = i64 1L in
+  let argument = i64 42L in
+  let storage, _ = invoke ~storage ~argument code in
+  let storage = Bytes.get_int64_le storage 0 in
+  Alcotest.(check int64) "Same" 43L storage
+
+let test_ticket_own () =
+  let open Core_deku in
+  let code =
+    {|
+              (module
+                (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                (memory (export "memory") 1)
+                (func (export "main")  (param i32) (result i64 i64 i64)
+                  i32.const 21
+                  i32.const 5
+                  i32.store
+                  i32.const 22
+                  i32.const 0
+                  i32.store
+                  i64.const 21 
+                  call $syscall
+                  i64.extend_i32_s
+                  (i64.const 20)
+                  (i64.const 45)
+                  ))
+            |}
+  in
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let argument = handle |> Ticket_handle.to_bytes in
+  let table = Ticket_table.empty in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:(make_contract_address "test")
+         ~tickets:[handle])
+  in
+  let imit_hanlde, _ =
+    let table = Ticket_table.add_to_temporary table [handle] in
+    let tt =
+      Ticket_table.own table
+        (Address.of_contract_hash (make_contract_address "test"))
+        handle in
+    tt |> Result.get_ok in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let storage =
+    invoke ~custom:Ctx.custom ~storage ~argument code
+    |> fst
+    |> Ticket_handle.of_bytes
+    |> Option.get in
+  Alcotest.(check Testables.ticket_handle) "Same" imit_hanlde storage
+
+let test_ticket_join () =
+  let open Core_deku in
+  let code =
+    {|
+                  (module
+                    (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                    (memory (export "memory") 1)
+                    (func (export "main")  (param i32) (result i64 i64 i64)
+                      i32.const 41
+                      i32.const 6
+                      i32.store
+                      i32.const 46
+                      i32.const 0
+                      i32.store
+                      i32.const 51
+                      i32.const 20
+                      i32.store
+                      i64.const 41 
+                      call $syscall
+                      i64.extend_i32_s
+                      (i64.const 20)
+                      (i64.const 99)
+                      ))
+                |}
+  in
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let contract_addr = Address.of_contract_hash @@ make_contract_address "test" in
+  let handle2 = Ticket_handle.make contract_addr ticket in
+  let argument =
+    Bytes.concat Bytes.empty
+      [handle |> Ticket_handle.to_bytes; Ticket_handle.to_bytes handle2] in
+  let table = Ticket_table.empty in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:contract_addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:(make_contract_address "test")
+         ~tickets:[handle])
+  in
+  let imit_hanlde, _ =
+    let tt =
+      Ticket_table.join_tickets table ~source:contract_addr
+        ~senders:(addr, contract_addr) ~handles:(handle, handle2) in
+    tt |> Result.get_ok in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let storage =
+    invoke ~custom:Ctx.custom ~storage ~argument code
+    |> fst
+    |> Ticket_handle.of_bytes
+    |> Option.get in
+  Alcotest.(check string)
     "Same"
-    (Hexdump.of_string "2B 00 00 00 00 00 00 00")
-    storage
+    (Ticket_handle.to_string imit_hanlde)
+    (Ticket_handle.to_string storage)
+let test_ticket_split () =
+  let open Core_deku in
+  let code =
+    {|
+                      (module
+                        (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                        (memory (export "memory") 1)
+                        (func (export "main")  (param i32) (result i64 i64 i64)
+                          i32.const 21
+                          i32.const 4
+                          i32.store
+                          i32.const 26
+                          i32.const 0
+                          i32.store
+                          i32.const 31
+                          i64.const 5
+                          i64.store
+                          i32.const 40
+                          i64.const 5
+                          i64.store
+                          i64.const 21
+                          call $syscall
+                          i64.extend_i32_s
+                          (i64.const 41)
+                          (i64.const 99)
+                          ))
+                    |}
+  in
+
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let argument = handle |> Ticket_handle.to_bytes in
+  let table = Ticket_table.empty in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:(make_contract_address "test")
+         ~tickets:[handle])
+  in
+  let imit_hanlde, _ =
+    let tt =
+      Ticket_table.split_ticket table ~sender:addr ~ticket_handle:handle
+        ~amounts:(Amount.of_int 5, Amount.of_int 5) in
+    tt |> Result.get_ok in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let storage = invoke ~custom:Ctx.custom ~storage ~argument code |> fst in
+  let first, second =
+    ( Bytes.sub storage 0 20 |> Ticket_handle.of_bytes |> Option.get,
+      Bytes.sub storage 20 20 |> Ticket_handle.of_bytes |> Option.get ) in
+  let storage = (first, second) in
+  let imit_hanlde = (fst imit_hanlde, snd imit_hanlde) in
+  Alcotest.(check (pair Testables.ticket_handle Testables.ticket_handle))
+    "Same" imit_hanlde storage
+let test_ticket_send_twice () =
+  let open Core_deku in
+  let code =
+    {|
+                  (module
+                    (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                    (memory (export "memory") 1)
+                    (func (export "main")  (param i32) (result i64 i64 i64)
+                      i32.const 67
+                      i32.const 8
+                      i32.store
+                      i32.const 72
+                      i32.const 0
+                      i32.store
+                      i32.const 77
+                      i32.const 8
+                      i32.store
+                      i32.const 82
+                      i64.const 10
+                      i64.store
+                      i32.const 91
+                      i32.const 28
+                      i32.store
+                      i64.const 67
+                      call $syscall
+                      i64.extend_i32_s
+                      (i64.const 0)
+                      i32.const 72
+                      i32.const 1
+                      i32.store 
+                      i32.const 77
+                      i32.const 1 
+                      i32.store
+                      (i64.const 72)
+                      ))
+                |}
+  in
+  let code2 =
+    {|
+                  (module
+                    (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                    (memory (export "memory") 1)
+                    (func (export "main")  (param i32) (result i64 i64 i64)
+                      i32.const 21
+                      i32.const 5
+                      i32.store
+                      i32.const 26
+                      i32.const 0
+                      i32.store
+                      i64.const 21 
+                      call $syscall
+                      i64.extend_i32_s
+                      (i64.const 20)
+                      (i64.const 99)
+                      ))
+                |}
+  in
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let contract_address1 = make_contract_address "test" in
+  let contract_address2 = make_contract_address "test2" in
+  let table = Ticket_table.empty in
+  let argument =
+    Bytes.concat Bytes.empty
+      [
+        i64 20L;
+        Ticket_handle.to_bytes handle;
+        Address.to_string (Address.of_contract_hash contract_address2)
+        |> Bytes.of_string
+        (* 67 *);
+      ] in
+
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:contract_address1 ~tickets:[handle])
+  in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let _, ops = invoke ~custom:Ctx.custom ~storage ~argument code in
+  let x = M.get_ops ops |> Result.get_ok |> List.hd in
+  Alcotest.(check Testables.contract_operation)
+    "Same"
+    (Contract_context.Contract_operation.Invoke
+       {
+         ticket;
+         destination = Address.of_contract_hash contract_address2;
+         param =
+           Ticket_handle.to_bytes
+             (Ticket_handle.make
+                (Address.of_contract_hash contract_address1)
+                ticket);
+       })
+    x;
+  let new_table = M.get_table () |> Ticket_table.validate in
+  let ticket, param =
+    match x with
+    | Contract_context.Contract_operation.Invoke
+        { destination = _; param; ticket } ->
+      (ticket, param)
+    | _ -> failwith "wrong op" in
+  let module M =
+  (val Contract_context.make
+         ~sender:(Address.of_contract_hash contract_address1)
+         ~table:new_table ~self:contract_address2
+         ~tickets:
+           [
+             Ticket_handle.make
+               (Address.of_contract_hash contract_address1)
+               ticket;
+           ]
+         ~source:addr
+         ~contracts_table:(fun _ -> None))
+  in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let storage =
+    invoke ~custom:Ctx.custom ~storage ~argument:param code2
+    |> fst
+    |> Ticket_handle.of_bytes
+    |> Option.get in
+
+  let imit_hanlde, _ =
+    let table = Ticket_table.add_to_temporary table [handle] in
+    let tt =
+      Ticket_table.own table (Address.of_contract_hash contract_address2) handle
+    in
+    tt |> Result.get_ok in
+  Alcotest.(check Testables.ticket_handle) "Same" imit_hanlde storage
+
+let test_ticket_send_implicit () =
+  let open Core_deku in
+  let code =
+    {|
+                      (module
+                        (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                        (memory (export "memory") 1)
+                        (func (export "main")  (param i32) (result i64 i64 i64)
+                          i32.const 67
+                          i32.const 8
+                          i32.store
+                          i32.const 72
+                          i32.const -1
+                          i32.store
+                          i32.const 77
+                          i32.const 8
+                          i32.store
+                          i32.const 82
+                          i64.const 10
+                          i64.store
+                          i32.const 91
+                          i32.const 28
+                          i32.store
+                          i64.const 67
+                          call $syscall
+                          i64.extend_i32_s
+                          (i64.const 0)
+                          i32.const 72
+                          i32.const 1
+                          i32.store 
+                          i32.const 77
+                          i32.const 1 
+                          i32.store
+                          (i64.const 72)
+                          ))
+                    |}
+  in
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let contract_address1 = make_contract_address "test" in
+  let table = Ticket_table.empty in
+  let argument =
+    Bytes.concat Bytes.empty
+      [
+        i64 20L;
+        Ticket_handle.to_bytes handle;
+        Address.to_string addr |> Bytes.of_string (* 67 *);
+      ] in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:contract_address1 ~tickets:[handle])
+  in
+  let module Ctx = Wasm_vm.Ffi.Make (M) in
+  let _, ops = invoke ~custom:Ctx.custom ~storage ~argument code in
+  let x = M.get_ops ops |> Result.get_ok |> List.hd in
+  Alcotest.(check Testables.contract_operation)
+    "Same"
+    (Contract_context.Contract_operation.Transfer
+       { ticket; amount = Amount.of_int 10; destination = addr })
+    x
+
+let test_ticket_own_dup () =
+  let open Core_deku in
+  let code =
+    {|
+                  (module
+                    (import "env" "syscall" (func $syscall (param i64) (result i32)))
+                    (memory (export "memory") 1)
+                    (func (export "main")  (param i32) (result i64 i64 i64)
+                      i32.const 21
+                      i32.const 5
+                      i32.store
+                      i32.const 26
+                      i32.const 0
+                      i32.store
+                      i64.const 21 
+                      call $syscall
+                      i32.const 5
+                      i32.store
+                      i32.const 26
+                      i32.const 0
+                      i32.store
+                      i64.const 21 
+                      call $syscall
+                      i64.extend_i32_s
+                      (i64.const 20)
+                      (i64.const 8)
+
+                      ))
+                |}
+  in
+  let storage = Bytes.empty in
+  let addr = make_address () in
+  let ticket = make_ticket () in
+  let handle = Ticket_handle.make addr ticket in
+  let argument = handle |> Ticket_handle.to_bytes in
+  let table = Ticket_table.empty in
+  let table =
+    Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
+      ~amount:(Amount.of_int 10) in
+  let module M =
+  (val Contract_context.make ~source:addr ~sender:addr ~table
+         ~contracts_table:(fun _ -> None)
+         ~self:(make_contract_address "test")
+         ~tickets:[handle])
+  in
+  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
+      ignore
+        (let module Ctx = Wasm_vm.Ffi.Make (M) in
+        invoke ~custom:Ctx.custom ~storage ~argument code
+        |> fst
+        |> Ticket_handle.of_bytes
+        |> Option.get))
 
 let test_extern_bindings () =
   let code =
     {|
-    (module
-      (import "env" "opaque" (func $opaque (result i64)))
-      (memory (export "memory") 1)
-      (func (export "main") (param i32) (param i32) (result i32)
-        local.get 1
-        i64.const 24
-        call $opaque
-        i64.add
-        i64.store
-        i32.const 8))
-    |}
+          (module
+            (import "env" "syscall" (func $syscall (param i64) (result i32)))
+            (memory (export "memory") 1)
+            (func (export "main")  (param i32) (result i64 i64 i64)
+              i32.const 0
+              i64.const 0
+              i64.store
+              i32.const 9
+              i64.const 42
+              i64.store
+              i64.const 0
+              call $syscall
+              (i64.extend_i32_s)
+              (i64.const 8)
+              (i64.const 45)
+              ))
+          |}
   in
   let storage = Bytes.empty in
   let argument = Bytes.empty in
   let called = ref false in
-  let opaque_fn _ _ =
+  let custom mem arg =
     called := true;
-    Some (Wasm_vm.Value.i64 13L) in
-  let imports = Wasm_vm.[Extern.func ([], Some I64) opaque_fn] in
-  let storage = invoke ~imports ~storage ~argument code in
-  Alcotest.(check Hexdump.hex)
-    "Same"
-    (Hexdump.of_string "25 00 00 00 00 00 00 00")
-    storage;
+    let buf = Wasm_vm.Memory.load_bytes mem ~address:arg ~size:8 in
+    let num = Bytes.get_int64_le buf 0 in
+    match num with
+    | 0L ->
+      let i64m = i64 in
+      let i64 =
+        Wasm_vm.Memory.load_bytes mem ~address:Int64.(add arg 9L) ~size:8 in
+      let i64 = Bytes.get_int64_le i64 0 in
+      let i64 = Int64.add i64 1L in
+      Wasm_vm.Memory.store_bytes mem ~address:0L ~content:(i64m i64)
+    | _ -> assert false in
+  let storage, _ = invoke ~custom ~storage ~argument code in
+  let storage = Bytes.get_int64_le storage 0 in
+  Alcotest.(check int64) "Same" 43L storage;
   Alcotest.(check bool) "Called" true !called
-
-let test_extern_manipulating_memory () =
-  let code =
-    {|
-    (module
-      (import "env" "mock_hash" (func $mock_hash (param i32) (param i32) (param i32)))
-      (memory (export "memory") 1)
-      (func (export "main") (param $argument i32) (param $storage i32) (result i32)
-        local.get $argument
-        i32.const 8
-        local.get $storage
-        call $mock_hash
-        i32.const 32))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Hexdump.of_string "AB CD EF 01 02 03 04 05" in
-  let mock_hash memory args =
-    let open Wasm_vm in
-    let payload, size, target =
-      match args with
-      | [payload; size; target] -> (payload, size, target)
-      | _ -> assert false in
-    let payload, size, target =
-      match
-        (Value.to_int32 payload, Value.to_int32 size, Value.to_int32 target)
-      with
-      | Some payload, Some size, Some target ->
-        (Int64.of_int32 payload, Int32.to_int size, Int64.of_int32 target)
-      | _ -> assert false in
-    let payload = Memory.sub memory payload size in
-    Alcotest.(check Hexdump.hex) "Same buffer" argument payload;
-    let hash =
-      Hexdump.of_string
-        "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92" in
-    Memory.blit memory target hash;
-    None in
-  let imports = Wasm_vm.Extern.[func ([I32; I32; I32], None) mock_hash] in
-  let storage = invoke ~imports ~storage ~argument code in
-  Alcotest.(check int) "Same size" 32 (Bytes.length storage);
-  Alcotest.(check Hexdump.hex)
-    "Same"
-    (Hexdump.of_string
-       "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92")
-    storage
-
-let test_memory_export () =
-  let code =
-    {|
-    (module
-      (func (export "main") (param i32) (param i32) (result i32)
-        i32.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_memory_name () =
-  let code =
-    {|
-    (module
-      (memory (export "foo") 1)
-      (func (export "main") (param i32) (param i32) (result i32)
-        i32.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_memory_type () =
-  let code =
-    {|
-    (module
-      (func (export "memory"))
-      (func (export "main") (param i32) (param i32) (result i32)
-        i32.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_main_export () =
-  let code = {|
-    (module
-      (memory (export "memory") 1))
-    |} in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_main_name () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "foo") (param i32) (param i32) (result i32)
-        i32.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_main_type () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (global (export "main") (mut i32) (i32.const 0)))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_main_signature () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "main") (result i32)
-        i32.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_division_by_zero () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "main") (param i32) (param i32) (result i32)
-        i32.const 1
-        i32.const 0
-        i32.div_s))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_trap_unreachable () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "main") (param i32) (param i32) (result i32)
-        unreachable))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
-
-let test_incorrect_return_type () =
-  let code =
-    {|
-    (module
-      (memory (export "memory") 1)
-      (func (export "main") (param i32) (param i32) (result i64)
-        i64.const 0))
-    |}
-  in
-  let storage = Bytes.empty in
-  let argument = Bytes.empty in
-  Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
-      ignore (invoke ~storage ~argument code))
 
 let test =
   let open Alcotest in
@@ -257,16 +499,12 @@ let test =
     [
       test_case "Simple invocation" `Quick test_simple_invocation;
       test_case "External calls" `Quick test_extern_bindings;
-      test_case "External memory manipulation" `Quick
-        test_extern_manipulating_memory;
-      test_case "Export memory" `Quick test_memory_export;
-      test_case "Export memory name" `Quick test_memory_name;
-      test_case "Export memory type" `Quick test_memory_type;
-      test_case "Export main" `Quick test_main_export;
-      test_case "Export main name" `Quick test_main_name;
-      test_case "Export main type" `Quick test_main_type;
-      test_case "Main signature" `Quick test_main_signature;
-      test_case "Main return type" `Quick test_incorrect_return_type;
-      test_case "Division by zero" `Quick test_division_by_zero;
-      test_case "Trap unreachable" `Quick test_trap_unreachable;
+      test_case "Tickets ownership" `Quick test_ticket_own;
+      test_case "Tickets ownership dup fails" `Quick test_ticket_own_dup;
+      test_case "Tickets transfer: implicit -> originated -> invoke originated"
+        `Quick test_ticket_send_twice;
+      test_case "Tickets transfer: implicit -> originated -> implicit" `Quick
+        test_ticket_send_implicit;
+      test_case "Tickets join" `Quick test_ticket_join;
+      test_case "Tickets split" `Quick test_ticket_split;
     ] )
