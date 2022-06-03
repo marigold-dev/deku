@@ -34,17 +34,17 @@ let test_ticket_own () =
                 (import "env" "syscall" (func $syscall (param i64) (result i32)))
                 (memory (export "memory") 1)
                 (func (export "main")  (param i32) (result i64 i64 i64)
-                  i32.const 21
+                  i32.const 41
                   i32.const 5
                   i32.store
-                  i32.const 22
+                  i32.const 46
                   i32.const 0
                   i32.store
-                  i64.const 21 
+                  i64.const 41 
                   call $syscall
                   i64.extend_i32_s
-                  (i64.const 20)
-                  (i64.const 45)
+                  (i64.const 40)
+                  (i64.const 95)
                   ))
             |}
   in
@@ -86,20 +86,20 @@ let test_ticket_join () =
                     (import "env" "syscall" (func $syscall (param i64) (result i32)))
                     (memory (export "memory") 1)
                     (func (export "main")  (param i32) (result i64 i64 i64)
-                      i32.const 41
+                      i32.const 81
                       i32.const 6
                       i32.store
-                      i32.const 46
+                      i32.const 86
                       i32.const 0
                       i32.store
-                      i32.const 51
-                      i32.const 20
+                      i32.const 91
+                      i32.const 40
                       i32.store
-                      i64.const 41 
+                      i64.const 81 
                       call $syscall
                       i64.extend_i32_s
-                      (i64.const 20)
-                      (i64.const 99)
+                      (i64.const 40)
+                      (i64.const 555)
                       ))
                 |}
   in
@@ -148,23 +148,23 @@ let test_ticket_split () =
                         (import "env" "syscall" (func $syscall (param i64) (result i32)))
                         (memory (export "memory") 1)
                         (func (export "main")  (param i32) (result i64 i64 i64)
-                          i32.const 21
+                          i32.const 41
                           i32.const 4
                           i32.store
-                          i32.const 26
+                          i32.const 46
                           i32.const 0
                           i32.store
-                          i32.const 31
+                          i32.const 51
                           i64.const 5
                           i64.store
-                          i32.const 40
+                          i32.const 60
                           i64.const 5
                           i64.store
-                          i64.const 21
+                          i64.const 41
                           call $syscall
                           i64.extend_i32_s
-                          (i64.const 41)
-                          (i64.const 99)
+                          (i64.const 80)
+                          (i64.const 555)
                           ))
                     |}
   in
@@ -192,8 +192,8 @@ let test_ticket_split () =
   let module Ctx = Wasm_vm.Ffi.Make (M) in
   let storage = invoke ~custom:Ctx.custom ~storage ~argument code |> fst in
   let first, second =
-    ( Bytes.sub storage 0 20 |> Ticket_handle.of_bytes |> Option.get,
-      Bytes.sub storage 20 20 |> Ticket_handle.of_bytes |> Option.get ) in
+    ( Bytes.sub storage 0 40 |> Ticket_handle.of_bytes |> Option.get,
+      Bytes.sub storage 40 40 |> Ticket_handle.of_bytes |> Option.get ) in
   let storage = (first, second) in
   let imit_hanlde = (fst imit_hanlde, snd imit_hanlde) in
   Alcotest.(check (pair Testables.ticket_handle Testables.ticket_handle))
@@ -206,32 +206,32 @@ let test_ticket_send_twice () =
                     (import "env" "syscall" (func $syscall (param i64) (result i32)))
                     (memory (export "memory") 1)
                     (func (export "main")  (param i32) (result i64 i64 i64)
-                      i32.const 67
+                      i32.const 87
                       i32.const 8
                       i32.store
-                      i32.const 72
+                      i32.const 92
                       i32.const 0
                       i32.store
-                      i32.const 77
+                      i32.const 97
                       i32.const 8
                       i32.store
-                      i32.const 82
+                      i32.const 102
                       i64.const 10
                       i64.store
-                      i32.const 91
-                      i32.const 28
+                      i32.const 111
+                      i32.const 48
                       i32.store
-                      i64.const 67
+                      i64.const 87
                       call $syscall
                       i64.extend_i32_s
                       (i64.const 0)
-                      i32.const 72
+                      i32.const 102
                       i32.const 1
                       i32.store 
-                      i32.const 77
+                      i32.const 107
                       i32.const 1 
                       i32.store
-                      (i64.const 72)
+                      (i64.const 102)
                       ))
                 |}
   in
@@ -241,16 +241,16 @@ let test_ticket_send_twice () =
                     (import "env" "syscall" (func $syscall (param i64) (result i32)))
                     (memory (export "memory") 1)
                     (func (export "main")  (param i32) (result i64 i64 i64)
-                      i32.const 21
+                      i32.const 41
                       i32.const 5
                       i32.store
-                      i32.const 26
+                      i32.const 46
                       i32.const 0
                       i32.store
-                      i64.const 21 
+                      i64.const 41 
                       call $syscall
                       i64.extend_i32_s
-                      (i64.const 20)
+                      (i64.const 40)
                       (i64.const 99)
                       ))
                 |}
@@ -265,7 +265,7 @@ let test_ticket_send_twice () =
   let argument =
     Bytes.concat Bytes.empty
       [
-        i64 20L;
+        i64 40L;
         Ticket_handle.to_bytes handle;
         Address.to_string (Address.of_contract_hash contract_address2)
         |> Bytes.of_string
@@ -339,32 +339,32 @@ let test_ticket_send_implicit () =
                         (import "env" "syscall" (func $syscall (param i64) (result i32)))
                         (memory (export "memory") 1)
                         (func (export "main")  (param i32) (result i64 i64 i64)
-                          i32.const 67
+                          i32.const 87
                           i32.const 8
                           i32.store
-                          i32.const 72
+                          i32.const 92
                           i32.const -1
                           i32.store
-                          i32.const 77
+                          i32.const 97
                           i32.const 8
                           i32.store
-                          i32.const 82
+                          i32.const 102
                           i64.const 10
                           i64.store
-                          i32.const 91
-                          i32.const 28
+                          i32.const 111
+                          i32.const 48
                           i32.store
-                          i64.const 67
+                          i64.const 87
                           call $syscall
                           i64.extend_i32_s
                           (i64.const 0)
-                          i32.const 72
+                          i32.const 92
                           i32.const 1
                           i32.store 
-                          i32.const 77
+                          i32.const 97
                           i32.const 1 
                           i32.store
-                          (i64.const 72)
+                          (i64.const 92)
                           ))
                     |}
   in
@@ -406,23 +406,23 @@ let test_ticket_own_dup () =
                     (import "env" "syscall" (func $syscall (param i64) (result i32)))
                     (memory (export "memory") 1)
                     (func (export "main")  (param i32) (result i64 i64 i64)
-                      i32.const 21
+                      i32.const 41
                       i32.const 5
                       i32.store
-                      i32.const 26
+                      i32.const 46
                       i32.const 0
                       i32.store
-                      i64.const 21 
+                      i64.const 41 
                       call $syscall
                       i32.const 5
                       i32.store
-                      i32.const 26
+                      i32.const 46
                       i32.const 0
                       i32.store
-                      i64.const 21 
+                      i64.const 41 
                       call $syscall
                       i64.extend_i32_s
-                      (i64.const 20)
+                      (i64.const 40)
                       (i64.const 8)
 
                       ))

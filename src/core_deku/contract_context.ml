@@ -77,7 +77,7 @@ let make ~sender ~table ~self ~source ~tickets ~contracts_table =
     end
     module Ticket_handle = struct
       include Ticket_handle
-      let size = 20
+      let size = 40
       let of_bytes t = Option.value_exn (of_bytes t)
     end
     module Ticket_id = struct

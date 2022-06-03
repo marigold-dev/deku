@@ -219,16 +219,16 @@ let test_ok_wasm msg =
     (import "env" "syscall" (func $syscall (param i64) (result i32)))
     (memory (export "memory") 1)
     (func (export "main")  (param i32) (result i64 i64 i64)
-      i32.const 21
+      i32.const 41
       i32.const 5
       i32.store
-      i32.const 26
+      i32.const 46
       i32.const 0
       i32.store
-      i64.const 21 
+      i64.const 41 
       call $syscall
       i64.extend_i32_s
-      (i64.const 20)
+      (i64.const 40)
       (i64.const 99)
       ))
     |}
@@ -245,13 +245,12 @@ let test_ok_wasm msg =
   let state, _ = State.apply_user_operation initial_state user_op.hash user_op in
   let init_storage = State.contract_storage state in
 
+  let arg =
+    [%to_yojson: bytes]
+      (Ticket_handle.make (Address.of_key_hash address) ticket
+      |> Ticket_handle.to_bytes) in
   let payload =
-    Contract_vm.Invocation_payload.wasm_of_yojson
-      ~arg:
-        ([%to_yojson: bytes]
-           (Ticket_handle.make (Address.of_key_hash address) ticket
-           |> Ticket_handle.to_bytes))
-    |> Result.get_ok in
+    Contract_vm.Invocation_payload.wasm_of_yojson ~arg |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
       { to_invoke = contract_address; argument = payload; tickets = [ticket] }

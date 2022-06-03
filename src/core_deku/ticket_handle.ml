@@ -13,8 +13,8 @@ let make_temp owner ticket amount =
       Amount.to_int amount |> string_of_int;
     ]
 
-let to_bytes t = BLAKE2B_20.to_raw_string t |> Bytes.of_string
-let of_bytes t = Bytes.to_string t |> BLAKE2B_20.of_raw_string
+let to_bytes t = to_string t |> Bytes.of_string
+let of_bytes t = Bytes.to_string t |> of_string
 
 module Map = Helpers.Map.Make_with_yojson (BLAKE2B_20)
 module Set = Helpers.Set.Make_with_yojson (BLAKE2B_20)
