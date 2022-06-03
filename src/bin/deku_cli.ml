@@ -113,9 +113,20 @@ let argument =
 let address =
   let parser string =
     Address.of_string string
+    |> Option.map Address.to_key_hash
+    |> Option.join
     |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
   let printer fmt wallet =
-    Format.fprintf fmt "%s" (wallet |> Address.to_string) in
+    Format.fprintf fmt "%s" (wallet |> Key_hash.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
+let contract_address =
+  let parser string =
+    Deku_vm.Contract_address.of_string string
+    |> Option.to_result ~none:(`Msg "Expected a valid contract address.") in
+  let printer fmt wallet =
+    Format.fprintf fmt "%s" (wallet |> Deku_vm.Contract_address.to_string) in
   let open Arg in
   conv (parser, printer)
 
@@ -192,19 +203,6 @@ let create_wallet =
   let open Term in
   lwt_ret (const create_wallet $ const ())
 
-let info_create_transaction =
-  let doc =
-    (* TODO: these docs are out of sync for deku-p *)
-    Printf.sprintf
-      "Submits a transaction to the sidechain. The transaction will be \
-       communicated to all known validators to be included in the next block. \
-       If the path to the wallet file corresponding to the sending address is \
-       not provided, a wallet file with the correct filename (%s) must be \
-       present in the current working directory"
-      (make_filename_from_address "address") in
-  Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
-    ~man
-
 let with_validator_uri node_folder f =
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -221,32 +219,78 @@ let with_validator_uri node_folder f =
     | [] -> Lwt.return (`Error (false, "No validators found"))
     | validator_uri :: _ -> f validator_uri)
 
-let create_transaction node_folder sender_wallet_file received_address amount
-    ticket argument vm_flavor =
+(* TODO: too much duplicated code *)
+let info_create_contract_invocation_transaction =
+  let doc =
+    (* TODO: these docs are out of sync for deku-p *)
+    Printf.sprintf
+      "Submits a transaction to the given contracts. The transaction will be \
+       communicated to all known validators to be included in the next block. \
+       If the path to the wallet file corresponding to the sending address is \
+       not provided, a wallet file with the correct filename (%s) must be \
+       present in the current working directory"
+      (make_filename_from_address "address") in
+  Cmd.info "create-contract-invocation-transaction"
+    ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
+let create_contract_invocation_transaction node_folder sender_wallet_file
+    contract_address arg vm_flavor =
+  let open Network in
+  with_validator_uri node_folder @@ fun (_, validators_uri) ->
+  let%await block_level_response = request_block_level () validators_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let payload =
+    match vm_flavor with
+    | `Lambda -> Deku_vm.Contract_vm.Invocation_payload.lambda_of_yojson ~arg
+    | `Dummy -> Deku_vm.Contract_vm.Invocation_payload.dummy_of_yojson ~arg
+  in
+  let argument = payload |> Result.get_ok in
+  let operation =
+    Vm_transaction
+      {
+        payload =
+          Deku_vm.Contract_transaction.Contract_invocation
+            { to_invoke = contract_address; argument }
+          |> Deku_vm.Contract_transaction.to_yojson;
+      }
+    |> Core_deku.User_operation.make ~source:wallet.address in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
+
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Network.request_user_operation_gossip
+      { user_operation = transaction }
+      identity.uri in
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+  Lwt.return (`Ok ())
+
+let info_create_transaction =
+  let doc =
+    (* TODO: these docs are out of sync for deku-p *)
+    Printf.sprintf
+      "Submits a transaction to the sidechain. The transaction will be \
+       communicated to all known validators to be included in the next block. \
+       If the path to the wallet file corresponding to the sending address is \
+       not provided, a wallet file with the correct filename (%s) must be \
+       present in the current working directory"
+      (make_filename_from_address "address") in
+  Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+    ~man
+
+let create_transaction node_folder sender_wallet_file destination amount ticket
+    =
   let open Network in
   with_validator_uri node_folder @@ fun (_, validator_uri) ->
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
-    match (Address.to_key_hash received_address, argument) with
-    | Some addr, None ->
-      Core_deku.User_operation.make ~source:wallet.address
-        (Transaction { destination = addr; amount; ticket })
-    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
-    | None, None -> failwith "Invalid transaction"
-    | None, Some arg ->
-      let payload =
-        match vm_flavor with
-        | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-        | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
-      let arg = payload |> Result.get_ok in
-      Core_deku.User_operation.make ~source:wallet.address
-        (Contract_invocation
-           {
-             to_invoke = Address.to_contract_hash received_address |> Option.get;
-             argument = arg;
-           }) in
+    Core_deku.User_operation.make ~source:wallet.address
+      (Transaction { destination; amount; ticket }) in
   let transaction =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
@@ -313,6 +357,7 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
       ~data:
         (Core_deku.User_operation.make ~source:wallet.address
            (Vm_transaction { payload })) in
+  let Protocol.Operation.Core_user.{ hash = operation_hash; _ } = transaction in
   let suffix =
     Stdlib.Random.bits () |> string_of_int |> BLAKE2B.hash |> BLAKE2B.to_string
   in
@@ -327,9 +372,9 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
   External_vm.External_vm_client.start_vm_ipc ~named_pipe_path;
   let initial_state = External_vm.External_vm_client.get_initial_state () in
   External_vm.External_vm_client.set_initial_state initial_state;
-  let mock_hash = BLAKE2B.hash "mocked op hash" in
   External_vm.External_vm_client.apply_vm_operation ~state:initial_state
-    ~source:wallet.address ~tx_hash:transaction.hash ~op_hash:mock_hash payload
+    ~source:wallet.address ~tx_hash:transaction.hash ~op_hash:operation_hash
+    payload
   |> External_vm.External_vm_protocol.State.to_yojson
   |> Yojson.Safe.to_string
   |> print_endline;
@@ -369,15 +414,22 @@ let originate_contract node_folder contract_json initial_storage
       let payload =
         match vm_flavor with
         | `Lambda ->
-          Contract_vm.Origination_payload.lambda_of_yojson
+          Deku_vm.Contract_vm.Origination_payload.lambda_of_yojson
             ~code:contract_program ~storage:initial_storage
           |> Result.get_ok
         | `Dummy ->
           let int =
             try Yojson.Safe.Util.to_int initial_storage with
             | _ -> failwith "Invalid storage fro contract" in
-          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
-      let origination_op = User_operation.Contract_origination payload in
+          Deku_vm.Contract_vm.Origination_payload.dummy_of_yojson ~storage:int
+      in
+      let origination_op =
+        User_operation.Vm_transaction
+          {
+            payload =
+              Deku_vm.Contract_transaction.Contract_origination payload
+              |> Deku_vm.Contract_transaction.to_yojson;
+          } in
       let originate_contract_op =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
@@ -394,8 +446,9 @@ let originate_contract node_folder contract_json initial_storage
       Format.printf "operation_hash: %s\n%!"
         (BLAKE2B.to_string originate_contract_op.hash);
       Format.printf "contract_address: %s\n%!"
-        (Contract_address.of_user_operation_hash originate_contract_op.hash
-        |> Contract_address.to_string);
+        (Deku_vm.Contract_address.of_user_operation_hash
+           originate_contract_op.hash
+        |> Deku_vm.Contract_address.to_string);
       Lwt.return (`Ok ()))
 
 let folder_node position =
@@ -466,11 +519,28 @@ let create_transaction =
     let doc = "The ticket to be transferred." in
     let open Arg in
     required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
-  let argument =
-    let doc = "Argument to be passed to transaction" in
+  let open Term in
+  lwt_ret
+    (const create_transaction
+    $ folder_node 0
+    $ address_from 1
+    $ address_to
+    $ amount
+    $ ticket)
+
+let create_contract_invocation_transaction =
+  let contract_address =
+    let doc = "The address of the contract." in
+    let env = Cmd.Env.info "CONTRACT" ~doc in
     let open Arg in
-    value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
-  in
+    required
+    & pos 2 (some contract_address) None
+    & info [] ~env ~docv:"contract" ~doc in
+  let argument =
+    let doc = "Argument to be passed to the contract." in
+    let env = Cmd.Env.info "ARG" ~doc in
+    let open Arg in
+    required & pos 3 (some argument) None & info [] ~env ~docv:"arg" ~doc in
   let vm_flavor =
     let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
     let env = Cmd.Env.info "VM_FLAVOR" ~doc in
@@ -480,12 +550,10 @@ let create_transaction =
       & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let open Term in
   lwt_ret
-    (const create_transaction
-    $ folder_node 0
-    $ address_from 1
-    $ address_to
-    $ amount
-    $ ticket
+    (const create_contract_invocation_transaction
+    $ folder_node 1
+    $ address_from 2
+    $ contract_address
     $ argument
     $ vm_flavor)
 
@@ -932,6 +1000,8 @@ let _ =
        [
          Cmd.v info_create_wallet create_wallet;
          Cmd.v info_create_transaction create_transaction;
+         Cmd.v info_create_contract_invocation_transaction
+           create_contract_invocation_transaction;
          Cmd.v info_create_custom_transaction create_custom_transaction;
          Cmd.v info_create_mock_transaction create_mock_transaction;
          Cmd.v info_originate_contract originate_contract;

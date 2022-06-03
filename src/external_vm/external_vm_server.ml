@@ -42,8 +42,8 @@ let main ~named_pipe_path initial_state transition =
   let rec runtime_loop transition =
     if chain.receive () = Control then (
       (match chain.receive () with
-      | Transaction { source; tx_hash; op_hash = _; operation } ->
-        transition storage source tx_hash operation
+      | Transaction { source; tx_hash; op_hash; operation } ->
+        transition storage source tx_hash op_hash operation
       | _ -> Error "protocol not respected")
       |> Result.fold
            ~ok:(fun _ -> External_vm_protocol.Stop)

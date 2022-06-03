@@ -2,22 +2,17 @@ open Helpers
 open Crypto
 
 type initial_operation =
-  | Transaction          of {
+  | Transaction    of {
       destination : Key_hash.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-  | Contract_invocation  of {
-      to_invoke : Contract_address.t;
-      argument : Contract_vm.Invocation_payload.t;
-    }
-  | Contract_origination of Contract_vm.Origination_payload.t
-  | Tezos_withdraw       of {
+  | Tezos_withdraw of {
       owner : Tezos.Address.t;
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-  | Vm_transaction       of { payload : Yojson.Safe.t }
+  | Vm_transaction of { payload : Yojson.Safe.t }
 [@@deriving yojson]
 
 type t = {

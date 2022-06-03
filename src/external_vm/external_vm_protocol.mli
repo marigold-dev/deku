@@ -8,6 +8,8 @@ module State : sig
   val set : string -> Yojson.Safe.t -> t -> t
 
   val empty : t
+
+  val equal : t -> t -> bool
 end
 
 type set = {

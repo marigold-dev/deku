@@ -8,6 +8,7 @@
   helpers
   yojson
   tezos
+  deku_vm
   tezos-micheline)
  (preprocess
   (pps ppx_lambda_vm ppx_let_binding ppx_deriving.show)))

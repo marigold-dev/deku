@@ -9,6 +9,8 @@ module State = struct
   let set = String_map.add
 
   let empty = String_map.empty
+
+  let equal = String_map.equal Yojson.Safe.equal
 end
 
 type set = {

@@ -8,16 +8,16 @@
 
 (executable
  (name deku_cli)
- (libraries node bin_common helpers cmdliner)
+ (libraries deku_vm node bin_common helpers cmdliner)
  (modules Deku_cli)
  (public_name deku-cli)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
 (executable
- (name deku_vm)
- (libraries node bin_common helpers cmdliner)
- (modules Deku_vm)
+ (name deku_external_vm)
+ (libraries node deku_vm bin_common helpers cmdliner)
+ (modules Deku_external_vm)
  (public_name deku-vm))
 
 (library

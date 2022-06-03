@@ -1,5 +1,6 @@
 open Crypto
 open Core_deku
+open External_vm.External_vm_protocol
 
 let make_ticket ?ticketer ?data () =
   let open Tezos in
@@ -27,30 +28,27 @@ let make_tezos_address () =
   let hash = Ed25519.Key_hash.of_key address in
   Address.Implicit (Ed25519 hash)
 
-let setup ?(initial_amount = 10000) () =
-  let t2 = make_ticket () in
-  let tezos_address = make_tezos_address () in
-  let op =
-    Tezos_operation.Tezos_deposit
-      {
-        destination = tezos_address;
-        ticket = t2;
-        amount = Amount.of_int initial_amount;
-      } in
-  let s = State.empty () in
-  let opp =
-    {
-      Tezos_operation.tezos_operation_hash =
-        "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
-        |> Tezos.Operation_hash.of_string
-        |> Option.get;
-      internal_operations = [op];
-    } in
-  let opp = Tezos_operation.make opp in
+let storage_factory (state : State.t ref) :
+    External_vm.External_vm_server.storage =
+  let get_value state key = State.get key !state in
+  let set_value state key value = state := State.set key value !state in
+  { get = get_value state; set = set_value state }
+
+let make_storage (initial_state : State.t) :
+    State.t ref * External_vm.External_vm_server.storage =
+  let state = ref initial_state in
+  let get key = State.get key !state in
+  let set key value = state := State.set key value !state in
+  (state, { get; set })
+
+let setup () =
   let make_address =
-    tezos_address |> Tezos.Address.to_string |> Key_hash.of_string |> Option.get
-  in
-  (State.apply_tezos_operation s opp, make_address)
+    make_tezos_address ()
+    |> Tezos.Address.to_string
+    |> Key_hash.of_string
+    |> Option.get in
+  let vm_state, storage = make_storage State.empty in
+  (vm_state, storage, make_address)
 
 let amount =
   Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%d" (Amount.to_int x))
