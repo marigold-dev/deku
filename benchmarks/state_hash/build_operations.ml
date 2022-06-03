@@ -87,20 +87,24 @@ let n_transactions state sources triples mock_hash =
   else
     raise Length_not_equal
 
-let n_transactions' sources triples =
+let n_transactions' state sources triples mock_hash =
   let len_souces = List.length sources in
   let len_trips = List.length triples in
   if len_souces = len_trips then
     List.fold_left2
-      (fun result source (destination, amount, ticket) ->
+      (fun result_hash source (destination, amount, ticket) ->
         (* todo: check the storage before and after *)
         (* each time transfer add it into state *)
         let user_op = user_op_transaction ~destination ~amount ~ticket in
         let op = Core_deku.User_operation.make ~source user_op in
-        (*let state, _ = Core_deku.State.apply_user_operation state mock_hash op in*)
+        let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
         (* Check balance *)
-        op :: result)
-      [] sources triples
+        let hash = Core_deku.State.hash state in 
+        let final = Crypto.BLAKE2B.both hash result_hash in 
+        final
+        
+       )
+      (Crypto.BLAKE2B.hash "empty") sources triples
   else
     raise Length_not_equal
 

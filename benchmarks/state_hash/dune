@@ -1,5 +1,5 @@
 (executables
- (names bench_main)
+ (names bench_main )
  (libraries
   core
   core_bench

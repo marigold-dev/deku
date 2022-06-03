@@ -159,14 +159,14 @@ let init_state_n n () =
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
   (* Convert tezos_addresses to Deku addresses *)
   let deku_addresses = Build_usage.make_n_deku_addresses tezos_addresses in
-  let _ =
+  (*let _ =
     List.fold_left2
       (fun _ deku_add ticket ->
         let balance =
           Core_deku.Ledger.balance deku_add ticket
             (Core_deku.State.ledger state) in
         Printf.printf "balance deposit: %i \n" (Core_deku.Amount.to_int balance))
-      () deku_addresses tickets in
+      () deku_addresses tickets in*)
   (state, tezos_addresses, deku_addresses, tickets)
 
 (* The number of n in init_state and build_state_n are the same *)
@@ -178,12 +178,18 @@ let build_state_n n () =
   (* contract origination *)
   let code, storage = Build_operations.contract_vm in
   let deku_add_1 = List.nth deku_addresses 0 in
+  let _deku_add_2 = List.nth deku_addresses 1 in
+  
   let initial_operation =
     Build_operations.user_op_contract_origination code storage in
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
+  (*let op1' = Core_deku.User_operation.make ~source:deku_add_2 initial_operation in*)
   let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state mock_hash op1 in
+  (*let state, _receipt_option =
+   Core_deku.State.apply_user_operation state mock_hash op1' in*)
+  
   let _init_storage = Core_deku.State.contract_storage state in
   (* contract invocation payload same source *)
   let arg = Build_operations.contract_arg () in
@@ -212,28 +218,32 @@ let build_state_n n () =
         [] destinations tickets
     else
       raise Build_operations.Length_not_equal in
-  let ops = Build_operations.n_transactions' sources triples in
-  let ops_len = List.length ops in
+  let hashes = Build_operations.n_transactions' state sources triples mock_hash in
+  (*let ops_len = List.length ops in
   let () =
     for i = 0 to ops_len - 1 do
       let op = List.nth ops i in
       let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
       let hash = Core_deku.State.hash state in 
-      let _ =
+      
+      (*let _ =
         List.fold_left2
           (fun _ des ticket ->
             let balance =
               Core_deku.Ledger.balance des ticket
                 (Core_deku.State.ledger state) in
             let _ =
-              Printf.printf "balance %i - ops len: %i \n" (Core_deku.Amount.to_int balance)
-            ops_len
+              Printf.printf "balance %i - add: %s \n" (Core_deku.Amount.to_int balance)
+              (Crypto.Key_hash.to_string des)
+            
             in
-            ())()
-          destinations tickets in
+            ()
+            
+            )()
+          destinations tickets in*)
       ignore hash
-    done in
-()
+    done in*)
+ignore hashes 
 
    (* 
   let states = Build_operations.n_transactions state sources triples mock_hash in
@@ -281,6 +291,6 @@ let build_state_n n () =
     ] in
   (test, states)*)
 
-let build_state_3 () = build_state_n 3 ()
+let build_state_3 () = build_state_n 5 ()
 
 let _build_state_10 () = build_state_n 10 ()

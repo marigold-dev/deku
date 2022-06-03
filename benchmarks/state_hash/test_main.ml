@@ -9,8 +9,8 @@
   ("State hash - Basic", [test_list] |> List.concat)
 *)
 let test_state_hash_3 =
-  let test_list, _state = Build_state.build_state_3 () in
-  ("State hash - 3", [test_list] |> List.concat)
+  let t = Build_state.build_state_3 () in
+  ("State hash - 3", [t] |> List.concat)
 
 (*
 let _test_state_hash_10 =
