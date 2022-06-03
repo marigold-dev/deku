@@ -6,7 +6,7 @@ let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
 let check_balance address ticket expected ledger =
-  let amount = Core_deku.of_int expected in
+  let amount = Core_deku.Amount.of_int expected in
   let balance = Core_deku.Ledger.balance address ticket ledger in
   amount = balance
 
@@ -43,21 +43,48 @@ let init_state () =
   let tezos_operation = Core_deku.Tezos_operation.make payload in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
   (* Check deposit balance *)
-  (state, (tezos_add_1, tezos_add_2), (ticket_1, ticket_2))
+  (* Convert tezos-addresses into deku-addresses to be able to use it
+      in Deku as it is deposit into this address.
+     - If I create a new Deku address, the deposit is 0.
+  *)
+  let deku_add_1 =
+    tezos_add_1
+    |> Tezos.Address.to_string
+    |> Crypto.Key_hash.of_string
+    |> Option.get in
+  let deku_add_2 =
+    tezos_add_2
+    |> Tezos.Address.to_string
+    |> Crypto.Key_hash.of_string
+    |> Option.get in
+
+  (* CHECK *)
+  (*let _ =
+      let balance =
+        Core_deku.Ledger.balance deku_add_1 ticket_1
+          (Core_deku.State.ledger state) in
+      Printf.printf "balance deposit 1: %i \n" (Core_deku.Amount.to_int balance)
+    in*)
+  ( state,
+    (tezos_add_1, tezos_add_2),
+    (deku_add_1, deku_add_2),
+    (ticket_1, ticket_2) )
 
 (*******************************************************************************)
 (* Build basic case for state *)
 
 let build_state () =
-  let init_state, (tezos_add_1, _tezos_add_2), (ticket_1, _) = init_state () in
+  let ( init_state,
+        (tezos_add_1, _tezos_add_2),
+        (deku_add_1, deku_add_2),
+        (ticket_1, _) ) =
+    init_state () in
   let code, storage = Build_operations.contract_vm in
   let initial_operation =
     Build_operations.user_op_contract_origination code storage in
   (* first user operation as contract origination,
      source is the destination address of tezos_operation
   *)
-  let deku_add_1 = make_address () in
-  let deku_add_2 = make_address () in
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
   let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
@@ -77,11 +104,12 @@ let build_state () =
          ~amount:(Core_deku.Amount.of_int 10)
          ~ticket:ticket_1) in
   let state, _ = Core_deku.State.apply_user_operation state mock_hash op3 in
-  let _ =
+  (*let _ =
     let balance =
       Core_deku.Ledger.balance deku_add_2 ticket_1
         (Core_deku.State.ledger state) in
-    Printf.printf "balance here: %i \n" (Core_deku.Amount.to_int balance) in
+    Printf.printf "balance basic here: %i \n" (Core_deku.Amount.to_int balance)
+  in*)
   (* fourth user operation as withdraw *)
   let op4 =
     Core_deku.User_operation.make ~source:deku_add_1
@@ -129,17 +157,27 @@ let init_state_n n () =
     } in
   let tezos_operation = Core_deku.Tezos_operation.make payload in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
-  (state, tezos_addresses, tickets)
+  (* Convert tezos_addresses to Deku addresses *)
+  let deku_addresses = Build_usage.make_n_deku_addresses tezos_addresses in
+  let _ =
+    List.fold_left2
+      (fun _ deku_add ticket ->
+        let balance =
+          Core_deku.Ledger.balance deku_add ticket
+            (Core_deku.State.ledger state) in
+        Printf.printf "balance deposit: %i \n" (Core_deku.Amount.to_int balance))
+      () deku_addresses tickets in
+  (state, tezos_addresses, deku_addresses, tickets)
 
 (* The number of n in init_state and build_state_n are the same *)
 
 let build_state_n n () =
-  let deku_addresses = Build_usage.make_n_address n in
-  let deku_add_1 = List.nth deku_addresses 0 in
   (* deposits *)
-  let init_state, _tezos_addresses, tickets = init_state_n n () in
+  let init_state, _tezos_addresses, deku_addresses, tickets =
+    init_state_n n () in
   (* contract origination *)
   let code, storage = Build_operations.contract_vm in
+  let deku_add_1 = List.nth deku_addresses 0 in
   let initial_operation =
     Build_operations.user_op_contract_origination code storage in
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
@@ -163,31 +201,41 @@ let build_state_n n () =
      Ledger.balance address ticket t
   *)
   let sources = deku_addresses in
+  let destinations = List.rev sources in
   let triples =
     let len_sources = List.length sources in
     let len_tickets = List.length tickets in
     if len_sources = len_tickets then
       List.fold_left2
         (fun result destination ticket ->
-          (* CHECK balance *)
-          (*let _ =
-            let ledger = Core_deku.State.ledger state in
-            let _ =
-              List.iter
-                (fun source ->
-                  let balance = Core_deku.Ledger.balance source ticket ledger in
-                  let _ =
-                    Printf.printf "balance : %i\n "
-                      (Core_deku.Amount.to_int balance) in
-
-                  ())
-                sources in
-            () in*)
           (destination, amount, ticket) :: result)
-        [] (List.rev sources) tickets
+        [] destinations tickets
     else
       raise Build_operations.Length_not_equal in
   let states = Build_operations.n_transactions state sources triples mock_hash in
+  (* CHECK balance *)
+  (*let _ =
+    (* check balance of sources and tickets *)
+    let () =
+      List.fold_left2
+        (fun _ source ticket ->
+          let balance =
+            Core_deku.Ledger.balance source ticket
+              (Core_deku.State.ledger states) in
+          Printf.printf " transfer source: %i \n"
+            (Core_deku.Amount.to_int balance))
+        () sources tickets in
+    (* Check balance of destination and tickets *)
+    let () =
+      List.fold_left2
+        (fun _ des ticket ->
+          let balance =
+            Core_deku.Ledger.balance des ticket
+              (Core_deku.State.ledger states) in
+          Printf.printf " transfer dest: %i \n"
+            (Core_deku.Amount.to_int balance))
+        () destinations tickets in
+    () in*)
   (* CHECK state storage *)
   let new_storage = Core_deku.State.contract_storage state in
   let old_contract =
@@ -211,4 +259,4 @@ let build_state_n n () =
 
 let build_state_3 () = build_state_n 3 ()
 
-let build_state_10 () = build_state_n 10 ()
+let _build_state_10 () = build_state_n 10 ()

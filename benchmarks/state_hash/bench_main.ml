@@ -6,13 +6,13 @@ open Core
    - 4 basic user operation: contract origination;
     contract invocation; transfer and withdraw (2 accounts)
 *)
-
+(*
 let bench_state_hash_basic =
   Bench.Test.create ~name:"bench basic" (fun () ->
       let _test, state = Build_state.build_state () in
       let _ = Core_deku.State.hash state in
       ())
-
+*)
 (* Increase case 
    
 *)
@@ -22,13 +22,14 @@ let bench_state_hash_3 =
       let _ = Core_deku.State.hash state in
       ())
 
+      (*
 let bench_state_hash_10 =
   Bench.Test.create ~name:"bench 10" (fun () ->
       let _test, state = Build_state.build_state_10 () in
       let _ = Core_deku.State.hash state in
-      ())
+      ())*)
 
-let tests = [bench_state_hash_basic; bench_state_hash_3; bench_state_hash_10]
+let tests = [ bench_state_hash_3]
 
 let command = Bench.make_command tests
 

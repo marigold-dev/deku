@@ -17,23 +17,36 @@ let make_n_tezos_address size =
     (Core.List.range 0 (size - 1))
 
 (*********************************************************************************)
-(* Deku address *)
+(* Convert Tezos address to Deku address *)
 
-let make_address () =
-  let _secret, _key, key_hash = Crypto.Key_hash.make_ed25519 () in
-  key_hash
+let make_deku_address tezos_address =
+  tezos_address
+  |> Tezos.Address.to_string
+  |> Crypto.Key_hash.of_string
+  |> Option.get
 
-(* Generate n Deku addresses*)
-let make_n_address size : Crypto.Key_hash.t list =
+let make_n_deku_addresses tezos_addresses =
   List.fold_left
-    (fun result _ ->
-      let key_hash = make_address () in
-      key_hash :: result)
-    []
-    (Core.List.range 0 (size - 1))
+    (fun result tezos_address ->
+      let deku_add = make_deku_address tezos_address in
+      deku_add :: result)
+    [] tezos_addresses
+
+(*let make_address () =
+    let _secret, _key, key_hash = Crypto.Key_hash.make_ed25519 () in
+    key_hash
+
+  (* Generate n Deku addresses*)
+  let make_n_address size : Crypto.Key_hash.t list =
+    List.fold_left
+      (fun result _ ->
+        let key_hash = make_address () in
+        key_hash :: result)
+      []
+      (Core.List.range 0 (size - 1))*)
 
 let print_address add =
-  Printf.printf "address: %s \n" (Crypto.Key_hash.to_string add)
+  Printf.printf "Deku address: %s \n" (Crypto.Key_hash.to_string add)
 
 let print_addresses l = List.iter (fun add -> print_address add) l
 
