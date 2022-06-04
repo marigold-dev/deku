@@ -43,32 +43,24 @@ type effect = private
         Trusted_validators_membership_change.Set.t;
     }
 
-val with_block :
-  (effect -> t -> unit) ->
-  Block.t ->
-  t ->
-  t
-  * [> `Already_known_block
-    | `Already_known_signature
-    | `Invalid_block                   of string
-    | `Invalid_block_when_applying
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ]
-    list
+type 'a error =
+  [> `Already_known_block
+  | `Already_known_signature
+  | `Invalid_block                   of string
+  | `Invalid_block_when_applying
+  | `Invalid_signature_for_this_hash
+  | `Not_a_validator ]
+  as
+  'a
+
+val with_block : (effect -> t -> unit) -> Block.t -> t -> t * _ error list
 
 val with_signature :
   (effect -> t -> unit) ->
   hash:BLAKE2B.t ->
   signature:Signature.t ->
   t ->
-  t
-  * [> `Already_known_block
-    | `Already_known_signature
-    | `Invalid_block                   of string
-    | `Invalid_block_when_applying
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ]
-    list
+  t * _ error list
 
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
@@ -76,14 +68,7 @@ val load_snapshot :
   last_block:Block.t ->
   last_block_signatures:Signature.t list ->
   t ->
-  ( t,
-    [> `Already_known_block
-    | `Already_known_signature
-    | `Invalid_block                   of string
-    | `Invalid_block_when_applying
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ] )
-  result
+  (t, _ error) result
 
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
