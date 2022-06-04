@@ -3,6 +3,7 @@ open Crypto
 open Protocol
 open State
 open Is_signable
+open Consensus_utils
 
 type signed =
   | Signed
@@ -53,55 +54,6 @@ type step =
 type t = step
 
 (* most small steps are here *)
-let is_validator_address state address =
-  List.exists
-    (fun validator -> Key_hash.equal validator.Validators.address address)
-    (Validators.to_list state.protocol.validators)
-
-let is_known_block state ~hash =
-  match Block_pool.find_block ~hash state.block_pool with
-  | Some _block -> true
-  | None -> false
-
-let is_known_signature state ~hash ~signature =
-  match Block_pool.find_signatures ~hash state.block_pool with
-  | Some signatures -> Signatures.mem signature signatures
-  | None -> false
-
-let signatures_required state =
-  let number_of_validators = Validators.length state.protocol.validators in
-  let open Float in
-  to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
-
-let is_next block state = Protocol.is_next state.protocol block
-
-(* `Next means current_block_height + 1
-   `Future means current_block_height + 2 + n
-   `Past means current_block_height - n *)
-let is_future_block block state =
-  if is_next block state then
-    `Next
-  else if block.block_height > state.protocol.block_height then
-    `Future
-  else
-    `Past
-
-let is_signed_block_hash ~hash state =
-  match Block_pool.find_signatures ~hash state.block_pool with
-  | Some signatures -> Signatures.is_signed signatures
-  | None -> false
-
-let is_valid_block state block =
-  let is_all_operations_properly_signed _block = true in
-  let%assert () =
-    ( Printf.sprintf
-        "new block has a lower block height (%Ld) than the current state (%Ld)"
-        block.Block.block_height state.protocol.block_height,
-      block.Block.block_height >= state.protocol.block_height ) in
-  let%assert () =
-    ( "some operation in the block is not properly signed",
-      is_all_operations_properly_signed block ) in
-  Ok ()
 
 let check_operation ~operation state =
   (* TODO: also check core_user properties such as being old operation *)
@@ -170,7 +122,7 @@ let is_signed_block ~hash state =
 
 (* TODO: this is checking too much*)
 let is_future_block ~signed ~block state =
-  match (is_future_block block state, signed) with
+  match (is_future_block state block, signed) with
   | `Past, _ ->
     (* TODO: may be malicious? Also, it may be a historical fork *)
     Noop
@@ -179,7 +131,7 @@ let is_future_block ~signed ~block state =
   | `Future, Not_signed -> (* TODO: may be malicious? *) Noop
 
 let is_signable_block ~block state =
-  if is_signable block state then Sign_block { block } else Noop
+  if is_signable state block then Sign_block { block } else Noop
 
 let sign_block ~block state =
   let secret = state.identity.secret in
@@ -195,7 +147,7 @@ let can_apply_block ~block state =
      in the same stack, because it produced an additional signature.
      Also it's a very good safeguard to have *)
   if
-    is_next block state
+    is_next state block
     && Block_pool.is_signed ~hash:block.hash state.block_pool
   then
     Apply_block { block }

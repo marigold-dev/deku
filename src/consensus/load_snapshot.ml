@@ -2,7 +2,7 @@ open Helpers
 open Crypto
 open Protocol
 open State
-open Steps
+open Consensus_utils
 open Apply_block
 
 let load_snapshot ~snapshot ~additional_blocks ~last_block
