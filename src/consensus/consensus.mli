@@ -82,6 +82,12 @@ val load_snapshot :
     | `State_root_not_the_expected ] )
   result
 
+val new_snapshot_ref : t -> Protocol.t -> t * Snapshots.snapshot_ref
+
+val block_matches_current_state_root_hash : state -> Block.t -> bool
+
+val block_matches_next_state_root_hash : state -> Block.t -> bool
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change

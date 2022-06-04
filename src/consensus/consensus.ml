@@ -24,6 +24,12 @@ let with_timeout effect state = Dispatch.dispatch effect Can_produce_block state
 let with_operation effect operation state =
   Dispatch.dispatch effect (Check_operation { operation }) state
 
+let new_snapshot_ref state protocol =
+  let snapshot_ref, snapshots =
+    Snapshots.add_snapshot_ref ~block_height:protocol.Protocol.block_height
+      state.snapshots in
+  ({ state with snapshots }, snapshot_ref)
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change
