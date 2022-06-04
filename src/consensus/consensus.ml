@@ -20,6 +20,8 @@ let with_block effect block state =
 let with_signature effect ~hash ~signature state =
   Dispatch.dispatch effect (Check_signature { hash; signature }) state
 
+let with_timeout effect state = Dispatch.dispatch effect Can_produce_block state
+
 let with_operation effect operation state =
   Dispatch.dispatch effect (Check_operation { operation }) state
 

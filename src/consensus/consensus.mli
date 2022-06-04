@@ -63,6 +63,13 @@ val with_signature :
   t ->
   t * _ error list
 
+val with_timeout :
+  (effect -> t -> unit) ->
+  hash:BLAKE2B.t ->
+  signature:Signature.t ->
+  t ->
+  t * _ error list
+
 val with_operation :
   (effect -> t -> unit) -> Operation.t -> t -> t * _ error list
 
