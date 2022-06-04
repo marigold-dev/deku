@@ -66,10 +66,20 @@ let apply_block ~block state =
       trusted_validator_membership_change;
     } in
 
-  Ok
-    ( state,
-      Both
-        ( Effect
-            (Applied_block
-               { block; receipts; trusted_validator_membership_change }),
-          Can_produce_block ) )
+  let self_signed =
+    match Block_pool.find_signatures ~hash:block.hash state.block_pool with
+    | Some signatures ->
+      if Signatures.is_self_signed signatures then Some signatures else None
+    | None -> None in
+
+  (* this is all the node is gonna see *)
+  let effect =
+    Effect.Applied_block
+      {
+        prev_protocol = previous_protocol;
+        block;
+        receipts;
+        trusted_validator_membership_change;
+        self_signed;
+      } in
+  Ok (state, Both (Effect effect, Can_produce_block))

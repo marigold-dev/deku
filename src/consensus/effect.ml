@@ -15,6 +15,8 @@ type effect =
       receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
       trusted_validator_membership_change :
         Trusted_validators_membership_change.Set.t;
+      prev_protocol : Protocol.t;
+      self_signed : Signatures.t option;
     }
 
 type t = effect
