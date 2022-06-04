@@ -10,7 +10,7 @@ type identity = {
   uri : Uri.t;
 }
 
-type state = private {
+type state = {
   (* TODO: duplicated on Node.State.t *)
   identity : identity;
   trusted_validator_membership_change :
