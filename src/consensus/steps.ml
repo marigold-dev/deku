@@ -191,11 +191,20 @@ let allow_to_add_validator ~key_hash state =
     Trusted_validators_membership_change.Set.add
       { action = Add; address = key_hash }
       state.trusted_validator_membership_change in
-  { state with trusted_validator_membership_change }
+  let state = { state with trusted_validator_membership_change } in
+  let effect =
+    Effect.Persist_trusted_membership_change
+      { trusted_validator_membership_change } in
+  (state, Effect effect)
 
 let allow_to_remove_validator ~key_hash state =
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.add
       { action = Remove; address = key_hash }
       state.trusted_validator_membership_change in
-  { state with trusted_validator_membership_change }
+
+  let state = { state with trusted_validator_membership_change } in
+  let effect =
+    Effect.Persist_trusted_membership_change
+      { trusted_validator_membership_change } in
+  (state, Effect effect)

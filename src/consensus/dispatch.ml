@@ -30,9 +30,9 @@ let rec dispatch effect step state =
   | Check_validator_change { payload; signature } ->
     check_validator_change ~payload ~signature effect state
   | Allow_to_add_validator { key_hash } ->
-    allow_to_add_validator ~key_hash state
+    allow_to_add_validator ~key_hash effect state
   | Allow_to_remove_validator { key_hash } ->
-    allow_to_remove_validator ~key_hash state
+    allow_to_remove_validator ~key_hash effect state
 
 and check_operation ~operation effect state =
   let step = Steps.check_operation ~operation state in
@@ -98,10 +98,10 @@ and check_validator_change ~payload ~signature effect state =
   | Ok step -> dispatch effect step state
   | Error err -> (state, [err])
 
-and allow_to_add_validator ~key_hash state =
-  let state = Steps.allow_to_add_validator ~key_hash state in
-  (state, [])
+and allow_to_add_validator ~key_hash effect state =
+  let state, step = Steps.allow_to_add_validator ~key_hash state in
+  dispatch effect step state
 
-and allow_to_remove_validator ~key_hash state =
-  let state = Steps.allow_to_remove_validator ~key_hash state in
-  (state, [])
+and allow_to_remove_validator ~key_hash effect state =
+  let state, step = Steps.allow_to_remove_validator ~key_hash state in
+  dispatch effect step state

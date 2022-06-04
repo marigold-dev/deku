@@ -73,13 +73,14 @@ let apply_block ~block state =
     | None -> None in
 
   (* this is all the node is gonna see *)
-  let effect =
+  let applied_block_effect =
     Effect.Applied_block
-      {
-        prev_protocol = previous_protocol;
-        block;
-        receipts;
-        trusted_validator_membership_change;
-        self_signed;
-      } in
-  Ok (state, Both (Effect effect, Can_produce_block))
+      { prev_protocol = previous_protocol; block; receipts; self_signed } in
+  let persist_trusted_membership_change_effect =
+    Effect.Persist_trusted_membership_change
+      { trusted_validator_membership_change } in
+  let effects =
+    Both
+      ( Effect applied_block_effect,
+        Effect persist_trusted_membership_change_effect ) in
+  Ok (state, Both (effects, Can_produce_block))
