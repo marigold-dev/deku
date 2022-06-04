@@ -1,18 +1,17 @@
 include State
 include Effect
 include Load_snapshot
+include Consensus_utils
 
 type t = state
 
-type 'a error =
-  [> `Already_known_block
+type error =
+  [ `Already_known_block
   | `Already_known_signature
   | `Invalid_block                   of string
   | `Invalid_block_when_applying
   | `Invalid_signature_for_this_hash
   | `Not_a_validator ]
-  as
-  'a
 
 let with_block effect block state =
   Dispatch.dispatch effect (Check_block { block }) state
