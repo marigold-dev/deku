@@ -70,6 +70,21 @@ val with_signature :
     | `Not_a_validator ]
     list
 
+val load_snapshot :
+  snapshot:Snapshots.snapshot ->
+  additional_blocks:Block.t list ->
+  last_block:Block.t ->
+  last_block_signatures:Signature.t list ->
+  t ->
+  ( t,
+    [> `Already_known_block
+    | `Already_known_signature
+    | `Invalid_block                   of string
+    | `Invalid_block_when_applying
+    | `Invalid_signature_for_this_hash
+    | `Not_a_validator ] )
+  result
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change

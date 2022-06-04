@@ -1,5 +1,6 @@
 include State
 include Effect
+include Load_snapshot
 
 type t = state
 
