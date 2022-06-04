@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Protocol
+open Consensus
 module Node = State
 
 let is_valid_block state block =
