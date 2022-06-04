@@ -9,6 +9,8 @@ let apply_block ~block state =
   (* TODO: handle this errors here *)
   let%ok protocol, user_operations, receipts =
     apply_block state.protocol block in
+  Metrics.Blocks.inc_operations_processed
+    ~operation_count:(List.length user_operations);
   let snapshots, snapshot_ref =
     if BLAKE2B.equal block.state_root_hash previous_protocol.state_root_hash
     then

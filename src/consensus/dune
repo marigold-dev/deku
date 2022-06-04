@@ -1,5 +1,5 @@
 (library
  (name consensus)
- (libraries protocol network)
+ (libraries protocol network metrics)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))

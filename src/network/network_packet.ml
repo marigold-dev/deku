@@ -15,16 +15,12 @@ module Signature_spec = struct
   let path = "/append-signature"
 end
 
-module Block_and_signature_spec = struct
-  type request = {
-    block : Block.t;
-    signature : Signature.t;
-  }
-  [@@deriving yojson]
+module Block_spec = struct
+  type request = { block : Block.t } [@@deriving yojson]
 
   type response = unit [@@deriving yojson]
 
-  let path = "/append-block-and-signature"
+  let path = "/append-block"
 end
 
 module Block_by_hash_spec = struct
