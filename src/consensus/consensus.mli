@@ -29,14 +29,15 @@ val make :
   t
 
 type effect = private
-  | Request_block           of { hash : BLAKE2B.t }
-  | Request_previous_blocks of { block : Block.t }
-  | Broadcast_block         of { block : Block.t }
-  | Broadcast_signature     of {
+  | Request_block            of { hash : BLAKE2B.t }
+  | Request_previous_blocks  of { block : Block.t }
+  | Broadcast_block          of { block : Block.t }
+  | Broadcast_signature      of {
       hash : BLAKE2B.t;
       signature : Signature.t;
     }
-  | Applied_block           of {
+  | Broadcast_user_operation of { user_operation : Operation.Core_user.t }
+  | Applied_block            of {
       block : Block.t;
       receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
       trusted_validator_membership_change :
@@ -61,6 +62,9 @@ val with_signature :
   signature:Signature.t ->
   t ->
   t * _ error list
+
+val with_operation :
+  (effect -> t -> unit) -> Operation.t -> t -> t * _ error list
 
 val load_snapshot :
   snapshot:Snapshots.snapshot ->

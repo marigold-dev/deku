@@ -20,6 +20,9 @@ let with_block effect block state =
 let with_signature effect ~hash ~signature state =
   Dispatch.dispatch effect (Check_signature { hash; signature }) state
 
+let with_operation effect operation state =
+  Dispatch.dispatch effect (Check_operation { operation }) state
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change

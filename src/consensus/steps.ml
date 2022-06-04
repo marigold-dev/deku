@@ -13,6 +13,10 @@ type step =
   | Effect            of Effect.t
   | Both              of step * step
   (* verify *)
+  | Check_operation   of { operation : Operation.t }
+  (* transition *)
+  | Append_operation  of { operation : Operation.t }
+  (* verify *)
   | Check_block       of { block : Block.t }
   (* transition *)
   | Append_block      of { block : Block.t }
@@ -98,6 +102,26 @@ let is_valid_block state block =
     ( "some operation in the block is not properly signed",
       is_all_operations_properly_signed block ) in
   Ok ()
+
+let check_operation ~operation state =
+  (* TODO: also check core_user properties such as being old operation *)
+  if Operation_map.mem operation state.pending_operations then
+    Noop
+  else
+    Append_operation { operation }
+
+let append_operation ~operation state =
+  let current_time = Unix.time () in
+  let pending_operations =
+    Operation_map.add operation current_time state.pending_operations in
+  let step =
+    match operation with
+    | Core_user user_operation ->
+      Effect (Broadcast_user_operation { user_operation })
+    | Consensus _
+    | Core_tezos _ ->
+      Noop in
+  ({ state with pending_operations }, step)
 
 let check_block ~block state =
   let%ok () =
