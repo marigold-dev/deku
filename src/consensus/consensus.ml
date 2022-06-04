@@ -11,7 +11,9 @@ type error =
   | `Invalid_block                   of string
   | `Invalid_block_when_applying
   | `Invalid_signature_for_this_hash
-  | `Not_a_validator ]
+  | `Not_a_validator
+  | `Failed_to_verify_payload
+  | `Invalid_signature_author ]
 
 let with_block effect block state =
   Dispatch.dispatch effect (Check_block { block }) state
@@ -23,6 +25,9 @@ let with_timeout effect state = Dispatch.dispatch effect Can_produce_block state
 
 let with_operation effect operation state =
   Dispatch.dispatch effect (Check_operation { operation }) state
+
+let with_trusted_validators_membership_change effect ~payload ~signature state =
+  Dispatch.dispatch effect (Check_validator_change { payload; signature }) state
 
 let new_snapshot_ref state protocol =
   let snapshot_ref, snapshots =

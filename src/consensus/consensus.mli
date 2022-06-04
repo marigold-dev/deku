@@ -52,7 +52,9 @@ type error =
   | `Invalid_block                   of string
   | `Invalid_block_when_applying
   | `Invalid_signature_for_this_hash
-  | `Not_a_validator ]
+  | `Not_a_validator
+  | `Failed_to_verify_payload
+  | `Invalid_signature_author ]
 
 val with_block : (effect -> t -> unit) -> Block.t -> t -> t * [> error] list
 
@@ -67,6 +69,13 @@ val with_timeout : (effect -> t -> unit) -> t -> t * [> error] list
 
 val with_operation :
   (effect -> t -> unit) -> Operation.t -> t -> t * [> error] list
+
+val with_trusted_validators_membership_change :
+  (effect -> t -> unit) ->
+  payload:Network.Trusted_validators_membership_change.payload ->
+  signature:Signature.t ->
+  t ->
+  t * [> error] list
 
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
