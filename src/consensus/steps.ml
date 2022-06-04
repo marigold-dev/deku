@@ -122,12 +122,11 @@ let append_signature ~hash ~signature state =
   ({ state with block_pool }, Is_signed_block { hash })
 
 let is_signed_block ~hash state =
-  if is_signed_block_hash ~hash state then
-    match Block_pool.find_block ~hash state.block_pool with
-    | Some block -> Is_future_block { signed = Signed; block }
-    | None -> Effect (Request_block { hash })
-  else
-    Noop
+  let signed = if is_signed_block_hash ~hash state then Signed else Not_signed in
+  match (Block_pool.find_block ~hash state.block_pool, signed) with
+  | Some block, _ -> Is_future_block { signed; block }
+  | None, Signed -> Effect (Request_block { hash })
+  | None, Not_signed -> Noop
 
 (* TODO: this is checking too much*)
 let is_future_block ~signed ~block state =
