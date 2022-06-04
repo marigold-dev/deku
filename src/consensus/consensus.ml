@@ -29,12 +29,6 @@ let with_operation effect operation state =
 let with_trusted_validators_membership_change effect ~payload ~signature state =
   Dispatch.dispatch effect (Check_validator_change { payload; signature }) state
 
-let new_snapshot_ref state protocol =
-  let snapshot_ref, snapshots =
-    Snapshots.add_snapshot_ref ~block_height:protocol.Protocol.block_height
-      state.snapshots in
-  ({ state with snapshots }, snapshot_ref)
-
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change

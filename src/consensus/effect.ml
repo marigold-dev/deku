@@ -17,6 +17,7 @@ type effect =
       receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
       prev_protocol : Protocol.t;
       self_signed : Signatures.t option;
+      snapshot_ref : Snapshots.snapshot_ref option;
     }
   | Persist_trusted_membership_change of {
       trusted_validator_membership_change :

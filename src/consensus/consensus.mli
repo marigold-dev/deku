@@ -44,6 +44,7 @@ type effect = private
       receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
       prev_protocol : Protocol.t;
       self_signed : Signatures.t option;
+      snapshot_ref : Snapshots.snapshot_ref option;
     }
   | Persist_trusted_membership_change of {
       trusted_validator_membership_change :
@@ -94,8 +95,6 @@ val load_snapshot :
     | `Snapshots_with_invalid_hash
     | `State_root_not_the_expected ] )
   result
-
-val new_snapshot_ref : t -> Protocol.t -> t * Snapshots.snapshot_ref
 
 val block_matches_current_state_root_hash : state -> Block.t -> bool
 
