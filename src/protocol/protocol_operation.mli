@@ -1,15 +1,15 @@
 open Crypto
 
-module Consensus : sig
+(* module Consensus : sig
   type t =
-    | Add_validator    of Validators.validator
-    | Remove_validator of Validators.validator
+    | Add_validator    of Validator.Validators.validator
+    | Remove_validator of Validator.Validators.validator
   [@@deriving eq, ord, yojson]
 
   val sign : Secret.t -> t -> Signature.t
 
   val verify : Key.t -> Signature.t -> t -> bool
-end
+end *)
 
 module Core_tezos : sig
   type t = Core_deku.Tezos_operation.t [@@deriving eq, ord, yojson]
@@ -46,5 +46,5 @@ end
 type t =
   | Core_tezos of Core_deku.Tezos_operation.t
   | Core_user  of Core_user.t
-  | Consensus  of Consensus.t
+  | Validators_action  of Validator.Actor.Validators_action.t
 [@@deriving eq, ord, yojson]

@@ -2,23 +2,23 @@ open Helpers
 open Crypto
 open Core_deku
 
-module Consensus = struct
-  type t =
-    | Add_validator    of Validators.validator
-    | Remove_validator of Validators.validator
-  [@@deriving eq, ord, yojson]
+(* module Consensus = struct
+     type t =
+       | Add_validator    of Validator.Validators.validator
+       | Remove_validator of Validator.Validators.validator
+     [@@deriving eq, ord, yojson]
 
-  let hash payload = to_yojson payload |> Yojson.Safe.to_string |> BLAKE2B.hash
+     let hash payload = to_yojson payload |> Yojson.Safe.to_string |> BLAKE2B.hash
 
-  let sign secret t =
-    let hash = hash t in
-    Signature.sign secret hash
+     let sign secret t =
+       let hash = hash t in
+       Signature.sign secret hash
 
-  let verify key signature t =
-    let hash = hash t in
-    Signature.verify key signature hash
-end
-
+     let verify key signature t =
+       let hash = hash t in
+       Signature.verify key signature hash
+   end
+*)
 module Core_tezos = struct
   type t = Tezos_operation.t [@@deriving eq, ord, yojson]
 end
@@ -79,7 +79,7 @@ module Core_user = struct
 end
 
 type t =
-  | Core_tezos of Core_deku.Tezos_operation.t
-  | Core_user  of Core_user.t
-  | Consensus  of Consensus.t
+  | Core_tezos        of Core_deku.Tezos_operation.t
+  | Core_user         of Core_user.t
+  | Validators_action of Validator.Actor.Validators_action.t
 [@@deriving eq, ord, yojson]

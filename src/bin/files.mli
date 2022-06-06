@@ -40,10 +40,3 @@ module State_bin : sig
   val write : Protocol.t -> file:string -> unit Lwt.t
 end
 
-module Trusted_validators_membership_change : sig
-  type t = Trusted_validators_membership_change.t [@@deriving yojson]
-
-  val read : file:string -> t list Lwt.t
-
-  val write : t list -> file:string -> unit Lwt.t
-end

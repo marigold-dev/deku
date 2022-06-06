@@ -748,20 +748,15 @@ let info_add_trusted_validator =
     ~exits ~man
 
 let add_trusted_validator node_folder address =
-  let open Network in
+  let open Network.Validators_change in
   let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Add } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
+  let payload = { address; action = Add } in
+  let payload_json_str = payload |> payload_to_yojson |> Yojson.Safe.to_string in
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in
   let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
+    Network.request_validator_membership { signature; payload } identity.uri
+  in
   await (`Ok ())
 
 let validator_address =
@@ -783,20 +778,15 @@ let info_remove_trusted_validator =
     ~exits ~man
 
 let remove_trusted_validator node_folder address =
-  let open Network in
+  let open Network.Validators_change in
   let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Remove } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
+  let payload = { address; action = Remove } in
+  let payload_json_str = payload |> payload_to_yojson |> Yojson.Safe.to_string in
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in
   let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
+    Network.request_validator_membership { signature; payload } identity.uri
+  in
   await (`Ok ())
 
 let remove_trusted_validator =

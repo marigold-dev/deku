@@ -100,9 +100,9 @@ module User_operation_gossip = struct
   let path = "/user-operation-gossip"
 end
 
-module Consensus_operation_gossip = struct
+module Validators_operation_gossip = struct
   type request = {
-    consensus_operation : Protocol.Operation.Consensus.t;
+    consensus_operation : Validator.Actor.Validators_action.t;
     signature : Crypto.Signature.t;
   }
   [@@deriving yojson]
@@ -140,7 +140,7 @@ module Ticket_balance = struct
   let path = "/ticket-balance"
 end
 
-module Trusted_validators_membership_change = struct
+module Validators_change = struct
   type action =
     | Add
     | Remove

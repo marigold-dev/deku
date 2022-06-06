@@ -139,16 +139,16 @@ let handle_receive_user_operation_gossip =
 (* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
   handle_request
-    (module Network.Consensus_operation_gossip)
+    (module Network.Validators_operation_gossip)
     (fun update_state request ->
-      Flows.received_consensus_operation (Server.get_state ()) update_state
+      Flows.received_validators_operation (Server.get_state ()) update_state
         request.consensus_operation request.signature)
 
 (* POST /trusted-validators-membership *)
 (* Add or Remove a new trusted validator *)
 let handle_trusted_validators_membership =
   handle_request
-    (module Network.Trusted_validators_membership_change)
+    (module Network.Validators_change)
     (fun update_state request ->
       Flows.trusted_validators_membership (Server.get_state ()) update_state
         request)

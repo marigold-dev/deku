@@ -1,6 +1,5 @@
 open Setup
-open Protocol
-open Validators
+open Validator.Validators
 
 let () =
   describe "validators" (fun { test; _ } ->
@@ -8,7 +7,6 @@ let () =
         let open Crypto in
         let _key, wallet = Ed25519.generate () in
         let address = Key_hash.of_key (Ed25519 wallet) in
-        let open Validators in
         { address } in
       let setup_two () =
         let a = make_validator () in

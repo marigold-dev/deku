@@ -4,7 +4,6 @@ include Exn_noop
 module Signature = Protocol_signature
 module Wallet = Wallet
 module Ledger = Ledger
-module Validators = Validators
 module Block = Block
 module Operation = Protocol_operation
 include Protocol_state
@@ -57,21 +56,23 @@ let apply_core_user_operation state tezos_operation =
   | Error (`Block_in_the_future | `Old_operation | `Duplicated_operation) ->
     (state, None)
 
-let apply_consensus_operation state consensus_operation =
-  let validators = state.validators in
-  let validators =
-    match consensus_operation with
-    | Consensus.Add_validator validator -> Validators.add validator validators
-    | Consensus.Remove_validator validator ->
-      Validators.remove validator validators in
-  let last_seen_membership_change_timestamp = Unix.time () in
-  { state with validators; last_seen_membership_change_timestamp }
+let apply_validators_operation :
+    Protocol_state.t -> Validator.Actor.Validators_action.t -> Protocol_state.t
+    =
+ fun state validators_op ->
+  let validators = state.validators_actor in
+  let validators = Validator.Actor.process_operation validators_op validators in
+  { state with validators_actor = validators }
 
 let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
 
-let apply_operation (state, receipts) operation =
+let apply_operation :
+    Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list ->
+    Protocol_operation.t ->
+    Protocol_state.t * (Crypto.BLAKE2B.t * State.receipt) list =
+ fun (state, receipts) operation ->
   match operation with
   | Core_tezos tezos_operation ->
     let state = apply_core_tezos_operation state tezos_operation in
@@ -83,8 +84,8 @@ let apply_operation (state, receipts) operation =
       | Some receipt -> (user_operation.hash, receipt) :: receipts
       | None -> receipts in
     (state, receipts)
-  | Consensus consensus_operation ->
-    let state = apply_consensus_operation state consensus_operation in
+  | Validators_action validators_op ->
+    let state = apply_validators_operation state validators_op in
     (state, receipts)
 
 let apply_block state block =
@@ -103,7 +104,9 @@ let apply_block state block =
   ( {
       state with
       block_height = block.block_height;
-      validators = state.validators |> Validators.update_current block.author;
+      validators_actor =
+        Validator.Actor.update_block_proposer block.author
+          state.validators_actor;
       last_block_hash = block.hash;
       last_state_root_update =
         (match block.state_root_hash <> state.state_root_hash with
@@ -111,7 +114,6 @@ let apply_block state block =
         | false -> state.last_state_root_update);
       last_applied_block_timestamp = Unix.time ();
       state_root_hash = block.state_root_hash;
-      validators_hash = block.validators_hash;
     },
     receipts )
 
@@ -121,14 +123,12 @@ let make ~initial_block =
       core_state = Core_deku.State.empty;
       included_tezos_operations = Tezos_operation_set.empty;
       included_user_operations = User_operation_set.empty;
-      validators = Validators.empty;
-      validators_hash = Validators.hash Validators.empty;
+      validators_actor = Validator.Actor.empty;
       block_height = Int64.sub initial_block.Block.block_height 1L;
       last_block_hash = initial_block.Block.previous_hash;
       state_root_hash = initial_block.Block.state_root_hash;
       last_state_root_update = 0.0;
       last_applied_block_timestamp = 0.0;
-      last_seen_membership_change_timestamp = 0.0;
     } in
   apply_block empty initial_block |> fst
 
@@ -143,4 +143,4 @@ let get_current_block_producer state =
   else
     let diff = Unix.time () -. state.last_applied_block_timestamp in
     let skips = Float.to_int (diff /. 10.0) in
-    Validators.after_current skips state.validators
+    Validator.Actor.get_new_block_proposer skips state.validators_actor

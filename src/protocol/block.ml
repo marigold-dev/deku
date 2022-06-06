@@ -85,7 +85,7 @@ let genesis =
   make ~previous_hash:(BLAKE2B.hash "tuturu")
     ~state_root_hash:(BLAKE2B.hash "mayuushi")
     ~withdrawal_handles_hash:(BLAKE2B.hash "desu")
-    ~validators_hash:(Validators.hash Validators.empty)
+    ~validators_hash:(Validator.Actor.get_validators_hash Validator.Actor.empty)
     ~block_height:0L ~operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
 
@@ -98,7 +98,8 @@ let produce ~state ~next_state_root_hash =
     ~withdrawal_handles_hash:
       (Core_deku.State.ledger state.core_state
       |> Ledger.withdrawal_handles_root_hash)
-    ~validators_hash:(Validators.hash state.validators)
+    ~validators_hash:
+      (Validator.Actor.get_validators_hash state.validators_actor)
     ~block_height:(Int64.add state.block_height 1L)
 
 open Protocol_signature.Make (struct

@@ -26,9 +26,8 @@ let broadcast_user_operation_gossip_to_list =
 
 let request_user_operation_gossip = request (module User_operation_gossip)
 
-let request_consensus_operation = request (module Consensus_operation_gossip)
+let request_validators_operation = request (module Validators_operation_gossip)
 
-let request_trusted_validator_membership =
-  request (module Trusted_validators_membership_change)
+let request_validator_membership = request (module Validators_change)
 
 let request_ticket_balance = request (module Ticket_balance)

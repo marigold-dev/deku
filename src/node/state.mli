@@ -17,8 +17,7 @@ module Operation_map : Map.S with type key = Protocol.Operation.t
 
 type t = {
   identity : identity;
-  trusted_validator_membership_change :
-    Trusted_validators_membership_change.Set.t;
+  validators_actor : Validator.Actor.t ;
   interop_context : Tezos_interop.t;
   data_folder : string;
   pending_operations : float Operation_map.t;
@@ -29,15 +28,11 @@ type t = {
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
-  persist_trusted_membership_change :
-    Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
 
 val make :
   identity:identity ->
-  trusted_validator_membership_change:Trusted_validators_membership_change.Set.t ->
-  persist_trusted_membership_change:
-    (Trusted_validators_membership_change.t list -> unit Lwt.t) ->
+  validators_actor:Validator.Actor.t ->
   interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->

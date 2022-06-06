@@ -198,7 +198,7 @@ let try_to_sign_block state update_state block =
 let commit_state_hash state =
   Tezos_interop.Consensus.commit_state_hash state.Node.interop_context
 
-let try_to_commit_state_hash ~prev_validators state block signatures =
+let try_to_commit_state_hash ~prev_validators_actor state block signatures =
   let open Node in
   let signatures_map =
     signatures
@@ -210,16 +210,15 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
            (address, (key, signature)))
     |> List.to_seq
     |> Address_map.of_seq in
-  let validators =
-    state.protocol.validators
-    |> Validators.to_list
-    |> List.map (fun validator -> validator.Validators.address) in
+  let validator_addresses =
+    Validator.Actor.get_validators_address_list state.validators_actor in
   let signatures =
-    prev_validators
-    |> Validators.to_list
-    |> List.map (fun validator -> validator.Validators.address)
+    prev_validators_actor
+    |> Validator.Actor.get_validators_list
+    |> List.map (fun validator -> validator.Validator.Validators.address)
     |> List.map (fun address -> Address_map.find_opt address signatures_map)
   in
+
   Lwt.async (fun () ->
       let%await () =
         match state.identity.t = block.Block.author with
@@ -228,7 +227,8 @@ let try_to_commit_state_hash ~prev_validators state block signatures =
       commit_state_hash state ~block_height:block.block_height
         ~block_payload_hash:block.payload_hash
         ~withdrawal_handles_hash:block.withdrawal_handles_hash
-        ~state_hash:block.state_root_hash ~validators ~signatures)
+        ~state_hash:block.state_root_hash ~validators:validator_addresses
+        ~signatures)
 
 let hash_new_state_root state protocol update_state =
   let task_pool = !get_task_pool () in
@@ -270,8 +270,9 @@ let rec try_to_apply_block state update_state block =
          Block_pool.find_signatures ~hash:block.hash state.Node.block_pool
        with
       | Some signatures when Signatures.is_self_signed signatures ->
-        try_to_commit_state_hash ~prev_validators:prev_protocol.validators state
-          block signatures
+        try_to_commit_state_hash
+          ~prev_validators_actor:prev_protocol.validators_actor state block
+          signatures
       | _ -> ());
       state)
     else
@@ -337,9 +338,10 @@ let received_signature state update_state ~hash ~signature =
     ( `Not_a_validator,
       List.exists
         (fun validator ->
-          Key_hash.equal validator.Validators.address
+          Key_hash.equal validator.Validator.Validators.address
             (Signature.address signature))
-        (Validators.to_list state.Node.protocol.validators) ) in
+        (Validator.Actor.get_validators_list
+           state.Node.protocol.validators_actor) ) in
   let%assert () =
     (`Already_known_signature, not (is_known_signature state ~hash ~signature))
   in
@@ -401,14 +403,14 @@ let received_user_operation state update_state user_operation =
     append_operation state update_state operation);
   Ok ()
 
-let received_consensus_operation state update_state consensus_operation
+let received_validators_operation state update_state validators_operation
     signature =
   let open Protocol.Operation in
   let%assert () =
     ( `Invalid_signature,
-      Consensus.verify state.Node.identity.key signature consensus_operation )
-  in
-  let operation = Consensus consensus_operation in
+      Validator.Actor.Validators_action.verify state.Node.identity.key signature
+        validators_operation ) in
+  let operation = Validators_action validators_operation in
   append_operation state update_state operation;
   Ok ()
 
@@ -467,7 +469,7 @@ let request_ticket_balance state ~ticket ~address =
   |> Ledger.balance address ticket
 
 let trusted_validators_membership state update_state request =
-  let open Network.Trusted_validators_membership_change in
+  let open Network.Validators_change in
   let { signature; payload = { address; action } as payload } = request in
   let payload_hash =
     payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
@@ -478,19 +480,16 @@ let trusted_validators_membership state update_state request =
   let%assert () =
     (`Failed_to_verify_payload, payload_hash |> Signature.verify ~signature)
   in
-  let new_validators =
+  let validator : Validator.Validators.validator = { address } in
+  let operation =
     match action with
-    | Add ->
-      Trusted_validators_membership_change.Set.add { action = Add; address }
-        state.Node.trusted_validator_membership_change
-    | Remove ->
-      Trusted_validators_membership_change.Set.add
-        { action = Remove; address }
-        state.Node.trusted_validator_membership_change in
+    | Add -> Validator.Actor.Validators_action.Add_validator validator
+    | Remove -> Validator.Actor.Validators_action.Remove_validator validator
+  in
+  let new_validators =
+    Validator.Actor.process_operation operation state.validators_actor in
+
   let (_ : State.t) =
-    update_state
-      { state with trusted_validator_membership_change = new_validators } in
-  Lwt.async (fun () ->
-      state.persist_trusted_membership_change
-        (new_validators |> Trusted_validators_membership_change.Set.elements));
+    update_state { state with validators_actor = new_validators } in
+  Lwt.async (fun () -> Validator.Actor.dump state.validators_actor);
   Ok ()

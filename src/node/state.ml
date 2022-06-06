@@ -19,8 +19,7 @@ type timestamp = float
 
 type t = {
   identity : identity;
-  trusted_validator_membership_change :
-    Trusted_validators_membership_change.Set.t;
+  validators_actor : Validator.Actor.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
   pending_operations : timestamp Operation_map.t;
@@ -34,12 +33,9 @@ type t = {
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
-  persist_trusted_membership_change :
-    Trusted_validators_membership_change.t list -> unit Lwt.t;
 }
 
-let make ~identity ~trusted_validator_membership_change
-    ~persist_trusted_membership_change ~interop_context ~data_folder
+let make ~identity ~validators_actor ~interop_context ~data_folder
     ~initial_validators_uri =
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
@@ -56,7 +52,7 @@ let make ~identity ~trusted_validator_membership_change
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
   {
     identity;
-    trusted_validator_membership_change;
+    validators_actor;
     interop_context;
     data_folder;
     pending_operations = Operation_map.empty;
@@ -67,7 +63,6 @@ let make ~identity ~trusted_validator_membership_change
     uri_state = Uri_map.empty;
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
-    persist_trusted_membership_change;
   }
 
 let apply_block state block =
@@ -94,7 +89,9 @@ let apply_block state block =
     }
 
 let signatures_required state =
-  let number_of_validators = Validators.length state.protocol.validators in
+  let number_of_validators =
+    Validator.Actor.get_number_of_validators state.protocol.validators_actor
+  in
   let open Float in
   to_int (ceil (of_int number_of_validators *. (2.0 /. 3.0)))
 
@@ -132,16 +129,14 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       Core_deku.State.t
       * Tezos_operation_set.t
       * User_operation_set.t
-      * Validators.t
-      * BLAKE2B.t
+      * Validator.Actor.t
       * int64
       * BLAKE2B.t
       * BLAKE2B.t] in
   let ( core_state,
         included_tezos_operations,
         included_user_operations,
-        validators,
-        validators_hash,
+        validators_actor,
         block_height,
         last_block_hash,
         state_root_hash ) =
@@ -152,14 +147,12 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       core_state;
       included_tezos_operations;
       included_user_operations;
-      validators;
-      validators_hash;
+      validators_actor;
       block_height;
       last_block_hash;
       state_root_hash;
       last_state_root_update = 0.0;
       last_applied_block_timestamp = 0.0;
-      last_seen_membership_change_timestamp = 0.0;
     } in
   (* TODO: this causes syncing to fail unless the snapshot is newer than the
      current block height, which is not always true (i.e, if you restart
