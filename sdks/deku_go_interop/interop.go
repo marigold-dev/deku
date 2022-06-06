@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 )
 
 var chain_to_machine *os.File
@@ -38,6 +37,7 @@ func read() []byte {
 	n := binary.LittleEndian.Uint16(b)
 	value := make([]byte, n)
 	bytes_read, err := chain_to_machine.Read(value)
+	check(err)
 	log(fmt.Sprintf("read %d bytes", bytes_read))
 	return value
 }
@@ -55,7 +55,13 @@ func write(message []byte) {
 func Get(key string) []byte {
 	message := []byte(fmt.Sprintf("[\"Get\", \"%s\"]", key))
 	write(message)
-	return read()
+	var value_buffer []interface{}
+	bytes := read()
+	err := json.Unmarshal(bytes, &value_buffer)
+	check(err)
+	retrieved_value, err := json.Marshal(value_buffer[1])
+	check(err)
+	return []byte(retrieved_value)
 }
 
 // Set(key,value) synchronously sets a key in the Deku state
@@ -84,8 +90,7 @@ func Main(initial_state map[string]interface{}, state_transition func(sender str
 	log("done")
 
 	init := string(read())
-	if init == "\"init\"" {
-		counter := initial_state["counter"];
+	if init == "[\"Get_Initial_State\"]" {
 		var initial_message []init_entry
 		for key, value := range initial_state {
 			initial_message = append(initial_message, init_entry{Key: key, Value: value})
@@ -96,17 +101,30 @@ func Main(initial_state map[string]interface{}, state_transition func(sender str
 		write([]byte(init_message))
 	}
 
+	var sender_buffer []string
+	var tx_hash_buffer []string
+	var input_buffer []interface{}
+
 	for {
 		// TODO: replace this with a control pipe
 		control := read()
 		if string(control) == "\"close\"" {
 			break
 		}
-		sender := strings.Trim(string(read()), "\"")
-		tx_hash := strings.Trim(string(read()), "\"")
-		input := read()
+		
+		err := json.Unmarshal(read(), &sender_buffer)
+		check(err)
+		err = json.Unmarshal(read(), &tx_hash_buffer)
+		check(err)
+		err = json.Unmarshal(read(), &input_buffer)
+		check(err)
+
+		sender := sender_buffer[1]
+		tx_hash := tx_hash_buffer[1]
+		input, err := json.Marshal(input_buffer[1])
+
 		log(fmt.Sprintf("Read start message: %s", string(input)))
-		err := state_transition(sender, tx_hash, input)
+		err = state_transition(sender, tx_hash, []byte(input))
 		var end_message []byte
 		if err != nil {
 			end_message = []byte(fmt.Sprintf("[\"Error\", \"%s\"]", err.Error()))
