@@ -1,4 +1,17 @@
 (executable
  (name asserter)
  (public_name asserter)
+ (modules asserter)
+ (libraries bin_common lwt cmdliner))
+
+(executable
+ (name asserter_contract)
+ (public_name asserter_contract)
+ (modules asserter_contract)
+ (libraries bin_common lwt cmdliner))
+
+(executable
+ (name ticket_handle)
+ (public_name ticket_handle)
+ (modules ticket_handle)
  (libraries bin_common lwt cmdliner))
