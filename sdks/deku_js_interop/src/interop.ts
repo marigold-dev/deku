@@ -54,7 +54,8 @@ const write = (value: Buffer) => {
 const get = (key: string): Buffer | undefined => {
   const message = `["Get", "${key}"]`;
   write(Buffer.from(message));
-  return read();
+  const value = read().toString()
+  return Buffer.from(JSON.stringify(JSON.parse(value)[1]));
 };
 
 /**
@@ -73,27 +74,28 @@ const set = (key: string, value: string) => {
  * @param state_transition the function called when there is an new input
  */
 const main = (
-  initial_state: {[key: string]: any}, // TODO: add a better type for JSON values
+  initial_state: { [key: string]: any }, // TODO: add a better type for JSON values
   state_transition: (address: string, tx_hash: string, input: Buffer) => string
 ) => {
   init_fifo();
 
-  const init = JSON.parse(read().toString());
-  if(init === "init") {
+  const init = JSON.parse(read().toString())[0];
+  if (init === "Get_Initial_State") {
     const initial_message = Object.keys(initial_state)
-      .map(key => ({key, value:initial_state[key]}));
+      .map(key => ({ key, value: initial_state[key] }));
     const init_message = `["Init", ${JSON.stringify(initial_message)}]`;
     write(Buffer.from(init_message))
   }
+  console.log("vm started");
 
-  for (;;) {
+  for (; ;) {
     const control = read().toString();
     if (control === '"close"') {
       break;
     }
-    const sender = read().toString().slice(1, -1);
-    const tx_hash = read().toString().slice(1, -1);
-    const input = read();
+    const sender = JSON.parse(read().toString())[1];
+    const tx_hash = JSON.parse(read().toString())[1];
+    const input = Buffer.from(JSON.stringify(JSON.parse(read().toString())[1]));
     const error = state_transition(sender, tx_hash, input);
     const end_message = error ? `["Error", "${error}"]` : '["Stop"]';
     write(Buffer.from(end_message));

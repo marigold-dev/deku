@@ -4,7 +4,16 @@ type set = {
 }
 [@@deriving yojson]
 
-type vm_message =
+type vm_client_message =
+  | Control
+  | Source            of string
+  | Tx_hash           of string
+  | Operation         of Yojson.Safe.t
+  | Get_Initial_State
+  | Get               of Yojson.Safe.t
+[@@deriving yojson]
+
+type vm_server_message =
   | Init  of set list
   | Stop
   | Set   of set
