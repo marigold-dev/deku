@@ -17,14 +17,14 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 type t = {
   hash : BLAKE2B.t;
   source : Key_hash.t;
   initial_operation : initial_operation;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 let equal a b = BLAKE2B.equal a.hash b.hash
 

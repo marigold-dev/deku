@@ -6,7 +6,7 @@ module Consensus = struct
   type t =
     | Add_validator    of Validators.validator
     | Remove_validator of Validators.validator
-  [@@deriving eq, ord, yojson]
+  [@@deriving eq, ord, yojson, bin_io]
 
   let hash payload = to_yojson payload |> Yojson.Safe.to_string |> BLAKE2B.hash
 
@@ -20,10 +20,11 @@ module Consensus = struct
 end
 
 module Core_tezos = struct
-  type t = Tezos_operation.t [@@deriving eq, ord, yojson]
+  type t = Tezos_operation.t [@@deriving eq, ord, yojson, bin_io]
 end
 
 module Core_user = struct
+  open Bin_prot.Std
   type t = {
     hash : BLAKE2B.t;
     key : Key.t;
@@ -32,7 +33,7 @@ module Core_user = struct
     block_height : int64;
     data : User_operation.t;
   }
-  [@@deriving eq, yojson]
+  [@@deriving eq, yojson, bin_io]
 
   let compare a b = BLAKE2B.compare a.hash b.hash
 
@@ -82,4 +83,4 @@ type t =
   | Core_tezos of Core_deku.Tezos_operation.t
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]

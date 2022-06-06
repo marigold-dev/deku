@@ -4,7 +4,7 @@ module Consensus : sig
   type t =
     | Add_validator    of Validators.validator
     | Remove_validator of Validators.validator
-  [@@deriving eq, ord, yojson]
+  [@@deriving eq, ord, yojson, bin_io]
 
   val sign : Secret.t -> t -> Signature.t
 
@@ -12,7 +12,7 @@ module Consensus : sig
 end
 
 module Core_tezos : sig
-  type t = Core_deku.Tezos_operation.t [@@deriving eq, ord, yojson]
+  type t = Core_deku.Tezos_operation.t [@@deriving eq, ord, yojson, bin_io]
 end
 
 module Core_user : sig
@@ -24,7 +24,7 @@ module Core_user : sig
     block_height : int64;
     data : Core_deku.User_operation.t;
   }
-  [@@deriving eq, ord, yojson]
+  [@@deriving eq, ord, yojson, bin_io]
 
   val sign :
     secret:Secret.t ->
@@ -47,4 +47,4 @@ type t =
   | Core_tezos of Core_deku.Tezos_operation.t
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]

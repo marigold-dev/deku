@@ -1,4 +1,4 @@
-type t [@@deriving yojson, eq, ord]
+type t [@@deriving yojson, eq, ord, bin_io]
 
 val initial : t
 

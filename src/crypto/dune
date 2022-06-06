@@ -5,7 +5,8 @@
   mirage-crypto-ec
   mirage-crypto-rng.unix
   helpers
-  secp256k1-internal)
+  secp256k1-internal
+  bin_prot)
  (modules_without_implementation crypto_intf)
  (preprocess
-  (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving_yojson ppx_let_binding)))
+  (pps ppx_deriving.ord ppx_deriving.eq ppx_deriving_yojson ppx_let_binding ppx_bin_prot)))

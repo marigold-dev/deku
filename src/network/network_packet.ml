@@ -20,7 +20,7 @@ module Block_and_signature_spec = struct
     block : Block.t;
     signature : Signature.t;
   }
-  [@@deriving yojson]
+  [@@deriving yojson, bin_io]
 
   type response = unit [@@deriving yojson]
 

@@ -11,7 +11,7 @@ type t = private {
   block_height : int64;
   operations : Protocol_operation.t list;
 }
-[@@deriving yojson, ord]
+[@@deriving yojson, ord, bin_io]
 
 val sign : key:Secret.t -> t -> Protocol_signature.t
 

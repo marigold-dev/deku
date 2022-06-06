@@ -6,7 +6,7 @@ module Lambda = struct
       code : Lambda_vm.Ir.code;
       storage : Lambda_vm.Ir.value;
     }
-    [@@deriving yojson, eq]
+    [@@deriving yojson, eq, bin_io]
 
     let make ~code ~storage = { code; storage }
   end
@@ -32,14 +32,14 @@ module Lambda = struct
         x
 
     module Script = struct
-      type t = Ast.script [@@deriving yojson]
+      type t = Ast.script [@@deriving yojson, bin_io]
 
       let to_code ~gas script = wrap_error (Compiler.compile gas script)
     end
 
     (** TODO: conversion from micheline *)
     module Value = struct
-      type t = Ast.value [@@deriving yojson]
+      type t = Ast.value [@@deriving yojson, bin_io]
 
       let to_value ~gas value = wrap_error (Compiler.compile_value gas value)
     end
@@ -50,7 +50,7 @@ module Lambda = struct
       code : Raw_repr.Script.t;
       storage : Raw_repr.Value.t;
     }
-    [@@deriving yojson]
+    [@@deriving yojson, bin_io]
   end
 
   module Compiler = struct
@@ -73,7 +73,7 @@ module Lambda = struct
   end
 
   module Invocation_payload = struct
-    type t = Raw_repr.Value.t [@@deriving yojson]
+    type t = Raw_repr.Value.t [@@deriving yojson, bin_io]
   end
 
   module Interpreter = struct
@@ -170,10 +170,11 @@ module External_vm = struct
   end
 
   module Invocation_payload = struct
+    open Bin_prot.Std
     type t =
       | Lambda of Lambda.Invocation_payload.t
       | Dummy  of (int * int)
-    [@@deriving yojson]
+    [@@deriving yojson, bin_io]
 
     let lambda_of_yojson ~arg =
       let%ok arg = Lambda.Invocation_payload.of_yojson arg in

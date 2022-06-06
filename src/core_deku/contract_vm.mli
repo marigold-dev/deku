@@ -1,9 +1,9 @@
 module Contract : sig
-  type t [@@deriving yojson, eq]
+  type t [@@deriving yojson, eq, bin_io]
 end
 
 module Origination_payload : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val lambda_of_yojson :
     code:Yojson.Safe.t -> storage:Yojson.Safe.t -> (t, string) result
@@ -16,7 +16,7 @@ module Compiler : sig
 end
 
 module Invocation_payload : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val lambda_of_yojson : arg:Yojson.Safe.t -> (t, string) result
 

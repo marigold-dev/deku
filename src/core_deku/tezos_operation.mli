@@ -16,6 +16,6 @@ type t = private {
   hash : BLAKE2B.t;
   payload : payload;
 }
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 val make : payload -> t

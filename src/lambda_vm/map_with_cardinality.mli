@@ -16,7 +16,7 @@ module type S = sig
 end
 
 module Make (K : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val compare : t -> t -> int
-end) : S with type key = K.t
+end) : S with type key = K.t [@@deriving bin_io]

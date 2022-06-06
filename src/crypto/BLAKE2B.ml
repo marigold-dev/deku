@@ -3,7 +3,7 @@ open Helpers
 module Make (P : sig
   val size : int
 end) : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val to_string : t -> string
 
@@ -61,6 +61,22 @@ end = struct
   let verify ~hash:expected_hash data = expected_hash = hash data
 
   let both a b = hash (to_raw_string a ^ to_raw_string b)
+
+  let bin_read_t buf ~pos_ref = match of_string @@ Bin_prot.Read.bin_read_string buf ~pos_ref:pos_ref with
+    | None -> failwith "Invalid hex"
+    | Some t -> t
+
+  let bin_reader_t = failwith "Not used by Pollinate"
+  let __bin_read_t__ = failwith "Not used by Pollinate"
+  
+  let bin_write_t buf ~pos t = Bin_prot.Write.bin_write_string buf ~pos:pos (to_hex t)
+
+  let bin_writer_t = failwith "Not used by Pollinate"
+  let __bin_write_t__ = failwith "Not used by Pollinate"
+
+  let bin_size_t = failwith "Not used by Pollinate"
+  let bin_shape_t = failwith "Not used by Pollinate" 
+  let bin_t = failwith "Not used by Pollinate"
 
   module Map = Map.Make (struct
     type nonrec t = t

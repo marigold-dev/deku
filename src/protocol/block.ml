@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Core_deku
+open Bin_prot.Std
 
 type t = {
   hash : BLAKE2B.t;
@@ -13,7 +14,7 @@ type t = {
   block_height : int64;
   operations : Protocol_operation.t list;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash

@@ -1,5 +1,7 @@
 (* TODO: should I care about overflowing this? *)
-type t = int [@@deriving yojson, eq, ord]
+open Bin_prot.Std
+
+type t = int [@@deriving yojson, eq, ord, bin_io]
 
 let initial = 0
 
