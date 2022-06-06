@@ -26,6 +26,10 @@ let print_balance add ticket ledger =
   print_deku_address add;
   Printf.printf "amount: %i \n" (Core_deku.Amount.to_int balance)
 
+let expect_balance address ticket expected ledger =
+  let balance = Core_deku.Ledger.balance address ticket ledger in
+  Core_deku.Amount.of_int expected = balance
+
 let n_transactions sources triples =
   let len_sources = List.length sources in
   let len_triples = List.length triples in
@@ -46,12 +50,15 @@ let n_transactions sources triples =
 let init_tezos_operation_hash =
   "opCAkifFMh1Ya2J4WhRHskaXc297ELtx32wnc2WzeNtdQHp7DW4"
 
+exception Balance_not_equal
+
 let build_init_state_n n () =
   (* build n tezos addresses, tickets,
      then deposits the same amount to those tickets *)
   let tezos_addresses = Build_usage.make_n_tezos_address n in
   let tickets = Build_usage.make_n_tickets n in
-  let ops = deposits_n tezos_addresses tickets 10_000 in
+  let amount = 10_000 in
+  let ops = deposits_n tezos_addresses tickets amount in
   (* initial state *)
   let state = Core_deku.State.empty in
   let tezos_operation_hash =
@@ -64,13 +71,19 @@ let build_init_state_n n () =
     } in
   let tezos_operation = Core_deku.Tezos_operation.make payload in
   let state = Core_deku.State.apply_tezos_operation state tezos_operation in
+  (* deku_addresses: It is a revert list *)
   let deku_addresses = Build_usage.make_n_deku_addresses tezos_addresses in
-  (*let _ =
+  (* Check deposit balance *)
+  let () =
     List.iter2
-      (fun deku_add ticket ->
-        print_balance deku_add ticket (Core_deku.State.ledger state))
-      deku_addresses tickets in*)
-  (state, tezos_addresses, deku_addresses, tickets)
+      (fun deku_address ticket ->
+        let amount' =
+          Core_deku.Ledger.balance deku_address ticket
+            (Core_deku.State.ledger state) in
+        let b = Core_deku.Amount.to_int amount' = amount in
+        if b then () else raise Balance_not_equal)
+      (List.rev deku_addresses) tickets in
+  (state, tezos_addresses, List.rev deku_addresses, tickets)
 
 (* Contract origination para *)
 let contract_vm =
@@ -93,17 +106,23 @@ let user_op_contract_origination code storage =
 let build_state_n n () =
   let init_state, _tezos_addresses, deku_addresses, tickets =
     build_init_state_n n () in
-  (* originate contract, the source is the first address
-     TODO:  orignate each deku_addresses?
-  *)
+  (* originate contract, the source is the first address *)
   let code, storage = contract_vm in
   let deku_add_1 = List.nth deku_addresses 0 in
-  let _deku_add_2 = List.nth deku_addresses 1 in
+  let deku_add_2 = List.nth deku_addresses 1 in
+  let deku_add_3 = List.nth deku_addresses 2 in
   let initial_operation = user_op_contract_origination code storage in
   let op1 = Core_deku.User_operation.make ~source:deku_add_1 initial_operation in
   let mock_hash = Crypto.BLAKE2B.hash "mocked op hash" in
   let state, _receipt_option =
     Core_deku.State.apply_user_operation init_state mock_hash op1 in
+  let op2 = Core_deku.User_operation.make ~source:deku_add_2 initial_operation in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation state mock_hash op2 in
+  let op3 = Core_deku.User_operation.make ~source:deku_add_3 initial_operation in
+  let state, _receipt_option =
+    Core_deku.State.apply_user_operation state mock_hash op3 in
+
   (* transfer *)
   let amount = Core_deku.Amount.of_int 10 in
   let sources = deku_addresses in
@@ -124,9 +143,9 @@ let build_state_n n () =
       let op = List.nth ops i in
       let state, _ = Core_deku.State.apply_user_operation state mock_hash op in
       let hash = Core_deku.State.hash state in
-      (*let () =
-        List.fold_left2
-          (fun _ des ticket ->
+      let () =
+        List.iter2
+          (fun des ticket ->
             let balance =
               Core_deku.Ledger.balance des ticket (Core_deku.State.ledger state)
             in
@@ -134,9 +153,14 @@ let build_state_n n () =
               (Core_deku.Amount.to_int balance)
               (Crypto.Key_hash.to_string des);
             ())
-          () destinations tickets in*)
+          sources tickets in
       ignore hash
     done in
+  let _test =
+    [
+      Alcotest.test_case "balance " `Quick (fun () ->
+          Alcotest.(check' bool) ~msg:"correct" ~expected:(1 = 1) ~actual:true);
+    ] in
   ()
 
-let build_state () = build_state_n 10 ()
+let build_state () = build_state_n 4 ()
