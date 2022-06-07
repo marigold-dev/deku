@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"errors"
 )
 
 var chain_to_machine *os.File
 var machine_to_chain *os.File
+var state map[string]interface{}
 
 type chain_message struct {
 	Type    string
@@ -23,7 +25,7 @@ func check(e error) {
 
 func log(message string) {
 	// TODO: implement debug mode logging.
-	if false {
+	if true {
 		colored := fmt.Sprintf("\x1b[%dm%s\x1b[0m", 31, message)
 		fmt.Fprintln(os.Stderr, colored)
 	}
@@ -53,15 +55,13 @@ func write(message []byte) {
 // Get(key) synchronously gets the bytes associated with the given
 // key from the Deku state.
 func Get(key string) []byte {
-	message := []byte(fmt.Sprintf("[\"Get\", \"%s\"]", key))
-	write(message)
-	var value_buffer []interface{}
-	bytes := read()
-	err := json.Unmarshal(bytes, &value_buffer)
+	value := state[key]
+	if value == nil {
+		return make([]byte, 0)
+	}
+	json_value, err := json.Marshal(value)
 	check(err)
-	retrieved_value, err := json.Marshal(value_buffer[1])
-	check(err)
-	return []byte(retrieved_value)
+	return []byte(json_value)
 }
 
 // Set(key,value) synchronously sets a key in the Deku state
@@ -72,12 +72,47 @@ func Set(key string, value interface{}) {
 	check(err)
 	value_str := string(b)
 	message := []byte(fmt.Sprintf("[\"Set\",{\"key\":\"%s\",\"value\":%s}]", key, value_str))
-	write(message)
+	write(message);
+	state[key] = value
 }
 
 type init_entry struct {
 	Key  string `json:"key"`
 	Value interface{} `json:"value"`
+}
+
+func init_state(initial_state map[string]interface{}) (map[string]interface{}, error) {
+	message := read()
+	var json_buffer []interface{}
+	json.Unmarshal(message, &json_buffer)
+	log(string(message))
+
+	message_type := json_buffer[0].(string)
+	
+	switch message_type {
+	case "Get_Initial_State":
+		var initial_message []init_entry
+		for key, value := range initial_state {
+			initial_message = append(initial_message, init_entry{Key: key, Value: value})
+		}
+		b, err := json.Marshal(initial_message)
+		check(err)
+		init_message := fmt.Sprintf("[\"Init\", %s]", string(b))
+		write([]byte(init_message))
+		return init_state(initial_state);
+	case "Set_Initial_State":
+		vm_state := json_buffer[1].([]interface{})
+		var state = make(map[string]interface{})
+		for _, entry := range vm_state {
+			entry := entry.([]interface{})
+			key := entry[0].(string)
+			value := entry[1]
+			state[key] = value 
+		}
+		return state, nil
+	default:
+		return nil, errors.New("protocol not respected 4")
+	} 
 }
 
 func Main(initial_state map[string]interface{}, state_transition func(sender string, tx_hash string, input []byte) (err error)) {
@@ -89,17 +124,10 @@ func Main(initial_state map[string]interface{}, state_transition func(sender str
 	chain_to_machine, _ = os.OpenFile(fifo_path+"_write", os.O_RDONLY, 0666)
 	log("done")
 
-	init := string(read())
-	if init == "[\"Get_Initial_State\"]" {
-		var initial_message []init_entry
-		for key, value := range initial_state {
-			initial_message = append(initial_message, init_entry{Key: key, Value: value})
-		}
-		b, err := json.Marshal(initial_message)
-		check(err)
-		init_message := fmt.Sprintf("[\"Init\", %s]", string(b))
-		write([]byte(init_message))
-	}
+	vm_state, err := init_state(initial_state)
+	check(err)
+	state = vm_state
+	log("initialized")
 
 	var sender_buffer []string
 	var tx_hash_buffer []string
