@@ -1,7 +1,7 @@
 open Crypto
 
 (* TODO: write custom instances of `bin_read_t`, `bin_write_t` necessary for Pollinate *)
-type t = Key.t
+type t = Key.t [@@deriving bin_io]
 
 let compare = Key.compare
 
@@ -12,6 +12,16 @@ let of_string = Key.of_string
 let to_yojson = Key.to_yojson
 
 let of_yojson = Key.of_yojson
+
+let bin_read_t = Key.bin_read_t
+let bin_writer_t = Key.bin_writer_t
+let bin_reader_t = Key.bin_reader_t
+let __bin_read_t__ = Key.__bin_read_t__
+let bin_write_t = Key.bin_write_t
+let __bin_write_t__ = Key.__bin_write_t__
+let bin_size_t = Key.bin_size_t
+let bin_shape_t = Key.bin_shape_t
+let bin_t = Key.bin_t
 
 let of_key secret =
   match secret with
