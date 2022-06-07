@@ -27,6 +27,8 @@ let ledger t = t.ledger
 
 let contract_storage t = t.contract_storage
 
+let vm_state t = t.vm_state
+
 let hash t = to_yojson t |> Yojson.Safe.to_string |> BLAKE2B.hash
 
 let apply_tezos_operation t tezos_operation =

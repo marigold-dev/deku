@@ -64,7 +64,8 @@ let get_initial_state ~folder ~minimum_block_delay =
     if state_bin_exists then
       Files.State_bin.read ~file:state_bin
     else
-      let external_vm_state = External_vm.External_vm_client.initial_state () in
+      let external_vm_state =
+        External_vm.External_vm_client.get_initial_state () in
       let core_state =
         Core_deku.State.intialize_external_vm_state external_vm_state
           node.protocol.core_state in

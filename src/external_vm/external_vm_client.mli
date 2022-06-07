@@ -1,7 +1,9 @@
 open Crypto
 open External_vm_protocol
 
-val initial_state : unit -> State.t
+val get_initial_state : unit -> State.t
+
+val set_initial_state : State.t -> unit
 
 val start_vm_ipc : named_pipe_path:string -> unit
 

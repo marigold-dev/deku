@@ -325,8 +325,9 @@ let create_mock_transaction sender_wallet_file payload vm_binary_path vm_args =
     Unix.create_process vm_binary_path args stdin Unix.stdout Unix.stderr in
   (* FIXME: shouldn't use the initial state before it's given *)
   External_vm.External_vm_client.start_vm_ipc ~named_pipe_path;
-  External_vm.External_vm_client.apply_vm_operation
-    ~state:(Some (External_vm.External_vm_client.initial_state ()))
+  let initial_state = External_vm.External_vm_client.get_initial_state () in
+  External_vm.External_vm_client.set_initial_state initial_state;
+  External_vm.External_vm_client.apply_vm_operation ~state:(Some initial_state)
     ~source:wallet.address ~tx_hash:transaction.hash payload
   |> External_vm.External_vm_protocol.State.to_yojson
   |> Yojson.Safe.to_string

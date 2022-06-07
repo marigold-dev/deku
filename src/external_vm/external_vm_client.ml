@@ -11,7 +11,7 @@ let start_vm_ipc ~named_pipe_path =
          ~to_yojson:vm_client_message_to_yojson
          ~of_yojson:External_vm_protocol.vm_server_message_of_yojson)
 
-let initial_state () =
+let get_initial_state () =
   match !vm with
   | None ->
     failwith
@@ -26,6 +26,13 @@ let initial_state () =
           State.set key value state)
         State.empty set_list
     | _ -> failwith "received a different message from Init")
+
+let set_initial_state state =
+  match !vm with
+  | None ->
+    failwith
+      "You must initialize the external VM IPC before sending the initial state"
+  | Some vm -> vm.send (Set_Initial_State state)
 
 let apply_vm_operation ~state ~source ~tx_hash operation =
   match (state, !vm) with
@@ -44,9 +51,6 @@ let apply_vm_operation ~state ~source ~tx_hash operation =
       | Init _ -> failwith "Init shouldn't be received, TODO: better error"
       | Stop -> finished := true
       | Set { key; value } -> state := State.set key value !state
-      | Get key ->
-        let value = State.get key !state |> Option.value ~default:`Null in
-        vm.send (Get value)
       | Error message ->
         Format.eprintf "VM error: %s\n%!" message;
         finished := true

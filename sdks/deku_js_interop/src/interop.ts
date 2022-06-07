@@ -3,6 +3,8 @@ import * as child_process from "child_process";
 
 let machineToChain: number | undefined;
 let chainToMachine: number | undefined;
+let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
+
 
 /**
  * Opens two fifos, one for reading and a second one for writing
@@ -17,6 +19,32 @@ const init_fifo = () => {
   console.log("opening write");
   chainToMachine = fs.openSync(`${fifo_path}_write`, "r");
 };
+
+/**
+ * Initialize the state of the vm
+ * @param initial_state the initial state provided by the vm
+ * @returns the initialized state
+ */
+const init_state = (initial_state) => {
+  const message = JSON.parse(read().toString());
+  switch (message[0]) {
+    case "Get_Initial_State": {
+      const initial_message = Object.keys(initial_state)
+        .map(key => ({ key, value: initial_state[key] }));
+      const init_message = `["Init", ${JSON.stringify(initial_message)}]`;
+      write(Buffer.from(init_message));
+      return init_state(initial_state);
+    }
+    case "Set_Initial_State": {
+      return message[1].reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {})
+    }
+    default:
+      throw new Error("protocol not respected");
+  }
+}
 
 /**
  * Reads the fifo and returns the result
@@ -47,26 +75,29 @@ const write = (value: Buffer) => {
 };
 
 /**
- * Returns the value of a given key from the deku state
- * @param {string} key  the key of the deku state
- * @returns {Buffer | undefined}
- */
-const get = (key: string): Buffer | undefined => {
-  const message = `["Get", "${key}"]`;
-  write(Buffer.from(message));
-  const value = read().toString()
-  return Buffer.from(JSON.stringify(JSON.parse(value)[1]));
-};
-
-/**
  * Set a value in the deku state for a given key
  * @param {string} key the key of the state
  * @param {string} value a string encoded in json
  */
 const set = (key: string, value: string) => {
   const message = `["Set",{"key":"${key}","value":${value}}]`;
-  return write(Buffer.from(message));
+  write(Buffer.from(message)); // TODO: check if it succeeds
+  state[key] = value;
+  return;
 };
+
+/**
+ * Retrieves the value from the local state
+ * TODO: why returning a Buffer and not a plain object ?
+ * @param key the key the value
+ * @returns th stored value
+ */
+const get = (key: string): Buffer | undefined => {
+  const value = state[key];
+  return value === undefined
+    ? Buffer.from(JSON.stringify(null))
+    : Buffer.from(JSON.stringify(value))
+}
 
 /**
  * The main function
@@ -78,14 +109,7 @@ const main = (
   state_transition: (address: string, tx_hash: string, input: Buffer) => string
 ) => {
   init_fifo();
-
-  const init = JSON.parse(read().toString())[0];
-  if (init === "Get_Initial_State") {
-    const initial_message = Object.keys(initial_state)
-      .map(key => ({ key, value: initial_state[key] }));
-    const init_message = `["Init", ${JSON.stringify(initial_message)}]`;
-    write(Buffer.from(init_message))
-  }
+  state = init_state(initial_state);
   console.log("vm started");
 
   for (; ;) {
