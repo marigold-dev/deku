@@ -11,13 +11,16 @@ type t = {
   previous_hash : BLAKE2B.t;
   author : Key_hash.t;
   block_height : int64;
-  operations : Protocol_operation.t list;
+  consensus_operations : Protocol_operation.Consensus.t list;
+  tezos_operations : Protocol_operation.Core_tezos.t list;
+  user_operations : Protocol_operation.Core_user.t list;
 }
 [@@deriving yojson]
 
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations =
+      ~previous_hash ~author ~block_height ~consensus_operations
+      ~tezos_operations ~user_operations =
     let to_yojson =
       [%to_yojson:
         BLAKE2B.t
@@ -26,7 +29,9 @@ let hash, verify =
         * BLAKE2B.t
         * Key_hash.t
         * int64
-        * Protocol_operation.t list] in
+        * Protocol_operation.Consensus.t list
+        * Protocol_operation.Core_tezos.t list
+        * Protocol_operation.Core_user.t list] in
     let json =
       to_yojson
         ( state_root_hash,
@@ -35,7 +40,9 @@ let hash, verify =
           previous_hash,
           author,
           block_height,
-          operations ) in
+          consensus_operations,
+          tezos_operations,
+          user_operations ) in
     let payload = Yojson.Safe.to_string json in
     let block_payload_hash = BLAKE2B.hash payload in
     let hash =
@@ -51,10 +58,12 @@ let hash, verify =
   (hash, verify)
 
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-    ~previous_hash ~author ~block_height ~operations =
+    ~previous_hash ~author ~block_height ~consensus_operations ~tezos_operations
+    ~user_operations =
   let hash, payload_hash =
     hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~operations in
+      ~previous_hash ~author ~block_height ~consensus_operations
+      ~tezos_operations ~user_operations in
   {
     hash;
     payload_hash;
@@ -64,19 +73,32 @@ let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     validators_hash;
     author;
     block_height;
-    operations;
+    consensus_operations;
+    tezos_operations;
+    user_operations;
   }
 
 let of_yojson json =
   let%ok block = of_yojson json in
   let%ok () =
     match
-      verify ~hash:block.hash ~payload_hash:block.payload_hash
-        ~state_root_hash:block.state_root_hash
-        ~withdrawal_handles_hash:block.withdrawal_handles_hash
-        ~validators_hash:block.validators_hash
-        ~previous_hash:block.previous_hash ~author:block.author
-        ~block_height:block.block_height ~operations:block.operations
+      let {
+        hash;
+        payload_hash;
+        state_root_hash;
+        withdrawal_handles_hash;
+        validators_hash;
+        previous_hash;
+        author;
+        block_height;
+        consensus_operations;
+        tezos_operations;
+        user_operations;
+      } =
+        block in
+      verify ~hash ~payload_hash ~state_root_hash ~withdrawal_handles_hash
+        ~validators_hash ~previous_hash ~author ~block_height
+        ~consensus_operations ~tezos_operations ~user_operations
     with
     | true -> Ok ()
     | false -> Error "Invalid hash" in
@@ -89,7 +111,8 @@ let genesis =
     ~state_root_hash:(BLAKE2B.hash "mayuushi")
     ~withdrawal_handles_hash:(BLAKE2B.hash "desu")
     ~validators_hash:(Validators.hash Validators.empty)
-    ~block_height:0L ~operations:[]
+    ~block_height:0L ~consensus_operations:[] ~tezos_operations:[]
+    ~user_operations:[]
     ~author:(Key_hash.of_key Wallet.genesis_wallet)
 
 let produce ~state ~next_state_root_hash =

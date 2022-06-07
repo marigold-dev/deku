@@ -598,7 +598,8 @@ let produce_block node_folder =
   let address = identity.t in
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
-      ~author:address ~operations:[] in
+      ~author:address ~consensus_operations:[] ~tezos_operations:[]
+      ~user_operations:[] in
   let signature = Block.sign ~key:identity.secret block in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in

@@ -71,26 +71,23 @@ let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
 
-let apply_operation (state, receipts) operation =
-  match operation with
-  | Core_tezos tezos_operation ->
-    let state = apply_core_tezos_operation state tezos_operation in
-    (state, receipts)
-  | Core_user user_operation ->
-    let state, receipt = apply_core_user_operation state user_operation in
-    let receipts =
-      match receipt with
-      | Some receipt -> (user_operation.hash, receipt) :: receipts
-      | None -> receipts in
-    (state, receipts)
-  | Consensus consensus_operation ->
-    let state = apply_consensus_operation state consensus_operation in
-    (state, receipts)
-
 let apply_block state block =
   Log.info "block: %Ld" block.Block.block_height;
+  let state =
+    List.fold_left apply_consensus_operation state block.consensus_operations
+  in
+  let state =
+    List.fold_left apply_core_tezos_operation state block.tezos_operations in
   let state, receipts =
-    List.fold_left apply_operation (state, []) block.operations in
+    List.fold_left
+      (fun (state, receipts) user_operation ->
+        let state, receipt = apply_core_user_operation state user_operation in
+        let receipts =
+          match receipt with
+          | Some receipt -> (user_operation.hash, receipt) :: receipts
+          | None -> receipts in
+        (state, receipts))
+      (state, []) block.user_operations in
   let state =
     {
       state with

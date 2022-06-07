@@ -76,25 +76,28 @@ let is_signable state block =
   let current_time = Unix.time () in
   let next_allowed_membership_change_timestamp =
     last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
-  let is_trusted_operation operation =
-    match operation with
-    | Protocol.Operation.Core_tezos _ ->
-      Node.Operation_map.mem operation state.pending_operations
-    | Core_user _ -> true
-    | Consensus consensus_operation -> (
-      current_time > next_allowed_membership_change_timestamp
-      &&
-      match consensus_operation with
-      | Add_validator validator ->
-        Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Add }
-          trusted_validator_membership_change
-      | Remove_validator validator ->
-        Trusted_validators_membership_change.Set.mem
-          { address = validator.address; action = Remove }
-          trusted_validator_membership_change) in
+
+  let is_trusted_consensu_operation consensus_operation =
+    current_time > next_allowed_membership_change_timestamp
+    &&
+    match consensus_operation with
+    | Protocol.Operation.Consensus.Add_validator validator ->
+      Trusted_validators_membership_change.Set.mem
+        { address = validator.address; action = Add }
+        trusted_validator_membership_change
+    | Remove_validator validator ->
+      Trusted_validators_membership_change.Set.mem
+        { address = validator.address; action = Remove }
+        trusted_validator_membership_change in
+  let is_trusted_tezos_operation tezos_operation =
+    (* TODO: this is a bit hackish *)
+    let operation = Protocol.Operation.Core_tezos tezos_operation in
+    Node.Operation_map.mem operation state.pending_operations in
+
   let all_operations_are_trusted =
-    List.for_all is_trusted_operation block.Block.operations in
+    List.for_all is_trusted_consensu_operation block.Block.consensus_operations
+    && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
+  in
   is_next state block
   && (not (is_signed_by_self state ~hash:block.hash))
   && is_current_producer state ~key_hash:block.author
@@ -148,8 +151,27 @@ let produce_block state =
         | Consensus _ ->
           operation :: operations)
       state.pending_operations [] in
+  (* TODO: probably separate operations at pending_operations? *)
+  let consensus_operations, tezos_operations, user_operations =
+    List.fold_left
+      (fun (consensus_operations, tezos_operations, user_operations) operation ->
+        match operation with
+        | Protocol.Operation.Consensus consensus_operation ->
+          ( consensus_operation :: consensus_operations,
+            tezos_operations,
+            user_operations )
+        | Core_tezos tezos_operation ->
+          ( consensus_operations,
+            tezos_operation :: tezos_operations,
+            user_operations )
+        | Core_user user_operation ->
+          ( consensus_operations,
+            tezos_operations,
+            user_operation :: user_operations ))
+      ([], [], []) operations in
   Block.produce ~state:state.Node.protocol ~author:state.identity.t
-    ~next_state_root_hash ~operations
+    ~next_state_root_hash ~consensus_operations ~tezos_operations
+    ~user_operations
 
 let is_valid_block_height state block_height =
   block_height >= 1L && block_height <= state.Node.protocol.block_height
@@ -175,27 +197,46 @@ let apply_block state update_state block =
   Ok (update_state state)
 
 let clean state update_state block =
+  (* TODO: definitely should separate on the pending *)
   let pending_operations =
-    List.fold_left
-      (fun pending_operations operation ->
-        Node.Operation_map.remove operation pending_operations)
-      state.State.pending_operations block.Block.operations in
+    let remove_operations operations pending_operations =
+      List.fold_left
+        (fun pending_operations operation ->
+          Node.Operation_map.remove operation pending_operations)
+        pending_operations operations in
+    let consensus_operations =
+      List.map
+        (fun consensus_operation ->
+          Protocol.Operation.Consensus consensus_operation)
+        block.Block.consensus_operations in
+    let tezos_operations =
+      List.map
+        (fun consensus_operation ->
+          Protocol.Operation.Core_tezos consensus_operation)
+        block.Block.tezos_operations in
+    let user_operations =
+      List.map
+        (fun consensus_operation ->
+          Protocol.Operation.Core_user consensus_operation)
+        block.Block.user_operations in
+    state.State.pending_operations
+    |> remove_operations consensus_operations
+    |> remove_operations tezos_operations
+    |> remove_operations user_operations in
   let trusted_validator_membership_change =
     List.fold_left
       (fun trusted_validator_membership_change operation ->
         match operation with
-        | Operation.Core_tezos _
-        | Core_user _ ->
-          trusted_validator_membership_change
-        | Consensus (Add_validator validator) ->
+        | Protocol.Operation.Consensus.Add_validator validator ->
           Trusted_validators_membership_change.Set.remove
             { address = validator.address; action = Add }
             trusted_validator_membership_change
-        | Consensus (Remove_validator validator) ->
+        | Remove_validator validator ->
           Trusted_validators_membership_change.Set.remove
             { address = validator.address; action = Remove }
             state.Node.trusted_validator_membership_change)
-      state.Node.trusted_validator_membership_change block.operations in
+      state.Node.trusted_validator_membership_change block.consensus_operations
+  in
   Lwt.async (fun () ->
       trusted_validator_membership_change
       |> Trusted_validators_membership_change.Set.elements
