@@ -39,5 +39,5 @@ the Deku CLI. For example:
 ```bash
 alias deku-cli='nix run github:marigold-dev/deku/parametric#deku-cli --'
 db='[["tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy-1", {"amount": 1, "operators": []}], ["1", {"": "", "symbol": "my custom symbol", "name": "my super token", "decimals": ""}], ["administrator", {"value": "tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy"}]]'
-echo "$db" | deku-cli create-mock-transaction ./wallet.json ./vm $action
+deku-cli create-mock-transaction ./wallet.json $action node build/main.js
 ```

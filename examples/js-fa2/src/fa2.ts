@@ -11,7 +11,7 @@ type token_metadata = {
   decimals: string, // I don't understand the given definition...
 }
 // TODO: review the name
-// Just use to type what is stored in the deku_storage
+// Just use to type what is stored in the deku state
 type ledger_entry = {
   amount: amount,
   operators: address[]
@@ -345,11 +345,11 @@ export const mint_token = (mint_token_operation: mint_token_operation, sender: a
 }
 
 export const initial_state = {
-  "1" : {"":"", name: "my first token", symbol: 'AT1', decimals: ""},
-  "2" : {"":"", name: "my second token", symbol: 'AT2', decimals: ""},
-  "3" : {"":"", name: "my third token", symbol: 'AT3', decimals: ""},
-  "administrator": {value: "tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy"},
-  [`${"tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy"}-1`]: {amount: 1, operators: []},
+  "1": { "": "", name: "my first token", symbol: 'AT1', decimals: "" },
+  "2": { "": "", name: "my second token", symbol: 'AT2', decimals: "" },
+  "3": { "": "", name: "my third token", symbol: 'AT3', decimals: "" },
+  "administrator": { value: "tz1ZUHdFkMKwSEeSfYhN6e4CVUBxvfbHNA6L" },
+  [`${"tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy"}-1`]: { amount: 1, operators: [] },
 }
 
 export const transition_state = (deku_storage: Deku_storage) => (sender: address, tx_hash: string, operation: string): string | void => {

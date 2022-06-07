@@ -1,38 +1,37 @@
 import { FA2_Error, update_operator_type } from "../src/fa2";
 import * as child_process from 'child_process';
 
-const alice = "tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy";
+const alice = "tz1ZUHdFkMKwSEeSfYhN6e4CVUBxvfbHNA6L";
 const bob = "tz1XPCN4m8m8YWW6qWz18eYN68n4mc8rj4ZQ";
 const john = "tz1dn6Pf8VMNAhwBSStZGTxsqa18sapKFrMt";
 const token_id = 1
 
 const initial_state = {
-  [`${alice}-${token_id}`]:{ amount: 1, operators: [] },
-  [`${alice}-${2}`]:{ operators: [bob], amount: 1 },
-  [`${bob}-${2}`]:{ operators: [john], amount: 1 },
-  [`${john}-${2}`]:{ operators: [alice], amount: 1 },
-  ["1"]:{ "": "", name: "my-token", symbol: "TT", decimals: "" },
-  ["2"]:{ "": "", name: "my-second-token", symbol: "TT", decimals: "" },
-  ["3"]:{ "": "", name: "my-third-token", symbol: "TT", decimals: "" },
-  ["administrator"]:{ value: alice },
+  [`${alice}-${token_id}`]: { amount: 1, operators: [] },
+  [`${alice}-${2}`]: { operators: [bob], amount: 1 },
+  [`${bob}-${2}`]: { operators: [john], amount: 1 },
+  [`${john}-${2}`]: { operators: [alice], amount: 1 },
+  ["1"]: { "": "", name: "my-token", symbol: "TT", decimals: "" },
+  ["2"]: { "": "", name: "my-second-token", symbol: "TT", decimals: "" },
+  ["3"]: { "": "", name: "my-third-token", symbol: "TT", decimals: "" },
+  ["administrator"]: { value: alice },
 }
 
 type result = { isOk: boolean, error: string, next_state: Record<string, unknown> }
 
 const execute = (state: any, operation: any): result => {
-  const { stdout, stderr } = child_process.spawnSync("deku-cli", ["create-mock-transaction", './wallet.json', JSON.stringify(operation), 'node', './build/main.js'], { 
+  const { stdout, stderr } = child_process.spawnSync("deku-cli", ["create-mock-transaction", './__tests__/wallet.json', JSON.stringify(operation), 'node', './build/main.js'], {
     env: {
-      ...process.env, 
-      'NODE_ENV':'test',
+      ...process.env,
+      'NODE_ENV': 'test',
       'TEST_STATE': JSON.stringify(state)
-    } 
+    }
   });
-
   const next_state = stdout.toString().trim().split("\n").pop(); // The last line of stdout is the new state
   const error = stderr.toString().trim().split("\n").find(err => err.includes('VM error'))?.split(': ')[1] // Parsing the error to get the error message
   const parsed_next_state = JSON.parse(next_state)
     .reduce((acc, element) => {
-      acc[element[0]]=element[1];
+      acc[element[0]] = element[1];
       return acc
     }, {});
 
@@ -115,9 +114,11 @@ test('Transfers of zero amount MUST be treated as normal transfers', () => {
 
 test('Transfer with the same address (from_ equals to_) MUST be treated as normal transfers', () => {
   const alice_initial_token_amount = get_token_amount(initial_state, alice, token_id);
+  console.log(alice_initial_token_amount);
   const amount_of_transfer = 1;
 
   const result = execute(initial_state, create_transfer(alice, alice, token_id, amount_of_transfer));
+  console.log(result.next_state);
 
   expect(get_token_amount(result.next_state, alice, token_id)).toBe(alice_initial_token_amount);
 });
