@@ -96,6 +96,10 @@
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;
+            # Adding profiling to run inisde flake: 
+            # nix build .#profiling or
+            # nix shell .#profiling
+          profiling = pkgs.callPackage {inherit deku};
           };
         }
         # Add npm packages as exposed packages
