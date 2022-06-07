@@ -152,7 +152,9 @@ let handle_ticket_balance =
     (module Network.Ticket_balance)
     (fun _update_state { ticket; address } ->
       let state = Server.get_state () in
-      let amount = Flows.request_ticket_balance state ~ticket ~address in
+      let amount =
+        Flows.request_ticket_balance state ~ticket
+          ~address:(Core_deku.Address.of_key_hash address) in
       Ok { amount })
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in

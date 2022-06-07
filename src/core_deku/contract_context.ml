@@ -179,7 +179,8 @@ let make ~sender ~table ~self ~source ~tickets ~contracts_table =
       let (ticket, amount2, handle), t =
         Ticket_table.read_ticket ~sender ~ticket_handle !table |> get_or_raise
       in
-      if not (Amount.equal amount amount2) then failwith "execution error";
+      if not (Amount.equal amount amount2) then
+        failwith "attempting to send partial ticket";
       table := t;
       let handle, t = Ticket_table.own !table self handle |> get_or_raise in
       table := t;

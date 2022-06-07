@@ -23,7 +23,7 @@ let apply_tezos_operation t tezos_operation =
         match destination with
         | Implicit key_hash ->
           let destination = key_hash in
-          Ledger.deposit destination amount ticket ledger
+          Ledger.deposit (Address.of_key_hash destination) amount ticket ledger
         | Originated _ -> failwith "not implemented" in
       { ledger; contract_storage } in
   let { hash = _; payload } = tezos_operation in
@@ -38,12 +38,14 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
   match initial_operation with
   | Transaction { destination; amount; ticket } ->
     let%ok ledger =
-      Ledger.transfer ~sender:source ~destination amount ticket ledger in
+      Ledger.transfer ~sender
+        ~destination:(Address.of_key_hash destination)
+        amount ticket ledger in
+    Format.printf "Transfer done\n";
     Ok ({ contract_storage; ledger }, None)
   | Tezos_withdraw { owner; amount; ticket } ->
     let%ok ledger, handle =
-      Ledger.withdraw ~sender:source ~destination:owner amount ticket ledger
-    in
+      Ledger.withdraw ~sender ~destination:owner amount ticket ledger in
     Ok ({ ledger; contract_storage }, Some (Receipt_tezos_withdraw handle))
   | Contract_origination { payload; tickets } ->
     (* @TODO: deduct gas from account and check *)
@@ -122,15 +124,14 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
       Contract_storage.update_contract_storage contract_storage
         ~address:to_invoke ~updated_contract:contract in
     let module M = (val ctx : Contract_context.CTX) in
+    let table = M.get_table () |> Ticket_table.validate in
+    let ledger = Ledger.update_ticket_table table t.ledger in
     List.fold_result
       ~f:
         (apply_contract_ops ~source
            ~sender:(Address.of_contract_hash to_invoke))
-      ~init:(t, None) user_op_list
-    |> Result.map ~f:(fun (t, receipt) ->
-           let new_table = M.get_table () |> Ticket_table.validate in
-           let new_ledger = Ledger.update_ticket_table new_table t.ledger in
-           ({ ledger = new_ledger; contract_storage }, receipt))
+      ~init:({ ledger; contract_storage }, None)
+      user_op_list
 
 and apply_contract_ops ~source ~sender (t, _) x =
   match x with
