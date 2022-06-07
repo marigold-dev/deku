@@ -13,9 +13,29 @@ type t = {
   block_height : int64;
   consensus_operations : Protocol_operation.Consensus.t list;
   tezos_operations : Protocol_operation.Core_tezos.t list;
-  user_operations : Protocol_operation.Core_user.t list;
+  user_operations : string;
 }
 [@@deriving yojson]
+
+type user_operations = Protocol_operation.Core_user.t list [@@deriving yojson]
+
+let serialize_user_operations user_operations =
+  let json = user_operations_to_yojson user_operations in
+  Yojson.Safe.to_string json
+
+let parse_user_operations t =
+  let%ok json =
+    try Ok (Yojson.Safe.from_string t.user_operations) with
+    | _exn -> Error "invalid json" in
+  user_operations_of_yojson json
+
+let parse_user_operations t =
+  (* invalid encode means noop *)
+  match parse_user_operations t with
+  | Ok user_operations -> user_operations
+  | Error _ ->
+    (* TODO: maybe log this *)
+    []
 
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
@@ -31,7 +51,7 @@ let hash, verify =
         * int64
         * Protocol_operation.Consensus.t list
         * Protocol_operation.Core_tezos.t list
-        * Protocol_operation.Core_user.t list] in
+        * string] in
     let json =
       to_yojson
         ( state_root_hash,
@@ -56,27 +76,6 @@ let hash, verify =
         BLAKE2B.equal hash expected_hash
         && BLAKE2B.equal payload_hash expected_payload_hash) in
   (hash, verify)
-
-let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-    ~previous_hash ~author ~block_height ~consensus_operations ~tezos_operations
-    ~user_operations =
-  let hash, payload_hash =
-    hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
-      ~previous_hash ~author ~block_height ~consensus_operations
-      ~tezos_operations ~user_operations in
-  {
-    hash;
-    payload_hash;
-    previous_hash;
-    state_root_hash;
-    withdrawal_handles_hash;
-    validators_hash;
-    author;
-    block_height;
-    consensus_operations;
-    tezos_operations;
-    user_operations;
-  }
 
 let of_yojson json =
   let%ok block = of_yojson json in
@@ -105,6 +104,28 @@ let of_yojson json =
   Ok block
 
 let compare a b = BLAKE2B.compare a.hash b.hash
+
+let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
+    ~previous_hash ~author ~block_height ~consensus_operations ~tezos_operations
+    ~user_operations =
+  let user_operations = serialize_user_operations user_operations in
+  let hash, payload_hash =
+    hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
+      ~previous_hash ~author ~block_height ~consensus_operations
+      ~tezos_operations ~user_operations in
+  {
+    hash;
+    payload_hash;
+    previous_hash;
+    state_root_hash;
+    withdrawal_handles_hash;
+    validators_hash;
+    author;
+    block_height;
+    consensus_operations;
+    tezos_operations;
+    user_operations;
+  }
 
 let genesis =
   make ~previous_hash:(BLAKE2B.hash "tuturu")
