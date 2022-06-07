@@ -182,7 +182,7 @@ let try_to_produce_block state update_state =
   let block = produce_block state in
   let signature = sign ~key:state.identity.secret block in
   let state = append_signature state update_state ~signature ~hash:block.hash in
-  broadcast_block_and_signature state ~block ~signature;
+  let _ = broadcast_block_and_signature state ~block ~signature in
   Metrics.Blocks.inc_block_produced ();
   Ok ()
 

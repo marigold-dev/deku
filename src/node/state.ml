@@ -36,6 +36,7 @@ type t = {
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
+  pollinate_node : Pollinate.PNode.t ref Lwt.t;
 }
 
 let make ~identity ~trusted_validator_membership_change
@@ -54,6 +55,10 @@ let make ~identity ~trusted_validator_membership_change
     { hash; data } in
   let initial_snapshots =
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
+  let init_peers = [] in
+  (* FIXME: get peers *)
+  let pollinate_address = Pollinate.Address.create "0.0.0.0" 4242 in
+  let pollinate_node = Pollinate.PNode.init ~init_peers pollinate_address in
   {
     identity;
     trusted_validator_membership_change;
@@ -68,6 +73,7 @@ let make ~identity ~trusted_validator_membership_change
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
+    pollinate_node;
   }
 
 let apply_block state block =

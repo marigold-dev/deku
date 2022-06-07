@@ -29,22 +29,6 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
-(* POST /append-block-and-signature *)
-(* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block_and_signature =
-  handle_request
-    (module Network.Block_and_signature_spec)
-    (fun update_state request ->
-      let open Flows in
-      let%ok () =
-        received_block (Server.get_state ()) update_state request.block
-        |> ignore_some_errors in
-      let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
-        |> ignore_some_errors in
-      Ok ())
-
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
 let handle_received_signature =
@@ -187,7 +171,6 @@ let node folder prometheus_port =
       @@ Dream.router
            [
              handle_block_level;
-             handle_received_block_and_signature;
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;

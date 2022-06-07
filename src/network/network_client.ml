@@ -52,3 +52,13 @@ let broadcast_to_list (type req res)
   (* TODO: limit concurrency here *)
   |> Lwt_list.iter_p (fun uri ->
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
+
+let send_over_pollinate (type req res)
+    (module E : Request_endpoint with type request = req and type response = res)
+    node data =
+  let open Bin_prot.Std in
+  let%await data = Parallel.encode E.request_to_yojson data in
+  let data_bin_io = Pollinate.Util.Encoding.pack bin_writer_string data in
+  let message = Pollinate.PNode.Client.create_post node (data_bin_io, None) in
+  let _ = Pollinate.PNode.Client.post node message in
+  Lwt.return_unit
