@@ -11,7 +11,19 @@
  (libraries bin_common lwt cmdliner))
 
 (executable
+ (name asserter_balance)
+ (public_name asserter_balance)
+ (modules asserter_balance)
+ (libraries bin_common lwt cmdliner))
+
+(executable
  (name ticket_handle)
  (public_name ticket_handle)
  (modules ticket_handle)
+ (libraries bin_common lwt cmdliner))
+
+(executable
+ (name ticket_transfer)
+ (public_name ticket_transfer)
+ (modules ticket_transfer)
  (libraries bin_common lwt cmdliner))

@@ -199,15 +199,16 @@ let transfer t ~sender ~ticket ~destination ~amount =
   let ticket_handle = Ticket_handle.make sender ticket in
   let%ok (ticket, ticket_total, _), t = read_ticket t ~sender ~ticket_handle in
   let%ok () = assert_enough_funds ~ticket_total ~amount in
-  let%ok to_send, to_hold =
-    Ticket_repr.split ticket ~ticket_total
-      ~amounts:Amount.(amount, ticket_total - amount) in
-  let t =
-    unsafe_deposit_ticket t ~ticket:to_send.ticket ~amount:to_send.amount
-      ~destination in
   if Amount.(equal ticket_total amount) then
+    let t = unsafe_deposit_ticket t ~ticket ~amount ~destination in
     Ok (t |> validate)
   else
+    let%ok to_send, to_hold =
+      Ticket_repr.split ticket ~ticket_total
+        ~amounts:Amount.(amount, ticket_total - amount) in
+    let t =
+      unsafe_deposit_ticket t ~ticket:to_send.ticket ~amount:to_send.amount
+        ~destination in
     Ok
       (unsafe_deposit_ticket t ~ticket:to_hold.ticket ~amount:to_hold.amount
          ~destination:sender

@@ -35,29 +35,23 @@ let ticket_table t = t.ledger
 let update_ticket_table table t =
   { ledger = table; withdrawal_handles = t.withdrawal_handles }
 let balance address ticket t =
-  Ticket_table.amount t.ledger (Address.of_key_hash address) ticket
+  Ticket_table.amount t.ledger address ticket
   |> Option.value ~default:Amount.zero
 
 let transfer ~sender ~destination amount ticket t =
   let%ok ledger =
-    Ticket_table.transfer t.ledger
-      ~sender:(Address.of_key_hash sender)
-      ~destination:(Address.of_key_hash destination)
-      ~amount ~ticket
+    Ticket_table.transfer t.ledger ~sender ~destination ~amount ~ticket
     |> Result.map_error (fun _ -> `Insufficient_funds) in
   Ok { ledger; withdrawal_handles = t.withdrawal_handles }
 let deposit destination amount ticket t =
   let ledger =
-    Ticket_table.unsafe_deposit_ticket t.ledger ~ticket
-      ~destination:(Address.of_key_hash destination)
-      ~amount in
+    Ticket_table.unsafe_deposit_ticket t.ledger ~ticket ~destination ~amount
+  in
   { ledger; withdrawal_handles = t.withdrawal_handles }
 
 let withdraw ~sender ~destination amount ticket t =
   let%ok ledger =
-    Ticket_table.unsafe_withdraw t.ledger
-      ~sender:(Address.of_key_hash sender)
-      ~amount ~ticket
+    Ticket_table.unsafe_withdraw t.ledger ~sender ~amount ~ticket
     |> Result.map_error (function _ -> `Insufficient_funds) in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add

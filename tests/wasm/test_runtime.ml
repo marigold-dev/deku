@@ -335,37 +335,38 @@ let test_ticket_send_implicit () =
   let open Core_deku in
   let code =
     {|
-                      (module
-                        (import "env" "syscall" (func $syscall (param i64) (result i32)))
-                        (memory (export "memory") 1)
-                        (func (export "main")  (param i32) (result i64 i64 i64)
-                          i32.const 87
-                          i32.const 8
-                          i32.store
-                          i32.const 92
-                          i32.const -1
-                          i32.store
-                          i32.const 97
-                          i32.const 8
-                          i32.store
-                          i32.const 102
-                          i64.const 10
-                          i64.store
-                          i32.const 111
-                          i32.const 48
-                          i32.store
-                          i64.const 87
-                          call $syscall
-                          i64.extend_i32_s
-                          (i64.const 0)
-                          i32.const 92
-                          i32.const 1
-                          i32.store 
-                          i32.const 97
-                          i32.const 1 
-                          i32.store
-                          (i64.const 92)
-                          ))
+    (module
+    (import "env" "syscall" (func $syscall (param i64) (result i32)))
+    (memory (export "memory") 1)
+    (func (export "main")  (param i32) (result i64 i64 i64)
+      i32.const 77
+      i32.const 8
+      i32.store
+      i32.const 82
+      i32.const -1
+      i32.store
+      i32.const 87
+      i32.const 0
+      i32.store
+      i32.const 92
+      i64.const 100
+      i64.store
+      i32.const 101
+      i32.const 40
+      i32.store
+      i64.const 77
+      call $syscall
+      i64.extend_i32_s
+      (i64.const 0)
+      i32.const 92
+      i32.const 1
+      i32.store 
+      i32.const 97
+      i32.const 1 
+      i32.store
+      (i64.const 92)
+      ))
+
                     |}
   in
   let storage = Bytes.empty in
@@ -377,13 +378,12 @@ let test_ticket_send_implicit () =
   let argument =
     Bytes.concat Bytes.empty
       [
-        i64 20L;
         Ticket_handle.to_bytes handle;
         Address.to_string addr |> Bytes.of_string (* 67 *);
       ] in
   let table =
     Ticket_table.unsafe_deposit_ticket table ~ticket ~destination:addr
-      ~amount:(Amount.of_int 10) in
+      ~amount:(Amount.of_int 100) in
   let module M =
   (val Contract_context.make ~source:addr ~sender:addr ~table
          ~contracts_table:(fun _ -> None)
@@ -395,7 +395,7 @@ let test_ticket_send_implicit () =
   Alcotest.(check Testables.contract_operation)
     "Same"
     (Contract_context.Contract_operation.Transfer
-       { ticket; amount = Amount.of_int 10; destination = addr })
+       { ticket; amount = Amount.of_int 100; destination = addr })
     x
 
 let test_ticket_own_dup () =

@@ -27,7 +27,7 @@ let () =
         { ticketer; data } in
       let make_address () =
         let _secret, _key, key_hash = Key_hash.make_ed25519 () in
-        key_hash in
+        Address.of_key_hash key_hash in
       let make_tezos_address () =
         let open Crypto in
         let open Tezos in
