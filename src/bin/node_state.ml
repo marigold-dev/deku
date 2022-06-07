@@ -1,6 +1,7 @@
 open Helpers
 open Protocol
 open Node
+open Consensus
 
 let get_initial_state ~folder =
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in

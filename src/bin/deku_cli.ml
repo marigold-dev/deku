@@ -250,7 +250,6 @@ let create_transaction node_folder sender_wallet_file received_address amount
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
           ~block_height:block_level ~data:operation in
-
       let%await identity = read_identity ~node_folder in
       let%await () =
         Network.request_user_operation_gossip

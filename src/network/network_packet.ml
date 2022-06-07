@@ -51,6 +51,14 @@ module Block_level = struct
   let path = "/block-level"
 end
 
+module User_operation_was_included_in_block = struct
+  type request = { operation_hash : User_operation_set.t } [@@deriving yojson]
+
+  type response = int64 option [@@deriving yojson]
+
+  let path = "/user-operation-was-included-in-block"
+end
+
 module Protocol_snapshot = struct
   type request = unit [@@deriving yojson]
 
