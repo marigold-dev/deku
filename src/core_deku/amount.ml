@@ -1,4 +1,6 @@
-type t = int [@@deriving eq, ord]
+open Bin_prot.Std
+
+type t = int [@@deriving eq, ord, bin_io]
 
 let zero = 0
 

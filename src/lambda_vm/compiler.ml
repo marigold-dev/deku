@@ -29,9 +29,10 @@ let compile_prim prim =
   | Sender -> P_sender
 
 module Vars = Map_with_cardinality.Make (struct
+  open Bin_prot.Std
   include String
 
-  type t = string [@@deriving yojson]
+  type t = string [@@deriving yojson, bin_io]
 end)
 
 let burn_gas gas vars code =

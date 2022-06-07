@@ -27,12 +27,26 @@ module Secret = struct
 
     let of_raw string =
       priv_of_cstruct (Cstruct.of_string string) |> Result.to_option
+
   end)
 end
 
 module Key = struct
   type t = pub
 
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
   let of_secret = pub_of_priv
 
   let equal a b =
@@ -60,7 +74,21 @@ module Key = struct
 end
 
 module Key_hash = struct
-  type t = BLAKE2B_20.t [@@deriving ord, eq]
+  type t = BLAKE2B_20.t [@@deriving ord, eq, bin_io]
+
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
 
   let of_key t =
     BLAKE2B_20.hash (pub_to_cstruct ~compress:true t |> Cstruct.to_string)
@@ -83,7 +111,22 @@ module Key_hash = struct
 end
 
 module Signature = struct
-  type t = string [@@deriving ord, eq]
+  open Bin_prot.Std
+  type t = string [@@deriving ord, eq, bin_io]
+
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
 
   include Encoding_helpers.Make_b58 (struct
     type nonrec t = t

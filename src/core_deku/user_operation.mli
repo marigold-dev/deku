@@ -22,6 +22,6 @@ type t = private {
   source : Key_hash.t;
   initial_operation : initial_operation;
 }
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 val make : source:Key_hash.t -> initial_operation -> t

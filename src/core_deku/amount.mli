@@ -1,4 +1,4 @@
-type t [@@deriving eq, ord, yojson]
+type t [@@deriving eq, ord, yojson, bin_io]
 
 val zero : t
 

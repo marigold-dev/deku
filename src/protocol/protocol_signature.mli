@@ -1,6 +1,6 @@
 open Crypto
 
-type t [@@deriving yojson]
+type t [@@deriving yojson, bin_io]
 
 val compare : t -> t -> int
 

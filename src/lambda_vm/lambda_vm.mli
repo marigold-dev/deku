@@ -78,7 +78,36 @@ end
 module Ir : sig
   type code [@@deriving yojson, eq]
 
+  val bin_read_code : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> code
+  val bin_writer_code : code Bin_prot.Type_class.writer
+
+  val bin_reader_code : code Bin_prot.Type_class.reader
+  val __bin_read_code__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> int -> code
+
+  val bin_write_code : Bin_prot.Common.buf -> pos:int -> code -> int
+
+  val __bin_write_code__ : Bin_prot.Common.buf -> pos:int -> code -> int
+
+  val bin_size_code : code -> int
+  val bin_shape_code : Bin_shape_lib.Bin_shape.t
+  val bin_code : code Bin_prot.Type_class.t
+
+
   type value [@@deriving yojson, eq]
+
+  val bin_read_value : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> value
+  val bin_writer_value : value Bin_prot.Type_class.writer
+
+  val bin_reader_value : value Bin_prot.Type_class.reader
+  val __bin_read_value__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> int -> value
+
+  val bin_write_value : Bin_prot.Common.buf -> pos:int -> value -> int
+
+  val __bin_write_value__ : Bin_prot.Common.buf -> pos:int -> value -> int
+
+  val bin_size_value : value -> int
+  val bin_shape_value : Bin_shape_lib.Bin_shape.t
+  val bin_value : value Bin_prot.Type_class.t
 
   module Value_syntax : sig
     val int : int64 -> value

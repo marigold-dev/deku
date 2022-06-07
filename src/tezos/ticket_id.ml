@@ -1,11 +1,12 @@
 open Tezos_micheline
 open Helpers
+open Bin_prot.Std
 
 type t = {
   ticketer : Address.t;
   data : bytes;
 }
-[@@deriving eq, ord]
+[@@deriving eq, ord, bin_io]
 
 let parse_micheline string =
   let tokens, errors = Micheline_parser.tokenize string in

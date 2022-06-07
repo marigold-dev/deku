@@ -1,7 +1,7 @@
 open Helpers
 open Crypto
 
-type t = BLAKE2B_20.t [@@deriving eq, ord]
+type t = BLAKE2B_20.t [@@deriving eq, ord, bin_io]
 
 include Encoding_helpers.Make_b58 (struct
   type nonrec t = t

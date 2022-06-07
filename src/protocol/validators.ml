@@ -1,7 +1,8 @@
 open Helpers
 open Crypto
+open Bin_prot.Std
 
-type validator = { address : Key_hash.t } [@@deriving eq, ord, yojson]
+type validator = { address : Key_hash.t } [@@deriving eq, ord, yojson, bin_io]
 
 type t = {
   current : validator option;
@@ -9,7 +10,7 @@ type t = {
   length : int;
   hash : BLAKE2B.t;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 let current t = t.current
 

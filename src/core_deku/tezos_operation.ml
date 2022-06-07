@@ -1,5 +1,6 @@
 open Helpers
 open Crypto
+open Bin_prot.Std
 
 type internal_operation =
   | Tezos_deposit of {
@@ -7,19 +8,19 @@ type internal_operation =
       amount : Amount.t;
       ticket : Tezos.Ticket_id.t;
     }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 type payload = {
   tezos_operation_hash : Tezos.Operation_hash.t;
   internal_operations : internal_operation list;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 type t = {
   hash : BLAKE2B.t;
   payload : payload;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 let equal a b = BLAKE2B.equal a.hash b.hash
 

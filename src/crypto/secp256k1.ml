@@ -14,6 +14,20 @@ let context =
 module Key = struct
   type t = Libsecp256k1.Key.public Libsecp256k1.Key.t
 
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
+
   let equal = Libsecp256k1.Key.equal
 
   let compare a b =
@@ -45,7 +59,21 @@ module Key = struct
 end
 
 module Key_hash = struct
-  type t = BLAKE2B_20.t [@@deriving ord, eq]
+  type t = BLAKE2B_20.t [@@deriving ord, eq, bin_io]
+
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
 
   let of_key t = BLAKE2B_20.hash (Key.to_raw t)
 
@@ -95,6 +123,20 @@ end
 
 module Signature = struct
   type t = Sign.plain Sign.t
+  
+  let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+  let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+  
+  let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+  let bin_size_t : t -> int = failwith "Not used by Pollinate"
+  let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+  let bin_t : t -> int = failwith "Not used by Pollinate"
 
   let equal = Sign.equal
 

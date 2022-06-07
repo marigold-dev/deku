@@ -1,4 +1,6 @@
-type ident = Ident.t [@@deriving yojson, show, eq]
+open Bin_prot.Std
+
+type ident = Ident.t [@@deriving yojson, show, eq, bin_io]
 
 type prim =
   | P_neg
@@ -16,7 +18,9 @@ type prim =
   | P_fst
   | P_snd
   | P_sender
-[@@deriving show, yojson, eq]
+[@@deriving show, yojson, eq, bin_io]
+
+let bin_shape_prim = failwith "Not used by Pollinate"
 
 module Env = struct
   include Map_with_cardinality.Make (Ident)
@@ -47,7 +51,9 @@ type expr =
       first : expr;
       second : expr;
     }
-[@@deriving show, yojson, eq]
+[@@deriving show, yojson, eq, bin_io]
+
+let bin_shape_expr = failwith "Not used by Pollinate"
 
 type value =
   | V_int64     of int64
@@ -64,10 +70,18 @@ type value =
       args : value list;
       prim : prim;
     }
-[@@deriving show, yojson, eq]
+[@@deriving show, yojson, eq, bin_io]
+
+let bin_shape_value = failwith "Not used by Pollinate"
+
+let __bin_write_value__ = failwith "Not used by Pollinate"
 
 type code = {
   param : Ident.t;
   code : expr;
 }
-[@@deriving yojson, show, eq]
+[@@deriving yojson, show, eq, bin_io]
+
+let bin_shape_code = failwith "Not used by Pollinate"
+
+let __bin_write_code__ = failwith "Not used by Pollinate"

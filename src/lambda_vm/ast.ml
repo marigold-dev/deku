@@ -1,4 +1,6 @@
-type ident = string [@@deriving yojson, show]
+open Bin_prot.Std
+
+type ident = string [@@deriving yojson, show, bin_io]
 
 type prim =
   | Neg
@@ -16,7 +18,7 @@ type prim =
   | Fst
   | Snd
   | Sender
-[@@deriving yojson, show]
+[@@deriving yojson, show, bin_io]
 
 type expr =
   (* calculus *)
@@ -41,18 +43,18 @@ type expr =
       first : expr;
       second : expr;
     }
-[@@deriving yojson, show]
+[@@deriving yojson, show, bin_io]
 
 type value =
   | Int64 of int64
   | Pair  of value * value
-[@@deriving yojson, show]
+[@@deriving yojson, show, bin_io]
 
 type script = {
   param : ident;
   code : expr;
 }
-[@@deriving yojson, show]
+[@@deriving yojson, show, bin_io]
 
 let value_of_string gas str =
   let append list item = Pair (item, list) in
