@@ -22,8 +22,8 @@ let spam_transactions ~ticketer ~n () =
   let%await block_level = Deku_block_queries.get_current_block_level () in
   let ticket = Deku_tickets.make_ticket ticketer in
   let transactions =
-    List.init n (fun i ->
-        Format.eprintf "transaction %i\n" i;
+    List.init n (fun _i ->
+        (*Format.eprintf "transaction %i\n" i;*)
         make_transaction ~block_level ~ticket ~sender:alice_wallet
           ~recipient:bob_wallet ~amount:1) in
   Format.eprintf "Number of transactions - packed: %d\n%!"
@@ -35,15 +35,15 @@ let spam_transactions ~ticketer ~n () =
   Lwt.return transactions
 
 let rec spam ~ticketer =
-  let n = 20 in
+  let n = 2000 in
   (*let%await _ = spam_transactions ~ticketer ~n () in*)
   let%await _ =
     Lwt_list.iter_p Fun.id
     @@ (* REMARK: list n: is n related to the number of validators?
           the number of validators will be n * 2
        *)
-    List.init 10 (fun i ->
-        Format.eprintf "%i-th " i;
+    List.init 4 (fun _i ->
+        (*Format.eprintf "%i-th " i;*)
         let%await _ = spam_transactions ~ticketer ~n () in
         await ()) in
   let%await () = Lwt_unix.sleep 1.0 in

@@ -157,8 +157,8 @@ let handle_receive_user_operations_gossip =
     (module Network.User_operations_gossip)
     (fun update_state request ->
       let operations = request.user_operations in
-      Format.eprintf "Deku-node: Number of transactions - packed: %i\n%!"
-        (List.length operations);
+      (*Format.eprintf "Deku-node: Number of transactions - packed: %i\n%!"
+        (List.length operations);*)
       List.fold_left_ok
         (fun () operation ->
           (* TODO quadratic function *)
