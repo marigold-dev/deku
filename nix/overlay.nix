@@ -42,5 +42,6 @@ in {
       json-data-encoding = disableCheck osuper.json-data-encoding;
       json-data-encoding-bson = disableCheck osuper.json-data-encoding-bson;
       mrmime = disableCheck osuper.mrmime;
+      pollinate = disableCheck osuper.pollinate;
     })) prev.ocaml-ng;
 }
