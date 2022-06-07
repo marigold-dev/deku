@@ -1,5 +1,6 @@
 open Crypto
 
+(* TODO: write custom instances of `bin_read_t`, `bin_write_t` necessary for Pollinate *)
 type t = Key.t
 
 let compare = Key.compare

@@ -1,4 +1,6 @@
-type ident = Ident.t [@@deriving yojson, show, eq]
+open Bin_prot.Std
+
+type ident = Ident.t [@@deriving yojson, show, eq, bin_io]
 
 type prim =
   | P_neg
@@ -16,7 +18,7 @@ type prim =
   | P_fst
   | P_snd
   | P_sender
-[@@deriving show, yojson, eq]
+[@@deriving show, yojson, eq, bin_io]
 
 module Env = struct
   include Map_with_cardinality.Make (Ident)
@@ -47,7 +49,7 @@ type expr =
       first : expr;
       second : expr;
     }
-[@@deriving show, yojson, eq]
+[@@deriving show, yojson, eq, bin_io]
 
 type value =
   | V_int64     of int64
@@ -70,4 +72,4 @@ type code = {
   param : Ident.t;
   code : expr;
 }
-[@@deriving yojson, show, eq]
+[@@deriving yojson, show, eq, bin_io]

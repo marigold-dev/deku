@@ -4,7 +4,21 @@ type t =
   | Ed25519   of Ed25519.Key.t
   | Secp256k1 of Secp256k1.Key.t
   | P256      of P256.Key.t
-[@@deriving ord, eq]
+[@@deriving ord, eq, bin_io]
+
+let bin_read_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+let bin_writer_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+let bin_reader_t : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t= failwith "Not used by Pollinate"
+let __bin_read_t__ : Bin_prot.Common.buf -> pos_ref:Bin_prot.Common.pos_ref -> t = failwith "Not used by Pollinate"
+
+let bin_write_t : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+let __bin_write_t__ : Bin_prot.Common.buf -> pos:int -> t -> int = failwith "Not used by Pollinate"
+
+let bin_size_t : t -> int = failwith "Not used by Pollinate"
+let bin_shape_t : Bin_shape_lib.Bin_shape.t = failwith "Not used by Pollinate" 
+let bin_t : t -> int = failwith "Not used by Pollinate"
 
 let of_secret = function
   | Secret.Ed25519 secret -> Ed25519 (Ed25519.Key.of_secret secret)
