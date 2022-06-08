@@ -163,6 +163,11 @@ let node folder prometheus_port =
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;
+
+  let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
+   fun _msg -> failwith "Nope" in
+
+  let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
@@ -184,6 +189,7 @@ let node folder prometheus_port =
              handle_trusted_validators_membership;
            ];
       Prometheus_dream.serve prometheus_port;
+      Pollinate.PNode.run_server ~msg_handler pollinate_node;
     ]
   |> Lwt_main.run
   |> ignore
