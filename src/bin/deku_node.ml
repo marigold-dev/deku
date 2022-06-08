@@ -29,6 +29,27 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
+(* POST /append-block-and-signature *)
+(* If the block is not already known and is valid, add it to the pool *)
+let handle_received_block_and_signature (msg : Pollinate.PNode.Message.t) =
+  let open Bin_prot.Read in
+  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
+  let payload_json = Yojson.Safe.from_string payload_str in
+  let req = Network.Block_and_signature_spec.request_of_yojson payload_json in
+  match req with
+  | Error err -> raise (Failure err)
+  | Ok block_and_signature ->
+    let%ok () =
+      Flows.received_block (Server.get_state ()) update_state
+        block_and_signature.block
+      |> ignore_some_errors in
+    let%ok () =
+      Flows.received_signature (Server.get_state ()) update_state
+        ~hash:block_and_signature.block.hash
+        ~signature:block_and_signature.signature
+      |> ignore_some_errors in
+    Ok ()
+
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
 let handle_received_signature =
@@ -165,7 +186,15 @@ let node folder prometheus_port =
   Node.Server.start ~initial:node;
 
   let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
-   fun _msg -> failwith "Nope" in
+   fun msg ->
+    let subcategory_opt = msg.sub_category_opt in
+    let _ =
+      match subcategory_opt with
+      | None -> failwith "Deku messages must have a subcategory"
+      | Some ("ChainOperation", "Block_and_signature") ->
+        handle_received_block_and_signature msg
+      | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
+    (None, None) in
 
   let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();

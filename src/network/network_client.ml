@@ -59,6 +59,16 @@ let send_over_pollinate (type req res)
   let open Bin_prot.Std in
   let%await data = Parallel.encode E.request_to_yojson data in
   let data_bin_io = Pollinate.Util.Encoding.pack bin_writer_string data in
-  let message = Pollinate.PNode.Client.create_post node (data_bin_io, None) in
+  let message : Pollinate.PNode.Message.t =
+    {
+      category = Pollinate.PNode.Message.Post;
+      sub_category_opt = Some ("ChainOperation", "Block_and_signature");
+      id = -1;
+      timestamp = Unix.gettimeofday ();
+      sender = Pollinate.PNode.Client.address_of !node;
+      recipients = [];
+      payload = data_bin_io;
+      payload_signature = None;
+    } in
   let _ = Pollinate.PNode.Client.post node message in
   Lwt.return_unit
