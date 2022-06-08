@@ -115,6 +115,14 @@
             type = "app";
             program = "${sandbox}/bin/sandbox.sh";
           };
+          create-consensus-contract = {
+            type = "app";
+            program = "${
+                (pkgs.callPackage ./nix/contracts.nix {
+                  inherit ligo;
+                }).create-consensus-contract
+              }/bin/create-consensus-contract.sh";
+          };
         };
       }) // {
         hydraJobs = {
