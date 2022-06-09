@@ -123,6 +123,14 @@
                 }).create-consensus-contract
               }/bin/create-consensus-contract.sh";
           };
+          create-discovery-contract = {
+            type = "app";
+            program = "${
+                (pkgs.callPackage ./nix/contracts.nix {
+                  inherit ligo;
+                }).create-discovery-contract
+              }/bin/create-discovery-contract.sh";
+          };
         };
       }) // {
         hydraJobs = {
