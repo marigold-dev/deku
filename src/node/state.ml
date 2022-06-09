@@ -36,11 +36,13 @@ type t = {
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
+  pollinate_node : Pollinate.PNode.t ref Lwt.t;
 }
 
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri =
+  Printf.printf "STARTING MAKE\n";
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
@@ -54,6 +56,35 @@ let make ~identity ~trusted_validator_membership_change
     { hash; data } in
   let initial_snapshots =
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
+  Printf.printf "Translating Uri.t to Pollinate.Address.t\n";
+  let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
+   fun uri ->
+    let address =
+      match Uri.host uri with
+      | Some "localhost" -> "127.0.0.1"
+      | Some "0.0.0.0" -> "127.0.0.1"
+      | Some address -> address
+      | _ -> failwith "Could not retrieve address from uri" in
+    let port =
+      match Uri.port uri with
+      | Some port -> port + 100
+      | None -> failwith "Could not retrieve port from uri." in
+    Pollinate.Address.create address port in
+
+  Printf.printf "INIT_PEERS: adding peers\n";
+  let init_peers =
+    List.map
+      (fun (_, x) -> uri_to_pollinate x)
+      (Address_map.bindings initial_validators_uri) in
+  List.iter
+    (fun x -> Printf.printf "INIT_PEERS: %s\n" (Pollinate.Address.show x))
+    init_peers;
+
+  let pollinate_address = uri_to_pollinate identity.uri in
+  Printf.printf "POLLINATE_SERVER = %s\n"
+    (Pollinate.Address.show pollinate_address);
+  let pollinate_node = Pollinate.PNode.init ~init_peers pollinate_address in
+
   {
     identity;
     trusted_validator_membership_change;
@@ -68,6 +99,7 @@ let make ~identity ~trusted_validator_membership_change
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
+    pollinate_node;
   }
 
 let apply_block state block =

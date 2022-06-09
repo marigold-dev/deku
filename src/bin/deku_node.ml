@@ -31,19 +31,29 @@ let handle_request (type req res)
 
 (* POST /append-block-and-signature *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block_and_signature =
-  handle_request
-    (module Network.Block_and_signature_spec)
-    (fun update_state request ->
-      let open Flows in
-      let%ok () =
-        received_block (Server.get_state ()) update_state request.block
-        |> ignore_some_errors in
-      let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
-        |> ignore_some_errors in
-      Ok ())
+let handle_received_block_and_signature (msg : Pollinate.PNode.Message.t) =
+  let open Bin_prot.Read in
+  Log.debug "Unpacking message";
+  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
+  Log.debug "unpacked message";
+  let payload_json = Yojson.Safe.from_string payload_str in
+  Log.debug "HANDLE RECEIVED BLOCK AND SIG";
+  let req = Network.Block_and_signature_spec.request_of_yojson payload_json in
+  match req with
+  | Error err -> raise (Failure err)
+  | Ok block_and_signature ->
+    let%ok () =
+      Log.debug "BLOCK TO FLOWS";
+      Flows.received_block (Server.get_state ()) update_state
+        block_and_signature.block
+      |> ignore_some_errors in
+    let%ok () =
+      Log.debug "SIG TO FLOWS";
+      Flows.received_signature (Server.get_state ()) update_state
+        ~hash:block_and_signature.block.hash
+        ~signature:block_and_signature.signature
+      |> ignore_some_errors in
+    Ok ()
 
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
@@ -179,6 +189,21 @@ let node folder prometheus_port =
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;
+
+  let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
+   fun msg ->
+    Log.debug "MSG_HANDLER: Received message";
+    let subcategory_opt = msg.sub_category_opt in
+    let _ =
+      match subcategory_opt with
+      | None -> failwith "Deku messages must have a subcategory"
+      | Some ("ChainOperation", "Block_and_signature") ->
+        Log.debug "MSG_HANDLER: Received message, with subcategory";
+        handle_received_block_and_signature msg
+      | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
+    (None, None) in
+
+  let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
@@ -187,7 +212,6 @@ let node folder prometheus_port =
       @@ Dream.router
            [
              handle_block_level;
-             handle_received_block_and_signature;
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
@@ -201,6 +225,7 @@ let node folder prometheus_port =
              handle_trusted_validators_membership;
            ];
       Prometheus_dream.serve prometheus_port;
+      Pollinate.PNode.run_server ~msg_handler pollinate_node;
     ]
   |> Lwt_main.run
   |> ignore

@@ -16,7 +16,7 @@ let request_withdraw_proof = request (module Withdraw_proof)
 let broadcast_signature = broadcast_to_list (module Signature_spec)
 
 let broadcast_block_and_signature =
-  broadcast_to_list (module Block_and_signature_spec)
+  send_over_pollinate (module Block_and_signature_spec)
 
 let broadcast_user_operation_gossip =
   broadcast_to_list (module User_operation_gossip)

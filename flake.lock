@@ -239,6 +239,31 @@
         "type": "github"
       }
     },
+    "ocaml-overlays_2": {
+      "inputs": {
+        "flake-utils": [
+          "pollinate",
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "pollinate",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1654363376,
+        "narHash": "sha256-J/isefhczw2KElNzmxJcjUetC+5dlvorYimlh9Gn9CA=",
+        "owner": "anmonteiro",
+        "repo": "nix-overlays",
+        "rev": "f553d0457f13a6562605d5fb12b6322e8d8c48a1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "anmonteiro",
+        "repo": "nix-overlays",
+        "type": "github"
+      }
+    },
     "poetry2nix": {
       "flake": false,
       "locked": {
@@ -253,6 +278,34 @@
         "owner": "nix-community",
         "ref": "1.21.0",
         "repo": "poetry2nix",
+        "type": "github"
+      }
+    },
+    "pollinate": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nix-filter": [
+          "nix-filter"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "ocaml-overlays": "ocaml-overlays_2"
+      },
+      "locked": {
+        "lastModified": 1654767965,
+        "narHash": "sha256-9nB2oWAsLU2PsqKxYk5Pfp2Fv17mBXzQM+WG/HNtvMw=",
+        "owner": "marigold-dev",
+        "repo": "pollinate",
+        "rev": "00826d585a25fc3eae6298b5841a9de9b63e9906",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "ref": "feat/dekuIntegrationAct2",
+        "repo": "pollinate",
         "type": "github"
       }
     },
@@ -315,6 +368,7 @@
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays",
+        "pollinate": "pollinate",
         "prometheus-web": "prometheus-web",
         "tezos": "tezos"
       }
