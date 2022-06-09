@@ -606,7 +606,7 @@ let produce_block node_folder =
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok _ ->
-    let p_node = Lwt_main.run state.Node.State.pollinate_node in
+    let%await p_node = state.Node.State.pollinate_node in
     let%await () =
       let open Network in
       Printf.printf "Calling send_over_pollinate";

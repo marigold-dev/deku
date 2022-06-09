@@ -230,7 +230,7 @@ let broadcast_signature state ~hash ~signature =
   Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
 
 let broadcast_block_and_signature state ~block ~signature =
-  let%lwt node = state.Node.pollinate_node in
+  let%await node = state.Node.pollinate_node in
   Network.broadcast_block_and_signature node { block; signature }
 
 let broadcast_user_operation_gossip state operation =
