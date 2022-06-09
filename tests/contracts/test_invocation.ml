@@ -244,17 +244,21 @@ let test_ok_wasm msg =
     user_op.hash |> Contract_address.of_user_operation_hash in
   let state, _ = State.apply_user_operation initial_state user_op.hash user_op in
   let init_storage = State.contract_storage state in
-
   let arg =
     [%to_yojson: bytes]
-      (Ticket_handle.make (Address.of_key_hash address) ticket
+      (Ticket_handle.make
+         (Address.of_key_hash address)
+         ticket (Amount.of_int 55)
       |> Ticket_handle.to_bytes) in
   let payload =
     Contract_vm.Invocation_payload.wasm_of_yojson ~arg |> Result.get_ok in
   let operation =
     User_operation.Contract_invocation
-      { to_invoke = contract_address; argument = payload; tickets = [ticket] }
-  in
+      {
+        to_invoke = contract_address;
+        argument = payload;
+        tickets = [(ticket, Amount.of_int 55)];
+      } in
   let operation = User_operation.make ~source:address operation in
   let state, _ = State.apply_user_operation state user_op.hash operation in
   let new_storage = State.contract_storage state in

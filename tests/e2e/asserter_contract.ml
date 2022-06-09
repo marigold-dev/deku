@@ -1,7 +1,7 @@
 open Cmdliner
 open Bin_common
 
-let assert_state_correct data_folder contract ticket =
+let assert_state_correct data_folder contract ticket amount =
   print_endline @@ "Checking state at path: " ^ data_folder;
   let file = data_folder ^ "/state.bin" in
   let protocol_state = Lwt_main.run @@ Files.State_bin.read ~file in
@@ -17,9 +17,9 @@ let assert_state_correct data_folder contract ticket =
       contract_storage
     |> Option.is_some);
   let balance =
-    Ticket_table.amount table contract ticket
+    Ticket_table.balance table ~sender:contract ~ticket
     |> Option.value ~default:Amount.zero in
-  assert (Amount.(balance = of_int 100));
+  assert (Amount.(equal balance (of_int amount)));
   print_endline "State looks good 👍"
 
 let args =
@@ -38,8 +38,12 @@ let args =
     let doc = "The ticket" in
     let open Arg in
     required & pos 2 (some string) None & info [] ~doc ~docv in
-
+  let amount =
+    let docv = "amount" in
+    let doc = "The ticket amount" in
+    let open Arg in
+    required & pos 3 (some int) None & info [] ~doc ~docv in
   let open Term in
-  const assert_state_correct $ folder_node $ contract_address $ ticket
+  const assert_state_correct $ folder_node $ contract_address $ ticket $ amount
 
 let () = Term.exit @@ Term.eval (args, Term.info "asserter")

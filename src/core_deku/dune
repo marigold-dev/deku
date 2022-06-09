@@ -7,4 +7,5 @@
    ppx_deriving.ord
    ppx_deriving_yojson
    ppx_deriving.show
-   ppx_let_binding)))
+   ppx_let_binding
+   ppx_jane)))

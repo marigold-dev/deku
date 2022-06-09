@@ -8,7 +8,7 @@ module Contract_operation : sig
     | Invoke   of {
         param : bytes;
         destination : Address.t;
-        ticket : Ticket_id.t;
+        tickets : (Ticket_id.t * Amount.t) list;
       }
 end
 module type CTX = sig
@@ -19,26 +19,27 @@ module type CTX = sig
     val to_bytes : t -> bytes
   end
   module Ticket_handle : sig
-    type t
+    type t = Ticket_handle.t
     val size : int
 
     val of_bytes : bytes -> t
     val to_bytes : t -> bytes
   end
   module Ticket_id : sig
-    type t
+    type t = Ticket_id.t
     val size : t -> int
 
     val to_bytes : t -> bytes
   end
   module Amount : sig
-    type t
+    type t = Amount.t
     val size : int
     val of_int : int -> t
     val to_int : t -> int
   end
 
-  val get_table : unit -> Ticket_table.t
+  val get_tickets : unit -> (Ticket_id.t * Amount.t) Seq.t
+
   val get_ops :
     int list -> (Contract_operation.t list, [`Execution_error]) result
 
@@ -57,9 +58,9 @@ module type CTX = sig
 end
 val make :
   sender:Address.t ->
-  table:Ticket_table.t ->
+  table:(Ticket_id.t * Amount.t) Seq.t ->
+  tickets:(Ticket_id.t * Amount.t) Seq.t ->
   self:Contract_address.t ->
   source:Address.t ->
-  tickets:Ticket_handle.t list ->
-  contracts_table:(Contract_address.t -> Contract_address.t option) ->
+  contracts_table:(Contract_address.t -> Address.t option) ->
   (module CTX)

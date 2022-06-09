@@ -359,7 +359,7 @@ let originate_contract =
     let doc = "The string containing initial tickets for storage" in
     Arg.(
       Arg.value
-      & opt ~vopt:[] (list ticket) []
+      & opt ~vopt:[] (list (pair ~sep:':' ticket amount)) []
       & info ["tickets"] ~docv:"tickets" ~doc) in
 
   Term.(
@@ -393,17 +393,17 @@ let create_transaction =
     let open Arg in
     required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
   in
+  let tickets =
+    let doc = "The string containing tickets for vm argument" in
+    Arg.(
+      Arg.value
+      & opt ~vopt:[] (list (pair ~sep:':' ticket amount)) []
+      & info ["tickets"] ~docv:"tickets" ~doc) in
   let amount =
     let doc = "The amount to be transferred." in
     let env = Arg.env_var "TRANSFER_AMOUNT" ~doc in
     let open Arg in
     required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
-  let tickets =
-    let doc = "The string containing tickets for vm argument" in
-    Arg.(
-      Arg.value
-      & opt ~vopt:[] (list ticket) []
-      & info ["tickets"] ~docv:"tickets" ~doc) in
   let ticket =
     let doc = "The ticket to be transferred." in
     let open Arg in

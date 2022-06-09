@@ -61,35 +61,32 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
     let initial_gas = Amount.to_int Amount.(balance - origination_cost) in
     let wrap_error t =
       t |> Result.map_error ~f:(fun x -> `Origination_error x) in
-    let ticket_handles = List.map ~f:(Ticket_handle.make sender) tickets in
-    let ticket_table =
-      Ticket_table.add_to_temporary (Ledger.ticket_table ledger) ticket_handles
-    in
-    let address = Contract_address.of_user_operation_hash operation_hash in
-    let%ok handles, table =
-      List.fold_result
-        ~f:(fun (handles, acc) x ->
-          let owned =
-            Ticket_table.own acc (Address.of_contract_hash address) x in
-          let append (new_handle, t) =
-            let new_head =
-              (Ticket_handle.to_string x, Ticket_handle.to_string new_handle)
-            in
-            (new_head :: handles, t) in
-          Result.map ~f:append owned)
-        ~init:([], ticket_table) ticket_handles
-      |> Result.map_error
-           ~f:(Fn.const (`Origination_error "error occured when originating"))
-    in
-    let table = Ticket_table.validate table in
+    let table = Ledger.ticket_table ledger in
+    let%ok tickets, table = Ticket_table.take_tickets table ~sender ~tickets in
+
+    let contract_address =
+      Contract_address.of_user_operation_hash operation_hash in
+    let address = Address.of_contract_hash contract_address in
+    let og_handles, new_handles =
+      Seq.fold_left
+        (fun (acc1, acc2) (ticket, amount) ->
+          ( Ticket_handle.make sender ticket amount :: acc1,
+            Ticket_handle.make address ticket amount :: acc2 ))
+        ([], []) tickets in
+    let table = Ticket_table.update_tickets table ~sender:address ~tickets in
+    let handles =
+      List.fold2_exn
+        ~f:(fun acc x y ->
+          (Ticket_handle.to_string x, Ticket_handle.to_string y) :: acc)
+        ~init:[] og_handles new_handles in
     let ledger = Ledger.update_ticket_table table ledger in
     (* TODO: Burn on storage size change, need CTEZ *)
     let%ok contract =
       Contract_vm.Compiler.compile ~gas:initial_gas payload ~tickets:handles
       |> wrap_error in
     let contract_storage =
-      Contract_storage.originate_contract t.contract_storage ~address ~contract
-    in
+      Contract_storage.originate_contract t.contract_storage
+        ~address:contract_address ~contract in
     Ok ({ contract_storage; ledger }, None)
   | Contract_invocation { to_invoke; argument; tickets } ->
     let balance = Int.max_value |> Amount.of_int in
@@ -107,15 +104,17 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
       Contract_storage.get_contract t.contract_storage ~address:to_invoke
       |> Result.of_option ~error:"Contract not found"
       |> wrap_error in
+    let table = Ledger.ticket_table t.ledger in
+    let table_tickets, table =
+      Ticket_table.tickets table ~sender:(Address.of_contract_hash to_invoke)
+    in
+    let%ok tickets, table = Ticket_table.take_tickets table ~sender ~tickets in
     let ctx =
       let source = Address.of_key_hash source in
-      Contract_context.make ~sender ~source
-        ~table:(Ledger.ticket_table t.ledger)
-        ~self:to_invoke
-        ~tickets:(List.map ~f:(Ticket_handle.make sender) tickets)
-        ~contracts_table:(fun address ->
+      Contract_context.make ~sender ~source ~table:table_tickets ~self:to_invoke
+        ~tickets ~contracts_table:(fun address ->
           Contract_storage.get_contract contract_storage ~address
-          |> Option.map ~f:(Fn.const address)) in
+          |> Option.map ~f:(Fn.const (Address.of_contract_hash address))) in
     let%ok contract, user_op_list =
       Contract_vm.Interpreter.invoke ~ctx ~arg:argument ~gas:initial_gas
         contract
@@ -124,18 +123,24 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
       Contract_storage.update_contract_storage contract_storage
         ~address:to_invoke ~updated_contract:contract in
     let module M = (val ctx : Contract_context.CTX) in
-    let table = M.get_table () |> Ticket_table.validate in
-    let ledger = Ledger.update_ticket_table table t.ledger in
     List.fold_result
       ~f:
         (apply_contract_ops ~source
            ~sender:(Address.of_contract_hash to_invoke))
-      ~init:({ ledger; contract_storage }, None)
-      user_op_list
+      ~init:(t, None) user_op_list
+    |> Result.map ~f:(fun (t, receipt) ->
+           let new_tickets = M.get_tickets () in
+           let table =
+             Ticket_table.update_tickets table
+               ~sender:(Address.of_contract_hash to_invoke)
+               ~tickets:new_tickets in
+           let new_ledger = Ledger.update_ticket_table table t.ledger in
+           ({ ledger = new_ledger; contract_storage }, receipt))
 
 and apply_contract_ops ~source ~sender (t, _) x =
   match x with
-  | Contract_context.Contract_operation.Invoke { ticket; destination; param } ->
+  | Contract_context.Contract_operation.Invoke { tickets; destination; param }
+    ->
     let%ok destination =
       Address.to_contract_hash destination
       |> Result.of_option ~error:(`Invocation_error "invalid address") in
@@ -144,8 +149,7 @@ and apply_contract_ops ~source ~sender (t, _) x =
       |> Result.map_error ~f:(fun x -> `Invocation_error x) in
     let operation =
       User_operation.Contract_invocation
-        { to_invoke = destination; argument = payload; tickets = [ticket] }
-    in
+        { to_invoke = destination; argument = payload; tickets } in
     let operation = User_operation.make ~source operation in
     apply_user_operation ~sender t operation.hash operation
   | Transfer { ticket; amount; destination } ->

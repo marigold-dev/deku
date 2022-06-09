@@ -37,4 +37,6 @@ let invoke custom ~module_ ~gas ~argument ~storage =
         (Memory.load_bytes memory ~address ~size:Int.(of_int64_exn size), ops)
       in
       result)
-  |> Result.map_error ~f:(fun _ -> `Execution_error)
+  |> Result.map_error ~f:(fun _ ->
+         Printexc.print_backtrace stdout;
+         `Execution_error)

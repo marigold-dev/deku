@@ -10,11 +10,11 @@ type initial_operation =
   | Contract_invocation  of {
       to_invoke : Contract_address.t;
       argument : Contract_vm.Invocation_payload.t;
-      tickets : Ticket_id.t list;
+      tickets : (Ticket_id.t * Amount.t) list;
     }
   | Contract_origination of {
       payload : Contract_vm.Origination_payload.t;
-      tickets : Ticket_id.t list;
+      tickets : (Ticket_id.t * Amount.t) list;
     }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;

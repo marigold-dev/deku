@@ -443,17 +443,17 @@ deposit_withdraw_test() {
 
 test_wasm() {
   deposit_ticket | grep tezos-client | tr -d '\r'
-  sleep 10
+  sleep 5
   echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
   CONTRACT_ADDRESS=$(esy x deku-cli originate-contract ./data/1 wallet.json ./docs/smart-contracts/wasm_contracts/wasm_own.wat ./docs/smart-contracts/wasm_contracts/initial.json --vm_flavor="Wasm" | awk '{ print $2 }' | head -n1 | tr -d '\t\n\r')
   echo "Contract address deployed: $CONTRACT_ADDRESS"
   DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
-  ARG=$(ticket_handle $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x")
+  ARG=$(ticket_handle $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 100)
   echo "param: \"$ARG\""
-  sleep 10
-  INVOKED=$(esy x deku-cli create-transaction ./data/0 wallet.json $CONTRACT_ADDRESS 100 "Pair \"$DUMMY_TICKET\" 0x" --arg=$ARG --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x" )
-  sleep 10
-  asserter_contract "data/0" $CONTRACT_ADDRESS "Pair \"$DUMMY_TICKET\" 0x"
+  sleep 5
+  INVOKED=$(esy x deku-cli create-transaction ./data/0 wallet.json $CONTRACT_ADDRESS 100 "Pair \"$DUMMY_TICKET\" 0x" --arg=$ARG --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100)
+  sleep 5
+  asserter_contract "data/0" $CONTRACT_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 100
 }
 test_wasm_full() {
   deposit_ticket | grep tezos-client | tr -d '\r'
@@ -466,15 +466,15 @@ test_wasm_full() {
 
   DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
 
-  ARG=$(ticket_transfer $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x")
+  ARG=$(ticket_transfer $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 100)
 
   echo "param: \"$ARG\""
 
   sleep 5
 
-  INVOKED=$(esy x deku-cli create-transaction ./data/0 wallet.json $CONTRACT_ADDRESS 100 "Pair \"$DUMMY_TICKET\" 0x" --arg=$ARG --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x" )
+  INVOKED=$(esy x deku-cli create-transaction ./data/0 wallet.json $CONTRACT_ADDRESS 100 "Pair \"$DUMMY_TICKET\" 0x" --arg=$ARG --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100 )
 
-  sleep 10
+  sleep 5
   
   # # We can withdraw 10 tickets from deku
   OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
@@ -495,8 +495,8 @@ test_wasm_full() {
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
 
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
-  sleep 10
-  asserter_balance "data/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x"
+  sleep 5
+  asserter_balance "data/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
 }
 help() {
   # FIXME: fix these docs
