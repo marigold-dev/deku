@@ -5,7 +5,11 @@
   "main": "example.js",
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "build": "tsc example.ts -outDir build/"
+  },
   "dependencies": {
-    "deku_js_interop": "file:../../sdks/deku_js_interop"
+    "deku_js_interop": "file:../../sdks/deku_js_interop",
+    "typescript": "^4.7.3"
   }
 }
