@@ -596,6 +596,7 @@ let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state = Node_state.get_initial_state ~folder:node_folder in
   let address = identity.t in
+  Printf.printf "Calling Block.produce";
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
       ~author:address ~operations:[] in
@@ -604,18 +605,20 @@ let produce_block node_folder =
   let%await validator_uris = validator_uris ~interop_context in
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
+  | Ok _ ->
+    let p_node = Lwt_main.run state.Node.State.pollinate_node in
     let%await () =
       let open Network in
-      broadcast_to_list
+      Printf.printf "Calling send_over_pollinate";
+      send_over_pollinate
         (module Block_and_signature_spec)
-        validator_uris { block; signature } in
+        p_node { block; signature } in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 
 let produce_block =
   let open Term in
+  Printf.printf "COUCOU";
   lwt_ret (const produce_block $ folder_node)
 
 let ensure_folder folder =

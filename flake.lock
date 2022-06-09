@@ -251,11 +251,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1654150159,
-        "narHash": "sha256-/SbOxDGuJr+aQHtBg+V5J+3OV+/gU/cZVOlEl8/kzG4=",
+        "lastModified": 1654363376,
+        "narHash": "sha256-J/isefhczw2KElNzmxJcjUetC+5dlvorYimlh9Gn9CA=",
         "owner": "anmonteiro",
         "repo": "nix-overlays",
-        "rev": "70165a4922ed0f4819fac34ee4879604d754af6e",
+        "rev": "f553d0457f13a6562605d5fb12b6322e8d8c48a1",
         "type": "github"
       },
       "original": {
@@ -295,11 +295,11 @@
         "ocaml-overlays": "ocaml-overlays_2"
       },
       "locked": {
-        "lastModified": 1654267022,
-        "narHash": "sha256-+v79cgYSoEwf9rkcgRshH6AtpG8koAsFre4XwR2+rZE=",
+        "lastModified": 1654767965,
+        "narHash": "sha256-9nB2oWAsLU2PsqKxYk5Pfp2Fv17mBXzQM+WG/HNtvMw=",
         "owner": "marigold-dev",
         "repo": "pollinate",
-        "rev": "684ae347b2ebd5a329e5e1e7aef56fd8d43a33bd",
+        "rev": "00826d585a25fc3eae6298b5841a9de9b63e9906",
         "type": "github"
       },
       "original": {

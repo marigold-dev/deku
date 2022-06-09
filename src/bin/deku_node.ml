@@ -33,17 +33,22 @@ let handle_request (type req res)
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block_and_signature (msg : Pollinate.PNode.Message.t) =
   let open Bin_prot.Read in
+  Log.debug "Unpacking message";
   let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
+  Log.debug "unpacked message";
   let payload_json = Yojson.Safe.from_string payload_str in
+  Log.debug "HANDLE RECEIVED BLOCK AND SIG";
   let req = Network.Block_and_signature_spec.request_of_yojson payload_json in
   match req with
   | Error err -> raise (Failure err)
   | Ok block_and_signature ->
     let%ok () =
+      Log.debug "BLOCK TO FLOWS";
       Flows.received_block (Server.get_state ()) update_state
         block_and_signature.block
       |> ignore_some_errors in
     let%ok () =
+      Log.debug "SIG TO FLOWS";
       Flows.received_signature (Server.get_state ()) update_state
         ~hash:block_and_signature.block.hash
         ~signature:block_and_signature.signature
@@ -187,11 +192,13 @@ let node folder prometheus_port =
 
   let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
    fun msg ->
+    Log.debug "MSG_HANDLER: Received message";
     let subcategory_opt = msg.sub_category_opt in
     let _ =
       match subcategory_opt with
       | None -> failwith "Deku messages must have a subcategory"
       | Some ("ChainOperation", "Block_and_signature") ->
+        Log.debug "MSG_HANDLER: Received message, with subcategory";
         handle_received_block_and_signature msg
       | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
     (None, None) in
