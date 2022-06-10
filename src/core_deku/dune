@@ -1,6 +1,6 @@
 (library
  (name core_deku)
- (libraries crypto tezos lambda_vm)
+ (libraries crypto tezos lambda_vm core)
  (preprocess
   (pps
    ppx_deriving.eq
