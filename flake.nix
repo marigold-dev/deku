@@ -45,8 +45,7 @@
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
     , prometheus-web, tezos, json-logs-reporter }:
-    let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+    let supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
     in with flake-utils.lib;
     eachSystem supportedSystems (system:
       let
