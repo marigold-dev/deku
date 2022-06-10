@@ -47,19 +47,9 @@
     , prometheus-web, tezos, json-logs-reporter }:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
-
-      dream2nix-lib = dream2nix.lib2.init {
-        systems = supportedSystems;
-        config.projectRoot = ./.;
-      };
     in with flake-utils.lib;
     eachSystem supportedSystems (system:
       let
-        nodejs = pkgs.nodejs-16_x;
-
-        ligo = (import nixpkgs { inherit system; }).ligo.overrideAttrs
-          (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
-
         pkgs = (ocaml-overlays.makePkgs { inherit system; }).appendOverlays [
           (import ./nix/overlay.nix)
           prometheus-web.overlays.default
@@ -68,6 +58,15 @@
         ];
 
         pkgs_static = pkgs.pkgsCross.musl64;
+
+        dream2nix-lib = dream2nix.lib.init {
+          inherit pkgs;
+          config.projectRoot = ./.;
+        };
+        nodejs = pkgs.nodejs-16_x;
+
+        ligo = (import nixpkgs { inherit system; }).ligo.overrideAttrs
+          (_: { meta = { platforms = pkgs.ocaml.meta.platforms; }; });
 
         npmPackages = import ./nix/npm.nix {
           inherit system dream2nix-lib nix-filter nodejs;
