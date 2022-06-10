@@ -21,7 +21,7 @@
 ## How to originate them?
 ### example cli invocation to originate a contract:
  ```bash 
- esy x deku-cli originate-contract data-folder wallet code.json initial_storage.json --vm_flavor=Lambda
+ deku-cli originate-contract data-folder wallet code.json initial_storage.json --vm_flavor=Lambda
  ```
 ### --vm_flavor=Lambda|Dummy: 
  argument itself is optional and can be left out, then it defaults to `Lambda`
@@ -34,7 +34,7 @@
 ## How to run them?
 ### example cli invocation to originate a contract:
  ```bash 
- esy x deku-cli create-transaction data-folder sender receiver amount ticket --arg="example json string" --vm_flavor=Lambda
+ deku-cli create-transaction data-folder sender receiver amount ticket --arg="example json string" --vm_flavor=Lambda
  ```
 ### --vm_flavor=Lambda|Dummy: 
  argument itself is optional and can be left out, then it defaults to `Lambda`

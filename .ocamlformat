@@ -1,5 +1,6 @@
-# In both Esy and Nix we're using a patched version of 0.20.1
-# but ocamlformat's version check won't work for both of them simultaneously.
+# We're using a patched version of 0.20.1 provided
+# by the ocaml-overlay in flake.nix
+
 # version = 0.20.1
 
 profile = conventional
