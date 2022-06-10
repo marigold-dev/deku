@@ -131,6 +131,12 @@
                 }).create-discovery-contract
               }/bin/create-discovery-contract.sh";
           };
+          create-deployment = {
+            type = "app";
+            program = ''${pkgs.callPackage ./nix/create-deployment.nix { 
+              inherit (tezos.packages."${system}") tezos-client;
+             }}/bin/create-deku-deployment.sh'';
+          };
         };
       }) // {
         hydraJobs = {
