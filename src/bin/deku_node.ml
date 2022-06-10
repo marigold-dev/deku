@@ -1,6 +1,7 @@
 open Helpers
 open Cmdliner
 open Node
+open Consensus
 open Bin_common
 
 let ignore_some_errors = function Error #Flows.ignore -> Ok () | v -> v
