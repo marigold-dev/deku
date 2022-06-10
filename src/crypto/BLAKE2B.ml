@@ -19,6 +19,8 @@ end) : sig
 
   val hash : string -> t
 
+  val hash_v : string list -> t
+
   val verify : hash:t -> string -> bool
 
   val both : t -> t -> t
@@ -57,6 +59,8 @@ end = struct
   let compare = unsafe_compare
 
   let hash data = digest_string data
+
+  let hash_v lst = digestv_string lst
 
   let verify ~hash:expected_hash data = expected_hash = hash data
 

@@ -33,6 +33,7 @@ let () =
         let open Tezos in
         let _key, address = Ed25519.generate () in
         let hash = Ed25519.Key_hash.of_key address in
+
         Address.Implicit (Ed25519 hash) in
       let setup_two () =
         let t1 = make_ticket () in
@@ -72,7 +73,9 @@ let () =
       test "transfer" (fun expect expect_balance ->
           let t, (t1, t2), (a, b) = setup_two () in
           let c = make_address () in
-          let t = transfer ~sender:a ~destination:b (Amount.of_int 1) t1 t in
+          let t =
+            transfer ~sender:(Address.of_key_hash a) ~destination:b
+              (Amount.of_int 1) t1 t in
           (expect.result t).toBeOk ();
           let t = Result.get_ok t in
           expect_balance a t1 99 t;
@@ -81,7 +84,9 @@ let () =
           expect_balance b t2 400 t;
           expect_balance c t1 0 t;
           expect_balance c t2 0 t;
-          let t = transfer ~sender:b ~destination:a (Amount.of_int 3) t2 t in
+          let t =
+            transfer ~sender:(Address.of_key_hash b) ~destination:a
+              (Amount.of_int 3) t2 t in
           (expect.result t).toBeOk ();
           let t = Result.get_ok t in
           expect_balance a t1 99 t;
@@ -90,7 +95,9 @@ let () =
           expect_balance b t2 397 t;
           expect_balance c t1 0 t;
           expect_balance c t2 0 t;
-          let t = transfer ~sender:b ~destination:c (Amount.of_int 5) t2 t in
+          let t =
+            transfer ~sender:(Address.of_key_hash b) ~destination:c
+              (Amount.of_int 5) t2 t in
           (expect.result t).toBeOk ();
           let t = Result.get_ok t in
           expect_balance a t1 99 t;
@@ -99,7 +106,9 @@ let () =
           expect_balance b t2 392 t;
           expect_balance c t1 0 t;
           expect_balance c t2 5 t;
-          let t = transfer ~sender:a ~destination:c (Amount.of_int 99) t1 t in
+          let t =
+            transfer ~sender:(Address.of_key_hash a) ~destination:c
+              (Amount.of_int 99) t1 t in
           (expect.result t).toBeOk ();
           let t = Result.get_ok t in
           expect_balance a t1 0 t;
@@ -108,17 +117,23 @@ let () =
           expect_balance b t2 392 t;
           expect_balance c t1 99 t;
           expect_balance c t2 5 t;
-          (let t = transfer ~sender:b ~destination:c (Amount.of_int 202) t1 t in
+          (let t =
+             transfer ~sender:(Address.of_key_hash b) ~destination:c
+               (Amount.of_int 202) t1 t in
            (expect.result t).toBeError ();
-           expect.equal (Result.get_error t) `Not_enough_funds);
+           expect.equal (Result.get_error t) `Insufficient_funds);
           (let d = make_address () in
-           let t = transfer ~sender:d ~destination:c (Amount.of_int 1) t2 t in
+           let t =
+             transfer ~sender:(Address.of_key_hash d) ~destination:c
+               (Amount.of_int 1) t2 t in
            (expect.result t).toBeError ();
-           expect.equal (Result.get_error t) `Not_enough_funds);
+           expect.equal (Result.get_error t) `Insufficient_funds);
           (let t3 = make_ticket () in
-           let t = transfer ~sender:a ~destination:b (Amount.of_int 1) t3 t in
+           let t =
+             transfer ~sender:(Address.of_key_hash a) ~destination:b
+               (Amount.of_int 1) t3 t in
            (expect.result t).toBeError ();
-           expect.equal (Result.get_error t) `Not_enough_funds);
+           expect.equal (Result.get_error t) `Insufficient_funds);
           ());
       test "deposit" (fun _ expect_balance ->
           let t, (t1, t2), (a, b) = setup_two () in
@@ -176,11 +191,15 @@ let () =
       test "compare" (fun expect _ ->
           let t, (t1, _), (a, b) = setup_two () in
           (let t1' = make_ticket ~data:t1.data () in
-           let t = transfer ~sender:a ~destination:b (Amount.of_int 1) t1' t in
+           let t =
+             transfer ~sender:(Address.of_key_hash a) ~destination:b
+               (Amount.of_int 1) t1' t in
            (expect.result t).toBeError ();
-           expect.equal (Result.get_error t) `Not_enough_funds);
+           expect.equal (Result.get_error t) `Insufficient_funds);
           (let t1' = make_ticket ~ticketer:t1.ticketer () in
-           let t = transfer ~sender:a ~destination:b (Amount.of_int 1) t1' t in
+           let t =
+             transfer ~sender:(Address.of_key_hash a) ~destination:b
+               (Amount.of_int 1) t1' t in
            (expect.result t).toBeError ();
-           expect.equal (Result.get_error t) `Not_enough_funds);
+           expect.equal (Result.get_error t) `Insufficient_funds);
           ()))
