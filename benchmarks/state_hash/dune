@@ -1,0 +1,18 @@
+(executable
+ (name bench_state_hash)
+ (libraries
+  core
+  bin_prot
+  crypto
+  core_deku
+  core_bench
+  core_unix.command_unix
+  helpers
+  protocol)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_bin_prot ppx_let_binding)))
+
+(rule
+ (alias bench)
+ (action
+  (run %{exe:bench_state_hash.exe})))
