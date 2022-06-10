@@ -1,11 +1,9 @@
-# If `USE_NIX` is not set to 'y' we won't build the image
-if os.environ.get('USE_NIX', 'n') == 'y':
-  custom_build(
-    'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
-    'nix build .#docker && docker load < ./result',
-    ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
-    skips_local_docker=False,
-    tag = "latest")
+custom_build(
+  'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
+  'nix build .#docker && docker load < ./result',
+  ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
+  skips_local_docker=False,
+  tag = "latest")
 
 def get_services(compose):
     return compose.get("services").keys()

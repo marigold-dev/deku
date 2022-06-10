@@ -48,27 +48,8 @@ consensus_wallet="myWallet"
 # Used to interact with ticket contract to prevent clashes in tezos-client counter
 ticket_wallet="bob"
 
-# https://github.com/koalaman/shellcheck/wiki/SC2016
-# shellcheck disable=SC2016
-[ "$USE_NIX" ] || LD_LIBRARY_PATH=$(esy x sh -c 'echo $LD_LIBRARY_PATH')
-export LD_LIBRARY_PATH
-# shellcheck disable=SC2016
-[ "$USE_NIX" ] || PATH=$(esy x sh -c 'echo $PATH')
-export PATH
-
 if [ "${REBUILD:-}" ]; then
-  if [ "$USE_NIX" ]; then
-    dune build @install
-  else
-    esy dune build @install
-  fi
-fi
-
-if ! [ "$USE_NIX" ]; then
-  # Necessary to write tezos smart contracts
-  ligo() {
-    docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.37.0 "$@"
-  }
+  dune build @install
 fi
 
 if [ $mode = "docker" ]; then

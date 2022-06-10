@@ -9,17 +9,6 @@ A sidechain to Tezos by Marigold focused on higher throughput.
 Deku supports the following platforms: x86_64-linux, aarch64-linux, and
 aarch64-darwin (Mac M1).
 
-You'll need a one of the two package managers Deku is developed with:
-
-#### [Esy](https://esy.sh)
-Esy can be installed with NPM or Yarn.
-
-```shell
-npm i -g esy # on Ubuntu you might need --unsafe-perms to work around EACCES issues
-# or
-yarn global add esy
-```
-
 #### Nix
 
 Install Nix by following the [official guide](https://nixos.org/download.html).
@@ -29,7 +18,7 @@ echo 'experimental-features = nix-command flakes' >> /etc/nix/nix.conf
 ```
 
 Nix automatically installs all the dependencies and devtools needed for development,
-including Esy, Docker, etc.
+including OCaml, Docker, etc.
 
 You can load the Nix development with the command:
 ```shell
@@ -48,30 +37,15 @@ direnv allow
 ### Building
 
 ```shell
-# with esy
-esy
-esy dune build 
-
-# with nix
 dune build
 ```
 
 ### Testing
 
-We use [Rely](https://reason-native.com/docs/rely/) to write
-tests. These can be run with,
-
+Run our unit tests with:
 ```shell
-# with esy
-esy test
-
-# with nix
 dune build @runtest
 ```
-
-`esy test` will only run tests that the dependencies have changed since the last time
-you've ran it, so in order to run all the testsuite you must run `esy test -f` instead.
-
 ### Running a sidechain
 
 For convenient local development, we have included two components:
