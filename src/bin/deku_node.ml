@@ -90,6 +90,27 @@ let handle_block_by_level =
           state.applied_blocks in
       Ok block)
 
+(* POST /user_block-by-level *)
+(* Retrieves the block at the given level if it exists *)
+let handle_user_operation_was_included_in_block =
+  handle_request
+    (module Network.Block_user_operation_was_included)
+    (fun _update_state request ->
+      let open Protocol in
+      let state = Server.get_state () in
+      let block =
+        List.find_opt
+          (fun block ->
+            let user_operations = Block.parse_user_operations block in
+            List.exists
+              (fun x ->
+                Crypto.BLAKE2B.equal x.Protocol.Operation.Core_user.hash
+                  request.operation_hash)
+              user_operations)
+          state.applied_blocks
+        |> Option.map (fun block -> block.Block.block_height) in
+      Ok block)
+
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
 let handle_protocol_snapshot =
@@ -192,6 +213,7 @@ let node folder prometheus_port =
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
+             handle_user_operation_was_included_in_block;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;
@@ -218,11 +240,9 @@ let node json_logs style_renderer level folder prometheus_port =
   | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
   | None -> Fmt_tty.setup_std_outputs ());
   Logs.set_level level;
-
   (match json_logs with
   | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
   | false -> Logs.set_reporter (Logs_fmt.reporter ()));
-
   (* disable all non-deku logs *)
   List.iter
     (fun src ->
@@ -241,7 +261,6 @@ let node =
     let doc = "Path to the folder containing the node configuration data." in
     let open Arg in
     required & pos 0 (some string) None & info [] ~doc ~docv in
-
   let json_logs =
     let docv = "Json logs" in
     let doc = "This determines whether logs will be printed in json format." in
