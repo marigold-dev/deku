@@ -42,7 +42,9 @@ let apply_user_operation t operation_hash user_operation =
   match initial_operation with
   | Transaction { destination; amount; ticket } ->
     let%ok ledger =
-      Ledger.transfer ~sender:source ~destination amount ticket ledger in
+      Ledger.transfer
+        ~sender:(Address.of_key_hash source)
+        ~destination amount ticket ledger in
     Ok ({ contract_storage; ledger }, None)
   | Tezos_withdraw { owner; amount; ticket } ->
     let%ok ledger, handle =
@@ -102,4 +104,4 @@ let apply_user_operation t hash user_operation =
   | Ok (t, receipt) -> (t, receipt)
   (* TODO: use this erros for something *)
   | Error (`Origination_error _ | `Invocation_error _) -> (t, None)
-  | Error `Not_enough_funds -> (t, None)
+  | Error `Insufficient_funds -> (t, None)
