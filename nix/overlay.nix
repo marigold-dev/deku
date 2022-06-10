@@ -1,5 +1,7 @@
 final: prev:
-let disableCheck = package: package.overrideAttrs (o: { doCheck = false; });
+let
+  disableCheck = package: package.overrideAttrs (o: { doCheck = false; });
+  addCheckInputs = package: package.overrideAttrs ({ buildInputs ? [], checkInputs, ... }: { buildInputs = buildInputs ++ checkInputs; });
 in {
   ocaml-ng = builtins.mapAttrs (_: ocamlVersion:
     ocamlVersion.overrideScope' (oself: osuper: {
@@ -35,6 +37,21 @@ in {
         else
           o.src;
       });
+
+      # Fix packages that don't have checkInputs as buildInputs (bug in nixpkgs)
+      # This is a problem for static builds mainly
+      stringext = addCheckInputs osuper.stringext;
+      duration = addCheckInputs osuper.duration;
+      cstruct = addCheckInputs osuper.cstruct;
+      psq = addCheckInputs osuper.psq;
+      faraday = addCheckInputs osuper.faraday;
+      ke = addCheckInputs osuper.ke;
+      base64 = addCheckInputs osuper.base64;
+      prettym = addCheckInputs osuper.prettym;
+      angstrom = addCheckInputs osuper.angstrom;
+      multipart_form = addCheckInputs osuper.multipart_form;
+      uri = addCheckInputs osuper.uri;
+      caqti = addCheckInputs osuper.caqti;
 
       # disable broken tests
       dream = disableCheck osuper.dream;
