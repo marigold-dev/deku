@@ -596,7 +596,7 @@ let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state = Node_state.get_initial_state ~folder:node_folder in
   let address = identity.t in
-  Printf.printf "Calling Block.produce";
+  Printf.printf "Calling Block.produce%!";
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
       ~author:address ~operations:[] in
@@ -609,7 +609,7 @@ let produce_block node_folder =
     let%await p_node = state.Node.State.pollinate_node in
     let%await () =
       let open Network in
-      Printf.printf "Calling send_over_pollinate";
+      Printf.printf "Calling send_over_pollinate%!";
       send_over_pollinate
         (module Block_and_signature_spec)
         p_node { block; signature } in
@@ -618,7 +618,6 @@ let produce_block node_folder =
 
 let produce_block =
   let open Term in
-  Printf.printf "COUCOU";
   lwt_ret (const produce_block $ folder_node)
 
 let ensure_folder folder =

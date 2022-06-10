@@ -271,7 +271,7 @@ start_deku_cluster() {
     fi
   done
 
-  sleep 10
+  sleep 0.1
 
   # Step 4: Manually produce the block
   # Produce a block using `deku-cli produce-block`
@@ -283,7 +283,7 @@ start_deku_cluster() {
     HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
   fi
 
-  sleep 10
+  sleep 0.1
 
   # Step 5: Manually sign the block with 2/3rd of the nodes
   # Sign the previously produced block using `deku-cli sign-block`
