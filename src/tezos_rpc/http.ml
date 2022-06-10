@@ -131,7 +131,7 @@ let http_get_listen ~uri =
   | Ok response ->
     (* TODO: how to cancel body_stream *)
     (* TODO: what to do with this promise?*)
-    let body_stream, _promise = Piaf.Body.to_string_stream response.body in
+    let%await body_stream, _promise = Piaf.Body.to_string_stream response.body in
     await (Ok body_stream)
   | Error err -> await (Error (Piaf_request err))
 

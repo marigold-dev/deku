@@ -1,7 +1,7 @@
 { system, dream2nix-lib, nix-filter, nodejs }:
 
 let
-  outputs = (dream2nix-lib.makeFlakeOutputs {
+  outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
       root = ../.;
       include = [ ../package-lock.json ../package.json ];
@@ -18,7 +18,7 @@ let
     settings =
       [{ subsystemInfo.nodejs = (builtins.substring 0 2 nodejs.version); }];
   });
-  npmPackages = outputs.packages."${system}".sidechain;
+  npmPackages = outputs.packages.sidechain;
 
   node_modules' = builtins.attrValues
     (builtins.removeAttrs npmPackages.dependencies [ "webpack" ]);
