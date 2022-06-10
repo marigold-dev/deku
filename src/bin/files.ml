@@ -1,7 +1,6 @@
 open Helpers
 open Node
 open State
-open Consensus
 
 exception Invalid_json of string
 

@@ -5,9 +5,6 @@ let request_block_by_hash = request (module Block_by_hash_spec)
 
 let request_block_level = request (module Block_level)
 
-let request_user_operation_was_included_in_block =
-  request (module User_operation_was_included_in_block)
-
 let request_protocol_snapshot = request (module Protocol_snapshot)
 
 let request_nonce = request (module Request_nonce)

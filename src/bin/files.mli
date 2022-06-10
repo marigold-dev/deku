@@ -1,4 +1,3 @@
-open Consensus
 open Node
 open State
 

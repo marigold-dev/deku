@@ -1,7 +1,6 @@
 open Helpers
 open Crypto
 open Protocol
-open Consensus
 
 type identity = {
   secret : Secret.t;

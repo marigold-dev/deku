@@ -1,5 +1,5 @@
 (library
  (name node)
- (libraries protocol uri helpers piaf domainslib metrics network consensus)
+ (libraries protocol uri helpers piaf domainslib metrics network)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))
