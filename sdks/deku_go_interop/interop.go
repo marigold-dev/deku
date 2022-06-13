@@ -115,7 +115,14 @@ func init_state(initial_state map[string]interface{}) (map[string]interface{}, e
 	} 
 }
 
-func Main(initial_state map[string]interface{}, state_transition func(sender string, tx_hash string, input []byte) (err error)) {
+type Transaction struct {
+	Source string
+	Tx_hash string
+	Op_hash string
+	Operation []byte
+}
+
+func Main(initial_state map[string]interface{}, state_transition func(transaction Transaction) (err error)) {
 	log("Opening read")
 	fifo_path := os.Args[1]
 	log(fmt.Sprintf("fifo path: %s", fifo_path))
@@ -129,9 +136,7 @@ func Main(initial_state map[string]interface{}, state_transition func(sender str
 	state = vm_state
 	log("initialized")
 
-	var sender_buffer []string
-	var tx_hash_buffer []string
-	var input_buffer []interface{}
+	var parsed_transaction []interface{}
 
 	for {
 		// TODO: replace this with a control pipe
@@ -139,20 +144,22 @@ func Main(initial_state map[string]interface{}, state_transition func(sender str
 		if string(control) == "\"close\"" {
 			break
 		}
-		
-		err := json.Unmarshal(read(), &sender_buffer)
-		check(err)
-		err = json.Unmarshal(read(), &tx_hash_buffer)
-		check(err)
-		err = json.Unmarshal(read(), &input_buffer)
+		err := json.Unmarshal(read(), &parsed_transaction)
 		check(err)
 
-		sender := sender_buffer[1]
-		tx_hash := tx_hash_buffer[1]
-		input, err := json.Marshal(input_buffer[1])
+		transaction_variant := parsed_transaction[1].(map[string]interface{})
+		source := transaction_variant["source"].(string)
+		tx_hash := transaction_variant["tx_hash"].(string)
+		op_hash := transaction_variant["op_hash"].(string)
+		operation, err := json.Marshal(transaction_variant["operation"])
+		transaction := Transaction {
+			Source: source,
+			Tx_hash: tx_hash,
+			Op_hash: op_hash,
+			Operation: operation,
+		}
 
-		log(fmt.Sprintf("Read start message: %s", string(input)))
-		err = state_transition(sender, tx_hash, []byte(input))
+		err = state_transition(transaction)
 		var end_message []byte
 		if err != nil {
 			end_message = []byte(fmt.Sprintf("[\"Error\", \"%s\"]", err.Error()))

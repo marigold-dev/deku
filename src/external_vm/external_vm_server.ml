@@ -41,25 +41,10 @@ let main ~named_pipe_path initial_state transition =
 
   let rec runtime_loop transition =
     if chain.receive () = Control then (
-      let sender =
-        match chain.receive () with
-        | Source sender -> Crypto.Key_hash.of_string sender
-        | _ -> None in
-      let tx_hash =
-        match chain.receive () with
-        | Tx_hash tx_hash -> Crypto.BLAKE2B.of_string tx_hash
-        | _ -> None in
-      let operation =
-        match chain.receive () with
-        | Operation payload -> Some payload
-        | _ -> None in
-      (* let operation = chain.receive () in *)
-      (match (sender, tx_hash, operation) with
-      | Some sender, Some tx_hash, Some operation ->
-        transition storage sender tx_hash operation
-      | None, _, _ -> Error "sender is required"
-      | _, None, _ -> Error "hash is required"
-      | _, _, None -> Error "operation is required")
+      (match chain.receive () with
+      | Transaction { source; tx_hash; op_hash = _; operation } ->
+        transition storage source tx_hash operation
+      | _ -> Error "protocol not respected")
       |> Result.fold
            ~ok:(fun _ -> External_vm_protocol.Stop)
            ~error:(fun err -> External_vm_protocol.Error err)

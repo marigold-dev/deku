@@ -1,5 +1,4 @@
 open Helpers
-open Crypto
 open External_vm_protocol
 
 let vm = ref None
@@ -34,16 +33,14 @@ let set_initial_state state =
       "You must initialize the external VM IPC before sending the initial state"
   | Some vm -> vm.send (Set_Initial_State state)
 
-let apply_vm_operation ~state ~source ~tx_hash operation =
+let apply_vm_operation ~state ~source ~tx_hash ~op_hash operation =
   match !vm with
   | Some vm ->
     (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
        For now, I send an empty message if there's nothing extra to do. *)
     vm.send Control;
     (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
-    vm.send (Source (Key_hash.to_string source));
-    vm.send (Tx_hash (BLAKE2B.to_string tx_hash));
-    vm.send (Operation operation);
+    vm.send (Transaction { source; tx_hash; op_hash; operation });
     let finished = ref false in
     let state = ref state in
     while not !finished do
