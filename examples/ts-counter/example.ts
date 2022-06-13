@@ -37,14 +37,13 @@ const apply_transition = (state: number, action: Action) => {
  * @param action_buffer the custom payload of the transaction, in this example it's the string '"Increment"' or '"Decrement"'
  * @returns 
  */
-const transition = (sender, tx_hash, action_buffer) => {
-    console.log(`sender: ${sender}, tx_hash: ${tx_hash}`)
-    const action_type = JSON.parse(action_buffer.toString());
+const transition = ({ source, tx_hash, operation }) => {
+    console.log(`sender: ${source}, tx_hash: ${tx_hash}`)
     const raw_counter = get("counter"); // Get the counter from the state, it returns a Buffer
-    const action = {
-        type: action_type,
+    const action: Action = {
+        type: operation,
         payload: {
-            sender,
+            sender: source,
             tx_hash
         }
     }

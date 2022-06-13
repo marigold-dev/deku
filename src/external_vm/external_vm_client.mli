@@ -14,6 +14,7 @@ val apply_vm_operation :
     State.t ->
   source:Key_hash.t ->
   tx_hash:BLAKE2B.t ->
+  op_hash:BLAKE2B.t ->
   Yojson.Safe.t ->
   State.t
 

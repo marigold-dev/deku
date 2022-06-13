@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-
+	
 	"github.com/marigold-dev/deku/sdks/deku_go_interop"
 )
 
@@ -32,14 +32,15 @@ func log(message string) {
 }
 
 func main() {
-	state_transition := func(sender_address string, tx_hash string, input []byte) (return_err error) {
+	state_transition := func(transaction deku_go_interop.Transaction) (return_err error) {
 		var message message
 		log(fmt.Sprintf(
-				"State transition received. Sender: %s, Tx hash: %s, Payload: %s,",
-				sender_address,
-				tx_hash,
-				string(input)))
-		err := json.Unmarshal(input, &message)
+				"State transition received. Sender: %s, Tx hash: %s, Op hash: %s, Payload: %s,",
+				transaction.Source,
+				transaction.Tx_hash,
+				transaction.Op_hash,
+				string(transaction.Operation)))
+		err := json.Unmarshal(transaction.Operation, &message)
 		check(err)
 		counter_bytes := deku_go_interop.Get("counter")
 		var counter *int

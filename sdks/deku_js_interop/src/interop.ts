@@ -99,6 +99,14 @@ const get = (key: string): Buffer | undefined => {
     : Buffer.from(JSON.stringify(value))
 }
 
+// Json received from the chain
+interface transaction {
+  source: string;
+  tx_hash: string;
+  op_hash: string;
+  operation: { [key: string]: any }; // TODO: find a better way for JSON typing
+}
+
 /**
  * The main function
  * @param initial_state the initial state of your vm
@@ -106,7 +114,7 @@ const get = (key: string): Buffer | undefined => {
  */
 const main = (
   initial_state: { [key: string]: any }, // TODO: add a better type for JSON values
-  state_transition: (address: string, tx_hash: string, input: Buffer) => string
+  state_transition: (transaction: transaction) => string
 ) => {
   init_fifo();
   state = init_state(initial_state);
@@ -117,10 +125,8 @@ const main = (
     if (control === '"close"') {
       break;
     }
-    const sender = JSON.parse(read().toString())[1];
-    const tx_hash = JSON.parse(read().toString())[1];
-    const input = Buffer.from(JSON.stringify(JSON.parse(read().toString())[1]));
-    const error = state_transition(sender, tx_hash, input);
+    const transaction = JSON.parse(read().toString())[1];
+    const error = state_transition(transaction);
     const end_message = error ? `["Error", "${error}"]` : '["Stop"]';
     write(Buffer.from(end_message));
   }

@@ -352,20 +352,20 @@ export const initial_state = {
   [`${"tz1c5ZDfNvSrfRFAsp6uPYvCaZhpviwYpBfy"}-1`]: { amount: 1, operators: [] },
 }
 
-export const transition_state = (deku_storage: Deku_storage) => (sender: address, tx_hash: string, operation: string): string | void => {
+export const transition_state = (deku_storage: Deku_storage) => ({ source, operation }): string | void => {
   try {
-    const { type, op } = JSON.parse(operation); // TODO: find a solution to throw error when json is not correct
+    const { type, op } = operation;
     const storage = fa2_storage(deku_storage);
 
     switch (type) {
       case operation_type.Balance_of:
         return balance_of(op as balance_of_operation, storage);
       case operation_type.Transfer:
-        return transfer(op as transfer_operation, sender, storage);
+        return transfer(op as transfer_operation, source, storage);
       case operation_type.Update_operators:
-        return update_operators(op as update_operators_operation, sender, storage);
+        return update_operators(op as update_operators_operation, source, storage);
       case operation_type.Mint_token: {
-        return mint_token(op as mint_token_operation, sender, storage);
+        return mint_token(op as mint_token_operation, source, storage);
       }
       default:
         return FA2_Error.FA2_OPERATORS_UNSUPPORTED;

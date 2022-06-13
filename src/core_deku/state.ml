@@ -111,7 +111,7 @@ let apply_user_operation t operation_hash user_operation =
   | Vm_transaction { payload } ->
     let vm_state =
       External_vm.External_vm_client.apply_vm_operation ~state:t.vm_state
-        ~source ~tx_hash payload in
+        ~source ~tx_hash payload ~op_hash:operation_hash in
     Ok ({ contract_storage; ledger; vm_state }, None)
 
 let apply_user_operation t hash user_operation =
