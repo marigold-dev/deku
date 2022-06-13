@@ -130,9 +130,10 @@ services:
     container_name: deku_prometheus
     restart: always
     image: prom/prometheus
+    # "host" network mode is used so that the Prometheus container
+    # can still communicate with the deku nodes when running in
+    # local mode.
     network_mode: host
-    ports:
-      - "9090:9090"
     expose:
       - 9090/tcp
     volumes:
