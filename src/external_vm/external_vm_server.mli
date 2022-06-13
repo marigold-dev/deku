@@ -1,11 +1,10 @@
-val start_chain_ipc : named_pipe_path:string -> unit
-
 type storage = {
   set : string -> Yojson.Safe.t -> unit;
   get : string -> Yojson.Safe.t option;
 }
 
 val main :
+  named_pipe_path:string ->
   External_vm_protocol.set list ->
   (storage ->
   Crypto.Key_hash.t ->

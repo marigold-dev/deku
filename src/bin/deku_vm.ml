@@ -19,8 +19,9 @@ let transition (storage : External_vm_server.storage) sender tx_hash operation =
   result |> Result.map (fun counter -> storage.set "counter" (`Int counter))
 
 let deku_vm named_pipe_path =
-  External_vm_server.start_chain_ipc ~named_pipe_path;
-  External_vm_server.main [{ key = "counter"; value = `Int 1 }] transition
+  External_vm_server.main ~named_pipe_path
+    [{ key = "counter"; value = `Int 1 }]
+    transition
 
 let node =
   let named_pipe =
