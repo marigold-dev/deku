@@ -87,6 +87,8 @@
           inherit deku ligo;
           pkgs = import nixpkgs { inherit system; };
         };
+
+        contracts = pkgs.callPackage ./nix/contracts.nix { inherit ligo; };
       in {
         devShell = import ./nix/shell.nix { inherit pkgs system deku ligo; };
         packages = {
@@ -117,25 +119,22 @@
           };
           create-consensus-contract = {
             type = "app";
-            program = "${
-                (pkgs.callPackage ./nix/contracts.nix {
-                  inherit ligo;
-                }).create-consensus-contract
-              }/bin/create-consensus-contract.sh";
+            program =
+              "${contracts.create-consensus-contract}/bin/create-consensus-contract.sh";
           };
           create-discovery-contract = {
             type = "app";
-            program = "${
-                (pkgs.callPackage ./nix/contracts.nix {
-                  inherit ligo;
-                }).create-discovery-contract
-              }/bin/create-discovery-contract.sh";
+            program =
+              "${contracts.create-discovery-contract}/bin/create-discovery-contract.sh";
           };
           create-deployment = {
             type = "app";
-            program = ''${pkgs.callPackage ./nix/create-deployment.nix { 
-              inherit (tezos.packages."${system}") tezos-client;
-             }}/bin/create-deku-deployment.sh'';
+            program = "${
+                pkgs.callPackage ./nix/create-deployment.nix {
+                  inherit (tezos.packages."${system}") tezos-client;
+                  inherit contracts;
+                }
+              }/bin/create-deku-deployment.sh";
           };
         };
       }) // {
