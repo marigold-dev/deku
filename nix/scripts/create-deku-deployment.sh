@@ -73,9 +73,10 @@ DEKU_ADDRESSES=$(find data -iname identity.json | xargs jq '.t' -r | tr '\n' ' '
 
 print_info "Creating consensus contract"
 # create the consensus contract using the addresses from above
+# This is provided from the parent script
 # We are expecting it to split the words here so we disable shellcheck
 # shellcheck disable=2086
-nix run .\#create-consensus-contract -- $DEKU_ADDRESSES
+create-consensus-contract $DEKU_ADDRESSES
 
 step "Consensus contract created for $DEKU_ADDRESSES, next step is originating it, "
 
@@ -98,9 +99,10 @@ TEZOS_ADDRESSES=$(find data -iname identity.json | xargs jq '. | "\(.t),\(.uri)"
 
 print_info "Creating discovery contract"
 # create discovery contract with public keys and uris from above
+# This is provided from the parent script
 # We are expecting it to split the words here so we disable shellcheck
 # shellcheck disable=2086
-nix run .\#create-discovery-contract -- $TEZOS_ADDRESSES
+create-discovery-contract $TEZOS_ADDRESSES
 
 step "Discovery contract created for $TEZOS_ADDRESSES, next step is originating it, "
 
