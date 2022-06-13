@@ -258,6 +258,8 @@ let rec try_to_apply_block state update_state block =
     not (BLAKE2B.equal state.protocol.state_root_hash block.state_root_hash)
   in
   let%ok state, user_operations = apply_block state update_state block in
+  Metrics.Blocks.inc_operations_processed
+    ~operation_count:(List.length user_operations);
   write_state_to_file (state.Node.data_folder ^ "/state.bin") state.protocol;
   !reset_timeout ();
   let state = clean state update_state user_operations block in
