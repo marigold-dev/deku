@@ -9,8 +9,15 @@ import (
 	"github.com/marigold-dev/deku/sdks/deku_go_interop"
 )
 
+type Action int
+
+const (
+	Decrement Action = iota
+	Increment 
+)
+
 type message struct {
-	Action string
+	Action Action
 }
 
 func check(e error) {
@@ -39,11 +46,11 @@ func main() {
 		json.Unmarshal(counter_bytes, &counter)
 		var new_counter int
 		switch message.Action {
-		case "Increment":
+		case Increment:
 			new_counter = *counter + 1
 			deku_go_interop.Set("counter", new_counter)
 			log(fmt.Sprintf("Incremented counter %d", new_counter))
-		case "Decrement":
+		case Decrement:
 			if *counter > 0 {
 				new_counter = *counter - 1
 				deku_go_interop.Set("counter", new_counter)
