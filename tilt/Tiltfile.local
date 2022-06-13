@@ -41,6 +41,10 @@ def add_sandbox (no_of_deku_nodes):
 
 def load_deku_services(_, no_of_deku_nodes, path_to_the_vm):
   # creates a resource for a node and its corresponding vm
+  if config.tilt_subcommand == "ci":
+    print('no-op')
+    return
+
   for i in range(0, no_of_deku_nodes):
     local_resource(
       "deku-node-%s" % i,
