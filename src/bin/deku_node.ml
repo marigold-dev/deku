@@ -97,6 +97,27 @@ let handle_block_by_level =
                Network.Block_by_level_spec.{ block; timestamp }) in
       Ok block_and_timestamp)
 
+(* Returns the block height of the first block where an operation
+   is included *)
+let handle_user_operation_was_included_in_block =
+  handle_request
+    (module Network.Block_user_operation_was_included)
+    (fun _update_state request ->
+      let open Protocol in
+      let state = Server.get_state () in
+      let block_height_opt =
+        List.find_opt
+          (fun (_, block) ->
+            let user_operations = Block.parse_user_operations block in
+            List.exists
+              (fun op ->
+                Crypto.BLAKE2B.equal request.operation_hash
+                  op.Protocol.Operation.Core_user.hash)
+              user_operations)
+          (List.rev state.applied_blocks)
+        |> Option.map (fun (_, block) -> block.Block.block_height) in
+      Ok block_height_opt)
+
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
 let handle_protocol_snapshot =
@@ -216,6 +237,7 @@ let node folder minimum_block_delay prometheus_port =
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
+             handle_user_operation_was_included_in_block;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;

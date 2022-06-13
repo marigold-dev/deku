@@ -57,6 +57,14 @@ module Block_level = struct
   let path = "/block-level"
 end
 
+module Block_user_operation_was_included = struct
+  type request = { operation_hash : BLAKE2B.t } [@@deriving yojson]
+
+  type response = int64 option [@@deriving yojson]
+
+  let path = "/block-user-operation-was-included"
+end
+
 module Protocol_snapshot = struct
   type request = unit [@@deriving yojson]
 
