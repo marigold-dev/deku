@@ -276,7 +276,7 @@ start_deku_cluster() {
   # Step 4: Manually produce the block
   # Produce a block using `deku-cli produce-block`
   # See deku-cli produce-block --help
-  echo "Producing a block"
+  message "Producing a block"
   if [ "$mode" = "docker" ]; then
     HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
   else
@@ -291,11 +291,11 @@ start_deku_cluster() {
   echo "Signing"
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "docker" ]; then
-      echo "hash: $HASH"
+      message "hash: $HASH"
       echo "deku-node-$i"
       docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
     else
-      echo "hash: $HASH"
+      message "hash: $HASH"
       echo "deku-node-$i"
       deku-cli sign-block "$DATA_DIRECTORY/$i" "$HASH"
     fi

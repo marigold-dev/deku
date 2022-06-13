@@ -41,7 +41,7 @@ type t = {
 
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
-    ~initial_validators_uri =
+    ~initial_validators_uri ~pollinate_node_opt =
   Printf.printf "STARTING MAKE\n%!";
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
@@ -56,35 +56,44 @@ let make ~identity ~trusted_validator_membership_change
     { hash; data } in
   let initial_snapshots =
     Snapshots.make ~initial_snapshot ~initial_block ~initial_signatures in
-  Printf.printf "Translating Uri.t to Pollinate.Address.t\n%!";
-  let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
-   fun uri ->
-    let address =
-      match Uri.host uri with
-      | Some "localhost" -> "127.0.0.1"
-      | Some "0.0.0.0" -> "127.0.0.1"
-      | Some address -> address
-      | _ -> failwith "Could not retrieve address from uri" in
-    let port =
-      match Uri.port uri with
-      | Some port -> port + 100
-      | None -> failwith "Could not retrieve port from uri." in
-    Pollinate.Address.create address port in
 
-  Printf.printf "INIT_PEERS: adding peers\n%!";
-  let init_peers =
-    List.map
-      (fun (_, x) -> uri_to_pollinate x)
-      (Address_map.bindings initial_validators_uri) in
-  List.iter
-    (fun x -> Printf.printf "INIT_PEERS: %s\n%!" (Pollinate.Address.show x))
-    init_peers;
+  let pollinate_node = match pollinate_node_opt with
+  | Some p_node -> 
+      Printf.printf "Got node\n%!";
+      p_node
+  | None -> (
+    Printf.printf "Pollinate.node = NONE\n%!";
+    Printf.printf "Translating Uri.t to Pollinate.Address.t\n%!";
+    let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
+    fun uri ->
+      let address =
+        match Uri.host uri with
+        | Some "localhost" -> "127.0.0.1"
+        | Some "0.0.0.0" -> "127.0.0.1"
+        | Some address -> address
+        | _ -> failwith "Could not retrieve address from uri" in
+      let port =
+        match Uri.port uri with
+        | Some port -> port + 100
+        | None -> failwith "Could not retrieve port from uri." in
+      Pollinate.Address.create address port in
 
-  let pollinate_address = uri_to_pollinate identity.uri in
-  Printf.printf "POLLINATE_SERVER = %s\n%!"
-    (Pollinate.Address.show pollinate_address);
-  let pollinate_node = Pollinate.PNode.init ~init_peers pollinate_address in
+    Printf.printf "INIT_PEERS: adding peers\n%!";
+    let init_peers =
+      List.map
+        (fun (_, x) -> uri_to_pollinate x)
+        (Address_map.bindings initial_validators_uri) in
+    List.iter
+      (fun x -> Printf.printf "INIT_PEERS: %s\n%!" (Pollinate.Address.show x))
+      init_peers;
 
+    let pollinate_address = uri_to_pollinate identity.uri in
+    Printf.printf "POLLINATE_SERVER = %s\n%!"
+      (Pollinate.Address.show pollinate_address);
+    let pollinate_node = Pollinate.PNode.init ~init_peers pollinate_address in
+    pollinate_node;)
+  in
+  Printf.printf "ENDING MAKE\n%!";
   {
     identity;
     trusted_validator_membership_change;

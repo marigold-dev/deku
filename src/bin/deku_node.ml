@@ -183,7 +183,7 @@ let handle_ticket_balance =
       Ok { amount })
 
 let node folder prometheus_port =
-  let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
+  let node = Node_state.get_initial_state ~folder ~pollinate_node_opt:None |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state

@@ -2,7 +2,8 @@ open Helpers
 open Protocol
 open Node
 
-let get_initial_state ~folder =
+let get_initial_state ~folder ~pollinate_node_opt =
+  Printf.printf "Starting get_initial_state\n%!";
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
@@ -43,7 +44,7 @@ let get_initial_state ~folder =
   let node =
     State.make ~identity ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri
-      ~persist_trusted_membership_change in
+      ~persist_trusted_membership_change ~pollinate_node_opt in
   let node =
     {
       node with
