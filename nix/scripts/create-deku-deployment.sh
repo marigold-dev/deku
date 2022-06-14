@@ -47,7 +47,7 @@ KEY_NAME=${2:-"deku-testnet"}
 RPC_NODE=${3:-"https://ithacanet.tezos.marigold.dev"}
 
 # contract names
-CONSENSUS_NAME="$KEY_NAME-discovery"
+CONSENSUS_NAME="$KEY_NAME-consensus"
 DISCOVERY_NAME="$KEY_NAME-discovery"
 
 
