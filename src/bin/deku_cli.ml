@@ -593,27 +593,13 @@ let info_produce_block =
   Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
 let produce_block node_folder =
-  Printf.printf "Starting produce_block\n%!";
   let%await identity = read_identity ~node_folder in
-  let pollinate_node = Some (Pollinate.PNode.init ~init_peers:[] (Pollinate.Address.create "127.0.0.1" 4000)) in
-  let%await state = Node_state.get_initial_state ~folder:node_folder ~pollinate_node_opt:pollinate_node in
-  let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
-   fun uri ->
-    let address =
-      match Uri.host uri with
-      | Some "localhost" -> "127.0.0.1"
-      | Some "0.0.0.0" -> "127.0.0.1"
-      | Some address -> address
-      | _ -> failwith "Could not retrieve address from uri" in
-    let port =
-      match Uri.port uri with
-      | Some port -> port
-      | None -> failwith "Could not retrieve port from uri." in
-    Pollinate.Address.create address port in
-  let validators = List.map (fun (_,p) -> Pollinate.Peer.from ((uri_to_pollinate p))) (Address_map.bindings state.validators_uri) in
-  let _ = Pollinate.Peer.add_neighbors (Pollinate.Peer.from (Pollinate.Address.create "127.0.0.1" 3000)) validators in
+  let pollinate_node_opt =
+    Some
+      (Pollinate.PNode.init ~init_peers:[]
+         (Pollinate.Address.create "127.0.0.1" 4000)) in
+  let%await state = Node_state.get_initial_state ~folder:node_folder ~pollinate_node_opt in
   let address = identity.t in
-  Printf.printf "Calling Block.produce%!";
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None
       ~author:address ~operations:[] in
@@ -622,14 +608,13 @@ let produce_block node_folder =
   let%await validator_uris = validator_uris ~interop_context in
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
-  | Ok _ ->
-    let%await p_node = state.Node.State.pollinate_node in
+  | Ok validator_uris ->
+    let validator_uris = List.map snd validator_uris |> List.somes in
     let%await () =
       let open Network in
-      Printf.printf "Calling send_over_pollinate\n%!";
-      send_over_pollinate
+      broadcast_to_list
         (module Block_and_signature_spec)
-        p_node { block; signature } in
+        validator_uris { block; signature } in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 
