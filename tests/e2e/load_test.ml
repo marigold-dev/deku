@@ -190,7 +190,7 @@ let load_test_transactions _test_kind ticketer =
   Log.info "TPS: %i" tps;
   await ()
 
-let load_test_transactions test_kind ticketer await =
+let load_test_transactions test_kind ticketer =
   load_test_transactions test_kind ticketer |> Lwt_main.run
 
 let args =
