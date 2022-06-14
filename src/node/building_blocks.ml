@@ -127,6 +127,13 @@ let should_start_new_epoch last_state_root_update current_time =
 let can_include_tezos_operation ~current_time ~requested_at =
   current_time -. requested_at > minimum_waiting_period_for_tezos_operation
 
+let can_include_operation ~current_time ~requested_at = function
+  | Operation.Core_tezos _ ->
+    can_include_tezos_operation ~current_time ~requested_at
+  | Core_user _
+  | Consensus _ ->
+    true
+
 let produce_block state =
   let current_time = Unix.time () in
   let start_new_epoch =
@@ -142,15 +149,10 @@ let produce_block state =
     (* TODO: fold into list on Helpers *)
     Node.Operation_map.fold
       (fun operation requested_at operations ->
-        match operation with
-        | Operation.Core_tezos _ ->
-          if can_include_tezos_operation ~current_time ~requested_at then
-            operation :: operations
-          else
-            operations
-        | Core_user _
-        | Consensus _ ->
-          operation :: operations)
+        if can_include_operation ~current_time ~requested_at operation then
+          operation :: operations
+        else
+          operations)
       state.pending_operations [] in
   (* TODO: probably separate operations at pending_operations? *)
   let consensus_operations, tezos_operations, user_operations =
@@ -277,7 +279,13 @@ let broadcast_block_and_signature state ~block ~signature =
       let delay = state.config.minimum_block_delay in
       let broadcast () =
         Network.broadcast_block_and_signature uris { block; signature } in
-      if Float.equal delay 0. then
+      let can_include_any_operation =
+        Node.Operation_map.exists
+          (fun operation requested_at ->
+            can_include_operation ~current_time:(Unix.time ()) ~requested_at
+              operation)
+          state.pending_operations in
+      if can_include_any_operation then
         broadcast ()
       else
         let%await () = Lwt_unix.sleep delay in
