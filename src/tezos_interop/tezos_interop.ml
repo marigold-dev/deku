@@ -215,6 +215,7 @@ module Consensus = struct
       ~destination:t.consensus_contract ~on_message
 
   let fetch_uris_from_discovery t validator_key_hashes =
+    Log.debug "Fetch uris from discovery";
     let {
       rpc_node;
       required_confirmations;
@@ -252,6 +253,7 @@ module Consensus = struct
       Lwt.return key_hash_uri_pairs
 
   let fetch_validators t =
+    Log.debug "Fetch validators";
     let {
       rpc_node;
       required_confirmations;
