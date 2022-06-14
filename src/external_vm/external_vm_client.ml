@@ -35,8 +35,8 @@ let set_initial_state state =
   | Some vm -> vm.send (Set_Initial_State state)
 
 let apply_vm_operation ~state ~source ~tx_hash operation =
-  match (state, !vm) with
-  | Some state, Some vm ->
+  match !vm with
+  | Some vm ->
     (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
        For now, I send an empty message if there's nothing extra to do. *)
     vm.send Control;
@@ -56,9 +56,7 @@ let apply_vm_operation ~state ~source ~tx_hash operation =
         finished := true
     done;
     !state
-  | None, Some _vm ->
-    failwith "You must intialize the Vm state before applying a Vm transaction"
-  | _, None ->
+  | None ->
     failwith "You must initialize the Vm IPC before applying a Vm transaction"
 
 let close_vm_ipc () =

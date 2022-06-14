@@ -19,7 +19,7 @@ val ledger : t -> Ledger.t
 
 val contract_storage : t -> Contract_storage.t
 
-val vm_state : t -> External_vm.External_vm_protocol.State.t option
+val vm_state : t -> External_vm.External_vm_protocol.State.t
 
 val hash : t -> BLAKE2B.t
 

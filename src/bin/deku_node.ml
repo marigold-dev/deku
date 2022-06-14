@@ -199,8 +199,7 @@ let node folder named_pipe_path minimum_block_delay prometheus_port =
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
   in
-  let vm_state =
-    Core_deku.State.vm_state node.protocol.core_state |> Option.get in
+  let vm_state = Core_deku.State.vm_state node.protocol.core_state in
   External_vm.External_vm_client.set_initial_state vm_state;
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->

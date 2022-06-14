@@ -4,7 +4,7 @@ open Crypto
 type t = {
   ledger : Ledger.t;
   contract_storage : Contract_storage.t;
-  vm_state : External_vm.External_vm_protocol.State.t option;
+  vm_state : External_vm.External_vm_protocol.State.t;
 }
 [@@deriving yojson]
 
@@ -15,13 +15,10 @@ let empty () =
   {
     ledger = Ledger.empty;
     contract_storage = Contract_storage.empty;
-    vm_state = None;
+    vm_state = External_vm.External_vm_protocol.State.empty;
   }
 
-let intialize_external_vm_state
-    (vm_state : External_vm.External_vm_protocol.State.t)
-    { ledger; contract_storage; vm_state = _ } =
-  { ledger; contract_storage; vm_state = Some vm_state }
+let intialize_external_vm_state vm_state t = { t with vm_state }
 
 let ledger t = t.ledger
 
@@ -113,9 +110,8 @@ let apply_user_operation t operation_hash user_operation =
     Ok ({ ledger; contract_storage; vm_state }, None)
   | Vm_transaction { payload } ->
     let vm_state =
-      Some
-        (External_vm.External_vm_client.apply_vm_operation ~state:t.vm_state
-           ~source ~tx_hash payload) in
+      External_vm.External_vm_client.apply_vm_operation ~state:t.vm_state
+        ~source ~tx_hash payload in
     Ok ({ contract_storage; ledger; vm_state }, None)
 
 let apply_user_operation t hash user_operation =

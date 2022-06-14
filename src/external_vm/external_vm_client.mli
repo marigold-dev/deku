@@ -11,7 +11,7 @@ val apply_vm_operation :
   state:
     (* This [t option] seems like the result of a bad abstraction
        TODO: find a better way to structure this. *)
-    State.t option ->
+    State.t ->
   source:Key_hash.t ->
   tx_hash:BLAKE2B.t ->
   Yojson.Safe.t ->
