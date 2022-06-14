@@ -12,3 +12,10 @@ let blocks_signed_total =
 let inc_block_produced () = Prometheus.Counter.inc_one blocks_produced_total
 
 let inc_block_signed () = Prometheus.Counter.inc_one blocks_signed_total
+
+let operations_processed_total =
+  let help = "The total number of operations processed by the node" in
+  Counter.v ~help ~namespace ~subsystem "operations_processed_total"
+
+let inc_operations_processed ~operation_count =
+  Counter.inc operations_processed_total (Float.of_int operation_count)
