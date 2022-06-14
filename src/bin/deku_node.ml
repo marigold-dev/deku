@@ -146,7 +146,6 @@ let handle_receive_user_operations_gossip =
     (module Network.User_operations_gossip)
     (fun update_state request ->
       let operations = request.user_operations in
-      Log.debug "packed: %d\n%!" (List.length operations);
       List.fold_left_ok
         (fun () operation ->
           (* TODO: quadratic function *)
