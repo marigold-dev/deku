@@ -98,13 +98,25 @@ let handle_block_by_level =
       Ok block_and_timestamp)
 
 (* Returns the block height of the first block where an operation
-   is included *)
+   is included
+   We only iterate through blocks we haven't seen yet
+*)
 let handle_user_operation_was_included_in_block =
   handle_request
     (module Network.Block_user_operation_was_included)
     (fun _update_state request ->
       let open Protocol in
       let state = Server.get_state () in
+      let filtered_list, previous_level =
+        let rec go acc previous_level = function
+          | (t, hd) :: tl ->
+            if hd.Block.block_height = previous_level then
+              acc
+            else
+              go ((t, hd) :: acc) previous_level tl
+          | [] -> acc in
+        ( go [] request.previous_level state.applied_blocks,
+          request.previous_level ) in
       let block_height_opt =
         List.find_opt
           (fun (_, block) ->
@@ -114,9 +126,9 @@ let handle_user_operation_was_included_in_block =
                 Crypto.BLAKE2B.equal request.operation_hash
                   op.Protocol.Operation.Core_user.hash)
               user_operations)
-          (List.rev state.applied_blocks)
+          (List.rev filtered_list)
         |> Option.map (fun (_, block) -> block.Block.block_height) in
-      Ok block_height_opt)
+      Ok (block_height_opt, previous_level))
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
