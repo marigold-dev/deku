@@ -164,29 +164,33 @@ let process_transactions timestamps_and_blocks =
       0 blocks in
   Float.of_int total_transactions /. time_elapsed
 
+let get_block_response_by_level level =
+  let validator_uri = get_random_validator_uri () in
+  let%await response =
+    Network.request_block_by_level { level = Int64.of_int level } validator_uri
+  in
+  await (Option.get response)
+
 let load_test_transactions _test_kind ticketer =
   let rounds = 100 in
   let%await starting_block_level = get_current_block_level () in
   Format.printf "Starting block level: %Li\n%!" starting_block_level;
   let%await operation_hash = spam ~ticketer rounds in
+  Format.printf "Operation_hash: %s\n" (Crypto.BLAKE2B.to_string operation_hash);
   let%await final_block_level = get_last_block_height operation_hash in
+  Format.printf "Final block level: %Ld\n" final_block_level;
   let tps_period =
     Int64.to_int (Int64.sub final_block_level starting_block_level) in
+  Format.printf "tps_period: %i\n" tps_period;
   (* TODO: Make sure this is always greater than 0 *)
-  let validator_uri = get_random_validator_uri () in
-  let block_reponse_by_level level =
-    Network.request_block_by_level { level = Int64.of_int level } validator_uri
-  in
   let%await timestamps_and_blocks =
-    await
-      (List.init tps_period (fun level ->
-           let%await a = block_reponse_by_level level in
-           a)) in
+    List.init tps_period Fun.id
+    |> Lwt_list.map_s (fun level -> get_block_response_by_level level) in
   let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
   Log.info "TPS: %i" tps;
   await ()
 
-let load_test_transactions test_kind ticketer =
+let load_test_transactions test_kind ticketer await =
   load_test_transactions test_kind ticketer |> Lwt_main.run
 
 let args =
