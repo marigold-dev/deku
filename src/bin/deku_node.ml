@@ -47,22 +47,21 @@ let handle_received_block_and_signature_dream =
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block_and_signature (msg : Pollinate.PNode.Message.t) =
   let open Bin_prot.Read in
-  Log.debug "Unpacking message";
+  Log.debug "Unpacking message\n%!";
   let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
-  Log.debug "unpacked message";
+  Log.debug "Successfully unpacked message\n%!";
   let payload_json = Yojson.Safe.from_string payload_str in
-  Log.debug "HANDLE RECEIVED BLOCK AND SIG";
   let req = Network.Block_and_signature_spec.request_of_yojson payload_json in
   match req with
   | Error err -> raise (Failure err)
   | Ok block_and_signature ->
     let%ok () =
-      Log.debug "BLOCK TO FLOWS";
+      Log.debug "Managing the block\n%!";
       Flows.received_block (Server.get_state ()) update_state
         block_and_signature.block
       |> ignore_some_errors in
     let%ok () =
-      Log.debug "SIG TO FLOWS";
+      Log.debug "Managing the signature\n%!";
       Flows.received_signature (Server.get_state ()) update_state
         ~hash:block_and_signature.block.hash
         ~signature:block_and_signature.signature
@@ -197,7 +196,9 @@ let handle_ticket_balance =
       Ok { amount })
 
 let node folder prometheus_port =
-  let node = Node_state.get_initial_state ~folder ~pollinate_node_opt:None |> Lwt_main.run in
+  let node =
+    Node_state.get_initial_state ~folder ~pollinate_node_opt:None
+    |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->
       Flows.received_tezos_operation (Server.get_state ()) update_state

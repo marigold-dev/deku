@@ -598,7 +598,8 @@ let produce_block node_folder =
     Some
       (Pollinate.PNode.init ~init_peers:[]
          (Pollinate.Address.create "127.0.0.1" 4000)) in
-  let%await state = Node_state.get_initial_state ~folder:node_folder ~pollinate_node_opt in
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder ~pollinate_node_opt in
   let address = identity.t in
   let block =
     Block.produce ~state:state.protocol ~next_state_root_hash:None

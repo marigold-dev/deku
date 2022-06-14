@@ -42,7 +42,7 @@ val make :
   interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->
-  pollinate_node_opt: Pollinate.PNode.t ref Lwt.t option ->
+  pollinate_node_opt:Pollinate.PNode.t ref Lwt.t option ->
   t
 
 val apply_block :

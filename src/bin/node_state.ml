@@ -3,7 +3,6 @@ open Protocol
 open Node
 
 let get_initial_state ~folder ~pollinate_node_opt =
-  Printf.printf "Starting get_initial_state\n%!";
   let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
