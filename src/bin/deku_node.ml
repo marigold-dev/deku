@@ -267,7 +267,7 @@ let node =
       "Determines the minimum time the node will wait before propagating a \
        newly produced block." in
     let open Arg in
-    value & opt float 1. & info ["minimum_block_delay"] ~doc ~docv in
+    value & opt float 5. & info ["minimum_block_delay"] ~doc ~docv in
   let json_logs =
     let docv = "Json logs" in
     let doc = "This determines whether logs will be printed in json format." in
