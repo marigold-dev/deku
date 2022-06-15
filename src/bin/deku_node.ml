@@ -106,6 +106,7 @@ let handle_user_operation_was_included_in_block =
     (module Network.Block_user_operation_was_included)
     (fun _update_state request ->
       let open Protocol in
+      (* List.hd blocks is the most recent block *)
       let state = Server.get_state () in
       let filtered_list, previous_level =
         let rec go acc previous_level = function
@@ -116,7 +117,7 @@ let handle_user_operation_was_included_in_block =
               go ((t, hd) :: acc) previous_level tl
           | [] -> acc in
         ( go [] request.previous_level state.applied_blocks,
-          request.previous_level ) in
+          (snd @@ List.hd state.applied_blocks).block_height ) in
       let block_height_opt =
         List.find_opt
           (fun (_, block) ->

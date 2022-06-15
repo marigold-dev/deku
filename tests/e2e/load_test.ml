@@ -134,12 +134,12 @@ let rec get_last_block_height hash previous_level =
   Format.eprintf "get_last_block_height\n";
   let open Network in
   let uri = get_random_validator_uri () in
-  let%await request, new_level =
+  let%await reply, new_level =
     request_block_by_user_operation_included
       { operation_hash = hash; previous_level }
       uri in
 
-  match request with
+  match reply with
   | Some block_height ->
     Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height;
 
@@ -217,9 +217,9 @@ let get_block_response_by_level level =
 
 let load_test_transactions _test_kind ticketer =
   Format.eprintf "load_test_transactions";
-  let rounds = 50 in
-  let batch_size = 200 in
-  let batch_count = 4 in
+  let rounds = 1 in
+  let batch_size = 3200 in
+  let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
@@ -234,7 +234,7 @@ let load_test_transactions _test_kind ticketer =
   let starting_point = Int64.to_int starting_block_level in
   Format.eprintf "starting point: %d\n%!" starting_point;
   (* TODO: Make sure this is always greater than 0 *)
-  (* We should be able to turn this into a single list init*)
+  (* TODO: We should be able to turn this into a single list init*)
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) (fun i ->
         let block_index_of_spamming = i + starting_point in
