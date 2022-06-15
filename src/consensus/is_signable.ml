@@ -1,6 +1,6 @@
-open Crypto
 open Protocol
 open State
+open Consensus_utils
 
 let is_signed_by_self state ~hash =
   match Block_pool.find_signatures ~hash state.block_pool with
@@ -12,25 +12,16 @@ let has_next_block_to_apply state ~hash =
   | Some _ -> true
   | None -> false
 
-let block_matches_current_state_root_hash block state =
-  BLAKE2B.equal block.Block.state_root_hash state.protocol.state_root_hash
-
-let block_matches_next_state_root_hash state block =
-  match Snapshots.get_next_snapshot state.snapshots with
-  | Some { hash = next_state_root_hash; _ } ->
-    BLAKE2B.equal block.Block.state_root_hash next_state_root_hash
-  | None -> false
-
-let block_has_signable_state_root_hash ~current_time block state =
+let block_has_signable_state_root_hash ~current_time state block =
   let time_since_last_epoch =
     current_time -. state.protocol.last_state_root_update in
-  if block_matches_current_state_root_hash block state then
+  if block_matches_current_state_root_hash state block then
     time_since_last_epoch <= maximum_signable_time_between_epochs
   else
     block_matches_next_state_root_hash state block
     && time_since_last_epoch >= minimum_signable_time_between_epochs
 
-let is_signable block state =
+let is_signable state block =
   let { trusted_validator_membership_change; protocol; _ } = state in
   let current_time = Unix.time () in
   let next_allowed_membership_change_timestamp =
@@ -57,9 +48,9 @@ let is_signable block state =
     List.for_all is_trusted_consensu_operation block.Block.consensus_operations
     && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
   in
-  is_next block state
+  is_next state block
   && (not (is_signed_by_self state ~hash:block.hash))
   && is_current_producer state ~key_hash:block.author
   && (not (has_next_block_to_apply state ~hash:block.hash))
   && all_operations_are_trusted
-  && block_has_signable_state_root_hash ~current_time block state
+  && block_has_signable_state_root_hash ~current_time state block

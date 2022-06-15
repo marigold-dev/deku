@@ -1,1 +1,1 @@
-val is_signable : Protocol.Block.t -> State.t -> bool
+val is_signable : State.t -> Protocol.Block.t -> bool

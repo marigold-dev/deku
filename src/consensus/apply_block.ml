@@ -9,12 +9,16 @@ let apply_block ~block state =
   (* TODO: handle this errors here *)
   let%ok protocol, user_operations, receipts =
     apply_block state.protocol block in
-  let snapshots =
+  let snapshots, snapshot_ref =
     if BLAKE2B.equal block.state_root_hash previous_protocol.state_root_hash
     then
-      state.snapshots
+      (state.snapshots, None)
     else
-      Snapshots.start_new_epoch state.snapshots in
+      let snapshots = Snapshots.start_new_epoch state.snapshots in
+      let snapshot_ref, snapshots =
+        Snapshots.add_snapshot_ref ~block_height:previous_protocol.block_height
+          snapshots in
+      (snapshots, Some snapshot_ref) in
 
   (* TODO: definitely should separate on the pending *)
   let pending_operations =
@@ -66,10 +70,27 @@ let apply_block ~block state =
       trusted_validator_membership_change;
     } in
 
-  Ok
-    ( state,
-      Both
-        ( Effect
-            (Applied_block
-               { block; receipts; trusted_validator_membership_change }),
-          Can_produce_block ) )
+  let self_signed =
+    match Block_pool.find_signatures ~hash:block.hash state.block_pool with
+    | Some signatures ->
+      if Signatures.is_self_signed signatures then Some signatures else None
+    | None -> None in
+
+  (* this is all the node is gonna see *)
+  let applied_block_effect =
+    Effect.Applied_block
+      {
+        prev_protocol = previous_protocol;
+        block;
+        receipts;
+        self_signed;
+        snapshot_ref;
+      } in
+  let persist_trusted_membership_change_effect =
+    Effect.Persist_trusted_membership_change
+      { trusted_validator_membership_change } in
+  let effects =
+    Both
+      ( Effect applied_block_effect,
+        Effect persist_trusted_membership_change_effect ) in
+  Ok (state, Both (effects, Can_produce_block))

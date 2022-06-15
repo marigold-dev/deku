@@ -10,6 +10,8 @@ let rec dispatch effect step state =
     let state, err_left = dispatch effect left state in
     let state, err_right = dispatch effect right state in
     (state, err_left @ err_right)
+  | Check_operation { operation } -> check_operation ~operation effect state
+  | Append_operation { operation } -> append_operation ~operation effect state
   | Check_block { block } -> check_block ~block effect state
   | Append_block { block } -> append_block ~block effect state
   | Check_signature { hash; signature } ->
@@ -25,6 +27,20 @@ let rec dispatch effect step state =
   | Apply_block { block } -> apply_block ~block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
+  | Check_validator_change { payload; signature } ->
+    check_validator_change ~payload ~signature effect state
+  | Allow_to_add_validator { key_hash } ->
+    allow_to_add_validator ~key_hash effect state
+  | Allow_to_remove_validator { key_hash } ->
+    allow_to_remove_validator ~key_hash effect state
+
+and check_operation ~operation effect state =
+  let step = Steps.check_operation ~operation state in
+  dispatch effect step state
+
+and append_operation ~operation effect state =
+  let state, step = Steps.append_operation ~operation state in
+  dispatch effect step state
 
 and check_block ~block effect state =
   match Steps.check_block ~block state with
@@ -75,4 +91,17 @@ and can_produce_block effect state =
 
 and produce_block effect state =
   let step = Produce_block.produce_block state in
+  dispatch effect step state
+
+and check_validator_change ~payload ~signature effect state =
+  match Steps.check_validator_change ~payload ~signature state with
+  | Ok step -> dispatch effect step state
+  | Error err -> (state, [err])
+
+and allow_to_add_validator ~key_hash effect state =
+  let state, step = Steps.allow_to_add_validator ~key_hash state in
+  dispatch effect step state
+
+and allow_to_remove_validator ~key_hash effect state =
+  let state, step = Steps.allow_to_remove_validator ~key_hash state in
   dispatch effect step state

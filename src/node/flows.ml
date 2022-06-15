@@ -1,9 +1,9 @@
 open Helpers
 open Crypto
 open Protocol
-open Building_blocks
 open Domainslib
 open Consensus
+open Building_blocks
 module Node = State
 
 let write_state_to_file path protocol =

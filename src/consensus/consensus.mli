@@ -10,7 +10,7 @@ type identity = {
   uri : Uri.t;
 }
 
-type state = private {
+type state = {
   (* TODO: duplicated on Node.State.t *)
   identity : identity;
   trusted_validator_membership_change :
@@ -29,46 +29,76 @@ val make :
   t
 
 type effect = private
-  | Request_block           of { hash : BLAKE2B.t }
-  | Request_previous_blocks of { block : Block.t }
-  | Broadcast_block         of { block : Block.t }
-  | Broadcast_signature     of {
+  | Request_block                     of { hash : BLAKE2B.t }
+  | Request_previous_blocks           of { block : Block.t }
+  | Broadcast_block                   of { block : Block.t }
+  | Broadcast_signature               of {
       hash : BLAKE2B.t;
       signature : Signature.t;
     }
-  | Applied_block           of {
+  | Broadcast_user_operation          of {
+      user_operation : Operation.Core_user.t;
+    }
+  | Applied_block                     of {
       block : Block.t;
       receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
+      prev_protocol : Protocol.t;
+      self_signed : Signatures.t option;
+      snapshot_ref : Snapshots.snapshot_ref option;
+    }
+  | Persist_trusted_membership_change of {
       trusted_validator_membership_change :
         Trusted_validators_membership_change.Set.t;
     }
 
-val with_block :
-  (effect -> t -> unit) ->
-  Block.t ->
-  t ->
-  t
-  * [> `Already_known_block
-    | `Already_known_signature
-    | `Invalid_block                   of string
-    | `Invalid_block_when_applying
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ]
-    list
+type error =
+  [ `Already_known_block
+  | `Already_known_signature
+  | `Invalid_block                   of string
+  | `Invalid_block_when_applying
+  | `Invalid_signature_for_this_hash
+  | `Not_a_validator
+  | `Failed_to_verify_payload
+  | `Invalid_signature_author ]
+
+val with_block : (effect -> t -> unit) -> Block.t -> t -> t * [> error] list
 
 val with_signature :
   (effect -> t -> unit) ->
   hash:BLAKE2B.t ->
   signature:Signature.t ->
   t ->
-  t
-  * [> `Already_known_block
-    | `Already_known_signature
-    | `Invalid_block                   of string
-    | `Invalid_block_when_applying
-    | `Invalid_signature_for_this_hash
-    | `Not_a_validator ]
-    list
+  t * [> error] list
+
+val with_timeout : (effect -> t -> unit) -> t -> t * [> error] list
+
+val with_operation :
+  (effect -> t -> unit) -> Operation.t -> t -> t * [> error] list
+
+val with_trusted_validators_membership_change :
+  (effect -> t -> unit) ->
+  payload:Network.Trusted_validators_membership_change.payload ->
+  signature:Signature.t ->
+  t ->
+  t * [> error] list
+
+val load_snapshot :
+  snapshot:Snapshots.snapshot ->
+  additional_blocks:Block.t list ->
+  last_block:Block.t ->
+  last_block_signatures:Signature.t list ->
+  t ->
+  ( t,
+    [> error
+    | `Invalid_snapshot_height
+    | `Not_all_blocks_are_signed
+    | `Snapshots_with_invalid_hash
+    | `State_root_not_the_expected ] )
+  result
+
+val block_matches_current_state_root_hash : state -> Block.t -> bool
+
+val block_matches_next_state_root_hash : state -> Block.t -> bool
 
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
