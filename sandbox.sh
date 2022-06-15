@@ -505,7 +505,7 @@ deposit-dummy-ticket)
   deposit_ticket
   ;;
 load-test)
-  load_test "$2"
+  load_test
   ;;
 *)
   help

@@ -3,6 +3,19 @@ open Crypto
 open Node
 open Helpers
 
+(*
+This load-test is for benchmarking the TPS of Deku. 
+To run it do:
+./sandbox.sh tear-down
+./sandbox.sh setup 
+./sandbox.sh deploy-dummy-ticket
+./sandbox.sh start   
+
+and in a new terminal do
+
+./sandbox.sh load-test
+   *)
+
 open (
   struct
     include Server
@@ -75,12 +88,13 @@ let spam_transactions ~ticketer ~n () =
     List.init n (fun _ ->
         make_transaction ~block_level ~ticket ~sender:alice_wallet
           ~recipient:bob_wallet ~amount:1) in
-  Format.eprintf "packed: %d\n%!" (List.length transactions);
+  Format.eprintf "packed: %d\n%!" n;
   let%await _ =
     Network.request_user_operations_gossip
       { user_operations = transactions }
       validator_uri in
-  Lwt.return transactions
+  let transaction = transactions |> List.rev |> List.hd in
+  Lwt.return transaction
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
@@ -140,30 +154,20 @@ let rec get_last_block_height hash previous_level =
    Find the block_level the transaction is included at
    Get blocks & block time from start block to final block
 *)
-let rec spam ~ticketer rounds_left =
+let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
   Format.eprintf "spam \n";
-  let n = 20 in
-  let init_list = List.init 4 Fun.id in
-  let empty_hash = Crypto.BLAKE2B.hash "" in
   let%await transaction =
-    Lwt_list.fold_left_s
-      (fun _ _ ->
-        Format.eprintf "inside spam \n";
-        let%await transactions = spam_transactions ~ticketer ~n () in
-        await
-          (let op_hash =
-             List.rev transactions |> List.hd |> fun op ->
-             op.Protocol.Operation.Core_user.hash in
-           Format.eprintf "operation_hash_inside_spam %s\n%!"
-             (Crypto.BLAKE2B.to_string op_hash);
-           op_hash))
-      empty_hash init_list in
+    List.init batch_count (fun _ ->
+        let transaction = spam_transactions ~ticketer ~n:batch_size () in
+        transaction)
+    |> List.rev
+    |> List.hd in
   if rounds_left = 1 then
     let _ = Format.eprintf "round is 1\n" in
-    await transaction
+    await transaction.Protocol.Operation.Core_user.hash
   else
-    let _ = Format.eprintf "round is not 1" in
-    spam ~ticketer (rounds_left - 1)
+    let _ = Format.eprintf "round is not 1\n" in
+    spam ~ticketer (rounds_left - 1) info
 
 let process_transactions timestamps_and_blocks =
   Format.eprintf "process_transaction\n";
@@ -213,10 +217,12 @@ let get_block_response_by_level level =
 
 let load_test_transactions _test_kind ticketer =
   Format.eprintf "load_test_transactions";
-  let rounds = 10 in
+  let rounds = 50 in
+  let batch_size = 200 in
+  let batch_count = 4 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
-  let%await operation_hash = spam ~ticketer rounds in
+  let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
   Format.eprintf "Operation_hash: %s\n"
     (Crypto.BLAKE2B.to_string operation_hash);
   let%await final_block_level =
@@ -228,14 +234,14 @@ let load_test_transactions _test_kind ticketer =
   let starting_point = Int64.to_int starting_block_level in
   Format.eprintf "starting point: %d\n%!" starting_point;
   (* TODO: Make sure this is always greater than 0 *)
+  (* We should be able to turn this into a single list init*)
   let%await timestamps_and_blocks =
-    List.init (tps_period + 1) Fun.id
-    |> List.map (fun i ->
-           let block_index_of_spamming = i + starting_point + 1 in
-           let _ =
-             Format.eprintf "i:%i - block index of spamming: %i \n%!" i
-               block_index_of_spamming in
-           block_index_of_spamming)
+    List.init (tps_period + 1) (fun i ->
+        let block_index_of_spamming = i + starting_point in
+        let _ =
+          Format.eprintf "i:%i - block index of spamming: %i \n%!" i
+            block_index_of_spamming in
+        block_index_of_spamming)
     |> Lwt_list.map_s (fun level ->
            Format.eprintf "level response: %i\n%!" level;
            get_block_response_by_level level) in
