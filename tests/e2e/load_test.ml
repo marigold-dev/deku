@@ -38,10 +38,14 @@ let bob_wallet =
 let validators_uris =
   ["http://localhost:4440"; "http://localhost:4441"; "http://localhost:4442"]
 
-let get_random_validator_uri () =
-  (* TODO: make random again *)
-  List.nth validators_uris 0 |> Uri.of_string
+let random_int v = v |> Int32.of_int |> Random.int32 |> Int32.to_int
 
+let get_random_validator_uri () =
+  let validator =
+    List.nth validators_uris (random_int (List.length validators_uris)) in
+  validator |> Uri.of_string
+
+(* Return the height of the chain *)
 let get_current_block_level () =
   let validator_uri = get_random_validator_uri () in
   let%await block_level = Network.request_block_level () validator_uri in
@@ -55,32 +59,189 @@ let make_ticket ticketer =
   let ticketer = Tezos.Address.Originated { contract; entrypoint = None } in
   Core_deku.Ticket_id.{ ticketer; data = Bytes.empty }
 
-let nonce = ref 0l
-
+(* Making a transaction to a specific block_level *)
 let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
-  nonce := Int32.add 1l !nonce;
   let amount = Core_deku.Amount.of_int amount in
-  Protocol.Operation.Core_user.sign ~secret:sender.secret ~nonce:!nonce
+  Protocol.Operation.Core_user.sign ~secret:sender.secret
+    ~nonce:(Crypto.Random.int32 Int32.max_int)
     ~block_height:block_level
     ~data:
       (Core_deku.User_operation.make ~source:sender.key_hash
          (Transaction { destination = recipient.key_hash; amount; ticket }))
 
+(* spam a bunk of transactions at a current block level *)
+
 let spam_transactions ~ticketer ~n () =
   let validator_uri = get_random_validator_uri () in
+  (* query the chain and fetch the current block level,
+     this block level will be received a spam of transactions:
+     from a to b with the same amount n times
+  *)
   let%await block_level = get_current_block_level () in
   let ticket = make_ticket ticketer in
-
   let transactions =
     List.init n (fun _ ->
         make_transaction ~block_level ~ticket ~sender:alice_wallet
           ~recipient:bob_wallet ~amount:1) in
-  Format.eprintf "packed: %d\n%!" (List.length transactions);
+  Format.eprintf "At block-level :%Ld - spam packed: %d\n%!" block_level
+    (List.length transactions);
+  (* waiting to see the user operations is equal to the list of transactions
+     that we have sent *)
   let%await _ =
     Network.request_user_operations_gossip
       { user_operations = transactions }
       validator_uri in
+  (* TODO : RECHECK here what is happening *)
+  (* We check that the last transaction hash is included *)
+  (* TODO: query out the block by level and feed it here at the previous_level *)
+  let%await block_by_level =
+    Network.request_block_by_level { level = block_level } validator_uri in
+  let b = Option.get block_by_level in
+  let previous_level = b.block.block_height in
+  let%await _ =
+    Lwt_list.iter_s
+      (fun transaction ->
+        let%await bl, prv =
+          Network.request_block_by_user_operation_included
+            {
+              operation_hash = transaction.Protocol.Operation.Core_user.hash;
+              previous_level;
+            }
+            validator_uri in
+        let _ =
+          match bl with
+          | Some bl ->
+            Format.eprintf
+              "block_height_found: %Ld - at previous level: %Ld\n%!" bl prv
+          | None -> () in
+        await ())
+      transactions in
   Lwt.return transactions
+
+(* TODO: Fix this piece of crap
+   This function is o(n) for the length of the blockchain and will redo
+   the same computation until the thing we want is found. *)
+let rec get_last_block_height hash previous_level =
+  Format.eprintf "get_last_block_height\n";
+  let open Network in
+  let uri = get_random_validator_uri () in
+  let%await request, new_level =
+    request_block_by_user_operation_included
+      { operation_hash = hash; previous_level }
+      uri in
+  match request with
+  | Some block_height ->
+    Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height;
+    await block_height
+  | None ->
+    Format.eprintf "calling get_last_block_height again\n%!";
+    Unix.sleep 2;
+    get_last_block_height hash new_level
+
+(* Spam transactions for m rounds.
+   Get the final transaction hash.
+   Find the block_level the transaction is included at.
+   Get blocks & block time from start block to final block.
+*)
+
+let rec spam ~ticketer rounds_left =
+  let n = 20 in
+  let repeat_spam = 2 in
+  let init_list = List.init repeat_spam Fun.id in
+  let empty_hash = Crypto.BLAKE2B.hash "" in
+  let%await transaction =
+    Lwt_list.fold_left_s
+      (fun _ _ ->
+        let%await transactions = spam_transactions ~ticketer ~n () in
+        await
+          (let op_hash =
+             List.rev transactions |> List.hd |> fun op ->
+             op.Protocol.Operation.Core_user.hash in
+           Format.eprintf "repeat_spam:%i \n%!" repeat_spam;
+           op_hash))
+      empty_hash init_list in
+  if rounds_left = 1 then
+    let _ = Format.eprintf "round is 1\n" in
+    await transaction
+  else
+    let _ = Format.eprintf "round is not 1" in
+    spam ~ticketer (rounds_left - 1)
+
+let process_transactions timestamps_and_blocks =
+  let timestamps, blocks =
+    List.fold_left
+      (fun acc bt ->
+        let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
+        let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
+        (timestamps, blocks))
+      ([], []) timestamps_and_blocks in
+  let final_time = List.hd timestamps in
+  Format.eprintf "final time: %.3f\n%!" final_time;
+  let first_time = List.hd @@ List.rev timestamps in
+  Format.eprintf "starting time: %.3f\n%!" first_time;
+  let time_elapsed = final_time -. first_time in
+  Format.eprintf "time_elapsed time: %.3f\n%!" time_elapsed;
+  let total_transactions =
+    List.fold_left
+      (fun acc block ->
+        let user_operations = Protocol.Block.parse_user_operations block in
+        let i = acc + List.length user_operations in
+        i)
+      0 blocks in
+  Format.eprintf "total_transactions: %i\n%!" total_transactions;
+  let tps = Float.of_int total_transactions /. time_elapsed in
+  Format.eprintf "tps_process_transactions:%.3f\n%!" tps;
+  tps
+
+let get_block_response_by_level level =
+  Format.eprintf "get_block_response_by_level: %d\n%!" level;
+  let validator_uri = get_random_validator_uri () in
+  let%await response =
+    Network.request_block_by_level { level = Int64.of_int level } validator_uri
+  in
+  let%await _ =
+    match response with
+    | Some _ -> await ()
+    | None ->
+      failwith
+        (Printf.sprintf "get_block_response_by_level failed with level %d%!"
+           level) in
+  await (Option.get response)
+
+let load_test_transactions _test_kind ticketer =
+  Format.eprintf "load_test_transactions";
+  let rounds = 2 in
+  let%await starting_block_level = get_current_block_level () in
+  Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
+  let%await operation_hash = spam ~ticketer rounds in
+  Format.eprintf "Operation_hash: %s\n"
+    (Crypto.BLAKE2B.to_string operation_hash);
+  let%await final_block_level =
+    get_last_block_height operation_hash starting_block_level in
+  Format.eprintf "Final block level: %Ld\n" final_block_level;
+  let tps_period =
+    Int64.to_int (Int64.sub final_block_level starting_block_level) in
+  Format.eprintf "tps_period: %i\n" tps_period;
+  let starting_point = Int64.to_int starting_block_level in
+  Format.eprintf "starting point: %d\n%!" starting_point;
+  (* TODO: Make sure this is always greater than 0 *)
+  let%await timestamps_and_blocks =
+    List.init (tps_period + 1) Fun.id
+    |> List.map (fun i ->
+           let block_index_of_spamming = i + starting_point + 1 in
+           let _ =
+             Format.eprintf "i:%i - block index of spamming: %i \n%!" i
+               block_index_of_spamming in
+           block_index_of_spamming)
+    |> Lwt_list.map_s (fun level ->
+           Format.eprintf "level response: %i\n%!" level;
+           get_block_response_by_level level) in
+  let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
+  Format.eprintf "TPS: %i\n%!" tps;
+  await ()
+
+let load_test_transactions test_kind ticketer =
+  load_test_transactions test_kind ticketer |> Lwt_main.run
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
@@ -113,138 +274,6 @@ module Test_kind = struct
     in
     Arg.info [] ~doc ~docv
 end
-
-(* TODO: Fix this piece of crap
-   This function is o(n) for the length of the blockchain and will redo the same computation until the thing we want is found. *)
-let rec get_last_block_height hash previous_level =
-  Format.eprintf "get_last_block_height\n";
-  let open Network in
-  let uri = get_random_validator_uri () in
-  let%await request, new_level =
-    request_block_by_user_operation_included
-      { operation_hash = hash; previous_level }
-      uri in
-
-  match request with
-  | Some block_height ->
-    Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height;
-
-    await block_height
-  | None ->
-    Format.eprintf "calling get_last_block_height again\n%!";
-    Unix.sleep 2;
-    get_last_block_height hash new_level
-
-(* Spam transactions for m rounds,
-   Get the final transaction hash
-   Find the block_level the transaction is included at
-   Get blocks & block time from start block to final block
-*)
-let rec spam ~ticketer rounds_left =
-  Format.eprintf "spam \n";
-  let n = 20 in
-  let init_list = List.init 4 Fun.id in
-  let empty_hash = Crypto.BLAKE2B.hash "" in
-  let%await transaction =
-    Lwt_list.fold_left_s
-      (fun _ _ ->
-        Format.eprintf "inside spam \n";
-        let%await transactions = spam_transactions ~ticketer ~n () in
-        await
-          (let op_hash =
-             List.rev transactions |> List.hd |> fun op ->
-             op.Protocol.Operation.Core_user.hash in
-           Format.eprintf "operation_hash_inside_spam %s\n%!"
-             (Crypto.BLAKE2B.to_string op_hash);
-           op_hash))
-      empty_hash init_list in
-  if rounds_left = 1 then
-    let _ = Format.eprintf "round is 1\n" in
-    await transaction
-  else
-    let _ = Format.eprintf "round is not 1" in
-    spam ~ticketer (rounds_left - 1)
-
-let process_transactions timestamps_and_blocks =
-  Format.eprintf "process_transaction\n";
-  let timestamps, blocks =
-    List.fold_left
-      (fun acc bt ->
-        Format.eprintf "inside timestamps, blocks\n%!";
-        let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
-        let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
-        (timestamps, blocks))
-      ([], []) timestamps_and_blocks in
-  let final_time = List.hd timestamps in
-  Format.eprintf "final time: %.3f\n%!" final_time;
-  let first_time = List.hd @@ List.rev timestamps in
-  Format.eprintf "starting time: %.3f\n%!" first_time;
-  let time_elapsed = final_time -. first_time in
-  Format.eprintf "time_elapsed time: %.3f\n%!" time_elapsed;
-  let total_transactions =
-    List.fold_left
-      (fun acc block ->
-        Format.eprintf "inside total_transactions\n";
-        let user_operations = Protocol.Block.parse_user_operations block in
-        let i = acc + List.length user_operations in
-        Format.eprintf "number of operations:%i\n%!" i;
-        Format.eprintf "acc:%i\n%!" acc;
-        i)
-      0 blocks in
-  Format.eprintf "total_transactions: %i\n%!" total_transactions;
-  let tps = Float.of_int total_transactions /. time_elapsed in
-  Format.eprintf "tps_process_transactions:%.3f\n%!" tps;
-  tps
-
-let get_block_response_by_level level =
-  Format.eprintf "get_block_response_by_level: %d\n%!" level;
-  let validator_uri = get_random_validator_uri () in
-  let%await response =
-    Network.request_block_by_level { level = Int64.of_int level } validator_uri
-  in
-  let%await _ =
-    match response with
-    | Some _ -> await ()
-    | None ->
-      failwith
-        (Printf.sprintf "get_block_response_by_level failed with level %d%!"
-           level) in
-  await (Option.get response)
-
-let load_test_transactions _test_kind ticketer =
-  Format.eprintf "load_test_transactions";
-  let rounds = 10 in
-  let%await starting_block_level = get_current_block_level () in
-  Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
-  let%await operation_hash = spam ~ticketer rounds in
-  Format.eprintf "Operation_hash: %s\n"
-    (Crypto.BLAKE2B.to_string operation_hash);
-  let%await final_block_level =
-    get_last_block_height operation_hash starting_block_level in
-  Format.eprintf "Final block level: %Ld\n" final_block_level;
-  let tps_period =
-    Int64.to_int (Int64.sub final_block_level starting_block_level) in
-  Format.eprintf "tps_period: %i\n" tps_period;
-  let starting_point = Int64.to_int starting_block_level in
-  Format.eprintf "starting point: %d\n%!" starting_point;
-  (* TODO: Make sure this is always greater than 0 *)
-  let%await timestamps_and_blocks =
-    List.init (tps_period + 1) Fun.id
-    |> List.map (fun i ->
-           let block_index_of_spamming = i + starting_point + 1 in
-           let _ =
-             Format.eprintf "i:%i - block index of spamming: %i \n%!" i
-               block_index_of_spamming in
-           block_index_of_spamming)
-    |> Lwt_list.map_s (fun level ->
-           Format.eprintf "level response: %i\n%!" level;
-           get_block_response_by_level level) in
-  let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
-  Format.eprintf "TPS: %i\n%!" tps;
-  await ()
-
-let load_test_transactions test_kind ticketer =
-  load_test_transactions test_kind ticketer |> Lwt_main.run
 
 let args =
   let open Arg in
