@@ -4,10 +4,6 @@ open Node
 open Consensus
 open Bin_common
 
-let ignore_some_errors = function
-  | Error #Flows.ignore -> Ok ()
-  | v -> v
-
 let update_state state =
   Server.set_state state;
   state
@@ -24,7 +20,7 @@ let handle_request (type req res)
       (String.length body);
     match request with
     | Ok request -> (
-      let response = handler update_state request in
+      let response = handler request in
       match response with
       | Ok response ->
         let%await response = Parallel.encode E.response_to_yojson response in
@@ -35,18 +31,11 @@ let handle_request (type req res)
 
 (* POST /append-block-and-signature *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block_and_signature =
+let handle_received_block =
   handle_request
-    (module Network.Block_and_signature_spec)
-    (fun update_state request ->
-      let open Flows in
-      let%ok () =
-        received_block (Server.get_state ()) update_state request.block
-        |> ignore_some_errors in
-      let%ok () =
-        received_signature (Server.get_state ()) update_state
-          ~hash:request.block.hash ~signature:request.signature
-        |> ignore_some_errors in
+    (module Network.Block_spec)
+    (fun request ->
+      Flows.received_block request.block;
       Ok ())
 
 (* POST /append-signature *)
@@ -54,12 +43,8 @@ let handle_received_block_and_signature =
 let handle_received_signature =
   handle_request
     (module Network.Signature_spec)
-    (fun update_state request ->
-      let open Flows in
-      let%ok () =
-        received_signature (Server.get_state ()) update_state ~hash:request.hash
-          ~signature:request.signature
-        |> ignore_some_errors in
+    (fun request ->
+      Flows.received_signature ~hash:request.hash ~signature:request.signature;
       Ok ())
 
 (* POST /block-by-hash *)
@@ -67,7 +52,7 @@ let handle_received_signature =
 let handle_block_by_hash =
   handle_request
     (module Network.Block_by_hash_spec)
-    (fun _update_state request ->
+    (fun request ->
       let block = Flows.find_block_by_hash (Server.get_state ()) request.hash in
       Ok block)
 
@@ -76,15 +61,14 @@ let handle_block_by_hash =
 let handle_block_level =
   handle_request
     (module Network.Block_level)
-    (fun _update_state _request ->
-      Ok { level = Flows.find_block_level (Server.get_state ()) })
+    (fun () -> Ok { level = Flows.find_block_level (Server.get_state ()) })
 
 (* POST /block-by-level *)
 (* Retrieves the block at the given level if it exists *)
 let handle_block_by_level =
   handle_request
     (module Network.Block_by_level_spec)
-    (fun _update_state request ->
+    (fun request ->
       let state = Server.get_state () in
       let block =
         List.find_opt
@@ -98,8 +82,9 @@ let handle_block_by_level =
 let handle_protocol_snapshot =
   handle_request
     (module Network.Protocol_snapshot)
-    (fun _update_state () ->
-      let State.{ snapshots; _ } = Server.get_state () in
+    (fun () ->
+      let state = Server.get_state () in
+      let snapshots = state.consensus.snapshots in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       Ok
         Network.Protocol_snapshot.
@@ -118,7 +103,7 @@ let handle_protocol_snapshot =
 let handle_request_nonce =
   handle_request
     (module Network.Request_nonce)
-    (fun update_state { uri } ->
+    (fun { uri } ->
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
       Ok { nonce })
 
@@ -127,7 +112,7 @@ let handle_request_nonce =
 let handle_register_uri =
   handle_request
     (module Network.Register_uri)
-    (fun update_state { uri; signature } ->
+    (fun { uri; signature } ->
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
 
 (* POST /user-operation-gossip *)
@@ -135,9 +120,9 @@ let handle_register_uri =
 let handle_receive_user_operation_gossip =
   handle_request
     (module Network.User_operation_gossip)
-    (fun update_state request ->
-      Flows.received_user_operation (Server.get_state ()) update_state
-        request.user_operation)
+    (fun request ->
+      Flows.received_user_operation request.user_operation;
+      Ok ())
 
 (* POST /user-operations-gossip *)
 (* Propagate a batch of user operations (core_user.t) over gossip network *)
@@ -158,8 +143,8 @@ let handle_receive_user_operations_gossip =
 let handle_receive_consensus_operation =
   handle_request
     (module Network.Consensus_operation_gossip)
-    (fun update_state request ->
-      Flows.received_consensus_operation (Server.get_state ()) update_state
+    (fun request ->
+      Flows.received_consensus_operation (Server.get_state ())
         request.consensus_operation request.signature)
 
 (* POST /trusted-validators-membership *)
@@ -167,16 +152,17 @@ let handle_receive_consensus_operation =
 let handle_trusted_validators_membership =
   handle_request
     (module Network.Trusted_validators_membership_change)
-    (fun update_state request ->
-      Flows.trusted_validators_membership (Server.get_state ()) update_state
-        request)
+    (fun request ->
+      Flows.trusted_validators_membership ~payload:request.payload
+        ~signature:request.signature;
+      Ok ())
 
 (* POST /withdraw-proof *)
 (* Returns a proof that can be provided to Tezos to fulfill a withdraw *)
 let handle_withdraw_proof =
   handle_request
     (module Network.Withdraw_proof)
-    (fun _ { operation_hash } ->
+    (fun { operation_hash } ->
       Ok
         (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
 
@@ -185,7 +171,7 @@ let handle_withdraw_proof =
 let handle_ticket_balance =
   handle_request
     (module Network.Ticket_balance)
-    (fun _update_state { ticket; address } ->
+    (fun { ticket; address } ->
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
@@ -193,9 +179,7 @@ let handle_ticket_balance =
 let node folder prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
-    ~on_operation:(fun operation ->
-      Flows.received_tezos_operation (Server.get_state ()) update_state
-        operation);
+    ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
   let port = Node.Server.get_port () |> Option.get in
@@ -205,7 +189,7 @@ let node folder prometheus_port =
       @@ Dream.router
            [
              handle_block_level;
-             handle_received_block_and_signature;
+             handle_received_block;
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;

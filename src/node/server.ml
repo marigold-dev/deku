@@ -1,5 +1,4 @@
 open Helpers
-open Flows
 
 type t = {
   mutable state : State.t;
@@ -28,13 +27,7 @@ let rec reset_timeout server =
   Lwt.cancel server.timeout;
   server.timeout <-
     (let%await () = Lwt_unix.sleep 10.0 in
-     (match
-        try_to_produce_block server.state (fun state ->
-            server.state <- state;
-            state)
-      with
-     | Ok () -> ()
-     | Error `Not_current_block_producer -> ());
+     Flows.handle_consensus_operation Consensus.with_timeout;
      reset_timeout server;
      Lwt.return_unit)
 
