@@ -116,8 +116,8 @@ let rec get_last_block_height hash previous_level =
       Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height ;
       await block_height
   | None ->
-      Format.eprintf "calling get_last_block_height again - remark: sleep 2\n%!" ;
-      Unix.sleep 2 ;
+      Format.eprintf "calling get_last_block_height again - remark: sleep 1\n%!" ;
+      Unix.sleep 1 ;
       get_last_block_height hash new_level
 
 (* Spam transactions for m rounds.
@@ -188,7 +188,7 @@ let get_block_response_by_level level =
 let load_test_transactions _test_kind ticketer =
   let name = "tps" in
   let rounds = 2 in
-  let batch_size = 10 in
+  let batch_size = 1000 in
   let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
@@ -205,8 +205,6 @@ let load_test_transactions _test_kind ticketer =
     List.init (tps_period + 1) Fun.id
     |> Lwt_list.map_s (fun level ->
            let block_index_of_spamming = level + starting_point in
-           (*Format.eprintf "level:%i - block index of spamming: %i \n%!" level
-             block_index_of_spamming ;*)
            get_block_response_by_level block_index_of_spamming )
   in
   let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
@@ -272,7 +270,7 @@ type table_entry =
   ; tps_period: int
   ; tps: int }
 
-let compute_table triple =
+let compute_table info =
   (fun ( name
        , rounds
        , batch_size
@@ -289,7 +287,7 @@ let compute_table triple =
     ; final_block
     ; tps_period
     ; tps } )
-    triple
+    info
 
 let print_table table =
   let add_padding ?col_width s =
@@ -302,16 +300,16 @@ let print_table table =
   Format.(
     open_tbox () ;
     set_tab () ;
-    printf "%s" (add_padding ~col_width:46 "Name") ;
+    printf "%s" (add_padding ~col_width:20 "Name") ;
     set_tab () ;
     printf "%s" (add_padding "Rounds") ;
     set_tab () ;
     printf "%s" (add_padding "Batch_size") ;
     set_tab () ;
     printf "%s" (add_padding "Batch_count") ;
-    printf "%s" (add_padding "Starting block") ;
+    printf "%s" (add_padding "Start_block") ;
     set_tab () ;
-    printf "%s" (add_padding "Final block") ;
+    printf "%s" (add_padding "Final_block") ;
     set_tab () ;
     printf "%s" (add_padding "Tps_period") ;
     set_tab () ;
@@ -322,6 +320,7 @@ let print_table table =
     printf "%s" table.name ;
     print_tab () ;
     printf "%i" table.rounds ;
+    print_tab () ;
     printf "%i" table.batch_size ;
     print_tab () ;
     printf "%i" table.batch_count ;
@@ -336,11 +335,10 @@ let print_table table =
     close_tbox () ;
     printf "\n")
 
-let print_tps_bench test_kind ticketer : unit =
-  let triple = load_test_transactions test_kind ticketer in
-  let table = compute_table triple in
-  let result = print_table table in
-  result
+let print_tps_bench test_kind ticketer =
+  let info = load_test_transactions test_kind ticketer in
+  let table = compute_table info in
+  print_table table
 
 let args =
   let open Arg in
