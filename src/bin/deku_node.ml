@@ -129,14 +129,13 @@ let handle_receive_user_operation_gossip =
 let handle_receive_user_operations_gossip =
   handle_request
     (module Network.User_operations_gossip)
-    (fun update_state request ->
-      let operations = request.user_operations in
-      List.fold_left_ok
-        (fun () operation ->
+    (fun request ->
+      List.iter
+        (fun user_operation ->
           (* TODO: quadratic function *)
-          Flows.received_user_operation (Server.get_state ()) update_state
-            operation)
-        () operations)
+          Flows.received_user_operation user_operation)
+        request.user_operations;
+      Ok ())
 
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
