@@ -40,6 +40,16 @@ in {
         else
           o.src;
       });
+      feather = osuper.buildDunePackage {
+        pname = "feather";
+        version = "0.3.0";
+        src = builtins.fetchurl {
+          url =
+            "https://github.com/charlesetc/feather/archive/refs/tags/0.3.0.tar.gz";
+          sha256 = "0mkycpkpq9jrlaf3zc367l6m88521zg0zpsd5g93c72azp7gj7zg";
+        };
+        propagatedBuildInputs = with osuper; [ ppx_expect spawn ];
+      };
 
       # Fix packages that don't have checkInputs as buildInputs (bug in nixpkgs)
       # This is a problem for static builds mainly
