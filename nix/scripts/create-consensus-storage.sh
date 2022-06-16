@@ -3,8 +3,6 @@
 set -e
 
 consensus_storage=$(
-  # Step 3: After having the Deku identities, we will configure and deploy
-  # a Deku consensus contract to the Tezos testnet.
     cat <<EOF
   {
   root_hash = {

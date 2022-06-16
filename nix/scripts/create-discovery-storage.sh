@@ -2,7 +2,6 @@
 
 set -e
 
-  ## most of the noise in this function is because of indentation
   echo "Big_map.literal ["
   for i in "$@"; do
     # shellcheck disable=2086

@@ -16,24 +16,15 @@ function step {
   if [ "$action" == "N" ]; then exit 2; fi
 }
 
-function create_wallet {
-  WALLET_NAME=${1:-"deku-testnet"}
-  RPC_NODE=${2:-"https://ithacanet.tezos.marigold.dev"}
-
-  # Generate a new key pair, we are not forcing here as to not override the current key
-  tezos-client -E "$RPC_NODE" gen keys "$KEY_NAME" || true
-
-  # Get the address
-  PUBLIC_KEY_HASH=$(tezos-client -E "$RPC_NODE" show address "$WALLET_NAME" | grep 'Hash:' | awk '{ print $2}')
-
-  curl "https://faucet-bot.marigold.dev/ithaca/getmoney/$PUBLIC_KEY_HASH"
-}
-
 print_info "Making sure ./data exists"
 mkdir -p ./data
 
+PROTOCOL=${1:-"jakarta"}
+
+step "Using $PROTOCOL as the protocol"
+
 # number of nodes to generate, starting from 0
-NUMBER_OF_NODES=${1:-"3"}
+NUMBER_OF_NODES=${2:-"3"}
 
 # create a array of numbers for looping later
 # https://github.com/koalaman/shellcheck/wiki/SC2207
@@ -41,10 +32,22 @@ NUMBER_OF_NODES=${1:-"3"}
 VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
 # base name to use
-KEY_NAME=${2:-"deku-testnet"}
+KEY_NAME=${3:-"deku-testnet"}
 
 # tezos RPC node
-RPC_NODE=${3:-"https://ithacanet.tezos.marigold.dev"}
+RPC_NODE=${4:-"https://${PROTOCOL}net.tezos.marigold.dev"}
+
+function create_wallet {
+  WALLET_NAME=${1:-"deku-testnet"}
+
+  # Generate a new key pair, we are not forcing here as to not override the current key
+  tezos-client -E "$RPC_NODE" gen keys "$WALLET_NAME" || true
+
+  # Get the address
+  PUBLIC_KEY_HASH=$(tezos-client -E "$RPC_NODE" show address "$WALLET_NAME" | grep 'Hash:' | awk '{ print $2}')
+
+  curl "https://faucet-bot.marigold.dev/${PROTOCOL}/getmoney/$PUBLIC_KEY_HASH"
+}
 
 # contract names
 CONSENSUS_NAME="$KEY_NAME-consensus"
@@ -60,8 +63,8 @@ for VALIDATOR in "${VALIDATORS[@]}"; do
   print_info "Creating a wallet for the node"
   create_wallet "$KEY_NAME-$VALIDATOR"
   print_success "Wallet created and got money"
-  echo "peer-$VALIDATOR.$KEY_NAME.gcp-npr.marigold.dev"
-  nix run github:marigold-dev/deku#deku-cli -- setup-identity "data/$VALIDATOR"  --uri="peer-$VALIDATOR.$KEY_NAME.gcp-npr.marigold.dev"
+  echo "https://peer-$VALIDATOR.$KEY_NAME.gcp-npr.marigold.dev"
+  nix run github:marigold-dev/deku#deku-cli -- setup-identity "data/$VALIDATOR" --uri="https://peer-$VALIDATOR.$KEY_NAME.gcp-npr.marigold.dev"
 done
 print_success "Identities generated"
 
@@ -86,7 +89,7 @@ tezos-client --endpoint "$RPC_NODE" originate contract "$CONSENSUS_NAME" \
   transferring 0 from "$KEY_NAME" \
   running "$(cat ./consensus_contract)" \
   --init "$(cat ./consensus_storage)" \
-  --burn-cap 2 \
+  --burn-cap 5 \
   --force
 
 rm ./consensus_contract ./consensus_storage
@@ -126,17 +129,23 @@ TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint "$RPC_NODE" show known contra
 print_success "Got contract addresses"
 
 print_info "Generating tezos.json for nodes"
-# generate tezos.json
 for VALIDATOR in "${VALIDATORS[@]}"; do
   # Get private key for the specific node
   TEZOS_PRIVATE_KEY=$(tezos-client -E "$RPC_NODE" show address "$KEY_NAME-$VALIDATOR" --show-secret | grep 'Secret Key:' | awk '{ print $3}' | sed s/unencrypted://)
 
-  echo '{"rpc_node": "", "secret": "", "consensus_contract": "", "discovery_contract": "", "required_confirmations": 10}' \
+  echo '{"required_confirmations": 4}' \
     | jq '.rpc_node = $rpc_node' --arg rpc_node "$RPC_NODE" \
     | jq '.secret = $secret' --arg secret "$TEZOS_PRIVATE_KEY" \
     | jq '.consensus_contract = $consensus_contract' --arg consensus_contract "$TEZOS_CONSENSUS_ADDRESS" \
     | jq '.discovery_contract = $discovery_contract' --arg discovery_contract "$TEZOS_DISCOVERY_ADDRESS" > "data/$VALIDATOR/tezos.json"
+
+
+  echo '[]' \
+    | jq '.[0] = { "action": [ "Add" ], "address": $secret }' --arg secret "$TEZOS_PRIVATE_KEY" \
+    > "data/$VALIDATOR/trusted-validator-membership-change.json"
 done
 print_success "tezos.json files generated"
+
+
 
 echo "Make sure the ./data directory looks like what you expect"

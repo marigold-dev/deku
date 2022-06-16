@@ -346,11 +346,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1654690018,
-        "narHash": "sha256-PiDWck9d8EglFHC0syGU2Pfirb6+oEyH/VO/mX7jrx4=",
+        "lastModified": 1655389168,
+        "narHash": "sha256-xz8W+45DHaX2p/hlfEKg3dO27iIQgrJgItdSwIYbvSY=",
         "owner": "marigold-dev",
         "repo": "tezos-nix",
-        "rev": "54016c12df1877462b09e98e030c29f12996d2df",
+        "rev": "6026cf4d169a86682a0eeb0a54c33a1323a8271a",
         "type": "github"
       },
       "original": {

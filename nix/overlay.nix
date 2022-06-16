@@ -41,6 +41,13 @@ in {
           o.src;
       });
 
+      ringo = osuper.ringo.overrideAttrs (o: {
+        # Bad hack to workaround https://gitlab.com/nomadic-labs/ringo/-/issues/4
+        postPatch = ''
+          substituteInPlace src/weak_tabler.ml --replace "Ephemeron.K1.Make" "Hashtbl.Make"
+        '';
+      });
+
       # Fix packages that don't have checkInputs as buildInputs (bug in nixpkgs)
       # This is a problem for static builds mainly
       stringext = addCheckInputs osuper.stringext;
