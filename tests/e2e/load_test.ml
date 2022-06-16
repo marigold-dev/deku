@@ -104,7 +104,6 @@ let spam_transactions ~ticketer ~n () =
    This function is o(n) for the length of the blockchain and will redo
    the same computation until the thing we want is found. *)
 let rec get_last_block_height hash previous_level =
-  Format.eprintf "get_last_block_height\n" ;
   let open Network in
   let uri = get_random_validator_uri () in
   let%await request, new_level =
@@ -117,7 +116,7 @@ let rec get_last_block_height hash previous_level =
       Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height ;
       await block_height
   | None ->
-      Format.eprintf "calling get_last_block_height again\n%!" ;
+      Format.eprintf "calling get_last_block_height again - remark: sleep 2\n%!" ;
       Unix.sleep 2 ;
       get_last_block_height hash new_level
 
@@ -135,10 +134,10 @@ let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
     |> List.rev |> List.hd
   in
   if rounds_left = 1 then
-    let _ = Format.eprintf "round is 1\n" in
+    let _ = Format.eprintf "round is 1\n%!" in
     await transaction.Protocol.Operation.Core_user.hash
   else
-    let _ = Format.eprintf "round is not 1" in
+    let _ = Format.eprintf "round is not 1\n%!" in
     spam ~ticketer (rounds_left - 1) info
 
 let process_transactions timestamps_and_blocks =
@@ -186,10 +185,11 @@ let get_block_response_by_level level =
   in
   await (Option.get response)
 
-let load_test_transactions _test_kind ticketer =
+let load_test_transactions ticketer =
   Format.eprintf "load_test_transactions" ;
+  let name = "tps" in
   let rounds = 2 in
-  let batch_size = 3200 in
+  let batch_size = 200 in
   let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level ;
@@ -214,66 +214,64 @@ let load_test_transactions _test_kind ticketer =
              block_index_of_spamming ;
            get_block_response_by_level block_index_of_spamming )
   in
-  (*let%await timestamps_and_blocks =
-      List.init (tps_period + 1) Fun.id
-      |> List.map (fun i ->
-             let block_index_of_spamming = i + starting_point in
-             let _ =
-               Format.eprintf "i:%i - block index of spamming: %i \n%!" i
-                 block_index_of_spamming
-             in
-             block_index_of_spamming )
-      |> Lwt_list.map_s (fun level ->
-             Format.eprintf "level response: %i\n%!" level ;
-             get_block_response_by_level level )
-    in*)
   let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
   Format.eprintf "TPS: %i\n%!" tps ;
-  await ()
+  let results = List.init 1 (fun _ -> (name, batch_size, batch_count)) in
+  await results
 
-let load_test_transactions test_kind ticketer =
-  load_test_transactions test_kind ticketer |> Lwt_main.run
+(*let load_test_transactions ticketer =
+  load_test_transactions ticketer |> Lwt_main.run*)
 
-module Test_kind = struct
-  (* TODO: this is a lot of boiler plate :(
-     PPX to help with this? *)
-  type t = Saturate | Maximal_blocks
+let load_test_transactions_table ticketer = load_test_transactions ticketer
 
-  let all_options = ["saturate"; "maximal-blocks"]
+(* Print table of benchmark *)
 
-  let of_string = function
-    | "saturate" ->
-        Ok Saturate
-    | "maximal-blocks" ->
-        Ok Maximal_blocks
-    | s ->
-        Error (Format.sprintf "Unable to parse test kind \"%s\"" s)
+type table_entry = {name: string; batch_size: int; batch_count: int}
 
-  let to_string = function
-    | Saturate ->
-        "saturate"
-    | Maximal_blocks ->
-        "maximal-blocks"
+let compute_table : (string * int * int) list -> table_entry list =
+ fun triple ->
+  List.map
+    (fun (name, batch_size, batch_count) -> {name; batch_size; batch_count})
+    triple
 
-  let test_kind_conv =
-    let parser x = of_string x |> Result.map_error (fun e -> `Msg e) in
-    let printer ppf test_kind = Format.fprintf ppf "%s" (to_string test_kind) in
-    let open Arg in
-    conv (parser, printer)
+let print_table table =
+  let add_padding ?col_width s =
+    match col_width with
+    | None ->
+        s ^ " "
+    | Some col_width ->
+        s ^ String.init (col_width - String.length s) (fun _ -> ' ')
+  in
+  Format.(
+    open_tbox () ;
+    set_tab () ;
+    printf "%s" (add_padding ~col_width:46 "Name") ;
+    set_tab () ;
+    printf "%s" (add_padding "Batch_size") ;
+    set_tab () ;
+    printf "%s" (add_padding "Batch_count") ;
+    printf "\n" ;
+    List.iter
+      (fun te ->
+        print_tab () ;
+        printf "%s" te.name ;
+        print_tab () ;
+        printf "%i" te.batch_size ;
+        print_tab () ;
+        printf "%i" te.batch_count )
+      table ;
+    close_tbox () ;
+    printf "\n")
 
-  let arg_info =
-    let docv = "test_kind" in
-    let doc =
-      "The type of test to perform. Options: " ^ String.concat " | " all_options
-    in
-    Arg.info [] ~doc ~docv
-end
+let print_tps_bench ticketer =
+  Printf.printf "Benchmark tps: \n" ;
+  let%await triple = load_test_transactions ticketer in
+  let table = compute_table triple in
+  let result = print_table table in
+  await result
 
 let args =
   let open Arg in
-  let test_kind =
-    required & pos 0 (some Test_kind.test_kind_conv) None & Test_kind.arg_info
-  in
   let ticketer =
     let docv = "ticketer" in
     let doc =
@@ -283,6 +281,6 @@ let args =
     required & pos 1 (some string) None & info [] ~doc ~docv
   in
   let open Term in
-  const load_test_transactions $ test_kind $ ticketer
+  const print_tps_bench $ ticketer
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "load-test") args

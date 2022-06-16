@@ -435,7 +435,7 @@ deposit_withdraw_test() {
 
 load_test () {
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+  deku-load-test "$DUMMY_TICKET_ADDRESS"
 }
 
 help() {
@@ -461,7 +461,7 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
-  echo "load-test (saturate | maximal-blocks)"
+  echo "load-test"
   echo "  Performs the specified load test on a running cluster"
 }
 
