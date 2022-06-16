@@ -186,38 +186,41 @@ let get_block_response_by_level level =
   await (Option.get response)
 
 let load_test_transactions _test_kind ticketer =
-  Format.eprintf "load_test_transactions" ;
   let name = "tps" in
   let rounds = 2 in
   let batch_size = 10 in
   let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
-  Format.eprintf "Starting block level: %Li\n%!" starting_block_level ;
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
   Format.eprintf "Operation_hash: %s\n"
     (Crypto.BLAKE2B.to_string operation_hash) ;
   let%await final_block_level =
     get_last_block_height operation_hash starting_block_level
   in
-  Format.eprintf "Final block level: %Ld\n" final_block_level ;
   let tps_period =
     Int64.to_int (Int64.sub final_block_level starting_block_level)
   in
-  Format.eprintf "tps_period: %i\n" tps_period ;
   let starting_point = Int64.to_int starting_block_level in
-  Format.eprintf "starting point: %d\n%!" starting_point ;
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) Fun.id
     |> Lwt_list.map_s (fun level ->
            let block_index_of_spamming = level + starting_point in
-           Format.eprintf "level:%i - block index of spamming: %i \n%!" level
-             block_index_of_spamming ;
+           (*Format.eprintf "level:%i - block index of spamming: %i \n%!" level
+             block_index_of_spamming ;*)
            get_block_response_by_level block_index_of_spamming )
   in
   let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
-  Format.eprintf "TPS: %i\n%!" tps ;
-  let results = List.init 1 (fun _ -> (name, batch_size, batch_count)) in
-  await results
+  let table =
+    ( name
+    , rounds
+    , batch_size
+    , batch_count
+    , starting_block_level
+    , final_block_level
+    , tps_period
+    , tps )
+  in
+  await table
 
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
@@ -257,16 +260,35 @@ end
 let load_test_transactions test_kind ticketer =
   load_test_transactions test_kind ticketer |> Lwt_main.run
 
-(*let load_test_transactions_table ticketer = load_test_transactions ticketer*)
-
 (* Print table of benchmark *)
 
-type table_entry = {name: string; batch_size: int; batch_count: int}
+type table_entry =
+  { name: string
+  ; rounds: int
+  ; batch_size: int
+  ; batch_count: int
+  ; starting_block: int64
+  ; final_block: int64
+  ; tps_period: int
+  ; tps: int }
 
-let compute_table : (string * int * int) list -> table_entry list =
- fun triple ->
-  List.map
-    (fun (name, batch_size, batch_count) -> {name; batch_size; batch_count})
+let compute_table triple =
+  (fun ( name
+       , rounds
+       , batch_size
+       , batch_count
+       , starting_block
+       , final_block
+       , tps_period
+       , tps ) ->
+    { name
+    ; rounds
+    ; batch_size
+    ; batch_count
+    ; starting_block
+    ; final_block
+    ; tps_period
+    ; tps } )
     triple
 
 let print_table table =
@@ -282,24 +304,39 @@ let print_table table =
     set_tab () ;
     printf "%s" (add_padding ~col_width:46 "Name") ;
     set_tab () ;
+    printf "%s" (add_padding "Rounds") ;
+    set_tab () ;
     printf "%s" (add_padding "Batch_size") ;
     set_tab () ;
     printf "%s" (add_padding "Batch_count") ;
+    printf "%s" (add_padding "Starting block") ;
+    set_tab () ;
+    printf "%s" (add_padding "Final block") ;
+    set_tab () ;
+    printf "%s" (add_padding "Tps_period") ;
+    set_tab () ;
+    printf "%s" (add_padding "TPS") ;
+    set_tab () ;
     printf "\n" ;
-    List.iter
-      (fun te ->
-        print_tab () ;
-        printf "%s" te.name ;
-        print_tab () ;
-        printf "%i" te.batch_size ;
-        print_tab () ;
-        printf "%i" te.batch_count )
-      table ;
+    print_tab () ;
+    printf "%s" table.name ;
+    print_tab () ;
+    printf "%i" table.rounds ;
+    printf "%i" table.batch_size ;
+    print_tab () ;
+    printf "%i" table.batch_count ;
+    print_tab () ;
+    printf "%Ld" table.starting_block ;
+    print_tab () ;
+    printf "%Ld" table.final_block ;
+    print_tab () ;
+    printf "%i" table.tps_period ;
+    print_tab () ;
+    printf "%i" table.tps ;
     close_tbox () ;
     printf "\n")
 
 let print_tps_bench test_kind ticketer : unit =
-  Printf.printf "Benchmark tps: \n" ;
   let triple = load_test_transactions test_kind ticketer in
   let table = compute_table triple in
   let result = print_table table in
