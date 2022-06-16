@@ -219,10 +219,10 @@ let load_test_transactions ticketer =
   let results = List.init 1 (fun _ -> (name, batch_size, batch_count)) in
   await results
 
-(*let load_test_transactions ticketer =
-  load_test_transactions ticketer |> Lwt_main.run*)
+let load_test_transactions ticketer =
+  load_test_transactions ticketer |> Lwt_main.run
 
-let load_test_transactions_table ticketer = load_test_transactions ticketer
+(*let load_test_transactions_table ticketer = load_test_transactions ticketer*)
 
 (* Print table of benchmark *)
 
@@ -263,12 +263,12 @@ let print_table table =
     close_tbox () ;
     printf "\n")
 
-let print_tps_bench ticketer =
+let print_tps_bench ticketer : unit =
   Printf.printf "Benchmark tps: \n" ;
-  let%await triple = load_test_transactions ticketer in
+  let triple = load_test_transactions ticketer in
   let table = compute_table triple in
   let result = print_table table in
-  await result
+  result
 
 let args =
   let open Arg in
@@ -283,4 +283,4 @@ let args =
   let open Term in
   const print_tps_bench $ ticketer
 
-let _ = Cmd.eval @@ Cmd.v (Cmd.info "load-test") args
+let main = Cmd.eval @@ Cmd.v (Cmd.info "load-test") args
