@@ -435,7 +435,7 @@ deposit_withdraw_test() {
 
 load_test () {
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  deku-load-test "$DUMMY_TICKET_ADDRESS"
+  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
 }
 
 help() {

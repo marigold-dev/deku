@@ -185,11 +185,11 @@ let get_block_response_by_level level =
   in
   await (Option.get response)
 
-let load_test_transactions ticketer =
+let load_test_transactions _test_kind ticketer =
   Format.eprintf "load_test_transactions" ;
   let name = "tps" in
   let rounds = 2 in
-  let batch_size = 200 in
+  let batch_size = 10 in
   let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level ;
@@ -219,8 +219,43 @@ let load_test_transactions ticketer =
   let results = List.init 1 (fun _ -> (name, batch_size, batch_count)) in
   await results
 
-let load_test_transactions ticketer =
-  load_test_transactions ticketer |> Lwt_main.run
+module Test_kind = struct
+  (* TODO: this is a lot of boiler plate :(
+     PPX to help with this? *)
+  type t = Saturate | Maximal_blocks
+
+  let all_options = ["saturate"; "maximal-blocks"]
+
+  let of_string = function
+    | "saturate" ->
+        Ok Saturate
+    | "maximal-blocks" ->
+        Ok Maximal_blocks
+    | s ->
+        Error (Format.sprintf "Unable to parse test kind \"%s\"" s)
+
+  let to_string = function
+    | Saturate ->
+        "saturate"
+    | Maximal_blocks ->
+        "maximal-blocks"
+
+  let test_kind_conv =
+    let parser x = of_string x |> Result.map_error (fun e -> `Msg e) in
+    let printer ppf test_kind = Format.fprintf ppf "%s" (to_string test_kind) in
+    let open Arg in
+    conv (parser, printer)
+
+  let arg_info =
+    let docv = "test_kind" in
+    let doc =
+      "The type of test to perform. Options: " ^ String.concat " | " all_options
+    in
+    Arg.info [] ~doc ~docv
+end
+
+let load_test_transactions test_kind ticketer =
+  load_test_transactions test_kind ticketer |> Lwt_main.run
 
 (*let load_test_transactions_table ticketer = load_test_transactions ticketer*)
 
@@ -263,15 +298,18 @@ let print_table table =
     close_tbox () ;
     printf "\n")
 
-let print_tps_bench ticketer : unit =
+let print_tps_bench test_kind ticketer : unit =
   Printf.printf "Benchmark tps: \n" ;
-  let triple = load_test_transactions ticketer in
+  let triple = load_test_transactions test_kind ticketer in
   let table = compute_table triple in
   let result = print_table table in
   result
 
 let args =
   let open Arg in
+  let test_kind =
+    required & pos 0 (some Test_kind.test_kind_conv) None & Test_kind.arg_info
+  in
   let ticketer =
     let docv = "ticketer" in
     let doc =
@@ -281,6 +319,6 @@ let args =
     required & pos 1 (some string) None & info [] ~doc ~docv
   in
   let open Term in
-  const print_tps_bench $ ticketer
+  const print_tps_bench $ test_kind $ ticketer
 
 let main = Cmd.eval @@ Cmd.v (Cmd.info "load-test") args
