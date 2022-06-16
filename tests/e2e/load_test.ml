@@ -127,30 +127,19 @@ let rec get_last_block_height hash previous_level =
    Get blocks & block time from start block to final block.
 *)
 
-let rec spam ~ticketer rounds_left =
-  let n = 20 in
-  let repeat_spam = 2 in
-  let init_list = List.init repeat_spam Fun.id in
-  let empty_hash = Crypto.BLAKE2B.hash "" in
+let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
   let%await transaction =
-    Lwt_list.fold_left_s
-      (fun _ _ ->
-        let%await transactions = spam_transactions ~ticketer ~n () in
-        await
-          (let op_hash =
-             List.rev transactions |> List.hd
-             |> fun op -> op.Protocol.Operation.Core_user.hash
-           in
-           Format.eprintf "repeat_spam:%i \n%!" repeat_spam ;
-           op_hash ) )
-      empty_hash init_list
+    List.init batch_count (fun _ ->
+        let transaction = spam_transactions ~ticketer ~n:batch_size () in
+        transaction )
+    |> List.rev |> List.hd
   in
   if rounds_left = 1 then
     let _ = Format.eprintf "round is 1\n" in
-    await transaction
+    await transaction.Protocol.Operation.Core_user.hash
   else
     let _ = Format.eprintf "round is not 1" in
-    spam ~ticketer (rounds_left - 1)
+    spam ~ticketer (rounds_left - 1) info
 
 let process_transactions timestamps_and_blocks =
   let timestamps, blocks =
@@ -200,9 +189,11 @@ let get_block_response_by_level level =
 let load_test_transactions _test_kind ticketer =
   Format.eprintf "load_test_transactions" ;
   let rounds = 2 in
+  let batch_size = 3200 in
+  let batch_count = 1 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level ;
-  let%await operation_hash = spam ~ticketer rounds in
+  let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
   Format.eprintf "Operation_hash: %s\n"
     (Crypto.BLAKE2B.to_string operation_hash) ;
   let%await final_block_level =
@@ -215,20 +206,27 @@ let load_test_transactions _test_kind ticketer =
   Format.eprintf "tps_period: %i\n" tps_period ;
   let starting_point = Int64.to_int starting_block_level in
   Format.eprintf "starting point: %d\n%!" starting_point ;
-  (* TODO: Make sure this is always greater than 0 *)
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) Fun.id
-    |> List.map (fun i ->
-           let block_index_of_spamming = i + starting_point + 1 in
-           let _ =
-             Format.eprintf "i:%i - block index of spamming: %i \n%!" i
-               block_index_of_spamming
-           in
-           block_index_of_spamming )
     |> Lwt_list.map_s (fun level ->
-           Format.eprintf "level response: %i\n%!" level ;
-           get_block_response_by_level level )
+           let block_index_of_spamming = level + starting_point in
+           Format.eprintf "level:%i - block index of spamming: %i \n%!" level
+             block_index_of_spamming ;
+           get_block_response_by_level block_index_of_spamming )
   in
+  (*let%await timestamps_and_blocks =
+      List.init (tps_period + 1) Fun.id
+      |> List.map (fun i ->
+             let block_index_of_spamming = i + starting_point in
+             let _ =
+               Format.eprintf "i:%i - block index of spamming: %i \n%!" i
+                 block_index_of_spamming
+             in
+             block_index_of_spamming )
+      |> Lwt_list.map_s (fun level ->
+             Format.eprintf "level response: %i\n%!" level ;
+             get_block_response_by_level level )
+    in*)
   let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
   Format.eprintf "TPS: %i\n%!" tps ;
   await ()
@@ -270,137 +268,6 @@ module Test_kind = struct
     in
     Arg.info [] ~doc ~docv
 end
-
-(* TODO: Fix this piece of crap
-   This function is o(n) for the length of the blockchain and will redo the same computation until the thing we want is found. *)
-let rec get_last_block_height hash previous_level =
-  Format.eprintf "get_last_block_height\n" ;
-  let open Network in
-  let uri = get_random_validator_uri () in
-  let%await reply, new_level =
-    request_block_by_user_operation_included
-      {operation_hash= hash; previous_level}
-      uri
-  in
-  match reply with
-  | Some block_height ->
-      Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height ;
-      await block_height
-  | None ->
-      Format.eprintf "calling get_last_block_height again\n%!" ;
-      Unix.sleep 2 ;
-      get_last_block_height hash new_level
-
-(* Spam transactions for m rounds,
-   Get the final transaction hash
-   Find the block_level the transaction is included at
-   Get blocks & block time from start block to final block
-*)
-let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
-  Format.eprintf "spam \n" ;
-  let%await transaction =
-    List.init batch_count (fun _ ->
-        let transaction = spam_transactions ~ticketer ~n:batch_size () in
-        transaction )
-    |> List.rev |> List.hd
-  in
-  if rounds_left = 1 then
-    let _ = Format.eprintf "round is 1\n" in
-    await transaction.Protocol.Operation.Core_user.hash
-  else
-    let _ = Format.eprintf "round is not 1\n" in
-    spam ~ticketer (rounds_left - 1) info
-
-let process_transactions timestamps_and_blocks =
-  Format.eprintf "process_transaction\n" ;
-  let timestamps, blocks =
-    List.fold_left
-      (fun acc bt ->
-        Format.eprintf "inside timestamps, blocks\n%!" ;
-        let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
-        let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
-        (timestamps, blocks) )
-      ([], []) timestamps_and_blocks
-  in
-  let final_time = List.hd timestamps in
-  Format.eprintf "final time: %.3f\n%!" final_time ;
-  let first_time = List.hd @@ List.rev timestamps in
-  Format.eprintf "starting time: %.3f\n%!" first_time ;
-  let time_elapsed = final_time -. first_time in
-  Format.eprintf "time_elapsed time: %.3f\n%!" time_elapsed ;
-  let total_transactions =
-    List.fold_left
-      (fun acc block ->
-        Format.eprintf "inside total_transactions\n" ;
-        let user_operations = Protocol.Block.parse_user_operations block in
-        let i = acc + List.length user_operations in
-        Format.eprintf "number of operations:%i\n%!" i ;
-        Format.eprintf "acc:%i\n%!" acc ;
-        i )
-      0 blocks
-  in
-  Format.eprintf "total_transactions: %i\n%!" total_transactions ;
-  let tps = Float.of_int total_transactions /. time_elapsed in
-  Format.eprintf "tps_process_transactions:%.3f\n%!" tps ;
-  tps
-
-let get_block_response_by_level level =
-  Format.eprintf "get_block_response_by_level: %d\n%!" level ;
-  let validator_uri = get_random_validator_uri () in
-  let%await response =
-    Network.request_block_by_level {level= Int64.of_int level} validator_uri
-  in
-  let%await _ =
-    match response with
-    | Some _ ->
-        await ()
-    | None ->
-        failwith
-          (Printf.sprintf "get_block_response_by_level failed with level %d%!"
-             level )
-  in
-  await (Option.get response)
-
-let load_test_transactions _test_kind ticketer =
-  Format.eprintf "load_test_transactions" ;
-  let rounds = 1 in
-  let batch_size = 3200 in
-  let batch_count = 1 in
-  let%await starting_block_level = get_current_block_level () in
-  Format.eprintf "Starting block level: %Li\n%!" starting_block_level ;
-  let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
-  Format.eprintf "Operation_hash: %s\n"
-    (Crypto.BLAKE2B.to_string operation_hash) ;
-  let%await final_block_level =
-    get_last_block_height operation_hash starting_block_level
-  in
-  Format.eprintf "Final block level: %Ld\n" final_block_level ;
-  let tps_period =
-    Int64.to_int (Int64.sub final_block_level starting_block_level)
-  in
-  Format.eprintf "tps_period: %i\n" tps_period ;
-  let starting_point = Int64.to_int starting_block_level in
-  Format.eprintf "starting point: %d\n%!" starting_point ;
-  (* TODO: Make sure this is always greater than 0 *)
-  (* TODO: We should be able to turn this into a single list init*)
-  let%await timestamps_and_blocks =
-    List.init (tps_period + 1) (fun i ->
-        let block_index_of_spamming = i + starting_point in
-        let _ =
-          Format.eprintf "i:%i - block index of spamming: %i \n%!" i
-            block_index_of_spamming
-        in
-        block_index_of_spamming )
-    |> Lwt_list.map_s (fun level ->
-           Format.eprintf "level response: %i\n%!" level ;
-           get_block_response_by_level level )
-  in
-  let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
-  Format.eprintf "TPS: %i\n%!" tps ;
-  await ()
-
-let load_test_transactions test_kind ticketer =
-  load_test_transactions test_kind ticketer |> Lwt_main.run
 
 let args =
   let open Arg in
