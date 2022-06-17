@@ -26,7 +26,7 @@ let set_state state = (get ()).state <- state
 let rec reset_timeout server =
   Lwt.cancel server.timeout;
   server.timeout <-
-    (let%await () = Lwt_unix.sleep 10.0 in
+    (let%await () = Lwt_unix.sleep 5.0 in
      Flows.handle_consensus_operation Consensus.with_timeout;
      reset_timeout server;
      Lwt.return_unit)

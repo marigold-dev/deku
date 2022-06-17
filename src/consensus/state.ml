@@ -52,9 +52,9 @@ let is_current_producer state ~key_hash =
   | Some current_producer -> current_producer.address = key_hash
   | None -> false
 
-let minimum_signable_time_between_epochs = 10.0
+let minimum_signable_time_between_epochs = 5.0
 
-let maximum_signable_time_between_epochs = 20.0
+let maximum_signable_time_between_epochs = 10.0
 
 (** Used to add a delay between a tezos operation being confirmed,
   needs to be bigger than the polling interval for operations *)
