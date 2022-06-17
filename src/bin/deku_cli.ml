@@ -746,7 +746,7 @@ let setup_tezos =
        can compromise security of the Deku chain." in
     let open Arg in
     value
-    & opt tezos_required_confirmations 10
+    & opt tezos_required_confirmations 3
     & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
   let open Term in
   lwt_ret
