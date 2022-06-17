@@ -29,3 +29,5 @@ val produce :
   t
 
 val parse_user_operations : t -> Protocol_operation.Core_user.t list
+
+val pp : Format.formatter -> t -> unit
