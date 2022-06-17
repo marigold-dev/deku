@@ -202,6 +202,9 @@ let node folder prometheus_port =
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
+      @@ (fun inner_handler request ->
+           Log.debug "incoming request to %s" (Dream.target request);
+           inner_handler request)
       @@ Dream.router
            [
              handle_block_level;

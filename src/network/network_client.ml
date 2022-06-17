@@ -13,6 +13,7 @@ exception Error_status
 let raw_request path raw_data uri =
   let open Piaf in
   let uri = Uri.with_path uri path in
+  Log.debug "sending request to %a" Uri.pp uri;
   let body = Body.of_string raw_data in
   let%await response = Client.Oneshot.post ~body uri in
   match response with
