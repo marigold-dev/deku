@@ -201,7 +201,7 @@ let node folder prometheus_port =
   let port =
     Sys.getenv_opt "PORT"
     |> Option.map int_of_string
-    |> Option.value ~default:(Option.get @@ Node.Server.get_port ()) in
+    |> Option.value ~default:4440 in
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
