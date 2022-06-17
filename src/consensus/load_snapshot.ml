@@ -23,11 +23,19 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
         Block_pool.append_signature ~signatures_required
           ~hash:last_block.Block.hash signature block_pool)
       block_pool last_block_signatures in
-  let%assert () =
+
+  (* TODO: commenting this out because if the last block is signed,
+     and they form a proper chain (which will be checked when applying I think),
+     then we don't need signatures for all the blocks - just the last one.
+
+     Edit: we could include the signatures in the network response.
+  *)
+
+  (* let%assert () =
     ( `Not_all_blocks_are_signed,
       List.for_all
         (fun block -> Block_pool.is_signed ~hash:block.Block.hash block_pool)
-        all_blocks ) in
+         all_blocks ) in *)
   let%assert () =
     ( `State_root_not_the_expected,
       snapshot.Snapshots.hash = last_block.state_root_hash ) in

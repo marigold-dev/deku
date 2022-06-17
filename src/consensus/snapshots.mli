@@ -23,8 +23,8 @@ val make :
   initial_signatures:Signatures.t ->
   t
 
-val append_block : pool:Block_pool.t -> Block.t * Signatures.t -> t -> t
-  [@@ocaml.doc " this should be called when a block is received "]
+val append_block : block:Block.t -> signatures:Signatures.t -> t -> t
+(** This should be called when a block is received *)
 
 val add_snapshot_ref : block_height:int64 -> t -> snapshot_ref * t
 

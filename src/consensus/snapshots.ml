@@ -33,18 +33,18 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
     additional_blocks = [];
   }
 
-let append_block ~pool (block, signatures) t =
+let append_block ~block ~signatures t =
   if t.last_block.block_height > block.Block.block_height then
     t
   else
-    let blocks, (block, signatures) =
-      Block_pool.find_all_signed_blocks_above (block, signatures) pool in
+    (* let blocks, (block, signatures) =
+       Block_pool.find_all_signed_blocks_above (block, signatures) pool in *)
     {
       current_snapshot = t.current_snapshot;
       next_snapshots = t.next_snapshots;
       last_block = block;
       last_block_signatures = signatures;
-      additional_blocks = blocks @ [t.last_block] @ t.additional_blocks;
+      additional_blocks = [t.last_block] @ t.additional_blocks;
     }
 
 let add_snapshot_ref ~block_height t =

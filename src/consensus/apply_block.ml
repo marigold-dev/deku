@@ -9,12 +9,25 @@ let apply_block ~block state =
   (* TODO: handle this errors here *)
   let%ok protocol, user_operations, receipts =
     apply_block state.protocol block in
+  let signatures =
+    match Block_pool.find_signatures ~hash:block.hash state.block_pool with
+    | None ->
+      (* FIXME: this is a sign I'm not in the correct place
+
+         We could add the signatures to the network response.
+         Then snapshots.ml doesn't keep track of signatures.
+         But that makes the dependency between the last block
+         sent in a snapshot request and its signatures implicit.
+      *)
+      assert false
+    | Some signatures -> signatures in
+  let snapshots = Snapshots.append_block ~block ~signatures state.snapshots in
   let snapshots, snapshot_ref =
     if BLAKE2B.equal block.state_root_hash previous_protocol.state_root_hash
     then
-      (state.snapshots, None)
+      (snapshots, None)
     else
-      let snapshots = Snapshots.start_new_epoch state.snapshots in
+      let snapshots = Snapshots.start_new_epoch snapshots in
       let snapshot_ref, snapshots =
         Snapshots.add_snapshot_ref ~block_height:previous_protocol.block_height
           snapshots in
