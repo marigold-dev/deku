@@ -198,7 +198,10 @@ let node folder prometheus_port =
         operation);
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
-  let port = Node.Server.get_port () |> Option.get in
+  let port =
+    Sys.getenv_opt "PORT"
+    |> Option.map int_of_string
+    |> Option.value ~default:(Option.get @@ Node.Server.get_port ()) in
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
