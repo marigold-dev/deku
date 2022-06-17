@@ -7,6 +7,14 @@ open Apply_block
 
 let load_snapshot ~snapshot ~additional_blocks ~last_block
     ~last_block_signatures t =
+  Log.info "loading snapshot: %s" (BLAKE2B.to_string snapshot.Snapshots.hash);
+  let additional_blocks_str =
+    List.map
+      (fun b -> b.Block.block_height |> Int64.to_string)
+      additional_blocks
+    |> String.concat ", " in
+  Log.info "Additional blocks: %s" additional_blocks_str;
+  Log.info "Last block: %Ld" last_block.Block.block_height;
   let all_blocks =
     last_block :: additional_blocks
     |> List.sort (fun a b ->
@@ -32,9 +40,9 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
   *)
 
   (* let%assert () =
-    ( `Not_all_blocks_are_signed,
-      List.for_all
-        (fun block -> Block_pool.is_signed ~hash:block.Block.hash block_pool)
+     ( `Not_all_blocks_are_signed,
+       List.for_all
+         (fun block -> Block_pool.is_signed ~hash:block.Block.hash block_pool)
          all_blocks ) in *)
   let%assert () =
     ( `State_root_not_the_expected,
