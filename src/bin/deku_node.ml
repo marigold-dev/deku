@@ -249,7 +249,7 @@ let node json_logs style_renderer level folder prometheus_port =
         (not (String.starts_with ~prefix:"deku" src_name))
         && not (String.equal src_name "application")
       then
-        Logs.Src.set_level src (Some Logs.Error))
+        Logs.Src.set_level src (Some Logs.Info))
     (Logs.Src.list ());
   node folder prometheus_port
 
