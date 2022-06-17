@@ -241,16 +241,6 @@ let node json_logs style_renderer level folder prometheus_port =
   | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
   | false -> Logs.set_reporter (Logs_fmt.reporter ()));
 
-  (* disable all non-deku logs *)
-  List.iter
-    (fun src ->
-      let src_name = Logs.Src.name src in
-      if
-        (not (String.starts_with ~prefix:"deku" src_name))
-        && not (String.equal src_name "application")
-      then
-        Logs.Src.set_level src (Some Logs.Info))
-    (Logs.Src.list ());
   node folder prometheus_port
 
 let node =
