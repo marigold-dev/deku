@@ -9,6 +9,7 @@
 
 You can install the example with:
 ```bash
+$ npm --prefix "../../sdks/deku_js_interop" install
 $ npm --prefix "../../sdks/deku_js_interop/" run build # To build the sdk
 $ npm i # To install dependencies
 $ npm run build # To build the typescript counter example
@@ -29,12 +30,20 @@ If you build deku with nix, the deku client will be in your path.
 
 ## Test the example with a mock transaction
 
-You can test the increment and decrement action by running a mock transaction:
+You can test the increment and decrement action by running a mock `Increment` transaction:
 
 ```bash
 deku-cli create-mock-transaction ./wallet.json '"Increment"' node ./build/example.js
 ```
 
-```bash
-deku-cli create-mock-transaction ./wallet.json '"Decrement"' node ./build/example.js
+This will execute the VM with the given argument against its initial state, producing
+output like the following:
+```
+fifo path: /tmp/deku_named_pipe_1521113be49393891d6f2273f0cc19fbd89ad6d25af7670a6889cd5116c9d727
+opening read
+opening write
+vm started
+sender: tz1cCUK2sqSmJCUNpoQUpy3Puy48H4Poic9s, tx_hash: b1a38e81b72f4a14ebb91bf65eecd08c2ac7e9ffaa97e54ea9f7533b2d492553
+next counter value: 43
+[["counter",43]]
 ```
