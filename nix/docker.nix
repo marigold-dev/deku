@@ -17,12 +17,17 @@ pkgs.dockerTools.buildImage {
 
   fromImage = baseImage;
 
-  contents = [ deku pkgs.cacert ];
+  contents = [ deku ];
 
   config = {
     author = "marigold.dev";
     architecture = "amd64";
     os = "linux";
+
+    Env = [
+      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+    ];
 
     WorkingDir = "/app";
     Entrypoint = [ "${deku}/bin/deku-node" ];
