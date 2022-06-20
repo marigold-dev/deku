@@ -814,6 +814,9 @@ let default_info =
 let () = Domain.set_name "deku-cli"
 
 let _ =
+  Logs.set_level (Some Debug);
+  Logs.set_reporter (Logs_fmt.reporter ());
+
   Cmd.eval
   @@ Cmd.group default_info
        [
