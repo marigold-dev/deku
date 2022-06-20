@@ -234,6 +234,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
         | None, None -> failwith "Invalid transaction"
         | None, Some arg ->
           let payload =
+            let open Contracts in
             match vm_flavor with
             | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
             | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
@@ -290,6 +291,7 @@ let originate_contract node_folder contract_json initial_storage
       let contract_program = Yojson.Safe.from_file contract_json in
       let initial_storage = Yojson.Safe.from_file initial_storage in
       let payload =
+        let open Contracts in
         match vm_flavor with
         | `Lambda ->
           Contract_vm.Origination_payload.lambda_of_yojson
