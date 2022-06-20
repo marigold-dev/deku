@@ -1,3 +1,4 @@
+open Contracts
 open Crypto
 
 type initial_operation =

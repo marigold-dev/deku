@@ -1,5 +1,5 @@
 open Helpers
-open Contract_vm
+open Contracts.Contract_vm
 module Map = Map.Make_with_yojson (Contract_address)
 
 type t = Contract.t Map.t [@@deriving yojson, eq]

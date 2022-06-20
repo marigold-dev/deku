@@ -1,5 +1,6 @@
 open Crypto
 open Core_deku
+open Contracts
 open Helpers_contracts
 
 let test_ok msg =

@@ -6,6 +6,12 @@ type t =
   | Originated of Contract_address.t
 [@@deriving eq, ord, yojson]
 
+let is_originated = function
+  | Originated _ -> true
+  | Implicit _ -> false
+
+let is_implicit t = not (is_originated t)
+
 let of_key_hash implicit = Implicit implicit
 
 let to_key_hash t =

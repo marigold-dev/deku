@@ -1,5 +1,6 @@
 open Helpers
 open Crypto
+open Contracts
 
 type t = {
   ledger : Ledger.t;

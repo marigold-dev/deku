@@ -1,4 +1,5 @@
 open Helpers
+open Contracts
 open Crypto
 
 type initial_operation =
