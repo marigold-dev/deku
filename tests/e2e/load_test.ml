@@ -93,6 +93,14 @@ let spam_transactions ~ticketer ~n () =
     Network.request_user_operations_gossip
       { user_operations = transactions }
       validator_uri in
+  let _ =
+    List.fold_left
+      (fun acc transaction ->
+        Format.eprintf "batch index, hash : %i %s\n%!" acc
+          (Crypto.BLAKE2B.to_string
+             transaction.Protocol.Operation.Core_user.hash);
+        acc + 1)
+      0 transactions in
   let transaction = transactions |> List.rev |> List.hd in
   Lwt.return transaction
 
@@ -131,14 +139,17 @@ end
 (* TODO: Fix this piece of crap
    This function is o(n) for the length of the blockchain and will redo the same computation until the thing we want is found. *)
 let rec get_last_block_height hash previous_level =
-  Format.eprintf "get_last_block_height\n";
   let open Network in
   let uri = get_random_validator_uri () in
+  Format.eprintf "operation_hash is : %s\n%!" (Crypto.BLAKE2B.to_string hash);
   let%await reply, new_level =
     request_block_by_user_operation_included
       { operation_hash = hash; previous_level }
       uri in
-
+  Format.eprintf "previous level is: %Ld\n%!" previous_level;
+  Format.eprintf "new level is : %Ld\n%!" new_level;
+  let%await block_level = get_current_block_level () in
+  Format.eprintf "current block is : %Ld\n%!" block_level;
   match reply with
   | Some block_height ->
     Format.eprintf "found get_last_block_height, it is %Ld\n%!" block_height;
@@ -146,14 +157,24 @@ let rec get_last_block_height hash previous_level =
     await block_height
   | None ->
     Format.eprintf "calling get_last_block_height again\n%!";
-    Unix.sleep 2;
-    get_last_block_height hash new_level
+    let rec wait_until_good () =
+      Unix.sleep 150;
+      if get_current_block_level () = await new_level then begin
+        Format.eprintf "waiting patiently!\n%!";
+        wait_until_good ()
+      end
+      else begin
+        Format.eprintf "calling self\n%!";
+        get_last_block_height hash new_level
+      end in
+    wait_until_good ()
 
 (* Spam transactions for m rounds,
    Get the final transaction hash
    Find the block_level the transaction is included at
    Get blocks & block time from start block to final block
 *)
+
 let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
   Format.eprintf "spam \n";
   let%await transaction =
@@ -169,12 +190,13 @@ let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
     let _ = Format.eprintf "round is not 1\n" in
     spam ~ticketer (rounds_left - 1) info
 
+(* How sure are we that
+    the blocks we're finding the length of here are the applied blocks?
+*)
 let process_transactions timestamps_and_blocks =
-  Format.eprintf "process_transaction\n";
   let timestamps, blocks =
     List.fold_left
       (fun acc bt ->
-        Format.eprintf "inside timestamps, blocks\n%!";
         let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
         let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
         (timestamps, blocks))
@@ -188,11 +210,10 @@ let process_transactions timestamps_and_blocks =
   let total_transactions =
     List.fold_left
       (fun acc block ->
-        Format.eprintf "inside total_transactions\n";
         let user_operations = Protocol.Block.parse_user_operations block in
-        let i = acc + List.length user_operations in
-        Format.eprintf "number of operations:%i\n%!" i;
-        Format.eprintf "acc:%i\n%!" acc;
+        let transactions_per_block = List.length user_operations in
+        let i = acc + transactions_per_block in
+        Format.eprintf "transactions per block:%i\n%!" transactions_per_block;
         i)
       0 blocks in
   Format.eprintf "total_transactions: %i\n%!" total_transactions;
@@ -215,11 +236,18 @@ let get_block_response_by_level level =
            level) in
   await (Option.get response)
 
+(*
+   When 
+   - (rounds, batch_size, batch_count) = (1, 10_000, 5) we think the nodes get ddossed because they seem to fall out of sync and we get the error 
+
+
+When we call handle_user_operation_was_included_in_block with a large number of transactions, we're pulling in a ton of data every time we make that call. This could be affecting things.
+
+*)
 let load_test_transactions _test_kind ticketer =
-  Format.eprintf "load_test_transactions";
   let rounds = 1 in
-  let batch_size = 3200 in
-  let batch_count = 1 in
+  let batch_size = 10_000 in
+  let batch_count = 5 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
@@ -234,6 +262,7 @@ let load_test_transactions _test_kind ticketer =
   let starting_point = Int64.to_int starting_block_level in
   Format.eprintf "starting point: %d\n%!" starting_point;
   (* TODO: Make sure this is always greater than 0 *)
+  (* TODO: Make sure that this function never calls the same level twice *)
   (* TODO: We should be able to turn this into a single list init*)
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) (fun i ->

@@ -78,6 +78,23 @@ let apply_block state block =
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
   let applied_blocks = (Unix.gettimeofday (), block) :: state.applied_blocks in
+  let _ =
+    let _, block = List.hd applied_blocks in
+    let user_operations' = Block.parse_user_operations block in
+    List.iteri
+      (fun index op ->
+        let len = List.length user_operations' in
+        Format.eprintf "transaction count: %i\n%!" len;
+        if len != 0 then
+          Format.eprintf "order : %i, %s\n%!" index
+            (Crypto.BLAKE2B.to_string op.Protocol.Operation.Core_user.hash))
+      user_operations' in
+
+  (* if len != 0 then
+     Format.eprintf
+       "block height(List.hd @@ List.r,v user_operations')hash : %Ld, %s\n%!"
+       block.block_height
+       (Crypto.BLAKE2B.to_string (List.hd user_operations').hash) in *)
   Ok
     ( {
         state with
