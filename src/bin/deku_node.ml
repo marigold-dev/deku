@@ -197,7 +197,7 @@ let node folder prometheus_port =
       Flows.received_tezos_operation (Server.get_state ()) update_state
         operation);
   Node.Server.start ~initial:node;
-  Dream.initialize_log ~level:`Warning ();
+  Dream.initialize_log ~level:`Debug ();
   let port =
     Sys.getenv_opt "PORT"
     |> Option.map int_of_string
