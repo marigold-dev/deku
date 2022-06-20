@@ -10,13 +10,14 @@ let
     finalImageName = "node";
   };
 
-in pkgs.dockerTools.buildImage {
+in
+pkgs.dockerTools.buildImage {
   name = "ghcr.io/marigold-dev/deku";
   tag = "latest";
 
   fromImage = baseImage;
 
-  contents = [ deku ];
+  contents = [ deku pkgs.cacert ];
 
   config = {
     author = "marigold.dev";
