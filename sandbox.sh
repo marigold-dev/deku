@@ -247,7 +247,7 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
+      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-info}" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
@@ -435,14 +435,21 @@ deposit_withdraw_test() {
 
 load_test () {
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
-  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+  # search deku-node pid and get the first one out to attach it when running load-test
+  node_pid=$(ps -A | grep -i deku-node | head -n 1 | cut -d "p" -f 1 )
+  echo "node_pid: $node_pid"
+
+  # perf record attach a process, sh -c run linux command
+  strace -c perf record -a -F 99 -g -p "$node_pid" -- sleep 3 sh -c "deku-load-test \"saturate\" \"$DUMMY_TICKET_ADDRESS\""
+  # read the result of perf.data, export it to a text file
+  #perf script -i perf.data > profile.linux-perf.txt
 }
 
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|start|tear-down|smoke-test"
+  echo "Usage: $0 setup|start|tear-down|smoke-test|load-test"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
