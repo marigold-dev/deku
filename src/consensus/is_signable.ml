@@ -48,9 +48,25 @@ let is_signable state block =
     List.for_all is_trusted_consensus_operation block.Block.consensus_operations
     && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
   in
-  is_next state block
-  && (not (is_signed_by_self state ~hash:block.hash))
-  && is_current_producer state ~key_hash:block.author
-  && (not (has_next_block_to_apply state ~hash:block.hash))
-  && all_operations_are_trusted
-  && block_has_signable_state_root_hash ~current_time state block
+  match () with 
+  | () when is_next state block -> 
+    Error `Is_not_next_block
+  | () when (not (is_signed_by_self state ~hash:block.hash)) -> 
+    Error `Is_already_signed_by_self
+  | 
+  let signable =
+    
+    && 
+    && is_current_producer state ~key_hash:block.author
+    && (not (has_next_block_to_apply state ~hash:block.hash))
+    && all_operations_are_trusted
+    && block_has_signable_state_root_hash ~current_time state block in
+  let open Helpers in
+  match signable with
+  | false when not (is_signed_by_self state ~hash:block.hash) ->
+    Log.info "Is already signed by";
+    false
+  | false when is_current_producer state ~key_hash:block.author ->
+    Log.
+    false
+  | _ -> true

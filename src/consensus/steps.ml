@@ -85,6 +85,7 @@ let append_operation ~operation state =
   ({ state with pending_operations }, step)
 
 let check_block ~block state =
+  Log.info "Checking %a" Block.pp block;
   let%ok () =
     is_valid_block state block
     |> Result.map_error (fun msg -> `Invalid_block msg) in
@@ -144,6 +145,7 @@ let is_signable_block ~block state =
 let sign_block ~block state =
   let secret = state.identity.secret in
   (* TODO: rename Block.sign ~key to ~secret *)
+  Log.info "Signing: %a" Block.pp block;
   let signature = Block.sign ~key:secret block in
   let hash = block.hash in
   Both

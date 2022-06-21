@@ -72,7 +72,7 @@ let is_next state block =
   && state.last_block_hash = block.previous_hash
 
 let apply_block state block =
-  Log.info "block: %Ld" block.Block.block_height;
+  Log.info "Applying: %a" Block.pp block;
   let user_operations = Block.parse_user_operations block in
   let state =
     List.fold_left apply_consensus_operation state block.consensus_operations
@@ -142,5 +142,5 @@ let get_current_block_producer state =
     None
   else
     let diff = Unix.time () -. state.last_applied_block_timestamp in
-    let skips = Float.to_int (diff /. 10.0) in
+    let skips = Float.to_int (diff /. 5.0) in
     Validators.after_current skips state.validators
