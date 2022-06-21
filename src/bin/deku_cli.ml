@@ -171,16 +171,12 @@ let ticket =
 let vm_flavor =
   let parser string =
     (match string with
-    | "Lambda" -> Some `Lambda
-    | "Dummy" -> Some `Dummy
     | "Wasm" -> Some `Wasm
     | _ -> None)
     |> Option.to_result ~none:(`Msg "Expected a valid Vm_flavor") in
   let printer fmt flavor =
     Format.fprintf fmt "%S"
       (match flavor with
-      | `Lambda -> "Lambda"
-      | `Dummy -> "Dummy"
       | `Wasm -> "Wasm") in
   let open Arg in
   conv ~docv:"Vm_flavor" (parser, printer)
@@ -255,12 +251,6 @@ let create_transaction node_folder sender_wallet_file received_address amount
           let payload =
             let open Contracts in
             match vm_flavor with
-            | `Lambda ->
-              let arg = Yojson.Safe.from_string arg in
-              Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-            | `Dummy ->
-              let arg = Yojson.Safe.from_string arg in
-              Contract_vm.Invocation_payload.dummy_of_yojson ~arg
             | `Wasm ->
               let arg = Yojson.Safe.from_string arg in
               Contract_vm.Invocation_payload.wasm_of_yojson ~arg in
@@ -295,7 +285,7 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda | `Wasm]) tickets =
+    sender_wallet_file (vm_flavor : [`Wasm]) tickets =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -317,20 +307,6 @@ let originate_contract node_folder contract_json initial_storage
       let%await payload =
         let open Contracts in
         match vm_flavor with
-        | `Lambda ->
-          let contract_program = Yojson.Safe.from_file contract_json in
-          let initial_storage = Yojson.Safe.from_file initial_storage in
-          Contract_vm.Origination_payload.lambda_of_yojson
-            ~code:contract_program ~storage:initial_storage
-          |> Result.get_ok
-          |> Lwt.return
-        | `Dummy ->
-          let initial_storage = Yojson.Safe.from_file initial_storage in
-          let int =
-            try Yojson.Safe.Util.to_int initial_storage with
-            | _ -> failwith "Invalid storage fro contract" in
-          Lwt.return
-            (Contract_vm.Origination_payload.dummy_of_yojson ~storage:int)
         | `Wasm ->
           let%await code =
             Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
@@ -381,11 +357,11 @@ let originate_contract =
     Arg.(required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
   in
   let vm_flavor =
-    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
+    let doc = "Virtual machine flavor. can only be Wasm for now" in
     let env = Cmd.Env.info "VM_FLAVOR" ~doc in
     Arg.(
       Arg.value
-      & opt ~vopt:`Lambda vm_flavor `Lambda
+      & opt ~vopt:`Wasm vm_flavor `Wasm
       & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let contract_json =
     let doc =
@@ -462,11 +438,11 @@ let create_transaction =
     value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
   in
   let vm_flavor =
-    let doc = "Virtual machine flavor. can be Lambda/Dummy/Wasm" in
+    let doc = "Virtual machine flavor. can be only be Wasm for now" in
     let env = Cmd.Env.info "VM_FLAVOR" ~doc in
     Arg.(
       Arg.value
-      & opt ~vopt:`Lambda vm_flavor `Lambda
+      & opt ~vopt:`Wasm vm_flavor `Wasm
       & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let open Term in
   lwt_ret

@@ -1,6 +1,6 @@
 (library
  (name core_deku)
- (libraries crypto tezos lambda_vm core smart_contracts)
+ (libraries crypto tezos  core smart_contracts)
  (preprocess
   (pps
    ppx_deriving.eq

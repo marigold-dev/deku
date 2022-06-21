@@ -1,6 +1,6 @@
 (library
  (name smart_contracts)
- (libraries crypto tezos helpers core lambda_vm wasm_vm)
+ (libraries crypto tezos helpers core wasm_vm)
  (preprocess
   (pps
    ppx_deriving.eq

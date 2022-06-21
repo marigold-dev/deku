@@ -1,5 +1,0 @@
-(test
- (name test_vm)
- (libraries lambda_vm core_deku alcotest qcheck-alcotest)
- (preprocess
-  (pps ppx_lambda_vm)))
