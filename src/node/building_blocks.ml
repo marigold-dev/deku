@@ -27,14 +27,15 @@ let validator_uris state =
     validators
 
 let broadcast_signature state ~hash ~signature =
-  let uris = validator_uris state in
-  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
+  Lwt.async (fun () ->
+    let%await node = state.Node.pollinate_node in
+    Network.broadcast_signature node { hash; signature })
 
 let broadcast_block state ~block =
-  let uris = validator_uris state in
   Lwt.async (fun () ->
-      let%await () = Lwt_unix.sleep 1.0 in
-      Network.broadcast_block uris { block })
+    let%await node = state.Node.pollinate_node in
+    let%await () = Lwt_unix.sleep 1.0 in
+    Network.broadcast_block node { block })
 
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in
