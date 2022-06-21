@@ -4,7 +4,7 @@ open Node
 open Helpers
 
 (*
-This load-test is for benchmarking the TPS of Deku. 
+This load-test measures the TPS capacity of Deku. 
 To run it do:
 ./sandbox.sh tear-down
 ./sandbox.sh setup 
@@ -14,6 +14,39 @@ To run it do:
 and in a new terminal do
 
 ./sandbox.sh load-test
+
+To test TPS, we create a large amount of "unit" transactions which transfer a dummy ticket from one hardcoded acount to another. These tickets do not contain data, and so performance will be different if change the tickets to a more representative kind. 
+The load-test then spams these transactions to the nodes. We select the hash of the last generated transaction, and query the Deku state until we can see that the operation corresponding to our hash has appeared in Deku's applied blocks. At this point we select the first block where that hash appears (final block), select the block where we started spamming transactions (initial block), grab the sizes of the applied blocks in this range, and calculate the time difference between the initial and final block. 
+
+Let:
+- I be the initial block
+- F be the final block
+- It be the timestamp of the initial block
+- Ft be the timestamp of the final block
+- let L be the length of the applied blocks 
+
+Then TPS(I, F) = L / (Ft - It)
+
+Note that the load-test calculates the TPS offline using Deku data after it has been recorded, as opposed to Prometheus which calculates TPS on the fly by observing variables in Deku.
+
+
+There are 4 parameters we can pass to the load-test: 
+- Round count
+- Batch count
+- Batch size
+- Wait time
+
+The amount of transactions we pass during the load-test is (Round count * Batch count * Batch size).
+
+The wait time is a tuning parameter that determines how long we wait before querying Deku about the applied blocks. 
+
+Currently we have no way to provide load test parameters of the form e.g. send 1k transactions a second for 5 minutes. 
+Instead our current tests look like e.g. send 50k transactions and tell me when they've all been processed.
+
+TODO: Tracking function runtime so we can run tests based on load rate instead of transaction count
+
+TODO: Write RPC to receive 
+
    *)
 
 open (
@@ -158,7 +191,11 @@ let rec get_last_block_height hash previous_level =
   | None ->
     Format.eprintf "calling get_last_block_height again\n%!";
     let rec wait_until_good () =
-      Unix.sleep 150;
+      (* This parameter controls how often we query Deku to see if
+          the final transaction has been included in applied blocks.
+          This number is high to prevent DDosing the nodes.
+      *)
+      Unix.sleep 10;
       if get_current_block_level () = await new_level then begin
         Format.eprintf "waiting patiently!\n%!";
         wait_until_good ()
@@ -175,6 +212,7 @@ let rec get_last_block_height hash previous_level =
    Get blocks & block time from start block to final block
 *)
 
+(* TODO: Make it so spam can take a sleep parameter to wait in-between spams *)
 let rec spam ~ticketer rounds_left ((batch_size, batch_count) as info) =
   Format.eprintf "spam \n";
   let%await transaction =
@@ -213,9 +251,10 @@ let process_transactions timestamps_and_blocks =
         let user_operations = Protocol.Block.parse_user_operations block in
         let transactions_per_block = List.length user_operations in
         let i = acc + transactions_per_block in
-        Format.eprintf "transactions per block:%i\n%!" transactions_per_block;
+        Format.eprintf "transactions per block, block height:%Ld, %i\n%!"
+          block.block_height transactions_per_block;
         i)
-      0 blocks in
+      0 (List.rev blocks) in
   Format.eprintf "total_transactions: %i\n%!" total_transactions;
   let tps = Float.of_int total_transactions /. time_elapsed in
   Format.eprintf "tps_process_transactions:%.3f\n%!" tps;
@@ -242,12 +281,12 @@ let get_block_response_by_level level =
 
 
 When we call handle_user_operation_was_included_in_block with a large number of transactions, we're pulling in a ton of data every time we make that call. This could be affecting things.
-
+TODO: Pass batch info as a parameter to load-test-transactions so we can run it over parameter space and see if we get different outputs. 
 *)
 let load_test_transactions _test_kind ticketer =
-  let rounds = 1 in
-  let batch_size = 10_000 in
+  let rounds = 500 in
   let batch_count = 5 in
+  let batch_size = 10 in
   let%await starting_block_level = get_current_block_level () in
   Format.eprintf "Starting block level: %Li\n%!" starting_block_level;
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in

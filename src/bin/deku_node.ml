@@ -101,29 +101,6 @@ let handle_block_by_level =
    is included
    We only iterate through blocks we haven't seen yet
 *)
-(*let handle_user_operation_was_included_in_block =
-  Format.eprintf "before before \n";
-  handle_request
-    (module Network.Block_user_operation_was_included)
-    (fun _update_state request ->
-      let open Protocol in
-      (* List.hd blocks is the most recent block *)
-      Format.eprintf "before state";
-      let state = Server.get_state () in
-      let block_height_opt =
-        Format.eprintf "within handle user operation was included in block ";
-        List.find_opt
-          (fun (_, block) ->
-            let user_operations = Block.parse_user_operations block in
-            List.exists
-              (fun op ->
-                Crypto.BLAKE2B.equal request.operation_hash
-                  op.Protocol.Operation.Core_user.hash)
-              user_operations)
-          state.applied_blocks
-        |> Option.map (fun (_, block) -> block.Block.block_height) in
-      Ok block_height_opt)*)
-
 let handle_user_operation_was_included_in_block =
   handle_request
     (module Network.Block_user_operation_was_included)
@@ -261,6 +238,11 @@ let handle_receive_user_operations_gossip =
             operation)
         () operations)
 
+let handle_receive_user_operations_noop =
+  handle_request
+    (module Network.User_operations_noop)
+    (fun _update_state _request -> Ok ())
+
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
@@ -325,6 +307,7 @@ let node folder minimum_block_delay prometheus_port =
              handle_register_uri;
              handle_receive_user_operation_gossip;
              handle_receive_user_operations_gossip;
+             handle_receive_user_operations_noop;
              handle_receive_consensus_operation;
              handle_withdraw_proof;
              handle_ticket_balance;

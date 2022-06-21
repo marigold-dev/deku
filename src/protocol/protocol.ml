@@ -72,8 +72,9 @@ let is_next state block =
   && state.last_block_hash = block.previous_hash
 
 let apply_block state block =
-  Log.info "block: %Ld" block.Block.block_height;
   let user_operations = Block.parse_user_operations block in
+  Log.info "block, num of ops: %Ld, %i" block.Block.block_height
+    (List.length user_operations);
   let state =
     List.fold_left apply_consensus_operation state block.consensus_operations
   in
