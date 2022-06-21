@@ -3,7 +3,7 @@ open Lwt_ext.Let_syntax
 (* lazy because Unix.fork stops working after domains start *)
 (* TODO: proper number of domains *)
 (* THIS IS GLOBAL STATE OUTSIDE OF src/node/server.ml. CAUTION *)
-let pool = lazy (Lwt_domain.setup_pool 8)
+let pool = lazy (Lwt_domain.setup_pool 16)
 
 let pool () = Lazy.force_val pool
 

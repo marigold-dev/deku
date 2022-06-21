@@ -238,10 +238,15 @@ let handle_receive_user_operations_gossip =
             operation)
         () operations)
 
+let _handle_receive_user_operations_noop =
+  let handler request =
+    let%await _body = Dream.body request in
+    let response = Network.User_operations_noop.response_to_yojson () in
+    Dream.json (Yojson.Safe.to_string response) in
+  Dream.post Network.User_operations_noop.path handler
+
 let handle_receive_user_operations_noop =
-  handle_request
-    (module Network.User_operations_noop)
-    (fun _update_state _request -> Ok ())
+  handle_request (module Network.User_operations_noop) (fun _ _ -> Ok ())
 
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)

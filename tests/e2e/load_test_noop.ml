@@ -112,19 +112,6 @@ let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
       (Core_deku.User_operation.make ~source:sender.key_hash
          (Transaction { destination = recipient.key_hash; amount; ticket }))
 
-let spam_transactions ~ticketer ~n () =
-  let validator_uri = get_random_validator_uri () in
-  let block_level = 0L in
-  let ticket = make_ticket ticketer in
-
-  let transactions =
-    List.init n (fun _ ->
-        make_transaction ~block_level ~ticket ~sender:alice_wallet
-          ~recipient:bob_wallet ~amount:1) in
-  Network.request_user_operations_noop
-    { user_operations = transactions }
-    validator_uri
-
 module Test_kind = struct
   (* TODO: this is a lot of boiler plate :(
      PPX to help with this? *)
@@ -157,30 +144,52 @@ module Test_kind = struct
     Arg.info [] ~doc ~docv
 end
 
-let rec spam ~ticketer rounds_left batch_size =
-  if rounds_left <= 0 then
-    await ()
-  else
-    let%await _ = spam_transactions ~ticketer ~n:batch_size () in
-    spam ~ticketer (rounds_left - 1) batch_size
+let spam ~batch_count ~batch rounds_left =
+  let rec go rounds_left =
+    if rounds_left <= 0 then
+      await ()
+    else
+      let%await () =
+        Lwt_list.iter_p
+          (fun _ ->
+            Network.request_user_operations_noop
+              { user_operations = batch }
+              (get_random_validator_uri ()))
+          (List.init batch_count Fun.id) in
+      go (rounds_left - 1) in
+  go rounds_left
+
+let cross_product a b =
+  a |> List.map (fun ax -> List.map (fun bx -> (ax, bx)) b) |> List.flatten
 
 let load_test_transactions _test_kind ticketer =
-  let rounds = 1 in
-  let batch_count = 100 in
-  let batch_size = 10_000 in
-  let start_time = Unix.gettimeofday () in
-  let requests =
-    List.init batch_count (fun _ -> spam ~ticketer rounds batch_size) in
-  Lwt_list.iter_p
-    (fun _ ->
+  let powers_of_2 =
+    List.init 10 (fun i -> 2. ** Float.of_int i |> Float.to_int) in
+  let params =
+    cross_product powers_of_2 powers_of_2
+    |> List.map (fun (batch_count, batch_size) ->
+           let batch =
+             List.init batch_size (fun _ ->
+                 make_transaction ~block_level:0L ~ticket:(make_ticket ticketer)
+                   ~sender:alice_wallet ~recipient:bob_wallet ~amount:0) in
+           (batch_count, batch_size, batch)) in
+  Format.eprintf "Batches ready, starting test\n%!";
+  print_endline "batch_count, batch_size, messages_per_second";
+  let samples = 5 in
+  Lwt_list.iter_s
+    (fun (batch_count, batch_size, batch) ->
+      Format.eprintf "Testing batch count: %d, batch size: %d\n" batch_count
+        batch_size;
+      let start_time = Unix.gettimeofday () in
+      let%await () = spam ~batch_count ~batch samples in
       let end_time = Unix.gettimeofday () in
       let duration = end_time -. start_time in
-      Format.eprintf "duration : %.3f\n" duration;
       let messages_per_second =
-        Float.of_int (rounds * batch_size) /. (end_time -. start_time) in
-      Format.eprintf "messages per second : %.3f\n" messages_per_second;
+        Float.of_int (samples * batch_count * batch_size) /. duration in
+      Format.eprintf "Duration: %.3f, mps: %.3f\n%!" duration messages_per_second;
+      Format.printf "%d, %d, %.3f\n" batch_count batch_size messages_per_second;
       await ())
-    requests
+    params
 
 let load_test_transactions test_kind ticketer =
   load_test_transactions test_kind ticketer |> Lwt_main.run
