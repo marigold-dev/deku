@@ -2,45 +2,56 @@ def add_sandbox (no_of_deku_nodes):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && nix run .#sandbox setup local %s" % no_of_deku_nodes,
+    "nix run .#sandbox setup local %s" % no_of_deku_nodes,
     resource_deps=["flextesa"],
     labels=["scripts"],
     )
 
-  if config.tilt_subcommand == "ci":
-    # bootstrap the deku network and run some tests
+def load_deku_services (deku_nodes):
+  for i in range(len(deku_nodes)):
+    http_request = http_get_action(9000 + i)
     local_resource(
-      "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
+      deku_nodes[i],
+      "dune build @install",
+      serve_cmd='deku-node "$DATA_DIRECTORY/$i" --listen-prometheus="900%s" -vv' % i,
+      serve_env={"DATA_DIRECTORY": "./data/%s" % i},
+      labels=["deku"],
       resource_deps=["deku-setup"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
+      readiness_probe=probe(http_get=http_request),
       allow_parallel=True,
-      )
+    )
 
-    local_resource(
-      "deposit-withdraw-test",
-      "sleep 5 && nix run .#sandbox deposit-withdraw-test",
-      resource_deps=["smoke-test"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      allow_parallel=True,
-      )
-  else:
-    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    local_resource(
-      "deku-net",
-      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
+  # bootstrap the deku network and run some tests
+  local_resource(
+    "smoke-test",
+    "nix run .#sandbox smoke-test local %s" % len(deku_nodes),
+    resource_deps=deku_nodes,
+    labels=["scripts"],
+    auto_init=config.tilt_subcommand == "ci", # trigger once at start if we're running ci
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    allow_parallel=True,
+    )
 
-def load_deku_services (_):
-  print('no-op')
+  local_resource(
+    "deposit-withdraw-test",
+    "nix run .#sandbox deposit-withdraw-test local %s" % len(deku_nodes),
+    resource_deps=["smoke-test"],
+    labels=["scripts"],
+    auto_init=config.tilt_subcommand == "ci", # trigger once at start if we're running ci
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    allow_parallel=True,
+    )
+    
+  local_resource(
+    'deku-net',
+    "nix run .#sandbox start local %s" % len(deku_nodes),
+    env={"DATA_DIRECTORY": "./data"},
+    resource_deps=deku_nodes,
+    labels=["scripts"],
+    auto_init=config.tilt_subcommand != "ci", # trigger once at start unless we're running ci
+    allow_parallel=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    )
 
 def make_deku_yaml (_):
   print('no-op')

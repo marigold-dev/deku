@@ -1,0 +1,16 @@
+# Setup configurations
+config.define_string("nodes", False, "specify number of deku nodes to run")
+config.define_string("mode", False, "specify what mode to run in, 'local' (default) or 'docker'")
+
+cfg = config.parse()
+
+no_of_deku_nodes = int(cfg.get('nodes', "3"))
+mode = cfg.get('mode', 'local')
+
+is_not_ci = config.tilt_subcommand != "ci"
+
+# Initialize list of deku nodes
+deku_nodes = [] 
+for i in range(no_of_deku_nodes):
+  deku_node_name = "deku-node-%s" % i
+  deku_nodes.append(deku_node_name)

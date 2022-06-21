@@ -1,26 +1,25 @@
 custom_build(
   'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
   'nix build .#docker && docker load < ./result',
-  ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
+  ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch for changes
   skips_local_docker=False,
   tag = "latest")
 
 def get_services(compose):
-    return compose.get("services").keys()
+  return compose.get("services").keys()
 
-def make_deku_yaml(n):
+def make_deku_yaml(deku_nodes):
   services = []
 
-  for i in range(n):
-    deku_node_name = "deku-node-%s" % i
-    services.append((deku_node_name, {
-    'container_name': deku_node_name,
-    'restart': 'always',
-    'image': 'ghcr.io/marigold-dev/deku',
-    'expose': [ 4040, 9000 ],
-    'ports': [ "444%s:4040" % i ],
-    'volumes': [ ("./data/%s:/app/data" % i) ],
-    'command': [ "/app/data", "--listen-prometheus=9000" ]
+  for i in range(len(deku_nodes)):
+    services.append((deku_nodes[i], {
+      'container_name': deku_nodes[i],
+      'restart': 'always',
+      'image': 'ghcr.io/marigold-dev/deku',
+      'expose': [ 4040, 9000 ],
+      'ports': [ "444%s:4040" % i ],
+      'volumes': [ ("./data/%s:/app/data" % i) ],
+      'command': [ "/app/data", "--listen-prometheus=9000", "-vv" ]
     }))
 
 
@@ -39,7 +38,6 @@ def make_deku_yaml(n):
     ]
   }
 
-
   prometheus_config_yaml = encode_yaml(prometheus_config)
   output_path = "/tmp/prometheus_config.yaml"
 
@@ -54,6 +52,8 @@ def make_deku_yaml(n):
     'ports': ['9090:9090'],
     'expose': [ 9090 ],
     'volumes': [ output_path + ':/etc/prometheus/prometheus.yml' ],
+    'network_mode': 'bridge',
+    'links': deku_nodes,
   }))
 
   services = {k: v for k, v in services}
@@ -62,37 +62,38 @@ def make_deku_yaml(n):
     'services': services
   })
 
-def load_deku_services (deku_yaml):
-  for deku_service in get_services(decode_yaml(deku_yaml)):
-      dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
+def load_deku_services (deku_nodes):
+  for deku_service in deku_nodes:
+    dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
+
+  # bootstrap the deku network and run some tests
+  local_resource(
+    "smoke-test",
+    "nix run .#sandbox smoke-test docker %s" % len(deku_nodes),
+    resource_deps=deku_nodes,
+    labels=["scripts"],
+    auto_init=config.tilt_subcommand == "ci", # trigger once at start if we're running ci
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    allow_parallel=True,
+    )
+
+  local_resource(
+    'deku-net',
+    "nix run .#sandbox start docker %s" % len(deku_nodes),
+    env={"DATA_DIRECTORY": "./data"},
+    resource_deps=deku_nodes,
+    labels=["scripts"],
+    auto_init=config.tilt_subcommand != "ci", # trigger once at start unless we're running ci
+    allow_parallel=False,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    )
 
 def add_sandbox (no_of_deku_nodes):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && nix run .#sandbox setup docker %s" % no_of_deku_nodes,
+    "nix run .#sandbox setup docker %s" % no_of_deku_nodes,
     resource_deps=["flextesa"],
     labels=["scripts"],
     )
-
-  if config.tilt_subcommand == "ci":
-    # bootstrap the deku network and run some tests
-    local_resource(
-      "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
-  else:
-    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    local_resource(
-      "deku-net",
-      "nix run .#sandbox start docker %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      )
     
