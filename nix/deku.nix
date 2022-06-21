@@ -37,7 +37,7 @@ in ocamlPackages.buildDunePackage rec {
   nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages
     ++ (with ocamlPackages; [ utop reason ]);
 
-  propagatedBuildInputs = with ocamlPackages;
+  buildInputs = with ocamlPackages;
     [
       cmdliner
       ppx_deriving
@@ -68,9 +68,9 @@ in ocamlPackages.buildDunePackage rec {
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs
-    # some benchmarking libraries are broken om m1, so we make them optional
-    ++ (if system != "aarch64-darwin" then [ landmarks ] else [ ]);
+    ++ checkInputs;
+
+  propagatedBuildInputs = [ cacert ];
 
   checkInputs = with ocamlPackages; [ alcotest qcheck qcheck-alcotest rely ];
 
@@ -78,18 +78,18 @@ in ocamlPackages.buildDunePackage rec {
   # This makes the result much smaller
   isLibrary = false;
   postFixup = ''
-    rm -rf $out/lib $out/nix-support $out/share/doc
+    rm -rf $out/lib $out/share/doc
     remove-references-to \
       -t ${ocamlPackages.ocaml} \
-      $out/bin/deku-{node,cli}
+      $out/bin/{asserter,deku-node,deku-cli}
   '' + (if static then ''
     # If we're building statically linked binaries everything should be possible to remove
     remove-references-to \
       -t ${pkgs.gmp} \
-      $out/bin/deku-{node,cli}
+      $out/bin/{asserter,deku-node,deku-cli}
     remove-references-to \
       -t ${pkgs.libffi} \
-      $out/bin/deku-{node,cli}
+      $out/bin/{asserter,deku-node,deku-cli}
   '' else
     "");
 }
