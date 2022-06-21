@@ -12,14 +12,14 @@ module Tickets = struct
   let singleton ~ticket ~amount =
     Ticket_map.of_seq (Seq.return (ticket, amount))
 
-  let merge t ~ticket ~amount =
-    let merger option ~amount =
+  let join t ~ticket ~amount =
+    let join option ~amount =
       let value = Option.fold ~none:amount ~some:Amount.(( + ) amount) option in
       value in
     Ticket_map.update ticket
       (fun x ->
-        let merged = merger ~amount x in
-        Option.some merged)
+        let joined = join ~amount x in
+        Option.some joined)
       t
 
   let get_and_remove t ~ticket ~to_take =
@@ -67,7 +67,7 @@ let balance t ~sender ~ticket =
 
 let update_or_create ~amount ~ticket t =
   Option.fold
-    ~some:(fun x -> Tickets.merge ~amount ~ticket x)
+    ~some:(fun x -> Tickets.join ~amount ~ticket x)
     ~none:(Tickets.singleton ~amount ~ticket)
     t
   |> Option.some
