@@ -44,7 +44,7 @@ jobs:
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
 
       - name: "tilt ci"
-        run: "nix develop -c tilt ci -- --mode=local"
+        run: "nix develop -c tilt ci"
 
   # Static and docker are linked because we're using the static build in docker
   static:

@@ -1,6 +1,6 @@
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
-config.define_string("mode", False, "specify what mode to run in, 'docker' (default) or 'local'")
+config.define_string("mode", False, "specify what mode to run in, 'local' (default) or 'docker'")
 
 if config.tilt_subcommand == "down":
   local("nix run .#sandbox tear-down")
@@ -8,7 +8,7 @@ if config.tilt_subcommand == "down":
 cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
-mode = cfg.get('mode', 'docker')
+mode = cfg.get('mode', 'local')
 
 def load_config ():
   if mode == "docker" :
