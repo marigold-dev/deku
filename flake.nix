@@ -116,6 +116,8 @@
             program = "${sandbox}/bin/sandbox.sh";
           };
         };
+
+        formatter = pkgs.treefmt;
       }) // {
         hydraJobs = {
           x86_64-linux = self.packages.x86_64-linux;

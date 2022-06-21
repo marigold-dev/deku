@@ -22,8 +22,8 @@ jobs:
       # Broken because we patch nixpkgs, can add it back when janestreet 0.15 is added upstream
       # - name: "Run nix flake check"
       #   run: nix flake check
-      - name: "Check nix formatting"
-        run: nix develop -c nixfmt --check ./flake.nix ./nix/*.nix
+      - name: "Check formatting"
+        run: nix fmt -- --fail-on-change
       - name: "Check shell formatting"
         run: nix develop -c shellcheck *.sh
       - name: "Run tests"
