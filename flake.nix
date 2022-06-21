@@ -41,19 +41,34 @@
       nix-filter.follows = "nix-filter";
       flake-utils.follows = "flake-utils";
     };
+
+    pollinate.url = "git+file:///home/arthur/Marigold/pollinate/";
+    pollinate.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      ocaml-overlay.follows = "ocaml-overlays";
+      flake-utils.follows = "flake-utils";
+      nix-filter.follows = "nix-filter";
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, ocaml-overlays
-    , prometheus-web, tezos, json-logs-reporter }:
-    let supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+    , prometheus-web, tezos, json-logs-reporter, pollinate }:
+    let
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
+
+      dream2nix-lib = dream2nix.lib2.init {
+        systems = supportedSystems;
+        config.projectRoot = ./.;
+      };
     in with flake-utils.lib;
     eachSystem supportedSystems (system:
       let
         pkgs = (ocaml-overlays.makePkgs { inherit system; }).appendOverlays [
-          (import ./nix/overlay.nix)
           prometheus-web.overlays.default
           tezos.overlays.default
           json-logs-reporter.overlays.default
+          pollinate.overlays.default
+          (import ./nix/overlay.nix)
         ];
 
         pkgs_static = pkgs.pkgsCross.musl64;

@@ -29,18 +29,48 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
-(* POST /append-block-and-signature *)
+(* POST /append-block-signature *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block =
+let handle_received_block_dream =
   handle_request
     (module Network.Block_spec)
     (fun request ->
       Flows.received_block request.block;
       Ok ())
 
+(* FIXME doc *)
+(* POST /append-block-and-signature *)
+(* If the block is not already known and is valid, add it to the pool *)
+let handle_received_block (msg : Pollinate.PNode.Message.t) =
+  let open Bin_prot.Read in
+  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
+  let payload_json = Yojson.Safe.from_string payload_str in
+  (* FIXME weird interface *)
+  let req = Network.Block_spec.request_of_yojson payload_json in
+  match req with
+  | Error err -> raise (Failure err)
+  | Ok request ->
+    Flows.received_block request.block;
+    Ok ()
+
+(* FIXME factorization *)
+let handle_received_signature pollinate_msg =
+  let open Bin_prot.Read in
+  let open Pollinate.PNode.Message in
+  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string pollinate_msg.payload in
+  let payload_json = Yojson.Safe.from_string payload_str in
+  let req = Network.Signature_spec.request_of_yojson payload_json in
+  match req with
+  | Error err -> raise (Failure err)
+  | Ok request ->
+    Flows.received_signature
+      ~hash:request.hash
+      ~signature:request.signature;
+    Ok ()
+
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
-let handle_received_signature =
+let handle_received_signature_dream =
   handle_request
     (module Network.Signature_spec)
     (fun request ->
@@ -179,10 +209,31 @@ let handle_ticket_balance =
       Ok { amount })
 
 let node folder port prometheus_port =
-  let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
+  let node =
+    Node_state.get_initial_state ~folder ~pollinate_node_opt:None
+    |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
+
+  let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
+   fun msg ->
+    Log.debug "MSG_HANDLER: Received message";
+    let subcategory_opt = msg.sub_category_opt in
+    let _ =
+      match subcategory_opt with
+      | None -> failwith "Deku messages must have a subcategory"
+      (* FIXME automate dispatch *)
+      | Some ("ChainOperation", "/append-block") ->
+        Log.debug "MSG_HANDLER: Received block";
+        handle_received_block msg
+      | Some ("ChainOperation", "/append-signature") ->
+        Log.debug "MSG_HANDLER: Received signature";
+        handle_received_signature msg
+      | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
+    (None, None) in
+
+  let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();
   let port =
     match port with
@@ -195,8 +246,8 @@ let node folder port prometheus_port =
       @@ Dream.router
            [
              handle_block_level;
-             handle_received_block;
-             handle_received_signature;
+             handle_received_block_dream;
+             handle_received_signature_dream;
              handle_block_by_hash;
              handle_block_by_level;
              handle_protocol_snapshot;
@@ -210,6 +261,7 @@ let node folder port prometheus_port =
              handle_trusted_validators_membership;
            ];
       Prometheus_dream.serve prometheus_port;
+      Pollinate.PNode.run_server ~msg_handler pollinate_node;
     ]
   |> Lwt_main.run
   |> ignore
