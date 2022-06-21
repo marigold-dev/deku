@@ -12,9 +12,7 @@ end
 module type Pollinate_endpoint = sig
   type request [@@deriving bin_io]
 
-  type response [@@deriving yojson]
-
-  val path : string
+  val name : string
 end
 
 exception Error_status
@@ -61,3 +59,21 @@ let broadcast_to_list (type req res)
   (* TODO: limit concurrency here *)
   |> Lwt_list.iter_p (fun uri ->
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
+
+let send_over_pollinate (type req)
+    (module E : Pollinate_endpoint with type request = req) node data recipients
+    =
+  let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
+  let message : Pollinate.PNode.Message.t =
+    {
+      category = Pollinate.PNode.Message.Post;
+      sub_category = Some ("ChainOperation", E.name);
+      request_ack = false;
+      id = -1;
+      timestamp = Unix.gettimeofday ();
+      sender = Pollinate.PNode.Client.address_of !node;
+      recipients = [];
+      payload = Pollinate.PNode.Message.{ data = data_bin_io; signature = None };
+    } in
+  let%await () = Pollinate.PNode.Client.broadcast node message recipients in
+  Lwt.return_unit

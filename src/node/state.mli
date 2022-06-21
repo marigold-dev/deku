@@ -14,6 +14,10 @@ module Address_map : Map.S with type key = Key_hash.t
 
 module Uri_map : Map.S with type key = Uri.t
 
+type pollinate_context =
+  | Client
+  | Server
+
 type t = {
   identity : identity;
   consensus : Consensus.t;
@@ -25,6 +29,7 @@ type t = {
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
+  pollinate_node : Pollinate.PNode.t ref Lwt.t;
 }
 
 val make :
@@ -35,4 +40,5 @@ val make :
   interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->
+  pollinate_context:pollinate_context ->
   t

@@ -32,6 +32,22 @@ let interop_context node_folder =
 let validator_uris ~interop_context =
   Tezos_interop.Consensus.fetch_validators interop_context
 
+(** FIXME, must be refactored *)
+let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
+ fun uri ->
+  Log.debug "Translating Uri.t to Pollinate.Address.t";
+  let address =
+    match Uri.host uri with
+    | Some "localhost" -> "127.0.0.1"
+    | Some "0.0.0.0" -> "127.0.0.1"
+    | Some address -> address
+    | _ -> failwith "Could not retrieve address from uri" in
+  let port =
+    match Uri.port uri with
+    | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
+    | None -> failwith "Could not retrieve port from uri." in
+  Pollinate.Address.create address port
+
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
@@ -609,18 +625,24 @@ let info_sign_block =
 let sign_block node_folder block_hash =
   let%await identity = read_identity ~node_folder in
   let signature = Signature.sign ~key:identity.secret block_hash in
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder
+      ~pollinate_context:Node.State.Client in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
     let validator_uris = List.map snd validator_uris |> List.somes in
+    let recipients = List.map uri_to_pollinate validator_uris in
+    let%await pollinate_node = state.pollinate_node in
     let%await () =
       let open Network in
-      broadcast_to_list
+      send_over_pollinate
         (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
+        pollinate_node
+        { hash = block_hash; signature }
+        recipients in
     Lwt.return (`Ok ())
 
 let sign_block_term =
@@ -639,7 +661,9 @@ let info_produce_block =
 
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
-  let%await state = Node_state.get_initial_state ~folder:node_folder in
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder
+      ~pollinate_context:Node.State.Client in
   let address = identity.t in
   let block =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
@@ -651,9 +675,13 @@ let produce_block node_folder =
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
     let validator_uris = List.map snd validator_uris |> List.somes in
+    let recipients = List.map uri_to_pollinate validator_uris in
+    let%await pollinate_node = state.pollinate_node in
     let%await () =
       let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
+      send_over_pollinate
+        (module Block_spec)
+        pollinate_node { block } recipients in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 
