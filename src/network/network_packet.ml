@@ -8,19 +8,15 @@ module Signature_spec = struct
     hash : BLAKE2B.t;
     signature : Signature.t;
   }
-  [@@deriving yojson, bin_io]
+  [@@deriving bin_io]
 
-  type response = unit [@@deriving yojson]
-
-  let path = "/append-signature"
+  let name = "append-signature"
 end
 
 module Block_spec = struct
-  type request = { block : Block.t } [@@deriving yojson, bin_io]
+  type request = { block : Block.t } [@@deriving bin_io]
 
-  type response = unit [@@deriving yojson]
-
-  let path = "/append-block"
+  let name = "append-block"
 end
 
 module Block_by_hash_spec = struct

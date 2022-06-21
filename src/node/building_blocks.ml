@@ -26,15 +26,33 @@ let validator_uris state =
       Node.Address_map.find_opt address state.Node.validators_uri)
     validators
 
+let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
+ fun uri ->
+  Log.debug "Translating Uri.t to Pollinate.Address.t";
+  let address =
+    match Uri.host uri with
+    | Some "localhost" -> "127.0.0.1"
+    | Some "0.0.0.0" -> "127.0.0.1"
+    | Some address -> address
+    | _ -> failwith "Could not retrieve address from uri" in
+  let port =
+    match Uri.port uri with
+    | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
+    | None -> failwith "Could not retrieve port from uri." in
+  Pollinate.Address.create address port
+
 let broadcast_signature state ~hash ~signature =
-  let uris = validator_uris state in
-  Lwt.async (fun () -> Network.broadcast_signature uris { hash; signature })
+  Lwt.async (fun () ->
+      let%await node = state.Node.pollinate_node in
+      let recipients = List.map uri_to_pollinate (validator_uris state) in
+      Network.broadcast_signature node { hash; signature } recipients)
 
 let broadcast_block state ~block =
-  let uris = validator_uris state in
   Lwt.async (fun () ->
+      let%await node = state.Node.pollinate_node in
       let%await () = Lwt_unix.sleep 1.0 in
-      Network.broadcast_block uris { block })
+      let recipients = List.map uri_to_pollinate (validator_uris state) in
+      Network.broadcast_block node { block } recipients)
 
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in
