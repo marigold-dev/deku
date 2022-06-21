@@ -433,6 +433,10 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
+load_test_noop () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  deku-load-test-noop "saturate" "$DUMMY_TICKET_ADDRESS"
+}
 load_test () {
   DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
   deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
@@ -506,6 +510,9 @@ deposit-dummy-ticket)
   ;;
 load-test)
   load_test
+  ;;
+load-test-noop)
+  load_test_noop
   ;;
 *)
   help

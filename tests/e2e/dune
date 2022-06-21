@@ -11,3 +11,11 @@
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
  (libraries bin_common lwt cmdliner))
+
+(executable
+ (name load_test_noop)
+ (public_name deku-load-test-noop)
+ (modules load_test_noop)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries bin_common lwt cmdliner))

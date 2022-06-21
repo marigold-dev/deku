@@ -45,7 +45,7 @@ Instead our current tests look like e.g. send 50k transactions and tell me when 
 
 TODO: Tracking function runtime so we can run tests based on load rate instead of transaction count
 
-TODO: Write RPC to receive 
+TODO: Do these numbers agree with prometheus
 
    *)
 
@@ -284,7 +284,7 @@ When we call handle_user_operation_was_included_in_block with a large number of 
 TODO: Pass batch info as a parameter to load-test-transactions so we can run it over parameter space and see if we get different outputs. 
 *)
 let load_test_transactions _test_kind ticketer =
-  let rounds = 500 in
+  let rounds = 500_000_000 in
   let batch_count = 5 in
   let batch_size = 10 in
   let%await starting_block_level = get_current_block_level () in
