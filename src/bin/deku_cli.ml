@@ -12,20 +12,7 @@ let () = Printexc.record_backtrace true
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
 
-
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
-
-let interop_context node_folder =
-  let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
-  Lwt.return
-    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
-       ~consensus_contract:context.consensus_contract
-       ~discovery_contract:context.discovery_contract
-       ~required_confirmations:context.required_confirmations)
-
-let validator_uris ~interop_context =
-  Tezos_interop.Consensus.fetch_validators interop_context
 
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
@@ -202,58 +189,43 @@ let info_create_transaction =
 let create_transaction node_folder sender_wallet_file received_address amount
     ticket argument vm_flavor =
   let open Network in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris -> (
-    let validator_uris =
-      List.filter_map
-        (function
-          | key_hash, Some uri -> Some (key_hash, uri)
-          | _ -> None)
-        validator_uris in
-    match validator_uris with
-    | [] -> Lwt.return (`Error (false, "No validators found"))
-    | (_, validator_uri) :: _ ->
-      let%await block_level_response = request_block_level () validator_uri in
-      let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let operation =
-        match (Address.to_key_hash received_address, argument) with
-        | Some addr, None ->
-          Core_deku.User_operation.make ~source:wallet.address
-            (Transaction { destination = addr; amount; ticket })
-        | Some _, Some _ ->
-          failwith "can't pass an argument to implicit account"
-        | None, None -> failwith "Invalid transaction"
-        | None, Some arg ->
-          let payload =
-            match vm_flavor with
-            | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-            | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
-          in
-          let arg = payload |> Result.get_ok in
-          Core_deku.User_operation.make ~source:wallet.address
-            (Contract_invocation
-               {
-                 to_invoke =
-                   Address.to_contract_hash received_address |> Option.get;
-                 argument = arg;
-               }) in
-      let transaction =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-          ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level ~data:operation in
+  let%await { uri; _ } = read_identity ~node_folder in
+  (* TODO: remove *)
+  let node_uri = uri in
+  let%await block_level_response = request_block_level () node_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    match (Address.to_key_hash received_address, argument) with
+    | Some addr, None ->
+      Core_deku.User_operation.make ~source:wallet.address
+        (Transaction { destination = addr; amount; ticket })
+    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
+    | None, None -> failwith "Invalid transaction"
+    | None, Some arg ->
+      let payload =
+        match vm_flavor with
+        | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
+        | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
+      let arg = payload |> Result.get_ok in
+      Core_deku.User_operation.make ~source:wallet.address
+        (Contract_invocation
+           {
+             to_invoke = Address.to_contract_hash received_address |> Option.get;
+             argument = arg;
+           }) in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
 
-      let%await identity = read_identity ~node_folder in
-      let%await () =
-        Network.request_user_operation_gossip
-          { user_operation = transaction }
-          identity.uri in
-      Format.printf "operation.hash: %s\n%!"
-        (BLAKE2B.to_string transaction.hash);
-      Lwt.return (`Ok ()))
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Network.request_user_operation_gossip
+      { user_operation = transaction }
+      identity.uri in
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+  Lwt.return (`Ok ())
 
 let info_originate_contract =
   let doc =
@@ -265,56 +237,42 @@ let info_originate_contract =
 let originate_contract node_folder contract_json initial_storage
     sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
   let open Network in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris -> (
-    let validator_uris =
-      List.filter_map
-        (function
-          | key_hash, Some uri -> Some (key_hash, uri)
-          | _ -> None)
-        validator_uris in
-    match validator_uris with
-    | [] -> Lwt.return (`Error (false, "No validators found"))
-    | (_, validator_uri) :: _ ->
-      let%await block_level_response = request_block_level () validator_uri in
-      let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let contract_program = Yojson.Safe.from_file contract_json in
-      let initial_storage = Yojson.Safe.from_file initial_storage in
-      let payload =
-        match vm_flavor with
-        | `Lambda ->
-          Contract_vm.Origination_payload.lambda_of_yojson
-            ~code:contract_program ~storage:initial_storage
-          |> Result.get_ok
-        | `Dummy ->
-          let int =
-            try Yojson.Safe.Util.to_int initial_storage with
-            | _ -> failwith "Invalid storage fro contract" in
-          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
-      let origination_op = User_operation.Contract_origination payload in
-      let originate_contract_op =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-          ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level
-          ~data:(User_operation.make ~source:wallet.address origination_op)
-      in
-      let%await identity = read_identity ~node_folder in
-      let%await () =
-        Network.request_user_operation_gossip
-          {
-            Network.User_operation_gossip.user_operation = originate_contract_op;
-          }
-          identity.uri in
-      Format.printf "operation_hash: %s\n%!"
-        (BLAKE2B.to_string originate_contract_op.hash);
-      Format.printf "contract_address: %s\n%!"
-        (Contract_address.of_user_operation_hash originate_contract_op.hash
-        |> Contract_address.to_string);
-      Lwt.return (`Ok ()))
+  let%await { uri; _ } = read_identity ~node_folder in
+  (* TODO: remove *)
+  let node_uri = uri in
+  let%await block_level_response = request_block_level () node_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let contract_program = Yojson.Safe.from_file contract_json in
+  let initial_storage = Yojson.Safe.from_file initial_storage in
+  let payload =
+    match vm_flavor with
+    | `Lambda ->
+      Contract_vm.Origination_payload.lambda_of_yojson ~code:contract_program
+        ~storage:initial_storage
+      |> Result.get_ok
+    | `Dummy ->
+      let int =
+        try Yojson.Safe.Util.to_int initial_storage with
+        | _ -> failwith "Invalid storage fro contract" in
+      Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
+  let origination_op = User_operation.Contract_origination payload in
+  let originate_contract_op =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level
+      ~data:(User_operation.make ~source:wallet.address origination_op) in
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Network.request_user_operation_gossip
+      { Network.User_operation_gossip.user_operation = originate_contract_op }
+      identity.uri in
+  Format.printf "operation_hash: %s\n%!"
+    (BLAKE2B.to_string originate_contract_op.hash);
+  Format.printf "contract_address: %s\n%!"
+    (Contract_address.of_user_operation_hash originate_contract_op.hash
+    |> Contract_address.to_string);
+  Lwt.return (`Ok ())
 
 let folder_node =
   let docv = "folder_node" in
