@@ -18,12 +18,12 @@ val empty : t
 val balance : Key_hash.t -> Ticket_id.t -> t -> Amount.t
 
 val transfer :
-  sender:Key_hash.t ->
+  sender:Address.t ->
   destination:Key_hash.t ->
   Amount.t ->
   Ticket_id.t ->
   t ->
-  (t, [> `Not_enough_funds]) result
+  (t, [> `Insufficient_funds]) result
 
 val deposit : Key_hash.t -> Amount.t -> Ticket_id.t -> t -> t
 
@@ -33,7 +33,7 @@ val withdraw :
   Amount.t ->
   Ticket_id.t ->
   t ->
-  (t * Withdrawal_handle.t, [> `Not_enough_funds]) result
+  (t * Withdrawal_handle.t, [> `Insufficient_funds]) result
 
 val withdrawal_handles_find_proof :
   Withdrawal_handle.t -> t -> (BLAKE2B.t * BLAKE2B.t) list
