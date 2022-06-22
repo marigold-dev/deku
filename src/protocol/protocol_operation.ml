@@ -60,13 +60,13 @@ module Core_user = struct
          secret"
 
   let verify ~hash ~key ~signature ~nonce ~block_height ~data =
-    (* let source = data.User_operation.source in *)
-    (* let%assert () =
+    let source = data.User_operation.source in
+    let%assert () =
       ( "Invalid core_user operation hash",
         verify ~hash ~nonce ~block_height ~data ) in
     let%assert () = ("Invalid core_user key", Key_hash.matches_key key source) in
     let%assert () =
-      ("Invalid core_user signature", Signature.verify key signature hash) in *)
+      ("Invalid core_user signature", Signature.verify key signature hash) in
     Ok { hash; key; signature; nonce; block_height; data }
 
   let of_yojson json =
