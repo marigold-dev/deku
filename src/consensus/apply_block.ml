@@ -95,4 +95,4 @@ let apply_block ~block state =
     Both
       ( Effect applied_block_effect,
         Effect persist_trusted_membership_change_effect ) in
-  Ok (state, Both (effects, Can_produce_block))
+  Ok (state, snapshot_ref, Both (effects, Can_produce_block))

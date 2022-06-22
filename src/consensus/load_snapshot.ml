@@ -82,19 +82,13 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
      In the future, we should only add snapshots once we're in sync. *)
   List.fold_left_ok
     (fun prev_state block ->
-      let%ok state, _step = apply_block ~block prev_state in
-      if
-        BLAKE2B.equal prev_state.protocol.state_root_hash
-          state.protocol.state_root_hash
-      then
-        Ok state
-      else
+      let%ok state, snapshot_ref, _step = apply_block ~block prev_state in
+      (match snapshot_ref with
+      | Some snapshot_ref ->
         (* TODO: this should be done in parallel, as otherwise the node
            may not be able to load the snapshot fast enough. *)
         let hash, data = Protocol.hash prev_state.protocol in
-        let snapshot_ref, snapshots =
-          Snapshots.add_snapshot_ref
-            ~block_height:prev_state.protocol.block_height state.snapshots in
-        let () = Snapshots.set_snapshot_ref snapshot_ref { hash; data } in
-        Ok { state with snapshots })
+        Snapshots.set_snapshot_ref snapshot_ref { hash; data }
+      | None -> ());
+      Ok state)
     t all_blocks
