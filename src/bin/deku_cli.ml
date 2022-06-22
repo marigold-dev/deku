@@ -7,10 +7,6 @@ open Bin_common
 let () = Printexc.record_backtrace true
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
-
-let make_filename_from_address wallet_addr_str =
-  Printf.sprintf "%s.tzsidewallet" wallet_addr_str
-
 let exits =
   Cmd.Exit.defaults
   @ [Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)"]
@@ -18,6 +14,9 @@ let exits =
 let lwt_ret p =
   let open Term in
   ret (const Lwt_main.run $ p)
+
+let make_filename_from_address wallet_addr_str =
+  Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
 let wallet =
   let parser file =
