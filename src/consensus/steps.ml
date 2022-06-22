@@ -5,10 +5,6 @@ open State
 open Is_signable
 open Consensus_utils
 
-type signed =
-  | Signed
-  | Not_signed
-
 type step =
   | Noop
   | Effect                    of Effect.t
@@ -42,8 +38,11 @@ type step =
   | Is_signable_block         of { block : Block.t }
   (* transition *)
   | Sign_block                of { block : Block.t }
-  (* verify *)
-  | Can_apply_block           of { block : Block.t }
+  (* transition *)
+  | Pre_apply_block           of {
+      block : Block.t;
+      signatures : Signatures.t;
+    }
   (* transition *)
   | Apply_block               of { block : Block.t }
   (* verify *)
@@ -122,20 +121,22 @@ let append_signature ~hash ~signature state =
   ({ state with block_pool }, Is_signed_block { hash })
 
 let is_signed_block ~hash state =
-  let signed = if is_signed_block_hash ~hash state then Signed else Not_signed in
+  let signed = is_signed_block_hash ~hash state in
   match (Block_pool.find_block ~hash state.block_pool, signed) with
   | Some block, _ -> Is_future_block { signed; block }
-  | None, Signed -> Effect (Request_block { hash })
+  | None, Signed _signatures -> Effect (Request_block { hash })
   | None, Not_signed -> Noop
 
-(* TODO: this is checking too much*)
+(* TODO: this is checking too much? *)
 let is_future_block ~signed ~block state =
   match (is_future_block state block, signed) with
   | `Past, _ ->
     (* TODO: may be malicious? Also, it may be a historical fork *)
     Noop
-  | `Next, _ -> Both (Is_signable_block { block }, Can_apply_block { block })
-  | `Future, Signed -> Effect (Request_previous_blocks { block })
+  | `Next, Signed signatures ->
+    Both (Is_signable_block { block }, Pre_apply_block { block; signatures })
+  | `Next, Not_signed -> Is_signable_block { block }
+  | `Future, Signed _signatures -> Effect (Request_previous_blocks { block })
   | `Future, Not_signed -> (* TODO: may be malicious? *) Noop
 
 let is_signable_block ~block state =
@@ -148,17 +149,12 @@ let sign_block ~block state =
   let hash = block.hash in
   Effect (Broadcast_signature { hash; signature })
 
-let can_apply_block ~block state =
-  (* WHY: sometimes the current machine tries to apply block twice
-     in the same stack, because it produced an additional signature.
-     Also it's a very good safeguard to have *)
-  if
-    is_next state block
-    && Block_pool.is_signed ~hash:block.hash state.block_pool
-  then
-    Apply_block { block }
-  else
-    Noop
+let pre_apply_block ~block ~signatures state =
+  let snapshots =
+    Snapshots.append_block ~pool:state.block_pool (block, signatures)
+      state.snapshots in
+  let state = { state with snapshots } in
+  (state, Apply_block { block })
 
 let can_produce_block state =
   if is_current_producer state ~key_hash:state.identity.t then

@@ -45,10 +45,15 @@ let is_future_block state block =
   else
     `Past
 
+type signed =
+  | Signed     of Signatures.t
+  | Not_signed
+
 let is_signed_block_hash ~hash state =
   match Block_pool.find_signatures ~hash state.block_pool with
-  | Some signatures -> Signatures.is_signed signatures
-  | None -> false
+  | Some signatures ->
+    if Signatures.is_signed signatures then Signed signatures else Not_signed
+  | None -> Not_signed
 
 let is_valid_block state block =
   let is_all_operations_properly_signed _block = true in

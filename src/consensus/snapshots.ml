@@ -95,5 +95,6 @@ let get_most_recent_snapshot t =
   | None -> Error `Node_not_yet_initialized
 
 let get_next_snapshot t =
+  Log.info "length: %d" (List.length t.next_snapshots);
   let%some _, snapshot = List.nth_opt t.next_snapshots 0 in
   Atomic.get snapshot
