@@ -1,7 +1,6 @@
 # Setup configurations
 config.define_string("nodes", False, "specify number of deku nodes to run")
 config.define_string("mode", False, "specify what mode to run in, 'local' (default) or 'docker'")
-config.define_bool("all-services", False, "flag for running all services")
 
 if config.tilt_subcommand == "down":
   local("nix run .#sandbox tear-down")
@@ -10,7 +9,7 @@ cfg = config.parse()
 
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 mode = cfg.get('mode', 'local')
-all_services = cfg.get('all-services', False)
+is_not_ci = config.tilt_subcommand != "ci"
 
 def load_config ():
   if mode == "docker" :
@@ -29,13 +28,13 @@ deku_yaml = make_deku_yaml(no_of_deku_nodes)
 # Run docker-compose
 docker_compose(["./docker-compose.yml", deku_yaml])
 
-dc_resource("db", labels=["tezos"], auto_init=all_services)
-dc_resource("elastic", labels=["tezos"], auto_init=all_services)
+dc_resource("db", labels=["tezos"], auto_init=is_not_ci)
+dc_resource("elastic", labels=["tezos"], auto_init=is_not_ci)
 dc_resource("flextesa", labels=["tezos"])
-dc_resource("gui", labels=["tezos"], auto_init=all_services)
-dc_resource("api", labels=["tezos"], auto_init=all_services)
-dc_resource("metrics", labels=["tezos"], auto_init=all_services)
-dc_resource("indexer", labels=["tezos"], auto_init=all_services)
+dc_resource("gui", labels=["tezos"], auto_init=is_not_ci)
+dc_resource("api", labels=["tezos"], auto_init=is_not_ci)
+dc_resource("metrics", labels=["tezos"], auto_init=is_not_ci)
+dc_resource("indexer", labels=["tezos"], auto_init=is_not_ci)
 
 dc_resource("prometheus", labels=["infra"])
 
