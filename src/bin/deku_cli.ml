@@ -1,16 +1,10 @@
 open Helpers
 open Crypto
-open Node
-open State
-open Protocol
 open Cmdliner
 open Core_deku
 open Bin_common
 
 let () = Printexc.record_backtrace true
-
-let read_identity ~node_folder =
-  Files.Identity.read ~file:(node_folder ^ "/identity.json")
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
@@ -186,12 +180,9 @@ let info_create_transaction =
   Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let create_transaction node_folder sender_wallet_file received_address amount
+let create_transaction node_uri sender_wallet_file received_address amount
     ticket argument vm_flavor =
   let open Network in
-  let%await { uri; _ } = read_identity ~node_folder in
-  (* TODO: remove *)
-  let node_uri = uri in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
@@ -219,11 +210,10 @@ let create_transaction node_folder sender_wallet_file received_address amount
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level ~data:operation in
 
-  let%await identity = read_identity ~node_folder in
   let%await () =
     Network.request_user_operation_gossip
       { user_operation = transaction }
-      identity.uri in
+      node_uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
   Lwt.return (`Ok ())
 
@@ -234,12 +224,9 @@ let info_originate_contract =
   Cmd.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
+let originate_contract node_uri contract_json initial_storage sender_wallet_file
+    (vm_flavor : [`Dummy | `Lambda]) =
   let open Network in
-  let%await { uri; _ } = read_identity ~node_folder in
-  (* TODO: remove *)
-  let node_uri = uri in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
@@ -262,11 +249,10 @@ let originate_contract node_folder contract_json initial_storage
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level
       ~data:(User_operation.make ~source:wallet.address origination_op) in
-  let%await identity = read_identity ~node_folder in
   let%await () =
     Network.request_user_operation_gossip
       { Network.User_operation_gossip.user_operation = originate_contract_op }
-      identity.uri in
+      node_uri in
   Format.printf "operation_hash: %s\n%!"
     (BLAKE2B.to_string originate_contract_op.hash);
   Format.printf "contract_address: %s\n%!"
@@ -274,11 +260,16 @@ let originate_contract node_folder contract_json initial_storage
     |> Contract_address.to_string);
   Lwt.return (`Ok ())
 
-let folder_node =
-  let docv = "folder_node" in
+let node_uri =
+  let docv = "node_uri" in
   let doc = "The folder where the node lives." in
   let open Arg in
-  required & pos 0 (some string) None & info [] ~doc ~docv
+  let uri =
+    let parser s = Ok (Uri.of_string s) in
+    let printer ppf uri = Format.fprintf ppf "%s" (Uri.to_string uri) in
+    let open Arg in
+    conv (parser, printer) in
+  required & pos 0 (some uri) None & info [] ~doc ~docv
 
 let originate_contract =
   let address_from =
@@ -311,7 +302,7 @@ let originate_contract =
   Term.(
     lwt_ret
       (const originate_contract
-      $ folder_node
+      $ node_uri
       $ contract_json
       $ initial_storage
       $ address_from
@@ -356,7 +347,7 @@ let create_transaction =
   let open Term in
   lwt_ret
     (const create_transaction
-    $ folder_node
+    $ node_uri
     $ address_from
     $ address_to
     $ amount
@@ -368,10 +359,9 @@ let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Cmd.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let withdraw node_folder sender_wallet_file tezos_address amount ticket =
+let withdraw node_uri sender_wallet_file tezos_address amount ticket =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await block_level_response = request_block_level () identity.uri in
+  let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
@@ -384,7 +374,7 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let%await () =
     Network.request_user_operation_gossip
       { user_operation = operation }
-      identity.uri in
+      node_uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash);
   Lwt.return (`Ok ())
 
@@ -416,17 +406,11 @@ let withdraw =
     required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
-    (const withdraw
-    $ folder_node
-    $ address_from
-    $ tezos_address
-    $ amount
-    $ ticket)
+    (const withdraw $ node_uri $ address_from $ tezos_address $ amount $ ticket)
 
-let withdraw_proof node_folder operation_hash callback =
+let withdraw_proof node_uri operation_hash callback =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await result = request_withdraw_proof { operation_hash } identity.uri in
+  let%await result = request_withdraw_proof { operation_hash } node_uri in
   match result with
   | Unknown_operation ->
     let message = BLAKE2B.to_string operation_hash ^ " is unknown" in
@@ -475,27 +459,25 @@ let withdraw_proof =
     required & pos 2 (some address_tezos_interop) None & info [] ~doc ~docv
   in
   let open Term in
-  lwt_ret
-    (const withdraw_proof $ folder_node $ operation_hash $ contract_callback)
+  lwt_ret (const withdraw_proof $ node_uri $ operation_hash $ contract_callback)
 
 let info_get_ticket_balance =
   let doc = "Get balance of a ticket for an account." in
   Cmd.info "get-balance" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let get_ticket_balance node_folder address ticket =
+let get_ticket_balance node_uri address ticket =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await result = request_ticket_balance { address; ticket } identity.uri in
+  let%await result = request_ticket_balance { address; ticket } node_uri in
   Format.printf "Balance: %i\n%!" (Amount.to_int result.amount);
   await (`Ok ())
 
 let get_ticket_balance =
   let open Term in
-  let folder_node =
-    let docv = "folder_node" in
+  let node_uri =
+    let docv = "node_uri" in
     let doc = "The folder where the node lives." in
     let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+    required & pos 0 (some uri) None & info [] ~doc ~docv in
   let address =
     let docv = "address" in
     let doc = "The account address to get the balance." in
@@ -506,7 +488,7 @@ let get_ticket_balance =
     let doc = "The ticket to get the balance." in
     let open Arg in
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
-  lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
+  lwt_ret (const get_ticket_balance $ node_uri $ address $ ticket)
 
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
@@ -528,70 +510,6 @@ let show_help =
     Cmd.info "deku-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
       ~man )
 
-let info_add_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "add-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let add_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Add } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let validator_address =
-  let docv = "validator_address" in
-  let doc = "The validator address to be added/removed as trusted" in
-  let open Arg in
-  required & pos 1 (some address_implicit) None & info [] ~docv ~doc
-
-let add_trusted_validator =
-  let open Term in
-  lwt_ret (const add_trusted_validator $ folder_node $ validator_address)
-
-let info_remove_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let remove_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Remove } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let remove_trusted_validator =
-  let open Term in
-  lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
-
 let default_info =
   let doc = "Deku cli" in
   let sdocs = Manpage.s_common_options in
@@ -610,7 +528,5 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_add_trusted_validator add_trusted_validator;
-         Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_get_ticket_balance get_ticket_balance;
        ]
