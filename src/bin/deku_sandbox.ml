@@ -2,6 +2,7 @@ open Cmdliner
 open Feather
 open Helpers
 open Crypto
+open Tezos
 
 let exits =
   Cmd.Exit.defaults
@@ -149,6 +150,86 @@ let ligo args = process "ligo" args
 
 let make_validators nodes = List.init nodes (fun i -> i)
 
+let fold_results acc =
+  List.fold_left
+    (fun acc res ->
+      match (acc, res) with
+      | Ok results, Ok res -> Ok (res :: results)
+      | Error err, _ -> Error err
+      | Ok _, Error err -> Error err)
+    acc
+
+let tezos_client args =
+  process "docker"
+    (List.append ["exec"; "-t"; "deku_flextesa"; "tezos-client"] args)
+  |> run_res ~error:"error in tezos-client"
+
+let rpc_url mode =
+  match mode with
+  | Docker -> "http://flextesa:20000"
+  | Local -> "http://localhost:20000"
+
+let get_contract_address rpc_url contract_name =
+  let%ok stdout =
+    tezos_client
+      ["--endpoint"; rpc_url; "show"; "known"; "contract"; contract_name] in
+  stdout
+  |> String.split_on_char '\n'
+  |> List.filter (String.starts_with ~prefix:"KT1")
+  |> (fun list -> List.nth_opt list 0)
+  |> Option.map String.trim
+  |> Option.map Address.of_string
+  |> Option.join
+  |> Option.to_result ~none:"Error in contract retrieving"
+
+let deploy_contract rpc_url contract_name contract_path storage wallet =
+  Format.printf "Originating new %s contract." contract_name;
+  let%ok storage =
+    ligo ["compile"; "storage"; contract_path; storage]
+    |> run_res ~error:"ligo compile storage error" in
+  let%ok contract =
+    ligo ["compile"; "contract"; contract_path]
+    |> run_res ~error:"ligo compile contract error" in
+  let%ok _ =
+    tezos_client
+      [
+        "--endpoint";
+        rpc_url;
+        "originate";
+        "contract";
+        contract_name;
+        "transferring";
+        "0";
+        "from";
+        wallet;
+        "running";
+        contract;
+        "--init";
+        storage;
+        "--burn-cap";
+        "2";
+        "--force";
+      ] in
+  get_contract_address rpc_url contract_name
+
+let deku_address =
+  "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf" |> Key_hash.of_string |> Option.get
+
+let get_deku_height rpc_url =
+  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+  let consensus_address = Address.to_string consensus_address in
+  let url =
+    Format.sprintf
+      "http://localhost:20000/chains/main/blocks/head/context/contracts/%s/storage"
+      consensus_address in
+  process "curl" ["--silent"; url]
+  |. process "jq" [".args[0].args[0].args[0].args[1].int"]
+  |. process "xargs" []
+  |> run_res ~error:"get deku-height with tezos-client error"
+  |> Result.map int_of_string_opt
+  |> Result.map (Option.to_result ~none:"cannot parse output from deku-height")
+  |> Result.join
+
 (* start *)
 let start_deku_cluster mode validators verbosity =
   (* Step 1: Starts all the nodes only if mode is set to local *)
@@ -268,7 +349,11 @@ let info_deposit_withdraw_test =
 
 (* deploy-dummy-ticket *)
 let deploy_dummy_ticket mode =
-  process "./sandbox.sh" ["deploy-dummy-ticket"; mode_to_string mode] |> run_ret
+  deploy_contract (rpc_url mode) "dummy_ticket" "./dummy_ticket.mligo" "()"
+    "bob"
+  |> Result.map Address.to_string
+  |> Result.map print_endline
+  |> ret_res
 
 let deploy_dummy_ticket =
   let open Term in
@@ -281,9 +366,33 @@ let info_deploy_dummy_ticket =
     ~man
 
 (* deposit-dummy-ticket *)
+let deposit_ticket rpc_url deku_address =
+  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+  let consensus_address = Address.to_string consensus_address in
+  let input =
+    Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100 0x)" consensus_address
+      (deku_address |> Key_hash.to_string) in
+  tezos_client
+    [
+      "--endpoint";
+      rpc_url;
+      "transfer";
+      "0";
+      "from";
+      "bob";
+      "to";
+      "dummy_ticket";
+      "--entrypoint";
+      "mint_to_deku";
+      "--arg";
+      input;
+      "--burn-cap";
+      "2";
+    ]
+
 let deposit_dummy_ticket mode =
-  process "./sandbox.sh" ["deposit-dummy-ticket"; mode_to_string mode]
-  |> run_ret
+  let rpc_url = rpc_url mode in
+  deposit_ticket rpc_url deku_address |> ret_res
 
 let deposit_dummy_ticket =
   let open Term in
