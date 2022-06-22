@@ -203,11 +203,15 @@ let info_start =
   Cmd.info "start" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
 (* tear-down *)
-let tear_down () = process "./sandbox.sh" ["tear-down"] |> run_ret
+let tear_down nodes =
+  make_validators nodes
+  |> List.map (fun i -> Format.sprintf "data/%i" i)
+  |> List.iter rm_dir;
+  `Ok 0
 
 let tear_down =
   let open Term in
-  const tear_down $ const () |> ret
+  const tear_down $ nodes |> ret
 
 let info_tear_down =
   let doc = "Stops the Tezos node and destroys the Deku state." in
