@@ -6,7 +6,9 @@ open Bin_common
 
 let () = Printexc.record_backtrace true
 
+(* TODO: move into a helper module *)
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
 let exits =
   Cmd.Exit.defaults
   @ [Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)"]
@@ -488,17 +490,6 @@ let get_ticket_balance =
     let open Arg in
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
   lwt_ret (const get_ticket_balance $ node_uri $ address $ ticket)
-
-let ensure_folder folder =
-  let%await exists = Lwt_unix.file_exists folder in
-  if exists then
-    let%await stat = Lwt_unix.stat folder in
-    if stat.st_kind = Lwt_unix.S_DIR then
-      await ()
-    else
-      raise (Invalid_argument (folder ^ " is not a folder"))
-  else
-    Lwt_unix.mkdir folder 0o700
 
 let default_info =
   let doc = "Deku cli" in
