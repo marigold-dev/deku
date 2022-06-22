@@ -1,0 +1,12 @@
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
+[formatter.ocaml]
+command = "dune"
+options = ["build", "@fmt", "--auto-promote"]
+includes = ["*.ml", "dune"]
+
+[formatter.javascript]
+command = "prettier"
+includes = ["*.js"]
