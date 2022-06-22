@@ -14,6 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache nix store
+        id: cache-static
+        uses: actions/cache@v3
+        with:
+          path: cache
+          key: ${{ runner.os }}-native-${{ hashFiles('flake.lock') }}
+
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
         with:
@@ -35,11 +42,25 @@ jobs:
       - name: "tilt ci"
         run: "nix develop -c tilt ci"
 
+      - name: "Copy store to cache"
+        run: |
+          mkdir -p ./cache
+          PATHS=$(nix show-derivation -r .#deku | jq -r '.[] | .inputDrvs | keys | .[]' | uniq | tail -n 50)
+          nix copy --to "file://$(pwd)/cache" $PATHS
+
+
   # Static and docker are linked because we're using the static build in docker
   static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Cache nix store
+        id: cache-static
+        uses: actions/cache@v3
+        with:
+          path: cache
+          key: ${{ runner.os }}-static-${{ hashFiles('flake.lock') }}
 
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
@@ -81,3 +102,9 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'docker')
         run: |
           docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+
+      - name: "Copy store to cache"
+        run: |
+          mkdir -p ./cache
+          PATHS=$(nix show-derivation -r .#docker | jq -r '.[] | .inputDrvs | keys | .[]' | uniq | tail -n 50)
+          nix copy --to "file://$(pwd)/cache" $PATHS
