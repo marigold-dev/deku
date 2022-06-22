@@ -190,7 +190,7 @@ let handle_ticket_balance =
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
 
-let node folder prometheus_port =
+let node folder port prometheus_port =
   let node = Node_state.get_initial_state ~folder |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation ->
@@ -199,9 +199,10 @@ let node folder prometheus_port =
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
   let port =
-    match Sys.getenv_opt "PORT" with
-    | Some port -> int_of_string port
+    match port with
+    | Some port -> port
     | None -> Node.Server.get_port () |> Option.value ~default:4440 in
+  Log.info "Listening on port %d" port;
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
@@ -267,12 +268,19 @@ let node =
     let docv = "Json logs" in
     let doc = "This determines whether logs will be printed in json format." in
     Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
+
+  let port =
+    let docv = "port" in
+    let doc = "The port to listen on for incoming messages." in
+    let env = Cmd.Env.info "PORT" ~doc in
+    Arg.(value & opt (some int) None & info ~doc ~docv ~env ["port"]) in
   let open Term in
   const node
   $ json_logs
   $ Fmt_cli.style_renderer ()
   $ Logs_cli.level ()
   $ folder_node
+  $ port
   $ Prometheus_dream.opts
 
 let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
