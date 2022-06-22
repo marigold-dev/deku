@@ -10,7 +10,3 @@ includes = ["*.ml", "dune"]
 [formatter.javascript]
 command = "prettier"
 includes = ["*.js"]
-
-[formatter.sh]
-command = "shellcheck"
-includes = ["*.sh"]
