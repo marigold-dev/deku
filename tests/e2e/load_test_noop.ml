@@ -152,9 +152,10 @@ let spam ~batch_count ~batch rounds_left =
       let%await () =
         Lwt_list.iter_p
           (fun _ ->
-            Network.request_user_operations_noop
-              { user_operations = batch }
-              (get_random_validator_uri ()))
+            let%await _ =
+              Network.raw_request Network.User_operations_noop.path batch
+                (get_random_validator_uri ()) in
+            await ())
           (List.init batch_count Fun.id) in
       go (rounds_left - 1) in
   go rounds_left
@@ -165,13 +166,18 @@ let cross_product a b =
 let load_test_transactions _test_kind ticketer =
   let powers_of_2 =
     List.init 10 (fun i -> 2. ** Float.of_int i |> Float.to_int) in
+  (* let params = [(2048, 128); (128, 2048)] in *)
   let params =
     cross_product powers_of_2 powers_of_2
     |> List.map (fun (batch_count, batch_size) ->
-           let batch =
+           let user_operations =
              List.init batch_size (fun _ ->
                  make_transaction ~block_level:0L ~ticket:(make_ticket ticketer)
                    ~sender:alice_wallet ~recipient:bob_wallet ~amount:0) in
+           let batch =
+             { user_operations }
+             |> Network.User_operations_noop.request_to_yojson
+             |> Yojson.Safe.to_string in
            (batch_count, batch_size, batch)) in
   Format.eprintf "Batches ready, starting test\n%!";
   print_endline "batch_count, batch_size, messages_per_second";
@@ -186,8 +192,10 @@ let load_test_transactions _test_kind ticketer =
       let duration = end_time -. start_time in
       let messages_per_second =
         Float.of_int (samples * batch_count * batch_size) /. duration in
-      Format.eprintf "Duration: %.3f, mps: %.3f\n%!" duration messages_per_second;
-      Format.printf "%d, %d, %.3f\n" batch_count batch_size messages_per_second;
+      Format.eprintf "Duration: %.3f, mps: %.3f\n%!" duration
+        messages_per_second;
+      Format.printf "%d, %d, %.3f\n%!" batch_count batch_size
+        messages_per_second;
       await ())
     params
 
