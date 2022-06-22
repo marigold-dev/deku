@@ -501,15 +501,6 @@ let ensure_folder folder =
   else
     Lwt_unix.mkdir folder 0o700
 
-let show_help =
-  let doc = "a tool for interacting with the WIP Tezos Sidechain" in
-  let sdocs = Manpage.s_common_options in
-  let exits = Cmd.Exit.defaults in
-  ( (let open Term in
-    ret (const (`Help (`Pager, None)))),
-    Cmd.info "deku-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
-      ~man )
-
 let default_info =
   let doc = "Deku cli" in
   let sdocs = Manpage.s_common_options in
