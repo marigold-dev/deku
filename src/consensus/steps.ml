@@ -146,9 +146,7 @@ let sign_block ~block state =
   (* TODO: rename Block.sign ~key to ~secret *)
   let signature = Block.sign ~key:secret block in
   let hash = block.hash in
-  Both
-    ( Effect (Broadcast_signature { hash; signature }),
-      Check_signature { hash; signature } )
+  Effect (Broadcast_signature { hash; signature })
 
 let can_apply_block ~block state =
   (* WHY: sometimes the current machine tries to apply block twice
