@@ -164,21 +164,25 @@ let cross_product a b =
   a |> List.map (fun ax -> List.map (fun bx -> (ax, bx)) b) |> List.flatten
 
 let load_test_transactions _test_kind ticketer =
-  let powers_of_2 =
-    List.init 10 (fun i -> 2. ** Float.of_int i |> Float.to_int) in
-  (* let params = [(2048, 128); (128, 2048)] in *)
   let params =
-    cross_product powers_of_2 powers_of_2
+    (* Chosen ad hoc as a number that finished reasonably quickly. *)
+    let n = 13 in
+    List.init n (fun i ->
+        let i = i |> Float.of_int in
+        (2. ** i, 2. ** (Float.of_int n -. i))) in
+  let params =
+    params
     |> List.map (fun (batch_count, batch_size) ->
            let user_operations =
-             List.init batch_size (fun _ ->
+             List.init (batch_size |> Float.to_int) (fun _ ->
                  make_transaction ~block_level:0L ~ticket:(make_ticket ticketer)
                    ~sender:alice_wallet ~recipient:bob_wallet ~amount:0) in
            let batch =
              { user_operations }
              |> Network.User_operations_noop.request_to_yojson
              |> Yojson.Safe.to_string in
-           (batch_count, batch_size, batch)) in
+           (batch_count |> Float.to_int, batch_size |> Float.to_int, batch))
+  in
   Format.eprintf "Batches ready, starting test\n%!";
   print_endline "batch_count, batch_size, messages_per_second";
   let samples = 5 in
