@@ -258,7 +258,7 @@ let node json_logs style_renderer level folder prometheus_port =
     (Logs.Src.list ());
   node folder prometheus_port
 
-let node =
+let start_node =
   let folder_node =
     let docv = "folder_node" in
     let doc = "Path to the folder containing the node configuration data." in
@@ -277,4 +277,14 @@ let node =
   $ folder_node
   $ Prometheus_dream.opts
 
-let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
+let info_start_node =
+  let doc = "Starts the deku node." in
+  Cmd.info "start" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
+let default_info =
+  let doc = "Deku cli" in
+  let sdocs = Manpage.s_common_options in
+  let exits = Cmd.Exit.defaults in
+  Cmd.info "side-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
+
+let _ = Cmd.eval @@ Cmd.group default_info [Cmd.v info_start_node start_node]
