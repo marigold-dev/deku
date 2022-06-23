@@ -24,8 +24,6 @@ jobs:
       #   run: nix flake check
       - name: "Check formatting"
         run: nix fmt -- --fail-on-change
-      - name: "Check shell formatting"
-        run: nix develop -c shellcheck *.sh
       - name: "Run tests"
         run: nix develop -c dune build @check @runtest --force --no-buffer
       - name: "Build deku via flakes"

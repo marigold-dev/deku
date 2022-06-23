@@ -1,9 +1,9 @@
-def add_sandbox (no_of_deku_nodes):
+def add_sandbox (no_of_deku_nodes, need_rebuild):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && nix run .#sandbox setup local %s" % no_of_deku_nodes,
-    resource_deps=["flextesa"],
+    "sleep 5 && nix run .#sandbox setup -- --mode local --nodes %s" % no_of_deku_nodes,
+    resource_deps=["flextesa"] + ["rebuild"] if need_rebuild else [],
     labels=["scripts"],
     )
 
@@ -11,7 +11,7 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network and run some tests
     local_resource(
       "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
+      "sleep 5 && nix run .#sandbox smoke-test -- --mode local --nodes %s" % no_of_deku_nodes,
       resource_deps=["deku-setup"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
@@ -32,7 +32,7 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network, it will be run after deku-setup and the nodes have started
     local_resource(
       "deku-net",
-      serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
+      serve_cmd="nix run .#sandbox start -- --mode local --nodes %s" % no_of_deku_nodes,
       resource_deps=["deku-setup"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
