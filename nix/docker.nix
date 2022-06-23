@@ -23,6 +23,10 @@ in pkgs.dockerTools.buildImage {
     architecture = "amd64";
     os = "linux";
 
+    Env = [
+      "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+      "NIX_SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+    ];
     WorkingDir = "/app";
     Entrypoint = [ "${deku}/bin/deku-node" ];
     Cmd = [ "/app/data" ];
