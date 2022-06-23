@@ -29,6 +29,7 @@ jobs:
 
       # We don't check the signature because we're the one that created the cache
       - name: Restore cache
+        if: steps.cache-primes.outputs.cache-hit == 'true'
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
@@ -77,6 +78,7 @@ jobs:
 
       # We don't check the signature because we're the one that created the cache
       - name: Restore cache
+        if: steps.cache-primes.outputs.cache-hit == 'true'
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
