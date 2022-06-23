@@ -25,3 +25,6 @@ let-and = sparse
 type-decl = sparse
 sequence-blank-line=preserve-one
 module-item-spacing=sparse
+margin=80
+parse-docstrings       
+wrap-comments

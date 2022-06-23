@@ -46,20 +46,19 @@ let http_post_data_encoding ~node_uri ~path ~of_yojson ~data =
   let data = Data_encoding.Json.to_string data in
   http_request ~node_uri ~path ~method_:POST of_yojson data
 
-(* The two functions below, make_lazy_lexbuf and lazy_json_from_stream
-   exists to provide a way to continuously transform an string Lwt_stream into
+(* The two functions below, make_lazy_lexbuf and lazy_json_from_stream exists to
+   provide a way to continuously transform an string Lwt_stream into
    Yojson.Safe.t Lwt_stream.
 
-     To achieve that we're using of OCaml 5.00 algebraic effects,
-   as it allows to pause any function.
+   To achieve that we're using of OCaml 5.00 algebraic effects, as it allows to
+   pause any function.
 
-     In more details, every time something tries to read from this lexbuf
-   if the internal buffer is empty, it will dispatch a `Poll_data` effect,
-   which will have its continuation stored and resumed when `feed` is called.
-   As Yojson.Safe.read_json tries to read from this lexbuf, it will stops as
-   soon as there is not enough data available in the buffer and only be
-   resumed when `feed` is called, `feed` is then driven by an string Lwt_stream.
-*)
+   In more details, every time something tries to read from this lexbuf if the
+   internal buffer is empty, it will dispatch a `Poll_data` effect, which will
+   have its continuation stored and resumed when `feed` is called. As
+   Yojson.Safe.read_json tries to read from this lexbuf, it will stops as soon
+   as there is not enough data available in the buffer and only be resumed when
+   `feed` is called, `feed` is then driven by an string Lwt_stream. *)
 let make_lazy_lexbuf read =
   let open Effect in
   let module M = struct
@@ -99,10 +98,8 @@ let make_lazy_lexbuf read =
   let () = Deep.try_with read lexbuf { effc = handler } in
   feed
 
-(* TODO: what is the failure modes of this?
-         Any possible memory leak?
-         What happens if invalid JSON on the input?
-*)
+(* TODO: what is the failure modes of this? Any possible memory leak? What
+   happens if invalid JSON on the input? *)
 let lazy_json_from_stream string_stream =
   let pending = ref [] in
 

@@ -44,8 +44,8 @@ let minimum_signable_time_between_epochs = 10.0
 
 let maximum_signable_time_between_epochs = 20.0
 
-(** Used to add a delay between a tezos operation being confirmed,
-  needs to be bigger than the polling interval for operations *)
+(** Used to add a delay between a tezos operation being confirmed, needs to be
+    bigger than the polling interval for operations *)
 let minimum_waiting_period_for_tezos_operation = 5.0
 (* TODO: this is an workaround solution, replace it by Tezos_rpc *)
 

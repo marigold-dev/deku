@@ -16,8 +16,8 @@ val http_get_listen :
   path:string ->
   of_yojson:(Yojson.Safe.t -> ('a, string) result) ->
   ('a Lwt_stream.t, Error.error) result Lwt.t
-(** Makes a forever-lived HTTP request and return a stream with each
-  entry on the response body. Used with Tezos /monitor endpoints. *)
+(** Makes a forever-lived HTTP request and return a stream with each entry on
+    the response body. Used with Tezos /monitor endpoints. *)
 
 val http_post_data_encoding :
   node_uri:Uri.t ->

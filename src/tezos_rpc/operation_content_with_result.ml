@@ -28,8 +28,8 @@ type t =
   | Non_transaction
 
 module Decoder = struct
-  (* TODO: what to do when some operations are not known?
-        Let's say by a bug or because the format changed? *)
+  (* TODO: what to do when some operations are not known? Let's say by a bug or
+     because the format changed? *)
   (* TODO: also, how is the failure mode, exceptions or result???*)
   type kind =
     | Kind_transaction
@@ -112,7 +112,8 @@ module Decoder = struct
   let transaction_operation_of_yojson json =
     let%ok { source; destination; parameters; metadata } =
       transaction_operation_of_yojson json in
-    (* TODO: does applied here represents also the status of all the internal_transactions? *)
+    (* TODO: does applied here represents also the status of all the
+       internal_transactions? *)
     let initial_transaction =
       Internal_transaction { sender = Implicit source; destination; parameters }
     in

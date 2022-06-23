@@ -3,8 +3,8 @@ open Crypto
 open Tezos
 open Tezos_rpc
 
-(* This file only contains manual tests, to run them you need to have a
-   Tezos node running and uncomment the tests on the tests list below.
+(* This file only contains manual tests, to run them you need to have a Tezos
+   node running and uncomment the tests on the tests list below.
 
    You may also want to change the node_uri and/or the secret key below. *)
 
@@ -39,8 +39,8 @@ let fetch_block_operations ~block_hash () =
   | Error err -> failwith_err err);
   Lwt.return_unit
 
-(* WARNING: This will never stop.
-   It also doesn't show in the terminal, so use dune exec *)
+(* WARNING: This will never stop. It also doesn't show in the terminal, so use
+   dune exec *)
 let listen_to_chain_heads () =
   let%await result =
     Tezos_rpc.Listen_to_chain_heads.execute ~node_uri ~chain:None in
@@ -53,8 +53,8 @@ let listen_to_chain_heads () =
       stream
   | Error err -> failwith_err err
 
-(* WARNING: This will never stop.
-   It also doesn't show in the terminal, so use dune exec *)
+(* WARNING: This will never stop. It also doesn't show in the terminal, so use
+   dune exec *)
 let listen_to_blocks () =
   let%await result = Tezos_rpc.Listen_to_blocks.execute ~node_uri in
   match result with

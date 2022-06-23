@@ -33,7 +33,7 @@ type step =
     }
   (* verify *)
   | Is_signed_block           of { hash : BLAKE2B.t }
-  (* verify  *)
+  (* verify *)
   | Is_future_block           of {
       signed : signed;
       block : Block.t;
@@ -100,10 +100,10 @@ let append_block ~block state =
 let check_signature ~hash ~signature state =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
-  (* TODO: consider edge-cases related to the node being out sync.
-     If validators changed and you are out of sync, you will reject valid
-     signatures or accept invalid signatures (the node can wait and restart to back in sync by querying
-     the Tezos contract) *)
+  (* TODO: consider edge-cases related to the node being out sync. If validators
+     changed and you are out of sync, you will reject valid signatures or accept
+     invalid signatures (the node can wait and restart to back in sync by
+     querying the Tezos contract) *)
   (* TODO: *)
   let%assert () =
     (`Not_a_validator, is_validator_address state (Signature.address signature))
@@ -151,9 +151,9 @@ let sign_block ~block state =
       Check_signature { hash; signature } )
 
 let can_apply_block ~block state =
-  (* WHY: sometimes the current machine tries to apply block twice
-     in the same stack, because it produced an additional signature.
-     Also it's a very good safeguard to have *)
+  (* WHY: sometimes the current machine tries to apply block twice in the same
+     stack, because it produced an additional signature. Also it's a very good
+     safeguard to have *)
   if
     is_next state block
     && Block_pool.is_signed ~hash:block.hash state.block_pool

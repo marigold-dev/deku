@@ -26,9 +26,9 @@ type t = {
   data_folder : string;
   pending_operations : timestamp Operation_map.t;
   block_pool : Block_pool.t;
-  (* TODO: we need a bound on the size of this and put
-     behind an abstract type. We should also change how
-     this works once we have an indexer. See https://github.com/marigold-dev/deku/issues/535 *)
+  (* TODO: we need a bound on the size of this and put behind an abstract type.
+     We should also change how this works once we have an indexer. See
+     https://github.com/marigold-dev/deku/issues/535 *)
   applied_blocks : Block.t list;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
@@ -165,17 +165,18 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       last_seen_membership_change_timestamp = 0.0;
     } in
   (* TODO: this causes syncing to fail unless the snapshot is newer than the
-     current block height, which is not always true (i.e, if you restart
-     a node that's in sync very quickly. We need to have a more discerning
-     validation here. *)
+     current block height, which is not always true (i.e, if you restart a node
+     that's in sync very quickly. We need to have a more discerning validation
+     here. *)
   let%assert () =
     (`Invalid_snapshot_height, protocol.block_height > t.protocol.block_height)
   in
   let t = { t with protocol; block_pool } in
-  (* TODO: it doesn't seem valid to add a snapshot here based on the information received
-     from our (untrusted) peer; however, that's exactly what we're doing here. Supposing
-     the peer sending the snapshot is dishonest, we will then start propogating a bad snapshot.
-     In the future, we should only add snapshots once we're in sync. *)
+  (* TODO: it doesn't seem valid to add a snapshot here based on the information
+     received from our (untrusted) peer; however, that's exactly what we're
+     doing here. Supposing the peer sending the snapshot is dishonest, we will
+     then start propogating a bad snapshot. In the future, we should only add
+     snapshots once we're in sync. *)
   List.fold_left_ok
     (fun prev_state block ->
       let%ok state, _user_operations = apply_block prev_state block in
@@ -185,8 +186,8 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       then
         Ok state
       else
-        (* TODO: this should be done in parallel, as otherwise the node
-           may not be able to load the snapshot fast enough. *)
+        (* TODO: this should be done in parallel, as otherwise the node may not
+           be able to load the snapshot fast enough. *)
         let hash, data = Protocol.hash prev_state.protocol in
         let snapshot_ref, snapshots =
           Snapshots.add_snapshot_ref

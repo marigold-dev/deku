@@ -34,9 +34,8 @@ let signatures_required state =
 
 let is_next state block = Protocol.is_next state.protocol block
 
-(* `Next means current_block_height + 1
-   `Future means current_block_height + 2 + n
-   `Past means current_block_height - n *)
+(* `Next means current_block_height + 1 `Future means current_block_height + 2 +
+   n `Past means current_block_height - n *)
 let is_future_block state block =
   if is_next state block then
     `Next
