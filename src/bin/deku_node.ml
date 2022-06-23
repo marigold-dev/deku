@@ -4,6 +4,29 @@ open Node
 open Consensus
 open Bin_common
 
+(* TODO: move into a helper module *)
+let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
+let exits =
+  Cmd.Exit.defaults
+  @ [Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)"]
+
+(* We will need these later *)
+let _lwt_ret p =
+  let open Term in
+  ret (const Lwt_main.run $ p)
+
+let _ensure_folder folder =
+  let%await exists = Lwt_unix.file_exists folder in
+  if exists then
+    let%await stat = Lwt_unix.stat folder in
+    if stat.st_kind = Lwt_unix.S_DIR then
+      await ()
+    else
+      raise (Invalid_argument (folder ^ " is not a folder"))
+  else
+    Lwt_unix.mkdir folder 0o700
+
 let ignore_some_errors = function
   | Error #Flows.ignore -> Ok ()
   | v -> v
@@ -257,7 +280,7 @@ let node json_logs style_renderer level folder prometheus_port =
     (Logs.Src.list ());
   node folder prometheus_port
 
-let node =
+let start_node =
   let folder_node =
     let docv = "folder_node" in
     let doc = "Path to the folder containing the node configuration data." in
@@ -283,4 +306,14 @@ let node =
   $ port
   $ Prometheus_dream.opts
 
-let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
+let info_start_node =
+  let doc = "Starts the deku node." in
+  Cmd.info "start" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
+
+let default_info =
+  let doc = "Deku cli" in
+  let sdocs = Manpage.s_common_options in
+  let exits = Cmd.Exit.defaults in
+  Cmd.info "side-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
+
+let _ = Cmd.eval @@ Cmd.group default_info [Cmd.v info_start_node start_node]

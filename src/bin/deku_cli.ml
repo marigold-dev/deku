@@ -1,39 +1,13 @@
 open Helpers
 open Crypto
-open Node
-open State
-open Protocol
 open Cmdliner
 open Core_deku
 open Bin_common
 
 let () = Printexc.record_backtrace true
 
-let read_identity ~node_folder =
-  Files.Identity.read ~file:(node_folder ^ "/identity.json")
-
-let write_identity ~node_folder =
-  Files.Identity.write ~file:(node_folder ^ "/identity.json")
-
-let write_interop_context ~node_folder =
-  Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
-
+(* TODO: move into a helper module *)
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
-
-let interop_context node_folder =
-  let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
-  Lwt.return
-    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
-       ~consensus_contract:context.consensus_contract
-       ~discovery_contract:context.discovery_contract
-       ~required_confirmations:context.required_confirmations)
-
-let validator_uris ~interop_context =
-  Tezos_interop.Consensus.fetch_validators interop_context
-
-let make_filename_from_address wallet_addr_str =
-  Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
 let exits =
   Cmd.Exit.defaults
@@ -42,6 +16,9 @@ let exits =
 let lwt_ret p =
   let open Term in
   ret (const Lwt_main.run $ p)
+
+let make_filename_from_address wallet_addr_str =
+  Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
 let wallet =
   let parser file =
@@ -204,61 +181,42 @@ let info_create_transaction =
   Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let create_transaction node_folder sender_wallet_file received_address amount
+let create_transaction node_uri sender_wallet_file received_address amount
     ticket argument vm_flavor =
   let open Network in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris -> (
-    let validator_uris =
-      List.filter_map
-        (function
-          | key_hash, Some uri -> Some (key_hash, uri)
-          | _ -> None)
-        validator_uris in
-    match validator_uris with
-    | [] -> Lwt.return (`Error (false, "No validators found"))
-    | (_, validator_uri) :: _ ->
-      let%await block_level_response = request_block_level () validator_uri in
-      let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let operation =
-        match (Address.to_key_hash received_address, argument) with
-        | Some addr, None ->
-          Core_deku.User_operation.make ~source:wallet.address
-            (Transaction { destination = addr; amount; ticket })
-        | Some _, Some _ ->
-          failwith "can't pass an argument to implicit account"
-        | None, None -> failwith "Invalid transaction"
-        | None, Some arg ->
-          let payload =
-            match vm_flavor with
-            | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-            | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
-          in
-          let arg = payload |> Result.get_ok in
-          Core_deku.User_operation.make ~source:wallet.address
-            (Contract_invocation
-               {
-                 to_invoke =
-                   Address.to_contract_hash received_address |> Option.get;
-                 argument = arg;
-               }) in
-      let transaction =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-          ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level ~data:operation in
+  let%await block_level_response = request_block_level () node_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    match (Address.to_key_hash received_address, argument) with
+    | Some addr, None ->
+      Core_deku.User_operation.make ~source:wallet.address
+        (Transaction { destination = addr; amount; ticket })
+    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
+    | None, None -> failwith "Invalid transaction"
+    | None, Some arg ->
+      let payload =
+        match vm_flavor with
+        | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
+        | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg in
+      let arg = payload |> Result.get_ok in
+      Core_deku.User_operation.make ~source:wallet.address
+        (Contract_invocation
+           {
+             to_invoke = Address.to_contract_hash received_address |> Option.get;
+             argument = arg;
+           }) in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
 
-      let%await identity = read_identity ~node_folder in
-      let%await () =
-        Network.request_user_operation_gossip
-          { user_operation = transaction }
-          identity.uri in
-      Format.printf "operation.hash: %s\n%!"
-        (BLAKE2B.to_string transaction.hash);
-      Lwt.return (`Ok ()))
+  let%await () =
+    Network.request_user_operation_gossip
+      { user_operation = transaction }
+      node_uri in
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+  Lwt.return (`Ok ())
 
 let info_originate_contract =
   let doc =
@@ -267,65 +225,52 @@ let info_originate_contract =
   Cmd.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
+let originate_contract node_uri contract_json initial_storage sender_wallet_file
+    (vm_flavor : [`Dummy | `Lambda]) =
   let open Network in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris -> (
-    let validator_uris =
-      List.filter_map
-        (function
-          | key_hash, Some uri -> Some (key_hash, uri)
-          | _ -> None)
-        validator_uris in
-    match validator_uris with
-    | [] -> Lwt.return (`Error (false, "No validators found"))
-    | (_, validator_uri) :: _ ->
-      let%await block_level_response = request_block_level () validator_uri in
-      let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let contract_program = Yojson.Safe.from_file contract_json in
-      let initial_storage = Yojson.Safe.from_file initial_storage in
-      let payload =
-        match vm_flavor with
-        | `Lambda ->
-          Contract_vm.Origination_payload.lambda_of_yojson
-            ~code:contract_program ~storage:initial_storage
-          |> Result.get_ok
-        | `Dummy ->
-          let int =
-            try Yojson.Safe.Util.to_int initial_storage with
-            | _ -> failwith "Invalid storage fro contract" in
-          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
-      let origination_op = User_operation.Contract_origination payload in
-      let originate_contract_op =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-          ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level
-          ~data:(User_operation.make ~source:wallet.address origination_op)
-      in
-      let%await identity = read_identity ~node_folder in
-      let%await () =
-        Network.request_user_operation_gossip
-          {
-            Network.User_operation_gossip.user_operation = originate_contract_op;
-          }
-          identity.uri in
-      Format.printf "operation_hash: %s\n%!"
-        (BLAKE2B.to_string originate_contract_op.hash);
-      Format.printf "contract_address: %s\n%!"
-        (Contract_address.of_user_operation_hash originate_contract_op.hash
-        |> Contract_address.to_string);
-      Lwt.return (`Ok ()))
+  let%await block_level_response = request_block_level () node_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let contract_program = Yojson.Safe.from_file contract_json in
+  let initial_storage = Yojson.Safe.from_file initial_storage in
+  let payload =
+    match vm_flavor with
+    | `Lambda ->
+      Contract_vm.Origination_payload.lambda_of_yojson ~code:contract_program
+        ~storage:initial_storage
+      |> Result.get_ok
+    | `Dummy ->
+      let int =
+        try Yojson.Safe.Util.to_int initial_storage with
+        | _ -> failwith "Invalid storage fro contract" in
+      Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
+  let origination_op = User_operation.Contract_origination payload in
+  let originate_contract_op =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level
+      ~data:(User_operation.make ~source:wallet.address origination_op) in
+  let%await () =
+    Network.request_user_operation_gossip
+      { Network.User_operation_gossip.user_operation = originate_contract_op }
+      node_uri in
+  Format.printf "operation_hash: %s\n%!"
+    (BLAKE2B.to_string originate_contract_op.hash);
+  Format.printf "contract_address: %s\n%!"
+    (Contract_address.of_user_operation_hash originate_contract_op.hash
+    |> Contract_address.to_string);
+  Lwt.return (`Ok ())
 
-let folder_node =
-  let docv = "folder_node" in
+let node_uri =
+  let docv = "node_uri" in
   let doc = "The folder where the node lives." in
   let open Arg in
-  required & pos 0 (some string) None & info [] ~doc ~docv
+  let uri =
+    let parser s = Ok (Uri.of_string s) in
+    let printer ppf uri = Format.fprintf ppf "%s" (Uri.to_string uri) in
+    let open Arg in
+    conv (parser, printer) in
+  required & pos 0 (some uri) None & info [] ~doc ~docv
 
 let originate_contract =
   let address_from =
@@ -358,7 +303,7 @@ let originate_contract =
   Term.(
     lwt_ret
       (const originate_contract
-      $ folder_node
+      $ node_uri
       $ contract_json
       $ initial_storage
       $ address_from
@@ -403,7 +348,7 @@ let create_transaction =
   let open Term in
   lwt_ret
     (const create_transaction
-    $ folder_node
+    $ node_uri
     $ address_from
     $ address_to
     $ amount
@@ -415,10 +360,9 @@ let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Cmd.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let withdraw node_folder sender_wallet_file tezos_address amount ticket =
+let withdraw node_uri sender_wallet_file tezos_address amount ticket =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await block_level_response = request_block_level () identity.uri in
+  let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
@@ -431,7 +375,7 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let%await () =
     Network.request_user_operation_gossip
       { user_operation = operation }
-      identity.uri in
+      node_uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash);
   Lwt.return (`Ok ())
 
@@ -463,17 +407,11 @@ let withdraw =
     required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
-    (const withdraw
-    $ folder_node
-    $ address_from
-    $ tezos_address
-    $ amount
-    $ ticket)
+    (const withdraw $ node_uri $ address_from $ tezos_address $ amount $ ticket)
 
-let withdraw_proof node_folder operation_hash callback =
+let withdraw_proof node_uri operation_hash callback =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await result = request_withdraw_proof { operation_hash } identity.uri in
+  let%await result = request_withdraw_proof { operation_hash } node_uri in
   match result with
   | Unknown_operation ->
     let message = BLAKE2B.to_string operation_hash ^ " is unknown" in
@@ -522,27 +460,25 @@ let withdraw_proof =
     required & pos 2 (some address_tezos_interop) None & info [] ~doc ~docv
   in
   let open Term in
-  lwt_ret
-    (const withdraw_proof $ folder_node $ operation_hash $ contract_callback)
+  lwt_ret (const withdraw_proof $ node_uri $ operation_hash $ contract_callback)
 
 let info_get_ticket_balance =
   let doc = "Get balance of a ticket for an account." in
   Cmd.info "get-balance" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let get_ticket_balance node_folder address ticket =
+let get_ticket_balance node_uri address ticket =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await result = request_ticket_balance { address; ticket } identity.uri in
+  let%await result = request_ticket_balance { address; ticket } node_uri in
   Format.printf "Balance: %i\n%!" (Amount.to_int result.amount);
   await (`Ok ())
 
 let get_ticket_balance =
   let open Term in
-  let folder_node =
-    let docv = "folder_node" in
+  let node_uri =
+    let docv = "node_uri" in
     let doc = "The folder where the node lives." in
     let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+    required & pos 0 (some uri) None & info [] ~doc ~docv in
   let address =
     let docv = "address" in
     let doc = "The account address to get the balance." in
@@ -553,256 +489,7 @@ let get_ticket_balance =
     let doc = "The ticket to get the balance." in
     let open Arg in
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
-  lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
-
-let info_sign_block =
-  let doc =
-    "Sign a block hash and broadcast to the network manually, useful when the \
-     chain is stale." in
-  Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let sign_block node_folder block_hash =
-  let%await identity = read_identity ~node_folder in
-  let signature = Signature.sign ~key:identity.secret block_hash in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list
-        (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
-    Lwt.return (`Ok ())
-
-let sign_block_term =
-  let block_hash =
-    let doc = "The block hash to be signed." in
-    let open Arg in
-    required & pos 1 (some hash) None & info [] ~doc in
-  let open Term in
-  lwt_ret (const sign_block $ folder_node $ block_hash)
-
-let info_produce_block =
-  let doc =
-    "Produce and sign a block and broadcast to the network manually, useful \
-     when the chain is stale." in
-  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let produce_block node_folder =
-  let%await identity = read_identity ~node_folder in
-  let%await state = Node_state.get_initial_state ~folder:node_folder in
-  let address = identity.t in
-  let block =
-    Block.produce ~state:state.protocol ~next_state_root_hash:None
-      ~author:address ~consensus_operations:[] ~tezos_operations:[]
-      ~user_operations:[] in
-  let signature = Block.sign ~key:identity.secret block in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list
-        (module Block_and_signature_spec)
-        validator_uris { block; signature } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
-
-let produce_block =
-  let open Term in
-  lwt_ret (const produce_block $ folder_node)
-
-let ensure_folder folder =
-  let%await exists = Lwt_unix.file_exists folder in
-  if exists then
-    let%await stat = Lwt_unix.stat folder in
-    if stat.st_kind = Lwt_unix.S_DIR then
-      await ()
-    else
-      raise (Invalid_argument (folder ^ " is not a folder"))
-  else
-    Lwt_unix.mkdir folder 0o700
-
-let setup_identity node_folder uri =
-  let%await () = ensure_folder node_folder in
-  let identity =
-    let secret, key = Crypto.Ed25519.generate () in
-    let t = Key_hash.of_key (Ed25519 key) in
-    { uri; t; key = Ed25519 key; secret = Ed25519 secret } in
-  let%await () = write_identity ~node_folder identity in
-  await (`Ok ())
-
-let info_setup_identity =
-  let doc = "Create a validator identity" in
-  Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let setup_identity =
-  let self_uri =
-    let docv = "self_uri" in
-    let doc = "The uri that other nodes should use to connect to this node." in
-    let open Arg in
-    required & opt (some uri) None & info ["uri"] ~doc ~docv in
-  let open Term in
-  lwt_ret (const setup_identity $ folder_node $ self_uri)
-
-let info_setup_tezos =
-  let doc = "Setup Tezos identity" in
-  Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
-
-let setup_tezos node_folder rpc_node secret consensus_contract
-    discovery_contract required_confirmations =
-  let%await () = ensure_folder node_folder in
-  let%await () =
-    write_interop_context ~node_folder
-      {
-        rpc_node;
-        secret;
-        consensus_contract;
-        discovery_contract;
-        required_confirmations;
-      } in
-  await (`Ok ())
-
-let setup_tezos =
-  let tezos_node_uri =
-    let docv = "tezos_node_uri" in
-    let doc = "The uri of the tezos node." in
-    let open Arg in
-    required & opt (some uri) None & info ["tezos_rpc_node"] ~doc ~docv in
-  let tezos_secret =
-    let docv = "tezos_secret" in
-    let doc = "The Tezos secret key." in
-    let open Arg in
-    required
-    & opt (some edsk_secret_key) None
-    & info ["tezos_secret"] ~doc ~docv in
-  let tezos_consensus_contract_address =
-    let docv = "tezos_consensus_contract_address" in
-    let doc = "The address of the Tezos consensus contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_consensus_contract"] ~doc ~docv in
-  let tezos_discovery_contract_address =
-    let docv = "tezos_discovery_contract_address" in
-    let doc = "The address of the Tezos discovery contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_discovery_contract"] ~doc ~docv in
-  let tezos_required_confirmations =
-    let docv = "int" in
-    let doc =
-      "Set the required confirmations. WARNING: Setting below default of 10 \
-       can compromise security of the Deku chain." in
-    let open Arg in
-    value
-    & opt tezos_required_confirmations 10
-    & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
-  let open Term in
-  lwt_ret
-    (const setup_tezos
-    $ folder_node
-    $ tezos_node_uri
-    $ tezos_secret
-    $ tezos_consensus_contract_address
-    $ tezos_discovery_contract_address
-    $ tezos_required_confirmations)
-
-let show_help =
-  let doc = "a tool for interacting with the WIP Tezos Sidechain" in
-  let sdocs = Manpage.s_common_options in
-  let exits = Cmd.Exit.defaults in
-  ( (let open Term in
-    ret (const (`Help (`Pager, None)))),
-    Cmd.info "deku-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
-      ~man )
-
-let info_self =
-  let doc = "Shows identity key and address of the node." in
-  Cmd.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let self node_folder =
-  let%await identity = read_identity ~node_folder in
-  Format.printf "key: %s\n" (Wallet.to_string identity.key);
-  Format.printf "address: %s\n" (Key_hash.to_string identity.t);
-  Format.printf "uri: %s\n" (Uri.to_string identity.uri);
-  await (`Ok ())
-
-let self =
-  let open Term in
-  lwt_ret (const self $ folder_node)
-
-let info_add_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "add-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let add_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Add } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let validator_address =
-  let docv = "validator_address" in
-  let doc = "The validator address to be added/removed as trusted" in
-  let open Arg in
-  required & pos 1 (some address_implicit) None & info [] ~docv ~doc
-
-let add_trusted_validator =
-  let open Term in
-  lwt_ret (const add_trusted_validator $ folder_node $ validator_address)
-
-let info_remove_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let remove_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Remove } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let remove_trusted_validator =
-  let open Term in
-  lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
+  lwt_ret (const get_ticket_balance $ node_uri $ address $ ticket)
 
 let default_info =
   let doc = "Deku cli" in
@@ -822,12 +509,5 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_sign_block sign_block_term;
-         Cmd.v info_produce_block produce_block;
-         Cmd.v info_setup_identity setup_identity;
-         Cmd.v info_setup_tezos setup_tezos;
-         Cmd.v info_add_trusted_validator add_trusted_validator;
-         Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_get_ticket_balance get_ticket_balance;
-         Cmd.v info_self self;
        ]
