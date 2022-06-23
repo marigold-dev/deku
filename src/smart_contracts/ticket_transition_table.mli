@@ -27,6 +27,13 @@ module type S = sig
       [> `Ticket_doesnt_exist | `Ticket_ownership_violation] )
     result
 
+  val mint_ticket :
+    t ->
+    sender:Address.t ->
+    amount:Amount.t ->
+    bytes ->
+    Ticket_handle.t
+
   val read_ticket :
     t ->
     sender:Address.t ->

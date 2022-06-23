@@ -64,6 +64,11 @@ module Make (CC : Conversions.S) :
         Ticket_transition_table.join_tickets ~sender ~handles table
         |> get_or_raise in
       handle
+
+    let mint_ticket t (value, amount) = 
+      let sender = t#self in
+      let table = t#table in
+      Ticket_transition_table.mint_ticket table ~sender ~amount value
   end
 
   module Operations = struct

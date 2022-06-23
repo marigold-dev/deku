@@ -37,6 +37,10 @@ module type CTX = sig
       < State.table_access ; State.addressing ; .. > ->
       Ticket_handle.t ->
       Ticket_handle.t
+
+    val mint_ticket :  < State.table_access ; State.addressing ; .. > ->
+        (bytes * Amount.t) ->
+        Ticket_handle.t
   end
 
   module Operations : sig

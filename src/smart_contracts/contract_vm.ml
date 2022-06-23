@@ -70,6 +70,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       | SPLIT_TICKET
       | GET_CONTRACT_OPT
       | TRANSACTION
+      | MINT_TICKET
 
     open struct
       open Wasm_vm
@@ -220,6 +221,30 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
         let _, address = R.read_address memory writer_addr int32_offset in
         let store addr = W.write_some ~writer_addr addr W.write_address memory in
         store (Addressing.get_contract_opt ctx address)
+      | MINT_TICKET ->
+        let addr =
+          Bytes.get_int32_le
+            (Memory.load_bytes memory
+              ~address:(Int64.add writer_addr (int32_offset |> Int64.of_int))
+              ~size:4)
+            0
+          |> Int64.of_int32
+        in
+        let _, amount = R.read_amount memory addr 0 in
+        let payload =
+          let size =
+            Bytes.get_int32_le
+              (Memory.load_bytes memory
+                ~address:(Int64.add addr (int64_offset |> Int64.of_int))
+                ~size:4)
+              0
+          in
+          Memory.load_bytes memory
+            ~address:(Int64.add addr (Int64.of_int (int64_offset + int32_offset)))
+            ~size:(Int32.to_int size)
+        in
+        let ticket = Table_ops.mint_ticket ctx (payload, amount) in
+        W.write_ticket ~writer_addr:addr ticket memory
 
     let custom ~ctx mem x =
       match
@@ -235,6 +260,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       | 6 -> load ~ctx mem x JOIN_TICKETS
       | 7 -> load ~ctx mem x GET_CONTRACT_OPT
       | 8 -> load ~ctx mem x TRANSACTION
+      | 9 -> load ~ctx mem x MINT_TICKET
       | _ -> failwith "unimplemented"
   end
 
