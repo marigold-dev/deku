@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Cache nix store
-        id: cache-static
+        id: cache-native
         uses: actions/cache@v3
         with:
           path: cache
@@ -29,7 +29,7 @@ jobs:
 
       # We don't check the signature because we're the one that created the cache
       - name: Restore cache
-        if: steps.cache-primes.outputs.cache-hit == 'true'
+        if: steps.cache-native.outputs.cache-hit == 'true'
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
@@ -78,7 +78,7 @@ jobs:
 
       # We don't check the signature because we're the one that created the cache
       - name: Restore cache
-        if: steps.cache-primes.outputs.cache-hit == 'true'
+        if: steps.cache-static.outputs.cache-hit == 'true'
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
