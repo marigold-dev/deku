@@ -187,7 +187,8 @@ let safe_decode ?alphabet s =
       if len < 4 then
         None
       else
-        (* only if the string is long enough to extract a checksum do we check it *)
+        (* only if the string is long enough to extract a checksum do we check
+           it *)
         let msg = String.sub s 0 (len - 4) in
         let msg_hash = String.sub s (len - 4) 4 in
         if msg_hash <> checksum msg then None else Some msg)

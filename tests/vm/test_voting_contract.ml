@@ -24,7 +24,8 @@ let compare =
         aux size_a (snd a) (snd b)]
 
 let vote_contract =
-  (* Reference: https://github.com/juanProject/tezosVote/blob/master/src/voteContract.ligo *)
+  (* Reference:
+     https://github.com/juanProject/tezosVote/blob/master/src/voteContract.ligo *)
   [%lambda_vm.script
     fun pair ->
       let compare = [%e compare] in

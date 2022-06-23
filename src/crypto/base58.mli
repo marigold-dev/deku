@@ -84,5 +84,5 @@ val simple_decode :
   of_raw:(string -> 'a option) ->
   string ->
   'a option
-(** Decoder for a given kind of data. It returns [None] when
-  the decoded data does not start with the expected prefix. *)
+(** Decoder for a given kind of data. It returns [None] when the decoded data
+    does not start with the expected prefix. *)

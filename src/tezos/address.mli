@@ -8,7 +8,7 @@ type t =
     }
 [@@deriving eq, ord, yojson]
 
-(* TODO: explain why this encoding? TLDR fixed size and no entrypoint  *)
+(* TODO: explain why this encoding? TLDR fixed size and no entrypoint *)
 val contract_encoding : t Data_encoding.t
 
 val encoding : t Data_encoding.t

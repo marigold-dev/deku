@@ -45,7 +45,8 @@ end) : S with type key = K.t = struct
   let add key value t =
     let { cardinality; values } = t in
     let cardinality =
-      (* TODO: this could be fused with Ident.Map.add by using Ident.Map.update *)
+      (* TODO: this could be fused with Ident.Map.add by using
+         Ident.Map.update *)
       if Map.mem key values then
         cardinality
       else

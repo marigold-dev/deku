@@ -20,8 +20,8 @@ let response_of_yojson json =
   let%ok next_operations = Decoder.of_yojson json in
   match next_operations with
   | [next_operation] -> Ok next_operation.contents
-  (* TODO: leaking abstractions
-      this only works because this always pass a single operation on the input *)
+  (* TODO: leaking abstractions this only works because this always pass a
+     single operation on the input *)
   | _ -> assert false
 
 let path ~chain ~branch =

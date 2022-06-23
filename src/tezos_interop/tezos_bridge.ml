@@ -149,11 +149,10 @@ module Big_map_keys = struct
     let module T = struct
       type t = { status : string } [@@deriving of_yojson { strict = false }]
 
-      (*
-         TODO: Yojson.Safe.t is taking the place of a "well-formatted json object"
-         See: https://github.com/ecadlabs/taquito/blob/fcee40a6235ed0dd56ff6a8f3e64fb9d0c16cab3/packages/taquito/src/contract/big-map.ts#L46
-         It would be better to parse it to a micheline node.
-      *)
+      (* TODO: Yojson.Safe.t is taking the place of a "well-formatted json
+         object" See:
+         https://github.com/ecadlabs/taquito/blob/fcee40a6235ed0dd56ff6a8f3e64fb9d0c16cab3/packages/taquito/src/contract/big-map.ts#L46
+         It would be better to parse it to a micheline node. *)
       type success = { values : Yojson.Safe.t option list }
       [@@deriving of_yojson { strict = false }]
 

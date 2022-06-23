@@ -22,9 +22,10 @@ let make ~initial_snapshot ~initial_block ~initial_signatures =
   {
     current_snapshot =
       Atomic.make
-        (* TODO: if a snapshot is requested before first epoch starts, we will send meaningless data.
-           We need to have logic in the snapshot request handler such that we send a 503 error or something
-           instead of sending bad data. *)
+        (* TODO: if a snapshot is requested before first epoch starts, we will
+           send meaningless data. We need to have logic in the snapshot request
+           handler such that we send a 503 error or something instead of sending
+           bad data. *)
         (Some { hash = initial_block.Block.state_root_hash; data = "" });
     next_snapshots =
       [(initial_block.block_height, Atomic.make (Some initial_snapshot))];

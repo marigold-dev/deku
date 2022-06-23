@@ -19,7 +19,8 @@ let test_factorial =
     QCheck.(
       Test.make ~name:"Recursion with factorial" ~count:10000 (1 -- 26)
         (fun x ->
-          (* Less than 0 is infinite recursion, greater than 25 is integer overflow. *)
+          (* Less than 0 is infinite recursion, greater than 25 is integer
+             overflow. *)
           let x = Int64.of_int x in
           let result =
             Vm_test.execute_ast_exn sender 1_000_000 (Int64 x) factorial in

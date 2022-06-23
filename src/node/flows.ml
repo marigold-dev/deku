@@ -247,13 +247,13 @@ let rec try_to_apply_block state update_state block =
     ( `Block_not_signed_enough_to_apply,
       Block_pool.is_signed ~hash:block.Block.hash state.Node.block_pool ) in
   let prev_protocol = state.protocol in
-  (* If the [block.state_root_hash] is not equal to either the
-     current state root hash or the next calculated state root hash, then
-     the node has become out of sync with the chain. In this case we will not sign
-     blocks, but will still apply blocks with enough signatures.
-     TODO: we currently stay out of sync until the next state root hash update that
-     we finish on time. But it would be good to be able to get back in sync
-     as soon as we finish hashing. See https://github.com/marigold-dev/deku/pull/250 *)
+  (* If the [block.state_root_hash] is not equal to either the current state
+     root hash or the next calculated state root hash, then the node has become
+     out of sync with the chain. In this case we will not sign blocks, but will
+     still apply blocks with enough signatures. TODO: we currently stay out of
+     sync until the next state root hash update that we finish on time. But it
+     would be good to be able to get back in sync as soon as we finish hashing.
+     See https://github.com/marigold-dev/deku/pull/250 *)
   let is_new_state_root_hash =
     not (BLAKE2B.equal state.protocol.state_root_hash block.state_root_hash)
   in
@@ -332,10 +332,9 @@ let () = received_block' := received_block
 let received_signature state update_state ~hash ~signature =
   let%assert () =
     (`Invalid_signature_for_this_hash, Signature.verify ~signature hash) in
-  (* TODO: consider edge-cases related to the node being out sync.
-     If validators changed and you are out of sync, you will reject valid
-     signatures (the node can wait and restart to back in sync by querying
-     the Tezos contract) *)
+  (* TODO: consider edge-cases related to the node being out sync. If validators
+     changed and you are out of sync, you will reject valid signatures (the node
+     can wait and restart to back in sync by querying the Tezos contract) *)
   let%assert () =
     ( `Not_a_validator,
       List.exists

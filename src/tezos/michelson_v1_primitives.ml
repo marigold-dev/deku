@@ -182,8 +182,8 @@ type prim =
   | T_chest
   | H_constant
 
-(* Auxiliary types for error documentation.
-   All the prim constructor prefixes must match their namespace. *)
+(* Auxiliary types for error documentation. All the prim constructor prefixes
+   must match their namespace. *)
 type namespace =
   | (* prefix "T" *) Type_namespace
   | (* prefix "D" *) Constant_namespace
@@ -733,7 +733,8 @@ let prim_encoding =
   @@ string_enum
        (* Add the comment below every 10 lines *)
        [
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("parameter", K_parameter);
          ("storage", K_storage);
          ("code", K_code);
@@ -744,7 +745,8 @@ let prim_encoding =
          ("Pair", D_Pair);
          ("Right", D_Right);
          ("Some", D_Some);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("True", D_True);
          ("Unit", D_Unit);
          ("PACK", I_PACK);
@@ -755,7 +757,8 @@ let prim_encoding =
          ("ABS", I_ABS);
          ("ADD", I_ADD);
          ("AMOUNT", I_AMOUNT);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("AND", I_AND);
          ("BALANCE", I_BALANCE);
          ("CAR", I_CAR);
@@ -766,7 +769,8 @@ let prim_encoding =
          ("CONS", I_CONS);
          ("CREATE_ACCOUNT", I_CREATE_ACCOUNT);
          ("CREATE_CONTRACT", I_CREATE_CONTRACT);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("IMPLICIT_ACCOUNT", I_IMPLICIT_ACCOUNT);
          ("DIP", I_DIP);
          ("DROP", I_DROP);
@@ -777,7 +781,8 @@ let prim_encoding =
          ("EQ", I_EQ);
          ("EXEC", I_EXEC);
          ("FAILWITH", I_FAILWITH);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("GE", I_GE);
          ("GET", I_GET);
          ("GT", I_GT);
@@ -788,7 +793,8 @@ let prim_encoding =
          ("IF_NONE", I_IF_NONE);
          ("INT", I_INT);
          ("LAMBDA", I_LAMBDA);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("LE", I_LE);
          ("LEFT", I_LEFT);
          ("LOOP", I_LOOP);
@@ -799,7 +805,8 @@ let prim_encoding =
          ("MEM", I_MEM);
          ("MUL", I_MUL);
          ("NEG", I_NEG);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("NEQ", I_NEQ);
          ("NIL", I_NIL);
          ("NONE", I_NONE);
@@ -810,7 +817,8 @@ let prim_encoding =
          ("PUSH", I_PUSH);
          ("RIGHT", I_RIGHT);
          ("SIZE", I_SIZE);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("SOME", I_SOME);
          ("SOURCE", I_SOURCE);
          ("SENDER", I_SENDER);
@@ -821,7 +829,8 @@ let prim_encoding =
          ("TRANSFER_TOKENS", I_TRANSFER_TOKENS);
          ("SET_DELEGATE", I_SET_DELEGATE);
          ("UNIT", I_UNIT);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("UPDATE", I_UPDATE);
          ("XOR", I_XOR);
          ("ITER", I_ITER);
@@ -832,7 +841,8 @@ let prim_encoding =
          ("CAST", I_CAST);
          ("RENAME", I_RENAME);
          ("bool", T_bool);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("contract", T_contract);
          ("int", T_int);
          ("key", T_key);
@@ -843,7 +853,8 @@ let prim_encoding =
          ("big_map", T_big_map);
          ("nat", T_nat);
          ("option", T_option);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("or", T_or);
          ("pair", T_pair);
          ("set", T_set);
@@ -854,7 +865,8 @@ let prim_encoding =
          ("timestamp", T_timestamp);
          ("unit", T_unit);
          ("operation", T_operation);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("address", T_address);
          (* Alpha_002 addition *)
          ("SLICE", I_SLICE);
@@ -865,7 +877,8 @@ let prim_encoding =
          ("APPLY", I_APPLY);
          ("chain_id", T_chain_id);
          ("CHAIN_ID", I_CHAIN_ID);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          (* Alpha_008 addition *)
          ("LEVEL", I_LEVEL);
          ("SELF_ADDRESS", I_SELF_ADDRESS);
@@ -876,7 +889,8 @@ let prim_encoding =
          ("TOTAL_VOTING_POWER", I_TOTAL_VOTING_POWER);
          ("KECCAK", I_KECCAK);
          ("SHA3", I_SHA3);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          (* Alpha_008 addition *)
          ("PAIRING_CHECK", I_PAIRING_CHECK);
          ("bls12_381_g1", T_bls12_381_g1);
@@ -887,7 +901,8 @@ let prim_encoding =
          ("SAPLING_EMPTY_STATE", I_SAPLING_EMPTY_STATE);
          ("SAPLING_VERIFY_UPDATE", I_SAPLING_VERIFY_UPDATE);
          ("ticket", T_ticket);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          (* Alpha_008 addition *)
          ("TICKET", I_TICKET);
          ("READ_TICKET", I_READ_TICKET);
@@ -898,13 +913,15 @@ let prim_encoding =
          ("chest", T_chest);
          ("chest_key", T_chest_key);
          ("OPEN_CHEST", I_OPEN_CHEST);
-         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM, FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
+         (* /!\ NEW INSTRUCTIONS MUST BE ADDED AT THE END OF THE STRING_ENUM,
+            FOR BACKWARD COMPATIBILITY OF THE ENCODING. *)
          ("VIEW", I_VIEW);
          ("view", K_view);
          ("constant", H_constant);
          (* Alpha_012 addition *)
          ("SUB_MUTEZ", I_SUB_MUTEZ)
-         (* New instructions must be added here, for backward compatibility of the encoding. *)
+         (* New instructions must be added here, for backward compatibility of
+            the encoding. *)
          (* Keep the comment above at the end of the list *);
        ]
 

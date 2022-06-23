@@ -3,15 +3,14 @@ open Protocol
 open State
 open Steps
 
-(** Calculates whether to start sending a new state root hash.\n\n\
-        The state root epoch is the interval (in blocks) between state root\n\
-        hash updates. Thus, a new epoch is triggered by applying a block with\n\
-        a new state root hash. The block producer decides when to send\n\
-        blocks with new state root hashes. To enforce that he does so on time,\n\
-        validators reject blocks with updates that occur to soon or too late\n\
-        (see [Protocol.apply]).\n\n\
-        The block producer uses this function to determine when to send a\n\
-        block with an updated state root hash *)
+(** Calculates whether to start sending a new state root hash.\n\n\ The state
+    root epoch is the interval (in blocks) between state root\n\ hash updates.
+    Thus, a new epoch is triggered by applying a block with\n\ a new state root
+    hash. The block producer decides when to send\n\ blocks with new state root
+    hashes. To enforce that he does so on time,\n\ validators reject blocks with
+    updates that occur to soon or too late\n\ (see [Protocol.apply]).\n\n\ The
+    block producer uses this function to determine when to send a\n\ block with
+    an updated state root hash *)
 let should_start_new_epoch last_state_root_update current_time =
   let avoid_jitter = 1.0 in
   current_time -. last_state_root_update -. avoid_jitter

@@ -114,7 +114,8 @@ let handle_protocol_snapshot =
 (* POST /request-nonce *)
 (* Unused fow now *)
 (* Set a new Number Only Used Once for the selected key *)
-(* so that the author can make a proof that he is the owner of the secret and can set the URI *)
+(* so that the author can make a proof that he is the owner of the secret and
+   can set the URI *)
 let handle_request_nonce =
   handle_request
     (module Network.Request_nonce)

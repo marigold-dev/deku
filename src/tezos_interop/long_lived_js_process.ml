@@ -128,9 +128,8 @@ type t = {
   pending : Pending.t;
 }
 
-(* This file should not use the standard raise, since any exception here
-   must kill the node.
-     Use [raise_and_exit] instead. *)
+(* This file should not use the standard raise, since any exception here must
+   kill the node. Use [raise_and_exit] instead. *)
 let[@warning "-unused-value-declaration"] raise = ()
 
 let raise_and_exit exn =
@@ -145,8 +144,8 @@ let handle_message t message =
   | Ok () -> ()
   | Error (Unknown_id id) -> raise_and_exit (Unknown_id (id, content))
 
-(* WHY: to_yojson and of_yojson here are designed so that all exceptions
-   are handled here *)
+(* WHY: to_yojson and of_yojson here are designed so that all exceptions are
+   handled here *)
 let request t kind ~resolver ~to_yojson content =
   let id = t.next_id in
   let content = to_yojson content in
