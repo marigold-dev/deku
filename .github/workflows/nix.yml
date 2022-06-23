@@ -19,7 +19,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: cache
-          key: ${{ runner.os }}-native-${{ hashFiles('flake.lock') }}
+          key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
 
       - uses: cachix/install-nix-action@v16
       - uses: cachix/cachix-action@v10
