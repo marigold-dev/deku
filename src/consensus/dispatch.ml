@@ -23,8 +23,10 @@ let rec dispatch effect step state =
     is_future_block ~signed ~block effect state
   | Is_signable_block { block } -> is_signable_block ~block effect state
   | Sign_block { block } -> sign_block ~block effect state
-  | Can_apply_block { block } -> can_apply_block ~block effect state
+  | Pre_apply_block { block; signatures } ->
+    pre_apply_block ~block ~signatures effect state
   | Apply_block { block } -> apply_block ~block effect state
+  | Post_apply_block -> post_apply_block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
   | Check_validator_change { payload; signature } ->
@@ -76,14 +78,18 @@ and sign_block ~block effect state =
   let step = Steps.sign_block ~block state in
   dispatch effect step state
 
-and can_apply_block ~block effect state =
-  let step = Steps.can_apply_block ~block state in
+and pre_apply_block ~block ~signatures effect state =
+  let state, step = Steps.pre_apply_block ~block ~signatures state in
   dispatch effect step state
 
 and apply_block ~block effect state =
   match Apply_block.apply_block ~block state with
-  | Ok (state, step) -> dispatch effect step state
+  | Ok (state, _snapshot_ref, step) -> dispatch effect step state
   | Error err -> (state, [err])
+
+and post_apply_block effect state =
+  let step = Steps.post_apply_block state in
+  dispatch effect step state
 
 and can_produce_block effect state =
   let step = Steps.can_produce_block state in

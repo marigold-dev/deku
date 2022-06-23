@@ -27,7 +27,7 @@ let is_signable state block =
   let next_allowed_membership_change_timestamp =
     protocol.last_seen_membership_change_timestamp +. (24. *. 60. *. 60.) in
 
-  let is_trusted_consensu_operation consensus_operation =
+  let is_trusted_consensus_operation consensus_operation =
     current_time > next_allowed_membership_change_timestamp
     &&
     match consensus_operation with
@@ -45,7 +45,7 @@ let is_signable state block =
     Operation_map.mem operation state.pending_operations in
 
   let all_operations_are_trusted =
-    List.for_all is_trusted_consensu_operation block.Block.consensus_operations
+    List.for_all is_trusted_consensus_operation block.Block.consensus_operations
     && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
   in
   is_next state block
