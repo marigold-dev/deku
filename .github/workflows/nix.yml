@@ -26,11 +26,13 @@ jobs:
         with:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+
+      # We don't check the signature because we're the one that created the cache
       - name: Restore cache
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
-            nix copy --from "file://$(pwd)/cache" "$path"
+            nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
           done
       # Broken because we patch nixpkgs, can add it back when janestreet 0.15 is added upstream
       # - name: "Run nix flake check"
@@ -51,7 +53,7 @@ jobs:
       - name: "Copy store to cache"
         run: |
           mkdir -p ./cache
-          nix copy --to "file://$(pwd)/cache" .#deku
+          nix copy --to "file://$(pwd)/cache" .#devShell.x86_64-linux
 
 
   # Static and docker are linked because we're using the static build in docker
@@ -73,11 +75,12 @@ jobs:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
 
+      # We don't check the signature because we're the one that created the cache
       - name: Restore cache
         run: |
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
-            nix copy --from "file://$(pwd)/cache" "$path"
+            nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
           done
 
       - name: "Build static deku via flakes"
