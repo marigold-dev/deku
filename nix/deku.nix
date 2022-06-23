@@ -64,6 +64,8 @@ in ocamlPackages.buildDunePackage rec {
       core_bench
       memtrace
       benchmark
+      landmarks
+      landmarks-ppx
       json-logs-reporter
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
