@@ -45,6 +45,8 @@ type step =
     }
   (* transition *)
   | Apply_block               of { block : Block.t }
+  (* transition *)
+  | Post_apply_block
   (* verify *)
   | Can_produce_block
   (* transition *)
@@ -155,6 +157,14 @@ let pre_apply_block ~block ~signatures state =
       state.snapshots in
   let state = { state with snapshots } in
   (state, Apply_block { block })
+
+let post_apply_block state =
+  match
+    Block_pool.find_next_block_to_apply ~hash:state.protocol.last_block_hash
+      state.block_pool
+  with
+  | Some next_block -> Is_signed_block { hash = next_block.hash }
+  | None -> Can_produce_block
 
 let can_produce_block state =
   if is_current_producer state ~key_hash:state.identity.t then

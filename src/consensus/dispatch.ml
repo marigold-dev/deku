@@ -26,6 +26,7 @@ let rec dispatch effect step state =
   | Pre_apply_block { block; signatures } ->
     pre_apply_block ~block ~signatures effect state
   | Apply_block { block } -> apply_block ~block effect state
+  | Post_apply_block -> post_apply_block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
   | Check_validator_change { payload; signature } ->
@@ -85,6 +86,10 @@ and apply_block ~block effect state =
   match Apply_block.apply_block ~block state with
   | Ok (state, _snapshot_ref, step) -> dispatch effect step state
   | Error err -> (state, [err])
+
+and post_apply_block effect state =
+  let step = Steps.post_apply_block state in
+  dispatch effect step state
 
 and can_produce_block effect state =
   let step = Steps.can_produce_block state in
