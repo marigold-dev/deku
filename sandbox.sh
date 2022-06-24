@@ -274,11 +274,11 @@ start_deku_cluster() {
     if [ "$mode" = "docker" ]; then
       echo "hash: $HASH"
       echo "deku-node-$i"
-      docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
+      docker exec -t "deku-node-$i" deku-node sign-block /app/data "$HASH"
     else
       echo "hash: $HASH"
       echo "deku-node-$i"
-      deku-cli sign-block "$DATA_DIRECTORY/$i" "$HASH"
+      deku-node sign-block "$DATA_DIRECTORY/$i" "$HASH"
     fi
   done
 

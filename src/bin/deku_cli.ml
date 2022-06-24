@@ -578,37 +578,6 @@ let get_ticket_balance =
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
   lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
 
-let info_sign_block =
-  let doc =
-    "Sign a block hash and broadcast to the network manually, useful when the \
-     chain is stale." in
-  Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let sign_block node_folder block_hash =
-  let%await identity = read_identity ~node_folder in
-  let signature = Signature.sign ~key:identity.secret block_hash in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list
-        (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
-    Lwt.return (`Ok ())
-
-let sign_block_term =
-  let block_hash =
-    let doc = "The block hash to be signed." in
-    let open Arg in
-    required & pos 1 (some hash) None & info [] ~doc in
-  let open Term in
-  lwt_ret (const sign_block $ folder_node 0 $ block_hash)
-
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
   if exists then
@@ -813,7 +782,6 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_sign_block sign_block_term;
          Cmd.v info_setup_identity setup_identity;
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
