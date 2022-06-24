@@ -79,7 +79,9 @@ let handle_block_by_level =
           (fun block ->
             Int64.equal block.Protocol.Block.block_height request.level)
           state.applied_blocks in
-      Ok block)
+      match block with
+      | Some block -> Ok block
+      | None -> Error `Unknown_block_level)
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
