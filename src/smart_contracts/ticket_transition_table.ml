@@ -19,12 +19,6 @@ end
 module type S = sig
   include Conversions.S
 
-  module Ticket_handle :
-    Ticket_handle.S
-      with module Address = Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
-
   type t
 
   val own :
@@ -67,28 +61,19 @@ module type S = sig
 
   val init :
     self:Address.t ->
+    mapping:((Ticket_id.t * Amount.t) * Ticket_handle.t) list ->
     tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    temporary_tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    t
+    temporary_tickets:
+      ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) Seq.t ->
+    t * (Int64.t option * Ticket_handle.t) list option
 
-  val finalize : t -> (Ticket_id.t * Amount.t) Seq.t
+  val finalize : t -> (Ticket_handle.t * Ticket_id.t * Amount.t) Seq.t
 end
 
-module Make
-    (CC : Conversions.S)
-    (Ticket_handle : Ticket_handle.S
-                       with module Address = CC.Address
-                        and module Amount = CC.Amount
-                        and module Ticket_id = CC.Ticket_id) =
-struct
+open Core
+
+module Make (CC : Conversions.S) = struct
   module Ticket_handle = Ticket_handle
-
-  module Table = Hashtbl.Make (struct
-    include Int64
-
-    let hash t = Int64.to_int t
-  end)
-
   include CC
 
   module Owner = struct
@@ -136,24 +121,29 @@ struct
   end
 
   type t = {
-    mutable counter : Int64.t;
-    table : Ticket_repr.t Table.t;
+    mutable counter : Int32.t Seq.t;
+    mutable table : Ticket_repr.t Int32.Map.t;
   }
 
+  module Map = Int32.Map
+
   let incr t =
-    let counter = Int64.succ t.counter in
-    t.counter <- counter;
+    let counter, seq = Seq.uncons t.counter |> Option.value_exn in
+    t.counter <- seq;
     counter
 
-  let merge t ~handle ~repr = Table.add t.table handle repr
+  let merge t ~handle ~repr =
+    let table = Map.set ~key:handle ~data:repr t.table in
+    t.table <- table
 
-  let unsafe_read { table; counter = _ } ~handle =
-    Table.find_opt table handle
-    |> Option.fold
-         ~some:(fun x ->
-           Table.remove table handle;
+  let unsafe_read t ~handle =
+    Map.find t.table handle
+    |> Option.value_map
+         ~f:(fun x ->
+           let table = Map.remove t.table handle in
+           t.table <- table;
            Ok x)
-         ~none:Errors.doesnt_exist
+         ~default:Errors.doesnt_exist
 
   let own t sender ticket_handle =
     let%ok ticket = unsafe_read t ~handle:ticket_handle in
@@ -171,17 +161,18 @@ struct
     handle
 
   let read_ticket t ~sender ~ticket_handle =
-    Table.find_opt t.table ticket_handle
-    |> Option.fold
-         ~some:(fun ({ Ticket_repr.ticket; amount; owner } as repr) ->
+    Map.find t.table ticket_handle
+    |> Option.value_map
+         ~f:(fun ({ Ticket_repr.ticket; amount; owner } as repr) ->
            let%ok () = assert_available sender owner in
-           let () = Table.remove t.table ticket_handle in
+           let table = Map.remove t.table ticket_handle in
            let ticket_repr = { repr with owner = To_be_dropped } in
            let handle = incr t in
-           Table.add t.table handle ticket_repr;
+           let table = Map.set ~key:handle ~data:ticket_repr table in
+           t.table <- table;
            let to_return = (ticket, amount, handle) in
            Ok to_return)
-         ~none:Errors.doesnt_exist
+         ~default:Errors.doesnt_exist
 
   let split_ticket t ~sender ~ticket_handle ~amounts =
     let%ok { Ticket_repr.ticket; amount; owner } =
@@ -205,30 +196,64 @@ struct
     let () = merge t ~handle:handle1 ~repr in
     Ok handle1
 
-  let init ~self ~tickets ~temporary_tickets =
-    let temporary_tickets =
-      Seq.map
-        (fun (ticket, amount) ->
-          Ticket_repr.make ticket amount Owner.To_be_dropped)
-        temporary_tickets in
-    let tickets =
-      Seq.map
-        (fun (ticket, amount) ->
-          Ticket_repr.make ticket amount (Owner.Owned self))
-        tickets in
-    let acc = { counter = Int64.of_int (-1); table = Table.create 25 } in
-    Seq.iter
-      (fun (x : Ticket_repr.t) ->
-        let ticket_handle = incr acc in
-        Table.add acc.table ticket_handle x)
-      (Seq.append temporary_tickets tickets);
-    acc
+  let init :
+      self:Address.t ->
+      mapping:((Ticket_id.t * Amount.t) * Ticket_handle.t) list ->
+      tickets:(Ticket_id.t * Amount.t) Seq.t ->
+      temporary_tickets:
+        ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) Seq.t ->
+      t * (Int64.t option * Ticket_handle.t) list option =
+   fun ~self ~mapping ~tickets ~temporary_tickets ->
+    let tickets = Stdlib.List.of_seq tickets in
+    let mapping =
+      List.filter
+        ~f:(fun (arg, _) -> List.mem tickets arg ~equal:Poly.equal)
+        mapping in
+    let mmap = Set.of_list (module Int32) (List.map ~f:snd mapping) in
+    let rec folder t =
+      if Set.mem mmap t then folder Int32.(t + one) else Int32.(t + one) in
+    let acc =
+      {
+        counter = Seq.unfold (fun acc -> Some (acc, folder acc)) Int32.min_value;
+        table = Map.empty;
+      } in
+    let tickets_to_remap =
+      Seq.fold_left
+        (fun lst ((ticket, amount), (handle, offs)) ->
+          let repr = Ticket_repr.make ticket amount Owner.To_be_dropped in
+          let handle, offs =
+            if Set.mem mmap handle then
+              let new_handle = incr acc in
+              (new_handle, Some (offs, new_handle))
+            else
+              (handle, None) in
+          let table = Map.set ~key:handle ~data:repr acc.table in
+          acc.table <- table;
+          offs :: lst)
+        [] temporary_tickets in
+    let tickets_to_remap =
+      List.fold_right
+        ~f:(fun x acc ->
+          match (x, acc) with
+          | _, None -> None
+          | None, Some _ -> None
+          | Some x, Some acc -> Some (x :: acc))
+        ~init:(Some []) tickets_to_remap in
+    let () =
+      List.iter
+        ~f:(fun ((ticket, amount), handle) ->
+          let data = Ticket_repr.make ticket amount (Owner.Owned self) in
+          let table = Map.set ~key:handle ~data acc.table in
+          acc.table <- table)
+        mapping in
+    (acc, tickets_to_remap)
 
   let finalize t =
-    Table.fold
-      (fun _ (data : Ticket_repr.t) acc ->
+    Map.fold
+      ~f:(fun ~key ~data acc ->
         match data with
-        | { owner = Owned _; ticket; amount } -> Seq.cons (ticket, amount) acc
+        | { owner = Owned _; ticket; amount } ->
+          Seq.cons (key, ticket, amount) acc
         | { owner = To_be_dropped; ticket = _; amount = _ } -> acc)
-      t.table Seq.empty
+      t.table ~init:Seq.empty
 end

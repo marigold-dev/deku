@@ -11,11 +11,19 @@ type initial_operation =
   | Contract_invocation  of {
       to_invoke : Contract_address.t;
       argument : Contract_vm.Invocation_payload.t;
-      tickets : (Ticket_id.t * Amount.t) list;
+      (*TODO: remove tickets field when we will do normal parsing of arguments from the cli *)
+      tickets :
+        ((Ticket_id.t * Amount.t)
+        * (Smart_contracts.Ticket_handle.t * Int64.t option))
+        list;
     }
   | Contract_origination of {
       payload : Contract_vm.Origination_payload.t;
-      tickets : (Ticket_id.t * Amount.t) list;
+      (*TODO: remove tickets field when we will do normal parsing of initial storage from the cli *)
+      tickets :
+        ((Ticket_id.t * Amount.t)
+        * (Smart_contracts.Ticket_handle.t * Int64.t option))
+        list;
     }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;

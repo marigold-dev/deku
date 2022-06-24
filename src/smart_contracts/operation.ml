@@ -10,7 +10,8 @@ module type S = sig
     | Invoke   of {
         param : bytes;
         destination : Address.t;
-        tickets : (Ticket_id.t * Amount.t) list;
+        tickets :
+          ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
       }
 end
 
@@ -26,6 +27,7 @@ module Make (CC : Conversions.S) = struct
     | Invoke   of {
         param : bytes;
         destination : Address.t;
-        tickets : (Ticket_id.t * Amount.t) list;
+        tickets :
+          ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
       }
 end

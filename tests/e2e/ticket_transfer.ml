@@ -4,7 +4,7 @@ let create_arg addr =
   let open Core_deku in
   let open Contracts in
   let addr = Address.of_string addr |> Option.get in
-  let arg = Int64.zero |> Context.Ticket_handle.to_bytes in
+  let arg = Int32.zero |> Context.Ticket_handle.to_bytes in
   let args =
     [%to_yojson: bytes]
       (Bytes.concat Bytes.empty

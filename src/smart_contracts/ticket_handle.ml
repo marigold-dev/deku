@@ -1,29 +1,20 @@
-module type S = sig
-  include Conversions.S
+include Int32
 
-  type t = Int64.t [@@deriving ord, eq]
-
-  val to_string : t -> string
-
-  val of_string : string -> t
-
-  val size : int
-
-  val to_bytes : t -> bytes
-
-  val of_bytes : bytes -> t
+module For_yojson = struct
+  type t = Int32.t [@@deriving yojson]
 end
 
-module Make (CC : Conversions.S) = struct
-  include CC
-  include Int64
+include For_yojson
 
-  let to_bytes t =
-    let buf = Bytes.create 8 in
-    Bytes.set_int64_le buf 0 t;
-    buf
+let to_bytes t =
+  let buf = Bytes.create 4 in
+  Bytes.set_int32_le buf 0 t;
+  buf
 
-  let of_bytes t = Bytes.get_int64_le t 0
+let of_bytes t = Bytes.get_int32_le t 0
 
-  let size = 8
-end
+let to_string t = to_bytes t |> Bytes.unsafe_to_string
+
+let of_string t = String.to_bytes t |> of_bytes
+
+let size = 4

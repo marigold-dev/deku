@@ -6,18 +6,22 @@ let invoke ~ctx ~storage ~argument code =
   let open Core_deku in
   let open Contracts in
   match
+    let argument = [%to_yojson: bytes] argument in
     let code = Bytes.of_string code in
     let gas = Int.max_int in
     let%ok payload =
       Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage in
-    let%ok modd = Contract_vm.Compiler.compile payload ~gas in
-    let%ok argument = Contract_vm.Invocation_payload.of_bytes ~arg:argument in
+    let%ok modd = Contract_vm.Compiler.compile payload ~tickets:Seq.empty ~gas in
+    let%ok argument =
+      Contract_vm.Invocation_payload.wasm_of_yojson ~arg:argument in
     let%ok contract, ops =
-      Contract_vm.Interpreter.invoke ~ctx ~arg:argument ~gas modd in
+      Contract_vm.Interpreter.invoke ~to_replace:None ~ctx ~arg:argument ~gas
+        modd in
     Ok (Contract_vm.Contract.raw_storage contract, ops)
   with
   | Ok storage -> storage
   | Error _ -> raise Invocation_error
+  | exception _ -> raise Invocation_error
 
 let i32 t =
   let b = Bytes.make 4 '0' in
@@ -74,13 +78,26 @@ module Testables = struct
     let open Contracts in
     Alcotest.of_pp (fun fmt -> function
       | Context.Operation.Transfer x ->
-        Format.fprintf fmt "amount: %d\n destination: %s\n"
+        Format.fprintf fmt "amount: %d\n destination: %S\n"
           (Amount.to_int x.amount)
           (Address.to_string x.destination)
-      | Invoke x ->
-        Format.fprintf fmt "param: %Ld\n  destination: %s\n"
-          (Bytes.get_int64_le x.param 0)
-          (Address.to_string x.destination))
+      | Invoke { destination; param; tickets } ->
+        let format_tickets fmt t =
+          Format.pp_print_list
+            ~pp_sep:(fun fmt () -> Format.fprintf fmt "%s" "\nNext\n")
+            (fun fmt ((ticket_id, amount), (handle, ptr)) ->
+              Format.fprintf fmt
+                "ticket_id: %s\namount: %d\nhandle: %s\noffset: %a"
+                (Ticket_id.to_string ticket_id)
+                (Amount.to_int amount) (Int32.to_string handle)
+                (Format.pp_print_option (fun fmt x ->
+                     Format.fprintf fmt "%s" (Int64.to_string x)))
+                ptr)
+            fmt t in
+        Format.fprintf fmt "\ndestination: %s\nparam: %S\ntickets:@[%a@]\n"
+          (Address.to_string destination)
+          (Core.Bytes.Hexdump.to_string_hum param)
+          format_tickets tickets)
 end
 
 let make_custom ~tickets_table ~source ~sender ~self ~tickets =

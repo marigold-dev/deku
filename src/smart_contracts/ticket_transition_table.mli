@@ -11,12 +11,6 @@ end
 module type S = sig
   include Conversions.S
 
-  module Ticket_handle :
-    Ticket_handle.S
-      with module Address = Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
-
   type t
 
   val own :
@@ -28,11 +22,7 @@ module type S = sig
     result
 
   val mint_ticket :
-    t ->
-    sender:Address.t ->
-    amount:Amount.t ->
-    bytes ->
-    Ticket_handle.t
+    t -> sender:Address.t -> amount:Amount.t -> bytes -> Ticket_handle.t
 
   val read_ticket :
     t ->
@@ -63,21 +53,17 @@ module type S = sig
 
   val init :
     self:Address.t ->
+    mapping:((Ticket_id.t * Amount.t) * Ticket_handle.t) list ->
     tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    temporary_tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    t
+    temporary_tickets:
+      ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) Seq.t ->
+    t * (Int64.t option * Ticket_handle.t) list option
 
-  val finalize : t -> (Ticket_id.t * Amount.t) Seq.t
+  val finalize : t -> (Ticket_handle.t * Ticket_id.t * Amount.t) Seq.t
 end
 
-module Make
-    (CC : Conversions.S)
-    (Ticket_handle : Ticket_handle.S
-                       with module Address = CC.Address
-                        and module Amount = CC.Amount
-                        and module Ticket_id = CC.Ticket_id) :
+module Make (CC : Conversions.S) :
   S
-    with module Address = CC.Address
-     and module Amount = CC.Amount
-     and module Ticket_id = CC.Ticket_id
-     and module Ticket_handle = Ticket_handle
+    with type Address.t = CC.Address.t
+     and type Amount.t = CC.Amount.t
+     and type Ticket_id.t = CC.Ticket_id.t

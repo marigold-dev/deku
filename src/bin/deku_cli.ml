@@ -118,6 +118,24 @@ let address =
   let open Arg in
   conv (parser, printer)
 
+let contract_argument_addr =
+  let parser string = Ok (Int64.of_string_opt string) in
+  let printer fmt wallet =
+    Format.fprintf fmt "%a"
+      (Format.pp_print_option (fun fmt x ->
+           Format.fprintf fmt "%s" (x |> Int64.to_string)))
+      wallet in
+  let open Arg in
+  conv (parser, printer)
+
+let contract_ticket_handle =
+  let parser string =
+    Int32.of_string_opt string
+    |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
+  let printer fmt wallet = Format.fprintf fmt "%s" (wallet |> Int32.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
 let amount =
   let parser string =
     let%ok int =
@@ -385,7 +403,12 @@ let originate_contract =
     let doc = "The string containing initial tickets for storage" in
     Arg.(
       Arg.value
-      & opt ~vopt:[] (list (pair ~sep:':' ticket amount)) []
+      & opt ~vopt:[]
+          (list
+             (pair ~sep:'='
+                (pair ~sep:':' ticket amount)
+                (pair ~sep:':' contract_ticket_handle contract_argument_addr)))
+          []
       & info ["tickets"] ~docv:"tickets" ~doc) in
 
   Term.(
@@ -417,7 +440,12 @@ let create_transaction =
     let doc = "The string containing tickets for vm argument" in
     Arg.(
       Arg.value
-      & opt ~vopt:[] (list (pair ~sep:':' ticket amount)) []
+      & opt ~vopt:[]
+          (list
+             (pair ~sep:'='
+                (pair ~sep:':' ticket amount)
+                (pair ~sep:':' contract_ticket_handle contract_argument_addr)))
+          []
       & info ["tickets"] ~docv:"tickets" ~doc) in
   let amount =
     let doc = "The amount to be transferred." in

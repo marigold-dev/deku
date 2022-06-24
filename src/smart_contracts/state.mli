@@ -1,31 +1,28 @@
 module type S = sig
   include Conversions.S
 
-  module Ticket_handle :
-    Ticket_handle.S
-      with module Address = Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
+  module Ticket_handle = Ticket_handle
 
   module Ticket_transition_table :
     Ticket_transition_table.S
-      with module Address = Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
-       and module Ticket_handle = Ticket_handle
+      with type Address.t = Address.t
+       and type Amount.t = Amount.t
+       and type Ticket_id.t = Ticket_id.t
 
   module Operation :
     Operation.S
-      with module Address = Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
+      with type Address.t = Address.t
+       and type Amount.t = Amount.t
+       and type Ticket_id.t = Ticket_id.t
 
   module State : sig
     class virtual finalization :
       object
         method virtual finalize :
           int list ->
-          ( (Ticket_id.t * Amount.t) Seq.t * Operation.t list,
+          ( ((Ticket_id.t * Amount.t) * Ticket_handle.t) List.t
+            * (Ticket_id.t * Amount.t) Seq.t
+            * Operation.t list,
             [`Execution_error] )
           result
       end
@@ -66,6 +63,6 @@ end
 
 module Make (CC : Conversions.S) :
   S
-    with module Address = CC.Address
-     and module Ticket_id = CC.Ticket_id
-     and module Amount = CC.Amount
+    with type Address.t = CC.Address.t
+     and type Amount.t = CC.Amount.t
+     and type Ticket_id.t = CC.Ticket_id.t

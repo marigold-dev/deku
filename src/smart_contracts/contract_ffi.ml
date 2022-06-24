@@ -65,14 +65,14 @@ module Make (CC : Conversions.S) :
         |> get_or_raise in
       handle
 
-    let mint_ticket t (value, amount) = 
+    let mint_ticket t (value, amount) =
       let sender = t#self in
       let table = t#table in
       Ticket_transition_table.mint_ticket table ~sender ~amount value
   end
 
   module Operations = struct
-    let transaction t (param, (ticket_handle, amount), address) =
+    let transaction t (param, (ticket_handle, amount, handle_addr), address) =
       let sender = t#self in
       let table = t#table in
       let ticket, amount2, _handle =
@@ -83,13 +83,12 @@ module Make (CC : Conversions.S) :
         if Address.is_implicit address then
           Operation.Transfer { ticket; amount; destination = address }
         else
-          let param =
-            Core.String.substr_replace_all (Bytes.to_string param)
-              ~pattern:(Ticket_handle.to_bytes ticket_handle |> Bytes.to_string)
-              ~with_:(Ticket_handle.to_bytes Int64.zero |> Bytes.to_string)
-            |> Bytes.of_string in
           Operation.Invoke
-            { param; tickets = [(ticket, amount)]; destination = address } in
+            {
+              param;
+              tickets = [((ticket, amount), (ticket_handle, handle_addr))];
+              destination = address;
+            } in
       t#add_operation operation
   end
 
@@ -106,8 +105,8 @@ module Make (CC : Conversions.S) :
       method get_contract_opt address = get_contract_opt address
     end
 
-  let make_state ~get_contract_opt ~source ~sender ~self ~contract_owned_tickets
-      ~provided_tickets =
+  let make_state ~get_contract_opt ~source ~sender ~mapping ~self
+      ~contract_owned_tickets ~provided_tickets =
     let ops = ref [] in
 
     let push operation =
@@ -121,33 +120,48 @@ module Make (CC : Conversions.S) :
           (new_idx, new_ops) in
       ops := operations;
       idx in
-    object
-      inherit State.full_state
+    let to_be_replaced = ref None in
+    ( object
+        inherit State.full_state
 
-      inherit addressable ~self ~source ~sender ~get_contract_opt
+        inherit addressable ~self ~source ~sender ~get_contract_opt
 
-      val ticket_table =
-        Ticket_transition_table.init ~self ~tickets:contract_owned_tickets
-          ~temporary_tickets:provided_tickets
+        val table =
+          let table, to_replace_tickets =
+            Ticket_transition_table.init ~mapping ~self
+              ~tickets:contract_owned_tickets
+              ~temporary_tickets:provided_tickets in
+          to_be_replaced := to_replace_tickets;
+          table
 
-      method table = ticket_table
+        method table = table
 
-      method finalize received =
-        let deduped = Set.stable_dedup_list (module Int) received in
-        let%ok ops =
-          if List.equal Int.equal received deduped then
-            let operations = !ops in
-            let ops =
-              List.fold_left
-                ~f:(fun acc x ->
-                  let elem = List.Assoc.find_exn ~equal:Int.equal operations x in
-                  elem :: acc)
-                ~init:[] received in
-            Result.return ops
-          else
-            Result.fail `Execution_error in
-        Ok (Ticket_transition_table.finalize ticket_table, ops)
+        method finalize received =
+          let finalized = Ticket_transition_table.finalize table in
+          let final = finalized |> Seq.map (fun (_, d, v) -> (d, v)) in
 
-      method add_operation operation = push operation
-    end
+          let saved_tickets =
+            finalized
+            |> Stdlib.List.of_seq
+            |> List.map ~f:(fun (key, t, a) -> ((t, a), key)) in
+          let deduped = Set.stable_dedup_list (module Int) received in
+          let%ok ops =
+            if List.equal Int.equal received deduped then
+              let operations = !ops in
+              let ops =
+                List.fold_left
+                  ~f:(fun acc x ->
+                    let elem =
+                      List.Assoc.find_exn ~equal:Int.equal operations x in
+                    elem :: acc)
+                  ~init:[] received in
+              Result.return ops
+            else
+              Result.fail `Execution_error in
+
+          Ok (saved_tickets, final, ops)
+
+        method add_operation operation = push operation
+      end,
+      !to_be_replaced )
 end
