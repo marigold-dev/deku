@@ -43,10 +43,12 @@ let apply_core_user_operation state user_operation =
       > state.block_height ) in
   let%assert () =
     ( `Duplicated_operation,
-      not (User_operation_set.mem user_operation state.included_user_operations)
-    ) in
+      not
+        (Included_user_operation_set.mem user_operation
+           state.included_user_operations) ) in
   let included_user_operations =
-    User_operation_set.add user_operation state.included_user_operations in
+    Included_user_operation_set.add user_operation
+      state.included_user_operations in
   let core_state, receipt =
     Core_deku.State.apply_user_operation state.core_state hash data in
   Ok ({ state with core_state; included_user_operations }, receipt)
@@ -89,17 +91,15 @@ let apply_block state block =
           | None -> receipts in
         (state, receipts))
       (state, []) user_operations in
-  let state =
-    {
-      state with
-      included_user_operations =
-        state.included_user_operations
-        |> User_operation_set.filter (fun op ->
-               Int64.sub state.block_height op.block_height
-               <= maximum_stored_block_height);
-    } in
+  let included_user_operations =
+    let block_height_to_be_removed =
+      Int64.sub state.block_height maximum_stored_block_height in
+    Included_user_operation_set.crop ~block_height:block_height_to_be_removed
+      state.included_user_operations in
+
   ( {
       state with
+      included_user_operations;
       block_height = block.block_height;
       validators = state.validators |> Validators.update_current block.author;
       last_block_hash = block.hash;
@@ -119,7 +119,7 @@ let make ~initial_block =
     {
       core_state = Core_deku.State.empty;
       included_tezos_operations = Tezos_operation_set.empty;
-      included_user_operations = User_operation_set.empty;
+      included_user_operations = Included_user_operation_set.empty;
       validators = Validators.empty;
       validators_hash = Validators.hash Validators.empty;
       block_height = Int64.sub initial_block.Block.block_height 1L;
