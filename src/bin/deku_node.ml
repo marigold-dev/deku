@@ -282,4 +282,10 @@ let node =
   $ minimum_block_delay
   $ Prometheus_dream.opts
 
-let _ = Cmd.eval @@ Cmd.v (Cmd.info "deku-node") node
+let default_info =
+  let doc = "Deku node" in
+  let sdocs = Manpage.s_common_options in
+  let exits = Cmd.Exit.defaults in
+  Cmd.info "deku-node" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
+
+let _ = Cmd.eval @@ Cmd.group default_info [Cmd.v (Cmd.info "start") node]
