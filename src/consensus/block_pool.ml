@@ -12,28 +12,37 @@ type block_and_signatures = {
   hash : BLAKE2B.t;
 }
 
+module Block_set = Set.Make (Block)
+
 type t = {
   self_key : Wallet.t;
   available : block_and_signatures Hash_map.t;
-  available_by_previous : block_and_signatures Hash_map.t;
+  available_by_previous : Block_set.t Hash_map.t;
   signed : block_and_signatures Hash_map.t;
   signed_by_previous : (Block.t * Signatures.t) Hash_map.t;
 }
 
 let update_block_and_signatures block_and_signatures t =
-  let add_to_map __x = Hash_map.add __x block_and_signatures in
   let hash = block_and_signatures.hash in
   let is_signed = Signatures.is_signed block_and_signatures.signatures in
   {
     self_key = t.self_key;
-    available = add_to_map hash t.available;
+    available = Hash_map.add hash block_and_signatures t.available;
     available_by_previous =
       (match block_and_signatures.block with
-      | Some block -> add_to_map block.previous_hash t.available_by_previous
+      | Some block ->
+        let block_set =
+          match
+            Hash_map.find_opt block.previous_hash t.available_by_previous
+          with
+          | Some block_set -> block_set
+          | None -> Block_set.empty in
+        let block_set = Block_set.add block block_set in
+        Hash_map.add block.previous_hash block_set t.available_by_previous
       | None -> t.available_by_previous);
     signed =
       (match is_signed with
-      | true -> add_to_map hash t.signed
+      | true -> Hash_map.add hash block_and_signatures t.signed
       | false -> t.signed);
     signed_by_previous =
       (match (is_signed, block_and_signatures.block) with
@@ -118,6 +127,13 @@ let find_signatures ~hash t =
 let find_next_block_to_apply ~hash t =
   let%some block, _ = Hash_map.find_opt hash t.signed_by_previous in
   Some block
+
+let find_all_next_blocks ~hash t =
+  let block_set =
+    match Hash_map.find_opt hash t.available_by_previous with
+    | Some block_set -> block_set
+    | None -> Block_set.empty in
+  Block_set.elements block_set
 
 let rec find_all_signed_blocks_above blocks (block, signatures) t =
   match Hash_map.find_opt block.Block.hash t.signed_by_previous with

@@ -28,7 +28,8 @@ let rec dispatch effect step state =
   | Apply_block_header { block } -> apply_block_header ~block effect state
   | Apply_block_data { block; previous_protocol } ->
     apply_block_data ~previous_protocol ~block effect state
-  | Post_apply_block -> post_apply_block effect state
+  | Post_apply_block { applied_block } ->
+    post_apply_block ~applied_block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
   | Check_validator_change { payload; signature } ->
@@ -94,8 +95,8 @@ and apply_block_data ~previous_protocol ~block effect state =
   | Ok (state, _snapshot_ref, step) -> dispatch effect step state
   | Error err -> (state, [err])
 
-and post_apply_block effect state =
-  let step = Steps.post_apply_block state in
+and post_apply_block ~applied_block effect state =
+  let step = Steps.post_apply_block ~applied_block state in
   dispatch effect step state
 
 and can_produce_block effect state =
