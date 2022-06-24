@@ -44,7 +44,12 @@ type step =
       signatures : Signatures.t;
     }
   (* transition *)
-  | Apply_block               of { block : Block.t }
+  | Apply_block_header        of { block : Block.t }
+  (* transition *)
+  | Apply_block_data          of {
+      block : Block.t;
+      previous_protocol : Protocol.t;
+    }
   (* transition *)
   | Post_apply_block
   (* verify *)
@@ -156,7 +161,7 @@ let pre_apply_block ~block ~signatures state =
     Snapshots.append_block ~pool:state.block_pool (block, signatures)
       state.snapshots in
   let state = { state with snapshots } in
-  (state, Apply_block { block })
+  (state, Apply_block_header { block })
 
 let post_apply_block state =
   match
@@ -164,7 +169,7 @@ let post_apply_block state =
       state.block_pool
   with
   | Some next_block -> Is_signed_block { hash = next_block.hash }
-  | None -> Can_produce_block
+  | None -> Noop
 
 let can_produce_block state =
   if is_current_producer state ~key_hash:state.identity.t then
