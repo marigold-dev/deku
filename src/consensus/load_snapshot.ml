@@ -82,7 +82,10 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
      In the future, we should only add snapshots once we're in sync. *)
   List.fold_left_ok
     (fun prev_state block ->
-      let%ok state, snapshot_ref, _step = apply_block ~block prev_state in
+      let previous_protocol = prev_state.protocol in
+      let%ok state, _step = apply_block_header ~block prev_state in
+      let%ok state, snapshot_ref, _step =
+        apply_block_data ~previous_protocol ~block state in
       (match snapshot_ref with
       | Some snapshot_ref ->
         (* TODO: this should be done in parallel, as otherwise the node
