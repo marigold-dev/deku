@@ -25,7 +25,9 @@ let rec dispatch effect step state =
   | Sign_block { block } -> sign_block ~block effect state
   | Pre_apply_block { block; signatures } ->
     pre_apply_block ~block ~signatures effect state
-  | Apply_block { block } -> apply_block ~block effect state
+  | Apply_block_header { block } -> apply_block_header ~block effect state
+  | Apply_block_data { block; previous_protocol } ->
+    apply_block_data ~previous_protocol ~block effect state
   | Post_apply_block -> post_apply_block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
@@ -82,8 +84,13 @@ and pre_apply_block ~block ~signatures effect state =
   let state, step = Steps.pre_apply_block ~block ~signatures state in
   dispatch effect step state
 
-and apply_block ~block effect state =
-  match Apply_block.apply_block ~block state with
+and apply_block_header ~block effect state =
+  match Apply_block.apply_block_header ~block state with
+  | Ok (state, step) -> dispatch effect step state
+  | Error err -> (state, [err])
+
+and apply_block_data ~previous_protocol ~block effect state =
+  match Apply_block.apply_block_data ~previous_protocol ~block state with
   | Ok (state, _snapshot_ref, step) -> dispatch effect step state
   | Error err -> (state, [err])
 
