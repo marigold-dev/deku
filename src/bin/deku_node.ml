@@ -25,8 +25,12 @@ let handle_request (type req res)
       | Ok response ->
         let%await response = Parallel.encode E.response_to_yojson response in
         Dream.json response
-      | Error err -> raise (Failure (Flows.string_of_error err)))
-    | Error err -> raise (Failure err) in
+      | Error err ->
+        Dream.respond ~status:`Internal_Server_Error (Flows.string_of_error err)
+      )
+    | Error err ->
+      Log.error "%s" err;
+      Dream.respond ~status:`Bad_Request err in
   Dream.post E.path handler
 
 (* POST /append-block-and-signature *)
