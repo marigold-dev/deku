@@ -33,6 +33,14 @@ let folder_node =
   let open Arg in
   required & pos 0 (some string) None & info [] ~doc ~docv
 
+let hash =
+  let parser string =
+    BLAKE2B.of_string string
+    |> Option.to_result ~none:(`Msg "Expected a 256bits BLAKE2b hash.") in
+  let printer fmt wallet = Format.fprintf fmt "%s" (BLAKE2B.to_string wallet) in
+  let open Arg in
+  conv (parser, printer)
+
 let lwt_ret p =
   let open Term in
   ret (const Lwt_main.run $ p)
@@ -309,6 +317,12 @@ let node =
   $ minimum_block_delay
   $ Prometheus_dream.opts
 
+let info_produce_block =
+  let doc =
+    "Produce and sign a block and broadcast to the network manually, useful \
+     when the chain is stale." in
+  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state =
@@ -335,11 +349,36 @@ let produce_block =
   let open Term in
   lwt_ret (const produce_block $ folder_node)
 
-let info_produce_block =
+let info_sign_block =
   let doc =
-    "Produce and sign a block and broadcast to the network manually, useful \
-     when the chain is stale." in
-  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+    "Sign a block hash and broadcast to the network manually, useful when the \
+     chain is stale." in
+  Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
+let sign_block node_folder block_hash =
+  let%await identity = read_identity ~node_folder in
+  let signature = Protocol.Signature.sign ~key:identity.secret block_hash in
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let validator_uris = List.map snd validator_uris |> List.somes in
+    let%await () =
+      let open Network in
+      broadcast_to_list
+        (module Signature_spec)
+        validator_uris
+        { hash = block_hash; signature } in
+    Lwt.return (`Ok ())
+
+let sign_block_term =
+  let block_hash =
+    let doc = "The block hash to be signed." in
+    let open Arg in
+    required & pos 1 (some hash) None & info [] ~doc in
+  let open Term in
+  lwt_ret (const sign_block $ folder_node $ block_hash)
 
 let default_info =
   let doc = "Deku node" in
@@ -350,4 +389,8 @@ let default_info =
 let _ =
   Cmd.eval
   @@ Cmd.group default_info
-       [Cmd.v (Cmd.info "start") node; Cmd.v info_produce_block produce_block]
+       [
+         Cmd.v (Cmd.info "start") node;
+         Cmd.v info_produce_block produce_block;
+         Cmd.v info_sign_block sign_block_term;
+       ]
