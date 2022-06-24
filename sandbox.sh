@@ -485,9 +485,10 @@ tear-down)
   tear-down
   ;;
 deposit-withdraw-test)
-  start_deku_cluster
+  start_deku_cluster &
+  deploy_dummy_ticket &
+  wait
   sleep 5
-  deploy_dummy_ticket
   deposit_withdraw_test
   pkill -x deku-node
   ;;
