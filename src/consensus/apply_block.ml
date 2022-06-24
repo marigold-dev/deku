@@ -14,7 +14,7 @@ let apply_block_header ~block state =
 
 let apply_block_data ~previous_protocol ~block state =
   (* TODO: handle this errors here *)
-  let%ok protocol, user_operations, receipts =
+  let protocol, user_operations, receipts =
     apply_block_data state.protocol block in
   Metrics.Blocks.inc_operations_processed
     ~operation_count:(List.length user_operations);
