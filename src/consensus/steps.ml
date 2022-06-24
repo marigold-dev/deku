@@ -51,7 +51,7 @@ type step =
       previous_protocol : Protocol.t;
     }
   (* transition *)
-  | Post_apply_block
+  | Post_apply_block          of { applied_block : Block.t }
   (* verify *)
   | Can_produce_block
   (* transition *)
@@ -163,13 +163,23 @@ let pre_apply_block ~block ~signatures state =
   let state = { state with snapshots } in
   (state, Apply_block_header { block })
 
-let post_apply_block state =
+let post_apply_block ~applied_block state =
   match
     Block_pool.find_next_block_to_apply ~hash:state.protocol.last_block_hash
       state.block_pool
   with
   | Some next_block -> Is_signed_block { hash = next_block.hash }
-  | None -> Noop
+  | None -> (
+    (* this is needed because blocks and signatures may arrive out of order *)
+    let next_blocks =
+      Block_pool.find_all_next_blocks ~hash:applied_block.Block.hash
+        state.block_pool in
+    (* TODO: this is not ideal, but likely not a problem *)
+    let signable_block =
+      List.find_opt (fun block -> is_signable state block) next_blocks in
+    match signable_block with
+    | Some block -> Is_signed_block { hash = block.hash }
+    | None -> Noop)
 
 let can_produce_block state =
   if is_current_producer state ~key_hash:state.identity.t then
