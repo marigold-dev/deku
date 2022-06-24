@@ -24,5 +24,7 @@ val find_signatures : hash:BLAKE2B.t -> t -> Signatures.t option
 
 val find_next_block_to_apply : hash:BLAKE2B.t -> t -> Block.t option
 
+val find_all_next_blocks : hash:BLAKE2B.t -> t -> Block.t list
+
 val find_all_signed_blocks_above :
   Block.t * Signatures.t -> t -> Block.t list * (Block.t * Signatures.t)
