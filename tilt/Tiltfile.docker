@@ -20,7 +20,7 @@ def make_deku_yaml(n):
     'expose': [ 4040, 9000 ],
     'ports': [ "444%s:4040" % i ],
     'volumes': [ ("./data/%s:/app/data" % i) ],
-    'command': [ "/app/data", "--listen-prometheus=9000" ]
+    'command': [ "start", "/app/data", "--listen-prometheus=9000"]
     }))
 
 
