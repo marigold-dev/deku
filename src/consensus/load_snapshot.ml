@@ -38,7 +38,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
     [%of_yojson:
       Core_deku.State.t
       * Tezos_operation_set.t
-      * User_operation_set.t
+      * Included_user_operation_set.t
       * Validators.t
       * BLAKE2B.t
       * int64
