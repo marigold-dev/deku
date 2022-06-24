@@ -73,14 +73,36 @@ let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
   && state.last_block_hash = block.previous_hash
 
-let apply_block state block =
-  Log.info "block: %Ld" block.Block.block_height;
-  let user_operations = Block.parse_user_operations block in
+(* after applying block header we can procede to produce blocks asynchronously *)
+let apply_block_header state block =
+  Log.info "block: %Ld, time: %d" block.Block.block_height
+    (Unix.time () |> Float.to_int);
   let state =
     List.fold_left apply_consensus_operation state block.consensus_operations
   in
   let state =
     List.fold_left apply_core_tezos_operation state block.tezos_operations in
+
+  {
+    state with
+    block_height = block.block_height;
+    validators = state.validators |> Validators.update_current block.author;
+    last_block_hash = block.hash;
+    last_state_root_update =
+      (match block.state_root_hash <> state.state_root_hash with
+      | true -> Unix.time ()
+      | false -> state.last_state_root_update);
+    last_applied_block_timestamp = Unix.time ();
+    state_root_hash = block.state_root_hash;
+    validators_hash = block.validators_hash;
+  }
+
+(* after applying block data the block is fully applied *)
+let apply_block_data state block =
+  let user_operations = Block.parse_user_operations block in
+  Log.info "block.data: %Ld, tx: %d" block.Block.block_height
+    (List.length user_operations);
+
   let state, receipts =
     List.fold_left
       (fun (state, receipts) user_operation ->
@@ -97,22 +119,7 @@ let apply_block state block =
     Included_user_operation_set.crop ~block_height:block_height_to_be_removed
       state.included_user_operations in
 
-  ( {
-      state with
-      included_user_operations;
-      block_height = block.block_height;
-      validators = state.validators |> Validators.update_current block.author;
-      last_block_hash = block.hash;
-      last_state_root_update =
-        (match block.state_root_hash <> state.state_root_hash with
-        | true -> Unix.time ()
-        | false -> state.last_state_root_update);
-      last_applied_block_timestamp = Unix.time ();
-      state_root_hash = block.state_root_hash;
-      validators_hash = block.validators_hash;
-    },
-    user_operations,
-    receipts )
+  ({ state with included_user_operations }, user_operations, receipts)
 
 let make ~initial_block =
   let empty =
@@ -129,12 +136,19 @@ let make ~initial_block =
       last_applied_block_timestamp = 0.0;
       last_seen_membership_change_timestamp = 0.0;
     } in
-  let state, _user_operations, _receipts = apply_block empty initial_block in
+  let state = apply_block_header empty initial_block in
+  let state, _user_operations, _receipts =
+    apply_block_data state initial_block in
   state
 
-let apply_block state block =
+let apply_block_header state block =
   let%assert () = (`Invalid_block_when_applying, is_next state block) in
-  let state, user_operations, result = apply_block state block in
+  let state = apply_block_header state block in
+  Ok state
+
+let apply_block_data state block =
+  let%assert () = (`Invalid_block_when_applying, is_next state block) in
+  let state, user_operations, result = apply_block_data state block in
   Ok (state, user_operations, result)
 
 let get_current_block_producer state =
