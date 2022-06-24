@@ -43,6 +43,19 @@ let lwt_ret p =
   let open Term in
   ret (const Lwt_main.run $ p)
 
+type output =
+  | JSON
+  | Human
+
+(* TODO: integrate with Logs library as we do in deku-node. *)
+let output_opt =
+  let docv = "output" in
+  let doc = "Output mode for the command, allowed values are json and human" in
+  Arg.(
+    value
+    & opt (enum [("json", JSON); ("human", Human)]) Human
+    & info ["output"] ~docv ~doc)
+
 let wallet =
   let parser file =
     let non_dir_file =
@@ -592,7 +605,7 @@ let info_produce_block =
      when the chain is stale." in
   Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let produce_block node_folder =
+let produce_block node_folder output =
   let%await identity = read_identity ~node_folder in
   let%await state = Node_state.get_initial_state ~folder:node_folder in
   let address = identity.t in
@@ -610,11 +623,19 @@ let produce_block node_folder =
       let open Network in
       broadcast_to_list (module Block_spec) validator_uris { block } in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+    let () =
+      let hash_string = BLAKE2B.to_string block.hash in
+      match output with
+      | Human -> Format.printf "block.hash: %s\n%!" hash_string
+      | JSON ->
+        Format.printf "%a"
+          (Yojson.pretty_print ~std:true)
+          (`Assoc [("block", `Assoc [("hash", `String hash_string)])]) in
     Lwt.return (`Ok ())
 
 let produce_block =
   let open Term in
-  lwt_ret (const produce_block $ folder_node)
+  lwt_ret (const produce_block $ folder_node $ output_opt)
 
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
@@ -726,16 +747,23 @@ let info_self =
   let doc = "Shows identity key and address of the node." in
   Cmd.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let self node_folder =
+let self node_folder output =
   let%await identity = read_identity ~node_folder in
-  Format.printf "key: %s\n" (Wallet.to_string identity.key);
-  Format.printf "address: %s\n" (Key_hash.to_string identity.t);
-  Format.printf "uri: %s\n" (Uri.to_string identity.uri);
+  let () =
+    match output with
+    | Human ->
+      Format.printf "key: %s\n" (Wallet.to_string identity.key);
+      Format.printf "address: %s\n" (Key_hash.to_string identity.t);
+      Format.printf "uri: %s\n" (Uri.to_string identity.uri)
+    | JSON ->
+      Format.printf "%a"
+        (Yojson.Safe.pretty_print ~std:true)
+        (identity_to_yojson identity) in
   await (`Ok ())
 
 let self =
   let open Term in
-  lwt_ret (const self $ folder_node)
+  lwt_ret (const self $ folder_node $ output_opt)
 
 let info_add_trusted_validator =
   let doc =
