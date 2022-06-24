@@ -29,7 +29,7 @@ end) : sig
 
   val pp : Format.formatter -> t -> unit
 
-  module Map : Map.S with type key = t
+  module Map : Map.S_with_yojson with type key = t
 
   val encoding : t Data_encoding.t
 end = struct
@@ -70,10 +70,14 @@ end = struct
 
   let pp fmt t = Format.fprintf fmt "%s" (to_string t)
 
-  module Map = Map.Make (struct
+  module Map = Map.Make_with_yojson (struct
     type nonrec t = t
 
     let compare = compare
+
+    let to_yojson = to_yojson
+
+    let of_yojson = of_yojson
   end)
 
   let encoding =
