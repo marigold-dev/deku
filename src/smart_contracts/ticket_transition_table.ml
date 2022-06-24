@@ -36,11 +36,7 @@ module type S = sig
     result
 
   val mint_ticket :
-    t ->
-    sender:Address.t ->
-    amount:Amount.t ->
-    bytes ->
-    Ticket_handle.t
+    t -> sender:Address.t -> amount:Amount.t -> bytes -> Ticket_handle.t
 
   val read_ticket :
     t ->
@@ -168,12 +164,9 @@ struct
     Ok handle
 
   let mint_ticket t ~sender ~amount data =
-    let contract =
-      (* FIXME: change Ticket_id.t and move this to use sender instead *)
-      Option.get @@ Tezos.Address.of_string "KT1UswnUv1iGpbV3UfYCFtJPq7CPUqBYrNF2" in
-    let ticket = Ticket_id.{ ticketer = contract; data } in
+    let ticket = Ticket_id.mint_ticket ~contract_address:sender ~data in
     let repr = Ticket_repr.make ticket amount To_be_dropped in
-    let handle = Ticket_handle.make sender ticket amount in
+    let handle = incr t in
     let () = merge t ~handle ~repr in
     handle
 

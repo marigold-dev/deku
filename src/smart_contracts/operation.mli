@@ -15,4 +15,7 @@ module type S = sig
 end
 
 module Make (CC : Conversions.S) :
-  S with module Address = CC.Address and module Amount = CC.Amount
+  S
+    with module Address = CC.Address
+     and module Amount = CC.Amount
+     and module Ticket_id = CC.Ticket_id

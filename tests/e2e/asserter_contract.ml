@@ -10,7 +10,7 @@ let assert_state_correct data_folder contract ticket amount =
   let contract = Address.of_string contract |> Option.get in
   let table = State.ledger state in
   let contract_storage = State.contract_storage state in
-  let ticket = Tezos.Ticket_id.of_string ticket |> Option.get in
+  let ticket = Core_deku.Ticket_id.of_string ticket |> Option.get in
   assert (
     Contract_storage.get_contract
       ~address:(Address.to_contract_hash contract |> Option.get)

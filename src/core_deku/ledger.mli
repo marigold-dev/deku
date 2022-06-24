@@ -6,7 +6,7 @@ module Withdrawal_handle : sig
     id : int;
     owner : Tezos.Address.t;
     amount : Amount.t;
-    ticket : Ticket_id.t;
+    ticket : Tezos.Ticket_id.t;
   }
   [@@deriving yojson]
 end
@@ -36,7 +36,7 @@ val withdraw :
   sender:Key_hash.t ->
   destination:Tezos.Address.t ->
   Amount.t ->
-  Ticket_id.t ->
+  Tezos.Ticket_id.t ->
   t ->
   (t * Withdrawal_handle.t, [> `Insufficient_funds]) result
 

@@ -26,6 +26,11 @@ let apply_tezos_operation t tezos_operation =
     let { ledger; contract_storage } = t in
     match internal_operation with
     | Tezos_deposit { destination; amount; ticket } ->
+      let ticket =
+        Ticket_id.of_tezos ticket
+        |> Result.map_error ~f:(Fun.const "impossible to fail")
+        |> Result.ok_or_failwith
+        (* TODO: verify that its not possible to fail *) in
       let ledger =
         match destination with
         | Implicit key_hash ->
@@ -49,12 +54,18 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
         ~sender:(Address.of_key_hash source)
         ~destination amount ticket ledger in
     Ok ({ contract_storage; ledger }, None)
-  | Tezos_withdraw { owner; amount; ticket } ->
+  | Tezos_withdraw { owner; amount; ticket } when Ticket_id.is_tezos ticket ->
+    let%ok ticket =
+      Ticket_id.to_tezos ticket
+      |> Result.map_error ~f:(Fun.const `Insufficient_funds) in
     let%ok ledger, handle =
       Ledger.withdraw
         ~sender:(Address.to_key_hash sender |> Option.value_exn)
         ~destination:owner amount ticket ledger in
     Ok ({ ledger; contract_storage }, Some (Receipt_tezos_withdraw handle))
+  | Tezos_withdraw _ ->
+    (*TODO *)
+    Error `Insufficient_funds
   | Contract_origination { payload; tickets } ->
     (* @TODO: deduct gas from account and check *)
     let balance = Int.max_value |> Amount.of_int in
