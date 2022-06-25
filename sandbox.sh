@@ -433,6 +433,49 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
+consensus_test() {
+  # Step 1: Start deku nodes
+  echo "Starting nodes."
+  for i in "${VALIDATORS[@]}"; do
+    if [ "$mode" = "local" ]; then
+      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
+      SERVERS+=($!)
+    fi
+  done
+
+  sleep 1
+
+  # Step 2: Manually produce the block
+  # See deku-cli produce-block --help
+  echo "Producing a block"
+  if [ "$mode" = "docker" ]; then
+    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
+  else
+    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
+  fi
+
+  sleep 0.1
+
+  # Step 3: Manually sign the block with less than 2/3rd of the nodes. 
+  #            Especially, sign the block with the proposers
+  # See deku-cli sign-block --help
+  echo "Signing"
+  echo "deku-node-0"
+  echo "hash: $HASH"
+  if [ "$mode" = "docker" ]; then
+      docker exec -t "deku-node-0" deku-cli sign-block /app/data "$HASH"
+    else
+      deku-cli sign-block "$DATA_DIRECTORY/0" "$HASH"
+    fi
+
+  if ((deku_height == 0))
+  then
+    echo "Error: The current block: $(deku_height) because it do not have greater than 2/3 signatures"
+    pkill -x deku-node
+    exit 1
+  fi
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -496,6 +539,9 @@ deploy-dummy-ticket)
   ;;
 deposit-dummy-ticket)
   deposit_ticket
+  ;;
+consensus-test)
+  consensus_test
   ;;
 *)
   help

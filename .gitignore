@@ -7,6 +7,9 @@ result
 # IDEs
 .vscode
 
+# Vscode history
+.history
+
 # nix-direnv cache
 .direnv
 
