@@ -468,7 +468,7 @@ consensus_test() {
       deku-cli sign-block "$DATA_DIRECTORY/0" "$HASH"
     fi
 
-  if ((deku_height == 0))
+  if [ "$(deku_height)" = 0 ]
   then
     echo "Error: The current block: $(deku_height) because it do not have greater than 2/3 signatures"
     pkill -x deku-node
