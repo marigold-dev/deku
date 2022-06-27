@@ -90,6 +90,32 @@ You may have to stop the session with `killall deku-node` to fully shutdown the 
 
 In either case, if all goes well, you should see the block height displayed in the terminal and increasing every second or so.
 
+### Test the deposit and withdraw in Deku
+
+Experiment with the deposit and withdraw processes between Tezos and Deku. 
+
+#### Requirements
+
+It is similar to Requirements in [Running a sidechain](#running-a-sidechain).
+
+#### Setup
+
+Run `docker compose up -d` and `./sandbox.sh setup` which are represented in [Running a sidechain](#running-a-sidechain).
+
+### Start
+
+Simply run:
+```
+./sanbox.sh deposit-withdraw-test
+```
+
+This starts the processes consecutively:
+
+- Start 3 nodes as background processes.
+- Deploy the `dummy-ticket` contract. You can find more about this contract in [dummy_ticket.mligo](dummy_ticket.mligo).
+- Deposit 100 tickets in an address included `dummy-ticket` contract and get the balance of the given address in Deku.
+- Withdraw 10 tickets from the aforementioned address in Deku.
+
 #### Experimental: Tilt
 
 Our experimental workflow uses [Tilt](https://tilt.dev) which is an advanced orchestrator. If you're using `nix` everything is already provided. If not, you will have to install the things in [requirements](#requirements) + [tilt](https://docs.tilt.dev/install.html) and [docker-compose](https://docs.docker.com/compose/install/).
