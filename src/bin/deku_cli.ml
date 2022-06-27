@@ -1,14 +1,10 @@
 open Helpers
 open Crypto
-open Protocol
 open Cmdliner
 open Core_deku
 open Bin_common
 
 let () = Printexc.record_backtrace true
-
-let read_identity ~node_folder =
-  Files.Identity.read ~file:(node_folder ^ "/identity.json")
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
@@ -263,21 +259,6 @@ let originate_contract node_uri contract_json initial_storage sender_wallet_file
     (BLAKE2B.to_string originate_contract_op.hash);
 
   Lwt.return (`Ok ())
-
-let folder_node position =
-  let docv = "folder_node" in
-  let doc = "The folder where the node lives." in
-  let open Arg in
-  required & pos position (some string) None & info [] ~doc ~docv
-
-let address_from position =
-  let doc =
-    "The sending address, or a path to a wallet% If a bare sending address is \
-     provided, the corresponding wallet is assumed to be in the working \
-     directory." in
-  let env = Cmd.Env.info "SENDER" ~doc in
-  let open Arg in
-  required & pos position (some wallet) None & info [] ~env ~docv:"sender" ~doc
 
 let node_uri =
   let doc = "Uri of a trusted node." in
@@ -535,19 +516,16 @@ let show_help =
       ~man )
 
 let info_self =
-  let doc = "Shows identity key and address of the node." in
+  let doc = "Shows address of the node." in
   Cmd.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let self node_folder =
-  let%await identity = read_identity ~node_folder in
-  Format.printf "key: %s\n" (Wallet.to_string identity.key);
-  Format.printf "address: %s\n" (Key_hash.to_string identity.t);
-  Format.printf "uri: %s\n" (Uri.to_string identity.uri);
-  await (`Ok ())
+let self node_uri =
+  Format.printf "uri: %s\n" (Uri.to_string node_uri);
+  `Ok ()
 
 let self =
   let open Term in
-  lwt_ret (const self $ folder_node 0)
+  ret (const self $ node_uri)
 
 let default_info =
   let doc = "Deku cli" in
