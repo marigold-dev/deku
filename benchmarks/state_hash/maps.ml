@@ -58,6 +58,8 @@ end = struct
   include Make_binable (struct
     include Crypto.BLAKE2B
 
+    let to_string = to_raw_string
+
     let name = "blake2b"
   end)
 end
