@@ -498,6 +498,11 @@ deploy-dummy-ticket)
 deposit-dummy-ticket)
   deposit_ticket
   ;;
+check-liveness)
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  echo "$CONSENSUS_ADDRESS" > /tmp/hello
+  check-liveness "$RPC_NODE" "$CONSENSUS_ADDRESS"
+  ;;
 *)
   help
   ;;

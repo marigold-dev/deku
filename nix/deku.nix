@@ -82,15 +82,15 @@ in ocamlPackages.buildDunePackage rec {
     rm -rf $out/lib $out/share/doc
     remove-references-to \
       -t ${ocamlPackages.ocaml} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-liveness,deku-node,deku-cli}
   '' + (if static then ''
     # If we're building statically linked binaries everything should be possible to remove
     remove-references-to \
       -t ${pkgs.gmp} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-livenss,deku-node,deku-cli}
     remove-references-to \
       -t ${pkgs.libffi} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-liveness,deku-node,deku-cli}
   '' else
     "");
 }
