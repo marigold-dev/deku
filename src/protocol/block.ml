@@ -1,6 +1,7 @@
 open Helpers
 open Crypto
 open Core_deku
+open Bin_prot.Std
 
 type t = {
   hash : BLAKE2B.t;
@@ -15,7 +16,7 @@ type t = {
   tezos_operations : Protocol_operation.Core_tezos.t list;
   user_operations : string;
 }
-[@@deriving yojson]
+[@@deriving yojson, bin_io]
 
 type user_operations = Protocol_operation.Core_user.t list [@@deriving yojson]
 

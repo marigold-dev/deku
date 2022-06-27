@@ -2,4 +2,4 @@
  (name network)
  (libraries protocol uri helpers piaf domainslib metrics)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))
+  (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding ppx_jane)))

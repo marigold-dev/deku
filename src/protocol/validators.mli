@@ -1,6 +1,6 @@
 open Crypto
 
-type validator = { address : Key_hash.t } [@@deriving eq, ord, yojson]
+type validator = { address : Key_hash.t } [@@deriving eq, ord, yojson, bin_io]
 
 type t [@@deriving yojson]
 

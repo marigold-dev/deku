@@ -1,6 +1,6 @@
 open Crypto
 
-type t = Key.t
+type t = Key.t [@@deriving bin_io]
 
 let compare = Key.compare
 

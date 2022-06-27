@@ -1,6 +1,6 @@
 open Crypto
 
-type t = Key.t [@@deriving yojson, ord]
+type t = Key.t [@@deriving yojson, ord, bin_io]
 
 val of_key : Secret.t -> t
 

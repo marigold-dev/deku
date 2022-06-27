@@ -1,7 +1,7 @@
 open Helpers
 open Crypto
 
-type t = BLAKE2B_20.t [@@deriving eq, ord]
+type t = BLAKE2B_20.t [@@deriving eq, ord, bin_io]
 
 let of_user_operation_hash t = BLAKE2B.to_raw_string t |> BLAKE2B_20.hash
 
