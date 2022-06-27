@@ -399,10 +399,9 @@ let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
   Cmd.info "withdraw" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-let withdraw node_folder sender_wallet_file tezos_address amount ticket =
+let withdraw node_uri sender_wallet_file tezos_address amount ticket =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await block_level_response = request_block_level () identity.uri in
+  let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
@@ -415,36 +414,39 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let%await () =
     Network.request_user_operation_gossip
       { user_operation = operation }
-      identity.uri in
+      node_uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string operation.hash);
   Lwt.return (`Ok ())
 
 let withdraw =
+  let address_from =
+    let doc =
+      "The sending address, or a path to a wallet% If a bare sending address \
+       is provided, the corresponding wallet is assumed to be in the working \
+       directory." in
+    let env = Cmd.Env.info "SENDER" ~doc in
+    let open Arg in
+    required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
   let tezos_address =
     let doc =
       "The address that will be used to withdraw the ticket at Tezos **only \
        KT1 and tz1**" in
     let open Arg in
     required
-    & pos 2 (some address_tezos_interop) None
+    & pos 1 (some address_tezos_interop) None
     & info [] ~docv:"tezos_address" ~doc in
   let amount =
     let doc = "The amount to be transacted." in
     let env = Cmd.Env.info "TRANSFER_AMOUNT" ~doc in
     let open Arg in
-    required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
+    required & pos 2 (some amount) None & info [] ~env ~docv:"amount" ~doc in
   let ticket =
     let doc = "The ticket to be trasnsacted." in
     let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+    required & pos 3 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
-    (const withdraw
-    $ folder_node 0
-    $ address_from 1
-    $ tezos_address
-    $ amount
-    $ ticket)
+    (const withdraw $ node_uri $ address_from $ tezos_address $ amount $ ticket)
 
 let withdraw_proof node_folder operation_hash callback =
   let open Network in
