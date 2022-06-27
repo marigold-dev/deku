@@ -589,29 +589,6 @@ let ensure_folder folder =
   else
     Lwt_unix.mkdir folder 0o700
 
-let setup_identity node_folder uri =
-  let%await () = ensure_folder node_folder in
-  let identity =
-    let open Crypto in
-    let secret, key = Ed25519.generate () in
-    let secret, key = (Secret.Ed25519 secret, Key.Ed25519 key) in
-    Consensus.make_identity ~secret ~key ~uri in
-  let%await () = write_identity ~node_folder identity in
-  await (`Ok ())
-
-let info_setup_identity =
-  let doc = "Create a validator identity" in
-  Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let setup_identity =
-  let self_uri =
-    let docv = "self_uri" in
-    let doc = "The uri that other nodes should use to connect to this node." in
-    let open Arg in
-    required & opt (some uri) None & info ["uri"] ~doc ~docv in
-  let open Term in
-  lwt_ret (const setup_identity $ folder_node 0 $ self_uri)
-
 let info_setup_tezos =
   let doc = "Setup Tezos identity" in
   Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
@@ -782,7 +759,6 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_setup_identity setup_identity;
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
          Cmd.v info_remove_trusted_validator remove_trusted_validator;

@@ -157,9 +157,9 @@ create_new_deku_environment() {
       # For the current setup, we are using either localhost or deku-node-i and
       # run on different ports (incremental).
       # In future, one can configure URI to be whatever one wish
-      deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
+      deku-node setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
     else
-      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+      deku-node setup-identity "$FOLDER" --uri "http://localhost:444$i"
     fi
     KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
     ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
