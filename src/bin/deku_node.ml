@@ -1,10 +1,11 @@
-open Helpers
-open Cmdliner
-open Node
 open Consensus
-open Bin_common
-open Protocol
+open Helpers
 open Crypto
+open Node
+open State
+open Protocol
+open Cmdliner
+open Bin_common
 
 let exits =
   Cmd.Exit.defaults
@@ -14,6 +15,9 @@ let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
+
+let write_identity ~node_folder =
+  Files.Identity.write ~file:(node_folder ^ "/identity.json")
 
 let interop_context node_folder =
   let%await context =
@@ -38,6 +42,23 @@ let hash =
     BLAKE2B.of_string string
     |> Option.to_result ~none:(`Msg "Expected a 256bits BLAKE2b hash.") in
   let printer fmt wallet = Format.fprintf fmt "%s" (BLAKE2B.to_string wallet) in
+  let open Arg in
+  conv (parser, printer)
+
+let ensure_folder folder =
+  let%await exists = Lwt_unix.file_exists folder in
+  if exists then
+    let%await stat = Lwt_unix.stat folder in
+    if stat.st_kind = Lwt_unix.S_DIR then
+      await ()
+    else
+      raise (Invalid_argument (folder ^ " is not a folder"))
+  else
+    Lwt_unix.mkdir folder 0o700
+
+let uri =
+  let parser uri = Ok (uri |> Uri.of_string) in
+  let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
   let open Arg in
   conv (parser, printer)
 
@@ -380,6 +401,29 @@ let sign_block_term =
   let open Term in
   lwt_ret (const sign_block $ folder_node $ block_hash)
 
+let info_setup_identity =
+  let doc = "Create a validator identity" in
+  Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc
+
+let setup_identity node_folder uri =
+  let%await () = ensure_folder node_folder in
+  let identity =
+    let open Crypto in
+    let secret, key = Ed25519.generate () in
+    let secret, key = (Secret.Ed25519 secret, Key.Ed25519 key) in
+    Consensus.make_identity ~secret ~key ~uri in
+  let%await () = write_identity ~node_folder identity in
+  await (`Ok ())
+
+let setup_identity =
+  let self_uri =
+    let docv = "self_uri" in
+    let doc = "The uri that other nodes should use to connect to this node." in
+    let open Arg in
+    required & opt (some uri) None & info ["uri"] ~doc ~docv in
+  let open Term in
+  lwt_ret (const setup_identity $ folder_node $ self_uri)
+
 let default_info =
   let doc = "Deku node" in
   let sdocs = Manpage.s_common_options in
@@ -393,4 +437,5 @@ let _ =
          Cmd.v (Cmd.info "start") node;
          Cmd.v info_produce_block produce_block;
          Cmd.v info_sign_block sign_block_term;
+         Cmd.v info_setup_identity setup_identity;
        ]
