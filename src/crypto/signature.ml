@@ -54,3 +54,13 @@ let of_string =
 
 let to_yojson, of_yojson =
   Yojson_ext.with_yojson_string "signature" to_string of_string
+
+include Bin_prot_ext.String_like (struct
+  type nonrec t = t
+
+  let name = "signature"
+
+  let of_string = of_string
+
+  let to_string = to_string
+end)

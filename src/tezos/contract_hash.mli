@@ -1,6 +1,6 @@
 open Crypto
 
-type t = BLAKE2B_20.t [@@deriving eq, ord, yojson]
+type t = BLAKE2B_20.t [@@deriving eq, ord, yojson, bin_io]
 
 val encoding : t Data_encoding.t
 

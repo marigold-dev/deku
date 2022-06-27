@@ -3,7 +3,7 @@ open Helpers
 module Make (P : sig
   val size : int
 end) : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val to_string : t -> string
 
@@ -74,6 +74,16 @@ end = struct
     type nonrec t = t
 
     let compare = compare
+  end)
+
+  include Bin_prot_ext.String_like (struct
+    type nonrec t = t
+
+    let name = "BLAKE2B"
+
+    let of_string = of_raw_string_opt
+
+    let to_string = to_raw_string
   end)
 
   let encoding =

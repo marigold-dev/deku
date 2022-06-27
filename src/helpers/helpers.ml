@@ -4,6 +4,7 @@ module Uri = Uri_ext
 module Result = Result_ext
 module Option = Option_ext
 module Yojson_ext = Yojson_ext
+module Bin_prot_ext = Bin_prot_ext
 module Map = Map_ext
 module Set = Set_ext
 

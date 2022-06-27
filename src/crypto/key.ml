@@ -57,3 +57,13 @@ let encoding =
 
 let to_yojson, of_yojson =
   Yojson_ext.with_yojson_string "key" to_string of_string
+
+include Helpers.Bin_prot_ext.String_like (struct
+  type nonrec t = t
+
+  let name = "Key"
+
+  let of_string = of_string
+
+  let to_string = to_string
+end)
