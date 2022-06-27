@@ -12,18 +12,6 @@ let read_identity ~node_folder =
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
-let interop_context node_folder =
-  let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
-  Lwt.return
-    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
-       ~consensus_contract:context.consensus_contract
-       ~discovery_contract:context.discovery_contract
-       ~required_confirmations:context.required_confirmations)
-
-let validator_uris ~interop_context =
-  Tezos_interop.Consensus.fetch_validators interop_context
-
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
@@ -190,22 +178,6 @@ let info_create_transaction =
   Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let with_validator_uri node_folder f =
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris -> (
-    let validator_uris =
-      List.filter_map
-        (function
-          | key_hash, Some uri -> Some (key_hash, uri)
-          | _ -> None)
-        validator_uris in
-    match validator_uris with
-    | [] -> Lwt.return (`Error (false, "No validators found"))
-    | validator_uri :: _ -> f validator_uri)
-
 let create_transaction node_uri sender_wallet_file received_address amount
     ticket argument vm_flavor tickets =
   let open Network in
@@ -253,49 +225,44 @@ let info_originate_contract =
   Cmd.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Wasm]) tickets =
-  with_validator_uri node_folder (fun (_, validator_uri) ->
-      let open Network in
-      let%await block_level_response = request_block_level () validator_uri in
-      let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let%await payload =
-        let open Contracts in
-        match vm_flavor with
-        | `Wasm ->
-          let%await code =
-            Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
-          in
-          let code = Bytes.of_string code in
-          let initial_storage = Yojson.Safe.from_file initial_storage in
-          let initial_storage =
-            Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
-          Contract_vm.Origination_payload.wasm_of_yojson ~code
-            ~storage:initial_storage
-          |> Result.get_ok
-          |> Lwt.return in
-      let origination_op =
-        User_operation.Contract_origination { payload; tickets } in
-      let originate_contract_op =
-        Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-          ~nonce:(Crypto.Random.int32 Int32.max_int)
-          ~block_height:block_level
-          ~data:(User_operation.make ~source:wallet.address origination_op)
+let originate_contract node_uri contract_json initial_storage sender_wallet_file
+    (vm_flavor : [`Wasm]) tickets =
+  let open Network in
+  let%await block_level_response = request_block_level () node_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await payload =
+    let open Contracts in
+    match vm_flavor with
+    | `Wasm ->
+      let%await code =
+        Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
       in
-      let%await identity = read_identity ~node_folder in
-      let%await () =
-        Network.request_user_operation_gossip
-          {
-            Network.User_operation_gossip.user_operation = originate_contract_op;
-          }
-          identity.uri in
-      Format.printf "contract_address: %s\noperation_hash: %s\n"
-        (Contract_address.of_user_operation_hash originate_contract_op.hash
-        |> Contract_address.to_string)
-        (BLAKE2B.to_string originate_contract_op.hash);
+      let code = Bytes.of_string code in
+      let initial_storage = Yojson.Safe.from_file initial_storage in
+      let initial_storage =
+        Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
+      Contract_vm.Origination_payload.wasm_of_yojson ~code
+        ~storage:initial_storage
+      |> Result.get_ok
+      |> Lwt.return in
+  let origination_op =
+    User_operation.Contract_origination { payload; tickets } in
+  let originate_contract_op =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level
+      ~data:(User_operation.make ~source:wallet.address origination_op) in
+  let%await () =
+    Network.request_user_operation_gossip
+      { Network.User_operation_gossip.user_operation = originate_contract_op }
+      node_uri in
+  Format.printf "contract_address: %s\noperation_hash: %s\n"
+    (Contract_address.of_user_operation_hash originate_contract_op.hash
+    |> Contract_address.to_string)
+    (BLAKE2B.to_string originate_contract_op.hash);
 
-      Lwt.return (`Ok ()))
+  Lwt.return (`Ok ())
 
 let folder_node position =
   let docv = "folder_node" in
@@ -326,7 +293,7 @@ let originate_contract =
        provided, the corresponding wallet is assumed to be in the working \
        directory." in
     let env = Cmd.Env.info "SENDER" ~doc in
-    Arg.(required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
+    Arg.(required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
   in
   let vm_flavor =
     let doc = "Virtual machine flavor. can only be Wasm for now" in
@@ -340,12 +307,12 @@ let originate_contract =
       "The path to the JSON output of compiling the contract to bytecode." in
     let open Arg in
     required
-    & pos 2 (some contract_code_path) None
+    & pos 1 (some contract_code_path) None
     & info [] ~docv:"contract" ~doc in
   let initial_storage =
     let doc = "The string containing initial storage for the VM" in
     let open Arg in
-    required & pos 3 (some string) None & info [] ~docv:"initial_storage" ~doc
+    required & pos 2 (some string) None & info [] ~docv:"initial_storage" ~doc
   in
   let tickets =
     let doc = "The string containing initial tickets for storage" in
@@ -362,7 +329,7 @@ let originate_contract =
   Term.(
     lwt_ret
       (const originate_contract
-      $ folder_node 0
+      $ node_uri
       $ contract_json
       $ initial_storage
       $ address_from
