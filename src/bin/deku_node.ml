@@ -567,6 +567,35 @@ let add_trusted_validator =
   let open Term in
   lwt_ret (const add_trusted_validator $ folder_node $ validator_address)
 
+let info_remove_trusted_validator =
+  let doc =
+    "Helps node operators maintain a list of trusted validators they verified \
+     off-chain which can later be used to make sure only trusted validators \
+     are added as new validators in the network." in
+  Cmd.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
+    ~man ~exits
+
+let remove_trusted_validator node_folder address =
+  let open Network in
+  let%await identity = read_identity ~node_folder in
+  let payload =
+    let open Trusted_validators_membership_change in
+    { address; action = Remove } in
+  let payload_json_str =
+    payload
+    |> Trusted_validators_membership_change.payload_to_yojson
+    |> Yojson.Safe.to_string in
+  let payload_hash = BLAKE2B.hash payload_json_str in
+  let signature = Signature.sign ~key:identity.secret payload_hash in
+  let%await () =
+    Network.request_trusted_validator_membership { signature; payload }
+      identity.uri in
+  await (`Ok ())
+
+let remove_trusted_validator =
+  let open Term in
+  lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
+
 let default_info =
   let doc = "Deku node" in
   let sdocs = Manpage.s_common_options in
@@ -583,4 +612,5 @@ let _ =
          Cmd.v info_setup_identity setup_identity;
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
+         Cmd.v info_remove_trusted_validator remove_trusted_validator;
        ]

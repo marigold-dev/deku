@@ -590,41 +590,6 @@ let self =
   let open Term in
   lwt_ret (const self $ folder_node 0)
 
-let validator_address =
-  let docv = "validator_address" in
-  let doc = "The validator address to be added/removed as trusted" in
-  let open Arg in
-  required & pos 1 (some address_implicit) None & info [] ~docv ~doc
-
-let info_remove_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let remove_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Remove } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let remove_trusted_validator =
-  let open Term in
-  lwt_ret (const remove_trusted_validator $ folder_node 0 $ validator_address)
-
 let default_info =
   let doc = "Deku cli" in
   let sdocs = Manpage.s_common_options in
@@ -643,7 +608,6 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_get_ticket_balance get_ticket_balance;
          Cmd.v info_self self;
        ]
