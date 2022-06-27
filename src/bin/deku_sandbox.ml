@@ -215,6 +215,11 @@ let deploy_contract rpc_url contract_name contract_path storage wallet =
 let deku_address =
   "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf" |> Key_hash.of_string |> Option.get
 
+let deku_secret =
+  "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+  |> Secret.of_string
+  |> Option.get
+
 let get_deku_height rpc_url =
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   let consensus_address = Address.to_string consensus_address in
@@ -229,6 +234,61 @@ let get_deku_height rpc_url =
   |> Result.map int_of_string_opt
   |> Result.map (Option.to_result ~none:"cannot parse output from deku-height")
   |> Result.join
+
+let withdraw path_to_wallet ticketer_address =
+  let ticketer_address_string = ticketer_address |> Address.to_string in
+  deku_cli
+    [
+      "withdraw";
+      "data/0";
+      path_to_wallet;
+      ticketer_address_string;
+      "10";
+      Format.sprintf "Pair \"%s\" 0x" ticketer_address_string;
+    ]
+  |. process "awk" ["{ print $2 }"]
+  |. process "tr" ["-d"; "\t\n\r"]
+  |> run_res ~error:"error in withdraw"
+
+let withdraw_proof operation_hash _ticketer_address =
+  let open Network in
+  let%ok withdraw_proof_response =
+    process "curl"
+      [
+        "-s";
+        "-X";
+        "POST";
+        "-d";
+        Format.sprintf "{\"operation_hash\":\"%s\"}" operation_hash;
+        operation_hash;
+        "http://localhost:4440/withdraw-proof";
+      ]
+    |> run_res ~error:"error in withdraw-proof" in
+
+  let%ok withdraw_proof_response =
+    withdraw_proof_response
+    |> Yojson.Safe.from_string
+    |> Withdraw_proof.response_of_yojson
+    |> Result.map_error (fun _ -> "Error in deserialization") in
+
+  match withdraw_proof_response with
+  | Unknown_operation -> Error "unknown operation"
+  | Operation_is_not_a_withdraw -> Error "operation is not a withdraw"
+  | Ok withdraw_proof ->
+    Ok
+      ( withdraw_proof.withdrawal_handle.id,
+        withdraw_proof.withdrawal_handles_hash,
+        withdraw_proof.proof )
+
+let create_wallet address priv_key path =
+  let open Infix in
+  echo
+    (Format.sprintf "{\"address\": \"%s\", \"priv_key\": \"%s\"}"
+       (Key_hash.to_string address)
+       (Secret.to_string priv_key))
+  > path
+  |> run_res ~error:"error in create wallet"
+  |> Result.map (fun _ -> ())
 
 (* start *)
 let start_deku_cluster mode validators verbosity =
@@ -330,23 +390,6 @@ let info_smoke_test =
   in
   Cmd.info "smoke-test" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
-(* deposit-withdraw-test *)
-let deposit_withdraw_test mode nodes =
-  process "./sandbox.sh"
-    ["deposit-withdraw-test"; mode_to_string mode; string_of_int nodes]
-  |> run_ret
-
-let deposit_withdraw_test =
-  let open Term in
-  const deposit_withdraw_test $ mode $ nodes |> ret
-
-let info_deposit_withdraw_test =
-  let doc =
-    "Start a Deku cluster and originate a dummy tickets and performs a deposit \
-     and a withdraw." in
-  Cmd.info "deposit-withdraw-test" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
 (* deploy-dummy-ticket *)
 let deploy_dummy_ticket mode =
   deploy_contract (rpc_url mode) "dummy_ticket" "./dummy_ticket.mligo" "()"
@@ -402,6 +445,103 @@ let info_deposit_dummy_ticket =
   let doc = "Executes a deposit of a dummy ticket to Deku." in
   Cmd.info "deposit-dummy-ticket" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
+
+(* deposit-withdraw-test *)
+let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
+  (* bootstrap the cluster *)
+  let%ok _ = start_deku_cluster mode validators Error in
+
+  (* deploy a dummy ticket *)
+  let%ok _ =
+    deploy_contract rpc_url "dummy_ticket" "./dummy_ticket.mligo" "()" "bob"
+  in
+
+  (* Deposit 100 tickets *)
+  let%ok _ = deposit_ticket rpc_url deku_address in
+  sleep 10.;
+
+  (* Create a wallet with the deku_address and deku_private key *)
+  let%ok () = create_wallet deku_address deku_secret "wallet.json" in
+
+  let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
+  let%ok balance = get_balance deku_address dummy_ticket_address in
+  let%assert () =
+    ( Format.sprintf "Balance for ticket %s is \"%i\"! Did the deposit fail?"
+        (dummy_ticket_address |> Address.to_string)
+        balance,
+      balance <> 0 ) in
+  print_endline "Deposit is ok.";
+
+  (* Withdraw some tickets *)
+  let%ok operation_hash = withdraw "./wallet.json" dummy_ticket_address in
+  sleep 10.0;
+
+  (* Get the proof of the withdraw *)
+  let%ok id, handle_hash, proof =
+    withdraw_proof operation_hash dummy_ticket_address in
+  let handle_hash = BLAKE2B.to_string handle_hash in
+  let proof =
+    proof
+    |> List.map (fun (left, right) ->
+           Format.sprintf "Pair 0x%s 0x%s" (BLAKE2B.to_string left)
+             (BLAKE2B.to_string right))
+    |> String.concat ";" in
+  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+  print_endline "Withdraw-proof is ok.";
+
+  sleep 10.0;
+
+  (* Send the proof to the dummy ticket contract*)
+  let arg =
+    Format.sprintf
+      "Pair (Pair \"%s\" (Pair (Pair (Pair 10 0x) (Pair %d \"%s\")) \"%s\")) \
+       (Pair 0x%s {%s})"
+      (consensus_address |> Address.to_string)
+      id
+      (dummy_ticket_address |> Address.to_string)
+      (dummy_ticket_address |> Address.to_string)
+      handle_hash proof in
+
+  tezos_client
+    [
+      "transfer";
+      "0";
+      "from";
+      "bob";
+      "to";
+      "dummy_ticket";
+      "--entrypoint";
+      "withdraw_from_deku";
+      "--arg";
+      arg;
+      "--burn-cap";
+      "2";
+    ]
+
+let deposit_withdraw_test mode nodes =
+  let rpc_url = rpc_url mode in
+  let validators = make_validators nodes in
+  let test_result =
+    deposit_withdraw_test mode validators rpc_url deku_address deku_secret in
+  killall_deku_nodes ();
+  test_result |> ret_res
+
+let deposit_withdraw_test =
+  let open Term in
+  const deposit_withdraw_test $ mode $ nodes |> ret
+
+let info_deposit_withdraw_test =
+  let doc = "Tests the deposit/withdraw scenario" in
+  let man =
+    `S Manpage.s_description
+    :: `P
+         "Does the following: starts a Deku cluster, originates a dummy ticket \
+          contract, deposits some ticket on Deku, checks the balance, requests \
+          a withdraw and the associated withdraw proof, sends the withdraw \
+          proof to the consensus contract."
+    :: man in
+  Cmd.info "deposit-withdraw-test" ~version:"%\226\128\140%VERSION%%" ~doc
+    ~exits ~man
 
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
