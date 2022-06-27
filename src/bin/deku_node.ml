@@ -20,6 +20,9 @@ let read_identity ~node_folder =
 let write_identity ~node_folder =
   Files.Identity.write ~file:(node_folder ^ "/identity.json")
 
+let write_interop_context ~node_folder =
+  Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
+
 let interop_context node_folder =
   let%await context =
     Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
@@ -62,6 +65,37 @@ let uri =
   let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
   let open Arg in
   conv (parser, printer)
+
+let edsk_secret_key =
+  let parser key =
+    match Crypto.Secret.of_string key with
+    | Some key -> Ok key
+    | _ -> Error (`Msg "Expected EDSK secret key") in
+  let printer ppf key = Format.fprintf ppf "%s" (Crypto.Secret.to_string key) in
+  let open Arg in
+  conv (parser, printer)
+
+let address_tezos_interop =
+  let parser string =
+    string
+    |> Tezos.Address.of_string
+    |> Option.to_result ~none:(`Msg "Expected a wallet address.") in
+  let printer fmt address =
+    Format.fprintf fmt "%s" (Tezos.Address.to_string address) in
+  let open Arg in
+  conv (parser, printer)
+
+let tezos_required_confirmations =
+  let msg = "Expected an integer greater than 0" in
+  let parser string =
+    match int_of_string_opt string with
+    | Some int when int > 0 -> Ok int
+    | Some _
+    | None ->
+      Error (`Msg msg) in
+  let printer fmt int = Format.fprintf fmt "%d" int in
+  let open Arg in
+  conv ~docv:"An integer greater than 0" (parser, printer)
 
 let lwt_ret p =
   let open Term in
@@ -430,6 +464,70 @@ let setup_identity =
   let open Term in
   lwt_ret (const setup_identity $ folder_node 0 $ self_uri)
 
+let info_setup_tezos =
+  let doc = "Setup Tezos identity" in
+  Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~man ~exits
+
+let setup_tezos node_folder rpc_node secret consensus_contract
+    discovery_contract required_confirmations =
+  let%await () = ensure_folder node_folder in
+  let%await () =
+    write_interop_context ~node_folder
+      {
+        rpc_node;
+        secret;
+        consensus_contract;
+        discovery_contract;
+        required_confirmations;
+      } in
+  await (`Ok ())
+
+let setup_tezos =
+  let tezos_node_uri =
+    let docv = "tezos_node_uri" in
+    let doc = "The uri of the tezos node." in
+    let open Arg in
+    required & opt (some uri) None & info ["tezos_rpc_node"] ~doc ~docv in
+  let tezos_secret =
+    let docv = "tezos_secret" in
+    let doc = "The Tezos secret key." in
+    let open Arg in
+    required
+    & opt (some edsk_secret_key) None
+    & info ["tezos_secret"] ~doc ~docv in
+  let tezos_consensus_contract_address =
+    let docv = "tezos_consensus_contract_address" in
+    let doc = "The address of the Tezos consensus contract." in
+    let open Arg in
+    required
+    & opt (some address_tezos_interop) None
+    & info ["tezos_consensus_contract"] ~doc ~docv in
+  let tezos_discovery_contract_address =
+    let docv = "tezos_discovery_contract_address" in
+    let doc = "The address of the Tezos discovery contract." in
+    let open Arg in
+    required
+    & opt (some address_tezos_interop) None
+    & info ["tezos_discovery_contract"] ~doc ~docv in
+  let tezos_required_confirmations =
+    let docv = "int" in
+    let doc =
+      "Set the required confirmations. WARNING: Setting below default of 10 \
+       can compromise security of the Deku chain." in
+    let open Arg in
+    value
+    & opt tezos_required_confirmations 10
+    & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
+  let open Term in
+  lwt_ret
+    (const setup_tezos
+    $ folder_node 0
+    $ tezos_node_uri
+    $ tezos_secret
+    $ tezos_consensus_contract_address
+    $ tezos_discovery_contract_address
+    $ tezos_required_confirmations)
+
 let default_info =
   let doc = "Deku node" in
   let sdocs = Manpage.s_common_options in
@@ -444,4 +542,5 @@ let _ =
          Cmd.v info_produce_block produce_block;
          Cmd.v info_sign_block sign_block_term;
          Cmd.v info_setup_identity setup_identity;
+         Cmd.v info_setup_tezos setup_tezos;
        ]

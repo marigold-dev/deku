@@ -10,12 +10,6 @@ let () = Printexc.record_backtrace true
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
 
-let write_identity ~node_folder =
-  Files.Identity.write ~file:(node_folder ^ "/identity.json")
-
-let write_interop_context ~node_folder =
-  Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
-
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 let interop_context node_folder =
@@ -66,15 +60,6 @@ let contract_code_path =
     |> Result.map_error (fun _ -> `Msg "Expected path to contract JSON") in
   let printer = Arg.(conv_printer non_dir_file) in
   Arg.(conv (parser, printer))
-
-let edsk_secret_key =
-  let parser key =
-    match Crypto.Secret.of_string key with
-    | Some key -> Ok key
-    | _ -> Error (`Msg "Expected EDSK secret key") in
-  let printer ppf key = Format.fprintf ppf "%s" (Crypto.Secret.to_string key) in
-  let open Arg in
-  conv (parser, printer)
 
 let uri =
   let parser uri = Ok (uri |> Uri.of_string) in
@@ -144,18 +129,6 @@ let amount =
   let printer fmt amount = Format.fprintf fmt "%d" (Amount.to_int amount) in
   let open Arg in
   conv ~docv:"A positive amount" (parser, printer)
-
-let tezos_required_confirmations =
-  let msg = "Expected an integer greater than 0" in
-  let parser string =
-    match int_of_string_opt string with
-    | Some int when int > 0 -> Ok int
-    | Some _
-    | None ->
-      Error (`Msg msg) in
-  let printer fmt int = Format.fprintf fmt "%d" int in
-  let open Arg in
-  conv ~docv:"An integer greater than 0" (parser, printer)
 
 let ticket =
   let parser string =
@@ -578,81 +551,6 @@ let get_ticket_balance =
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
   lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
 
-let ensure_folder folder =
-  let%await exists = Lwt_unix.file_exists folder in
-  if exists then
-    let%await stat = Lwt_unix.stat folder in
-    if stat.st_kind = Lwt_unix.S_DIR then
-      await ()
-    else
-      raise (Invalid_argument (folder ^ " is not a folder"))
-  else
-    Lwt_unix.mkdir folder 0o700
-
-let info_setup_tezos =
-  let doc = "Setup Tezos identity" in
-  Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
-
-let setup_tezos node_folder rpc_node secret consensus_contract
-    discovery_contract required_confirmations =
-  let%await () = ensure_folder node_folder in
-  let%await () =
-    write_interop_context ~node_folder
-      {
-        rpc_node;
-        secret;
-        consensus_contract;
-        discovery_contract;
-        required_confirmations;
-      } in
-  await (`Ok ())
-
-let setup_tezos =
-  let tezos_node_uri =
-    let docv = "tezos_node_uri" in
-    let doc = "The uri of the tezos node." in
-    let open Arg in
-    required & opt (some uri) None & info ["tezos_rpc_node"] ~doc ~docv in
-  let tezos_secret =
-    let docv = "tezos_secret" in
-    let doc = "The Tezos secret key." in
-    let open Arg in
-    required
-    & opt (some edsk_secret_key) None
-    & info ["tezos_secret"] ~doc ~docv in
-  let tezos_consensus_contract_address =
-    let docv = "tezos_consensus_contract_address" in
-    let doc = "The address of the Tezos consensus contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_consensus_contract"] ~doc ~docv in
-  let tezos_discovery_contract_address =
-    let docv = "tezos_discovery_contract_address" in
-    let doc = "The address of the Tezos discovery contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_discovery_contract"] ~doc ~docv in
-  let tezos_required_confirmations =
-    let docv = "int" in
-    let doc =
-      "Set the required confirmations. WARNING: Setting below default of 10 \
-       can compromise security of the Deku chain." in
-    let open Arg in
-    value
-    & opt tezos_required_confirmations 3
-    & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
-  let open Term in
-  lwt_ret
-    (const setup_tezos
-    $ folder_node 0
-    $ tezos_node_uri
-    $ tezos_secret
-    $ tezos_consensus_contract_address
-    $ tezos_discovery_contract_address
-    $ tezos_required_confirmations)
-
 let show_help =
   let doc = "a tool for interacting with the WIP Tezos Sidechain" in
   let sdocs = Manpage.s_common_options in
@@ -759,7 +657,6 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
          Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_get_ticket_balance get_ticket_balance;

@@ -222,7 +222,7 @@ EOF
     i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    deku-cli setup-tezos "$FOLDER" \
+    deku-node setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_discovery_contract="$TEZOS_DISCOVERY_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
