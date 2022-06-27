@@ -14,6 +14,10 @@ module Address_map : Map.S with type key = Key_hash.t
 
 module Uri_map : Map.S with type key = Uri.t
 
+type pollinate_context =
+  | Client
+  | Server
+
 type t = {
   identity : identity;
   consensus : Consensus.t;
@@ -36,5 +40,5 @@ val make :
   interop_context:Tezos_interop.t ->
   data_folder:string ->
   initial_validators_uri:Uri.t Address_map.t ->
-  pollinate_node_opt:Pollinate.PNode.t ref Lwt.t option ->
+  pollinate_context:pollinate_context ->
   t

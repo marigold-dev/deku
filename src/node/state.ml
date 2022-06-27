@@ -14,6 +14,10 @@ type identity = Consensus.identity = {
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 
+type pollinate_context =
+  | Client
+  | Server
+
 type t = {
   identity : identity;
   consensus : Consensus.t;
@@ -33,19 +37,19 @@ type t = {
 
 let make ~identity ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
-    ~initial_validators_uri ~pollinate_node_opt =
+    ~initial_validators_uri ~pollinate_context =
   let consensus =
     Consensus.make ~identity ~trusted_validator_membership_change in
   let pollinate_node =
-    match pollinate_node_opt with
-    | Some p_node ->
-      Log.debug "Got Pollinate Node\n%!";
-      p_node
-    | None ->
-      Log.debug "No Pollinate Node provided, constructing it\n%!";
+    match pollinate_context with
+    | Client -> (* Client mode only *)
+      (Pollinate.PNode.init ~init_peers:[]
+         (Pollinate.Address.create "127.0.0.1" 4000))
+    | Server ->
+      Log.debug "No Pollinate Node provided, constructing it";
       let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
        fun uri ->
-        Log.debug "Translating Uri.t to Pollinate.Address.t\n%!";
+        Log.debug "Translating Uri.t to Pollinate.Address.t";
         let address =
           match Uri.host uri with
           | Some "localhost" -> "127.0.0.1"
