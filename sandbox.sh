@@ -433,9 +433,9 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
-consensus_test() {
+consensus_test_scenario_1() {
   # Step 1: Start deku nodes
-  echo "Starting nodes."
+  echo "Starting nodes"
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
       deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
@@ -468,10 +468,49 @@ consensus_test() {
       deku-cli sign-block "$DATA_DIRECTORY/0" "$HASH"
     fi
 
+  sleep 1
+
   if [ "$(deku_height)" = 0 ]
   then
     echo "Error: The current block: $(deku_height) because it do not have greater than 2/3 signatures"
     pkill -x deku-node
+    exit 1
+  fi
+}
+
+consensus_test_scenario_2() {
+  INITIAL_DEKU_HEIGHT=$(deku_height)
+
+  # Step 1: Manually produce the block
+  # See deku-cli produce-block --help
+  echo "Producing a block"
+  if [ "$mode" = "docker" ]; then
+    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
+  else
+    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
+  fi
+
+  sleep 0.1
+
+  # Step 2: Manually sign the block 
+  # See deku-cli sign-block --help
+  echo "Signing"
+  for i in "${VALIDATORS[@]}"; do
+    echo "deku-node-$i"
+    echo "hash: $HASH"
+    if [ "$mode" = "docker" ]; then
+      
+      docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
+    else
+      deku-cli sign-block "$DATA_DIRECTORY/$i" "$HASH"
+    fi
+  done
+
+  sleep 1
+
+  if [ "$(deku_height)" = $INITIAL_DEKU_HEIGHT ]
+  then
+    echo "Error: The block which has just been produced and signed is not included in Deku"
     exit 1
   fi
 }
@@ -540,8 +579,11 @@ deploy-dummy-ticket)
 deposit-dummy-ticket)
   deposit_ticket
   ;;
-consensus-test)
-  consensus_test
+consensus-test-scenario-1)
+  consensus_test_scenario_1
+  ;;
+consensus-test-scenario-2)
+  consensus_test_scenario_2
   ;;
 *)
   help
