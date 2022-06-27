@@ -14,6 +14,14 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
+(executable
+ (name deku_sandbox)
+ (libraries feather bin_common cmdliner)
+ (modules deku_sandbox)
+ (public_name deku-sandbox)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
+
 (library
  (name bin_common)
  (modules Files Node_state)
