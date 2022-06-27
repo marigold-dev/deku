@@ -508,7 +508,7 @@ consensus_test_scenario_2() {
 
   sleep 1
 
-  if [ "$(deku_height)" = $INITIAL_DEKU_HEIGHT ]
+  if [ "$(deku_height)" = "$INITIAL_DEKU_HEIGHT" ]
   then
     echo "Error: The block which has just been produced and signed is not included in Deku"
     exit 1
