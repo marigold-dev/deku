@@ -6,7 +6,7 @@ type t =
       contract : Contract_hash.t;
       entrypoint : string option;
     }
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 (* TODO: explain why this encoding? TLDR fixed size and no entrypoint  *)
 val contract_encoding : t Data_encoding.t

@@ -13,7 +13,7 @@ type t = private {
   tezos_operations : Protocol_operation.Core_tezos.t list;
   user_operations : string;
 }
-[@@deriving yojson, ord]
+[@@deriving yojson, ord, bin_io]
 
 val sign : key:Secret.t -> t -> Protocol_signature.t
 

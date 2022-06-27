@@ -1,13 +1,13 @@
 type ticketer =
   | Deku  of Address.t
   | Tezos of Tezos.Address.t
-[@@deriving ord, eq, yojson]
+[@@deriving ord, eq, yojson, bin_io]
 
 type t = {
   ticketer : ticketer;
   data : bytes;
 }
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 let to_tezos = function
   | { ticketer = Deku _; data = _ } -> Error `Not_supported

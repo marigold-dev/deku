@@ -8,7 +8,7 @@ module Signature_spec = struct
     hash : BLAKE2B.t;
     signature : Signature.t;
   }
-  [@@deriving yojson]
+  [@@deriving yojson, bin_io]
 
   type response = unit [@@deriving yojson]
 
@@ -16,7 +16,7 @@ module Signature_spec = struct
 end
 
 module Block_spec = struct
-  type request = { block : Block.t } [@@deriving yojson]
+  type request = { block : Block.t } [@@deriving yojson, bin_io]
 
   type response = unit [@@deriving yojson]
 

@@ -41,32 +41,18 @@ let handle_received_block_dream =
 (* FIXME doc *)
 (* POST /append-block-and-signature *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block (msg : Pollinate.PNode.Message.t) =
-  let open Bin_prot.Read in
-  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string msg.payload in
-  let payload_json = Yojson.Safe.from_string payload_str in
-  (* FIXME weird interface *)
-  let req = Network.Block_spec.request_of_yojson payload_json in
-  match req with
-  | Error err -> raise (Failure err)
-  | Ok request ->
-    Flows.received_block request.block;
-    Ok ()
+let handle_received_block pollinate_msg =
+  let open Pollinate.PNode.Message in
+  let request = Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request pollinate_msg.payload in
+  Flows.received_block request.block;
+  Ok ()
 
 (* FIXME factorization *)
 let handle_received_signature pollinate_msg =
-  let open Bin_prot.Read in
   let open Pollinate.PNode.Message in
-  let payload_str = Pollinate.Util.Encoding.unpack bin_read_string pollinate_msg.payload in
-  let payload_json = Yojson.Safe.from_string payload_str in
-  let req = Network.Signature_spec.request_of_yojson payload_json in
-  match req with
-  | Error err -> raise (Failure err)
-  | Ok request ->
-    Flows.received_signature
-      ~hash:request.hash
-      ~signature:request.signature;
-    Ok ()
+  let request = Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request pollinate_msg.payload in
+  Flows.received_signature ~hash:request.hash ~signature:request.signature;
+  Ok ()
 
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
@@ -218,7 +204,6 @@ let node folder port prometheus_port =
 
   let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
    fun msg ->
-    Log.debug "MSG_HANDLER: Received message";
     let subcategory_opt = msg.sub_category_opt in
     let _ =
       match subcategory_opt with

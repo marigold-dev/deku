@@ -1,5 +1,6 @@
 open Crypto
 open Helpers
+open Bin_prot.Std
 
 type t =
   | Implicit   of Key_hash.t
@@ -7,7 +8,7 @@ type t =
       contract : Contract_hash.t;
       entrypoint : string option;
     }
-[@@deriving eq, ord]
+[@@deriving eq, ord, bin_io]
 
 let to_string = function
   | Implicit key_hash -> Key_hash.to_string key_hash

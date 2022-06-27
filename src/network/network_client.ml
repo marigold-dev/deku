@@ -8,6 +8,15 @@ module type Request_endpoint = sig
   val path : string
 end
 
+(* FIXME: to be factorized with Request_endpoint *)
+module type Pollinate_endpoint = sig
+  type request [@@deriving bin_io]
+
+  type response [@@deriving yojson]
+
+  val path : string
+end
+
 exception Error_status
 
 let raw_request path raw_data uri =
@@ -54,11 +63,9 @@ let broadcast_to_list (type req res)
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
 let send_over_pollinate (type req res)
-    (module E : Request_endpoint with type request = req and type response = res)
+    (module E : Pollinate_endpoint with type request = req and type response = res)
     node data =
-  let open Bin_prot.Std in
-  let%await data = Parallel.encode E.request_to_yojson data in
-  let data_bin_io = Pollinate.Util.Encoding.pack bin_writer_string data in
+  let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
   let message : Pollinate.PNode.Message.t =
     {
       category = Pollinate.PNode.Message.Post;

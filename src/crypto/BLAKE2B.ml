@@ -1,9 +1,10 @@
 open Helpers
+open Bin_prot.Std
 
 module Make (P : sig
   val size : int
 end) : sig
-  type t [@@deriving yojson]
+  type t [@@deriving yojson, bin_io]
 
   val to_string : t -> string
 
@@ -82,6 +83,29 @@ end = struct
       (fun hash -> to_raw_string hash)
       (fun string -> string |> of_raw_string |> Option.get)
       (Fixed.string size)
+
+ let bin_read_t buf ~pos_ref =
+   match of_string @@ Bin_prot.Read.bin_read_string buf ~pos_ref with
+     | None -> failwith "Invalid hex"
+     | Some t -> t
+  let bin_size_t t = bin_size_string @@ to_hex t
+
+  let bin_shape_t = Bin_prot.Shape.(basetype (Uuid.of_string "BLAKE2B") [])
+  let bin_reader_t =
+    let variant_wrong_type name _buf ~pos_ref _x =
+      Bin_prot.Common.raise_variant_wrong_type name !pos_ref
+    in
+    Bin_prot.Type_class.{ read = bin_read_t; vtag_read = variant_wrong_type
+  "BLAKE2B" }
+
+  let __bin_read_t__ _ = Log.debug "bin_read_t called"; failwith "Not used by Pollinate"
+
+  let bin_write_t buf ~pos t = Bin_prot.Write.bin_write_string buf ~pos (to_hex t)
+
+  let bin_writer_t = Bin_prot.Type_class.{ size = bin_size_t; write = bin_write_t }
+  let __bin_write_t__ _ = failwith "Not used by Pollinate"
+
+  let bin_t = Bin_prot.Type_class.{ shape = bin_shape_t; writer = bin_writer_t; reader = bin_reader_t }
 end
 
 module BLAKE2B_20 = Make (struct

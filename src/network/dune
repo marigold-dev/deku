@@ -1,5 +1,5 @@
 (library
  (name network)
- (libraries protocol uri helpers piaf domainslib metrics pollinate)
+ (libraries protocol uri helpers piaf domainslib metrics bin_prot pollinate)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))
+  (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding ppx_jane)))
