@@ -161,9 +161,9 @@ create_new_deku_environment() {
     else
       deku-node setup-identity "$FOLDER" --uri "http://localhost:444$i"
     fi
-    KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
-    URI=$(deku-cli self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
+    KEY=$(deku-node self "$FOLDER" | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku-node self "$FOLDER" | grep "address:" | awk '{ print $2 }')
+    URI=$(deku-node self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 

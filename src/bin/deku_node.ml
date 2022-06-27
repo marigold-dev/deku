@@ -598,6 +598,21 @@ let remove_trusted_validator node_folder address =
       identity.uri in
   await (`Ok ())
 
+let info_self =
+  let doc = "Shows identity key and address of the node." in
+  Cmd.info "self" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
+let self node_folder =
+  let%await identity = read_identity ~node_folder in
+  Format.printf "key: %s\n" (Wallet.to_string identity.key);
+  Format.printf "address: %s\n" (Key_hash.to_string identity.t);
+  Format.printf "uri: %s\n" (Uri.to_string identity.uri);
+  await (`Ok ())
+
+let self =
+  let open Term in
+  lwt_ret (const self $ folder_node 0)
+
 let remove_trusted_validator =
   let open Term in
   lwt_ret (const remove_trusted_validator $ folder_node 0 $ validator_address)
@@ -619,4 +634,5 @@ let _ =
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
          Cmd.v info_remove_trusted_validator remove_trusted_validator;
+         Cmd.v info_self self;
        ]
