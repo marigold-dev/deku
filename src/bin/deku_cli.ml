@@ -448,10 +448,9 @@ let withdraw =
   lwt_ret
     (const withdraw $ node_uri $ address_from $ tezos_address $ amount $ ticket)
 
-let withdraw_proof node_folder operation_hash callback =
+let withdraw_proof node_uri operation_hash callback =
   let open Network in
-  let%await identity = read_identity ~node_folder in
-  let%await result = request_withdraw_proof { operation_hash } identity.uri in
+  let%await result = request_withdraw_proof { operation_hash } node_uri in
   match result with
   | Unknown_operation ->
     let message = BLAKE2B.to_string operation_hash ^ " is unknown" in
@@ -492,16 +491,15 @@ let withdraw_proof =
     let docv = "operation_hash" in
     let doc = "The operation hash used on the withdraw." in
     let open Arg in
-    required & pos 1 (some hash) None & info [] ~doc ~docv in
+    required & pos 0 (some hash) None & info [] ~doc ~docv in
   let contract_callback =
     let docv = "contract_callback" in
     let doc = "Contract callback to be used on the withdraw" in
     let open Arg in
-    required & pos 2 (some address_tezos_interop) None & info [] ~doc ~docv
+    required & pos 1 (some address_tezos_interop) None & info [] ~doc ~docv
   in
   let open Term in
-  lwt_ret
-    (const withdraw_proof $ folder_node 0 $ operation_hash $ contract_callback)
+  lwt_ret (const withdraw_proof $ node_uri $ operation_hash $ contract_callback)
 
 let info_get_ticket_balance =
   let doc = "Get balance of a ticket for an account." in

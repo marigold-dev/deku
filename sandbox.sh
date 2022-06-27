@@ -363,7 +363,7 @@ deposit_withdraw_test() {
   OPERATION_HASH=$(deku-cli withdraw ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
   sleep 20
 
-  WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
+  WITHDRAW_PROOF=$(deku-cli withdraw-proof "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
     exit 1
