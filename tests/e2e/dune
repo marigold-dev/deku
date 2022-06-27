@@ -1,10 +1,4 @@
 (executable
- (name asserter)
- (public_name asserter)
- (modules asserter)
- (libraries bin_common lwt cmdliner))
-
-(executable
  (name check_liveness)
  (public_name check-liveness)
  (modules check_liveness)

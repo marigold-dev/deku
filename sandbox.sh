@@ -291,58 +291,6 @@ wait_for_servers() {
 }
 
 # =======================
-# Steps for the command: ./sandbox.sh smoke-test
-# - deku_height()
-# - start_deku_cluster()
-# - pkill -x deku-node
-# - assert_deku_state()
-deku_storage() {
-  local contract
-  contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
-  local storage
-  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
-  echo "$storage"
-}
-
-deku_state_hash() {
-  local storage
-  storage=$(deku_storage)
-  local state_hash
-  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
-  echo "$state_hash"
-}
-
-deku_height() {
-  local storage
-  storage=$(deku_storage)
-  local block_height
-  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
-  echo "$block_height"
-}
-
-assert_deku_state() {
-  local current_state_hash
-  current_state_hash=$(deku_state_hash)
-  local current_block_height
-  current_block_height=$(deku_height)
-  local starting_height=$1
-  local seconds=$2
-  local minimum_expected_height=$((starting_height + $2))
-
-  echo "The current block height is" "$current_block_height"
-
-  # Check that a current height has progressed past the starting height sufficiently
-  if [ $((current_block_height - starting_height)) -lt 20 ]; then
-    echo "Error: less than 20 blocks were produced in $2 seconds."
-    exit 1
-  fi
-
-  for i in "${VALIDATORS[@]}"; do
-    asserter "$DATA_DIRECTORY/$i" "$current_state_hash" "$minimum_expected_height"
-  done
-}
-
-# =======================
 # ./sandbox.sh tear-down
 # Removes the DATA_DIRECTORY subfolders
 # This avoids having wrong state when starting again
@@ -437,7 +385,7 @@ help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|start|tear-down|smoke-test"
+  echo "Usage: $0 setup|start|tear-down"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -448,8 +396,6 @@ help() {
   echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
-  echo "smoke-test"
-  echo "  Starts a Deku cluster and performs some simple checks that its working."
   echo "deploy-dummy-ticket"
   echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
   echo "deposit-withdraw-test"
@@ -472,14 +418,6 @@ setup)
 start)
   start_deku_cluster
   wait_for_servers
-  ;;
-smoke-test)
-  starting_height=$(deku_height)
-  start_deku_cluster
-  seconds=35
-  sleep $seconds
-  pkill -x deku-node
-  assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down
