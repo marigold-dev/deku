@@ -1,7 +1,5 @@
 open Helpers
 open Crypto
-open Node
-open State
 open Protocol
 open Cmdliner
 open Core_deku
@@ -611,39 +609,6 @@ let sign_block_term =
   let open Term in
   lwt_ret (const sign_block $ folder_node 0 $ block_hash)
 
-let info_produce_block =
-  let doc =
-    "Produce and sign a block and broadcast to the network manually, useful \
-     when the chain is stale." in
-  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let produce_block node_folder =
-  let%await identity = read_identity ~node_folder in
-  (* TODO: this should be refactored out of the CLI per https://github.com/marigold-dev/deku/issues/659 *)
-  let%await state =
-    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:1.
-  in
-  let address = identity.t in
-  let block =
-    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
-      ~author:address ~consensus_operations:[] ~tezos_operations:[]
-      ~user_operations:[] in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
-
-let produce_block =
-  let open Term in
-  lwt_ret (const produce_block $ folder_node 0)
-
 let ensure_folder folder =
   let%await exists = Lwt_unix.file_exists folder in
   if exists then
@@ -849,7 +814,6 @@ let _ =
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
          Cmd.v info_sign_block sign_block_term;
-         Cmd.v info_produce_block produce_block;
          Cmd.v info_setup_identity setup_identity;
          Cmd.v info_setup_tezos setup_tezos;
          Cmd.v info_add_trusted_validator add_trusted_validator;
