@@ -183,7 +183,7 @@ let get_contract_address rpc_url contract_name =
   |> Option.to_result ~none:"Error in contract retrieving"
 
 let deploy_contract rpc_url contract_name contract_path storage wallet =
-  Format.printf "Originating new %s contract." contract_name;
+  Format.printf "Originating new %s contract.@." contract_name;
   let%ok storage =
     ligo ["compile"; "storage"; contract_path; storage]
     |> run_res ~error:"ligo compile storage error" in
@@ -216,18 +216,78 @@ let deku_address =
   "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf" |> Key_hash.of_string |> Option.get
 
 let get_deku_height rpc_url =
+  let open Yojson.Safe.Util in
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let url =
     Format.sprintf
       "http://localhost:20000/chains/main/blocks/head/context/contracts/%s/storage"
       consensus_address in
-  process "curl" ["--silent"; url]
-  |. process "jq" [".args[0].args[0].args[0].args[1].int"]
-  |. process "xargs" []
-  |> run_res ~error:"get deku-height with tezos-client error"
+  let%ok stdout = process "curl" ["--silent"; url] |> run_res in
+  stdout
+  |> Yojson.Safe.from_string
+  |> member "args"
+  |> to_list
+  |> (fun list -> List.nth_opt list 0)
+  |> Option.map (member "args")
+  |> Option.map to_list
+  |> Option.map (fun list -> List.nth_opt list 0)
+  |> Option.join
+  |> Option.map (member "args")
+  |> Option.map to_list
+  |> Option.map (fun list -> List.nth_opt list 0)
+  |> Option.join
+  |> Option.map (member "args")
+  |> Option.map to_list
+  |> Option.map (fun list -> List.nth_opt list 1)
+  |> Option.join
+  |> Option.map (member "int")
+  |> Option.map Yojson.Safe.Util.to_string_option
+  |> Option.join
+  |> Option.map int_of_string_opt
+  |> Option.join
+  |> Option.to_result ~none:"Error in deku-height parsing"
+
+let get_deku_state_hash rpc_url =
+  let open Yojson.Safe.Util in
+  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+  let consensus_address = Address.to_string consensus_address in
+  let url =
+    Format.sprintf "%s/chains/main/blocks/head/context/contracts/%s/storage"
+      rpc_url consensus_address in
+  let%ok stdout = process "curl" ["--silent"; url] |> run_res in
+  stdout
+  |> Yojson.Safe.from_string
+  |> member "args"
+  |> to_list
+  |> (fun list -> List.nth_opt list 0)
+  |> Option.map (member "args")
+  |> Option.map to_list
+  |> Option.map (fun list -> List.nth_opt list 0)
+  |> Option.join
+  |> Option.map (member "args")
+  |> Option.map to_list
+  |> Option.map (fun list -> List.nth_opt list 2)
+  |> Option.join
+  |> Option.map (member "bytes")
+  |> Option.map to_string_option
+  |> Option.join
+  |> Option.to_result ~none:"Error in deku-state-hash parsing"
+
+let asserter data_folder state_hash block_height =
+  process "asserter" [data_folder; state_hash; block_height]
+  |> run_res ~error:"error in asserter"
+
+let killall_deku_nodes () = process "pkill" ["-x"; "deku-node"] |> run
+
+let get_balance address ticketer =
+  let ticket = Format.sprintf "(Pair \"%s\" 0x)" (Address.to_string ticketer) in
+  deku_cli ["get-balance"; "data/0"; Key_hash.to_string address; ticket]
+  |. grep "Balance:"
+  |. process "awk" ["{ print $2 }"]
+  |> run_res ~error:"error in get balance"
   |> Result.map int_of_string_opt
-  |> Result.map (Option.to_result ~none:"cannot parse output from deku-height")
+  |> Result.map (Option.to_result ~none:"error from get-balance parsing")
   |> Result.join
 
 (* start *)
@@ -313,10 +373,33 @@ let info_setup =
   Cmd.info "setup" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
 (* smoke test *)
+
+let smoke_test mode validators rpc_url =
+  (* bootstrap the network *)
+  let%ok _ = start_deku_cluster mode validators Error in
+  let%ok starting_height = get_deku_height rpc_url in
+  let seconds = 35 in
+  sleep (float_of_int seconds);
+  let%ok current_state_hash = get_deku_state_hash rpc_url in
+  let%ok current_block_height = get_deku_height rpc_url in
+  let minimum_expected_height = starting_height + seconds in
+  let%assert () =
+    ( Format.sprintf "less than 20 blocks were produce in %i seconds." seconds,
+      current_block_height - starting_height > 20 ) in
+  validators
+  |> List.map (fun i ->
+         asserter
+           (Format.sprintf "data/%i" i)
+           current_state_hash
+           (string_of_int minimum_expected_height))
+  |> fold_results (Ok [])
+
 let smoke_test mode nodes =
-  process "./sandbox.sh"
-    ["smoke-test"; mode_to_string mode; string_of_int nodes]
-  |> run_ret
+  let rpc_url = rpc_url mode in
+  let validators = make_validators nodes in
+  let test_result = smoke_test mode validators rpc_url in
+  killall_deku_nodes ();
+  test_result |> ret_res
 
 let smoke_test =
   let open Term in
