@@ -3,6 +3,39 @@ open Cmdliner
 open Node
 open Consensus
 open Bin_common
+open Protocol
+open Crypto
+
+let exits =
+  Cmd.Exit.defaults
+  @ [Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)"]
+
+let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
+let read_identity ~node_folder =
+  Files.Identity.read ~file:(node_folder ^ "/identity.json")
+
+let interop_context node_folder =
+  let%await context =
+    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
+  Lwt.return
+    (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
+       ~consensus_contract:context.consensus_contract
+       ~discovery_contract:context.discovery_contract
+       ~required_confirmations:context.required_confirmations)
+
+let validator_uris ~interop_context =
+  Tezos_interop.Consensus.fetch_validators interop_context
+
+let folder_node =
+  let docv = "folder_node" in
+  let doc = "Path to the folder containing the node configuration data." in
+  let open Arg in
+  required & pos 0 (some string) None & info [] ~doc ~docv
+
+let lwt_ret p =
+  let open Term in
+  ret (const Lwt_main.run $ p)
 
 let update_state state =
   Server.set_state state;
@@ -250,11 +283,10 @@ let node json_logs style_renderer level folder prometheus_port =
   node folder prometheus_port
 
 let node =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "Path to the folder containing the node configuration data." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+  let json_logs =
+    let docv = "Json logs" in
+    let doc = "This determines whether logs will be printed in json format." in
+    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
   let minimum_block_delay =
     let docv = "minimum_block_delay" in
     let doc =
@@ -262,11 +294,6 @@ let node =
        newly produced block." in
     let open Arg in
     value & opt float 1. & info ["minimum_block_delay"] ~doc ~docv in
-  let json_logs =
-    let docv = "Json logs" in
-    let doc = "This determines whether logs will be printed in json format." in
-    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
-
   let port =
     let docv = "port" in
     let doc = "The port to listen on for incoming messages." in
@@ -282,10 +309,45 @@ let node =
   $ minimum_block_delay
   $ Prometheus_dream.opts
 
+let produce_block node_folder =
+  let%await identity = read_identity ~node_folder in
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0.
+  in
+  let address = identity.t in
+  let block =
+    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
+      ~author:address ~consensus_operations:[] ~tezos_operations:[]
+      ~user_operations:[] in
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let validator_uris = List.map snd validator_uris |> List.somes in
+    let%await () =
+      let open Network in
+      broadcast_to_list (module Block_spec) validator_uris { block } in
+    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+    Lwt.return (`Ok ())
+
+let produce_block =
+  let open Term in
+  lwt_ret (const produce_block $ folder_node)
+
+let info_produce_block =
+  let doc =
+    "Produce and sign a block and broadcast to the network manually, useful \
+     when the chain is stale." in
+  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
 let default_info =
   let doc = "Deku node" in
   let sdocs = Manpage.s_common_options in
   let exits = Cmd.Exit.defaults in
   Cmd.info "deku-node" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
 
-let _ = Cmd.eval @@ Cmd.group default_info [Cmd.v (Cmd.info "start") node]
+let _ =
+  Cmd.eval
+  @@ Cmd.group default_info
+       [Cmd.v (Cmd.info "start") node; Cmd.v info_produce_block produce_block]
