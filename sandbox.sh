@@ -244,15 +244,7 @@ start_deku_cluster() {
   #           are aware of each other
   # (Step 1 and 2 are ./sandbox.sh setup)
   # - Step 3: Start each node
-  echo "Starting nodes."
-  for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
-      SERVERS+=($!)
-    fi
-  done
-
-  sleep 1
+  # This should be done by tilt
 
   # Step 4: Manually produce the block
   # Produce a block using `deku-cli produce-block`
@@ -294,13 +286,13 @@ wait_for_servers() {
 # Steps for the command: ./sandbox.sh smoke-test
 # - deku_height()
 # - start_deku_cluster()
-# - pkill -x deku-node
 # - assert_deku_state()
 deku_storage() {
   local contract
   contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
   local storage
-  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  # Since we're never running this from inside of docker we can't use $RPC_NODE
+  storage=$(curl --silent "http://localhost:20000/chains/main/blocks/head/context/contracts/$contract/storage")
   echo "$storage"
 }
 
@@ -408,7 +400,6 @@ deposit_withdraw_test() {
   if ((BALANCE == 0))
   then
     echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
-    pkill -x deku-node
     exit 1
   fi
 
@@ -419,7 +410,6 @@ deposit_withdraw_test() {
   WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
-    pkill -x deku-node
     exit 1
   fi
   sleep 10
@@ -475,21 +465,27 @@ start)
   ;;
 smoke-test)
   starting_height=$(deku_height)
+  message "Starting cluster"
   start_deku_cluster
   seconds=35
+  message "Waiting $seconds seconds"
   sleep $seconds
-  pkill -x deku-node
+  message "Checking block height"
   assert_deku_state "$starting_height" $seconds
   ;;
 tear-down)
   tear-down
   ;;
 deposit-withdraw-test)
+  message "Starting cluster"
   start_deku_cluster
-  sleep 5
+  seconds=5
+  message "Waiting $seconds seconds"
+  sleep $seconds
+  message "Deploying dummy ticket"
   deploy_dummy_ticket
+  message "Testing withdraw"
   deposit_withdraw_test
-  pkill -x deku-node
   ;;
 deploy-dummy-ticket)
   deploy_dummy_ticket
