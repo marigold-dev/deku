@@ -100,8 +100,15 @@ let apply_user_operation t operation_hash user_operation =
     Ok ({ ledger; contract_storage }, None)
 
 let apply_user_operation t hash user_operation =
+  let report_error error =
+    let message =
+      match error with
+      | `Origination_error msg -> "Origination error: " ^ msg
+      | `Invocation_error msg -> "Invocation error: " ^ msg
+      | `Insufficient_funds -> "Insufficient funds" in
+    Log.error "Operation %a - %s" BLAKE2B.pp hash message in
   match apply_user_operation t hash user_operation with
   | Ok (t, receipt) -> (t, receipt)
-  (* TODO: use this erros for something *)
-  | Error (`Origination_error _ | `Invocation_error _) -> (t, None)
-  | Error `Insufficient_funds -> (t, None)
+  | Error error ->
+    report_error error;
+    (t, None)

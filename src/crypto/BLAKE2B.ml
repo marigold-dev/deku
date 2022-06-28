@@ -27,6 +27,8 @@ end) : sig
 
   val size : int
 
+  val pp : Format.formatter -> t -> unit
+
   module Map : Map.S with type key = t
 
   val encoding : t Data_encoding.t
@@ -65,6 +67,8 @@ end = struct
   let verify ~hash:expected_hash data = expected_hash = hash data
 
   let both a b = hash (to_raw_string a ^ to_raw_string b)
+
+  let pp fmt t = Format.fprintf fmt "%s" (to_string t)
 
   module Map = Map.Make (struct
     type nonrec t = t
