@@ -10,7 +10,7 @@ let current_main_chain_height ~rpc_node ~consensus_contract_address =
     Format.sprintf "%s/chains/main/blocks/head/context/contracts/%s/storage"
       rpc_node consensus_contract_address in
   curl ["--silent"; url]
-  (* |. jq [".args[0].args.[0].args[2].bytes.args[0].args[0].args[0].args[1].int"] *)
+  (* TODO: we should use the Tezos_bridge module. *)
   |. jq [".args[0].args[0].args[0].args[1].int"; "-r"]
   |> collect stdout
   |> int_of_string
@@ -54,4 +54,11 @@ let args =
   let open Term in
   const check_liveness $ rpc_node $ consensus_contract_address $ timeout
 
-let _ = Cmd.eval @@ Cmd.v (Cmd.info "check-liveness") args
+let _ =
+  Cmd.eval
+  @@ Cmd.v
+       (Cmd.info "check-liveness"
+          ~doc:
+            "Checks that the Deku chain is making progress on the mainchain by \
+             polling for changes to the consensus storage.")
+       args
