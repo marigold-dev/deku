@@ -222,6 +222,8 @@ let () =
   Dream.initialize_log ~enable:false ()
 
 let node json_logs style_renderer level folder prometheus_port =
+  let _ = Unix.umask 0o066 in
+
   (match style_renderer with
   | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
   | None -> Fmt_tty.setup_std_outputs ());

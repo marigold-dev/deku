@@ -151,6 +151,9 @@ create_new_deku_environment() {
     FOLDER="$DATA_DIRECTORY/$i"
     mkdir -p "$FOLDER"
 
+    # TODO: Remove this once 732 is merged
+    umask 066
+
     if [ $mode = "docker" ]; then
       # Using the deku-cli to generate identities for each node
       # It is important to decide the URI of each node with the `--uri` flag
