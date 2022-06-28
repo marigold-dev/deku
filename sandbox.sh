@@ -188,9 +188,9 @@ EOF
     ];
   };
   vault = {
-    known_handles_hash = (Big_map.empty : vault_known_handles_hash_set);
-    used_handles = (Big_map.empty : vault_used_handle_set);
-    vault = (Big_map.empty : vault);
+    known_handles_hash = (Big_map.empty : Parameter.Types.vault_known_handles_hash_set);
+    used_handles = (Big_map.empty : Parameter.Types.vault_used_handle_set);
+    vault = (Big_map.empty : Parameter.Types.vault);
   }
 }
 EOF
@@ -198,7 +198,7 @@ EOF
 )
 
   # Step 4: deploying the consensus and validators discovery contracts
-  consensus="./src/tezos_interop/consensus.mligo"
+  consensus="./layer1/bridge/consensus/main.mligo"
   discovery="./src/tezos_interop/discovery.mligo"
   deploy_contract "consensus" "$consensus" "$consensus_storage"
   deploy_contract "discovery" "$discovery" "$(discovery_storage)"
