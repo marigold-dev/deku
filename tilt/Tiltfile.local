@@ -26,7 +26,7 @@ def add_sandbox (no_of_deku_nodes):
     local_resource(
       "deposit-withdraw-test",
       "nix run .#sandbox deposit-withdraw-test",
-      resource_deps=["deku-net"],
+      resource_deps=["deku-net", "dummy-ticket-contract"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,

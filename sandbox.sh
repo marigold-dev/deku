@@ -356,7 +356,6 @@ deposit_withdraw_test() {
   if ((BALANCE == 0))
   then
     echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
-    pkill -x deku-node
     exit 1
   fi
 
@@ -367,7 +366,6 @@ deposit_withdraw_test() {
   WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
-    pkill -x deku-node
     exit 1
   fi
   sleep 10
@@ -423,12 +421,7 @@ tear-down)
   tear-down
   ;;
 deposit-withdraw-test)
-  start_deku_cluster &
-  deploy_dummy_ticket &
-  wait
-  sleep 5
   deposit_withdraw_test
-  pkill -x deku-node
   ;;
 deploy-dummy-ticket)
   deploy_dummy_ticket

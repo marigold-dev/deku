@@ -42,6 +42,16 @@ load_deku_services(deku_yaml)
 
 add_sandbox(no_of_deku_nodes)
 
+# Deploy the dummy-ticket contract once after running flextesa 
+local_resource(
+    "dummy-ticket-contract",
+    "sleep 5 && nix run .#sandbox deploy-dummy-ticket local",
+    resource_deps=["flextesa"],
+    labels=["scripts"],
+    auto_init=True,
+    trigger_mode=TRIGGER_MODE_MANUAL,
+    )
+
 # action to manually trigger a teardown, this should almost never be needed
 local_resource(
   "deku-tear-down",
