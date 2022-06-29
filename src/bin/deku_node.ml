@@ -76,7 +76,7 @@ let handle_block_by_level =
             Int64.equal block.Protocol.Block.block_height request.level)
           state.applied_blocks 
           |> Option.map (fun (timestamp, block) ->
-            Network.Block_by_level_spec.{block; timestamp}) in
+            Network.Block_by_level_spec.{ timestamp; block}) in
       Ok block_and_timestamp)
 
 (* POST /user_operation_was_included_in_block *)
@@ -86,7 +86,7 @@ let handle_block_by_level =
 let handle_user_operation_was_included_in_block =
   handle_request
     (module Network.Block_user_operation_was_included)
-    (fun _update_state request ->
+    (fun request ->
       let open Protocol in
       (* pass a requested hash and a block height,
          return a block height option, and a block height *)
