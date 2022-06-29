@@ -389,7 +389,7 @@ test_wasm() {
   ARG=$(ticket_handle)
   echo "param: \"$ARG\""
   sleep 5
-  deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100
+  deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100=0:0
   sleep 5
   asserter_contract "$DATA_DIRECTORY/0" "$CONTRACT_ADDRESS" "Pair \"$DUMMY_TICKET\" 0x" 100
 }
@@ -410,7 +410,7 @@ test_wasm_full() {
 
   sleep 5
 
- deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100
+ deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100=0:0
 
   sleep 5
   

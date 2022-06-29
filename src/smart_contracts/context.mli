@@ -3,9 +3,9 @@ module type CTX = sig
 
   include
     State.S
-      with module Address := Address
-       and module Amount = Amount
-       and module Ticket_id = Ticket_id
+      with type Address.t = Address.t
+       and type Amount.t = Amount.t
+       and type Ticket_id.t = Ticket_id.t
 
   module Addressing : sig
     val sender : #State.addressing -> Address.t
@@ -47,7 +47,7 @@ module type CTX = sig
   module Operations : sig
     val transaction :
       < State.table_access ; State.with_operations ; State.addressing ; .. > ->
-      bytes * (Ticket_handle.t * Amount.t) * Address.t ->
+      bytes * (Ticket_handle.t * Amount.t * Int64.t option) * Address.t ->
       int
   end
 
@@ -55,8 +55,10 @@ module type CTX = sig
     get_contract_opt:(Address.t -> Address.t option) ->
     source:Address.t ->
     sender:Address.t ->
+    mapping:((Ticket_id.t * Amount.t) * Ticket_handle.t) list ->
     self:Address.t ->
     contract_owned_tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    provided_tickets:(Ticket_id.t * Amount.t) Seq.t ->
-    State.full_state
+    provided_tickets:
+      ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) Seq.t ->
+    State.full_state * (Int64.t option * Ticket_handle.t) list option
 end

@@ -9,6 +9,14 @@ module type S = sig
     type t [@@deriving yojson, eq]
 
     val raw_storage : t -> bytes
+
+    val update_tickets :
+      t ->
+      ((Context.Ticket_id.t * Context.Amount.t) * Ticket_handle.t) list ->
+      t
+
+    val tickets_mapping :
+      t -> ((Context.Ticket_id.t * Context.Amount.t) * Ticket_handle.t) list
   end
 
   module Origination_payload : sig
@@ -24,7 +32,10 @@ module type S = sig
 
   module Compiler : sig
     val compile :
-      Origination_payload.t -> gas:int -> (Contract.t, string) result
+      Origination_payload.t ->
+      gas:int ->
+      tickets:((Context.Ticket_id.t * Context.Amount.t) * Ticket_handle.t) Seq.t ->
+      (Contract.t, string) result
   end
 
   module Invocation_payload : sig
@@ -42,7 +53,13 @@ module type S = sig
   module Interpreter : sig
     val invoke :
       Contract.t ->
-      ctx:< State.table_access ; State.addressing ; State.with_operations ; .. > ->
+      ctx:
+        < State.table_access
+        ; State.addressing
+        ; State.with_operations
+        ; State.finalization
+        ; .. > ->
+      to_replace:(Int64.t option * Ticket_handle.t) list option ->
       arg:Invocation_payload.t ->
       gas:int ->
       (* TODO: unit should be user operation list *)
@@ -54,6 +71,23 @@ open Core
 
 module Make (CTX : Context.CTX) : S with module Context = CTX = struct
   module Context = CTX
+
+  module Tickets : sig
+    include
+      Helpers.Map.S with type key := Context.Ticket_id.t * Context.Amount.t
+
+    val to_yojson : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+
+    val of_yojson :
+      (Yojson.Safe.t -> ('a, string) result) ->
+      Yojson.Safe.t ->
+      ('a t, string) result
+  end = Helpers.Map.Make_with_yojson (struct
+    type t = CTX.Ticket_id.t * CTX.Amount.t [@@deriving yojson]
+
+    let compare a b = Poly.(compare a b)
+  end)
+
   module State = Context.State
 
   module FFI = struct
@@ -122,6 +156,19 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
           in
           let ticket_handle = Ticket_handle.of_bytes ticket_handle in
           (new_addr, ticket_handle)
+
+        let read_ticket_with_addr memory addr offs =
+          let new_addr = Int64.add addr (offs |> Int64.of_int) in
+          let addr =
+            Bytes.get_int32_le
+              (Memory.load_bytes memory ~address:new_addr ~size:4)
+              0
+            |> Int64.of_int32 in
+          let ticket_handle =
+            Memory.load_bytes memory ~address:addr ~size:Ticket_handle.size
+          in
+          let ticket_handle = Ticket_handle.of_bytes ticket_handle in
+          (new_addr, ticket_handle, addr)
 
         let read_amount memory addr offs =
           let new_addr = Int64.add addr (offs |> Int64.of_int) in
@@ -193,9 +240,9 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
                ~size:4)
             0
           |> Int64.of_int32 in
-        let arg =
+        let arg, stat =
           if addr = -1L then
-            Bytes.empty
+            (Bytes.empty, None)
           else
             let size =
               Bytes.get_int64_le
@@ -204,9 +251,10 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
               |> Int64.to_int in
             let bytes =
               Memory.load_bytes memory ~address:(Int64.add addr 8L) ~size in
-            bytes in
-        let addr, ticket_handle =
-          R.read_ticket memory writer_addr (int32_offset * 2) in
+            (bytes, Some Int64.(add addr 8L)) in
+        let addr, ticket_handle, address =
+          R.read_ticket_with_addr memory writer_addr (int32_offset * 2) in
+        let stat = stat |> Option.map (fun x -> Int64.sub address x) in
         let addr, amount = R.read_amount memory addr int32_offset in
         let _, destination = R.read_address memory addr int64_offset in
         let store int =
@@ -214,8 +262,8 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
           Bytes.set_int32_le buf 0 (Int32.of_int int);
           Memory.store_bytes memory ~address:writer_addr ~content:buf in
         let called =
-          Operations.transaction ctx (arg, (ticket_handle, amount), destination)
-        in
+          Operations.transaction ctx
+            (arg, (ticket_handle, amount, stat), destination) in
         store called
       | GET_CONTRACT_OPT ->
         let _, address = R.read_address memory writer_addr int32_offset in
@@ -225,24 +273,22 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
         let addr =
           Bytes.get_int32_le
             (Memory.load_bytes memory
-              ~address:(Int64.add writer_addr (int32_offset |> Int64.of_int))
-              ~size:4)
+               ~address:(Int64.add writer_addr (int32_offset |> Int64.of_int))
+               ~size:4)
             0
-          |> Int64.of_int32
-        in
+          |> Int64.of_int32 in
         let _, amount = R.read_amount memory addr 0 in
         let payload =
           let size =
             Bytes.get_int32_le
               (Memory.load_bytes memory
-                ~address:(Int64.add addr (int64_offset |> Int64.of_int))
-                ~size:4)
-              0
-          in
+                 ~address:(Int64.add addr (int64_offset |> Int64.of_int))
+                 ~size:4)
+              0 in
           Memory.load_bytes memory
-            ~address:(Int64.add addr (Int64.of_int (int64_offset + int32_offset)))
-            ~size:(Int32.to_int size)
-        in
+            ~address:
+              (Int64.add addr (Int64.of_int (int64_offset + int32_offset)))
+            ~size:(Int32.to_int size) in
         let ticket = Table_ops.mint_ticket ctx (payload, amount) in
         W.write_ticket ~writer_addr:addr ticket memory
 
@@ -407,6 +453,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       type t = {
         code : Wasm_vm.Module.t;
         storage : bytes;
+        tickets : Ticket_handle.t Tickets.t;
       }
       [@@deriving yojson]
 
@@ -421,14 +468,25 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       }
       [@@deriving yojson]
 
-      let make ~code ~storage = { code; storage }
+      let make ~code ~storage =
+        let%ok () =
+          Wasm_vm.Module.of_string ~code:(Bytes.to_string code)
+          |> Result.map_error ~f:(Fun.const "invalid module")
+          |> Result.map ~f:(Fun.const ()) in
+        Ok { code; storage }
     end
 
     module Compiler = struct
-      let compile ~gas:_ (code : Origination_payload.t) =
+      let compile ~gas:_ ~tickets (code : Origination_payload.t) =
         let%ok compiled =
           Wasm_vm.Module.of_string ~code:(Bytes.to_string code.code) in
-        Ok Contract.{ code = compiled; storage = code.storage }
+        Ok
+          Contract.
+            {
+              code = compiled;
+              storage = code.storage;
+              tickets = Tickets.of_seq tickets;
+            }
     end
 
     module Invocation_payload = struct
@@ -437,13 +495,13 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
 
     module Interpreter = struct
       let invoke ctx contract arg ~gas =
-        let Contract.{ code; storage } = contract in
+        let Contract.{ code; storage; tickets } = contract in
         let custom = FFI.custom ~ctx in
         let gas = ref gas in
         let%ok updated, operations =
           Wasm_vm.Runtime.invoke custom ~module_:code ~storage ~gas
             ~argument:arg in
-        let contract = Contract.{ code; storage = updated } in
+        let contract = Contract.{ code; storage = updated; tickets } in
         Ok (contract, operations)
     end
   end
@@ -459,6 +517,16 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       match t with
       | Wasm c -> c.storage
       | _ -> Bytes.create 0
+
+    let tickets_mapping = function
+      | Wasm c -> c.tickets |> Tickets.bindings
+      | _ -> []
+
+    let update_tickets t tickets =
+      match t with
+      | Wasm c ->
+        Wasm { c with tickets = Tickets.of_seq (Stdlib.List.to_seq tickets) }
+      | _ -> t
   end
 
   module Origination_payload = struct
@@ -476,11 +544,12 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
     let dummy_of_yojson ~storage = Dummy storage
 
     let wasm_of_yojson ~code ~storage =
-      Ok (Wasm (Wasm.Origination_payload.make ~code ~storage))
+      let%ok payload = Wasm.Origination_payload.make ~code ~storage in
+      Ok (Wasm payload)
   end
 
   module Compiler = struct
-    let compile payload ~gas =
+    let compile payload ~gas ~tickets =
       match payload with
       | Origination_payload.Dummy contract ->
         let%ok contract = Dummy.Compiler.compile contract ~gas in
@@ -490,7 +559,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
         Ok (Contract.Lambda contract)
       | Wasm contract ->
         let%ok contract =
-          Wasm.Compiler.compile contract ~gas
+          Wasm.Compiler.compile contract ~gas ~tickets
           |> Result.map_error ~f:Wasm_vm.Errors.show in
         Ok (Contract.Wasm contract)
   end
@@ -518,7 +587,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
   end
 
   module Interpreter = struct
-    let invoke code ~ctx ~arg ~gas =
+    let invoke code ~ctx ~to_replace ~arg ~gas =
       match (code, arg) with
       | Contract.Dummy contract, Invocation_payload.Dummy arg ->
         let%ok contract, _ = Dummy.Interpreter.invoke contract ~arg ~gas in
@@ -528,6 +597,21 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
           Lambda.Interpreter.invoke contract ~source:ctx#source ~arg ~gas in
         Ok (Contract.Lambda contract, [])
       | Wasm contract, Invocation_payload.Wasm arg ->
+        let%ok arg =
+          try
+            match to_replace with
+            | None -> Ok arg
+            | Some lst ->
+              let () =
+                List.iter
+                  ~f:(fun (t, h) ->
+                    let dst_pos = Int64.to_int_exn (Option.value_exn t) in
+                    let handle = Ticket_handle.to_bytes h in
+                    Bytes.blit ~src:handle ~src_pos:0 ~dst:arg ~dst_pos ~len:4)
+                  lst in
+              Ok arg
+          with
+          | _ -> Error "execution_failure" in
         let%ok contract, operations =
           Wasm.Interpreter.invoke ctx contract arg ~gas
           |> Result.map_error ~f:Wasm_vm.Errors.show in

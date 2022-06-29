@@ -70,14 +70,18 @@ let test_wasm msg =
         ))
       |}
       |> Bytes.of_string in
-    let storage = Int64.zero |> Context.Ticket_handle.to_bytes in
+    let storage = Int32.zero |> Context.Ticket_handle.to_bytes in
 
     Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
     |> Result.get_ok in
 
   let operation =
     User_operation.Contract_origination
-      { payload; tickets = [(ticket, Amount.of_int 10000)] } in
+      {
+        payload;
+        tickets =
+          [((ticket, Amount.of_int 10000), (Int32.zero, Some Int64.zero))];
+      } in
   let user_op = User_operation.make ~source:address operation in
 
   let state, _ = State.apply_user_operation initial_state user_op.hash user_op in
@@ -115,14 +119,17 @@ let test_wasm_fail msg =
           ))
         |}
       |> Bytes.of_string in
-    let storage = Int64.one |> Context.Ticket_handle.to_bytes in
+    let storage = Int32.one |> Context.Ticket_handle.to_bytes in
 
     Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
     |> Result.get_ok in
 
   let operation =
     User_operation.Contract_origination
-      { payload; tickets = [(t1, Amount.of_int 10000)] } in
+      {
+        payload;
+        tickets = [((t1, Amount.of_int 10000), (Int32.one, Some Int64.zero))];
+      } in
   let user_op = User_operation.make ~source:address operation in
 
   let state, _ = State.apply_user_operation initial_state user_op.hash user_op in

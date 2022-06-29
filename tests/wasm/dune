@@ -1,5 +1,5 @@
 (test
  (name test_wasm)
- (libraries wasm_vm alcotest helpers tezos core_deku crypto)
+ (libraries wasm_vm yojson alcotest helpers tezos core_deku crypto)
  (preprocess
-  (pps ppx_let_binding)))
+  (pps ppx_let_binding ppx_deriving_yojson)))
