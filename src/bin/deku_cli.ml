@@ -190,6 +190,9 @@ let info_create_transaction =
   Cmd.info "create-transaction" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
+(* Users should specify a paritcular node to send transactions, etc.
+   to. We shouldn't fetch them dynamically here. TODO: replace this
+   with a static setting defined either at CLI, in config file, or environment. *)
 let with_validator_uri node_folder f =
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
