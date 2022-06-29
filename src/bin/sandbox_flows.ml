@@ -533,10 +533,8 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
 let deposit_withdraw_test mode nodes =
   let rpc_url = rpc_url mode in
   let validators = make_validators nodes in
-  let test_result =
+  let%ok _result =
     deposit_withdraw_test mode validators rpc_url deku_address deku_secret in
-  killall_deku_nodes ();
-  let%ok _result = test_result in
   Ok ()
 
 let load_test () =
