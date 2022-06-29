@@ -295,6 +295,7 @@ let tear_down nodes =
   Ok ()
 
 let setup mode validators rpc_url =
+  (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
   let secret = "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq" in
