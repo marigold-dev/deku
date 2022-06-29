@@ -249,6 +249,7 @@ let node folder port prometheus_port =
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
+             handle_user_operation_was_included_in_block;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;
