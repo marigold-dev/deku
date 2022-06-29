@@ -9,26 +9,6 @@ let run_res ?(error = "") cmd =
   | stdout, 0 -> Ok stdout
   | stdout, _ -> Error (error ^ stdout)
 
-type verbosity =
-  | Debug
-  | Info
-  | Warn
-  | Error
-
-let verbosity_to_string verbosity =
-  match verbosity with
-  | Debug -> "debug"
-  | Info -> "info"
-  | Warn -> "warn"
-  | Error -> "error"
-
-let verbosity_of_string = function
-  | "debug" -> Ok Debug
-  | "info" -> Ok Info
-  | "warn" -> Ok Warn
-  | "error" -> Ok Error
-  | _ -> Error "verbosity level should be: debug/info/warn/error"
-
 type mode =
   | Docker
   | Local
@@ -356,7 +336,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
   |> run_res ~error:"error in deku-cli setup-tezos"
 
 (* start *)
-let start_deku_cluster mode validators verbosity =
+let start_deku_cluster mode validators =
   (* Step 1: Starts all the nodes only if mode is set to local *)
   print_endline "Starting nodes.";
   let running_nodes =
@@ -371,8 +351,6 @@ let start_deku_cluster mode validators verbosity =
                [
                  "start";
                  data_folder;
-                 "--verbosity";
-                 verbosity_to_string verbosity;
                  "--listen-prometheus";
                  string_of_int prometheus_port;
                ]
@@ -394,9 +372,9 @@ let start_deku_cluster mode validators verbosity =
   print_endline "Cluster bootstrapped.";
   Ok running_nodes
 
-let start mode nodes verbosity =
+let start mode nodes =
   let validators = make_validators nodes in
-  let%ok processes = start_deku_cluster mode validators verbosity in
+  let%ok processes = start_deku_cluster mode validators in
   let _processes = List.map wait processes in
   Ok ()
 
@@ -483,7 +461,7 @@ let deposit_dummy_ticket mode =
 
 let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   (* bootstrap the cluster *)
-  let%ok _ = start_deku_cluster mode validators Error in
+  let%ok _ = start_deku_cluster mode validators in
 
   (* deploy a dummy ticket *)
   let%ok _ =
