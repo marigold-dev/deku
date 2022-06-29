@@ -312,17 +312,18 @@
         "ocaml-overlays": "ocaml-overlays_2"
       },
       "locked": {
-        "lastModified": 1655995651,
-        "narHash": "sha256-j7FCxceqDeWoOx+88T2+a1OUDDn2/sKVI+7PxLdaqf0=",
-        "ref": "arthur-integration",
-        "rev": "b6dcffa0ace7b836f22306397367fb473916cb1f",
-        "revCount": 75,
-        "type": "git",
-        "url": "file:///home/arthur/Marigold/pollinate/"
+        "lastModified": 1656474201,
+        "narHash": "sha256-zZGFoXi+nLqUt9OCU53dfdC02lDXT6kaCixyYEKA5C0=",
+        "owner": "marigold-dev",
+        "repo": "pollinate",
+        "rev": "e383c642a888a9c2aa0e0a75dbb47472952d0277",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/arthur/Marigold/pollinate/"
+        "owner": "marigold-dev",
+        "ref": "feat/dekuIntegrationAct2",
+        "repo": "pollinate",
+        "type": "github"
       }
     },
     "pre-commit-hooks": {

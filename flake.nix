@@ -42,7 +42,7 @@
       flake-utils.follows = "flake-utils";
     };
 
-    pollinate.url = "git+file:///home/arthur/Marigold/pollinate/";
+    pollinate.url = "github:marigold-dev/pollinate/feat/dekuIntegrationAct2";
     pollinate.inputs = {
       nixpkgs.follows = "nixpkgs";
       ocaml-overlay.follows = "ocaml-overlays";
