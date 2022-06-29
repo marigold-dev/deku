@@ -247,7 +247,7 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --color="${DEKU_LOG_COLOR:-auto}" --listen-prometheus="900$i" &
+      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
