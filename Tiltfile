@@ -10,6 +10,7 @@ cfg = config.parse()
 no_of_deku_nodes = int(cfg.get('nodes', "3"))
 mode = cfg.get('mode', 'local')
 is_not_ci = config.tilt_subcommand != "ci"
+need_rebuild = os.getenv('REBUILD', 'n') == "y"
 
 def load_config ():
   if mode == "docker" :
@@ -40,7 +41,7 @@ dc_resource("prometheus", labels=["infra"])
 
 load_deku_services(deku_yaml)
 
-add_sandbox(no_of_deku_nodes)
+add_sandbox(no_of_deku_nodes, need_rebuild)
 
 # Deploy the dummy-ticket contract once after running flextesa 
 local_resource(
@@ -60,3 +61,11 @@ local_resource(
   trigger_mode=TRIGGER_MODE_MANUAL,
   labels=["scripts"],
   )
+
+# Check if we need to rebuild
+local_resource(
+  "rebuild",
+  "dune build @install",
+  auto_init=need_rebuild,
+  labels=["scripts"]
+)

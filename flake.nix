@@ -113,7 +113,7 @@
           };
           sandbox = {
             type = "app";
-            program = "${sandbox}/bin/sandbox.sh";
+            program = "${deku}/bin/deku-sandbox";
           };
         };
 
