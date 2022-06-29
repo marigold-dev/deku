@@ -66,12 +66,12 @@ def load_deku_services (deku_yaml):
   for deku_service in get_services(decode_yaml(deku_yaml)):
       dc_resource(deku_service, labels=["deku"], resource_deps=["deku-setup"])
 
-def add_sandbox (no_of_deku_nodes):
+def add_sandbox (no_of_deku_nodes, need_rebuild):
   # run setup when we build
   local_resource(
     "deku-setup",
-    "sleep 5 && nix run .#sandbox setup docker %s" % no_of_deku_nodes,
-    resource_deps=["flextesa"],
+    "sleep 5 && nix run .#sandbox setup -- --mode docker --nodes %s" % no_of_deku_nodes,
+    resource_deps=["flextesa"] + ["rebuild"] if need_rebuild else [],
     labels=["scripts"],
     )
 
@@ -79,7 +79,7 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network and run some tests
     local_resource(
       "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test docker %s" % no_of_deku_nodes,
+      "sleep 5 && nix run .#sandbox smoke-test -- --mode docker --nodes %s" % no_of_deku_nodes,
       resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
@@ -89,7 +89,7 @@ def add_sandbox (no_of_deku_nodes):
     # bootstrap the deku network, it will be run after deku-setup and the nodes have started
     local_resource(
       "deku-net",
-      "nix run .#sandbox start docker %s" % no_of_deku_nodes,
+      "nix run .#sandbox start -- --mode docker --nodes %s" % no_of_deku_nodes,
       resource_deps=["deku-setup", "deku-node-0", "deku-node-1", "deku-node-2"],
       labels=["scripts"],
       auto_init=True, # trigger once at start

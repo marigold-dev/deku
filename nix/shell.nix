@@ -13,7 +13,6 @@ pkgs.mkShell {
       ## General tooling
       docker
       nodejs
-      shellcheck
 
       docker-compose # This is needed by tilt
       jq
