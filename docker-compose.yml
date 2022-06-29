@@ -112,7 +112,7 @@ services:
     image: oxheadalpha/flextesa:20220510
     command: jakartabox start
     environment:
-      - block_time=4
+      - block_time=15
     ports:
       - "20000:20000"
     expose:
