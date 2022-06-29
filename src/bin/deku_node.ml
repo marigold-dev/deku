@@ -32,20 +32,23 @@ let interop_context node_folder =
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
 
-let with_validator_uris node_folder f =
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris =
-    Tezos_interop.Consensus.fetch_validators interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let uris =
-      List.filter_map
-        (function
-          | _key_hash, Some uri -> Some uri
-          | _ -> None)
-        validator_uris in
-    f uris
+let with_validator_uris ?uris node_folder f =
+  match uris with
+  | Some uris -> f uris
+  | None -> (
+    let%await interop_context = interop_context node_folder in
+    let%await validator_uris =
+      Tezos_interop.Consensus.fetch_validators interop_context in
+    match validator_uris with
+    | Error err -> Lwt.return (`Error (false, err))
+    | Ok validator_uris ->
+      let uris =
+        List.filter_map
+          (function
+            | _key_hash, Some uri -> Some uri
+            | _ -> None)
+          validator_uris in
+      f uris)
 
 let folder_node =
   let docv = "folder_node" in
@@ -400,7 +403,7 @@ let info_produce_block =
      when the chain is stale." in
   Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
 
-let produce_block node_folder =
+let produce_block node_folder validator_uris =
   let%await identity = read_identity ~node_folder in
   let%await state =
     Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0.
@@ -410,16 +413,25 @@ let produce_block node_folder =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
-  with_validator_uris node_folder (fun validator_uris ->
+  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
       let%await () =
         let open Network in
         broadcast_to_list (module Block_spec) validator_uris { block } in
       Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
       Lwt.return (`Ok ()))
 
+let validator_uris =
+  let open Arg in
+  let docv = "validator_uris" in
+  let doc =
+    "Comma-separated list of validator URI's to which to broadcast operations"
+  in
+  let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
+  value & opt (some (list uri)) None & info ["validator_uris"] ~doc ~docv ~env
+
 let produce_block =
   let open Term in
-  lwt_ret (const produce_block $ folder_node)
+  lwt_ret (const produce_block $ folder_node $ validator_uris)
 
 let info_sign_block =
   let doc =
@@ -427,10 +439,10 @@ let info_sign_block =
      chain is stale." in
   Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
 
-let sign_block node_folder block_hash =
+let sign_block node_folder block_hash validator_uris =
   let%await identity = read_identity ~node_folder in
   let signature = Protocol.Signature.sign ~key:identity.secret block_hash in
-  with_validator_uris node_folder (fun validator_uris ->
+  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
       let open Network in
       let%await () =
         broadcast_to_list
@@ -445,7 +457,7 @@ let sign_block_term =
     let open Arg in
     required & pos 1 (some hash) None & info [] ~doc in
   let open Term in
-  lwt_ret (const sign_block $ folder_node $ block_hash)
+  lwt_ret (const sign_block $ folder_node $ block_hash $ validator_uris)
 
 let info_setup_identity =
   let doc = "Create a validator identity" in
