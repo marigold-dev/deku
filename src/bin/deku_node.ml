@@ -6,7 +6,7 @@ open State
 open Protocol
 open Cmdliner
 open Core_deku
-open Bin_common
+open Files
 
 let exits =
   Cmd.Exit.defaults
@@ -15,17 +15,17 @@ let exits =
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 let read_identity ~node_folder =
-  Files.Identity.read ~file:(node_folder ^ "/identity.json")
+  Config_files.Identity.read ~file:(node_folder ^ "/identity.json")
 
 let write_identity ~node_folder =
-  Files.Identity.write ~file:(node_folder ^ "/identity.json")
+  Config_files.Identity.write ~file:(node_folder ^ "/identity.json")
 
 let write_interop_context ~node_folder =
-  Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
+  Config_files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
 
 let interop_context node_folder =
   let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
+    Config_files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
     (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
        ~consensus_contract:context.consensus_contract

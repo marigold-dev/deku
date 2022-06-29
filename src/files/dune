@@ -1,0 +1,5 @@
+(library
+ (name files)
+ (libraries lwt lwt.unix node helpers)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
