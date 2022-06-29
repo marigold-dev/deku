@@ -33,8 +33,20 @@ let interop_context node_folder =
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
 
-let validator_uris ~interop_context =
-  Tezos_interop.Consensus.fetch_validators interop_context
+let with_validator_uris node_folder f =
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris =
+    Tezos_interop.Consensus.fetch_validators interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let uris =
+      List.filter_map
+        (function
+          | _key_hash, Some uri -> Some uri
+          | _ -> None)
+        validator_uris in
+    f uris
 
 let folder_node position =
   let docv = "folder_node" in
@@ -399,17 +411,12 @@ let produce_block node_folder =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
+  with_validator_uris node_folder (fun validator_uris ->
+      let%await () =
+        let open Network in
+        broadcast_to_list (module Block_spec) validator_uris { block } in
+      Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+      Lwt.return (`Ok ()))
 
 let produce_block =
   let open Term in
@@ -430,19 +437,14 @@ let info_sign_block =
 let sign_block node_folder block_hash =
   let%await identity = read_identity ~node_folder in
   let signature = Protocol.Signature.sign ~key:identity.secret block_hash in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
+  with_validator_uris node_folder (fun validator_uris ->
       let open Network in
-      broadcast_to_list
-        (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
-    Lwt.return (`Ok ())
+      let%await () =
+        broadcast_to_list
+          (module Signature_spec)
+          validator_uris
+          { hash = block_hash; signature } in
+      Lwt.return (`Ok ()))
 
 let sign_block_term =
   let block_hash =
