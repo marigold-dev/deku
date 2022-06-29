@@ -70,12 +70,62 @@ let handle_block_by_level =
     (module Network.Block_by_level_spec)
     (fun request ->
       let state = Server.get_state () in
-      let block =
+      let block_and_timestamp =
         List.find_opt
-          (fun block ->
+          (fun (_, block) ->
             Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks in
-      Ok block)
+          state.applied_blocks 
+          |> Option.map (fun (timestamp, block) ->
+            Network.Block_by_level_spec.{block; timestamp}) in
+      Ok block_and_timestamp)
+
+(* POST /user_operation_was_included_in_block *)
+(* Returns the block height of the first block where an operation
+   is included. We only iterate through blocks we haven't seen yet
+*)
+let handle_user_operation_was_included_in_block =
+  handle_request
+    (module Network.Block_user_operation_was_included)
+    (fun _update_state request ->
+      let open Protocol in
+      (* pass a requested hash and a block height,
+         return a block height option, and a block height *)
+      let state = Server.get_state () in
+      let filtered_list =
+        let rec go filtered_list applied_blocks =
+          match applied_blocks with
+          | [] -> filtered_list
+          | (time, block) :: tl ->
+            if block.Protocol.Block.block_height = request.previous_level then
+              filtered_list
+            else
+              go ((time, block) :: filtered_list) tl in
+        List.rev @@ go [] state.applied_blocks in
+      let new_level = (snd (List.hd @@ state.applied_blocks)).block_height in
+      Format.eprintf "halfway\n%!";
+      let block_height_opt =
+        let rec go filtered_list hashes_present =
+          match filtered_list with
+          | [] -> begin
+            match List.rev hashes_present with
+            | [] -> None
+            | height :: _ -> Some height
+          end
+          | (_, block) :: tl ->
+            let user_operations = Block.parse_user_operations block in
+            if
+              List.exists
+                (fun operation ->
+                  Crypto.BLAKE2B.equal
+                    operation.Protocol.Operation.Core_user.hash
+                    request.operation_hash)
+                user_operations
+            then
+              go tl (block.Block.block_height :: hashes_present)
+            else
+              go tl hashes_present in
+        go filtered_list [] in
+      Ok (block_height_opt, new_level))
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
