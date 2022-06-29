@@ -28,6 +28,15 @@ let deku_node args = process "deku-node" args
 
 let deku_cli args = process "deku-cli" args
 
+let rm_dir directory = process "rm" ["-rf"; directory] |> run
+
+let ligo args = process "ligo" args
+
+let tezos_client args =
+  process "docker"
+    (List.append ["exec"; "-t"; "deku_flextesa"; "tezos-client"] args)
+  |> run_res ~error:"error in tezos-client"
+
 let produce_block mode =
   (match mode with
   | Docker ->
@@ -69,10 +78,6 @@ let sign_block mode hash i =
       ["sign-block"; Format.sprintf "data/%i" i; BLAKE2B.to_string hash])
   |> run_res ~error:"Error in sign block"
 
-let rm_dir directory = process "rm" ["-rf"; directory] |> run
-
-let ligo args = process "ligo" args
-
 let make_validators nodes = List.init nodes (fun i -> i)
 
 let get_balance address ticketer =
@@ -84,13 +89,6 @@ let get_balance address ticketer =
   |> Result.map int_of_string_opt
   |> Result.map (Option.to_result ~none:"error from get-balance parsing")
   |> Result.join
-
-let killall_deku_nodes () = process "pkill" ["-x"; "deku-node"] |> run
-
-let tezos_client args =
-  process "docker"
-    (List.append ["exec"; "-t"; "deku_flextesa"; "tezos-client"] args)
-  |> run_res ~error:"error in tezos-client"
 
 let rpc_url mode =
   match mode with
