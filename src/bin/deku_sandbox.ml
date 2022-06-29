@@ -718,6 +718,25 @@ let info_load_test =
   let doc = "Load tests a local running Deku cluster" in
   Cmd.info "load-test" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
 
+let check_liveness mode =
+  let result =
+    let rpc_url = rpc_url mode in
+    let%ok consensus_address = get_contract_address rpc_url "consensus" in
+    (* TODO: rewrite this to be part of this module *)
+    let consensus_address = Address.to_string consensus_address in
+    process "check-liveness" [rpc_url; consensus_address] |> run_res in
+  ret_res result
+
+let check_liveness =
+  let open Term in
+  const check_liveness $ mode |> ret
+
+let info_check_livenss =
+  let doc =
+    "Checks that the Deku cluster is producing blocks and posting to the main \
+     chain" in
+  Cmd.info "check-liveness" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+
 let default_info =
   let doc =
     "creates, deploys, and starts Deku clusters in a sandbox mode suitable for \
@@ -741,4 +760,5 @@ let _ =
          Cmd.v info_deploy_dummy_ticket deploy_dummy_ticket;
          Cmd.v info_deposit_dummy_ticket deposit_dummy_ticket;
          Cmd.v info_load_test load_test;
+         Cmd.v info_check_livenss check_liveness;
        ]
