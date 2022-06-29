@@ -34,19 +34,9 @@ let nodes =
   let doc = "The number of nodes you want in your cluster" in
   value & opt nodes_parser 3 & info ["nodes"] ~docv ~doc
 
-let verbosity =
-  let printer fmt verbosity =
-    Format.fprintf fmt "%s" (verbosity_to_string verbosity) in
-  let open Arg in
-  let verbosity_parser =
-    conv' ~docv:"verbosity" (verbosity_of_string, printer) in
-  let docv = "verbosity" in
-  let doc = "The verbosity level of the nodes" in
-  value & opt verbosity_parser Debug & info ["verbosity"] ~docv ~doc
-
 let start =
   let open Term in
-  const start $ mode $ nodes $ verbosity
+  const start $ mode $ nodes
 
 let info_start =
   let doc = "Starts a Deku cluster configured with this script" in
