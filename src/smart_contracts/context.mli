@@ -3,7 +3,7 @@ module type CTX = sig
 
   include
     State.S
-      with module Address = Address
+      with module Address := Address
        and module Amount = Amount
        and module Ticket_id = Ticket_id
 
@@ -36,6 +36,11 @@ module type CTX = sig
     val own_ticket :
       < State.table_access ; State.addressing ; .. > ->
       Ticket_handle.t ->
+      Ticket_handle.t
+
+    val mint_ticket :
+      < State.table_access ; State.addressing ; .. > ->
+      bytes * Amount.t ->
       Ticket_handle.t
   end
 

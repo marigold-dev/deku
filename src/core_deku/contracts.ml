@@ -23,7 +23,10 @@ module Conversions :
     let size t = Address.size + Bytes.length t.data
 
     let to_bytes t =
-      let byt = Tezos.Address.to_string t.ticketer in
+      let byt =
+        match t.ticketer with
+        | Deku t -> Address.to_string t
+        | Tezos t -> Tezos.Address.to_string t in
       let byt = Bytes.of_string byt in
       let byt2 = t.data in
       Stdlib.Bytes.cat byt byt2

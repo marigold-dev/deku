@@ -24,7 +24,7 @@ let () =
           | Some data -> data
           | None -> Random.generate 256 |> Cstruct.to_bytes in
         let open Ticket_id in
-        { ticketer; data } in
+        Core_deku.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok in
       let make_address () =
         let _secret, _key, key_hash = Key_hash.make_ed25519 () in
         Address.of_key_hash key_hash in
@@ -152,7 +152,8 @@ let () =
           let t, (t1, t2), (a, b) = setup_two () in
           let destination = make_tezos_address () in
           let t =
-            withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 10) t1
+            withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 10)
+              (Ticket_id.to_tezos t1 |> Result.get_ok)
               t in
           (expect.result t).toBeOk ();
           let t, handle = Result.get_ok t in
@@ -164,8 +165,9 @@ let () =
           expect.equal handle.owner destination;
           expect.equal handle.amount (Amount.of_int 10);
           let t =
-            withdraw ~sender:(to_key_hash b) ~destination (Amount.of_int 9) t2 t
-          in
+            withdraw ~sender:(to_key_hash b) ~destination (Amount.of_int 9)
+              (Ticket_id.to_tezos t2 |> Result.get_ok)
+              t in
           (expect.result t).toBeOk ();
           let t, handle = Result.get_ok t in
           expect_balance a t1 90 t;
@@ -176,8 +178,9 @@ let () =
           expect.equal handle.owner destination;
           expect.equal handle.amount (Amount.of_int 9);
           let t =
-            withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 8) t2 t
-          in
+            withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 8)
+              (Ticket_id.to_tezos t2 |> Result.get_ok)
+              t in
           (expect.result t).toBeOk ();
           let t, handle = Result.get_ok t in
           expect_balance a t1 90 t;
@@ -188,16 +191,19 @@ let () =
           expect.equal handle.owner destination;
           expect.equal handle.amount (Amount.of_int 8);
           (let t =
-             withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 91) t1
+             withdraw ~sender:(to_key_hash a) ~destination (Amount.of_int 91)
+               (Ticket_id.to_tezos t1 |> Result.get_ok)
                t in
            (expect.result t).toBeError ());
           (let t =
              withdraw ~sender:(to_key_hash b) ~destination (Amount.of_int 203)
-               t1 t in
+               (Ticket_id.to_tezos t1 |> Result.get_ok)
+               t in
            (expect.result t).toBeError ());
           (let c = make_address () in
            let t =
-             withdraw ~sender:(to_key_hash c) ~destination (Amount.of_int 1) t1
+             withdraw ~sender:(to_key_hash c) ~destination (Amount.of_int 1)
+               (Ticket_id.to_tezos t1 |> Result.get_ok)
                t in
            (expect.result t).toBeError ());
           ());
@@ -209,7 +215,8 @@ let () =
                t1' t in
            (expect.result t).toBeError ();
            expect.equal (Result.get_error t) `Insufficient_funds);
-          (let t1' = make_ticket ~ticketer:t1.ticketer () in
+          (let t1 = Ticket_id.to_tezos t1 |> Result.get_ok in
+           let t1' = make_ticket ~ticketer:t1.ticketer () in
            let t =
              transfer ~sender:a ~destination:(to_key_hash b) (Amount.of_int 1)
                t1' t in

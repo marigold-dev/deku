@@ -143,10 +143,10 @@ let tezos_required_confirmations =
 
 let ticket =
   let parser string =
-    Tezos.Ticket_id.of_string string
+    Core_deku.Ticket_id.of_string string
     |> Option.to_result ~none:(`Msg "Expected a ticket") in
   let printer fmt ticket =
-    Format.fprintf fmt "%S" (Tezos.Ticket_id.to_string ticket) in
+    Format.fprintf fmt "%S" (Core_deku.Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
 

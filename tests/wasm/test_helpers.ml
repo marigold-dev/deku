@@ -47,7 +47,7 @@ let make_ticket ?ticketer ?data () =
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  { ticketer; data }
+  Core_deku.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
 
 let make_address () =
   let open Crypto in
@@ -67,7 +67,7 @@ module Testables = struct
 
   let ticket_id =
     Alcotest.of_pp (fun fmt p ->
-        Format.fprintf fmt "%s" (Tezos.Ticket_id.to_string p))
+        Format.fprintf fmt "%s" (Core_deku.Ticket_id.to_string p))
 
   let contract_operation =
     let open Core_deku in

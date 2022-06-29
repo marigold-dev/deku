@@ -16,15 +16,13 @@ module type S = sig
   end
 
   module Ticket_id : sig
-    type t = Tezos.Ticket_id.t = {
-      ticketer : Tezos.Address.t;
-      data : bytes;
-    }
-    [@@deriving yojson]
+    type t [@@deriving yojson]
 
     val size : t -> int
 
     val to_bytes : t -> bytes
+
+    val mint_ticket : contract_address:Address.t -> data:bytes -> t
   end
 
   module Amount : sig

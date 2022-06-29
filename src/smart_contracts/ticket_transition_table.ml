@@ -35,6 +35,9 @@ module type S = sig
       [> `Ticket_doesnt_exist | `Ticket_ownership_violation] )
     result
 
+  val mint_ticket :
+    t -> sender:Address.t -> amount:Amount.t -> bytes -> Ticket_handle.t
+
   val read_ticket :
     t ->
     sender:Address.t ->
@@ -159,6 +162,13 @@ struct
     let handle = incr t in
     let () = merge t ~handle ~repr:ticket in
     Ok handle
+
+  let mint_ticket t ~sender ~amount data =
+    let ticket = Ticket_id.mint_ticket ~contract_address:sender ~data in
+    let repr = Ticket_repr.make ticket amount To_be_dropped in
+    let handle = incr t in
+    let () = merge t ~handle ~repr in
+    handle
 
   let read_ticket t ~sender ~ticket_handle =
     Table.find_opt t.table ticket_handle
