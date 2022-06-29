@@ -1,0 +1,6 @@
+(executable
+ (name deku_sandbox)
+ (libraries feather helpers files cmdliner)
+ (public_name deku-sandbox)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
