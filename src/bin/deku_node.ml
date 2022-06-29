@@ -398,7 +398,12 @@ let node =
   const node
   $ json_logs
   $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
-  $ Logs_cli.level ()
+  $ Logs_cli.level
+      ~env:
+        (Cmd.Env.info
+           "DEKU_LOG_VERBOSITY"
+           (* TODO: consolidate and document environment options *))
+      ()
   $ folder_node
   $ port
   $ minimum_block_delay
