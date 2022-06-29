@@ -19,7 +19,11 @@ end
 module type S = sig
   include Conversions.S
 
-  module Ticket_handle : Ticket_handle.S
+  module Ticket_handle :
+    Ticket_handle.S
+      with module Address = Address
+       and module Amount = Amount
+       and module Ticket_id = Ticket_id
 
   type t
 
@@ -59,7 +63,6 @@ module type S = sig
     result
 
   val init :
-    sender:Address.t ->
     self:Address.t ->
     tickets:(Ticket_id.t * Amount.t) Seq.t ->
     temporary_tickets:(Ticket_id.t * Amount.t) Seq.t ->
@@ -68,9 +71,21 @@ module type S = sig
   val finalize : t -> (Ticket_id.t * Amount.t) Seq.t
 end
 
-module Make (CC : Conversions.S) = struct
-  module Ticket_handle = Ticket_handle.Make (CC)
-  module Table = Ticket_handle.Table
+module Make
+    (CC : Conversions.S)
+    (Ticket_handle : Ticket_handle.S
+                       with module Address = CC.Address
+                        and module Amount = CC.Amount
+                        and module Ticket_id = CC.Ticket_id) =
+struct
+  module Ticket_handle = Ticket_handle
+
+  module Table = Hashtbl.Make (struct
+    include Int64
+
+    let hash t = Int64.to_int t
+  end)
+
   include CC
 
   module Owner = struct
@@ -117,15 +132,23 @@ module Make (CC : Conversions.S) = struct
       Ok (ticket1, ticket2)
   end
 
-  type t = Ticket_repr.t Table.t
+  type t = {
+    mutable counter : Int64.t;
+    table : Ticket_repr.t Table.t;
+  }
 
-  let merge t ~handle ~repr = Table.add t handle repr
+  let incr t =
+    let counter = Int64.succ t.counter in
+    t.counter <- counter;
+    counter
 
-  let unsafe_read t ~handle =
-    Table.find_opt t handle
+  let merge t ~handle ~repr = Table.add t.table handle repr
+
+  let unsafe_read { table; counter = _ } ~handle =
+    Table.find_opt table handle
     |> Option.fold
          ~some:(fun x ->
-           Table.remove t handle;
+           Table.remove table handle;
            Ok x)
          ~none:Errors.doesnt_exist
 
@@ -133,19 +156,19 @@ module Make (CC : Conversions.S) = struct
     let%ok ticket = unsafe_read t ~handle:ticket_handle in
     let%ok () = assert_available sender ticket.Ticket_repr.owner in
     let ticket = { ticket with owner = Owned sender } in
-    let handle = Ticket_handle.make sender ticket.ticket ticket.amount in
+    let handle = incr t in
     let () = merge t ~handle ~repr:ticket in
     Ok handle
 
   let read_ticket t ~sender ~ticket_handle =
-    Table.find_opt t ticket_handle
+    Table.find_opt t.table ticket_handle
     |> Option.fold
          ~some:(fun ({ Ticket_repr.ticket; amount; owner } as repr) ->
            let%ok () = assert_available sender owner in
-           let () = Table.remove t ticket_handle in
+           let () = Table.remove t.table ticket_handle in
            let ticket_repr = { repr with owner = To_be_dropped } in
-           let handle = Ticket_handle.make sender ticket amount in
-           Table.add t handle ticket_repr;
+           let handle = incr t in
+           Table.add t.table handle ticket_repr;
            let to_return = (ticket, amount, handle) in
            Ok to_return)
          ~none:Errors.doesnt_exist
@@ -156,8 +179,8 @@ module Make (CC : Conversions.S) = struct
     let%ok () = assert_available sender owner in
     let%ok repr, repr2 =
       Ticket_repr.split ticket ~ticket_total:amount ~amounts in
-    let handle1 = Ticket_handle.make sender repr.ticket repr.amount in
-    let handle2 = Ticket_handle.make sender repr2.ticket repr2.amount in
+    let handle1 = incr t in
+    let handle2 = incr t in
     let () = merge t ~handle:handle1 ~repr in
     let () = merge t ~handle:handle2 ~repr:repr2 in
     Ok (handle1, handle2)
@@ -168,11 +191,11 @@ module Make (CC : Conversions.S) = struct
     let%ok () = assert_available sender repr.Ticket_repr.owner in
     let%ok () = assert_available sender repr2.Ticket_repr.owner in
     let repr = Ticket_repr.join repr repr2 in
-    let handle1 = Ticket_handle.make sender repr.ticket repr.amount in
+    let handle1 = incr t in
     let () = merge t ~handle:handle1 ~repr in
     Ok handle1
 
-  let init ~sender ~self ~tickets ~temporary_tickets =
+  let init ~self ~tickets ~temporary_tickets =
     let temporary_tickets =
       Seq.map
         (fun (ticket, amount) ->
@@ -183,15 +206,12 @@ module Make (CC : Conversions.S) = struct
         (fun (ticket, amount) ->
           Ticket_repr.make ticket amount (Owner.Owned self))
         tickets in
-    let acc = Table.create 25 in
+    let acc = { counter = Int64.of_int (-1); table = Table.create 25 } in
     Seq.iter
       (fun (x : Ticket_repr.t) ->
-        let ticket_handle =
-          match x.owner with
-          | Owner.Owned self -> Ticket_handle.make self x.ticket x.amount
-          | To_be_dropped -> Ticket_handle.make sender x.ticket x.amount in
-        Table.add acc ticket_handle x)
-      (Seq.append tickets temporary_tickets);
+        let ticket_handle = incr acc in
+        Table.add acc.table ticket_handle x)
+      (Seq.append temporary_tickets tickets);
     acc
 
   let finalize t =
@@ -200,5 +220,5 @@ module Make (CC : Conversions.S) = struct
         match data with
         | { owner = Owned _; ticket; amount } -> Seq.cons (ticket, amount) acc
         | { owner = To_be_dropped; ticket = _; amount = _ } -> acc)
-      t Seq.empty
+      t.table Seq.empty
 end

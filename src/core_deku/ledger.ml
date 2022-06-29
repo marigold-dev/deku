@@ -36,8 +36,12 @@ let empty =
     withdrawal_handles = Withdrawal_handle_tree.empty;
   }
 
+let with_ticket_table t f =
+  f ~get_table:(Fun.const t.table) ~set_table:(fun table ->
+      { table; withdrawal_handles = t.withdrawal_handles })
+
 let balance address ticket t =
-  Ticket_table.balance t.table ~sender:(Address.of_key_hash address) ~ticket
+  Ticket_table.balance t.table ~sender:address ~ticket
   |> Option.value ~default:Amount.zero
 
 let transfer ~sender ~destination amount ticket t =
@@ -49,10 +53,7 @@ let transfer ~sender ~destination amount ticket t =
   Ok { table; withdrawal_handles = t.withdrawal_handles }
 
 let deposit destination amount ticket t =
-  let table =
-    Ticket_table.deposit t.table ~ticket
-      ~destination:(Address.of_key_hash destination)
-      ~amount in
+  let table = Ticket_table.deposit t.table ~ticket ~destination ~amount in
   { table; withdrawal_handles = t.withdrawal_handles }
 
 let withdraw ~sender ~destination amount ticket t =

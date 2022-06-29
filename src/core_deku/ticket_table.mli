@@ -30,3 +30,6 @@ val take_tickets :
 
 val take_all_tickets :
   t -> sender:Address.t -> (Ticket_id.t * Amount.t) Seq.t * t
+
+val update_tickets :
+  t -> sender:Address.t -> tickets:(Ticket_id.t * Amount.t) Seq.t -> t

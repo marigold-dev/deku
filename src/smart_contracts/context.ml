@@ -1,7 +1,11 @@
 module type CTX = sig
   include Conversions.S
 
-  include State.S
+  include
+    State.S
+      with module Address = Address
+       and module Amount = Amount
+       and module Ticket_id = Ticket_id
 
   module Addressing : sig
     val sender : #State.addressing -> Address.t
