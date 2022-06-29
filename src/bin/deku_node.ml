@@ -74,9 +74,9 @@ let handle_block_by_level =
         List.find_opt
           (fun (_, block) ->
             Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks 
-          |> Option.map (fun (timestamp, block) ->
-            Network.Block_by_level_spec.{ timestamp; block}) in
+          state.applied_blocks
+        |> Option.map (fun (timestamp, block) ->
+               Network.Block_by_level_spec.{ timestamp; block }) in
       Ok block_and_timestamp)
 
 (* POST /user_operation_was_included_in_block *)

@@ -37,7 +37,8 @@ module Block_by_level_spec = struct
   type block_and_timestamp = {
     block : Block.t;
     timestamp : float;
-  } [@@deriving yojson]
+  }
+  [@@deriving yojson]
 
   type response = block_and_timestamp option [@@deriving yojson]
 
