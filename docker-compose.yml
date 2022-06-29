@@ -109,8 +109,8 @@ services:
   flextesa:
     container_name: deku_flextesa
     restart: always
-    image: oxheadalpha/flextesa:20220127
-    command: hangzbox start
+    image: oxheadalpha/flextesa:20220510
+    command: jakartabox start
     environment:
       - block_time=4
     ports:
