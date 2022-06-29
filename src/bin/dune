@@ -17,7 +17,7 @@
 (executable
  (name deku_sandbox)
  (libraries feather helpers bin_common cmdliner)
- (modules deku_sandbox)
+ (modules deku_sandbox sandbox_flows)
  (public_name deku-sandbox)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
