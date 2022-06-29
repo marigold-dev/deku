@@ -533,6 +533,13 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
       "2";
     ]
 
+let deposit_withdraw_test mode nodes =
+  let rpc_url = rpc_url mode in
+  let validators = make_validators nodes in
+  let%ok _result =
+    deposit_withdraw_test mode validators rpc_url deku_address deku_secret in
+  Ok ()
+
 let load_test () =
   let rpc_url = rpc_url Local in
   let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
