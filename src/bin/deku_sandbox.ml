@@ -615,7 +615,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
 
   (* Deposit 100 tickets *)
   let%ok _ = deposit_ticket rpc_url deku_address in
-  sleep 10.;
+  sleep 20.;
 
   (* Create a wallet with the deku_address and deku_private key *)
   let%ok () = create_wallet deku_address deku_secret "wallet.json" in
