@@ -1,6 +1,7 @@
 open Cmdliner
 open Helpers
 open Sandbox_flows
+open Sandbox_helpers
 
 let exits =
   Cmd.Exit.defaults
