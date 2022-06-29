@@ -92,3 +92,42 @@ let deku_secret =
   "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
   |> Secret.of_string
   |> Option.get
+
+let make_validators nodes = List.init nodes (fun i -> i)
+
+module Cmdliner_helpers = struct
+  open Cmdliner
+
+  let exits =
+    Cmd.Exit.defaults
+    @ [Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)"]
+
+  let man =
+    [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
+  (* parsing *)
+  let mode =
+    let printer fmt mode = Format.fprintf fmt "%s" (mode_to_string mode) in
+    let open Arg in
+    let docv = "mode" in
+    let doc = "The mode of the cluster, it can be docker or local" in
+    let mode_parser = conv' ~docv (mode_of_string, printer) in
+    value & opt mode_parser Local & info ["mode"] ~docv ~doc
+
+  let nodes =
+    let parser string =
+      let%ok nodes =
+        int_of_string_opt string
+        |> Option.to_result ~none:(`Msg "number of nodes has to be a number.")
+      in
+      let%assert () =
+        (`Msg "number of nodes must be a strictly positive number", nodes > 0)
+      in
+      Ok nodes in
+    let printer fmt nodes = Format.fprintf fmt "%i" nodes in
+    let open Arg in
+    let nodes_parser = conv ~docv:"nodes" (parser, printer) in
+    let docv = "nodes" in
+    let doc = "The number of nodes you want in your cluster" in
+    value & opt nodes_parser 3 & info ["nodes"] ~docv ~doc
+end
