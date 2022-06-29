@@ -2,7 +2,7 @@
  (name check_liveness)
  (public_name check-liveness)
  (modules check_liveness)
- (libraries bin_common lwt cmdliner feather))
+ (libraries lwt cmdliner feather))
 
 (executable
  (name asserter_contract)
@@ -38,4 +38,4 @@
  (modules load_test)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
- (libraries bin_common lwt cmdliner))
+ (libraries files lwt cmdliner))
