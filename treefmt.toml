@@ -2,10 +2,15 @@
 command = "nixfmt"
 includes = ["*.nix"]
 
-[formatter.ocaml]
+[formatter.dune]
 command = "dune"
 options = ["build", "@fmt", "--auto-promote"]
-includes = ["*.ml", "dune"]
+includes = ["dune", "dune-project"]
+
+[formatter.ocaml]
+command = "ocamlformat"
+options = ["--inplace"]
+includes = ["*.ml"]
 
 [formatter.javascript]
 command = "prettier"
