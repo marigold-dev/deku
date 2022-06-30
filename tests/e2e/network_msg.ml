@@ -1,9 +1,10 @@
 open Load_test_helpers
 open Helpers
+open Cmdliner
 
-let spam_message ~batch_count ~batch rounds_left =
-  let rec go rounds_left =
-    if rounds_left <= 0 then
+let spam_messages ~batch_count ~batch samples =
+  let rec go samples =
+    if samples <= 0 then
       await ()
     else
       let%await () =
@@ -14,8 +15,8 @@ let spam_message ~batch_count ~batch rounds_left =
                 (get_random_validator_uri ()) in
             await ())
           (List.init batch_count Fun.id) in
-      go (rounds_left - 1) in
-  go rounds_left
+      go (samples - 1) in
+  go samples
 
 (* Chosen ad hoc as a number that finished reasonably quickly *)
 let ad_hoc_params ticketer =
@@ -36,4 +37,34 @@ let ad_hoc_params ticketer =
            |> Yojson.Safe.to_string in
          (batch_count |> Float.to_int, batch_size |> Float.to_int, batch))
 
-let spam_noop_transactions _ticketer = ()
+let spam_noop_transactions ticketer =
+  let samples = 5 in
+  Lwt_list.iter_s
+    (fun (batch_count, batch_size, batch) ->
+      let start_time = Unix.gettimeofday () in
+      let%await () = spam_messages ~batch_count ~batch samples in
+      let end_time = Unix.gettimeofday () in
+      let duration = end_time -. start_time in
+      let message_per_second =
+        Float.of_int (samples * batch_count * batch_size) /. duration in
+      Format.eprintf "Duration: %.3f, mps: %.3f\n%!" duration message_per_second;
+      Format.eprintf "%d, %d, %.3f\n%!" batch_count batch_size
+        message_per_second;
+      await ())
+    (ad_hoc_params ticketer)
+
+let spam_noop_transactions ticketer =
+  spam_noop_transactions ticketer |> Lwt_main.run
+
+let args =
+  let open Arg in
+  let ticketer =
+    let docv = "ticketer" in
+    let doc =
+      "Tezos address of the contract issuing the ticket (e.g \
+       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)" in
+    required & pos 0 (some string) None & info [] ~doc ~docv in
+  let open Term in
+  const spam_noop_transactions $ ticketer
+
+let _ = Cmd.eval @@ Cmd.v (Cmd.info "network-msg") args
