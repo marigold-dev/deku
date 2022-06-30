@@ -9,9 +9,13 @@ module Node = State
 let write_state_to_file path protocol =
   let protocol_bin = Marshal.to_string protocol [] in
   Lwt.async (fun () ->
-      Lwt_io.with_file ~mode:Output path (fun oc ->
-          let%await () = Lwt_io.write oc protocol_bin in
-          Lwt_io.flush oc))
+      let tmp_path = path ^ "tmp" in
+      (* TODO: our attempt at atomic writes of state.bin *)
+      let%await _ =
+        Lwt_io.with_file ~mode:Output tmp_path (fun oc ->
+            let%await () = Lwt_io.write oc protocol_bin in
+            Lwt_io.flush oc) in
+      Lwt_unix.rename tmp_path path)
 
 let string_of_error = function
   | `Added_block_has_lower_block_height -> "Added block has lower block height"

@@ -51,4 +51,9 @@ let broadcast_to_list (type req res)
   uris
   (* TODO: limit concurrency here *)
   |> Lwt_list.iter_p (fun uri ->
-         Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
+         Lwt.catch
+           (fun () -> raw_post E.path data uri)
+           (fun exn ->
+             (* FIXME: use Logs *)
+             Format.eprintf "Broadcast exception: %a\n%!" Fmt.exn exn;
+             await ()))
