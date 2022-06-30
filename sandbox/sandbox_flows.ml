@@ -235,7 +235,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   (* Wait for deposit to appear in Deku *)
   let get_balance () = get_balance deku_address dummy_ticket_address in
   let%ok _ =
-    poll get_balance (fun balance ->
+    retry get_balance (fun balance ->
         if balance <> 0 then Ok balance else Error "Deposit failed") in
   print_endline "Deposit is ok.";
 
@@ -247,7 +247,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   (* wait for a handle hash to appear in the consensus storage *)
   let get_big_map_size () = get_big_map_size big_map_id in
   let%ok _ =
-    poll get_big_map_size (fun big_map_size ->
+    retry get_big_map_size (fun big_map_size ->
         if big_map_size <> current_size then
           Ok ()
         else
@@ -294,7 +294,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
         "--burn-cap";
         "2";
       ] in
-  poll withdraw (fun res -> Ok res)
+  retry withdraw (fun res -> Ok res)
 
 let deposit_withdraw_test mode nodes =
   let rpc_url = rpc_url mode in
