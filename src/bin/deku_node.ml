@@ -196,7 +196,7 @@ let handle_receive_user_operations_gossip =
 (* POST /user_operations_noop *)
 (* Propagate a batch of empty user_operations over gossip network *)
 let handle_receive_user_operations_noop =
-  handle_request (module Network.User_operations_noop) (fun _ _ -> Ok ())
+  handle_request (module Network.User_operations_noop) (fun _ -> Ok ())
 
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
