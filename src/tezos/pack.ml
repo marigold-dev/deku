@@ -27,3 +27,5 @@ let to_bytes data =
   Data_encoding.Binary.to_bytes_exn Michelson.expr_encoding
     (strip_locations data)
   |> Bytes.cat (Bytes.of_string "\005")
+
+let string data = String (-1, data)
