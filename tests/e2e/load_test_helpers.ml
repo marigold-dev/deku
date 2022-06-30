@@ -57,7 +57,7 @@ let get_current_block_level () =
 let make_ticket ticketer =
   let contract = Tezos.Contract_hash.of_string ticketer |> Option.get in
   let ticketer = Tezos.Address.Originated { contract; entrypoint = None } in
-  Core_deku.Ticket_id.{ ticketer; data = Bytes.empty }
+  Core_deku.Ticket_id.of_tezos { ticketer; data = Bytes.empty } |> Result.get_ok
 
 let make_transaction ~block_level ~ticket ~sender ~recipient ~amount =
   let amount = Core_deku.Amount.of_int amount in

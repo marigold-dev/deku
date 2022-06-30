@@ -31,3 +31,18 @@
  (libraries bin_common lwt cmdliner yojson)
  (preprocess
   (pps ppx_deriving_yojson)))
+
+(library
+ (name load_test_helpers)
+ (modules load_test_helpers)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries bin_common lwt cmdliner))
+
+(executable
+ (name load_test_offline)
+ (public_name deku-load-test-offline)
+ (modules load_test_offline)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries cmdliner load_test_helpers))
