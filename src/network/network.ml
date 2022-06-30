@@ -32,6 +32,8 @@ let request_user_operation_gossip = request (module User_operation_gossip)
 
 let request_user_operations_gossip = request (module User_operations_gossip)
 
+let request_user_operations_noop = request (module User_operations_noop)
+
 let request_consensus_operation = request (module Consensus_operation_gossip)
 
 let request_trusted_validator_membership =
