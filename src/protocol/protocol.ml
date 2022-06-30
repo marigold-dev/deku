@@ -75,8 +75,7 @@ let is_next state block =
 
 (* after applying block header we can procede to produce blocks asynchronously *)
 let apply_block_header state block =
-  Log.info "block: %Ld, time: %d" block.Block.block_height
-    (Unix.time () |> Float.to_int);
+  Log.info "Applying %a" Block.pp block;
   let state =
     List.fold_left apply_consensus_operation state block.consensus_operations
   in
