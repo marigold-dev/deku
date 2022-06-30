@@ -161,9 +161,9 @@ create_new_deku_environment() {
     else
       deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
     fi
-    KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
-    URI=$(deku-cli self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
+    KEY=$(deku-cli self "$FOLDER" --output=json | jq -r .key)
+    ADDRESS=$(deku-cli self "$FOLDER" --output=json | jq -r .t)
+    URI=$(deku-cli self "$FOLDER" --output=json | jq -r .uri)
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -259,9 +259,9 @@ start_deku_cluster() {
   # See deku-cli produce-block --help
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
+    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data --output=json | jq -r .block.hash)
   else
-    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
+    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" --output=json | jq -r .block.hash)
   fi
 
   sleep 0.1
