@@ -4,7 +4,9 @@ open Node
 open Consensus
 
 (* FIXME: refactor below function to use this one *)
-let get_initial_consensus_state ~folder =
+let get_initial_consensus_state ~folder:_ =
+  failwith "Not implemented! Remove this when we're reading the right .bin"
+  (*
   let%await identity =
     Config_files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
@@ -20,7 +22,7 @@ let get_initial_consensus_state ~folder =
   if state_bin_exists then
     Config_files.State_bin.read ~file:state_bin
   else
-    await @@ Consensus.make ~identity ~trusted_validator_membership_change
+    await @@ Consensus.make ~identity ~trusted_validator_membership_change *)
 
 let get_initial_state ~folder ~minimum_block_delay =
   let%await identity =

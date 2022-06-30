@@ -445,17 +445,15 @@ let info_produce_block =
 
 let produce_block { node_folder; validator_uris; _ } =
   let%await identity = read_identity ~node_folder in
-  Log.info "got identity";
-  let%await consensus =
-    Node_state.get_initial_consensus_state ~folder:node_folder in
-  Log.info "got consensus";
+  let%await state = Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0. in
   let address = identity.t in
   let block =
-    Block.produce ~state:consensus.protocol ~next_state_root_hash:None
+    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
-  Log.info "produced block %a" Protocol.Block.pp block;
-  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
+  with_validator_uris
+    ?uris:validator_uris node_folder
+    (fun validator_uris ->
       let%await () =
         let open Network in
         broadcast_to_list (module Block_spec) validator_uris { block } in
