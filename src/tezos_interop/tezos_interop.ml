@@ -310,4 +310,26 @@ module Discovery = struct
     |> Bytes.to_string
     |> BLAKE2B.hash
     |> Signature.sign secret
+
+  let update_validator t secret key uri nonce =
+    let { discovery_contract; _ } = t in
+    let module Payload = struct
+      type t = {
+        key : Key.t;
+        uri : Uri.t;
+        nonce : int64;
+        signature : Signature.t;
+      }
+      [@@deriving yojson]
+    end in
+    let open Payload in
+    let signature = sign secret ~nonce uri in
+    let payload = { key; uri; nonce; signature } in
+    let%await result =
+      Run_contract.run t ~destination:discovery_contract ~entrypoint:"default"
+        ~payload:(Payload.to_yojson payload) in
+    await
+      (match result with
+      | Applied _ -> Ok ()
+      | _ -> Error "operation failed")
 end

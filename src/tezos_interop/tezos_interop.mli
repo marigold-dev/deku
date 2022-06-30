@@ -45,4 +45,7 @@ end
 
 module Discovery : sig
   val sign : Secret.t -> nonce:int64 -> Uri.t -> Signature.t
+
+  val update_validator :
+    t -> Secret.t -> Key.t -> Uri.t -> int64 -> (unit, string) result Lwt.t
 end
