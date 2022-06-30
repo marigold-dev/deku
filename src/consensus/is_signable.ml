@@ -1,6 +1,7 @@
 open Protocol
 open State
 open Consensus_utils
+open Helpers
 
 let is_signed_by_self state ~hash =
   match Block_pool.find_signatures ~hash state.block_pool with
@@ -48,9 +49,29 @@ let is_signable state block =
     List.for_all is_trusted_consensus_operation block.Block.consensus_operations
     && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
   in
-  is_next state block
-  && (not (is_signed_by_self state ~hash:block.hash))
-  && is_current_producer state ~key_hash:block.author
-  && (not (has_next_block_to_apply state ~hash:block.hash))
-  && all_operations_are_trusted
-  && block_has_signable_state_root_hash ~current_time state block
+  let block_analysis =
+    [
+      (is_next state block, "Not next block");
+      (not (is_signed_by_self state ~hash:block.hash), "Already signed by self");
+      ( is_current_producer state ~key_hash:block.author,
+        "Is not authored by current block producer" );
+      ( not (has_next_block_to_apply state ~hash:block.hash),
+        "Is already have next block to apply" );
+      (all_operations_are_trusted, "Includes untrusted Tezos operations");
+      ( block_has_signable_state_root_hash ~current_time state block,
+        "Does not include a signable state root hash" );
+    ] in
+  let rejection_reasons =
+    List.fold_left
+      (fun acc (is_valid, failure_reason) ->
+        if not is_valid then
+          failure_reason :: acc
+        else
+          acc)
+      [] block_analysis in
+  if Int.equal (List.length rejection_reasons) 0 then
+    true
+  else (
+    Log.error "Refusing to sign %a. Rejection reasons: %s" Block.pp block
+      (String.concat "; " rejection_reasons);
+    false)
