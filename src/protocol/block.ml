@@ -113,6 +113,7 @@ let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
       ~previous_hash ~author ~block_height ~consensus_operations
       ~tezos_operations ~user_operations in
+  Log.info "bar";
   {
     hash;
     payload_hash;
@@ -140,6 +141,7 @@ let produce ~state ~next_state_root_hash =
   let next_state_root_hash =
     Option.value ~default:state.Protocol_state.state_root_hash
       next_state_root_hash in
+  Log.info "waaaaat";
   make ~previous_hash:state.Protocol_state.last_block_hash
     ~state_root_hash:next_state_root_hash
     ~withdrawal_handles_hash:

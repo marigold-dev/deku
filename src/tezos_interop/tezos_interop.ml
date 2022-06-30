@@ -252,6 +252,7 @@ module Consensus = struct
       Lwt.return key_hash_uri_pairs
 
   let fetch_validators t =
+    Log.debug "Fetching validators from main chain";
     let {
       rpc_node;
       required_confirmations;
@@ -298,6 +299,7 @@ module Consensus = struct
                 (Address.to_string discovery_contract)
             | _, Some _ -> ())
           validator_uri_pairs;
+        Log.debug "Validators retrieved";
         Lwt.return (Ok validator_uri_pairs))
     | Error e -> Lwt.return (Error e)
 end
