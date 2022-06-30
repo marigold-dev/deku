@@ -28,7 +28,7 @@ let produce_block mode =
   |> Result.join
 
 let sign_block mode hash i =
-  (match mode with
+  match mode with
   | Docker ->
     process "docker"
       [
@@ -42,8 +42,13 @@ let sign_block mode hash i =
       ]
   | Local ->
     process "deku-node"
-      ["sign-block"; Format.sprintf "data/%i" i; BLAKE2B.to_string hash])
-  |> run_res ~error:"Error in sign block"
+      ["sign-block"; Format.sprintf "data/%i" i; BLAKE2B.to_string hash]
+
+let sign_block mode hash validators =
+  validators
+  |> List.map (sign_block mode hash)
+  |> List.map (Feather.collect_in_background stdout_and_status)
+  |> List.map Feather.wait
 
 let get_balance address ticketer =
   let ticket = Format.sprintf "(Pair \"%s\" 0x)" (Address.to_string ticketer) in
@@ -158,7 +163,7 @@ let start_deku_cluster mode validators =
      Sign the previously produced block using `deku-node sign-block`
      See ./src/bin/deku_node.ml:sign_block *)
   print_endline "Signing the block.";
-  let _ = validators |> List.map (sign_block mode hash) in
+  let _ = validators |> sign_block mode hash in
   print_endline "Cluster bootstrapped.";
   Ok running_nodes
 
