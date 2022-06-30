@@ -19,3 +19,5 @@ val key_hash : Key_hash.t -> t
 val address : Address.t -> t
 
 val to_bytes : t -> bytes
+
+val string : string -> t
