@@ -3,14 +3,6 @@ open Sandbox_flows
 open Sandbox_helpers
 open Cmdliner_helpers
 
-let start =
-  let open Term in
-  const start $ mode $ nodes
-
-let info_start =
-  let doc = "Starts a Deku cluster configured with this script" in
-  Cmd.info "start" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
 let tear_down =
   let open Term in
   const tear_down $ nodes
@@ -145,7 +137,7 @@ let _ =
   @@ Cmd.eval_result
   @@ Cmd.group default_info
        [
-         Cmd.v info_start start;
+         Cmd.v Start.info Start.term;
          Cmd.v Setup.info Setup.term;
          Cmd.v info_tear_down tear_down;
          Cmd.v info_deposit_withdraw_test deposit_withdraw_test;
