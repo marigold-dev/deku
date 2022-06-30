@@ -119,7 +119,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
       "--tezos_secret";
       tezos_secret;
       "--unsafe_tezos_required_confirmations";
-      "4";
+      "3";
     ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
