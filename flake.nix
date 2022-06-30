@@ -117,7 +117,7 @@
           };
         };
 
-        formatter = pkgs.treefmt;
+        formatter = pkgs.callPackage ./nix/formatter.nix { };
       }) // {
         hydraJobs = {
           x86_64-linux = self.packages.x86_64-linux;
