@@ -146,11 +146,11 @@ let setup mode validators rpc_url =
   let consensus_storage = make_consensus_storage identities in
   let discovery_storage = make_discovery_storage identities in
   let%ok consensus_address =
-    deploy_contract rpc_url "consensus" consensus consensus_storage "myWallet"
-  in
+    deploy_contract ~wait:(Some 1) rpc_url "consensus" consensus
+      consensus_storage "myWallet" in
   let%ok discovery_address =
-    deploy_contract rpc_url "discovery" discovery discovery_storage "myWallet"
-  in
+    deploy_contract ~wait:(Some 1) rpc_url "discovery" discovery
+      discovery_storage "myWallet" in
 
   (* setup tezos informations *)
   make_trusted_validator_membership_change_json identities;
