@@ -618,4 +618,4 @@ let () =
           let signature =
             sign secret ~nonce:1L (Uri.of_string "http://localhost") in
           (expect.string (Signature.to_string signature)).toEqual
-            "edsigtpGEA7XKPKMFkFiEA6SfJaaha4Ai2XbteJG5FYvuMtMRyPnXRuZNi54P7BWvV6GaWTijf8EBjGb8MZZvdTrWCGFCVCXL7r"))
+            "edsigtpF4xy9p2Y7RNHHzmVdF3simPHAEWZFPgGg4MAcXKnwe1wc7NzoA45rEbFs19nvhj9ztd3mDwJPYH8cxQjgdngpfSPkfc6"))
