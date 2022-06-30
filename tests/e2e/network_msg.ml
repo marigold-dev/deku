@@ -38,9 +38,13 @@ let ad_hoc_params ticketer =
          (batch_count |> Float.to_int, batch_size |> Float.to_int, batch))
 
 let spam_noop_transactions ticketer =
+  Format.eprintf "Batches ready, starting test\n%!";
+  print_endline "batch_count, batch_size, messages_per_second";
   let samples = 5 in
   Lwt_list.iter_s
     (fun (batch_count, batch_size, batch) ->
+      Format.eprintf "Testing batch count: %d, batch size: %d\n" batch_count
+        batch_size;
       let start_time = Unix.gettimeofday () in
       let%await () = spam_messages ~batch_count ~batch samples in
       let end_time = Unix.gettimeofday () in
