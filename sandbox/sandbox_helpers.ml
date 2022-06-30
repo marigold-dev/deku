@@ -32,9 +32,15 @@ let rm_dir directory = process "rm" ["-rf"; directory] |> run
 
 let ligo args = process "ligo" args
 
-let tezos_client args =
+let tezos_client ?(wait = None) args =
+  let wait =
+    match wait with
+    | None -> "none"
+    | Some n -> string_of_int n in
   process "docker"
-    (List.append ["exec"; "-t"; "deku_flextesa"; "tezos-client"] args)
+    (List.append
+       ["exec"; "-t"; "deku_flextesa"; "tezos-client"; "--wait"; wait]
+       args)
   |> run_res ~error:"error in tezos-client"
 
 let rpc_url mode =
@@ -55,8 +61,9 @@ let get_contract_address rpc_url contract_name =
   |> Option.join
   |> Option.to_result ~none:"Error in contract retrieving"
 
-let deploy_contract rpc_url contract_name contract_path storage wallet =
-  Format.printf "Originating new %s contract." contract_name;
+let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
+    wallet =
+  Format.printf "Originating new %s contract.@." contract_name;
   let%ok storage =
     ligo ["compile"; "storage"; contract_path; storage]
     |> run_res ~error:"ligo compile storage error" in
@@ -64,7 +71,7 @@ let deploy_contract rpc_url contract_name contract_path storage wallet =
     ligo ["compile"; "contract"; contract_path]
     |> run_res ~error:"ligo compile contract error" in
   let%ok _ =
-    tezos_client
+    tezos_client ~wait
       [
         "--endpoint";
         rpc_url;
@@ -94,6 +101,38 @@ let deku_secret =
   |> Option.get
 
 let make_validators nodes = List.init nodes (fun i -> i)
+
+(** Try to execute a given function n time, with a spacing time of 1 seconds between each call, verify if the result match the predicate function **)
+let rec retry ?(tries = 60) f verify =
+  if tries <= 0 then
+    Error "function did not succeed"
+  else
+    let res = f () |> Result.fold ~ok:verify ~error:(fun error -> Error error) in
+    match res with
+    | Ok res -> Ok res
+    | Error _ ->
+      Unix.sleep 1;
+      retry f ~tries:(tries - 1) verify
+
+let known_handles_hash_big_map_id consensus_address =
+  let%ok stdout =
+    tezos_client
+      ["get"; "contract"; "storage"; "for"; Address.to_string consensus_address]
+    |> Result.map (Str.global_replace (Str.regexp "\n") "") in
+  let regex = Str.regexp ".*(Pair\\( [0-9]+\\) [0-9]+).*" in
+  match Str.string_match regex stdout 0 with
+  | false -> Error "cannot retrieve the big map id"
+  | true -> Str.matched_group 1 stdout |> String.trim |> int_of_string |> ok
+
+let get_big_map_size big_map_id =
+  process "curl"
+    [
+      "--silent";
+      Format.sprintf
+        "http://localhost:20000/chains/main/blocks/head/context/raw/json/big_maps/index/%i/total_bytes"
+        big_map_id;
+    ]
+  |> run_res
 
 module Cmdliner_helpers = struct
   open Cmdliner
