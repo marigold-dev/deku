@@ -46,3 +46,11 @@
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
  (libraries cmdliner load_test_helpers))
+
+(executable
+ (name network_msg)
+ (public_name deku-network-msg)
+ (modules network_msg)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries cmdliner load_test_helpers))
