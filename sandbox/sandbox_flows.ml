@@ -225,13 +225,13 @@ let deploy_dummy_ticket mode =
   |> Result.map Address.to_string
   |> Result.map print_endline
 
-let deposit_ticket rpc_url deku_address =
+let deposit_ticket ?(wait = None) rpc_url deku_address =
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let input =
     Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100 0x)" consensus_address
       (deku_address |> Key_hash.to_string) in
-  tezos_client
+  tezos_client ~wait
     [
       "--endpoint";
       rpc_url;
@@ -255,33 +255,44 @@ let deposit_dummy_ticket mode =
   Ok ()
 
 let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
+  let%ok consensus_address = get_contract_address rpc_url "consensus" in
   (* bootstrap the cluster *)
   let%ok _ = start_deku_cluster mode validators in
 
   (* deploy a dummy ticket *)
-  let%ok _ =
-    deploy_contract rpc_url "dummy_ticket" "./dummy_ticket.mligo" "()" "bob"
-  in
+  let%ok dummy_ticket_address =
+    deploy_contract ~wait:(Some 1) rpc_url "dummy_ticket" "./dummy_ticket.mligo"
+      "()" "bob" in
 
   (* Deposit 100 tickets *)
-  let%ok _ = deposit_ticket rpc_url deku_address in
-  Unix.sleep 5;
+  let%ok _ = deposit_ticket ~wait:(Some 1) rpc_url deku_address in
 
   (* Create a wallet with the deku_address and deku_private key *)
   let%ok () = create_wallet deku_address deku_secret "wallet.json" in
+  (* Retrieves the known handles hash big map id to poll it *)
+  let%ok big_map_id = known_handles_hash_big_map_id consensus_address in
 
-  let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
-  let%ok balance = get_balance deku_address dummy_ticket_address in
-  let%assert () =
-    ( Format.sprintf "Balance for ticket %s is \"%i\"! Did the deposit fail?"
-        (dummy_ticket_address |> Address.to_string)
-        balance,
-      balance <> 0 ) in
+  (* Wait for deposit to appear in Deku *)
+  let get_balance () = get_balance deku_address dummy_ticket_address in
+  let%ok _ =
+    retry get_balance (fun balance ->
+        if balance <> 0 then Ok balance else Error "Deposit failed") in
   print_endline "Deposit is ok.";
 
   (* Withdraw some tickets *)
+  (* let%ok current_known_handle_hashes = get_current_known_handle_hashes dummy_ticket_address consensus_address in  *)
+  let%ok current_size = get_big_map_size big_map_id in
   let%ok operation_hash = withdraw "./wallet.json" dummy_ticket_address in
-  Unix.sleep 10;
+
+  (* wait for a handle hash to appear in the consensus storage *)
+  let get_big_map_size () = get_big_map_size big_map_id in
+  let%ok _ =
+    retry get_big_map_size (fun big_map_size ->
+        if big_map_size <> current_size then
+          Ok ()
+        else
+          Error "Big map wasn't updated") in
+  print_endline "Withdraw is ok.";
 
   (* Get the proof of the withdraw *)
   let%ok id, handle_hash, proof =
@@ -296,8 +307,6 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   print_endline "Withdraw-proof is ok.";
 
-  Unix.sleep 10;
-
   (* Send the proof to the dummy ticket contract*)
   let arg =
     Format.sprintf
@@ -309,21 +318,23 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
       (dummy_ticket_address |> Address.to_string)
       handle_hash proof in
 
-  tezos_client
-    [
-      "transfer";
-      "0";
-      "from";
-      "bob";
-      "to";
-      "dummy_ticket";
-      "--entrypoint";
-      "withdraw_from_deku";
-      "--arg";
-      arg;
-      "--burn-cap";
-      "2";
-    ]
+  let withdraw () =
+    tezos_client
+      [
+        "transfer";
+        "0";
+        "from";
+        "bob";
+        "to";
+        "dummy_ticket";
+        "--entrypoint";
+        "withdraw_from_deku";
+        "--arg";
+        arg;
+        "--burn-cap";
+        "2";
+      ] in
+  retry withdraw (fun res -> Ok res)
 
 let deposit_withdraw_test mode nodes =
   let rpc_url = rpc_url mode in
