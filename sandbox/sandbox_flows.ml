@@ -106,11 +106,11 @@ let setup mode validators rpc_url =
   in
 
   (* setup write indentity.json to file system *)
-  let%ok identities = validators |> List.map_ok (setup_identity mode) in
+  let%ok identities = validators |> List.map_ok (Setup.setup_identity mode) in
 
   (* deploy smart contracts *)
-  let consensus_storage = make_consensus_storage identities in
-  let discovery_storage = make_discovery_storage identities in
+  let consensus_storage = Setup.make_consensus_storage identities in
+  let discovery_storage = Setup.make_discovery_storage identities in
   let%ok consensus_address =
     deploy_contract rpc_url "consensus" consensus consensus_storage "myWallet"
   in
@@ -119,10 +119,10 @@ let setup mode validators rpc_url =
   in
 
   (* setup tezos informations *)
-  make_trusted_validator_membership_change_json identities;
+  Setup.make_trusted_validator_membership_change_json identities;
   identities
   |> List.map_ok
-       (setup_tezos rpc_url secret consensus_address discovery_address)
+       (Setup.setup_tezos rpc_url secret consensus_address discovery_address)
 
 let setup mode nodes =
   let validators = make_validators nodes in

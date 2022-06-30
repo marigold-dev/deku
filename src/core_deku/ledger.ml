@@ -86,4 +86,7 @@ let withdrawal_handles_find_proof_by_id key t =
   Withdrawal_handle_tree.find key t.withdrawal_handles
 
 let withdrawal_handles_root_hash t =
-  Withdrawal_handle_tree.hash t.withdrawal_handles
+  Log.info "hash start";
+  let x = Withdrawal_handle_tree.hash t.withdrawal_handles in
+  Log.info "hash end";
+  x

@@ -4,28 +4,36 @@ open Crypto
 open Cmdliner
 open Sandbox_helpers
 
+(* FIXME: don't hard-code this *)
+let local_validators_option =
+  [
+    "--validator_uris";
+    "http://localhost:4440,http://localhost:4441,http://localhost:4442";
+  ]
+
 let produce_block mode =
-  (match mode with
-  | Docker ->
-    process "docker"
-      [
-        "exec";
-        "-t";
-        "deku-node-0";
-        "/bin/deku-node";
-        "produce-block";
-        "/app/data";
-      ]
-  | Local -> process "deku-node" ["produce-block"; "data/0"])
-  |. grep "block.hash"
-  |. sed "block.hash: \\([a-f0-9]*\\)" "\\1"
-  |. tr "-d" "\t\n\r"
-  |> run_res ~error:"Error in prodduce-block"
-  |> Result.map BLAKE2B.of_string
-  |> Result.map
-       (Option.to_result
-          ~none:"cannot deserialize block hash from produce-block")
-  |> Result.join
+  let%ok output =
+    (match mode with
+    | Docker ->
+      process "docker"
+        [
+          "exec";
+          "-t";
+          "deku-node-0";
+          "/bin/deku-node";
+          "produce-block";
+          "/app/data";
+        ]
+    | Local ->
+      process "deku-node"
+        (["produce-block"; "data/0"; "--json-logs"; "-v"]
+        @ local_validators_option))
+    |. process "cut" ["-d"; " "; "-f"; "2"]
+    |> run_res ~error:"Error in produce-block" in
+  Format.printf "Hash from produce-block: %s" output;
+  match BLAKE2B.of_string output with
+  | Some hash -> Ok hash
+  | None -> Error "cannot deserialize block hash from produce-block"
 
 let sign_block mode hash i =
   match mode with
@@ -42,7 +50,8 @@ let sign_block mode hash i =
       ]
   | Local ->
     process "deku-node"
-      ["sign-block"; Format.sprintf "data/%i" i; BLAKE2B.to_string hash]
+      (["sign-block"; Format.sprintf "data/%i" i; BLAKE2B.to_string hash]
+      @ local_validators_option)
 
 let sign_block mode hash validators =
   validators
@@ -51,25 +60,57 @@ let sign_block mode hash validators =
   |> List.map Feather.wait
 
 let start_deku_cluster mode validators =
+  (match mode with
+  | Docker -> failwith "TODO: fix docker"
+  | Local -> ());
   (* Step 1: Starts all the nodes only if mode is set to local *)
   print_endline "Starting nodes.";
   let running_nodes =
     match mode with
-    | Docker -> []
+    | Docker -> assert false
     | Local ->
       validators
-      |> List.map (fun i ->
+      |> Lwt_list.iter_p (fun i ->
              let data_folder = Format.sprintf "data/%i" i in
              let prometheus_port = 9000 + i in
-             deku_node
-               [
-                 "start";
-                 data_folder;
-                 "--listen-prometheus";
-                 string_of_int prometheus_port;
-               ]
-             |> run_in_background) in
-  Unix.sleep 3;
+             (* We want to dynamically log the stdout and stderr of each of
+                these. Hence we handle with Lwt instead of Feather.
+                TODO: implement some kind of tee functionality in Feather
+                - that would be way easier to use than this. *)
+             let%await status =
+               Lwt_process.exec ~stdout:`Keep ~stderr:`Keep
+                 ( "deku-node",
+                   [|
+                     "deku-node";
+                     "start";
+                     data_folder;
+                     "--listen-prometheus";
+                     string_of_int prometheus_port;
+                     (* TODO: we should probably change the verbosity *)
+                     "-v";
+                   |] ) in
+             Format.eprintf "deku-node exited with status ";
+             (match status with
+             | Unix.WEXITED i -> Format.eprintf "EXITED %d" i
+             | Unix.WSTOPPED i -> Format.eprintf "STOPPED %d" i
+             | Unix.WSIGNALED i -> Format.eprintf "SIGNALED %d" i);
+             Format.eprintf "\n%!";
+             await ()) in
+  let%ok () =
+    retry ~tries:100
+      (fun () ->
+        Format.printf "Waiting for nodes to come online\n%!";
+        let%ok _ =
+          curl ["-d"; "null"; "http://localhost:4440/block-level"] |> run_res
+        in
+        let%ok _ =
+          curl ["-d"; "null"; "http://localhost:4441/block-level"] |> run_res
+        in
+        let%ok _ =
+          curl ["-d"; "null"; "http://localhost:4442/block-level"] |> run_res
+        in
+        Ok ())
+      (fun () -> Ok ()) in
 
   (* Step 2: Manually produce the block
      Produce a block using `deku-node produce-block`
@@ -88,8 +129,8 @@ let start_deku_cluster mode validators =
 
 let start mode nodes =
   let validators = make_validators nodes in
-  let%ok processes = start_deku_cluster mode validators in
-  let _processes = List.map wait processes in
+  let%ok running_nodes = start_deku_cluster mode validators in
+  let () = Lwt_main.run running_nodes in
   Ok ()
 
 open Cmdliner_helpers

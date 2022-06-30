@@ -15,6 +15,83 @@ let exits =
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 (* TODO: several functions copied from deku-cli. Refactor. *)
+type common_options = {
+  node_folder : string;
+  use_json : bool;
+  validator_uris : Uri.t list option;
+  style_renderer : Fmt.style_renderer option;
+  log_level : Logs.level option;
+}
+
+let setup_logs style_renderer log_level use_json =
+  (match style_renderer with
+  | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
+  | None -> Fmt_tty.setup_std_outputs ());
+  Logs.set_level log_level;
+
+  (match use_json with
+  | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
+  | false -> Logs.set_reporter (Logs_fmt.reporter ()));
+
+  (* disable all non-deku logs *)
+  match log_level with
+  (* TODO: we probably want a flag like --all_logs or something here instead *)
+  | Some Logs.Debug -> ()
+  | _ ->
+    List.iter
+      (fun src ->
+        let src_name = Logs.Src.name src in
+        if
+          (not (String.starts_with ~prefix:"deku" src_name))
+          && not (String.equal src_name "application")
+        then
+          Logs.Src.set_level src (Some Logs.Error))
+      (Logs.Src.list ())
+
+let common_options node_folder use_json validator_uris style_renderer log_level
+    =
+  setup_logs style_renderer log_level use_json;
+  { node_folder; use_json; validator_uris; style_renderer; log_level }
+
+let uri =
+  let parser uri = Ok (uri |> Uri.of_string) in
+  let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
+let folder_node =
+  let docv = "folder_node" in
+  let doc = "Path to the folder containing the node configuration data." in
+  let open Arg in
+  required & pos 0 (some string) None & info [] ~doc ~docv
+
+let validator_uris =
+  let open Arg in
+  let docv = "validator_uris" in
+  let doc =
+    "Comma-separated list of validator URI's to which to broadcast operations"
+  in
+  let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
+  value & opt (some (list uri)) None & info ["validator_uris"] ~doc ~docv ~env
+
+let common_options_term =
+  let json_logs =
+    let docv = "Json logs" in
+    let doc = "This determines whether logs will be printed in json format." in
+    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
+  let open Term in
+  const common_options
+  $ folder_node
+  $ json_logs
+  $ validator_uris
+  $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
+  $ Logs_cli.level
+      ~env:
+        (Cmd.Env.info
+           "DEKU_LOG_VERBOSITY"
+           (* TODO: consolidate and document environment options *))
+      ()
+
 let read_identity ~node_folder =
   Config_files.Identity.read ~file:(node_folder ^ "/identity.json")
 
@@ -75,12 +152,6 @@ let ensure_folder folder =
       raise (Invalid_argument (folder ^ " is not a folder"))
   else
     Lwt_unix.mkdir folder 0o700
-
-let uri =
-  let parser uri = Ok (uri |> Uri.of_string) in
-  let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
-  let open Arg in
-  conv (parser, printer)
 
 let edsk_secret_key =
   let parser key =
@@ -349,34 +420,11 @@ let () =
   (* This is needed because Dream will initialize logs lazily *)
   Dream.initialize_log ~enable:false ()
 
-let node json_logs style_renderer level folder prometheus_port =
-  (match style_renderer with
-  | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
-  | None -> Fmt_tty.setup_std_outputs ());
-  Logs.set_level level;
+let start common_options prometheus_port =
+  let { node_folder; _ } = common_options in
+  node node_folder prometheus_port
 
-  (match json_logs with
-  | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
-  | false -> Logs.set_reporter (Logs_fmt.reporter ()));
-
-  (* disable all non-deku logs *)
-  List.iter
-    (fun src ->
-      let src_name = Logs.Src.name src in
-      if
-        (not (String.starts_with ~prefix:"deku" src_name))
-        && not (String.equal src_name "application")
-      then
-        Logs.Src.set_level src (Some Logs.Error))
-    (Logs.Src.list ());
-  node folder prometheus_port
-
-let node =
-  let folder_node =
-    let docv = "folder_node" in
-    let doc = "Path to the folder containing the node configuration data." in
-    let open Arg in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+let start =
   let minimum_block_delay =
     let docv = "minimum_block_delay" in
     let doc =
@@ -384,66 +432,44 @@ let node =
        newly produced block." in
     let open Arg in
     value & opt float 5. & info ["minimum_block_delay"] ~doc ~docv in
-  let json_logs =
-    let docv = "Json logs" in
-    let doc = "This determines whether logs will be printed in json format." in
-    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
-
   let port =
     let docv = "port" in
     let doc = "The port to listen on for incoming messages." in
     let env = Cmd.Env.info "PORT" ~doc in
     Arg.(value & opt (some int) None & info ~doc ~docv ~env ["port"]) in
   let open Term in
-  const node
-  $ json_logs
-  $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
-  $ Logs_cli.level
-      ~env:
-        (Cmd.Env.info
-           "DEKU_LOG_VERBOSITY"
-           (* TODO: consolidate and document environment options *))
-      ()
-  $ folder_node
+  const start
+  $ common_options_term
   $ port
   $ minimum_block_delay
   $ Prometheus_dream.opts
-
-let produce_block node_folder validator_uris =
-  let%await identity = read_identity ~node_folder in
-  let%await state =
-    Node_state.get_initial_state ~minimum_block_delay:0. ~folder:node_folder
-  in
-  let address = identity.t in
-  let block =
-    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
-      ~author:address ~consensus_operations:[] ~tezos_operations:[]
-      ~user_operations:[] in
-  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
-      let%await () =
-        let open Network in
-        broadcast_to_list (module Block_spec) validator_uris { block } in
-      Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-      Lwt.return (`Ok ()))
-
-let validator_uris =
-  let open Arg in
-  let docv = "validator_uris" in
-  let doc =
-    "Comma-separated list of validator URI's to which to broadcast operations"
-  in
-  let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
-  value & opt (some (list uri)) None & info ["validator_uris"] ~doc ~docv ~env
-
-let produce_block =
-  let open Term in
-  lwt_ret (const produce_block $ folder_node 0 $ validator_uris)
 
 let info_produce_block =
   let doc =
     "Produce and sign a block and broadcast to the network manually, useful \
      when the chain is stale." in
   Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
+let produce_block { node_folder; validator_uris; _ } =
+  let%await identity = read_identity ~node_folder in
+  let%await consensus =
+    Node_state.get_initial_consensus_state ~folder:node_folder in
+  let address = identity.t in
+  let block =
+    Block.produce ~state:consensus.protocol ~next_state_root_hash:None
+      ~author:address ~consensus_operations:[] ~tezos_operations:[]
+      ~user_operations:[] in
+  Log.info "produced block %a" Protocol.Block.pp block;
+  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
+      let%await () =
+        let open Network in
+        broadcast_to_list (module Block_spec) validator_uris { block } in
+      Logs.app (fun fmt -> fmt "block.hash: %s" (BLAKE2B.to_string block.hash));
+      Lwt.return (`Ok ()))
+
+let produce_block =
+  let open Term in
+  lwt_ret (const produce_block $ common_options_term)
 
 let info_sign_block =
   let doc =
@@ -665,7 +691,7 @@ let update_uri =
     let docv = "nonce" in
     let doc = "The nonce of the transaction." in
     required & pos 2 (some int64) None & info [] ~doc ~docv in
-  lwt_ret (const update_uri $ folder_node $ new_node_uri $ nonce)
+  lwt_ret (const update_uri $ folder_node 0 $ new_node_uri $ nonce)
 
 let default_info =
   let doc = "Deku node" in
@@ -677,7 +703,7 @@ let _ =
   Cmd.eval
   @@ Cmd.group default_info
        [
-         Cmd.v (Cmd.info "start") node;
+         Cmd.v (Cmd.info "start") start;
          Cmd.v info_produce_block produce_block;
          Cmd.v info_sign_block sign_block_term;
          Cmd.v info_setup_identity setup_identity;

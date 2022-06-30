@@ -32,6 +32,8 @@ let rm_dir directory = process "rm" ["-rf"; directory] |> run
 
 let ligo args = process "ligo" args
 
+let curl args = process "curl" (["--silent"] @ args)
+
 let tezos_client ?(wait = None) args =
   let wait =
     match wait with
@@ -104,6 +106,7 @@ let make_validators nodes = List.init nodes (fun i -> i)
 
 (** Try to execute a given function n time, with a spacing time of 1 seconds between each call, verify if the result match the predicate function **)
 let rec retry ?(tries = 60) f verify =
+  (* FIXME: I think we should get rid of the verify param *)
   if tries <= 0 then
     Error "function did not succeed"
   else
@@ -133,6 +136,24 @@ let get_big_map_size big_map_id =
         big_map_id;
     ]
   |> run_res
+
+let is_node_bootstrapped rpc_url =
+  tezos_client ["--endpoint"; rpc_url; "bootstrapped"]
+  |> Result.map (String.split_on_char '\n')
+  |> Result.map List.rev
+  |> Result.map (fun list -> List.nth_opt list 0)
+  |> Result.map
+       (Option.to_result ~none:"No output from tezos-client bootstrapped")
+  |> Result.join
+  |> Result.map (String.starts_with ~prefix:"Node is bootstrapped")
+  |> Result.fold ~ok:(fun _ -> true) ~error:(fun _ -> false)
+
+let tezos_client_update_config rpc_url =
+  tezos_client ["--endpoint"; rpc_url; "config"; "update"]
+
+let import_secret rpc_url alias secret =
+  tezos_client
+    ["--endpoint"; rpc_url; "import"; "secret"; "key"; alias; secret; "--force"]
 
 module Cmdliner_helpers = struct
   open Cmdliner

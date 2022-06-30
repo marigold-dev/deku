@@ -3,18 +3,18 @@ open Crypto
 open Protocol
 open Cmdliner
 open Core_deku
-open Bin_common
+open Files
 
 let () = Printexc.record_backtrace true
 
 let read_identity ~node_folder =
-  Files.Identity.read ~file:(node_folder ^ "/identity.json")
+  Config_files.Identity.read ~file:(node_folder ^ "/identity.json")
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 let interop_context node_folder =
   let%await context =
-    Files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
+    Config_files.Interop_context.read ~file:(node_folder ^ "/tezos.json") in
   Lwt.return
     (Tezos_interop.make ~rpc_node:context.rpc_node ~secret:context.secret
        ~consensus_contract:context.consensus_contract
@@ -171,7 +171,8 @@ let create_wallet () =
   let address_string = Address.to_string (key_hash |> Address.of_key_hash) in
   let file = make_filename_from_address address_string in
   let%await () =
-    Files.Wallet.write { priv_key = secret; address = key_hash } ~file in
+    Config_files.Wallet.write { priv_key = secret; address = key_hash } ~file
+  in
   await (`Ok ())
 
 let create_wallet =
@@ -215,7 +216,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
   with_validator_uri node_folder @@ fun (_, validator_uri) ->
   let%await block_level_response = request_block_level () validator_uri in
   let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
   let operation =
     match (Address.to_key_hash received_address, argument) with
     | Some addr, None ->
@@ -264,7 +265,7 @@ let originate_contract node_folder contract_json initial_storage
       let open Network in
       let%await block_level_response = request_block_level () validator_uri in
       let block_level = block_level_response.level in
-      let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+      let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
       let%await payload =
         let open Contracts in
         match vm_flavor with
@@ -427,7 +428,7 @@ let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let%await identity = read_identity ~node_folder in
   let%await block_level_response = request_block_level () identity.uri in
   let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
   let operation =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)

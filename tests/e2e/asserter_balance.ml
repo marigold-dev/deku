@@ -1,10 +1,10 @@
 open Cmdliner
-open Bin_common
+open Files
 
 let assert_state_correct data_folder contract ticket =
   print_endline @@ "Checking state at path: " ^ data_folder;
   let file = data_folder ^ "/state.bin" in
-  let protocol_state = Lwt_main.run @@ Files.State_bin.read ~file in
+  let protocol_state = Lwt_main.run @@ Config_files.State_bin.read ~file in
   let state = protocol_state.core_state in
   let open Core_deku in
   let contract = Address.of_string contract |> Option.get in

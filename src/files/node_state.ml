@@ -3,6 +3,28 @@ open Protocol
 open Node
 open Consensus
 
+(* FIXME: refactor below function to use this one *)
+let get_initial_consensus_state ~folder =
+  let%await identity =
+    Config_files.Identity.read ~file:(folder ^ "/identity.json") in
+  let trusted_validator_membership_change_file =
+    folder ^ "/trusted-validator-membership-change.json" in
+  let%await trusted_validator_membership_change_list =
+    Config_files.Trusted_validators_membership_change.read
+      ~file:trusted_validator_membership_change_file in
+  let trusted_validator_membership_change =
+    Trusted_validators_membership_change.Set.of_list
+      trusted_validator_membership_change_list in
+  let state_bin = folder ^ "/state.bin" in
+  let%await state_bin_exists = Lwt_unix.file_exists state_bin in
+  let consensus =
+    Consensus.make ~identity ~trusted_validator_membership_change in
+  if state_bin_exists then
+    let%await protocol = Config_files.State_bin.read ~file:state_bin in
+    await { consensus with protocol }
+  else
+    await consensus
+
 let get_initial_state ~folder ~minimum_block_delay =
   let%await identity =
     Config_files.Identity.read ~file:(folder ^ "/identity.json") in
