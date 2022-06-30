@@ -630,6 +630,37 @@ let remove_trusted_validator =
   let open Term in
   lwt_ret (const remove_trusted_validator $ folder_node $ validator_address)
 
+let info_update_uri =
+  let doc = "Updates the uri of the node by the given one." in
+  Cmd.info "update-uri" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
+let update_uri node_folder uri nonce =
+  print_endline (uri |> Uri.to_string);
+  let%await interop_context = interop_context node_folder in
+  let%await identity = read_identity ~node_folder in
+  let%await result =
+    Tezos_interop.Discovery.update_validator interop_context identity.secret
+      identity.key uri nonce in
+  result
+  |> Result.fold ~ok:(fun _ -> `Ok ()) ~error:(fun msg -> `Error (false, msg))
+  |> await
+
+let update_uri =
+  let open Term in
+  let new_node_uri =
+    let open Arg in
+    let docv = "node_uri" in
+    let doc =
+      "The new uri of the node. The discovery storage will be updated with \
+       this uri." in
+    required & pos 1 (some uri) None & info [] ~doc ~docv in
+  let nonce =
+    let open Arg in
+    let docv = "nonce" in
+    let doc = "The nonce of the transaction." in
+    required & pos 2 (some int64) None & info [] ~doc ~docv in
+  lwt_ret (const update_uri $ folder_node $ new_node_uri $ nonce)
+
 let default_info =
   let doc = "Deku node" in
   let sdocs = Manpage.s_common_options in
@@ -648,4 +679,5 @@ let _ =
          Cmd.v info_add_trusted_validator add_trusted_validator;
          Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_self self;
+         Cmd.v info_update_uri update_uri;
        ]
