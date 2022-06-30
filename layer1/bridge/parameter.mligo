@@ -80,4 +80,9 @@ module Types = struct
     proof: vault_handle_proof;
     callback: vault_ticket contract;
   }
+
+  type t =
+  | Update_root_hash of root_hash_action
+  | Deposit of vault_deposit
+  | Withdraw of vault_withdraw
 end
