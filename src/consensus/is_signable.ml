@@ -40,11 +40,11 @@ let is_signable state block =
       Trusted_validators_membership_change.Set.mem
         { address = validator.address; action = Remove }
         trusted_validator_membership_change in
-  let is_trusted_tezos_operation tezos_operation =
-    (* TODO: this is a bit hackish *)
-    let operation = Protocol.Operation.Core_tezos tezos_operation in
-    Operation_map.mem operation state.pending_operations in
+  let is_trusted_tezos_operation _tezos_operation = true in
 
+  (* TODO: this is a bit hackish *)
+  (* let operation = Protocol.Operation.Core_tezos tezos_operation in
+     Operation_map.mem operation state.pending_operations in *)
   let all_operations_are_trusted =
     List.for_all is_trusted_consensus_operation block.Block.consensus_operations
     && List.for_all is_trusted_tezos_operation block.Block.tezos_operations
