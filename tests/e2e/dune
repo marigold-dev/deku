@@ -8,13 +8,13 @@
  (name asserter_contract)
  (public_name asserter_contract)
  (modules asserter_contract)
- (libraries bin_common lwt cmdliner deku_data))
+ (libraries bin_common lwt cmdliner deku_data deku_core))
 
 (executable
  (name asserter_balance)
  (public_name asserter_balance)
  (modules asserter_balance)
- (libraries bin_common lwt cmdliner deku_data))
+ (libraries bin_common lwt cmdliner deku_data deku_core))
 
 (executable
  (name ticket_handle)

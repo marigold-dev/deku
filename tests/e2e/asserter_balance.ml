@@ -7,7 +7,7 @@ let assert_state_correct data_folder contract ticket =
   let protocol_state = Lwt_main.run @@ Files.State_bin.read ~file in
   let state = protocol_state.core_state in
   let open Deku_data in
-  let open Core_deku in
+  let open Deku_core in
   let contract = Address.of_string contract |> Option.get in
   let ticket = Ticket_id.of_string ticket |> Option.get in
   let ledger = State.ledger state in

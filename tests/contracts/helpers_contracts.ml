@@ -1,5 +1,5 @@
 open Crypto
-open Core_deku
+open Deku_core
 open Deku_data
 
 let make_ticket ?ticketer ?data () =

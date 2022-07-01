@@ -1,6 +1,6 @@
 open Helpers
 open Crypto
-open Core_deku
+open Deku_core
 
 type t = {
   hash : BLAKE2B.t;
@@ -143,7 +143,7 @@ let produce ~state ~next_state_root_hash =
   make ~previous_hash:state.Protocol_state.last_block_hash
     ~state_root_hash:next_state_root_hash
     ~withdrawal_handles_hash:
-      (Core_deku.State.ledger state.core_state
+      (Deku_core.State.ledger state.core_state
       |> Ledger.withdrawal_handles_root_hash)
     ~validators_hash:(Validators.hash state.validators)
     ~block_height:(Int64.add state.block_height 1L)

@@ -4,7 +4,14 @@
   (:standard \ Test_runner))
  (library_flags
   (-linkall -g))
- (libraries rely.lib tezos_interop protocol node tezos_rpc deku_data)
+ (libraries
+  rely.lib
+  tezos_interop
+  protocol
+  node
+  tezos_rpc
+  deku_data
+  deku_core)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 

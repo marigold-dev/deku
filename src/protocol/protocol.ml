@@ -1,5 +1,5 @@
 open Helpers
-open Core_deku
+open Deku_core
 include Exn_noop
 module Signature = Protocol_signature
 module Wallet = Wallet
@@ -24,7 +24,7 @@ let apply_core_tezos_operation state tezos_operation =
     Tezos_operation_set.add tezos_operation state.included_tezos_operations
   in
   let core_state =
-    Core_deku.State.apply_tezos_operation state.core_state tezos_operation in
+    Deku_core.State.apply_tezos_operation state.core_state tezos_operation in
   Ok { state with core_state; included_tezos_operations }
 
 let apply_core_tezos_operation state tezos_operation =
@@ -48,7 +48,7 @@ let apply_core_user_operation state user_operation =
   let included_user_operations =
     User_operation_set.add user_operation state.included_user_operations in
   let core_state, receipt =
-    Core_deku.State.apply_user_operation state.core_state hash data in
+    Deku_core.State.apply_user_operation state.core_state hash data in
   Ok ({ state with core_state; included_user_operations }, receipt)
 
 let apply_core_user_operation state tezos_operation =
@@ -117,7 +117,7 @@ let apply_block state block =
 let make ~initial_block =
   let empty =
     {
-      core_state = Core_deku.State.empty;
+      core_state = Deku_core.State.empty;
       included_tezos_operations = Tezos_operation_set.empty;
       included_user_operations = User_operation_set.empty;
       validators = Validators.empty;

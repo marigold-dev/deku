@@ -36,7 +36,7 @@ let load_snapshot ~snapshot ~additional_blocks ~last_block
       BLAKE2B.verify ~hash:snapshot.hash snapshot.data ) in
   let of_yojson =
     [%of_yojson:
-      Core_deku.State.t
+      Deku_core.State.t
       * Tezos_operation_set.t
       * User_operation_set.t
       * Validators.t

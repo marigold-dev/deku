@@ -1,4 +1,4 @@
-open Core_deku
+open Deku_core
 open Deku_data
 open Smart_contracts
 open Helpers_contracts

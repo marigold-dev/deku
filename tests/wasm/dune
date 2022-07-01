@@ -6,7 +6,7 @@
   alcotest
   helpers
   tezos
-  core_deku
+  deku_core
   crypto
   deku_data
   smart_contracts)

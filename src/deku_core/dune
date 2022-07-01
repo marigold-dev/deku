@@ -1,5 +1,5 @@
 (library
- (name core_deku)
+ (name deku_core)
  (libraries crypto tezos core smart_contracts deku_data)
  (preprocess
   (pps
