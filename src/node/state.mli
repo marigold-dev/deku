@@ -14,12 +14,14 @@ module Address_map : Map.S with type key = Key_hash.t
 
 module Uri_map : Map.S with type key = Uri.t
 
+type timestamp = float
+
 type t = {
   identity : identity;
   consensus : Consensus.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
-  applied_blocks : Block.t list;
+  applied_blocks : (timestamp * Block.t) list;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;

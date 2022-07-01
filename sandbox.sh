@@ -329,8 +329,6 @@ deploy_dummy_ticket() {
     --force
 }
 
-
-
 # =======================
 # A hard-coded Deku wallet to use in development
 DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
@@ -393,6 +391,7 @@ test_wasm() {
   sleep 5
   asserter_contract "$DATA_DIRECTORY/0" "$CONTRACT_ADDRESS" "Pair \"$DUMMY_TICKET\" 0x" 100
 }
+
 test_wasm_full() {
   deposit_ticket | grep tezos-client | tr -d '\r'
   sleep 5
@@ -436,11 +435,17 @@ test_wasm_full() {
   sleep 5
   asserter_balance "$DATA_DIRECTORY/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
 }
+
+network_msg () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  deku-network-msg "$DUMMY_TICKET_ADDRESS"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|start|tear-down"
+  echo "Usage: $0 setup|start|tear-down|network-msg"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -457,6 +462,8 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "network-msg"
+  echo "  Performs the specified load test with noop on a running cluster"
 }
 
 message "Running in $mode mode"
@@ -506,6 +513,9 @@ check-liveness)
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   echo "$CONSENSUS_ADDRESS" > /tmp/hello
   check-liveness "$RPC_NODE" "$CONSENSUS_ADDRESS"
+  ;;
+network-msg)
+ network_msg
   ;;
 *)
   help

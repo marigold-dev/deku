@@ -34,7 +34,13 @@ end
 module Block_by_level_spec = struct
   type request = { level : int64 } [@@deriving yojson]
 
-  type response = Block.t option [@@deriving yojson]
+  type block_and_timestamp = {
+    block : Block.t;
+    timestamp : float;
+  }
+  [@@deriving yojson]
+
+  type response = block_and_timestamp option [@@deriving yojson]
 
   let path = "/block-by-level"
 end
@@ -103,6 +109,17 @@ module User_operations_gossip = struct
   type response = unit [@@deriving yojson]
 
   let path = "/user-operations-gossip"
+end
+
+module User_operations_noop = struct
+  type request = User_operations_gossip.request = {
+    user_operations : Protocol.Operation.Core_user.t list;
+  }
+  [@@deriving yojson]
+
+  type response = unit [@@deriving yojson]
+
+  let path = "/user-operations-noop"
 end
 
 module Consensus_operation_gossip = struct

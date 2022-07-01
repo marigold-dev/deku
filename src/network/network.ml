@@ -5,6 +5,8 @@ let request_block_by_hash = request (module Block_by_hash_spec)
 
 let request_block_level = request (module Block_level)
 
+let request_block_by_level = request (module Block_by_level_spec)
+
 let request_protocol_snapshot = request (module Protocol_snapshot)
 
 let request_nonce = request (module Request_nonce)
@@ -26,6 +28,8 @@ let broadcast_user_operation_gossip_to_list =
 let request_user_operation_gossip = request (module User_operation_gossip)
 
 let request_user_operations_gossip = request (module User_operations_gossip)
+
+let request_user_operations_noop = request (module User_operations_noop)
 
 let request_consensus_operation = request (module Consensus_operation_gossip)
 
