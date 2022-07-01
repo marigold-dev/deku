@@ -25,8 +25,12 @@ let handle_request (type req res)
       | Ok response ->
         let%await response = Parallel.encode E.response_to_yojson response in
         Dream.json response
-      | Error err -> raise (Failure (Flows.string_of_error err)))
-    | Error err -> raise (Failure err) in
+      | Error err ->
+        Dream.respond ~status:`Internal_Server_Error (Flows.string_of_error err)
+      )
+    | Error err ->
+      Log.error "%s" err;
+      Dream.respond ~status:`Bad_Request err in
   Dream.post E.path handler
 
 (* POST /append-block-and-signature *)
@@ -75,7 +79,9 @@ let handle_block_by_level =
           (fun block ->
             Int64.equal block.Protocol.Block.block_height request.level)
           state.applied_blocks in
-      Ok block)
+      match block with
+      | Some block -> Ok block
+      | None -> Error `Unknown_block_level)
 
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)

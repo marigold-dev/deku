@@ -44,6 +44,7 @@ let string_of_error = function
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
   | `Node_not_yet_initialized -> "Node_not_yet_initialized"
   | `Not_a_validator -> "Not_a_validator"
+  | `Unknown_block_level -> "Unknown_block_level"
 
 let print_error err = Log.error "%s" (string_of_error err)
 
