@@ -1,5 +1,5 @@
 open Deku_data
-open Contracts.Contract_vm
+open Smart_contracts.Contract_vm
 
 type t [@@deriving yojson, eq]
 

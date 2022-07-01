@@ -1,6 +1,6 @@
 open Core_deku
 open Deku_data
-open Contracts
+open Smart_contracts
 open Helpers_contracts
 
 let test_wasm msg =
@@ -26,7 +26,7 @@ let test_wasm msg =
         ))
       |}
       |> Bytes.of_string in
-    let storage = Int32.zero |> Context.Ticket_handle.to_bytes in
+    let storage = Int32.zero |> Ticket_handle.to_bytes in
 
     Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
     |> Result.get_ok in
@@ -75,7 +75,7 @@ let test_wasm_fail msg =
           ))
         |}
       |> Bytes.of_string in
-    let storage = Int32.one |> Context.Ticket_handle.to_bytes in
+    let storage = Int32.one |> Ticket_handle.to_bytes in
 
     Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage
     |> Result.get_ok in

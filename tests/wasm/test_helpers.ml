@@ -1,11 +1,10 @@
 open Helpers
 open Deku_data
+open Smart_contracts
 
 exception Invocation_error
 
 let invoke ~ctx ~storage ~argument code =
-  let open Core_deku in
-  let open Contracts in
   match
     let argument = [%to_yojson: bytes] argument in
     let code = Bytes.of_string code in
@@ -71,10 +70,8 @@ module Testables = struct
         Format.fprintf fmt "%s" (Ticket_id.to_string p))
 
   let contract_operation =
-    let open Core_deku in
-    let open Contracts in
     Alcotest.of_pp (fun fmt -> function
-      | Context.Operation.Transfer x ->
+      | Contract_operation.Transfer x ->
         Format.fprintf fmt "amount: %d\n destination: %S\n"
           (Amount.to_int x.amount)
           (Address.to_string x.destination)
@@ -98,8 +95,6 @@ module Testables = struct
 end
 
 let make_custom ~tickets_table ~source ~sender ~self ~tickets =
-  let open Core_deku in
-  let open Contracts in
   let ctx =
     Context.make_state ~source ~sender ~contract_owned_tickets:tickets_table
       ~get_contract_opt:(fun _ -> None)

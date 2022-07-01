@@ -1,6 +1,6 @@
 open Core_deku
 open Deku_data
-open Contracts
+open Smart_contracts
 open Helpers_contracts
 
 let test_ok_wasm msg =
@@ -36,7 +36,7 @@ let test_ok_wasm msg =
     user_op.hash |> Contract_address.of_user_operation_hash in
   let state, _ = State.apply_user_operation initial_state user_op.hash user_op in
   let init_storage = State.contract_storage state in
-  let arg = [%to_yojson: bytes] (Int32.zero |> Context.Ticket_handle.to_bytes) in
+  let arg = [%to_yojson: bytes] (Int32.zero |> Ticket_handle.to_bytes) in
   let payload =
     Contract_vm.Invocation_payload.wasm_of_yojson ~arg |> Result.get_ok in
   let operation =
