@@ -27,26 +27,16 @@ let is_node_bootstrapped rpc_url =
   |> Result.map (String.starts_with ~prefix:"Node is bootstrapped")
   |> Result.fold ~ok:(fun _ -> true) ~error:(fun _ -> false)
 
-let setup_identity mode i =
+let setup_identity i =
   let folder = Format.sprintf "data/%d" i in
   process "mkdir" ["-p"; folder] |> run;
-  (match mode with
-  | Docker ->
-    deku_cli
-      [
-        "setup-identity";
-        folder;
-        "--uri";
-        Format.sprintf "http://deku-node-%d:4440" i;
-      ]
-  | Local ->
-    deku_node
-      [
-        "setup-identity";
-        folder;
-        "--uri";
-        Format.sprintf "http://localhost:444%d" i;
-      ])
+  deku_node
+    [
+      "setup-identity";
+      folder;
+      "--uri";
+      Format.sprintf "http://localhost:444%d" i;
+    ]
   |> run;
   let%ok key =
     deku_node ["self"; folder]
@@ -126,7 +116,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
     ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
-let setup mode validators rpc_url =
+let setup validators rpc_url =
   (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
@@ -143,7 +133,7 @@ let setup mode validators rpc_url =
   in
 
   (* setup write indentity.json to file system *)
-  let%ok identities = validators |> List.map_ok (setup_identity mode) in
+  let%ok identities = validators |> List.map_ok setup_identity in
 
   (* deploy smart contracts *)
   let consensus_storage = make_consensus_storage identities in
@@ -161,17 +151,16 @@ let setup mode validators rpc_url =
   |> List.map_ok
        (setup_tezos rpc_url secret consensus_address discovery_address)
 
-let setup mode nodes =
+let setup nodes =
   let validators = make_validators nodes in
-  let rpc_url = rpc_url mode in
-  let%ok _validators = setup mode validators rpc_url in
+  let%ok _validators = setup validators rpc_url in
   Ok ()
 
 open Cmdliner_helpers
 
 let term =
   let open Term in
-  const setup $ mode $ nodes
+  const setup $ nodes
 
 let info =
   let doc =

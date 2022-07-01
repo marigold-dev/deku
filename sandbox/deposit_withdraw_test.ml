@@ -6,10 +6,10 @@ open Sandbox_flows
 open Crypto
 open Tezos
 
-let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
+let deposit_withdraw_test validators rpc_url deku_address deku_secret =
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   (* bootstrap the cluster *)
-  let%ok _ = Start.start_deku_cluster mode validators in
+  let%ok _ = Start.start_deku_cluster validators in
 
   (* deploy a dummy ticket *)
   let%ok dummy_ticket_address =
@@ -91,16 +91,15 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
       ] in
   retry withdraw
 
-let deposit_withdraw_test mode nodes =
-  let rpc_url = rpc_url mode in
+let deposit_withdraw_test nodes =
   let validators = make_validators nodes in
   let%ok _result =
-    deposit_withdraw_test mode validators rpc_url deku_address deku_secret in
+    deposit_withdraw_test validators rpc_url deku_address deku_secret in
   Ok ()
 
 let term =
   let open Term in
-  const deposit_withdraw_test $ mode $ nodes
+  const deposit_withdraw_test $ nodes
 
 let info =
   let doc = "Tests the deposit/withdraw scenario" in

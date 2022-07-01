@@ -9,21 +9,6 @@ let run_res ?(error = "") cmd =
   | stdout, 0 -> Ok stdout
   | stdout, _ -> Error (error ^ stdout)
 
-type mode =
-  | Docker
-  | Local
-
-let mode_to_string mode =
-  match mode with
-  | Docker -> "docker"
-  | Local -> "local"
-
-let mode_of_string = function
-  | "docker" -> Ok Docker
-  | "local" -> Ok Local
-  | _ -> Error "The allowed mode is docker or local"
-
-(* helpers *)
 let deku_node args = process "deku-node" args
 
 let deku_cli args = process "deku-cli" args
@@ -43,10 +28,7 @@ let tezos_client ?(wait = None) args =
     (["run"; "github:marigold-dev/tezos-nix#tezos-client"; "--"] @ wait @ args)
   |> run_res ~error:"error in tezos-client"
 
-let rpc_url mode =
-  match mode with
-  | Docker -> "http://flextesa:20000"
-  | Local -> "https://jakartanet.tezos.marigold.dev"
+let rpc_url = "https://jakartanet.tezos.marigold.dev"
 
 let get_contract_address rpc_url contract_name =
   let%ok stdout =
@@ -162,15 +144,6 @@ module Cmdliner_helpers = struct
 
   let man =
     [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
-
-  (* parsing *)
-  let mode =
-    let printer fmt mode = Format.fprintf fmt "%s" (mode_to_string mode) in
-    let open Arg in
-    let docv = "mode" in
-    let doc = "The mode of the cluster, it can be docker or local" in
-    let mode_parser = conv' ~docv (mode_of_string, printer) in
-    value & opt mode_parser Local & info ["mode"] ~docv ~doc
 
   let nodes =
     let parser string =

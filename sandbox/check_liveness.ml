@@ -5,8 +5,7 @@ open Cmdliner_helpers
 open Tezos
 open Feather
 
-let check_liveness mode =
-  let rpc_url = rpc_url mode in
+let check_liveness () =
   let%ok consensus_address = get_contract_address rpc_url "consensus" in
   (* TODO: rewrite this to be part of this module *)
   let consensus_address = Address.to_string consensus_address in
@@ -16,7 +15,7 @@ let check_liveness mode =
 
 let term =
   let open Term in
-  const check_liveness $ mode
+  const check_liveness $ const ()
 
 let info =
   let doc =
