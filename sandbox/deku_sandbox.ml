@@ -30,23 +30,6 @@ let info_deposit_dummy_ticket =
   Cmd.info "deposit-dummy-ticket" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let deposit_withdraw_test =
-  let open Term in
-  const deposit_withdraw_test $ mode $ nodes
-
-let info_deposit_withdraw_test =
-  let doc = "Tests the deposit/withdraw scenario" in
-  let man =
-    `S Manpage.s_description
-    :: `P
-         "Does the following: starts a Deku cluster, originates a dummy ticket \
-          contract, deposits some ticket on Deku, checks the balance, requests \
-          a withdraw and the associated withdraw proof, sends the withdraw \
-          proof to the consensus contract."
-    :: man in
-  Cmd.info "deposit-withdraw-test" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
 
@@ -86,7 +69,7 @@ let _ =
          Cmd.v Start.info Start.term;
          Cmd.v Setup.info Setup.term;
          Cmd.v Teardown.info Teardown.term;
-         Cmd.v info_deposit_withdraw_test deposit_withdraw_test;
+         Cmd.v Deposit_withdraw_test.info Deposit_withdraw_test.term;
          Cmd.v info_deploy_dummy_ticket deploy_dummy_ticket;
          Cmd.v info_deposit_dummy_ticket deposit_dummy_ticket;
          Cmd.v info_load_test load_test;
