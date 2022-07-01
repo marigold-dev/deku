@@ -1,4 +1,5 @@
 open Cmdliner
+open Sandbox_helpers.Cmdliner_helpers
 
 let tear_down =
   let open Term in
@@ -95,16 +96,13 @@ let default_info =
   Cmd.info "deku-sandbox" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
 
 let _ =
-  exit
-  @@ Cmd.eval_result
-  @@ Cmd.group default_info
-       [
-         Cmd.v Start.info Start.term;
-         Cmd.v Setup.info Setup.term;
-         Cmd.v Teardown.info Teardown.term;
-         Cmd.v Deposit_withdraw_test.info Deposit_withdraw_test.term;
-         Cmd.v Deploy_dummy_ticket.info Deploy_dummy_ticket.term;
-         Cmd.v Deposit_dummy_ticket.info Deposit_dummy_ticket.term;
-         Cmd.v Load_test.info Load_test.term;
-         Cmd.v Check_liveness.info Check_liveness.term;
-       ]
+  Cli.make ~info:default_info ()
+  |> Cli.add (module Start)
+  |> Cli.add (module Setup)
+  |> Cli.add (module Teardown)
+  |> Cli.add (module Deposit_withdraw_test)
+  |> Cli.add (module Deploy_dummy_ticket)
+  |> Cli.add (module Deposit_dummy_ticket)
+  |> Cli.add (module Load_test)
+  |> Cli.add (module Check_liveness)
+  |> Cli.eval

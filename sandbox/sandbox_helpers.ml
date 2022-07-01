@@ -170,4 +170,28 @@ module Cmdliner_helpers = struct
     let docv = "nodes" in
     let doc = "The number of nodes you want in your cluster" in
     value & opt nodes_parser 3 & info ["nodes"] ~docv ~doc
+
+  (* convenient way to add commands *)
+  module Cli = struct
+    module type COMMAND = sig
+      val term : (unit, string) result Term.t
+
+      val info : Cmd.info
+    end
+
+    type 'a t = {
+      info : Cmd.info;
+      commands : 'a Cmd.t list;
+    }
+
+    let make ~info () = { info; commands = [] }
+
+    let add (module Command : COMMAND) t =
+      {
+        info = t.info;
+        commands = Cmd.v Command.info Command.term :: t.commands;
+      }
+
+    let eval t = exit @@ Cmd.eval_result @@ Cmd.group t.info t.commands
+  end
 end
