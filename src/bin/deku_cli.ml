@@ -208,43 +208,41 @@ let with_validator_uri node_folder f =
         validator_uris in
     match validator_uris with
     | [] -> Lwt.return (`Error (false, "No validators found"))
-  | validator_uri :: _ -> f validator_uri)
+    | validator_uri :: _ -> f validator_uri)
 
 let create_transaction node_folder sender_wallet_file received_address amount
     ticket argument vm_flavor tickets =
   let open Network in
   with_validator_uri node_folder @@ fun (_, validator_uri) ->
-    let%await block_level_response = request_block_level () validator_uri in
-    let block_level = block_level_response.level in
-    let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
-    let operation =
-      match (Address.to_key_hash received_address, argument) with
-      | Some addr, None ->
-        Core_deku.User_operation.make ~source:wallet.address
-          (Transaction { destination = addr; amount; ticket })
-      | Some _, Some _ ->
-        failwith "can't pass an argument to implicit account"
-      | None, None -> failwith "Invalid transaction"
-      | None, Some arg ->
-        let payload =
-          let open Contracts in
-          match vm_flavor with
-          | `Wasm ->
-            let arg = Yojson.Safe.from_string arg in
-            Contract_vm.Invocation_payload.wasm_of_yojson ~arg in
-        let arg = payload |> Result.get_ok in
-        Core_deku.User_operation.make ~source:wallet.address
-          (Contract_invocation
-             {
-               to_invoke =
-                 Address.to_contract_hash received_address |> Option.get;
-               argument = arg;
-               tickets;
-             }) in
-    let transaction =
-      Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
-        ~nonce:(Crypto.Random.int32 Int32.max_int)
-        ~block_height:block_level ~data:operation in
+  let%await block_level_response = request_block_level () validator_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    match (Address.to_key_hash received_address, argument) with
+    | Some addr, None ->
+      Core_deku.User_operation.make ~source:wallet.address
+        (Transaction { destination = addr; amount; ticket })
+    | Some _, Some _ -> failwith "can't pass an argument to implicit account"
+    | None, None -> failwith "Invalid transaction"
+    | None, Some arg ->
+      let payload =
+        let open Contracts in
+        match vm_flavor with
+        | `Wasm ->
+          let arg = Yojson.Safe.from_string arg in
+          Contract_vm.Invocation_payload.wasm_of_yojson ~arg in
+      let arg = payload |> Result.get_ok in
+      Core_deku.User_operation.make ~source:wallet.address
+        (Contract_invocation
+           {
+             to_invoke = Address.to_contract_hash received_address |> Option.get;
+             argument = arg;
+             tickets;
+           }) in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
 
   let%await identity = read_identity ~node_folder in
   let%await () =
@@ -281,7 +279,6 @@ let originate_contract node_folder contract_json initial_storage
       let%await block_level_response = request_block_level () validator_uri in
       let block_level = block_level_response.level in
       let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
-      let contract_program = Yojson.Safe.from_file contract_json in
       let initial_storage = Yojson.Safe.from_file initial_storage in
       let%await payload =
         let open Contracts in
@@ -291,7 +288,6 @@ let originate_contract node_folder contract_json initial_storage
             Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
           in
           let code = Bytes.of_string code in
-          let initial_storage = Yojson.Safe.from_file initial_storage in
           let initial_storage =
             Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
           Contract_vm.Origination_payload.wasm_of_yojson ~code

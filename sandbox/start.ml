@@ -25,7 +25,9 @@ let produce_block mode =
           "/app/data";
         ]
     | Local ->
-      process "deku-node" (["produce-block"; "data/0"; "--json-logs"; "-v"] @ local_validators_option))
+      process "deku-node"
+        (["produce-block"; "data/0"; "--json-logs"; "-v"]
+        @ local_validators_option))
     |. process "cut" ["-d"; " "; "-f"; "2"]
     |> run_res ~error:"Error in produce-block" in
   Format.printf "Hash from produce-block: %s" output;
