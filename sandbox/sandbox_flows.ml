@@ -160,11 +160,6 @@ let deposit_ticket ?(wait = None) rpc_url deku_address =
       "2";
     ]
 
-let deposit_dummy_ticket mode =
-  let rpc_url = rpc_url mode in
-  let%ok _result = deposit_ticket rpc_url deku_address in
-  Ok ()
-
 let load_test () =
   let rpc_url = rpc_url Local in
   let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
