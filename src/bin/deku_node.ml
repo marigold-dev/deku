@@ -15,9 +15,14 @@ let exits =
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
 (* TODO: several functions copied from deku-cli. Refactor. *)
+type json_option =
+  | No
+  | To_stdout
+  | To_stderr
+
 type common_options = {
   node_folder : string;
-  use_json : bool;
+  use_json : json_option;
   validator_uris : Uri.t list option;
   style_renderer : Fmt.style_renderer option;
   log_level : Logs.level option;
@@ -29,9 +34,12 @@ let setup_logs style_renderer log_level use_json =
   | None -> Fmt_tty.setup_std_outputs ());
   Logs.set_level log_level;
 
-  (match use_json with
-  | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
-  | false -> Logs.set_reporter (Logs_fmt.reporter ()));
+  let reporter =
+    match use_json with
+    | No -> Logs_fmt.reporter ()
+    | To_stdout -> Json_logs_reporter.reporter Fmt.stdout
+    | To_stderr -> Json_logs_reporter.reporter Fmt.stderr in
+  Logs.set_reporter reporter;
 
   (* disable all non-deku logs *)
   match log_level with
@@ -76,9 +84,16 @@ let validator_uris =
 
 let common_options_term =
   let json_logs =
-    let docv = "Json logs" in
-    let doc = "This determines whether logs will be printed in json format." in
-    Arg.(value & flag & info ~doc ~docv ["json-logs"]) in
+    let no_json =
+      let doc = "Normal logs, no JSON" in
+      (No, Arg.info ["no-json"] ~doc) in
+    let json_stdout =
+      let doc = "JSON printed to stdout" in
+      (To_stdout, Arg.info ["json-stdout"] ~doc) in
+    let json_stderr =
+      let doc = "JSON printed to stderr" in
+      (To_stderr, Arg.info ["json-stderr"] ~doc) in
+    Arg.(last & vflag_all [No] [no_json; json_stdout; json_stderr]) in
   let open Term in
   const common_options
   $ folder_node

@@ -26,9 +26,9 @@ let produce_block mode =
         ]
     | Local ->
       process "deku-node"
-        (["produce-block"; "data/0"; "--json-logs"; "-v"]
+        (["produce-block"; "data/0"; "--no-json"; "-v"]
         @ local_validators_option))
-    |. process "cut" ["-d"; " "; "-f"; "2"]
+    |. process "sed" ["-n"; "s/.*block.hash: \\([a-f0-9]*\\).*/\\1/p"]
     |> run_res ~error:"Error in produce-block" in
   Format.printf "Hash from produce-block: %s" output;
   match BLAKE2B.of_string output with
