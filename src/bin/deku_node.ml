@@ -79,53 +79,6 @@ let handle_block_by_level =
                Network.Block_by_level_spec.{ timestamp; block }) in
       Ok block_and_timestamp)
 
-(* POST /user_operation_was_included_in_block *)
-(* Returns the block height of the first block where an operation
-   is included. We only iterate through blocks we haven't seen yet
-*)
-let handle_user_operation_was_included_in_block =
-  handle_request
-    (module Network.Block_user_operation_was_included)
-    (fun request ->
-      let open Protocol in
-      (* pass a requested hash and a block height,
-         return a block height option, and a block height *)
-      let state = Server.get_state () in
-      let filtered_list =
-        let rec go filtered_list applied_blocks =
-          match applied_blocks with
-          | [] -> filtered_list
-          | (time, block) :: tl ->
-            if block.Protocol.Block.block_height = request.previous_level then
-              filtered_list
-            else
-              go ((time, block) :: filtered_list) tl in
-        List.rev @@ go [] state.applied_blocks in
-      let new_level = (snd (List.hd @@ state.applied_blocks)).block_height in
-      Format.eprintf "halfway\n%!";
-      let block_height_opt =
-        let rec go filtered_list hashes_present =
-          match filtered_list with
-          | [] -> (
-            match List.rev hashes_present with
-            | [] -> None
-            | height :: _ -> Some height)
-          | (_, block) :: tl ->
-            let user_operations = Block.parse_user_operations block in
-            if
-              List.exists
-                (fun operation ->
-                  Crypto.BLAKE2B.equal
-                    operation.Protocol.Operation.Core_user.hash
-                    request.operation_hash)
-                user_operations
-            then
-              go tl (block.Block.block_height :: hashes_present)
-            else
-              go tl hashes_present in
-        go filtered_list [] in
-      Ok (block_height_opt, new_level))
-
 (* POST /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
 let handle_protocol_snapshot =
@@ -253,7 +206,6 @@ let node folder port prometheus_port =
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
-             handle_user_operation_was_included_in_block;
              handle_protocol_snapshot;
              handle_request_nonce;
              handle_register_uri;
