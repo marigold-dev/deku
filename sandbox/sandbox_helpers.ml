@@ -37,18 +37,16 @@ let curl args = process "curl" (["--silent"] @ args)
 let tezos_client ?(wait = None) args =
   let wait =
     match wait with
-    | None -> "none"
-    | Some n -> string_of_int n in
-  process "docker"
-    (List.append
-       ["exec"; "-t"; "deku_flextesa"; "tezos-client"; "--wait"; wait]
-       args)
+    | None -> []
+    | Some n -> ["--wait"; string_of_int n] in
+  process "nix"
+    (["run"; "github:marigold-dev/tezos-nix#tezos-client"; "--"] @ wait @ args)
   |> run_res ~error:"error in tezos-client"
 
 let rpc_url mode =
   match mode with
   | Docker -> "http://flextesa:20000"
-  | Local -> "http://localhost:20000"
+  | Local -> "https://jakartanet.tezos.marigold.dev"
 
 let get_contract_address rpc_url contract_name =
   let%ok stdout =
@@ -72,6 +70,7 @@ let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
   let%ok contract =
     ligo ["compile"; "contract"; contract_path]
     |> run_res ~error:"ligo compile contract error" in
+  print_endline "deploying contract";
   let%ok _ =
     tezos_client ~wait
       [
@@ -92,6 +91,7 @@ let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
         "2";
         "--force";
       ] in
+  print_endline "delpoyed contract";
   get_contract_address rpc_url contract_name
 
 let deku_address =
