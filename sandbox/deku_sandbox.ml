@@ -139,7 +139,7 @@ let _ =
        [
          Cmd.v Start.info Start.term;
          Cmd.v Setup.info Setup.term;
-         Cmd.v info_tear_down tear_down;
+         Cmd.v Teardown.info Teardown.term;
          Cmd.v info_deposit_withdraw_test deposit_withdraw_test;
          Cmd.v info_deploy_dummy_ticket deploy_dummy_ticket;
          Cmd.v info_deposit_dummy_ticket deposit_dummy_ticket;
