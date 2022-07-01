@@ -7,13 +7,16 @@ open Tezos
 open Protocol
 
 let tezos_client_update_config rpc_url =
+  print_endline "update config";
   tezos_client ["--endpoint"; rpc_url; "config"; "update"]
 
 let import_secret rpc_url alias secret =
+  print_endline "import secret";
   tezos_client
     ["--endpoint"; rpc_url; "import"; "secret"; "key"; alias; secret; "--force"]
 
 let is_node_bootstrapped rpc_url =
+  print_endline "bootstrapped";
   tezos_client ["--endpoint"; rpc_url; "bootstrapped"]
   |> Result.map (String.split_on_char '\n')
   |> Result.map List.rev
@@ -127,7 +130,7 @@ let setup mode validators rpc_url =
   (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
-  let secret = "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq" in
+  let secret = "edsk4TxW4UvCXFZrB5ifMx83PAUECKLUB95ecm1Lp4GbE8ZEeE3T1g" in
   validators
   |> List.map (fun i -> Format.sprintf "data/%i" i)
   |> List.iter rm_dir;
