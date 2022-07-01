@@ -6,18 +6,18 @@ open Sandbox_flows
 open Crypto
 open Tezos
 
-let deposit_withdraw_test validators rpc_url deku_address deku_secret =
-  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+let deposit_withdraw_test validators rpc_address deku_address deku_secret =
+  let%ok consensus_address = get_contract_address rpc_address "consensus" in
   (* bootstrap the cluster *)
   let%ok _ = Start.start_deku_cluster validators in
 
   (* deploy a dummy ticket *)
   let%ok dummy_ticket_address =
-    deploy_contract ~wait:(Some 1) rpc_url "dummy_ticket" "./dummy_ticket.mligo"
-      "()" "bob" in
+    deploy_contract ~wait:(Some 1) rpc_address "dummy_ticket"
+      "./dummy_ticket.mligo" "()" "bob" in
 
   (* Deposit 100 tickets *)
-  let%ok _ = deposit_ticket ~wait:(Some 1) rpc_url deku_address in
+  let%ok _ = deposit_ticket ~wait:(Some 1) rpc_address deku_address in
 
   (* Create a wallet with the deku_address and deku_private key *)
   let%ok () = create_wallet deku_address deku_secret "wallet.json" in
@@ -59,7 +59,7 @@ let deposit_withdraw_test validators rpc_url deku_address deku_secret =
            Format.sprintf "Pair 0x%s 0x%s" (BLAKE2B.to_string left)
              (BLAKE2B.to_string right))
     |> String.concat ";" in
-  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+  let%ok consensus_address = get_contract_address rpc_address "consensus" in
   print_endline "Withdraw-proof is ok.";
 
   (* Send the proof to the dummy ticket contract*)
@@ -91,15 +91,15 @@ let deposit_withdraw_test validators rpc_url deku_address deku_secret =
       ] in
   retry withdraw
 
-let deposit_withdraw_test nodes =
+let deposit_withdraw_test nodes rpc_address =
   let validators = make_validators nodes in
   let%ok _result =
-    deposit_withdraw_test validators rpc_url deku_address deku_secret in
+    deposit_withdraw_test validators rpc_address deku_address deku_secret in
   Ok ()
 
 let term =
   let open Term in
-  const deposit_withdraw_test $ nodes
+  const deposit_withdraw_test $ nodes $ rpc_address
 
 let info =
   let doc = "Tests the deposit/withdraw scenario" in

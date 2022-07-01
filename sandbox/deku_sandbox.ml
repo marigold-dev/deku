@@ -1,33 +1,6 @@
 open Cmdliner
 open Sandbox_helpers.Cmdliner_helpers
 
-let tear_down =
-  let open Term in
-  const tear_down $ nodes
-
-let info_tear_down =
-  let doc = "Stops the Tezos node and destroys the Deku state." in
-  Cmd.info "tear-down" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let deploy_dummy_ticket =
-  let open Term in
-  const deploy_dummy_ticket $ mode
-
-let info_deploy_dummy_ticket =
-  let doc =
-    "Deploys a contract that forges dummy tickets and deposits to Deku." in
-  Cmd.info "deploy-dummy-ticket" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
-    ~man
-
-let deposit_dummy_ticket =
-  let open Term in
-  const deposit_dummy_ticket $ mode
-
-let info_deposit_dummy_ticket =
-  let doc = "Executes a deposit of a dummy ticket to Deku." in
-  Cmd.info "deposit-dummy-ticket" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
-    ~man
-
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
 

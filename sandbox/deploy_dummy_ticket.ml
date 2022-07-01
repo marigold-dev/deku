@@ -4,14 +4,14 @@ open Sandbox_helpers
 open Cmdliner_helpers
 open Tezos
 
-let deploy_dummy_ticket () =
-  deploy_contract rpc_url "dummy_ticket" "./dummy_ticket.mligo" "()" "bob"
+let deploy_dummy_ticket rpc_address =
+  deploy_contract rpc_address "dummy_ticket" "./dummy_ticket.mligo" "()" "bob"
   |> Result.map Address.to_string
   |> Result.map print_endline
 
 let term =
   let open Term in
-  const deploy_dummy_ticket $ const ()
+  const deploy_dummy_ticket $ rpc_address
 
 let info =
   let doc =

@@ -14,8 +14,8 @@ let get_balance address ticketer =
   |> Result.map (Option.to_result ~none:"error from get-balance parsing")
   |> Result.join
 
-let get_deku_height rpc_url =
-  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+let get_deku_height rpc_address =
+  let%ok consensus_address = get_contract_address rpc_address "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let url =
     Format.sprintf
@@ -84,20 +84,8 @@ let create_wallet address priv_key path =
   |> run_res ~error:"error in create wallet"
   |> Result.map (fun _ -> ())
 
-let tear_down nodes =
-  make_validators nodes
-  |> List.map (fun i -> Format.sprintf "data/%i" i)
-  |> List.iter rm_dir;
-  Ok ()
-
-let deploy_dummy_ticket mode =
-  deploy_contract (rpc_url mode) "dummy_ticket" "./dummy_ticket.mligo" "()"
-    "bob"
-  |> Result.map Address.to_string
-  |> Result.map print_endline
-
-let deposit_ticket ?(wait = None) rpc_url deku_address =
-  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+let deposit_ticket ?(wait = None) rpc_address deku_address =
+  let%ok consensus_address = get_contract_address rpc_address "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let input =
     Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100 0x)" consensus_address
@@ -105,7 +93,7 @@ let deposit_ticket ?(wait = None) rpc_url deku_address =
   tezos_client ~wait
     [
       "--endpoint";
-      rpc_url;
+      Uri.to_string rpc_address;
       "transfer";
       "0";
       "from";
@@ -120,17 +108,19 @@ let deposit_ticket ?(wait = None) rpc_url deku_address =
       "2";
     ]
 
-let load_test () =
-  let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
+let load_test rpc_address =
+  let%ok dummy_ticket_address =
+    get_contract_address rpc_address "dummy_ticket" in
   let dummy_ticket_address = Address.to_string dummy_ticket_address in
   let%ok _result =
     process "load-test" ["saturate"; dummy_ticket_address] |> run_res in
   Ok ()
 
-let check_liveness =
-  let%ok consensus_address = get_contract_address rpc_url "consensus" in
+let check_liveness rpc_address =
+  let%ok consensus_address = get_contract_address rpc_address "consensus" in
   (* TODO: rewrite this to be part of this module *)
   let consensus_address = Address.to_string consensus_address in
   let%ok _result =
-    process "check-liveness" [rpc_url; consensus_address] |> run_res in
+    process "check-liveness" [Uri.to_string rpc_address; consensus_address]
+    |> run_res in
   Ok ()
