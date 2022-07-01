@@ -88,7 +88,7 @@ in ocamlPackages.buildDunePackage rec {
     # If we're building statically linked binaries everything should be possible to remove
     remove-references-to \
       -t ${pkgs.gmp} \
-      $out/bin/{asserter,check-livenss,deku-node,deku-cli}
+      $out/bin/{asserter,check-liveness,deku-node,deku-cli}
     remove-references-to \
       -t ${pkgs.libffi} \
       $out/bin/{asserter,check-liveness,deku-node,deku-cli}
