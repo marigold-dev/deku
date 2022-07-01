@@ -1,4 +1,5 @@
 open Helpers
+open Deku_data
 open Crypto
 open Contracts
 open Core

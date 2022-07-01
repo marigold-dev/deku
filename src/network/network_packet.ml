@@ -134,6 +134,8 @@ module Withdraw_proof = struct
 end
 
 module Ticket_balance = struct
+  open Deku_data
+
   type request = {
     address : Key_hash.t;
     ticket : Ticket_id.t;

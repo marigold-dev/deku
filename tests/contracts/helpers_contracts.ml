@@ -1,5 +1,6 @@
 open Crypto
 open Core_deku
+open Deku_data
 
 let make_ticket ?ticketer ?data () =
   let open Tezos in
@@ -18,7 +19,7 @@ let make_ticket ?ticketer ?data () =
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  Core_deku.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
+  Deku_data.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
 
 let make_address () =
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in

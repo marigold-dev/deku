@@ -87,16 +87,19 @@ let block_added_to_the_pool' =
       ref)
 
 let rec request_block_by_hash tries ~hash =
-  if tries > 20 then raise Not_found;
-  Lwt.catch
-    (fun () ->
-      let state = !get_state () in
-      let validator_uri = find_random_validator_uri state in
-      let%await block = Network.request_block_by_hash { hash } validator_uri in
-      await (Option.get block))
-    (fun _exn ->
-      Printexc.print_backtrace stdout;
-      request_block_by_hash (tries + 1) ~hash)
+  if tries > 20 then
+    raise Not_found
+  else
+    let state = !get_state () in
+    let validator_uri = find_random_validator_uri state in
+    Lwt.try_bind
+      (Fun.const (Network.request_block_by_hash { hash } validator_uri))
+      (function
+        | None -> request_block_by_hash (tries + 1) ~hash
+        | Some block -> Lwt.return block)
+      (function
+        | Not_found -> raise Not_found
+        | _ -> request_block_by_hash (tries + 1) ~hash)
 
 let request_block ~hash =
   Lwt.async (fun () ->
@@ -290,7 +293,7 @@ let parse_internal_tezos_transaction transaction =
   match transaction with
   | Tezos_interop.Consensus.Update_root_hash _ -> Error `Update_root_hash
   | Tezos_interop.Consensus.Deposit { ticket; amount; destination } ->
-    let amount = Core_deku.Amount.of_int (Z.to_int amount) in
+    let amount = Deku_data.Amount.of_int (Z.to_int amount) in
     Ok (Core_deku.Tezos_operation.Tezos_deposit { destination; amount; ticket })
 
 let parse_internal_tezos_transactions tezos_internal_transactions =

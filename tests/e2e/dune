@@ -8,13 +8,13 @@
  (name asserter_contract)
  (public_name asserter_contract)
  (modules asserter_contract)
- (libraries bin_common lwt cmdliner))
+ (libraries bin_common lwt cmdliner deku_data))
 
 (executable
  (name asserter_balance)
  (public_name asserter_balance)
  (modules asserter_balance)
- (libraries bin_common lwt cmdliner))
+ (libraries bin_common lwt cmdliner deku_data))
 
 (executable
  (name ticket_handle)
@@ -28,6 +28,6 @@
  (name ticket_transfer)
  (public_name ticket_transfer)
  (modules ticket_transfer)
- (libraries bin_common lwt cmdliner yojson)
+ (libraries bin_common lwt cmdliner yojson deku_data)
  (preprocess
   (pps ppx_deriving_yojson)))

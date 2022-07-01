@@ -1,4 +1,5 @@
 open Helpers
+open Deku_data
 
 module Tickets = struct
   module Ticket_map = Map.Make_with_yojson (Ticket_id)

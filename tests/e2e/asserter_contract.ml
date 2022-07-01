@@ -7,10 +7,11 @@ let assert_state_correct data_folder contract ticket amount =
   let protocol_state = Lwt_main.run @@ Files.State_bin.read ~file in
   let state = protocol_state.core_state in
   let open Core_deku in
+  let open Deku_data in
   let contract = Address.of_string contract |> Option.get in
   let table = State.ledger state in
   let contract_storage = State.contract_storage state in
-  let ticket = Core_deku.Ticket_id.of_string ticket |> Option.get in
+  let ticket = Ticket_id.of_string ticket |> Option.get in
   assert (
     Contract_storage.get_contract
       ~address:(Address.to_contract_hash contract |> Option.get)

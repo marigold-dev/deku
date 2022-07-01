@@ -1,14 +1,14 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries dream bin_common node helpers prometheus-dream)
+ (libraries dream bin_common node helpers prometheus-dream deku_data)
  (modules Deku_node)
  (preprocess
   (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
 
 (executable
  (name deku_cli)
- (libraries node bin_common helpers cmdliner)
+ (libraries node bin_common helpers cmdliner deku_data)
  (modules Deku_cli)
  (public_name deku-cli)
  (preprocess
