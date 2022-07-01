@@ -1,7 +1,4 @@
 open Cmdliner
-open Sandbox_flows
-open Sandbox_helpers
-open Cmdliner_helpers
 
 let tear_down =
   let open Term in
@@ -87,16 +84,6 @@ let info_deposit_dummy_ticket =
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
 
-let check_liveness =
-  let open Term in
-  const check_liveness $ mode
-
-let info_check_livenss =
-  let doc =
-    "Checks that the Deku cluster is producing blocks and posting to the main \
-     chain" in
-  Cmd.info "check-liveness" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
-
 let default_info =
   let doc =
     "creates, deploys, and starts Deku clusters in a sandbox mode suitable for \
@@ -119,5 +106,5 @@ let _ =
          Cmd.v Deploy_dummy_ticket.info Deploy_dummy_ticket.term;
          Cmd.v Deposit_dummy_ticket.info Deposit_dummy_ticket.term;
          Cmd.v Load_test.info Load_test.term;
-         Cmd.v info_check_livenss check_liveness;
+         Cmd.v Check_liveness.info Check_liveness.term;
        ]
