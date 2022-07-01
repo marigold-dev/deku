@@ -125,11 +125,10 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
     ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
-let setup validators (rpc_address : Uri.t) =
+let setup validators (rpc_address : Uri.t) tezos_secret =
   (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
-  let secret = "edsk4TxW4UvCXFZrB5ifMx83PAUECKLUB95ecm1Lp4GbE8ZEeE3T1g" in
   validators
   |> List.map (fun i -> Format.sprintf "data/%i" i)
   |> List.iter rm_dir;
@@ -141,7 +140,7 @@ let setup validators (rpc_address : Uri.t) =
   let%ok _ = tezos_client_update_config rpc_address in
   let%ok _ =
     import_secret rpc_address "myWallet"
-      (Format.sprintf "unencrypted:%s" secret) in
+      (Format.sprintf "unencrypted:%s" tezos_secret) in
 
   (* setup write indentity.json to file system *)
   let%ok identities = validators |> List.map_ok setup_identity in
@@ -160,18 +159,18 @@ let setup validators (rpc_address : Uri.t) =
   make_trusted_validator_membership_change_json identities;
   identities
   |> List.map_ok
-       (setup_tezos rpc_address secret consensus_address discovery_address)
+       (setup_tezos rpc_address tezos_secret consensus_address discovery_address)
 
-let setup nodes rpc_address =
+let setup nodes rpc_address tezos_secret =
   let validators = make_validators nodes in
-  let%ok _validators = setup validators rpc_address in
+  let%ok _validators = setup validators rpc_address tezos_secret in
   Ok ()
 
 open Cmdliner_helpers
 
 let term =
   let open Term in
-  const setup $ nodes $ rpc_address
+  const setup $ nodes $ rpc_address $ tezos_secret
 
 let info =
   let doc =
