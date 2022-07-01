@@ -150,6 +150,18 @@ module Cmdliner_helpers = struct
     & opt uri (Uri.of_string "http://localhost:20000")
     & info ["rpc_address"] ~docv ~doc ~env
 
+  let tezos_secret =
+    let open Arg in
+    let doc = "tezos_secret" in
+    let docv =
+      "The secret key used to deploy the contract to Tezos. Defaults the \
+       secret corresponding to one of the bootstrapping accounts used in \
+       Flextesa" in
+    let env = Cmd.Env.info "DEKU_TEZOS_SECRET" in
+    value
+    & opt string "edsk4TxW4UvCXFZrB5ifMx83PAUECKLUB95ecm1Lp4GbE8ZEeE3T1g"
+    & info ["tezos_secret"] ~docv ~doc ~env
+
   let nodes =
     let parser string =
       let%ok nodes =
