@@ -69,6 +69,8 @@ let start_deku_cluster mode validators =
     match mode with
     | Docker -> assert false
     | Local ->
+      (* Kills deku-node children at exit. FIXME? not sure if good enough *)
+      at_exit (fun () -> Unix.kill 0 9);
       validators
       |> Lwt_list.iter_p (fun i ->
              let data_folder = Format.sprintf "data/%i" i in
