@@ -6,18 +6,27 @@ open Crypto
 open Tezos
 open Protocol
 
-let tezos_client_update_config rpc_url =
+let tezos_client_update_config rpc_address =
   print_endline "update config";
-  tezos_client ["--endpoint"; rpc_url; "config"; "update"]
+  tezos_client ["--endpoint"; Uri.to_string rpc_address; "config"; "update"]
 
-let import_secret rpc_url alias secret =
+let import_secret rpc_address alias secret =
   print_endline "import secret";
   tezos_client
-    ["--endpoint"; rpc_url; "import"; "secret"; "key"; alias; secret; "--force"]
+    [
+      "--endpoint";
+      Uri.to_string rpc_address;
+      "import";
+      "secret";
+      "key";
+      alias;
+      secret;
+      "--force";
+    ]
 
-let is_node_bootstrapped rpc_url =
+let is_node_bootstrapped rpc_address =
   print_endline "bootstrapped";
-  tezos_client ["--endpoint"; rpc_url; "bootstrapped"]
+  tezos_client ["--endpoint"; Uri.to_string rpc_address; "bootstrapped"]
   |> Result.map (String.split_on_char '\n')
   |> Result.map List.rev
   |> Result.map (fun list -> List.nth_opt list 0)
@@ -108,7 +117,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
       "--tezos_discovery_contract";
       Address.to_string discovery_address;
       "--tezos_rpc_node";
-      rpc_node;
+      Uri.to_string rpc_node;
       "--tezos_secret";
       tezos_secret;
       "--unsafe_tezos_required_confirmations";
@@ -116,7 +125,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
     ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
-let setup validators rpc_url =
+let setup validators (rpc_address : Uri.t) =
   (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
@@ -126,11 +135,13 @@ let setup validators rpc_url =
   |> List.iter rm_dir;
   (* setup tezos-client *)
   let%assert () =
-    ("the tezos node is not bootstrapped", is_node_bootstrapped rpc_url) in
-  let%ok _ = tezos_client_update_config rpc_url in
-  let%ok _ =
-    import_secret rpc_url "myWallet" (Format.sprintf "unencrypted:%s" secret)
+    ("the tezos node is not bootstrapped", is_node_bootstrapped rpc_address)
   in
+  print_endline "foobar";
+  let%ok _ = tezos_client_update_config rpc_address in
+  let%ok _ =
+    import_secret rpc_address "myWallet"
+      (Format.sprintf "unencrypted:%s" secret) in
 
   (* setup write indentity.json to file system *)
   let%ok identities = validators |> List.map_ok setup_identity in
@@ -139,28 +150,28 @@ let setup validators rpc_url =
   let consensus_storage = make_consensus_storage identities in
   let discovery_storage = make_discovery_storage identities in
   let%ok consensus_address =
-    deploy_contract ~wait:(Some 1) rpc_url "consensus" consensus
+    deploy_contract ~wait:(Some 1) rpc_address "consensus" consensus
       consensus_storage "myWallet" in
   let%ok discovery_address =
-    deploy_contract ~wait:(Some 1) rpc_url "discovery" discovery
+    deploy_contract ~wait:(Some 1) rpc_address "discovery" discovery
       discovery_storage "myWallet" in
 
   (* setup tezos informations *)
   make_trusted_validator_membership_change_json identities;
   identities
   |> List.map_ok
-       (setup_tezos rpc_url secret consensus_address discovery_address)
+       (setup_tezos rpc_address secret consensus_address discovery_address)
 
-let setup nodes =
+let setup nodes rpc_address =
   let validators = make_validators nodes in
-  let%ok _validators = setup validators rpc_url in
+  let%ok _validators = setup validators rpc_address in
   Ok ()
 
 open Cmdliner_helpers
 
 let term =
   let open Term in
-  const setup $ nodes
+  const setup $ nodes $ rpc_address
 
 let info =
   let doc =

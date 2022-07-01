@@ -28,12 +28,17 @@ let tezos_client ?(wait = None) args =
     (["run"; "github:marigold-dev/tezos-nix#tezos-client"; "--"] @ wait @ args)
   |> run_res ~error:"error in tezos-client"
 
-let rpc_url = "https://jakartanet.tezos.marigold.dev"
-
-let get_contract_address rpc_url contract_name =
+let get_contract_address rpc_address contract_name =
   let%ok stdout =
     tezos_client
-      ["--endpoint"; rpc_url; "show"; "known"; "contract"; contract_name] in
+      [
+        "--endpoint";
+        Uri.to_string rpc_address;
+        "show";
+        "known";
+        "contract";
+        contract_name;
+      ] in
   stdout
   |> String.split_on_char '\n'
   |> List.filter (String.starts_with ~prefix:"KT1")
@@ -43,8 +48,8 @@ let get_contract_address rpc_url contract_name =
   |> Option.join
   |> Option.to_result ~none:"Error in contract retrieving"
 
-let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
-    wallet =
+let deploy_contract ?(wait = None) rpc_address contract_name contract_path
+    storage wallet =
   Format.printf "Originating new %s contract.@." contract_name;
   let%ok storage =
     ligo ["compile"; "storage"; contract_path; storage]
@@ -57,7 +62,7 @@ let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
     tezos_client ~wait
       [
         "--endpoint";
-        rpc_url;
+        Uri.to_string rpc_address;
         "originate";
         "contract";
         contract_name;
@@ -74,7 +79,7 @@ let deploy_contract ?(wait = None) rpc_url contract_name contract_path storage
         "--force";
       ] in
   print_endline "delpoyed contract";
-  get_contract_address rpc_url contract_name
+  get_contract_address rpc_address contract_name
 
 let deku_address =
   "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf" |> Key_hash.of_string |> Option.get
@@ -126,6 +131,24 @@ module Cmdliner_helpers = struct
 
   let man =
     [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
+
+  (* TODO: copied from deku_cli *)
+  let uri =
+    let parser uri = Ok (uri |> Uri.of_string) in
+    let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
+    let open Arg in
+    conv (parser, printer)
+
+  let rpc_address =
+    let open Arg in
+    let doc = "rpc_address" in
+    let docv =
+      "The address of the Tezos RPC server used to communicate with the main \
+       chain" in
+    let env = Cmd.Env.info "DEKU_RPC_ADDRESS" in
+    value
+    & opt uri (Uri.of_string "http://localhost:20000")
+    & info ["rpc_address"] ~docv ~doc ~env
 
   let nodes =
     let parser string =

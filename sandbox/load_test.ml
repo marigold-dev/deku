@@ -5,8 +5,9 @@ open Cmdliner_helpers
 open Tezos
 open Feather
 
-let load_test () =
-  let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
+let load_test rpc_address =
+  let%ok dummy_ticket_address =
+    get_contract_address rpc_address "dummy_ticket" in
   let dummy_ticket_address = Address.to_string dummy_ticket_address in
   let%ok _result =
     process "load-test" ["saturate"; dummy_ticket_address] |> run_res in
@@ -14,7 +15,7 @@ let load_test () =
 
 let term =
   let open Term in
-  const load_test $ const ()
+  const load_test $ rpc_address
 
 let info =
   let doc = "Load tests a local running Deku cluster" in
