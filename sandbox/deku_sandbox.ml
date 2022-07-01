@@ -71,7 +71,7 @@ let _ =
          Cmd.v Teardown.info Teardown.term;
          Cmd.v Deposit_withdraw_test.info Deposit_withdraw_test.term;
          Cmd.v Deploy_dummy_ticket.info Deploy_dummy_ticket.term;
-         Cmd.v info_deposit_dummy_ticket deposit_dummy_ticket;
+         Cmd.v Deposit_dummy_ticket.info Deposit_dummy_ticket.term;
          Cmd.v info_load_test load_test;
          Cmd.v info_check_livenss check_liveness;
        ]
