@@ -87,14 +87,6 @@ let info_deposit_dummy_ticket =
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
 
-let load_test =
-  let open Term in
-  const load_test $ const ()
-
-let info_load_test =
-  let doc = "Load tests a local running Deku cluster" in
-  Cmd.info "load-test" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
-
 let check_liveness =
   let open Term in
   const check_liveness $ mode
@@ -126,6 +118,6 @@ let _ =
          Cmd.v Deposit_withdraw_test.info Deposit_withdraw_test.term;
          Cmd.v Deploy_dummy_ticket.info Deploy_dummy_ticket.term;
          Cmd.v Deposit_dummy_ticket.info Deposit_dummy_ticket.term;
-         Cmd.v info_load_test load_test;
+         Cmd.v Load_test.info Load_test.term;
          Cmd.v info_check_livenss check_liveness;
        ]
