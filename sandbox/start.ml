@@ -100,21 +100,16 @@ let start_deku_cluster mode validators =
              | Unix.WSIGNALED i -> Format.eprintf "SIGNALED %d" i);
              Format.eprintf "\n%!";
              await ()) in
-  let%ok () =
-    retry ~tries:100
-      (fun () ->
-        Format.printf "Waiting for nodes to come online\n%!";
-        let%ok _ =
-          curl ["-d"; "null"; "http://localhost:4440/block-level"] |> run_res
-        in
-        let%ok _ =
-          curl ["-d"; "null"; "http://localhost:4441/block-level"] |> run_res
-        in
-        let%ok _ =
-          curl ["-d"; "null"; "http://localhost:4442/block-level"] |> run_res
-        in
-        Ok ())
-      (fun () -> Ok ()) in
+  let is_cluster_bootstrapped () =
+    Format.printf "Waiting for nodes to come online\n%!";
+    let%ok _ =
+      curl ["-d"; "null"; "http://localhost:4440/block-level"] |> run_res in
+    let%ok _ =
+      curl ["-d"; "null"; "http://localhost:4441/block-level"] |> run_res in
+    let%ok _ =
+      curl ["-d"; "null"; "http://localhost:4442/block-level"] |> run_res in
+    Ok () in
+  let%ok () = retry is_cluster_bootstrapped in
 
   (* Step 2: Manually produce the block
      Produce a block using `deku-node produce-block`
