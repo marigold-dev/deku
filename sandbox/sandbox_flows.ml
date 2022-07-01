@@ -184,10 +184,13 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   let%ok big_map_id = known_handles_hash_big_map_id consensus_address in
 
   (* Wait for deposit to appear in Deku *)
-  let get_balance () = get_balance deku_address dummy_ticket_address in
-  let%ok _ =
-    retry get_balance (fun balance ->
-        if balance <> 0 then Ok balance else Error "Deposit failed") in
+  let get_balance () =
+    match get_balance deku_address dummy_ticket_address with
+    | Error err -> Error err
+    | Ok balance -> if balance <> 0 then Ok balance else Error "Deposit failed"
+  in
+
+  let%ok _ = retry get_balance in
   print_endline "Deposit is ok.";
 
   (* Withdraw some tickets *)
@@ -196,13 +199,15 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
   let%ok operation_hash = withdraw "./wallet.json" dummy_ticket_address in
 
   (* wait for a handle hash to appear in the consensus storage *)
-  let get_big_map_size () = get_big_map_size big_map_id in
-  let%ok _ =
-    retry get_big_map_size (fun big_map_size ->
-        if big_map_size <> current_size then
-          Ok ()
-        else
-          Error "Big map wasn't updated") in
+  let get_big_map_size () =
+    match get_big_map_size big_map_id with
+    | Error err -> Error err
+    | Ok big_map_size ->
+      if big_map_size <> current_size then
+        Ok ()
+      else
+        Error "Big map wasn't updated" in
+  let%ok _ = retry get_big_map_size in
   print_endline "Withdraw is ok.";
 
   (* Get the proof of the withdraw *)
@@ -245,7 +250,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
         "--burn-cap";
         "2";
       ] in
-  retry withdraw (fun res -> Ok res)
+  retry withdraw
 
 let deposit_withdraw_test mode nodes =
   let rpc_url = rpc_url mode in

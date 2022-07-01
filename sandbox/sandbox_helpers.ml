@@ -104,18 +104,16 @@ let deku_secret =
 
 let make_validators nodes = List.init nodes (fun i -> i)
 
-(** Try to execute a given function n time, with a spacing time of 1 seconds between each call, verify if the result match the predicate function **)
-let rec retry ?(tries = 60) f verify =
-  (* FIXME: I think we should get rid of the verify param *)
+(** Try to execute a given function n time, with a spacing time of 1 seconds between each call **)
+let rec retry ?(tries = 60) f =
   if tries <= 0 then
     Error "function did not succeed"
   else
-    let res = f () |> Result.fold ~ok:verify ~error:(fun error -> Error error) in
-    match res with
+    match f () with
     | Ok res -> Ok res
     | Error _ ->
       Unix.sleep 1;
-      retry f ~tries:(tries - 1) verify
+      retry ~tries:(tries - 1) f
 
 let known_handles_hash_big_map_id consensus_address =
   let%ok stdout =
