@@ -266,8 +266,10 @@ module Consensus = struct
       let michelson = Micheline.root michelson in
       match michelson with
       | Micheline.Prim
-          (_, D_Pair, [Prim (_, D_Pair, [_; _; Seq (_, key_hashes)], _); _; _], _)
-        ->
+          ( _,
+            D_Pair,
+            [Prim (_, D_Pair, [_; _; Seq (_, key_hashes)], _); _; _],
+            _ ) ->
         List.fold_left_ok
           (fun acc k ->
             match k with
