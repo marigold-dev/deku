@@ -1,0 +1,14 @@
+{
+  "name":"DEKU",
+  "description":"The bridge between Layer 1 and Layer 2",
+  "version": "0.1.0",
+  "license": {"name": "MIT"},
+  "authors":[
+    "Marigold <contact@marigold.dev>"
+  ],
+  "homepage":"https://www.marigold.dev/project/deku-sidechain",
+  "source":{
+    "tools": ["CameLIGO"],
+    "location": "https://github.com/marigold-dev/deku/ree/main/layer1/bridge"
+  }
+}
