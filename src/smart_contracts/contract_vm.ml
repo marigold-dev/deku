@@ -17,6 +17,8 @@ module type S = sig
 
     val tickets_mapping :
       t -> ((Context.Ticket_id.t * Context.Amount.t) * Ticket_handle.t) list
+
+    val pp : Format.formatter -> t -> unit
   end
 
   module Origination_payload : sig
@@ -314,6 +316,22 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
 
       (* TODO: this is bad *)
       let equal a b = Poly.( = ) a b
+
+      let print_hex _fmt _h =
+        Format.fprintf _fmt "%s" Stdlib.Bytes.(to_string (escaped _h))
+
+      let pp fmt t =
+        let code = Wasm_vm.Module.encode t.code |> Stdlib.Result.get_ok in
+        Format.fprintf fmt "Code:\n%a\n\n" print_hex (Bytes.of_string code);
+        Format.fprintf fmt "Storage:\n%a\n\n" print_hex t.storage;
+        Format.fprintf fmt "Tickets:\n";
+        Tickets.iter
+          (fun (ticket_id, amount) handle ->
+            Format.fprintf fmt "Ticket: %s, Amount: %d, Handle: %ld\n"
+              (Context.Ticket_id.to_string ticket_id)
+              (Context.Amount.to_int amount)
+              handle)
+          t.tickets
     end
 
     module Origination_payload = struct
@@ -379,6 +397,9 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       match t with
       | Wasm c ->
         Wasm { c with tickets = Tickets.of_seq (Stdlib.List.to_seq tickets) }
+
+    let pp fmt = function
+      | Wasm t -> Wasm.Contract.pp fmt t
   end
 
   module Origination_payload = struct

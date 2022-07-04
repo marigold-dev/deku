@@ -58,3 +58,12 @@ let setup ?(initial_amount = 10000) () =
 
 let amount =
   Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%d" (Amount.to_int x))
+
+let ticket =
+  Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%s" (Ticket_id.to_string x))
+
+let contract_value = Alcotest.of_pp Contracts.Contract_vm.Contract.pp
+
+let compile contract tickets =
+  let tickets = tickets |> List.map (fun (x, (y, _)) -> (x, y)) |> List.to_seq in
+  Contracts.Contract_vm.Compiler.compile ~tickets ~gas:Int.max_int contract
