@@ -22,6 +22,8 @@ module type S = sig
 
     val to_bytes : t -> bytes
 
+    val to_string : t -> string
+
     val mint_ticket : contract_address:Address.t -> data:bytes -> t
   end
 
