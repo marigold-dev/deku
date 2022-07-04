@@ -5,7 +5,7 @@ module Types = struct
   type t = {
     root_hash: Parameter.Types.root_hash_storage;
     vault: Parameter.Types.vault_storage;
-    metadata: (string, bytes) big_map;
+    metadata: Parameter.Types.metadata;
   }
 end
 

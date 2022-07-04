@@ -81,6 +81,9 @@ module Types = struct
     callback: vault_ticket contract;
   }
 
+  (* Contract metadata *)
+  type metadata = (string, bytes) big_map
+
   type t =
   | Update_root_hash of root_hash_action
   | Deposit of vault_deposit
