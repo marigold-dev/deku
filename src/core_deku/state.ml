@@ -1,7 +1,7 @@
 open Helpers
 open Deku_data
 open Crypto
-open Contracts
+open Smart_contracts
 open Core
 
 type t = {
@@ -179,7 +179,7 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
 
 and apply_contract_ops ~source ~sender (t, _) x =
   match x with
-  | Context.Operation.Invoke { tickets; destination; param } ->
+  | Contract_operation.Invoke { tickets; destination; param } ->
     let%ok destination =
       Address.to_contract_hash destination
       |> Result.of_option ~error:(`Invocation_error "invalid address") in

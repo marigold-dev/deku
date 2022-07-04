@@ -1,8 +1,5 @@
-module Make_ffi = Contract_ffi.Make
 module Contract_vm = Contract_vm
-
-module type CTX = Context.CTX
-
-module type Conversions = Conversions.S
-
+module Conversions = Conversions
+module Context = Contract_ffi
 module Ticket_handle = Ticket_handle
+module Contract_operation = Operation

@@ -20,7 +20,7 @@
  (name ticket_handle)
  (public_name ticket_handle)
  (modules ticket_handle)
- (libraries bin_common lwt cmdliner yojson)
+ (libraries bin_common lwt cmdliner yojson smart_contracts)
  (preprocess
   (pps ppx_deriving_yojson)))
 
@@ -28,6 +28,6 @@
  (name ticket_transfer)
  (public_name ticket_transfer)
  (modules ticket_transfer)
- (libraries bin_common lwt cmdliner yojson deku_data)
+ (libraries bin_common lwt cmdliner yojson deku_data smart_contracts)
  (preprocess
   (pps ppx_deriving_yojson)))

@@ -250,7 +250,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
         | None, None -> failwith "Invalid transaction"
         | None, Some arg ->
           let payload =
-            let open Contracts in
+            let open Smart_contracts in
             match vm_flavor with
             | `Wasm ->
               let arg = Yojson.Safe.from_string arg in
@@ -306,7 +306,7 @@ let originate_contract node_folder contract_json initial_storage
       let block_level = block_level_response.level in
       let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
       let%await payload =
-        let open Contracts in
+        let open Smart_contracts in
         match vm_flavor with
         | `Wasm ->
           let%await code =

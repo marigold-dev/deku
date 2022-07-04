@@ -1,6 +1,6 @@
 open Deku_data
 open Crypto
-open Contracts
+open Smart_contracts
 
 type initial_operation =
   | Transaction          of {
@@ -12,16 +12,12 @@ type initial_operation =
       to_invoke : Contract_address.t;
       argument : Contract_vm.Invocation_payload.t;
       tickets :
-        ((Ticket_id.t * Amount.t)
-        * (Smart_contracts.Ticket_handle.t * Int64.t option))
-        list;
+        ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
     }
   | Contract_origination of {
       payload : Contract_vm.Origination_payload.t;
       tickets :
-        ((Ticket_id.t * Amount.t)
-        * (Smart_contracts.Ticket_handle.t * Int64.t option))
-        list;
+        ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
     }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;

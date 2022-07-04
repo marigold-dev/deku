@@ -1,45 +1,39 @@
-module type S = sig
-  module Address : sig
-    type t [@@deriving yojson, eq]
+open Core
+open Deku_data
 
-    val size : int
+module Address = struct
+  include Address
 
-    val is_implicit : t -> bool
+  let size = 36
 
-    val is_originated : t -> bool
+  let to_bytes t = Bytes.of_string (to_string t)
 
-    val of_bytes : bytes -> t
+  let of_bytes t =
+    let addr = Address.of_string (Bytes.to_string t) in
+    Option.value_exn addr
+end
 
-    val to_bytes : t -> bytes
+module Ticket_id = struct
+  include Ticket_id
 
-    val to_string : t -> string
-  end
+  let size t = Address.size + Bytes.length t.data
 
-  module Ticket_id : sig
-    type t [@@deriving yojson]
+  let to_bytes t =
+    let byt =
+      match t.ticketer with
+      | Deku t -> Address.to_string t
+      | Tezos t -> Tezos.Address.to_string t in
+    let byt = Bytes.of_string byt in
+    let byt2 = t.data in
+    Stdlib.Bytes.cat byt byt2
+end
 
-    val size : t -> int
+module Amount = struct
+  include Amount
 
-    val to_bytes : t -> bytes
+  let size = 8
 
-    val mint_ticket : contract_address:Address.t -> data:bytes -> t
-  end
+  let of_int t = Amount.of_int t
 
-  module Amount : sig
-    type t [@@deriving yojson]
-
-    val zero : t
-
-    val equal : t -> t -> bool
-
-    val ( - ) : t -> t -> t
-
-    val ( + ) : t -> t -> t
-
-    val size : int
-
-    val of_int : int -> t
-
-    val to_int : t -> int
-  end
+  let to_int t = Amount.to_int t
 end

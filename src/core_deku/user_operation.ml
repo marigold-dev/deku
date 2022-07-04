@@ -1,6 +1,6 @@
 open Helpers
 open Deku_data
-open Contracts
+open Smart_contracts
 open Crypto
 
 type initial_operation =
@@ -14,17 +14,13 @@ type initial_operation =
       argument : Contract_vm.Invocation_payload.t;
       (*TODO: remove tickets field when we will do normal parsing of arguments from the cli *)
       tickets :
-        ((Ticket_id.t * Amount.t)
-        * (Smart_contracts.Ticket_handle.t * Int64.t option))
-        list;
+        ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
     }
   | Contract_origination of {
       payload : Contract_vm.Origination_payload.t;
       (*TODO: remove tickets field when we will do normal parsing of initial storage from the cli *)
       tickets :
-        ((Ticket_id.t * Amount.t)
-        * (Smart_contracts.Ticket_handle.t * Int64.t option))
-        list;
+        ((Ticket_id.t * Amount.t) * (Ticket_handle.t * Int64.t option)) list;
     }
   | Tezos_withdraw       of {
       owner : Tezos.Address.t;

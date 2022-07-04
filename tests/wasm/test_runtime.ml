@@ -1,10 +1,9 @@
 open Helpers
 open Test_helpers
 open Deku_data
+open Smart_contracts
 
 let test_simple_invocation () =
-  let open Core_deku in
-  let open Contracts in
   let code =
     {|
           (module
@@ -39,7 +38,6 @@ let test_simple_invocation () =
 
 let test_ticket_own () =
   let open Core_deku in
-  let open Contracts in
   let code =
     {|
               (module
@@ -63,7 +61,7 @@ let test_ticket_own () =
   let storage = Bytes.empty in
   let addr = make_address () in
   let ticket = make_ticket () in
-  let argument = Int32.zero |> Context.Ticket_handle.to_bytes in
+  let argument = Int32.zero |> Ticket_handle.to_bytes in
   let table = Ticket_table.empty in
   let table =
     Ticket_table.deposit table ~ticket ~destination:addr
@@ -92,8 +90,6 @@ let test_ticket_own () =
 
 let test_ticket_join () =
   let open Core_deku in
-  let open Contracts in
-  let open Context in
   let code =
     {|
                   (module
@@ -129,10 +125,10 @@ let test_ticket_join () =
   let storage = Bytes.empty in
   let addr = make_address () in
   let ticket = make_ticket () in
-  let handle = Int32.zero |> Context.Ticket_handle.to_bytes in
+  let handle = Int32.zero |> Ticket_handle.to_bytes in
   let self = make_contract_address "test" in
   let contract_addr = Deku_data.Address.of_contract_hash self in
-  let handle2 = Int32.one |> Context.Ticket_handle.to_bytes in
+  let handle2 = Int32.one |> Ticket_handle.to_bytes in
   let argument = Bytes.concat Bytes.empty [handle; handle2] in
   let table = Ticket_table.empty in
   let table =
@@ -164,8 +160,6 @@ let test_ticket_join () =
 
 let test_ticket_split () =
   let open Core_deku in
-  let open Contracts in
-  let open Context in
   let code =
     {|
                                (module
@@ -242,7 +236,6 @@ let test_ticket_split () =
 
 let test_ticket_send_twice () =
   let open Core_deku in
-  let open Contracts in
   let open Context in
   let code =
     {|
@@ -335,7 +328,7 @@ let test_ticket_send_twice () =
   let ops = ops |> List.hd in
   Alcotest.(check Testables.contract_operation)
     "Same Ops"
-    (Operation.Invoke
+    (Contract_operation.Invoke
        {
          tickets = [((ticket, Amount.of_int 10), (Int32.zero, Some 0L))];
          destination = Deku_data.Address.of_contract_hash contract_address2;
@@ -350,7 +343,8 @@ let test_ticket_send_twice () =
       ~tickets in
   let tickets, param =
     match ops with
-    | Operation.Invoke { destination = _; param; tickets } -> (tickets, param)
+    | Contract_operation.Invoke { destination = _; param; tickets } ->
+      (tickets, param)
     | _ -> failwith "wrong op" in
   let tickets_table, _table =
     Ticket_table.take_all_tickets table
@@ -377,7 +371,6 @@ let test_ticket_send_twice () =
 
 let test_ticket_send_implicit () =
   let open Core_deku in
-  let open Contracts in
   let code =
     {|
               (module
@@ -421,10 +414,8 @@ let test_ticket_send_implicit () =
   let table = Ticket_table.empty in
   let argument =
     Bytes.concat Bytes.empty
-      [
-        Context.Ticket_handle.to_bytes handle;
-        Address.to_string addr |> Bytes.of_string;
-      ] in
+      [Ticket_handle.to_bytes handle; Address.to_string addr |> Bytes.of_string]
+  in
   let table =
     Ticket_table.deposit table ~ticket ~destination:addr
       ~amount:(Amount.of_int 10) in
@@ -442,13 +433,12 @@ let test_ticket_send_implicit () =
   let x = ctx#finalize ops |> Result.get_ok |> (fun (_, _, x) -> x) |> List.hd in
   Alcotest.(check Testables.contract_operation)
     "Same"
-    (Context.Operation.Transfer
+    (Contract_operation.Transfer
        { ticket; amount = Amount.of_int 10; destination = addr })
     x
 
 let test_ticket_own_dup () =
   let open Core_deku in
-  let open Contracts in
   let open Context in
   let code =
     {|
