@@ -25,7 +25,7 @@ type t = {
   applied_blocks : Block.t list;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
-  recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
+  recent_operation_receipts : Deku_core.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
 }

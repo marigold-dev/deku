@@ -14,7 +14,7 @@ type effect =
     }
   | Applied_block                     of {
       block : Block.t;
-      receipts : (BLAKE2B.t * Core_deku.State.receipt) list;
+      receipts : (BLAKE2B.t * Deku_core.State.receipt) list;
       prev_protocol : Protocol.t;
       self_signed : Signatures.t option;
       snapshot_ref : Snapshots.snapshot_ref option;

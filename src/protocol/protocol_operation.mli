@@ -12,7 +12,7 @@ module Consensus : sig
 end
 
 module Core_tezos : sig
-  type t = Core_deku.Tezos_operation.t [@@deriving eq, ord, yojson]
+  type t = Deku_core.Tezos_operation.t [@@deriving eq, ord, yojson]
 end
 
 module Core_user : sig
@@ -22,7 +22,7 @@ module Core_user : sig
     signature : Signature.t;
     nonce : int32;
     block_height : int64;
-    data : Core_deku.User_operation.t;
+    data : Deku_core.User_operation.t;
   }
   [@@deriving eq, ord, yojson]
 
@@ -30,7 +30,7 @@ module Core_user : sig
     secret:Secret.t ->
     nonce:int32 ->
     block_height:int64 ->
-    data:Core_deku.User_operation.t ->
+    data:Deku_core.User_operation.t ->
     t
 
   val unsafe_make :
@@ -39,12 +39,12 @@ module Core_user : sig
     signature:Signature.t ->
     nonce:int32 ->
     block_height:int64 ->
-    data:Core_deku.User_operation.t ->
+    data:Deku_core.User_operation.t ->
     t
 end
 
 type t =
-  | Core_tezos of Core_deku.Tezos_operation.t
+  | Core_tezos of Deku_core.Tezos_operation.t
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
 [@@deriving eq, ord, yojson]

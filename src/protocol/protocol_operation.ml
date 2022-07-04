@@ -1,6 +1,6 @@
 open Helpers
 open Crypto
-open Core_deku
+open Deku_core
 
 module Consensus = struct
   type t =
@@ -79,7 +79,7 @@ module Core_user = struct
 end
 
 type t =
-  | Core_tezos of Core_deku.Tezos_operation.t
+  | Core_tezos of Deku_core.Tezos_operation.t
   | Core_user  of Core_user.t
   | Consensus  of Consensus.t
 [@@deriving eq, ord, yojson]

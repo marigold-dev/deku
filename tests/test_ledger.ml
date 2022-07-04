@@ -1,7 +1,7 @@
 open Setup
 open Helpers
 open Crypto
-open Core_deku
+open Deku_core
 open Deku_data
 open Ledger
 

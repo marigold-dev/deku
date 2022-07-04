@@ -37,7 +37,7 @@ let test_simple_invocation () =
   Alcotest.(check int64) "Same" 43L storage
 
 let test_ticket_own () =
-  let open Core_deku in
+  let open Deku_core in
   let code =
     {|
               (module
@@ -89,7 +89,7 @@ let test_ticket_own () =
   Alcotest.(check (option Testables.amount)) "Same" expected final
 
 let test_ticket_join () =
-  let open Core_deku in
+  let open Deku_core in
   let code =
     {|
                   (module
@@ -159,7 +159,7 @@ let test_ticket_join () =
   Alcotest.(check @@ option Testables.amount) "Same" expected final
 
 let test_ticket_split () =
-  let open Core_deku in
+  let open Deku_core in
   let code =
     {|
                                (module
@@ -235,7 +235,7 @@ let test_ticket_split () =
     "Same tickets" imit_hanlde tickets
 
 let test_ticket_send_twice () =
-  let open Core_deku in
+  let open Deku_core in
   let open Context in
   let code =
     {|
@@ -370,7 +370,7 @@ let test_ticket_send_twice () =
     "Same" imit_hanlde tickets
 
 let test_ticket_send_implicit () =
-  let open Core_deku in
+  let open Deku_core in
   let code =
     {|
               (module
@@ -438,7 +438,7 @@ let test_ticket_send_implicit () =
     x
 
 let test_ticket_own_dup () =
-  let open Core_deku in
+  let open Deku_core in
   let open Context in
   let code =
     {|
