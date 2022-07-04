@@ -22,6 +22,7 @@ pkgs.mkShell {
       ligo
 
       # formatters
+      treefmt
       nixfmt
       nodePackages.prettier
       ocamlformat_0_20_1

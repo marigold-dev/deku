@@ -1,4 +1,4 @@
-open Contract_vm
+open Contracts.Contract_vm
 
 type t [@@deriving yojson, eq]
 

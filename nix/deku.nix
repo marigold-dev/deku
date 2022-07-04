@@ -66,6 +66,7 @@ in ocamlPackages.buildDunePackage rec {
       benchmark
       json-logs-reporter
       feather
+      wasm
     ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
@@ -82,15 +83,15 @@ in ocamlPackages.buildDunePackage rec {
     rm -rf $out/lib $out/share/doc
     remove-references-to \
       -t ${ocamlPackages.ocaml} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-liveness,deku-node,deku-cli}
   '' + (if static then ''
     # If we're building statically linked binaries everything should be possible to remove
     remove-references-to \
       -t ${pkgs.gmp} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-livenss,deku-node,deku-cli}
     remove-references-to \
       -t ${pkgs.libffi} \
-      $out/bin/{asserter,deku-node,deku-cli}
+      $out/bin/{asserter,check-liveness,deku-node,deku-cli}
   '' else
     "");
 }

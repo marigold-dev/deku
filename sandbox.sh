@@ -251,7 +251,7 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
+      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --color="${DEKU_LOG_COLOR:-auto}" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
@@ -291,58 +291,6 @@ start_deku_cluster() {
 wait_for_servers() {
   for PID in "${SERVERS[@]}"; do
     wait "$PID"
-  done
-}
-
-# =======================
-# Steps for the command: ./sandbox.sh smoke-test
-# - deku_height()
-# - start_deku_cluster()
-# - pkill -x deku-node
-# - assert_deku_state()
-deku_storage() {
-  local contract
-  contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
-  local storage
-  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
-  echo "$storage"
-}
-
-deku_state_hash() {
-  local storage
-  storage=$(deku_storage)
-  local state_hash
-  state_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
-  echo "$state_hash"
-}
-
-deku_height() {
-  local storage
-  storage=$(deku_storage)
-  local block_height
-  block_height=$(echo "$storage" | jq '.args[0].args[0].args[0].args[1].int' | xargs)
-  echo "$block_height"
-}
-
-assert_deku_state() {
-  local current_state_hash
-  current_state_hash=$(deku_state_hash)
-  local current_block_height
-  current_block_height=$(deku_height)
-  local starting_height=$1
-  local seconds=$2
-  local minimum_expected_height=$((starting_height + $2))
-
-  echo "The current block height is" "$current_block_height"
-
-  # Check that a current height has progressed past the starting height sufficiently
-  if [ $((current_block_height - starting_height)) -lt 20 ]; then
-    echo "Error: less than 20 blocks were produced in $2 seconds."
-    exit 1
-  fi
-
-  for i in "${VALIDATORS[@]}"; do
-    asserter "$DATA_DIRECTORY/$i" "$current_state_hash" "$minimum_expected_height"
   done
 }
 
@@ -412,7 +360,6 @@ deposit_withdraw_test() {
   if ((BALANCE == 0))
   then
     echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
-    pkill -x deku-node
     exit 1
   fi
 
@@ -423,7 +370,6 @@ deposit_withdraw_test() {
   WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
-    pkill -x deku-node
     exit 1
   fi
   sleep 10
@@ -437,11 +383,68 @@ deposit_withdraw_test() {
   tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
 }
 
+test_wasm() {
+  deposit_ticket | grep tezos-client | tr -d '\r'
+  sleep 5
+  echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
+  CONTRACT_ADDRESS=$(deku-cli originate-contract ./data/1 wallet.json ./docs/smart-contracts/wasm_contracts/wasm_own.wat ./docs/smart-contracts/wasm_contracts/initial.json --vm_flavor="Wasm" | awk '{ print $2 }' | head -n1 | tr -d '\t\n\r')
+  echo "Contract address deployed: $CONTRACT_ADDRESS"
+  DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
+  ARG=$(ticket_handle)
+  echo "param: \"$ARG\""
+  sleep 5
+  deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100=0:0
+  sleep 5
+  asserter_contract "$DATA_DIRECTORY/0" "$CONTRACT_ADDRESS" "Pair \"$DUMMY_TICKET\" 0x" 100
+}
+test_wasm_full() {
+  deposit_ticket | grep tezos-client | tr -d '\r'
+  sleep 5
+  echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
+
+  CONTRACT_ADDRESS=$(deku-cli originate-contract ./data/1 wallet.json ./docs/smart-contracts/wasm_contracts/wasm_transfer.wat ./docs/smart-contracts/wasm_contracts/initial.json --vm_flavor="Wasm" | awk '{ print $2 }' | head -n1 | tr -d '\t\n\r')
+
+  echo "Contract address deployed: $CONTRACT_ADDRESS"
+
+  DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
+
+  ARG=$(ticket_transfer $DEKU_ADDRESS )
+
+  echo "param: \"$ARG\""
+
+  sleep 5
+
+ deku-cli create-transaction ./data/0 wallet.json "$CONTRACT_ADDRESS" 100 "Pair \"$DUMMY_TICKET\" 0x" --arg="$ARG" --vm_flavor="Wasm" --tickets="Pair \"$DUMMY_TICKET\" 0x":100=0:0
+
+  sleep 5
+  
+  # # We can withdraw 10 tickets from deku
+  OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
+  sleep 5
+
+  WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
+  if [ -z "$WITHDRAW_PROOF" ]; then
+    echo Withdraw failed!
+    killall deku-node
+    exit 1
+  fi
+  sleep 10
+
+  PROOF=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*\({.*}\).*/\1/p')
+  ID=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*[[:space:]]\([0-9]\+\)[[:space:]]\".*/\1/p')
+  HANDLE_HASH=$(echo "$WITHDRAW_PROOF" | sed -n 's/.*\(0x.*\).*{.*/\1/p')
+
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+
+  tezos-client transfer 0 from $ticket_wallet to dummy_ticket --entrypoint withdraw_from_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) (Pair $ID \"$DUMMY_TICKET\")) \"$DUMMY_TICKET\")) (Pair $HANDLE_HASH $PROOF)" --burn-cap 2
+  sleep 5
+  asserter_balance "$DATA_DIRECTORY/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
+}
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
   echo ""
-  echo "Usage: $0 setup|start|tear-down|smoke-test"
+  echo "Usage: $0 setup|start|tear-down"
   echo "Commands:"
   echo "setup"
   echo "  Does the following:"
@@ -452,8 +455,6 @@ help() {
   echo "  Starts a Deku cluster configured with this script."
   echo "tear-down"
   echo "  Stops the Tezos node and destroys the Deku state"
-  echo "smoke-test"
-  echo "  Starts a Deku cluster and performs some simple checks that its working."
   echo "deploy-dummy-ticket"
   echo "  Deploys a contract that forges dummy tickets and deposits to Deku"
   echo "deposit-withdraw-test"
@@ -477,29 +478,38 @@ start)
   start_deku_cluster
   wait_for_servers
   ;;
-smoke-test)
-  starting_height=$(deku_height)
-  start_deku_cluster
-  seconds=35
-  sleep $seconds
-  pkill -x deku-node
-  assert_deku_state "$starting_height" $seconds
-  ;;
 tear-down)
   tear-down
   ;;
-deposit-withdraw-test)
-  start_deku_cluster
+test-wasm)
+  start_deku_cluster > /dev/null
   sleep 5
   deploy_dummy_ticket
+  sleep 5
+  test_wasm
+  killall deku-node
+ ;;
+ test-wasm-full)
+  start_deku_cluster > /dev/null
+  sleep 5
+  deploy_dummy_ticket
+  sleep 5
+  test_wasm_full
+  killall deku-node
+ ;;
+deposit-withdraw-test)
   deposit_withdraw_test
-  pkill -x deku-node
   ;;
 deploy-dummy-ticket)
   deploy_dummy_ticket
   ;;
 deposit-dummy-ticket)
   deposit_ticket
+  ;;
+check-liveness)
+  CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  echo "$CONSENSUS_ADDRESS" > /tmp/hello
+  check-liveness "$RPC_NODE" "$CONSENSUS_ADDRESS"
   ;;
 *)
   help

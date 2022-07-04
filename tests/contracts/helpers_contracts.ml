@@ -18,7 +18,11 @@ let make_ticket ?ticketer ?data () =
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  { ticketer; data }
+  Core_deku.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
+
+let make_address () =
+  let _secret, _key, key_hash = Key_hash.make_ed25519 () in
+  key_hash
 
 let make_tezos_address () =
   let open Crypto in
@@ -34,7 +38,7 @@ let setup ?(initial_amount = 10000) () =
     Tezos_operation.Tezos_deposit
       {
         destination = tezos_address;
-        ticket = t2;
+        ticket = Ticket_id.to_tezos t2 |> Result.get_ok;
         amount = Amount.of_int initial_amount;
       } in
   let s = State.empty in
@@ -50,7 +54,7 @@ let setup ?(initial_amount = 10000) () =
   let make_address =
     tezos_address |> Tezos.Address.to_string |> Key_hash.of_string |> Option.get
   in
-  (State.apply_tezos_operation s opp, make_address)
+  (State.apply_tezos_operation s opp, make_address, t2)
 
 let amount =
   Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%d" (Amount.to_int x))

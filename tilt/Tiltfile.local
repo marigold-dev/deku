@@ -6,38 +6,33 @@ def add_sandbox (no_of_deku_nodes):
     resource_deps=["flextesa"],
     labels=["scripts"],
     )
-
-  if config.tilt_subcommand == "ci":
-    # bootstrap the deku network and run some tests
-    local_resource(
-      "smoke-test",
-      "sleep 5 && nix run .#sandbox smoke-test local %s" % no_of_deku_nodes,
-      resource_deps=["deku-setup"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      allow_parallel=True,
-      )
-
-    local_resource(
-      "deposit-withdraw-test",
-      "sleep 5 && nix run .#sandbox deposit-withdraw-test",
-      resource_deps=["smoke-test"],
-      labels=["scripts"],
-      auto_init=True, # trigger once at start
-      trigger_mode=TRIGGER_MODE_MANUAL,
-      allow_parallel=True,
-      )
-  else:
-    # bootstrap the deku network, it will be run after deku-setup and the nodes have started
-    local_resource(
+  local_resource(
       "deku-net",
       serve_cmd="nix run .#sandbox start local %s" % no_of_deku_nodes,
       resource_deps=["deku-setup"],
       labels=["scripts"],
       auto_init=True, # trigger once at start
       trigger_mode=TRIGGER_MODE_MANUAL,
+  )
+  if config.tilt_subcommand == "ci":
+    local_resource(
+      "deku-health-check",
+      "nix run .#sandbox check-liveness",
+      resource_deps=["deku-net"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
       )
+    local_resource(
+      "deposit-withdraw-test",
+      "nix run .#sandbox deposit-withdraw-test",
+      resource_deps=["deku-net", "dummy-ticket-contract"],
+      labels=["scripts"],
+      auto_init=True, # trigger once at start
+      trigger_mode=TRIGGER_MODE_MANUAL,
+      allow_parallel=True,
+      )
+    
 
 def load_deku_services (_):
   print('no-op')

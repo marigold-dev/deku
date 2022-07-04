@@ -7,12 +7,12 @@ module Withdrawal_handle = struct
     id : int;
     owner : Tezos.Address.t;
     amount : Amount.t;
-    ticket : Ticket_id.t;
+    ticket : Tezos.Ticket_id.t;
   }
   [@@deriving yojson]
 
   let hash ~id ~owner ~amount ~ticket =
-    let Ticket_id.{ ticketer; data } = ticket in
+    let Tezos.Ticket_id.{ ticketer; data } = ticket in
     Tezos.Deku.Consensus.hash_withdraw_handle ~id:(Z.of_int id) ~owner
       ~amount:(Z.of_int (Amount.to_int amount))
       ~ticketer ~data
@@ -36,8 +36,12 @@ let empty =
     withdrawal_handles = Withdrawal_handle_tree.empty;
   }
 
+let with_ticket_table t f =
+  f ~get_table:(Fun.const t.table) ~set_table:(fun table ->
+      { table; withdrawal_handles = t.withdrawal_handles })
+
 let balance address ticket t =
-  Ticket_table.balance t.table ~sender:(Address.of_key_hash address) ~ticket
+  Ticket_table.balance t.table ~sender:address ~ticket
   |> Option.value ~default:Amount.zero
 
 let transfer ~sender ~destination amount ticket t =
@@ -49,17 +53,17 @@ let transfer ~sender ~destination amount ticket t =
   Ok { table; withdrawal_handles = t.withdrawal_handles }
 
 let deposit destination amount ticket t =
-  let table =
-    Ticket_table.deposit t.table ~ticket
-      ~destination:(Address.of_key_hash destination)
-      ~amount in
+  let table = Ticket_table.deposit t.table ~ticket ~destination ~amount in
   { table; withdrawal_handles = t.withdrawal_handles }
 
 let withdraw ~sender ~destination amount ticket t =
+  let%ok ticket' =
+    Ticket_id.of_tezos ticket
+    |> Result.map_error (function _ -> `Insufficient_funds) in
   let%ok table =
     Ticket_table.withdraw t.table
       ~sender:(Address.of_key_hash sender)
-      ~amount ~ticket
+      ~amount ~ticket:ticket'
     |> Result.map_error (function _ -> `Insufficient_funds) in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add

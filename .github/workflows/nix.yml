@@ -23,7 +23,19 @@ jobs:
       # - name: "Run nix flake check"
       #   run: nix flake check
       - name: "Check formatting"
-        run: nix fmt -- --fail-on-change
+        run: |
+          nix fmt -- --no-cache
+          if [[ -n "$(git status --porcelain -unormal)" ]]; then
+            echo "-----------------------------"
+            echo "ERROR: The project is dirty!"
+            echo "-----------------------------"
+            git status -unormal
+            exit 1
+          else
+            echo "--------------"
+            echo "OK: All good!"
+            echo "--------------"
+          fi
       - name: "Check shell formatting"
         run: nix develop -c shellcheck *.sh
       - name: "Run tests"

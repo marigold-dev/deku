@@ -10,4 +10,4 @@
   tezos
   tezos-micheline)
  (preprocess
-  (pps ppx_lambda_vm ppx_let_binding ppx_deriving.show)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving_yojson)))

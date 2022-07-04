@@ -104,9 +104,8 @@ let address_tezos_interop =
   conv (parser, printer)
 
 let argument =
-  let parser string = Ok (Yojson.Safe.from_string string) in
-  let printer fmt arg =
-    Format.fprintf fmt "%s" (Yojson.Safe.pretty_to_string arg) in
+  let parser string = Ok string in
+  let printer fmt arg = Format.fprintf fmt "%s" arg in
   let open Arg in
   conv ~docv:"A valid contract argument" (parser, printer)
 
@@ -116,6 +115,24 @@ let address =
     |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
   let printer fmt wallet =
     Format.fprintf fmt "%s" (wallet |> Address.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
+let contract_argument_addr =
+  let parser string = Ok (Int64.of_string_opt string) in
+  let printer fmt wallet =
+    Format.fprintf fmt "%a"
+      (Format.pp_print_option (fun fmt x ->
+           Format.fprintf fmt "%s" (x |> Int64.to_string)))
+      wallet in
+  let open Arg in
+  conv (parser, printer)
+
+let contract_ticket_handle =
+  let parser string =
+    Int32.of_string_opt string
+    |> Option.to_result ~none:(`Msg "Expected a valid Deku address.") in
+  let printer fmt wallet = Format.fprintf fmt "%s" (wallet |> Int32.to_string) in
   let open Arg in
   conv (parser, printer)
 
@@ -144,25 +161,23 @@ let tezos_required_confirmations =
 
 let ticket =
   let parser string =
-    Tezos.Ticket_id.of_string string
+    Core_deku.Ticket_id.of_string string
     |> Option.to_result ~none:(`Msg "Expected a ticket") in
   let printer fmt ticket =
-    Format.fprintf fmt "%S" (Tezos.Ticket_id.to_string ticket) in
+    Format.fprintf fmt "%S" (Core_deku.Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
 
 let vm_flavor =
   let parser string =
     (match string with
-    | "Lambda" -> Some `Lambda
-    | "Dummy" -> Some `Dummy
+    | "Wasm" -> Some `Wasm
     | _ -> None)
     |> Option.to_result ~none:(`Msg "Expected a valid Vm_flavor") in
   let printer fmt flavor =
     Format.fprintf fmt "%S"
       (match flavor with
-      | `Lambda -> "Lambda"
-      | `Dummy -> "Dummy") in
+      | `Wasm -> "Wasm") in
   let open Arg in
   conv ~docv:"Vm_flavor" (parser, printer)
 
@@ -205,7 +220,7 @@ let info_create_transaction =
     ~man
 
 let create_transaction node_folder sender_wallet_file received_address amount
-    ticket argument vm_flavor =
+    ticket argument vm_flavor tickets =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -234,10 +249,11 @@ let create_transaction node_folder sender_wallet_file received_address amount
         | None, None -> failwith "Invalid transaction"
         | None, Some arg ->
           let payload =
+            let open Contracts in
             match vm_flavor with
-            | `Lambda -> Contract_vm.Invocation_payload.lambda_of_yojson ~arg
-            | `Dummy -> Contract_vm.Invocation_payload.dummy_of_yojson ~arg
-          in
+            | `Wasm ->
+              let arg = Yojson.Safe.from_string arg in
+              Contract_vm.Invocation_payload.wasm_of_yojson ~arg in
           let arg = payload |> Result.get_ok in
           Core_deku.User_operation.make ~source:wallet.address
             (Contract_invocation
@@ -245,6 +261,7 @@ let create_transaction node_folder sender_wallet_file received_address amount
                  to_invoke =
                    Address.to_contract_hash received_address |> Option.get;
                  argument = arg;
+                 tickets;
                }) in
       let transaction =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
@@ -268,7 +285,7 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_folder contract_json initial_storage
-    sender_wallet_file (vm_flavor : [`Dummy | `Lambda]) =
+    sender_wallet_file (vm_flavor : [`Wasm]) tickets =
   let open Network in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
@@ -287,20 +304,23 @@ let originate_contract node_folder contract_json initial_storage
       let%await block_level_response = request_block_level () validator_uri in
       let block_level = block_level_response.level in
       let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
-      let contract_program = Yojson.Safe.from_file contract_json in
-      let initial_storage = Yojson.Safe.from_file initial_storage in
-      let payload =
+      let%await payload =
+        let open Contracts in
         match vm_flavor with
-        | `Lambda ->
-          Contract_vm.Origination_payload.lambda_of_yojson
-            ~code:contract_program ~storage:initial_storage
+        | `Wasm ->
+          let%await code =
+            Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
+          in
+          let code = Bytes.of_string code in
+          let initial_storage = Yojson.Safe.from_file initial_storage in
+          let initial_storage =
+            Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
+          Contract_vm.Origination_payload.wasm_of_yojson ~code
+            ~storage:initial_storage
           |> Result.get_ok
-        | `Dummy ->
-          let int =
-            try Yojson.Safe.Util.to_int initial_storage with
-            | _ -> failwith "Invalid storage fro contract" in
-          Contract_vm.Origination_payload.dummy_of_yojson ~storage:int in
-      let origination_op = User_operation.Contract_origination payload in
+          |> Lwt.return in
+      let origination_op =
+        User_operation.Contract_origination { payload; tickets } in
       let originate_contract_op =
         Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
           ~nonce:(Crypto.Random.int32 Int32.max_int)
@@ -314,11 +334,11 @@ let originate_contract node_folder contract_json initial_storage
             Network.User_operation_gossip.user_operation = originate_contract_op;
           }
           identity.uri in
-      Format.printf "operation_hash: %s\n%!"
-        (BLAKE2B.to_string originate_contract_op.hash);
-      Format.printf "contract_address: %s\n%!"
+      Format.printf "contract_address: %s\noperation_hash: %s\n"
         (Contract_address.of_user_operation_hash originate_contract_op.hash
-        |> Contract_address.to_string);
+        |> Contract_address.to_string)
+        (BLAKE2B.to_string originate_contract_op.hash);
+
       Lwt.return (`Ok ()))
 
 let folder_node =
@@ -336,25 +356,37 @@ let originate_contract =
     let env = Cmd.Env.info "SENDER" ~doc in
     Arg.(required & pos 1 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
   in
+  let vm_flavor =
+    let doc = "Virtual machine flavor. can only be Wasm for now" in
+    let env = Cmd.Env.info "VM_FLAVOR" ~doc in
+    Arg.(
+      Arg.value
+      & opt ~vopt:`Wasm vm_flavor `Wasm
+      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let contract_json =
     let doc =
-      "The path to the JSON output of compiling the contract to Lambda." in
+      "The path to the JSON output of compiling the contract to bytecode." in
     let open Arg in
     required
     & pos 2 (some contract_code_path) None
     & info [] ~docv:"contract" ~doc in
   let initial_storage =
-    let doc = "The string containing initial storage for Lambdavm" in
+    let doc = "The string containing initial storage for the VM" in
     let open Arg in
     required & pos 3 (some string) None & info [] ~docv:"initial_storage" ~doc
   in
-  let vm_flavor =
-    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
-    let env = Cmd.Env.info "VM_FLAVOR" ~doc in
+  let tickets =
+    let doc = "The string containing initial tickets for storage" in
     Arg.(
       Arg.value
-      & opt ~vopt:`Lambda vm_flavor `Lambda
-      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
+      & opt ~vopt:[]
+          (list
+             (pair ~sep:'='
+                (pair ~sep:':' ticket amount)
+                (pair ~sep:':' contract_ticket_handle contract_argument_addr)))
+          []
+      & info ["tickets"] ~docv:"tickets" ~doc) in
+
   Term.(
     lwt_ret
       (const originate_contract
@@ -362,7 +394,8 @@ let originate_contract =
       $ contract_json
       $ initial_storage
       $ address_from
-      $ vm_flavor))
+      $ vm_flavor
+      $ tickets))
 
 let create_transaction =
   let address_from =
@@ -379,6 +412,17 @@ let create_transaction =
     let open Arg in
     required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
   in
+  let tickets =
+    let doc = "The string containing tickets for vm argument" in
+    Arg.(
+      Arg.value
+      & opt ~vopt:[]
+          (list
+             (pair ~sep:'='
+                (pair ~sep:':' ticket amount)
+                (pair ~sep:':' contract_ticket_handle contract_argument_addr)))
+          []
+      & info ["tickets"] ~docv:"tickets" ~doc) in
   let amount =
     let doc = "The amount to be transferred." in
     let env = Cmd.Env.info "TRANSFER_AMOUNT" ~doc in
@@ -394,11 +438,11 @@ let create_transaction =
     value @@ (opt (some argument) None & info ["arg"] ~docv:"argument" ~doc)
   in
   let vm_flavor =
-    let doc = "Virtual machine flavor. can be either Lambda or Dummy" in
+    let doc = "Virtual machine flavor. can be only be Wasm for now" in
     let env = Cmd.Env.info "VM_FLAVOR" ~doc in
     Arg.(
       Arg.value
-      & opt ~vopt:`Lambda vm_flavor `Lambda
+      & opt ~vopt:`Wasm vm_flavor `Wasm
       & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let open Term in
   lwt_ret
@@ -409,7 +453,8 @@ let create_transaction =
     $ amount
     $ ticket
     $ argument
-    $ vm_flavor)
+    $ vm_flavor
+    $ tickets)
 
 let info_withdraw =
   let doc = Printf.sprintf "Submits a withdraw to the sidechain." in
@@ -701,7 +746,7 @@ let setup_tezos =
        can compromise security of the Deku chain." in
     let open Arg in
     value
-    & opt tezos_required_confirmations 10
+    & opt tezos_required_confirmations 3
     & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
   let open Term in
   lwt_ret

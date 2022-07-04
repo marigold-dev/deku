@@ -6,7 +6,7 @@ module Withdrawal_handle : sig
     id : int;
     owner : Tezos.Address.t;
     amount : Amount.t;
-    ticket : Ticket_id.t;
+    ticket : Tezos.Ticket_id.t;
   }
   [@@deriving yojson]
 end
@@ -15,7 +15,12 @@ type t [@@deriving yojson]
 
 val empty : t
 
-val balance : Key_hash.t -> Ticket_id.t -> t -> Amount.t
+val balance : Address.t -> Ticket_id.t -> t -> Amount.t
+
+val with_ticket_table :
+  t ->
+  (get_table:(unit -> Ticket_table.t) -> set_table:(Ticket_table.t -> t) -> 'a) ->
+  'a
 
 val transfer :
   sender:Address.t ->
@@ -25,13 +30,13 @@ val transfer :
   t ->
   (t, [> `Insufficient_funds]) result
 
-val deposit : Key_hash.t -> Amount.t -> Ticket_id.t -> t -> t
+val deposit : Address.t -> Amount.t -> Ticket_id.t -> t -> t
 
 val withdraw :
   sender:Key_hash.t ->
   destination:Tezos.Address.t ->
   Amount.t ->
-  Ticket_id.t ->
+  Tezos.Ticket_id.t ->
   t ->
   (t * Withdrawal_handle.t, [> `Insufficient_funds]) result
 
