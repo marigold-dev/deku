@@ -158,11 +158,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1652298385,
-        "narHash": "sha256-+utBO2RQlo5ufd6vRpoDA3o+TaYu6IAV/D3hbTaBLjc=",
+        "lastModified": 1657019818,
+        "narHash": "sha256-ejoPTEJAngFSGAU1DMzQEt2GGpr/VGlYtVlHMBG5tIg=",
         "owner": "marigold-dev",
         "repo": "json-logs-reporter",
-        "rev": "298a1ade7b95831c43997b6b3b6efcdd7803d974",
+        "rev": "82d78fbeec2c7b17c8a434ccd7e10c162b87fd72",
         "type": "github"
       },
       "original": {
