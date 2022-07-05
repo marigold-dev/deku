@@ -42,19 +42,15 @@ let setup_logs style_renderer log_level use_json =
   Logs.set_reporter reporter;
 
   (* disable all non-deku logs *)
-  match log_level with
-  (* TODO: we probably want a flag like --all_logs or something here instead *)
-  | Some Logs.Debug -> ()
-  | _ ->
-    List.iter
-      (fun src ->
-        let src_name = Logs.Src.name src in
-        if
-          (not (String.starts_with ~prefix:"deku" src_name))
-          && not (String.equal src_name "application")
-        then
-          Logs.Src.set_level src (Some Logs.Error))
-      (Logs.Src.list ())
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if
+        (not (String.starts_with ~prefix:"deku" src_name))
+        && not (String.equal src_name "application")
+      then
+        Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ())
 
 let common_options node_folder use_json validator_uris style_renderer log_level
     =
