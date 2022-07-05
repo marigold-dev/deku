@@ -162,6 +162,7 @@ let sign_block ~block state =
   (* TODO: rename Block.sign ~key to ~secret *)
   let signature = Block.sign ~key:secret block in
   let hash = block.hash in
+  Metrics.Blocks.inc_block_signed ();
   Effect (Broadcast_signature { hash; signature })
 
 let pre_apply_block ~block ~signatures state =
