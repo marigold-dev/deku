@@ -36,37 +36,29 @@ let is_node_bootstrapped rpc_address =
   |> Result.map (String.starts_with ~prefix:"Node is bootstrapped")
   |> Result.fold ~ok:(fun _ -> true) ~error:(fun _ -> false)
 
-let setup_identity i =
-  let folder = Format.sprintf "data/%d" i in
-  process "mkdir" ["-p"; folder] |> run;
-  deku_node
-    [
-      "setup-identity";
-      folder;
-      "--uri";
-      Format.sprintf "http://localhost:444%d" i;
-    ]
-  |> run;
+let setup_identity ~data_folder uri =
+  process "mkdir" ["-p"; data_folder] |> run;
+  deku_node ["setup-identity"; data_folder; "--uri"; uri] |> run;
   let%ok key =
-    deku_node ["self"; folder]
+    deku_node ["self"; data_folder]
     |. grep "key:"
     |. process "awk" ["{ print $2 }"]
     |> collect stdout
     |> Wallet.of_string
     |> Option.to_result ~none:"error in key parsing" in
   let%ok address =
-    deku_node ["self"; folder]
+    deku_node ["self"; data_folder]
     |. grep "address"
     |. process "awk" ["{ print $2 }"]
     |> collect stdout
     |> Key_hash.of_string
     |> Option.to_result ~none:"error in address parsing" in
   let uri =
-    deku_node ["self"; folder]
+    deku_node ["self"; data_folder]
     |. grep "uri:"
     |. process "awk" ["{ print $2 }"]
     |> collect stdout in
-  Ok (i, key, uri, address)
+  Ok (key, uri, address)
 
 let make_consensus_storage identities =
   identities
@@ -125,7 +117,7 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
     ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
-let setup validators (rpc_address : Uri.t) tezos_secret =
+let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
   (* FIXME: this relative path seems suspicious - does it work if you move directories? *)
   let consensus = "./src/tezos_interop/consensus.mligo" in
   let discovery = "./src/tezos_interop/discovery.mligo" in
@@ -143,7 +135,13 @@ let setup validators (rpc_address : Uri.t) tezos_secret =
       (Format.sprintf "unencrypted:%s" tezos_secret) in
 
   (* setup write indentity.json to file system *)
-  let%ok identities = validators |> List.map_ok setup_identity in
+  let%ok identities =
+    validators
+    |> List.map_ok (fun i ->
+           let uri = Format.sprintf "http://localhost:444%d" i in
+           let data_folder = Format.sprintf "%s/%d" data_folder i in
+           let%ok key, uri, address = setup_identity ~data_folder uri in
+           Ok (i, key, uri, address)) in
 
   (* deploy smart contracts *)
   let consensus_storage = make_consensus_storage identities in
@@ -163,7 +161,8 @@ let setup validators (rpc_address : Uri.t) tezos_secret =
 
 let setup nodes rpc_address tezos_secret =
   let validators = make_validators nodes in
-  let%ok _validators = setup validators rpc_address tezos_secret in
+  let data_folder = "./data" in
+  let%ok _validators = setup validators rpc_address tezos_secret data_folder in
   Ok ()
 
 open Cmdliner_helpers
