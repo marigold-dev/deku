@@ -44,7 +44,9 @@ let test_wasm () =
     Contract_storage.get_contract (State.contract_storage state) ~address
     |> Option.get in
 
-  let expected = compile payload tickets |> Result.get_ok in
+  let expected =
+    compile payload tickets ~sender:(Address.of_key_hash address)
+    |> Result.get_ok in
   Alcotest.check' contract_value
     ~msg:"Contract should have the same value as its counterpart in storage"
     ~actual ~expected
