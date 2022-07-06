@@ -232,7 +232,8 @@ let applied_block state update_state ~prev_protocol ~block ~receipts
     List.fold_left
       (fun results (hash, receipt) -> BLAKE2B.Map.add hash receipt results)
       state.recent_operation_receipts receipts in
-  let applied_blocks = (Unix.time (), block) :: state.applied_blocks in
+  let applied_blocks =
+    (Unix.time (), block) :: state.applied_blocks |> List.take 100 in
   update_state { state with recent_operation_receipts; applied_blocks }
 
 let persist_trusted_membership_change state ~trusted_validator_membership_change
