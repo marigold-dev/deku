@@ -2,4 +2,9 @@
  (name protocol)
  (libraries helpers tezos_interop core_deku bin_prot)
  (preprocess
-  (pps ppx_deriving_yojson ppx_deriving.eq ppx_deriving.ord ppx_let_binding ppx_jane)))
+  (pps
+   ppx_deriving_yojson
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_let_binding
+   ppx_jane)))

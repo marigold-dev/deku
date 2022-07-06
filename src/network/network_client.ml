@@ -12,8 +12,6 @@ end
 module type Pollinate_endpoint = sig
   type request [@@deriving bin_io]
 
-  type response [@@deriving yojson]
-
   val path : string
 end
 
@@ -62,9 +60,8 @@ let broadcast_to_list (type req res)
   |> Lwt_list.iter_p (fun uri ->
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
-let send_over_pollinate (type req res)
-    (module E : Pollinate_endpoint with type request = req and type response = res)
-    node data =
+let send_over_pollinate (type req)
+    (module E : Pollinate_endpoint with type request = req) node data =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
   let message : Pollinate.PNode.Message.t =
     {
@@ -77,5 +74,5 @@ let send_over_pollinate (type req res)
       payload = data_bin_io;
       payload_signature = None;
     } in
-  let _ = Pollinate.PNode.Client.post node message in
+  Pollinate.PNode.Client.post node message;
   Lwt.return_unit

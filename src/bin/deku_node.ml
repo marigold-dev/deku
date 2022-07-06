@@ -43,14 +43,18 @@ let handle_received_block_dream =
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block pollinate_msg =
   let open Pollinate.PNode.Message in
-  let request = Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request pollinate_msg.payload in
+  let request =
+    Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request
+      pollinate_msg.payload in
   Flows.received_block request.block;
   Ok ()
 
 (* FIXME factorization *)
 let handle_received_signature pollinate_msg =
   let open Pollinate.PNode.Message in
-  let request = Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request pollinate_msg.payload in
+  let request =
+    Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request
+      pollinate_msg.payload in
   Flows.received_signature ~hash:request.hash ~signature:request.signature;
   Ok ()
 

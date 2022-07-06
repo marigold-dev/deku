@@ -640,23 +640,21 @@ let info_produce_block =
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state =
-    Node_state.get_initial_state ~folder:node_folder ~pollinate_context:Node.State.Client in
+    Node_state.get_initial_state ~folder:node_folder
+      ~pollinate_context:Node.State.Client in
   let address = identity.t in
   let block =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
+  let%await pnode = state.Node.State.pollinate_node in
+  let msg_handler _a = (None, None) in
+  let _ = Pollinate.PNode.run_server ~msg_handler pnode in
+  let%await () =
+    let open Network in
+    send_over_pollinate (module Block_spec) pnode { block } in
+  Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+  Lwt.return (`Ok ())
 
 let produce_block =
   let open Term in
