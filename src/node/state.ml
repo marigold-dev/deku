@@ -1,5 +1,4 @@
 open Crypto
-open Protocol
 open Consensus
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
@@ -14,7 +13,7 @@ type t = {
   (* TODO: we need a bound on the size of this and put
      behind an abstract type. We should also change how
      this works once we have an indexer. See https://github.com/marigold-dev/deku/issues/535 *)
-  applied_blocks : (timestamp * Block.t) list;
+  applied_blocks : Saved_blocks.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
@@ -34,7 +33,7 @@ let make ~config ~trusted_validator_membership_change
     consensus;
     interop_context;
     data_folder;
-    applied_blocks = [];
+    applied_blocks = Saved_blocks.make data_folder;
     uri_state = Uri_map.empty;
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;

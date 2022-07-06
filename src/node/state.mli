@@ -1,5 +1,4 @@
 open Crypto
-open Protocol
 open Consensus
 
 module Address_map : Map.S with type key = Key_hash.t
@@ -13,7 +12,7 @@ type t = {
   consensus : Consensus.t;
   interop_context : Tezos_interop.t;
   data_folder : string;
-  applied_blocks : (timestamp * Block.t) list;
+  applied_blocks : Saved_blocks.t;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;

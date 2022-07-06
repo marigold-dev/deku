@@ -270,10 +270,7 @@ let handle_block_by_level =
     (fun request ->
       let state = Server.get_state () in
       let block_and_timestamp =
-        List.find_opt
-          (fun (_, block) ->
-            Int64.equal block.Protocol.Block.block_height request.level)
-          state.applied_blocks
+        Node.Saved_blocks.get_block state.applied_blocks request.level
         |> Option.map (fun (timestamp, block) ->
                Network.Block_by_level_spec.{ block; timestamp }) in
       Ok block_and_timestamp)
