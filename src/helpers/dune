@@ -13,6 +13,7 @@
   fmt.cli
   logs.cli
   fmt.tty
+  pollinate ; do not commit!!
   json-logs-reporter)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))

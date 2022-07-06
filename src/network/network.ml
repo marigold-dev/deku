@@ -15,12 +15,13 @@ let request_withdraw_proof = request (module Withdraw_proof)
 
 let broadcast_signature = send_over_pollinate (module Signature_spec)
 
-let broadcast_block = send_over_pollinate (module Block_spec)
+let broadcast_pollinate = broadcast_pollinate
 
-(*
-let broadcast_block_and_signature =
-  send_over_pollinate (module Block_and_signature_spec)
-*)
+let broadcast_block node block =
+  (* Log.debug "Sending block %s by DISSEMINATION from %s"
+    (block.Block_spec.block.Protocol.Block.hash |> BLAKE2B.to_string)
+    (Helpers.Pollinate_ext.to_string !node); *)
+  send_over_pollinate (module Block_spec) node block
 
 let broadcast_user_operation_gossip =
   broadcast_to_list (module User_operation_gossip)

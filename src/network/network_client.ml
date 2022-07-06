@@ -66,6 +66,9 @@ let send_over_pollinate (type req res)
     (module E : Pollinate_endpoint with type request = req and type response = res)
     node data =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
+  let recipients =
+    Pollinate.PNode.Client.peers_of (!node) |> Base.Hashtbl.keys
+  in
   let message : Pollinate.PNode.Message.t =
     {
       category = Pollinate.PNode.Message.Post;
@@ -73,9 +76,20 @@ let send_over_pollinate (type req res)
       id = -1;
       timestamp = Unix.gettimeofday ();
       sender = Pollinate.PNode.Client.address_of !node;
-      recipients = [];
+      recipients;
       payload = data_bin_io;
       payload_signature = None;
     } in
   let _ = Pollinate.PNode.Client.post node message in
   Lwt.return_unit
+
+let broadcast_pollinate (type req res)
+    (module E : Pollinate_endpoint with type request = req and type response = res)
+    node data =
+  Pollinate_ext.iter_peers node
+    (fun peer ->
+      Lwt.async
+        (fun () ->
+          Log.debug "sending to peer %s" (Pollinate_ext.peer_to_string peer);
+          let%await node = Pollinate.PNode.init (peer.Pollinate.Peer.address) in
+          send_over_pollinate (module E) node data))

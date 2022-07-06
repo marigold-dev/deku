@@ -651,11 +651,21 @@ let produce_block node_folder =
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
+    let _validator_uris = List.map snd validator_uris |> List.somes in
+    let open Network in
+    (*
+    broadcast_to_list (module Block_spec) validator_uris { block } in *)
+    let%await node = state.pollinate_node in
+    let%await _ = broadcast_block node { block } in
+    let fake_handler _ =
+      None, None
+    in
+    Lwt.async (
+      fun () ->
+        let%await () = Lwt_unix.sleep 3. in
+        exit 0);
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
+    let%await _ = Pollinate.PNode.run_server ~msg_handler:fake_handler node in
     Lwt.return (`Ok ())
 
 let produce_block =
