@@ -116,6 +116,14 @@ EOF
   echo "]"
 }
 
+# Get the stored root_hash in consensus smart contract
+deku_root_hash() {
+  local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
+  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  local state_root_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  echo "$state_root_hash"
+}
+
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
 # the [initial_storage] expression and originates the contract as myWallet on Tezos.
 deploy_contract () {
@@ -436,6 +444,12 @@ test_wasm_full() {
   sleep 5
   asserter_balance "$DATA_DIRECTORY/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
 }
+
+test_update_root_hash() {
+  state_root_hash=$(deku_root_hash)
+  asserter_root_hash "$DATA_DIRECTORY/0" "$state_root_hash"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -491,6 +505,12 @@ test-wasm)
   deploy_dummy_ticket
   sleep 5
   test_wasm_full
+  killall deku-node
+ ;;
+ test-state-root-hash)
+  start_deku_cluster > /dev/null
+  sleep 5
+  test_update_root_hash
   killall deku-node
  ;;
 deposit-withdraw-test)
