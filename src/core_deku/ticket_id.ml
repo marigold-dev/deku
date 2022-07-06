@@ -1,3 +1,5 @@
+open Bin_prot.Std
+
 type ticketer =
   | Deku  of Address.t
   | Tezos of Tezos.Address.t

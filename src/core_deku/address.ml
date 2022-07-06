@@ -4,7 +4,7 @@ open Helpers
 type t =
   | Implicit   of Key_hash.t
   | Originated of Contract_address.t
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 let is_originated = function
   | Originated _ -> true
