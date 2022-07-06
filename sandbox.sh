@@ -507,7 +507,7 @@ test-wasm)
   test_wasm_full
   killall deku-node
  ;;
- test-state-root-hash)
+ test-update-root-hash)
   start_deku_cluster > /dev/null
   sleep 5
   test_update_root_hash
