@@ -7,7 +7,7 @@ open Crypto
 
 let assert_root_hash data_folder root_hash =
   let file = data_folder ^ "/state.bin" in
-  let protocol_state = Lwt_main.run @@ Files.State_bin.read ~file in
+  let protocol_state = Files.State_bin.read ~file |> Lwt_main.run in
   let state_root_hash = protocol_state.state_root_hash |> BLAKE2B.to_string in
   assert (state_root_hash = root_hash);
   Format.printf "The root hash is updated properly 👍 \n"
