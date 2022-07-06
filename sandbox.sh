@@ -118,9 +118,12 @@ EOF
 
 # Get the stored root_hash in consensus smart contract
 deku_root_hash() {
-  local contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
-  local storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
-  local state_root_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
+  local contract
+  contract=$(jq <"$DATA_DIRECTORY/0/tezos.json" '.consensus_contract' | xargs)
+  local storage
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$contract/storage")
+  local state_root_hash
+  state_root_hash=$(echo "$storage" | jq '.args[0].args[0].args[2].bytes' | xargs)
   echo "$state_root_hash"
 }
 
