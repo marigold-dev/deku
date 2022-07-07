@@ -31,3 +31,9 @@
  (libraries bin_common lwt cmdliner yojson)
  (preprocess
   (pps ppx_deriving_yojson)))
+
+(executable
+ (name asserter_root_hash)
+ (public_name asserter_root_hash)
+ (modules asserter_root_hash)
+ (libraries bin_common cmdliner))
