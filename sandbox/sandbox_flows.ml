@@ -106,12 +106,3 @@ let deposit_ticket ?(wait = None) rpc_address deku_address =
       "--burn-cap";
       "2";
     ]
-
-let check_liveness rpc_address =
-  let%ok consensus_address = get_contract_address rpc_address "consensus" in
-  (* TODO: rewrite this to be part of this module *)
-  let consensus_address = Address.to_string consensus_address in
-  let%ok _result =
-    process "check-liveness" [Uri.to_string rpc_address; consensus_address]
-    |> run_res in
-  Ok ()

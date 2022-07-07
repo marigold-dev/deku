@@ -1,14 +1,6 @@
-(library
- (name sandbox_helpers)
- (modules sandbox_helpers)
- (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
- (libraries feather helpers files lwt cmdliner lwt.unix))
-
 (executable
  (name deku_sandbox)
  (public_name deku-sandbox)
- (modules deku_sandbox)
- (libraries feather sandbox_helpers helpers files cmdliner lwt lwt.unix)
+ (libraries feather helpers files cmdliner lwt lwt.unix)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
