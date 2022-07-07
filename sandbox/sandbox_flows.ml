@@ -86,7 +86,7 @@ let deposit_ticket ?(wait = None) rpc_address deku_address =
   let%ok consensus_address = get_contract_address rpc_address "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let input =
-    Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100000 0x)"
+    Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 1000000 0x)"
       consensus_address
       (deku_address |> Key_hash.to_string) in
   tezos_client ~wait
