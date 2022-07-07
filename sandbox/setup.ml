@@ -1,6 +1,5 @@
 open Cmdliner
 open Helpers
-open Sandbox_helpers
 open Feather
 open Crypto
 open Tezos
@@ -133,7 +132,6 @@ let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
   let%ok _ =
     import_secret rpc_address "myWallet"
       (Format.sprintf "unencrypted:%s" tezos_secret) in
-
   (* setup write indentity.json to file system *)
   let%ok identities =
     validators
@@ -142,7 +140,6 @@ let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
            let data_folder = Format.sprintf "%s/%d" data_folder i in
            let%ok key, uri, address = setup_identity ~data_folder uri in
            Ok (i, key, uri, address)) in
-
   (* deploy smart contracts *)
   let consensus_storage = make_consensus_storage identities in
   let discovery_storage = make_discovery_storage identities in
@@ -152,7 +149,6 @@ let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
   let%ok discovery_address =
     deploy_contract ~wait:(Some 1) rpc_address "discovery" discovery
       discovery_storage "myWallet" in
-
   (* setup tezos informations *)
   make_trusted_validator_membership_change_json identities;
   identities

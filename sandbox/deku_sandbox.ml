@@ -22,6 +22,5 @@ let _ =
   |> Cli.add (module Deposit_withdraw_test)
   |> Cli.add (module Deploy_dummy_ticket)
   |> Cli.add (module Deposit_dummy_ticket)
-  |> Cli.add (module Load_test)
   |> Cli.add (module Check_liveness)
   |> Cli.eval

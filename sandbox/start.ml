@@ -78,14 +78,12 @@ let start_deku_cluster validators =
       curl ["-d"; "null"; "http://localhost:4442/block-level"] |> run_res in
     Ok () in
   let%ok () = retry is_cluster_bootstrapped in
-
   (* Step 2: Manually produce the block
      Produce a block using `deku-node produce-block`
      See deku-node produce-block --help *)
   print_endline "Producing a block.";
   let%ok hash = produce_block () in
   Unix.sleep 3;
-
   (* Step 3: Manually sign the block
      Sign the previously produced block using `deku-node sign-block`
      See ./src/bin/deku_node.ml:sign_block *)
