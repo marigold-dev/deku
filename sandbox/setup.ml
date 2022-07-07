@@ -4,27 +4,26 @@ open Feather
 open Crypto
 open Tezos
 open Protocol
+open Sandbox_helpers
 
 let tezos_client_update_config rpc_address =
-  print_endline "update config";
+  print_endline "update config" ;
   tezos_client ["--endpoint"; Uri.to_string rpc_address; "config"; "update"]
 
 let import_secret rpc_address alias secret =
-  print_endline "import secret";
+  print_endline "import secret" ;
   tezos_client
-    [
-      "--endpoint";
-      Uri.to_string rpc_address;
-      "import";
-      "secret";
-      "key";
-      alias;
-      secret;
-      "--force";
-    ]
+    [ "--endpoint"
+    ; Uri.to_string rpc_address
+    ; "import"
+    ; "secret"
+    ; "key"
+    ; alias
+    ; secret
+    ; "--force" ]
 
 let is_node_bootstrapped rpc_address =
-  print_endline "bootstrapped";
+  print_endline "bootstrapped" ;
   tezos_client ["--endpoint"; Uri.to_string rpc_address; "bootstrapped"]
   |> Result.map (String.split_on_char '\n')
   |> Result.map List.rev
@@ -36,33 +35,34 @@ let is_node_bootstrapped rpc_address =
   |> Result.fold ~ok:(fun _ -> true) ~error:(fun _ -> false)
 
 let setup_identity ~data_folder uri =
-  process "mkdir" ["-p"; data_folder] |> run;
-  deku_node ["setup-identity"; data_folder; "--uri"; uri] |> run;
+  process "mkdir" ["-p"; data_folder] |> run ;
+  deku_node ["setup-identity"; data_folder; "--uri"; uri] |> run ;
   let%ok key =
     deku_node ["self"; data_folder]
     |. grep "key:"
     |. process "awk" ["{ print $2 }"]
-    |> collect stdout
-    |> Wallet.of_string
-    |> Option.to_result ~none:"error in key parsing" in
+    |> collect stdout |> Wallet.of_string
+    |> Option.to_result ~none:"error in key parsing"
+  in
   let%ok address =
     deku_node ["self"; data_folder]
     |. grep "address"
     |. process "awk" ["{ print $2 }"]
-    |> collect stdout
-    |> Key_hash.of_string
-    |> Option.to_result ~none:"error in address parsing" in
+    |> collect stdout |> Key_hash.of_string
+    |> Option.to_result ~none:"error in address parsing"
+  in
   let uri =
     deku_node ["self"; data_folder]
     |. grep "uri:"
     |. process "awk" ["{ print $2 }"]
-    |> collect stdout in
+    |> collect stdout
+  in
   Ok (key, uri, address)
 
 let make_consensus_storage identities =
   identities
   |> List.map (fun (_, _, _, address) ->
-         Format.sprintf "(\"%s\" : key_hash)" (Key_hash.to_string address))
+         Format.sprintf "(\"%s\" : key_hash)" (Key_hash.to_string address) )
   |> String.concat ";"
   |> Format.sprintf
        "{root_hash = { current_block_hash = 0x;current_block_height = \
@@ -78,21 +78,22 @@ let make_discovery_storage identities =
   |> List.map (fun (_, _, uri, address) ->
          Format.sprintf "((\"%s\" : key_hash), (0, \"%s\"))"
            (Key_hash.to_string address)
-           uri)
+           uri )
   |> String.concat ";"
   |> Format.sprintf "Big_map.literal [%s]"
 
 let make_trusted_validator_membership_change_json identities =
   let open Consensus.Trusted_validators_membership_change in
   let json =
-    List.map (fun (_, _, _, address) -> { action = Add; address }) identities
-    |> [%to_yojson: t list] in
+    List.map (fun (_, _, _, address) -> {action= Add; address}) identities
+    |> [%to_yojson: t list]
+  in
   List.iter
     (fun (i, _, _, _) ->
       let path_to_file =
         Format.sprintf "data/%d/trusted-validator-membership-change.json" i
       in
-      Yojson.Safe.to_file path_to_file json)
+      Yojson.Safe.to_file path_to_file json )
     identities
 
 let setup_tezos rpc_node tezos_secret consensus_address discovery_address
@@ -100,20 +101,18 @@ let setup_tezos rpc_node tezos_secret consensus_address discovery_address
   let i, _, _, _ = identity in
   let folder = Format.sprintf "data/%i" i in
   deku_node
-    [
-      "setup-tezos";
-      folder;
-      "--tezos_consensus_contract";
-      Address.to_string consensus_address;
-      "--tezos_discovery_contract";
-      Address.to_string discovery_address;
-      "--tezos_rpc_node";
-      Uri.to_string rpc_node;
-      "--tezos_secret";
-      tezos_secret;
-      "--unsafe_tezos_required_confirmations";
-      "3";
-    ]
+    [ "setup-tezos"
+    ; folder
+    ; "--tezos_consensus_contract"
+    ; Address.to_string consensus_address
+    ; "--tezos_discovery_contract"
+    ; Address.to_string discovery_address
+    ; "--tezos_rpc_node"
+    ; Uri.to_string rpc_node
+    ; "--tezos_secret"
+    ; tezos_secret
+    ; "--unsafe_tezos_required_confirmations"
+    ; "3" ]
   |> run_res ~error:"error in deku-cli setup-tezos"
 
 let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
@@ -122,16 +121,17 @@ let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
   let discovery = "./src/tezos_interop/discovery.mligo" in
   validators
   |> List.map (fun i -> Format.sprintf "data/%i" i)
-  |> List.iter rm_dir;
+  |> List.iter rm_dir ;
   (* setup tezos-client *)
   let%assert () =
     ("the tezos node is not bootstrapped", is_node_bootstrapped rpc_address)
   in
-  print_endline "foobar";
+  print_endline "foobar" ;
   let%ok _ = tezos_client_update_config rpc_address in
   let%ok _ =
     import_secret rpc_address "myWallet"
-      (Format.sprintf "unencrypted:%s" tezos_secret) in
+      (Format.sprintf "unencrypted:%s" tezos_secret)
+  in
   (* setup write indentity.json to file system *)
   let%ok identities =
     validators
@@ -139,18 +139,21 @@ let setup validators (rpc_address : Uri.t) tezos_secret data_folder =
            let uri = Format.sprintf "http://localhost:444%d" i in
            let data_folder = Format.sprintf "%s/%d" data_folder i in
            let%ok key, uri, address = setup_identity ~data_folder uri in
-           Ok (i, key, uri, address)) in
+           Ok (i, key, uri, address) )
+  in
   (* deploy smart contracts *)
   let consensus_storage = make_consensus_storage identities in
   let discovery_storage = make_discovery_storage identities in
   let%ok consensus_address =
     deploy_contract ~wait:(Some 1) rpc_address "consensus" consensus
-      consensus_storage "myWallet" in
+      consensus_storage "myWallet"
+  in
   let%ok discovery_address =
     deploy_contract ~wait:(Some 1) rpc_address "discovery" discovery
-      discovery_storage "myWallet" in
+      discovery_storage "myWallet"
+  in
   (* setup tezos informations *)
-  make_trusted_validator_membership_change_json identities;
+  make_trusted_validator_membership_change_json identities ;
   identities
   |> List.map_ok
        (setup_tezos rpc_address tezos_secret consensus_address discovery_address)
@@ -171,5 +174,6 @@ let info =
   let doc =
     "Does the following: it starts a Tezos sandbox network with Flextesa, then \
      it generates a new validator indentities and it deploys a new contract to \
-     the Tezos sandbox configured to use these validators." in
+     the Tezos sandbox configured to use these validators."
+  in
   Cmd.info "setup" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
