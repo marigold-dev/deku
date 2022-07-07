@@ -78,7 +78,7 @@ let deploy_contract ?(wait = None) rpc_address contract_name contract_path
         "2";
         "--force";
       ] in
-  print_endline "delpoyed contract";
+  print_endline "deployed contract";
   get_contract_address rpc_address contract_name
 
 let deku_address =
