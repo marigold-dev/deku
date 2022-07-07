@@ -10,7 +10,7 @@ let load_test rpc_address =
     get_contract_address rpc_address "dummy_ticket" in
   let dummy_ticket_address = Address.to_string dummy_ticket_address in
   let%ok _result =
-    process "load-test" ["saturate"; dummy_ticket_address] |> run_res in
+    process "deku-load-test" ["saturate"; dummy_ticket_address] |> run_res in
   Ok ()
 
 let term =
