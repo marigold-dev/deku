@@ -4,6 +4,8 @@ open Consensus
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
 
+type timestamp = float
+
 type t = {
   config : Config.t;
   consensus : Consensus.t;
@@ -12,7 +14,7 @@ type t = {
   (* TODO: we need a bound on the size of this and put
      behind an abstract type. We should also change how
      this works once we have an indexer. See https://github.com/marigold-dev/deku/issues/535 *)
-  applied_blocks : Block.t list;
+  applied_blocks : (timestamp * Block.t) list;
   uri_state : string Uri_map.t;
   validators_uri : Uri.t Address_map.t;
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
