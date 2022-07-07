@@ -9,8 +9,7 @@ let default_info =
     "creates, deploys, and starts Deku clusters in a sandbox mode suitable for \
      local development and testnets. BE ADVISED: some of the configuration \
      options used by deku-sandbox are unsafe for production environments. \
-     Refer to the production deployment guide."
-  in
+     Refer to the production deployment guide." in
   let sdocs = Manpage.s_common_options in
   let exits = Cmd.Exit.defaults in
   Cmd.info "deku-sandbox" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
