@@ -31,11 +31,3 @@
  (libraries files lwt cmdliner yojson)
  (preprocess
   (pps ppx_deriving_yojson)))
-
-(executable
- (name load_test)
- (public_name deku-load-test)
- (modules load_test)
- (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
- (libraries files lwt cmdliner))

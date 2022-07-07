@@ -1,0 +1,14 @@
+(library
+ (name load_test_helpers)
+ (modules load_test_helpers)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries files lwt cmdliner))
+
+(executable
+ (name load_test_tps)
+ (public_name deku-load-test-tps)
+ (modules load_test_tps)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries lwt cmdliner load_test_helpers))
