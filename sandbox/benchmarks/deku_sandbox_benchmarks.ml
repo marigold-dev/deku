@@ -1,5 +1,5 @@
 open Cmdliner
-open Sandbox_helpers.Cmdliner_helpers
+open Sandbox_benchmarks_helpers.Cmdliner_helpers
 
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox-benchmarks"

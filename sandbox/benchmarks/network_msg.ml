@@ -1,6 +1,6 @@
 open Helpers
 open Cmdliner
-open Sandbox_helpers
+open Sandbox_benchmarks_helpers
 open Cmdliner_helpers
 open Tezos
 open Feather
