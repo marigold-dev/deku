@@ -155,3 +155,8 @@ open Protocol_signature.Make (struct
 end)
 
 let sign ~key t = (sign ~key t).signature
+
+let pp fmt t =
+  let hash_str = BLAKE2B.to_string t.hash in
+  let short_hash = String.sub hash_str 0 8 in
+  Format.fprintf fmt "Block %s %Ld" short_hash t.block_height
