@@ -275,7 +275,7 @@ let node =
   let open Term in
   const node
   $ json_logs
-  $ Fmt_cli.style_renderer ()
+  $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
   $ Logs_cli.level ()
   $ folder_node
   $ port
