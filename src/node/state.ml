@@ -42,9 +42,10 @@ let make ~identity ~trusted_validator_membership_change
     Consensus.make ~identity ~trusted_validator_membership_change in
   let pollinate_node =
     match pollinate_context with
-    | Client -> (* Client mode only *)
-      (Pollinate.PNode.init ~init_peers:[]
-         (Pollinate.Address.create "127.0.0.1" 4000))
+    | Client ->
+      (* Client mode only *)
+      Pollinate.PNode.init ~init_peers:[]
+        (Pollinate.Address.create "127.0.0.1" 4000)
     | Server ->
       Log.debug "No Pollinate Node provided, constructing it";
       let uri_to_pollinate : Uri.t -> Pollinate.Address.t =

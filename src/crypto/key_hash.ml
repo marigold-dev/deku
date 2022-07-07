@@ -65,27 +65,31 @@ let encoding =
 let to_yojson, of_yojson =
   Yojson_ext.with_yojson_string "key_hash" to_string of_string
 
-let bin_read_t buf ~pos_ref = match of_string @@ Bin_prot.Read.bin_read_string buf ~pos_ref with
+let bin_read_t buf ~pos_ref =
+  match of_string @@ Bin_prot.Read.bin_read_string buf ~pos_ref with
   | None -> failwith "Invalid key_hash"
   | Some t -> t
 
 let bin_reader_t =
   let variant_wrong_type name _buf ~pos_ref _x =
-    Bin_prot.Common.raise_variant_wrong_type name !pos_ref
-  in
-  Bin_prot.Type_class.{ read = bin_read_t; vtag_read = variant_wrong_type "Key_hash" }
+    Bin_prot.Common.raise_variant_wrong_type name !pos_ref in
+  Bin_prot.Type_class.
+    { read = bin_read_t; vtag_read = variant_wrong_type "Key_hash" }
 
 let __bin_read_t__ _ = failwith "Not used by Pollinate"
 
-let bin_write_t buf ~pos t = Bin_prot.Write.bin_write_string buf ~pos (to_string t)
+let bin_write_t buf ~pos t =
+  Bin_prot.Write.bin_write_string buf ~pos (to_string t)
 
 let bin_size_t t = Bin_prot.Std.bin_size_string @@ to_string t
 
-let bin_writer_t
-  = Bin_prot.Type_class.{ size = bin_size_t; write = bin_write_t }
+let bin_writer_t =
+  Bin_prot.Type_class.{ size = bin_size_t; write = bin_write_t }
 
 let __bin_write_t__ _ = failwith "Not used by Pollinate"
 
 let bin_shape_t = Bin_prot.Shape.(basetype (Uuid.of_string "Key_hash")) []
 
-let bin_t = Bin_prot.Type_class.{ shape = bin_shape_t; writer = bin_writer_t; reader = bin_reader_t }
+let bin_t =
+  Bin_prot.Type_class.
+    { shape = bin_shape_t; writer = bin_writer_t; reader = bin_reader_t }

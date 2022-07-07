@@ -63,19 +63,20 @@ let broadcast_to_list (type req res)
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
 let send_over_pollinate (type req res)
-    (module E : Pollinate_endpoint with type request = req and type response = res)
-    node data =
+    (module E : Pollinate_endpoint
+      with type request = req
+       and type response = res) node data recipients =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
   let message : Pollinate.PNode.Message.t =
     {
       category = Pollinate.PNode.Message.Post;
-      sub_category_opt = Some ("ChainOperation", E.path);
+      sub_category = Some ("ChainOperation", E.path);
+      request_ack = false;
       id = -1;
       timestamp = Unix.gettimeofday ();
       sender = Pollinate.PNode.Client.address_of !node;
       recipients = [];
-      payload = data_bin_io;
-      payload_signature = None;
+      payload = Pollinate.PNode.Message.{ data = data_bin_io; signature = None };
     } in
-  let _ = Pollinate.PNode.Client.post node message in
+  let%await () = Pollinate.PNode.Client.broadcast node message recipients in
   Lwt.return_unit

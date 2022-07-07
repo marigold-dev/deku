@@ -43,14 +43,18 @@ let handle_received_block_dream =
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block pollinate_msg =
   let open Pollinate.PNode.Message in
-  let request = Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request pollinate_msg.payload in
+  let request =
+    Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request
+      pollinate_msg.payload.data in
   Flows.received_block request.block;
   Ok ()
 
 (* FIXME factorization *)
 let handle_received_signature pollinate_msg =
   let open Pollinate.PNode.Message in
-  let request = Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request pollinate_msg.payload in
+  let request =
+    Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request
+      pollinate_msg.payload.data in
   Flows.received_signature ~hash:request.hash ~signature:request.signature;
   Ok ()
 
@@ -202,9 +206,10 @@ let node folder port prometheus_port =
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
 
-  let msg_handler : Pollinate.PNode.Message.t -> bytes option * bytes option =
+  let msg_handler :
+      Pollinate.PNode.Message.t -> Pollinate.PNode.Message.payload option =
    fun msg ->
-    let subcategory_opt = msg.sub_category_opt in
+    let subcategory_opt = msg.sub_category in
     let _ =
       match subcategory_opt with
       | None -> failwith "Deku messages must have a subcategory"
@@ -216,7 +221,7 @@ let node folder port prometheus_port =
         Log.debug "MSG_HANDLER: Received signature";
         handle_received_signature msg
       | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
-    (None, None) in
+    None in
 
   let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();
