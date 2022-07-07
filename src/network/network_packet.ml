@@ -104,6 +104,16 @@ module User_operations_gossip = struct
   let path = "/user-operations-gossip"
 end
 
+module User_operations_noop = struct
+  type request = User_operations_gossip.request =
+    {user_operations: Protocol.Operation.Core_user.t list}
+  [@@deriving yojson]
+
+  type response = unit [@@deriving yojson]
+
+  let path = "/user-operations-noop"
+end
+
 module Consensus_operation_gossip = struct
   type request =
     { consensus_operation: Protocol.Operation.Consensus.t
