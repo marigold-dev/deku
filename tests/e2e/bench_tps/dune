@@ -14,6 +14,14 @@
  (libraries lwt cmdliner load_test_helpers))
 
 (executable
+ (name load_test_tps_offline)
+ (public_name deku-load-test-tps-offline)
+ (modules load_test_tps_offline)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding))
+ (libraries cmdliner load_test_helpers))
+
+(executable
  (name network_msg)
  (public_name deku-network-msg)
  (modules network_msg)
