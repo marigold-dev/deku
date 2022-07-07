@@ -436,6 +436,12 @@ test_wasm_full() {
   sleep 5
   asserter_balance "$DATA_DIRECTORY/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
 }
+
+load_test () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -457,6 +463,8 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "load-test (saturate | maximal-blocks)"
+  echo "  Performs the specified load test on a running cluster"
 }
 
 message "Running in $mode mode"
@@ -506,6 +514,9 @@ check-liveness)
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   echo "$CONSENSUS_ADDRESS" > /tmp/hello
   check-liveness "$RPC_NODE" "$CONSENSUS_ADDRESS"
+  ;;
+load-test)
+  load_test "$2"
   ;;
 *)
   help
