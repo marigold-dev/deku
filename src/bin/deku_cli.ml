@@ -639,7 +639,10 @@ let info_produce_block =
 
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
-  let%await state = Node_state.get_initial_state ~folder:node_folder in
+  (* TODO: this should be refactored out of the CLI per https://github.com/marigold-dev/deku/issues/659 *)
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:1.
+  in
   let address = identity.t in
   let block =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None

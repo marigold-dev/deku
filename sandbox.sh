@@ -345,7 +345,7 @@ deposit_ticket() {
 deposit_withdraw_test() {
   # Deposit 100 tickets
   deposit_ticket | grep tezos-client | tr -d '\r'
-  sleep 10
+  sleep 20
 
   echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
 
@@ -361,7 +361,7 @@ deposit_withdraw_test() {
 
   # # We can withdraw 10 tickets from deku
   OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
-  sleep 10
+  sleep 20
 
   WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
