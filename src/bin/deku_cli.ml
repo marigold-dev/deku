@@ -1,7 +1,5 @@
 open Helpers
 open Crypto
-open Node
-open State
 open Protocol
 open Cmdliner
 open Core_deku
@@ -11,12 +9,6 @@ let () = Printexc.record_backtrace true
 
 let read_identity ~node_folder =
   Files.Identity.read ~file:(node_folder ^ "/identity.json")
-
-let write_identity ~node_folder =
-  Files.Identity.write ~file:(node_folder ^ "/identity.json")
-
-let write_interop_context ~node_folder =
-  Files.Interop_context.write ~file:(node_folder ^ "/tezos.json")
 
 let man = [`S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>."]
 
@@ -68,15 +60,6 @@ let contract_code_path =
     |> Result.map_error (fun _ -> `Msg "Expected path to contract JSON") in
   let printer = Arg.(conv_printer non_dir_file) in
   Arg.(conv (parser, printer))
-
-let edsk_secret_key =
-  let parser key =
-    match Crypto.Secret.of_string key with
-    | Some key -> Ok key
-    | _ -> Error (`Msg "Expected EDSK secret key") in
-  let printer ppf key = Format.fprintf ppf "%s" (Crypto.Secret.to_string key) in
-  let open Arg in
-  conv (parser, printer)
 
 let uri =
   let parser uri = Ok (uri |> Uri.of_string) in
@@ -146,18 +129,6 @@ let amount =
   let printer fmt amount = Format.fprintf fmt "%d" (Amount.to_int amount) in
   let open Arg in
   conv ~docv:"A positive amount" (parser, printer)
-
-let tezos_required_confirmations =
-  let msg = "Expected an integer greater than 0" in
-  let parser string =
-    match int_of_string_opt string with
-    | Some int when int > 0 -> Ok int
-    | Some _
-    | None ->
-      Error (`Msg msg) in
-  let printer fmt int = Format.fprintf fmt "%d" int in
-  let open Arg in
-  conv ~docv:"An integer greater than 0" (parser, printer)
 
 let ticket =
   let parser string =
@@ -580,168 +551,6 @@ let get_ticket_balance =
     required & pos 2 (some ticket) None & info [] ~docv ~doc in
   lwt_ret (const get_ticket_balance $ folder_node $ address $ ticket)
 
-let info_sign_block =
-  let doc =
-    "Sign a block hash and broadcast to the network manually, useful when the \
-     chain is stale." in
-  Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let sign_block node_folder block_hash =
-  let%await identity = read_identity ~node_folder in
-  let signature = Signature.sign ~key:identity.secret block_hash in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list
-        (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
-    Lwt.return (`Ok ())
-
-let sign_block_term =
-  let block_hash =
-    let doc = "The block hash to be signed." in
-    let open Arg in
-    required & pos 1 (some hash) None & info [] ~doc in
-  let open Term in
-  lwt_ret (const sign_block $ folder_node 0 $ block_hash)
-
-let info_produce_block =
-  let doc =
-    "Produce and sign a block and broadcast to the network manually, useful \
-     when the chain is stale." in
-  Cmd.info "produce-block" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let produce_block node_folder =
-  let%await identity = read_identity ~node_folder in
-  (* TODO: this should be refactored out of the CLI per https://github.com/marigold-dev/deku/issues/659 *)
-  let%await state =
-    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:1.
-  in
-  let address = identity.t in
-  let block =
-    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
-      ~author:address ~consensus_operations:[] ~tezos_operations:[]
-      ~user_operations:[] in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
-
-let produce_block =
-  let open Term in
-  lwt_ret (const produce_block $ folder_node 0)
-
-let ensure_folder folder =
-  let%await exists = Lwt_unix.file_exists folder in
-  if exists then
-    let%await stat = Lwt_unix.stat folder in
-    if stat.st_kind = Lwt_unix.S_DIR then
-      await ()
-    else
-      raise (Invalid_argument (folder ^ " is not a folder"))
-  else
-    Lwt_unix.mkdir folder 0o700
-
-let setup_identity node_folder uri =
-  let%await () = ensure_folder node_folder in
-  let identity =
-    let open Crypto in
-    let secret, key = Ed25519.generate () in
-    let secret, key = (Secret.Ed25519 secret, Key.Ed25519 key) in
-    Consensus.make_identity ~secret ~key ~uri in
-  let%await () = write_identity ~node_folder identity in
-  await (`Ok ())
-
-let info_setup_identity =
-  let doc = "Create a validator identity" in
-  Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
-
-let setup_identity =
-  let self_uri =
-    let docv = "self_uri" in
-    let doc = "The uri that other nodes should use to connect to this node." in
-    let open Arg in
-    required & opt (some uri) None & info ["uri"] ~doc ~docv in
-  let open Term in
-  lwt_ret (const setup_identity $ folder_node 0 $ self_uri)
-
-let info_setup_tezos =
-  let doc = "Setup Tezos identity" in
-  Cmd.info "setup-tezos" ~version:"%%VERSION%%" ~doc ~exits ~man
-
-let setup_tezos node_folder rpc_node secret consensus_contract
-    discovery_contract required_confirmations =
-  let%await () = ensure_folder node_folder in
-  let%await () =
-    write_interop_context ~node_folder
-      {
-        rpc_node;
-        secret;
-        consensus_contract;
-        discovery_contract;
-        required_confirmations;
-      } in
-  await (`Ok ())
-
-let setup_tezos =
-  let tezos_node_uri =
-    let docv = "tezos_node_uri" in
-    let doc = "The uri of the tezos node." in
-    let open Arg in
-    required & opt (some uri) None & info ["tezos_rpc_node"] ~doc ~docv in
-  let tezos_secret =
-    let docv = "tezos_secret" in
-    let doc = "The Tezos secret key." in
-    let open Arg in
-    required
-    & opt (some edsk_secret_key) None
-    & info ["tezos_secret"] ~doc ~docv in
-  let tezos_consensus_contract_address =
-    let docv = "tezos_consensus_contract_address" in
-    let doc = "The address of the Tezos consensus contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_consensus_contract"] ~doc ~docv in
-  let tezos_discovery_contract_address =
-    let docv = "tezos_discovery_contract_address" in
-    let doc = "The address of the Tezos discovery contract." in
-    let open Arg in
-    required
-    & opt (some address_tezos_interop) None
-    & info ["tezos_discovery_contract"] ~doc ~docv in
-  let tezos_required_confirmations =
-    let docv = "int" in
-    let doc =
-      "Set the required confirmations. WARNING: Setting below default of 10 \
-       can compromise security of the Deku chain." in
-    let open Arg in
-    value
-    & opt tezos_required_confirmations 3
-    & info ["unsafe_tezos_required_confirmations"] ~doc ~docv in
-  let open Term in
-  lwt_ret
-    (const setup_tezos
-    $ folder_node 0
-    $ tezos_node_uri
-    $ tezos_secret
-    $ tezos_consensus_contract_address
-    $ tezos_discovery_contract_address
-    $ tezos_required_confirmations)
-
 let show_help =
   let doc = "a tool for interacting with the WIP Tezos Sidechain" in
   let sdocs = Manpage.s_common_options in
@@ -766,70 +575,6 @@ let self =
   let open Term in
   lwt_ret (const self $ folder_node 0)
 
-let info_add_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "add-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let add_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Add } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let validator_address =
-  let docv = "validator_address" in
-  let doc = "The validator address to be added/removed as trusted" in
-  let open Arg in
-  required & pos 1 (some address_implicit) None & info [] ~docv ~doc
-
-let add_trusted_validator =
-  let open Term in
-  lwt_ret (const add_trusted_validator $ folder_node 0 $ validator_address)
-
-let info_remove_trusted_validator =
-  let doc =
-    "Helps node operators maintain a list of trusted validators they verified \
-     off-chain which can later be used to make sure only trusted validators \
-     are added as new validators in the network." in
-  Cmd.info "remove-trusted-validator" ~version:"%\226\128\140%VERSION%%" ~doc
-    ~exits ~man
-
-let remove_trusted_validator node_folder address =
-  let open Network in
-  let%await identity = read_identity ~node_folder in
-  let payload =
-    let open Trusted_validators_membership_change in
-    { address; action = Remove } in
-  let payload_json_str =
-    payload
-    |> Trusted_validators_membership_change.payload_to_yojson
-    |> Yojson.Safe.to_string in
-  let payload_hash = BLAKE2B.hash payload_json_str in
-  let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
-  await (`Ok ())
-
-let remove_trusted_validator =
-  let open Term in
-  lwt_ret (const remove_trusted_validator $ folder_node 0 $ validator_address)
-
 let default_info =
   let doc = "Deku cli" in
   let sdocs = Manpage.s_common_options in
@@ -848,12 +593,6 @@ let _ =
          Cmd.v info_originate_contract originate_contract;
          Cmd.v info_withdraw withdraw;
          Cmd.v info_withdraw_proof withdraw_proof;
-         Cmd.v info_sign_block sign_block_term;
-         Cmd.v info_produce_block produce_block;
-         Cmd.v info_setup_identity setup_identity;
-         Cmd.v info_setup_tezos setup_tezos;
-         Cmd.v info_add_trusted_validator add_trusted_validator;
-         Cmd.v info_remove_trusted_validator remove_trusted_validator;
          Cmd.v info_get_ticket_balance get_ticket_balance;
          Cmd.v info_self self;
        ]
