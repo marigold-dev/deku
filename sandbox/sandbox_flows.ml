@@ -58,13 +58,11 @@ let withdraw_proof operation_hash _ticketer_address =
         "http://localhost:4440/withdraw-proof";
       ]
     |> run_res ~error:"error in withdraw-proof" in
-
   let%ok withdraw_proof_response =
     withdraw_proof_response
     |> Yojson.Safe.from_string
     |> Withdraw_proof.response_of_yojson
     |> Result.map_error (fun _ -> "Error in deserialization") in
-
   match withdraw_proof_response with
   | Unknown_operation -> Error "unknown operation"
   | Operation_is_not_a_withdraw -> Error "operation is not a withdraw"
@@ -88,7 +86,8 @@ let deposit_ticket ?(wait = None) rpc_address deku_address =
   let%ok consensus_address = get_contract_address rpc_address "consensus" in
   let consensus_address = Address.to_string consensus_address in
   let input =
-    Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100 0x)" consensus_address
+    Format.sprintf "Pair (Pair \"%s\" \"%s\") (Pair 100000 0x)"
+      consensus_address
       (deku_address |> Key_hash.to_string) in
   tezos_client ~wait
     [
