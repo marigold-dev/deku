@@ -1,13 +1,14 @@
 open Helpers
 open Cmdliner
-open Sandbox_benchmarks_helpers
+open Sandbox_helpers
 open Cmdliner_helpers
 open Tezos
 open Feather
 
 let load_test_tps rpc_address =
   let%ok dummy_ticket_address =
-    get_contract_address rpc_address "dummy_ticket" in
+    get_contract_address rpc_address "dummy_ticket"
+  in
   let dummy_ticket_address = Address.to_string dummy_ticket_address in
   let%ok _result =
     process "deku-load-test-tps" ["saturate"; dummy_ticket_address] |> run_res
