@@ -199,7 +199,7 @@ EOF
 
   # Step 4: deploying the consensus and validators discovery contracts
   consensus="./src/tezos_interop/consensus.mligo"
-  discovery="./src/tezos_interop/discovery.mligo"
+  discovery="./src/tezos_interop/discovery-contract/main.mligo"
   deploy_contract "consensus" "$consensus" "$consensus_storage"
   deploy_contract "discovery" "$discovery" "$(discovery_storage)"
 
