@@ -90,46 +90,6 @@ let tear_down nodes =
   |> List.iter rm_dir;
   Ok ()
 
-let setup mode validators rpc_url =
-  let consensus = "./src/tezos_interop/consensus.mligo" in
-  let discovery = "./src/tezos_interop/discovery.mligo" in
-  let secret = "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq" in
-  validators
-  |> List.map (fun i -> Format.sprintf "data/%i" i)
-  |> List.iter rm_dir;
-  (* setup tezos-client *)
-  let%assert () =
-    ("the tezos node is not bootstrapped", is_node_bootstrapped rpc_url) in
-  let%ok _ = tezos_client_update_config rpc_url in
-  let%ok _ =
-    import_secret rpc_url "myWallet" (Format.sprintf "unencrypted:%s" secret)
-  in
-
-  (* setup write indentity.json to file system *)
-  let%ok identities = validators |> List.map_ok (Setup.setup_identity mode) in
-
-  (* deploy smart contracts *)
-  let consensus_storage = Setup.make_consensus_storage identities in
-  let discovery_storage = Setup.make_discovery_storage identities in
-  let%ok consensus_address =
-    deploy_contract rpc_url "consensus" consensus consensus_storage "myWallet"
-  in
-  let%ok discovery_address =
-    deploy_contract rpc_url "discovery" discovery discovery_storage "myWallet"
-  in
-
-  (* setup tezos informations *)
-  Setup.make_trusted_validator_membership_change_json identities;
-  identities
-  |> List.map_ok
-       (Setup.setup_tezos rpc_url secret consensus_address discovery_address)
-
-let setup mode nodes =
-  let validators = make_validators nodes in
-  let rpc_url = rpc_url mode in
-  let%ok _validators = setup mode validators rpc_url in
-  Ok ()
-
 let deploy_dummy_ticket mode =
   deploy_contract (rpc_url mode) "dummy_ticket" "./dummy_ticket.mligo" "()"
     "bob"
