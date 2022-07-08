@@ -89,18 +89,16 @@ open Helpers
    block to final block *)
 
 (* TODO: Make it so spam can take a sleep parameter to wait in-between spams *)
-let rec spam ~ticketer rounds ((batch_size, batch_count) as info) =
+(*let rec spam ~ticketer rounds ((batch_size, batch_count) as info) =
   let%await transaction =
     List.init batch_count (fun _ ->
         let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
         let transaction = transactions |> List.rev |> List.hd in
-        Lwt.return transaction)
-    |> List.rev
-    |> List.hd in
-  if rounds = 1 then
-    await transaction.Protocol.Operation.Core_user.hash
-  else
-    spam ~ticketer (rounds - 1) info
+        Lwt.return transaction )
+    |> List.rev |> List.hd
+  in
+  if rounds = 1 then await transaction.Protocol.Operation.Core_user.hash
+  else spam ~ticketer (rounds - 1) info*)
 
 (*let spam ~ticketer (batch_size, batch_count) =
   let%await transaction =
@@ -111,12 +109,13 @@ let rec spam ~ticketer rounds ((batch_size, batch_count) as info) =
   in
   await transaction.Protocol.Operation.Core_user.hash*)
 
-(*let spam ~ticketer (batch_size, batch_count) =
+let spam ~ticketer (batch_size, batch_count) =
   List.init batch_count (fun _ ->
       let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
       let transaction = transactions |> List.rev |> List.hd in
-      await transaction.Protocol.Operation.Core_user.hash )
-  |> List.rev |> List.hd*)
+      await transaction.Protocol.Operation.Core_user.hash)
+  |> List.rev
+  |> List.hd
 
 (* How sure are we that the blocks we're finding the length of here are the
    applied blocks? *)
@@ -156,12 +155,12 @@ let process_transactions timestamps_and_blocks =
    TODO: Pass batch info as a parameter to
    load-test-transactions so we can run it over parameter space and see if we
    get different outputs. *)
-let load_test_transactions ~ticketer rounds (batch_size, batch_count) =
+let load_test_transactions ~ticketer (batch_size, batch_count) =
   (*let rounds = 50 in
     let batch_count = 50 in
     let batch_size = 10 in*)
   let%await starting_block_level = get_current_block_level () in
-  let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
+  let%await operation_hash = spam ~ticketer (batch_size, batch_count) in
   let%await final_block_level =
     get_last_block_height operation_hash starting_block_level in
   let tps_period =
@@ -172,26 +171,30 @@ let load_test_transactions ~ticketer rounds (batch_size, batch_count) =
     |> Lwt_list.map_s (fun level -> get_block_response_by_level level) in
   let tps, total_transactions = process_transactions timestamps_and_blocks in
   (*let _ = assert (total_transactions = batch_size * batch_count * rounds) in*)
-  Format.eprintf "rounds: %i - (batch_size: %i, batch_count: %i)\n%!" rounds
-    batch_size batch_count;
-  Format.eprintf "Total send: %i\n%!" (batch_size * batch_count * rounds);
+  Format.eprintf "(batch_size: %i, batch_count: %i)\n%!" batch_size batch_count;
+  Format.eprintf "Total send: %i\n%!" (batch_size * batch_count);
   Format.eprintf "Total process transactions: %i\n%!" total_transactions;
   Format.eprintf "TPS: %.03f\n%!" tps;
   await ()
 
-let params = [(1, (1000, 1)); (2, (250, 2))]
+(*let params = [(1, (1000, 1)); (2, (250, 2))]
 
-let spams_params ~ticketer =
-  params
-  |> List.map (fun (rounds, (batch_size, batch_count)) ->
-         load_test_transactions ~ticketer rounds (batch_size, batch_count))
+  let spams_params ~ticketer =
+    params
+    |> List.map (fun (rounds, (batch_size, batch_count)) ->
+           load_test_transactions ~ticketer rounds (batch_size, batch_count))
+
+  let load_test_transactions ticketer =
+    let sps = spams_params ~ticketer in
+    Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 40.0; s]) sps*)
 
 let load_test_transactions ticketer =
-  let sps = spams_params ~ticketer in
-  Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 40.0; s]) sps
-
-(*let load_test_transactions ticketer =
-  Lwt.pick [Lwt_unix.timeout 20.0; load_test_transactions ~ticketer 1 (1000, 1)]*)
+  Lwt.pick
+    [
+      Lwt_unix.timeout 40.0;
+      load_test_transactions ~ticketer (1000, 1);
+      load_test_transactions ~ticketer (500, 2);
+    ]
 
 let load_test_transactions ticketer =
   load_test_transactions ticketer |> Lwt_main.run
