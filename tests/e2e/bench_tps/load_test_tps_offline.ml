@@ -63,7 +63,7 @@ open Helpers
 
    TODO: Do these numbers agree with prometheus *)
 
-let spam_transactions ~ticketer ~n () =
+(*let spam_transactions ~ticketer ~n () =
   let validator_uri = get_random_validator_uri () in
   let%await block_level = get_current_block_level () in
   let ticket = make_ticket ticketer in
@@ -78,7 +78,11 @@ let spam_transactions ~ticketer ~n () =
       validator_uri
   in
   let transaction = transactions |> List.rev |> List.hd in
-  Lwt.return transaction
+  Lwt.return transaction*)
+(*let spam_transactions ~ticketer ~n () =
+  let%await transactions = spam_transactions ~ticketer ~n () in
+  let transaction = transactions |> List.rev |> List.hd in
+  Lwt.return transaction*)
 
 (* Spam transactions for m rounds, Get the final transaction hash Find the
    block_level the transaction is included at Get blocks & block time from start
@@ -88,12 +92,31 @@ let spam_transactions ~ticketer ~n () =
 let rec spam ~ticketer rounds ((batch_size, batch_count) as info) =
   let%await transaction =
     List.init batch_count (fun _ ->
+        let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
+        let transaction = transactions |> List.rev |> List.hd in
+        Lwt.return transaction)
+    |> List.rev
+    |> List.hd in
+  if rounds = 1 then
+    await transaction.Protocol.Operation.Core_user.hash
+  else
+    spam ~ticketer (rounds - 1) info
+
+(*let spam ~ticketer (batch_size, batch_count) =
+  let%await transaction =
+    List.init batch_count (fun _ ->
         let transaction = spam_transactions ~ticketer ~n:batch_size () in
         transaction )
     |> List.rev |> List.hd
   in
-  if rounds = 1 then await transaction.Protocol.Operation.Core_user.hash
-  else spam ~ticketer (rounds - 1) info
+  await transaction.Protocol.Operation.Core_user.hash*)
+
+(*let spam ~ticketer (batch_size, batch_count) =
+  List.init batch_count (fun _ ->
+      let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
+      let transaction = transactions |> List.rev |> List.hd in
+      await transaction.Protocol.Operation.Core_user.hash )
+  |> List.rev |> List.hd*)
 
 (* How sure are we that the blocks we're finding the length of here are the
    applied blocks? *)
@@ -103,9 +126,8 @@ let process_transactions timestamps_and_blocks =
       (fun acc bt ->
         let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
         let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
-        (timestamps, blocks) )
-      ([], []) timestamps_and_blocks
-  in
+        (timestamps, blocks))
+      ([], []) timestamps_and_blocks in
   let final_time = List.hd timestamps in
   let first_time = List.hd @@ List.rev timestamps in
   let time_elapsed = final_time -. first_time in
@@ -116,13 +138,12 @@ let process_transactions timestamps_and_blocks =
         let transactions_per_block = List.length user_operations in
         let i = acc + transactions_per_block in
         Format.eprintf "transactions per block, block height:%Ld, %i\n%!"
-          block.block_height transactions_per_block ;
-        i )
-      0 (List.rev blocks)
-  in
-  Format.eprintf "total_transactions: %i\n%!" total_transactions ;
+          block.block_height transactions_per_block;
+        i)
+      0 (List.rev blocks) in
+  (*Format.eprintf "total_process_transactions: %i\n%!" total_transactions ;*)
   let tps = Float.of_int total_transactions /. time_elapsed in
-  tps
+  (tps, total_transactions)
 
 (* When
    (rounds, batch_size, batch_count) = (1, 10_000, 5)
@@ -135,37 +156,42 @@ let process_transactions timestamps_and_blocks =
    TODO: Pass batch info as a parameter to
    load-test-transactions so we can run it over parameter space and see if we
    get different outputs. *)
-let load_test_transactions ~ticketer (batch_size, batch_count) rounds =
+let load_test_transactions ~ticketer rounds (batch_size, batch_count) =
   (*let rounds = 50 in
     let batch_count = 50 in
     let batch_size = 10 in*)
   let%await starting_block_level = get_current_block_level () in
   let%await operation_hash = spam ~ticketer rounds (batch_size, batch_count) in
   let%await final_block_level =
-    get_last_block_height operation_hash starting_block_level
-  in
+    get_last_block_height operation_hash starting_block_level in
   let tps_period =
-    Int64.to_int (Int64.sub final_block_level starting_block_level)
-  in
+    Int64.to_int (Int64.sub final_block_level starting_block_level) in
   let starting_point = Int64.to_int starting_block_level in
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) (fun i -> i + starting_point)
-    |> Lwt_list.map_s (fun level -> get_block_response_by_level level)
-  in
-  let tps = Int.of_float @@ process_transactions timestamps_and_blocks in
-  Format.eprintf "TPS: %i\n%!" tps ;
+    |> Lwt_list.map_s (fun level -> get_block_response_by_level level) in
+  let tps, total_transactions = process_transactions timestamps_and_blocks in
+  (*let _ = assert (total_transactions = batch_size * batch_count * rounds) in*)
+  Format.eprintf "rounds: %i - (batch_size: %i, batch_count: %i)\n%!" rounds
+    batch_size batch_count;
+  Format.eprintf "Total send: %i\n%!" (batch_size * batch_count * rounds);
+  Format.eprintf "Total process transactions: %i\n%!" total_transactions;
+  Format.eprintf "TPS: %.03f\n%!" tps;
   await ()
 
-let params = [((1000, 1), 1)]
+let params = [(1, (1000, 1)); (2, (250, 2))]
 
 let spams_params ~ticketer =
   params
-  |> List.map (fun ((batch_size, batch_count), rounds) ->
-         load_test_transactions ~ticketer (batch_size, batch_count) rounds )
+  |> List.map (fun (rounds, (batch_size, batch_count)) ->
+         load_test_transactions ~ticketer rounds (batch_size, batch_count))
 
 let load_test_transactions ticketer =
   let sps = spams_params ~ticketer in
-  Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 20.0; s]) sps
+  Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 40.0; s]) sps
+
+(*let load_test_transactions ticketer =
+  Lwt.pick [Lwt_unix.timeout 20.0; load_test_transactions ~ticketer 1 (1000, 1)]*)
 
 let load_test_transactions ticketer =
   load_test_transactions ticketer |> Lwt_main.run
@@ -176,10 +202,8 @@ let args =
     let docv = "ticketer" in
     let doc =
       "Tezos address of the contract issuing the ticket (e.g. \
-       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)"
-    in
-    required & pos 0 (some string) None & info [] ~doc ~docv
-  in
+       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)" in
+    required & pos 0 (some string) None & info [] ~doc ~docv in
   let open Term in
   const load_test_transactions $ ticketer
 

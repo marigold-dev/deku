@@ -154,7 +154,8 @@ let spam_transactions ~ticketer ~n () =
     List.init n (fun _ ->
         make_transaction ~block_level ~ticket ~sender:alice_wallet
           ~recipient:bob_wallet ~amount:1) in
-  Format.eprintf "Total transactions: %d\n%!" (List.length transactions);
+  Format.eprintf "Total transactions each spam: %d\n%!"
+    (List.length transactions);
   let%await _ =
     Network.request_user_operations_gossip
       { user_operations = transactions }
