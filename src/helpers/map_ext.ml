@@ -1,5 +1,16 @@
 include Map
 
+module type S_with_yojson = sig
+  include Map.S
+
+  val to_yojson : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+
+  val of_yojson :
+    (Yojson.Safe.t -> ('a, string) result) ->
+    Yojson.Safe.t ->
+    ('a t, string) result
+end
+
 module Make_with_yojson (K : sig
   include Map.OrderedType
 

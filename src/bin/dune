@@ -16,7 +16,7 @@
 
 (executable
  (name deku_sandbox)
- (libraries feather bin_common cmdliner)
+ (libraries feather helpers bin_common cmdliner)
  (modules deku_sandbox)
  (public_name deku-sandbox)
  (preprocess
