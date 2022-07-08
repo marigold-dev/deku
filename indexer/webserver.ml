@@ -1,4 +1,5 @@
 open Helpers
+open Protocol
 
 module type Request_endpoint = sig
   type request [@@deriving yojson]
@@ -39,5 +40,26 @@ module Level = struct
     await (Ok { level })
 end
 
+(* get a specific block *)
+module Get_block_by_level = struct
+  type request = { level : int64 } [@@deriving yojson]
+
+  type response = Block.t [@@deriving yojson]
+
+  let path = "/block-by-level"
+
+  let handle { level } =
+    let%await block = Repository.find_block_by_level level in
+    match block with
+    | Some block -> await (Ok block)
+    | None -> await (Error "block not found")
+end
+
 let run =
-  Dream.serve @@ Dream.logger @@ Dream.router [handle_request (module Level)]
+  Dream.serve
+  @@ Dream.logger
+  @@ Dream.router
+       [
+         handle_request (module Level);
+         handle_request (module Get_block_by_level);
+       ]

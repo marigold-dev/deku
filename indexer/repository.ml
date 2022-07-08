@@ -76,3 +76,50 @@ let add block =
     await block)
 
 let level () = !in_memory.block_height
+
+let find_block_by_level level =
+  (* First: check in memory *)
+  let state = !in_memory in
+  let blocks = state.blocks in
+  let end_height = state.block_height in
+  let start_height =
+    Int64.sub state.block_height (Int64.of_int (List.length state.blocks - 1))
+  in
+
+  let block_opt =
+    if level >= start_height && level <= end_height then
+      List.find_opt (fun (bl : Block.t) -> bl.block_height = level) blocks
+    else
+      None in
+
+  match block_opt with
+  | Some block -> await (Some block)
+  | None -> (
+    (* If the block wasn't found in the memory of the indexer, it means it's in a file *)
+    let%await files =
+      Lwt_unix.files_of_directory "database" |> Lwt_stream.to_list in
+    let file =
+      files
+      |> List.filter (fun file -> file <> ".." && file <> ".")
+      |> List.find_opt (fun file ->
+             let start_height =
+               String.split_on_char '-' file |> List.hd |> Int64.of_string in
+             let end_height =
+               String.split_on_char '-' file
+               |> List.rev
+               |> List.hd
+               |> Int64.of_string in
+             level >= start_height && level <= end_height) in
+    match file with
+    | None -> await None (* the block doesn't exists yet *)
+    | Some file -> (
+      let%await string =
+        Lwt_io.with_file ~mode:Input ("database/" ^ file) Lwt_io.read in
+      let json = Yojson.Safe.from_string string in
+      let blocks = [%of_yojson: Block.t list] json in
+      match blocks with
+      | Ok blocks ->
+        blocks
+        |> List.find_opt (fun (bl : Block.t) -> bl.block_height = level)
+        |> await
+      | Error _ -> await None))
