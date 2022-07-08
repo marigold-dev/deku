@@ -48,26 +48,12 @@ let make ~identity ~trusted_validator_membership_change
         (Pollinate.Address.create "127.0.0.1" 4000)
     | Server ->
       Log.debug "No Pollinate Node provided, constructing it";
-      let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
-       fun uri ->
-        Log.debug "Translating Uri.t to Pollinate.Address.t";
-        let address =
-          match Uri.host uri with
-          | Some "localhost" -> "127.0.0.1"
-          | Some "0.0.0.0" -> "127.0.0.1"
-          | Some address -> address
-          | _ -> failwith "Could not retrieve address from uri" in
-        let port =
-          match Uri.port uri with
-          | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
-          | None -> failwith "Could not retrieve port from uri." in
-        Pollinate.Address.create address port in
-      let pollinate_address = uri_to_pollinate identity.uri in
+      let pollinate_address = Network.Pollinate_utils.uri_to_pollinate identity.uri in
 
       Log.debug "Creating peers list necessary for dissemination\n%!";
       let init_peers =
         List.map
-          (fun (_, x) -> uri_to_pollinate x)
+          (fun (_, x) -> Network.Pollinate_utils.uri_to_pollinate x)
           (Address_map.bindings initial_validators_uri) in
 
       Log.debug "Pollinate Node started on: %s\n%!"

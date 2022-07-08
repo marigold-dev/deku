@@ -15,6 +15,37 @@ module type Pollinate_endpoint = sig
   val name : string
 end
 
+module Pollinate_utils = struct
+  type category = ChainOperation [@@deriving bin_io]
+
+  type name =
+    | Append_block
+    | Append_signature
+  [@@deriving bin_io]
+
+  let create_operation ?name category =
+    let category = Pollinate.Util.Encoding.pack bin_writer_category category in
+    match name with
+    | Some name ->
+      let name = Some (Pollinate.Util.Encoding.pack bin_writer_name name) in
+      Pollinate.PNode.Message.{ category; name }
+    | None -> Pollinate.PNode.Message.{ category; name = None }
+
+  let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
+  fun uri ->
+    Log.debug "Translating Uri.t to Pollinate.Address.t";
+    let address =
+      match Uri.host uri with
+      | Some "localhost" -> "127.0.0.1"
+      | Some address -> address
+      | _ -> failwith "Could not retrieve address from uri" in
+    let port =
+      match Uri.port uri with
+      | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
+      | None -> failwith "Could not retrieve port from uri" in
+    Pollinate.Address.create address port
+end
+
 exception Error_status
 
 let raw_request path raw_data uri =
@@ -61,13 +92,13 @@ let broadcast_to_list (type req res)
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
 let send_over_pollinate (type req)
-    (module E : Pollinate_endpoint with type request = req) node data recipients
-    =
+    (module E : Pollinate_endpoint with type request = req) node data ?operation
+    recipients =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
   let message : Pollinate.PNode.Message.t =
     {
-      category = Pollinate.PNode.Message.Post;
-      sub_category = Some ("ChainOperation", E.name);
+      pollinate_category = Pollinate.PNode.Message.Post;
+      operation;
       request_ack = false;
       id = -1;
       timestamp = Unix.gettimeofday ();

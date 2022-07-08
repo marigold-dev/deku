@@ -312,11 +312,11 @@
         "ocaml-overlays": "ocaml-overlays_2"
       },
       "locked": {
-        "lastModified": 1657190344,
-        "narHash": "sha256-Q2tJGwRzE6WL22nZ9ycy0sCbVCtIzzTX+ptW07H8bM0=",
+        "lastModified": 1657289781,
+        "narHash": "sha256-XI1zMqHRj+n3pQkFlme1hvo2WQLU/ZGyI1xyKxUcEsk=",
         "owner": "marigold-dev",
         "repo": "pollinate",
-        "rev": "219aeb798fc7db5aaa0dac5133121601338a0675",
+        "rev": "d3c1e0101e82d9c708a977ac89efec10a40c1c28",
         "type": "github"
       },
       "original": {

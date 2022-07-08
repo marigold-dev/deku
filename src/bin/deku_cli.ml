@@ -32,22 +32,6 @@ let interop_context node_folder =
 let validator_uris ~interop_context =
   Tezos_interop.Consensus.fetch_validators interop_context
 
-(** FIXME, must be refactored *)
-let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
- fun uri ->
-  Log.debug "Translating Uri.t to Pollinate.Address.t";
-  let address =
-    match Uri.host uri with
-    | Some "localhost" -> "127.0.0.1"
-    | Some "0.0.0.0" -> "127.0.0.1"
-    | Some address -> address
-    | _ -> failwith "Could not retrieve address from uri" in
-  let port =
-    match Uri.port uri with
-    | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
-    | None -> failwith "Could not retrieve port from uri." in
-  Pollinate.Address.create address port
-
 let make_filename_from_address wallet_addr_str =
   Printf.sprintf "%s.tzsidewallet" wallet_addr_str
 
@@ -633,16 +617,18 @@ let sign_block node_folder block_hash =
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
+    let open Network.Pollinate_utils in
     let validator_uris = List.map snd validator_uris |> List.somes in
     let recipients = List.map uri_to_pollinate validator_uris in
     let%await pollinate_node = state.pollinate_node in
+    let operation = create_operation ~name:Append_signature ChainOperation in
     let%await () =
       let open Network in
       send_over_pollinate
         (module Signature_spec)
         pollinate_node
         { hash = block_hash; signature }
-        recipients in
+        ~operation recipients in
     Lwt.return (`Ok ())
 
 let sign_block_term =
@@ -674,14 +660,16 @@ let produce_block node_folder =
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
+    let open Network.Pollinate_utils in
     let validator_uris = List.map snd validator_uris |> List.somes in
     let recipients = List.map uri_to_pollinate validator_uris in
     let%await pollinate_node = state.pollinate_node in
+    let operation = create_operation ~name:Append_block ChainOperation in
     let%await () =
       let open Network in
       send_over_pollinate
         (module Block_spec)
-        pollinate_node { block } recipients in
+        pollinate_node { block } ~operation recipients in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 

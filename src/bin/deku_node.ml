@@ -190,18 +190,26 @@ let node folder port prometheus_port =
   let msg_handler :
       Pollinate.PNode.Message.t -> Pollinate.PNode.Message.payload option =
    fun msg ->
-    let subcategory_opt = msg.sub_category in
+    let operation_opt = msg.operation in
     let _ =
-      match subcategory_opt with
+      match operation_opt with
       | None -> failwith "Deku messages must have a subcategory"
       (* FIXME automate dispatch *)
-      | Some ("ChainOperation", "append-block") ->
-        Log.debug "MSG_HANDLER: Received block";
-        handle_received_block msg
-      | Some ("ChainOperation", "append-signature") ->
-        Log.debug "MSG_HANDLER: Received signature";
-        handle_received_signature msg
-      | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
+      | Some Pollinate.PNode.Message.{ category; name } ->
+      match name with
+      | Some name -> (
+        let open Network.Pollinate_utils in
+        let category =
+          Pollinate.Util.Encoding.unpack bin_read_category category in
+        let name = Pollinate.Util.Encoding.unpack bin_read_name name in
+        match (category, name) with
+        | ChainOperation, Append_block ->
+          Log.debug "MSG_HANDLER: Received block";
+          handle_received_block msg
+        | ChainOperation, Append_signature ->
+          Log.debug "MSG_HANDLER: Received signature";
+          handle_received_signature msg)
+      | None -> failwith "Operation.name is mandatory for Deku" in
     None in
 
   let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
