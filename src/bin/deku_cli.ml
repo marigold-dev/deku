@@ -206,11 +206,10 @@ let with_validator_uri node_folder f =
     | [] -> Lwt.return (`Error (false, "No validators found"))
     | validator_uri :: _ -> f validator_uri)
 
-let create_transaction node_folder sender_wallet_file received_address amount
+let create_transaction node_uri sender_wallet_file received_address amount
     ticket argument vm_flavor tickets =
   let open Network in
-  with_validator_uri node_folder @@ fun (_, validator_uri) ->
-  let%await block_level_response = request_block_level () validator_uri in
+  let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
@@ -240,11 +239,10 @@ let create_transaction node_folder sender_wallet_file received_address amount
       ~nonce:(Crypto.Random.int32 Int32.max_int)
       ~block_height:block_level ~data:operation in
 
-  let%await identity = read_identity ~node_folder in
   let%await () =
     Network.request_user_operation_gossip
       { user_operation = transaction }
-      identity.uri in
+      node_uri in
   Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
   Lwt.return (`Ok ())
 
@@ -314,6 +312,13 @@ let address_from position =
   let open Arg in
   required & pos position (some wallet) None & info [] ~env ~docv:"sender" ~doc
 
+let node_uri =
+  let doc = "Uri of a trusted node." in
+  let default = Uri.of_string "http://localhost:4440" in
+  let env = Cmd.Env.info "DEKU_NODE_URI" ~doc in
+  let open Arg in
+  value & opt uri default & info ["deku-node"] ~env ~docv:"deku_node_uri" ~doc
+
 let originate_contract =
   let address_from =
     let doc =
@@ -365,11 +370,19 @@ let originate_contract =
       $ tickets))
 
 let create_transaction =
+  let address_from =
+    let doc =
+      "The sending address, or a path to a wallet% If a bare sending address \
+       is provided, the corresponding wallet is assumed to be in the working \
+       directory." in
+    let env = Cmd.Env.info "SENDER" ~doc in
+    let open Arg in
+    required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
   let address_to =
     let doc = "The receiving address." in
     let env = Cmd.Env.info "RECEIVER" ~doc in
     let open Arg in
-    required & pos 2 (some address) None & info [] ~env ~docv:"receiver" ~doc
+    required & pos 1 (some address) None & info [] ~env ~docv:"receiver" ~doc
   in
   let tickets =
     let doc = "The string containing tickets for vm argument" in
@@ -386,11 +399,11 @@ let create_transaction =
     let doc = "The amount to be transferred." in
     let env = Cmd.Env.info "TRANSFER_AMOUNT" ~doc in
     let open Arg in
-    required & pos 3 (some amount) None & info [] ~env ~docv:"amount" ~doc in
+    required & pos 2 (some amount) None & info [] ~env ~docv:"amount" ~doc in
   let ticket =
     let doc = "The ticket to be transferred." in
     let open Arg in
-    required & pos 4 (some ticket) None & info [] ~docv:"ticket" ~doc in
+    required & pos 3 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let argument =
     let doc = "Argument to be passed to transaction" in
     let open Arg in
@@ -406,8 +419,8 @@ let create_transaction =
   let open Term in
   lwt_ret
     (const create_transaction
-    $ folder_node 0
-    $ address_from 1
+    $ node_uri
+    $ address_from
     $ address_to
     $ amount
     $ ticket
