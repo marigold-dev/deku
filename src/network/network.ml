@@ -37,3 +37,5 @@ let request_ticket_balance = request (module Ticket_balance)
 let request_in_sync = request (module In_sync)
 
 let request_bootstrap_signal = request (module Bootstrapper_signal)
+
+let request_block_by_level = request (module Block_by_level_spec)

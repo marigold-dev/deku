@@ -1,0 +1,6 @@
+(executable
+ (name deku_indexer)
+ (public_name deku-indexer)
+ (libraries lwt helpers network)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_yojson)))
