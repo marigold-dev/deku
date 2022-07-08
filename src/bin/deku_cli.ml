@@ -222,26 +222,22 @@ let info_originate_contract =
     ~man
 
 let originate_contract node_uri sender_wallet_file contract_json initial_storage
-    (vm_flavor : [`Wasm]) tickets =
+    tickets =
   let open Network in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let%await payload =
-    let open Contracts in
-    match vm_flavor with
-    | `Wasm ->
-      let%await code =
-        Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x)
-      in
-      let code = Bytes.of_string code in
-      let initial_storage = Yojson.Safe.from_file initial_storage in
-      let initial_storage =
-        Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
-      Contract_vm.Origination_payload.wasm_of_yojson ~code
-        ~storage:initial_storage
-      |> Result.get_ok
-      |> Lwt.return in
+    let%await code =
+      Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x) in
+    let code = Bytes.of_string code in
+    let initial_storage = Yojson.Safe.from_file initial_storage in
+    let initial_storage =
+      Yojson.Safe.Util.to_string initial_storage |> Bytes.of_string in
+    Contracts.Contract_vm.Origination_payload.wasm_of_yojson ~code
+      ~storage:initial_storage
+    |> Result.get_ok
+    |> Lwt.return in
   let origination_op =
     User_operation.Contract_origination { payload; tickets } in
   let originate_contract_op =
@@ -279,13 +275,6 @@ let address_from position =
     & info [] ~env ~docv:"sender" ~doc)
 
 let originate_contract =
-  let vm_flavor =
-    let doc = "Virtual machine flavor. can only be Wasm for now" in
-    let env = Cmd.Env.info "VM_FLAVOR" ~doc in
-    Arg.(
-      Arg.value
-      & opt ~vopt:`Wasm vm_flavor `Wasm
-      & info ["vm_flavor"] ~env ~docv:"vm_flavor" ~doc) in
   let contract_json =
     let doc =
       "The path to the JSON output of compiling the contract to bytecode." in
@@ -317,7 +306,6 @@ let originate_contract =
       $ address_from 0
       $ contract_json
       $ initial_storage
-      $ vm_flavor
       $ tickets))
 
 let create_transaction =
@@ -414,7 +402,12 @@ let withdraw =
     required & pos 3 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
-    (const withdraw $ node_uri $ address_from 0 $ tezos_address $ amount $ ticket)
+    (const withdraw
+    $ node_uri
+    $ address_from 0
+    $ tezos_address
+    $ amount
+    $ ticket)
 
 let withdraw_proof node_uri operation_hash callback =
   let open Network in
