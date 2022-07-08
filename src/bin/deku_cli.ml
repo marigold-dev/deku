@@ -221,7 +221,7 @@ let info_originate_contract =
   Cmd.info "originate-contract" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
     ~man
 
-let originate_contract node_uri contract_json initial_storage sender_wallet_file
+let originate_contract node_uri sender_wallet_file contract_json initial_storage
     (vm_flavor : [`Wasm]) tickets =
   let open Network in
   let%await block_level_response = request_block_level () node_uri in
@@ -267,15 +267,18 @@ let node_uri =
   let open Arg in
   value & opt uri default & info ["deku-node"] ~env ~docv:"deku_node_uri" ~doc
 
+let address_from position =
+  let doc =
+    "The sending address, or a path to a wallet. If a bare address is \
+     provided, the corresponding wallet is assumed to be in the working \
+     directory." in
+  let env = Cmd.Env.info "SENDER" ~doc in
+  Arg.(
+    required
+    & pos position (some wallet) None
+    & info [] ~env ~docv:"sender" ~doc)
+
 let originate_contract =
-  let address_from =
-    let doc =
-      "The sending address, or a path to a wallet. If a bare address is \
-       provided, the corresponding wallet is assumed to be in the working \
-       directory." in
-    let env = Cmd.Env.info "SENDER" ~doc in
-    Arg.(required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc)
-  in
   let vm_flavor =
     let doc = "Virtual machine flavor. can only be Wasm for now" in
     let env = Cmd.Env.info "VM_FLAVOR" ~doc in
@@ -311,21 +314,13 @@ let originate_contract =
     lwt_ret
       (const originate_contract
       $ node_uri
+      $ address_from 0
       $ contract_json
       $ initial_storage
-      $ address_from
       $ vm_flavor
       $ tickets))
 
 let create_transaction =
-  let address_from =
-    let doc =
-      "The sending address, or a path to a wallet% If a bare sending address \
-       is provided, the corresponding wallet is assumed to be in the working \
-       directory." in
-    let env = Cmd.Env.info "SENDER" ~doc in
-    let open Arg in
-    required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
   let address_to =
     let doc = "The receiving address." in
     let env = Cmd.Env.info "RECEIVER" ~doc in
@@ -368,7 +363,7 @@ let create_transaction =
   lwt_ret
     (const create_transaction
     $ node_uri
-    $ address_from
+    $ address_from 0
     $ address_to
     $ amount
     $ ticket
@@ -400,14 +395,6 @@ let withdraw node_uri sender_wallet_file tezos_address amount ticket =
   Lwt.return (`Ok ())
 
 let withdraw =
-  let address_from =
-    let doc =
-      "The sending address, or a path to a wallet% If a bare sending address \
-       is provided, the corresponding wallet is assumed to be in the working \
-       directory." in
-    let env = Cmd.Env.info "SENDER" ~doc in
-    let open Arg in
-    required & pos 0 (some wallet) None & info [] ~env ~docv:"sender" ~doc in
   let tezos_address =
     let doc =
       "The address that will be used to withdraw the ticket at Tezos **only \
@@ -427,7 +414,7 @@ let withdraw =
     required & pos 3 (some ticket) None & info [] ~docv:"ticket" ~doc in
   let open Term in
   lwt_ret
-    (const withdraw $ node_uri $ address_from $ tezos_address $ amount $ ticket)
+    (const withdraw $ node_uri $ address_from 0 $ tezos_address $ amount $ ticket)
 
 let withdraw_proof node_uri operation_hash callback =
   let open Network in
