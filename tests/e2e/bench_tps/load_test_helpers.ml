@@ -145,3 +145,26 @@ module Test_kind = struct
     in
     Arg.info [] ~doc ~docv
 end
+
+let spam_transactions ~ticketer ~n () =
+  let validator_uri = get_random_validator_uri () in
+  let%await block_level = get_current_block_level () in
+  let ticket = make_ticket ticketer in
+  let transactions =
+    List.init n (fun _ ->
+        make_transaction ~block_level ~ticket ~sender:alice_wallet
+          ~recipient:bob_wallet ~amount:1) in
+  Format.eprintf "Total transactions: %d\n%!" (List.length transactions);
+  let%await _ =
+    Network.request_user_operations_gossip
+      { user_operations = transactions }
+      validator_uri in
+  Lwt.return transactions
+
+let spam ~ticketer ~n ~rounds =
+  let%await _ =
+    Lwt_list.iter_p Fun.id
+    @@ List.init rounds (fun _ ->
+           let%await _ = spam_transactions ~ticketer ~n () in
+           await ()) in
+  Lwt.return ()

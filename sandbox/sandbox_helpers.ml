@@ -84,6 +84,10 @@ let deploy_contract ?(wait = None) rpc_address contract_name contract_path
 let deku_address =
   "tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf" |> Key_hash.of_string |> Option.get
 
+(* https://gitlab.com/tezos/flextesa
+   This is the secret key of alias: alice
+*)
+
 let deku_secret =
   "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
   |> Secret.of_string
