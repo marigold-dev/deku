@@ -19,4 +19,4 @@ node_modules
 *.install
 *.bundle.js
 *.bundle.js.LICENSE.txt
-
+database/

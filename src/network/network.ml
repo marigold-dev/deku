@@ -33,3 +33,5 @@ let request_trusted_validator_membership =
   request (module Trusted_validators_membership_change)
 
 let request_ticket_balance = request (module Ticket_balance)
+
+let request_block_by_level = request (module Block_by_level_spec)
