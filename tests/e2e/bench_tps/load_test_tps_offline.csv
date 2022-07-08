@@ -1,0 +1,27 @@
+Warning:
+  
+                 This is NOT the Tezos Mainnet.
+  
+           Do NOT use your fundraiser keys on this network.
+
+Total transactions each spam: 250
+Total transactions each spam: 1000
+Total transactions each spam: 250
+Total transactions each spam: 250
+Total transactions each spam: 250
+transactions per block, block height:482, 0
+transactions per block, block height:483, 0
+transactions per block, block height:484, 1750
+transactions per block, block height:485, 2000
+rounds: 1 - (batch_size: 1000, batch_count: 1)
+Total send: 1000
+Total process transactions: 3750
+TPS: 267.857
+transactions per block, block height:482, 0
+transactions per block, block height:483, 0
+transactions per block, block height:484, 1750
+transactions per block, block height:485, 2000
+rounds: 2 - (batch_size: 250, batch_count: 2)
+Total send: 1000
+Total process transactions: 3750
+TPS: 267.857
