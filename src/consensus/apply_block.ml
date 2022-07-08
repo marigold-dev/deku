@@ -4,11 +4,18 @@ open Protocol
 open State
 open Steps
 
-let apply_block ~block state =
+let apply_block_header ~block state =
   let previous_protocol = state.protocol in
+  let%ok protocol = apply_block_header state.protocol block in
+  let state = { state with protocol } in
+  Ok
+    ( state,
+      Both (Can_produce_block, Apply_block_data { block; previous_protocol }) )
+
+let apply_block_data ~previous_protocol ~block state =
   (* TODO: handle this errors here *)
   let%ok protocol, user_operations, receipts =
-    apply_block state.protocol block in
+    apply_block_data state.protocol block in
   Metrics.Blocks.inc_operations_processed
     ~operation_count:(List.length user_operations);
   let snapshots, snapshot_ref =
