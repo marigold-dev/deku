@@ -15,9 +15,10 @@ dune exec -- _build/default/sandbox/deku_sandbox.exe start
 
 dune exec -- _build/default/sandbox/deku_sandbox.exe deploy-dummy-ticket
 
-dune exec -- _build/default/sandbox/deku_sandbox.exe load-test-tps
+# Remember to deploy dummy ticket before using these tests below
+dune exec -- _build/default/sandbox/deku_sandbox.exe load-test-tps >& ~/deku/tests/e2e/bench_tps/load_test_tps.csv
 
-dune exec -- _build/default/sandbox/deku_sandbox.exe load-test-tps-offline
+dune exec -- _build/default/sandbox/deku_sandbox.exe load-test-tps-offline >& ~/deku/tests/e2e/bench_tps/load_test_tps_offline.csv
 
 dune exec -- _build/default/sandbox/deku_sandbox.exe network-msg >& ~/deku/tests/e2e/bench_tps/network_msg.csv
 
