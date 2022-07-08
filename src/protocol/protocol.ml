@@ -146,11 +146,6 @@ let apply_block_header state block =
   let state = apply_block_header state block in
   Ok state
 
-let apply_block_data state block =
-  let%assert () = (`Invalid_block_when_applying, is_next state block) in
-  let state, user_operations, result = apply_block_data state block in
-  Ok (state, user_operations, result)
-
 let get_current_block_producer state =
   if state.last_applied_block_timestamp = 0.0 then
     None
