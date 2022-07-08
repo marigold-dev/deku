@@ -61,7 +61,7 @@ let to_yojson, of_yojson =
 include Helpers.Bin_prot_ext.String_like (struct
   type nonrec t = t
 
-  let name = "Key"
+  let name = "key"
 
   let of_string = of_string
 

@@ -1,0 +1,30 @@
+From dcb10c2ddf796a7f1e874931aa4663d46bab2767 Mon Sep 17 00:00:00 2001
+From: Daniel Hines <d4hines@gmail.com>
+Date: Tue, 28 Jun 2022 15:44:28 -0400
+Subject: [PATCH 13/13] wip: disable user operation broadcast
+
+---
+ src/node/flows.ml | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/node/flows.ml b/src/node/flows.ml
+index f30a5b15..06024b96 100644
+--- a/src/node/flows.ml
++++ b/src/node/flows.ml
+@@ -246,9 +246,10 @@ let handle_consensus_effect effect =
+   | Broadcast_block { block } -> broadcast_block (!get_state ()) ~block
+   | Broadcast_signature { hash; signature } ->
+     broadcast_signature (!get_state ()) ~hash ~signature
+-  | Broadcast_user_operation { user_operation } ->
+-    Lwt.async (fun () ->
+-        broadcast_user_operation_gossip (!get_state ()) { user_operation })
++  | Broadcast_user_operation { user_operation = _ } ->
++    (* Lwt.async (fun () ->
++        broadcast_user_operation_gossip (!get_state ()) { user_operation }) *)
++    ()
+   | Applied_block { prev_protocol; block; receipts; self_signed; snapshot_ref }
+     ->
+     applied_block (!get_state ()) !set_state ~prev_protocol ~block ~receipts
+-- 
+2.36.1
+

@@ -8,13 +8,13 @@ module Signature_spec = struct
     hash : BLAKE2B.t;
     signature : Signature.t;
   }
-  [@@deriving bin_io]
+  [@@deriving yojson, bin_io]
 
   let name = "append-signature"
 end
 
 module Block_spec = struct
-  type request = { block : Block.t } [@@deriving bin_io]
+  type request = { block : Block.t } [@@deriving yojson, bin_io]
 
   let name = "append-block"
 end
@@ -30,7 +30,13 @@ end
 module Block_by_level_spec = struct
   type request = { level : int64 } [@@deriving yojson]
 
-  type response = Block.t option [@@deriving yojson]
+  type block_and_timestamp = {
+    block : Block.t;
+    timestamp : float;
+  }
+  [@@deriving yojson]
+
+  type response = block_and_timestamp option [@@deriving yojson]
 
   let path = "/block-by-level"
 end
