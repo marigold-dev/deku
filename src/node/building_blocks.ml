@@ -9,7 +9,7 @@ let find_random_validator_uri state =
   let validators = Validators.to_list state.Node.consensus.protocol.validators in
   let rec safe_validator_uri () =
     let validator = List.nth validators (random_int (List.length validators)) in
-    if state.Node.identity.t = validator.address then
+    if state.Node.config.identity.t = validator.address then
       safe_validator_uri ()
     else
       match
@@ -29,15 +29,28 @@ let validator_uris state =
 let broadcast_signature state ~hash ~signature ~operation =
   Lwt.async (fun () ->
       let%await node = state.Node.pollinate_node in
-      let recipients = List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state) in
+      let recipients =
+        List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state)
+      in
       Network.broadcast_signature node { hash; signature } ~operation recipients)
 
 let broadcast_block state ~block ~operation =
   Lwt.async (fun () ->
+      let delay = state.State.config.minimum_block_delay in
       let%await node = state.Node.pollinate_node in
       let%await () = Lwt_unix.sleep 1.0 in
-      let recipients = List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state) in
-      Network.broadcast_block node { block } ~operation recipients)
+      let recipients =
+        List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state)
+      in
+      let broadcast () =
+        Network.broadcast_block node { block } ~operation recipients in
+      (* TODO: modify consensus engine to immediately broadcast
+         the block if there are any pending transactions. *)
+      if Float.equal delay 0. then
+        broadcast ()
+      else
+        let%await () = Lwt_unix.sleep delay in
+        broadcast ())
 
 let broadcast_user_operation_gossip state operation =
   let uris = validator_uris state in
