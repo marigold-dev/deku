@@ -46,7 +46,7 @@ let ad_hoc_params ticketer =
 
 let spam_noop_transactions ticketer =
   Format.eprintf "Batches ready, starting test\n%!";
-  print_endline "batch_count, batch_size, messages_per_second";
+  Format.eprintf "batch_count, batch_size, messages_per_second\n%!";
   let samples = 5 in
   Lwt_list.iter_s
     (fun (batch_count, batch_size, batch) ->
