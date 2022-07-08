@@ -292,8 +292,9 @@ let handle_ticket_balance =
 
 let node folder port minimum_block_delay prometheus_port =
   let node =
-    Node_state.get_initial_state ~folder ~minimum_block_delay ~pollinate_context:Node.State.Server |> Lwt_main.run
-  in
+    Node_state.get_initial_state ~folder ~minimum_block_delay
+      ~pollinate_context:Node.State.Server
+    |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
@@ -410,18 +411,18 @@ let node =
 
 (** FIXME, must be refactored *)
 let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
-  fun uri ->
-   let address =
-     match Uri.host uri with
-     | Some "localhost" -> "127.0.0.1"
-     | Some "0.0.0.0" -> "127.0.0.1"
-     | Some address -> address
-     | _ -> failwith "Could not retrieve address from uri" in
-   let port =
-     match Uri.port uri with
-     | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
-     | None -> failwith "Could not retrieve port from uri." in
-   Pollinate.Address.create address port
+ fun uri ->
+  let address =
+    match Uri.host uri with
+    | Some "localhost" -> "127.0.0.1"
+    | Some "0.0.0.0" -> "127.0.0.1"
+    | Some address -> address
+    | _ -> failwith "Could not retrieve address from uri" in
+  let port =
+    match Uri.port uri with
+    | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
+    | None -> failwith "Could not retrieve port from uri." in
+  Pollinate.Address.create address port
 
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in

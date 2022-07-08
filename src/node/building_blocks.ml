@@ -52,7 +52,7 @@ let broadcast_block state ~block =
       let%await node = state.Node.pollinate_node in
       let%await () = Lwt_unix.sleep 1.0 in
       let recipients = List.map uri_to_pollinate (validator_uris state) in
-      let broadcast () = Network.broadcast_block node { block } recipients in 
+      let broadcast () = Network.broadcast_block node { block } recipients in
       (* TODO: modify consensus engine to immediately broadcast
          the block if there are any pending transactions. *)
       if Float.equal delay 0. then

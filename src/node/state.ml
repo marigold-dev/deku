@@ -7,6 +7,7 @@ module Uri_map = Map.Make (Uri)
 type pollinate_context =
   | Client
   | Server
+
 type timestamp = float
 
 type t = {
@@ -30,8 +31,8 @@ let make ~config ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
     ~initial_validators_uri ~pollinate_context =
   let consensus =
-  Consensus.make ~identity:config.Config.identity 
-    ~trusted_validator_membership_change in
+    Consensus.make ~identity:config.Config.identity
+      ~trusted_validator_membership_change in
   let pollinate_node =
     match pollinate_context with
     | Client ->
