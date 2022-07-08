@@ -27,5 +27,11 @@ let rec run uri =
   let%await () =
     pull_blocks (Int64.add current_indexer_level 1L) current_deku_level in
   let%await () = Lwt_unix.sleep 1.0 in
-  (* Sleep between 2 request *)
-  run uri
+  (* Sleep between 2 request *) run uri
+
+let is_sync uri =
+  let%await block_level_res = request_block_level () uri in
+  let current_deku_level = block_level_res.level in
+  let current_indexer_level = Repository.level () in
+  await (Int64.sub current_deku_level current_indexer_level < 5L)
+(* There will always exists a delta between the indexer and the cluster*)
