@@ -1,3 +1,4 @@
+open Deku_data
 open Contracts.Contract_vm
 
 type t [@@deriving yojson, eq]

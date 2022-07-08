@@ -1,5 +1,6 @@
-open Contracts
+open Deku_data
 open Crypto
+open Contracts
 
 type initial_operation =
   | Transaction          of {

@@ -1,4 +1,5 @@
 open Helpers
+open Deku_data
 open Crypto
 open Protocol
 open Cmdliner
@@ -132,10 +133,10 @@ let amount =
 
 let ticket =
   let parser string =
-    Core_deku.Ticket_id.of_string string
+    Ticket_id.of_string string
     |> Option.to_result ~none:(`Msg "Expected a ticket") in
   let printer fmt ticket =
-    Format.fprintf fmt "%S" (Core_deku.Ticket_id.to_string ticket) in
+    Format.fprintf fmt "%S" (Ticket_id.to_string ticket) in
   let open Arg in
   conv ~docv:"A ticket" (parser, printer)
 

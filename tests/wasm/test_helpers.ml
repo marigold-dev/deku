@@ -1,4 +1,5 @@
 open Helpers
+open Deku_data
 
 exception Invocation_error
 
@@ -51,27 +52,23 @@ let make_ticket ?ticketer ?data () =
     | Some data -> data
     | None -> Random.generate 256 |> Cstruct.to_bytes in
   let open Ticket_id in
-  Core_deku.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
+  Deku_data.Ticket_id.of_tezos { ticketer; data } |> Result.get_ok
 
 let make_address () =
   let open Crypto in
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in
-  Core_deku.Address.of_key_hash key_hash
+  Address.of_key_hash key_hash
 
-let make_contract_address str : Core_deku.Contract_address.t =
+let make_contract_address str : Contract_address.t =
   Crypto.BLAKE2B_20.hash str |> Obj.magic
 
 module Testables = struct
-  open Core_deku
-  open Contracts
-
   let amount =
-    Alcotest.of_pp (fun fmt x ->
-        Format.fprintf fmt "%d" (Context.Amount.to_int x))
+    Alcotest.of_pp (fun fmt x -> Format.fprintf fmt "%d" (Amount.to_int x))
 
   let ticket_id =
     Alcotest.of_pp (fun fmt p ->
-        Format.fprintf fmt "%s" (Core_deku.Ticket_id.to_string p))
+        Format.fprintf fmt "%s" (Ticket_id.to_string p))
 
   let contract_operation =
     let open Core_deku in

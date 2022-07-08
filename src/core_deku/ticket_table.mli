@@ -1,3 +1,5 @@
+open Deku_data
+
 type t [@@deriving yojson]
 
 val empty : t

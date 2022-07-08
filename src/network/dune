@@ -1,5 +1,5 @@
 (library
  (name network)
- (libraries protocol uri helpers piaf domainslib metrics)
+ (libraries protocol uri helpers piaf domainslib metrics deku_data)
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.ord ppx_let_binding)))

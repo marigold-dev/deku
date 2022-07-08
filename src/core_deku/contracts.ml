@@ -1,3 +1,5 @@
+open Deku_data
+
 module Conversions :
   Smart_contracts.Conversions
     with type Address.t = Address.t

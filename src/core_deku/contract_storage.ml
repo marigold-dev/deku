@@ -1,4 +1,5 @@
 open Helpers
+open Deku_data
 open Contracts.Contract_vm
 module Map = Map.Make_with_yojson (Contract_address)
 

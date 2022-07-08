@@ -1,5 +1,6 @@
 open Helpers
 open Test_helpers
+open Deku_data
 
 let test_simple_invocation () =
   let open Core_deku in
@@ -130,7 +131,7 @@ let test_ticket_join () =
   let ticket = make_ticket () in
   let handle = Int32.zero |> Context.Ticket_handle.to_bytes in
   let self = make_contract_address "test" in
-  let contract_addr = Core_deku.Address.of_contract_hash self in
+  let contract_addr = Deku_data.Address.of_contract_hash self in
   let handle2 = Int32.one |> Context.Ticket_handle.to_bytes in
   let argument = Bytes.concat Bytes.empty [handle; handle2] in
   let table = Ticket_table.empty in
@@ -143,13 +144,13 @@ let test_ticket_join () =
   let tickets_table, _table =
     Ticket_table.take_all_tickets table
       ~sender:
-        (Core_deku.Address.of_contract_hash (make_contract_address "test"))
+        (Deku_data.Address.of_contract_hash (make_contract_address "test"))
   in
   let ctx, _ =
     make_custom ~tickets_table
       ~mapping:[((ticket, Amount.of_int 10), Int32.zero)]
       ~tickets:(Seq.return ((ticket, Amount.of_int 10), (Int32.one, Some 5L)))
-      ~self:(Core_deku.Address.of_contract_hash self)
+      ~self:(Deku_data.Address.of_contract_hash self)
       ~sender:addr ~source:addr in
   let _, _ = invoke ~ctx ~storage ~argument code in
   let _, tickets, _ = ctx#finalize [] |> Result.get_ok in
@@ -219,7 +220,7 @@ let test_ticket_split () =
   let self = make_contract_address "test" in
   let make_custom' =
     make_custom
-      ~self:(Core_deku.Address.of_contract_hash self)
+      ~self:(Deku_data.Address.of_contract_hash self)
       ~sender:addr ~source:addr in
   let table = Ticket_table.empty in
   let table =
@@ -227,7 +228,7 @@ let test_ticket_split () =
       ~amount:(Amount.of_int 10) in
   let tickets_table, _table =
     Ticket_table.take_all_tickets table
-      ~sender:(Core_deku.Address.of_contract_hash self) in
+      ~sender:(Deku_data.Address.of_contract_hash self) in
   let ctx, _ =
     make_custom' ~mapping:[]
       ~tickets:(Seq.return ((ticket, Amount.of_int 10), (Int32.zero, Some 0L)))
@@ -310,7 +311,7 @@ let test_ticket_send_twice () =
       [
         i64 4L;
         Ticket_handle.to_bytes handle;
-        Address.to_string (Core_deku.Address.of_contract_hash contract_address2)
+        Address.to_string (Deku_data.Address.of_contract_hash contract_address2)
         |> Bytes.of_string;
       ] in
 
@@ -320,13 +321,13 @@ let test_ticket_send_twice () =
   let tickets_table, table =
     Ticket_table.take_all_tickets table
       ~sender:
-        (Core_deku.Address.of_contract_hash (make_contract_address "test"))
+        (Deku_data.Address.of_contract_hash (make_contract_address "test"))
   in
   let ctx, _ =
     make_state ~source:addr ~sender:addr ~contract_owned_tickets:tickets_table
       ~get_contract_opt:(fun _ -> None)
       ~mapping:[]
-      ~self:(Core_deku.Address.of_contract_hash contract_address1)
+      ~self:(Deku_data.Address.of_contract_hash contract_address1)
       ~provided_tickets:
         (Seq.return ((ticket, Amount.of_int 10), (Int32.zero, Some 4L))) in
   let _, ops = invoke ~ctx ~storage ~argument code in
@@ -337,7 +338,7 @@ let test_ticket_send_twice () =
     (Operation.Invoke
        {
          tickets = [((ticket, Amount.of_int 10), (Int32.zero, Some 0L))];
-         destination = Core_deku.Address.of_contract_hash contract_address2;
+         destination = Deku_data.Address.of_contract_hash contract_address2;
          param = Ticket_handle.to_bytes Int32.zero;
        })
     ops;
@@ -345,7 +346,7 @@ let test_ticket_send_twice () =
   let table =
     Ticket_table.update_tickets table
       ~sender:
-        (Core_deku.Address.of_contract_hash (make_contract_address "test"))
+        (Deku_data.Address.of_contract_hash (make_contract_address "test"))
       ~tickets in
   let tickets, param =
     match ops with
@@ -354,13 +355,13 @@ let test_ticket_send_twice () =
   let tickets_table, _table =
     Ticket_table.take_all_tickets table
       ~sender:
-        (Core_deku.Address.of_contract_hash (make_contract_address "test"))
+        (Deku_data.Address.of_contract_hash (make_contract_address "test"))
   in
   let ctx, _ =
     make_state ~mapping:[]
-      ~sender:(Core_deku.Address.of_contract_hash contract_address1)
+      ~sender:(Deku_data.Address.of_contract_hash contract_address1)
       ~contract_owned_tickets:tickets_table
-      ~self:(Core_deku.Address.of_contract_hash contract_address2)
+      ~self:(Deku_data.Address.of_contract_hash contract_address2)
       ~provided_tickets:
         (Seq.return
            (let ticket, amount = List.hd tickets in
@@ -489,13 +490,13 @@ let test_ticket_own_dup () =
   let tickets_table, _table =
     Ticket_table.take_all_tickets table
       ~sender:
-        (Core_deku.Address.of_contract_hash (make_contract_address "test"))
+        (Deku_data.Address.of_contract_hash (make_contract_address "test"))
   in
   let ctx, _ =
     make_state ~source:addr ~sender:addr ~contract_owned_tickets:tickets_table
       ~mapping:[]
       ~get_contract_opt:(fun _ -> None)
-      ~self:(make_contract_address "test" |> Core_deku.Address.of_contract_hash)
+      ~self:(make_contract_address "test" |> Deku_data.Address.of_contract_hash)
       ~provided_tickets:
         (Seq.return ((ticket, Amount.of_int 10), (Int32.zero, None))) in
   Alcotest.check_raises "Invocation error" Invocation_error (fun () ->

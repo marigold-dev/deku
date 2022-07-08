@@ -1,4 +1,5 @@
 open Core_deku
+open Deku_data
 open Contracts
 open Helpers_contracts
 
