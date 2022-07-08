@@ -42,7 +42,9 @@ let make ~config ~trusted_validator_membership_change
         (Pollinate.Address.create "127.0.0.1" 4000)
     | Server ->
       Log.debug "No Pollinate Node provided, constructing it";
-      let pollinate_address = Network.Pollinate_utils.uri_to_pollinate config.Config.identity.uri in
+      let pollinate_address =
+        Network.Pollinate_utils.uri_to_pollinate config.Config.identity.uri
+      in
 
       let init_peers =
         List.map

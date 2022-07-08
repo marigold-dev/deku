@@ -29,7 +29,9 @@ let validator_uris state =
 let broadcast_signature state ~hash ~signature ~operation =
   Lwt.async (fun () ->
       let%await node = state.Node.pollinate_node in
-      let recipients = List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state) in
+      let recipients =
+        List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state)
+      in
       Network.broadcast_signature node { hash; signature } ~operation recipients)
 
 let broadcast_block state ~block ~operation =
@@ -37,8 +39,11 @@ let broadcast_block state ~block ~operation =
       let delay = state.State.config.minimum_block_delay in
       let%await node = state.Node.pollinate_node in
       let%await () = Lwt_unix.sleep 1.0 in
-      let recipients = List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state) in
-      let broadcast () = Network.broadcast_block node { block } ~operation recipients in
+      let recipients =
+        List.map Network.Pollinate_utils.uri_to_pollinate (validator_uris state)
+      in
+      let broadcast () =
+        Network.broadcast_block node { block } ~operation recipients in
       (* TODO: modify consensus engine to immediately broadcast
          the block if there are any pending transactions. *)
       if Float.equal delay 0. then

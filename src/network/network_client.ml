@@ -32,7 +32,7 @@ module Pollinate_utils = struct
     | None -> Pollinate.PNode.Message.{ category; name = None }
 
   let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
-  fun uri ->
+   fun uri ->
     Log.debug "Translating Uri.t to Pollinate.Address.t";
     let address =
       match Uri.host uri with
