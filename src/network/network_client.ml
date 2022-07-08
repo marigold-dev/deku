@@ -61,8 +61,8 @@ let broadcast_to_list (type req res)
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
 let send_over_pollinate (type req)
-    (module E : Pollinate_endpoint
-      with type request = req) node data recipients =
+    (module E : Pollinate_endpoint with type request = req) node data recipients
+    =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
   let message : Pollinate.PNode.Message.t =
     {

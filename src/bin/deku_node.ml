@@ -29,7 +29,6 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
-
 (* Sent by Pollinate (UDP, bin_prot) *)
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block pollinate_msg =
