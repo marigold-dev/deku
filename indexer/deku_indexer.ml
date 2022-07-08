@@ -2,8 +2,12 @@ open Cmdliner
 open Helpers
 
 let main uri =
+  let module Parameters = struct
+    let node_uri = uri
+  end in
   let%await () = Repository.init () in
-  let%await _ = Lwt.both (Interval.run uri) Webserver.run in
+  let%await _ =
+    Lwt.both (Interval.run uri) (Webserver.run (module Parameters)) in
   await (`Ok ())
 
 let run =

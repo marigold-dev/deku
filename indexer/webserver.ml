@@ -55,11 +55,29 @@ module Get_block_by_level = struct
     | None -> await (Error "block not found")
 end
 
-let run =
+module type PARAMETERS = sig
+  val node_uri : Uri.t
+end
+
+(* to check if the indexer is boostrapped *)
+module Bootstrapped (Parameters : PARAMETERS) = struct
+  type request = unit [@@deriving yojson]
+
+  type response = { is_sync : bool } [@@deriving yojson]
+
+  let path = "/is-sync"
+
+  let handle () =
+    let%await is_sync = Interval.is_sync Parameters.node_uri in
+    await (Ok { is_sync })
+end
+
+let run (module Parameters : PARAMETERS) =
   Dream.serve
   @@ Dream.logger
   @@ Dream.router
        [
          handle_request (module Level);
          handle_request (module Get_block_by_level);
+         handle_request (module Bootstrapped (Parameters));
        ]
