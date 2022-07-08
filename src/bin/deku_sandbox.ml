@@ -615,7 +615,7 @@ let deposit_withdraw_test mode validators rpc_url deku_address deku_secret =
 
   (* Deposit 100 tickets *)
   let%ok _ = deposit_ticket rpc_url deku_address in
-  sleep 10.;
+  sleep 20.;
 
   (* Create a wallet with the deku_address and deku_private key *)
   let%ok () = create_wallet deku_address deku_secret "wallet.json" in
@@ -703,6 +703,41 @@ let info_deposit_withdraw_test =
 (* TODO: https://github.com/ocaml/ocaml/issues/11090 *)
 let () = Domain.set_name "deku-sandbox"
 
+let load_test () =
+  let rpc_url = rpc_url Local in
+  let result =
+    let%ok dummy_ticket_address = get_contract_address rpc_url "dummy_ticket" in
+    let dummy_ticket_address = Address.to_string dummy_ticket_address in
+    process "load-test" ["saturate"; dummy_ticket_address] |> run_res in
+  ret_res result
+
+let load_test =
+  let open Term in
+  const load_test $ const () |> ret
+
+let info_load_test =
+  let doc = "Load tests a local running Deku cluster" in
+  Cmd.info "load-test" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+
+let check_liveness mode =
+  let result =
+    let rpc_url = rpc_url mode in
+    let%ok consensus_address = get_contract_address rpc_url "consensus" in
+    (* TODO: rewrite this to be part of this module *)
+    let consensus_address = Address.to_string consensus_address in
+    process "check-liveness" [rpc_url; consensus_address] |> run_res in
+  ret_res result
+
+let check_liveness =
+  let open Term in
+  const check_liveness $ mode |> ret
+
+let info_check_livenss =
+  let doc =
+    "Checks that the Deku cluster is producing blocks and posting to the main \
+     chain" in
+  Cmd.info "check-liveness" ~version:"%\226\128\140%VERSION%%" ~doc ~exits
+
 let default_info =
   let doc =
     "creates, deploys, and starts Deku clusters in a sandbox mode suitable for \
@@ -725,4 +760,6 @@ let _ =
          Cmd.v info_deposit_withdraw_test deposit_withdraw_test;
          Cmd.v info_deploy_dummy_ticket deploy_dummy_ticket;
          Cmd.v info_deposit_dummy_ticket deposit_dummy_ticket;
+         Cmd.v info_load_test load_test;
+         Cmd.v info_check_livenss check_liveness;
        ]
