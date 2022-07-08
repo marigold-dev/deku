@@ -307,10 +307,10 @@ let node folder port minimum_block_delay prometheus_port =
       | None -> failwith "Deku messages must have a subcategory"
       (* FIXME automate dispatch *)
       | Some ("ChainOperation", "append-block") ->
-        Log.debug "MSG_HANDLER: Received block";
+        Log.debug "POLLINATE: Received block";
         handle_received_block msg
       | Some ("ChainOperation", "append-signature") ->
-        Log.debug "MSG_HANDLER: Received signature";
+        Log.debug "POLLINATE: Received signature";
         handle_received_signature msg
       | Some (_, _) -> failwith "Not implemented in Pollinate yet" in
     None in
@@ -411,7 +411,6 @@ let node =
 (** FIXME, must be refactored *)
 let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
   fun uri ->
-   Log.debug "Translating Uri.t to Pollinate.Address.t";
    let address =
      match Uri.host uri with
      | Some "localhost" -> "127.0.0.1"

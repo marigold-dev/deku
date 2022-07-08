@@ -28,7 +28,6 @@ let validator_uris state =
 
 let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
  fun uri ->
-  Log.debug "Translating Uri.t to Pollinate.Address.t";
   let address =
     match Uri.host uri with
     | Some "localhost" -> "127.0.0.1"
