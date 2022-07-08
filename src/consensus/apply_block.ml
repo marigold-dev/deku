@@ -102,4 +102,7 @@ let apply_block_data ~previous_protocol ~block state =
     Both
       ( Effect applied_block_effect,
         Effect persist_trusted_membership_change_effect ) in
-  Ok (state, snapshot_ref, Both (Post_apply_block, effects))
+  Ok
+    ( state,
+      snapshot_ref,
+      Both (Post_apply_block { applied_block = block }, effects) )
