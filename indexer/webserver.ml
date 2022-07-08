@@ -1,5 +1,11 @@
-open Helpers
 open Protocol
+open Helpers
+
+module type PARAMETERS = sig
+  val node_uri : Uri.t
+
+  val port : int
+end
 
 module type Request_endpoint = sig
   type request [@@deriving yojson]
@@ -55,10 +61,6 @@ module Get_block_by_level = struct
     | None -> await (Error "block not found")
 end
 
-module type PARAMETERS = sig
-  val node_uri : Uri.t
-end
-
 (* to check if the indexer is boostrapped *)
 module Bootstrapped (Parameters : PARAMETERS) = struct
   type request = unit [@@deriving yojson]
@@ -73,7 +75,7 @@ module Bootstrapped (Parameters : PARAMETERS) = struct
 end
 
 let run (module Parameters : PARAMETERS) =
-  Dream.serve
+  Dream.serve ~port:Parameters.port
   @@ Dream.logger
   @@ Dream.router
        [

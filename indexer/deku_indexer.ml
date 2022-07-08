@@ -1,9 +1,11 @@
 open Cmdliner
 open Helpers
 
-let main uri =
+let main uri port =
   let module Parameters = struct
     let node_uri = uri
+
+    let port = port
   end in
   let%await () = Repository.init () in
   let%await _ =
@@ -24,8 +26,23 @@ let run =
     let default = Uri.of_string "http://localhost:4440" in
     let open Arg in
     value & opt uri default & info ["node-uri"] ~docv ~doc ~env in
+  let port =
+    let port =
+      let parser string =
+        int_of_string_opt string
+        |> Option.to_result ~none:(`Msg "Cannot parse port") in
+      let printer ppf port = Format.fprintf ppf "%s" (string_of_int port) in
+      let open Arg in
+      conv (parser, printer) in
+    let docv = "port" in
+    let doc = "The port on which you want the webserver to run" in
+    let env = Cmd.Env.info "PORT" in
+    let default = 8080 in
+    let open Arg in
+    value & opt port default & info ["port"] ~docv ~doc ~env in
+
   let open Term in
-  ret (const Lwt_main.run $ (const main $ node_uri))
+  ret (const Lwt_main.run $ (const main $ node_uri $ port))
 
 let info =
   let doc = "Deku indexer" in
