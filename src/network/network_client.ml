@@ -8,28 +8,23 @@ module type Request_endpoint = sig
   val path : string
 end
 
-(* FIXME: to be factorized with Request_endpoint *)
-module type Pollinate_endpoint = sig
-  type request [@@deriving bin_io]
-
-  val name : string
-end
-
 module Pollinate_utils = struct
+  open Bin_prot.Std
+
   type category = ChainOperation [@@deriving bin_io]
 
-  type name =
+  type action =
     | Append_block
     | Append_signature
   [@@deriving bin_io]
 
-  let create_operation ?name category =
-    let category = Pollinate.Util.Encoding.pack bin_writer_category category in
-    match name with
-    | Some name ->
-      let name = Some (Pollinate.Util.Encoding.pack bin_writer_name name) in
-      Pollinate.PNode.Message.{ category; name }
-    | None -> Pollinate.PNode.Message.{ category; name = None }
+  type payload = {
+    category : category;
+    action : action;
+    data : bytes;
+    signature_payload : bytes option;
+  }
+  [@@deriving bin_io]
 
   let uri_to_pollinate : Uri.t -> Pollinate.Address.t =
    fun uri ->
@@ -44,6 +39,15 @@ module Pollinate_utils = struct
       | Some port -> port + 100 (* ugly fix to avoif using the HTTP port *)
       | None -> failwith "Could not retrieve port from uri" in
     Pollinate.Address.create address port
+end
+
+(* FIXME: to be factorized with Request_endpoint *)
+module type Pollinate_endpoint = sig
+  type request [@@deriving bin_io]
+
+  val category : Pollinate_utils.category
+
+  val action : Pollinate_utils.action
 end
 
 exception Error_status
@@ -92,19 +96,27 @@ let broadcast_to_list (type req res)
          Lwt.catch (fun () -> raw_post E.path data uri) (fun _exn -> await ()))
 
 let send_over_pollinate (type req)
-    (module E : Pollinate_endpoint with type request = req) node data ?operation
-    recipients =
+    (module E : Pollinate_endpoint with type request = req) node data recipients
+    =
   let data_bin_io = Pollinate.Util.Encoding.pack E.bin_writer_request data in
+  let payload =
+    Pollinate.Util.Encoding.pack Pollinate_utils.bin_writer_payload
+      Pollinate_utils.
+        {
+          category = E.category;
+          action = E.action;
+          data = data_bin_io;
+          signature_payload = None;
+        } in
   let message : Pollinate.PNode.Message.t =
     {
       pollinate_category = Pollinate.PNode.Message.Post;
-      operation;
       request_ack = false;
       id = -1;
       timestamp = Unix.gettimeofday ();
       sender = Pollinate.PNode.Client.address_of !node;
       recipients = [];
-      payload = Pollinate.PNode.Message.{ data = data_bin_io; signature = None };
+      payload;
     } in
   let%await () = Pollinate.PNode.Client.broadcast node message recipients in
   Lwt.return_unit

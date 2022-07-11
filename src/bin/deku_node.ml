@@ -138,21 +138,13 @@ let handle_request (type req res)
 
 (* Sent by Pollinate (UDP, bin_prot) *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block pollinate_msg =
-  let open Pollinate.PNode.Message in
-  let request =
-    Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request
-      pollinate_msg.payload.data in
-  Flows.received_block request.block;
+let handle_received_block block =
+  Flows.received_block block;
   Ok ()
 
 (* Sent by Pollinate (UDP, bin_prot) *)
-let handle_received_signature pollinate_msg =
-  let open Pollinate.PNode.Message in
-  let request =
-    Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request
-      pollinate_msg.payload.data in
-  Flows.received_signature ~hash:request.hash ~signature:request.signature;
+let handle_received_signature hash signature =
+  Flows.received_signature ~hash ~signature;
   Ok ()
 
 (* POST /block-by-hash *)
@@ -299,29 +291,25 @@ let node folder port minimum_block_delay prometheus_port =
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
 
-  let msg_handler :
-      Pollinate.PNode.Message.t -> Pollinate.PNode.Message.payload option =
+  let msg_handler : Pollinate.PNode.Message.t -> bytes option =
    fun msg ->
-    let operation_opt = msg.operation in
+    let payload =
+      Pollinate.Util.Encoding.unpack Network.Pollinate_utils.bin_read_payload
+        msg.payload in
     let _ =
-      match operation_opt with
-      | None -> failwith "Deku messages must have a subcategory"
-      (* FIXME automate dispatch *)
-      | Some Pollinate.PNode.Message.{ category; name } ->
-      match name with
-      | Some name -> (
-        let open Network.Pollinate_utils in
-        let category =
-          Pollinate.Util.Encoding.unpack bin_read_category category in
-        let name = Pollinate.Util.Encoding.unpack bin_read_name name in
-        match (category, name) with
-        | ChainOperation, Append_block ->
-          Log.debug "MSG_HANDLER: Received block";
-          handle_received_block msg
-        | ChainOperation, Append_signature ->
-          Log.debug "MSG_HANDLER: Received signature";
-          handle_received_signature msg)
-      | None -> failwith "Operation.name is mandatory for Deku" in
+      match (payload.category, payload.action) with
+      | ChainOperation, Append_block ->
+        Log.debug "MSG_HANDLER: Received block";
+        let request =
+          Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request
+            payload.data in
+        handle_received_block request.block
+      | ChainOperation, Append_signature ->
+        Log.debug "MSG_HANDLER: Received signature";
+        let request =
+          Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request
+            payload.data in
+        handle_received_signature request.hash request.signature in
     None in
 
   let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
@@ -436,12 +424,11 @@ let produce_block node_folder =
     let validator_uris = List.map snd validator_uris |> List.somes in
     let recipients = List.map uri_to_pollinate validator_uris in
     let%await pollinate_node = state.pollinate_node in
-    let operation = create_operation ~name:Append_block ChainOperation in
     let%await () =
       let open Network in
       send_over_pollinate
         (module Block_spec)
-        pollinate_node { block } ~operation recipients in
+        pollinate_node { block } recipients in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 
@@ -476,14 +463,13 @@ let sign_block node_folder block_hash =
     let validator_uris = List.map snd validator_uris |> List.somes in
     let recipients = List.map uri_to_pollinate validator_uris in
     let%await pollinate_node = state.pollinate_node in
-    let operation = create_operation ~name:Append_signature ChainOperation in
     let%await () =
       let open Network in
       send_over_pollinate
         (module Signature_spec)
         pollinate_node
         { hash = block_hash; signature }
-        ~operation recipients in
+        recipients in
     Lwt.return (`Ok ())
 
 let sign_block_term =

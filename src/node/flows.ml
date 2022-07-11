@@ -243,14 +243,9 @@ let handle_consensus_effect effect =
   | Request_block { hash } -> request_block ~hash
   | Request_previous_blocks { block } ->
     request_previous_blocks (!get_state ()) block
-  | Broadcast_block { block } ->
-    let open Network.Pollinate_utils in
-    let operation = create_operation ~name:Append_block ChainOperation in
-    broadcast_block (!get_state ()) ~block ~operation
+  | Broadcast_block { block } -> broadcast_block (!get_state ()) ~block
   | Broadcast_signature { hash; signature } ->
-    let open Network.Pollinate_utils in
-    let operation = create_operation ~name:Append_signature ChainOperation in
-    broadcast_signature (!get_state ()) ~hash ~signature ~operation
+    broadcast_signature (!get_state ()) ~hash ~signature
   | Broadcast_user_operation { user_operation } ->
     Lwt.async (fun () ->
         broadcast_user_operation_gossip (!get_state ()) { user_operation })
