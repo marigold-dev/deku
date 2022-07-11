@@ -10,7 +10,7 @@ open Helpers
    ./sandbox.sh start
 
    and in a new terminal do
-   ./sandbox.sh load-test
+   ./sandbox.sh load-test-tps-offline
 
    To test TPS, we create a large amount of "unit" transactions which transfer a
    dummy ticket from one hardcoded acount to another.
@@ -41,74 +41,21 @@ open Helpers
    has been recorded, as opposed to Prometheus which calculates TPS on the fly
    by observing variables in Deku.
 
-   There are 4 parameters we can pass to the load-test:
+   There are 3 parameters we can pass to the load-test:
 
-   - Round count
    - Batch count
    - Batch size
    - Wait time
 
-   The amount of transactions we pass during the load-test is (Round count *
-   Batch count * Batch size).
+   The amount of transactions we pass during the load-test is (Batch count * Batch size).
 
    The wait time is a tuning parameter that determines how long we wait before
    querying Deku about the applied blocks.
-
-   Currently we have no way to provide load test parameters of the form e.g.
-   send 1k transactions a second for 5 minutes. Instead our current tests look
-   like e.g. send 50k transactions and tell me when they've all been processed.
 
    TODO: Tracking function runtime so we can run tests based on load rate
    instead of transaction count
 
    TODO: Do these numbers agree with prometheus *)
-
-(*let spam_transactions ~ticketer ~n () =
-  let validator_uri = get_random_validator_uri () in
-  let%await block_level = get_current_block_level () in
-  let ticket = make_ticket ticketer in
-  let transactions =
-    List.init n (fun _ ->
-        make_transaction ~block_level ~ticket ~sender:alice_wallet
-          ~recipient:bob_wallet ~amount:1 )
-  in
-  let%await _ =
-    Network.request_user_operations_gossip
-      {user_operations= transactions}
-      validator_uri
-  in
-  let transaction = transactions |> List.rev |> List.hd in
-  Lwt.return transaction*)
-(*let spam_transactions ~ticketer ~n () =
-  let%await transactions = spam_transactions ~ticketer ~n () in
-  let transaction = transactions |> List.rev |> List.hd in
-  Lwt.return transaction*)
-
-(* Spam transactions for m rounds, Get the final transaction hash Find the
-   block_level the transaction is included at Get blocks & block time from start
-   block to final block *)
-
-(* TODO: Make it so spam can take a sleep parameter to wait in-between spams *)
-(*let rec spam ~ticketer rounds ((batch_size, batch_count) as info) =
-  let%await transaction =
-    List.init batch_count (fun _ ->
-        let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
-        let transaction = transactions |> List.rev |> List.hd in
-        Lwt.return transaction )
-    |> List.rev |> List.hd
-  in
-  if rounds = 1 then await transaction.Protocol.Operation.Core_user.hash
-  else spam ~ticketer (rounds - 1) info*)
-
-(*let spam ~ticketer (batch_size, batch_count) =
-  let%await transaction =
-    List.init batch_count (fun _ ->
-        let transaction = spam_transactions ~ticketer ~n:batch_size () in
-        transaction )
-    |> List.rev |> List.hd
-  in
-  await transaction.Protocol.Operation.Core_user.hash*)
-
 let spam ~ticketer (batch_size, batch_count) =
   List.init batch_count (fun _ ->
       let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
@@ -140,25 +87,17 @@ let process_transactions timestamps_and_blocks =
           block.block_height transactions_per_block;
         i)
       0 (List.rev blocks) in
-  (*Format.eprintf "total_process_transactions: %i\n%!" total_transactions ;*)
   let tps = Float.of_int total_transactions /. time_elapsed in
   (tps, total_transactions)
 
 (* When
-   (rounds, batch_size, batch_count) = (1, 10_000, 5)
+   (batch_size, batch_count) = (10_000, 5)
 
    We think the nodes get ddossed because they seem to fall out of sync and we get the error
    When we call handle_user_operation_was_included_in_block with a large number
    of transactions, we're pulling in a ton of data every time we make that call.
-   This could be affecting things.
-
-   TODO: Pass batch info as a parameter to
-   load-test-transactions so we can run it over parameter space and see if we
-   get different outputs. *)
+   This could be affecting things. *)
 let load_test_transactions ~ticketer (batch_size, batch_count) =
-  (*let rounds = 50 in
-    let batch_count = 50 in
-    let batch_size = 10 in*)
   let%await starting_block_level = get_current_block_level () in
   let%await operation_hash = spam ~ticketer (batch_size, batch_count) in
   let%await final_block_level =
@@ -177,22 +116,22 @@ let load_test_transactions ~ticketer (batch_size, batch_count) =
   Format.eprintf "TPS: %.03f\n%!" tps;
   await ()
 
-(*let params = [(1, (1000, 1)); (2, (250, 2))]
+(*let params = [(500, 2); (250, 4); (100, 10)]
 
   let spams_params ~ticketer =
     params
-    |> List.map (fun (rounds, (batch_size, batch_count)) ->
-           load_test_transactions ~ticketer rounds (batch_size, batch_count))
+    |> List.map (fun (batch_size, batch_count) ->
+           load_test_transactions ~ticketer (batch_size, batch_count) )
 
   let load_test_transactions ticketer =
     let sps = spams_params ~ticketer in
-    Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 40.0; s]) sps*)
+    Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 60.0; s]) sps*)
 
 let load_test_transactions ticketer =
   Lwt.pick
     [
-      Lwt_unix.timeout 40.0;
-      load_test_transactions ~ticketer (1000, 1);
+      Lwt_unix.timeout 60.0;
+      load_test_transactions ~ticketer (100, 10);
       load_test_transactions ~ticketer (500, 2);
     ]
 

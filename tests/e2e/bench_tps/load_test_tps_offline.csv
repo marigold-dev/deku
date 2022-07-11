@@ -4,24 +4,48 @@ Warning:
   
            Do NOT use your fundraiser keys on this network.
 
-Total transactions each spam: 250
-Total transactions each spam: 1000
-Total transactions each spam: 250
+Execution time: 0.000000s
 Total transactions each spam: 250
 Total transactions each spam: 250
-transactions per block, block height:482, 0
-transactions per block, block height:483, 0
-transactions per block, block height:484, 1750
-transactions per block, block height:485, 2000
-rounds: 1 - (batch_size: 1000, batch_count: 1)
+Total transactions each spam: 500
+Total transactions each spam: 500
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 250
+Total transactions each spam: 100
+Total transactions each spam: 250
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 100
+Total transactions each spam: 100
+transactions per block, block height:45, 0
+transactions per block, block height:46, 0
+transactions per block, block height:47, 0
+transactions per block, block height:48, 1659
+transactions per block, block height:49, 3000
+transactions per block, block height:50, 1341
+(batch_size: 500, batch_count: 2)
 Total send: 1000
-Total process transactions: 3750
-TPS: 267.857
-transactions per block, block height:482, 0
-transactions per block, block height:483, 0
-transactions per block, block height:484, 1750
-transactions per block, block height:485, 2000
-rounds: 2 - (batch_size: 250, batch_count: 2)
+Total process transactions: 6000
+TPS: 260.870
+transactions per block, block height:45, 0
+transactions per block, block height:46, 0
+transactions per block, block height:47, 0
+transactions per block, block height:48, 1659
+transactions per block, block height:49, 3000
+(batch_size: 250, batch_count: 4)
 Total send: 1000
-Total process transactions: 3750
-TPS: 267.857
+Total process transactions: 4659
+TPS: 211.773
+transactions per block, block height:45, 0
+transactions per block, block height:46, 0
+transactions per block, block height:47, 0
+transactions per block, block height:48, 1659
+transactions per block, block height:49, 3000
+(batch_size: 100, batch_count: 10)
+Total send: 1000
+Total process transactions: 4659
+TPS: 211.773

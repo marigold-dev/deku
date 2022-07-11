@@ -13,6 +13,6 @@
   (pps ppx_deriving_yojson ppx_bin_prot ppx_let_binding)))
 
 (rule
- (alias bench)
+ (alias bench_hash)
  (action
   (run %{exe:bench_state_hash.exe})))

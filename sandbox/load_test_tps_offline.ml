@@ -10,7 +10,8 @@ let load_test_tps_offline rpc_address =
     get_contract_address rpc_address "dummy_ticket" in
   let dummy_ticket_address = Address.to_string dummy_ticket_address in
   let%ok _result =
-    process "deku-load-test-tps-offline" [dummy_ticket_address] |> run_res in
+    time process "deku-load-test-tps-offline" [dummy_ticket_address] |> run_res
+  in
   Ok ()
 
 let term =
