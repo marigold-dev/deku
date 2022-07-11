@@ -82,6 +82,8 @@ const { inspect } = require("util");
  * @property {TransactionResponse | StorageResponse | TransactionMessage | ErrorResponse} content
  */
 
+const devMode = process.env.NODE_ENV === "development";
+
 const failure = (err) => {
   console.error(err);
   process.exit(1);
@@ -145,7 +147,7 @@ const read = (callback) => {
 const config = {
   shouldObservableSubscriptionRetry: true,
   streamerPollingIntervalMilliseconds: 1000,
-  confirmationPollingIntervalSecond: 1,
+  confirmationPollingIntervalSecond: devMode ? 1 : 5,
 };
 
 /** @param {TransactionRequest} content */
