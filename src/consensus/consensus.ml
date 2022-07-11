@@ -26,8 +26,8 @@ let with_timeout effect state = Dispatch.dispatch effect Can_produce_block state
 let with_operation effect operation state =
   Dispatch.dispatch effect (Check_operation { operation }) state
 
-let with_trusted_validators_membership_change effect ~payload ~signature state =
-  Dispatch.dispatch effect (Check_validator_change { payload; signature }) state
+let with_trusted_validators_membership_change effect ~payload ~signature ~payload_hash state =
+  Dispatch.dispatch effect (Check_validator_change { payload; signature; payload_hash }) state
 
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =

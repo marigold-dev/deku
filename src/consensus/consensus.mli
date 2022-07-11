@@ -81,8 +81,9 @@ val with_operation :
 
 val with_trusted_validators_membership_change :
   (effect -> t -> unit) ->
-  payload:Network.Trusted_validators_membership_change.payload ->
+  payload:Network.validators_payload ->
   signature:Signature.t ->
+  payload_hash:BLAKE2B.t ->
   t ->
   t * [> error] list
 

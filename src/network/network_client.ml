@@ -16,11 +16,15 @@ module type Pollinate_endpoint = sig
 end
 
 module Pollinate_utils = struct
-  type category = ChainOperation [@@deriving bin_io]
+  type category =
+    | ChainOperation
+    | ValidatorsOperation
+  [@@deriving bin_io]
 
   type name =
     | Append_block
     | Append_signature
+    | Validators_change
   [@@deriving bin_io]
 
   let create_operation ?name category =

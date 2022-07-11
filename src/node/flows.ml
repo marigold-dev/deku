@@ -390,7 +390,7 @@ let request_ticket_balance state ~ticket ~address =
   |> Core_deku.State.ledger
   |> Ledger.balance address ticket
 
-let trusted_validators_membership ~payload ~signature =
+let trusted_validators_membership ~payload ~signature ~payload_hash =
   handle_consensus_operation (fun handler consensus ->
       Consensus.with_trusted_validators_membership_change handler ~payload
-        ~signature consensus)
+        ~signature ~payload_hash consensus)

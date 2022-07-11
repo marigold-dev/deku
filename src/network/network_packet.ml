@@ -3,6 +3,17 @@ open Crypto
 open Protocol
 open Core_deku
 
+type validators_action =
+| Add
+| Remove
+[@@deriving yojson, bin_io]
+
+type validators_payload = {
+action : validators_action;
+address : Key_hash.t;
+}
+[@@deriving yojson, bin_io]
+
 module Signature_spec = struct
   type request = {
     hash : BLAKE2B.t;
@@ -148,24 +159,23 @@ module Ticket_balance = struct
 end
 
 module Trusted_validators_membership_change = struct
-  type action =
-    | Add
-    | Remove
-  [@@deriving yojson]
-
-  type payload = {
-    action : action;
-    address : Key_hash.t;
-  }
-  [@@deriving yojson]
-
   type request = {
     signature : Signature.t;
-    payload : payload;
+    payload : validators_payload;
   }
   [@@deriving yojson]
 
   type response = unit [@@deriving yojson]
 
   let path = "/trusted-validators-membership"
+end
+
+module Validators_change = struct
+  type request = {
+    signature : Signature.t;
+    payload : validators_payload;
+  }
+  [@@deriving bin_io]
+
+  let name = "validators-change"
 end

@@ -29,8 +29,8 @@ let rec dispatch effect step state =
   | Post_apply_block -> post_apply_block effect state
   | Can_produce_block -> can_produce_block effect state
   | Produce_block -> produce_block effect state
-  | Check_validator_change { payload; signature } ->
-    check_validator_change ~payload ~signature effect state
+  | Check_validator_change { payload; signature; payload_hash } ->
+    check_validator_change ~payload ~signature ~payload_hash effect state
   | Allow_to_add_validator { key_hash } ->
     allow_to_add_validator ~key_hash effect state
   | Allow_to_remove_validator { key_hash } ->
@@ -99,8 +99,8 @@ and produce_block effect state =
   let step = Produce_block.produce_block state in
   dispatch effect step state
 
-and check_validator_change ~payload ~signature effect state =
-  match Steps.check_validator_change ~payload ~signature state with
+and check_validator_change ~payload ~signature ~payload_hash effect state =
+  match Steps.check_validator_change ~payload ~signature ~payload_hash state with
   | Ok step -> dispatch effect step state
   | Error err -> (state, [err])
 

@@ -261,13 +261,25 @@ let handle_receive_consensus_operation =
 
 (* POST /trusted-validators-membership *)
 (* Add or Remove a new trusted validator *)
-let handle_trusted_validators_membership =
+(* let handle_trusted_validators_membership =
   handle_request
     (module Network.Trusted_validators_membership_change)
     (fun request ->
+      let payload_hash = request.payload |> Network.validators_payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
       Flows.trusted_validators_membership ~payload:request.payload
-        ~signature:request.signature;
-      Ok ())
+        ~signature:request.signature ~payload_hash:payload_hash;
+      Ok ()) *)
+
+(* Sent by Pollinate (UDP, bin_prot) *)
+(* Adds or removes a new trusted validator. *)
+let handle_validators_change pollinate_msg = 
+  let open Pollinate.PNode.Message in
+  let request =
+    Pollinate.Util.Encoding.unpack Network.Validators_change.bin_read_request
+      pollinate_msg.payload.data in
+  let payload_hash = request.payload |> Network.validators_payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in 
+  Flows.trusted_validators_membership ~payload:request.payload ~signature:request.signature ~payload_hash:payload_hash;
+  Ok ()  
 
 (* POST /withdraw-proof *)
 (* Returns a proof that can be provided to Tezos to fulfill a withdraw *)
@@ -320,7 +332,14 @@ let node folder port minimum_block_delay prometheus_port =
           handle_received_block msg
         | ChainOperation, Append_signature ->
           Log.debug "MSG_HANDLER: Received signature";
-          handle_received_signature msg)
+          handle_received_signature msg
+        | ChainOperation, _ ->
+          failwith "MSG_HANDLER: Received unknown chain operation, ignoring."
+        | ValidatorsOperation, Validators_change -> 
+          Log.debug "MSG_HANDLER: Received validator operation";
+          handle_validators_change msg
+        | ValidatorsOperation, _ -> 
+          failwith "MSG_HANDLER: Received unknown validators operation, ignoring.")
       | None -> failwith "Operation.name is mandatory for Deku" in
     None in
 
@@ -347,8 +366,8 @@ let node folder port minimum_block_delay prometheus_port =
              handle_receive_consensus_operation;
              handle_withdraw_proof;
              handle_ticket_balance;
-             handle_trusted_validators_membership;
-           ];
+(*              handle_trusted_validators_membership;
+ *)           ];
       Prometheus_dream.serve prometheus_port;
       Pollinate.PNode.run_server ~msg_handler pollinate_node;
     ]
@@ -591,18 +610,33 @@ let info_add_trusted_validator =
 let add_trusted_validator node_folder address =
   let open Network in
   let%await identity = read_identity ~node_folder in
+  let%await state = Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0. ~pollinate_context:Node.State.Client in 
   let payload =
-    let open Trusted_validators_membership_change in
     { address; action = Add } in
   let payload_json_str =
     payload
-    |> Trusted_validators_membership_change.payload_to_yojson
+    |> validators_payload_to_yojson
     |> Yojson.Safe.to_string in
+
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in
-  let%await () =
-    Network.request_trusted_validator_membership { signature; payload }
-      identity.uri in
+  let%await interop_context = interop_context node_folder in
+  let%await validator_uris = validator_uris ~interop_context in
+  match validator_uris with
+  | Error err -> Lwt.return (`Error (false, err))
+  | Ok validator_uris ->
+    let open Network.Pollinate_utils in
+    let validator_uris = List.map snd validator_uris |> List.somes in
+    let recipients = List.map uri_to_pollinate validator_uris in
+    let%await pollinate_node = state.pollinate_node in
+    let operation = create_operation ~name:Validators_change ValidatorsOperation in 
+    let%await () =
+      let open Network in 
+      send_over_pollinate
+        (module Validators_change)
+        pollinate_node { signature; payload } ~operation recipients in 
+        Format.printf "ADDING VALIDATOR\n%!";
+ 
   await (`Ok ())
 
 let validator_address =
@@ -627,11 +661,10 @@ let remove_trusted_validator node_folder address =
   let open Network in
   let%await identity = read_identity ~node_folder in
   let payload =
-    let open Trusted_validators_membership_change in
     { address; action = Remove } in
   let payload_json_str =
     payload
-    |> Trusted_validators_membership_change.payload_to_yojson
+    |> validators_payload_to_yojson
     |> Yojson.Safe.to_string in
   let payload_hash = BLAKE2B.hash payload_json_str in
   let signature = Signature.sign ~key:identity.secret payload_hash in

@@ -53,8 +53,9 @@ type step =
   | Produce_block
   (* verify *)
   | Check_validator_change    of {
-      payload : Network.Trusted_validators_membership_change.payload;
+      payload : Network.validators_payload;
       signature : Signature.t;
+      payload_hash : BLAKE2B.t;
     }
   (* transition *)
   | Allow_to_add_validator    of { key_hash : Key_hash.t }
@@ -172,10 +173,10 @@ let can_produce_block state =
   else
     Noop
 
-let check_validator_change ~payload ~signature state =
-  let open Network.Trusted_validators_membership_change in
-  let payload_hash =
-    payload |> payload_to_yojson |> Yojson.Safe.to_string |> BLAKE2B.hash in
+let check_validator_change ~payload ~signature ~payload_hash state =
+  let open Network in 
+
+  Format.printf "";
   let%assert () =
     ( `Invalid_signature_author,
       Key_hash.compare state.identity.t (Signature.address signature) = 0 )
