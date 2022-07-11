@@ -13,29 +13,24 @@ type t = {
   block_height : int64;
   consensus_operations : Protocol_operation.Consensus.t list;
   tezos_operations : Protocol_operation.Core_tezos.t list;
-  user_operations : string;
+  user_operations : string list;
 }
 [@@deriving yojson]
 
-type user_operations = Protocol_operation.Core_user.t list [@@deriving yojson]
+type user_operation = Protocol_operation.Core_user.t [@@deriving yojson]
 
-let serialize_user_operations user_operations =
-  let json = user_operations_to_yojson user_operations in
+let serialize_user_operation user_operation =
+  let json = user_operation_to_yojson user_operation in
   Yojson.Safe.to_string json
 
 let parse_user_operations t =
-  let%ok json =
-    try Ok (Yojson.Safe.from_string t.user_operations) with
-    | _exn -> Error "invalid json" in
-  user_operations_of_yojson json
-
-let parse_user_operations t =
-  (* invalid encode means noop *)
-  match parse_user_operations t with
-  | Ok user_operations -> user_operations
-  | Error _ ->
-    (* TODO: maybe log this *)
-    []
+  Parallel.protocol_decode_list user_operation_of_yojson t.user_operations
+  |> List.filter_map (fun user_operation ->
+         match user_operation with
+         | Ok user_operation -> Some user_operation
+         | Error _ ->
+           (* TODO: maybe log this *)
+           None)
 
 let hash, verify =
   let apply f ~state_root_hash ~withdrawal_handles_hash ~validators_hash
@@ -51,7 +46,7 @@ let hash, verify =
         * int64
         * Protocol_operation.Consensus.t list
         * Protocol_operation.Core_tezos.t list
-        * string] in
+        * string list] in
     let json =
       to_yojson
         ( state_root_hash,
@@ -108,7 +103,7 @@ let compare a b = BLAKE2B.compare a.hash b.hash
 let make ~state_root_hash ~withdrawal_handles_hash ~validators_hash
     ~previous_hash ~author ~block_height ~consensus_operations ~tezos_operations
     ~user_operations =
-  let user_operations = serialize_user_operations user_operations in
+  let user_operations = List.map serialize_user_operation user_operations in
   let hash, payload_hash =
     hash ~state_root_hash ~withdrawal_handles_hash ~validators_hash
       ~previous_hash ~author ~block_height ~consensus_operations
