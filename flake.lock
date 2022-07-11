@@ -256,31 +256,6 @@
         "type": "github"
       }
     },
-    "ocaml-overlays_2": {
-      "inputs": {
-        "flake-utils": [
-          "pollinate",
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "pollinate",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1654150159,
-        "narHash": "sha256-/SbOxDGuJr+aQHtBg+V5J+3OV+/gU/cZVOlEl8/kzG4=",
-        "owner": "anmonteiro",
-        "repo": "nix-overlays",
-        "rev": "70165a4922ed0f4819fac34ee4879604d754af6e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "anmonteiro",
-        "repo": "nix-overlays",
-        "type": "github"
-      }
-    },
     "poetry2nix": {
       "flake": false,
       "locked": {
@@ -309,7 +284,9 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "ocaml-overlays": "ocaml-overlays_2"
+        "ocaml-overlays": [
+          "ocaml-overlays"
+        ]
       },
       "locked": {
         "lastModified": 1657526502,

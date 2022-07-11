@@ -46,7 +46,7 @@
       "github:marigold-dev/pollinate/feat/dekuIntegrationFinalAct";
     pollinate.inputs = {
       nixpkgs.follows = "nixpkgs";
-      ocaml-overlay.follows = "ocaml-overlays";
+      ocaml-overlays.follows = "ocaml-overlays";
       flake-utils.follows = "flake-utils";
       nix-filter.follows = "nix-filter";
     };
