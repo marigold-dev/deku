@@ -146,7 +146,7 @@ const read = (callback) => {
 
 const config = {
   shouldObservableSubscriptionRetry: true,
-  streamerPollingIntervalMilliseconds: 1000,
+  streamerPollingIntervalMilliseconds: devMode ? 1000 : 5000,
   confirmationPollingIntervalSecond: devMode ? 1 : 5,
 };
 
