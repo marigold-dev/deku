@@ -60,9 +60,8 @@ let spam ~ticketer (batch_size, batch_count) =
   List.init batch_count (fun _ ->
       let%await transactions = spam_transactions ~ticketer ~n:batch_size () in
       let transaction = transactions |> List.rev |> List.hd in
-      await transaction.Protocol.Operation.Core_user.hash)
-  |> List.rev
-  |> List.hd
+      await transaction.Protocol.Operation.Core_user.hash )
+  |> List.rev |> List.hd
 
 (* How sure are we that the blocks we're finding the length of here are the
    applied blocks? *)
@@ -72,8 +71,9 @@ let process_transactions timestamps_and_blocks =
       (fun acc bt ->
         let timestamps = bt.Network.Block_by_level_spec.timestamp :: fst acc in
         let blocks = bt.Network.Block_by_level_spec.block :: snd acc in
-        (timestamps, blocks))
-      ([], []) timestamps_and_blocks in
+        (timestamps, blocks) )
+      ([], []) timestamps_and_blocks
+  in
   let final_time = List.hd timestamps in
   let first_time = List.hd @@ List.rev timestamps in
   let time_elapsed = final_time -. first_time in
@@ -84,9 +84,10 @@ let process_transactions timestamps_and_blocks =
         let transactions_per_block = List.length user_operations in
         let i = acc + transactions_per_block in
         Format.eprintf "transactions per block, block height:%Ld, %i\n%!"
-          block.block_height transactions_per_block;
-        i)
-      0 (List.rev blocks) in
+          block.block_height transactions_per_block ;
+        i )
+      0 (List.rev blocks)
+  in
   let tps = Float.of_int total_transactions /. time_elapsed in
   (tps, total_transactions)
 
@@ -101,19 +102,22 @@ let load_test_transactions ~ticketer (batch_size, batch_count) =
   let%await starting_block_level = get_current_block_level () in
   let%await operation_hash = spam ~ticketer (batch_size, batch_count) in
   let%await final_block_level =
-    get_last_block_height operation_hash starting_block_level in
+    get_last_block_height operation_hash starting_block_level
+  in
   let tps_period =
-    Int64.to_int (Int64.sub final_block_level starting_block_level) in
+    Int64.to_int (Int64.sub final_block_level starting_block_level)
+  in
   let starting_point = Int64.to_int starting_block_level in
   let%await timestamps_and_blocks =
     List.init (tps_period + 1) (fun i -> i + starting_point)
-    |> Lwt_list.map_s (fun level -> get_block_response_by_level level) in
+    |> Lwt_list.map_s (fun level -> get_block_response_by_level level)
+  in
   let tps, total_transactions = process_transactions timestamps_and_blocks in
   (*let _ = assert (total_transactions = batch_size * batch_count * rounds) in*)
-  Format.eprintf "(batch_size: %i, batch_count: %i)\n%!" batch_size batch_count;
-  Format.eprintf "Total send: %i\n%!" (batch_size * batch_count);
-  Format.eprintf "Total process transactions: %i\n%!" total_transactions;
-  Format.eprintf "TPS: %.03f\n%!" tps;
+  Format.eprintf "(batch_size: %i, batch_count: %i)\n%!" batch_size batch_count ;
+  Format.eprintf "Total send: %i\n%!" (batch_size * batch_count) ;
+  Format.eprintf "Total process transactions: %i\n%!" total_transactions ;
+  Format.eprintf "TPS: %.03f\n%!" tps ;
   await ()
 
 (*let params = [(500, 2); (250, 4); (100, 10)]
@@ -128,12 +132,7 @@ let load_test_transactions ~ticketer (batch_size, batch_count) =
     Lwt_list.iter_p (fun s -> Lwt.pick [Lwt_unix.timeout 60.0; s]) sps*)
 
 let load_test_transactions ticketer =
-  Lwt.pick
-    [
-      Lwt_unix.timeout 60.0;
-      load_test_transactions ~ticketer (100, 10);
-      load_test_transactions ~ticketer (500, 2);
-    ]
+  Lwt.pick [Lwt_unix.timeout 45.0; load_test_transactions ~ticketer (100, 10)]
 
 let load_test_transactions ticketer =
   load_test_transactions ticketer |> Lwt_main.run
@@ -144,8 +143,10 @@ let args =
     let docv = "ticketer" in
     let doc =
       "Tezos address of the contract issuing the ticket (e.g. \
-       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)" in
-    required & pos 0 (some string) None & info [] ~doc ~docv in
+       KT1Ec5eb7WZNuqWDUdcFM1c2XcmwjWsJrrxb)"
+    in
+    required & pos 0 (some string) None & info [] ~doc ~docv
+  in
   let open Term in
   const load_test_transactions $ ticketer
 
