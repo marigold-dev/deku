@@ -4,3 +4,4 @@ node_modules
 database.db
 database.db-journal
 result
+examples/cookie-game/lib/
