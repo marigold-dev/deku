@@ -116,6 +116,17 @@ EOF
   echo "]"
 }
 
+# Get the uri and the nonce of a newly-updated validator in discovery storage
+validator_storage() {
+  local script_id_hash storage big_map_value validator_value
+
+  script_id_hash=$(tezos-client hash data \"$1\" of type key_hash | grep "Script-expression-ID-Hash: ex" | awk '{ print $2 }' | tr -d '\r')
+  storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$2/storage")
+  big_map_value=$(echo "$storage" | jq '.int' | xargs)
+  validator_value=$(tezos-client get element $script_id_hash of big map $big_map_value)
+  echo $validator_value
+}
+
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
 # the [initial_storage] expression and originates the contract as myWallet on Tezos.
 deploy_contract () {
@@ -342,6 +353,13 @@ deposit_ticket() {
   --burn-cap 2
 }
 
+# Add uri for a default validator in discovery contract
+update_discovery_contract() {
+  tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to discovery \
+  --arg "Pair (Pair \"$1\" $2) (Pair \"$3\" \"$4\")" \
+  --burn-cap 2
+}
+
 deposit_withdraw_test() {
   # Deposit 100 tickets
   deposit_ticket | grep tezos-client | tr -d '\r'
@@ -436,6 +454,23 @@ test_wasm_full() {
   sleep 5
   asserter_balance "$DATA_DIRECTORY/0" $DEKU_ADDRESS "Pair \"$DUMMY_TICKET\" 0x" 
 }
+
+test_discovery_contract() {
+  local key address uri signature nonce discovery_address storage_uri
+
+  # The information of a randomly-chosen vailidator
+  key="edpkvUjffzShGfC7t2JV2LbHv7wsMJFhjN88FESzVmxpSk7kXgQjSg"
+  address="tz1RHAKdVWB9RuwWK4fyXrgWR5fEBJAjRM42"
+  uri="http://localhost:4445"
+  signature="edsigtrEB1sXywYiJUdiLurqbaN8UgxGyY4Hw4pY5VB7Vs19MeKrUCThjUEoq1ootsfZvdDiEJyPMquTVDAzzvRgF7keNH4U9Ee"
+  nonce=1
+
+  update_discovery_contract $key $nonce $signature $uri
+  discovery_address="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
+  storage_uri=$(validator_storage $address $discovery_address | awk '{ print $3 }' | tr -d '\r')
+  asserter_uri_update uri storage_uri
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -493,6 +528,9 @@ test-wasm)
   test_wasm_full
   killall deku-node
  ;;
+test-discovery-contract)
+  test_discovery_contract
+  ;;
 deposit-withdraw-test)
   deposit_withdraw_test
   ;;
