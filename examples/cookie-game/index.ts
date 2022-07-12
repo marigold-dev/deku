@@ -69,7 +69,10 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 console.log("Adding grandma");
                 //adding one cookie
                 source_value.cookie_baker.number_of_grandma += 1;
+                source_value.cookie_baker.number_of_cookie -= grandma_cost;
                 console.log("New grandmas amount: " + source_value.cookie_baker.number_of_grandma);
+                console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
+
                 //update state
                 print_message_with_source("successfully minted grandma for:", source_value);
                 set(source, source_value);
@@ -86,13 +89,15 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 console.log("Adding factory");
                 //adding one factory
                 source_value.cookie_baker.number_of_factory += 1;
+                source_value.cookie_baker.number_of_cookie -= factory_cost;
                 console.log("New factories amount: " + source_value.cookie_baker.number_of_factory);
+                console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
                 //update state
                 print_message_with_source("successfully minted factory for:", source_value);
                 set(source, source_value);
                 console.log("Saved state");
             } else {
-                console.log("Not enough cookie to buy a grandma");
+                console.log("Not enough cookie to buy a factory");
             }
             break;
         }
