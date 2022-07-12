@@ -5,11 +5,12 @@ payload="increment_cookie"
 # Run mock create
 mock(){
     # build the ts project
-    cd examples/cookie-games && npm run build
+    cd examples/cookie-game && npm run build
+
+    cd ../../
 
     # run the deku-cli
-     deku-cli create-mock-transaction wallet.json '"increment_cookie"' node \
-     _build/default/examples/cookie-game/index.js
+     deku-cli create-mock-transaction wallet.json '"increment_cookie"' node examples/cookie-game/index.js
 
     #deku-cli create-mock-transaction wallet.json '"$payload"' node \
     #_build/default/examples/cookie-game/index.js
@@ -20,8 +21,9 @@ mock(){
 
 deku_cluster(){
     # build ts project
-    cd examples/cookie-games && npm run install 
+    cd examples/cookie-game && npm run build
 
+    cd ../../
     # tear-down the cluster
     tilt down
     # setup and start the cluster with vm cookie

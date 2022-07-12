@@ -52,7 +52,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
             print_message_with_source("Successfully parsed source:", source_value);
             console.log("Adding cookie");
             console.log(source_value);
-            const cookie_baker : cookie_baker = source_value.cookie_baker;
+            const cookie_baker = source_value.cookie_baker;
             //adding one cookie
             cookie_baker.number_of_cookie += 1;
             console.log("New cookies amount: " + cookie_baker.number_of_cookie);
@@ -81,7 +81,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
         }
         case action_type.increment_factory: {
             const source_value = JSON.parse(get(source));
-            if (source_value.cookie_baker.number_of_cookie >= grandma_cost) {
+            if (source_value.cookie_baker.number_of_cookie >= factory_cost) {
                 print_message_with_source("Successfully parsed source:", source_value);
                 console.log("Adding factory");
                 //adding one factory
