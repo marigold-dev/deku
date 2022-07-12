@@ -5,3 +5,4 @@ database.db
 database.db-journal
 result
 chain*.json
+examples/cookie-game/lib/
