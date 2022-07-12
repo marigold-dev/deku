@@ -120,11 +120,11 @@ EOF
 validator_storage() {
   local script_id_hash storage big_map_value validator_value
 
-  script_id_hash=$(tezos-client hash data \"$1\" of type key_hash | grep "Script-expression-ID-Hash: ex" | awk '{ print $2 }' | tr -d '\r')
+  script_id_hash=$(tezos-client hash data \""$1"\" of type key_hash | grep "Script-expression-ID-Hash: ex" | awk '{ print $2 }' | tr -d '\r')
   storage=$(curl --silent "$RPC_NODE/chains/main/blocks/head/context/contracts/$2/storage")
   big_map_value=$(echo "$storage" | jq '.int' | xargs)
-  validator_value=$(tezos-client get element $script_id_hash of big map $big_map_value)
-  echo $validator_value
+  validator_value=$(tezos-client get element "$script_id_hash" of big map "$big_map_value")
+  echo "$validator_value"
 }
 
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
@@ -467,8 +467,8 @@ test_discovery_contract() {
 
   update_discovery_contract $key $nonce $signature $uri
   discovery_address="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
-  storage_uri=$(validator_storage $address $discovery_address | awk '{ print $3 }' | tr -d '\r')
-  asserter_uri_update uri storage_uri
+  storage_uri=$(validator_storage $address "$discovery_address" | awk '{ print $3 }' | tr -d '\r')
+  asserter_uri_update $uri "$storage_uri"
 }
 
 load_test () {
