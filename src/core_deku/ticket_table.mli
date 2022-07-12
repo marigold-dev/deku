@@ -33,3 +33,5 @@ val take_all_tickets :
 
 val update_tickets :
   t -> sender:Address.t -> tickets:(Ticket_id.t * Amount.t) Seq.t -> t
+
+val tickets : t -> Address.t -> (Ticket_id.t * Amount.t) list

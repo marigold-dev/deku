@@ -387,6 +387,17 @@ let request_ticket_balance state ~ticket ~address =
   |> Core_deku.State.ledger
   |> Ledger.balance address ticket
 
+let request_contract_storage ~address state =
+  state.Node.consensus.protocol.core_state
+  |> Core_deku.State.contract_storage
+  |> Core_deku.Contract_storage.get_contract ~address
+  |> Option.map Core_deku.Contracts.Contract_vm.Contract.raw_storage
+
+let request_address_tickets ~address state =
+  state.Node.consensus.protocol.core_state
+  |> Core_deku.State.ledger
+  |> Ledger.address_tickets ~address
+
 let trusted_validators_membership ~payload ~signature =
   handle_consensus_operation (fun handler consensus ->
       Consensus.with_trusted_validators_membership_change handler ~payload
