@@ -2,7 +2,20 @@ open Crypto
 
 type t [@@deriving yojson]
 
-type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
+type contract_invocation_changes
+
+and contract_origination_changes
+
+and receipt =
+  | Receipt_tezos_withdraw       of Ledger.Withdrawal_handle.t
+  | Receipt_contract_origination of {
+      sender : Address.t;
+      outcome : [`Success of contract_origination_changes | `Failure];
+    }
+  | Receipt_contract_invocation  of {
+      sender : Address.t;
+      outcome : [`Success of contract_invocation_changes | `Failure];
+    }
 [@@deriving yojson]
 
 val empty : t
