@@ -47,3 +47,5 @@ val withdrawal_handles_find_proof_by_id :
   int -> t -> ((BLAKE2B.t * BLAKE2B.t) list * Withdrawal_handle.t) option
 
 val withdrawal_handles_root_hash : t -> BLAKE2B.t
+
+val address_tickets : t -> address:Address.t -> (Ticket_id.t * Amount.t) list

@@ -119,3 +119,8 @@ let take_all_tickets t ~sender =
     Address_map.find_opt sender t |> Option.value ~default:Tickets.empty in
   let tickets = Tickets.to_seq map in
   (tickets, Address_map.remove sender t)
+
+let tickets t address =
+  match Address_map.find_opt address t with
+  | Some tickets -> tickets |> Tickets.to_seq |> List.of_seq
+  | None -> []

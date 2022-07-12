@@ -44,6 +44,8 @@ let balance address ticket t =
   Ticket_table.balance t.table ~sender:address ~ticket
   |> Option.value ~default:Amount.zero
 
+let address_tickets t ~address = Ticket_table.tickets t.table address
+
 let transfer ~sender ~destination amount ticket t =
   let%ok table =
     Ticket_table.transfer t.table ~sender

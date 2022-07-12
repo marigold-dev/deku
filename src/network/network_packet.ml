@@ -173,3 +173,19 @@ module Trusted_validators_membership_change = struct
 
   let path = "/trusted-validators-membership"
 end
+
+module Contract_storage = struct
+  type request = { address : Contract_address.t } [@@deriving yojson]
+
+  type response = bytes option [@@deriving yojson]
+
+  let path = "/contract-storage"
+end
+
+module Address_tickets = struct
+  type request = { address : Key_hash.t } [@@deriving yojson]
+
+  type response = (Ticket_id.t * Amount.t) list [@@deriving yojson]
+
+  let path = "/available-tickets"
+end
