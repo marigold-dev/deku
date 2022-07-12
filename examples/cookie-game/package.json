@@ -1,0 +1,16 @@
+{
+  "name": "cookie-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "deku_js_interop": "file:../../sdks/deku_js_interop",
+    "typescript": "^4.7.4"
+  }
+}
