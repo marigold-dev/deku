@@ -168,13 +168,13 @@ create_new_deku_environment() {
       # For the current setup, we are using either localhost or deku-node-i and
       # run on different ports (incremental).
       # In future, one can configure URI to be whatever one wish
-      deku-cli setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
+      deku-node setup-identity "$FOLDER" --uri "http://deku-node-$i:4440"
     else
-      deku-cli setup-identity "$FOLDER" --uri "http://localhost:444$i"
+      deku-node setup-identity "$FOLDER" --uri "http://localhost:444$i"
     fi
-    KEY=$(deku-cli self "$FOLDER" | grep "key:" | awk '{ print $2 }')
-    ADDRESS=$(deku-cli self "$FOLDER" | grep "address:" | awk '{ print $2 }')
-    URI=$(deku-cli self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
+    KEY=$(deku-node self "$FOLDER" | grep "key:" | awk '{ print $2 }')
+    ADDRESS=$(deku-node self "$FOLDER" | grep "address:" | awk '{ print $2 }')
+    URI=$(deku-node self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
     VALIDATORS[$i]="$i;$KEY;$URI;$ADDRESS"
   done
 
@@ -233,7 +233,7 @@ EOF
     i=$(echo "$VALIDATOR" | awk -F';' '{ print $1 }')
     FOLDER="$DATA_DIRECTORY/$i"
 
-    deku-cli setup-tezos "$FOLDER" \
+    deku-node setup-tezos "$FOLDER" \
       --tezos_consensus_contract="$TEZOS_CONSENSUS_ADDRESS" \
       --tezos_discovery_contract="$TEZOS_DISCOVERY_ADDRESS" \
       --tezos_rpc_node=$RPC_NODE \
@@ -258,7 +258,7 @@ start_deku_cluster() {
   echo "Starting nodes."
   for i in "${VALIDATORS[@]}"; do
     if [ "$mode" = "local" ]; then
-      deku-node "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --color="${DEKU_LOG_COLOR:-auto}" --listen-prometheus="900$i" &
+      deku-node start "$DATA_DIRECTORY/$i" --verbosity="${DEKU_LOG_VERBOSITY:-debug}" --listen-prometheus="900$i" &
       SERVERS+=($!)
     fi
   done
@@ -270,9 +270,9 @@ start_deku_cluster() {
   # See deku-cli produce-block --help
   echo "Producing a block"
   if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 /bin/deku-cli produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
+    HASH=$(docker exec -t deku-node-0 /bin/deku-node produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
   else
-    HASH=$(deku-cli produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
+    HASH=$(deku-node produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
   fi
 
   sleep 0.1
@@ -285,11 +285,11 @@ start_deku_cluster() {
     if [ "$mode" = "docker" ]; then
       echo "hash: $HASH"
       echo "deku-node-$i"
-      docker exec -t "deku-node-$i" deku-cli sign-block /app/data "$HASH"
+      docker exec -t "deku-node-$i" deku-node sign-block /app/data "$HASH"
     else
       echo "hash: $HASH"
       echo "deku-node-$i"
-      deku-cli sign-block "$DATA_DIRECTORY/$i" "$HASH"
+      deku-node sign-block "$DATA_DIRECTORY/$i" "$HASH"
     fi
   done
 
@@ -363,14 +363,14 @@ update_discovery_contract() {
 deposit_withdraw_test() {
   # Deposit 100 tickets
   deposit_ticket | grep tezos-client | tr -d '\r'
-  sleep 10
+  sleep 20
 
   echo "{\"address\": \"$DEKU_ADDRESS\", \"priv_key\": \"$DEKU_PRIVATE_KEY\"}" > wallet.json
 
   DUMMY_TICKET=$(tezos-client show known contract dummy_ticket | tr -d '\t\n\r')
 
   # Check that the ticket has been deposited on deku
-  BALANCE=$(deku-cli get-balance data/0 $DEKU_ADDRESS "(Pair \"$DUMMY_TICKET\" 0x)" | sed -n "s/Balance: \([0-9]*\)/\1/p")
+  BALANCE=$(deku-cli get-balance $DEKU_ADDRESS "(Pair \"$DUMMY_TICKET\" 0x)" | sed -n "s/Balance: \([0-9]*\)/\1/p")
   if ((BALANCE == 0))
   then
     echo "error: Balance for ticket $DUMMY_TICKET is \"$BALANCE\"! Did the deposit fail?"
@@ -378,10 +378,10 @@ deposit_withdraw_test() {
   fi
 
   # # We can withdraw 10 tickets from deku
-  OPERATION_HASH=$(deku-cli withdraw data/0 ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
-  sleep 10
+  OPERATION_HASH=$(deku-cli withdraw ./wallet.json "$DUMMY_TICKET" 10 "Pair \"$DUMMY_TICKET\" 0x" | awk '{ print $2 }' | tr -d '\t\n\r')
+  sleep 20
 
-  WITHDRAW_PROOF=$(deku-cli withdraw-proof data/0 "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
+  WITHDRAW_PROOF=$(deku-cli withdraw-proof "$OPERATION_HASH" "$DUMMY_TICKET%burn_callback" | tr -d '\t\n\r')
   if [ -z "$WITHDRAW_PROOF" ]; then
     echo Withdraw failed!
     exit 1
@@ -471,6 +471,11 @@ test_discovery_contract() {
   asserter_uri_update uri storage_uri
 }
 
+load_test () {
+  DUMMY_TICKET_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  deku-load-test "saturate" "$DUMMY_TICKET_ADDRESS"
+}
+
 help() {
   # FIXME: fix these docs
   echo "$0 automates deployment of a Tezos testnet node and setup of a Deku cluster."
@@ -492,6 +497,8 @@ help() {
   echo "  Start a Deku cluster and originate a dummy tickets and performs a deposit and a withdraw"
   echo "deposit-dummy-ticket"
   echo " Executes a deposit of a dummy ticket to Deku"
+  echo "load-test (saturate | maximal-blocks)"
+  echo "  Performs the specified load test on a running cluster"
 }
 
 message "Running in $mode mode"
@@ -544,6 +551,9 @@ check-liveness)
   CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   echo "$CONSENSUS_ADDRESS" > /tmp/hello
   check-liveness "$RPC_NODE" "$CONSENSUS_ADDRESS"
+  ;;
+load-test)
+  load_test "$2"
   ;;
 *)
   help
