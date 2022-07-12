@@ -22,6 +22,7 @@ interface cookie_baker {
 interface grandma {
     cookie_per_second : 2
 }
+
 interface factory {
     cookie_per_second : 10
 }
@@ -30,6 +31,11 @@ enum actions {
     increment_cookie = "increment_cookie",
     increment_grandma = "increment_grandma",
     increment_factory = "increment_factory"
+}
+
+const print_message_with_source = (message, source) => {
+    console.log(message);
+    console.log(source);
 }
 
 const transition = ( {source, op_hash, tx_hash, operation}) => {
@@ -48,8 +54,7 @@ const transition = ( {source, op_hash, tx_hash, operation}) => {
             console.log("new cookies amount: " + source_value.number_of_cookies);
             //update state
             set(source, JSON.stringify(source_value));
-            console.log("successfully minted cookie for:")
-            console.log(source_value);
+            print_message_with_source("successfully minted cookie for:", source_value);
             break;
         }
         case actions.increment_grandma : {
@@ -62,8 +67,7 @@ const transition = ( {source, op_hash, tx_hash, operation}) => {
             console.log("new grandmas amount: " + source_value.number_of_grandmas);
             //update state
             set(source, JSON.stringify(source_value));
-            console.log("successfully minted grandma for:")
-            console.log(source_value);
+            print_message_with_source("successfully minted grandma for:", source_value);
             break;
         }
         case actions.increment_factory : {
@@ -76,8 +80,7 @@ const transition = ( {source, op_hash, tx_hash, operation}) => {
             console.log("new factories amount: " + source_value.number_of_factories);
             //update state
             set(source, JSON.stringify(source_value));
-            console.log("successfully minted factory for:")
-            console.log(source_value);
+            print_message_with_source("successfully minted factory for:", source_value);
             break;
         }
     }
