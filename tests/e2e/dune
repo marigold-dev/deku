@@ -21,7 +21,7 @@
  (public_name asserter_uri_update)
  (modules asserter_uri_update)
  (libraries cmdliner))
- 
+
 (executable
  (name ticket_handle)
  (public_name ticket_handle)
