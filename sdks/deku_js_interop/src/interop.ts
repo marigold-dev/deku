@@ -5,7 +5,6 @@ let machineToChain: number | undefined;
 let chainToMachine: number | undefined;
 let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
 
-
 /**
  * Opens two fifos, one for reading and a second one for writing
  * @returns {void}
@@ -80,7 +79,7 @@ const write = (value: Buffer) => {
  * @param {string} value a string encoded in json
  */
 const set = (key: string, value: string) => {
-  const message = `["Set",{"key":"${key}","value":${value}}]`;
+  const message = JSON.stringify(["Set", { "key": key, value }]);
   write(Buffer.from(message)); // TODO: check if it succeeds
   state[key] = value;
   return;
