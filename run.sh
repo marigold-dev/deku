@@ -2,6 +2,11 @@ set -e
 
 payload="increment_cookie"
 
+# Build sdks
+build_sdks(){
+    cd sdks/deku_js_interop && npm install && npm run build
+}
+
 # Run mock create
 mock(){
     # build the ts project
@@ -38,6 +43,9 @@ custom(){
 
 
 case "$1" in 
+build_skds)
+ build_sdks
+;;
 mock)
  mock
  ;;
