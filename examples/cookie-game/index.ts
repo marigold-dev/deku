@@ -31,9 +31,9 @@ interface factory {
 }
 
 enum action_type {
-    increment_cookie = "increment_cookie",
-    increment_grandma = "increment_grandma",
-    increment_factory = "increment_factory"
+    increment_cookie = "cookie",
+    increment_grandma = "grandma",
+    increment_factory = "factory"
 }
 
 const print_message_with_source = (message, source) => {

@@ -1,6 +1,12 @@
 set -e
 
-payload="increment_cookie"
+node=$2
+wallet="$3"
+cmd="$4"
+
+build_cookie(){
+    cd examples/cookie-game && npm run build
+}
 
 # Build sdks
 build_sdks(){
@@ -15,7 +21,7 @@ mock(){
     cd ../../
 
     # run the deku-cli
-     deku-cli create-mock-transaction wallet.json '"increment_cookie"' node examples/cookie-game/index.js
+     deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/index.js
 
     #deku-cli create-mock-transaction wallet.json '"$payload"' node \
     #_build/default/examples/cookie-game/index.js
@@ -38,11 +44,14 @@ deku_cluster(){
 # Run custom create
 
 custom(){
-    deku-cli create-custom-transaction data/0 wallet.json '"increment_cookie"'    
+    deku-cli create-custom-transaction $node $wallet $cmd
 }
 
 
 case "$1" in 
+build_cookie)
+ build_cookie
+;;
 build_skds)
  build_sdks
 ;;
