@@ -85,7 +85,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 print_message_with_source("Successfully parsed source:", source_value);
                 console.log("Adding factory");
                 //adding one factory
-                source_value.factory_baker.number_of_factory += 1;
+                source_value.cookie_baker.number_of_factory += 1;
                 console.log("New factories amount: " + source_value.cookie_baker.number_of_factory);
                 //update state
                 print_message_with_source("successfully minted factory for:", source_value);
