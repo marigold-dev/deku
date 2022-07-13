@@ -1,17 +1,5 @@
-import { main, get, set } from "deku_js_interop"
-
-// const fct = ({param1, param2}: custom_type) => {
-//     console.log("Here I am");
-//     console.log(param1);
-//     console.log(param2);
-// }
-
-// interface custom_type {
-//     param1: string,
-//     param2: number
-// }
-
-// fct({param1: "salut", param2:3});
+// @ts-ignore
+import { main, get, set, transaction } from "deku_js_interop"
 
 interface cookie_baker {
     number_of_cookie: number,
@@ -41,23 +29,23 @@ enum action_type {
     increment_grandma = "grandma",
     increment_factory = "factory"
 }
-
-const print_message_with_source = (message, source) => {
+// @ts-ignore
+const print_message_with_source = (message:string, source) => {
     console.log(message);
     console.log(source);
 }
-
-const save_state = (source, source_value) => {
+const save_state = (source: transaction, source_value:JSON) => {
     console.log("Saving state");
     set(source, source_value);
     console.log("Successfully saved state");
 }
 
-const transition = ({ source, op_hash, tx_hash, operation }) => {
+const transition = (tx: transaction) => {
     // source -> tz1 address
     // op_hash / tx_hash => BLAKE2B => resolved as string
     // operation => any
-
+    const source = tx.source;
+    const operation = tx.operation;
     console.log("Getting source");
     const source_value = JSON.parse(get(source));
     print_message_with_source("Successfully parsed source:", source_value);
@@ -85,7 +73,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
 
                 //update state
                 print_message_with_source("Successfully minted cursor for:", source_value);
-                save_state(source, source_value);
+                save_state(tx, source_value);
             } else {
                 console.log("Not enough cookie to buy a cursor");
             }
@@ -102,14 +90,13 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
 
                 //update state
                 print_message_with_source("Successfully minted grandma for:", source_value);
-                save_state(source, source_value);
+                save_state(tx, source_value);
             } else {
                 console.log("Not enough cookie to buy a grandma");
             }
             break;
         }
         case action_type.increment_factory: {
-            const source_value = JSON.parse(get(source));
             if (source_value.cookie_baker.number_of_cookie >= factory_cost) {
                 console.log("Adding factory");
                 //adding one factory
@@ -119,7 +106,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
                 //update state
                 print_message_with_source("Successfully minted factory for:", source_value);
-                save_state(source, source_value);
+                save_state(tx, source_value);
             } else {
                 console.log("Not enough cookie to buy a factory");
             }
