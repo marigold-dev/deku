@@ -177,7 +177,7 @@ module Cmdliner_helpers = struct
        Flextesa" in
     let env = Cmd.Env.info "DEKU_TEZOS_SECRET" in
     value
-    & opt string "edsk4TxW4UvCXFZrB5ifMx83PAUECKLUB95ecm1Lp4GbE8ZEeE3T1g"
+    & opt string "edsk3RFfvaFaxbHx8BMtEW1rKQcPtDML3LXjNqMNLCzC3wLC1bWbAt"
     & info ["tezos_secret"] ~docv ~doc ~env
 
   let nodes =
