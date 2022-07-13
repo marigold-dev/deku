@@ -11,7 +11,7 @@ type t = private {
   block_height : int64;
   consensus_operations : Protocol_operation.Consensus.t list;
   tezos_operations : Protocol_operation.Core_tezos.t list;
-  user_operations : string;
+  user_operations : string list;
 }
 [@@deriving yojson, ord]
 
