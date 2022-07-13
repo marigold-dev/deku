@@ -175,10 +175,9 @@ let handle_receive_user_operation_custom =
                 (fun _ operation ->
                   match operation with
                   | Protocol.Operation.Core_user op ->
-                    let op_request = request.user_operation in
                     if
                       op.Protocol.Operation.Core_user.hash
-                      = op_request.Protocol.Operation.Core_user.hash
+                      = request.user_operation
                     then
                       match op.data.initial_operation with
                       | Core_deku.User_operation.Vm_transaction payload ->

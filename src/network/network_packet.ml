@@ -116,7 +116,7 @@ module User_operations_gossip = struct
 end
 
 module User_operation_custom = struct
-  type request = { user_operation : Protocol.Operation.Core_user.t }
+  type request = { user_operation : BLAKE2B.t }
   [@@deriving yojson]
 
   type response = Yojson.Safe.t option [@@deriving yojson]
