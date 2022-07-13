@@ -76,10 +76,10 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
         }
         case action_type.increment_cursor: {
             if (source_value.cookie_baker.number_of_cookie >= cursor_cost) {
-                console.log("Adding grandma");
+                console.log("Adding cursor");
                 //adding one cookie
                 source_value.cookie_baker.number_of_cursor += 1;
-                console.log("New grandmas amount: " + source_value.cookie_baker.number_of_cursor);
+                console.log("New cursors amount: " + source_value.cookie_baker.number_of_cursor);
                 source_value.cookie_baker.number_of_cookie -= cursor_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
 
