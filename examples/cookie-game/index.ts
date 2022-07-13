@@ -1,18 +1,5 @@
 import { main, get, set } from "deku_js_interop"
 
-// const fct = ({param1, param2}: custom_type) => {
-//     console.log("Here I am");
-//     console.log(param1);
-//     console.log(param2);
-// }
-
-// interface custom_type {
-//     param1: string,
-//     param2: number
-// }
-
-// fct({param1: "salut", param2:3});
-
 interface cookie_baker {
     number_of_cookie: number,
     number_of_grandma: number,
@@ -87,7 +74,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 print_message_with_source("Successfully minted cursor for:", source_value);
                 save_state(source, source_value);
             } else {
-                console.log("Not enough cookie to buy a cursor");
+                console.log("Not enough cookie to buy a cursor. The cookie you need have to be " + cursor_cost);
             }
             break;
         }
@@ -104,7 +91,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 print_message_with_source("Successfully minted grandma for:", source_value);
                 save_state(source, source_value);
             } else {
-                console.log("Not enough cookie to buy a grandma");
+                console.log("Not enough cookie to buy a grandma. The cookie you need have to be " + grandma_cost);
             }
             break;
         }
@@ -121,7 +108,7 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
                 print_message_with_source("Successfully minted factory for:", source_value);
                 save_state(source, source_value);
             } else {
-                console.log("Not enough cookie to buy a factory");
+                console.log("Not enough cookie to buy a factory. The cookie you need have to be " + factory_cost);
             }
             break;
         }
