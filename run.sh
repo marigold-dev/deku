@@ -14,6 +14,7 @@ build_dune(){
 # Build cookie project
 build_cookie(){
     cd examples/cookie-game && npm install && npm run build
+    cd ../../
 }
 
 # Build sdks
@@ -23,24 +24,14 @@ build_sdks(){
 
 # Run mock create
 mock(){
-    # build cookie project project
-    cd examples/cookie-game && npm run build
-
-    cd ../../
-
     # run the deku-cli in mock mode
+    # ex: ./run.sh wallet.json '"cookie"'
      deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/index.js
 
 }
 
-
 # run Deku-cluster in tilt mode
 deku_cluster(){
-    # build cookie project
-    cd examples/cookie-game && npm run build
-
-    cd ../../
-
     # tear-down the cluster
     tilt down
     
@@ -50,6 +41,8 @@ deku_cluster(){
 
 # Run custom create
 custom(){
+    # Need to wait for deku_cluster to build some nodes before run this 
+    # ex: ./run.sh custom data/0 wallet.json '"cookie'
     deku-cli create-custom-transaction $node $wallet $cmd
 }
 
@@ -64,9 +57,11 @@ build_sdks)
  build_sdks
 ;;
 mock)
+ build_cookie
  mock
  ;;
 deku_cluster)
+ build_cookie
  deku_cluster
  ;;
 custom)
