@@ -89,7 +89,7 @@ jobs:
           docker image push ghcr.io/marigold-dev/deku:latest
           docker image push ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
       - name: "Push image for PR"
-        # Run this if the PR has the "docker" label
+        # Run this if the PR has the "docker" label (test)
         if: contains(github.event.pull_request.labels.*.name, 'docker')
         run: |
           docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
