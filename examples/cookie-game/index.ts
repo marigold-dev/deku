@@ -75,7 +75,7 @@ const transition = (tx: transaction) => {
                 print_message_with_source("Successfully minted cursor for:", source_value);
                 save_state(tx, source_value);
             } else {
-                console.log("Not enough cookie to buy a cursor");
+                console.log("Not enough cookie to buy a cursor. The cookie you need have to be " + cursor_cost);
             }
             break;
         }
@@ -92,7 +92,7 @@ const transition = (tx: transaction) => {
                 print_message_with_source("Successfully minted grandma for:", source_value);
                 save_state(tx, source_value);
             } else {
-                console.log("Not enough cookie to buy a grandma");
+                console.log("Not enough cookie to buy a grandma. The cookie you need have to be " + grandma_cost);
             }
             break;
         }
@@ -108,7 +108,7 @@ const transition = (tx: transaction) => {
                 print_message_with_source("Successfully minted factory for:", source_value);
                 save_state(tx, source_value);
             } else {
-                console.log("Not enough cookie to buy a factory");
+                console.log("Not enough cookie to buy a factory. The cookie you need have to be " + factory_cost);
             }
             break;
         }
