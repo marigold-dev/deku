@@ -5,7 +5,6 @@ let machineToChain: number | undefined;
 let chainToMachine: number | undefined;
 let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
 
-
 /**
  * Opens two fifos, one for reading and a second one for writing
  * @returns {void}
