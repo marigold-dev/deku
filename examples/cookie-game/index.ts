@@ -19,19 +19,25 @@ interface cookie_baker {
     number_of_factory: number,
 }
 
-const grandma_cost = 5;
-const factory_cost = 10;
+const cursor_cost = 3;
+const grandma_cost = 10;
+const factory_cost = 20;
+
+interface cursor {
+    cookie_per_second: 0.5
+}
 
 interface grandma {
-    cookie_per_second: 2
+    cookie_per_second: 1
 }
 
 interface factory {
-    cookie_per_second: 10
+    cookie_per_second: 5
 }
 
 enum action_type {
     increment_cookie = "cookie",
+    increment_cursor = "cursor",
     increment_grandma = "grandma",
     increment_factory = "factory"
 }
@@ -41,42 +47,62 @@ const print_message_with_source = (message, source) => {
     console.log(source);
 }
 
+const save_state = (source, source_value) => {
+    console.log("Saving state");
+    set(source, source_value);
+    console.log("Successfully saved state");
+}
+
 const transition = ({ source, op_hash, tx_hash, operation }) => {
     // source -> tz1 address
     // op_hash / tx_hash => BLAKE2B => resolved as string
     // operation => any
 
+    console.log("Getting source");
+    const source_value = JSON.parse(get(source));
+    print_message_with_source("Successfully parsed source:", source_value);
+
     switch (operation) {
         case action_type.increment_cookie: {
-            const source_value = JSON.parse(get(source));
-            print_message_with_source("Successfully parsed source:", source_value);
             console.log("Adding cookie");
             console.log(source_value);
-            const cookie_baker = source_value.cookie_baker;
             //adding one cookie
-            cookie_baker.number_of_cookie += 1;
-            console.log("New cookies amount: " + cookie_baker.number_of_cookie);
+            source_value.cookie_baker.number_of_cookie += 1;
+            console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
+            print_message_with_source("Successfully minted cookie for:", source_value);
             //update state
-            print_message_with_source("successfully minted cookie for:", source_value);
-            set(source, source_value);
-            console.log("Saved state");
+            save_state(source, source_value);
+            break;
+        }
+        case action_type.increment_cursor: {
+            if (source_value.cookie_baker.number_of_cookie >= cursor_cost) {
+                console.log("Adding grandma");
+                //adding one cookie
+                source_value.cookie_baker.number_of_cursor += 1;
+                console.log("New grandmas amount: " + source_value.cookie_baker.number_of_cursor);
+                source_value.cookie_baker.number_of_cookie -= cursor_cost;
+                console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
+
+                //update state
+                print_message_with_source("Successfully minted cursor for:", source_value);
+                save_state(source, source_value);
+            } else {
+                console.log("Not enough cookie to buy a cursor");
+            }
             break;
         }
         case action_type.increment_grandma: {
-            const source_value = JSON.parse(get(source));
-            print_message_with_source("Successfully parsed source:", source_value);
             if (source_value.cookie_baker.number_of_cookie >= grandma_cost) {
                 console.log("Adding grandma");
                 //adding one cookie
                 source_value.cookie_baker.number_of_grandma += 1;
-                source_value.cookie_baker.number_of_cookie -= grandma_cost;
                 console.log("New grandmas amount: " + source_value.cookie_baker.number_of_grandma);
+                source_value.cookie_baker.number_of_cookie -= grandma_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
 
                 //update state
-                print_message_with_source("successfully minted grandma for:", source_value);
-                set(source, source_value);
-                console.log("Saved state");
+                print_message_with_source("Successfully minted grandma for:", source_value);
+                save_state(source, source_value);
             } else {
                 console.log("Not enough cookie to buy a grandma");
             }
@@ -85,25 +111,21 @@ const transition = ({ source, op_hash, tx_hash, operation }) => {
         case action_type.increment_factory: {
             const source_value = JSON.parse(get(source));
             if (source_value.cookie_baker.number_of_cookie >= factory_cost) {
-                print_message_with_source("Successfully parsed source:", source_value);
                 console.log("Adding factory");
                 //adding one factory
                 source_value.cookie_baker.number_of_factory += 1;
-                source_value.cookie_baker.number_of_cookie -= factory_cost;
                 console.log("New factories amount: " + source_value.cookie_baker.number_of_factory);
+                source_value.cookie_baker.number_of_cookie -= factory_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
                 //update state
-                print_message_with_source("successfully minted factory for:", source_value);
-                set(source, source_value);
-                console.log("Saved state");
+                print_message_with_source("Successfully minted factory for:", source_value);
+                save_state(source, source_value);
             } else {
                 console.log("Not enough cookie to buy a factory");
             }
             break;
         }
     }
-    //always need to do `JSON.parse(get(source));
-
 }
 
 main(
@@ -113,6 +135,6 @@ main(
         "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
         {
             cookie_baker:
-                { number_of_cookie: 0, number_of_grandma: 0, number_of_factory: 0 }
+                { number_of_cookie: 0, number_of_cursor: 0, number_of_grandma: 0, number_of_factory: 0 }
         }
     }, transition)
