@@ -37,7 +37,7 @@ export enum FA2_Custom_Error {
 
 export type Deku_storage = {
   get: (key: string) => string | undefined
-  set: (key: string, value: string) => void
+  set: (key: string, value: any) => void
 }
 
 type fa2_storage = {
@@ -68,6 +68,8 @@ type fa2_storage = {
 export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
   const get_token_amount = (address: address, token_id: token_id): amount => {
     const json_str: string | undefined = deku_storage.get(`${address}-${token_id}`);
+    console.log("THERE IS BUG");
+    console.log(json_str);
     if (json_str === undefined) {
       return 0 // If the address does not own the token, the amount of token is considered to be 0
     }
@@ -87,7 +89,7 @@ export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
     }
     const json = JSON.parse(json_str);
     const next = { ...json, amount: json.amount - amount };
-    deku_storage.set(`${address}-${token_id}`, JSON.stringify(next));
+    deku_storage.set(`${address}-${token_id}`, next);
   }
 
   const increment_token_balance = (address: address, token_id: token_id, amount: amount) => {
@@ -96,7 +98,7 @@ export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
       ? { operators: [], amount: 0 }
       : JSON.parse(json_str);
     const next = { ...json, amount: json.amount + amount }
-    deku_storage.set(`${address}-${token_id}`, JSON.stringify(next));
+    deku_storage.set(`${address}-${token_id}`, next);
   }
 
   const add_operator = (owner: address, token_id: token_id, operator: address) => {
@@ -105,7 +107,7 @@ export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
       ? { amount: 0, operators: [] }
       : JSON.parse(json_str)
     const next = { ...json, operators: [...json.operators, operator] }
-    deku_storage.set(`${owner}-${token_id}`, JSON.stringify(next));
+    deku_storage.set(`${owner}-${token_id}`, next);
   }
 
   const remove_operator = (owner: address, token_id: token_id, operator: address) => {
@@ -115,7 +117,7 @@ export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
     } else {
       const json: ledger_entry = JSON.parse(json_str);
       const next = { ...json, operators: json.operators.filter(op => op !== operator) }
-      deku_storage.set(`${owner}-${token_id}`, JSON.stringify(next));
+      deku_storage.set(`${owner}-${token_id}`, next);
     }
   }
 
@@ -158,8 +160,8 @@ export const fa2_storage = (deku_storage: Deku_storage): fa2_storage => {
       throw FA2_Error.FA2_NOT_OPERATOR;
     }
 
-    deku_storage.set(`${token_id}`, JSON.stringify(token_metadata));
-    deku_storage.set(`${administrator}-${token_id}`, JSON.stringify({ amount: token_amount, operators: [] }));
+    deku_storage.set(`${token_id}`, token_metadata);
+    deku_storage.set(`${administrator}-${token_id}`, { amount: token_amount, operators: [] });
   }
 
   return {

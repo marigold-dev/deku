@@ -7,7 +7,7 @@ const token_id = 1
 
 let state = {}
 const mock_deku_storage: Deku_storage = {
-  get: (key: string) => state[key],
+  get: (key: string) => JSON.stringify(state[key]),
   set: (key: string, value: string) => state[key] = value
 }
 const storage = fa2_storage(mock_deku_storage);
@@ -19,11 +19,11 @@ const create_mint_token = (token_id) => [{ token_id, amount: 23, token_metadata:
 
 beforeEach(() => {
   state = {
-    [`${alice}-${token_id}`]: JSON.stringify({ operators: [], amount: 1 }),
-    [`${alice}-${2}`]: JSON.stringify({ operators: [bob], amount: 1 }),
-    "1": JSON.stringify({ "": "", name: "my-token", symbol: "TT", decimals: "" }),
-    "2": JSON.stringify({ "": "", name: "my-second-token", symbol: "TT", decimals: "" }),
-    "administrator": JSON.stringify({ value: bob })
+    [`${alice}-${token_id}`]: { operators: [], amount: 1 },
+    [`${alice}-${2}`]: { operators: [bob], amount: 1 },
+    "1": { "": "", name: "my-token", symbol: "TT", decimals: "" },
+    "2": { "": "", name: "my-second-token", symbol: "TT", decimals: "" },
+    "administrator": { value: bob }
   };
 });
 
