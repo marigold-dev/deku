@@ -52,26 +52,26 @@ const transition = (tx: transaction) => {
     const operation = tx.operation;
     console.log("Getting source");
     const source_value = JSON.parse(get(source));
-    print_message_with_source("Successfully parsed source:", source_value);
+    print_message_with_source("The cookie that you have now is:", source_value);
 
     switch (operation) {
         case action_type.increment_cookie: {
-            console.log("Adding cookie");
-            console.log(source_value);
+            print_message_with_source("Adding cookie", source_value);
             //adding one cookie
             source_value.cookie_baker.number_of_cookie += 1;
             console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
-            print_message_with_source("Successfully minted cookie for:", source_value);
             //update state
+            print_message_with_source("The cookie that you have now is:", source_value);
             save_state(source, source_value);
             break;
         }
         case action_type.increment_cursor: {
             if (source_value.cookie_baker.number_of_cookie >= cursor_cost) {
                 console.log("Adding cursor");
-                //adding one cookie
+                //adding one cursor
                 source_value.cookie_baker.number_of_cursor += 1;
                 console.log("New cursors amount: " + source_value.cookie_baker.number_of_cursor);
+                // cookie = cookie - cursor_cost
                 source_value.cookie_baker.number_of_cookie -= cursor_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
 
@@ -86,9 +86,10 @@ const transition = (tx: transaction) => {
         case action_type.increment_grandma: {
             if (source_value.cookie_baker.number_of_cookie >= grandma_cost) {
                 console.log("Adding grandma");
-                //adding one cookie
+                //adding one grandma
                 source_value.cookie_baker.number_of_grandma += 1;
                 console.log("New grandmas amount: " + source_value.cookie_baker.number_of_grandma);
+                // cookie = cookie - grandma_cost
                 source_value.cookie_baker.number_of_cookie -= grandma_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
 
@@ -106,8 +107,10 @@ const transition = (tx: transaction) => {
                 //adding one factory
                 source_value.cookie_baker.number_of_factory += 1;
                 console.log("New factories amount: " + source_value.cookie_baker.number_of_factory);
+                // cookie = cookie - factory_cost
                 source_value.cookie_baker.number_of_cookie -= factory_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker.number_of_cookie);
+                
                 //update state
                 print_message_with_source("Successfully minted factory for:", source_value);
                 save_state(tx, source_value);
