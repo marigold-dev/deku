@@ -97,7 +97,7 @@ let deposit_ticket ?(wait = None) rpc_address deku_address =
       "transfer";
       "0";
       "from";
-      "bob";
+      "myWallet";
       "to";
       "dummy_ticket";
       "--entrypoint";

@@ -5,7 +5,7 @@ open Cmdliner_helpers
 open Tezos
 
 let deploy_dummy_ticket rpc_address =
-  deploy_contract rpc_address "dummy_ticket" "./dummy_ticket.mligo" "()" "bob"
+  deploy_contract rpc_address "dummy_ticket" "./dummy_ticket.mligo" "()" "myWallet"
   |> Result.map Address.to_string
   |> Result.map print_endline
 

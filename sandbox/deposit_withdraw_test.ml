@@ -13,9 +13,9 @@ let deposit_withdraw_test validators rpc_address deku_address deku_secret =
 
   (* deploy a dummy ticket *)
   let%ok dummy_ticket_address =
+  (* TODO: this should not deploy the ticket -should be done separately. *)
     deploy_contract ~wait:(Some 1) rpc_address "dummy_ticket"
-      "./dummy_ticket.mligo" "()" "bob" in
-
+      "./dummy_ticket.mligo" "()" "myWallet" in
   (* Deposit 100 tickets *)
   let%ok _ = deposit_ticket ~wait:(Some 1) rpc_address deku_address in
 
@@ -79,7 +79,7 @@ let deposit_withdraw_test validators rpc_address deku_address deku_secret =
         "transfer";
         "0";
         "from";
-        "bob";
+        "myWallet";
         "to";
         "dummy_ticket";
         "--entrypoint";
