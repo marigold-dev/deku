@@ -13,7 +13,7 @@ build_dune(){
 
 # Build cookie project
 build_cookie(){
-    cd examples/cookie-game && npm run build
+    cd examples/cookie-game && npm install && npm run build
 }
 
 # Build sdks
