@@ -27,6 +27,7 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
+  | Increment            of int
 
 type t = private {
   hash : BLAKE2B.t;

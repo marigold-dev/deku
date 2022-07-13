@@ -6,24 +6,32 @@ open Core
 type t = {
   ledger : Ledger.t;
   contract_storage : Contract_storage.t;
+  counter : int;
 }
 [@@deriving yojson]
 
 type receipt = Receipt_tezos_withdraw of Ledger.Withdrawal_handle.t
 [@@deriving yojson]
 
-let empty = { ledger = Ledger.empty; contract_storage = Contract_storage.empty }
+let empty =
+  {
+    ledger = Ledger.empty;
+    contract_storage = Contract_storage.empty;
+    counter = 0;
+  }
 
 let ledger t = t.ledger
 
 let contract_storage t = t.contract_storage
+
+let get_counter t = t.counter
 
 let hash t = to_yojson t |> Yojson.Safe.to_string |> BLAKE2B.hash
 
 let apply_tezos_operation t tezos_operation =
   let open Tezos_operation in
   let apply_internal_operation t internal_operation =
-    let { ledger; contract_storage } = t in
+    let { ledger; contract_storage; counter } = t in
     match internal_operation with
     | Tezos_deposit { destination; amount; ticket } ->
       let ticket =
@@ -37,7 +45,7 @@ let apply_tezos_operation t tezos_operation =
           let destination = key_hash in
           Ledger.deposit (Address.of_key_hash destination) amount ticket ledger
         | Originated _ -> failwith "not implemented" in
-      { ledger; contract_storage } in
+      { ledger; contract_storage; counter } in
   let { hash = _; payload } = tezos_operation in
   let { tezos_operation_hash = _; internal_operations } = payload in
   List.fold_left ~f:apply_internal_operation ~init:t internal_operations
@@ -46,14 +54,14 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
   let open User_operation in
   let { source; initial_operation; hash = _ } = user_operation in
   let sender = sender |> Option.value ~default:(Address.of_key_hash source) in
-  let { ledger; contract_storage } = t in
+  let { ledger; contract_storage; counter } = t in
   match initial_operation with
   | Transaction { destination; amount; ticket } ->
     let%ok ledger =
       Ledger.transfer
         ~sender:(Address.of_key_hash source)
         ~destination amount ticket ledger in
-    Ok ({ contract_storage; ledger }, None)
+    Ok ({ contract_storage; ledger; counter }, None)
   | Tezos_withdraw { owner; amount; ticket } when Ticket_id.is_tezos ticket ->
     let%ok ticket =
       Ticket_id.to_tezos ticket
@@ -62,7 +70,9 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
       Ledger.withdraw
         ~sender:(Address.to_key_hash sender |> Option.value_exn)
         ~destination:owner amount ticket ledger in
-    Ok ({ ledger; contract_storage }, Some (Receipt_tezos_withdraw handle))
+    Ok
+      ( { ledger; contract_storage; counter },
+        Some (Receipt_tezos_withdraw handle) )
   | Tezos_withdraw _ ->
     (*TODO *)
     Error `Insufficient_funds
@@ -107,7 +117,9 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
               ~address:contract_address ~contract in
           let ledger = set_table table in
           Ok (contract_storage, ledger)) in
-    Ok ({ contract_storage; ledger }, None)
+    Ok ({ contract_storage; ledger; counter }, None)
+  | Increment inc ->
+    Ok ({ contract_storage; ledger; counter = counter + inc }, None)
   | Contract_invocation { to_invoke; argument; tickets } ->
     let balance = Int.max_value |> Amount.of_int in
     (* TODO: find good transaction cost *)
@@ -171,9 +183,10 @@ let rec apply_user_operation ?sender t operation_hash user_operation =
                 apply_contract_ops ~source
                   ~sender:(Address.of_contract_hash to_invoke)
                   acc op)
-              ~init:({ ledger; contract_storage }, None)
+              ~init:({ ledger; contract_storage; counter }, None)
               operations in
           Ok (receipt, t)) in
+
     Ok (t, receipt)
 
 and apply_contract_ops ~source ~sender (t, _) x =

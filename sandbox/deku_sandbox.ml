@@ -24,4 +24,5 @@ let _ =
   |> Cli.add (module Deposit_dummy_ticket)
   |> Cli.add (module Load_test)
   |> Cli.add (module Check_liveness)
+  |> Cli.add (module Counter_e2e_test)
   |> Cli.eval

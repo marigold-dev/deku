@@ -210,6 +210,27 @@ let with_validator_uri node_folder f =
     | [] -> Lwt.return (`Error (false, "No validators found"))
     | validator_uri :: _ -> f validator_uri)
 
+let create_counter_transaction node_folder sender_wallet_file =
+  let open Network in
+  with_validator_uri node_folder @@ fun (_, validator_uri) ->
+  let%await block_level_response = request_block_level () validator_uri in
+  let block_level = block_level_response.level in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
+  let operation =
+    Core_deku.User_operation.make ~source:wallet.address
+      (Core_deku.User_operation.Increment 1) in
+  let transaction =
+    Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
+      ~nonce:(Crypto.Random.int32 Int32.max_int)
+      ~block_height:block_level ~data:operation in
+  let%await identity = read_identity ~node_folder in
+  let%await () =
+    Network.request_user_operation_gossip
+      { user_operation = transaction }
+      identity.uri in
+  Format.printf "operation.hash: %s\n%!" (BLAKE2B.to_string transaction.hash);
+  Lwt.return (`Ok ())
+
 let create_transaction node_folder sender_wallet_file received_address amount
     ticket argument vm_flavor tickets =
   let open Network in
@@ -529,6 +550,20 @@ let info_get_ticket_balance =
   let doc = "Get balance of a ticket for an account." in
   Cmd.info "get-balance" ~version:"%\226\128\140%VERSION%%" ~doc ~exits ~man
 
+let info_create_counter_transaction =
+  let doc = "Foo" in
+  Cmd.info "create-counter-transaction" ~version:"%\226\128\140%VERSION%%" ~doc
+    ~exits ~man
+
+let create_counter_transaction =
+  let open Term in
+  let folder_node =
+    let docv = "folder_node" in
+    let doc = "The folder where the node lives." in
+    let open Arg in
+    required & pos 0 (some string) None & info [] ~doc ~docv in
+  lwt_ret (const create_counter_transaction $ folder_node $ address_from 1)
+
 let get_ticket_balance node_folder address ticket =
   let open Network in
   let%await identity = read_identity ~node_folder in
@@ -599,4 +634,5 @@ let _ =
          Cmd.v info_withdraw_proof withdraw_proof;
          Cmd.v info_get_ticket_balance get_ticket_balance;
          Cmd.v info_self self;
+         Cmd.v info_create_counter_transaction create_counter_transaction;
        ]

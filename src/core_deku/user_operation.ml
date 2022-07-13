@@ -30,6 +30,7 @@ type initial_operation =
       amount : Amount.t;
       ticket : Ticket_id.t;
     }
+  | Increment            of int
 [@@deriving yojson]
 
 type t = {

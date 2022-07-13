@@ -173,3 +173,11 @@ module Trusted_validators_membership_change = struct
 
   let path = "/trusted-validators-membership"
 end
+
+module Counter = struct
+  type request = unit [@@deriving yojson]
+
+  type response = int [@@deriving yojson]
+
+  let path = "/counter"
+end

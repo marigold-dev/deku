@@ -386,6 +386,15 @@ let handle_ticket_balance =
           ~address:(Core_deku.Address.of_key_hash address) in
       Ok { amount })
 
+let handle_counter =
+  handle_request
+    (module Network.Counter)
+    (fun () ->
+      let state : Node.State.t = Server.get_state () in
+      let counter =
+        Core_deku.State.get_counter state.consensus.protocol.core_state in
+      Ok counter)
+
 let node folder port minimum_block_delay prometheus_port =
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
@@ -406,6 +415,7 @@ let node folder port minimum_block_delay prometheus_port =
            [
              handle_block_level;
              handle_received_block;
+             handle_counter;
              handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;

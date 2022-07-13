@@ -9,6 +9,8 @@ val empty : t
 
 val ledger : t -> Ledger.t
 
+val get_counter : t -> int
+
 val contract_storage : t -> Contract_storage.t
 
 val hash : t -> BLAKE2B.t
