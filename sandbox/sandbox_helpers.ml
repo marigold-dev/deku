@@ -58,6 +58,7 @@ let deploy_contract ?(wait = None) rpc_address contract_name contract_path
     ligo ["compile"; "contract"; contract_path]
     |> run_res ~error:"ligo compile contract error" in
   print_endline "deploying contract";
+  Format.printf "rpc_address: %s\n%!" (Uri.to_string rpc_address);
   let%ok _ =
     tezos_client ~wait
       [
