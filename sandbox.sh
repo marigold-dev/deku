@@ -356,7 +356,7 @@ update_proxy_contract () {
     proxy="./proxy-contract/main.mligo"
     proxy_storage=$(
       cat <<EOF
-  (Big_map.empty : Parameter.Types.t)
+  (Big_map.empty : Storage.Types.t)
 EOF
     )
     deploy_contract "proxy" "$proxy" "$proxy_storage"
