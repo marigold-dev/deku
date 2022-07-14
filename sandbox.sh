@@ -364,18 +364,18 @@ EOF
 
   # Check if the validator or bridge address is generated or not
   # If this address is not generated, generating the key info for this locally
-  account_address="$(tezos-client --endpoint $RPC_NODE list known addresses | grep $1 | tr -d '\r')"
+  account_address="$(tezos-client --endpoint $RPC_NODE list known addresses | grep "$1" | tr -d '\r')"
   if [ -z "$account_address" ]; then 
-    tezos-client gen keys $1
+    tezos-client gen keys "$1"
   fi
 
   # Get the key of validator or bridge account
   # Sign the newly-generated address of discovery contract
   # Update the value of big-map with this signature
-  key="$(tezos-client -endpoint $RPC_NODE show address $1 -S | grep "Public" | awk '{ print $3 }'  | tr -d '\r')"
+  key="$(tezos-client -endpoint $RPC_NODE show address "$1" -S | grep "Public" | awk '{ print $3 }'  | tr -d '\r')"
 
   packed_address="$(tezos-client -endpoint $RPC_NODE hash data \""$2"\" of type address | grep "data:" | awk '{ print $4 }' | tr -d '\r')"
-  signature="$(tezos-client -endpoint $RPC_NODE sign bytes "$packed_address" for $1 | grep "Signature:" | awk '{ print $2 }' | tr -d '\r')"
+  signature="$(tezos-client -endpoint $RPC_NODE sign bytes "$packed_address" for "$1" | grep "Signature:" | awk '{ print $2 }' | tr -d '\r')"
 
   tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to proxy --arg "Pair (Pair \"$2\" \"$key\") \"$signature\"" --burn-cap 2
 }
