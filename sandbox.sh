@@ -215,7 +215,11 @@ EOF
   TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
 
-  # Step 6: Finally we need to configure each Deku node to communicate with the Tezos testnet.
+  # Step 6: Update the proxy contract with the newly-generated consensus and discovery contract address
+  update_proxy_contract "validator_account" "$TEZOS_DISCOVERY_ADDRESS"
+  update_proxy_contract "bridge_account" "$TEZOS_CONSENSUS_ADDRESS"
+
+  # Step 7: Finally we need to configure each Deku node to communicate with the Tezos testnet.
   # This configuration is stored in a file named `tezos.json`, and is created with the `deku-cli setup-tezos``
   message "Configuring Deku nodes"
   for VALIDATOR in "${VALIDATORS[@]}"; do
@@ -340,6 +344,40 @@ deposit_ticket() {
   tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to dummy_ticket \
   --entrypoint mint_to_deku --arg "Pair (Pair \"$CONSENSUS_ADDRESS\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
   --burn-cap 2
+}
+
+update_proxy_contract () {
+  message "Creating or updating proxy contract"
+
+  # Check if the proxy contract is deployed or not
+  # If this contract is not deployed, deploying it
+  proxy_address="$(tezos-client --endpoint $RPC_NODE show known contract proxy | grep KT1 | tr -d '\r')"
+  if [ -z "$proxy_address" ]; then 
+    proxy="./proxy-contract/main.mligo"
+    proxy_storage=$(
+      cat <<EOF
+  (Big_map.empty : Parameter.Types.t)
+EOF
+    )
+    deploy_contract "proxy" "$proxy" "$proxy_storage"
+  fi 
+
+  # Check if the validator or bridge address is generated or not
+  # If this address is not generated, generating the key info for this locally
+  account_address="$(tezos-client --endpoint $RPC_NODE list known addresses | grep $1 | tr -d '\r')"
+  if [ -z "$account_address" ]; then 
+    tezos-client gen keys $1
+  fi
+
+  # Get the key of validator or bridge account
+  # Sign the newly-generated address of discovery contract
+  # Update the value of big-map with this signature
+  key="$(tezos-client -endpoint $RPC_NODE show address $1 -S | grep "Public" | awk '{ print $3 }'  | tr -d '\r')"
+
+  packed_address="$(tezos-client -endpoint $RPC_NODE hash data \""$2"\" of type address | grep "data:" | awk '{ print $4 }' | tr -d '\r')"
+  signature="$(tezos-client -endpoint $RPC_NODE sign bytes "$packed_address" for $1 | grep "Signature:" | awk '{ print $2 }' | tr -d '\r')"
+
+  tezos-client --endpoint $RPC_NODE transfer 0 from $ticket_wallet to proxy --arg "Pair (Pair \"$2\" \"$key\") \"$signature\"" --burn-cap 2
 }
 
 deposit_withdraw_test() {
