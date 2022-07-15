@@ -115,6 +115,10 @@
             type = "app";
             program = "${deku}/bin/deku-sandbox";
           };
+          tilting = {
+            type = "app";
+            program = "${ pkgs.callPackage ./nix/tilt.nix { }}/bin/run_tilt.sh";
+          };
         };
 
         formatter = pkgs.callPackage ./nix/formatter.nix { };

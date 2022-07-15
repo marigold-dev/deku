@@ -1,0 +1,13 @@
+allow_k8s_contexts('deku-dev')
+
+namespace = kustomize('./k8s')
+deku_nodes = kustomize('./k8s/deku-nodes')
+
+k8s_yaml([namespace, deku_nodes])
+
+custom_build(
+  'ghcr.io/marigold-dev/deku', # image name, should match with what's in docker-compose
+  'nix build .#docker && docker load < ./result',
+  ["./src", "./ppx_lambda_vm", "./ppx_let_binding", "./nix"], # folders to watch f or changes
+  skips_local_docker=True,
+  tag = "latest")

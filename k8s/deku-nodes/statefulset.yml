@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: deku-node
+spec:
+  selector:
+    matchLabels:
+      app: deku-node
+  updateStrategy:
+    type: RollingUpdate
+  serviceName: "deku-node"
+  podManagementPolicy: Parallel
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: deku-node
+        track: stable
+        version: 0.1.0
+    spec:
+      terminationGracePeriodSeconds: 10
+      initContainers:
+        - name: init-storage
+          image: busybox:1.28
+          command:
+            [
+              "sh",
+              "-c",
+              "ls -R /mnt && cp /mnt/config/$HOSTNAME-identity.json /mnt/data/identity.json && cp /mnt/config/$HOSTNAME-tezos.json /mnt/data/tezos.json && cp /mnt/config/trusted-validator-membership-change.json /mnt/data/trusted-validator-membership-change.json",
+            ]
+          volumeMounts:
+            - name: "deku-node-config"
+              mountPath: "/mnt/config"
+            - name: "deku-node-pv-claim"
+              mountPath: "/mnt/data"
+      securityContext:
+        runAsUser: 0
+        fsGroup: 0
+      containers:
+        - name: deku-node
+          image: deku-image
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              #!/bin/sh
+              set -e
+              apt-get update -y && apt-get install -y curl jq
+              while [ "$(curl -s "http://127.0.0.1:8732/chains/main/is_bootstrapped" | jq '.bootstrapped')" != "true" ]
+              do
+                echo "Waiting node bootstrapping. Trying again in 10 seconds."
+                sleep 10
+              done
+              echo "Done"
+              deku-node start /app/data --listen-prometheus=9000 --verbosity=debug --json-stdout
+          env:
+            - name: PORT
+              value: "4440"
+          resources:
+            requests:
+              cpu: 500m
+              memory: "400Mi"
+            limits:
+              cpu: 1000m
+              memory: "2000Mi"
+          ports:
+            - name: http
+              containerPort: 4440
+            - name: prometheus
+              containerPort: 9000
+          volumeMounts:
+            - name: "deku-node-pv-claim"
+              mountPath: "/app/data"
+          imagePullPolicy: Always
+          startupProbe:
+            httpGet:
+              path: /
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9000
+            periodSeconds: 5
+            failureThreshold: 2
+      volumes:
+        - name: "deku-node-config"
+          configMap:
+            name: "deku-node-config"
+            items:
+              - key: "deku-node-0-identity.json"
+                path: "deku-node-0-identity.json"
+              - key: "deku-node-1-identity.json"
+                path: "deku-node-1-identity.json"
+              - key: "deku-node-2-identity.json"
+                path: "deku-node-2-identity.json"
+              - key: "deku-node-0-tezos.json"
+                path: "deku-node-0-tezos.json"
+              - key: "deku-node-1-tezos.json"
+                path: "deku-node-1-tezos.json"
+              - key: "deku-node-2-tezos.json"
+                path: "deku-node-2-tezos.json"
+              - key: "trusted-validator-membership-change.json"
+                path: "trusted-validator-membership-change.json"
+  volumeClaimTemplates:
+    - metadata:
+        name: deku-node-pv-claim
+      spec:
+        storageClassName: standard
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+    - metadata:
+        name: tezos-node-pvc
+      spec:
+        storageClassName: standard
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi

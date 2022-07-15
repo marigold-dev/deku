@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deku-node-config
+data:
+  deku-node-0-identity.json: |-
+    {
+      "secret": "edsk4TzdRcUTK41AYrtdEDX4Qjb13bZvmAo2yzxW6Td2JEH25PrNjU",
+      "key": "edpkujQ7h8MuLuy7BMBBUZ7KWsV4oWCkSzeZ9mx45x9Ak3BtPfFAYy",
+      "t": "tz1YAEAqpKfC1gjanUALQyL3cTLuzm8U3Bwz",
+      "uri": "http://deku-node-0:4440"
+    }
+  deku-node-0-tezos.json: |
+    {
+      "required_confirmations": 4,
+      "rpc_node": "https://jakartanet.tezos.marigold.dev",
+      "secret": "edsk2wEvEiTmpw18ZAY5xBzCV78Ma7xgZPB3wKVDZdMjT1WLbmbuVF",
+      "consensus_contract": "KT1Pva88UhurSSYF1efm4AVpM1xTZ3kYDm1T",
+      "discovery_contract": "KT1Dpm6CNovdJNUXxfX7PXjfd2orS7PmJdXa"
+    }
+  deku-node-1-identity.json: |-
+    {
+      "secret": "edsk4DoMJFibNamZnABabGhi3iKwWxCFLTVmxYfqTdC8J8kjean6uq",
+      "key": "edpkvHi3tS4H8kPiTdzbdVb5A554i17nrjsT1wWDW8oiksAwWQQbMP",
+      "t": "tz1ZozPFxMB2qm1s8dhHv1VKDoWg6YKMjjgZ",
+      "uri": "http://deku-node-1:4440"
+    }
+  deku-node-1-tezos.json: |
+    {
+      "required_confirmations": 4,
+      "rpc_node": "https://jakartanet.tezos.marigold.dev",
+      "secret": "edsk2nppe9Zmf8BKifqh9EJW5gRumQbpE1sGCSbwM1xLtQwempp2qN",
+      "consensus_contract": "KT1Pva88UhurSSYF1efm4AVpM1xTZ3kYDm1T",
+      "discovery_contract": "KT1Dpm6CNovdJNUXxfX7PXjfd2orS7PmJdXa"
+    }
+  deku-node-2-identity.json: |-
+    {
+      "secret": "edsk3FcyEyUon4jZWa5pAurvtSozv2HQnCHXqqMw1kPDSFY8SaK6iL",
+      "key": "edpkv6fNnn3VmFvnytRaH6w1SyvrwuR7AzyG8i1Wuvyuo1KDFta8yU",
+      "t": "tz1e6NXuJj5hqcseZAyoPExq3i5sMCRQvepG",
+      "uri": "http://deku-node-2:4440"
+    }
+  deku-node-2-tezos.json: |
+    {
+      "required_confirmations": 4,
+      "rpc_node": "https://jakartanet.tezos.marigold.dev",
+      "secret": "edsk3sudaz7mUt534jw2ePxKBwgYPP5ZV32sibu8anJg2rbAuMhnXk",
+      "consensus_contract": "KT1Pva88UhurSSYF1efm4AVpM1xTZ3kYDm1T",
+      "discovery_contract": "KT1Dpm6CNovdJNUXxfX7PXjfd2orS7PmJdXa"
+    }
+  trusted-validator-membership-change.json: |-
+    [
+      {"action": [ "Add" ], "address": "tz1YAEAqpKfC1gjanUALQyL3cTLuzm8U3Bwz"},
+      {"action": [ "Add" ], "address": "tz1ZozPFxMB2qm1s8dhHv1VKDoWg6YKMjjgZ"},
+      {"action": [ "Add" ], "address": "tz1e6NXuJj5hqcseZAyoPExq3i5sMCRQvepG"}
+    ]
