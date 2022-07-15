@@ -35,23 +35,25 @@ const initial_grandma_cost = 100;
 const initial_farm_cost = 1100;
 
 const calculate_cost = (action: action_type, state: cookie_baker_state) => {
-    console.log("Calculating price for next building");
-    let price2 = 0;
     switch (action) {
         case action_type.increment_cursor:
+            console.log("Calculating price for next cursor");
             const cursor_cost = 1.15 * initial_cursor_cost;
-            price2 = Math.pow(cursor_cost, state.number_of_cursor - state.number_of_free_cursor);
-            break;
+            return Math.floor(Math.pow(cursor_cost, state.number_of_cursor - state.number_of_free_cursor));
         case action_type.increment_grandma:
+            console.log("Calculating price for next grandma");
             const grandma_cost = 1.15 * initial_grandma_cost;
-            price2 = Math.pow(grandma_cost, state.number_of_grandma - state.number_of_free_grandma);
-            break;
+            return Math.floor(Math.pow(grandma_cost, state.number_of_grandma - state.number_of_free_grandma));
         case action_type.increment_farm:
+            console.log("Calculating price for next farm");
             const farm_cost = 1.15 * initial_farm_cost;
-            price2 = Math.pow(farm_cost, state.number_of_farm - state.number_of_free_farm);
-            break;
+            return Math.floor(Math.pow(farm_cost, state.number_of_farm - state.number_of_free_farm));
     }
-    return Math.floor(price2);
+    return undefined;
+}
+
+const update_total_cps = (state: cookie_baker_state) => {
+    state.total_cps = state.cursor_cps + state.grandma_cps + state.farm_cps
 }
 
 enum action_type {
@@ -66,7 +68,7 @@ const print_message_with_source = (message: string, source) => {
     console.log(source);
 }
 const save_state = (source: transaction, source_value: JSON) => {
-    console.log("Saving state");
+    print_message_with_source("Saving state", source_value);
     set(source, source_value);
     console.log("Successfully saved state");
 }
@@ -79,7 +81,7 @@ const transition = (tx: transaction) => {
     const operation = tx.operation;
     console.log("Getting source");
     const source_value = JSON.parse(get(source));
-    print_message_with_source("The cookie that you have now is:", source_value);
+    print_message_with_source("Your current state is:", source_value);
 
     switch (operation) {
         case action_type.increment_cookie: {
@@ -87,8 +89,9 @@ const transition = (tx: transaction) => {
             //adding one cookie
             source_value.cookie_baker_state.number_of_cookie += 1;
             console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
+
             //update state
-            print_message_with_source("The cookie that you have now is:", source_value);
+            console.log("Successfully minted cookie");
             save_state(source, source_value);
             break;
         }
@@ -102,20 +105,23 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_cookie -= initial_cursor_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
-                //update state
-                print_message_with_source("Successfully minted cursor for:", source_value);
 
-                source_value.cookie_baker_state.cursor_cost = calculate_cost(action_type.increment_cursor, source_value.cookie_baker_state)
-                console.log("New cursor cost: " + source_value.cookie_baker_state.cursor_cost)
+                source_value.cookie_baker_state.cursor_cost = calculate_cost(action_type.increment_cursor, source_value.cookie_baker_state);
+                console.log("New cursor cost: " + source_value.cookie_baker_state.cursor_cost);
+                source_value.cookie_baker_state.cursor_cps = source_value.cookie_baker_state.number_of_cursor * cursor_initial_cps;
+                console.log("New cursor cps: " + source_value.cookie_baker_state.cursor_cost);
+                update_total_cps(source_value.cookie_baker_state);
+
+                //action successful, update state
+                console.log("Successfully minted cursor");
                 save_state(source, source_value);
-
             } else {
-                console.log("Not enough cookie to buy a cursor. The cookie you need have to be " + initial_cursor_cost);
+                console.log("Not enough cookie to buy a cursor, needed: " + source_value.cookie_baker_state.cursor_cost + " actual amount: " + source_value.cookie_baker_state.number_of_cookie);
             }
             break;
         }
         case action_type.increment_grandma: {
-            if (source_value.cookie_baker_state.number_of_cookie >= initial_grandma_cost) {
+            if (source_value.cookie_baker_state.number_of_cookie >= source_value.cookie_baker_state.grandma_cost) {
                 console.log("Adding grandma");
                 //adding one grandma
                 source_value.cookie_baker_state.number_of_grandma += 1;
@@ -124,16 +130,22 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_cookie -= initial_grandma_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
-                //update state
-                print_message_with_source("Successfully minted grandma for:", source_value);
+                source_value.cookie_baker_state.grandma_cost = calculate_cost(action_type.increment_grandma, source_value.cookie_baker_state);
+                console.log("New grandma cost: " + source_value.cookie_baker_state.grandma_cost);
+                source_value.cookie_baker_state.grandma_cps = source_value.cookie_baker_state.number_of_grandma * grandma_initial_cps;
+                console.log("New grandma cps: " + source_value.cookie_baker_state.grandma_cost);
+                update_total_cps(source_value.cookie_baker_state);
+
+                //action successful, update state
+                console.log("Successfully minted grandma");
                 save_state(source, source_value);
             } else {
-                console.log("Not enough cookie to buy a grandma. The cookie you need have to be " + initial_grandma_cost);
+                console.log("Not enough cookie to buy a grandma, needed: " + source_value.cookie_baker_state.grandma_cost + " actual amount: " + source_value.cookie_baker_state.number_of_cookie);
             }
             break;
         }
         case action_type.increment_farm: {
-            if (source_value.cookie_baker_state.number_of_cookie >= initial_farm_cost) {
+            if (source_value.cookie_baker_state.number_of_cookie >= source_value.cookie_baker_state.farm_cost) {
                 console.log("Adding farm");
                 //adding one farm
                 source_value.cookie_baker_state.number_of_farm += 1;
@@ -142,11 +154,17 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_cookie -= initial_farm_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
-                //update state
-                print_message_with_source("Successfully minted farm for:", source_value);
+                source_value.cookie_baker_state.farm_cost = calculate_cost(action_type.increment_farm, source_value.cookie_baker_state);
+                console.log("New farm cost: " + source_value.cookie_baker_state.farm_cost);
+                source_value.cookie_baker_state.farm_cps = source_value.cookie_baker_state.number_of_farm * farm_initial_cps;
+                console.log("New farm cps: " + source_value.cookie_baker_state.farm_cost);
+                update_total_cps(source_value.cookie_baker_state);
+
+                //action successful, update state
+                console.log("Successfully minted farm");
                 save_state(source, source_value);
             } else {
-                console.log("Not enough cookie to buy a farm. The cookie you need have to be " + initial_farm_cost);
+                console.log("Not enough cookie to buy a farm, needed: " + source_value.cookie_baker_state.farm_cost + " actual amount: " + source_value.cookie_baker_state.number_of_cookie);
             }
             break;
         }
