@@ -2,7 +2,7 @@ type t =
   | Ed25519   of Ed25519.Key.t
   | Secp256k1 of Secp256k1.Key.t
   | P256      of P256.Key.t
-[@@deriving ord, eq]
+[@@deriving ord, eq, bin_io]
 
 val of_secret : Secret.t -> t
 

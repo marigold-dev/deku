@@ -6,7 +6,7 @@ module Consensus = struct
   type t =
     | Add_validator    of Validators.validator
     | Remove_validator of Validators.validator
-  [@@deriving eq, ord, yojson]
+  [@@deriving eq, ord, yojson, bin_io]
 
   let hash payload = to_yojson payload |> Yojson.Safe.to_string |> BLAKE2B.hash
 
@@ -20,7 +20,7 @@ module Consensus = struct
 end
 
 module Core_tezos = struct
-  type t = Tezos_operation.t [@@deriving eq, ord, yojson]
+  type t = Tezos_operation.t [@@deriving eq, ord, yojson, bin_io]
 end
 
 module Core_user = struct

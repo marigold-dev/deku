@@ -13,6 +13,7 @@
   fmt.cli
   logs.cli
   fmt.tty
-  json-logs-reporter)
+  json-logs-reporter
+  bin_prot)
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))

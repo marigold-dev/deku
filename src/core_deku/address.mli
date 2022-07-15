@@ -1,6 +1,6 @@
 open Crypto
 
-type t [@@deriving eq, ord, yojson]
+type t [@@deriving eq, ord, yojson, bin_io]
 
 val is_implicit : t -> bool
 

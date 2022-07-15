@@ -2,7 +2,7 @@ type t = {
   ticketer : Address.t;
   data : bytes;
 }
-[@@deriving eq, ord, yojson]
+[@@deriving eq, ord, yojson, bin_io]
 
 val to_string : t -> string
 

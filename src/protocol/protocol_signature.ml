@@ -6,7 +6,7 @@ type t = {
   public_key : Wallet.t;
   address : Key_hash.t;
 }
-[@@deriving ord]
+[@@deriving ord, bin_io]
 
 let public_key t = t.public_key
 

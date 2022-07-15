@@ -8,6 +8,15 @@ module type Request_endpoint = sig
   val path : string
 end
 
+(* FIXME: to be factorized with Request_endpoint *)
+module type Pollinate_endpoint = sig
+  type request [@@deriving bin_io]
+
+  type response [@@deriving yojson]
+
+  val path : string
+end
+
 exception Error_status
 
 let raw_request path raw_data uri =
