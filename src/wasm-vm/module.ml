@@ -1,3 +1,4 @@
+open Helpers
 open Wasm
 
 module S = Set.Make (struct
@@ -20,8 +21,11 @@ let () =
   Import.register (Utf8.decode "env") (fun name _ ->
       if Utf8.encode name = "syscall" then
         extern
-      else
-        Errors.raise `Module_validation_error)
+      else begin
+        Log.error "The only function avaibale is syscall, %s is not."
+          (Utf8.encode name);
+        Errors.raise `Module_validation_error
+      end)
 
 type t = Ast.module_
 
@@ -29,7 +33,9 @@ let get_memory t =
   let memory = Utf8.decode "memory" in
   match Instance.export t memory with
   | Some (ExternMemory _) -> ()
-  | _ -> Errors.raise `Module_validation_error
+  | _ ->
+    Log.error "Module should export a memory of name memory";
+    Errors.raise `Module_validation_error
 
 let validate_main t s1 ~gas =
   let main = Utf8.decode "main" in
@@ -45,8 +51,14 @@ let validate_main t s1 ~gas =
               _,
               _ ))) ->
       ()
-    | Some _ -> Errors.raise `Module_validation_error
-    | None -> Errors.raise `Module_validation_error in
+    | Some _ ->
+      Log.error
+        "Module interface mismatch, expected i32 -> (i64, i64, i64)";
+      Errors.raise `Module_validation_error
+    | None ->
+      Log.error
+        "Module validation error, a function named main should be exported";
+      Errors.raise `Module_validation_error in
   let inst =
     try Wasm.Eval.init gas t (S.to_seq s1 |> List.of_seq) with
     | Wasm.Eval.Link _ -> Errors.raise `Initialization_error in
@@ -76,9 +88,10 @@ let of_string ~code =
     Ok module_
   with
   | Errors.Error err -> Error err
-  | Parse.Syntax (_, _)
-  | Valid.Invalid (_, _) ->
-    (* TODO: Better error reporting *)
+  | Parse.Syntax (at, msg)
+  | Valid.Invalid (at, msg) ->
+    Log.error "Module validation error at %d:%d - %d:%d: %s"
+      at.left.line at.left.column at.right.line at.right.column msg;
     Error `Module_validation_error
 
 let encode t =
@@ -93,7 +106,9 @@ let decode t =
     Ok decoded
   with
   | Errors.Error err -> Error err
-  | Decode.Code (_, _) -> Error `Module_validation_error
+  | Decode.Code (_, msg) ->
+    Log.error "Module validation error: %s" msg;
+    Error `Module_validation_error
 
 let to_yojson t = `String (encode t |> Result.get_ok)
 
