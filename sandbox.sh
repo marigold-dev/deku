@@ -351,8 +351,8 @@ update_proxy_contract () {
 
   # Check if the proxy contract is deployed or not
   # If this contract is not deployed, deploying it
-  proxy_address="$(tezos-client --endpoint $RPC_NODE show known contract proxy | grep KT1 | tr -d '\r')"
-  if [ -z "$proxy_address" ]; then 
+  proxy_address="$(tezos-client --endpoint $RPC_NODE list known contracts)"
+  if [[ ! $proxy_address == *"proxy"* ]]; then 
     proxy="./proxy-contract/main.mligo"
     proxy_storage=$(
       cat <<EOF
@@ -364,8 +364,9 @@ EOF
 
   # Check if the validator or bridge address is generated or not
   # If this address is not generated, generating the key info for this locally
-  account_address="$(tezos-client --endpoint $RPC_NODE list known addresses | grep "$1" | tr -d '\r')"
-  if [ -z "$account_address" ]; then 
+  account_address="$(tezos-client --endpoint $RPC_NODE list known addresses)"
+  if [[ ! $account_address == *"$1"* ]]; then 
+    message "Generate validator or bridge address"
     tezos-client gen keys "$1"
   fi
 
