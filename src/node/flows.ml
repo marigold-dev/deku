@@ -87,7 +87,7 @@ let block_added_to_the_pool' =
       ref)
 
 let rec request_block_by_hash tries ~hash =
-  if tries > 20 then raise Not_found;
+  if tries > 2 then raise Not_found;
   Lwt.catch
     (fun () ->
       let state = !get_state () in

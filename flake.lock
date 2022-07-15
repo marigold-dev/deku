@@ -273,6 +273,36 @@
         "type": "github"
       }
     },
+    "pollinate": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nix-filter": [
+          "nix-filter"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "ocaml-overlays": [
+          "ocaml-overlays"
+        ]
+      },
+      "locked": {
+        "lastModified": 1657526502,
+        "narHash": "sha256-1ez8FFI5RmcQ0V51TzeUmAeUmJoTiom22QqzcAbgBAE=",
+        "owner": "marigold-dev",
+        "repo": "pollinate",
+        "rev": "f7a30dd363b5049aa4997e9068316dcbe05debe8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "ref": "feat/dekuIntegrationFinalAct",
+        "repo": "pollinate",
+        "type": "github"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-utils": [
@@ -332,6 +362,7 @@
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
         "ocaml-overlays": "ocaml-overlays",
+        "pollinate": "pollinate",
         "prometheus-web": "prometheus-web",
         "tezos": "tezos"
       }

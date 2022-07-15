@@ -10,17 +10,17 @@ module Signature_spec = struct
   }
   [@@deriving yojson, bin_io]
 
-  type response = unit [@@deriving yojson]
+  let category = Network_client.Pollinate_utils.ChainOperation
 
-  let path = "/append-signature"
+  let action = Network_client.Pollinate_utils.Append_signature
 end
 
 module Block_spec = struct
   type request = { block : Block.t } [@@deriving yojson, bin_io]
 
-  type response = unit [@@deriving yojson]
+  let category = Network_client.Pollinate_utils.ChainOperation
 
-  let path = "/append-block"
+  let action = Network_client.Pollinate_utils.Append_block
 end
 
 module Block_by_hash_spec = struct

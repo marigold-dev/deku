@@ -13,9 +13,9 @@ let request_register_uri = request (module Register_uri)
 
 let request_withdraw_proof = request (module Withdraw_proof)
 
-let broadcast_signature = broadcast_to_list (module Signature_spec)
+let broadcast_signature = send_over_pollinate (module Signature_spec)
 
-let broadcast_block = broadcast_to_list (module Block_spec)
+let broadcast_block = send_over_pollinate (module Block_spec)
 
 let broadcast_user_operation_gossip =
   broadcast_to_list (module User_operation_gossip)

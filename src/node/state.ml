@@ -1,8 +1,13 @@
+open Helpers
 open Crypto
 open Protocol
 open Consensus
 module Address_map = Map.Make (Key_hash)
 module Uri_map = Map.Make (Uri)
+
+type pollinate_context =
+  | Client
+  | Server
 
 type timestamp = float
 
@@ -20,15 +25,34 @@ type t = {
   recent_operation_receipts : Core_deku.State.receipt BLAKE2B.Map.t;
   persist_trusted_membership_change :
     Trusted_validators_membership_change.t list -> unit Lwt.t;
+  pollinate_node : Pollinate.PNode.t ref Lwt.t;
 }
 
 let make ~config ~trusted_validator_membership_change
     ~persist_trusted_membership_change ~interop_context ~data_folder
-    ~initial_validators_uri =
+    ~initial_validators_uri ~pollinate_context =
   let consensus =
     Consensus.make ~identity:config.Config.identity
       ~trusted_validator_membership_change in
+  let pollinate_node =
+    match pollinate_context with
+    | Client ->
+      (* Client mode only *)
+      Pollinate.PNode.init ~init_peers:[]
+        (Pollinate.Address.create "127.0.0.1" 4000)
+    | Server ->
+      Log.debug "No Pollinate Node provided, constructing it";
+      let pollinate_address =
+        Network.Pollinate_utils.uri_to_pollinate config.Config.identity.uri
+      in
 
+      let init_peers =
+        List.map
+          (fun (_, x) -> Network.Pollinate_utils.uri_to_pollinate x)
+          (Address_map.bindings initial_validators_uri) in
+
+      let pollinate_node = Pollinate.PNode.init ~init_peers pollinate_address in
+      pollinate_node in
   {
     config;
     consensus;
@@ -39,4 +63,5 @@ let make ~config ~trusted_validator_membership_change
     validators_uri = initial_validators_uri;
     recent_operation_receipts = BLAKE2B.Map.empty;
     persist_trusted_membership_change;
+    pollinate_node;
   }

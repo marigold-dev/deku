@@ -136,23 +136,16 @@ let handle_request (type req res)
     | Error err -> raise (Failure err) in
   Dream.post E.path handler
 
-(* POST /append-block-and-signature *)
+(* Sent by Pollinate (UDP, bin_prot) *)
 (* If the block is not already known and is valid, add it to the pool *)
-let handle_received_block =
-  handle_request
-    (module Network.Block_spec)
-    (fun request ->
-      Flows.received_block request.block;
-      Ok ())
+let handle_received_block block =
+  Flows.received_block block;
+  Ok ()
 
-(* POST /append-signature *)
-(* Append signature to an already existing block? *)
-let handle_received_signature =
-  handle_request
-    (module Network.Signature_spec)
-    (fun request ->
-      Flows.received_signature ~hash:request.hash ~signature:request.signature;
-      Ok ())
+(* Sent by Pollinate (UDP, bin_prot) *)
+let handle_received_signature hash signature =
+  Flows.received_signature ~hash ~signature;
+  Ok ()
 
 (* POST /block-by-hash *)
 (* Retrieve block by provided hash *)
@@ -291,11 +284,35 @@ let handle_ticket_balance =
 
 let node folder port minimum_block_delay prometheus_port =
   let node =
-    Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
-  in
+    Node_state.get_initial_state ~folder ~minimum_block_delay
+      ~pollinate_context:Node.State.Server
+    |> Lwt_main.run in
   Tezos_interop.Consensus.listen_operations node.Node.State.interop_context
     ~on_operation:(fun operation -> Flows.received_tezos_operation operation);
   Node.Server.start ~initial:node;
+
+  let msg_handler : Pollinate.PNode.Message.t -> bytes option =
+   fun msg ->
+    let payload =
+      Pollinate.Util.Encoding.unpack Network.Pollinate_utils.bin_read_payload
+        msg.payload in
+    let _ =
+      match (payload.category, payload.action) with
+      | ChainOperation, Append_block ->
+        Log.debug "MSG_HANDLER: Received block";
+        let request =
+          Pollinate.Util.Encoding.unpack Network.Block_spec.bin_read_request
+            payload.data in
+        handle_received_block request.block
+      | ChainOperation, Append_signature ->
+        Log.debug "MSG_HANDLER: Received signature";
+        let request =
+          Pollinate.Util.Encoding.unpack Network.Signature_spec.bin_read_request
+            payload.data in
+        handle_received_signature request.hash request.signature in
+    None in
+
+  let pollinate_node = Lwt_main.run node.Node.State.pollinate_node in
   Dream.initialize_log ~level:`Warning ();
   let port =
     match port with
@@ -308,8 +325,6 @@ let node folder port minimum_block_delay prometheus_port =
       @@ Dream.router
            [
              handle_block_level;
-             handle_received_block;
-             handle_received_signature;
              handle_block_by_hash;
              handle_block_by_level;
              handle_protocol_snapshot;
@@ -323,6 +338,7 @@ let node folder port minimum_block_delay prometheus_port =
              handle_trusted_validators_membership;
            ];
       Prometheus_dream.serve prometheus_port;
+      Pollinate.PNode.run_server ~msg_handler pollinate_node;
     ]
   |> Lwt_main.run
   |> ignore
@@ -392,8 +408,8 @@ let node =
 let produce_block node_folder =
   let%await identity = read_identity ~node_folder in
   let%await state =
-    Node_state.get_initial_state ~minimum_block_delay:0. ~folder:node_folder
-  in
+    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0.
+      ~pollinate_context:Node.State.Client in
   let address = identity.t in
   let block =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
@@ -404,10 +420,15 @@ let produce_block node_folder =
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
+    let open Network.Pollinate_utils in
     let validator_uris = List.map snd validator_uris |> List.somes in
+    let recipients = List.map uri_to_pollinate validator_uris in
+    let%await pollinate_node = state.pollinate_node in
     let%await () =
       let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
+      send_over_pollinate
+        (module Block_spec)
+        pollinate_node { block } recipients in
     Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
     Lwt.return (`Ok ())
 
@@ -429,19 +450,26 @@ let info_sign_block =
 
 let sign_block node_folder block_hash =
   let%await identity = read_identity ~node_folder in
-  let signature = Protocol.Signature.sign ~key:identity.secret block_hash in
+  let signature = Signature.sign ~key:identity.secret block_hash in
+  let%await state =
+    Node_state.get_initial_state ~folder:node_folder ~minimum_block_delay:0.
+      ~pollinate_context:Node.State.Client in
   let%await interop_context = interop_context node_folder in
   let%await validator_uris = validator_uris ~interop_context in
   match validator_uris with
   | Error err -> Lwt.return (`Error (false, err))
   | Ok validator_uris ->
+    let open Network.Pollinate_utils in
     let validator_uris = List.map snd validator_uris |> List.somes in
+    let recipients = List.map uri_to_pollinate validator_uris in
+    let%await pollinate_node = state.pollinate_node in
     let%await () =
       let open Network in
-      broadcast_to_list
+      send_over_pollinate
         (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
+        pollinate_node
+        { hash = block_hash; signature }
+        recipients in
     Lwt.return (`Ok ())
 
 let sign_block_term =
