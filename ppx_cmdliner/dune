@@ -1,0 +1,7 @@
+(library
+ (name ppx_cmdliner)
+ (modules Ppx_cmdliner)
+ (kind ppx_rewriter)
+ (libraries ppxlib)
+ (preprocess
+  (pps ppxlib.metaquot)))
