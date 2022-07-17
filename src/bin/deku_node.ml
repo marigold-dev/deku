@@ -410,9 +410,16 @@ let node folder port minimum_block_delay prometheus_port =
     | Some port -> port
     | None -> Node.Server.get_port () |> Option.value ~default:4440 in
   Log.info "Listening on port %d" port;
+  let cors_middleware inner_handler req =
+    let%await response = inner_handler req in
+    Dream.add_header response "Access-Control-Allow-Origin" "*";
+    Dream.add_header response "Access-Control-Allow-Headers" "*";
+    Dream.add_header response "Allow" "*";
+    Lwt.return response in
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
+      @@ cors_middleware
       @@ Dream.router
            [
              handle_block_level;
