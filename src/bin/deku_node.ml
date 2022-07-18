@@ -194,6 +194,16 @@ let handle_ticket_balance =
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
 
+(* POST /vm-state *)
+(* Returns the vm state *)
+let handle_vm_state =
+  handle_request
+    (module Network.Vm_state)
+    (fun _update_state () ->
+      let state = Server.get_state () in
+      let vm_state = Flows.request_vm_state state in
+      Ok { state = vm_state })
+
 let node folder named_pipe_path minimum_block_delay prometheus_port =
   External_vm.External_vm_client.start_vm_ipc ~named_pipe_path;
   let node =
@@ -235,6 +245,7 @@ let node folder named_pipe_path minimum_block_delay prometheus_port =
              handle_withdraw_proof;
              handle_ticket_balance;
              handle_trusted_validators_membership;
+             handle_vm_state;
            ];
       Prometheus_dream.serve prometheus_port;
     ]

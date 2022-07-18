@@ -177,3 +177,12 @@ module Trusted_validators_membership_change = struct
 
   let path = "/trusted-validators-membership"
 end
+
+module Vm_state = struct
+  type request = unit [@@deriving yojson]
+
+  type response = { state : External_vm.External_vm_protocol.State.t }
+  [@@deriving yojson]
+
+  let path = "/vm-state"
+end

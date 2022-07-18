@@ -467,6 +467,9 @@ let request_ticket_balance state ~ticket ~address =
   |> Core_deku.State.ledger
   |> Ledger.balance address ticket
 
+let request_vm_state state =
+  state.Node.protocol.core_state |> Core_deku.State.vm_state
+
 let trusted_validators_membership state update_state request =
   let open Network.Trusted_validators_membership_change in
   let { signature; payload = { address; action } as payload } = request in
