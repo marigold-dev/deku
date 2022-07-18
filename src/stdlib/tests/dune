@@ -1,0 +1,10 @@
+(executable
+ (name deku_stdlib_tests)
+ (libraries deku_stdlib alcotest))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./deku_stdlib_tests.exe))
+ (action
+  (run %{exe})))
