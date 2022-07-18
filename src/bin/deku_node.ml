@@ -241,10 +241,18 @@ let node folder named_pipe_path minimum_block_delay prometheus_port =
         operation);
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
+  let cors_middleware inner_handler req =
+    let%await response = inner_handler req in
+    Dream.add_header response "Access-Control-Allow-Origin" "*";
+    Dream.add_header response "Access-Control-Allow-Headers" "*";
+    Dream.add_header response "Allow" "*";
+    Lwt.return response
+  in
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
+      @@ cors_middleware
       @@ Dream.router
            [
              handle_block_level;
