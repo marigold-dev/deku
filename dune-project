@@ -7,3 +7,7 @@
 (package
  (name deku-stdlib)
  (depends zarith))
+
+(package
+ (name deku-concepts)
+ (depends deku-stdlib))
