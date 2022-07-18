@@ -183,7 +183,7 @@ module Contract_storage = struct
 end
 
 module Address_tickets = struct
-  type request = { address : Key_hash.t } [@@deriving yojson]
+  type request = { address : string } [@@deriving yojson]
 
   type response = (Ticket_id.t * Amount.t) list [@@deriving yojson]
 

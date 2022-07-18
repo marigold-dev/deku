@@ -306,7 +306,10 @@ let handle_address_tickets =
     (module Network.Address_tickets)
     (fun { address } ->
       let state = Server.get_state () in
-      let address = Address.of_key_hash address in
+      let address =
+        match Address.of_string address with
+        | Some address -> address
+        | None -> failwith "Invalid address" in
       let tickets = Flows.request_address_tickets ~address state in
       Ok tickets)
 
