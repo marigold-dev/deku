@@ -2,7 +2,7 @@ open Helpers
 open Crypto
 open Cmdliner
 open Core_deku
-open Bin_common
+open Files
 
 let () = Printexc.record_backtrace true
 
@@ -155,7 +155,8 @@ let create_wallet () =
   let address_string = Address.to_string (key_hash |> Address.of_key_hash) in
   let file = make_filename_from_address address_string in
   let%await () =
-    Files.Wallet.write { priv_key = secret; address = key_hash } ~file in
+    Config_files.Wallet.write { priv_key = secret; address = key_hash } ~file
+  in
   await (`Ok ())
 
 let create_wallet =
@@ -179,7 +180,7 @@ let create_transaction node_uri sender_wallet_file received_address amount
   let open Network in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
   let operation =
     match (Address.to_key_hash received_address, argument) with
     | Some addr, None ->
@@ -226,7 +227,7 @@ let originate_contract node_uri sender_wallet_file contract_json initial_storage
   let open Network in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
   let%await payload =
     let%await code =
       Lwt_io.with_file ~mode:Input contract_json (fun x -> Lwt_io.read x) in
@@ -367,7 +368,7 @@ let withdraw node_uri sender_wallet_file tezos_address amount ticket =
   let open Network in
   let%await block_level_response = request_block_level () node_uri in
   let block_level = block_level_response.level in
-  let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
+  let%await wallet = Config_files.Wallet.read ~file:sender_wallet_file in
   let operation =
     Protocol.Operation.Core_user.sign ~secret:wallet.priv_key
       ~nonce:(Crypto.Random.int32 Int32.max_int)
