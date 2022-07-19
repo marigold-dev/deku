@@ -11,3 +11,7 @@
 (package
  (name deku-concepts)
  (depends deku-stdlib))
+
+(package
+ (name deku-protocol)
+ (depends deku-concepts))
