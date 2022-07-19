@@ -42,16 +42,13 @@ const calculate_cost = (action: action_type, state: cookie_baker_state) => {
     switch (action) {
         case action_type.increment_cursor:
             console.log("Calculating price for next cursor");
-            const cursor_cost = 1.15 * initial_cursor_cost;
-            return Math.floor(Math.pow(cursor_cost, state.number_of_cursor - state.number_of_free_cursor));
+            return initial_cursor_cost * Math.floor(Math.pow(1.15, state.number_of_cursor - state.number_of_free_cursor));
         case action_type.increment_grandma:
             console.log("Calculating price for next grandma");
-            const grandma_cost = 1.15 * initial_grandma_cost;
-            return Math.floor(Math.pow(grandma_cost, state.number_of_grandma - state.number_of_free_grandma));
+            return initial_grandma_cost * Math.floor(Math.pow(1.15, state.number_of_grandma - state.number_of_free_grandma));
         case action_type.increment_farm:
             console.log("Calculating price for next farm");
-            const farm_cost = 1.15 * initial_farm_cost;
-            return Math.floor(Math.pow(farm_cost, state.number_of_farm - state.number_of_free_farm));
+            return initial_farm_cost * Math.floor(Math.pow(1.15, state.number_of_farm - state.number_of_free_farm));
     }
     return undefined;
 }
