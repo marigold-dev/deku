@@ -45,3 +45,11 @@ let rec kmap_ok k f l =
   | Error error -> Error error
 
 let map_ok f l = kmap_ok (fun x -> x) f l
+
+let take n l =
+  let rec go acc = function
+    | 0, _
+    | _, [] ->
+      acc
+    | n, hd :: tl -> go (hd :: acc) (n - 1, tl) in
+  go [] (n, l) |> List.rev
