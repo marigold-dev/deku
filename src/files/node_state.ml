@@ -4,11 +4,12 @@ open Node
 open Consensus
 
 let get_initial_state ~folder ~minimum_block_delay =
-  let%await identity = Files.Identity.read ~file:(folder ^ "/identity.json") in
+  let%await identity =
+    Config_files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
   let%await trusted_validator_membership_change_list =
-    Files.Trusted_validators_membership_change.read
+    Config_files.Trusted_validators_membership_change.read
       ~file:trusted_validator_membership_change_file in
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.of_list
@@ -21,7 +22,7 @@ let get_initial_state ~folder ~minimum_block_delay =
             discovery_contract;
             required_confirmations;
           } =
-      Files.Interop_context.read ~file:(folder ^ "/tezos.json") in
+      Config_files.Interop_context.read ~file:(folder ^ "/tezos.json") in
     Lwt.return
       (Tezos_interop.make ~rpc_node ~secret ~consensus_contract
          ~discovery_contract ~required_confirmations) in
@@ -39,7 +40,7 @@ let get_initial_state ~folder ~minimum_block_delay =
         | None -> validators_uri)
       State.Address_map.empty validators in
   let persist_trusted_membership_change =
-    Files.Trusted_validators_membership_change.write
+    Config_files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
   let config = Config.make ~identity ~minimum_block_delay in
   let node =
@@ -58,7 +59,7 @@ let get_initial_state ~folder ~minimum_block_delay =
   let%await state_bin_exists = Lwt_unix.file_exists state_bin in
   let%await protocol =
     if state_bin_exists then
-      Files.State_bin.read ~file:state_bin
+      Config_files.State_bin.read ~file:state_bin
     else
       await node.consensus.protocol in
   let prev_epoch_state_bin = folder ^ "/prev_epoch_state.bin" in
@@ -67,7 +68,7 @@ let get_initial_state ~folder ~minimum_block_delay =
   let%await snapshots =
     if state_bin_exists && prev_epoch_state_bin_exists then
       let%await prev_protocol =
-        Files.State_bin.read ~file:prev_epoch_state_bin in
+        Config_files.State_bin.read ~file:prev_epoch_state_bin in
       let hash, data = Protocol.hash prev_protocol in
       let snapshot_ref, snapshots =
         Snapshots.add_snapshot_ref ~block_height:prev_protocol.block_height
