@@ -105,10 +105,18 @@ let check_signature ~hash ~signature state =
      If validators changed and you are out of sync, you will reject valid
      signatures or accept invalid signatures (the node can wait and restart to back in sync by querying
      the Tezos contract) *)
+  (* FIXME: temp logging *)
+  let is_validator = is_validator_address state (Signature.address signature) in
+  if not is_validator then (
+    let signer = Signature.address signature |> Key_hash.to_string in
+    Log.error "Got a signature from %s but he is not a validator" signer;
+    let validators =
+      Validators.to_list state.protocol.validators
+      |> List.map (fun x -> x.Validators.address |> Key_hash.to_string) in
+    Log.error "Current validators: %s" (String.concat ", " validators));
+
   (* TODO: *)
-  let%assert () =
-    (`Not_a_validator, is_validator_address state (Signature.address signature))
-  in
+  let%assert () = (`Not_a_validator, is_validator) in
   (* TODO: this could likely be removed*)
   let%assert () =
     (`Already_known_signature, not (is_known_signature state ~hash ~signature))
