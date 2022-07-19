@@ -9,6 +9,16 @@
  (depends zarith))
 
 (package
+ (name deku-crypto)
+ ; TODO: I don't like this
+ (depends
+  deku-stdlib
+  digestif
+  mirage-crypto
+  mirage-crypto-ec
+  mirage-crypto-rng))
+
+(package
  (name deku-concepts)
  (depends deku-stdlib))
 

@@ -1,0 +1,7 @@
+(library
+ (name deku_crypto)
+ (public_name deku-crypto)
+ (libraries deku_stdlib digestif mirage-crypto-ec)
+ (modules_without_implementation alg_intf hash_intf)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
