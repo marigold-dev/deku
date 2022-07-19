@@ -10,3 +10,5 @@ val fold_left_ok :
 val somes : 'a option list -> 'a list
 
 val map_ok : ('a -> ('b, 'c) result) -> 'a t -> ('b t, 'c) result
+
+val take : int -> 'a t -> 'a t
