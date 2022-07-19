@@ -23,6 +23,7 @@ type json_option =
 type common_options = {
   node_folder : string;
   use_json : json_option;
+  validator_uris : Uri.t list option;
   style_renderer : Fmt.style_renderer option;
   log_level : Logs.level option;
 }
@@ -51,9 +52,10 @@ let setup_logs style_renderer log_level use_json =
         Logs.Src.set_level src (Some Logs.Error))
     (Logs.Src.list ())
 
-let common_options node_folder use_json style_renderer log_level =
+let common_options node_folder use_json validator_uris style_renderer log_level
+    =
   setup_logs style_renderer log_level use_json;
-  { node_folder; use_json; style_renderer; log_level }
+  { node_folder; use_json; validator_uris; style_renderer; log_level }
 
 let uri =
   let parser uri = Ok (uri |> Uri.of_string) in
@@ -66,6 +68,15 @@ let folder_node position =
   let doc = "Path to the folder containing the node configuration data." in
   let open Arg in
   required & pos position (some string) None & info [] ~doc ~docv
+
+let validator_uris =
+  let open Arg in
+  let docv = "validator_uris" in
+  let doc =
+    "Comma-separated list of validator URI's to which to broadcast operations"
+  in
+  let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
+  value & opt (some (list uri)) None & info ["validator_uris"] ~doc ~docv ~env
 
 let common_options_term =
   let json_logs =
@@ -83,6 +94,7 @@ let common_options_term =
   const common_options
   $ folder_node 0
   $ json_logs
+  $ validator_uris
   $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
   $ Logs_cli.level
       ~env:
@@ -109,8 +121,23 @@ let interop_context node_folder =
        ~discovery_contract:context.discovery_contract
        ~required_confirmations:context.required_confirmations)
 
-let validator_uris ~interop_context =
-  Tezos_interop.Consensus.fetch_validators interop_context
+let with_validator_uris ?uris node_folder f =
+  match uris with
+  | Some uris -> f uris
+  | None -> (
+    let%await interop_context = interop_context node_folder in
+    let%await validator_uris =
+      Tezos_interop.Consensus.fetch_validators interop_context in
+    match validator_uris with
+    | Error err -> Lwt.return (`Error (false, err))
+    | Ok validator_uris ->
+      let uris =
+        List.filter_map
+          (function
+            | _key_hash, Some uri -> Some uri
+            | _ -> None)
+          validator_uris in
+      f uris)
 
 let hash =
   let parser string =
@@ -420,7 +447,7 @@ let node =
   $ minimum_block_delay
   $ Prometheus_dream.opts
 
-let produce_block { node_folder; _ } =
+let produce_block { node_folder; validator_uris; _ } =
   let%await identity = read_identity ~node_folder in
   let%await state =
     Node_state.get_initial_state ~minimum_block_delay:0. ~folder:node_folder
@@ -430,17 +457,12 @@ let produce_block { node_folder; _ } =
     Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
-      let open Network in
-      broadcast_to_list (module Block_spec) validator_uris { block } in
-    Format.printf "block.hash: %s\n%!" (BLAKE2B.to_string block.hash);
-    Lwt.return (`Ok ())
+  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
+      let%await () =
+        let open Network in
+        broadcast_to_list (module Block_spec) validator_uris { block } in
+      Logs.app (fun fmt -> fmt "block.hash: %s" (BLAKE2B.to_string block.hash));
+      Lwt.return (`Ok ()))
 
 let produce_block =
   let open Term in
@@ -458,22 +480,17 @@ let info_sign_block =
      chain is stale." in
   Cmd.info "sign-block" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
 
-let sign_block { node_folder; _ } block_hash =
+let sign_block { node_folder; validator_uris; _ } block_hash =
   let%await identity = read_identity ~node_folder in
   let signature = Protocol.Signature.sign ~key:identity.secret block_hash in
-  let%await interop_context = interop_context node_folder in
-  let%await validator_uris = validator_uris ~interop_context in
-  match validator_uris with
-  | Error err -> Lwt.return (`Error (false, err))
-  | Ok validator_uris ->
-    let validator_uris = List.map snd validator_uris |> List.somes in
-    let%await () =
+  with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
       let open Network in
-      broadcast_to_list
-        (module Signature_spec)
-        validator_uris
-        { hash = block_hash; signature } in
-    Lwt.return (`Ok ())
+      let%await () =
+        broadcast_to_list
+          (module Signature_spec)
+          validator_uris
+          { hash = block_hash; signature } in
+      Lwt.return (`Ok ()))
 
 let sign_block_term =
   let block_hash =
