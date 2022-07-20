@@ -12,7 +12,15 @@ with ocamlPackages; buildDunePackage rec {
     files = [ "dune-project" ];
   };
 
-  propagatedBuildInputs = [ ppx_deriving zarith digestif ]
+  propagatedBuildInputs = [
+    ppx_deriving
+    zarith
+    digestif
+    mirage-crypto
+    mirage-crypto-ec
+    mirage-crypto-rng
+    secp256k1-internal
+  ]
     # checkInputs are here because when cross compiling dune needs test dependencies
     # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
     ++ checkInputs;

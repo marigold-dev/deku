@@ -1,3 +1,4 @@
+(* TODO: make those GADTs *)
 type signature =
   | Ed25519 of Ed25519.Signature.t
   | Secp256k1 of Secp256k1.Signature.t

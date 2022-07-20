@@ -1,3 +1,4 @@
+(* TODO: make those GADTs *)
 type key_hash =
   | Ed25519 of Ed25519.Key_hash.t
   | Secp256k1 of Secp256k1.Key_hash.t

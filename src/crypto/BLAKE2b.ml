@@ -16,7 +16,9 @@ struct
 
   let of_hex string =
     let size = digest_size * 2 in
-    if String.length string = size then of_hex_opt string else None
+    match String.length string = size with
+    | true -> of_hex_opt string
+    | false -> None
 
   let to_hex hash = to_hex hash
   let hash data = digest_string data

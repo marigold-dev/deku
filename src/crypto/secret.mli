@@ -1,3 +1,4 @@
+(* TODO: make those GADTs *)
 type secret =
   | Ed25519 of Ed25519.Secret.t
   | Secp256k1 of Secp256k1.Secret.t

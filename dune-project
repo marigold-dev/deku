@@ -10,13 +10,13 @@
 
 (package
  (name deku-crypto)
- ; TODO: I don't like this
  (depends
-  deku-stdlib
+  zarith
   digestif
   mirage-crypto
   mirage-crypto-ec
-  mirage-crypto-rng))
+  mirage-crypto-rng
+  secp256k1-internal))
 
 (package
  (name deku-concepts)
