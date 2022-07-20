@@ -1,0 +1,54 @@
+module type S = sig
+  module Secret : sig
+    type secret
+    type t = secret [@@deriving eq, ord]
+
+    (* repr *)
+    val of_b58 : string -> secret option
+    val to_b58 : secret -> string
+
+    (* utils *)
+    val generate : unit -> secret
+  end
+
+  module Key : sig
+    type key
+    type t = key [@@deriving eq, ord]
+
+    (* repr *)
+    val of_b58 : string -> key option
+    val to_b58 : key -> string
+
+    (* operations *)
+    val of_secret : Secret.t -> key
+  end
+
+  module Key_hash : sig
+    type key_hash
+    type t = key_hash [@@deriving eq, ord]
+
+    (* repr *)
+    val of_b58 : string -> key_hash option
+    val to_b58 : key_hash -> string
+
+    (* operations *)
+    val of_key : Key.t -> key_hash
+  end
+
+  module Signature : sig
+    type signature
+    type t = signature [@@deriving eq, ord]
+
+    (* repr *)
+    val of_b58 : string -> signature option
+    val to_b58 : signature -> string
+
+    (* utils *)
+    val zero : signature
+    val size : int
+
+    (* operations *)
+    val sign : Secret.t -> BLAKE2b.t -> signature
+    val verify : Key.t -> signature -> BLAKE2b.t -> bool
+  end
+end
