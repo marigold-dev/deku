@@ -1,0 +1,10 @@
+type secret =
+  | Ed25519 of Ed25519.Secret.t
+  | Secp256k1 of Secp256k1.Secret.t
+  | P256 of P256.Secret.t
+
+type t = secret [@@deriving ord, eq]
+
+(* repr *)
+val of_b58 : string -> secret option
+val to_b58 : secret -> string
