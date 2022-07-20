@@ -82,11 +82,6 @@
           static = true;
           inherit nix-filter nodejs npmPackages;
         };
-
-        sandbox = pkgs.callPackage ./nix/sandbox.nix {
-          inherit deku ligo;
-          pkgs = import nixpkgs { inherit system; };
-        };
       in {
         devShell = import ./nix/shell.nix { inherit pkgs system deku ligo; };
         packages = {
@@ -113,7 +108,7 @@
           };
           sandbox = {
             type = "app";
-            program = "${sandbox}/bin/sandbox.sh";
+            program = "${deku}/bin/deku-sandbox";
           };
         };
 
