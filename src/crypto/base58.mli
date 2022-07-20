@@ -80,3 +80,5 @@ end) : sig
   val of_b58 : string -> P.t option
   val to_b58 : P.t -> string
 end
+
+val decode_variant : (string -> 'a option) list -> string -> 'a option

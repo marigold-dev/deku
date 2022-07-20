@@ -189,3 +189,12 @@ struct
   let of_b58 string = simple_decode ~prefix ~of_raw string
   let to_b58 t = simple_encode ~prefix ~to_raw t
 end
+
+(* TODO: this is dumb *)
+let rec decode_variant l string =
+  match l with
+  | of_b58 :: l -> (
+      match of_b58 string with
+      | Some v -> Some v
+      | None -> decode_variant l string)
+  | [] -> None
