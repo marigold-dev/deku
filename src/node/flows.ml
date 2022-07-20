@@ -382,6 +382,9 @@ let request_withdraw_proof state ~hash =
       |> Ledger.withdrawal_handles_find_proof withdrawal_handle in
     Ok { withdrawal_handles_hash; withdrawal_handle; proof }
 
+let request_operation_receipt state ~hash =
+  BLAKE2B.Map.find_opt hash state.Node.recent_operation_receipts
+
 let request_ticket_balance state ~ticket ~address =
   state.Node.consensus.protocol.core_state
   |> Core_deku.State.ledger

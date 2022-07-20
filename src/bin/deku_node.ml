@@ -277,6 +277,20 @@ let handle_withdraw_proof =
       Ok
         (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
 
+(* POST /receipt *)
+(* Returns the receipt for a given operation hash *)
+let handle_operation_receipt =
+  handle_request
+    (module Network.Receipt)
+    (fun { operation_hash = hash } ->
+      let convert = function
+      | State.Receipt_contract_origination { sender; outcome } -> Network.Receipt.Origination { sender; outcome }
+      | Receipt_contract_invocation { sender; outcome } -> Invocation { sender; outcome }
+      | Receipt_tezos_withdraw _ -> failwith "Not supported yet"
+      in
+      let receipt = Flows.request_operation_receipt ~hash (Server.get_state ()) in
+      Ok (Option.map convert receipt))
+
 (* POST /ticket-balance *)
 (* Returns how much of a ticket a key has *)
 let handle_ticket_balance =
@@ -353,6 +367,7 @@ let node folder port minimum_block_delay prometheus_port =
              handle_receive_user_operations_gossip;
              handle_receive_consensus_operation;
              handle_withdraw_proof;
+             handle_operation_receipt;
              handle_ticket_balance;
              handle_trusted_validators_membership;
              handle_contract_address;

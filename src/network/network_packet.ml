@@ -139,6 +139,29 @@ module Withdraw_proof = struct
   let path = "/withdraw-proof"
 end
 
+module Receipt = struct
+  type request = { operation_hash: BLAKE2B.t } [@@deriving yojson]
+
+  type address = Address.t
+
+  let address_to_yojson, address_of_yojson =
+    Yojson_ext.with_yojson_string "Address" Address.to_string Address.of_string
+
+  type receipt =
+    | Origination of {
+        sender: address;
+        outcome: [`Success of State.contract_origination_changes | `Failure];
+      }
+    | Invocation of {
+        sender: address;
+        outcome: [`Success of State.contract_invocation_changes | `Failure];
+      }
+  [@@deriving yojson]
+
+  type response = receipt option [@@deriving yojson]
+
+  let path = "/receipt"
+end
 module Ticket_balance = struct
   type request = {
     address : Key_hash.t;
