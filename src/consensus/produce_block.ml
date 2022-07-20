@@ -68,4 +68,6 @@ let produce_block state =
     Block.produce ~state:state.protocol ~author:state.identity.t
       ~next_state_root_hash ~consensus_operations ~tezos_operations
       ~user_operations in
+  Log.info "Producing %a" Block.pp block;
+  Metrics.Blocks.inc_block_produced ();
   Effect (Broadcast_block { block })
