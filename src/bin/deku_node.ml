@@ -449,12 +449,11 @@ let node =
 
 let produce_block { node_folder; validator_uris; _ } =
   let%await identity = read_identity ~node_folder in
-  let%await state =
-    Node_state.get_initial_state ~minimum_block_delay:0. ~folder:node_folder
-  in
+  let%await consensus =
+    Node_state.get_initial_consensus_state ~folder:node_folder in
   let address = identity.t in
   let block =
-    Block.produce ~state:state.consensus.protocol ~next_state_root_hash:None
+    Block.produce ~state:consensus.protocol ~next_state_root_hash:None
       ~author:address ~consensus_operations:[] ~tezos_operations:[]
       ~user_operations:[] in
   with_validator_uris ?uris:validator_uris node_folder (fun validator_uris ->
