@@ -4,7 +4,7 @@
  (libraries dream bin_common node helpers prometheus-dream)
  (modules Deku_node)
  (preprocess
-  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding)))
+  (pps ppx_deriving.show ppx_deriving_yojson ppx_let_binding lwt_ppx)))
 
 (executable
  (name deku_cli)
@@ -31,3 +31,9 @@
  (static
   (ocamlopt_flags
    (:standard -O2 -ccopt -static))))
+
+(rule
+ (targets deku_node.ml)
+ (deps deku_node.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))

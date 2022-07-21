@@ -237,7 +237,7 @@ let create_contract_invocation_transaction node_folder sender_wallet_file
     contract_address arg vm_flavor =
   let open Network in
   with_validator_uri node_folder @@ fun (_, validators_uri) ->
-  let%await block_level_response = request_block_level () validators_uri in
+  let%await block_level_response = request_block_level validators_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let payload =
@@ -285,7 +285,7 @@ let create_transaction node_folder sender_wallet_file destination amount ticket
     =
   let open Network in
   with_validator_uri node_folder @@ fun (_, validator_uri) ->
-  let%await block_level_response = request_block_level () validator_uri in
+  let%await block_level_response = request_block_level validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =
@@ -319,7 +319,7 @@ let info_create_custom_transaction =
 let create_custom_transaction node_folder sender_wallet_file payload =
   let open Network in
   with_validator_uri node_folder @@ fun (_, validator_uri) ->
-  let%await block_level_response = request_block_level () validator_uri in
+  let%await block_level_response = request_block_level validator_uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let transaction =
@@ -406,7 +406,7 @@ let originate_contract node_folder contract_json initial_storage
     match validator_uris with
     | [] -> Lwt.return (`Error (false, "No validators found"))
     | (_, validator_uri) :: _ ->
-      let%await block_level_response = request_block_level () validator_uri in
+      let%await block_level_response = request_block_level validator_uri in
       let block_level = block_level_response.level in
       let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
       let contract_program = Yojson.Safe.from_file contract_json in
@@ -604,7 +604,7 @@ let info_withdraw =
 let withdraw node_folder sender_wallet_file tezos_address amount ticket =
   let open Network in
   let%await identity = read_identity ~node_folder in
-  let%await block_level_response = request_block_level () identity.uri in
+  let%await block_level_response = request_block_level identity.uri in
   let block_level = block_level_response.level in
   let%await wallet = Files.Wallet.read ~file:sender_wallet_file in
   let operation =

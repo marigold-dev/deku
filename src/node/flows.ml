@@ -134,7 +134,7 @@ let rec request_protocol_snapshot tries =
     (fun () ->
       let state = !get_state () in
       let validator_uri = find_random_validator_uri state in
-      Network.request_protocol_snapshot () validator_uri)
+      Network.request_protocol_snapshot validator_uri)
     (fun _exn ->
       Printexc.print_backtrace stdout;
       request_protocol_snapshot (tries + 1))

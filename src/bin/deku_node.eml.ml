@@ -11,11 +11,12 @@ let update_state state =
   Server.set_state state;
   state
 
-let handle_request (type req res)
-    (module E : Network.Request_endpoint
+let handle_post_request (type req res)
+    (module E : Network.Post_request_endpoint
       with type request = req
        and type response = res) handler =
   let handler request =
+    let headers = Dream.all_headers request in
     let%await body = Dream.body request in
     let%await request = Parallel.decode E.request_of_yojson body in
     Metrics.Networking.inc_network_messages_received E.path;
@@ -29,13 +30,29 @@ let handle_request (type req res)
         let%await response = Parallel.encode E.response_to_yojson response in
         Dream.json response
       | Error err -> raise (Failure (Flows.string_of_error err)))
-    | Error err -> raise (Failure err) in
+    | Error err ->
+      Log.debug "Bad request: %s" err;
+      (* TODO: FIXME, this is not working
+         any curl will wait for ever, even if the code is ok *)
+      Dream.respond ~status:`Bad_Request ~code:400 ~headers err in
   Dream.post E.path handler
+
+let handle_request_get (type res)
+    (module E : Network.Get_request_endpoint with type response = res) handler =
+  let handler _req =
+    Metrics.Networking.inc_network_messages_received E.path;
+    let response = handler update_state in
+    match response with
+    | Ok response ->
+      let%await response = Parallel.encode E.response_to_yojson response in
+      Dream.json response
+    | Error err -> raise (Failure (Flows.string_of_error err)) in
+  Dream.get E.path handler
 
 (* POST /append-block-and-signature *)
 (* If the block is not already known and is valid, add it to the pool *)
 let handle_received_block_and_signature =
-  handle_request
+  handle_post_request
     (module Network.Block_and_signature_spec)
     (fun update_state request ->
       let open Flows in
@@ -51,7 +68,7 @@ let handle_received_block_and_signature =
 (* POST /append-signature *)
 (* Append signature to an already existing block? *)
 let handle_received_signature =
-  handle_request
+  handle_post_request
     (module Network.Signature_spec)
     (fun update_state request ->
       let open Flows in
@@ -64,18 +81,18 @@ let handle_received_signature =
 (* POST /block-by-hash *)
 (* Retrieve block by provided hash *)
 let handle_block_by_hash =
-  handle_request
+  handle_post_request
     (module Network.Block_by_hash_spec)
     (fun _update_state request ->
       let block = Flows.find_block_by_hash (Server.get_state ()) request.hash in
       Ok block)
 
-(* POST /block-level *)
+(* GET /block-level *)
 (* Retrieve height of the chain *)
 let handle_block_level =
-  handle_request
+  handle_request_get
     (module Network.Block_level)
-    (fun _update_state _request ->
+    (fun _update_state ->
       Ok { level = Flows.find_block_level (Server.get_state ()) })
 
 (* POST /block-by-level *)
@@ -83,7 +100,7 @@ let handle_block_level =
    the timestamp at which it was applied (note the timestamp will be
    slightly different across nodes). *)
 let handle_block_by_level =
-  handle_request
+  handle_post_request
     (module Network.Block_by_level_spec)
     (fun _update_state request ->
       let state = Server.get_state () in
@@ -96,12 +113,12 @@ let handle_block_by_level =
                Network.Block_by_level_spec.{ block; timestamp }) in
       Ok block_and_timestamp)
 
-(* POST /protocol-snapshot *)
+(* GET /protocol-snapshot *)
 (* Get the snapshot of the protocol (last block and associated signature) *)
 let handle_protocol_snapshot =
-  handle_request
+  handle_request_get
     (module Network.Protocol_snapshot)
-    (fun _update_state () ->
+    (fun _update_state ->
       let State.{ snapshots; _ } = Server.get_state () in
       let%ok snapshot = Snapshots.get_most_recent_snapshot snapshots in
       Ok
@@ -119,7 +136,7 @@ let handle_protocol_snapshot =
 (* Set a new Number Only Used Once for the selected key *)
 (* so that the author can make a proof that he is the owner of the secret and can set the URI *)
 let handle_request_nonce =
-  handle_request
+  handle_post_request
     (module Network.Request_nonce)
     (fun update_state { uri } ->
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
@@ -128,7 +145,7 @@ let handle_request_nonce =
 (* POST /register-uri *)
 (* Set the provided URI of the validator *)
 let handle_register_uri =
-  handle_request
+  handle_post_request
     (module Network.Register_uri)
     (fun update_state { uri; signature } ->
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
@@ -136,7 +153,7 @@ let handle_register_uri =
 (* POST /user-operation-gossip *)
 (* Propagate user operation (core_user.t) over gossip network *)
 let handle_receive_user_operation_gossip =
-  handle_request
+  handle_post_request
     (module Network.User_operation_gossip)
     (fun update_state request ->
       Flows.received_user_operation (Server.get_state ()) update_state
@@ -145,7 +162,7 @@ let handle_receive_user_operation_gossip =
 (* POST /user-operations-gossip *)
 (* Propagate a batch of user operations (core_user.t) over gossip network *)
 let handle_receive_user_operations_gossip =
-  handle_request
+  handle_post_request
     (module Network.User_operations_gossip)
     (fun update_state request ->
       let operations = request.user_operations in
@@ -160,7 +177,7 @@ let handle_receive_user_operations_gossip =
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
-  handle_request
+  handle_post_request
     (module Network.Consensus_operation_gossip)
     (fun update_state request ->
       Flows.received_consensus_operation (Server.get_state ()) update_state
@@ -169,7 +186,7 @@ let handle_receive_consensus_operation =
 (* POST /trusted-validators-membership *)
 (* Add or Remove a new trusted validator *)
 let handle_trusted_validators_membership =
-  handle_request
+  handle_post_request
     (module Network.Trusted_validators_membership_change)
     (fun update_state request ->
       Flows.trusted_validators_membership (Server.get_state ()) update_state
@@ -178,7 +195,7 @@ let handle_trusted_validators_membership =
 (* POST /withdraw-proof *)
 (* Returns a proof that can be provided to Tezos to fulfill a withdraw *)
 let handle_withdraw_proof =
-  handle_request
+  handle_post_request
     (module Network.Withdraw_proof)
     (fun _ { operation_hash } ->
       Ok
@@ -187,22 +204,27 @@ let handle_withdraw_proof =
 (* POST /ticket-balance *)
 (* Returns how much of a ticket a key has *)
 let handle_ticket_balance =
-  handle_request
+  handle_post_request
     (module Network.Ticket_balance)
     (fun _update_state { ticket; address } ->
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })
 
-(* POST /vm-state *)
+(* GET /vm-state *)
 (* Returns the vm state *)
 let handle_vm_state =
-  handle_request
+  handle_request_get
     (module Network.Vm_state)
-    (fun _update_state () ->
+    (fun _update_state ->
       let state = Server.get_state () in
       let vm_state = Flows.request_vm_state state in
       Ok { state = vm_state })
+
+(* TODO: should we do something else here? *)
+let my_error_template _error _debug_info suggested_response =
+  let response = suggested_response in
+  Lwt.return response
 
 let node folder named_pipe_path minimum_block_delay prometheus_port =
   External_vm.External_vm_client.start_vm_ipc ~named_pipe_path;
@@ -217,17 +239,18 @@ let node folder named_pipe_path minimum_block_delay prometheus_port =
         operation);
   Node.Server.start ~initial:node;
   Dream.initialize_log ~level:`Warning ();
+
   let cors_middleware inner_handler req =
     let%await response = inner_handler req in
     Dream.add_header response "Access-Control-Allow-Origin" "*";
     Dream.add_header response "Access-Control-Allow-Headers" "*";
     Dream.add_header response "Allow" "*";
-    Lwt.return response
-  in
+    Lwt.return response in
   let port = Node.Server.get_port () |> Option.get in
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
+        ~error_handler:(Dream.error_template my_error_template)
       @@ cors_middleware
       @@ Dream.router
            [

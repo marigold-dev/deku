@@ -50,16 +50,12 @@ module Block_by_level_spec = struct
 end
 
 module Block_level = struct
-  type request = unit [@@deriving yojson]
-
   type response = { level : int64 } [@@deriving yojson]
 
   let path = "/block-level"
 end
 
 module Protocol_snapshot = struct
-  type request = unit [@@deriving yojson]
-
   type snapshot = {
     hash : BLAKE2B.t;
     data : string;
@@ -179,8 +175,6 @@ module Trusted_validators_membership_change = struct
 end
 
 module Vm_state = struct
-  type request = unit [@@deriving yojson]
-
   type response = { state : External_vm.External_vm_protocol.State.t }
   [@@deriving yojson]
 
