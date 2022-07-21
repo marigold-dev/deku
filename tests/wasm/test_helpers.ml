@@ -2,7 +2,7 @@ open Helpers
 
 exception Invocation_error
 
-let invoke ~ctx ~storage ~argument code =
+let invoke ~ctx ~storage ~argument ~sender code =
   let open Core_deku in
   let open Contracts in
   match
@@ -11,7 +11,8 @@ let invoke ~ctx ~storage ~argument code =
     let gas = Int.max_int in
     let%ok payload =
       Contract_vm.Origination_payload.wasm_of_yojson ~code ~storage in
-    let%ok modd = Contract_vm.Compiler.compile payload ~tickets:Seq.empty ~gas in
+    let%ok modd =
+      Contract_vm.Compiler.compile payload ~tickets:Seq.empty ~gas ~sender in
     let%ok argument =
       Contract_vm.Invocation_payload.wasm_of_yojson ~arg:argument in
     let%ok contract, ops =

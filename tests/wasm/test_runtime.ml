@@ -32,7 +32,7 @@ let test_simple_invocation () =
       ~get_contract_opt:(fun _ -> None)
       ~self:(Address.of_contract_hash (make_contract_address "test"))
       ~provided_tickets:Seq.empty in
-  let storage, _ = invoke ~ctx ~storage ~argument code in
+  let storage, _ = invoke ~ctx ~storage ~argument ~sender:addr code in
   let storage = Bytes.get_int64_le storage 0 in
   Alcotest.(check int64) "Same" 43L storage
 
@@ -78,7 +78,7 @@ let test_ticket_own () =
       ~provided_tickets:
         ([((ticket, Amount.of_int 10), (Int32.zero, Some Int64.zero))]
         |> List.to_seq) in
-  let _storage, _ = invoke ~ctx ~storage ~argument code in
+  let _storage, _ = invoke ~ctx ~storage ~argument ~sender:addr code in
   let _, tickets, _ = ctx#finalize [] |> Result.get_ok in
   let contract_addr = Address.of_contract_hash (make_contract_address "test") in
   let final = Ticket_table.update_tickets ~sender:contract_addr table ~tickets in
@@ -151,7 +151,7 @@ let test_ticket_join () =
       ~tickets:(Seq.return ((ticket, Amount.of_int 10), (Int32.one, Some 5L)))
       ~self:(Core_deku.Address.of_contract_hash self)
       ~sender:addr ~source:addr in
-  let _, _ = invoke ~ctx ~storage ~argument code in
+  let _, _ = invoke ~ctx ~storage ~argument ~sender:addr code in
   let _, tickets, _ = ctx#finalize [] |> Result.get_ok in
   let final = Ticket_table.update_tickets ~sender:contract_addr table ~tickets in
   let final = Ticket_table.balance final ~sender:contract_addr ~ticket in
@@ -232,7 +232,7 @@ let test_ticket_split () =
     make_custom' ~mapping:[]
       ~tickets:(Seq.return ((ticket, Amount.of_int 10), (Int32.zero, Some 0L)))
       ~tickets_table in
-  let _, _ = invoke ~ctx ~storage ~argument code in
+  let _, _ = invoke ~ctx ~storage ~argument ~sender:addr code in
   let _, tickets, _ = ctx#finalize [] |> Result.get_ok in
   let tickets = List.of_seq tickets in
   let imit_hanlde = [(ticket, Amount.of_int 5); (ticket, Amount.of_int 5)] in
@@ -329,7 +329,7 @@ let test_ticket_send_twice () =
       ~self:(Core_deku.Address.of_contract_hash contract_address1)
       ~provided_tickets:
         (Seq.return ((ticket, Amount.of_int 10), (Int32.zero, Some 4L))) in
-  let _, ops = invoke ~ctx ~storage ~argument code in
+  let _, ops = invoke ~ctx ~storage ~argument ~sender:addr code in
   let _, tickets, ops = ctx#finalize ops |> Result.get_ok in
   let ops = ops |> List.hd in
   Alcotest.(check Testables.contract_operation)
@@ -367,7 +367,7 @@ let test_ticket_send_twice () =
             (ticket, amount)))
       ~source:addr
       ~get_contract_opt:(fun _ -> None) in
-  let _, _ = invoke ~ctx ~storage ~argument:param code2 in
+  let _, _ = invoke ~ctx ~storage ~argument:param ~sender:addr code2 in
   let _, tickets, _ = ctx#finalize [] |> Result.get_ok in
   let tickets = List.of_seq tickets in
   let imit_hanlde = [(ticket, Amount.of_int 10)] in
@@ -437,7 +437,7 @@ let test_ticket_send_implicit () =
       ~self:(Address.of_contract_hash contract_address1)
       ~provided_tickets:
         (Seq.return ((ticket, Amount.of_int 10), (Int32.zero, Some 0L))) in
-  let _, ops = invoke ~ctx ~storage ~argument code in
+  let _, ops = invoke ~ctx ~storage ~argument ~sender:addr code in
   let x = ctx#finalize ops |> Result.get_ok |> (fun (_, _, x) -> x) |> List.hd in
   Alcotest.(check Testables.contract_operation)
     "Same"
@@ -500,7 +500,9 @@ let test_ticket_own_dup () =
         (Seq.return ((ticket, Amount.of_int 10), (Int32.zero, None))) in
   Alcotest.check_raises "Invocation error" Invocation_error (fun () ->
       ignore
-        (invoke ~ctx ~storage ~argument code |> fst |> Ticket_handle.of_bytes))
+        (invoke ~ctx ~storage ~argument ~sender:addr code
+        |> fst
+        |> Ticket_handle.of_bytes))
 
 let test =
   let open Alcotest in

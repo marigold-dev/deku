@@ -366,6 +366,8 @@ let register_uri state update_state ~uri ~signature =
 let request_withdraw_proof state ~hash =
   match state.Node.recent_operation_receipts |> BLAKE2B.Map.find_opt hash with
   | None -> Network.Withdraw_proof.Unknown_operation
+  | Some (Receipt_contract_invocation _ | Receipt_contract_origination _) ->
+    Network.Withdraw_proof.Operation_is_not_a_withdraw
   | Some (Receipt_tezos_withdraw withdrawal_handle) ->
     let last_block_hash = state.Node.consensus.protocol.last_block_hash in
     let withdrawal_handles_hash =

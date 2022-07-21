@@ -30,6 +30,7 @@ module type S = sig
       Origination_payload.t ->
       gas:int ->
       tickets:((Context.Ticket_id.t * Context.Amount.t) * Ticket_handle.t) Seq.t ->
+      sender:Context.Address.t ->
       (Contract.t, string) result
   end
 
@@ -307,6 +308,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
         code : Wasm_vm.Module.t;
         storage : bytes;
         tickets : Ticket_handle.t Tickets.t;
+        originated_by : Context.Address.t;
       }
       [@@deriving yojson]
 
@@ -330,7 +332,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
     end
 
     module Compiler = struct
-      let compile ~gas:_ ~tickets (code : Origination_payload.t) =
+      let compile ~gas:_ ~tickets (code : Origination_payload.t) ~sender =
         let%ok compiled =
           Wasm_vm.Module.of_string ~code:(Bytes.to_string code.code) in
         Ok
@@ -339,6 +341,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
               code = compiled;
               storage = code.storage;
               tickets = Tickets.of_seq tickets;
+              originated_by = sender;
             }
     end
 
@@ -348,13 +351,16 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
 
     module Interpreter = struct
       let invoke ctx contract arg ~gas =
-        let Contract.{ code; storage; tickets } = contract in
+        let Contract.{ code; storage; tickets; originated_by = sender } =
+          contract in
         let custom = FFI.custom ~ctx in
         let gas = ref gas in
         let%ok updated, operations =
           Wasm_vm.Runtime.invoke custom ~module_:code ~storage ~gas
             ~argument:arg in
-        let contract = Contract.{ code; storage = updated; tickets } in
+        let contract =
+          Contract.{ code; storage = updated; tickets; originated_by = sender }
+        in
         Ok (contract, operations)
     end
   end
@@ -384,11 +390,11 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
   end
 
   module Compiler = struct
-    let compile payload ~gas ~tickets =
+    let compile payload ~gas ~tickets ~sender =
       match payload with
       | Origination_payload.Wasm contract ->
         let%ok contract =
-          Wasm.Compiler.compile contract ~gas ~tickets
+          Wasm.Compiler.compile contract ~gas ~tickets ~sender
           |> Result.map_error ~f:Wasm_vm.Errors.show in
         Ok (Contract.Wasm contract)
   end
