@@ -397,6 +397,9 @@ let request_in_sync state =
   let v = Validators.length state.protocol.validators in
   let time_since_last_applied_block =
     Unix.time () -. state.protocol.last_applied_block_timestamp in
+  let () = print_float time_since_last_applied_block in
+  let () = print_float (float_of_int v *. 10.0) in
+  print_newline ();
   time_since_last_applied_block <= float_of_int v *. 10.0
 
 let handle_bootstrap_signal ~payload =

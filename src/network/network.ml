@@ -33,3 +33,7 @@ let request_trusted_validator_membership =
   request (module Trusted_validators_membership_change)
 
 let request_ticket_balance = request (module Ticket_balance)
+
+let request_in_sync = request (module In_sync)
+
+let request_bootstrap_signal = request (module Bootstrapper_signal)
