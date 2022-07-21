@@ -173,3 +173,11 @@ module Trusted_validators_membership_change = struct
 
   let path = "/trusted-validators-membership"
 end
+
+module In_sync = struct
+  type request = unit [@@deriving yojson]
+
+  type response = { in_sync : bool } [@@deriving yojson]
+
+  let path = "/in-sync"
+end

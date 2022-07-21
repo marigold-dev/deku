@@ -104,6 +104,8 @@ val block_matches_current_state_root_hash : state -> Block.t -> bool
 
 val block_matches_next_state_root_hash : state -> Block.t -> bool
 
+val in_sync : state -> bool
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change

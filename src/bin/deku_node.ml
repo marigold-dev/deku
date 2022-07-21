@@ -380,6 +380,15 @@ let handle_ticket_balance =
           ~address:(Core_deku.Address.of_key_hash address) in
       Ok { amount })
 
+(* POST /in-sync *)
+let handle_in_sync =
+  handle_request
+    (module Network.In_sync)
+    (fun () ->
+      let state = Server.get_state () in
+      let in_sync = Flows.request_in_sync state in
+      Ok { in_sync })
+
 let node folder port minimum_block_delay prometheus_port =
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
@@ -412,6 +421,7 @@ let node folder port minimum_block_delay prometheus_port =
              handle_withdraw_proof;
              handle_ticket_balance;
              handle_trusted_validators_membership;
+             handle_in_sync;
            ];
       Prometheus_dream.serve prometheus_port;
     ]

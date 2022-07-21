@@ -392,3 +392,7 @@ let trusted_validators_membership ~payload ~signature =
   handle_consensus_operation (fun handler consensus ->
       Consensus.with_trusted_validators_membership_change handler ~payload
         ~signature consensus)
+
+let request_in_sync state =
+  let state = state.Node.consensus in
+  Consensus.in_sync state
