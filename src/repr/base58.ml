@@ -35,6 +35,7 @@ module Prefix = struct
   (* 32 *)
   let block_hash = "\001\052" (* B(51) *)
   let operation_hash = "\005\116" (* o(51) *)
+  let deku_operation_hash = "\086\124" (* Do(51) *)
   let protocol_hash = "\002\170" (* P(51) *)
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
   let ed25519_seed = "\013\015\058\007" (* edsk(54) *)
@@ -174,27 +175,3 @@ let safe_decode ?alphabet s =
 let simple_decode ?alphabet ~prefix ~of_raw s =
   let ( >?? ) = Option.bind in
   safe_decode ?alphabet s >?? TzString.remove_prefix ~prefix >?? of_raw
-
-(* deku *)
-module Make (P : sig
-  type t
-
-  val prefix : string
-  val to_raw : t -> string
-  val of_raw : string -> t option
-end) =
-struct
-  open P
-
-  let of_b58 string = simple_decode ~prefix ~of_raw string
-  let to_b58 t = simple_encode ~prefix ~to_raw t
-end
-
-(* TODO: this is dumb *)
-let rec decode_variant l string =
-  match l with
-  | of_b58 :: l -> (
-      match of_b58 string with
-      | Some v -> Some v
-      | None -> decode_variant l string)
-  | [] -> None

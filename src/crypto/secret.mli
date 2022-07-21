@@ -4,7 +4,7 @@ type secret =
   | Secp256k1 of Secp256k1.Secret.t
   | P256 of P256.Secret.t
 
-type t = secret [@@deriving ord, eq]
+type t = secret [@@deriving eq, ord, yojson]
 
 (* repr *)
 val of_b58 : string -> secret option

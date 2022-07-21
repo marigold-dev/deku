@@ -1,3 +1,4 @@
+open Deku_repr
 open Mirage_crypto_ec
 open Ed25519
 
@@ -11,10 +12,10 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include Base58.Make (struct
+  include With_b58_and_yojson (struct
     type t = secret
 
-    let prefix = Base58.Prefix.ed25519_seed
+    let prefix = Prefix.ed25519_seed
     let to_raw secret = Cstruct.to_string (priv_to_cstruct secret)
 
     let of_raw string =
@@ -38,10 +39,10 @@ module Key = struct
   let of_secret secret = pub_of_priv secret
   let to_raw key = Cstruct.to_string (pub_to_cstruct key)
 
-  include Base58.Make (struct
+  include With_b58_and_yojson (struct
     type t = key
 
-    let prefix = Base58.Prefix.ed25519_public_key
+    let prefix = Prefix.ed25519_public_key
     let to_raw = to_raw
 
     let of_raw string =
@@ -60,7 +61,14 @@ module Key_hash = struct
   let of_key key = hash (Key.to_raw key)
 
   include With_b58 (struct
-    let prefix = Base58.Prefix.ed25519_public_key_hash
+    let prefix = Prefix.ed25519_public_key_hash
+  end)
+
+  include With_yojson_of_b58 (struct
+    type t = key_hash
+
+    let of_b58 = of_b58
+    let to_b58 = to_b58
   end)
 end
 
@@ -73,10 +81,10 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include Base58.Make (struct
+  include With_b58_and_yojson (struct
     type t = signature
 
-    let prefix = Base58.Prefix.ed25519_signature
+    let prefix = Prefix.ed25519_signature
     let to_raw signature = signature
 
     let of_raw string =

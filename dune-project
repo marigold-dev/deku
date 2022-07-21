@@ -9,8 +9,18 @@
  (depends zarith))
 
 (package
+ (name deku-constants)
+ (depends deku-stdlib))
+
+(package
+ (name deku-repr)
+ (depends zarith mirage-crypto ppx_deriving ppx_yojson_conv))
+
+(package
  (name deku-crypto)
  (depends
+  ppx_deriving
+  ppx_yojson_conv
   zarith
   digestif
   mirage-crypto
@@ -24,4 +34,4 @@
 
 (package
  (name deku-protocol)
- (depends deku-concepts))
+ (depends deku-stdlib deku-concepts deku_constants))

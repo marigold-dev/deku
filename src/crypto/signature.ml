@@ -1,3 +1,5 @@
+open Deku_repr
+
 type signature =
   | Ed25519 of Ed25519.Signature.t
   | Secp256k1 of Secp256k1.Signature.t
@@ -21,12 +23,19 @@ let of_b58 =
     | Some signature -> Some (P256 signature)
     | None -> None
   in
-  fun string -> Base58.decode_variant [ ed25519; secp256k1; p256 ] string
+  fun string -> decode_variant [ ed25519; secp256k1; p256 ] string
 
 let to_b58 = function
   | Ed25519 signature -> Ed25519.Signature.to_b58 signature
   | Secp256k1 signature -> Secp256k1.Signature.to_b58 signature
   | P256 signature -> P256.Signature.to_b58 signature
+
+include With_yojson_of_b58 (struct
+  type t = signature
+
+  let of_b58 = of_b58
+  let to_b58 = to_b58
+end)
 
 let zero = Ed25519 Ed25519.Signature.zero
 

@@ -1,4 +1,4 @@
-let self_init () =
+let () =
   Stdlib.Random.self_init ();
   Mirage_crypto_rng_unix.initialize ()
 

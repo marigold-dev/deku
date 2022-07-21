@@ -31,6 +31,7 @@ module Prefix : sig
   val deku_contract_hash : string
   val block_hash : string
   val operation_hash : string
+  val deku_operation_hash : string
   val protocol_hash : string
   val ed25519_public_key_hash : string
   val secp256k1_public_key_hash : string
@@ -67,18 +68,3 @@ val simple_decode :
   'a option
 (** Decoder for a given kind of data. It returns [None] when
   the decoded data does not start with the expected prefix. *)
-
-(* deku *)
-module Make (P : sig
-  type t
-
-  val prefix : string
-  val of_raw : string -> t option
-  val to_raw : t -> string
-end) : sig
-  (* repr *)
-  val of_b58 : string -> P.t option
-  val to_b58 : P.t -> string
-end
-
-val decode_variant : (string -> 'a option) list -> string -> 'a option

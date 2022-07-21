@@ -1,3 +1,5 @@
+open Deku_repr
+
 module Make (P : sig
   val digest_size : int
 end) =
@@ -6,8 +8,8 @@ struct
 
   include Digestif.Make_BLAKE2B (P)
 
-  let pp fmt hash = pp fmt hash
-  let show hash = to_hex hash
+  let pp = pp
+  let show = to_hex
 
   (* TODO: this compare is unsafe*)
   let compare a b = unsafe_compare a b
@@ -34,7 +36,7 @@ struct
   module With_b58 (P : sig
     val prefix : string
   end) =
-  Base58.Make (struct
+  With_b58 (struct
     open P
 
     type t = hash
@@ -42,6 +44,12 @@ struct
     let prefix = prefix
     let to_raw = to_raw
     let of_raw = of_raw
+  end)
+
+  module Map = Map.Make (struct
+    type t = hash
+
+    let compare = compare
   end)
 end
 

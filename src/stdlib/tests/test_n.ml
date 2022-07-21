@@ -183,7 +183,7 @@ let test_lt_2_2 () =
 
 let run () =
   let open Alcotest in
-  run "N"
+  run "N" ~and_exit:false
     [
       ( "of_z",
         [

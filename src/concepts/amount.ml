@@ -2,12 +2,8 @@ open Deku_stdlib
 open N
 
 type amount = N.t
-type t = amount
+and t = amount [@@deriving show, eq, ord, yojson]
 
-let show n = show n
-let pp fmt n = pp fmt n
-let equal a b = equal a b
-let compare a b = compare a b
 let zero = zero
 let one = one
 let of_n x = x

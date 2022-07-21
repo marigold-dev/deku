@@ -1,3 +1,5 @@
+open Deku_repr
+
 type key =
   | Ed25519 of Ed25519.Key.t
   | Secp256k1 of Secp256k1.Key.t
@@ -21,7 +23,7 @@ let of_b58 =
     | Some key -> Some (P256 key)
     | None -> None
   in
-  fun string -> Base58.decode_variant [ ed25519; secp256k1; p256 ] string
+  fun string -> decode_variant [ ed25519; secp256k1; p256 ] string
 
 let to_b58 key =
   match key with

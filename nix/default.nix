@@ -14,6 +14,7 @@ with ocamlPackages; buildDunePackage rec {
 
   propagatedBuildInputs = [
     ppx_deriving
+    ppx_yojson_conv
     zarith
     digestif
     mirage-crypto

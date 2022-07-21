@@ -1,6 +1,6 @@
 (executable
  (name deku_stdlib_tests)
- (libraries deku_stdlib alcotest))
+ (libraries alcotest deku_stdlib))
 
 (rule
  (alias runtest)

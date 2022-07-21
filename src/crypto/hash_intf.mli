@@ -34,4 +34,6 @@ module type S = sig
     val of_b58 : string -> hash option
     val to_b58 : hash -> string
   end
+
+  module Map : Map.S with type key = hash
 end
