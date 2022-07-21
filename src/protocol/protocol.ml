@@ -157,10 +157,12 @@ let apply_block state block =
       (state, [], []) in
   Ok (state, user_operations, result)
 
+let block_producer_timeout = 10.0
+
 let get_current_block_producer state =
   if state.last_applied_block_timestamp = 0.0 then
     None
   else
     let diff = Unix.time () -. state.last_applied_block_timestamp in
-    let skips = Float.to_int (diff /. 10.0) in
+    let skips = Float.to_int (diff /. block_producer_timeout) in
     Validators.after_current skips state.validators

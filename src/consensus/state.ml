@@ -64,3 +64,9 @@ let maximum_signable_time_between_epochs = 20.0
 (** Used to add a delay between a tezos operation being confirmed,
   needs to be bigger than the polling interval for operations *)
 let minimum_waiting_period_for_tezos_operation = 5.0
+
+let in_sync state =
+  let validators = Validators.length state.protocol.validators |> Float.of_int in
+  let time_since_last_applied_block =
+    Unix.time () -. state.protocol.last_applied_block_timestamp in
+  time_since_last_applied_block <= validators *. Protocol.block_producer_timeout

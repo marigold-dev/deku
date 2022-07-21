@@ -390,3 +390,11 @@ let trusted_validators_membership ~payload ~signature =
   handle_consensus_operation (fun handler consensus ->
       Consensus.with_trusted_validators_membership_change handler ~payload
         ~signature consensus)
+
+(* TODO: duplicated code from consensus/state.ml, I should misunderstood something with the module import in OCaml...*)
+let request_in_sync state =
+  let state = state.Node.consensus in
+  let v = Validators.length state.protocol.validators in
+  let time_since_last_applied_block =
+    Unix.time () -. state.protocol.last_applied_block_timestamp in
+  time_since_last_applied_block <= float_of_int v *. 10.0
