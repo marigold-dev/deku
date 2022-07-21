@@ -86,6 +86,12 @@ val with_trusted_validators_membership_change :
   t ->
   t * [> error] list
 
+val with_bootstrap_signal :
+  (effect -> t -> unit) ->
+  payload:Validators.validator ->
+  t ->
+  t * [> error] list
+
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
   additional_blocks:Block.t list ->

@@ -398,3 +398,7 @@ let request_in_sync state =
   let time_since_last_applied_block =
     Unix.time () -. state.protocol.last_applied_block_timestamp in
   time_since_last_applied_block <= float_of_int v *. 10.0
+
+let handle_bootstrap_signal ~payload =
+  handle_consensus_operation (fun handler consensus ->
+      Consensus.with_bootstrap_signal handler ~payload consensus)

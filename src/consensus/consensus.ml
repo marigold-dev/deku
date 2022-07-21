@@ -29,6 +29,9 @@ let with_operation effect operation state =
 let with_trusted_validators_membership_change effect ~payload ~signature state =
   Dispatch.dispatch effect (Check_validator_change { payload; signature }) state
 
+let with_bootstrap_signal effect ~payload state =
+  Dispatch.dispatch effect (Check_bootstrap_signal { producer = payload }) state
+
 module Snapshots = Snapshots
 module Trusted_validators_membership_change =
   Trusted_validators_membership_change
