@@ -60,6 +60,10 @@ type step =
   | Allow_to_add_validator    of { key_hash : Key_hash.t }
   (* transition *)
   | Allow_to_remove_validator of { key_hash : Key_hash.t }
+  (* verify *)
+  | Check_bootstrap_signal    of { payload : Bootstrapper_signal.t }
+  (* transition *)
+  | Apply_bootstrap_signal    of Bootstrapper_signal.t
 
 type t = step
 
@@ -220,3 +224,21 @@ let allow_to_remove_validator ~key_hash state =
     Effect.Persist_trusted_membership_change
       { trusted_validator_membership_change } in
   (state, Effect effect)
+
+let check_bootstrap_signal ~payload state =
+  let public_key = Signature.public_key payload.Bootstrapper_signal.signature in
+  if
+    Wallet.compare public_key state.bootstrapper |> Int.equal 0
+    && not (in_sync state)
+  then
+    (state, Apply_bootstrap_signal payload)
+  else
+    (state, Noop)
+
+let apply_bootstrap_signal bootstrap_signal state =
+  let open Bootstrapper_signal in
+  let validators =
+    Validators.update_current bootstrap_signal.producer.address
+      state.protocol.validators in
+  let protocol = { state.protocol with validators } in
+  ({ state with protocol }, Can_produce_block)

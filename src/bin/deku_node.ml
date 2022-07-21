@@ -389,6 +389,14 @@ let handle_in_sync =
       let in_sync = Flows.request_in_sync state in
       Ok { in_sync })
 
+(* POST /in-sync *)
+let handle_bootstrap_signal =
+  handle_request
+    (module Network.Bootstrapper_signal)
+    (fun { producer; signature } ->
+      let%ok payload = Consensus.Bootstrapper_signal.make ~producer ~signature in
+      Flows.handle_bootstrap_signal ~payload |> ok)
+
 let node folder port minimum_block_delay prometheus_port =
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
@@ -422,6 +430,7 @@ let node folder port minimum_block_delay prometheus_port =
              handle_ticket_balance;
              handle_trusted_validators_membership;
              handle_in_sync;
+             handle_bootstrap_signal;
            ];
       Prometheus_dream.serve prometheus_port;
     ]

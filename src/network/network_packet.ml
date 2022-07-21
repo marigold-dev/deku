@@ -181,3 +181,15 @@ module In_sync = struct
 
   let path = "/in-sync"
 end
+
+module Bootstrapper_signal = struct
+  type request = {
+    producer : Validators.validator;
+    signature : Signature.t;
+  }
+  [@@deriving yojson]
+
+  type response = unit [@@deriving yojson]
+
+  let path = "/bootstrapper-signal"
+end

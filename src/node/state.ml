@@ -27,8 +27,8 @@ let make ~config ~trusted_validator_membership_change
     ~initial_validators_uri =
   let consensus =
     Consensus.make ~identity:config.Config.identity
-      ~trusted_validator_membership_change in
-
+      ~trusted_validator_membership_change
+      ~bootstrapper:config.Config.bootstrapper in
   {
     config;
     consensus;

@@ -23,11 +23,12 @@ type state = {
   block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
+  bootstrapper : Key.t;
 }
 
 type t = state
 
-let make ~identity ~trusted_validator_membership_change =
+let make ~identity ~trusted_validator_membership_change ~bootstrapper =
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
@@ -48,6 +49,7 @@ let make ~identity ~trusted_validator_membership_change =
     block_pool = initial_block_pool;
     protocol = initial_protocol;
     snapshots = initial_snapshots;
+    bootstrapper;
   }
 
 let is_next block state = Protocol.is_next state.protocol block

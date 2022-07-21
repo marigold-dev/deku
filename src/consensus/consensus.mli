@@ -23,6 +23,7 @@ type state = {
   block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
+  bootstrapper : Key.t;
 }
 
 type t = state
@@ -30,6 +31,7 @@ type t = state
 val make :
   identity:identity ->
   trusted_validator_membership_change:Trusted_validators_membership_change.Set.t ->
+  bootstrapper:Key.t ->
   t
 
 type effect = private
@@ -86,6 +88,12 @@ val with_trusted_validators_membership_change :
   t ->
   t * [> error] list
 
+val with_bootstrap_signal :
+  (effect -> t -> unit) ->
+  payload:Bootstrapper_signal.t ->
+  t ->
+  t * [> error] list
+
 val load_snapshot :
   snapshot:Snapshots.snapshot ->
   additional_blocks:Block.t list ->
@@ -111,3 +119,4 @@ module Trusted_validators_membership_change =
   Trusted_validators_membership_change
 module Block_pool = Block_pool
 module Signatures = Signatures
+module Bootstrapper_signal = Bootstrapper_signal

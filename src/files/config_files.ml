@@ -73,3 +73,11 @@ module Trusted_validators_membership_change = struct
 
   let write = write_json [%to_yojson: t list]
 end
+
+module Bootstrapper = struct
+  type t = Crypto.Key.t [@@deriving yojson]
+
+  let read = read_json of_yojson
+
+  let write = write_json to_yojson
+end
