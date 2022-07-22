@@ -59,8 +59,7 @@ enum action_type {
     increment_grandma = "grandma",
     increment_farm = "farm"
 }
-// @ts-ignore
-const print_message_with_source = (message: string, source) => {
+const print_message_with_source = (message: string, source : transaction) => {
     console.log(message);
     console.log(source);
 }
@@ -99,14 +98,14 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_cursor += 1;
                 console.log("New cursors amount: " + source_value.cookie_baker_state.number_of_cursor);
                 // cookie = cookie - cursor_cost
-                source_value.cookie_baker_state.number_of_cookie -= initial_cursor_cost;
+                source_value.cookie_baker_state.number_of_cookie -= source_value.cookie_baker_state.cursor_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
 
                 source_value.cookie_baker_state.cursor_cost = calculate_cost(action_type.increment_cursor, source_value.cookie_baker_state);
                 console.log("New cursor cost: " + source_value.cookie_baker_state.cursor_cost);
                 source_value.cookie_baker_state.cursor_cps = source_value.cookie_baker_state.number_of_cursor * cursor_initial_cps;
-                console.log("New cursor cps: " + source_value.cookie_baker_state.cursor_cost);
+                console.log("New cursor cps: " + source_value.cookie_baker_state.cursor_cps);
                 update_total_cps(source_value.cookie_baker_state);
 
                 //action successful, update state
@@ -124,13 +123,13 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_grandma += 1;
                 console.log("New grandmas amount: " + source_value.cookie_baker_state.number_of_grandma);
                 // cookie = cookie - grandma_cost
-                source_value.cookie_baker_state.number_of_cookie -= initial_grandma_cost;
+                source_value.cookie_baker_state.number_of_cookie -= source_value.cookie_baker_state.grandma_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
                 source_value.cookie_baker_state.grandma_cost = calculate_cost(action_type.increment_grandma, source_value.cookie_baker_state);
                 console.log("New grandma cost: " + source_value.cookie_baker_state.grandma_cost);
                 source_value.cookie_baker_state.grandma_cps = source_value.cookie_baker_state.number_of_grandma * grandma_initial_cps;
-                console.log("New grandma cps: " + source_value.cookie_baker_state.grandma_cost);
+                console.log("New grandma cps: " + source_value.cookie_baker_state.grandma_cps);
                 update_total_cps(source_value.cookie_baker_state);
 
                 //action successful, update state
@@ -148,13 +147,13 @@ const transition = (tx: transaction) => {
                 source_value.cookie_baker_state.number_of_farm += 1;
                 console.log("New farms amount: " + source_value.cookie_baker_state.number_of_farm);
                 // cookie = cookie - farm_cost
-                source_value.cookie_baker_state.number_of_cookie -= initial_farm_cost;
+                source_value.cookie_baker_state.number_of_cookie -= source_value.cookie_baker_state.farm_cost;
                 console.log("New cookies amount: " + source_value.cookie_baker_state.number_of_cookie);
 
                 source_value.cookie_baker_state.farm_cost = calculate_cost(action_type.increment_farm, source_value.cookie_baker_state);
                 console.log("New farm cost: " + source_value.cookie_baker_state.farm_cost);
                 source_value.cookie_baker_state.farm_cps = source_value.cookie_baker_state.number_of_farm * farm_initial_cps;
-                console.log("New farm cps: " + source_value.cookie_baker_state.farm_cost);
+                console.log("New farm cps: " + source_value.cookie_baker_state.farm_cps);
                 update_total_cps(source_value.cookie_baker_state);
 
                 //action successful, update state
