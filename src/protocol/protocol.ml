@@ -31,6 +31,10 @@ let apply_core_tezos_operation state tezos_operation =
   match apply_core_tezos_operation state tezos_operation with
   | Ok state -> state
   | Error `Duplicated_operation -> state
+  | exception exn ->
+    (* TODO: pretty print the tezos operation *)
+    Log.error "Error when applying Core Tezos operation: %a" Core.Exn.pp exn;
+    state
 
 let apply_core_user_operation state user_operation =
   let Core_user.{ hash; key = _; signature = _; nonce = _; block_height; data }
@@ -58,6 +62,10 @@ let apply_core_user_operation state tezos_operation =
   | Ok (state, receipts) -> (state, receipts)
   | Error (`Block_in_the_future | `Old_operation | `Duplicated_operation) ->
     (state, None)
+  | exception exn ->
+    (* TODO: pretty-print the user operation *)
+    Log.error "Error when applying user operation: %a" Core.Exn.pp exn;
+    (state, None)
 
 let apply_consensus_operation state consensus_operation =
   let validators = state.validators in
@@ -68,6 +76,13 @@ let apply_consensus_operation state consensus_operation =
       Validators.remove validator validators in
   let last_seen_membership_change_timestamp = Unix.time () in
   { state with validators; last_seen_membership_change_timestamp }
+
+let apply_consensus_operation state consensus_operation =
+  try apply_consensus_operation state consensus_operation with
+  | exn ->
+    (* TODO: pretty print the consensus operation *)
+    Log.error "Error when applying consensus operation: %a" Core.Exn.pp exn;
+    state
 
 let is_next state block =
   Int64.add state.block_height 1L = block.Block.block_height
@@ -134,7 +149,12 @@ let make ~initial_block =
 
 let apply_block state block =
   let%assert () = (`Invalid_block_when_applying, is_next state block) in
-  let state, user_operations, result = apply_block state block in
+  let state, user_operations, result =
+    try apply_block state block with
+    | exn ->
+      Log.error "Error when applying block %a: %a" Block.pp block Core.Exn.pp
+        exn;
+      (state, [], []) in
   Ok (state, user_operations, result)
 
 let get_current_block_producer state =
