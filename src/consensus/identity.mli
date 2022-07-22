@@ -5,4 +5,5 @@ open Deku_concepts
 type identity
 type t = identity
 
+val key : identity -> Key.t
 val sign : hash:BLAKE2b.t -> identity -> Verified_signature.t

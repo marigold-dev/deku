@@ -17,6 +17,7 @@ type t = signer
 
 let make ~identity ~validators ~block =
   let (Block { hash; level; author; _ }) = block in
+  let author = Key_hash.of_key author in
   Signer
     {
       identity;
@@ -33,7 +34,7 @@ let apply_block ~current ~block signer =
 
   let current_block = hash in
   let current_level = level in
-  let last_block_author = author in
+  let last_block_author = Key_hash.of_key author in
   let last_block_update = Some current in
   Signer
     {
@@ -48,6 +49,7 @@ let apply_block ~current ~block signer =
 let is_expected_author ~current ~validators ~last_block_author
     ~last_block_update block =
   let (Block { author; _ }) = block in
+  let author = Key_hash.of_key author in
   match last_block_update with
   | Some last_block_update -> (
       let skip = Timestamp.timeouts_since ~current ~since:last_block_update in

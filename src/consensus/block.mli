@@ -4,8 +4,11 @@ open Deku_protocol
 
 type block = private
   | Block of {
+      (* TODO: I don't like that block carries signature *)
+      signature : Signature.t;
       hash : Block_hash.t;
-      author : Key_hash.t;
+      (* TODO: author being Key.t is also weird *)
+      author : Key.t;
       (* TODO: why does it contain a level? *)
       level : Level.t;
       previous : Block_hash.t;
@@ -14,8 +17,10 @@ type block = private
 
 type t = block [@@deriving eq, ord, yojson]
 
-val make :
-  author:Key_hash.t ->
+exception Invalid_signature
+
+val produce :
+  identity:Identity.t ->
   level:Level.t ->
   previous:Block_hash.t ->
   payload:(Key.t * Signature.t * Operation.t) list ->

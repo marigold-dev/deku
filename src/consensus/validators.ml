@@ -4,6 +4,7 @@ type validators = Key_hash.Set.t
 type t = validators
 
 let of_key_hash_list = Key_hash.Set.of_list
+let cardinal validators = Key_hash.Set.cardinal validators
 let mem key_hash validators = Key_hash.Set.mem key_hash validators
 
 let rec findi_opt n f l =
