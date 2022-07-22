@@ -14,7 +14,7 @@ and operation =
       data : operation_data;
     }
 
-and t = operation
+and t = operation [@@deriving yojson]
 
 let equal a b =
   let (Operation { hash = a; _ }) = a in

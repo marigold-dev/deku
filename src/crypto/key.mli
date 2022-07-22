@@ -4,7 +4,7 @@ type key =
   | Secp256k1 of Secp256k1.Key.t
   | P256 of P256.Key.t
 
-type t = key [@@deriving eq, ord]
+type t = key [@@deriving eq, ord, yojson]
 
 (* repr *)
 val of_b58 : string -> key option

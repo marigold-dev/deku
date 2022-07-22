@@ -1,3 +1,5 @@
+open Deku_crypto
+
 type verified_signature =
   | Verified_signature of {
       key : Key.t;
@@ -9,6 +11,12 @@ type verified_signature =
 
 and t = verified_signature [@@deriving eq, ord]
 (* TODO: is this deriving a good idea? *)
+
+let sign hash secret =
+  let key = Key.of_secret secret in
+  let key_hash = Key_hash.of_key key in
+  let signature = Signature.sign secret hash in
+  Verified_signature { signed_hash = hash; key; key_hash; signature }
 
 let verify signed_hash key signature =
   let key_hash = Key_hash.of_key key in

@@ -38,21 +38,21 @@ let apply_operation key signature operation protocol =
       Some (Protocol { included_operations; ledger })
   | false -> None
 
-let apply_operations operations protocol =
+let apply_payload payload protocol =
   List.fold_left
     (fun protocol (key, signature, operation) ->
       match apply_operation key signature operation protocol with
       | Some protocol -> protocol
       | None -> protocol)
-    protocol operations
+    protocol payload
 
-let clean ~current protocol =
+let clean ~current_level protocol =
   let (Protocol { included_operations; ledger }) = protocol in
   let included_operations =
-    Included_operation_set.drop ~current included_operations
+    Included_operation_set.drop ~current_level included_operations
   in
   Protocol { included_operations; ledger }
 
-let apply ~current ~operations protocol =
-  let protocol = apply_operations operations protocol in
-  clean ~current protocol
+let apply ~current_level ~payload protocol =
+  let protocol = apply_payload payload protocol in
+  clean ~current_level protocol

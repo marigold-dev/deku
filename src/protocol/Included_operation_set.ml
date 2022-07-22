@@ -17,7 +17,7 @@ let mem operation t =
   let (Operation { hash; _ }) = operation in
   Operation_hash.Map.mem hash t
 
-let drop ~current t =
+let drop ~current_level t =
   let open Deku_constants in
   Operation_hash.Map.filter
     (fun _hash operation_level ->
@@ -27,5 +27,5 @@ let drop ~current t =
         of_n N.(operation_level + includable_operation_window)
       in
       (* limits for how many blocks we need to hold the operations *)
-      current < last_includable_block)
+      current_level < last_includable_block)
     t

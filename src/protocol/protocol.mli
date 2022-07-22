@@ -12,7 +12,7 @@ type t = protocol
 val initial : protocol
 
 val apply :
-  current:Level.t ->
-  operations:(Key.t * Signature.t * Operation.t) list ->
+  current_level:Level.t ->
+  payload:(Key.t * Signature.t * Operation.t) list ->
   protocol ->
   protocol

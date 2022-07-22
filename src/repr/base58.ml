@@ -34,6 +34,7 @@ module Prefix = struct
 
   (* 32 *)
   let block_hash = "\001\052" (* B(51) *)
+  let deku_block_hash = "\085\022" (* Db(51) *)
   let operation_hash = "\005\116" (* o(51) *)
   let deku_operation_hash = "\086\124" (* Do(51) *)
   let protocol_hash = "\002\170" (* P(51) *)

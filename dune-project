@@ -34,4 +34,8 @@
 
 (package
  (name deku-protocol)
- (depends deku-stdlib deku-concepts deku_constants))
+ (depends deku-stdlib deku-concepts deku-constants))
+
+(package
+ (name deku-consensus)
+ (depends deku-stdlib deku-concepts deku-constants))
