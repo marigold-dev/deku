@@ -10,12 +10,17 @@ and t = producer
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
   let (Producer { identity = _; operations }) = producer in
-  
+
   ()
 
-let produce ~current_level ~previous producer = 
+let produce ~current_level ~previous producer =
   let (Producer { identity; operations }) = producer in
-  let level = Level.next current_level in
-  let payload = Operation
-  let x = Block.produce ~identity ~level ~previous ~payloadin
   assert false
+(* let level = Level.next current_level in
+   let payload = Operation in
+   let x = Block.produce ~identity ~level ~previous ~payload in
+   assert false *)
+
+let make = assert false
+let apply_block = assert false
+let incoming_operation = assert false
