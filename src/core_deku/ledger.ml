@@ -45,6 +45,11 @@ let balance address ticket t =
   |> Option.value ~default:Amount.zero
 
 let transfer ~sender ~destination amount ticket t =
+  Log.info "Transfering amount %d of ticket %s from %s to %s"
+    (Amount.to_int amount)
+    (Ticket_id.to_string ticket)
+    (Address.to_string sender)
+    (Key_hash.to_string destination);
   let%ok table =
     Ticket_table.transfer t.table ~sender
       ~destination:(Address.of_key_hash destination)
@@ -54,9 +59,18 @@ let transfer ~sender ~destination amount ticket t =
 
 let deposit destination amount ticket t =
   let table = Ticket_table.deposit t.table ~ticket ~destination ~amount in
+  Log.info "Depositing amount %d of ticket %s to desitination %s"
+    (Amount.to_int amount)
+    (Ticket_id.to_string ticket)
+    (Address.to_string destination);
   { table; withdrawal_handles = t.withdrawal_handles }
 
 let withdraw ~sender ~destination amount ticket t =
+  Log.info "Transfering amount %d of ticket %s from %s to %s"
+    (Amount.to_int amount)
+    (Tezos.Ticket_id.to_string ticket)
+    (Key_hash.to_string sender)
+    (Tezos.Address.to_string destination);
   let%ok ticket' =
     Ticket_id.of_tezos ticket
     |> Result.map_error (function _ -> `Insufficient_funds) in
