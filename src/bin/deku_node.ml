@@ -380,6 +380,36 @@ let handle_ticket_balance =
           ~address:(Core_deku.Address.of_key_hash address) in
       Ok { amount })
 
+(* POST /contract-storage *)
+(* Returns the storage for a given contract address *)
+let handle_contract_address =
+  handle_request
+    (module Network.Contract_storage)
+    (fun { address } ->
+      let state = Server.get_state () in
+      let storage = Flows.request_contract_storage ~address state in
+      Ok storage)
+
+(* POST /available-tickets *)
+(* Returns address available tickets *)
+let handle_address_tickets =
+  handle_request
+    (module Network.Address_tickets)
+    (fun { address } ->
+      let state = Server.get_state () in
+      let address = Address.of_key_hash address in
+      let tickets = Flows.request_address_tickets ~address state in
+      Ok tickets)
+
+let cors_handler ~allow handler req =
+  let access_control_header = "Access-Control-Allow-Origin" in
+  let%await response =
+    match Dream.method_ req with
+    | `OPTIONS -> Dream.empty `No_Content
+    | _ -> handler req in
+  Dream.add_header response access_control_header allow;
+  Lwt.return response
+
 let node folder port minimum_block_delay prometheus_port =
   let node =
     Node_state.get_initial_state ~folder ~minimum_block_delay |> Lwt_main.run
@@ -396,6 +426,7 @@ let node folder port minimum_block_delay prometheus_port =
   Lwt.all
     [
       Dream.serve ~interface:"0.0.0.0" ~port
+      @@ cors_handler ~allow:"*"
       @@ Dream.router
            [
              handle_block_level;
@@ -412,6 +443,8 @@ let node folder port minimum_block_delay prometheus_port =
              handle_withdraw_proof;
              handle_ticket_balance;
              handle_trusted_validators_membership;
+             handle_contract_address;
+             handle_address_tickets;
            ];
       Prometheus_dream.serve prometheus_port;
     ]
