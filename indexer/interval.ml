@@ -15,9 +15,9 @@ let rec run uri =
         print_endline
           (Printf.sprintf "fetching block: %s" (Int64.to_string from_level))
       in
-      let%await block = request_block_by_level { level = from_level } uri in
-      match block with
-      | Some block ->
+      let%await response = request_block_by_level { level = from_level } uri in
+      match response with
+      | Some { block; timestamp = _ } ->
         let%await _ = Repository.add block in
         pull_blocks (Int64.add from_level 1L) to_level
       | None ->

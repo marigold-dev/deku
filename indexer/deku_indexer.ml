@@ -1,13 +1,13 @@
 open Cmdliner
 open Helpers
 
-let main uri port =
+let main uri port initial_height =
   let module Parameters = struct
     let node_uri = uri
 
     let port = port
   end in
-  let%await () = Repository.init () in
+  let%await () = Repository.init initial_height in
   let%await _ =
     Lwt.both (Interval.run uri) (Webserver.run (module Parameters)) in
   await (`Ok ())
@@ -40,9 +40,15 @@ let run =
     let default = 8080 in
     let open Arg in
     value & opt port default & info ["port"] ~docv ~doc ~env in
-
+  let initial_height =
+    let docv = "initial_height" in
+    let doc = "The height to start querying at" in
+    let env = Cmd.Env.info "INITIAL_HEIGHT" in
+    let default = 0L in
+    let open Arg in
+    value & opt int64 default & info ["initial_height"] ~docv ~doc ~env in
   let open Term in
-  ret (const Lwt_main.run $ (const main $ node_uri $ port))
+  ret (const Lwt_main.run $ (const main $ node_uri $ port $ initial_height))
 
 let info =
   let doc = "Deku indexer" in

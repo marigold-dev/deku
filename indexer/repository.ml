@@ -8,7 +8,9 @@ type t = {
 
 let in_memory = ref { blocks = []; block_height = 0L }
 
-let init () =
+let init initial_height =
+  in_memory := { blocks = !in_memory.blocks; block_height = initial_height };
+
   (* TODO: Ensure the "database" folder exists *)
 
   (* find the file with the biggest height *)
@@ -44,7 +46,8 @@ let init () =
       | Error _ -> failwith "Database is corrupted" in
     (* If I have 100 blocks, it means the file is full, so we do not load the blocks, only the the block_height *)
     let last_block = List.hd blocks in
-    let block_height = last_block.block_height in
+    (* The user may want to override and skip some blocks by passing in the initial height *)
+    let block_height = Int64.max last_block.block_height initial_height in
     if List.length blocks = 100 then
       in_memory := { blocks = []; block_height }
     else

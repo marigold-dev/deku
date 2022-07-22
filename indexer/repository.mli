@@ -1,6 +1,6 @@
 open Protocol
 
-val init : unit -> unit Lwt.t
+val init : int64 -> unit Lwt.t
 (** Loads the repository from the disk**)
 
 val add : Block.t -> Block.t Lwt.t
