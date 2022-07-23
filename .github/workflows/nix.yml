@@ -36,8 +36,6 @@ jobs:
             echo "OK: All good!"
             echo "--------------"
           fi
-      - name: "Check shell formatting"
-        run: nix develop -c shellcheck *.sh
       - name: "Run tests"
         run: nix develop -c dune build @check @runtest --force --no-buffer
       - name: "Build deku via flakes"

@@ -14,14 +14,6 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
-(executable
- (name deku_sandbox)
- (libraries feather files cmdliner)
- (modules deku_sandbox)
- (public_name deku-sandbox)
- (preprocess
-  (pps ppx_deriving_yojson ppx_let_binding)))
-
 (env
  (static
   (ocamlopt_flags

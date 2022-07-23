@@ -12,6 +12,7 @@ in ocamlPackages.buildDunePackage rec {
       root = ../.;
       include = [
         (inDirectory "src")
+        (inDirectory "sandbox")
         (inDirectory "ppx_let_binding")
         (inDirectory "ppx_lambda_vm")
         (inDirectory "tests")
