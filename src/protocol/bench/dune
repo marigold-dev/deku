@@ -2,3 +2,8 @@
  (name bench_apply)
  (libraries deku_protocol)
  (modules bench_apply))
+
+(executable
+ (name micro_benchmarks)
+ (libraries deku_protocol core core_unix.command_unix core_bench)
+ (modules micro_benchmarks))
