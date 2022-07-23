@@ -21,6 +21,8 @@ with ocamlPackages; buildDunePackage rec {
     mirage-crypto-ec
     mirage-crypto-rng
     secp256k1-internal
+    core
+    core_bench
 
     landmarks
     landmarks-ppx
