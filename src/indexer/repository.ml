@@ -44,11 +44,11 @@ let init initial_height =
       match [%of_yojson: Block.t list] json with
       | Ok data -> await data
       | Error _ -> failwith "Database is corrupted" in
-    (* If I have 100 blocks, it means the file is full, so we do not load the blocks, only the the block_height *)
+    (* If I have 1 blocks, it means the file is full, so we do not load the blocks, only the the block_height *)
     let last_block = List.hd blocks in
     (* The user may want to override and skip some blocks by passing in the initial height *)
     let block_height = Int64.max last_block.block_height initial_height in
-    if List.length blocks = 100 then
+    if List.length blocks = 1 then
       in_memory := { blocks = []; block_height }
     else
       in_memory := { blocks; block_height };
@@ -58,13 +58,13 @@ let add block =
   let state = !in_memory in
   let next_state =
     { blocks = block :: state.blocks; block_height = block.block_height } in
-  (* Saved on disk every 100 blocks (so that the file to write to disk has a constant size) *)
-  if List.length next_state.blocks = 100 then (
+  (* Saved on disk every 1 blocks (so that the file to write to disk has a constant size) *)
+  if List.length next_state.blocks = 1 then (
     let () = print_endline "save on disk" in
     let last = (List.hd next_state.blocks).block_height in
     let first = (List.rev next_state.blocks |> List.hd).block_height in
     let file_name =
-      Format.sprintf "database/%s-blocks-%s" (first |> Int64.to_string)
+      Format.sprintf "database/%s-blocks-%s.json" (first |> Int64.to_string)
         (last |> Int64.to_string) in
     (*The file doesn't exists*)
     let%await _ =
