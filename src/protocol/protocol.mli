@@ -13,6 +13,7 @@ val initial : protocol
 
 val apply :
   current_level:Level.t ->
+  (* FIXME: why not include key as part of Signature.t? *)
   payload:(Key.t * Signature.t * Operation.t) list ->
   protocol ->
   protocol

@@ -1,0 +1,4 @@
+(executable
+ (name bench_apply)
+ (libraries deku_protocol)
+ (modules bench_apply))
