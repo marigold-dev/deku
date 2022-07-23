@@ -3,4 +3,6 @@
  (public_name deku-protocol)
  (libraries deku_crypto deku_concepts deku_constants)
  (preprocess
-  (pps ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))
+  (pps ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv))
+ (instrumentation
+  (backend landmarks)))

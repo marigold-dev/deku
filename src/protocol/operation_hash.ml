@@ -2,6 +2,7 @@ open Deku_repr
 open Deku_crypto
 open BLAKE2b
 
+(* FIXME: question: what is the point of this module? *)
 type operation_hash = BLAKE2b.t
 and t = operation_hash [@@deriving eq, ord]
 

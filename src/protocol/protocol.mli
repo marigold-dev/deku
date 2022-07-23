@@ -13,6 +13,7 @@ val initial : protocol
 val apply :
   parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->
   current_level:Level.t ->
+  (* FIXME: why not include key as part of Signature.t? *)
   payload:string list ->
   protocol ->
   protocol
