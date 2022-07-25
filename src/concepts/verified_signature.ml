@@ -12,10 +12,10 @@ type verified_signature =
 and t = verified_signature [@@deriving eq, ord]
 (* TODO: is this deriving a good idea? *)
 
-let sign hash secret =
-  let key = Key.of_secret secret in
-  let key_hash = Key_hash.of_key key in
-  let signature = Signature.sign secret hash in
+let sign hash identity =
+  let key = Identity.key identity in
+  let key_hash = Identity.key_hash identity in
+  let signature = Identity.sign ~hash identity in
   Verified_signature { signed_hash = hash; key; key_hash; signature }
 
 let verify signed_hash key signature =

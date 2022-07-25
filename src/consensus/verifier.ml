@@ -1,33 +1,12 @@
 open Deku_concepts
+open Consensus
 open Block
 open Is_valid
 
-type verifier =
-  | Verifier of {
-      validators : Validators.t;
-      current_level : Level.t;
-      current_block : Block_hash.t;
-      block_pool : Block_pool.t;
-    }
-
+type verifier = Verifier of { block_pool : Block_pool.t }
 type t = verifier
 
-let make ~validators ~block =
-  let (Block { hash; level; _ }) = block in
-  let current_level = level in
-  let current_block = hash in
-  let block_pool = Block_pool.empty in
-  Verifier { validators; current_level; current_block; block_pool }
-
-let apply_block ~block verifier =
-  let (Verifier
-        { validators; current_level = _; current_block = _; block_pool }) =
-    verifier
-  in
-  let (Block { hash; level; _ }) = block in
-  let current_level = level in
-  let current_block = hash in
-  Verifier { validators; current_level; current_block; block_pool }
+let empty = Verifier { block_pool = Block_pool.empty }
 
 type incoming_block_or_signature_result = {
   apply : Block.t option;
@@ -56,46 +35,50 @@ let is_signed_enough ~validators ~signatures =
   in
   total_signatures >= required_signatures
 
-let incoming_block_or_signature ~block_hash verifier =
-  let (Verifier { validators; current_level; current_block; block_pool }) =
-    verifier
+let incoming_block_or_signature ~consensus ~block_hash verifier =
+  let (Consensus
+        {
+          validators;
+          current_level;
+          current_block;
+          (* TODO: the following data probably matters *)
+          last_block_author = _;
+          last_block_update = _;
+        }) =
+    consensus
   in
-  match Block_pool.find_block ~block_hash block_pool with
-  | Some block -> (
-      match is_valid ~current_level ~current_block block with
-      | true -> (
-          let signatures = Block_pool.find_signatures ~block_hash block_pool in
-          match is_signed_enough ~validators ~signatures with
-          | true ->
-              let verifier = apply_block ~block verifier in
-              { apply = Some block; verifier }
-          | false -> { apply = None; verifier })
-      | false ->
-          (* TODO: clean from Block_pool *)
-          { apply = None; verifier })
-  | None -> { apply = None; verifier }
+  let (Verifier { block_pool }) = verifier in
 
-let incoming_block ~block verifier =
-  let (Verifier { validators; current_level; current_block; block_pool }) =
-    verifier
+  let apply =
+    match Block_pool.find_block ~block_hash block_pool with
+    | Some block -> (
+        let signatures = Block_pool.find_signatures ~block_hash block_pool in
+
+        match
+          is_valid ~current_level ~current_block block
+          && is_signed_enough ~validators ~signatures
+        with
+        | true -> Some block
+        | false ->
+            (* TODO: clean from Block_pool if not valid  *)
+            None)
+    | None -> None
   in
+  { apply; verifier }
+
+let incoming_block ~consensus ~block verifier =
+  let (Verifier { block_pool }) = verifier in
   let block_pool = Block_pool.append_block block block_pool in
-  let verifier =
-    Verifier { validators; current_block; current_level; block_pool }
-  in
+  let verifier = Verifier { block_pool } in
 
   let (Block { hash = block_hash; _ }) = block in
-  incoming_block_or_signature ~block_hash verifier
+  incoming_block_or_signature ~consensus ~block_hash verifier
 
-let incoming_signature ~signature verifier =
-  let (Verifier { validators; current_level; current_block; block_pool }) =
-    verifier
-  in
+let incoming_signature ~consensus ~signature verifier =
+  let (Verifier { block_pool }) = verifier in
   let block_pool = Block_pool.append_signature signature block_pool in
-  let verifier =
-    Verifier { validators; current_block; current_level; block_pool }
-  in
+  let verifier = Verifier { block_pool } in
 
   let hash = Verified_signature.signed_hash signature in
   let hash = Block_hash.of_blake2b hash in
-  incoming_block_or_signature ~block_hash:hash verifier
+  incoming_block_or_signature ~consensus ~block_hash:hash verifier

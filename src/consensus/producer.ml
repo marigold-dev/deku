@@ -6,16 +6,19 @@ type producer =
 
 and t = producer
 
+let make ~identity =
+  let operations = Operation.Set.empty in
+  Producer { identity; operations }
+
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
-  let (Producer { identity = _; operations }) = producer in
-  
-  ()
+  let (Producer { identity; operations }) = producer in
+  let operations = Operation.Set.add operation operations in
+  Producer { identity; operations }
 
-let produce ~current_level ~previous producer = 
+let produce ~current_level ~previous producer =
   let (Producer { identity; operations }) = producer in
   let level = Level.next current_level in
-  let payload = Operation
-  let x = Block.produce ~identity ~level ~previous ~payloadin
-  assert false
+  let operations = Operation.Set.elements operations in
+  Block.produce ~identity ~level ~previous ~operations
