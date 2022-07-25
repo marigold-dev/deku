@@ -13,18 +13,24 @@ let initial =
       ledger = Ledger.initial;
     }
 
-let apply_operation key signature operation protocol =
+let apply_operation protocol operation =
   let (Protocol { included_operations; ledger }) = protocol in
-  match
-    Operation.verify key signature operation
-    && not (Included_operation_set.mem operation included_operations)
-  with
+  match not (Included_operation_set.mem operation included_operations) with
   | true ->
       let open Operation in
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-      let (Operation { hash = _; level = _; nonce = _; source; data }) =
+      let (Operation
+            {
+              key = _;
+              signature = _;
+              hash = _;
+              level = _;
+              nonce = _;
+              source;
+              data;
+            }) =
         operation
       in
       let ledger =
@@ -38,13 +44,23 @@ let apply_operation key signature operation protocol =
       Some (Protocol { included_operations; ledger })
   | false -> None
 
-let apply_payload payload protocol =
-  List.fold_left
-    (fun protocol (key, signature, operation) ->
-      match apply_operation key signature operation protocol with
-      | Some protocol -> protocol
-      | None -> protocol)
-    protocol payload
+let parse_operation operation =
+  match
+    let json = Yojson.Safe.from_string operation in
+    Operation.t_of_yojson json
+  with
+  | operation -> Some operation
+  | exception _exn -> (* TODO: print exception *) None
+
+let apply_operation protocol operation =
+  match apply_operation protocol operation with
+  | Some protocol -> protocol
+  | None -> protocol
+  | exception _exn -> (* TODO: print exception *) protocol
+
+let apply_payload ~parallel payload protocol =
+  let operations = parallel parse_operation payload in
+  List.fold_left apply_operation protocol operations
 
 let clean ~current_level protocol =
   let (Protocol { included_operations; ledger }) = protocol in
@@ -53,6 +69,6 @@ let clean ~current_level protocol =
   in
   Protocol { included_operations; ledger }
 
-let apply ~current_level ~payload protocol =
-  let protocol = apply_payload payload protocol in
+let apply ~parallel ~current_level ~payload protocol =
+  let protocol = apply_payload ~parallel payload protocol in
   clean ~current_level protocol

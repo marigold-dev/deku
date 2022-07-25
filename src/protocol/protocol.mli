@@ -1,4 +1,3 @@
-open Deku_crypto
 open Deku_concepts
 
 type protocol = private
@@ -12,7 +11,8 @@ type t = protocol
 val initial : protocol
 
 val apply :
+  parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->
   current_level:Level.t ->
-  payload:(Key.t * Signature.t * Operation.t) list ->
+  payload:string list ->
   protocol ->
   protocol
