@@ -17,7 +17,7 @@
     call $syscall
     drop)
 
-  (func $own (param $addr i32)
+  (func $own (param $addr i32) (result i32)
     i32.const 40
     i32.const 5
     i32.store
@@ -25,8 +25,7 @@
     local.get $addr
     i32.store
     i64.const 40
-    call $syscall
-    drop)
+    call $syscall)
 
   (func (export "main") (param i32) (result i64 i64 i64)
     i32.const 70
@@ -35,8 +34,8 @@
     i32.const 70
     call $own
 
-    i64.const 70
-    i64.const 40
+    i64.extend_i32_s
+    i64.const 4
     i64.const 120
   )
 )
