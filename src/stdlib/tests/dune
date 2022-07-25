@@ -1,3 +1,8 @@
+; FIXME: Isn't this all we need?
+;(test
+;  (name my_test_program)
+;  (libraries alcotest deku_stdlib)) 
+
 (executable
  (name deku_stdlib_tests)
  (libraries alcotest deku_stdlib))
