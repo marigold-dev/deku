@@ -57,11 +57,8 @@ let apply_tezos_operation t tezos_operation =
         |> Result.ok_or_failwith
         (* TODO: verify that its not possible to fail *) in
       let ledger =
-        match destination with
-        | Implicit key_hash ->
-          let destination = key_hash in
-          Ledger.deposit (Address.of_key_hash destination) amount ticket ledger
-        | Originated _ -> failwith "not implemented" in
+        Ledger.deposit (Address.of_key_hash destination) amount ticket ledger
+      in
       { ledger; contract_storage } in
   let { hash = _; payload } = tezos_operation in
   let { tezos_operation_hash = _; internal_operations } = payload in

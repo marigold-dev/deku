@@ -125,7 +125,7 @@ module Consensus = struct
     | Deposit          of {
         ticket : Ticket_id.t;
         amount : Z.t;
-        destination : Address.t;
+        destination : Key_hash.t;
       }
     | Update_root_hash of BLAKE2B.t
 
@@ -190,7 +190,7 @@ module Consensus = struct
             ],
             _ ) ) ->
       let%some destination =
-        Data_encoding.Binary.of_bytes_opt Address.encoding destination in
+        Data_encoding.Binary.of_bytes_opt Key_hash.encoding destination in
       let%some ticketer =
         Data_encoding.Binary.of_bytes_opt Address.encoding ticketer in
       let ticket =

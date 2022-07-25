@@ -2,7 +2,7 @@ open Crypto
 
 type internal_operation =
   | Tezos_deposit of {
-      destination : Tezos.Address.t;
+      destination : Key_hash.t;
       amount : Amount.t;
       ticket : Tezos.Ticket_id.t;
     }
