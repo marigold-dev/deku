@@ -91,11 +91,14 @@ This will generate a `tz1xxxx.tzsidewallet` file. Let's rename it to `wallet.jso
 6. Finally, we can test the dApp with the Deku-P, in this example we are using the CLI provided by Deku-P `create-mock-transaction` to run the example without interact with the Deku-P cluster, to interact with Deku-P cluster use `create-custom-transaction`. 
 
 ```
+ts index.ts
 npm i
+npm run build
 deku-cli create-mock-transaction ./wallet.json $action node examples/tutorial/index.js
 ```
 
-- `npm i`: build your TypeScript project.
+- `ts index.ts`: build `ts` to `js`
+- `npm i` and `npm run build`: build your TypeScript project.
 - `$action`: is the input from dApp that you want to send to the WASM.
 
 ## Write dApp
