@@ -26,6 +26,9 @@ let apply_operation protocol operation =
               key = _;
               signature = _;
               hash = _;
+              (* FIXME: We want to use this + includable_operation_window
+                 to ensure operations have an expiration date. We currently
+                 ignore this value. *)
               level = _;
               nonce = _;
               source;
