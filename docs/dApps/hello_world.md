@@ -1,65 +1,137 @@
 # Create your first JS Deku dApp
 
-In this tutorial, we will use the `deku_js_interop` to create our first dApp using Typescript.
+In this tutorial, we demonstrate how to create an DApp (using TypeScript) to interact with the Deku-Parametric or Deku-P in short.
+
+TLDR;
+Deku-P is a private blockchain (it has its own consensus, gossip, network, validators, etc.). Where it has a separate WASM act as the bridge, to communicate between your DApp and the blockchain. The advantage of Deku-P is that you only need to focus on writing your dApp, Deku-P will take care of how to handle the transaction, consensus, etc. for you.
 
 ## Prerequisites
 
-1. Create the folder of your choice (examples/cookie-game) for us, run `npm init`
-2. Run `npm install typescript`, to create a `package.json` file
-3. Install `deku_js_interop` to use it as a dependency, with `npm install "file:path/to/sdks/deku_js_interop"`
-4. Create `index.ts` file
-5. Create a deku-wallet if you don't already have one:
-```shell script
-$ deku-cli create-wallet
+0. You can clone the github directory and use the branch [parametric-develop](https://github.com/marigold-dev/deku/tree/parametric-develop), on your terminal type:
+
+```
+git clone https://github.com/marigold-dev/deku.git 
+git checkout parametric-develop
 ```
 
-This will generate a `tz1xxxx.tzsidewallet` file, which I rename to `wallet.json` for the example.
+You can follow this [readme](https://github.com/marigold-dev/deku/tree/parametric) on how to compile your project.
 
-_Optional_
-1. create a `tsconfig.json` file to use some useful compiler options (see [our own tsconfig.json](examples/tutorial/tsconfig.json) for example)
-2. Modify `package.json` to add `"build": "tsc --p tsconfig.json"` in the `scripts` section
+I will use `nix` to build this project as follow:
 
-## Hello world
-
-### Import deku_js_interop
-
-In your `index.ts` file you must import `deku_js_interop`, as following:
-
-```typescript
-import { main, get, set, transaction } from "deku_js_interop"
+```
+cd deku
+direnv allow
+dune build
 ```
 
-### transition function
+1. We will use Typescript as a main language for our application. Create the folder for your new project inside the folder `examples`.  On your terminal type:
 
-Your business will be done in a `transition` function, you can create a basic one, like the following:
+```
+cd examples
+mkdir tutorial
+npm init
+```
+
+`npm init` to initialize your project.
+
+2. Run `npm install typescript`, it will create a file `package.json`. 
+Inside this file you can add the configuration file `tsconfig.json` which contain all the configurations for your typescript project.
+
+```
+"scripts": {
+    "build": "tsc --p tsconfig.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+```
+
+Create a new file `tsconfig.json` at the same level of your typescript project
+
+```
+touch tsconfig.json
+```
+
+copy the content of this [`tsconfig.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/cookie-game/tsconfig.json)
+
+
+3. Now you need to build a WASM so that you have a communication channel between your application and the Deku-P. 
+
+To do that in your `package.json` you can add the `"dependecies"` as follow:
+
+```
+ "dependencies": {
+    "deku_js_interop": "file:../../sdks/deku_js_interop",
+    "typescript": "^4.7.4"
+  }
+```
+
+Or you can install `deku_js_interop` manually by using:
+
+```
+npm install "file:../.../sdks/deku_js_interop"
+```
+
+Here is the complete [`package.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/cookie-game/package.json)
+
+
+4. Now you can start to write your application. To do that create an `index.ts` file. This file will contain all the logic of your application.
+
+```
+touch index.ts
+```
+
+5. To be able to interact between Deku-P and your applcation, you need to have a Deku wallet. You can use the CLI `deku-cli` (for more information you can use `deku-cli --help`) provided by the Deku-P as follow:
+
+```
+alias deku-cli='nix run github:marigold-dev/deku/parametric#deku-cli --'
+deku-cli create-wallet
+```
+
+This will generate a `tz1xxxx.tzsidewallet` file. Let's rename it to `wallet.json` for the example.
+
+6. Finally, we can test the dApp with the Deku-P, in this example we are using the CLI provided by Deku-P `create-mock-transaction` to run the example without interact with the Deku-P cluster, to interact with Deku-P cluster use `create-custom-transaction`. 
+
+```
+npm i
+deku-cli create-mock-transaction ./wallet.json $action node examples/tutorial/index.js
+```
+
+- `npm i`: build your TypeScript project.
+- `$action`: is the input from dApp that you want to send to the WASM.
+
+## Write dApp
+
+Let's start to write the logic for our dApp. We want to print out the `Hello World`.
+
+Inside `index.ts` we import the library `deku_js_interop` to guide our dApp on how to communicate with the WASM.
+
 
 ```typescript
-const transition = (tx: transaction) => {
+import  { main, get, set, transaction } from "deku_js_interop"
+```
+
+- `main`: is the main function where it will take two parameters: 
+  + initial state of your VM 
+  + state transition when there is a new input
+- `get`: retrieves the value from the local state, it will take a single parameter `key`, and will return the stored value.
+- `set`: it will set a value  in a Deku state for a given key. It takes two parameters:
+  + key: a key of the state
+  + value: a value is a string encoded in json format
+- `transition`: is a json received from the chain, it contains
+```
+interface transaction {
+  source: string;
+  tx_hash: string;
+  op_hash: string;
+  operation: { [key: string]: any };
 }
 ```
 
-The `tx` which is a `transaction` will allow you to retrieve and save the state of your application.
-Before using it, let's write the `main` function, with an initial empty state:
-```typescript
-main({ my_state: "" }, transition);
-```
-
-The first argument of the `main` function is your initial state. It must be a `JSON` object with the `tz1xxx` address as key
-The second, is your `transition` function which will update your state.
-
-### hello world
-
-#### Build it
-
-Let's modity our empty initial state with a basic "hello world":
-
-1. Get the `tx.source` where the state is saved.
-2. Parse the `source`
-3. Since the state is an empty string, let's just append `Hello world` to it
-
-Your `transition` function should look like this:
+The complete `index.ts` example:
 
 ```typescript
+// @ts-ignore
+import { main, get, set, transaction } from "deku_js_interop"
+
 const transition = (tx: transaction) => {
     // get the current value of `state` field defined in `main` function
     let source_value = JSON.parse(get("my_state"));
@@ -68,64 +140,50 @@ const transition = (tx: transaction) => {
     // save the new state
     set("my_state", source_value);
 }
+
+main({ my_state: "" }, transition);
 ```
 
-Run `npm run build` to build your VM.
+- The `transition` function
 
-### Test it
-
-You can easily test it with the following command:
-```shell script
-$ deku-cli create-mock-transaction wallet.json '""' node examples/tutorial/index.js
+```typescript
+const transition = (tx: transaction) => {
+}
 ```
 
-Please note this is a `mocked` transaction, it is not executed on Deku.
+The `tx` which is a `transaction` will allow you to retrieve and save the state of your application.
 
-#### Run it on a Deku cluster
 
-On Deku side, we use `tilt` to run a working `deku_cluster` with our VM.
-You can do it by running the following command, in the main Deku directory:
-
-```shell script
-$ tilt up -- --mode=local --vm="node examples/tutorial/index.js"
+- The `main` function declare the initial state:
+```typescript
+main({ my_state: "" }, transition);
 ```
 
-Wait for all the `vms` to be up and ready:
-![](resources/vm-state.png)
+- `my_state: ""`: it is the initial state, it must be a `JSON` object with the `tz1xxx` address as key
+- `transition`: it will update the state.
 
-With a detail like the following for each VM:
-![](resources/vm-state-detail.png)
+#### Run our dApp: Hello World
 
-And with an up and ready Deku (nodes exchanging blocks):
-![](resources/deku-ready.png)
+Call your VM transaction:
 
-#### Call your VM transaction
-
-We will run the following command to execute our application:
-
-```shell script
-$ deku-cli create-custom-transaction data/0 wallet.json '""'
-
-(node:65197) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-operation.hash: 0f119e93991bf55ccbcaa60333774430df0d1592c5c93b21733f85e7747a7a54
-close
+```
+npm run build
+deku-cli create-mock-transaction wallet.json '""' node examples/tutorial/index.js
 ```
 
-And you should see the state being updated on VM side on tilt UI:
-![](resources/hello-world.png)
+- `npm run build` to build your VM.
+- `$action` we give an empty string because we just want to call the `transition` with the value `Hello World` that already stored in our value out.
 
-# Voilà
+If you want to run on Deku-P cluster use:
+
+```
+tilt up -- --mode=local --vm="node examples/tutorial/index.js"
+deku-cli create-custom-transaction data/0 wallet.json '""'
+```
 
 ## Operation
+In this example, instead giving the `$action` as an empty string, we will input the string `Hello World` from the dApp to the Deku-P cluster. To do that, let's modify the code in the function `transition` in `index.ts` as follow:
 
-Now we would like to give the new value of the state, we will simply write it in the last argument of `deku-cli create-custom-transaction`:
-
-```shell script
-$ deku-cli create-custom-transaction data/0 wallet.json '"Hello world!"'
-```
-
-And use it within our `index.ts`:
 ```typescript
 const transition = (tx: transaction) => {
     console.log("Getting source");
@@ -138,7 +196,14 @@ const transition = (tx: transaction) => {
 }
 ```
 
-Let's now call it once again, with something else:
+We will simply write it in the last argument of `deku-cli create-custom-transaction`:
+
+```shell script
+$ deku-cli create-custom-transaction data/0 wallet.json '"Hello world!"'
+```
+
+To change the state with another string `Something else` we can use:
+
 ```shell script
 $ deku-cli create-custom-transaction data/0 wallet.json '"Something else"'
 ```
@@ -153,11 +218,13 @@ Current value: Hello world!
 New value: Something else
 ```
 
-For more complex examples, you can have a look at [counter](../../examples/ts-counter/example.ts) or at [cookie-game](../../examples/cookie-game/index.ts).
+The complete source code of our tutorial can be find at: [tutorial](https://github.com/marigold-dev/deku/tree/cookie-game/examples/tutorial)
 
-You are now able to modify your state from the outside world, let's do this with the HTTP APIs!
+For more complex examples, you can have a look at [counter](https://github.com/marigold-dev/deku/tree/cookie-game/examples/ts-counter) or at [cookie-game](https://github.com/marigold-dev/deku/tree/cookie-game/examples/cookie-game).
 
 ## From the outside world
+
+You are now able to modify your state from the outside world, let's do this with the HTTP APIs!
 
 You can go further, and create an application using your state. For a complex example, you can have a look at [decookies](https://github.com/marigold-dev/decookies), which is a basic front UI using [cookie-game](../../examples/cookie-game/index.ts) state.
 
