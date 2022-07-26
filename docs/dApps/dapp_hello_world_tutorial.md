@@ -50,7 +50,7 @@ Create a new file `tsconfig.json` at the same level of your typescript project
 touch tsconfig.json
 ```
 
-copy the content of this [`tsconfig.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/cookie-game/tsconfig.json)
+copy the content of this [`tsconfig.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/tutorial/tsconfig.json)
 
 
 3. Now you need to build a WASM so that you have a communication channel between your application and the Deku-P. 
@@ -70,7 +70,7 @@ Or you can install `deku_js_interop` manually by using:
 npm install "file:../.../sdks/deku_js_interop"
 ```
 
-Here is the complete [`package.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/cookie-game/package.json)
+Here is the complete [`package.json`](https://github.com/marigold-dev/deku/blob/cookie-game/examples/tutorial/package.json)
 
 
 4. Now you can start to write your application. To do that create an `index.ts` file. This file will contain all the logic of your application.
@@ -221,4 +221,3 @@ New value: Something else
 The complete source code of our tutorial can be find at: [tutorial](https://github.com/marigold-dev/deku/tree/cookie-game/examples/tutorial)
 
 For more complex examples, you can have a look at [counter](https://github.com/marigold-dev/deku/tree/cookie-game/examples/ts-counter) or at [cookie-game](https://github.com/marigold-dev/deku/tree/cookie-game/examples/cookie-game).
-
