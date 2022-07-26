@@ -1,5 +1,7 @@
 open Deku_stdlib
 
+(* FIXME: this isn't yet used. We have to fix this. *)
+
 type nonce
 type t = nonce [@@deriving eq, ord, yojson]
 
