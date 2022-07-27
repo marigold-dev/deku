@@ -26,7 +26,7 @@ build_sdks(){
 mock(){
     # run the deku-cli in mock mode
     # ex: ./run.sh wallet.json '"cookie"'
-     deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/index.js
+     deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/lib/src/index.js
 
 }
 
@@ -36,7 +36,7 @@ deku_cluster(){
     tilt down
     
     # setup and start the cluster with vm cookie
-    tilt up -- --mode=Local --vm="node examples/cookie-game/index.js"
+    tilt up -- --mode=Local --vm="node examples/cookie-game/lib/src/index.js"
 }
 
 # Run custom create

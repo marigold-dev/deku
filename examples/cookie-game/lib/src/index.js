@@ -21,36 +21,36 @@ var transition = function (tx) {
     var operation = tx.operation;
     console.log("Getting source");
     var source_value = JSON.parse((0, deku_js_interop_1.get)(source));
-    var cookie_baker = new state_1.Cookie_baker(source_value.cookie_baker.number_of_cookie, source_value.cookie_baker.number_of_cursor, source_value.cookie_baker.number_of_grandma, source_value.cookie_baker.number_of_farm, source_value.cookie_baker.number_of_free_cursor, source_value.cookie_baker.number_of_free_grandma, source_value.cookie_baker.number_of_free_farm);
+    var cookie_baker = (0, state_1.create_cookie_baker)(source_value.cookie_baker.number_of_cookie, source_value.cookie_baker.number_of_cursor, source_value.cookie_baker.number_of_grandma, source_value.cookie_baker.number_of_farm, source_value.cookie_baker.number_of_free_cursor, source_value.cookie_baker.number_of_free_grandma, source_value.cookie_baker.number_of_free_farm);
     switch (operation) {
         case actions_1.action_type.increment_cookie: {
-            cookie_baker.add_cookie();
+            var updated_cookie_baker = (0, state_1.add_cookie)(cookie_baker);
             //update state
-            source_value.cookie_baker = cookie_baker;
+            source_value.cookie_baker = updated_cookie_baker;
             console.log("Successfully minted cookie");
             save_state(source, source_value);
             break;
         }
         case actions_1.action_type.increment_cursor: {
-            cookie_baker.add_cursor();
+            var updated_cookie_baker = (0, state_1.add_cursor)(cookie_baker);
             //action successful, update state
-            source_value.cookie_baker = cookie_baker;
+            source_value.cookie_baker = updated_cookie_baker;
             console.log("Successfully minted cursor");
             save_state(source, source_value);
             break;
         }
         case actions_1.action_type.increment_grandma: {
-            cookie_baker.add_grandma();
+            var updated_cookie_baker = (0, state_1.add_grandma)(cookie_baker);
             //action successful, update state
-            source_value.cookie_baker = cookie_baker;
+            source_value.cookie_baker = updated_cookie_baker;
             console.log("Successfully minted grandma");
             save_state(source, source_value);
             break;
         }
         case actions_1.action_type.increment_farm: {
-            cookie_baker.add_farm();
+            var updated_cookie_baker = (0, state_1.add_farm)(cookie_baker);
             //action successful, update state
-            source_value.cookie_baker = cookie_baker;
+            source_value.cookie_baker = updated_cookie_baker;
             console.log("Successfully minted farm");
             save_state(source, source_value);
             break;
