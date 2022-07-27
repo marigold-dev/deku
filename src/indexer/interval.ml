@@ -5,7 +5,7 @@ open Network
 let rec run uri =
   let%await block_level_res = request_block_level () uri in
   let current_deku_level = block_level_res.level in
-  let current_indexer_level = Repository.level () in
+  let%await current_indexer_level = Repository.level () in
 
   let rec pull_blocks from_level to_level =
     if from_level = to_level then
@@ -32,6 +32,6 @@ let rec run uri =
 let is_sync uri =
   let%await block_level_res = request_block_level () uri in
   let current_deku_level = block_level_res.level in
-  let current_indexer_level = Repository.level () in
+  let%await current_indexer_level = Repository.level () in
   await (Int64.sub current_deku_level current_indexer_level < 5L)
 (* There will always exists a delta between the indexer and the cluster*)

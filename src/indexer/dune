@@ -1,6 +1,14 @@
 (executable
  (name deku_indexer)
  (public_name deku-indexer)
- (libraries cmdliner dream lwt helpers network)
+ (libraries
+  caqti
+  caqti-lwt
+  caqti-driver-sqlite3
+  cmdliner
+  dream
+  lwt
+  helpers
+  network)
  (preprocess
   (pps ppx_let_binding ppx_deriving_yojson)))

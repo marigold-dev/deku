@@ -42,7 +42,7 @@ module Level = struct
   let path = "/block-level"
 
   let handle () =
-    let level = Repository.level () in
+    let%await level = Repository.level () in
     await (Ok { level })
 end
 
