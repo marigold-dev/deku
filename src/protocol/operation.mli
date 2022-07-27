@@ -8,6 +8,7 @@ type operation_data = private
 
 type operation = private
   | Operation of {
+      (* FIXME: why don't we use verified_signature here? *)
       key : Key.t;
       signature : Signature.t;
       hash : Operation_hash.t;
