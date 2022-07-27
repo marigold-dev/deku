@@ -1,12 +1,12 @@
 import { action_type } from "./actions"
 
-const initial_cursor_cps = 0.1;
-const initial_grandma_cps = 1;
-const initial_farm_cps = 8;
+export const initial_cursor_cps: number = 0.1;
+export const initial_grandma_cps: number = 1;
+export const initial_farm_cps: number = 8;
 
-const initial_cursor_cost = 15;
-const initial_grandma_cost = 100;
-const initial_farm_cost = 1100;
+export const initial_cursor_cost: number = 15;
+export const initial_grandma_cost: number = 100;
+export const initial_farm_cost: number = 1100;
 
 export class Cookie_baker {
     /* minted by user */
@@ -30,9 +30,16 @@ export class Cookie_baker {
     private grandma_cps: number;
     private farm_cps: number;
 
-    constructor(number_of_cookie: number, number_of_cursor: number, number_of_grandma: number, number_of_farm: number, number_of_free_cursor: number, number_of_free_grandma: number, number_of_free_farm: number) {
-        console.log("creating baker with: " + number_of_cookie + " cookies");
-        if (number_of_cookie != undefined) {
+    constructor(number_of_cookie: number,
+        number_of_cursor: number,
+        number_of_grandma: number,
+        number_of_farm: number,
+        number_of_free_cursor: number,
+        number_of_free_grandma: number,
+        number_of_free_farm: number,
+    ) {
+        if (number_of_cookie !== undefined && number_of_cookie !== null && !isNaN(number_of_cookie)) {
+            console.log("CONSTRUCTOR: Creating coookie_baker from existing state");
             this.number_of_cookie = number_of_cookie;
             this.number_of_cursor = number_of_cursor;
             this.number_of_grandma = number_of_grandma;
@@ -40,8 +47,14 @@ export class Cookie_baker {
             this.number_of_free_cursor = number_of_free_cursor;
             this.number_of_free_grandma = number_of_free_grandma;
             this.number_of_free_farm = number_of_free_farm;
+            this.cursor_cost = this.calculate_cost(action_type.increment_cursor);
+            this.grandma_cost = this.calculate_cost(action_type.increment_grandma);;
+            this.farm_cost = this.calculate_cost(action_type.increment_farm);
+            this.cursor_cps = this.get_number_of_cursor * initial_cursor_cps;
+            this.grandma_cps = this.get_number_of_grandma * initial_grandma_cps;
+            this.farm_cps = this.get_number_of_farm * initial_farm_cps;
         } else {
-            console.log("Creating a new coookie_baker");
+            console.log("CONSTRUCTOR: Creating a new coookie_baker");
             this.number_of_cookie = 0;
             this.number_of_cursor = 0;
             this.number_of_grandma = 0;
@@ -49,13 +62,14 @@ export class Cookie_baker {
             this.number_of_free_cursor = 0;
             this.number_of_free_grandma = 0;
             this.number_of_free_farm = 0;
+            this.cursor_cost = initial_cursor_cost;
+            this.grandma_cost = initial_grandma_cost;
+            this.farm_cost = initial_farm_cost;
+            this.cursor_cps = initial_cursor_cps;
+            this.grandma_cps = initial_grandma_cps;
+            this.farm_cps = initial_farm_cps;
         }
-        this.cursor_cost = initial_cursor_cost;
-        this.grandma_cost = initial_grandma_cost;
-        this.farm_cost = initial_farm_cost;
-        this.cursor_cps = initial_cursor_cps;
-        this.grandma_cps = initial_grandma_cps;
-        this.farm_cps = initial_farm_cps;
+
     }
 
     /**
@@ -320,7 +334,7 @@ export class Cookie_baker {
         }
     }
 
-    private calculate_cost(action: action_type): number {
+    public calculate_cost(action: action_type): number {
         switch (action) {
             case action_type.increment_cookie:
                 console.log("Cookie does not have cost");
