@@ -45,6 +45,7 @@ type t = {
   last_applied_block_timestamp : float;
   last_seen_membership_change_timestamp : float;
 }
+[@@deriving yojson]
 
 let hash t =
   let to_yojson =

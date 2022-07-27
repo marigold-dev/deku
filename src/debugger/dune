@@ -1,0 +1,6 @@
+(executable
+ (name deku_debugger)
+ (public_name deku-debugger)
+ (libraries protocol node files cmdliner dream lwt helpers network)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_yojson)))

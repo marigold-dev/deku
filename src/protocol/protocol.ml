@@ -166,3 +166,5 @@ let get_current_block_producer state =
     let diff = Unix.time () -. state.last_applied_block_timestamp in
     let skips = Float.to_int (diff /. block_producer_timeout) in
     Validators.after_current skips state.validators
+
+module Protocol_state = Protocol_state
