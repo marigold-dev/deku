@@ -30,7 +30,8 @@ const transition = (tx: transaction) => {
             source_value.cookie_baker.number_of_farm,
             source_value.cookie_baker.number_of_free_cursor,
             source_value.cookie_baker.number_of_free_grandma,
-            source_value.cookie_baker.number_of_free_farm);
+            source_value.cookie_baker.number_of_free_farm
+        );
 
 
     switch (operation) {
