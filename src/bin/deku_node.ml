@@ -671,7 +671,7 @@ let default_info =
   Cmd.info "deku-node" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
 
 let _ =
-  Cmd.eval
+  Cmd.eval ~catch:false
   @@ Cmd.group default_info
        [
          Cmd.v (Cmd.info "start") node;
