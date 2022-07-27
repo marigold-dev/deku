@@ -4,15 +4,37 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc --p tsconfig.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --lib es6 --outDir lib/ --p tsconfig.json",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsconfig": "tsconfig.json"
+      }
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/specs/*.specs*.+(ts|tsx|js)"
+    ]
+  },
   "dependencies": {
     "deku_js_interop": "file:../../sdks/deku_js_interop",
-    "fast-check": "^3.1.0",
-    "jest": "^28.1.3",
     "typescript": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^28.1.6",
+    "fast-check": "^3.1.1",
+    "jest": "^28.1.3",
+    "ts-jest": "^28.0.7"
   }
 }
