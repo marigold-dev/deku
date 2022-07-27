@@ -72,6 +72,7 @@ module Repr = struct
           Operation_transaction { receiver; amount }
     in
     let hash =
+      (* FIXME: This is not the correct hash. *)
       let serialized = Yojson.Safe.to_string json in
       Operation_hash.hash serialized
     in
