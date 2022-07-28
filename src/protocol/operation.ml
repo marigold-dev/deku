@@ -71,10 +71,7 @@ module Repr = struct
       | Transaction { receiver; amount } ->
           Operation_transaction { receiver; amount }
     in
-    let hash =
-      let serialized = Yojson.Safe.to_string json in
-      Operation_hash.hash serialized
-    in
+    let hash = hash operation in
 
     (match
        let source = Address.to_key_hash source in
