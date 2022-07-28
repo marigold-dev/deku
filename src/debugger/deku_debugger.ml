@@ -46,6 +46,7 @@ let debugger state_bin blocks =
     Debugger.make blocks protocol_state history
     |> Debugger.use (module Show)
     |> Debugger.use (module Goto)
+    |> Debugger.use (module Save)
     |> Debugger.run in
   await (`Ok ())
 
