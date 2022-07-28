@@ -18,7 +18,8 @@ let secret =
   let secret = conv (parser, printer) in
   let docv = "secret" in
   let doc = "Secret key of the bootstrapper" in
-  required & opt (some secret) None & info ["secret"] ~docv ~doc
+  let env = Cmd.Env.info "DEKU_BOOTSTRAPPER_SECRET" in
+  required & opt (some secret) None & info ["secret"] ~docv ~doc ~env
 
 module Bootstrap = struct
   (* TODO: should this be 2/3rd's plus 1? *)
@@ -69,7 +70,8 @@ module Bootstrap = struct
     let doc =
       "The address of a validator which will produce a block to bootstrap the \
        cluster." in
-    required & pos 0 (some producer) None & info [] ~docv ~doc
+    let env = Cmd.Env.info "DEKU_NEXT_PRODUCER" in
+    required & pos 0 (some producer) None & info [] ~docv ~doc ~env
 
   let node_uris =
     let parser string =
@@ -89,7 +91,8 @@ module Bootstrap = struct
           Uri.of_string "http://localhost:4441";
           Uri.of_string "http://localhost:4442";
         ] in
-    required & opt (some node_uris) default & info ["node-uris"] ~docv ~doc
+    let env = Cmd.Env.info "DEKU_VALIDTAOR_URIS" in
+    required & opt (some node_uris) default & info ["node-uris"] ~docv ~doc ~env
 
   let run =
     let open Term in
@@ -118,8 +121,8 @@ module Setup_identity = struct
     Cmd.info "setup-identity" ~version:"%\226\128\140%VERSION%%" ~doc
 end
 
-module Derive_secret = struct
-  let derive_secret secret =
+module Derive_key = struct
+  let derive_key secret =
     let key = Key.of_secret secret in
     (* TODO: use Logs everywhere *)
     Format.printf "Key: %s\n" (Key.to_string key);
@@ -127,11 +130,11 @@ module Derive_secret = struct
 
   let run =
     let open Term in
-    lwt_ret (const derive_secret $ secret)
+    lwt_ret (const derive_key $ secret)
 
   let info =
     let doc = "Derive the public key from the given secret" in
-    Cmd.info "derive-secret" ~version:"%\226\128\140%VERSION%%" ~doc
+    Cmd.info "derive-key" ~version:"%\226\128\140%VERSION%%" ~doc
 end
 
 let default_info =
@@ -146,5 +149,5 @@ let _ =
        [
          Cmd.v Bootstrap.info Bootstrap.run;
          Cmd.v Setup_identity.info Setup_identity.run;
-         Cmd.v Derive_secret.info Derive_secret.run;
+         Cmd.v Derive_key.info Derive_key.run;
        ]

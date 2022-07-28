@@ -28,7 +28,7 @@ VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
 # Bootstrapper secret
 # If you want your own you can generate own with "deku-bootstrapper setup-identity"
-BOOTSTRAPPER_SECRET="edsk3CRD8RNhoTPV74p8t9pEvW3zEH2ZZzVD8zns2dyZyY49nbjoiG"
+DEKU_BOOTSTRAPPER_SECRET="edsk3CRD8RNhoTPV74p8t9pEvW3zEH2ZZzVD8zns2dyZyY49nbjoiG"
 
 # =======================
 # Running environments
@@ -151,7 +151,7 @@ create_new_deku_environment() {
 
   # Step 0: create the bootstrapper identity
   message "Create the bootstrapper identity"
-  bootstrapper_key=$(deku-bootstrapper derive-secret --secret $BOOTSTRAPPER_SECRET | grep Key: | awk '{ print $2 }')
+  bootstrapper_key=$(deku-bootstrapper derive-key --secret $DEKU_BOOTSTRAPPER_SECRET | grep Key: | awk '{ print $2 }')
   
   # Step 1: Set up validator identities for each node
   message "Creating validator identities"
@@ -266,7 +266,7 @@ start_deku_cluster() {
   sleep 1.0 # Wait to start deku-node to start its dream server
   
   producer=$(jq -r .t <"$DATA_DIRECTORY/0/identity.json")
-  deku-bootstrapper bootstrap "$producer" --secret "$BOOTSTRAPPER_SECRET"
+  deku-bootstrapper bootstrap "$producer" --secret "$DEKU_BOOTSTRAPPER_SECRET"
 }
 
 wait_for_servers() {
