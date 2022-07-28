@@ -42,7 +42,10 @@ let debugger state_bin blocks =
   let%await blocks = load_blocks blocks in
   let history = compute_history protocol_state blocks in
 
-  let%await _ = Debugger.make blocks protocol_state history |> Debugger.run in
+  let%await _ =
+    Debugger.make blocks protocol_state history
+    |> Debugger.use (module Show)
+    |> Debugger.run in
   await (`Ok ())
 
 let state_bin =
