@@ -1,7 +1,6 @@
 open Deku_concepts
 open Consensus
 open Block
-open Is_valid
 
 type verifier = Verifier of { block_pool : Block_pool.t }
 type t = verifier
@@ -36,27 +35,15 @@ let is_signed_enough ~validators ~signatures =
   total_signatures >= required_signatures
 
 let incoming_block_or_signature ~consensus ~block_hash verifier =
-  let (Consensus
-        {
-          validators;
-          current_level;
-          current_block;
-          (* TODO: the following data probably matters *)
-          last_block_author = _;
-          last_block_update = _;
-        }) =
-    consensus
-  in
+  let (Consensus { validators; _ }) = consensus in
   let (Verifier { block_pool }) = verifier in
 
   let apply =
     match Block_pool.find_block ~block_hash block_pool with
     | Some block -> (
         let signatures = Block_pool.find_signatures ~block_hash block_pool in
-
         match
-          is_valid ~current_level ~current_block block
-          && is_signed_enough ~validators ~signatures
+          is_valid ~block consensus && is_signed_enough ~validators ~signatures
         with
         | true -> Some block
         | false ->

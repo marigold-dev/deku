@@ -57,10 +57,8 @@ module Repr = struct
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
     let { author; level; previous; payload } = block in
-    let hash =
-      let serialized = Yojson.Safe.to_string json in
-      Block_hash.hash serialized
-    in
+    (* TODO: serializing after deserializing *)
+    let hash = hash block in
 
     (match Key_hash.(equal author (of_key key)) with
     | true -> ()

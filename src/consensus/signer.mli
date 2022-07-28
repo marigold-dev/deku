@@ -5,7 +5,7 @@ type t = signer
 
 val make : identity:Identity.t -> signer
 
-val sign :
+val try_to_sign :
   current:Timestamp.t ->
   consensus:Consensus.t ->
   block:Block.t ->
