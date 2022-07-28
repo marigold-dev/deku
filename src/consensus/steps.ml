@@ -227,18 +227,31 @@ let allow_to_remove_validator ~key_hash state =
 
 let check_bootstrap_signal ~payload state =
   let public_key = Signature.public_key payload.Bootstrapper_signal.signature in
-  if
-    Wallet.compare public_key state.bootstrapper |> Int.equal 0
-    && not (in_sync state)
-  then
-    (state, Apply_bootstrap_signal payload)
-  else
-    (state, Noop)
+  let is_authorized_bootstrapper =
+    Wallet.compare public_key state.bootstrapper |> Int.equal 0 in
+  match (is_authorized_bootstrapper, in_sync state) with
+  | false, _ -> (state, Noop)
+  | true, true ->
+    (* When we're in sync, we ignore the payload of the bootstrapper signal
+       and just check if we can produce a block. This prevents bootstrapper
+       messing with consensus when it's already working. *)
+    (state, Can_produce_block)
+  | true, false -> (state, Apply_bootstrap_signal payload)
 
 let apply_bootstrap_signal bootstrap_signal state =
   let open Bootstrapper_signal in
+  Log.info "Setting %s as the new producer"
+    (Key_hash.to_string bootstrap_signal.producer.address);
   let validators =
     Validators.update_current bootstrap_signal.producer.address
       state.protocol.validators in
-  let protocol = { state.protocol with validators } in
+  let protocol =
+    {
+      state.protocol with
+      validators;
+      (* I really don't like abusing this mechanism.
+         TODO: come up with better way to determine the block
+         producer. *)
+      last_applied_block_timestamp = Unix.time ();
+    } in
   ({ state with protocol }, Can_produce_block)
