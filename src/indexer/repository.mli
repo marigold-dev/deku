@@ -11,3 +11,6 @@ val level : unit -> int64 Lwt.t
 
 (* Returns a block at given level *)
 val find_block_by_level : int64 -> Block.t option Lwt.t
+
+(* Returns a block between an interval *)
+val find_blocks_between : int64 -> int64 -> Block.t list Lwt.t

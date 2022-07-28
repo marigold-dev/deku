@@ -16,6 +16,10 @@ let one query param (module C : Caqti_lwt.CONNECTION) = C.find query param
 let option query param (module C : Caqti_lwt.CONNECTION) =
   C.find_opt query param
 
+(** query that returns exactly a list **)
+let list query param (module C : Caqti_lwt.CONNECTION) =
+  C.collect_list query param
+
 let exec_query exec query param =
   let exec = exec query param in
   match !pool_ref with
@@ -92,4 +96,21 @@ let find_block_by_level level =
   |> Option.map Block.of_yojson
   |> Option.map Result.to_option
   |> Option.join
+  |> await
+
+let find_blocks_between start _end =
+  let query =
+    let open Caqti_request.Infix in
+    let open Caqti_type.Std in
+    (tup2 int64 int64 ->* string)
+    @@ "SELECT block FROM blocks where height >= ? and height < ?" in
+  let%await result = exec_query list query (start, _end) in
+  let result =
+    match result with
+    | Ok blocks -> blocks
+    | Error err -> failwith err in
+  result
+  |> List.map Yojson.Safe.from_string
+  |> List.map [%of_yojson: Block.t]
+  |> List.filter_map Result.to_option
   |> await

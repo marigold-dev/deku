@@ -74,6 +74,23 @@ module Bootstrapped (Parameters : PARAMETERS) = struct
     await (Ok { is_sync })
 end
 
+(* Returns a set of blocks *)
+module Get_blocks_interval = struct
+  type request = {
+    start : int64;
+    _end : int64; [@key "end"]
+  }
+  [@@deriving yojson]
+
+  type response = Block.t list [@@deriving yojson]
+
+  let path = "/block-interval"
+
+  let handle { start; _end } =
+    let%await result = Repository.find_blocks_between start _end in
+    await (Ok result)
+end
+
 let run (module Parameters : PARAMETERS) =
   Dream.serve ~port:Parameters.port
   @@ Dream.logger
@@ -82,4 +99,5 @@ let run (module Parameters : PARAMETERS) =
          handle_request (module Level);
          handle_request (module Get_block_by_level);
          handle_request (module Bootstrapped (Parameters));
+         handle_request (module Get_blocks_interval);
        ]
