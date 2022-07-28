@@ -21,41 +21,58 @@ let secret =
   let env = Cmd.Env.info "DEKU_BOOTSTRAPPER_SECRET" in
   required & opt (some secret) None & info ["secret"] ~docv ~doc ~env
 
+let is_node_online_request node_uri =
+  Lwt.catch
+    (fun () ->
+      (* We're just testing that the node is serving HTTP, so we can use any endpoint.
+         TODO: make an official endpoint for this, like /ping or something. *)
+      let%await _ = request_block_level () node_uri in
+      await true)
+    (fun _exn -> await false)
+
+let rec is_node_online ~retries node_uri =
+  let%await is_online = is_node_online_request node_uri in
+  match (is_online, retries) with
+  | false, 0 ->
+    Format.eprintf "node %s did not come online" (Uri.to_string node_uri);
+    await false
+  | false, _ ->
+    let%await () = Lwt_unix.sleep 1. in
+    is_node_online ~retries:(retries - 1) node_uri
+  | true, _ -> await true
+
 module Bootstrap = struct
   (* TODO: should this be 2/3rd's plus 1? *)
-  (* Check if at least 2/3 of the cluster is in sync *)
-  let are_nodes_in_sync node_uris =
-    let%await response =
-      node_uris |> Lwt_list.map_p (fun node_uri -> request_in_sync () node_uri)
-    in
-    let number_of_nodes_in_sync =
-      response
-      |> List.filter (fun In_sync.{ in_sync } -> in_sync)
-      |> List.length
-      |> float_of_int in
-    number_of_nodes_in_sync
-    >= float_of_int (List.length node_uris) *. (2.0 /. 3.0)
-    |> await
+  (* Check if at least 2/3 of the cluster are online *)
+  let wait_for_quorum retries node_uris =
+    let%await response = node_uris |> Lwt_list.map_p (is_node_online ~retries) in
+    let number_of_nodes_online =
+      response |> List.filter Fun.id |> List.length |> float_of_int in
+    let quorum = float_of_int (List.length node_uris) *. (2.0 /. 3.0) in
+    if number_of_nodes_online >= quorum then
+      await ()
+    else
+      raise
+        (Failure
+           (Format.sprintf
+              "Did not reach a quorum of nodes online after %d seconds of \
+               waiting"
+              retries))
 
   let broadcast_bootstrap_signal node_uris msg =
     node_uris
     |> Lwt_list.iter_p (fun node_uri -> request_bootstrap_signal msg node_uri)
 
-  let bootstrap node_uris producer secret =
-    let%await in_sync = are_nodes_in_sync node_uris in
-    match in_sync with
-    | true ->
-      (* TODO: use Logs everywhere. *)
-      Format.printf "Nodes are in sync. Doing nothing.\n%!";
-      Lwt.return (`Ok ())
-    | false ->
-      let signature =
-        BLAKE2B.hash (Key_hash.to_string producer)
-        |> Protocol.Signature.sign ~key:secret in
-      let%await () =
-        broadcast_bootstrap_signal node_uris
-          { producer = { address = producer }; signature } in
-      Lwt.return (`Ok ())
+  let bootstrap node_uris producer secret retries =
+    let%await () = wait_for_quorum retries node_uris in
+    let signature =
+      BLAKE2B.hash (Key_hash.to_string producer)
+      |> Protocol.Signature.sign ~key:secret in
+    Format.printf "Broadcasting boostrap message\n%!";
+    let%await () =
+      broadcast_bootstrap_signal node_uris
+        { producer = { address = producer }; signature } in
+    Lwt.return (`Ok ())
 
   let producer =
     let parser string =
@@ -91,12 +108,21 @@ module Bootstrap = struct
           Uri.of_string "http://localhost:4441";
           Uri.of_string "http://localhost:4442";
         ] in
-    let env = Cmd.Env.info "DEKU_VALIDTAOR_URIS" in
+    let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
     required & opt (some node_uris) default & info ["node-uris"] ~docv ~doc ~env
+
+  let retries =
+    let open Arg in
+    let docv = "retries" in
+    let doc =
+      "Number of attempts to contact a node, separted by 1 second delays" in
+    let env = Cmd.Env.info "DEKU_BOOTSTRAPPER_RETRIES" in
+    let default = 150 in
+    value & opt int default & info ["retries"] ~docv ~doc ~env
 
   let run =
     let open Term in
-    lwt_ret (const bootstrap $ node_uris $ producer $ secret)
+    lwt_ret (const bootstrap $ node_uris $ producer $ secret $ retries)
 
   let info =
     let doc = "Create the bootstrapper identity" in
@@ -144,7 +170,7 @@ let default_info =
   Cmd.info "side-cli" ~version:"%\226\128\140%VERSION%%" ~doc ~sdocs ~exits
 
 let _ =
-  Cmd.eval
+  Cmd.eval ~catch:true
   @@ Cmd.group default_info
        [
          Cmd.v Bootstrap.info Bootstrap.run;
