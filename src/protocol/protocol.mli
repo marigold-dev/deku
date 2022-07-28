@@ -15,4 +15,4 @@ val apply :
   current_level:Level.t ->
   payload:string list ->
   protocol ->
-  protocol
+  protocol * Receipt.t list

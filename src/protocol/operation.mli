@@ -3,7 +3,7 @@ open Deku_concepts
 
 exception Invalid_signature
 
-type operation_data = private
+type operation_content = private
   | Operation_transaction of { receiver : Address.t; amount : Amount.t }
 
 type operation = private
@@ -14,7 +14,7 @@ type operation = private
       level : Level.t;
       nonce : Nonce.t;
       source : Address.t;
-      data : operation_data;
+      content : operation_content;
     }
 
 type t = operation [@@deriving eq, ord, yojson]
@@ -27,5 +27,3 @@ val transaction :
   receiver:Address.t ->
   amount:Amount.t ->
   operation
-
-module Set : Set.S with type elt = operation

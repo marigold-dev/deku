@@ -3,7 +3,7 @@ open Deku_concepts
 
 exception Invalid_signature
 
-type operation_data =
+type operation_content =
   | Operation_transaction of { receiver : Address.t; amount : Amount.t }
 
 and operation =
@@ -15,7 +15,7 @@ and operation =
       level : Level.t;
       nonce : Nonce.t;
       source : Address.t;
-      data : operation_data;
+      content : operation_content;
     }
 
 and t = operation [@@deriving yojson]
@@ -30,21 +30,15 @@ let compare a b =
   let (Operation { hash = b; _ }) = b in
   Operation_hash.compare a b
 
-module Set = Set.Make (struct
-  type t = operation
-
-  let compare = compare
-end)
-
 module Repr = struct
-  type operation_data =
+  type operation_content =
     | Transaction of { receiver : Address.t; amount : Amount.t }
 
   and operation = {
     level : Level.t;
     nonce : Nonce.t;
     source : Address.t;
-    data : operation_data;
+    content : operation_content;
   }
 
   and operation_with_signature = {
@@ -53,8 +47,6 @@ module Repr = struct
     operation : operation;
   }
   [@@deriving yojson]
-
-  (* TODO: we could avoid Yojson.Safe.to_string if we had locations *)
 
   let hash operation =
     let json = yojson_of_operation operation in
@@ -65,16 +57,14 @@ module Repr = struct
     let { key; signature; operation } =
       operation_with_signature_of_yojson json
     in
-    let { level; nonce; source; data } = operation in
-    let data =
-      match data with
+    let { level; nonce; source; content } = operation in
+    let content =
+      match content with
       | Transaction { receiver; amount } ->
           Operation_transaction { receiver; amount }
     in
-    let hash =
-      let serialized = Yojson.Safe.to_string json in
-      Operation_hash.hash serialized
-    in
+    (* TODO: serializing after deserializing *)
+    let hash = hash operation in
 
     (match
        let source = Address.to_key_hash source in
@@ -88,18 +78,19 @@ module Repr = struct
      with
     | true -> ()
     | false -> raise Invalid_signature);
-    Operation { key; signature; hash; level; nonce; source; data }
+    Operation { key; signature; hash; level; nonce; source; content }
 
   let yojson_of_t operation =
-    let (Operation { key; signature; hash = _; level; nonce; source; data }) =
+    let (Operation { key; signature; hash = _; level; nonce; source; content })
+        =
       operation
     in
-    let data =
-      match data with
+    let content =
+      match content with
       | Operation_transaction { receiver; amount } ->
           Transaction { receiver; amount }
     in
-    let operation = { level; nonce; source; data } in
+    let operation = { level; nonce; source; content } in
     yojson_of_operation_with_signature { key; signature; operation }
 end
 
@@ -109,8 +100,8 @@ let yojson_of_t = Repr.yojson_of_t
 let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
   let hash =
     let open Repr in
-    let data = Transaction { receiver; amount } in
-    let operation = { level; nonce; source; data } in
+    let content = Transaction { receiver; amount } in
+    let operation = { level; nonce; source; content } in
     hash operation
   in
   let key = Identity.key identity in
@@ -118,5 +109,5 @@ let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
     let hash = Operation_hash.to_blake2b hash in
     Identity.sign ~hash identity
   in
-  let data = Operation_transaction { receiver; amount } in
-  Operation { key; signature; hash; level; nonce; source; data }
+  let content = Operation_transaction { receiver; amount } in
+  Operation { key; signature; hash; level; nonce; source; content }
