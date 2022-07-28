@@ -65,6 +65,8 @@ module Bootstrap = struct
 
   let bootstrap node_uris producer secret retries =
     let%await () = wait_for_quorum retries node_uris in
+    (* TODO: if the chosen producer is not part of the quorum,
+       bootstrapping will fail silently*)
     let signature =
       BLAKE2B.hash (Key_hash.to_string producer)
       |> Protocol.Signature.sign ~key:secret in
