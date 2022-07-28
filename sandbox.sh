@@ -26,6 +26,10 @@ DATA_DIRECTORY="data"
 # shellcheck disable=SC2207
 VALIDATORS=( $(seq 0 "$((NUMBER_OF_NODES - 1))") )
 
+# Bootstrapper secret
+# If you want your own you can generate own with "deku-bootstrapper setup-identity"
+DEKU_BOOTSTRAPPER_SECRET="edsk3CRD8RNhoTPV74p8t9pEvW3zEH2ZZzVD8zns2dyZyY49nbjoiG"
+
 # =======================
 # Running environments
 # Docker mode is to run Deku nodes from docker-compose file
@@ -145,6 +149,10 @@ deploy_contract () {
 # writes Tezos identity files in $DATA_DIRECTORY subfolders
 create_new_deku_environment() {
 
+  # Step 0: create the bootstrapper identity
+  message "Create the bootstrapper identity"
+  bootstrapper_key=$(deku-bootstrapper derive-key --secret $DEKU_BOOTSTRAPPER_SECRET | grep Key: | awk '{ print $2 }')
+  
   # Step 1: Set up validator identities for each node
   message "Creating validator identities"
   for i in "${VALIDATORS[@]}"; do
@@ -161,6 +169,10 @@ create_new_deku_environment() {
     else
       deku-node setup-identity "$FOLDER" --uri "http://localhost:444$i"
     fi
+
+    # Setup the bootstrapper identity
+    echo "\"$bootstrapper_key\"" > "$FOLDER/bootstrapper.json"
+    
     KEY=$(deku-node self "$FOLDER" | grep "key:" | awk '{ print $2 }')
     ADDRESS=$(deku-node self "$FOLDER" | grep "address:" | awk '{ print $2 }')
     URI=$(deku-node self "$FOLDER" | grep "uri:" | awk '{ print $2 }')
@@ -251,37 +263,10 @@ start_deku_cluster() {
       SERVERS+=($!)
     fi
   done
-
-  sleep 1
-
-  # Step 4: Manually produce the block
-  # Produce a block using `deku-cli produce-block`
-  # See deku-cli produce-block --help
-  echo "Producing a block"
-  if [ "$mode" = "docker" ]; then
-    HASH=$(docker exec -t deku-node-0 /bin/deku-node produce-block /app/data | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p' | tr -d " \t\n\r")
-  else
-    HASH=$(deku-node produce-block "$DATA_DIRECTORY/0" | sed -n 's/block.hash: \([a-f0-9]*\)/\1/p')
-  fi
-
-  sleep 0.1
-
-  # Step 5: Manually sign the block with 2/3rd of the nodes
-  # Sign the previously produced block using `deku-cli sign-block`
-  # See ./src/bin/deku_cli.ml:sign_block
-  echo "Signing"
-  for i in "${VALIDATORS[@]}"; do
-    if [ "$mode" = "docker" ]; then
-      echo "hash: $HASH"
-      echo "deku-node-$i"
-      docker exec -t "deku-node-$i" deku-node sign-block /app/data "$HASH"
-    else
-      echo "hash: $HASH"
-      echo "deku-node-$i"
-      deku-node sign-block "$DATA_DIRECTORY/$i" "$HASH"
-    fi
-  done
-
+  sleep 1.0 # Wait to start deku-node to start its dream server
+  
+  producer=$(jq -r .t <"$DATA_DIRECTORY/0/identity.json")
+  deku-bootstrapper bootstrap "$producer" --secret "$DEKU_BOOTSTRAPPER_SECRET"
 }
 
 wait_for_servers() {

@@ -173,3 +173,23 @@ module Trusted_validators_membership_change = struct
 
   let path = "/trusted-validators-membership"
 end
+
+module In_sync = struct
+  type request = unit [@@deriving yojson]
+
+  type response = { in_sync : bool } [@@deriving yojson]
+
+  let path = "/in-sync"
+end
+
+module Bootstrapper_signal = struct
+  type request = {
+    producer : Validators.validator;
+    signature : Signature.t;
+  }
+  [@@deriving yojson]
+
+  type response = unit [@@deriving yojson]
+
+  let path = "/bootstrapper-signal"
+end

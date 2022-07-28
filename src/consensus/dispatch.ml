@@ -35,6 +35,10 @@ let rec dispatch effect step state =
     allow_to_add_validator ~key_hash effect state
   | Allow_to_remove_validator { key_hash } ->
     allow_to_remove_validator ~key_hash effect state
+  | Check_bootstrap_signal { payload : Bootstrapper_signal.t } ->
+    check_bootstrap_signal ~payload effect state
+  | Apply_bootstrap_signal bootstrap_signal ->
+    apply_bootstrap_signal ~bootstrap_signal effect state
 
 and check_operation ~operation effect state =
   let step = Steps.check_operation ~operation state in
@@ -110,4 +114,12 @@ and allow_to_add_validator ~key_hash effect state =
 
 and allow_to_remove_validator ~key_hash effect state =
   let state, step = Steps.allow_to_remove_validator ~key_hash state in
+  dispatch effect step state
+
+and check_bootstrap_signal ~payload effect state =
+  let state, step = Steps.check_bootstrap_signal ~payload state in
+  dispatch effect step state
+
+and apply_bootstrap_signal ~bootstrap_signal effect state =
+  let state, step = Steps.apply_bootstrap_signal bootstrap_signal state in
   dispatch effect step state

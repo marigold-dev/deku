@@ -22,6 +22,14 @@
  (preprocess
   (pps ppx_deriving_yojson ppx_let_binding)))
 
+(executable
+ (name deku_bootstrapper)
+ (libraries feather files cmdliner)
+ (modules deku_bootstrapper)
+ (public_name deku-bootstrapper)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_let_binding)))
+
 (env
  (static
   (ocamlopt_flags

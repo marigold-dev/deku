@@ -12,13 +12,16 @@ let get_initial_consensus_state ~folder =
   let%await trusted_validator_membership_change_list =
     Config_files.Trusted_validators_membership_change.read
       ~file:trusted_validator_membership_change_file in
+  let%await bootstrapper =
+    Config_files.Bootstrapper.read ~file:(folder ^ "/bootstrapper.json") in
   let trusted_validator_membership_change =
     Trusted_validators_membership_change.Set.of_list
       trusted_validator_membership_change_list in
   let state_bin = folder ^ "/state.bin" in
   let%await state_bin_exists = Lwt_unix.file_exists state_bin in
   let consensus =
-    Consensus.make ~identity ~trusted_validator_membership_change in
+    Consensus.make ~identity ~trusted_validator_membership_change ~bootstrapper
+  in
   if state_bin_exists then
     let%await protocol = Config_files.State_bin.read ~file:state_bin in
     await { consensus with protocol }
@@ -30,6 +33,8 @@ let get_initial_state ~folder ~minimum_block_delay =
     Config_files.Identity.read ~file:(folder ^ "/identity.json") in
   let trusted_validator_membership_change_file =
     folder ^ "/trusted-validator-membership-change.json" in
+  let%await bootstrapper =
+    Config_files.Bootstrapper.read ~file:(folder ^ "/bootstrapper.json") in
   let%await trusted_validator_membership_change_list =
     Config_files.Trusted_validators_membership_change.read
       ~file:trusted_validator_membership_change_file in
@@ -64,7 +69,7 @@ let get_initial_state ~folder ~minimum_block_delay =
   let persist_trusted_membership_change =
     Config_files.Trusted_validators_membership_change.write
       ~file:trusted_validator_membership_change_file in
-  let config = Config.make ~identity ~minimum_block_delay in
+  let config = Config.make ~identity ~minimum_block_delay ~bootstrapper in
   let node =
     State.make ~config ~trusted_validator_membership_change ~interop_context
       ~data_folder:folder ~initial_validators_uri

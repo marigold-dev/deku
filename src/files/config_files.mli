@@ -57,3 +57,11 @@ module Trusted_validators_membership_change : sig
 
   val write : t list -> file:string -> unit Lwt.t
 end
+
+module Bootstrapper : sig
+  type t = Crypto.Key.t
+
+  val read : file:string -> t Lwt.t
+
+  val write : t -> file:string -> unit Lwt.t
+end

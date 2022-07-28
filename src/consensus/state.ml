@@ -23,11 +23,12 @@ type state = {
   block_pool : Block_pool.t;
   protocol : Protocol.t;
   snapshots : Snapshots.t;
+  bootstrapper : Key.t;
 }
 
 type t = state
 
-let make ~identity ~trusted_validator_membership_change =
+let make ~identity ~trusted_validator_membership_change ~bootstrapper =
   let initial_block = Block.genesis in
   let initial_protocol = Protocol.make ~initial_block in
   let initial_signatures =
@@ -48,6 +49,7 @@ let make ~identity ~trusted_validator_membership_change =
     block_pool = initial_block_pool;
     protocol = initial_protocol;
     snapshots = initial_snapshots;
+    bootstrapper;
   }
 
 let is_next block state = Protocol.is_next state.protocol block
@@ -64,3 +66,19 @@ let maximum_signable_time_between_epochs = 20.0
 (** Used to add a delay between a tezos operation being confirmed,
   needs to be bigger than the polling interval for operations *)
 let minimum_waiting_period_for_tezos_operation = 5.0
+
+(* TODO: this is not sound - nodes should be out of sync when they
+   load a snapshot until they verify the next state root hash on Tezos. *)
+let in_sync state =
+  (* When a node is on the genesis block, it is by definition not in sync.
+     However, state.protocol.last_applied_block_timestamp is set to Unix.time ()
+     when the chain initializes, so we need this extra check here. *)
+  if BLAKE2B.equal Block.genesis.hash state.protocol.last_block_hash then
+    false
+  else
+    let validators =
+      Validators.length state.protocol.validators |> Float.of_int in
+    let time_since_last_applied_block =
+      Unix.time () -. state.protocol.last_applied_block_timestamp in
+    time_since_last_applied_block
+    <= validators *. Protocol.block_producer_timeout

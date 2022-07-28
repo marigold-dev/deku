@@ -44,6 +44,7 @@ let string_of_error = function
   | `Snapshots_with_invalid_hash -> "Snapshots_with_invalid_hash"
   | `Node_not_yet_initialized -> "Node_not_yet_initialized"
   | `Not_a_validator -> "Not_a_validator"
+  | `Invalid_bootstrapper_signature -> "Invalid_bootstrapper_signal"
 
 let print_error err = Log.error "%s" (string_of_error err)
 
@@ -392,3 +393,11 @@ let trusted_validators_membership ~payload ~signature =
   handle_consensus_operation (fun handler consensus ->
       Consensus.with_trusted_validators_membership_change handler ~payload
         ~signature consensus)
+
+let request_in_sync state =
+  let state = state.Node.consensus in
+  Consensus.in_sync state
+
+let handle_bootstrap_signal ~payload =
+  handle_consensus_operation (fun handler consensus ->
+      Consensus.with_bootstrap_signal handler ~payload consensus)
