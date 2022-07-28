@@ -47,6 +47,7 @@ let debugger state_bin blocks =
     |> Debugger.use (module Show)
     |> Debugger.use (module Goto)
     |> Debugger.use (module Save)
+    |> Debugger.use (module Next)
     |> Debugger.run in
   await (`Ok ())
 
