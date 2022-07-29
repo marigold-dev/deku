@@ -193,3 +193,11 @@ module Bootstrapper_signal = struct
 
   let path = "/bootstrapper-signal"
 end
+
+module Identity = struct
+  type request = unit [@@deriving yojson]
+
+  type response = Key_hash.t [@@deriving yojson]
+
+  let path = "/identity"
+end
