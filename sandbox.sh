@@ -6,7 +6,7 @@ set -e
 # Parameters declarations
 
 # Starting from 0
-NUMBER_OF_NODES=${3:-"3"}
+NUMBER_OF_NODES=${3:-"4"}
 
 # This secret key never changes.
 # We need this secret key for sigining Tezos operations.
