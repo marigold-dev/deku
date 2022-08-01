@@ -13,12 +13,11 @@ let broadcast_json ~nodes ~endpoint ~packet =
   let body = Yojson.Safe.to_string packet in
   Lwt_list.iter_p
     (fun node ->
+      let open Lwt.Infix in
       let uri = Uri.with_path node endpoint in
-      Lwt.map
-        (fun _post_result ->
-          (* TODO: do some/thing with this result*)
-          ())
-        (post body uri))
+      post body uri >|= fun _post_result ->
+      (* TODO: do some/thing with this result*)
+      ())
     nodes
 
 let broadcast_json ~nodes ~endpoint ~packet =

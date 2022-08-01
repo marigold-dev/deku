@@ -2,6 +2,8 @@
 type timestamp
 type t = timestamp
 
+val of_float : float -> timestamp
+
 (* operations *)
 (* TODO: better naming, TLDR it measures how many skips since some time
    like for timeouts*)

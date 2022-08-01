@@ -1,10 +1,7 @@
 module Prefix : sig
   val contract_hash : string
-  val deku_contract_hash : string
   val block_hash : string
-  val deku_block_hash : string
   val operation_hash : string
-  val deku_operation_hash : string
   val protocol_hash : string
   val ed25519_public_key_hash : string
   val secp256k1_public_key_hash : string
@@ -19,6 +16,10 @@ module Prefix : sig
   val secp256k1_signature : string
   val p256_signature : string
   val chain_id : string
+  val deku_contract_hash : string
+  val deku_block_hash : string
+  val deku_operation_hash : string
+  val deku_packet_hash : string
 end
 
 module With_b58 (P : sig

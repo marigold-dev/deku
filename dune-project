@@ -39,3 +39,11 @@
 (package
  (name deku-consensus)
  (depends deku-stdlib deku-concepts deku-constants))
+
+(package
+ (name deku-network)
+ (depends deku-protocol deku-consensus))
+
+(package
+ (name deku-node)
+ (depends deku-protocol deku-consensus))

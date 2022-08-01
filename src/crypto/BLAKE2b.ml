@@ -46,6 +46,12 @@ struct
     let of_raw = of_raw
   end)
 
+  module Set = Set.Make (struct
+    type t = hash
+
+    let compare = compare
+  end)
+
   module Map = Map.Make (struct
     type t = hash
 

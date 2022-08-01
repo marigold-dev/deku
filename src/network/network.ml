@@ -25,6 +25,8 @@ let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
           let network = Network { nodes; known_packets } in
 
           match
+            (* TODO: really important, how to prevent spam?
+                Can the same parsed data be derived from two different hashes? *)
             (* TODO: does it make sense here? *)
             let () = broadcast_json ~nodes ~endpoint ~packet:packet_json in
             Packet.content_of_yojson ~endpoint content

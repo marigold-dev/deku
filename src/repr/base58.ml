@@ -27,16 +27,13 @@
 module Prefix = struct
   (* 20 *)
   let contract_hash = "\002\090\121" (* KT1(36) *)
-  let deku_contract_hash = "\001\146\006" (* DK1(36) *)
   let ed25519_public_key_hash = "\006\161\159" (* tz1(36) *)
   let secp256k1_public_key_hash = "\006\161\161" (* tz2(36) *)
   let p256_public_key_hash = "\006\161\164" (* tz3(36) *)
 
   (* 32 *)
   let block_hash = "\001\052" (* B(51) *)
-  let deku_block_hash = "\085\022" (* Db(51) *)
   let operation_hash = "\005\116" (* o(51) *)
-  let deku_operation_hash = "\086\124" (* Do(51) *)
   let protocol_hash = "\002\170" (* P(51) *)
   let ed25519_public_key = "\013\015\037\217" (* edpk(54) *)
   let ed25519_seed = "\013\015\058\007" (* edsk(54) *)
@@ -54,6 +51,12 @@ module Prefix = struct
 
   (* 4 *)
   let chain_id = "\087\082\000" (* Net(15) *)
+
+  (* 32 *)
+  let deku_contract_hash = "\001\146\006" (* DK1(36) *)
+  let deku_block_hash = "\085\022" (* Db(52) *)
+  let deku_operation_hash = "\086\124" (* Do(52) *)
+  let deku_packet_hash = "\086\154" (* Dp(52)*)
 end
 
 let base = 58

@@ -8,8 +8,10 @@ type _ endpoint = private
   | Operations : Operation.t endpoint
 
 type 'a t = 'a endpoint
+type ex = Ex : _ endpoint -> ex
 
 val blocks : Block.t endpoint
 val signatures : Verified_signature.t endpoint
 val operations : Operation.t endpoint
+val of_string : string -> ex option
 val to_string : _ endpoint -> string

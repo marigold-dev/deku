@@ -1,7 +1,10 @@
 open Deku_crypto
 
+exception Invalid_hash
+exception Invalid_signature
+
 type verified_signature
-type t = verified_signature [@@deriving eq, ord]
+type t = verified_signature [@@deriving eq, ord, yojson]
 
 val sign : BLAKE2b.t -> Identity.t -> verified_signature
 val verify : BLAKE2b.t -> Key.t -> Signature.t -> verified_signature option

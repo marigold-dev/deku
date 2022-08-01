@@ -35,5 +35,6 @@ module type S = sig
     val to_b58 : hash -> string
   end
 
+  module Set : Set.S with type elt = hash
   module Map : Map.S with type key = hash
 end
