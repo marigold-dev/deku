@@ -2,4 +2,4 @@
  (name deku_node)
  (public_name deku-node)
  (package deku-node)
- (libraries deku-protocol deku-consensus deku-network))
+ (libraries deku-protocol deku-consensus deku-network deku-storage))

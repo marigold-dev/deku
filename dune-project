@@ -45,5 +45,9 @@
  (depends deku-protocol deku-consensus))
 
 (package
+ (name deku-storage)
+ (depends deku-crypto))
+
+(package
  (name deku-node)
  (depends deku-protocol deku-consensus))
