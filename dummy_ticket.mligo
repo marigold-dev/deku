@@ -6,7 +6,7 @@
 
 type blake2b = bytes
 type vault_ticket = bytes ticket
-type vault_deposit = { ticket : vault_ticket; address : address }
+type vault_deposit = { ticket : vault_ticket; address : key_hash }
 
 type vault_handle_id = nat
 type vault_handle_structure = {
@@ -28,7 +28,7 @@ type vault_withdraw = {
 type parameter =
   | Mint_to_deku of {
       deku_consensus : address;
-      deku_recipient : address;
+      deku_recipient : key_hash;
       ticket_data : bytes;
       ticket_amount : nat;
     }
@@ -42,7 +42,7 @@ type parameter =
 
 type return = operation list * unit
 
-let deposit_to_deku (consensus : address) (ticket : vault_ticket) (recipient : address) =
+let deposit_to_deku (consensus : address) (ticket : vault_ticket) (recipient : key_hash) =
   let deposit_entrypoint =
     match (Tezos.get_entrypoint_opt "%deposit" consensus : vault_deposit contract option) with
     | Some deposit_entrypoint -> deposit_entrypoint
@@ -71,10 +71,10 @@ let withdraw_from_deku (consensus : address) (handles_hash : blake2b)
 let main ((param, ()) : parameter * unit) : return =
   match param with
   | Mint_to_deku {deku_consensus; deku_recipient; ticket_data; ticket_amount}
-    -> 
+    ->
       let ticket = Tezos.create_ticket ticket_data ticket_amount in
-      let deposit_operation  = deposit_to_deku deku_consensus ticket deku_recipient in
-      ([ deposit_operation  ], ())
+      let deposit_operation = deposit_to_deku deku_consensus ticket deku_recipient in
+      ([ deposit_operation ], ())
   | Withdraw_from_deku {deku_consensus; handles_hash; handle; proof} ->
       let callback : vault_ticket contract = Tezos.self "%burn_callback" in
       let withdraw_operation =

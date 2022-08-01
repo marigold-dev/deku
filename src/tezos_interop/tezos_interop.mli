@@ -28,7 +28,7 @@ module Consensus : sig
     | Deposit          of {
         ticket : Ticket_id.t;
         amount : Z.t;
-        destination : Address.t;
+        destination : Key_hash.t;
       }
     | Update_root_hash of BLAKE2B.t
 

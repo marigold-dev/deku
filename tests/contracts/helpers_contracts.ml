@@ -24,16 +24,9 @@ let make_address () =
   let _secret, _key, key_hash = Key_hash.make_ed25519 () in
   key_hash
 
-let make_tezos_address () =
-  let open Crypto in
-  let open Tezos in
-  let _key, address = Ed25519.generate () in
-  let hash = Ed25519.Key_hash.of_key address in
-  Address.Implicit (Ed25519 hash)
-
 let setup ?(initial_amount = 10000) () =
   let t2 = make_ticket () in
-  let tezos_address = make_tezos_address () in
+  let tezos_address = make_address () in
   let op =
     Tezos_operation.Tezos_deposit
       {
@@ -51,10 +44,7 @@ let setup ?(initial_amount = 10000) () =
       internal_operations = [op];
     } in
   let opp = Tezos_operation.make opp in
-  let make_address =
-    tezos_address |> Tezos.Address.to_string |> Key_hash.of_string |> Option.get
-  in
-  (State.apply_tezos_operation s opp, make_address, t2)
+  (State.apply_tezos_operation s opp, tezos_address, t2)
 
 let amount =
   Alcotest.of_pp (fun ppf x -> Format.fprintf ppf "%d" (Amount.to_int x))
