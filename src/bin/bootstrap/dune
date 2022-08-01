@@ -1,0 +1,12 @@
+(executable
+ (name deku_bootstrap)
+ (public_name deku-bootstrap)
+ (package deku-bootstrap)
+ (libraries deku-consensus deku-network deku-storage)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))

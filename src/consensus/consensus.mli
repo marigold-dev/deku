@@ -12,7 +12,7 @@ type consensus = private
 
 and t = consensus
 
-val make : validators:Validators.t -> block:Block.t -> consensus
+val make : validators:Validators.t -> consensus
 
 (* transition *)
 val apply_block : current:Timestamp.t -> block:Block.t -> consensus -> consensus

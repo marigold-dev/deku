@@ -42,11 +42,12 @@ let incoming_packet ~endpoint ~packet network =
 
 let broadcast ~endpoint ~content network =
   let (Network { nodes; known_packets }) = network in
-  let (Packet { hash; content = _ } as packet) =
+  let packet =
     let content = Packet.yojson_of_content ~endpoint content in
     Packet.make ~content
   in
-  let known_packets = Packet_hash.Set.add hash known_packets in
+  (* TODO: this is ideal but leads to problems *)
+  (* let known_packets = Packet_hash.Set.add hash known_packets in *)
   let () = broadcast_packet ~nodes ~endpoint ~packet in
   Network { nodes; known_packets }
 

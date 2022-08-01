@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
@@ -20,10 +21,7 @@ module Node = struct
   let make ~identity ~validators ~nodes =
     let validators = Validators.of_key_hash_list validators in
     let protocol = Protocol.initial in
-    let consensus =
-      let block = Genesis.block in
-      Consensus.make ~validators ~block
-    in
+    let consensus = Consensus.make ~validators in
     let verifier = Verifier.empty in
     let signer = Signer.make ~identity in
     let producer = Producer.make ~identity in
@@ -31,6 +29,12 @@ module Node = struct
     Node { protocol; consensus; verifier; signer; producer; network }
 
   let apply_block ~current ~block node =
+    let () =
+      let (Block.Block { level; _ }) = block in
+      let level = Level.to_n level in
+      let level = N.to_z level in
+      Format.eprintf "%a\n%!" Z.pp_print level
+    in
     let (Node { protocol; consensus; verifier; signer; producer; network }) =
       node
     in
@@ -184,13 +188,18 @@ module Server = struct
 end
 
 let main () =
-  let open Lwt.Infix in
-  Storage.read () >>= fun storage ->
-  let () = Singleton.initialize storage in
   let port = ref 8080 in
+  let storage = ref "storage.json" in
   Arg.parse
-    [ ("-p", Arg.Set_int port, " Listening port number (8080 by default)") ]
+    [
+      ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
+      ("-s", Arg.Set_string storage, " Storage file (storage.json by default)");
+    ]
     ignore "Handle Deku communication. Runs forever.";
+
+  let open Lwt.Infix in
+  Storage.read ~file:!storage >>= fun storage ->
+  let () = Singleton.initialize storage in
   Server.start !port
 
 let () = Lwt_main.run (main ())

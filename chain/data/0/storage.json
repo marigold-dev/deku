@@ -1,0 +1,13 @@
+{
+  "secret": "edsk4UWkJqpZrAm26qvJE8uY9ZFGFqQiFuBcDyEPASXeHxuD68WvvF",
+  "initial_validators": [
+    "tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK",
+    "tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8",
+    "tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi",
+    "tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
+  ],
+  "nodes": [
+    "http://localhost:4440", "http://localhost:4441",
+    "http://localhost:4442", "http://localhost:4443"
+  ]
+}

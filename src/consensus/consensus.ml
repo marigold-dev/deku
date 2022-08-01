@@ -13,8 +13,8 @@ type consensus =
 
 and t = consensus
 
-let make ~validators ~block =
-  let (Block { hash; level; author; _ }) = block in
+let make ~validators =
+  let (Block { hash; level; author; _ }) = Genesis.block in
 
   let current_block = hash in
   let current_level = level in

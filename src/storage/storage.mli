@@ -8,4 +8,11 @@ type storage = private {
 
 type t = storage [@@deriving yojson]
 
-val read : unit -> storage Lwt.t
+val make :
+  secret:Secret.t ->
+  initial_validators:Key_hash.t list ->
+  nodes:Uri.t list ->
+  storage
+
+val read : file:string -> storage Lwt.t
+val write : file:string -> storage -> unit Lwt.t

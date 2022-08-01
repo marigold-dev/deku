@@ -51,3 +51,7 @@
 (package
  (name deku-node)
  (depends deku-protocol deku-consensus))
+
+(package
+ (name deku-bootstrap)
+ (depends deku-network))
