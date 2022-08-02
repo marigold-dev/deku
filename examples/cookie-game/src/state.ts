@@ -23,11 +23,13 @@ export const initial_cursor_cps: number = 0.1;
 export const initial_grandma_cps: number = 1;
 export const initial_farm_cps: number = 8;
 export const initial_mine_cps: number = 47;
+export const initial_factory_cps: number = 260;
 
 export const initial_cursor_cost: number = 15;
 export const initial_grandma_cost: number = 100;
 export const initial_farm_cost: number = 1100;
 export const initial_mine_cost: number = 12000;
+export const initial_factory_cost: number = 130000;
 
 
 
@@ -37,6 +39,7 @@ export type cookie_baker_type = {
     number_of_grandma: number;
     number_of_farm: number;
     number_of_mine: number;
+    number_of_factory: number;
 
     /* Gift from application */
     /* TODO: add the rule to generate them! */
@@ -44,17 +47,20 @@ export type cookie_baker_type = {
     number_of_free_grandma: number;
     number_of_free_farm: number;
     number_of_free_mine: number;
+    number_of_free_factory: number;
 
     cursor_cost: number;
     grandma_cost: number;
     farm_cost: number;
     mine_cost: number;
+    factory_cost: number;
 
     /* Cookie per second*/
     cursor_cps: number;
     grandma_cps: number;
     farm_cps: number;
     mine_cps: number;
+    factory_cps: number;
 }
 
 export const create_cookie_baker = (number_of_cookie: number,
@@ -62,45 +68,55 @@ export const create_cookie_baker = (number_of_cookie: number,
     number_of_grandma: number,
     number_of_farm: number,
     number_of_mine: number,
+    number_of_factory: number,
     number_of_free_cursor: number,
     number_of_free_grandma: number,
     number_of_free_farm: number,
-    number_of_free_mine: number, ): cookie_baker_type => {
+    number_of_free_mine: number,
+    number_of_free_factory: number,): cookie_baker_type => {
     const cookie_baker = {
         number_of_cookie,
         number_of_cursor,
         number_of_grandma,
         number_of_farm,
         number_of_mine,
+        number_of_factory,
         number_of_free_cursor,
         number_of_free_grandma,
         number_of_free_farm,
         number_of_free_mine,
+        number_of_free_factory,
         cursor_cost: 0,
         grandma_cost: 0,
         farm_cost: 0,
         mine_cost: 0,
+        factory_cost: 0,
         cursor_cps: 0,
         grandma_cps: 0,
         farm_cps: 0,
         mine_cps: 0,
+        factory_cps: 0,
     }
     const cursor_cost = calculate_cost(action_type.increment_cursor, cookie_baker);
     const grandma_cost = calculate_cost(action_type.increment_grandma, cookie_baker);
     const farm_cost = calculate_cost(action_type.increment_farm, cookie_baker);
     const mine_cost = calculate_cost(action_type.increment_mine, cookie_baker);
+    const factory_cost = calculate_cost(action_type.increment_factory, cookie_baker);
     const cursor_cps = cookie_baker.number_of_cursor * initial_cursor_cps;
     const grandma_cps = cookie_baker.number_of_grandma * initial_grandma_cps;
     const farm_cps = cookie_baker.number_of_farm * initial_farm_cps;
     const mine_cps = cookie_baker.number_of_mine * initial_mine_cps;
+    const factory_cps = cookie_baker.number_of_factory * initial_factory_cps;
     cookie_baker.cursor_cost = cursor_cost;
     cookie_baker.grandma_cost = grandma_cost;
     cookie_baker.farm_cost = farm_cost;
     cookie_baker.mine_cost = mine_cost;
+    cookie_baker.factory_cost = factory_cost;
     cookie_baker.cursor_cps = cursor_cps;
     cookie_baker.grandma_cps = grandma_cps;
     cookie_baker.farm_cps = farm_cps;
     cookie_baker.mine_cps = mine_cps;
+    cookie_baker.factory_cps = factory_cps;
     return cookie_baker;
 }
 
@@ -129,6 +145,10 @@ export const calculate_cost = (action: action_type, cookie_baker: cookie_baker_t
             const new_mine_pirce = Math.floor(initial_mine_cost * Math.pow(1.15, cookie_baker.number_of_mine - cookie_baker.number_of_free_mine));
             console.log("New mine price is: " + new_mine_pirce);
             return new_mine_pirce;
+        case action_type.increment_factory:
+            console.log("Calculating price for next factory, actual price is: " + cookie_baker.factory_cost);
+            const new_factory_price = Math.floor(initial_factory_cost * Math.pow(1.15, cookie_baker.number_of_factory - cookie_baker.number_of_free_factory));
+            return new_factory_price;
     }
 }
 
@@ -207,6 +227,24 @@ export const add_mine = (cookie_baker: cookie_baker_type): cookie_baker_type => 
         return cookie_baker;
     } else {
         console.log("Not enough cookie to buy mine, need: " + cookie_baker.mine_cost + " actual amount: " + cookie_baker.number_of_cookie);
+        return cookie_baker;
+    }
+}
+
+export const add_factory = (cookie_baker: cookie_baker_type): cookie_baker_type => {
+    if (cookie_baker.number_of_cookie >= cookie_baker.factory_cost) {
+        console.log("Enough cookie to buy a factory");
+        // adding factory
+        cookie_baker.number_of_factory = cookie_baker.number_of_factory + 1;
+        // remove mine cost
+        cookie_baker.number_of_cookie = cookie_baker.number_of_cookie - cookie_baker.factory_cost;
+        // calculating next factory price
+        cookie_baker.factory_cost = calculate_cost(action_type.increment_factory, cookie_baker);
+        // calculate new cps;
+        cookie_baker.factory_cps = cookie_baker.number_of_factory * initial_factory_cps;
+        return cookie_baker;
+    } else {
+        console.log("Not enough cookie to buy factory, need: " + cookie_baker.factory_cost + " actual amount: " + cookie_baker.number_of_cookie);
         return cookie_baker;
     }
 }

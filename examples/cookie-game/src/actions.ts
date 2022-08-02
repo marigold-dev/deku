@@ -4,4 +4,5 @@ export enum action_type {
     increment_grandma = "grandma",
     increment_farm = "farm",
     increment_mine = "mine",
+    increment_factory = "factory",
 } 

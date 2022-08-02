@@ -22,6 +22,13 @@ build_sdks(){
     cd sdks/deku_js_interop && npm install && npm run build && npm i
 }
 
+
+# Build test
+
+build_tests(){
+    cd examples/cookie-game && npm run test
+}
+
 # Run mock create
 mock(){
     # run the deku-cli in mock mode
@@ -55,6 +62,9 @@ build_cookie)
 ;;
 build_sdks)
  build_sdks
+;;
+build_tests)
+  build_tests
 ;;
 mock)
  build_cookie

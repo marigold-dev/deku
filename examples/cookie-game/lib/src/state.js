@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.add_mine = exports.add_farm = exports.add_grandma = exports.add_cursor = exports.add_cookie = exports.calculate_cost = exports.create_cookie_baker = exports.initial_mine_cost = exports.initial_farm_cost = exports.initial_grandma_cost = exports.initial_cursor_cost = exports.initial_mine_cps = exports.initial_farm_cps = exports.initial_grandma_cps = exports.initial_cursor_cps = void 0;
+exports.add_factory = exports.add_mine = exports.add_farm = exports.add_grandma = exports.add_cursor = exports.add_cookie = exports.calculate_cost = exports.create_cookie_baker = exports.initial_factory_cost = exports.initial_mine_cost = exports.initial_farm_cost = exports.initial_grandma_cost = exports.initial_cursor_cost = exports.initial_factory_cps = exports.initial_mine_cps = exports.initial_farm_cps = exports.initial_grandma_cps = exports.initial_cursor_cps = void 0;
 var actions_1 = require("./actions");
 /*
    Understanding rule of game:
@@ -22,46 +22,56 @@ exports.initial_cursor_cps = 0.1;
 exports.initial_grandma_cps = 1;
 exports.initial_farm_cps = 8;
 exports.initial_mine_cps = 47;
+exports.initial_factory_cps = 260;
 exports.initial_cursor_cost = 15;
 exports.initial_grandma_cost = 100;
 exports.initial_farm_cost = 1100;
 exports.initial_mine_cost = 12000;
-var create_cookie_baker = function (number_of_cookie, number_of_cursor, number_of_grandma, number_of_farm, number_of_mine, number_of_free_cursor, number_of_free_grandma, number_of_free_farm, number_of_free_mine) {
+exports.initial_factory_cost = 130000;
+var create_cookie_baker = function (number_of_cookie, number_of_cursor, number_of_grandma, number_of_farm, number_of_mine, number_of_factory, number_of_free_cursor, number_of_free_grandma, number_of_free_farm, number_of_free_mine, number_of_free_factory) {
     var cookie_baker = {
         number_of_cookie: number_of_cookie,
         number_of_cursor: number_of_cursor,
         number_of_grandma: number_of_grandma,
         number_of_farm: number_of_farm,
         number_of_mine: number_of_mine,
+        number_of_factory: number_of_factory,
         number_of_free_cursor: number_of_free_cursor,
         number_of_free_grandma: number_of_free_grandma,
         number_of_free_farm: number_of_free_farm,
         number_of_free_mine: number_of_free_mine,
+        number_of_free_factory: number_of_free_factory,
         cursor_cost: 0,
         grandma_cost: 0,
         farm_cost: 0,
         mine_cost: 0,
+        factory_cost: 0,
         cursor_cps: 0,
         grandma_cps: 0,
         farm_cps: 0,
         mine_cps: 0,
+        factory_cps: 0,
     };
     var cursor_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_cursor, cookie_baker);
     var grandma_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_grandma, cookie_baker);
     var farm_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_farm, cookie_baker);
     var mine_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_mine, cookie_baker);
+    var factory_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_factory, cookie_baker);
     var cursor_cps = cookie_baker.number_of_cursor * exports.initial_cursor_cps;
     var grandma_cps = cookie_baker.number_of_grandma * exports.initial_grandma_cps;
     var farm_cps = cookie_baker.number_of_farm * exports.initial_farm_cps;
     var mine_cps = cookie_baker.number_of_mine * exports.initial_mine_cps;
+    var factory_cps = cookie_baker.number_of_factory * exports.initial_factory_cps;
     cookie_baker.cursor_cost = cursor_cost;
     cookie_baker.grandma_cost = grandma_cost;
     cookie_baker.farm_cost = farm_cost;
     cookie_baker.mine_cost = mine_cost;
+    cookie_baker.factory_cost = factory_cost;
     cookie_baker.cursor_cps = cursor_cps;
     cookie_baker.grandma_cps = grandma_cps;
     cookie_baker.farm_cps = farm_cps;
     cookie_baker.mine_cps = mine_cps;
+    cookie_baker.factory_cps = factory_cps;
     return cookie_baker;
 };
 exports.create_cookie_baker = create_cookie_baker;
@@ -90,6 +100,10 @@ var calculate_cost = function (action, cookie_baker) {
             var new_mine_pirce = Math.floor(exports.initial_mine_cost * Math.pow(1.15, cookie_baker.number_of_mine - cookie_baker.number_of_free_mine));
             console.log("New mine price is: " + new_mine_pirce);
             return new_mine_pirce;
+        case actions_1.action_type.increment_factory:
+            console.log("Calculating price for next factory, actual price is: " + cookie_baker.factory_cost);
+            var new_factory_price = Math.floor(exports.initial_factory_cost * Math.pow(1.15, cookie_baker.number_of_factory - cookie_baker.number_of_free_factory));
+            return new_factory_price;
     }
 };
 exports.calculate_cost = calculate_cost;
@@ -176,3 +190,22 @@ var add_mine = function (cookie_baker) {
     }
 };
 exports.add_mine = add_mine;
+var add_factory = function (cookie_baker) {
+    if (cookie_baker.number_of_cookie >= cookie_baker.factory_cost) {
+        console.log("Enough cookie to buy a factory");
+        // adding factory
+        cookie_baker.number_of_factory = cookie_baker.number_of_factory + 1;
+        // remove mine cost
+        cookie_baker.number_of_cookie = cookie_baker.number_of_cookie - cookie_baker.factory_cost;
+        // calculating next factory price
+        cookie_baker.factory_cost = (0, exports.calculate_cost)(actions_1.action_type.increment_factory, cookie_baker);
+        // calculate new cps;
+        cookie_baker.factory_cps = cookie_baker.number_of_factory * exports.initial_factory_cps;
+        return cookie_baker;
+    }
+    else {
+        console.log("Not enough cookie to buy factory, need: " + cookie_baker.factory_cost + " actual amount: " + cookie_baker.number_of_cookie);
+        return cookie_baker;
+    }
+};
+exports.add_factory = add_factory;

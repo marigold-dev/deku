@@ -8,4 +8,5 @@ var action_type;
     action_type["increment_grandma"] = "grandma";
     action_type["increment_farm"] = "farm";
     action_type["increment_mine"] = "mine";
+    action_type["increment_factory"] = "factory";
 })(action_type = exports.action_type || (exports.action_type = {}));
