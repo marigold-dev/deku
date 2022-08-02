@@ -43,10 +43,49 @@ let test_apply_one_operation () =
   in
   Alcotest.(check bool) "operation is included" true (List.length receipts = 1)
 
+let test_many_operations () =
+  (* Creates a list of 10 different operations *)
+  let operations, payload, op_hashes =
+    List.init 10 (fun nonce -> make_operation ~nonce ())
+    |> List.fold_left
+         (fun (ops, payload, hashes) (op, op_str, op_hash) ->
+           (op :: ops, op_str :: payload, op_hash :: hashes))
+         ([], [], [])
+  in
+  let protocol, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload
+  in
+  let (Protocol.Protocol { included_operations; _ }) = protocol in
+  let all_ops_are_included =
+    operations
+    |> List.for_all (fun op ->
+           Included_operation_set.mem op included_operations)
+  in
+  let receipts_are_op_hashes =
+    receipts
+    |> List.for_all (fun (Receipt.Receipt { operation; _ }) ->
+           List.find_opt
+             (fun hash -> Operation_hash.equal hash operation)
+             op_hashes
+           |> Option.is_some)
+  in
+  Alcotest.(check bool)
+    "there should be 10 receipts" true
+    (List.length receipts = 10);
+  Alcotest.(check bool)
+    "the 10 operations should be included" true all_ops_are_included;
+  Alcotest.(check bool)
+    "the receipts correspond to the given operation hashes" true
+    receipts_are_op_hashes
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
     [
       ( "apply operations",
-        [ test_case "apply one operation" `Quick test_apply_one_operation ] );
+        [
+          test_case "apply one operation" `Quick test_apply_one_operation;
+          test_case "apply many operations" `Quick test_many_operations;
+        ] );
     ]
