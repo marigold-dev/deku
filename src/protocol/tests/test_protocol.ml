@@ -128,6 +128,15 @@ let test_duplicated_operation_after_includable_window () =
     "operation shouldn't be applied" true
     (List.length receipts = 0)
 
+let test_invalid_string () =
+  let wrong_op_str = "waku waku" in
+  let _, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero
+         ~payload:[ wrong_op_str ]
+  in
+  Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -142,5 +151,6 @@ let run () =
             test_duplicated_operation_different_level;
           test_case "duplicated operation after includable window" `Quick
             test_duplicated_operation_after_includable_window;
+          test_case "invalid string" `Quick test_invalid_string;
         ] );
     ]
