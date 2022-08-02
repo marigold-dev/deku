@@ -95,6 +95,19 @@ let test_duplicated_operation_same_level () =
     "the hash correspond" true
     (Operation_hash.equal operation hash)
 
+let test_duplicated_operation_different_level () =
+  let _, op_str, _ = make_operation () in
+  let _, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+    |> fst
+    |> Protocol.apply ~parallel ~current_level:(Level.next Level.zero)
+         ~payload:[ op_str ]
+  in
+  Alcotest.(check bool)
+    "second operation shouldn't be applied" true
+    (List.length receipts = 0)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -105,5 +118,7 @@ let run () =
           test_case "apply many operations" `Quick test_many_operations;
           test_case "duplicated operation on same level" `Quick
             test_duplicated_operation_same_level;
+          test_case "duplicated operation on different level" `Quick
+            test_duplicated_operation_different_level;
         ] );
     ]
