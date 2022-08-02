@@ -2,6 +2,7 @@ open Deku_concepts
 open Deku_crypto
 open Deku_stdlib
 open Deku_protocol
+open Deku_constants
 
 let alice_secret =
   Secret.of_b58 "edsk3EYk77QNx9HM4YDh5rv5nzBL68z2YGtBUGXhkw3rMhB2eCNvHf"
@@ -108,6 +109,25 @@ let test_duplicated_operation_different_level () =
     "second operation shouldn't be applied" true
     (List.length receipts = 0)
 
+let test_duplicated_operation_after_includable_window () =
+  let _, op_str, _ = make_operation () in
+  let _, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+    |> fst
+    |> Protocol.apply ~parallel
+         ~current_level:(Level.of_n N.(zero + includable_operation_window))
+         ~payload:[]
+    |> fst
+    |> Protocol.apply ~parallel
+         ~current_level:
+           (Level.of_n N.(zero + includable_operation_window + one))
+         ~payload:[ op_str ]
+  in
+  Alcotest.(check bool)
+    "operation shouldn't be applied" true
+    (List.length receipts = 0)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -120,5 +140,7 @@ let run () =
             test_duplicated_operation_same_level;
           test_case "duplicated operation on different level" `Quick
             test_duplicated_operation_different_level;
+          test_case "duplicated operation after includable window" `Quick
+            test_duplicated_operation_after_includable_window;
         ] );
     ]
