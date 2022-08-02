@@ -137,6 +137,45 @@ let test_invalid_string () =
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
+let test_invalid_signature () =
+  let operation =
+    `Assoc
+      [
+        ("level", Level.yojson_of_t Level.zero);
+        ("nonce", Nonce.yojson_of_t (Nonce.of_n N.one));
+        ( "source",
+          Address.yojson_of_t (Address.of_key_hash (Identity.key_hash alice)) );
+        ( "content",
+          `List
+            [
+              `String "Transaction";
+              `Assoc
+                [
+                  ( "receiver",
+                    Address.yojson_of_t
+                      (Address.of_key_hash (Identity.key_hash bob)) );
+                  ("amount", Amount.yojson_of_t Amount.zero);
+                ];
+            ] );
+      ]
+  in
+  let hash = BLAKE2b.hash "waku waku" in
+  let signature = Identity.sign ~hash alice in
+  let json =
+    `Assoc
+      [
+        ("key", Key.yojson_of_t (Identity.key alice));
+        ("signature", Signature.yojson_of_t signature);
+        ("operation", operation);
+      ]
+  in
+  let op_str = Yojson.Safe.to_string json in
+  let _, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+  in
+  Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -152,5 +191,6 @@ let run () =
           test_case "duplicated operation after includable window" `Quick
             test_duplicated_operation_after_includable_window;
           test_case "invalid string" `Quick test_invalid_string;
+          test_case "invalid signature" `Quick test_invalid_signature;
         ] );
     ]
