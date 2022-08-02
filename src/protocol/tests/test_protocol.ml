@@ -218,6 +218,17 @@ let test_valid_signature_but_different_key () =
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
+let test_receipt_implied_included_operations () =
+  let op, op_str, _ = make_operation () in
+  let protocol, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+  in
+  let (Protocol.Protocol { included_operations; _ }) = protocol in
+  let is_included = Included_operation_set.mem op included_operations in
+  Alcotest.(check bool) "the operation is included" true is_included;
+  Alcotest.(check bool) "there only one receipt" true (List.length receipts = 1)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -236,5 +247,7 @@ let run () =
           test_case "invalid signature" `Quick test_invalid_signature;
           test_case "good signature, wrong key" `Quick
             test_valid_signature_but_different_key;
+          test_case "one receipt imply one included operation" `Quick
+            test_receipt_implied_included_operations;
         ] );
     ]
