@@ -1,0 +1,34 @@
+{
+    "tezos_config": {
+        "rpc_node": "http://localhost:20000",
+        "required_confirmations": 2
+    },
+    "bootstrapper_key": "edpkuuQuC5s45n5RzTM5kJ1egWnRwFGT3AJbmqJQsc1eZpzAr8chri",
+    "minimum_block_delay" : 5.0,
+    "trusted_membership_changes": [
+        {
+            "action": [
+                "Add"
+            ],
+            "address": "tz1ZaJfitdk3qEomDWgtzc54vSrrUUpvAcV9"
+        },
+        {
+            "action": [
+                "Add"
+            ],
+            "address": "tz1e94qn41vgXa7fxA33j8x6WrrEJM4gihL1"
+        },
+        {
+            "action": [
+                "Add"
+            ],
+            "address": "tz1ZzRtsesB972fch3VwqLi4fU4K9ALuYNui"
+        },
+        {
+            "action": [
+                "Add"
+            ],
+            "address": "tz1VMbQuempdenr58JaRWVpNksqfC8dqk8v9"
+        }
+    ]
+}

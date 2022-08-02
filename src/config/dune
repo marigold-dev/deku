@@ -1,0 +1,6 @@
+(library
+ (name deku_config)
+ (public_name deku-config)
+ (libraries deku-stdlib deku-crypto deku-consensus lwt lwt.unix)
+ (preprocess
+  (pps ppx_let_binding ppx_yojson_conv)))

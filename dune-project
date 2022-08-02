@@ -55,3 +55,7 @@
 (package
  (name deku-bootstrap)
  (depends deku-network))
+
+ (package
+ (name deku-config)
+ (depends deku-consensus deku-stdlib deku-crypto))

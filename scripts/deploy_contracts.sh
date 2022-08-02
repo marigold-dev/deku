@@ -1,0 +1,51 @@
+#! /usr/bin/env bash
+
+message() {
+  echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
+}
+
+# We need the tezos-client to deploy contracts.
+# We will use the binary included in the Tezos testnet deployment
+# See https://tezos.gitlab.io/introduction/howtouse.html#client
+tezos-client() {
+  docker exec -t deku_flextesa tezos-client "$@"
+}
+
+# Using a Tezos node on localhost:20000 that is provided by the docker-compose file
+rpc_node=${RPC_NODE:-http://localhost:20000}
+
+wallet=${WALLET:-"myWallet"}
+
+# [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
+# the [initial_storage] expression and originates the contract as myWallet on Tezos.
+deploy_contract () {
+  message "Deploying new $1 contract"
+
+  # Compiles an initial storage for a given contract to a Michelson expression.
+  # The resulting Michelson expression can be passed as an argument in a transaction which originates a contract.
+  storage=$(ligo compile storage "$2" "$3")
+
+  # Compiles a contract to Michelson code.
+  # Expects a source file and an entrypoint function.
+  contract=$(ligo compile contract "$2")
+
+  echo "Originating $1 contract"
+  sleep 2
+  tezos-client --endpoint "$rpc_node" originate contract "$1" \
+    transferring 0 from "$wallet" \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 2 \
+    --force
+}
+
+
+deploy_contract "consensus" \
+    "./src/tezos_interop/consensus.mligo" \
+    "$(cat ./configs/flextesa/consensus_storage.mligo)"
+
+deploy_contract "discovery" \
+    "./src/tezos_interop/discovery.mligo" \
+    "$(cat ./configs/flextesa/discovery_storage.mligo)"
+
+wait
