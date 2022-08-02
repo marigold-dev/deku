@@ -1,6 +1,6 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
-import { cookie_baker_type, create_cookie_baker, add_cookie, add_cursor, add_grandma, add_farm } from "./state"
+import { cookie_baker_type, create_cookie_baker, add_cookie, add_cursor, add_grandma, add_farm, add_mine } from "./state"
 import { action_type } from "./actions"
 
 const print_message_with_source = (message: string, source: transaction) => {
@@ -27,9 +27,11 @@ const transition = (tx: transaction) => {
         source_value.cookie_baker.number_of_cursor,
         source_value.cookie_baker.number_of_grandma,
         source_value.cookie_baker.number_of_farm,
+        source_value.cookie_baker.number_of_mine,
         source_value.cookie_baker.number_of_free_cursor,
         source_value.cookie_baker.number_of_free_grandma,
-        source_value.cookie_baker.number_of_free_farm
+        source_value.cookie_baker.number_of_free_farm,
+        source_value.cookie_baker.number_of_free_mine, 
     );
 
 
@@ -69,6 +71,15 @@ const transition = (tx: transaction) => {
             save_state(source, source_value);
             break;
         }
+        case action_type.increment_mine: {
+            const update_cookie_baker = add_mine(cookie_baker);
+
+            //action successful, update state
+            source_value.cookie_baker = update_cookie_baker;
+            console.log("Successfully minted mine");
+            save_state(source, source_value);
+            break;
+        }
     }
 }
 
@@ -84,15 +95,18 @@ main(
                 number_of_cursor: 0.,
                 number_of_grandma: 0.,
                 number_of_farm: 0.,
+                number_of_mine: 0.,
                 number_of_free_cursor: 0,
                 number_of_free_grandma: 0,
                 number_of_free_farm: 0,
+                number_of_free_mine: 0, 
                 cursor_cost: 0,
                 grandma_cost: 0,
                 farm_cost: 0,
                 cursor_cps: 0,
                 grandma_cps: 0,
-                farm_cps: 0
+                farm_cps: 0,
+                mine_cps: 0,
             }
         }
     }, transition)

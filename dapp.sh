@@ -25,7 +25,7 @@ build_sdks(){
 # Run mock create
 mock(){
     # run the deku-cli in mock mode
-    # ex: ./run.sh wallet.json '"cookie"'
+    # ex: ./dapp.sh wallet.json '"cookie"'
      deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/lib/src/index.js
 
 }
@@ -42,7 +42,7 @@ deku_cluster(){
 # Run custom create
 custom(){
     # Need to wait for deku_cluster to build some nodes before run this 
-    # ex: ./run.sh custom data/0 wallet.json '"cookie'
+    # ex: ./dapp.sh custom data/0 wallet.json '"cookie'
     deku-cli create-custom-transaction $node $wallet $cmd
 }
 

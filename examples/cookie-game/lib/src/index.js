@@ -21,7 +21,7 @@ var transition = function (tx) {
     var operation = tx.operation;
     console.log("Getting source");
     var source_value = JSON.parse((0, deku_js_interop_1.get)(source));
-    var cookie_baker = (0, state_1.create_cookie_baker)(source_value.cookie_baker.number_of_cookie, source_value.cookie_baker.number_of_cursor, source_value.cookie_baker.number_of_grandma, source_value.cookie_baker.number_of_farm, source_value.cookie_baker.number_of_free_cursor, source_value.cookie_baker.number_of_free_grandma, source_value.cookie_baker.number_of_free_farm);
+    var cookie_baker = (0, state_1.create_cookie_baker)(source_value.cookie_baker.number_of_cookie, source_value.cookie_baker.number_of_cursor, source_value.cookie_baker.number_of_grandma, source_value.cookie_baker.number_of_farm, source_value.cookie_baker.number_of_mine, source_value.cookie_baker.number_of_free_cursor, source_value.cookie_baker.number_of_free_grandma, source_value.cookie_baker.number_of_free_farm, source_value.cookie_baker.number_of_free_mine);
     switch (operation) {
         case actions_1.action_type.increment_cookie: {
             var updated_cookie_baker = (0, state_1.add_cookie)(cookie_baker);
@@ -55,6 +55,14 @@ var transition = function (tx) {
             save_state(source, source_value);
             break;
         }
+        case actions_1.action_type.increment_mine: {
+            var update_cookie_baker = (0, state_1.add_mine)(cookie_baker);
+            //action successful, update state
+            source_value.cookie_baker = update_cookie_baker;
+            console.log("Successfully minted mine");
+            save_state(source, source_value);
+            break;
+        }
     }
 };
 (0, deku_js_interop_1.main)(
@@ -67,15 +75,18 @@ var transition = function (tx) {
             number_of_cursor: 0.,
             number_of_grandma: 0.,
             number_of_farm: 0.,
+            number_of_mine: 0.,
             number_of_free_cursor: 0,
             number_of_free_grandma: 0,
             number_of_free_farm: 0,
+            number_of_free_mine: 0,
             cursor_cost: 0,
             grandma_cost: 0,
             farm_cost: 0,
             cursor_cps: 0,
             grandma_cps: 0,
-            farm_cps: 0
+            farm_cps: 0,
+            mine_cps: 0,
         }
     }
 }, transition);
