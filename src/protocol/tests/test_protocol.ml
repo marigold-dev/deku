@@ -243,6 +243,34 @@ let test_included_operation_clean_after_window () =
   let is_included = Included_operation_set.mem op included_operations in
   Alcotest.(check bool) "included operations should be empty" false is_included
 
+let amount = Alcotest.testable Amount.pp Amount.equal
+
+let test_cannot_create_amount_ex_nihilo () =
+  let _, op_str, _ = make_operation ~amount:32 () in
+  let protocol = Protocol.initial in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_previous_balance =
+    ledger |> Ledger.balance (bob |> Identity.key_hash |> Address.of_key_hash)
+  in
+  let alice_previous_balance =
+    ledger |> Ledger.balance (alice |> Identity.key_hash |> Address.of_key_hash)
+  in
+  let protocol, _ =
+    protocol
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance =
+    ledger |> Ledger.balance (bob |> Identity.key_hash |> Address.of_key_hash)
+  in
+  let alice_balance =
+    ledger |> Ledger.balance (alice |> Identity.key_hash |> Address.of_key_hash)
+  in
+  Alcotest.(check amount)
+    "balance of alice has not changed" bob_previous_balance bob_balance;
+  Alcotest.(check amount)
+    "balance of bob has not changed" alice_previous_balance alice_balance
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -265,5 +293,10 @@ let run () =
             test_receipt_implied_included_operations;
           test_case "no more included operations after includable window" `Quick
             test_included_operation_clean_after_window;
+        ] );
+      ( "ledger operation",
+        [
+          test_case "balance does not change, when not enough amount" `Quick
+            test_cannot_create_amount_ex_nihilo;
         ] );
     ]
