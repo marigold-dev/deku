@@ -79,6 +79,22 @@ let test_many_operations () =
     "the receipts correspond to the given operation hashes" true
     receipts_are_op_hashes
 
+let test_duplicated_operation_same_level () =
+  let _, op_str, hash = make_operation () in
+
+  let _, receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero
+         ~payload:[ op_str; op_str ]
+  in
+  let (Receipt.Receipt { operation }) = List.hd receipts in
+  Alcotest.(check bool)
+    "there should only be one receipt" true
+    (List.length receipts = 1);
+  Alcotest.(check bool)
+    "the hash correspond" true
+    (Operation_hash.equal operation hash)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -87,5 +103,7 @@ let run () =
         [
           test_case "apply one operation" `Quick test_apply_one_operation;
           test_case "apply many operations" `Quick test_many_operations;
+          test_case "duplicated operation on same level" `Quick
+            test_duplicated_operation_same_level;
         ] );
     ]
