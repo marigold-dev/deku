@@ -229,6 +229,20 @@ let test_receipt_implied_included_operations () =
   Alcotest.(check bool) "the operation is included" true is_included;
   Alcotest.(check bool) "there only one receipt" true (List.length receipts = 1)
 
+let test_included_operation_clean_after_window () =
+  let op, op_str, _ = make_operation () in
+  let protocol, _receipts =
+    Protocol.initial
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+    |> fst
+    |> Protocol.apply ~parallel
+         ~current_level:(Level.of_n N.(one + includable_operation_window))
+         ~payload:[]
+  in
+  let (Protocol.Protocol { included_operations; _ }) = protocol in
+  let is_included = Included_operation_set.mem op included_operations in
+  Alcotest.(check bool) "included operations should be empty" false is_included
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -249,5 +263,7 @@ let run () =
             test_valid_signature_but_different_key;
           test_case "one receipt imply one included operation" `Quick
             test_receipt_implied_included_operations;
+          test_case "no more included operations after includable window" `Quick
+            test_included_operation_clean_after_window;
         ] );
     ]
