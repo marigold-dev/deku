@@ -36,17 +36,40 @@ let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
 (* The parallel function given to the Protocol.apply *)
 let parallel = List.filter_map
 
+let assert_all_were_applied_with_receipts ~operations ~protocol ~receipts =
+  let (Protocol.Protocol { included_operations; _ }) = protocol in
+  let all_ops_are_included =
+    operations
+    |> List.for_all (fun op ->
+           Included_operation_set.mem op included_operations)
+  in
+  let op_hashes =
+    List.map (fun (Operation.Operation { hash; _ }) -> hash) operations
+    |> List.sort Operation_hash.compare
+  in
+  let op_hashes_from_receipts =
+    List.map (fun (Receipt.Receipt { operation; _ }) -> operation) receipts
+    |> List.sort Operation_hash.compare
+  in
+  let all_receipts_have_hashes_and_vice_versa =
+    List.equal Operation_hash.equal op_hashes op_hashes_from_receipts
+  in
+  all_receipts_have_hashes_and_vice_versa && all_ops_are_included
+
 let test_apply_one_operation () =
-  let _, op_str, _ = make_operation () in
-  let _, receipts =
+  let op, op_str, _ = make_operation () in
+  let protocol, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
   in
-  Alcotest.(check bool) "operation is included" true (List.length receipts = 1)
+  Alcotest.(check bool)
+    "operation is included" true
+    (assert_all_were_applied_with_receipts ~operations:[ op ] ~receipts
+       ~protocol)
 
 let test_many_operations () =
   (* Creates a list of 10 different operations *)
-  let operations, payload, op_hashes =
+  let operations, payload, _op_hashes =
     List.init 10 (fun nonce -> make_operation ~nonce ())
     |> List.fold_left
          (fun (ops, payload, hashes) (op, op_str, op_hash) ->
@@ -57,24 +80,9 @@ let test_many_operations () =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload
   in
-  let (Protocol.Protocol { included_operations; _ }) = protocol in
-  let all_ops_are_included =
-    operations
-    |> List.for_all (fun op ->
-           Included_operation_set.mem op included_operations)
-  in
-  let all_ops_have_receipts =
-    let op_hashes = List.sort Operation_hash.compare op_hashes in
-    let op_hashes_from_receipts =
-      List.map (fun (Receipt.Receipt { operation; _ }) -> operation) receipts
-      |> List.sort Operation_hash.compare
-    in
-    List.equal Operation_hash.equal op_hashes op_hashes_from_receipts
-  in
   Alcotest.(check bool)
-    "the 10 operations should be included" true all_ops_are_included;
-  Alcotest.(check bool)
-    "all operations have receipts and vice versa" true all_ops_have_receipts
+    "all operations have receipts and vice versa" true
+    (assert_all_were_applied_with_receipts ~operations ~protocol ~receipts)
 
 let test_duplicated_operation_same_level () =
   let _, op_str, hash = make_operation () in
@@ -92,6 +100,12 @@ let test_duplicated_operation_same_level () =
     "the hash correspond" true
     (Operation_hash.equal operation hash)
 
+(* TODO: we can collapse a lot of these properties into
+   property based tests. We want to check that
+   - any time an operation is included, the corresponding receipt is generated
+   - receipts are never generated otherwise
+   - plus all the properties we're testing here.
+*)
 let test_duplicated_operation_different_level () =
   let _, op_str, _ = make_operation () in
   let _, receipts =
@@ -107,14 +121,20 @@ let test_duplicated_operation_different_level () =
 
 let test_duplicated_operation_after_includable_window () =
   let _, op_str, _ = make_operation () in
-  let _, receipts =
+  let protocol, _receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
-    |> fst
+  in
+  (* TODO: should we have an integrity check in Protocol.apply that checks
+     that the block being applied is a valid next block? *)
+  let protocol, _recipets =
+    protocol
     |> Protocol.apply ~parallel
          ~current_level:(Level.of_n N.(zero + includable_operation_window))
          ~payload:[]
-    |> fst
+  in
+  let _protocol, receipts =
+    protocol
     |> Protocol.apply ~parallel
          ~current_level:
            (Level.of_n N.(zero + includable_operation_window + one))
