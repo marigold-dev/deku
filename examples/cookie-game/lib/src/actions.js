@@ -7,4 +7,6 @@ var actions;
     actions["incrementCursor"] = "cursor";
     actions["incrementGrandma"] = "grandma";
     actions["incrementFarm"] = "farm";
+    actions["incrementMine"] = "mine";
+    actions["incrementFactory"] = "factory";
 })(actions = exports.actions || (exports.actions = {}));

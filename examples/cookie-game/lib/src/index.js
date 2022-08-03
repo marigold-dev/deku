@@ -8,9 +8,9 @@ var printMessageWithSource = function (message, source) {
     console.log(message);
     console.log(source);
 };
-var saveState = function (source, source_value) {
-    printMessageWithSource("Saving state", source_value);
-    (0, deku_js_interop_1.set)(source, source_value);
+var saveState = function (source, sourceValue) {
+    printMessageWithSource("Saving state", sourceValue);
+    (0, deku_js_interop_1.set)(source, sourceValue);
     console.log("Successfully saved state");
 };
 var transition = function (tx) {
@@ -20,39 +20,55 @@ var transition = function (tx) {
     var source = tx.source;
     var operation = tx.operation;
     console.log("Getting source");
-    var source_value = JSON.parse((0, deku_js_interop_1.get)(source));
-    var cookieBaker = (0, state_1.createCookieBaker)(source_value.cookie_baker.numberOfCookie, source_value.cookie_baker.numberOfCursor, source_value.cookie_baker.numberOfGrandma, source_value.cookie_baker.numberOfFarm, source_value.cookie_baker.numberOfFreeCursor, source_value.cookie_baker.numberOfFreeGrandma, source_value.cookie_baker.numberOfFreeFarm);
+    var sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
+    var cookieBaker = (0, state_1.createCookieBaker)(sourceValue.cookieBaker.numberOfCookie, sourceValue.cookieBaker.numberOfCursor, sourceValue.cookieBaker.numberOfGrandma, sourceValue.cookieBaker.numberOfFarm, sourceValue.cookieBaker.numberOfMine, sourceValue.cookieBaker.numberOfFactory, sourceValue.cookieBaker.numberOfFreeCursor, sourceValue.cookieBaker.numberOfFreeGrandma, sourceValue.cookieBaker.numberOfFreeFarm, sourceValue.cookieBaker.numberOfFreeMine, sourceValue.cookieBaker.numberOfFreeFactory);
     switch (operation) {
         case actions_1.actions.incrementCookie: {
-            var updated_cookie_baker = (0, state_1.addCookie)(cookieBaker);
+            var updatedCookieBaker = (0, state_1.addCookie)(cookieBaker);
             //update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted cookie");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions_1.actions.incrementCursor: {
-            var updated_cookie_baker = (0, state_1.addCursor)(cookieBaker);
+            var updatedCookieBaker = (0, state_1.addCursor)(cookieBaker);
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted cursor");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions_1.actions.incrementGrandma: {
-            var updated_cookie_baker = (0, state_1.addGrandma)(cookieBaker);
+            var updatedCookieBaker = (0, state_1.addGrandma)(cookieBaker);
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted grandma");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions_1.actions.incrementFarm: {
-            var updated_cookie_baker = (0, state_1.addFarm)(cookieBaker);
+            var updatedCookieBaker = (0, state_1.addFarm)(cookieBaker);
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted farm");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementMine: {
+            var updatedCookieBaker = (0, state_1.addMine)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted mine");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementFactory: {
+            var updatedCookieBaker = (0, state_1.addFactory)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted factory");
+            saveState(source, sourceValue);
             break;
         }
     }
@@ -62,20 +78,28 @@ var transition = function (tx) {
 //deku-cli create-wallet
 {
     "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc": {
-        cookie_baker: {
+        cookieBaker: {
             numberOfCookie: 0,
             numberOfCursor: 0.,
             numberOfGrandma: 0.,
             numberOfFarm: 0.,
+            numberOfMine: 0.,
+            numberOfFactory: 0.,
             numberOfFreeCursor: 0,
             numberOfFreeGrandma: 0,
             numberOfFreeFarm: 0,
+            numberOfFreeMine: 0,
+            numberOfFreeFactory: 0,
             cursorCost: 0,
             grandmaCost: 0,
             farmCost: 0,
+            mineCost: 0,
+            factoryCost: 0,
             cursorCps: 0,
             grandmaCps: 0,
-            farmCps: 0
+            farmCps: 0,
+            mineCps: 0,
+            factoryCps: 0,
         }
     }
 }, transition);
