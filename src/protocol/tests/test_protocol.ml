@@ -63,22 +63,18 @@ let test_many_operations () =
     |> List.for_all (fun op ->
            Included_operation_set.mem op included_operations)
   in
-  let receipts_are_op_hashes =
-    receipts
-    |> List.for_all (fun (Receipt.Receipt { operation; _ }) ->
-           List.find_opt
-             (fun hash -> Operation_hash.equal hash operation)
-             op_hashes
-           |> Option.is_some)
+  let all_ops_have_receipts =
+    let op_hashes = List.sort Operation_hash.compare op_hashes in
+    let op_hashes_from_receipts =
+      List.map (fun (Receipt.Receipt { operation; _ }) -> operation) receipts
+      |> List.sort Operation_hash.compare
+    in
+    List.equal Operation_hash.equal op_hashes op_hashes_from_receipts
   in
-  Alcotest.(check bool)
-    "there should be 10 receipts" true
-    (List.length receipts = 10);
   Alcotest.(check bool)
     "the 10 operations should be included" true all_ops_are_included;
   Alcotest.(check bool)
-    "the receipts correspond to the given operation hashes" true
-    receipts_are_op_hashes
+    "all operations have receipts and vice versa" true all_ops_have_receipts
 
 let test_duplicated_operation_same_level () =
   let _, op_str, hash = make_operation () in
