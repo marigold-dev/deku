@@ -8,22 +8,44 @@ export const cookieBakerArbitrary = () =>
         fc.integer({ min: 0, max: 200 }),
         fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),
-        fc.integer({ min: 0, max: 10 })).map(
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),    
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),).map(
             ([numberOfCookie,
                 numberOfCursor,
                 numberOfGrandma,
                 numberOfFarm,
+                numberOfMine,
+                numberOfFactory,
                 numberOfFreeCursor,
                 numberOfFreeGrandma,
                 numberOfFreeFarm,
+                numberOfFreeMine,
+                numberOfFreeFactory,
             ]) => {
                 const cookie_baker = createCookieBaker(
                     numberOfCookie,
                     numberOfCursor,
                     numberOfGrandma,
                     numberOfFarm,
+                    numberOfMine,
+                    numberOfFactory,
                     numberOfFreeCursor,
                     numberOfFreeGrandma,
-                    numberOfFreeFarm)
+                    numberOfFreeFarm,
+                    numberOfFreeMine,
+                    numberOfFreeFactory,)
                 return cookie_baker;
             });
