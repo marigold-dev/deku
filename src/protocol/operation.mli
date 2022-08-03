@@ -28,4 +28,5 @@ val transaction :
   amount:Amount.t ->
   operation
 
-val is_in_includable_window : current_level:Level.t -> operation_level:Level.t -> bool
+val is_in_includable_window :
+  current_level:Level.t -> operation_level:Level.t -> bool
