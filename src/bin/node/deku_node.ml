@@ -95,6 +95,10 @@ module Node = struct
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
+    (* TODO: We have to be careful because this function is reentrant.
+       Basically we need to make sure we never read the state twice per
+       "outer loop".
+    *)
     let (Node { protocol; consensus; verifier; signer; producer; network }) =
       node
     in
