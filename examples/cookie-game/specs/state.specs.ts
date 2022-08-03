@@ -57,7 +57,7 @@ describe('cookieBaker.add_XXX successful', () => {
     /**
      * cursor
      */
-    /*test('add cookie only mint one cursor', () => {
+    test('add cookie only mint one cursor', () => {
         fc.assert(
             fc.property(
                 cookieBakerArbitrary(),
@@ -107,7 +107,7 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore)
                 }), { verbose: true });
-    });*/
+    });
 
     /**
      * grandma
@@ -281,7 +281,7 @@ describe('cookieBaker.add_XXX successful', () => {
     /**
      * factory
      */
-    /*test('add factory only mint one factory, decrease cookie amount, increase factory cost, and increase factories CPS', () => {
+    test('add factory only mint one factory, decrease cookie amount, increase factory cost, and increase factories CPS', () => {
         fc.assert(
             fc.property(
                 cookieBakerArbitrary(),
@@ -332,7 +332,7 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps > factoryCpsBefore)
                 }), { verbose: true });
-    });*/
+    });
 });
 
 describe('cookieBaker.add_XXX without enough', () => {

@@ -201,7 +201,7 @@ var addFactory = function (cookieBaker) {
         // calculating next factory price
         cookieBaker.factoryCost = (0, exports.calculateCost)(actions_1.actions.incrementFactory, cookieBaker);
         // calculate new cps
-        cookieBaker.factoryCps = cookieBaker.numberOfMine * exports.initial_factoryCps;
+        cookieBaker.factoryCps = cookieBaker.numberOfFactory * exports.initial_factoryCps;
         return cookieBaker;
     }
     else {
