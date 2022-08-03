@@ -1,12 +1,33 @@
 import { actions } from "./actions"
 
-export const initial_cursor_cps: number = 0.1;
+/*
+   Understanding rule of game:
+   https://cookieclicker.fandom.com/wiki/Building
+   - cookie: is the number of cookie that one have
+   - cursor: this level only available when you have enough number 
+             of cookie required (for instance: it is 15 cookie in this example).
+             When a cursor is added, the number of cookie will be removed by 15.
+             - The first cursor will have the initial cost: 15, 
+             after that it will be increase by this formula:
+             new_cursor = number_of_cursor - number_of_free_cursor
+             cost = floor (init_cost * power (1.15, new_cursor))
+             - A cps: is the cookie per second and it is :
+             cursor_cps = number_of_cursor * init_cursor_cps
+   - grandma: same as cursor, it requires 100 cookies.
+   - farm: it requires 1100 cookies
+*/
+
+export const initial_cursorCps: number = 0.1;
 export const initial_grandmaCps: number = 1;
 export const initial_farmCps: number = 8;
+export const initial_mineCps: number = 47;
+export const initial_factoryCps: number = 260;
 
 export const initial_cursorCost: number = 15;
 export const initial_grandmaCost: number = 100;
 export const initial_farmCost: number = 1100;
+export const initial_mineCost: number = 12000;
+export const initial_factoryCost: number = 130000;
 
 
 export type cookieBaker = {
@@ -14,57 +35,85 @@ export type cookieBaker = {
     numberOfCursor: number;
     numberOfGrandma: number;
     numberOfFarm: number;
+    numberOfMine: number;
+    numberOfFactory: number;
 
     /* Gift from application */
     /* TODO: add the rule to generate them! */
     numberOfFreeCursor: number;
     numberOfFreeGrandma: number;
     numberOfFreeFarm: number;
+    numberOfFreeMine: number;
+    numberOfFreeFactory: number;
 
     cursorCost: number;
     grandmaCost: number;
     farmCost: number;
+    mineCost: number;
+    factoryCost: number;
 
     /* Cookie per second*/
     cursorCps: number;
     grandmaCps: number;
     farmCps: number;
+    mineCps: number;
+    factoryCps: number;
 }
 
 export const createCookieBaker = (numberOfCookie: number,
     numberOfCursor: number,
     numberOfGrandma: number,
     numberOfFarm: number,
+    numberOfMine: number,
+    numberOfFactory: number,
     numberOfFreeCursor: number,
     numberOfFreeGrandma: number,
-    numberOfFreeFarm: number,): cookieBaker => {
+    numberOfFreeFarm: number,
+    numberOfFreeMine: number,
+    numberOfFreeFactory: number,): cookieBaker => {
     const cookieBaker = {
         numberOfCookie,
         numberOfCursor,
         numberOfGrandma,
         numberOfFarm,
+        numberOfMine,
+        numberOfFactory,
         numberOfFreeCursor,
         numberOfFreeGrandma,
         numberOfFreeFarm,
+        numberOfFreeMine,
+        numberOfFreeFactory,
         cursorCost: 0,
         grandmaCost: 0,
         farmCost: 0,
+        mineCost: 0,
+        factoryCost:0,
         cursorCps: 0,
         grandmaCps: 0,
         farmCps: 0,
+        mineCps: 0,
+        factoryCps: 0,
     }
     const cursorCost = calculateCost(actions.incrementCursor, cookieBaker);
     const grandmaCost = calculateCost(actions.incrementGrandma, cookieBaker);
     const farmCost = calculateCost(actions.incrementFarm, cookieBaker);
-    const cursor_cps = cookieBaker.numberOfCursor * initial_cursor_cps;
+    const mineCost = calculateCost(actions.incrementMine, cookieBaker);
+    const factoryCost = calculateCost(actions.incrementFactory, cookieBaker);
+    const cursorCps = cookieBaker.numberOfCursor * initial_cursorCps;
     const grandmaCps = cookieBaker.numberOfGrandma * initial_grandmaCps;
     const farmCps = cookieBaker.numberOfFarm * initial_farmCps;
+    const mineCps = cookieBaker.numberOfMine * initial_mineCps;
+    const factoryCps = cookieBaker.numberOfFactory * initial_factoryCps;
     cookieBaker.cursorCost = cursorCost;
     cookieBaker.grandmaCost = grandmaCost;
     cookieBaker.farmCost = farmCost;
-    cookieBaker.cursorCps = cursor_cps;
+    cookieBaker.mineCost = mineCost;
+    cookieBaker.factoryCost = factoryCost;
+    cookieBaker.cursorCps = cursorCps;
     cookieBaker.grandmaCps = grandmaCps;
     cookieBaker.farmCps = farmCps;
+    cookieBaker.mineCps = mineCps;
+    cookieBaker.factoryCps = factoryCps;
     return cookieBaker;
 }
 
@@ -88,6 +137,16 @@ export const calculateCost = (action: actions, cookieBaker: cookieBaker): number
             const new_farm_price = Math.floor(initial_farmCost * Math.pow(1.15, cookieBaker.numberOfFarm - cookieBaker.numberOfFreeFarm));
             console.log("New farm price is: " + new_farm_price);
             return new_farm_price;
+        case actions.incrementMine:
+            console.log("Calculating price for next mine, actual price is: " + cookieBaker.mineCost);
+            const new_mine_price = Math.floor(initial_mineCost * Math.pow(1.15, cookieBaker.numberOfMine - cookieBaker.numberOfFreeMine));
+            console.log("New mine price is: " + new_mine_price);
+            return new_mine_price;
+        case actions.incrementFactory:
+            console.log("Calculating price for next factory, actual price is: " + cookieBaker.factoryCost);
+            const new_factory_price = Math.floor(initial_factoryCost * Math.pow(1.15, cookieBaker.numberOfFactory - cookieBaker.numberOfFreeFactory));
+            console.log("New factory price is: " + new_factory_price);
+            return new_factory_price;
 
     }
 }
@@ -109,7 +168,7 @@ export const addCursor = (cookieBaker: cookieBaker): cookieBaker => {
         // calculating next cursor price
         cookieBaker.cursorCost = calculateCost(actions.incrementCursor, cookieBaker);
         // calculate new cps
-        cookieBaker.cursorCps = cookieBaker.numberOfCursor * initial_cursor_cps;
+        cookieBaker.cursorCps = cookieBaker.numberOfCursor * initial_cursorCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a cursor, needed: " + cookieBaker.cursorCps + " actual amount: " + cookieBaker.numberOfCookie);
@@ -149,6 +208,42 @@ export const addFarm = (cookieBaker: cookieBaker): cookieBaker => {
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a farm, needed: " + cookieBaker.farmCost + " actual amount: " + cookieBaker.numberOfCookie);
+        return cookieBaker;
+    }
+}
+
+export const addMine = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.mineCost) {
+        console.log("Enough cookie to buy a mine");
+        // adding mine
+        cookieBaker.numberOfMine = cookieBaker.numberOfMine + 1;
+        // removing mine cost
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.mineCost;
+        // calculating next mine price
+        cookieBaker.mineCost = calculateCost(actions.incrementMine, cookieBaker);
+        // calculate new cps
+        cookieBaker.mineCps = cookieBaker.numberOfMine * initial_mineCps;
+        return cookieBaker;
+    } else {
+        console.log("Not enough cookie to buy a mine, needed: " + cookieBaker.mineCost + " actual amount: " + cookieBaker.numberOfMine);
+        return cookieBaker;
+    }
+}
+
+export const addFactory = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.factoryCost) {
+        console.log("Enough cookie to buy a factory");
+        // adding factory
+        cookieBaker.numberOfFactory = cookieBaker.numberOfFactory + 1;
+        // removing factory cost
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.factoryCost;
+        // calculating next factory price
+        cookieBaker.factoryCost = calculateCost(actions.incrementFactory, cookieBaker);
+        // calculate new cps
+        cookieBaker.factoryCps = cookieBaker.numberOfMine * initial_factoryCps;
+        return cookieBaker;
+    } else {
+        console.log("Not enough cookie to buy a factory, needed: " + cookieBaker.factoryCost + " actual amount: " + cookieBaker.numberOfFactory);
         return cookieBaker;
     }
 }
