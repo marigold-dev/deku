@@ -4,8 +4,30 @@ open Deku_protocol
 open Deku_consensus
 open Deku_network
 open Deku_storage
+open Deku_crypto
 
-module Node = struct
+module Node : sig
+  type node = private
+    | Node of {
+        protocol : Protocol.t;
+        consensus : Consensus.t;
+        verifier : Verifier.t;
+        signer : Signer.t;
+        producer : Producer.t;
+        network : Network.t;
+      }
+
+  type t = node
+
+  val make :
+    identity:Identity.identity ->
+    validators:Key_hash.t list ->
+    nodes:Uri.t list ->
+    t
+
+  val incoming_packet :
+    current:Timestamp.t -> endpoint:'a Endpoint.t -> packet:string -> t -> t
+end = struct
   type node =
     | Node of {
         protocol : Protocol.t;
