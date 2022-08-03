@@ -8,9 +8,9 @@ const printMessageWithSource = (message: string, source: transaction) => {
     console.log(source);
 }
 
-const saveState = (source: transaction, source_value: cookieBaker) => {
-    printMessageWithSource("Saving state", source_value);
-    set(source, source_value);
+const saveState = (source: transaction, sourceValue: cookieBaker) => {
+    printMessageWithSource("Saving state", sourceValue);
+    set(source, sourceValue);
     console.log("Successfully saved state");
 }
 
@@ -21,52 +21,52 @@ const transition = (tx: transaction) => {
     const source = tx.source;
     const operation = tx.operation;
     console.log("Getting source");
-    const source_value = JSON.parse(get(source));
+    const sourceValue = JSON.parse(get(source));
     const cookieBaker: cookieBaker = createCookieBaker(
-        source_value.cookie_baker.numberOfCookie,
-        source_value.cookie_baker.numberOfCursor,
-        source_value.cookie_baker.numberOfGrandma,
-        source_value.cookie_baker.numberOfFarm,
-        source_value.cookie_baker.numberOfFreeCursor,
-        source_value.cookie_baker.numberOfFreeGrandma,
-        source_value.cookie_baker.numberOfFreeFarm
+        sourceValue.cookieBaker.numberOfCookie,
+        sourceValue.cookieBaker.numberOfCursor,
+        sourceValue.cookieBaker.numberOfGrandma,
+        sourceValue.cookieBaker.numberOfFarm,
+        sourceValue.cookieBaker.numberOfFreeCursor,
+        sourceValue.cookieBaker.numberOfFreeGrandma,
+        sourceValue.cookieBaker.numberOfFreeFarm
     );
 
 
     switch (operation) {
         case actions.incrementCookie: {
-            const updated_cookie_baker = addCookie(cookieBaker);
+            const updatedCookieBaker = addCookie(cookieBaker);
             //update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted cookie");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions.incrementCursor: {
-            const updated_cookie_baker = addCursor(cookieBaker);
+            const updatedCookieBaker = addCursor(cookieBaker);
 
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted cursor");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions.incrementGrandma: {
-            const updated_cookie_baker = addGrandma(cookieBaker);
+            const updatedCookieBaker = addGrandma(cookieBaker);
 
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted grandma");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
         case actions.incrementFarm: {
-            const updated_cookie_baker = addFarm(cookieBaker);
+            const updatedCookieBaker = addFarm(cookieBaker);
 
             //action successful, update state
-            source_value.cookie_baker = updated_cookie_baker;
+            sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted farm");
-            saveState(source, source_value);
+            saveState(source, sourceValue);
             break;
         }
     }
@@ -78,7 +78,7 @@ main(
     {
         "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
         {
-            cookie_baker:
+            cookieBaker:
             {
                 numberOfCookie: 0,
                 numberOfCursor: 0.,
