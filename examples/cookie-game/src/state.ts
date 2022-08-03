@@ -240,7 +240,7 @@ export const addFactory = (cookieBaker: cookieBaker): cookieBaker => {
         // calculating next factory price
         cookieBaker.factoryCost = calculateCost(actions.incrementFactory, cookieBaker);
         // calculate new cps
-        cookieBaker.factoryCps = cookieBaker.numberOfMine * initial_factoryCps;
+        cookieBaker.factoryCps = cookieBaker.numberOfFactory * initial_factoryCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a factory, needed: " + cookieBaker.factoryCost + " actual amount: " + cookieBaker.numberOfFactory);
