@@ -169,7 +169,7 @@ type vault_storage = {
 type vault_deposit = {
   ticket: vault_ticket;
   (* WARNING: deposit address should be a valid sidechain address *)
-  address: address
+  address: key_hash
 }
 let vault_deposit (deposit: vault_deposit) (storage: vault_storage) =
   let { known_handles_hash; used_handles; vault } = storage in
@@ -236,11 +236,11 @@ let vault_check_handle_proof
     let rec verify
       (bit, proof, parent: int * vault_handle_proof * blake2b): unit =
         match proof with
-        | [] -> 
+        | [] ->
           let calculated_hash = Crypto.blake2b (Bytes.pack handle) in
           assert_msg ("invalid handle data", parent = calculated_hash)
         | (left, right) :: tl ->
-          let () = 
+          let () =
             let calculated_hash = Crypto.blake2b (Bytes.concat left right) in
             assert_msg ("invalid proof hash", parent = calculated_hash) in
           verify (bit - 1, tl, (if bit_is_set bit then right else left)) in
@@ -276,7 +276,7 @@ let vault_withdraw (withdraw: vault_withdraw) (storage: vault_storage) =
 
   let (fragment, vault) =
     let (old_ticket, vault) =
-      match 
+      match
         Big_map.get_and_update
           (handle.ticketer, handle.data)
           (None: bytes ticket option)
