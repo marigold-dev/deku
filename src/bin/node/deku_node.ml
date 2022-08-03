@@ -170,6 +170,7 @@ module Server = struct
     let node = Singleton.get_state () in
     let current = Timestamp.of_float (Unix.gettimeofday ()) in
     let (Endpoint.Ex endpoint) = endpoint in
+    (* TODO: handler errors here. *)
     let node = Node.incoming_packet ~current ~endpoint ~packet node in
     let () = Singleton.set_state node in
     let response = Piaf.Response.of_string ~body:"OK" `OK in
