@@ -1,4 +1,3 @@
-open Deku_stdlib
 open Deku_concepts
 open Operation
 
@@ -18,14 +17,7 @@ let mem operation t =
   Operation_hash.Map.mem hash t
 
 let drop ~current_level t =
-  let open Deku_constants in
   Operation_hash.Map.filter
     (fun _hash operation_level ->
-      let open Level in
-      let last_includable_block =
-        let operation_level = to_n operation_level in
-        of_n N.(operation_level + includable_operation_window)
-      in
-      (* limits for how many blocks we need to hold the operations *)
-      current_level < last_includable_block)
+      Operation.is_in_includable_window ~current_level ~operation_level)
     t
