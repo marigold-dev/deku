@@ -38,7 +38,7 @@ export const createCookieBaker = (numberOfCookie: number,
     numberOfFreeCursor: number,
     numberOfFreeGrandma: number,
     numberOfFreeFarm: number,): cookieBaker => {
-    const cookie_baker = {
+    const cookieBaker = {
         numberOfCookie,
         numberOfCursor,
         numberOfGrandma,
@@ -53,102 +53,102 @@ export const createCookieBaker = (numberOfCookie: number,
         grandmaCps: 0,
         farmCps: 0,
     }
-    const cursorCost = calculateCost(actions.incrementCursor, cookie_baker);
-    const grandmaCost = calculateCost(actions.incrementGrandma, cookie_baker);
-    const farmCost = calculateCost(actions.incrementFarm, cookie_baker);
-    const cursor_cps = cookie_baker.numberOfCursor * initial_cursor_cps;
-    const grandmaCps = cookie_baker.numberOfGrandma * initial_grandmaCps;
-    const farmCps = cookie_baker.numberOfFarm * initial_farmCps;
-    cookie_baker.cursorCost = cursorCost;
-    cookie_baker.grandmaCost = grandmaCost;
-    cookie_baker.farmCost = farmCost;
-    cookie_baker.cursorCps = cursor_cps;
-    cookie_baker.grandmaCps = grandmaCps;
-    cookie_baker.farmCps = farmCps;
-    return cookie_baker;
+    const cursorCost = calculateCost(actions.incrementCursor, cookieBaker);
+    const grandmaCost = calculateCost(actions.incrementGrandma, cookieBaker);
+    const farmCost = calculateCost(actions.incrementFarm, cookieBaker);
+    const cursor_cps = cookieBaker.numberOfCursor * initial_cursor_cps;
+    const grandmaCps = cookieBaker.numberOfGrandma * initial_grandmaCps;
+    const farmCps = cookieBaker.numberOfFarm * initial_farmCps;
+    cookieBaker.cursorCost = cursorCost;
+    cookieBaker.grandmaCost = grandmaCost;
+    cookieBaker.farmCost = farmCost;
+    cookieBaker.cursorCps = cursor_cps;
+    cookieBaker.grandmaCps = grandmaCps;
+    cookieBaker.farmCps = farmCps;
+    return cookieBaker;
 }
 
-export const calculateCost = (action: actions, cookie_baker: cookieBaker): number => {
+export const calculateCost = (action: actions, cookieBaker: cookieBaker): number => {
     switch (action) {
         case actions.incrementCookie:
             console.log("Cookie does not have cost");
             throw new Error("Cookie does not have cost");
         case actions.incrementCursor:
-            console.log("Calculating price for next cursor, actual price is: " + cookie_baker.cursorCost);
-            const new_cursor_price = Math.floor(initial_cursorCost * Math.pow(1.15, cookie_baker.numberOfCursor - cookie_baker.numberOfFreeCursor));
+            console.log("Calculating price for next cursor, actual price is: " + cookieBaker.cursorCost);
+            const new_cursor_price = Math.floor(initial_cursorCost * Math.pow(1.15, cookieBaker.numberOfCursor - cookieBaker.numberOfFreeCursor));
             console.log("New cursor price is: " + new_cursor_price);
             return new_cursor_price;
         case actions.incrementGrandma:
-            console.log("Calculating price for next grandma, actual price is: " + cookie_baker.grandmaCost);
-            const new_grandma_price = Math.floor(initial_grandmaCost * Math.pow(1.15, cookie_baker.numberOfGrandma - cookie_baker.numberOfFreeGrandma));
+            console.log("Calculating price for next grandma, actual price is: " + cookieBaker.grandmaCost);
+            const new_grandma_price = Math.floor(initial_grandmaCost * Math.pow(1.15, cookieBaker.numberOfGrandma - cookieBaker.numberOfFreeGrandma));
             console.log("New grandma price is: " + new_grandma_price);
             return new_grandma_price;
         case actions.incrementFarm:
-            console.log("Calculating price for next farm, actual price is: " + cookie_baker.farmCost);
-            const new_farm_price = Math.floor(initial_farmCost * Math.pow(1.15, cookie_baker.numberOfFarm - cookie_baker.numberOfFreeFarm));
+            console.log("Calculating price for next farm, actual price is: " + cookieBaker.farmCost);
+            const new_farm_price = Math.floor(initial_farmCost * Math.pow(1.15, cookieBaker.numberOfFarm - cookieBaker.numberOfFreeFarm));
             console.log("New farm price is: " + new_farm_price);
             return new_farm_price;
 
     }
 }
 
-export const addCookie = (cookie_baker: cookieBaker): cookieBaker => {
-    console.log("Adding cookie: " + cookie_baker.numberOfCookie);
-    cookie_baker.numberOfCookie = cookie_baker.numberOfCookie + 1;
-    console.log("Successfully added cookie: " + cookie_baker.numberOfCookie);
-    return cookie_baker;
+export const addCookie = (cookieBaker: cookieBaker): cookieBaker => {
+    console.log("Adding cookie: " + cookieBaker.numberOfCookie);
+    cookieBaker.numberOfCookie = cookieBaker.numberOfCookie + 1;
+    console.log("Successfully added cookie: " + cookieBaker.numberOfCookie);
+    return cookieBaker;
 }
 
-export const addCursor = (cookie_baker: cookieBaker): cookieBaker => {
-    if (cookie_baker.numberOfCookie >= cookie_baker.cursorCost) {
+export const addCursor = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.cursorCost) {
         console.log("Enough cookie to buy a cursor");
         // adding cursor
-        cookie_baker.numberOfCursor = cookie_baker.numberOfCursor + 1;
+        cookieBaker.numberOfCursor = cookieBaker.numberOfCursor + 1;
         // removing cursor cost
-        cookie_baker.numberOfCookie = cookie_baker.numberOfCookie - cookie_baker.cursorCost;
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.cursorCost;
         // calculating next cursor price
-        cookie_baker.cursorCost = calculateCost(actions.incrementCursor, cookie_baker);
+        cookieBaker.cursorCost = calculateCost(actions.incrementCursor, cookieBaker);
         // calculate new cps
-        cookie_baker.cursorCps = cookie_baker.numberOfCursor * initial_cursor_cps;
-        return cookie_baker;
+        cookieBaker.cursorCps = cookieBaker.numberOfCursor * initial_cursor_cps;
+        return cookieBaker;
     } else {
-        console.log("Not enough cookie to buy a cursor, needed: " + cookie_baker.cursorCps + " actual amount: " + cookie_baker.numberOfCookie);
-        return cookie_baker;
+        console.log("Not enough cookie to buy a cursor, needed: " + cookieBaker.cursorCps + " actual amount: " + cookieBaker.numberOfCookie);
+        return cookieBaker;
     }
 }
 
-export const addGrandma = (cookie_baker: cookieBaker): cookieBaker => {
-    if (cookie_baker.numberOfCookie >= cookie_baker.grandmaCost) {
+export const addGrandma = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.grandmaCost) {
         console.log("Enough cookie to buy a grandma");
         // adding grandma
-        cookie_baker.numberOfGrandma = cookie_baker.numberOfGrandma + 1;
+        cookieBaker.numberOfGrandma = cookieBaker.numberOfGrandma + 1;
         // removing grandma cost
-        cookie_baker.numberOfCookie = cookie_baker.numberOfCookie - cookie_baker.grandmaCost;
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.grandmaCost;
         // calculating next grandma price
-        cookie_baker.grandmaCost = calculateCost(actions.incrementGrandma, cookie_baker);
+        cookieBaker.grandmaCost = calculateCost(actions.incrementGrandma, cookieBaker);
         // calculate new cps
-        cookie_baker.grandmaCps = cookie_baker.numberOfGrandma * initial_grandmaCps;
-        return cookie_baker;
+        cookieBaker.grandmaCps = cookieBaker.numberOfGrandma * initial_grandmaCps;
+        return cookieBaker;
     } else {
-        console.log("Not enough cookie to buy a grandma, needed: " + cookie_baker.grandmaCost + " actual amount: " + cookie_baker.numberOfCookie);
-        return cookie_baker;
+        console.log("Not enough cookie to buy a grandma, needed: " + cookieBaker.grandmaCost + " actual amount: " + cookieBaker.numberOfCookie);
+        return cookieBaker;
     }
 }
 
-export const addFarm = (cookie_baker: cookieBaker): cookieBaker => {
-    if (cookie_baker.numberOfCookie >= cookie_baker.farmCost) {
+export const addFarm = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.farmCost) {
         console.log("Enough cookie to buy a farm");
         // adding farm
-        cookie_baker.numberOfFarm = cookie_baker.numberOfFarm + 1;
+        cookieBaker.numberOfFarm = cookieBaker.numberOfFarm + 1;
         // removing farm cost
-        cookie_baker.numberOfCookie = cookie_baker.numberOfCookie - cookie_baker.farmCost;
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.farmCost;
         // calculating next farm price
-        cookie_baker.farmCost = calculateCost(actions.incrementFarm, cookie_baker);
+        cookieBaker.farmCost = calculateCost(actions.incrementFarm, cookieBaker);
         // calculate new cps
-        cookie_baker.farmCps = cookie_baker.numberOfFarm * initial_farmCps;
-        return cookie_baker;
+        cookieBaker.farmCps = cookieBaker.numberOfFarm * initial_farmCps;
+        return cookieBaker;
     } else {
-        console.log("Not enough cookie to buy a farm, needed: " + cookie_baker.farmCost + " actual amount: " + cookie_baker.numberOfCookie);
-        return cookie_baker;
+        console.log("Not enough cookie to buy a farm, needed: " + cookieBaker.farmCost + " actual amount: " + cookieBaker.numberOfCookie);
+        return cookieBaker;
     }
 }
