@@ -14,11 +14,13 @@ module Node = struct
         signer : Signer.t;
         producer : Producer.t;
         network : Network.t;
+        (* TODO: weird, but for timeouts*)
+        applied_block : unit -> unit;
       }
 
   type t = node
 
-  let make ~identity ~validators ~nodes =
+  let make ~identity ~validators ~nodes ~applied_block =
     let validators = Validators.of_key_hash_list validators in
     let protocol = Protocol.initial in
     let consensus = Consensus.make ~validators in
@@ -26,7 +28,16 @@ module Node = struct
     let signer = Signer.make ~identity in
     let producer = Producer.make ~identity in
     let network = Network.make ~nodes in
-    Node { protocol; consensus; verifier; signer; producer; network }
+    Node
+      {
+        protocol;
+        consensus;
+        verifier;
+        signer;
+        producer;
+        network;
+        applied_block;
+      }
 
   let apply_block ~current ~block node =
     let () =
@@ -35,7 +46,16 @@ module Node = struct
       let level = N.to_z level in
       Format.eprintf "%a\n%!" Z.pp_print level
     in
-    let (Node { protocol; consensus; verifier; signer; producer; network }) =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
       node
     in
     let consensus = Consensus.apply_block ~current ~block consensus in
@@ -50,10 +70,30 @@ module Node = struct
       | Some block -> Network.broadcast_block ~block network
       | None -> network
     in
-    Node { protocol; consensus; verifier; signer; producer; network }
+    (* TODO: I really don't like this *)
+    let () = applied_block () in
+    Node
+      {
+        protocol;
+        consensus;
+        verifier;
+        signer;
+        producer;
+        network;
+        applied_block;
+      }
 
   let incoming_block ~current ~block node =
-    let (Node { protocol; consensus; verifier; signer; producer; network }) =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
       node
     in
     let Verifier.{ apply; verifier } =
@@ -65,21 +105,48 @@ module Node = struct
       | None -> network
     in
     let node =
-      Node { protocol; consensus; verifier; signer; producer; network }
+      Node
+        {
+          protocol;
+          consensus;
+          verifier;
+          signer;
+          producer;
+          network;
+          applied_block;
+        }
     in
     match apply with
     | Some block -> apply_block ~current ~block node
     | None -> node
 
   let incoming_signature ~current ~signature node =
-    let (Node { protocol; consensus; verifier; signer; producer; network }) =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
       node
     in
     let Verifier.{ apply; verifier } =
       Verifier.incoming_signature ~consensus ~signature verifier
     in
     let node =
-      Node { protocol; consensus; verifier; signer; producer; network }
+      Node
+        {
+          protocol;
+          consensus;
+          verifier;
+          signer;
+          producer;
+          network;
+          applied_block;
+        }
     in
 
     match apply with
@@ -87,20 +154,56 @@ module Node = struct
     | None -> node
 
   let incoming_operation ~operation node =
-    let (Node { protocol; consensus; verifier; signer; producer; network }) =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
       node
     in
     let producer = Producer.incoming_operation ~operation producer in
-    Node { protocol; consensus; verifier; signer; producer; network }
+    Node
+      {
+        protocol;
+        consensus;
+        verifier;
+        signer;
+        producer;
+        network;
+        applied_block;
+      }
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node { protocol; consensus; verifier; signer; producer; network }) =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
       node
     in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let node =
-      Node { protocol; consensus; verifier; signer; producer; network }
+      Node
+        {
+          protocol;
+          consensus;
+          verifier;
+          signer;
+          producer;
+          network;
+          applied_block;
+        }
     in
     match packet with
     | Some packet -> (
@@ -109,6 +212,36 @@ module Node = struct
         | Signatures -> incoming_signature ~current ~signature:packet node
         | Operations -> incoming_operation ~operation:packet node)
     | None -> node
+
+  let incoming_timeout ~current node =
+    let () = Format.printf "timeout\n%!" in
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
+      node
+    in
+    let network =
+      match Producer.try_to_produce ~current ~consensus producer with
+      | Some block -> Network.broadcast_block ~block network
+      | None -> network
+    in
+    Node
+      {
+        protocol;
+        consensus;
+        verifier;
+        signer;
+        producer;
+        network;
+        applied_block;
+      }
 end
 
 module Singleton : sig
@@ -116,20 +249,46 @@ module Singleton : sig
   val set_state : Node.t -> unit
   val initialize : Storage.t -> unit
 end = struct
+  type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
+
   let state = ref None
 
-  let get_state () =
+  let get_server () =
     match !state with
-    | Some state -> state
+    | Some server -> server
     | None -> failwith "uninitialized state"
 
-  let set_state new_state = state := Some new_state
+  let get_state () =
+    let server = get_server () in
+    server.state
+
+  let set_state new_state =
+    let server = get_server () in
+    server.state <- new_state
+
+  let rec reset_timeout server =
+    Lwt.cancel server.timeout;
+    server.timeout <-
+      (let open Deku_constants in
+      let%await () = Lwt_unix.sleep block_timeout in
+      let current = Timestamp.of_float (Unix.gettimeofday ()) in
+      server.state <- Node.incoming_timeout ~current server.state;
+      reset_timeout server;
+      Lwt.return_unit)
 
   let initialize storage =
     let Storage.{ secret; initial_validators; nodes } = storage in
     let identity = Identity.make secret in
-    let node = Node.make ~identity ~validators:initial_validators ~nodes in
-    set_state node
+
+    let applied_block_ref = ref (fun () -> ()) in
+    let applied_block () = !applied_block_ref () in
+    let node =
+      Node.make ~identity ~validators:initial_validators ~nodes ~applied_block
+    in
+    let server = { state = node; timeout = Lwt.return_unit } in
+    let () = applied_block_ref := fun () -> reset_timeout server in
+    let () = reset_timeout server in
+    state := Some server
 end
 
 module Server = struct
