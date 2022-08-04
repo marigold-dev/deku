@@ -1,6 +1,6 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
-import { cookieBaker, createCookieBaker, addCookie, addCursor, addGrandma, addFarm, addMine, addFactory } from "./state"
+import { cookieBaker, createCookieBaker, addCookie, addCursor, addGrandma, addFarm, addMine, addFactory, addBank } from "./state"
 import { actions } from "./actions"
 
 const printMessageWithSource = (message: string, source: transaction) => {
@@ -29,11 +29,13 @@ const transition = (tx: transaction) => {
         sourceValue.cookieBaker.numberOfFarm,
         sourceValue.cookieBaker.numberOfMine,
         sourceValue.cookieBaker.numberOfFactory,
+        sourceValue.cookieBaker.numberOfBank,
         sourceValue.cookieBaker.numberOfFreeCursor,
         sourceValue.cookieBaker.numberOfFreeGrandma,
         sourceValue.cookieBaker.numberOfFreeFarm,
         sourceValue.cookieBaker.numberOfFreeMine,
         sourceValue.cookieBaker.numberOfFreeFactory,
+        sourceValue.cookieBaker.numberOfFreeBank,
     );
 
 
@@ -91,6 +93,15 @@ const transition = (tx: transaction) => {
             saveState(source, sourceValue);
             break;
         }
+        case actions.incrementBank: {
+            const updatedCookieBaker = addBank(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted bank");
+            saveState(source, sourceValue);
+            break;
+        }
     }
 }
 
@@ -108,21 +119,25 @@ main(
                 numberOfFarm: 0.,
                 numberOfMine: 0.,
                 numberOfFactory: 0.,
+                numberOfBank: 0.,
                 numberOfFreeCursor: 0,
                 numberOfFreeGrandma: 0,
                 numberOfFreeFarm: 0,
                 numberOfFreeMine: 0,
                 numberOfFreeFactory: 0,
+                numberOfFreeBank: 0,
                 cursorCost: 0,
                 grandmaCost: 0,
                 farmCost: 0,
                 mineCost: 0,
                 factoryCost: 0,
+                bankCost: 0,
                 cursorCps: 0,
                 grandmaCps: 0,
                 farmCps: 0,
                 mineCps: 0,
                 factoryCps: 0,
+                bankCps: 0,
             }
         }
     }, transition)
