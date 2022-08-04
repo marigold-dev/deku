@@ -1,136 +1,117 @@
 open Deku_stdlib
 open Deku_crypto
-open Deku_concepts
 open Deku_consensus
 open Deku_network
-open Deku_storage
 
-module Util = struct
-  let ensure_folder folder =
-    let%await exists = Lwt_unix.file_exists folder in
-    if exists then
-      let%await stat = Lwt_unix.stat folder in
-      if stat.st_kind = Lwt_unix.S_DIR then Lwt.return ()
-      else raise (Invalid_argument (folder ^ " is not a folder"))
-    else Lwt_unix.mkdir folder 0o700
+let restart ~bootstrap_secret ~next_author network =
+  let hash = BLAKE2b.hash (Key_hash.to_b58 next_author) in
 
-  let storage_file ~n =
-    let cwd = Unix.getcwd () in
-    let data_folder = Filename.concat cwd "data" in
-    let folder = Filename.concat data_folder (Int.to_string n) in
-    Filename.concat folder "storage.json"
-end
-
-let produce identity consensus network =
-  let (Consensus.Consensus { current_level; current_block; _ }) = consensus in
-  let level = Level.next current_level in
-  let previous = current_block in
-  let operations = [] in
-  let block = Block.produce ~identity ~level ~previous ~operations in
-  let _network = Network.broadcast_block ~block network in
-  block
-
-let sign identity block network =
-  let signature = Block.sign ~identity block in
-  let _network = Network.broadcast_signature ~signature network in
+  let bootstrap_key = Key.of_secret bootstrap_secret in
+  let signature = Signature.sign bootstrap_secret hash in
+  let bootstrap_signal =
+    Bootstrap_signal.Bootstrap_signal { next_author; signature; bootstrap_key }
+  in
+  let _network = Network.broadcast_bootstrap_signal ~bootstrap_signal network in
   ()
 
-let restart ~producer identities consensus network =
-  let block = produce producer consensus network in
-  List.iter (fun identity -> sign identity block network) identities
-
-let bootstrap ~size =
-  let%await storages =
-    let files = List.init size (fun n -> Util.storage_file ~n) in
-    Lwt_list.map_p (fun file -> Storage.read ~file) files
-  in
-  let identities =
-    List.map
-      (fun storage ->
-        let secret = storage.Storage.secret in
-        Identity.make secret)
-      storages
-  in
+let bootstrap bootstrap_secret validators validator_uris =
   let producer =
-    let length = List.length identities in
+    let length = List.length validators in
     let index = Random.int32 (Int32.of_int length) in
     let () = Format.eprintf "producer: %ld\n%!" index in
-    List.nth identities (Int32.to_int index)
+    List.nth validators (Int32.to_int index)
   in
-  let nodes =
-    let storage = List.nth storages 0 in
-    storage.Storage.nodes
-  in
-  let validators =
-    let validators = List.map Identity.key_hash identities in
-    Validators.of_key_hash_list validators
-  in
-  let consensus = Consensus.make ~validators in
-  let network = Network.make ~nodes in
-  let () = restart ~producer identities consensus network in
+  let network = Network.make ~nodes:validator_uris in
+  let () = restart ~bootstrap_secret ~next_author:producer network in
   (* TODO: this is lame, but Lwt*)
   let%await () = Lwt_unix.sleep 3.0 in
-  Lwt.return_unit
+  Lwt.return (Ok ())
 
-let generate ~base_uri ~base_port ~size =
-  let secrets =
-    List.init size (fun _n ->
-        let ed25519 = Ed25519.Secret.generate () in
-        Secret.Ed25519 ed25519)
+open Cmdliner
+
+(* TODO: extract some of this stuff into a library
+   of Cmdliner helpers (e.g. Uri parser, etc.) *)
+
+(* TODO: is there a better pattern for dealing with Lwt and Cmdliner? *)
+let lwt_ret p =
+  let open Term in
+  term_result' (const Lwt_main.run $ p)
+
+let exits =
+  Cmd.Exit.defaults
+  @ [ Cmd.Exit.info 1 ~doc:"expected failure (might not be a bug)" ]
+
+let man =
+  [ `S Manpage.s_bugs; `P "Email bug reports to <contact@marigold.dev>." ]
+
+let uri =
+  let parser uri = Ok (uri |> Uri.of_string) in
+  let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
+let key_hash =
+  let parser key_hash =
+    match Key_hash.of_b58 key_hash with
+    | Some key_hash -> Ok key_hash
+    | None ->
+        Error (`Msg (Format.sprintf "Unable to parse key hash '%s'" key_hash))
   in
-  let initial_validators =
-    List.map
-      (fun secret ->
-        let key = Key.of_secret secret in
-        Key_hash.of_key key)
-      secrets
+  let printer ppf key_hash =
+    Format.fprintf ppf "%s" (key_hash |> Key_hash.to_b58)
   in
-  let nodes =
-    List.init size (fun n ->
-        let port = base_port + n in
-        let uri = Uri.of_string base_uri in
-        Uri.with_port uri (Some port))
+  let open Arg in
+  conv (parser, printer)
+
+let ed25519_secret =
+  let parser secret =
+    match Ed25519.Secret.of_b58 secret with
+    | Some secret -> Ok (Secret.Ed25519 secret)
+    | None -> Error (`Msg "Unable to parse given ed25519 secret")
   in
-  let storages =
-    List.map
-      (fun secret -> Storage.make ~secret ~initial_validators ~nodes)
-      secrets
+  let printer ppf _secret = Format.fprintf ppf "<ed25519 secret>" in
+  let open Arg in
+  conv (parser, printer)
+
+let info =
+  let doc = "Shows identity key and address of the node." in
+  Cmd.info "deku-bootstrap" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
+
+let term =
+  let bootstrap_secret =
+    let open Arg in
+    let docv = "bootstrap-secret" in
+    let doc =
+      "Ed25519 secret key used to bootstrap the chain. Validators must be \
+       configured with the corresponding public key."
+    in
+    let env = Cmd.Env.info "DEKU_BOOTSTRAP_SECRET" in
+    required
+    & opt (some ed25519_secret) None
+    & info [ "bootstrap-secret" ] ~doc ~docv ~env
   in
+  let validators =
+    let open Arg in
+    let docv = "validators" in
+    let doc = "Comma-separated list of validator public key hashes" in
+    let env = Cmd.Env.info "DEKU_VALIDATORS" in
+    required
+    & opt (some (list key_hash)) None
+    & info [ "validators" ] ~doc ~docv ~env
+  in
+  let validator_uris =
+    let open Arg in
+    let docv = "validator_uris" in
+    let doc =
+      "Comma-separated list of validator URI's to which to broadcast operations"
+    in
 
-  let%await cwd = Lwt_unix.getcwd () in
-  let data_folder = Filename.concat cwd "data" in
-  let%await () = Util.ensure_folder data_folder in
+    let env = Cmd.Env.info "DEKU_VALIDATOR_URIS" in
+    required
+    & opt (some (list uri)) None
+    & info [ "validator-uris" ] ~doc ~docv ~env
+  in
+  let open Term in
+  lwt_ret (const bootstrap $ bootstrap_secret $ validators $ validator_uris)
 
-  Lwt_list.iteri_p
-    (fun n storage ->
-      let folder = Filename.concat data_folder (Int.to_string n) in
-      let%await () = Util.ensure_folder folder in
-
-      let file = Filename.concat folder "storage.json" in
-      Storage.write ~file storage)
-    storages
-
-let main () =
-  let base_uri = ref "http://localhost" in
-  let base_port = ref 4440 in
-  let size = ref 4 in
-  let kind = ref None in
-
-  Arg.parse
-    [
-      ( "-s",
-        Arg.Set_string base_uri,
-        {|Base URI for validators ("http://localhost" by default)|} );
-      ("-p", Arg.Set_int base_port, "Base PORT for validators (4440 by default)");
-      ("-n", Arg.Set_int size, "Number of validators (4 by default)");
-    ]
-    (fun selected -> kind := Some selected)
-    "Handle Deku communication. Runs forever.";
-
-  match !kind with
-  | Some "generate" ->
-      generate ~base_uri:!base_uri ~base_port:!base_port ~size:!size
-  | Some "bootstrap" -> bootstrap ~size:!size
-  | Some _ | None -> failwith "deku-bootstrap <generate|bootstrap>"
-
-let () = Lwt_main.run (main ())
+let _ = Cmd.eval ~catch:true @@ Cmd.v info term
