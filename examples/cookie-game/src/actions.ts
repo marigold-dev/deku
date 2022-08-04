@@ -5,4 +5,5 @@ export enum actions {
     incrementFarm = "farm",
     incrementMine = "mine",
     incrementFactory = "factory",
+    incrementBank = "bank",
 } 
