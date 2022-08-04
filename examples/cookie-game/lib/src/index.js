@@ -80,7 +80,7 @@ var transition = function (tx) {
             break;
         }
         case actions_1.actions.incrementTemple: {
-            var updatedCookieBaker = addTemple(cookieBaker);
+            var updatedCookieBaker = (0, state_1.addTemple)(cookieBaker);
             //action successful, update state
             sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted temple");
@@ -102,12 +102,38 @@ var transition = function (tx) {
             numberOfMine: 0.,
             numberOfFactory: 0.,
             numberOfBank: 0.,
+            numberOfTemple: 0.,
+            numberOfWizard: 0.,
+            numberOfShipment: 0.,
+            numberOfAlchemy: 0.,
+            numberOfPortal: 0.,
+            numberOfTimeMachine: 0.,
+            numberOfAntimatter: 0.,
+            numberOfPrism: 0.,
+            numberOfChanceMaker: 0.,
+            numberOfFractal: 0.,
+            numberOfJavaScript: 0.,
+            numberOfIdleverse: 0.,
+            numberOfCordex: 0.,
             numberOfFreeCursor: 0,
             numberOfFreeGrandma: 0,
             numberOfFreeFarm: 0,
             numberOfFreeMine: 0,
             numberOfFreeFactory: 0,
             numberOfFreeBank: 0,
+            numberOfFreeTemple: 0,
+            numberOfFreeWizard: 0,
+            numberOfFreeShipment: 0,
+            numberOfFreeAlchemy: 0,
+            numberOfFreePortal: 0,
+            numberOfFreeTimeMachine: 0,
+            numberOfFreeAntimatter: 0,
+            numberOfFreePrism: 0,
+            numberOfFreeChanceMaker: 0,
+            numberOfFreeFractal: 0,
+            numberOfFreeJavaScript: 0,
+            numberOfFreeIdleverse: 0,
+            numberOfFreeCordex: 0,
             cursorCost: 0,
             grandmaCost: 0,
             farmCost: 0,
@@ -120,6 +146,19 @@ var transition = function (tx) {
             mineCps: 0,
             factoryCps: 0,
             bankCps: 0,
+            templeCps: 0,
+            wizardCps: 0,
+            shipmentCps: 0,
+            alchemyCps: 0,
+            portalCps: 0,
+            timeMachineCps: 0,
+            antimatterCps: 0,
+            prismCps: 0,
+            chanceMakerCps: 0,
+            fractalCps: 0,
+            javaScriptCps: 0,
+            idleverseCps: 0,
+            cordexCps: 0,
         }
     }
 }, transition);
