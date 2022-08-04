@@ -20,7 +20,11 @@ type external_effect = private
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
 
-val make : identity:Identity.t -> validators:Key_hash.t list -> chain
+val make :
+  identity:Identity.t ->
+  bootstrap_key:Key.t ->
+  validators:Key_hash.t list ->
+  chain
 
 val incoming_block :
   pool:Parallel.Pool.pool ->
@@ -40,3 +44,9 @@ val incoming_timeout :
   current:Timestamp.timestamp -> chain -> chain * external_effect list
 
 val incoming_operation : operation:Operation.operation -> chain -> chain
+
+val incoming_bootstrap_signal :
+  bootstrap_signal:Bootstrap_signal.t ->
+  current:Timestamp.timestamp ->
+  chain ->
+  chain * external_effect list

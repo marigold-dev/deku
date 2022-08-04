@@ -15,3 +15,6 @@ val incoming_packet :
 val broadcast_block : block:Block.t -> network -> network
 val broadcast_signature : signature:Verified_signature.t -> network -> network
 val broadcast_operation : operation:Operation.t -> network -> network
+
+val broadcast_bootstrap_signal :
+  bootstrap_signal:Bootstrap_signal.t -> network -> network

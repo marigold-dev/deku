@@ -41,9 +41,11 @@ let content_of_yojson (type a) ~(endpoint : a endpoint) json : a =
   | Blocks -> Block.t_of_yojson json
   | Signatures -> Verified_signature.t_of_yojson json
   | Operations -> Operation.t_of_yojson json
+  | Bootstrap -> Bootstrap_signal.t_of_yojson json
 
 let yojson_of_content (type a) ~(endpoint : a endpoint) (content : a) =
   match endpoint with
   | Blocks -> Block.yojson_of_t content
   | Signatures -> Verified_signature.yojson_of_t content
   | Operations -> Operation.yojson_of_t content
+  | Bootstrap -> Bootstrap_signal.yojson_of_t content

@@ -24,8 +24,8 @@ module Node = struct
 
   type t = node
 
-  let make ~identity ~validators ~nodes ~applied_block =
-    let chain = Chain.make ~identity ~validators in
+  let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block =
+    let chain = Chain.make ~identity ~bootstrap_key ~validators in
     let network = Network.make ~nodes in
     Node { chain; network; applied_block }
 
@@ -59,7 +59,10 @@ module Node = struct
               Chain.incoming_signature ~pool ~current ~signature:packet chain
           | Operations ->
               let chain = Chain.incoming_operation ~operation:packet chain in
-              (chain, []))
+              (chain, [])
+          | Bootstrap ->
+              Chain.incoming_bootstrap_signal ~bootstrap_signal:packet ~current
+                chain)
       | None -> (chain, [])
     in
     let node = Node { chain; network; applied_block } in
@@ -105,13 +108,16 @@ end = struct
       Lwt.return_unit)
 
   let initialize storage =
-    let Storage.{ secret; initial_validators; nodes } = storage in
+    let Storage.{ secret; initial_validators; nodes; bootstrap_key } =
+      storage
+    in
     let identity = Identity.make secret in
 
     let applied_block_ref = ref (fun () -> ()) in
     let applied_block () = !applied_block_ref () in
     let node =
-      Node.make ~identity ~validators:initial_validators ~nodes ~applied_block
+      Node.make ~identity ~bootstrap_key ~validators:initial_validators ~nodes
+        ~applied_block
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in

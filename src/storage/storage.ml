@@ -6,12 +6,13 @@ type storage = {
   (* bootstrap *)
   initial_validators : Key_hash.t list;
   nodes : Uri.t list;
+  bootstrap_key : Key.t;
 }
 
 and t = storage [@@deriving yojson]
 
-let make ~secret ~initial_validators ~nodes =
-  { secret; initial_validators; nodes }
+let make ~secret ~initial_validators ~nodes ~bootstrap_key =
+  { secret; initial_validators; nodes; bootstrap_key }
 
 let read ~file =
   let open Lwt.Infix in

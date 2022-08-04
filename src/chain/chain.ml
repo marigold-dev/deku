@@ -19,10 +19,10 @@ type external_effect =
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
 
-let make ~identity ~validators =
+let make ~identity ~bootstrap_key ~validators =
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
-  let consensus = Consensus.make ~validators in
+  let consensus = Consensus.make ~validators ~bootstrap_key in
   let verifier = Verifier.empty in
   let signer = Signer.make ~identity in
   let producer = Producer.make ~identity in
@@ -95,3 +95,19 @@ let incoming_operation ~operation node =
   let (Chain { protocol; consensus; verifier; signer; producer }) = node in
   let producer = Producer.incoming_operation ~operation producer in
   Chain { protocol; consensus; verifier; signer; producer }
+
+let incoming_bootstrap_signal ~bootstrap_signal ~current node =
+  let (Chain { protocol; consensus; verifier; signer; producer }) = node in
+  let consensus =
+    match
+      Consensus.apply_bootstrap_signal ~bootstrap_signal ~current consensus
+    with
+    | Some consensus -> consensus
+    | None -> consensus
+  in
+  let effects =
+    match Producer.try_to_produce ~current ~consensus producer with
+    | Some block -> [ Broadcast_block block ]
+    | None -> []
+  in
+  (Chain { protocol; consensus; verifier; signer; producer }, effects)
