@@ -17,11 +17,12 @@ let main () =
 
   let pool = Parallel.Pool.make ~domains in
   let%await storage = Storage.read ~file:!storage in
-  let Storage.{ secret; initial_validators; nodes } = storage in
+  let Storage.{ secret; initial_validators; nodes; bootstrap_key } = storage in
   let identity = Identity.make secret in
   Parallel.Pool.run pool (fun () ->
       let node, promise =
         Node.make ~pool ~identity ~validators:initial_validators ~nodes
+          ~bootstrap_key
       in
       Node.listen node ~port:!port;
       promise)

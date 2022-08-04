@@ -7,6 +7,7 @@ module Content = struct
     | Content_block of Block.t
     | Content_signature of Verified_signature.t
     | Content_operation of Operation.t
+    | Content_bootstrap_signal of Bootstrap_signal.t
 
   and t = content [@@deriving yojson]
 

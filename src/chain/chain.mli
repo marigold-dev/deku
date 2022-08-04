@@ -21,6 +21,7 @@ type action = private
 
 val make :
   identity:Identity.t ->
+  bootstrap_key:Key.t ->
   validators:Key_hash.t list ->
   pool:Parallel.Pool.t ->
   chain

@@ -49,6 +49,10 @@ let restart ~producer identities consensus network =
   let block = produce producer consensus network in
   List.iter (fun identity -> sign identity block network) identities
 
+let bootstrap_key =
+  Key.of_b58 "edpku8312JdFovNcX9AkFiafkAcVCHDvAe3zBTvF4YMyLEPz4KFFMd"
+  |> Option.get
+
 let bootstrap ~size =
   let%await storages =
     let files = List.init size (fun n -> Util.storage_file ~n) in
@@ -75,7 +79,9 @@ let bootstrap ~size =
     let validators = List.map Identity.key_hash identities in
     Validators.of_key_hash_list validators
   in
-  let consensus = Consensus.make ~identity:producer ~validators in
+  let consensus =
+    Consensus.make ~identity:producer ~validators ~bootstrap_key
+  in
   let network = Network.connect ~nodes in
   (* TODO: this is lame, but I'm lazy*)
   let%await () = Lwt_unix.sleep sleep_time in
@@ -105,7 +111,8 @@ let generate ~base_uri ~base_port ~size =
   in
   let storages =
     List.map
-      (fun secret -> Storage.make ~secret ~initial_validators ~nodes)
+      (fun secret ->
+        Storage.make ~secret ~initial_validators ~nodes ~bootstrap_key)
       secrets
   in
 

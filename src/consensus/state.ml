@@ -62,3 +62,47 @@ let current_author ~current consensus =
       let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
       Validators.skip ~after:last_block_author ~skip validators
   | None -> None
+
+let is_in_sync ~current state =
+  let (State
+        {
+          validators;
+          current_level = _;
+          current_block = _;
+          last_block_author = _;
+          last_block_update;
+        }) =
+    state
+  in
+  match last_block_update with
+  | None -> false
+  | Some last_block_update ->
+      let validators = Validators.cardinal validators in
+      let timeouts_since_last_update =
+        Timestamp.timeouts_since ~current ~since:last_block_update
+      in
+      timeouts_since_last_update <= validators
+
+let apply_bootstrap_signal ~current ~author state =
+  let (State
+        {
+          validators;
+          current_level;
+          current_block;
+          last_block_author = _;
+          last_block_update = _;
+        }) =
+    state
+  in
+  match is_in_sync ~current state with
+  | true -> None
+  | false ->
+      Some
+        (State
+           {
+             validators;
+             current_level;
+             current_block;
+             last_block_author = author;
+             last_block_update = Some current;
+           })

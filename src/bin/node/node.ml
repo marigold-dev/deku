@@ -91,10 +91,10 @@ and handle_gossip_fragment node ~fragment =
       on_gossip_outcome node ~current ~outcome;
       Lwt.return_unit)
 
-let make ~pool ~identity ~validators ~nodes =
+let make ~pool ~identity ~validators ~nodes ~bootstrap_key =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
-  let chain = Chain.make ~identity ~validators ~pool in
+  let chain = Chain.make ~identity ~validators ~pool ~bootstrap_key in
   let node =
     let trigger_timeout () = () in
     { pool; network; gossip; chain; trigger_timeout }

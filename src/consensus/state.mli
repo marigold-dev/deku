@@ -19,3 +19,6 @@ val current_author : current:Timestamp.t -> state -> Key_hash.t option
 
 (* update *)
 val apply_block : current:Timestamp.t -> block:Block.t -> state -> state
+
+val apply_bootstrap_signal :
+  current:Timestamp.t -> author:Key_hash.t -> state -> state option

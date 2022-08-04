@@ -18,10 +18,10 @@ type action =
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
 
-let make ~identity ~validators ~pool =
+let make ~identity ~bootstrap_key ~validators ~pool =
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
-  let consensus = Consensus.make ~identity ~validators in
+  let consensus = Consensus.make ~identity ~validators ~bootstrap_key in
   let producer = Producer.make ~identity in
   Chain { pool; protocol; consensus; producer }
 
@@ -80,6 +80,27 @@ let incoming_operation ~operation node =
   let producer = Producer.incoming_operation ~operation producer in
   Chain { pool; protocol; consensus; producer }
 
+let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
+  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let consensus =
+    match
+      Consensus.incoming_bootstrap_signal ~bootstrap_signal ~current consensus
+    with
+    | Some consensus -> consensus
+    | None -> consensus
+  in
+  let effects =
+    let (Consensus { block_pool = _; signer = _; bootstrap_key = _; state }) =
+      consensus
+    in
+    match Producer.produce ~current ~state producer with
+    | Some block ->
+        let content = Message.Content.block block in
+        [ Chain_broadcast { content } ]
+    | None -> []
+  in
+  (Chain { pool; protocol; consensus; producer }, effects)
+
 let incoming_message ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
@@ -89,12 +110,16 @@ let incoming_message ~current ~message chain =
   | Content_operation operation ->
       let chain = incoming_operation ~operation chain in
       (chain, [])
+  | Content_bootstrap_signal bootstrap_signal ->
+      incoming_bootstrap_signal ~bootstrap_signal ~current chain
 
 let incoming_timeout ~current chain =
   let (Chain { pool; protocol; consensus; producer }) = chain in
   let chain = Chain { pool; protocol; consensus; producer } in
   let actions =
-    let (Consensus { block_pool = _; signer = _; state }) = consensus in
+    let (Consensus { block_pool = _; signer = _; state; bootstrap_key = _ }) =
+      consensus
+    in
     match Producer.produce ~current ~state producer with
     | Some block ->
         let content = Message.Content.block block in
