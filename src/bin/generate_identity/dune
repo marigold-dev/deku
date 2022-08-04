@@ -1,0 +1,5 @@
+(executable
+ (name deku_generate_identity)
+ (public_name deku-generate-identity)
+ (package deku-generate-identity)
+ (libraries deku-crypto cmdliner))

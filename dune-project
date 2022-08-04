@@ -63,3 +63,7 @@
 (package
  (name deku-benchmark)
  (depends deku-protocol))
+
+(package
+ (name deku-generate-identity)
+ (depends deku-crypto cmdliner))
