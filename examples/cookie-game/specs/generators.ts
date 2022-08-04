@@ -13,6 +13,8 @@ export const cookieBakerArbitrary = () =>
         fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }), 
+        fc.integer({ min: 0, max: 10 }),
         ).map(
             ([numberOfCookie,
                 numberOfCursor,
@@ -20,11 +22,13 @@ export const cookieBakerArbitrary = () =>
                 numberOfFarm,
                 numberOfMine,
                 numberOfFactory,
+                numberOfBank,
                 numberOfFreeCursor,
                 numberOfFreeGrandma,
                 numberOfFreeFarm,
                 numberOfFreeMine,
                 numberOfFreeFactory,
+                numberOfFreeBank,
             ]) => {
                 const cookie_baker = createCookieBaker(
                     numberOfCookie,
@@ -33,10 +37,13 @@ export const cookieBakerArbitrary = () =>
                     numberOfFarm,
                     numberOfMine,
                     numberOfFactory,
+                    numberOfBank,
                     numberOfFreeCursor,
                     numberOfFreeGrandma,
                     numberOfFreeFarm,
                     numberOfFreeMine,
-                    numberOfFreeFactory,)
+                    numberOfFreeFactory,
+                    numberOfFreeBank,
+                )
                 return cookie_baker;
             });
