@@ -818,24 +818,28 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmsBefore = cookieBakerType.numberOfFarm;
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
 
                     const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
                     const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
                     const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
 
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
 
                     const cursorCpsBefore = cookieBakerType.cursorCps;
                     const grandmaCpsBefore = cookieBakerType.grandmaCps;
                     const farmCpsBefore = cookieBakerType.farmCps;
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
                     //make sure we can't buy a factory
                     cookieBakerType.numberOfCookie = 0
                     const cookieBaker = addBank(cookieBakerType);
@@ -845,24 +849,29 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFarm === farmsBefore
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
 
                         && cookieBaker.numberOfFreeCursor === freeCursorBefore
                         && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
                         && cookieBaker.numberOfFreeFarm === freeFarmBefore
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
 
                         && cookieBaker.cursorCost === cursorCostBefore
                         && cookieBaker.grandmaCost === grandmaCostBefore
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
                         
                         && cookieBaker.cursorCps === cursorCpsBefore
                         && cookieBaker.grandmaCps === grandmaCpsBefore
                         && cookieBaker.farmCps === farmCpsBefore
                         && cookieBaker.mineCps === mineCpsBefore
-                        && cookieBaker.factoryCps === factoryCpsBefore)
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                    )
                 }), { verbose: true });
     });
 });
