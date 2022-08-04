@@ -54,4 +54,7 @@
 
 (package
  (name deku-bootstrap)
- (depends deku-network))
+
+(package
+ (name deku-generate-identity)
+ (depends deku-crypto cmdliner))
