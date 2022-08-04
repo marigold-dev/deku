@@ -1,6 +1,6 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
-import { cookieBaker, createCookieBaker, addCookie, addCursor, addGrandma, addFarm, addMine, addFactory, addBank } from "./state"
+import { cookieBakerType, createCookieBaker, addCookie, addCursor, addGrandma, addFarm, addMine, addFactory, addBank } from "./state"
 import { actions } from "./actions"
 
 const printMessageWithSource = (message: string, source: transaction) => {
@@ -8,7 +8,7 @@ const printMessageWithSource = (message: string, source: transaction) => {
     console.log(source);
 }
 
-const saveState = (source: transaction, sourceValue: cookieBaker) => {
+const saveState = (source: transaction, sourceValue: cookieBakerType) => {
     printMessageWithSource("Saving state", sourceValue);
     set(source, sourceValue);
     console.log("Successfully saved state");
@@ -22,7 +22,7 @@ const transition = (tx: transaction) => {
     const operation = tx.operation;
     console.log("Getting source");
     const sourceValue = JSON.parse(get(source));
-    const cookieBaker: cookieBaker = createCookieBaker(
+    const cookieBaker: cookieBakerType = createCookieBaker(
         sourceValue.cookieBaker.numberOfCookie,
         sourceValue.cookieBaker.numberOfCursor,
         sourceValue.cookieBaker.numberOfGrandma,
