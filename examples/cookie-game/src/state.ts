@@ -32,7 +32,7 @@ export const initial_factoryCost: number = 130_000;
 export const initial_bankCost: number = 1_400_000;
 
 
-export type cookieBaker = {
+export type cookieBakerType = {
     numberOfCookie: number;
     numberOfCursor: number;
     numberOfGrandma: number;
@@ -78,7 +78,7 @@ export const createCookieBaker = (numberOfCookie: number,
     numberOfFreeFarm: number,
     numberOfFreeMine: number,
     numberOfFreeFactory: number,
-    numberOfFreeBank: number,): cookieBaker => {
+    numberOfFreeBank: number,): cookieBakerType => {
     const cookieBaker = {
         numberOfCookie,
         numberOfCursor,
@@ -133,7 +133,7 @@ export const createCookieBaker = (numberOfCookie: number,
     return cookieBaker;
 }
 
-export const calculateCost = (action: actions, cookieBaker: cookieBaker): number => {
+export const calculateCost = (action: actions, cookieBaker: cookieBakerType): number => {
     switch (action) {
         case actions.incrementCookie:
             console.log("Cookie does not have cost");
@@ -172,14 +172,14 @@ export const calculateCost = (action: actions, cookieBaker: cookieBaker): number
     }
 }
 
-export const addCookie = (cookieBaker: cookieBaker): cookieBaker => {
+export const addCookie = (cookieBaker: cookieBakerType): cookieBakerType => {
     console.log("Adding cookie: " + cookieBaker.numberOfCookie);
     cookieBaker.numberOfCookie = cookieBaker.numberOfCookie + 1;
     console.log("Successfully added cookie: " + cookieBaker.numberOfCookie);
     return cookieBaker;
 }
 
-export const addCursor = (cookieBaker: cookieBaker): cookieBaker => {
+export const addCursor = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.cursorCost) {
         console.log("Enough cookie to buy a cursor");
         // adding cursor
@@ -197,7 +197,7 @@ export const addCursor = (cookieBaker: cookieBaker): cookieBaker => {
     }
 }
 
-export const addGrandma = (cookieBaker: cookieBaker): cookieBaker => {
+export const addGrandma = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.grandmaCost) {
         console.log("Enough cookie to buy a grandma");
         // adding grandma
@@ -215,7 +215,7 @@ export const addGrandma = (cookieBaker: cookieBaker): cookieBaker => {
     }
 }
 
-export const addFarm = (cookieBaker: cookieBaker): cookieBaker => {
+export const addFarm = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.farmCost) {
         console.log("Enough cookie to buy a farm");
         // adding farm
@@ -233,7 +233,7 @@ export const addFarm = (cookieBaker: cookieBaker): cookieBaker => {
     }
 }
 
-export const addMine = (cookieBaker: cookieBaker): cookieBaker => {
+export const addMine = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.mineCost) {
         console.log("Enough cookie to buy a mine");
         // adding mine
@@ -251,7 +251,7 @@ export const addMine = (cookieBaker: cookieBaker): cookieBaker => {
     }
 }
 
-export const addFactory = (cookieBaker: cookieBaker): cookieBaker => {
+export const addFactory = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.factoryCost) {
         console.log("Enough cookie to buy a factory");
         // adding factory
@@ -269,7 +269,7 @@ export const addFactory = (cookieBaker: cookieBaker): cookieBaker => {
     }
 }
 
-export const addBank = (cookieBaker: cookieBaker): cookieBaker => {
+export const addBank = (cookieBaker: cookieBakerType): cookieBakerType => {
     if (cookieBaker.numberOfCookie >= cookieBaker.bankCost) {
         console.log("Enough cookie to buy a bank");
         // adding bank
