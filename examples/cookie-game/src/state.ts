@@ -22,12 +22,14 @@ export const initial_grandmaCps: number = 1;
 export const initial_farmCps: number = 8;
 export const initial_mineCps: number = 47;
 export const initial_factoryCps: number = 260;
+export const initial_bankCps: number = 1400;
 
 export const initial_cursorCost: number = 15;
 export const initial_grandmaCost: number = 100;
 export const initial_farmCost: number = 1100;
-export const initial_mineCost: number = 12000;
-export const initial_factoryCost: number = 130000;
+export const initial_mineCost: number = 12_000;
+export const initial_factoryCost: number = 130_000;
+export const initial_bankCost: number = 1_400_000;
 
 
 export type cookieBaker = {
@@ -37,6 +39,7 @@ export type cookieBaker = {
     numberOfFarm: number;
     numberOfMine: number;
     numberOfFactory: number;
+    numberOfBank: number;
 
     /* Gift from application */
     /* TODO: add the rule to generate them! */
@@ -45,12 +48,14 @@ export type cookieBaker = {
     numberOfFreeFarm: number;
     numberOfFreeMine: number;
     numberOfFreeFactory: number;
+    numberOfFreeBank: number;
 
     cursorCost: number;
     grandmaCost: number;
     farmCost: number;
     mineCost: number;
     factoryCost: number;
+    bankCost: number;
 
     /* Cookie per second*/
     cursorCps: number;
@@ -58,6 +63,7 @@ export type cookieBaker = {
     farmCps: number;
     mineCps: number;
     factoryCps: number;
+    bankCps: number;
 }
 
 export const createCookieBaker = (numberOfCookie: number,
@@ -66,11 +72,13 @@ export const createCookieBaker = (numberOfCookie: number,
     numberOfFarm: number,
     numberOfMine: number,
     numberOfFactory: number,
+    numberOfBank: number,
     numberOfFreeCursor: number,
     numberOfFreeGrandma: number,
     numberOfFreeFarm: number,
     numberOfFreeMine: number,
-    numberOfFreeFactory: number,): cookieBaker => {
+    numberOfFreeFactory: number,
+    numberOfFreeBank: number,): cookieBaker => {
     const cookieBaker = {
         numberOfCookie,
         numberOfCursor,
@@ -78,42 +86,50 @@ export const createCookieBaker = (numberOfCookie: number,
         numberOfFarm,
         numberOfMine,
         numberOfFactory,
+        numberOfBank,
         numberOfFreeCursor,
         numberOfFreeGrandma,
         numberOfFreeFarm,
         numberOfFreeMine,
         numberOfFreeFactory,
+        numberOfFreeBank,
         cursorCost: 0,
         grandmaCost: 0,
         farmCost: 0,
         mineCost: 0,
-        factoryCost:0,
+        factoryCost: 0,
+        bankCost: 0,
         cursorCps: 0,
         grandmaCps: 0,
         farmCps: 0,
         mineCps: 0,
         factoryCps: 0,
+        bankCps: 0,
     }
     const cursorCost = calculateCost(actions.incrementCursor, cookieBaker);
     const grandmaCost = calculateCost(actions.incrementGrandma, cookieBaker);
     const farmCost = calculateCost(actions.incrementFarm, cookieBaker);
     const mineCost = calculateCost(actions.incrementMine, cookieBaker);
     const factoryCost = calculateCost(actions.incrementFactory, cookieBaker);
+    const bankCost = calculateCost(actions.incrementBank, cookieBaker);
     const cursorCps = cookieBaker.numberOfCursor * initial_cursorCps;
     const grandmaCps = cookieBaker.numberOfGrandma * initial_grandmaCps;
     const farmCps = cookieBaker.numberOfFarm * initial_farmCps;
     const mineCps = cookieBaker.numberOfMine * initial_mineCps;
     const factoryCps = cookieBaker.numberOfFactory * initial_factoryCps;
+    const bankCps = cookieBaker.numberOfBank * initial_bankCps;
     cookieBaker.cursorCost = cursorCost;
     cookieBaker.grandmaCost = grandmaCost;
     cookieBaker.farmCost = farmCost;
     cookieBaker.mineCost = mineCost;
     cookieBaker.factoryCost = factoryCost;
+    cookieBaker.bankCost = bankCost;
     cookieBaker.cursorCps = cursorCps;
     cookieBaker.grandmaCps = grandmaCps;
     cookieBaker.farmCps = farmCps;
     cookieBaker.mineCps = mineCps;
     cookieBaker.factoryCps = factoryCps;
+    cookieBaker.bankCps = bankCps;
     return cookieBaker;
 }
 
@@ -147,6 +163,11 @@ export const calculateCost = (action: actions, cookieBaker: cookieBaker): number
             const new_factory_price = Math.floor(initial_factoryCost * Math.pow(1.15, cookieBaker.numberOfFactory - cookieBaker.numberOfFreeFactory));
             console.log("New factory price is: " + new_factory_price);
             return new_factory_price;
+        case actions.incrementBank:
+            console.log("Calculating price for next bank, actual price is: " + cookieBaker.bankCost);
+            const new_bank_price = Math.floor(initial_bankCost * Math.pow(1.15, cookieBaker.numberOfBank - cookieBaker.numberOfFreeBank));
+            console.log("New bank price is: " + new_bank_price);
+            return new_bank_price;
 
     }
 }
@@ -244,6 +265,24 @@ export const addFactory = (cookieBaker: cookieBaker): cookieBaker => {
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a factory, needed: " + cookieBaker.factoryCost + " actual amount: " + cookieBaker.numberOfFactory);
+        return cookieBaker;
+    }
+}
+
+export const addBank = (cookieBaker: cookieBaker): cookieBaker => {
+    if (cookieBaker.numberOfCookie >= cookieBaker.bankCost) {
+        console.log("Enough cookie to buy a bank");
+        // adding bank
+        cookieBaker.numberOfBank = cookieBaker.numberOfBank + 1;
+        // removing bank cost
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.bankCost;
+        // calculating next bank price
+        cookieBaker.bankCost = calculateCost(actions.incrementBank, cookieBaker);
+        // calculate new cps
+        cookieBaker.bankCps = cookieBaker.numberOfBank * initial_bankCps;
+        return cookieBaker;
+    } else {
+        console.log("Not enough cookie to buy a bank, needed: " + cookieBaker.bankCost + " actual amount: " + cookieBaker.numberOfBank);
         return cookieBaker;
     }
 }

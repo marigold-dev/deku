@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.initial_factoryCost = exports.initial_mineCost = exports.initial_farmCost = exports.initial_grandmaCost = exports.initial_cursorCost = exports.initial_factoryCps = exports.initial_mineCps = exports.initial_farmCps = exports.initial_grandmaCps = exports.initial_cursorCps = void 0;
+exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.initial_bankCost = exports.initial_factoryCost = exports.initial_mineCost = exports.initial_farmCost = exports.initial_grandmaCost = exports.initial_cursorCost = exports.initial_bankCps = exports.initial_factoryCps = exports.initial_mineCps = exports.initial_farmCps = exports.initial_grandmaCps = exports.initial_cursorCps = void 0;
 var actions_1 = require("./actions");
 /*
    Understanding rule of game:
@@ -23,12 +23,14 @@ exports.initial_grandmaCps = 1;
 exports.initial_farmCps = 8;
 exports.initial_mineCps = 47;
 exports.initial_factoryCps = 260;
+exports.initial_bankCps = 1400;
 exports.initial_cursorCost = 15;
 exports.initial_grandmaCost = 100;
 exports.initial_farmCost = 1100;
 exports.initial_mineCost = 12000;
 exports.initial_factoryCost = 130000;
-var createCookieBaker = function (numberOfCookie, numberOfCursor, numberOfGrandma, numberOfFarm, numberOfMine, numberOfFactory, numberOfFreeCursor, numberOfFreeGrandma, numberOfFreeFarm, numberOfFreeMine, numberOfFreeFactory) {
+exports.initial_bankCost = 1400000;
+var createCookieBaker = function (numberOfCookie, numberOfCursor, numberOfGrandma, numberOfFarm, numberOfMine, numberOfFactory, numberOfBank, numberOfFreeCursor, numberOfFreeGrandma, numberOfFreeFarm, numberOfFreeMine, numberOfFreeFactory, numberOfFreeBank) {
     var cookieBaker = {
         numberOfCookie: numberOfCookie,
         numberOfCursor: numberOfCursor,
@@ -36,42 +38,50 @@ var createCookieBaker = function (numberOfCookie, numberOfCursor, numberOfGrandm
         numberOfFarm: numberOfFarm,
         numberOfMine: numberOfMine,
         numberOfFactory: numberOfFactory,
+        numberOfBank: numberOfBank,
         numberOfFreeCursor: numberOfFreeCursor,
         numberOfFreeGrandma: numberOfFreeGrandma,
         numberOfFreeFarm: numberOfFreeFarm,
         numberOfFreeMine: numberOfFreeMine,
         numberOfFreeFactory: numberOfFreeFactory,
+        numberOfFreeBank: numberOfFreeBank,
         cursorCost: 0,
         grandmaCost: 0,
         farmCost: 0,
         mineCost: 0,
         factoryCost: 0,
+        bankCost: 0,
         cursorCps: 0,
         grandmaCps: 0,
         farmCps: 0,
         mineCps: 0,
         factoryCps: 0,
+        bankCps: 0,
     };
     var cursorCost = (0, exports.calculateCost)(actions_1.actions.incrementCursor, cookieBaker);
     var grandmaCost = (0, exports.calculateCost)(actions_1.actions.incrementGrandma, cookieBaker);
     var farmCost = (0, exports.calculateCost)(actions_1.actions.incrementFarm, cookieBaker);
     var mineCost = (0, exports.calculateCost)(actions_1.actions.incrementMine, cookieBaker);
     var factoryCost = (0, exports.calculateCost)(actions_1.actions.incrementFactory, cookieBaker);
+    var bankCost = (0, exports.calculateCost)(actions_1.actions.incrementBank, cookieBaker);
     var cursorCps = cookieBaker.numberOfCursor * exports.initial_cursorCps;
     var grandmaCps = cookieBaker.numberOfGrandma * exports.initial_grandmaCps;
     var farmCps = cookieBaker.numberOfFarm * exports.initial_farmCps;
     var mineCps = cookieBaker.numberOfMine * exports.initial_mineCps;
     var factoryCps = cookieBaker.numberOfFactory * exports.initial_factoryCps;
+    var bankCps = cookieBaker.numberOfBank * exports.initial_bankCps;
     cookieBaker.cursorCost = cursorCost;
     cookieBaker.grandmaCost = grandmaCost;
     cookieBaker.farmCost = farmCost;
     cookieBaker.mineCost = mineCost;
     cookieBaker.factoryCost = factoryCost;
+    cookieBaker.bankCost = bankCost;
     cookieBaker.cursorCps = cursorCps;
     cookieBaker.grandmaCps = grandmaCps;
     cookieBaker.farmCps = farmCps;
     cookieBaker.mineCps = mineCps;
     cookieBaker.factoryCps = factoryCps;
+    cookieBaker.bankCps = bankCps;
     return cookieBaker;
 };
 exports.createCookieBaker = createCookieBaker;
@@ -105,6 +115,11 @@ var calculateCost = function (action, cookieBaker) {
             var new_factory_price = Math.floor(exports.initial_factoryCost * Math.pow(1.15, cookieBaker.numberOfFactory - cookieBaker.numberOfFreeFactory));
             console.log("New factory price is: " + new_factory_price);
             return new_factory_price;
+        case actions_1.actions.incrementBank:
+            console.log("Calculating price for next bank, actual price is: " + cookieBaker.bankCost);
+            var new_bank_price = Math.floor(exports.initial_bankCost * Math.pow(1.15, cookieBaker.numberOfBank - cookieBaker.numberOfFreeBank));
+            console.log("New bank price is: " + new_bank_price);
+            return new_bank_price;
     }
 };
 exports.calculateCost = calculateCost;
@@ -210,3 +225,22 @@ var addFactory = function (cookieBaker) {
     }
 };
 exports.addFactory = addFactory;
+var addBank = function (cookieBaker) {
+    if (cookieBaker.numberOfCookie >= cookieBaker.bankCost) {
+        console.log("Enough cookie to buy a bank");
+        // adding bank
+        cookieBaker.numberOfBank = cookieBaker.numberOfBank + 1;
+        // removing bank cost
+        cookieBaker.numberOfCookie = cookieBaker.numberOfCookie - cookieBaker.bankCost;
+        // calculating next bank price
+        cookieBaker.bankCost = (0, exports.calculateCost)(actions_1.actions.incrementBank, cookieBaker);
+        // calculate new cps
+        cookieBaker.bankCps = cookieBaker.numberOfBank * exports.initial_bankCps;
+        return cookieBaker;
+    }
+    else {
+        console.log("Not enough cookie to buy a bank, needed: " + cookieBaker.bankCost + " actual amount: " + cookieBaker.numberOfBank);
+        return cookieBaker;
+    }
+};
+exports.addBank = addBank;

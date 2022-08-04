@@ -21,7 +21,7 @@ var transition = function (tx) {
     var operation = tx.operation;
     console.log("Getting source");
     var sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
-    var cookieBaker = (0, state_1.createCookieBaker)(sourceValue.cookieBaker.numberOfCookie, sourceValue.cookieBaker.numberOfCursor, sourceValue.cookieBaker.numberOfGrandma, sourceValue.cookieBaker.numberOfFarm, sourceValue.cookieBaker.numberOfMine, sourceValue.cookieBaker.numberOfFactory, sourceValue.cookieBaker.numberOfFreeCursor, sourceValue.cookieBaker.numberOfFreeGrandma, sourceValue.cookieBaker.numberOfFreeFarm, sourceValue.cookieBaker.numberOfFreeMine, sourceValue.cookieBaker.numberOfFreeFactory);
+    var cookieBaker = (0, state_1.createCookieBaker)(sourceValue.cookieBaker.numberOfCookie, sourceValue.cookieBaker.numberOfCursor, sourceValue.cookieBaker.numberOfGrandma, sourceValue.cookieBaker.numberOfFarm, sourceValue.cookieBaker.numberOfMine, sourceValue.cookieBaker.numberOfFactory, sourceValue.cookieBaker.numberOfBank, sourceValue.cookieBaker.numberOfFreeCursor, sourceValue.cookieBaker.numberOfFreeGrandma, sourceValue.cookieBaker.numberOfFreeFarm, sourceValue.cookieBaker.numberOfFreeMine, sourceValue.cookieBaker.numberOfFreeFactory, sourceValue.cookieBaker.numberOfFreeBank);
     switch (operation) {
         case actions_1.actions.incrementCookie: {
             var updatedCookieBaker = (0, state_1.addCookie)(cookieBaker);
@@ -71,6 +71,14 @@ var transition = function (tx) {
             saveState(source, sourceValue);
             break;
         }
+        case actions_1.actions.incrementBank: {
+            var updatedCookieBaker = (0, state_1.addBank)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted bank");
+            saveState(source, sourceValue);
+            break;
+        }
     }
 };
 (0, deku_js_interop_1.main)(
@@ -85,21 +93,25 @@ var transition = function (tx) {
             numberOfFarm: 0.,
             numberOfMine: 0.,
             numberOfFactory: 0.,
+            numberOfBank: 0.,
             numberOfFreeCursor: 0,
             numberOfFreeGrandma: 0,
             numberOfFreeFarm: 0,
             numberOfFreeMine: 0,
             numberOfFreeFactory: 0,
+            numberOfFreeBank: 0,
             cursorCost: 0,
             grandmaCost: 0,
             farmCost: 0,
             mineCost: 0,
             factoryCost: 0,
+            bankCost: 0,
             cursorCps: 0,
             grandmaCps: 0,
             farmCps: 0,
             mineCps: 0,
             factoryCps: 0,
+            bankCps: 0,
         }
     }
 }, transition);

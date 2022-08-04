@@ -9,4 +9,5 @@ var actions;
     actions["incrementFarm"] = "farm";
     actions["incrementMine"] = "mine";
     actions["incrementFactory"] = "factory";
+    actions["incrementBank"] = "bank";
 })(actions = exports.actions || (exports.actions = {}));
