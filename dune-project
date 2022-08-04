@@ -58,7 +58,7 @@
 
 (package
  (name deku-bootstrap)
- (depends deku-network))
+ (depends deku-network cmdliner))
 
 (package
  (name deku-benchmark)
