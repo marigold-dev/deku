@@ -358,6 +358,66 @@ describe('cookieBaker.add_XXX successful', function () {
                 && cookieBaker.bankCps === bankCpsBefore);
         }), { verbose: true });
     });
+    /**
+     * bank
+     */
+    test('add bank only mint one bank, decrease cookie amount, increase bank cost, and increase banks CPS', function () {
+        fc.assert(fc.property((0, generators_1.cookieBakerArbitrary)(), function (cookieBakerType) {
+            var cookiesBefore = cookieBakerType.numberOfCookie;
+            var cursorsBefore = cookieBakerType.numberOfCursor;
+            var grandmasBefore = cookieBakerType.numberOfGrandma;
+            var farmsBefore = cookieBakerType.numberOfFarm;
+            var minesBefore = cookieBakerType.numberOfMine;
+            var factoriesBefore = cookieBakerType.numberOfFactory;
+            var banksBefore = cookieBakerType.numberOfBank;
+            var freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+            var freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+            var freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+            var freeMineBefore = cookieBakerType.numberOfFreeMine;
+            var freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+            var freeBankBefore = cookieBakerType.numberOfFreeBank;
+            var cursorCostBefore = cookieBakerType.cursorCost;
+            var grandmaCostBefore = cookieBakerType.grandmaCost;
+            var farmCostBefore = cookieBakerType.farmCost;
+            var mineCostBefore = cookieBakerType.mineCost;
+            var factoryCostBefore = cookieBakerType.factoryCost;
+            var bankCostBefore = cookieBakerType.bankCost;
+            var cursorCpsBefore = cookieBakerType.cursorCps;
+            var grandmaCpsBefore = cookieBakerType.grandmaCps;
+            var farmCpsBefore = cookieBakerType.farmCps;
+            var mineCpsBefore = cookieBakerType.mineCps;
+            var factoryCpsBefore = cookieBakerType.factoryCps;
+            var bankCpsBefore = cookieBakerType.bankCps;
+            //make sure we have enough cookies to buy a bank
+            cookieBakerType.numberOfCookie = cookiesBefore + bankCostBefore;
+            var cookieBaker = (0, state_1.addBank)(cookieBakerType);
+            return (cookieBaker.numberOfCookie === cookiesBefore
+                && cookieBaker.numberOfCursor === cursorsBefore
+                && cookieBaker.numberOfGrandma === grandmasBefore
+                && cookieBaker.numberOfFarm === farmsBefore
+                && cookieBaker.numberOfMine === minesBefore
+                && cookieBaker.numberOfFactory === factoriesBefore
+                && cookieBaker.numberOfBank === banksBefore + 1
+                && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                && cookieBaker.numberOfFreeMine === freeMineBefore
+                && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                && cookieBaker.numberOfFreeBank === freeBankBefore
+                && cookieBaker.cursorCost === cursorCostBefore
+                && cookieBaker.grandmaCost === grandmaCostBefore
+                && cookieBaker.farmCost === farmCostBefore
+                && cookieBaker.mineCost === mineCostBefore
+                && cookieBaker.factoryCost === factoryCostBefore
+                && cookieBaker.bankCost > bankCostBefore
+                && cookieBaker.cursorCps === cursorCpsBefore
+                && cookieBaker.grandmaCps === grandmaCpsBefore
+                && cookieBaker.farmCps === farmCpsBefore
+                && cookieBaker.mineCps === mineCpsBefore
+                && cookieBaker.factoryCps === factoryCpsBefore
+                && cookieBaker.bankCps > bankCpsBefore);
+        }), { verbose: true });
+    });
 });
 describe('cookieBaker.add_XXX without enough', function () {
     /**
@@ -592,6 +652,57 @@ describe('cookieBaker.add_XXX without enough', function () {
             //make sure we can't buy a factory
             cookieBakerType.numberOfCookie = 0;
             var cookieBaker = (0, state_1.addFactory)(cookieBakerType);
+            return (cookieBaker.numberOfCookie === 0
+                && cookieBaker.numberOfCursor === cursorsBefore
+                && cookieBaker.numberOfGrandma === grandmasBefore
+                && cookieBaker.numberOfFarm === farmsBefore
+                && cookieBaker.numberOfMine === minesBefore
+                && cookieBaker.numberOfFactory === factoriesBefore
+                && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                && cookieBaker.numberOfFreeMine === freeMineBefore
+                && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                && cookieBaker.cursorCost === cursorCostBefore
+                && cookieBaker.grandmaCost === grandmaCostBefore
+                && cookieBaker.farmCost === farmCostBefore
+                && cookieBaker.mineCost === mineCostBefore
+                && cookieBaker.factoryCost === factoryCostBefore
+                && cookieBaker.cursorCps === cursorCpsBefore
+                && cookieBaker.grandmaCps === grandmaCpsBefore
+                && cookieBaker.farmCps === farmCpsBefore
+                && cookieBaker.mineCps === mineCpsBefore
+                && cookieBaker.factoryCps === factoryCpsBefore);
+        }), { verbose: true });
+    });
+    /**
+     * Bank
+     */
+    test('Cannot mint bank if not enough cookie', function () {
+        fc.assert(fc.property((0, generators_1.cookieBakerArbitrary)(), function (cookieBakerType) {
+            var cursorsBefore = cookieBakerType.numberOfCursor;
+            var grandmasBefore = cookieBakerType.numberOfGrandma;
+            var farmsBefore = cookieBakerType.numberOfFarm;
+            var minesBefore = cookieBakerType.numberOfMine;
+            var factoriesBefore = cookieBakerType.numberOfFactory;
+            var freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+            var freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+            var freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+            var freeMineBefore = cookieBakerType.numberOfFreeMine;
+            var freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+            var cursorCostBefore = cookieBakerType.cursorCost;
+            var grandmaCostBefore = cookieBakerType.grandmaCost;
+            var farmCostBefore = cookieBakerType.farmCost;
+            var mineCostBefore = cookieBakerType.mineCost;
+            var factoryCostBefore = cookieBakerType.factoryCost;
+            var cursorCpsBefore = cookieBakerType.cursorCps;
+            var grandmaCpsBefore = cookieBakerType.grandmaCps;
+            var farmCpsBefore = cookieBakerType.farmCps;
+            var mineCpsBefore = cookieBakerType.mineCps;
+            var factoryCpsBefore = cookieBakerType.factoryCps;
+            //make sure we can't buy a factory
+            cookieBakerType.numberOfCookie = 0;
+            var cookieBaker = (0, state_1.addBank)(cookieBakerType);
             return (cookieBaker.numberOfCookie === 0
                 && cookieBaker.numberOfCursor === cursorsBefore
                 && cookieBaker.numberOfGrandma === grandmasBefore
