@@ -59,3 +59,6 @@ let broadcast_signature ~signature network =
 
 let broadcast_operation ~operation network =
   broadcast ~endpoint:Endpoint.operations ~content:operation network
+
+let broadcast_bootstrap_signal ~bootstrap_signal network =
+  broadcast ~endpoint:Endpoint.bootstrap ~content:bootstrap_signal network

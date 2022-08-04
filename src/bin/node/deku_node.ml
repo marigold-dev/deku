@@ -20,10 +20,10 @@ module Node = struct
 
   type t = node
 
-  let make ~identity ~validators ~nodes ~applied_block =
+  let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block =
     let validators = Validators.of_key_hash_list validators in
     let protocol = Protocol.initial in
-    let consensus = Consensus.make ~validators in
+    let consensus = Consensus.make ~validators ~bootstrap_key in
     let verifier = Verifier.empty in
     let signer = Signer.make ~identity in
     let producer = Producer.make ~identity in
@@ -178,6 +178,43 @@ module Node = struct
         applied_block;
       }
 
+  let incoming_bootstrap_signal ~bootstrap_signal node =
+    let (Node
+          {
+            protocol;
+            consensus;
+            verifier;
+            signer;
+            producer;
+            network;
+            applied_block;
+          }) =
+      node
+    in
+    let current = Timestamp.of_float (Unix.gettimeofday ()) in
+    let consensus =
+      match
+        Consensus.apply_bootstrap_signal ~bootstrap_signal ~current consensus
+      with
+      | Some consensus -> consensus
+      | None -> consensus
+    in
+    let network =
+      match Producer.try_to_produce ~current ~consensus producer with
+      | Some block -> Network.broadcast_block ~block network
+      | None -> network
+    in
+    Node
+      {
+        protocol;
+        consensus;
+        verifier;
+        signer;
+        producer;
+        network;
+        applied_block;
+      }
+
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
     let (Node
@@ -210,7 +247,8 @@ module Node = struct
         match endpoint with
         | Blocks -> incoming_block ~current ~block:packet node
         | Signatures -> incoming_signature ~current ~signature:packet node
-        | Operations -> incoming_operation ~operation:packet node)
+        | Operations -> incoming_operation ~operation:packet node
+        | Bootstrap -> incoming_bootstrap_signal ~bootstrap_signal:packet node)
     | None -> node
 
   let incoming_timeout ~current node =
@@ -277,13 +315,16 @@ end = struct
       Lwt.return_unit)
 
   let initialize storage =
-    let Storage.{ secret; initial_validators; nodes } = storage in
+    let Storage.{ secret; initial_validators; nodes; bootstrap_key } =
+      storage
+    in
     let identity = Identity.make secret in
 
     let applied_block_ref = ref (fun () -> ()) in
     let applied_block () = !applied_block_ref () in
     let node =
-      Node.make ~identity ~validators:initial_validators ~nodes ~applied_block
+      Node.make ~identity ~bootstrap_key ~validators:initial_validators ~nodes
+        ~applied_block
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in
