@@ -1,7 +1,7 @@
 (executable
  (name deku_bootstrap)
  (public_name deku-bootstrap)
- (libraries deku_consensus deku_network deku_gossip deku_storage cmdliner)
+ (libraries deku_consensus deku_network deku_gossip cmdliner)
  (preprocess
   (pps
    ppx_let_binding

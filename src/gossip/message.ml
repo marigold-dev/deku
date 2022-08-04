@@ -14,6 +14,9 @@ module Content = struct
   let block block = Content_block block
   let signature siganture = Content_signature siganture
   let operation operation = Content_operation operation
+
+  let bootstrap_signal bootstrap_signal =
+    Content_bootstrap_signal bootstrap_signal
 end
 
 type message = Message of { hash : Message_hash.t; content : Content.t }

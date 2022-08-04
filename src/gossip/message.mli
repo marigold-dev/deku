@@ -14,6 +14,7 @@ module Content : sig
   val block : Block.t -> content
   val signature : Verified_signature.t -> content
   val operation : Operation.t -> content
+  val bootstrap_signal : Bootstrap_signal.t -> content
 end
 
 type message = private
