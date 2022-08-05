@@ -3545,7 +3545,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmsBefore = cookieBakerType.numberOfFarm;
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
-
                     const banksBefore = cookieBakerType.numberOfBank;
                     const templesBefore = cookieBakerType.numberOfTemple;
                     const wizardsBefore = cookieBakerType.numberOfWizard;
@@ -3566,7 +3565,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
-
                     const freeBankBefore = cookieBakerType.numberOfFreeBank;
                     const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
                     const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
@@ -3582,13 +3580,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
                     const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
-
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
-
                     const bankCostBefore = cookieBakerType.bankCost;
                     const templeCostBefore = cookieBakerType.templeCost;
                     const wizardCostBefore = cookieBakerType.wizardCost;
@@ -3604,13 +3600,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const idleverseCostBefore = cookieBakerType.idleverseCost;
                     const cordexCostBefore = cookieBakerType.cordexCost;
 
-
                     const cursorCpsBefore = cookieBakerType.cursorCps;
                     const grandmaCpsBefore = cookieBakerType.grandmaCps;
                     const farmCpsBefore = cookieBakerType.farmCps;
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
-
                     const bankCpsBefore = cookieBakerType.bankCps;
                     const templeCpsBefore = cookieBakerType.templeCps;
                     const wizardCpsBefore = cookieBakerType.wizardCps;
@@ -3635,7 +3629,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFarm === farmsBefore
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
-
                         && cookieBaker.numberOfBank === banksBefore
                         && cookieBaker.numberOfTemple === templesBefore
                         && cookieBaker.numberOfWizard === wizardsBefore
@@ -3651,13 +3644,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfIdleverse === idleversesBefore
                         && cookieBaker.numberOfCordex === cordexsBefore
 
-
                         && cookieBaker.numberOfFreeCursor === freeCursorBefore
                         && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
                         && cookieBaker.numberOfFreeFarm === freeFarmBefore
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
-
                         && cookieBaker.numberOfFreeBank === freeBankBefore
                         && cookieBaker.numberOfFreeTemple === freeTempleBefore
                         && cookieBaker.numberOfFreeWizard === freeWizardBefore
@@ -3678,7 +3669,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
-
                         && cookieBaker.bankCost === bankCostBefore
                         && cookieBaker.templeCost === templeCostBefore
                         && cookieBaker.wizardCost === wizardCostBefore
@@ -3694,13 +3684,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.idleverseCost === idleverseCostBefore
                         && cookieBaker.cordexCost === cordexCostBefore
 
-
                         && cookieBaker.cursorCps === cursorCpsBefore
                         && cookieBaker.grandmaCps === grandmaCpsBefore
                         && cookieBaker.farmCps === farmCpsBefore
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore
-
                         && cookieBaker.bankCps === bankCpsBefore
                         && cookieBaker.templeCps === templeCpsBefore
                         && cookieBaker.wizardCps === wizardCpsBefore
@@ -3715,7 +3703,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.javaScriptCps === javaScriptCpsBefore
                         && cookieBaker.idleverseCps === idleverseCpsBefore
                         && cookieBaker.cordexCps === cordexCpsBefore
-
                     )
                 }), { verbose: true });
     });
@@ -3732,7 +3719,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmsBefore = cookieBakerType.numberOfFarm;
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
-
                     const banksBefore = cookieBakerType.numberOfBank;
                     const templesBefore = cookieBakerType.numberOfTemple;
                     const wizardsBefore = cookieBakerType.numberOfWizard;
@@ -3753,7 +3739,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
-
                     const freeBankBefore = cookieBakerType.numberOfFreeBank;
                     const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
                     const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
@@ -3769,13 +3754,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
                     const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
-
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
-
                     const bankCostBefore = cookieBakerType.bankCost;
                     const templeCostBefore = cookieBakerType.templeCost;
                     const wizardCostBefore = cookieBakerType.wizardCost;
@@ -3796,7 +3779,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmCpsBefore = cookieBakerType.farmCps;
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
-
                     const bankCpsBefore = cookieBakerType.bankCps;
                     const templeCpsBefore = cookieBakerType.templeCps;
                     const wizardCpsBefore = cookieBakerType.wizardCps;
@@ -3812,7 +3794,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const idleverseCpsBefore = cookieBakerType.idleverseCps;
                     const cordexCpsBefore = cookieBakerType.cordexCps;
 
-
                     //make sure we can't buy a grandma
                     cookieBakerType.numberOfCookie = 0
                     const cookieBaker = addGrandma(cookieBakerType);
@@ -3822,7 +3803,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFarm === farmsBefore
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
-
                         && cookieBaker.numberOfBank === banksBefore
                         && cookieBaker.numberOfTemple === templesBefore
                         && cookieBaker.numberOfWizard === wizardsBefore
@@ -3838,14 +3818,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfIdleverse === idleversesBefore
                         && cookieBaker.numberOfCordex === cordexsBefore
 
-
                         && cookieBaker.numberOfFreeCursor === freeCursorBefore
                         && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
                         && cookieBaker.numberOfFreeFarm === freeFarmBefore
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
-
-
                         && cookieBaker.numberOfFreeBank === freeBankBefore
                         && cookieBaker.numberOfFreeTemple === freeTempleBefore
                         && cookieBaker.numberOfFreeWizard === freeWizardBefore
@@ -3861,14 +3838,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
                         && cookieBaker.numberOfFreeCordex === freeCordexBefore
 
-
                         && cookieBaker.cursorCost === cursorCostBefore
                         && cookieBaker.grandmaCost === grandmaCostBefore
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
-
-
                         && cookieBaker.bankCost === bankCostBefore
                         && cookieBaker.templeCost === templeCostBefore
                         && cookieBaker.wizardCost === wizardCostBefore
@@ -3884,14 +3858,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.idleverseCost === idleverseCostBefore
                         && cookieBaker.cordexCost === cordexCostBefore
 
-
-
                         && cookieBaker.cursorCps === cursorCpsBefore
                         && cookieBaker.grandmaCps === grandmaCpsBefore
                         && cookieBaker.farmCps === farmCpsBefore
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore
-
                         && cookieBaker.bankCps === bankCpsBefore
                         && cookieBaker.templeCps === templeCpsBefore
                         && cookieBaker.wizardCps === wizardCpsBefore
@@ -3906,8 +3877,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.javaScriptCps === javaScriptCpsBefore
                         && cookieBaker.idleverseCps === idleverseCpsBefore
                         && cookieBaker.cordexCps === cordexCpsBefore
-
-
                     )
                 }), { verbose: true });
     });
@@ -3924,7 +3893,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmsBefore = cookieBakerType.numberOfFarm;
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
-
                     const banksBefore = cookieBakerType.numberOfBank;
                     const templesBefore = cookieBakerType.numberOfTemple;
                     const wizardsBefore = cookieBakerType.numberOfWizard;
@@ -3945,7 +3913,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
-
                     const freeBankBefore = cookieBakerType.numberOfFreeBank;
                     const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
                     const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
@@ -3961,13 +3928,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
                     const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
-
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
-
                     const bankCostBefore = cookieBakerType.bankCost;
                     const templeCostBefore = cookieBakerType.templeCost;
                     const wizardCostBefore = cookieBakerType.wizardCost;
@@ -3988,7 +3953,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmCpsBefore = cookieBakerType.farmCps;
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
-
                     const bankCpsBefore = cookieBakerType.bankCps;
                     const templeCpsBefore = cookieBakerType.templeCps;
                     const wizardCpsBefore = cookieBakerType.wizardCps;
@@ -4003,7 +3967,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
                     const idleverseCpsBefore = cookieBakerType.idleverseCps;
                     const cordexCpsBefore = cookieBakerType.cordexCps;
-
 
                     //make sure we can't buy a farm
                     cookieBakerType.numberOfCookie = 0
@@ -4014,7 +3977,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFarm === farmsBefore
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
-
                         && cookieBaker.numberOfBank === banksBefore
                         && cookieBaker.numberOfTemple === templesBefore
                         && cookieBaker.numberOfWizard === wizardsBefore
@@ -4035,7 +3997,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeFarm === freeFarmBefore
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
-
                         && cookieBaker.numberOfFreeBank === freeBankBefore
                         && cookieBaker.numberOfFreeTemple === freeTempleBefore
                         && cookieBaker.numberOfFreeWizard === freeWizardBefore
@@ -4051,184 +4012,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
                         && cookieBaker.numberOfFreeCordex === freeCordexBefore
 
-
                         && cookieBaker.cursorCost === cursorCostBefore
                         && cookieBaker.grandmaCost === grandmaCostBefore
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
-
-                        && cookieBaker.bankCost === bankCostBefore
-                        && cookieBaker.templeCost === templeCostBefore
-                        && cookieBaker.wizardCost === wizardCostBefore
-                        && cookieBaker.shipmentCost === shipmentCostBefore
-                        && cookieBaker.alchemyCost === alchemyCostBefore
-                        && cookieBaker.portalCost === portalCostBefore
-                        && cookieBaker.timeMachineCost === timeMachineCostBefore
-                        && cookieBaker.antimatterCost === antimatterCostBefore
-                        && cookieBaker.prismCost === prismCostBefore
-                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
-                        && cookieBaker.fractalCost === fractalCostBefore
-                        && cookieBaker.javaScriptCost === javaScriptCostBefore
-                        && cookieBaker.idleverseCost === idleverseCostBefore
-                        && cookieBaker.cordexCost === cordexCostBefore
-
-
-
-                        && cookieBaker.cursorCps === cursorCpsBefore
-                        && cookieBaker.grandmaCps === grandmaCpsBefore
-                        && cookieBaker.farmCps === farmCpsBefore
-                        && cookieBaker.mineCps === mineCpsBefore
-                        && cookieBaker.factoryCps === factoryCpsBefore)
-                }), { verbose: true });
-    });
-    /**
-     * Mine
-     */
-    test('Cannot mint mine if not enough cookie', () => {
-        fc.assert(
-            fc.property(
-                cookieBakerArbitrary(),
-                cookieBakerType => {
-                    const cursorsBefore = cookieBakerType.numberOfCursor;
-                    const grandmasBefore = cookieBakerType.numberOfGrandma;
-                    const farmsBefore = cookieBakerType.numberOfFarm;
-                    const minesBefore = cookieBakerType.numberOfMine;
-                    const factoriesBefore = cookieBakerType.numberOfFactory;
-
-                    const banksBefore = cookieBakerType.numberOfBank;
-                    const templesBefore = cookieBakerType.numberOfTemple;
-                    const wizardsBefore = cookieBakerType.numberOfWizard;
-                    const shipmentsBefore = cookieBakerType.numberOfShipment;
-                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
-                    const portalsBefore = cookieBakerType.numberOfPortal;
-                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
-                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
-                    const prismsBefore = cookieBakerType.numberOfPrism;
-                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
-                    const fractalsBefore = cookieBakerType.numberOfFractal;
-                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
-                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
-                    const cordexsBefore = cookieBakerType.numberOfCordex;
-
-                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
-                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
-                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
-                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
-                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
-
-                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
-                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
-                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
-                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
-                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
-                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
-                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
-                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
-                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
-                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
-                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
-                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
-                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
-                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
-
-
-                    const cursorCostBefore = cookieBakerType.cursorCost;
-                    const grandmaCostBefore = cookieBakerType.grandmaCost;
-                    const farmCostBefore = cookieBakerType.farmCost;
-                    const mineCostBefore = cookieBakerType.mineCost;
-                    const factoryCostBefore = cookieBakerType.factoryCost;
-
-                    const bankCostBefore = cookieBakerType.bankCost;
-                    const templeCostBefore = cookieBakerType.templeCost;
-                    const wizardCostBefore = cookieBakerType.wizardCost;
-                    const shipmentCostBefore = cookieBakerType.shipmentCost;
-                    const alchemyCostBefore = cookieBakerType.alchemyCost;
-                    const portalCostBefore = cookieBakerType.portalCost;
-                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
-                    const antimatterCostBefore = cookieBakerType.antimatterCost;
-                    const prismCostBefore = cookieBakerType.prismCost;
-                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
-                    const fractalCostBefore = cookieBakerType.fractalCost;
-                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
-                    const idleverseCostBefore = cookieBakerType.idleverseCost;
-                    const cordexCostBefore = cookieBakerType.cordexCost;
-
-                    const cursorCpsBefore = cookieBakerType.cursorCps;
-                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
-                    const farmCpsBefore = cookieBakerType.farmCps;
-                    const mineCpsBefore = cookieBakerType.mineCps;
-                    const factoryCpsBefore = cookieBakerType.factoryCps;
-
-                    const bankCpsBefore = cookieBakerType.bankCps;
-                    const templeCpsBefore = cookieBakerType.templeCps;
-                    const wizardCpsBefore = cookieBakerType.wizardCps;
-                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
-                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
-                    const portalCpsBefore = cookieBakerType.portalCps;
-                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
-                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
-                    const prismCpsBefore = cookieBakerType.prismCps;
-                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
-                    const fractalCpsBefore = cookieBakerType.fractalCps;
-                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
-                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
-                    const cordexCpsBefore = cookieBakerType.cordexCps;
-
-
-                    //make sure we can't buy a mine
-                    cookieBakerType.numberOfCookie = 0
-                    const cookieBaker = addMine(cookieBakerType);
-                    return (cookieBaker.numberOfCookie === 0
-                        && cookieBaker.numberOfCursor === cursorsBefore
-                        && cookieBaker.numberOfGrandma === grandmasBefore
-                        && cookieBaker.numberOfFarm === farmsBefore
-                        && cookieBaker.numberOfMine === minesBefore
-                        && cookieBaker.numberOfFactory === factoriesBefore
-
-                        && cookieBaker.numberOfBank === banksBefore
-                        && cookieBaker.numberOfTemple === templesBefore
-                        && cookieBaker.numberOfWizard === wizardsBefore
-                        && cookieBaker.numberOfShipment === shipmentsBefore
-                        && cookieBaker.numberOfAlchemy === alchemiesBefore
-                        && cookieBaker.numberOfPortal === portalsBefore
-                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
-                        && cookieBaker.numberOfAntimatter === antimattersBefore
-                        && cookieBaker.numberOfPrism === prismsBefore
-                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
-                        && cookieBaker.numberOfFractal === fractalsBefore
-                        && cookieBaker.numberOfJavaScript === javascriptsBefore
-                        && cookieBaker.numberOfIdleverse === idleversesBefore
-                        && cookieBaker.numberOfCordex === cordexsBefore
-
-                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
-                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
-                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
-                        && cookieBaker.numberOfFreeMine === freeMineBefore
-                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
-
-                        && cookieBaker.numberOfFreeBank === freeBankBefore
-                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
-                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
-                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
-                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
-                        && cookieBaker.numberOfFreePortal === freePortalBefore
-                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
-                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
-                        && cookieBaker.numberOfFreePrism === freePrismBefore
-                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
-                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
-                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
-                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
-                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
-
-
-                        && cookieBaker.cursorCost === cursorCostBefore
-                        && cookieBaker.grandmaCost === grandmaCostBefore
-                        && cookieBaker.farmCost === farmCostBefore
-                        && cookieBaker.mineCost === mineCostBefore
-                        && cookieBaker.factoryCost === factoryCostBefore
-
                         && cookieBaker.bankCost === bankCostBefore
                         && cookieBaker.templeCost === templeCostBefore
                         && cookieBaker.wizardCost === wizardCostBefore
@@ -4249,7 +4037,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.farmCps === farmCpsBefore
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore
-
                         && cookieBaker.bankCps === bankCpsBefore
                         && cookieBaker.templeCps === templeCpsBefore
                         && cookieBaker.wizardCps === wizardCpsBefore
@@ -4265,8 +4052,180 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.idleverseCps === idleverseCpsBefore
                         && cookieBaker.cordexCps === cordexCpsBefore
 
+                    )
+                }), { verbose: true });
+    });
+    /**
+     * Mine
+     */
+    test('Cannot mint mine if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
 
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a mine
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addMine(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
                     )
                 }), { verbose: true });
     });
@@ -4284,7 +4243,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmsBefore = cookieBakerType.numberOfFarm;
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
-
                     const banksBefore = cookieBakerType.numberOfBank;
                     const templesBefore = cookieBakerType.numberOfTemple;
                     const wizardsBefore = cookieBakerType.numberOfWizard;
@@ -4305,7 +4263,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
-
                     const freeBankBefore = cookieBakerType.numberOfFreeBank;
                     const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
                     const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
@@ -4321,13 +4278,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
                     const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
-
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
-
                     const bankCostBefore = cookieBakerType.bankCost;
                     const templeCostBefore = cookieBakerType.templeCost;
                     const wizardCostBefore = cookieBakerType.wizardCost;
@@ -4348,7 +4303,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const farmCpsBefore = cookieBakerType.farmCps;
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
-
                     const bankCpsBefore = cookieBakerType.bankCps;
                     const templeCpsBefore = cookieBakerType.templeCps;
                     const wizardCpsBefore = cookieBakerType.wizardCps;
@@ -4364,7 +4318,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const idleverseCpsBefore = cookieBakerType.idleverseCps;
                     const cordexCpsBefore = cookieBakerType.cordexCps;
 
-
                     //make sure we can't buy a factory
                     cookieBakerType.numberOfCookie = 0
                     const cookieBaker = addFactory(cookieBakerType);
@@ -4374,7 +4327,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFarm === farmsBefore
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
-
                         && cookieBaker.numberOfBank === banksBefore
                         && cookieBaker.numberOfTemple === templesBefore
                         && cookieBaker.numberOfWizard === wizardsBefore
@@ -4395,7 +4347,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeFarm === freeFarmBefore
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
-
                         && cookieBaker.numberOfFreeBank === freeBankBefore
                         && cookieBaker.numberOfFreeTemple === freeTempleBefore
                         && cookieBaker.numberOfFreeWizard === freeWizardBefore
@@ -4411,13 +4362,11 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
                         && cookieBaker.numberOfFreeCordex === freeCordexBefore
 
-
                         && cookieBaker.cursorCost === cursorCostBefore
                         && cookieBaker.grandmaCost === grandmaCostBefore
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
-
                         && cookieBaker.bankCost === bankCostBefore
                         && cookieBaker.templeCost === templeCostBefore
                         && cookieBaker.wizardCost === wizardCostBefore
@@ -4438,7 +4387,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.farmCps === farmCpsBefore
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore
-
                         && cookieBaker.bankCps === bankCpsBefore
                         && cookieBaker.templeCps === templeCpsBefore
                         && cookieBaker.wizardCps === wizardCpsBefore
@@ -4453,8 +4401,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.javaScriptCps === javaScriptCpsBefore
                         && cookieBaker.idleverseCps === idleverseCpsBefore
                         && cookieBaker.cordexCps === cordexCpsBefore
-
-
                     )
                 }), { verbose: true });
     });
@@ -4473,7 +4419,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const minesBefore = cookieBakerType.numberOfMine;
                     const factoriesBefore = cookieBakerType.numberOfFactory;
                     const banksBefore = cookieBakerType.numberOfBank;
-
                     const templesBefore = cookieBakerType.numberOfTemple;
                     const wizardsBefore = cookieBakerType.numberOfWizard;
                     const shipmentsBefore = cookieBakerType.numberOfShipment;
@@ -4494,7 +4439,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeMineBefore = cookieBakerType.numberOfFreeMine;
                     const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
                     const freeBankBefore = cookieBakerType.numberOfFreeBank;
-
                     const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
                     const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
                     const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
@@ -4509,14 +4453,12 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
                     const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
 
-
                     const cursorCostBefore = cookieBakerType.cursorCost;
                     const grandmaCostBefore = cookieBakerType.grandmaCost;
                     const farmCostBefore = cookieBakerType.farmCost;
                     const mineCostBefore = cookieBakerType.mineCost;
                     const factoryCostBefore = cookieBakerType.factoryCost;
                     const bankCostBefore = cookieBakerType.bankCost;
-
                     const templeCostBefore = cookieBakerType.templeCost;
                     const wizardCostBefore = cookieBakerType.wizardCost;
                     const shipmentCostBefore = cookieBakerType.shipmentCost;
@@ -4537,7 +4479,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const mineCpsBefore = cookieBakerType.mineCps;
                     const factoryCpsBefore = cookieBakerType.factoryCps;
                     const bankCpsBefore = cookieBakerType.bankCps;
-
                     const templeCpsBefore = cookieBakerType.templeCps;
                     const wizardCpsBefore = cookieBakerType.wizardCps;
                     const shipmentCpsBefore = cookieBakerType.shipmentCps;
@@ -4552,7 +4493,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const idleverseCpsBefore = cookieBakerType.idleverseCps;
                     const cordexCpsBefore = cookieBakerType.cordexCps;
 
-
                     //make sure we can't buy a factory
                     cookieBakerType.numberOfCookie = 0
                     const cookieBaker = addBank(cookieBakerType);
@@ -4563,7 +4503,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfMine === minesBefore
                         && cookieBaker.numberOfFactory === factoriesBefore
                         && cookieBaker.numberOfBank === banksBefore
-
                         && cookieBaker.numberOfTemple === templesBefore
                         && cookieBaker.numberOfWizard === wizardsBefore
                         && cookieBaker.numberOfShipment === shipmentsBefore
@@ -4584,7 +4523,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeMine === freeMineBefore
                         && cookieBaker.numberOfFreeFactory === freeFactoryBefore
                         && cookieBaker.numberOfFreeBank === freeBankBefore
-
                         && cookieBaker.numberOfFreeTemple === freeTempleBefore
                         && cookieBaker.numberOfFreeWizard === freeWizardBefore
                         && cookieBaker.numberOfFreeShipment === freeShipmentBefore
@@ -4599,14 +4537,12 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
                         && cookieBaker.numberOfFreeCordex === freeCordexBefore
 
-
                         && cookieBaker.cursorCost === cursorCostBefore
                         && cookieBaker.grandmaCost === grandmaCostBefore
                         && cookieBaker.farmCost === farmCostBefore
                         && cookieBaker.mineCost === mineCostBefore
                         && cookieBaker.factoryCost === factoryCostBefore
                         && cookieBaker.bankCost === bankCostBefore
-
                         && cookieBaker.templeCost === templeCostBefore
                         && cookieBaker.wizardCost === wizardCostBefore
                         && cookieBaker.shipmentCost === shipmentCostBefore
@@ -4627,7 +4563,2295 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookieBaker.mineCps === mineCpsBefore
                         && cookieBaker.factoryCps === factoryCpsBefore
                         && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
 
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Temple
+    */
+    test('Cannot mint temple if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a temple
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addTemple(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Wizard
+    */
+    test('Cannot mint wizard if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a factory
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addWizard(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Shipment
+    */
+    test('Cannot mint shipment if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a shipment
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addShipment(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Alchemy
+    */
+    test('Cannot mint alchemy if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a alchemy
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addAlchemy(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Portal
+    */
+    test('Cannot mint portal if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a portal
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addPortal(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Time machine
+    */
+    test('Cannot mint time machine if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a time machine
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addTimeMachine(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Antimatter
+    */
+    test('Cannot mint antimatter if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a antimatter
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addAntimatter(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Prism
+    */
+    test('Cannot mint prism if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a prism
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addPrism(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Chance maker
+    */
+    test('Cannot mint chance maker if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a chance maker
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addChanceMaker(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Fractal
+    */
+    test('Cannot mint fractal if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a fractal
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addFractal(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Javascript
+    */
+    test('Cannot mint javascript if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a javascript
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addJavascript(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+
+    /**
+    * Idleverse
+    */
+    test('Cannot mint idleverse if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a idleverse
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addIdleverse(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
+                        && cookieBaker.templeCps === templeCpsBefore
+                        && cookieBaker.wizardCps === wizardCpsBefore
+                        && cookieBaker.shipmentCps === shipmentCpsBefore
+                        && cookieBaker.alchemyCps === alchemyCpsBefore
+                        && cookieBaker.portalCps === portalCpsBefore
+                        && cookieBaker.timeMachineCps === timeMachineCpsBefore
+                        && cookieBaker.antimatterCps === antimatterCpsBefore
+                        && cookieBaker.prismCps === prismCpsBefore
+                        && cookieBaker.chanceMakerCps === chanceMakerCpsBefore
+                        && cookieBaker.fractalCps === fractalCpsBefore
+                        && cookieBaker.javaScriptCps === javaScriptCpsBefore
+                        && cookieBaker.idleverseCps === idleverseCpsBefore
+                        && cookieBaker.cordexCps === cordexCpsBefore
+
+                    )
+                }), { verbose: true });
+    });
+
+    /**
+    * Cordex
+    */
+    test('Cannot cordex bank if not enough cookie', () => {
+        fc.assert(
+            fc.property(
+                cookieBakerArbitrary(),
+                cookieBakerType => {
+                    const cursorsBefore = cookieBakerType.numberOfCursor;
+                    const grandmasBefore = cookieBakerType.numberOfGrandma;
+                    const farmsBefore = cookieBakerType.numberOfFarm;
+                    const minesBefore = cookieBakerType.numberOfMine;
+                    const factoriesBefore = cookieBakerType.numberOfFactory;
+                    const banksBefore = cookieBakerType.numberOfBank;
+                    const templesBefore = cookieBakerType.numberOfTemple;
+                    const wizardsBefore = cookieBakerType.numberOfWizard;
+                    const shipmentsBefore = cookieBakerType.numberOfShipment;
+                    const alchemiesBefore = cookieBakerType.numberOfAlchemy;
+                    const portalsBefore = cookieBakerType.numberOfPortal;
+                    const timemachinesBefore = cookieBakerType.numberOfTimeMachine;
+                    const antimattersBefore = cookieBakerType.numberOfAntimatter;
+                    const prismsBefore = cookieBakerType.numberOfPrism;
+                    const chancemakersBefore = cookieBakerType.numberOfChanceMaker;
+                    const fractalsBefore = cookieBakerType.numberOfFractal;
+                    const javascriptsBefore = cookieBakerType.numberOfJavaScript;
+                    const idleversesBefore = cookieBakerType.numberOfIdleverse;
+                    const cordexsBefore = cookieBakerType.numberOfCordex;
+
+                    const freeCursorBefore = cookieBakerType.numberOfFreeCursor;
+                    const freeGrandmaBefore = cookieBakerType.numberOfFreeGrandma;
+                    const freeFarmBefore = cookieBakerType.numberOfFreeFarm;
+                    const freeMineBefore = cookieBakerType.numberOfFreeMine;
+                    const freeFactoryBefore = cookieBakerType.numberOfFreeFactory;
+                    const freeBankBefore = cookieBakerType.numberOfFreeBank;
+                    const freeTempleBefore = cookieBakerType.numberOfFreeTemple;
+                    const freeWizardBefore = cookieBakerType.numberOfFreeWizard;
+                    const freeShipmentBefore = cookieBakerType.numberOfFreeShipment;
+                    const freeAlchemyBefore = cookieBakerType.numberOfFreeAlchemy;
+                    const freePortalBefore = cookieBakerType.numberOfFreePortal;
+                    const freeTimeMachinesBefore = cookieBakerType.numberOfFreeTimeMachine;
+                    const freeAntimatterBefore = cookieBakerType.numberOfFreeAntimatter;
+                    const freePrismBefore = cookieBakerType.numberOfFreePrism;
+                    const freeChancemakerBefore = cookieBakerType.numberOfFreeChanceMaker;
+                    const freeFractalBefore = cookieBakerType.numberOfFreeFractal;
+                    const freeJavaScriptBefore = cookieBakerType.numberOfFreeJavaScript;
+                    const freeIdleverseBefore = cookieBakerType.numberOfFreeIdleverse;
+                    const freeCordexBefore = cookieBakerType.numberOfFreeCordex;
+
+                    const cursorCostBefore = cookieBakerType.cursorCost;
+                    const grandmaCostBefore = cookieBakerType.grandmaCost;
+                    const farmCostBefore = cookieBakerType.farmCost;
+                    const mineCostBefore = cookieBakerType.mineCost;
+                    const factoryCostBefore = cookieBakerType.factoryCost;
+                    const bankCostBefore = cookieBakerType.bankCost;
+                    const templeCostBefore = cookieBakerType.templeCost;
+                    const wizardCostBefore = cookieBakerType.wizardCost;
+                    const shipmentCostBefore = cookieBakerType.shipmentCost;
+                    const alchemyCostBefore = cookieBakerType.alchemyCost;
+                    const portalCostBefore = cookieBakerType.portalCost;
+                    const timeMachineCostBefore = cookieBakerType.timeMachineCost;
+                    const antimatterCostBefore = cookieBakerType.antimatterCost;
+                    const prismCostBefore = cookieBakerType.prismCost;
+                    const chanceMakerCostBefore = cookieBakerType.chanceMakerCost;
+                    const fractalCostBefore = cookieBakerType.fractalCost;
+                    const javaScriptCostBefore = cookieBakerType.javaScriptCost;
+                    const idleverseCostBefore = cookieBakerType.idleverseCost;
+                    const cordexCostBefore = cookieBakerType.cordexCost;
+
+                    const cursorCpsBefore = cookieBakerType.cursorCps;
+                    const grandmaCpsBefore = cookieBakerType.grandmaCps;
+                    const farmCpsBefore = cookieBakerType.farmCps;
+                    const mineCpsBefore = cookieBakerType.mineCps;
+                    const factoryCpsBefore = cookieBakerType.factoryCps;
+                    const bankCpsBefore = cookieBakerType.bankCps;
+                    const templeCpsBefore = cookieBakerType.templeCps;
+                    const wizardCpsBefore = cookieBakerType.wizardCps;
+                    const shipmentCpsBefore = cookieBakerType.shipmentCps;
+                    const alchemyCpsBefore = cookieBakerType.alchemyCps;
+                    const portalCpsBefore = cookieBakerType.portalCps;
+                    const timeMachineCpsBefore = cookieBakerType.timeMachineCps;
+                    const antimatterCpsBefore = cookieBakerType.antimatterCps;
+                    const prismCpsBefore = cookieBakerType.prismCps;
+                    const chanceMakerCpsBefore = cookieBakerType.chanceMakerCps;
+                    const fractalCpsBefore = cookieBakerType.fractalCps;
+                    const javaScriptCpsBefore = cookieBakerType.javaScriptCps;
+                    const idleverseCpsBefore = cookieBakerType.idleverseCps;
+                    const cordexCpsBefore = cookieBakerType.cordexCps;
+
+                    //make sure we can't buy a cordex
+                    cookieBakerType.numberOfCookie = 0
+                    const cookieBaker = addCordex(cookieBakerType);
+                    return (cookieBaker.numberOfCookie === 0
+                        && cookieBaker.numberOfCursor === cursorsBefore
+                        && cookieBaker.numberOfGrandma === grandmasBefore
+                        && cookieBaker.numberOfFarm === farmsBefore
+                        && cookieBaker.numberOfMine === minesBefore
+                        && cookieBaker.numberOfFactory === factoriesBefore
+                        && cookieBaker.numberOfBank === banksBefore
+                        && cookieBaker.numberOfTemple === templesBefore
+                        && cookieBaker.numberOfWizard === wizardsBefore
+                        && cookieBaker.numberOfShipment === shipmentsBefore
+                        && cookieBaker.numberOfAlchemy === alchemiesBefore
+                        && cookieBaker.numberOfPortal === portalsBefore
+                        && cookieBaker.numberOfTimeMachine === timemachinesBefore
+                        && cookieBaker.numberOfAntimatter === antimattersBefore
+                        && cookieBaker.numberOfPrism === prismsBefore
+                        && cookieBaker.numberOfChanceMaker === chancemakersBefore
+                        && cookieBaker.numberOfFractal === fractalsBefore
+                        && cookieBaker.numberOfJavaScript === javascriptsBefore
+                        && cookieBaker.numberOfIdleverse === idleversesBefore
+                        && cookieBaker.numberOfCordex === cordexsBefore
+
+                        && cookieBaker.numberOfFreeCursor === freeCursorBefore
+                        && cookieBaker.numberOfFreeGrandma === freeGrandmaBefore
+                        && cookieBaker.numberOfFreeFarm === freeFarmBefore
+                        && cookieBaker.numberOfFreeMine === freeMineBefore
+                        && cookieBaker.numberOfFreeFactory === freeFactoryBefore
+                        && cookieBaker.numberOfFreeBank === freeBankBefore
+                        && cookieBaker.numberOfFreeTemple === freeTempleBefore
+                        && cookieBaker.numberOfFreeWizard === freeWizardBefore
+                        && cookieBaker.numberOfFreeShipment === freeShipmentBefore
+                        && cookieBaker.numberOfFreeAlchemy === freeAlchemyBefore
+                        && cookieBaker.numberOfFreePortal === freePortalBefore
+                        && cookieBaker.numberOfFreeTimeMachine === freeTimeMachinesBefore
+                        && cookieBaker.numberOfFreeAntimatter === freeAntimatterBefore
+                        && cookieBaker.numberOfFreePrism === freePrismBefore
+                        && cookieBaker.numberOfFreeChanceMaker === freeChancemakerBefore
+                        && cookieBaker.numberOfFreeFractal === freeFractalBefore
+                        && cookieBaker.numberOfFreeJavaScript === freeJavaScriptBefore
+                        && cookieBaker.numberOfFreeIdleverse === freeIdleverseBefore
+                        && cookieBaker.numberOfFreeCordex === freeCordexBefore
+
+                        && cookieBaker.cursorCost === cursorCostBefore
+                        && cookieBaker.grandmaCost === grandmaCostBefore
+                        && cookieBaker.farmCost === farmCostBefore
+                        && cookieBaker.mineCost === mineCostBefore
+                        && cookieBaker.factoryCost === factoryCostBefore
+                        && cookieBaker.bankCost === bankCostBefore
+                        && cookieBaker.templeCost === templeCostBefore
+                        && cookieBaker.wizardCost === wizardCostBefore
+                        && cookieBaker.shipmentCost === shipmentCostBefore
+                        && cookieBaker.alchemyCost === alchemyCostBefore
+                        && cookieBaker.portalCost === portalCostBefore
+                        && cookieBaker.timeMachineCost === timeMachineCostBefore
+                        && cookieBaker.antimatterCost === antimatterCostBefore
+                        && cookieBaker.prismCost === prismCostBefore
+                        && cookieBaker.chanceMakerCost === chanceMakerCostBefore
+                        && cookieBaker.fractalCost === fractalCostBefore
+                        && cookieBaker.javaScriptCost === javaScriptCostBefore
+                        && cookieBaker.idleverseCost === idleverseCostBefore
+                        && cookieBaker.cordexCost === cordexCostBefore
+
+                        && cookieBaker.cursorCps === cursorCpsBefore
+                        && cookieBaker.grandmaCps === grandmaCpsBefore
+                        && cookieBaker.farmCps === farmCpsBefore
+                        && cookieBaker.mineCps === mineCpsBefore
+                        && cookieBaker.factoryCps === factoryCpsBefore
+                        && cookieBaker.bankCps === bankCpsBefore
                         && cookieBaker.templeCps === templeCpsBefore
                         && cookieBaker.wizardCps === wizardCpsBefore
                         && cookieBaker.shipmentCps === shipmentCpsBefore
