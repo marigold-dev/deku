@@ -1,7 +1,8 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
+import { cookieBakerType } from "./state_types"
 import {
-    cookieBakerType, createCookieBaker, addCookie, addCursor,
+    createCookieBaker, addCookie, addCursor,
     addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
     addWizard, addShipment, addAlchemy, addPortal, addTimeMachine,
     addAntimatter, addPrism, addChanceMaker, addFractal, addJavascript,
