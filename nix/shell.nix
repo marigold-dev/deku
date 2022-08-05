@@ -2,13 +2,7 @@
 pkgs.mkShell {
   shellHook = ''
     export PATH="$(pwd)/_build/install/default/bin:$PATH"
-
-    # This is a flag picked up by our sandbox.sh that's used
-    # to know when to use esy instead of nix.
-    # You can turn this off with the command 'unset USE_NIX'.
-    export USE_NIX=y
-    # Similar to above, but triggers a rebuild before executing
-    # the rest of the script.
+    # Triggers a rebuild before executing the rest of the script.
     export REBUILD=y
   '';
   inputsFrom = [ deku ];
@@ -25,11 +19,6 @@ pkgs.mkShell {
 
       # Tezos tooling
       ligo
-
-      # Go developer tooling
-      go
-      gopls
-      gore
 
       # formatters
       nixfmt
