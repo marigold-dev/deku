@@ -21,9 +21,10 @@ pkgs.mkShell {
       ligo
 
       # formatters
+      treefmt
       nixfmt
       nodePackages.prettier
-      ocamlformat
+      ocamlformat_0_20_1
     ] ++ (pkgs.lib.optional (system != "x86_64-darwin") tilt)
     ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
       # OCaml developer tooling
