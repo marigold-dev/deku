@@ -36,6 +36,7 @@ const transition = (tx: transaction) => {
         sourceValue.cookieBaker.numberOfMine,
         sourceValue.cookieBaker.numberOfFactory,
         sourceValue.cookieBaker.numberOfBank,
+
         sourceValue.cookieBaker.numberOfTemple,
         sourceValue.cookieBaker.numberOfWizard,
         sourceValue.cookieBaker.numberOfShipment,
