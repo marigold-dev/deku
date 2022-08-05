@@ -1,0 +1,12 @@
+diff --git a/packages/webpack-cli/src/webpack-cli.ts b/packages/webpack-cli/src/webpack-cli.ts
+--- a/lib/webpack-cli.js
++++ b/lib/webpack-cli.js
+@@ -342,7 +342,7 @@
+           continue;
+         }
+ 
+-        let skipInstallation = false;
++        let skipInstallation = true;
+ 
+         // Allow to use `./path/to/webpack.js` outside `node_modules`
+         if (dependency === WEBPACK_PACKAGE && fs.existsSync(WEBPACK_PACKAGE)) {
