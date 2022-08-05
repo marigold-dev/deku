@@ -23,5 +23,5 @@ let skip ~after ~skip validators =
   match find_after_index ~after validators with
   | Some n ->
       let i = (n + skip) mod length in
-      List.nth_opt validators i
-  | None -> None
+      List.nth validators i
+  | None -> List.nth validators 0

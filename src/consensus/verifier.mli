@@ -1,6 +1,6 @@
 open Deku_concepts
 
-type verifier
+type verifier = private Verifier of { block_pool : Block_pool.t }
 type t = verifier
 
 val empty : verifier

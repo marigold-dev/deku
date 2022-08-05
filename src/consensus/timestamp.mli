@@ -1,5 +1,5 @@
 (* TODO: probably should be under concepts *)
-type timestamp
+type timestamp = private float
 type t = timestamp
 
 val of_float : float -> timestamp

@@ -83,10 +83,12 @@ let expected_author ~current consensus =
   match last_block_update with
   | Some last_block_update ->
       let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
-      Validators.skip ~after:last_block_author ~skip validators
+      Some (Validators.skip ~after:last_block_author ~skip validators)
   | None -> None
 
 let is_expected_author ~current ~author consensus =
   match expected_author ~current consensus with
-  | Some expected_author -> Key_hash.equal expected_author author
-  | None -> false
+  | Some expected_author ->
+      Key_hash.equal expected_author author
+  | None ->
+      prerr_endline "none"; false

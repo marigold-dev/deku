@@ -25,11 +25,10 @@ let is_signed_enough ~validators ~signatures =
   in
 
   let required_signatures =
-    (* TODO: maybe should be 2/3 + 1? *)
     (* TODO: O(1) cardinal *)
     let validators = Validators.cardinal validators in
     let validators = Float.of_int validators in
-    let required_signatures = Float.ceil (validators *. (2.0 /. 3.0)) in
+    let required_signatures = Float.floor (validators *. (2.0 /. 3.0) +. 1.) in
     Float.to_int required_signatures
   in
   total_signatures >= required_signatures
