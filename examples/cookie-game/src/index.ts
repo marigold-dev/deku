@@ -1,6 +1,12 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
-import { cookieBakerType, createCookieBaker, addCookie, addCursor, addGrandma, addFarm, addMine, addFactory, addBank, addTemple } from "./state"
+import {
+    cookieBakerType, createCookieBaker, addCookie, addCursor,
+    addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
+    addWizard, addShipment, addAlchemy, addPortal, addTimeMachine,
+    addAntimatter, addPrism, addChanceMaker, addFractal, addJavascript,
+    addIdleverse, addCordex
+} from "./state"
 import { actions } from "./actions"
 
 const printMessageWithSource = (message: string, source: transaction) => {
@@ -135,6 +141,114 @@ const transition = (tx: transaction) => {
             //action successful, update state
             sourceValue.cookieBaker = updatedCookieBaker;
             console.log("Successfully minted temple");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementWizard: {
+            const updatedCookieBaker = addWizard(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted wizard");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementShipment: {
+            const updatedCookieBaker = addShipment(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted shipment");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementAlchemy: {
+            const updatedCookieBaker = addAlchemy(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted alchemy");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementPortal: {
+            const updatedCookieBaker = addPortal(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted portal");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementTimeMachine: {
+            const updatedCookieBaker = addTimeMachine(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted time machine");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementAntimatter: {
+            const updatedCookieBaker = addAntimatter(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted antimatter");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementPrism: {
+            const updatedCookieBaker = addPrism(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted prism");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementChanceMaker: {
+            const updatedCookieBaker = addChanceMaker(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted chance maker");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementFractal: {
+            const updatedCookieBaker = addFractal(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted fractal");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementJavascript: {
+            const updatedCookieBaker = addJavascript(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted javascript");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementIdleverse: {
+            const updatedCookieBaker = addIdleverse(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted idleverse");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions.incrementCordex: {
+            const updatedCookieBaker = addCordex(cookieBaker);
+
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted cordex");
             saveState(source, sourceValue);
             break;
         }
