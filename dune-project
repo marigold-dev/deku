@@ -1,4 +1,4 @@
-(lang dune 3.3)
+(lang dune 2.9)
 
 ; (name deku)
 
@@ -33,12 +33,20 @@
  (depends deku-stdlib))
 
 (package
+ (name deku-tezos)
+ (depends deku-stdlib))
+
+(package
  (name deku-protocol)
  (depends deku-stdlib deku-concepts deku-constants))
 
 (package
  (name deku-consensus)
  (depends deku-stdlib deku-concepts deku-constants))
+
+(package
+ (name deku-bridge)
+ (depends deku-stdlib))
 
 (package
  (name deku-chain)

@@ -7,34 +7,31 @@ type signature =
 
 and t = signature [@@deriving eq, ord]
 
-let of_b58 =
-  let ed25519 string =
-    match Ed25519.Signature.of_b58 string with
-    | Some signature -> Some (Ed25519 signature)
-    | None -> None
-  in
-  let secp256k1 string =
-    match Secp256k1.Signature.of_b58 string with
-    | Some signature -> Some (Secp256k1 signature)
-    | None -> None
-  in
-  let p256 string =
-    match P256.Signature.of_b58 string with
-    | Some signature -> Some (P256 signature)
-    | None -> None
-  in
-  fun string -> decode_variant [ ed25519; secp256k1; p256 ] string
-
-let to_b58 = function
-  | Ed25519 signature -> Ed25519.Signature.to_b58 signature
-  | Secp256k1 signature -> Secp256k1.Signature.to_b58 signature
-  | P256 signature -> P256.Signature.to_b58 signature
-
-include With_yojson_of_b58 (struct
+include With_encodings_of_many (struct
   type t = signature
 
-  let of_b58 = of_b58
-  let to_b58 = to_b58
+  let of_b58 =
+    let ed25519 string =
+      match Ed25519.Signature.of_b58 string with
+      | Some signature -> Some (Ed25519 signature)
+      | None -> None
+    in
+    let secp256k1 string =
+      match Secp256k1.Signature.of_b58 string with
+      | Some signature -> Some (Secp256k1 signature)
+      | None -> None
+    in
+    let p256 string =
+      match P256.Signature.of_b58 string with
+      | Some signature -> Some (P256 signature)
+      | None -> None
+    in
+    [ ed25519; secp256k1; p256 ]
+
+  let to_b58 = function
+    | Ed25519 signature -> Ed25519.Signature.to_b58 signature
+    | Secp256k1 signature -> Secp256k1.Signature.to_b58 signature
+    | P256 signature -> P256.Signature.to_b58 signature
 end)
 
 let zero = Ed25519 Ed25519.Signature.zero

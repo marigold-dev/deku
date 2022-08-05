@@ -7,5 +7,6 @@ type secret =
 type t = secret [@@deriving eq, ord, yojson]
 
 (* repr *)
+val encoding : secret Data_encoding.t
 val of_b58 : string -> secret option
 val to_b58 : secret -> string

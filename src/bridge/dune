@@ -1,0 +1,28 @@
+(library
+ (name deku_bridge)
+ (public_name deku-bridge)
+ (libraries deku-stdlib deku-crypto deku-tezos lwt)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv
+   ppx_blob))
+ (preprocessor_deps
+  (file ./tezos_js_bridge.bundle.js)))
+
+(rule
+ (deps ./webpack.config.js ./tezos_js_bridge.js)
+ (targets ./tezos_js_bridge.bundle.js)
+ (mode fallback)
+ (action
+  (run webpack --env=%{profile})))
+
+(rule
+ (deps ./webpack.config.js ./tezos_js_bridge.js)
+ (alias fmt)
+ (mode fallback)
+ (action
+  (run prettier -c %{deps})))

@@ -4,6 +4,7 @@ module type S = sig
     type t = secret [@@deriving eq, ord, yojson]
 
     (* repr *)
+    val encoding : secret Data_encoding.t
     val of_b58 : string -> secret option
     val to_b58 : secret -> string
 
@@ -16,6 +17,7 @@ module type S = sig
     type t = key [@@deriving eq, ord, yojson]
 
     (* repr *)
+    val encoding : key Data_encoding.t
     val of_b58 : string -> key option
     val to_b58 : key -> string
 
@@ -28,6 +30,7 @@ module type S = sig
     type t = key_hash [@@deriving eq, ord, yojson]
 
     (* repr *)
+    val encoding : key_hash Data_encoding.t
     val of_b58 : string -> key_hash option
     val to_b58 : key_hash -> string
 
@@ -40,6 +43,7 @@ module type S = sig
     type t = signature [@@deriving eq, ord, yojson]
 
     (* repr *)
+    val encoding : signature Data_encoding.t
     val of_b58 : string -> signature option
     val to_b58 : signature -> string
 

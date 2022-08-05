@@ -9,3 +9,4 @@ module Uri = Uri_ext
 [%%let ("let.some" : 'a option -> ('a -> 'b option) -> 'b option)]
 
 module Parallel = Parallel
+module Yojson = Yojson_ext

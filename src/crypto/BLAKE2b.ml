@@ -33,15 +33,29 @@ struct
       Alg.verify key signature (to_raw_string hash)
   end
 
-  module With_b58 (P : sig
-    val prefix : string
+  module With_encodings (P : sig
+    val prefix : Prefix.t
   end) =
-  With_b58 (struct
-    open P
+  With_encodings (struct
+    include P
 
     type t = hash
 
-    let prefix = prefix
+    let to_raw = to_raw
+    let of_raw = of_raw
+  end)
+
+  module With_all_encodings (P : sig
+    val name : string
+    val title : string
+    val prefix : Prefix.t
+  end) =
+  With_all_encodings (struct
+    include P
+
+    type t = hash
+
+    let size = digest_size
     let to_raw = to_raw
     let of_raw = of_raw
   end)

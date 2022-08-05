@@ -7,6 +7,7 @@ type key =
 type t = key [@@deriving eq, ord, yojson]
 
 (* repr *)
+val encoding : key Data_encoding.t
 val of_b58 : string -> key option
 val to_b58 : key -> string
 

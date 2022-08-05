@@ -1,5 +1,4 @@
-open Deku_repr
-open Z
+open Z_ext
 
 type nat = Z.t
 and t = nat [@@deriving eq, ord]

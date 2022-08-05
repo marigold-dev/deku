@@ -1,0 +1,6 @@
+(library
+ (name deku_tezos)
+ (public_name deku-tezos)
+ (libraries deku-crypto deku-stdlib deku-concepts tezos-micheline)
+ (preprocess
+  (pps ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv ppx_let_binding)))

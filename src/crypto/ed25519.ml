@@ -12,9 +12,12 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = secret
 
+    let name = "Ed25519.Secret_key"
+    let title = "An Ed25519 secret key"
+    let size = 32
     let prefix = Prefix.ed25519_seed
     let to_raw secret = Cstruct.to_string (priv_to_cstruct secret)
 
@@ -39,9 +42,12 @@ module Key = struct
   let of_secret secret = pub_of_priv secret
   let to_raw key = Cstruct.to_string (pub_to_cstruct key)
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = key
 
+    let name = "Ed25519.Public_key"
+    let title = "Ed25519 public key"
+    let size = 32
     let prefix = Prefix.ed25519_public_key
     let to_raw = to_raw
 
@@ -60,15 +66,10 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58 (struct
+  include With_all_encodings (struct
+    let name = "Ed25519.Public_key_hash"
+    let title = "An Ed25519 public key hash"
     let prefix = Prefix.ed25519_public_key_hash
-  end)
-
-  include With_yojson_of_b58 (struct
-    type t = key_hash
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
   end)
 end
 
@@ -81,9 +82,12 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = signature
 
+    let name = "Ed25519"
+    let title = "An Ed25519 signature"
+    let size = 64
     let prefix = Prefix.ed25519_signature
     let to_raw signature = signature
 

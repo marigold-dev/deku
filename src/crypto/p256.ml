@@ -13,9 +13,12 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = secret
 
+    let name = "P256.Secret_key"
+    let title = "A P256 secret key"
+    let size = 32
     let prefix = Prefix.p256_secret_key
     let to_raw secret = Cstruct.to_string (priv_to_cstruct secret)
 
@@ -41,9 +44,12 @@ module Key = struct
   let compare a b = Cstruct.compare (pub_to_cstruct a) (pub_to_cstruct b)
   let to_raw key = Cstruct.to_string (pub_to_cstruct ~compress:true key)
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = key
 
+    let name = "P256.Public_key"
+    let title = "P256 public key"
+    let size = 33
     let prefix = Prefix.p256_public_key
     let to_raw = to_raw
 
@@ -62,15 +68,10 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58 (struct
+  include With_all_encodings (struct
+    let name = "P256.Public_key_hash"
+    let title = "An P256 public key hash"
     let prefix = Prefix.p256_public_key_hash
-  end)
-
-  include With_yojson_of_b58 (struct
-    type t = key_hash
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
   end)
 end
 
@@ -83,9 +84,12 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include With_b58_and_yojson (struct
+  include With_all_encodings (struct
     type t = signature
 
+    let name = "P256"
+    let title = "An P256 signature"
+    let size = 64
     let prefix = Prefix.p256_signature
     let to_raw signature = signature
 
@@ -93,13 +97,6 @@ module Signature = struct
       match String.length string = size with
       | true -> Some string
       | false -> None
-  end)
-
-  include With_yojson_of_b58 (struct
-    type t = signature
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
   end)
 
   include BLAKE2b.With_alg (struct

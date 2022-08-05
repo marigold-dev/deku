@@ -2,7 +2,8 @@
  (name deku_crypto)
  (public_name deku-crypto)
  (libraries
-  deku_repr
+  data-encoding
+  deku-repr
   zarith
   mirage-crypto-rng
   mirage-crypto-rng.unix
