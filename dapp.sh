@@ -1,6 +1,6 @@
 set -e
 
-node=$2
+node="$2"
 wallet="$3"
 cmd="$4"
 
@@ -32,7 +32,7 @@ build_tests(){
 mock(){
     # run the deku-cli in mock mode
     # ex: ./dapp.sh wallet.json '"cookie"'
-     deku-cli create-mock-transaction $node $wallet $cmd node examples/cookie-game/lib/src/index.js
+     deku-cli create-mock-transaction "$node" "$wallet" "$cmd" node examples/cookie-game/lib/src/index.js
 
 }
 
@@ -49,7 +49,7 @@ deku_cluster(){
 custom(){
     # Need to wait for deku_cluster to build some nodes before run this 
     # ex: ./dapp.sh custom data/0 wallet.json '"cookie'
-    deku-cli create-custom-transaction $node $wallet $cmd
+    deku-cli create-custom-transaction "$node" "$wallet" "$cmd"
 }
 
 case "$1" in 
