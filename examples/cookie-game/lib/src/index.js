@@ -87,6 +87,102 @@ var transition = function (tx) {
             saveState(source, sourceValue);
             break;
         }
+        case actions_1.actions.incrementWizard: {
+            var updatedCookieBaker = (0, state_1.addWizard)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted wizard");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementShipment: {
+            var updatedCookieBaker = (0, state_1.addShipment)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted shipment");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementAlchemy: {
+            var updatedCookieBaker = (0, state_1.addAlchemy)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted alchemy");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementPortal: {
+            var updatedCookieBaker = (0, state_1.addPortal)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted portal");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementTimeMachine: {
+            var updatedCookieBaker = (0, state_1.addTimeMachine)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted time machine");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementAntimatter: {
+            var updatedCookieBaker = (0, state_1.addAntimatter)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted antimatter");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementPrism: {
+            var updatedCookieBaker = (0, state_1.addPrism)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted prism");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementChanceMaker: {
+            var updatedCookieBaker = (0, state_1.addChanceMaker)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted chance maker");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementFractal: {
+            var updatedCookieBaker = (0, state_1.addFractal)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted fractal");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementJavascript: {
+            var updatedCookieBaker = (0, state_1.addJavascript)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted javascript");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementIdleverse: {
+            var updatedCookieBaker = (0, state_1.addIdleverse)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted idleverse");
+            saveState(source, sourceValue);
+            break;
+        }
+        case actions_1.actions.incrementCordex: {
+            var updatedCookieBaker = (0, state_1.addCordex)(cookieBaker);
+            //action successful, update state
+            sourceValue.cookieBaker = updatedCookieBaker;
+            console.log("Successfully minted cordex");
+            saveState(source, sourceValue);
+            break;
+        }
     }
 };
 (0, deku_js_interop_1.main)(
