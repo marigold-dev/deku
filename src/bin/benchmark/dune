@@ -1,0 +1,5 @@
+(executable
+ (name deku_benchmark)
+ (public_name deku-benchmark)
+ (package deku-benchmark)
+ (libraries deku-protocol))

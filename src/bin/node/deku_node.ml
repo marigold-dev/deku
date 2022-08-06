@@ -4,7 +4,16 @@ open Deku_protocol
 open Deku_consensus
 open Deku_network
 open Deku_storage
-module Parallel = struct end
+
+module Parallel = struct
+  let domains = 8
+
+  let pool =
+    let pool = lazy (Parallel.Pool.make ~domains) in
+    fun () -> Lazy.force pool
+
+  let filter_map_p f l = Parallel.filter_map_p (pool ()) f l
+end
 
 module Node = struct
   type node =
@@ -62,8 +71,8 @@ module Node = struct
     let consensus = Consensus.apply_block ~current ~block consensus in
     let protocol, receipts =
       let (Block.Block { level; payload; _ }) = block in
-      Protocol.apply ~parallel:List.filter_map ~current_level:level ~payload
-        protocol
+      Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level
+        ~payload protocol
     in
     let producer = Producer.clean ~receipts producer in
     let network =
@@ -332,6 +341,7 @@ module Server = struct
     Lwt.return response
 
   let handler context =
+    (* TODO: weird usage of @@ *)
     with_endpoint context @@ fun context ->
     with_body context @@ fun context -> apply context
 
