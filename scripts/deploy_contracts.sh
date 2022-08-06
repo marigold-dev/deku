@@ -6,7 +6,6 @@ message() {
 
 # This secret key never changes.
 # We need this secret key for sigining Tezos operations.
-# We have to give the secret key to the Deku node as part of configuration.
 SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
 # We need the tezos-client to deploy contracts.
@@ -17,9 +16,12 @@ tezos-client() {
 }
 
 # Using a Tezos node on localhost:20000 that is provided by the docker-compose file
-rpc_node=${RPC_NODE:-http://localhost:20000}
+RPC_NODE=${RPC_NODE:-http://localhost:20000}
 
-wallet=${WALLET:-"myWallet"}
+message "Configuring Tezos client"
+tezos-client --endpoint "$RPC_NODE" bootstrapped
+tezos-client --endpoint "$RPC_NODE" config update
+tezos-client --endpoint "$RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
 
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
 # the [initial_storage] expression and originates the contract as myWallet on Tezos.
@@ -36,8 +38,8 @@ deploy_contract () {
 
   echo "Originating $1 contract"
   sleep 2
-  tezos-client --endpoint "$rpc_node" originate contract "$1" \
-    transferring 0 from "$wallet" \
+  tezos-client --endpoint "$RPC_NODE" originate contract "$1" \
+    transferring 0 from myWallet \
     running "$contract" \
     --init "$storage" \
     --burn-cap 2 \
