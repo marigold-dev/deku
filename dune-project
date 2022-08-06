@@ -41,6 +41,10 @@
  (depends deku-stdlib deku-concepts deku-constants))
 
 (package
+ (name deku-chain)
+ (depends deku-protocol deku-consensus))
+
+(package
  (name deku-network)
  (depends deku-protocol deku-consensus))
 

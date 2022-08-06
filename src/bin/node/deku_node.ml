@@ -1,7 +1,7 @@
 open Deku_stdlib
 open Deku_concepts
-open Deku_protocol
 open Deku_consensus
+open Deku_chain
 open Deku_network
 open Deku_storage
 
@@ -11,18 +11,12 @@ module Parallel = struct
   let pool =
     let pool = lazy (Parallel.Pool.make ~domains) in
     fun () -> Lazy.force pool
-
-  let filter_map_p f l = Parallel.filter_map_p (pool ()) f l
 end
 
 module Node = struct
   type node =
     | Node of {
-        protocol : Protocol.t;
-        consensus : Consensus.t;
-        verifier : Verifier.t;
-        signer : Signer.t;
-        producer : Producer.t;
+        chain : Chain.t;
         network : Network.t;
         (* TODO: weird, but for timeouts*)
         applied_block : unit -> unit;
@@ -31,227 +25,51 @@ module Node = struct
   type t = node
 
   let make ~identity ~validators ~nodes ~applied_block =
-    let validators = Validators.of_key_hash_list validators in
-    let protocol = Protocol.initial in
-    let consensus = Consensus.make ~validators in
-    let verifier = Verifier.empty in
-    let signer = Signer.make ~identity in
-    let producer = Producer.make ~identity in
+    let chain = Chain.make ~identity ~validators in
     let network = Network.make ~nodes in
-    Node
-      {
-        protocol;
-        consensus;
-        verifier;
-        signer;
-        producer;
-        network;
-        applied_block;
-      }
+    Node { chain; network; applied_block }
 
-  let apply_block ~current ~block node =
-    let () =
-      let (Block.Block { level; _ }) = block in
-      let level = Level.to_n level in
-      let level = N.to_z level in
-      Format.eprintf "%a\n%!" Z.pp_print level
-    in
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
-    let consensus = Consensus.apply_block ~current ~block consensus in
-    let protocol, receipts =
-      let (Block.Block { level; payload; _ }) = block in
-      Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level
-        ~payload protocol
-    in
-    let producer = Producer.clean ~receipts producer in
+  let dispatch_effect effect node =
+    let (Node { chain; network; applied_block }) = node in
     let network =
-      match Producer.try_to_produce ~current ~consensus producer with
-      | Some block -> Network.broadcast_block ~block network
-      | None -> network
+      match effect with
+      | Chain.Reset_timeout ->
+          let () = applied_block () in
+          network
+      | Chain.Broadcast_block block -> Network.broadcast_block ~block network
+      | Chain.Broadcast_signature signature ->
+          Network.broadcast_signature ~signature network
     in
-    (* TODO: I really don't like this *)
-    let () = applied_block () in
-    Node
-      {
-        protocol;
-        consensus;
-        verifier;
-        signer;
-        producer;
-        network;
-        applied_block;
-      }
+    Node { chain; network; applied_block }
 
-  let incoming_block ~current ~block node =
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
-    let Verifier.{ apply; verifier } =
-      Verifier.incoming_block ~consensus ~block verifier
-    in
-    let network =
-      match Signer.try_to_sign ~current ~consensus ~block signer with
-      | Some signature -> Network.broadcast_signature ~signature network
-      | None -> network
-    in
-    let node =
-      Node
-        {
-          protocol;
-          consensus;
-          verifier;
-          signer;
-          producer;
-          network;
-          applied_block;
-        }
-    in
-    match apply with
-    | Some block -> apply_block ~current ~block node
-    | None -> node
-
-  let incoming_signature ~current ~signature node =
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
-    let Verifier.{ apply; verifier } =
-      Verifier.incoming_signature ~consensus ~signature verifier
-    in
-    let node =
-      Node
-        {
-          protocol;
-          consensus;
-          verifier;
-          signer;
-          producer;
-          network;
-          applied_block;
-        }
-    in
-
-    match apply with
-    | Some block -> apply_block ~current ~block node
-    | None -> node
-
-  let incoming_operation ~operation node =
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
-    let producer = Producer.incoming_operation ~operation producer in
-    Node
-      {
-        protocol;
-        consensus;
-        verifier;
-        signer;
-        producer;
-        network;
-        applied_block;
-      }
+  let dispatch_effects effects node =
+    List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
+    let (Node { chain; network; applied_block }) = node in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
-    let node =
-      Node
-        {
-          protocol;
-          consensus;
-          verifier;
-          signer;
-          producer;
-          network;
-          applied_block;
-        }
+    let chain, effects =
+      match packet with
+      | Some packet -> (
+          let pool = Parallel.pool () in
+          match endpoint with
+          | Blocks -> Chain.incoming_block ~pool ~current ~block:packet chain
+          | Signatures ->
+              Chain.incoming_signature ~pool ~current ~signature:packet chain
+          | Operations ->
+              let chain = Chain.incoming_operation ~operation:packet chain in
+              (chain, []))
+      | None -> (chain, [])
     in
-    match packet with
-    | Some packet -> (
-        match endpoint with
-        | Blocks -> incoming_block ~current ~block:packet node
-        | Signatures -> incoming_signature ~current ~signature:packet node
-        | Operations -> incoming_operation ~operation:packet node)
-    | None -> node
+    let node = Node { chain; network; applied_block } in
+    dispatch_effects effects node
 
   let incoming_timeout ~current node =
-    let () = Format.printf "timeout\n%!" in
-    let (Node
-          {
-            protocol;
-            consensus;
-            verifier;
-            signer;
-            producer;
-            network;
-            applied_block;
-          }) =
-      node
-    in
-    let network =
-      match Producer.try_to_produce ~current ~consensus producer with
-      | Some block -> Network.broadcast_block ~block network
-      | None -> network
-    in
-    Node
-      {
-        protocol;
-        consensus;
-        verifier;
-        signer;
-        producer;
-        network;
-        applied_block;
-      }
+    let (Node { chain; network; applied_block }) = node in
+    let chain, effects = Chain.incoming_timeout ~current chain in
+    let node = Node { chain; network; applied_block } in
+    dispatch_effects effects node
 end
 
 module Singleton : sig
