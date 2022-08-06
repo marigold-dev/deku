@@ -65,15 +65,15 @@ module Inject_transaction = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson { strict = false }]
+      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
       type with_hash = { hash : string }
-      [@@deriving of_yojson { strict = false }]
+      [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
       type maybe_hash = { hash : string option }
-      [@@deriving of_yojson { strict = false }]
+      [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson { strict = false }]
+      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
     let other make =
       let%ok { hash } = T.maybe_hash_of_yojson json in
@@ -110,12 +110,12 @@ module Storage = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson { strict = false }]
+      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
       type success = { storage : Michelson.t }
-      [@@deriving of_yojson { strict = false }]
+      [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson { strict = false }]
+      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
     let%ok { status } = T.of_yojson json in
     match status with
@@ -144,7 +144,7 @@ module Big_map_keys = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson { strict = false }]
+      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
       (*
          TODO: Yojson.Safe.t is taking the place of a "well-formatted json object"
@@ -152,9 +152,9 @@ module Big_map_keys = struct
          It would be better to parse it to a micheline node.
       *)
       type success = { values : Yojson.Safe.t option list }
-      [@@deriving of_yojson { strict = false }]
+      [@@deriving of_yojson][@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson { strict = false }]
+      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
     let%ok { status } = T.of_yojson json in
     match status with
