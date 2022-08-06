@@ -11,7 +11,7 @@ type root_hash_storage = {
   (* TODO: is having current_block_hash even useful? *)
   (* consensus proof *)
   current_block_hash: blake2b;
-  current_block_height: int;
+  current_block_level: int;
   current_state_hash: blake2b;
   current_handles_hash: blake2b;
   current_validators: validators;
@@ -20,7 +20,7 @@ type root_hash_storage = {
 type signatures = signature option list
 
 type root_hash_action = {
-  block_height: int;
+  block_level: int;
   block_payload_hash: blake2b;
 
   state_hash: blake2b;
@@ -35,7 +35,7 @@ type root_hash_action = {
 (* (pair (pair int bytes) (pair bytes validators)) *)
 (* TODO: performance, put this structures in an optimized way *)
 type block_hash_structure = {
-  block_height: int;
+  block_level: int;
   block_payload_hash: blake2b;
   state_hash: blake2b;
   handles_hash: blake2b;
@@ -46,17 +46,17 @@ let assert_msg ((message, condition): (string * bool)) =
   if not condition then
     failwith message
 
-let root_hash_check_block_height
+let root_hash_check_block_level
   (storage: root_hash_storage)
-  (block_height: int) =
+  (block_level: int) =
     assert_msg (
-      "old block height",
-      block_height > storage.current_block_height
+      "old block level",
+      block_level > storage.current_block_level
     )
 
 let root_hash_block_hash (root_hash_update: root_hash_action) =
   let block_hash_structure = {
-    block_height = root_hash_update.block_height;
+    block_level = root_hash_update.block_level;
     block_payload_hash = root_hash_update.block_payload_hash;
     state_hash = root_hash_update.state_hash;
     handles_hash = root_hash_update.handles_hash;
@@ -135,19 +135,19 @@ let root_hash_main
   (root_hash_update: root_hash_action)
   (storage: root_hash_storage) =
     let block_hash = root_hash_block_hash root_hash_update in
-    let block_height = root_hash_update.block_height in
+    let block_level = root_hash_update.block_level in
     let state_hash = root_hash_update.state_hash in
     let handles_hash = root_hash_update.handles_hash in
     let validators = root_hash_update.validators in
     let signatures = root_hash_update.signatures in
 
-    let () = root_hash_check_block_height storage block_height in
+    let () = root_hash_check_block_level storage block_level in
     let () = root_hash_check_signatures root_hash_update storage signatures block_hash in
     let () = root_hash_check_keys root_hash_update storage block_hash in
 
     {
       current_block_hash = block_hash;
-      current_block_height = block_height;
+      current_block_level = block_level;
       current_state_hash = state_hash;
       current_handles_hash = handles_hash;
       current_validators = validators;
