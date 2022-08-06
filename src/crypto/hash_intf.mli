@@ -16,9 +16,12 @@ module type S = sig
   (* repr *)
   val of_hex : string -> hash option
   val to_hex : hash -> string
+  val of_raw : string -> hash option
+  val to_raw : hash -> string
 
   (* utils *)
   val both : hash -> hash -> hash
+  val digest_size : int
 
   (* TODO: better name for this*)
   module With_alg (Alg : Alg) : sig

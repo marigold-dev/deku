@@ -48,3 +48,25 @@ module Set = Set.Make (struct
 
   let compare = compare
 end)
+
+let encoding =
+  let open Data_encoding in
+  let name = "Signature.Public_key_hash" in
+  let title = "A Ed25519, Secp256k1, or P256 public key hash" in
+  let raw_encoding =
+    def "public_key_hash" ~description:title
+    @@ union
+         [
+           case (Tag 0) Ed25519.Key_hash.encoding ~title:"Ed25519"
+             (function Ed25519 key_hash -> Some key_hash | _ -> None)
+             (fun key_hash -> Ed25519 key_hash);
+           case (Tag 1) Secp256k1.Key_hash.encoding ~title:"Secp256k1"
+             (function Secp256k1 x -> Some x | _ -> None)
+             (fun x -> Secp256k1 x);
+           case (Tag 2) P256.Key_hash.encoding ~title:"P256"
+             (function P256 x -> Some x | _ -> None)
+             (fun x -> P256 x);
+         ]
+  in
+  Encoding_helpers.make_encoding ~name ~title ~to_string:to_b58
+    ~of_string:of_b58 ~raw_encoding

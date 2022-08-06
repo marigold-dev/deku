@@ -1,5 +1,5 @@
-open Helpers
-open Crypto
+open Deku_stdlib
+open Deku_crypto
 open Tezos
 
 type t = {
@@ -45,7 +45,7 @@ module Fetch_storage : sig
     rpc_node:Uri.t ->
     required_confirmations:int ->
     contract_address:Address.t ->
-    (Michelson.t, string) result Lwt.t
+    Michelson.t Lwt.t
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address =
     Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
@@ -59,7 +59,7 @@ module Fetch_big_map_keys : sig
     required_confirmations:int ->
     contract_address:Address.t ->
     keys:Michelson.big_map_key list ->
-    (Yojson.Safe.t option list, string) result Lwt.t
+    Yojson.Safe.t option list Lwt.t
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address ~keys =
     Tezos_bridge.big_map_keys t.bridge_process ~rpc_node ~required_confirmations
@@ -84,14 +84,14 @@ module Consensus = struct
     let module Payload = struct
       type t = {
         block_height : int64;
-        block_payload_hash : BLAKE2B.t;
+        block_payload_hash : BLAKE2b.t;
         signatures : string option list;
-        handles_hash : BLAKE2B.t;
-        state_hash : BLAKE2B.t;
+        handles_hash : BLAKE2b.t;
+        state_hash : BLAKE2b.t;
         validators : string list;
         current_validator_keys : string option list;
       }
-      [@@deriving to_yojson]
+      [@@deriving yojson]
     end in
     let open Payload in
     let current_validator_keys, signatures =
@@ -99,14 +99,14 @@ module Consensus = struct
         (fun signature ->
           match signature with
           | Some (key, signature) ->
-              let key = Key.to_string key in
-              let signature = Signature.to_string signature in
+              let key = Key.to_b58 key in
+              let signature = Signature.to_b58 signature in
               (Some key, Some signature)
           | None -> (None, None))
         signatures
       |> List.split
     in
-    let validators = List.map Key_hash.to_string validators in
+    let validators = List.map Key_hash.to_b58 validators in
     let payload =
       {
         block_height;
@@ -122,9 +122,9 @@ module Consensus = struct
     let%await _ =
       Run_contract.run t ~destination:t.consensus_contract
         ~entrypoint:"update_root_hash"
-        ~payload:(Payload.to_yojson payload)
+        ~payload:(Payload.yojson_of_t payload)
     in
-    await ()
+    Lwt.return_unit
 
   type transaction =
     | Deposit of {
@@ -132,7 +132,7 @@ module Consensus = struct
         amount : Z.t;
         destination : Key_hash.t;
       }
-    | Update_root_hash of BLAKE2B.t
+    | Update_root_hash of BLAKE2b.t
 
   type operation = { hash : Operation_hash.t; transactions : transaction list }
 
@@ -175,7 +175,7 @@ module Consensus = struct
             ],
             _ ) ) ->
         let%some state_root_hash =
-          state_root_hash |> Bytes.to_string |> BLAKE2B.of_raw_string
+          state_root_hash |> Bytes.to_string |> BLAKE2b.of_raw
         in
         Some (Update_root_hash state_root_hash)
     | ( "deposit",
@@ -209,7 +209,7 @@ module Consensus = struct
 
   let parse_operation output =
     let Tezos_bridge.Listen_transaction.{ hash; transactions } = output in
-    let%some hash = Operation_hash.of_string hash in
+    let%some hash = Operation_hash.of_b58 hash in
     let transactions = List.filter_map parse_transaction transactions in
     Some { hash; transactions }
 
@@ -246,23 +246,30 @@ module Consensus = struct
              (fun key_hash -> Michelson.Key_hash key_hash)
              validator_key_hashes)
     in
-    match micheline_uris with
-    | Error e -> Lwt.return (Error e)
-    | Ok micheline_uris ->
-        let uris =
-          List.map_ok
-            (fun micheline ->
-              match micheline with
-              | None -> Ok None
-              | Some uri ->
-                  let%ok key_hash = micheline_yojson_to_key_hash uri in
-                  Ok (Some key_hash))
-            micheline_uris
-        in
-        let key_hash_uri_pairs =
-          Result.map (fun uris -> List.combine validator_key_hashes uris) uris
-        in
-        Lwt.return key_hash_uri_pairs
+    (* FIXME: NOT TCO *)
+    let rec kmap_ok k f l =
+      match l with
+      | [] -> Ok (k [])
+      | el :: tl -> (
+          match f el with
+          | Ok el -> kmap_ok (fun tl -> k (el :: tl)) f tl
+          | Error error -> Error error)
+    in
+    let map_ok f l = kmap_ok (fun x -> x) f l in
+    let uris =
+      map_ok
+        (fun micheline ->
+          match micheline with
+          | None -> Ok None
+          | Some uri ->
+              let%ok key_hash = micheline_yojson_to_key_hash uri in
+              Ok (Some key_hash))
+        micheline_uris
+    in
+    let key_hash_uri_pairs =
+      Result.map (fun uris -> List.combine validator_key_hashes uris) uris
+    in
+    Lwt.return key_hash_uri_pairs
 
   let fetch_validators t =
     let {
@@ -275,8 +282,15 @@ module Consensus = struct
     } =
       t
     in
+    (*FIXME: should be included in an helper module ? *)
+    let rec fold_left_ok f state = function
+      | [] -> Ok state
+      | head :: tl -> (
+          match f state head with
+          | Ok state -> fold_left_ok f state tl
+          | Error error -> Error error)
+    in
     let micheline_to_validators michelson =
-      let%ok michelson = michelson in
       let michelson = Micheline.root michelson in
       match michelson with
       | Micheline.Prim
@@ -284,11 +298,11 @@ module Consensus = struct
             D_Pair,
             [ Prim (_, D_Pair, [ _; Seq (_, key_hashes) ], _); _; _ ],
             _ ) ->
-          List.fold_left_ok
+          fold_left_ok
             (fun acc k ->
               match k with
               | Micheline.String (_, k) -> (
-                  match Key_hash.of_string k with
+                  match Key_hash.of_b58 k with
                   | Some k -> Ok (k :: acc)
                   | None -> Error ("Failed to parse " ^ k))
               | _ -> Error "Some key_hash wasn't of type string")
@@ -301,6 +315,7 @@ module Consensus = struct
     in
     let validators = micheline_to_validators micheline_storage in
     match validators with
+    | Error e -> Lwt.return (Error e)
     | Ok validators -> (
         let%await validator_uri_pairs =
           fetch_uris_from_discovery t validators
@@ -311,24 +326,12 @@ module Consensus = struct
             List.iter
               (function
                 | key_hash, None ->
-                    Log.info
+                    Format.printf
                       "Validator with key_hash %s not found in discovery \
                        contract (%s)."
-                      (Key_hash.to_string key_hash)
+                      (Key_hash.to_b58 key_hash)
                       (Address.to_string discovery_contract)
                 | _, Some _ -> ())
               validator_uri_pairs;
             Lwt.return (Ok validator_uri_pairs))
-    | Error e -> Lwt.return (Error e)
-end
-
-module Discovery = struct
-  open Pack
-
-  let sign secret ~nonce uri =
-    to_bytes
-      (pair
-         (int (Z.of_int64 nonce))
-         (bytes (Bytes.of_string (Uri.to_string uri))))
-    |> Bytes.to_string |> BLAKE2B.hash |> Signature.sign secret
 end

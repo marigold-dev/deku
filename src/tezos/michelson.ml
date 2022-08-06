@@ -15,4 +15,4 @@ let is_unit value =
   | Prim (_, Michelson_v1_primitives.D_Unit, [], []) -> true
   | _ -> false
 
-type big_map_key = Key_hash of Crypto.Key_hash.t
+type big_map_key = Key_hash of Deku_crypto.Key_hash.t

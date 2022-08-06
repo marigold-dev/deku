@@ -1,4 +1,4 @@
-open Helpers
+open Deku_stdlib
 
 let spawn ~file ~on_error ~on_close input_stream =
   let node = "node" in

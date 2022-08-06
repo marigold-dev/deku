@@ -64,3 +64,6 @@ end
 val z_of_yojson : Yojson.Safe.t -> Z.t
 val yojson_of_z : Z.t -> Yojson.Safe.t
 val decode_variant : (string -> 'a option) list -> string -> 'a option
+
+(* FIXME: can we avoid exporting this somehow?*)
+module Base58 = Base58

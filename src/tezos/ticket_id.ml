@@ -1,5 +1,5 @@
 open Tezos_micheline
-open Helpers
+open Deku_stdlib
 
 type t = { ticketer : Address.t; data : bytes } [@@deriving eq, ord]
 
@@ -35,6 +35,3 @@ let of_string string =
   in
   let%some ticketer = Address.of_string ticketer in
   Some { ticketer; data }
-
-let to_yojson, of_yojson =
-  Yojson_ext.with_yojson_string "ticket_id" to_string of_string

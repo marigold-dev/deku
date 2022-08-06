@@ -1,5 +1,5 @@
-open Helpers
-open Crypto
+open Deku_stdlib
+open Deku_crypto
 open Tezos
 
 module Michelson = struct
@@ -7,21 +7,28 @@ module Michelson = struct
 
   type t = Michelson.t
 
-  let of_yojson json =
-    let%ok json =
-      Yojson.Safe.to_string json |> Data_encoding.Json.from_string
-    in
-    try Ok (Data_encoding.Json.destruct Michelson.expr_encoding json)
-    with _ -> Error "invalid json"
+  let t_of_yojson json =
+    match Yojson.Safe.to_string json |> Data_encoding.Json.from_string with
+    | Ok json -> Data_encoding.Json.destruct Michelson.expr_encoding json
+    | Error err -> failwith err
 
-  let big_map_key_to_yojson (Key_hash key_hash) : Yojson.Safe.t =
-    `String (Key_hash.to_string key_hash)
+  let yojson_of_t t =
+    Data_encoding.Json.construct Michelson.expr_encoding t
+    |> Data_encoding.Json.to_string |> Yojson.Safe.from_string
+
+  let yojson_of_big_map_key (Key_hash key_hash) : Yojson.Safe.t =
+    `String (Key_hash.to_b58 key_hash)
+
+  let big_map_key_of_yojson json =
+    match json with
+    | `String string ->
+        let key_hash = Key_hash.of_b58 string |> Option.get in
+        Key_hash key_hash
+    | _ -> failwith "big_map_key was not properly serialized"
 end
 
 module Listen_transaction = struct
-  type kind = Listen
-
-  let kind_to_yojson Listen = `String "listen"
+  type kind = Listen [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -29,19 +36,17 @@ module Listen_transaction = struct
     confirmation : int;
     destination : string;
   }
-  [@@deriving to_yojson]
+  [@@deriving yojson]
 
   type transaction = { entrypoint : string; value : Michelson.t }
-  [@@deriving of_yojson]
+  [@@deriving yojson]
 
   type t = { hash : string; transactions : transaction list }
-  [@@deriving of_yojson]
+  [@@deriving yojson]
 end
 
 module Inject_transaction = struct
-  type kind = Transaction
-
-  let kind_to_yojson Transaction = `String "transaction"
+  type kind = Transaction [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -52,7 +57,7 @@ module Inject_transaction = struct
     entrypoint : string;
     payload : Yojson.Safe.t;
   }
-  [@@deriving to_yojson]
+  [@@deriving yojson]
 
   type t =
     | Applied of { hash : string }
@@ -76,29 +81,27 @@ module Inject_transaction = struct
       type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
     let other make =
-      let%ok { hash } = T.maybe_hash_of_yojson json in
-      Ok (make hash)
+      let T.{ hash } = T.maybe_hash_of_yojson json in
+      make hash
     in
 
-    let%ok { status } = T.of_yojson json in
+    let T.{ status } = T.t_of_yojson json in
     match status with
     | "applied" ->
-        let%ok { hash } = T.with_hash_of_yojson json in
-        Ok (Applied { hash })
+        let (T.{ hash } : T.with_hash) = T.with_hash_of_yojson json in
+        Applied { hash }
     | "failed" -> other (fun hash -> Failed { hash })
     | "skipped" -> other (fun hash -> Skipped { hash })
     | "backtracked" -> other (fun hash -> Backtracked { hash })
     | "unknown" -> other (fun hash -> Unknown { hash })
     | "error" ->
-        let%ok { error } = T.error_of_yojson json in
-        Ok (Error { error })
-    | _ -> Error "invalid status"
+        let T.{ error } = T.error_of_yojson json in
+        Error { error }
+    | _ -> failwith "invalid status"
 end
 
 module Storage = struct
-  type kind = Storage
-
-  let kind_to_yojson Storage = `String "storage"
+  type kind = Storage [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -106,7 +109,7 @@ module Storage = struct
     confirmation : int;
     destination : string;
   }
-  [@@deriving to_yojson]
+  [@@deriving yojson]
 
   let of_yojson json =
     let module T = struct
@@ -117,21 +120,19 @@ module Storage = struct
 
       type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
-    let%ok { status } = T.of_yojson json in
+    let T.{ status } = T.t_of_yojson json in
     match status with
     | "success" ->
-        let%ok { storage } = T.success_of_yojson json in
-        Ok (Ok storage)
+        let T.{ storage } = T.success_of_yojson json in
+        storage
     | "error" ->
-        let%ok { error } = T.error_of_yojson json in
-        Ok (Error error)
-    | _ -> Error "invalid status"
+        let T.{ error } = T.error_of_yojson json in
+        failwith error
+    | _ -> failwith "invalid status"
 end
 
 module Big_map_keys = struct
-  type kind = Big_map_keys
-
-  let kind_to_yojson Big_map_keys = `String "big_map_keys"
+  type kind = Big_map_keys [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -140,7 +141,7 @@ module Big_map_keys = struct
     destination : string;
     keys : Michelson.big_map_key list;
   }
-  [@@deriving to_yojson]
+  [@@deriving yojson]
 
   let of_yojson json =
     let module T = struct
@@ -156,15 +157,15 @@ module Big_map_keys = struct
 
       type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
     end in
-    let%ok { status } = T.of_yojson json in
+    let T.{ status } = T.t_of_yojson json in
     match status with
     | "success" ->
-        let%ok { values } = T.success_of_yojson json in
-        Ok (Ok values)
+        let T.{ values } = T.success_of_yojson json in
+        values
     | "error" ->
-        let%ok { error } = T.error_of_yojson json in
-        Ok (Error error)
-    | _ -> Error "invalid status"
+        let T.{ error } = T.error_of_yojson json in
+        failwith error
+    | _ -> failwith "invalid status"
 end
 
 type t = Long_lived_js_process.t
@@ -183,8 +184,8 @@ let listen_transaction t ~rpc_node ~required_confirmations ~destination =
         destination = Address.to_string destination;
       }
   in
-  Long_lived_js_process.listen t ~to_yojson:Listen_transaction.request_to_yojson
-    ~of_yojson:Listen_transaction.of_yojson request
+  Long_lived_js_process.listen t ~to_yojson:Listen_transaction.yojson_of_request
+    ~of_yojson:Listen_transaction.t_of_yojson request
 
 let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
     ~entrypoint ~payload =
@@ -193,7 +194,7 @@ let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
       {
         kind = Transaction;
         rpc_node = Uri.to_string rpc_node;
-        secret = Secret.to_string secret;
+        secret = Secret.to_b58 secret;
         confirmation = required_confirmations;
         destination = Address.to_string destination;
         entrypoint;
@@ -201,7 +202,7 @@ let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
       }
   in
   Long_lived_js_process.request t
-    ~to_yojson:Inject_transaction.request_to_yojson
+    ~to_yojson:Inject_transaction.yojson_of_request
     ~of_yojson:Inject_transaction.of_yojson request
 
 let storage t ~rpc_node ~required_confirmations ~destination =
@@ -214,7 +215,7 @@ let storage t ~rpc_node ~required_confirmations ~destination =
         destination = Address.to_string destination;
       }
   in
-  Long_lived_js_process.request t ~to_yojson:Storage.request_to_yojson
+  Long_lived_js_process.request t ~to_yojson:Storage.yojson_of_request
     ~of_yojson:Storage.of_yojson request
 
 let big_map_keys t ~rpc_node ~required_confirmations ~destination ~keys =
@@ -228,5 +229,5 @@ let big_map_keys t ~rpc_node ~required_confirmations ~destination ~keys =
         keys;
       }
   in
-  Long_lived_js_process.request t ~to_yojson:Big_map_keys.request_to_yojson
+  Long_lived_js_process.request t ~to_yojson:Big_map_keys.yojson_of_request
     ~of_yojson:Big_map_keys.of_yojson request

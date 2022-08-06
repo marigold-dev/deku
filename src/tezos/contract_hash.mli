@@ -1,6 +1,7 @@
-open Crypto
+open Deku_crypto
+open BLAKE2b
 
-type t = BLAKE2B_20.t [@@deriving eq, ord, yojson]
+type t = BLAKE2b_160.t [@@deriving eq, ord]
 
 val encoding : t Data_encoding.t
 val to_string : t -> string

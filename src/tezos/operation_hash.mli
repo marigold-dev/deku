@@ -1,5 +1,4 @@
-type t [@@deriving eq, ord, yojson]
+type t [@@deriving eq, ord]
 
-val encoding : t Data_encoding.t
-val to_string : t -> string
-val of_string : string -> t option
+val of_b58 : string -> t option
+val to_b58 : t -> string

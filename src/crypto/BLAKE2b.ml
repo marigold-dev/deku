@@ -25,6 +25,7 @@ struct
   let to_hex hash = to_hex hash
   let hash data = digest_string data
   let both a b = hash (to_raw_string a ^ to_raw_string b)
+  let digest_size = P.digest_size
 
   module With_alg (Alg : Hash_intf.Alg) = struct
     let sign secret hash = Alg.sign secret (to_raw_string hash)
@@ -70,3 +71,12 @@ end
 module BLAKE2b_160 = Make (Size_160)
 module BLAKE2b_256 = Make (Size_256)
 include BLAKE2b_256
+
+let yojson_of_t t = `String (to_hex t)
+
+let t_of_yojson json =
+  let json_str = Yojson.Safe.to_string json in
+  match json_str |> of_hex with
+  | Some t -> t
+  | None ->
+      failwith (Format.sprintf "cannot deserialize %s to blake2b" json_str)

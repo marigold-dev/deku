@@ -1,13 +1,13 @@
-open Crypto
+open Deku_crypto
 open Tezos
 
 (* push *)
 module Listen_transaction : sig
   type transaction = { entrypoint : string; value : Michelson.t }
-  [@@deriving of_yojson]
+  [@@deriving yojson]
 
   type t = { hash : string; transactions : transaction list }
-  [@@deriving of_yojson]
+  [@@deriving yojson]
 end
 
 (* response *)
@@ -47,7 +47,7 @@ val storage :
   rpc_node:Uri.t ->
   required_confirmations:int ->
   destination:Address.t ->
-  (Michelson.t, string) result Lwt.t
+  Michelson.t Lwt.t
 
 val big_map_keys :
   t ->
@@ -55,4 +55,4 @@ val big_map_keys :
   required_confirmations:int ->
   destination:Address.t ->
   keys:Michelson.big_map_key list ->
-  (Yojson.Safe.t option list, string) result Lwt.t
+  Yojson.Safe.t option list Lwt.t

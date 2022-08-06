@@ -1,5 +1,5 @@
-open Helpers
-open Crypto
+open Deku_stdlib
+open Deku_crypto
 open Tezos
 
 type t
@@ -16,9 +16,9 @@ module Consensus : sig
   val commit_state_hash :
     t ->
     block_height:int64 ->
-    block_payload_hash:BLAKE2B.t ->
-    state_hash:BLAKE2B.t ->
-    withdrawal_handles_hash:BLAKE2B.t ->
+    block_payload_hash:BLAKE2b.t ->
+    state_hash:BLAKE2b.t ->
+    withdrawal_handles_hash:BLAKE2b.t ->
     validators:Key_hash.t list ->
     signatures:(Key.t * Signature.t) option list ->
     unit Lwt.t
@@ -30,7 +30,7 @@ module Consensus : sig
         amount : Z.t;
         destination : Key_hash.t;
       }
-    | Update_root_hash of BLAKE2B.t
+    | Update_root_hash of BLAKE2b.t
 
   type operation = { hash : Operation_hash.t; transactions : transaction list }
 
@@ -38,8 +38,4 @@ module Consensus : sig
 
   val fetch_validators :
     t -> ((Key_hash.t * Uri.t option) list, string) result Lwt.t
-end
-
-module Discovery : sig
-  val sign : Secret.t -> nonce:int64 -> Uri.t -> Signature.t
 end

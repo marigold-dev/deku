@@ -1,7 +1,7 @@
 (** Interface between a long lived JS script and an OCaml consumer *)
 (* WARNING: this is higly mutable, so be careful *)
 
-open Helpers
+open Deku_stdlib
 
 module Id : sig
   type t [@@deriving yojson]
@@ -22,7 +22,6 @@ end = struct
 end
 
 exception Process_closed of Unix.process_status
-exception Failed_to_parse_json of string * Yojson.Safe.t
 exception Duplicated_id of Id.t
 exception Unknown_id of Id.t * Yojson.Safe.t
 
@@ -39,11 +38,6 @@ let () =
   let printer = function
     | Process_closed status ->
         Some (asprintf "Process_closed (%a)" pp_process_status status)
-    | Failed_to_parse_json (message, json) ->
-        Some
-          (asprintf "Failed_to_parse_json (%s, %a)" message
-             (Yojson.Safe.pretty_print ~std:false)
-             json)
     | Duplicated_id id -> Some (asprintf "Duplicated_id (%a)" Id.pp id)
     | Unknown_id (id, json) ->
         Some
@@ -113,12 +107,12 @@ let[@warning "-unused-value-declaration"] raise = ()
 
 let raise_and_exit exn =
   (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
-  Log.error "tezos_interop failure: %s" (Printexc.to_string exn);
+  Format.eprintf "tezos_interop failure: %s" (Printexc.to_string exn);
   exit 1
 
 let handle_message t message =
   let Message.{ id; content } = message in
-  Log.debug "js.message: %a" (Yojson.Safe.pretty_print ~std:false) content;
+  Format.eprintf "js.message: %a" (Yojson.Safe.pretty_print ~std:false) content;
   match Pending.push t.pending id content with
   | Ok () -> ()
   | Error (Unknown_id id) -> raise_and_exit (Unknown_id (id, content))
@@ -139,9 +133,8 @@ let request t kind ~resolver ~to_yojson content =
 let listen t ~to_yojson ~of_yojson content =
   let message_stream, push = Lwt_stream.create () in
   let resolver json =
-    match of_yojson json with
-    | Ok value -> push (Some value)
-    | Error error -> raise_and_exit (Failed_to_parse_json (error, json))
+    let value = of_yojson json in
+    push (Some value)
   in
   request t Listen ~resolver ~to_yojson content;
   message_stream
@@ -151,9 +144,7 @@ let request t ~to_yojson ~of_yojson content =
   let resolver json = Lwt.wakeup_later wakeup json in
   request t Request ~resolver ~to_yojson content;
   let%await json = promise in
-  match of_yojson json with
-  | Ok value -> Lwt.return value
-  | Error error -> raise_and_exit (Failed_to_parse_json (error, json))
+  Lwt.return (of_yojson json)
 
 let spawn ~file =
   let message_stream, push = Lwt_stream.create () in
@@ -167,7 +158,7 @@ let spawn ~file =
   let on_close status = raise_and_exit (Process_closed status) in
   let on_error exn = raise_and_exit exn in
   let input_stream =
-    Lwt_stream.map (fun message -> Message.to_yojson message) message_stream
+    Lwt_stream.map (fun message -> Message.yojson_of_t message) message_stream
   in
   let output_stream =
     Long_lived_process.spawn ~file ~on_error ~on_close input_stream
@@ -177,11 +168,7 @@ let spawn ~file =
   let handle_outputs () =
     Lwt_stream.iter
       (fun json ->
-        let message =
-          match Message.of_yojson json with
-          | Ok message -> message
-          | Error error -> raise_and_exit (Failed_to_parse_json (error, json))
-        in
+        let message = Message.t_of_yojson json in
         handle_message t message)
       output_stream
   in

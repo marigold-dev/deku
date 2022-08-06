@@ -568,7 +568,7 @@ let prims_of_strings expr =
     let return t = Ok t
     let ( >>= ) = Result.bind
   end) in
-  let open Helpers in
+  let open Deku_stdlib in
   let rec convert = function
     | (Int _ | String _ | Bytes _) as expr -> Result.ok expr
     | Prim (loc, prim, args, annot) ->
