@@ -1,40 +1,45 @@
-final: prev:
-let ocaml-lsp-5_00-src =
-  prev.fetchFromGitHub
-    {
-      owner = "d4hines";
-      repo = "ocaml-lsp";
-      fetchSubmodules = true;
-      rev = "3c761bfd82f636beff54b6eea1c704fe76610337";
-      sha256 = "sha256-bLMVDZ9qE9PQbfyMELKWT5oVQm0ZOV+qGXLqBFqbHns=";
-    }; in
-with prev; {
+self: super:
+with super; {
   # ocaml-ng = builtins.mapAttrs (_: ocamlVersion: ocamlVersion) super.ocaml-ng;
   # TODO: this is clearly not right, I should be overriding only 4_14
   ocaml-ng = ocaml-ng // (with ocaml-ng; {
     ocamlPackages_5_00 = ocamlPackages_5_00.overrideScope'
-      (oself: osuper: {
-        lwt_react = osuper.lwt_react.overrideAttrs
-          (o: { nativeBuildInputs = o.nativeBuildInputs ++ [ oself.cppo ]; });
-        lwt_domain = osuper.buildDunePackage {
-          pname = "lwt_domain";
-          version = "0.2.0-dev";
-          inherit (osuper.lwt) src;
-          propagatedBuildInputs = with osuper; [ domainslib lwt ];
-        };
-        utop = osuper.utop.overrideAttrs (o: {
-          propagatedBuildInputs = o.propagatedBuildInputs ++ [ oself.findlib ];
+      (_: super: {
+        dune-rpc = super.dune-rpc.overrideAttrs (_: {
+          src = fetchFromGitHub {
+            owner = "ocaml";
+            repo = "dune";
+            rev = "3df932f7f91ea68c3fee789f133b4aa8f9bea807";
+            sha256 = "m0HDamHAyOFQlh6P4vbbe8UhARZ4NjwbANInnJ4OZ6U=";
+            fetchSubmodules = true;
+          };
         });
-        alcotest = osuper.alcotest.overrideAttrs (o: {
-          propagatedBuildInputs =
-            prev.lib.lists.remove osuper.uuidm o.propagatedBuildInputs;
+        dune = super.dune.overrideAttrs (_: {
+          src = fetchFromGitHub {
+            owner = "ocaml";
+            repo = "dune";
+            rev = "3df932f7f91ea68c3fee789f133b4aa8f9bea807";
+            sha256 = "m0HDamHAyOFQlh6P4vbbe8UhARZ4NjwbANInnJ4OZ6U=";
+            fetchSubmodules = true;
+          };
         });
-        jsonrpc = osuper.jsonrpc.overrideAttrs (o: {
-          src =
-            if prev.lib.versionAtLeast oself.ocaml.version "5.00" then
-              ocaml-lsp-5_00-src
-            else
-              o.src;
+        ocaml-lsp = super.ocaml-lsp.overrideAttrs (_: {
+          src = fetchFromGitHub {
+            owner = "EduardoRFS";
+            repo = "ocaml-lsp";
+            rev = "72202cd2bb9ff65845b623d20f513f6ed5b82ab8";
+            sha256 = "49E7L50i9RZTrQDPmdqyeOaBSXjRo/ijjrsj9oztduM=";
+            fetchSubmodules = true;
+          };
+        });
+        jsonrpc = super.jsonrpc.overrideAttrs (_: {
+          src = fetchFromGitHub {
+            owner = "EduardoRFS";
+            repo = "ocaml-lsp";
+            rev = "72202cd2bb9ff65845b623d20f513f6ed5b82ab8";
+            sha256 = "49E7L50i9RZTrQDPmdqyeOaBSXjRo/ijjrsj9oztduM=";
+            fetchSubmodules = true;
+          };
         });
       });
   });

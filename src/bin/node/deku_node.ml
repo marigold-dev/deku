@@ -4,6 +4,7 @@ open Deku_protocol
 open Deku_consensus
 open Deku_network
 open Deku_storage
+module Parallel = struct end
 
 module Node = struct
   type node =
