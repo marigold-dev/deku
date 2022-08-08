@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
-kill() {
-    echo "Caught exit. Killing all deku nodes"
-    killall deku-node
-}
-
-trap kill EXIT
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 for N in 0 1 2 3
 do
