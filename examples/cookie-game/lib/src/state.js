@@ -180,6 +180,9 @@ var createCookieBaker = function (cookies, cursors, grandmas, farms, mines, fact
 exports.createCookieBaker = createCookieBaker;
 var calculateCost = function (action, cookieBaker) {
     switch (action) {
+        case actions_1.actions.address:
+            console.log("Address");
+            throw new Error("Address does not have cost");
         case actions_1.actions.incr_Cookie:
             console.log("Cookie does not have cost");
             throw new Error("Cookie does not have cost");
