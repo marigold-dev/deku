@@ -22,7 +22,6 @@ export const init_fractalCps: number = 15e10;
 export const init_javascriptCps: number = 1.1e11;
 export const init_idleverseCps: number = 8.3e11;
 export const init_cordexCps: number = 64e12;
-
 export const init_cursorCost: number = 15;
 export const init_grandmaCost: number = 100;
 export const init_farmCost: number = 1100;
@@ -128,4 +127,9 @@ export type cookieBaker = {
     javaScriptCps: number;
     idleverseCps: number;
     cordexCps: number;
+}
+
+export type payload = {
+    address: string;
+    cookie: cookieBaker;
 }

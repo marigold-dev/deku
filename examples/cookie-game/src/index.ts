@@ -33,7 +33,6 @@ const transition = (tx: transaction) => {
         sourceValue.cookieBaker.mines,
         sourceValue.cookieBaker.factories,
         sourceValue.cookieBaker.banks,
-
         sourceValue.cookieBaker.temples,
         sourceValue.cookieBaker.wizards,
         sourceValue.cookieBaker.shipments,
@@ -47,7 +46,6 @@ const transition = (tx: transaction) => {
         sourceValue.cookieBaker.javaScripts,
         sourceValue.cookieBaker.idleverses,
         sourceValue.cookieBaker.cordexs,
-
         sourceValue.cookieBaker.freeCursor,
         sourceValue.cookieBaker.freeGrandma,
         sourceValue.cookieBaker.freeFarm,
@@ -70,6 +68,13 @@ const transition = (tx: transaction) => {
     );
 
     switch (operation) {
+        // TODO: wallet address
+        case actions.address: {
+            console.log("address");
+            saveState(source, sourceValue);
+            break;
+        }
+
         case actions.incr_Cookie: {
             //update state
             sourceValue.cookieBaker = addCookie(cookieBaker);
