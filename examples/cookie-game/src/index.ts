@@ -1,6 +1,8 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
+//import { cookieBaker } from "./types"
 import { cookieBaker } from "./types"
+
 import {
     createCookieBaker, addCookie, addCursor,
     addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
@@ -23,185 +25,185 @@ const transition = (tx: transaction) => {
     const operation = tx.operation;
     console.log("Getting source");
     const sourceValue = JSON.parse(get(source));
-    const cookieBaker: cookieBaker = createCookieBaker(
-        sourceValue.cookieBaker.numberOfCookie,
-        sourceValue.cookieBaker.numberOfCursor,
-        sourceValue.cookieBaker.numberOfGrandma,
-        sourceValue.cookieBaker.numberOfFarm,
-        sourceValue.cookieBaker.numberOfMine,
-        sourceValue.cookieBaker.numberOfFactory,
-        sourceValue.cookieBaker.numberOfBank,
+    const cookieBaker = createCookieBaker(
+        sourceValue.cookieBaker.cookies,
+        sourceValue.cookieBaker.cursors,
+        sourceValue.cookieBaker.grandmas,
+        sourceValue.cookieBaker.farms,
+        sourceValue.cookieBaker.mines,
+        sourceValue.cookieBaker.factories,
+        sourceValue.cookieBaker.banks,
 
-        sourceValue.cookieBaker.numberOfTemple,
-        sourceValue.cookieBaker.numberOfWizard,
-        sourceValue.cookieBaker.numberOfShipment,
-        sourceValue.cookieBaker.numberOfAlchemy,
-        sourceValue.cookieBaker.numberOfPortal,
-        sourceValue.cookieBaker.numberOfTimeMachine,
-        sourceValue.cookieBaker.numberOfAntimatter,
-        sourceValue.cookieBaker.numberOfPrism,
-        sourceValue.cookieBaker.numberOfChanceMaker,
-        sourceValue.cookieBaker.numberOfFractal,
-        sourceValue.cookieBaker.numberOfJavaScript,
-        sourceValue.cookieBaker.numberOfIdleverse,
-        sourceValue.cookieBaker.numberOfCordex,
+        sourceValue.cookieBaker.temples,
+        sourceValue.cookieBaker.wizards,
+        sourceValue.cookieBaker.shipments,
+        sourceValue.cookieBaker.alchemies,
+        sourceValue.cookieBaker.portals,
+        sourceValue.cookieBaker.timeMachines,
+        sourceValue.cookieBaker.antimatters,
+        sourceValue.cookieBaker.prisms,
+        sourceValue.cookieBaker.chanceMakers,
+        sourceValue.cookieBaker.fractals,
+        sourceValue.cookieBaker.javaScripts,
+        sourceValue.cookieBaker.idleverses,
+        sourceValue.cookieBaker.cordexs,
 
-        sourceValue.cookieBaker.numberOfFreeCursor,
-        sourceValue.cookieBaker.numberOfFreeGrandma,
-        sourceValue.cookieBaker.numberOfFreeFarm,
-        sourceValue.cookieBaker.numberOfFreeMine,
-        sourceValue.cookieBaker.numberOfFreeFactory,
-        sourceValue.cookieBaker.numberOfFreeBank,
-        sourceValue.cookieBaker.numberOfFreeTemple,
-        sourceValue.cookieBaker.numberOfFreeWizard,
-        sourceValue.cookieBaker.numberOfFreeShipment,
-        sourceValue.cookieBaker.numberOfFreeAlchemy,
-        sourceValue.cookieBaker.numberOfFreePortal,
-        sourceValue.cookieBaker.numberOfFreeTimeMachine,
-        sourceValue.cookieBaker.numberOfFreeAntimatter,
-        sourceValue.cookieBaker.numberOfFreePrism,
-        sourceValue.cookieBaker.numberOfFreeChanceMaker,
-        sourceValue.cookieBaker.numberOfFreeFractal,
-        sourceValue.cookieBaker.numberOfFreeJavaScript,
-        sourceValue.cookieBaker.numberOfFreeIdleverse,
-        sourceValue.cookieBaker.numberOfFreeCordex,
+        sourceValue.cookieBaker.freeCursor,
+        sourceValue.cookieBaker.freeGrandma,
+        sourceValue.cookieBaker.freeFarm,
+        sourceValue.cookieBaker.freeMine,
+        sourceValue.cookieBaker.freeFactory,
+        sourceValue.cookieBaker.freeBank,
+        sourceValue.cookieBaker.freeTemple,
+        sourceValue.cookieBaker.freeWizard,
+        sourceValue.cookieBaker.freeShipment,
+        sourceValue.cookieBaker.freeAlchemy,
+        sourceValue.cookieBaker.freePortal,
+        sourceValue.cookieBaker.freeTimeMachine,
+        sourceValue.cookieBaker.freeAntimatter,
+        sourceValue.cookieBaker.freePrism,
+        sourceValue.cookieBaker.freeChanceMaker,
+        sourceValue.cookieBaker.freeFractal,
+        sourceValue.cookieBaker.FreeJavaScript,
+        sourceValue.cookieBaker.freeIdleverse,
+        sourceValue.cookieBaker.freeCordex,
     );
 
     switch (operation) {
-        case actions.incrementCookie: {
+        case actions.incr_Cookie: {
             //update state
             sourceValue.cookieBaker = addCookie(cookieBaker);
             console.log("Successfully minted cookie");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementCursor: {
+        case actions.incr_Cursor: {
             //action successful, update state
             sourceValue.cookieBaker = addCursor(cookieBaker);
             console.log("Successfully minted cursor");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementGrandma: {
+        case actions.incr_Grandma: {
             //action successful, update state
             sourceValue.cookieBaker = addGrandma(cookieBaker);
             console.log("Successfully minted grandma");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementFarm: {
+        case actions.incr_Farm: {
             //action successful, update state
             sourceValue.cookieBaker = addFarm(cookieBaker);
             console.log("Successfully minted farm");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementMine: {
+        case actions.incr_Mine: {
             //action successful, update state
             sourceValue.cookieBaker = addMine(cookieBaker);
             console.log("Successfully minted mine");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementFactory: {
+        case actions.incr_Factory: {
             //action successful, update state
             sourceValue.cookieBaker = addFactory(cookieBaker);
             console.log("Successfully minted factory");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementBank: {
+        case actions.incr_Bank: {
             //action successful, update state
             sourceValue.cookieBaker = addBank(cookieBaker);
             console.log("Successfully minted bank");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementTemple: {
+        case actions.incr_Temple: {
             //action successful, update state
             sourceValue.cookieBaker = addTemple(cookieBaker);
             console.log("Successfully minted temple");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementWizard: {
+        case actions.incr_Wizard: {
             //action successful, update state
             sourceValue.cookieBaker = addWizard(cookieBaker);
             console.log("Successfully minted wizard");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementShipment: {
+        case actions.incr_Shipment: {
             //action successful, update state
             sourceValue.cookieBaker = addShipment(cookieBaker);
             console.log("Successfully minted shipment");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementAlchemy: {
+        case actions.incr_Alchemy: {
             //action successful, update state
             sourceValue.cookieBaker = addAlchemy(cookieBaker);
             console.log("Successfully minted alchemy");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementPortal: {
+        case actions.incr_Portal: {
             //action successful, update state
             sourceValue.cookieBaker = addPortal(cookieBaker);
             console.log("Successfully minted portal");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementTimeMachine: {
+        case actions.incr_TimeMachine: {
             //action successful, update state
             sourceValue.cookieBaker = addTimeMachine(cookieBaker);
             console.log("Successfully minted time machine");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementAntimatter: {
+        case actions.incr_Antimatter: {
             //action successful, update state
             sourceValue.cookieBaker = addAntimatter(cookieBaker);
             console.log("Successfully minted antimatter");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementPrism: {
+        case actions.incr_Prism: {
             //action successful, update state
             sourceValue.cookieBaker = addPrism(cookieBaker);
             console.log("Successfully minted prism");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementChanceMaker: {
+        case actions.incr_ChanceMaker: {
             //action successful, update state
             sourceValue.cookieBaker = addChanceMaker(cookieBaker);
             console.log("Successfully minted chance maker");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementFractal: {
+        case actions.incr_Fractal: {
             //action successful, update state
             sourceValue.cookieBaker = addFractal(cookieBaker);
             console.log("Successfully minted fractal");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementJavascript: {
+        case actions.incr_Javascript: {
             //action successful, update state
             sourceValue.cookieBaker = addJavascript(cookieBaker);
             console.log("Successfully minted javascript");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementIdleverse: {
+        case actions.incr_Idleverse: {
             //action successful, update state
             sourceValue.cookieBaker = addIdleverse(cookieBaker);
             console.log("Successfully minted idleverse");
             saveState(source, sourceValue);
             break;
         }
-        case actions.incrementCordex: {
+        case actions.incr_Cordex: {
             //action successful, update state
             sourceValue.cookieBaker = addCordex(cookieBaker);
             console.log("Successfully minted cordex");
@@ -215,50 +217,52 @@ main(
     //tz address must be replaced by a correct one obtained with 
     //deku-cli create-wallet
     {
-        "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
+        // make it as an empty string, to fetch from payload
+        //"tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
+        "":
         {
             cookieBaker:
             {
-                numberOfCookie: 0,
-                numberOfCursor: 0.,
-                numberOfGrandma: 0.,
-                numberOfFarm: 0.,
-                numberOfMine: 0.,
-                numberOfFactory: 0.,
-                numberOfBank: 0.,
-                numberOfTemple: 0.,
-                numberOfWizard: 0.,
-                numberOfShipment: 0.,
-                numberOfAlchemy: 0.,
-                numberOfPortal: 0.,
-                numberOfTimeMachine: 0.,
-                numberOfAntimatter: 0.,
-                numberOfPrism: 0.,
-                numberOfChanceMaker: 0.,
-                numberOfFractal: 0.,
-                numberOfJavaScript: 0.,
-                numberOfIdleverse: 0.,
-                numberOfCordex: 0.,
+                cookies: 0,
+                cursors: 0.,
+                grandmas: 0.,
+                farms: 0.,
+                mines: 0.,
+                factories: 0.,
+                banks: 0.,
+                temples: 0.,
+                wizards: 0.,
+                shipments: 0.,
+                alchemies: 0.,
+                portals: 0.,
+                timeMachines: 0.,
+                antimatters: 0.,
+                prisms: 0.,
+                chanceMakers: 0.,
+                fractals: 0.,
+                javaScripts: 0.,
+                idleverses: 0.,
+                cordexs: 0.,
 
-                numberOfFreeCursor: 0,
-                numberOfFreeGrandma: 0,
-                numberOfFreeFarm: 0,
-                numberOfFreeMine: 0,
-                numberOfFreeFactory: 0,
-                numberOfFreeBank: 0,
-                numberOfFreeTemple: 0,
-                numberOfFreeWizard: 0,
-                numberOfFreeShipment: 0,
-                numberOfFreeAlchemy: 0,
-                numberOfFreePortal: 0,
-                numberOfFreeTimeMachine: 0,
-                numberOfFreeAntimatter: 0,
-                numberOfFreePrism: 0,
-                numberOfFreeChanceMaker: 0,
-                numberOfFreeFractal: 0,
-                numberOfFreeJavaScript: 0,
-                numberOfFreeIdleverse: 0,
-                numberOfFreeCordex: 0,
+                freeCursor: 0,
+                freeGrandma: 0,
+                freeFarm: 0,
+                freeMine: 0,
+                freeFactory: 0,
+                freeBank: 0,
+                freeTemple: 0,
+                freeWizard: 0,
+                freeShipment: 0,
+                freeAlchemy: 0,
+                freePortal: 0,
+                freeTimeMachine: 0,
+                freeAntimatter: 0,
+                freePrism: 0,
+                freeChanceMaker: 0,
+                freeFractal: 0,
+                freeJavaScript: 0,
+                freeIdleverse: 0,
+                freeCordex: 0,
 
                 cursorCost: 0,
                 grandmaCost: 0,
@@ -288,3 +292,6 @@ main(
             }
         }
     }, transition)
+
+
+
