@@ -1,10 +1,10 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.init_cordexCost = exports.init_idleverseCost = exports.init_javascriptCost = exports.init_fractalCost = exports.init_chanceMakerCost = exports.init_prismCost = exports.init_antimatterCost = exports.init_timeMachineCost = exports.init_portalCost = exports.init_alchemyCost = exports.init_shipmentCost = exports.init_wizardCost = exports.init_templeCost = exports.init_bankCost = exports.init_factoryCost = exports.init_mineCost = exports.init_farmCost = exports.init_grandmaCost = exports.init_cursorCost = exports.init_cordexCps = exports.init_idleverseCps = exports.init_javascriptCps = exports.init_fractalCps = exports.init_chanceMakerCps = exports.init_prismCps = exports.init_antimatterCps = exports.init_timeMachineCps = exports.init_portalCps = exports.init_alchemyCps = exports.init_shipmentCps = exports.init_wizardCps = exports.init_templeCps = exports.init_bankCps = exports.init_factoryCps = exports.init_mineCps = exports.init_farmCps = exports.init_grandmaCps = exports.init_cursorCps = void 0;
 /*
    Understanding rule of game:
    https://cookieclicker.fandom.com/wiki/Building
 */
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.init_cordexCost = exports.init_idleverseCost = exports.init_javascriptCost = exports.init_fractalCost = exports.init_chanceMakerCost = exports.init_prismCost = exports.init_antimatterCost = exports.init_timeMachineCost = exports.init_portalCost = exports.init_alchemyCost = exports.init_shipmentCost = exports.init_wizardCost = exports.init_templeCost = exports.init_bankCost = exports.init_factoryCost = exports.init_mineCost = exports.init_farmCost = exports.init_grandmaCost = exports.init_cursorCost = exports.init_cordexCps = exports.init_idleverseCps = exports.init_javascriptCps = exports.init_fractalCps = exports.init_chanceMakerCps = exports.init_prismCps = exports.init_antimatterCps = exports.init_timeMachineCps = exports.init_portalCps = exports.init_alchemyCps = exports.init_shipmentCps = exports.init_wizardCps = exports.init_templeCps = exports.init_bankCps = exports.init_factoryCps = exports.init_mineCps = exports.init_farmCps = exports.init_grandmaCps = exports.init_cursorCps = void 0;
 exports.init_cursorCps = 0.1;
 exports.init_grandmaCps = 1;
 exports.init_farmCps = 8;
