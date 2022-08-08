@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addCordex = exports.addIdleverse = exports.addJavascript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = void 0;
 var actions_1 = require("./actions");
-var st = require("./state_types");
+var st = require("./types");
 /*
    Understanding rule of game:
    https://cookieclicker.fandom.com/wiki/Building
