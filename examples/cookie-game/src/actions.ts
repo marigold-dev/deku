@@ -7,7 +7,6 @@ export enum actions {
     incr_Mine = "mine",
     incr_Factory = "factory",
     incr_Bank = "bank",
-
     incr_Temple = "temple",
     incr_Wizard = "wizard",
     incr_Shipment = "shipment",
