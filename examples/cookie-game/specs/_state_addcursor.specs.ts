@@ -2,8 +2,9 @@ import * as fc from 'fast-check';
 import { cookieBakerArbitrary } from './generators'
 import { addCursor } from '../src/state'
 
-describe('cookie_Baker.add_XXX successful', () => {
-    test('add cookie only mint one cursor', () => {
+
+describe('cookieBaker.add_XXX successful', () => {
+    test('add cookie only mint one cursor, decrease cookie amount, increase cursor cost, and increase cursors CPS', () => {
         fc.assert(
             fc.property(
                 cookieBakerArbitrary(),
@@ -89,6 +90,7 @@ describe('cookie_Baker.add_XXX successful', () => {
                     const idleverseCpsBefore = cookieBaker.idleverseCps;
                     const cordexCpsBefore = cookieBaker.cordexCps;
 
+                    //make sure we have enough cookies to buy a cursor
                     cookieBaker.numberOfCookie = cookiesBefore + cursorCostBefore;
                     const cookie_Baker = addCursor(cookieBaker);
                     return (cookie_Baker.numberOfCookie === cookiesBefore
@@ -175,3 +177,4 @@ describe('cookie_Baker.add_XXX successful', () => {
                 }), { verbose: true });
     });
 });
+
