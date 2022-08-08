@@ -27,7 +27,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const javascriptsBefore = cookieBaker.javaScripts;
                     const idleversesBefore = cookieBaker.idleverses;
                     const cordexsBefore = cookieBaker.cordexs;
-
                     const freeCursorBefore = cookieBaker.freeCursor;
                     const freeGrandmaBefore = cookieBaker.freeGrandma;
                     const freeFarmBefore = cookieBaker.freeFarm;
@@ -47,7 +46,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeJavaScriptBefore = cookieBaker.freeJavaScript;
                     const freeIdleverseBefore = cookieBaker.freeIdleverse;
                     const freeCordexBefore = cookieBaker.freeCordex;
-
                     const cursorCostBefore = cookieBaker.cursorCost;
                     const grandmaCostBefore = cookieBaker.grandmaCost;
                     const farmCostBefore = cookieBaker.farmCost;
@@ -67,7 +65,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
-
                     const cursorCpsBefore = cookieBaker.cursorCps;
                     const grandmaCpsBefore = cookieBaker.grandmaCps;
                     const farmCpsBefore = cookieBaker.farmCps;
