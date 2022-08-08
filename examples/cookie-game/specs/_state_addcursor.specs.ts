@@ -29,7 +29,6 @@ describe('cookieBaker.add_XXX successful', () => {
                     const javascriptsBefore = cookieBaker.javaScripts;
                     const idleversesBefore = cookieBaker.idleverses;
                     const cordexsBefore = cookieBaker.cordexs;
-
                     const freeCursorBefore = cookieBaker.freeCursor;
                     const freeGrandmaBefore = cookieBaker.freeGrandma;
                     const freeFarmBefore = cookieBaker.freeFarm;
@@ -49,7 +48,6 @@ describe('cookieBaker.add_XXX successful', () => {
                     const freeJavaScriptBefore = cookieBaker.freeJavaScript;
                     const freeIdleverseBefore = cookieBaker.freeIdleverse;
                     const freeCordexBefore = cookieBaker.freeCordex;
-
                     const cursorCostBefore = cookieBaker.cursorCost;
                     const grandmaCostBefore = cookieBaker.grandmaCost;
                     const farmCostBefore = cookieBaker.farmCost;
@@ -69,7 +67,6 @@ describe('cookieBaker.add_XXX successful', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
-
                     const cursorCpsBefore = cookieBaker.cursorCps;
                     const grandmaCpsBefore = cookieBaker.grandmaCps;
                     const farmCpsBefore = cookieBaker.farmCps;
@@ -113,7 +110,6 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.javaScripts === javascriptsBefore
                         && cookie_Baker.idleverses === idleversesBefore
                         && cookie_Baker.cordexs === cordexsBefore
-
                         && cookie_Baker.freeCursor === freeCursorBefore
                         && cookie_Baker.freeGrandma === freeGrandmaBefore
                         && cookie_Baker.freeFarm === freeFarmBefore
@@ -133,7 +129,6 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.freeJavaScript === freeJavaScriptBefore
                         && cookie_Baker.freeIdleverse === freeIdleverseBefore
                         && cookie_Baker.freeCordex === freeCordexBefore
-
                         && cookie_Baker.cursorCost > cursorCostBefore
                         && cookie_Baker.grandmaCost === grandmaCostBefore
                         && cookie_Baker.farmCost === farmCostBefore
@@ -153,7 +148,6 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
-
                         && cookie_Baker.cursorCps > cursorCpsBefore
                         && cookie_Baker.grandmaCps === grandmaCpsBefore
                         && cookie_Baker.farmCps === farmCpsBefore
