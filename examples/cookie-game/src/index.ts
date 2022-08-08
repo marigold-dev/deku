@@ -69,11 +69,6 @@ const transition = (tx: transaction) => {
 
     switch (operation) {
         // TODO: wallet address
-        case actions.address: {
-            console.log("address");
-            saveState(source, sourceValue);
-            break;
-        }
 
         case actions.incr_Cookie: {
             //update state
@@ -224,7 +219,7 @@ main(
     {
         // make it as an empty string, to fetch from payload
         //"tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
-        "":
+        "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
         {
             cookieBaker:
             {

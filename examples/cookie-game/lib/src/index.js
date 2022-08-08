@@ -19,11 +19,6 @@ var transition = function (tx) {
     var cookieBaker = (0, state_1.createCookieBaker)(sourceValue.cookieBaker.cookies, sourceValue.cookieBaker.cursors, sourceValue.cookieBaker.grandmas, sourceValue.cookieBaker.farms, sourceValue.cookieBaker.mines, sourceValue.cookieBaker.factories, sourceValue.cookieBaker.banks, sourceValue.cookieBaker.temples, sourceValue.cookieBaker.wizards, sourceValue.cookieBaker.shipments, sourceValue.cookieBaker.alchemies, sourceValue.cookieBaker.portals, sourceValue.cookieBaker.timeMachines, sourceValue.cookieBaker.antimatters, sourceValue.cookieBaker.prisms, sourceValue.cookieBaker.chanceMakers, sourceValue.cookieBaker.fractals, sourceValue.cookieBaker.javaScripts, sourceValue.cookieBaker.idleverses, sourceValue.cookieBaker.cordexs, sourceValue.cookieBaker.freeCursor, sourceValue.cookieBaker.freeGrandma, sourceValue.cookieBaker.freeFarm, sourceValue.cookieBaker.freeMine, sourceValue.cookieBaker.freeFactory, sourceValue.cookieBaker.freeBank, sourceValue.cookieBaker.freeTemple, sourceValue.cookieBaker.freeWizard, sourceValue.cookieBaker.freeShipment, sourceValue.cookieBaker.freeAlchemy, sourceValue.cookieBaker.freePortal, sourceValue.cookieBaker.freeTimeMachine, sourceValue.cookieBaker.freeAntimatter, sourceValue.cookieBaker.freePrism, sourceValue.cookieBaker.freeChanceMaker, sourceValue.cookieBaker.freeFractal, sourceValue.cookieBaker.FreeJavaScript, sourceValue.cookieBaker.freeIdleverse, sourceValue.cookieBaker.freeCordex);
     switch (operation) {
         // TODO: wallet address
-        case actions_1.actions.address: {
-            console.log("address");
-            saveState(source, sourceValue);
-            break;
-        }
         case actions_1.actions.incr_Cookie: {
             //update state
             sourceValue.cookieBaker = (0, state_1.addCookie)(cookieBaker);
@@ -172,7 +167,7 @@ var transition = function (tx) {
 {
     // make it as an empty string, to fetch from payload
     //"tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
-    "": {
+    "tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc": {
         cookieBaker: {
             cookies: 0,
             cursors: 0.,

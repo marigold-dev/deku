@@ -228,9 +228,6 @@ export const createCookieBaker = (
 export const calculateCost = (action: actions, cookieBaker: st.cookieBaker): number => {
     switch (action) {
         // TODO: address
-        case actions.address:
-            console.log("Address");
-            throw new Error("Address does not have cost");
 
         case actions.incr_Cookie:
             console.log("Cookie does not have cost");
