@@ -128,8 +128,3 @@ export type cookieBaker = {
     idleverseCps: number;
     cordexCps: number;
 }
-
-export type payload = {
-    address: string;
-    cookie: cookieBaker;
-}
