@@ -1,5 +1,3 @@
-import { actions } from "./actions"
-
 /*
    Understanding rule of game:
    https://cookieclicker.fandom.com/wiki/Building
@@ -45,49 +43,50 @@ export const init_javascriptCost: number = 71e18;
 export const init_idleverseCost: number = 12e21;
 export const init_cordexCost: number = 1.9e23;
 
+
 export type cookieBaker = {
-    numberOfCookie: number;
-    numberOfCursor: number;
-    numberOfGrandma: number;
-    numberOfFarm: number;
-    numberOfMine: number;
-    numberOfFactory: number;
-    numberOfBank: number;
-    numberOfTemple: number;
-    numberOfWizard: number;
-    numberOfShipment: number;
-    numberOfAlchemy: number;
-    numberOfPortal: number;
-    numberOfTimeMachine: number;
-    numberOfAntimatter: number;
-    numberOfPrism: number;
-    numberOfChanceMaker: number;
-    numberOfFractal: number;
-    numberOfJavaScript: number;
-    numberOfIdleverse: number;
-    numberOfCordex: number;
+    cookies: number;
+    cursors: number;
+    grandmas: number;
+    farms: number;
+    mines: number;
+    factories: number;
+    banks: number;
+    temples: number;
+    wizards: number;
+    shipments: number;
+    alchemies: number;
+    portals: number;
+    timeMachines: number;
+    antimatters: number;
+    prisms: number;
+    chanceMakers: number;
+    fractals: number;
+    javaScripts: number;
+    idleverses: number;
+    cordexs: number;
 
     /* Gift from application */
     /* TODO: add the rule to generate them! */
-    numberOfFreeCursor: number;
-    numberOfFreeGrandma: number;
-    numberOfFreeFarm: number;
-    numberOfFreeMine: number;
-    numberOfFreeFactory: number;
-    numberOfFreeBank: number;
-    numberOfFreeTemple: number;
-    numberOfFreeWizard: number;
-    numberOfFreeShipment: number;
-    numberOfFreeAlchemy: number;
-    numberOfFreePortal: number;
-    numberOfFreeTimeMachine: number;
-    numberOfFreeAntimatter: number;
-    numberOfFreePrism: number;
-    numberOfFreeChanceMaker: number;
-    numberOfFreeFractal: number;
-    numberOfFreeJavaScript: number;
-    numberOfFreeIdleverse: number;
-    numberOfFreeCordex: number;
+    freeCursor: number;
+    freeGrandma: number;
+    freeFarm: number;
+    freeMine: number;
+    freeFactory: number;
+    freeBank: number;
+    freeTemple: number;
+    freeWizard: number;
+    freeShipment: number;
+    freeAlchemy: number;
+    freePortal: number;
+    freeTimeMachine: number;
+    freeAntimatter: number;
+    freePrism: number;
+    freeChanceMaker: number;
+    freeFractal: number;
+    freeJavaScript: number;
+    freeIdleverse: number;
+    freeCordex: number;
 
     cursorCost: number;
     grandmaCost: number;
