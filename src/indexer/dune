@@ -1,0 +1,14 @@
+(library
+ (name deku_indexer)
+ (public_name deku-indexer)
+ (libraries
+  caqti
+  caqti-lwt
+  caqti-driver-sqlite3
+  deku_network
+  deku_consensus
+  deku_crypto
+  deku_concepts
+  deku_constants)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

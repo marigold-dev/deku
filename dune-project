@@ -63,3 +63,7 @@
 (package
  (name deku-benchmark)
  (depends deku-protocol))
+
+(package
+ (name deku-indexer)
+ (depends deku-stdlib deku-concepts deku-constants))

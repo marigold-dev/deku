@@ -19,6 +19,7 @@ type external_effect = private
   | Reset_timeout
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
+  | Save_block of Block.t
 
 val make : identity:Identity.t -> validators:Key_hash.t list -> chain
 

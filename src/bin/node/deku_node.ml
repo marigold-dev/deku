@@ -4,6 +4,7 @@ open Deku_consensus
 open Deku_chain
 open Deku_network
 open Deku_storage
+open Deku_indexer
 
 module Parallel = struct
   let domains = 8
@@ -18,36 +19,45 @@ module Node = struct
     | Node of {
         chain : Chain.t;
         network : Network.t;
+        indexer : Indexer.t;
         (* TODO: weird, but for timeouts*)
         applied_block : unit -> unit;
       }
 
   type t = node
 
-  let make ~identity ~validators ~nodes ~applied_block =
+  let make ~identity ~validators ~nodes ~applied_block ~database_uri =
     let chain = Chain.make ~identity ~validators in
     let network = Network.make ~nodes in
-    Node { chain; network; applied_block }
+    let indexer = Indexer.make ~uri:database_uri in
+    Node { chain; network; indexer; applied_block }
 
   let dispatch_effect effect node =
-    let (Node { chain; network; applied_block }) = node in
-    let network =
+    let (Node { chain; network; indexer; applied_block }) = node in
+    let network, indexer =
       match effect with
       | Chain.Reset_timeout ->
           let () = applied_block () in
-          network
-      | Chain.Broadcast_block block -> Network.broadcast_block ~block network
+          (network, indexer)
+      | Chain.Broadcast_block block ->
+          let network = Network.broadcast_block ~block network in
+          (network, indexer)
       | Chain.Broadcast_signature signature ->
-          Network.broadcast_signature ~signature network
+          let network = Network.broadcast_signature ~signature network in
+          (network, indexer)
+      | Chain.Save_block block ->
+          let indexer = Indexer.save_block ~block indexer in
+          (network, indexer)
     in
-    Node { chain; network; applied_block }
+    Node { chain; network; indexer; applied_block }
 
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; indexer; applied_block }) = node in
+    let indexer = Indexer.save_packet ~packet ~timestamp:current indexer in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let chain, effects =
       match packet with
@@ -62,13 +72,13 @@ module Node = struct
               (chain, []))
       | None -> (chain, [])
     in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; indexer; applied_block } in
     dispatch_effects effects node
 
   let incoming_timeout ~current node =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; applied_block; indexer }) = node in
     let chain, effects = Chain.incoming_timeout ~current chain in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; applied_block; indexer } in
     dispatch_effects effects node
 end
 
@@ -105,13 +115,14 @@ end = struct
       Lwt.return_unit)
 
   let initialize storage =
-    let Storage.{ secret; initial_validators; nodes } = storage in
+    let Storage.{ secret; initial_validators; nodes; database_uri } = storage in
     let identity = Identity.make secret in
 
     let applied_block_ref = ref (fun () -> ()) in
     let applied_block () = !applied_block_ref () in
     let node =
       Node.make ~identity ~validators:initial_validators ~nodes ~applied_block
+        ~database_uri
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in

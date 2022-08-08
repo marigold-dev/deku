@@ -72,6 +72,45 @@ let bootstrap ~size =
   let%await () = Lwt_unix.sleep 3.0 in
   Lwt.return_unit
 
+let make_database_uri ~node =
+  let%await cwd = Lwt_unix.getcwd () in
+  Filename.concat cwd (Printf.sprintf "data/%i/database.db" node)
+  |> ( ^ ) "sqlite3:" |> Uri.of_string |> Lwt.return
+
+let make_database ~database_uri =
+  let open Caqti_request.Infix in
+  let open Caqti_type.Std in
+  let blocks_table_query (module C : Caqti_lwt.CONNECTION) =
+    (unit ->. unit)
+    @@ {| create table blocks (
+            hash TEXT not null,
+            level BIGINT not null,
+            block TEXT not null
+          )
+       |}
+    |> fun query -> C.exec query ()
+  in
+  let packets_table_query (module C : Caqti_lwt.CONNECTION) =
+    (unit ->. unit)
+    @@ {| create table packets (
+            hash TEXT not null,
+            timestamp DOUBLE not null,
+            packet TEXT not null
+          )
+        |}
+    |> fun query -> C.exec query ()
+  in
+  let%await blocks_res =
+    Caqti_lwt.with_connection database_uri blocks_table_query
+  in
+  let%await packets_res =
+    Caqti_lwt.with_connection database_uri packets_table_query
+  in
+  match (blocks_res, packets_res) with
+  | Ok _, Ok _ -> Lwt.return_unit
+  | Error err, _ -> failwith (Caqti_error.show err)
+  | _, Error err -> failwith (Caqti_error.show err)
+
 let generate ~base_uri ~base_port ~size =
   let secrets =
     List.init size (fun _n ->
@@ -91,10 +130,14 @@ let generate ~base_uri ~base_port ~size =
         let uri = Uri.of_string base_uri in
         Uri.with_port uri (Some port))
   in
+  let%await database_uris =
+    List.init size (fun node -> node)
+    |> Lwt_list.map_p (fun node -> make_database_uri ~node)
+  in
   let storages =
-    List.map
-      (fun secret -> Storage.make ~secret ~initial_validators ~nodes)
-      secrets
+    List.combine secrets database_uris
+    |> List.map (fun (secret, database_uri) ->
+           Storage.make ~secret ~initial_validators ~nodes ~database_uri)
   in
 
   let%await cwd = Lwt_unix.getcwd () in
@@ -106,6 +149,8 @@ let generate ~base_uri ~base_port ~size =
       let folder = Filename.concat data_folder (Int.to_string n) in
       let%await () = Util.ensure_folder folder in
 
+      let database_uri = Storage.(storage.database_uri) in
+      let%await () = make_database ~database_uri in
       let file = Filename.concat folder "storage.json" in
       Storage.write ~file storage)
     storages

@@ -2,7 +2,13 @@
  (name deku_bootstrap)
  (public_name deku-bootstrap)
  (package deku-bootstrap)
- (libraries deku-consensus deku-network deku-storage)
+ (libraries
+  caqti
+  caqti-lwt
+  caqti-driver-sqlite3
+  deku-consensus
+  deku-network
+  deku-storage)
  (preprocess
   (pps
    ppx_let_binding
