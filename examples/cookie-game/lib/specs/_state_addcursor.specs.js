@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var fc = require("fast-check");
 var generators_1 = require("./generators");
 var state_1 = require("../src/state");
-describe('cookie_Baker.add_XXX successful', function () {
-    test('add cookie only mint one cursor', function () {
+describe('cookieBaker.add_XXX successful', function () {
+    test('add cookie only mint one cursor, decrease cookie amount, increase cursor cost, and increase cursors CPS', function () {
         fc.assert(fc.property((0, generators_1.cookieBakerArbitrary)(), function (cookieBaker) {
             var cookiesBefore = cookieBaker.numberOfCookie;
             var cursorsBefore = cookieBaker.numberOfCursor;
@@ -83,6 +83,7 @@ describe('cookie_Baker.add_XXX successful', function () {
             var javaScriptCpsBefore = cookieBaker.javaScriptCps;
             var idleverseCpsBefore = cookieBaker.idleverseCps;
             var cordexCpsBefore = cookieBaker.cordexCps;
+            //make sure we have enough cookies to buy a cursor
             cookieBaker.numberOfCookie = cookiesBefore + cursorCostBefore;
             var cookie_Baker = (0, state_1.addCursor)(cookieBaker);
             return (cookie_Baker.numberOfCookie === cookiesBefore
