@@ -45,7 +45,7 @@ export const init_javascriptCost: number = 71e18;
 export const init_idleverseCost: number = 12e21;
 export const init_cordexCost: number = 1.9e23;
 
-export type cookieBakerType = {
+export type cookieBaker = {
     numberOfCookie: number;
     numberOfCursor: number;
     numberOfGrandma: number;
