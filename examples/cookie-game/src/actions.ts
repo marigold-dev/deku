@@ -1,4 +1,5 @@
 export enum actions {
+    address = "address",
     incr_Cookie = "cookie",
     incr_Cursor = "cursor",
     incr_Grandma = "grandma",
