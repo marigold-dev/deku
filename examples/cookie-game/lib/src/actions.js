@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.actions = void 0;
 var actions;
 (function (actions) {
-    actions["address"] = "address";
     actions["incr_Cookie"] = "cookie";
     actions["incr_Cursor"] = "cursor";
     actions["incr_Grandma"] = "grandma";
