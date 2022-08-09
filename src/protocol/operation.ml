@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 
@@ -111,3 +112,13 @@ let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
   in
   let content = Operation_transaction { receiver; amount } in
   Operation { key; signature; hash; level; nonce; source; content }
+
+let is_in_includable_window ~current_level ~operation_level =
+  let open Level in
+  let open Deku_constants in
+  let last_includable_block =
+    let operation_level = to_n operation_level in
+    of_n N.(operation_level + includable_operation_window)
+  in
+  (* limits for how many blocks we need to hold the operations *)
+  last_includable_block > current_level
