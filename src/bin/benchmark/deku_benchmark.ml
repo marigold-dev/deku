@@ -70,13 +70,16 @@ module Zero_ops = struct
           in
           ())
     in
-    Format.eprintf "average: %f\n" average
+    average
 
   let run () =
     let protocol = Protocol.initial in
     let level = Level.zero in
-    let payload = big_payload ~size:50000 ~level in
-    perform ~runs:10 ~protocol ~level ~payload
+    let size = 50000 in
+    let payload = big_payload ~size ~level in
+    let average = perform ~runs:10 ~protocol ~level ~payload in
+    let tps = Float.of_int size /. average in
+    Format.eprintf "average run time: %3f. tps: %3f\n%!" average tps
 end
 
 let () = Zero_ops.run ()
