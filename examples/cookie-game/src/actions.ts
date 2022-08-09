@@ -1,5 +1,4 @@
 export enum actions {
-    address = "address",
     incr_Cookie = "cookie",
     incr_Cursor = "cursor",
     incr_Grandma = "grandma",
@@ -20,4 +19,4 @@ export enum actions {
     incr_Javascript = "javascript",
     incr_Idleverse = "idleverse",
     incr_Cordex = "cordex",
-} 
+}
