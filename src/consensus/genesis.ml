@@ -11,4 +11,5 @@ let block =
   let level = Level.zero in
   let previous = Block_hash.hash "tuturu" in
   let operations = [] in
-  Block.produce ~identity ~level ~previous ~operations
+  let tezos_operations = [] in
+  Block.produce ~identity ~level ~previous ~operations ~tezos_operations

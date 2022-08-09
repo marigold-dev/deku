@@ -7,6 +7,9 @@ type t = producer
 val make : identity:Identity.t -> producer
 val incoming_operation : operation:Operation.t -> producer -> producer
 
+val incoming_tezos_operation :
+  tezos_operation:Tezos_operation.t -> producer -> producer
+
 (* TODO: n log n *)
 val clean : receipts:Receipt.t list -> producer -> producer
 

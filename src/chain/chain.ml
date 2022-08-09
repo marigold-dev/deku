@@ -38,10 +38,10 @@ let apply_block ~pool ~current ~block chain =
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let consensus = Consensus.apply_block ~current ~block consensus in
   let protocol, receipts =
-    let (Block.Block { level; payload; _ }) = block in
+    let (Block.Block { level; payload; tezos_operations; _ }) = block in
     Protocol.apply
       ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
-      ~current_level:level ~payload protocol
+      ~current_level:level ~payload protocol ~tezos_operations
   in
   let producer = Producer.clean ~receipts producer in
   let effects =
@@ -111,3 +111,8 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current node =
     | None -> []
   in
   (Chain { protocol; consensus; verifier; signer; producer }, effects)
+
+let incoming_tezos_operation ~tezos_operation chain =
+  let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
+  let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
+  (Chain { protocol; consensus; verifier; signer; producer }, [])

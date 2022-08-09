@@ -50,3 +50,6 @@ val incoming_bootstrap_signal :
   current:Timestamp.timestamp ->
   chain ->
   chain * external_effect list
+
+val incoming_tezos_operation :
+  tezos_operation:Tezos_operation.t -> chain -> chain * external_effect list

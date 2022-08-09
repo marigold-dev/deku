@@ -3,6 +3,7 @@ open Deku_concepts
 type protocol = private
   | Protocol of {
       included_operations : Included_operation_set.t;
+      included_tezos_operations : Included_tezos_operation_set.t;
       ledger : Ledger.t;
     }
 
@@ -14,5 +15,6 @@ val apply :
   parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->
   current_level:Level.t ->
   payload:string list ->
+  tezos_operations:Tezos_operation.t list ->
   protocol ->
   protocol * Receipt.t list

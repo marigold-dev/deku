@@ -4,6 +4,8 @@ open Deku_consensus
 open Deku_chain
 open Deku_network
 open Deku_storage
+open Deku_tezos_interop
+open Deku_protocol
 
 module Parallel = struct
   let domains = 8
@@ -20,17 +22,19 @@ module Node = struct
         network : Network.t;
         (* TODO: weird, but for timeouts*)
         applied_block : unit -> unit;
+        tezos_interop : Tezos_interop.t;
       }
 
   type t = node
 
-  let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block =
+  let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block
+      ~tezos_interop =
     let chain = Chain.make ~identity ~bootstrap_key ~validators in
     let network = Network.make ~nodes in
-    Node { chain; network; applied_block }
+    Node { chain; network; applied_block; tezos_interop }
 
   let dispatch_effect effect node =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; applied_block; tezos_interop }) = node in
     let network =
       match effect with
       | Chain.Reset_timeout ->
@@ -40,14 +44,14 @@ module Node = struct
       | Chain.Broadcast_signature signature ->
           Network.broadcast_signature ~signature network
     in
-    Node { chain; network; applied_block }
+    Node { chain; network; applied_block; tezos_interop }
 
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; applied_block; tezos_interop }) = node in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let chain, effects =
       match packet with
@@ -65,20 +69,20 @@ module Node = struct
                 chain)
       | None -> (chain, [])
     in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; applied_block; tezos_interop } in
     dispatch_effects effects node
 
   let incoming_timeout ~current node =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; applied_block; tezos_interop }) = node in
     let chain, effects = Chain.incoming_timeout ~current chain in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; applied_block; tezos_interop } in
     dispatch_effects effects node
 end
 
 module Singleton : sig
   val get_state : unit -> Node.t
   val set_state : Node.t -> unit
-  val initialize : Storage.t -> unit
+  val initialize : Storage.t -> tezos_interop:Tezos_interop.t -> unit
 end = struct
   type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
 
@@ -107,7 +111,7 @@ end = struct
       reset_timeout server;
       Lwt.return_unit)
 
-  let initialize storage =
+  let initialize storage ~tezos_interop =
     let Storage.{ secret; initial_validators; nodes; bootstrap_key } =
       storage
     in
@@ -117,7 +121,7 @@ end = struct
     let applied_block () = !applied_block_ref () in
     let node =
       Node.make ~identity ~bootstrap_key ~validators:initial_validators ~nodes
-        ~applied_block
+        ~applied_block ~tezos_interop
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in
@@ -181,19 +185,79 @@ module Server = struct
     forever
 end
 
+module Tezos_bridge = struct
+  (* TODO: declare this function elsewhere ? *)
+  let to_tezos_operation transaction =
+    let open Tezos_interop.Consensus in
+    match transaction with
+    | Deposit { ticket; amount; destination } ->
+        N.of_z amount |> Option.map Amount.of_n
+        |> Option.map (fun amount ->
+               Tezos_operation.Deposit { ticket; amount; destination })
+    | _ -> None
+
+  let listen () =
+    let node = Singleton.get_state () in
+    let (Node { tezos_interop; _ }) = node in
+    Tezos_interop.Consensus.listen_operations tezos_interop
+      ~on_operation:(fun operation ->
+        let node = Singleton.get_state () in
+        let (Node { chain; network; applied_block; tezos_interop }) = node in
+        let Tezos_interop.Consensus.{ hash; transactions } = operation in
+        let operations = List.filter_map to_tezos_operation transactions in
+        let tezos_operation = Tezos_operation.make hash operations in
+        let chain, effects =
+          Chain.incoming_tezos_operation ~tezos_operation chain
+        in
+        let node = Node.Node { chain; network; applied_block; tezos_interop } in
+        let node = Node.dispatch_effects effects node in
+        Singleton.set_state node)
+end
+
 let main () =
   let port = ref 8080 in
   let storage = ref "storage.json" in
+  let rpc_node = ref "http://localhost:20000" in
+  let required_confirmations = ref 1 in
   Arg.parse
     [
       ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
       ("-s", Arg.Set_string storage, " Storage file (storage.json by default)");
+      ( "--rpc-node",
+        Arg.Set_string rpc_node,
+        " Tezos rpc node (http://localhost:20000 by default)" );
+      ( "--required-confirmations",
+        Arg.Set_int required_confirmations,
+        " The number of required confirmations (1 by default)" );
     ]
     ignore "Handle Deku communication. Runs forever.";
 
+  let consensus, discovery, tezos_secret =
+    match
+      ( Sys.getenv_opt "DEKU_CONSENSUS_CONTRACT",
+        Sys.getenv_opt "DEKU_DISCOVERY_CONTRACT",
+        Sys.getenv_opt "DEKU_TEZOS_SECRET" )
+    with
+    | Some consensus, Some discovery, Some tezos_secret ->
+        (consensus, discovery, tezos_secret)
+    | None, _, _ -> failwith "consensus address is required"
+    | _, None, _ -> failwith "discovery address is required"
+    | _, _, None -> failwith "tezos_secret is required"
+  in
+
+  let tezos_interop =
+    Tezos_interop.make
+      ~rpc_node:(Uri.of_string "http://localhost:20000")
+      ~secret:(tezos_secret |> Deku_crypto.Secret.of_b58 |> Option.get)
+      ~consensus_contract:(Deku_tezos.Address.of_string consensus |> Option.get)
+      ~discovery_contract:(Deku_tezos.Address.of_string discovery |> Option.get)
+      ~required_confirmations:1
+  in
+
   let open Lwt.Infix in
   Storage.read ~file:!storage >>= fun storage ->
-  let () = Singleton.initialize storage in
+  let () = Singleton.initialize storage ~tezos_interop in
+  Tezos_bridge.listen ();
   Server.start !port
 
 let () = Lwt_main.run (main ())

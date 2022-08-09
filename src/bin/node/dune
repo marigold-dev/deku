@@ -2,6 +2,12 @@
  (name deku_node)
  (public_name deku-node)
  (package deku-node)
- (libraries deku-chain deku-network deku-storage cmdliner)
+ (libraries
+  deku_tezos
+  deku_tezos_interop
+  deku-chain
+  deku-network
+  deku-storage
+  cmdliner)
  (preprocess
   (pps ppx_let_binding)))
