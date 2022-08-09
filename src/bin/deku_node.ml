@@ -55,6 +55,7 @@ let handle_received_block_and_signature =
   handle_post_request
     (module Network.Block_and_signature_spec)
     (fun update_state request ->
+      Log.error "Received block and signature: %s" (Yojson.Safe.show (Network.Block_and_signature_spec.request_to_yojson request));
       let open Flows in
       let%ok () =
         received_block (Server.get_state ()) update_state request.block
@@ -71,6 +72,7 @@ let handle_received_signature =
   handle_post_request
     (module Network.Signature_spec)
     (fun update_state request ->
+      Log.error "Received signature: %s" (Yojson.Safe.show (Network.Signature_spec.request_to_yojson request));
       let open Flows in
       let%ok () =
         received_signature (Server.get_state ()) update_state ~hash:request.hash
@@ -84,6 +86,7 @@ let handle_block_by_hash =
   handle_post_request
     (module Network.Block_by_hash_spec)
     (fun _update_state request ->
+      Log.error "Received block_by_hash: %s" (Yojson.Safe.show (Network.Block_by_hash_spec.request_to_yojson request));
       let block = Flows.find_block_by_hash (Server.get_state ()) request.hash in
       Ok block)
 
@@ -103,6 +106,7 @@ let handle_block_by_level =
   handle_post_request
     (module Network.Block_by_level_spec)
     (fun _update_state request ->
+      Log.error "Received block_by_level: %s" (Yojson.Safe.show (Network.Block_by_level_spec.request_to_yojson request));
       let state = Server.get_state () in
       let block_and_timestamp =
         List.find_opt
@@ -139,6 +143,7 @@ let handle_request_nonce =
   handle_post_request
     (module Network.Request_nonce)
     (fun update_state { uri } ->
+      Log.error "Received request_nonce: %s" (Yojson.Safe.show (Network.Request_nonce.request_to_yojson ({uri} )));
       let nonce = Flows.request_nonce (Server.get_state ()) update_state uri in
       Ok { nonce })
 
@@ -148,6 +153,7 @@ let handle_register_uri =
   handle_post_request
     (module Network.Register_uri)
     (fun update_state { uri; signature } ->
+      Log.error "Received request_nonce: %s" (Yojson.Safe.show (Network.Register_uri.request_to_yojson ({ uri; signature } )));
       Flows.register_uri (Server.get_state ()) update_state ~uri ~signature)
 
 (* POST /user-operation-gossip *)
@@ -180,6 +186,7 @@ let handle_receive_consensus_operation =
   handle_post_request
     (module Network.Consensus_operation_gossip)
     (fun update_state request ->
+      Log.error "Received receive_consensus_operation: %s" (Yojson.Safe.show (Network.Consensus_operation_gossip.request_to_yojson request));
       Flows.received_consensus_operation (Server.get_state ()) update_state
         request.consensus_operation request.signature)
 
@@ -189,6 +196,7 @@ let handle_trusted_validators_membership =
   handle_post_request
     (module Network.Trusted_validators_membership_change)
     (fun update_state request ->
+      Log.error "Received trusted_validators_membership: %s" (Yojson.Safe.show (Network.Trusted_validators_membership_change.request_to_yojson request));
       Flows.trusted_validators_membership (Server.get_state ()) update_state
         request)
 
@@ -198,6 +206,7 @@ let handle_withdraw_proof =
   handle_post_request
     (module Network.Withdraw_proof)
     (fun _ { operation_hash } ->
+      Log.error "Received withdraw_proof: %s" (Yojson.Safe.show (Network.Withdraw_proof.request_to_yojson ({ operation_hash })));
       Ok
         (Flows.request_withdraw_proof (Server.get_state ()) ~hash:operation_hash))
 
@@ -207,6 +216,7 @@ let handle_ticket_balance =
   handle_post_request
     (module Network.Ticket_balance)
     (fun _update_state { ticket; address } ->
+      Log.error "Received ticket_balance: %s" (Yojson.Safe.show (Network.Ticket_balance.request_to_yojson ({ ticket; address })));
       let state = Server.get_state () in
       let amount = Flows.request_ticket_balance state ~ticket ~address in
       Ok { amount })

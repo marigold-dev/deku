@@ -325,5 +325,20 @@ $ curl http://localhost:4440/user-operation-gossip -H "Content-type: application
 The answer will only be the print of the provided hash, like following:
 
 ```shell script
+operation.hash c62e6c83681dc160f2a2c74bc7e53cc2f3a0e0bb15521d2f8d9d26ecff026296
+```
 
+## /append-signature
+
+Append a signature to an already existing block
+
+```shell script
+$ curl http://localhost:4440/append-signature -H "Content-type: application/json" -d \
+'{
+  "hash": "238283eaafb77785b0e454f3fa72367eaa4a2ec3c4f44efa595130c853fca28b",
+  "signature": {
+    "signature": "edsigtvq5CHkdeLJLAEBqzGV4dccPonDhVmdEBUaYV76EjqGjyBb4vgPL5YdMChL1dMY2rtoRQiJGYiuLEMCe4yPTSr3kQpy3td",
+    "public_key": "edpkvSzBrQ7g5wuncyK7gvEjNn6VYewbpJFp6BzZ5TmByMN7XfyV3g"
+  }
+}'
 ```
