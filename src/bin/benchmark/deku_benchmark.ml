@@ -8,6 +8,7 @@ module Parallel = struct
   let pool = Parallel.Pool.make ~domains
   let init_p n f = Parallel.init_p pool n f
   let filter_map_p f l = Parallel.filter_map_p pool f l
+  let map_p f l = Parallel.map_p pool f l
 end
 
 module Util = struct
@@ -83,7 +84,8 @@ module Block_application = struct
     Format.printf "Block size: %d\n%!" payload_size;
     let average = perform ~runs:10 ~protocol ~level ~payload in
     let tps = Float.of_int size /. average in
-    Format.eprintf "average run time: %3f. tps: %3f\n%!" average tps
+    Format.eprintf "average run time: %3f. tps: %3f\n%!" average tps;
+    average
 end
 
 module Block_production = struct
@@ -97,42 +99,43 @@ module Block_production = struct
   let receiver =
     Block_application.generate () |> Identity.key_hash |> Address.of_key_hash
 
-  let operation ~level ~nonce =
-    (* This might not work when the bug is fixed. *)
+  let operation ~nonce =
+    let level = Level.zero in
     let nonce = Z.of_int nonce |> N.of_z |> Option.get |> Nonce.of_n in
     let amount = Amount.of_n N.zero in
     Operation.transaction ~identity:sender ~level ~nonce ~source ~receiver
       ~amount
 
-  let operations ~size ~level =
-    Parallel.init_p size (fun nonce -> operation ~level ~nonce)
+  let operations ~size = Parallel.init_p size (fun nonce -> operation ~nonce)
 
-  let produce_block ~size =
+  let produce_block ~operations =
     let open Deku_consensus in
     let level = Level.zero in
     let (Block.Block { previous; _ }) = Genesis.block in
-    let operations = operations ~size ~level in
     let _block =
-      Block.produce ~identity:producer ~level ~previous ~operations
-        ~tezos_operations:[]
+      Block.produce ~parallel_map:Parallel.map_p ~identity:producer ~level
+        ~previous ~operations ~tezos_operations:[]
     in
     ()
 
   let perform ~runs ~size =
     let () = Format.eprintf "running block production...\n%!" in
-
+    let operations = operations ~size in
     let (`Average average) =
-      Util.benchmark ~runs (fun () -> produce_block ~size)
+      Util.benchmark ~runs (fun () -> produce_block ~operations)
     in
     average
 
   let run () =
-    let size = 100000 in
+    let size = 50000 in
     let average = perform ~runs:5 ~size in
     let tx_packed_per_sec = Float.of_int size /. average in
     Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average
-      tx_packed_per_sec
+      tx_packed_per_sec;
+    average
 end
 
-(* let () = Block_application.run () *)
-let () = Block_production.run ()
+let alpha = Block_application.run ()
+let pi = Block_production.run ()
+let total = alpha +. pi
+let () = Format.printf "alpha + pi: %3f\n%!" total

@@ -82,7 +82,9 @@ let try_to_produce ~current ~consensus producer =
     is_expected_author ~current ~author:self consensus
   with
   | true ->
-      let block = produce ~current_level ~current_block producer in
+      let block =
+        produce ~parallel_map:List.map ~current_level ~current_block producer
+      in
       Format.printf "Producing %a \n%!" Block.pp block;
       Some block
   | false -> None
