@@ -12,7 +12,7 @@ import { actions } from "./actions"
 
 const saveState = (source: transaction, sourceValue: cookieBaker) => {
     set(source, sourceValue);
-    console.log("Successfully saved state");
+    console.log("Successfully saved state: " + JSON.stringify(sourceValue));
 }
 
 const transition = (tx: transaction) => {
@@ -21,57 +21,102 @@ const transition = (tx: transaction) => {
     // operation => any
     const source = tx.source;
     const operation = tx.operation;
-    console.log("Getting source");
-    const sourceValue = JSON.parse(get(source));
-    const cookieBaker = createCookieBaker(
-        sourceValue.cookieBaker.cookies,
-        sourceValue.cookieBaker.cursors,
-        sourceValue.cookieBaker.grandmas,
-        sourceValue.cookieBaker.farms,
-        sourceValue.cookieBaker.mines,
-        sourceValue.cookieBaker.factories,
-        sourceValue.cookieBaker.banks,
-        sourceValue.cookieBaker.temples,
-        sourceValue.cookieBaker.wizards,
-        sourceValue.cookieBaker.shipments,
-        sourceValue.cookieBaker.alchemies,
-        sourceValue.cookieBaker.portals,
-        sourceValue.cookieBaker.timeMachines,
-        sourceValue.cookieBaker.antimatters,
-        sourceValue.cookieBaker.prisms,
-        sourceValue.cookieBaker.chanceMakers,
-        sourceValue.cookieBaker.fractals,
-        sourceValue.cookieBaker.javaScripts,
-        sourceValue.cookieBaker.idleverses,
-        sourceValue.cookieBaker.cordexs,
-        sourceValue.cookieBaker.freeCursor,
-        sourceValue.cookieBaker.freeGrandma,
-        sourceValue.cookieBaker.freeFarm,
-        sourceValue.cookieBaker.freeMine,
-        sourceValue.cookieBaker.freeFactory,
-        sourceValue.cookieBaker.freeBank,
-        sourceValue.cookieBaker.freeTemple,
-        sourceValue.cookieBaker.freeWizard,
-        sourceValue.cookieBaker.freeShipment,
-        sourceValue.cookieBaker.freeAlchemy,
-        sourceValue.cookieBaker.freePortal,
-        sourceValue.cookieBaker.freeTimeMachine,
-        sourceValue.cookieBaker.freeAntimatter,
-        sourceValue.cookieBaker.freePrism,
-        sourceValue.cookieBaker.freeChanceMaker,
-        sourceValue.cookieBaker.freeFractal,
-        sourceValue.cookieBaker.FreeJavaScript,
-        sourceValue.cookieBaker.freeIdleverse,
-        sourceValue.cookieBaker.freeCordex,
-    );
+    console.log("source: " + source);
+    let sourceValue = JSON.parse(get(source));
+    console.log("sourceValue: " + sourceValue);
+    let cookieBaker;
+    if (sourceValue === undefined || sourceValue === null) {
+        sourceValue = { source };
+        console.log("sourceValue: " + sourceValue);
+        cookieBaker = createCookieBaker(
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
+    }
+    else {
+        cookieBaker = createCookieBaker(
+            sourceValue.cookieBaker.cookies,
+            sourceValue.cookieBaker.cursors,
+            sourceValue.cookieBaker.grandmas,
+            sourceValue.cookieBaker.farms,
+            sourceValue.cookieBaker.mines,
+            sourceValue.cookieBaker.factories,
+            sourceValue.cookieBaker.banks,
+            sourceValue.cookieBaker.temples,
+            sourceValue.cookieBaker.wizards,
+            sourceValue.cookieBaker.shipments,
+            sourceValue.cookieBaker.alchemies,
+            sourceValue.cookieBaker.portals,
+            sourceValue.cookieBaker.timeMachines,
+            sourceValue.cookieBaker.antimatters,
+            sourceValue.cookieBaker.prisms,
+            sourceValue.cookieBaker.chanceMakers,
+            sourceValue.cookieBaker.fractals,
+            sourceValue.cookieBaker.javaScripts,
+            sourceValue.cookieBaker.idleverses,
+            sourceValue.cookieBaker.cordexs,
+            sourceValue.cookieBaker.freeCursor,
+            sourceValue.cookieBaker.freeGrandma,
+            sourceValue.cookieBaker.freeFarm,
+            sourceValue.cookieBaker.freeMine,
+            sourceValue.cookieBaker.freeFactory,
+            sourceValue.cookieBaker.freeBank,
+            sourceValue.cookieBaker.freeTemple,
+            sourceValue.cookieBaker.freeWizard,
+            sourceValue.cookieBaker.freeShipment,
+            sourceValue.cookieBaker.freeAlchemy,
+            sourceValue.cookieBaker.freePortal,
+            sourceValue.cookieBaker.freeTimeMachine,
+            sourceValue.cookieBaker.freeAntimatter,
+            sourceValue.cookieBaker.freePrism,
+            sourceValue.cookieBaker.freeChanceMaker,
+            sourceValue.cookieBaker.freeFractal,
+            sourceValue.cookieBaker.FreeJavaScript,
+            sourceValue.cookieBaker.freeIdleverse,
+            sourceValue.cookieBaker.freeCordex
+        );
+    }
+    sourceValue.cookieBaker = cookieBaker;
+    console.log("sourceValue.cookieBaker: " + JSON.stringify(sourceValue.cookieBaker));
 
     switch (operation) {
-        // TODO: wallet address
-        case actions.address: {
-            console.log("address");
-            saveState(source, sourceValue);
-            break;
-        }
 
         case actions.incr_Cookie: {
             //update state
@@ -216,82 +261,4 @@ const transition = (tx: transaction) => {
     }
 }
 
-main(
-    //tz address must be replaced by a correct one obtained with 
-    //deku-cli create-wallet
-    {
-        // make it as an empty string, to fetch from payload
-        //"tz1VULT8pu1NoWs7YPFWuvXSg3JSdGq55TXc":
-        "":
-        {
-            cookieBaker:
-            {
-                cookies: 0,
-                cursors: 0.,
-                grandmas: 0.,
-                farms: 0.,
-                mines: 0.,
-                factories: 0.,
-                banks: 0.,
-                temples: 0.,
-                wizards: 0.,
-                shipments: 0.,
-                alchemies: 0.,
-                portals: 0.,
-                timeMachines: 0.,
-                antimatters: 0.,
-                prisms: 0.,
-                chanceMakers: 0.,
-                fractals: 0.,
-                javaScripts: 0.,
-                idleverses: 0.,
-                cordexs: 0.,
-
-                freeCursor: 0,
-                freeGrandma: 0,
-                freeFarm: 0,
-                freeMine: 0,
-                freeFactory: 0,
-                freeBank: 0,
-                freeTemple: 0,
-                freeWizard: 0,
-                freeShipment: 0,
-                freeAlchemy: 0,
-                freePortal: 0,
-                freeTimeMachine: 0,
-                freeAntimatter: 0,
-                freePrism: 0,
-                freeChanceMaker: 0,
-                freeFractal: 0,
-                freeJavaScript: 0,
-                freeIdleverse: 0,
-                freeCordex: 0,
-
-                cursorCost: 0,
-                grandmaCost: 0,
-                farmCost: 0,
-                mineCost: 0,
-                factoryCost: 0,
-                bankCost: 0,
-                cursorCps: 0,
-                grandmaCps: 0,
-                farmCps: 0,
-                mineCps: 0,
-                factoryCps: 0,
-                bankCps: 0,
-                templeCps: 0,
-                wizardCps: 0,
-                shipmentCps: 0,
-                alchemyCps: 0,
-                portalCps: 0,
-                timeMachineCps: 0,
-                antimatterCps: 0,
-                prismCps: 0,
-                chanceMakerCps: 0,
-                fractalCps: 0,
-                javaScriptCps: 0,
-                idleverseCps: 0,
-                cordexCps: 0,
-            }
-        }
-    }, transition)
+main({}, transition)
