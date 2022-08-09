@@ -137,7 +137,10 @@ module Consensus = struct
       }
     | Update_root_hash of BLAKE2b.t
 
-  type operation = { hash : Operation_hash.t; transactions : transaction list }
+  type operation = {
+    hash : Tezos_operation_hash.t;
+    transactions : transaction list;
+  }
 
   let parse_transaction transaction =
     let Tezos_bridge.Listen_transaction.{ entrypoint; value } = transaction in
@@ -212,7 +215,7 @@ module Consensus = struct
 
   let parse_operation output =
     let Tezos_bridge.Listen_transaction.{ hash; transactions } = output in
-    let%some hash = Operation_hash.of_b58 hash in
+    let%some hash = Tezos_operation_hash.of_b58 hash in
     let transactions = List.filter_map parse_transaction transactions in
     Some { hash; transactions }
 

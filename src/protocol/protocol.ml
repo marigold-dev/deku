@@ -1,8 +1,10 @@
 open Receipt
+open Deku_tezos
 
 type protocol =
   | Protocol of {
       included_operations : Included_operation_set.t;
+      included_tezos_operations : Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
     }
 
@@ -12,11 +14,14 @@ let initial =
   Protocol
     {
       included_operations = Included_operation_set.empty;
+      included_tezos_operations = Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
     }
 
 let apply_operation protocol operation =
-  let (Protocol { included_operations; ledger }) = protocol in
+  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+    protocol
+  in
   match
     (* TODO: check code through different lane *)
     not (Included_operation_set.mem operation included_operations)
@@ -48,8 +53,35 @@ let apply_operation protocol operation =
       in
 
       let receipt = Receipt { operation = hash } in
-      Some (Protocol { included_operations; ledger }, receipt)
+      Some
+        ( Protocol { included_operations; included_tezos_operations; ledger },
+          receipt )
   | false -> None
+
+let apply_tezos_operation protocol tezos_operation =
+  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+    protocol
+  in
+  let Tezos_operation.{ hash; operations } = tezos_operation in
+  match not (Tezos_operation_hash.Set.mem hash included_tezos_operations) with
+  | true ->
+      let included_tezos_operations =
+        Tezos_operation_hash.Set.add hash included_tezos_operations
+      in
+      let protocol =
+        Protocol { included_operations; included_tezos_operations; ledger }
+      in
+      List.fold_left
+        (fun protocol tezos_operation ->
+          match tezos_operation with
+          | Tezos_operation.Deposit _deposit ->
+              print_endline "todo: handle the deposit in the ticket ledger";
+              protocol)
+        protocol operations
+  | false -> protocol
+
+let apply_tezos_operations tezos_operations protocol =
+  List.fold_left apply_tezos_operation protocol tezos_operations
 
 let parse_operation operation =
   match
@@ -70,13 +102,17 @@ let apply_payload ~parallel payload protocol =
     (protocol, []) operations
 
 let clean ~current_level protocol =
-  let (Protocol { included_operations; ledger }) = protocol in
+  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+    protocol
+  in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol { included_operations; ledger }
+  Protocol { included_operations; included_tezos_operations; ledger }
 
-let apply ~parallel ~current_level ~payload protocol =
+let apply ~parallel ~current_level ~payload ~tezos_operations protocol =
   let protocol, receipts = apply_payload ~parallel payload protocol in
   let protocol = clean ~current_level protocol in
+  (* TODO: how to clean the set of tezos operations in memory? *)
+  let protocol = apply_tezos_operations tezos_operations protocol in
   (protocol, receipts)

@@ -8,28 +8,27 @@ open Deku_concepts
 (* Derivied with the following code using `ligo repel cameligo`
    #use "./src/tezos_interop/consensus.mligo";;
    Crypto.blake2b (Bytes.pack ({ block_level = (1 : int);
-     block_payload_hash = (0xb9b1b55f78085b941225554ec084a8a1b6531bf01561646cd2fb3c6ac3d01730 : blake2b);
+     block_payload_hash = (0x5a48194d3ed952e4d0dc0ef9efb98a6e937c17cf05e7e913b89075a2d33ead26 : blake2b);
      state_hash = (0xfa301e3ff218de7844b21dd7364a444243f1772f6eba158a4a3a911b59da7d8c : blake2b);
      handles_hash = (0xa6f93d7d62cafcd888899b265e822b9be3afb090decae7de35604a97582deb17: blake2b) } : block_hash_structure));;
 
-     This expression outputs 0x418290b56d90e445c8f8c11f77ec87fdae262c8424ec5b13706cdcd09e6f5e5f
-
+     This expression outputs 0xa5aa14dc656ab3777364ec40f42b653591e34d47d482b18ad6dc7c7b68b086a8
 
    FIXME: This could be automated according to https://tezos-dev.slack.com/archives/CFX0B8Q3X/p1659802632591539?thread_ts=1659800515.479659&cid=CFX0B8Q3X
 *)
 
 (* This  *)
 let expected_block_structure_hash =
-  "418290b56d90e445c8f8c11f77ec87fdae262c8424ec5b13706cdcd09e6f5e5f"
+  "a5aa14dc656ab3777364ec40f42b653591e34d47d482b18ad6dc7c7b68b086a8"
 
 let expected_block_hash =
-  "233b6df6bf9fd2c91bf8e2eedf1227d083ab132901c1ff9122bc8bae657ebe80"
+  "bcf40f2505af2a02922fd49ac4b9cd148e01d95955333f00d2dafcd703c45529"
 
 let test_deku_block_hashing () =
   let level = Level.zero |> Level.next in
   let block_payload_hash =
     BLAKE2b.of_hex
-      "b9b1b55f78085b941225554ec084a8a1b6531bf01561646cd2fb3c6ac3d01730"
+      "5a48194d3ed952e4d0dc0ef9efb98a6e937c17cf05e7e913b89075a2d33ead26"
     |> Option.get
   in
   let state_root_hash =
@@ -123,22 +122,21 @@ let test_block_signing () =
 
      Crypto.check
        ("edpku9AgudAnEYeuf2UUydQ55VLffFp2bFQ1TRtMC4oMAs61wMUJM3" : key)
-       ("edsigu1FDHuERHMK3421kJUn8qBN4YMkx6LcqV6PdokCAo1LUjn5Y6k99WsNQTr84mU62oC3S9M7LhYr9NW5tVMU5UScqKrEDQS" : signature)
-       (0x418290b56d90e445c8f8c11f77ec87fdae262c8424ec5b13706cdcd09e6f5e5f : bytes);;
+       ("edsigtgoUgMVsHuYFiuPt3kYXnetXsZp5L7yXtZZDcwz9Fr9SGmQQevxtLWGuazgYAWuBN7bSPNTCCam7r9fZBQBRWwokbAs8jr" : signature)
+       (0xa5aa14dc656ab3777364ec40f42b653591e34d47d482b18ad6dc7c7b68b086a8 : bytes);;
   *)
   let hash = BLAKE2b.of_hex expected_block_structure_hash |> Option.get in
   let hash_to_verify = BLAKE2b.to_raw hash |> BLAKE2b.hash in
   Alcotest.(
-    check string "Sanity check of hash to verify"
-      (BLAKE2b.to_hex hash_to_verify)
-      expected_block_hash);
+    check string "Sanity check of hash to verify" expected_block_hash
+      (BLAKE2b.to_hex hash_to_verify));
   let identity = List.hd Fixme_name.identities in
   let signature =
     Verified_signature.sign hash_to_verify identity
     |> Verified_signature.signature |> Signature.to_b58
   in
   let expected_signature =
-    "edsigu1FDHuERHMK3421kJUn8qBN4YMkx6LcqV6PdokCAo1LUjn5Y6k99WsNQTr84mU62oC3S9M7LhYr9NW5tVMU5UScqKrEDQS"
+    "edsigtgoUgMVsHuYFiuPt3kYXnetXsZp5L7yXtZZDcwz9Fr9SGmQQevxtLWGuazgYAWuBN7bSPNTCCam7r9fZBQBRWwokbAs8jr"
   in
   Alcotest.(
     check string "Deku block signing is Tezos compatible" expected_signature
@@ -150,8 +148,7 @@ let test_block_signing () =
     |> Verified_signature.signature |> Signature.to_b58
   in
   Alcotest.(
-    check string "Deku block signing is Tezos-compatible" expected_signature
-      signature)
+    check string "Deku block signing is correct" expected_signature signature)
 
 let () =
   run "Deku_tezos_interop" ~and_exit:false

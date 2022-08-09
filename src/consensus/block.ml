@@ -12,6 +12,7 @@ type block =
       previous : Block_hash.t;
       payload : string list;
       payload_hash : BLAKE2b.t;
+      tezos_operations : Tezos_operation.t list;
     }
 
 type t = block
@@ -46,6 +47,7 @@ module Repr = struct
     level : Level.t;
     previous : Block_hash.t;
     payload : string list;
+    tezos_operations : Tezos_operation.t list;
   }
   [@@deriving yojson]
 
@@ -66,7 +68,7 @@ module Repr = struct
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
-    let { author; level; previous; payload } = block in
+    let { author; level; previous; payload; tezos_operations } = block in
     (* TODO: serializing after deserializing *)
     let payload_hash, block_hash = hash block in
 
@@ -89,6 +91,7 @@ module Repr = struct
         previous;
         payload;
         payload_hash;
+        tezos_operations;
       }
 
   let yojson_of_t block =
@@ -102,10 +105,11 @@ module Repr = struct
             previous;
             payload;
             payload_hash = _;
+            tezos_operations;
           }) =
       block
     in
-    let block = { author; level; previous; payload } in
+    let block = { author; level; previous; payload; tezos_operations } in
     yojson_of_block_and_signature { key; signature; block }
 end
 
@@ -121,11 +125,11 @@ let payload_of_operations operations =
       Yojson.Safe.to_string json)
     operations
 
-let produce ~identity ~level ~previous ~operations =
+let produce ~identity ~level ~previous ~operations ~tezos_operations =
   let author = Identity.key_hash identity in
   let payload = payload_of_operations operations in
   let payload_hash, block_hash =
-    Repr.hash { author; level; previous; payload }
+    Repr.hash { author; level; previous; payload; tezos_operations }
   in
   let key = Identity.key identity in
   let signature =
@@ -142,6 +146,7 @@ let produce ~identity ~level ~previous ~operations =
       previous;
       payload;
       payload_hash;
+      tezos_operations;
     }
 
 let pp fmt (Block { hash; level; _ }) =

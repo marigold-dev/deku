@@ -33,7 +33,10 @@ module Consensus : sig
       }
     | Update_root_hash of BLAKE2b.t
 
-  type operation = { hash : Operation_hash.t; transactions : transaction list }
+  type operation = {
+    hash : Tezos_operation_hash.t;
+    transactions : transaction list;
+  }
 
   val listen_operations : t -> on_operation:(operation -> unit) -> unit
 

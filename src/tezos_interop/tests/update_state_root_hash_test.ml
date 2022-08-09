@@ -42,7 +42,7 @@ let main consensus_contract =
     Tezos_interop.Consensus.listen_operations
       ~on_operation:(fun { hash; transactions = _ } ->
         Format.printf "👍 State root update successful. Operation hash: %s\n%!"
-          (Operation_hash.to_b58 hash);
+          (Tezos_operation_hash.to_b58 hash);
         exit 0)
       t
   in

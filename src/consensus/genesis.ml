@@ -16,4 +16,5 @@ let block =
       ~withdrawal_handles_hash:(BLAKE2b.hash "tuturu")
   in
   let operations = [] in
-  Block.produce ~identity ~level ~previous ~operations
+  let tezos_operations = [] in
+  Block.produce ~identity ~level ~previous ~operations ~tezos_operations

@@ -16,6 +16,7 @@ type block = private
       previous : Block_hash.t;
       payload : string list;
       payload_hash : BLAKE2b.t;
+      tezos_operations : Tezos_operation.t list;
     }
 
 type t = block [@@deriving eq, ord, yojson]
@@ -25,6 +26,7 @@ val produce :
   level:Level.t ->
   previous:Block_hash.t ->
   operations:Operation.t list ->
+  tezos_operations:Tezos_operation.t list ->
   block
 
 (* TODO: tag signatures, should be more than sign of the hash of a block *)
