@@ -6,6 +6,7 @@ open Deku_network
 open Deku_storage
 open Deku_tezos_interop
 open Deku_protocol
+open Deku_indexer
 
 module Parallel = struct
   let domains = 8
@@ -20,6 +21,7 @@ module Node = struct
     | Node of {
         chain : Chain.t;
         network : Network.t;
+        indexer : Indexer.t;
         (* TODO: weird, but for timeouts*)
         applied_block : unit -> unit;
         tezos_interop : Tezos_interop.t;
@@ -28,13 +30,15 @@ module Node = struct
   type t = node
 
   let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block
-      ~tezos_interop =
+      ~tezos_interop ~indexer =
     let chain = Chain.make ~identity ~bootstrap_key ~validators in
     let network = Network.make ~nodes in
-    Node { chain; network; applied_block; tezos_interop }
+    Node { chain; network; applied_block; tezos_interop; indexer }
 
   let dispatch_effect effect node =
-    let (Node { chain; network; applied_block; tezos_interop }) = node in
+    let (Node { chain; network; applied_block; tezos_interop; indexer }) =
+      node
+    in
     let network =
       match effect with
       | Chain.Reset_timeout ->
@@ -43,15 +47,22 @@ module Node = struct
       | Chain.Broadcast_block block -> Network.broadcast_block ~block network
       | Chain.Broadcast_signature signature ->
           Network.broadcast_signature ~signature network
+      | Chain.Save_block block ->
+          let current = Timestamp.of_float (Unix.gettimeofday ()) in
+          let () = Indexer.save_block ~block ~timestamp:current indexer in
+          network
     in
-    Node { chain; network; applied_block; tezos_interop }
+    Node { chain; network; applied_block; tezos_interop; indexer }
 
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node { chain; network; applied_block; tezos_interop }) = node in
+    let (Node { chain; network; applied_block; tezos_interop; indexer }) =
+      node
+    in
+    let () = Indexer.save_packet ~packet ~timestamp:current indexer in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let chain, effects =
       match packet with
@@ -69,20 +80,24 @@ module Node = struct
                 chain)
       | None -> (chain, [])
     in
-    let node = Node { chain; network; applied_block; tezos_interop } in
+    let node = Node { chain; network; applied_block; tezos_interop; indexer } in
     dispatch_effects effects node
 
   let incoming_timeout ~current node =
-    let (Node { chain; network; applied_block; tezos_interop }) = node in
+    let (Node { chain; network; applied_block; tezos_interop; indexer }) =
+      node
+    in
     let chain, effects = Chain.incoming_timeout ~current chain in
-    let node = Node { chain; network; applied_block; tezos_interop } in
+    let node = Node { chain; network; applied_block; tezos_interop; indexer } in
     dispatch_effects effects node
 end
 
 module Singleton : sig
   val get_state : unit -> Node.t
   val set_state : Node.t -> unit
-  val initialize : Storage.t -> tezos_interop:Tezos_interop.t -> unit
+
+  val initialize :
+    tezos_interop:Tezos_interop.t -> indexer:Indexer.t -> Storage.t -> unit
 end = struct
   type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
 
@@ -111,7 +126,7 @@ end = struct
       reset_timeout server;
       Lwt.return_unit)
 
-  let initialize storage ~tezos_interop =
+  let initialize ~tezos_interop ~indexer storage =
     let Storage.{ secret; initial_validators; nodes; bootstrap_key } =
       storage
     in
@@ -121,7 +136,7 @@ end = struct
     let applied_block () = !applied_block_ref () in
     let node =
       Node.make ~identity ~bootstrap_key ~validators:initial_validators ~nodes
-        ~applied_block ~tezos_interop
+        ~applied_block ~tezos_interop ~indexer
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in
@@ -202,14 +217,18 @@ module Tezos_bridge = struct
     Tezos_interop.Consensus.listen_operations tezos_interop
       ~on_operation:(fun operation ->
         let node = Singleton.get_state () in
-        let (Node { chain; network; applied_block; tezos_interop }) = node in
+        let (Node { chain; network; applied_block; tezos_interop; indexer }) =
+          node
+        in
         let Tezos_interop.Consensus.{ hash; transactions } = operation in
         let operations = List.filter_map to_tezos_operation transactions in
         let tezos_operation = Tezos_operation.make hash operations in
         let chain, effects =
           Chain.incoming_tezos_operation ~tezos_operation chain
         in
-        let node = Node.Node { chain; network; applied_block; tezos_interop } in
+        let node =
+          Node.Node { chain; network; applied_block; tezos_interop; indexer }
+        in
         let node = Node.dispatch_effects effects node in
         Singleton.set_state node)
 end
@@ -219,6 +238,7 @@ let main () =
   let storage = ref "storage.json" in
   let rpc_node = ref "http://localhost:20000" in
   let required_confirmations = ref 2 in
+  let database_uri = ref "sqlite3:database.db" in
   Arg.parse
     [
       ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
@@ -229,6 +249,9 @@ let main () =
       ( "--required-confirmations",
         Arg.Set_int required_confirmations,
         " The number of required confirmations (2 by default)" );
+      ( "-d",
+        Arg.Set_string database_uri,
+        " Database URI (sqlite3:database.db by default)" );
     ]
     ignore "Handle Deku communication. Runs forever.";
 
@@ -244,7 +267,7 @@ let main () =
     | _, None, _ -> failwith "discovery address is required"
     | _, _, None -> failwith "tezos_secret is required"
   in
-
+  let%await storage = Storage.read ~file:!storage in
   let tezos_interop =
     Tezos_interop.make ~rpc_node:(Uri.of_string !rpc_node)
       ~secret:(tezos_secret |> Deku_crypto.Secret.of_b58 |> Option.get)
@@ -252,11 +275,10 @@ let main () =
       ~discovery_contract:(Deku_tezos.Address.of_string discovery |> Option.get)
       ~required_confirmations:!required_confirmations
   in
-
-  let open Lwt.Infix in
-  Storage.read ~file:!storage >>= fun storage ->
-  let () = Singleton.initialize storage ~tezos_interop in
   Tezos_bridge.listen ();
+  let database_uri = Uri.of_string !database_uri in
+  let%await indexer = Indexer.make ~uri:database_uri in
+  let () = Singleton.initialize ~indexer ~tezos_interop storage in
   Server.start !port
 
 let () = Lwt_main.run (main ())

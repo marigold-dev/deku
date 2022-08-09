@@ -8,6 +8,7 @@
   deku-chain
   deku-network
   deku-storage
+  deku-indexer
   cmdliner)
  (preprocess
   (pps ppx_let_binding)))

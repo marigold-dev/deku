@@ -71,3 +71,7 @@
 (package (name deku-tezos))
 
 (package (name deku-tezos-interop))
+
+(package
+ (name deku-indexer)
+ (depends deku-stdlib deku-concepts deku-constants))

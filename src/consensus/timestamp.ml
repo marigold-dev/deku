@@ -2,6 +2,7 @@ type timestamp = float
 type t = timestamp
 
 let of_float float = float
+let to_float timestamp = timestamp
 
 let timeouts_since ~current ~since =
   let diff = current -. since in
