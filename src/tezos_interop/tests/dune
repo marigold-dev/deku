@@ -1,0 +1,46 @@
+(executable
+ (name deku_update_state_root_hash_test)
+ (modules deku_update_state_root_hash_test)
+ (libraries
+  alcotest
+  deku-stdlib
+  deku-crypto
+  deku-tezos
+  deku-tezos-interop
+  deku-consensus
+  cmdliner
+  fixme_name)
+ (preprocess
+  (pps ppx_let_binding)))
+
+(executable
+ (name deposit_test)
+ (modules deposit_test)
+ (libraries
+  alcotest
+  deku-stdlib
+  deku-crypto
+  deku-tezos
+  deku-tezos-interop
+  deku-consensus
+  cmdliner
+  fixme_name)
+ (preprocess
+  (pps ppx_let_binding)))
+
+(library
+ (name fixme_name)
+ (modules fixme_name)
+ (libraries deku-consensus deku-stdlib deku-concepts))
+
+(executable
+ (name deku_tezos_interop_tests)
+ (modules deku_tezos_interop_tests)
+ (libraries alcotest deku-stdlib deku-consensus fixme_name))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./deku_tezos_interop_tests.exe))
+ (action
+  (run %{exe})))

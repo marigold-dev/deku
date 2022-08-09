@@ -1,6 +1,7 @@
 open Deku_stdlib
 open Deku_crypto
-open Tezos
+open Deku_tezos
+open Deku_concepts
 
 type t
 
@@ -15,7 +16,7 @@ val make :
 module Consensus : sig
   val commit_state_hash :
     t ->
-    block_height:int64 ->
+    block_level:Level.t ->
     block_payload_hash:BLAKE2b.t ->
     state_hash:BLAKE2b.t ->
     withdrawal_handles_hash:BLAKE2b.t ->

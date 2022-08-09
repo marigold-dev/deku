@@ -35,11 +35,11 @@ type root_hash_action = {
 (* (pair (pair int bytes) (pair bytes validators)) *)
 (* TODO: performance, put this structures in an optimized way *)
 type block_hash_structure = {
+  (* FIXME: should be nat*)
   block_level: int;
   block_payload_hash: blake2b;
   state_hash: blake2b;
   handles_hash: blake2b;
-  validators_hash: blake2b;
 }
 
 let assert_msg ((message, condition): (string * bool)) =
@@ -60,8 +60,6 @@ let root_hash_block_hash (root_hash_update: root_hash_action) =
     block_payload_hash = root_hash_update.block_payload_hash;
     state_hash = root_hash_update.state_hash;
     handles_hash = root_hash_update.handles_hash;
-    (* TODO: should we do pack of list? *)
-    validators_hash = Crypto.blake2b (Bytes.pack root_hash_update.validators)
   } in
   Crypto.blake2b (Bytes.pack block_hash_structure)
 

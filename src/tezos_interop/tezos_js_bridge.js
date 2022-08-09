@@ -303,13 +303,13 @@ const onListenTransaction = async (id, content) => {
 };
 
 const onRequest = (id, content) => {
-  if (content.kind === "transaction") {
+  if (content.kind[0] === "transaction") {
     return onTransactionRequest(id, content);
-  } else if (content.kind === "storage") {
+  } else if (content.kind[0] === "storage") {
     return onStorageRequest(id, content);
-  } else if (content.kind === "big_map_keys") {
+  } else if (content.kind[0] === "big_map_keys") {
     return onBigMapMultipleKeyRequest(id, content);
-  } else if (content.kind === "listen") {
+  } else if (content.kind[0] === "listen") {
     return onListenTransaction(id, content);
   } else {
     failure(new Error("invalid content.kind: " + JSON.stringify(content.kind)));

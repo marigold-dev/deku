@@ -18,6 +18,7 @@ module type S = sig
     (* repr *)
     val of_b58 : string -> key option
     val to_b58 : key -> string
+    val encoding : key Data_encoding.t
 
     (* operations *)
     val of_secret : Secret.t -> key

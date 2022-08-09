@@ -78,6 +78,8 @@ module Key = struct
       |> Libsecp256k1.Key.read_pk context
       |> Result.to_option
   end)
+
+  let encoding = Encoding.encoding
 end
 
 module Key_hash = struct

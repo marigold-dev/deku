@@ -19,6 +19,6 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
-let hash = hash
+let hash string = hash string |> to_raw |> hash
 
 module Map = Map

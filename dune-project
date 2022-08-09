@@ -67,3 +67,7 @@
 (package
  (name deku-generate-identity)
  (depends deku-crypto cmdliner))
+
+(package (name deku-tezos))
+
+(package (name deku-tezos-interop))

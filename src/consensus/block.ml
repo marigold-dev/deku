@@ -1,6 +1,7 @@
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
+open Deku_tezos
 
 type block =
   | Block of {
@@ -11,6 +12,7 @@ type block =
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
+      payload_hash : BLAKE2b.t;
     }
 
 type t = block
@@ -50,29 +52,58 @@ module Repr = struct
 
   (* TODO: we could avoid Yojson.Safe.to_string if we had locations *)
   let hash block =
-    let json = yojson_of_block block in
-    let json = Yojson.Safe.to_string json in
-    Block_hash.hash json
+    let block_payload_hash =
+      yojson_of_block block |> Yojson.Safe.to_string |> BLAKE2b.hash
+    in
+    let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
+    let withdrawal_handles_hash =
+      BLAKE2b.hash "FIXME: we need the withdraw handles hash"
+    in
+    let hash =
+      Deku.Consensus.hash_block ~block_level:block.level ~block_payload_hash
+        ~state_root_hash ~withdrawal_handles_hash
+    in
+    let double_hash = Block_hash.hash (BLAKE2b.to_hex hash) in
+    (block_payload_hash, double_hash)
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
     let { author; level; previous; payload } = block in
     (* TODO: serializing after deserializing *)
-    let hash = hash block in
-
+    let payload_hash, block_hash = hash block in
     (match Key_hash.(equal author (of_key key)) with
     | true -> ()
     | false -> raise Invalid_signature);
     (match
-       let hash = Block_hash.to_blake2b hash in
+       let hash = Block_hash.to_blake2b block_hash in
        Signature.verify key signature hash
      with
     | true -> ()
     | false -> raise Invalid_signature);
-    Block { key; signature; hash; author; level; previous; payload }
+    Block
+      {
+        key;
+        signature;
+        hash = block_hash;
+        author;
+        level;
+        previous;
+        payload;
+        payload_hash;
+      }
 
   let yojson_of_t block =
-    let (Block { key; signature; hash = _; author; level; previous; payload }) =
+    let (Block
+          {
+            key;
+            signature;
+            hash = _;
+            author;
+            level;
+            previous;
+            payload;
+            payload_hash = _;
+          }) =
       block
     in
     let block = { author; level; previous; payload } in
@@ -94,13 +125,30 @@ let payload_of_operations operations =
 let produce ~identity ~level ~previous ~operations =
   let author = Identity.key_hash identity in
   let payload = payload_of_operations operations in
-  let hash = Repr.hash { author; level; previous; payload } in
+  let payload_hash, block_hash =
+    Repr.hash { author; level; previous; payload }
+  in
   let key = Identity.key identity in
   let signature =
-    let hash = Block_hash.to_blake2b hash in
+    let hash = Block_hash.to_blake2b block_hash in
     Identity.sign ~hash identity
   in
-  Block { key; signature; hash; author; level; previous; payload }
+  Block
+    {
+      key;
+      signature;
+      hash = block_hash;
+      author;
+      level;
+      previous;
+      payload;
+      payload_hash;
+    }
+
+let pp fmt (Block { hash; level; _ }) =
+  let hash = Block_hash.to_b58 hash in
+  let open Deku_stdlib in
+  Format.fprintf fmt "Block [hash: %s, level: %a]" hash N.pp (Level.to_n level)
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in

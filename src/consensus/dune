@@ -6,6 +6,7 @@
   deku-crypto
   deku-constants
   deku-concepts
-  deku-protocol)
+  deku-protocol
+  deku-tezos)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

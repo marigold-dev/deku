@@ -1,6 +1,6 @@
 open Deku_stdlib
 open Deku_crypto
-open Tezos
+open Deku_tezos
 
 module Michelson = struct
   include Michelson
@@ -28,7 +28,7 @@ module Michelson = struct
 end
 
 module Listen_transaction = struct
-  type kind = Listen [@@deriving yojson]
+  type kind = Listen [@name "listen"] [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -46,7 +46,7 @@ module Listen_transaction = struct
 end
 
 module Inject_transaction = struct
-  type kind = Transaction [@@deriving yojson]
+  type kind = Transaction [@name "transaction"] [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -70,15 +70,17 @@ module Inject_transaction = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type t = { status : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
       type with_hash = { hash : string }
-      [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
       type maybe_hash = { hash : string option }
-      [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type error = { error : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
     end in
     let other make =
       let T.{ hash } = T.maybe_hash_of_yojson json in
@@ -113,12 +115,14 @@ module Storage = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type t = { status : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
       type success = { storage : Michelson.t }
-      [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type error = { error : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
     end in
     let T.{ status } = T.t_of_yojson json in
     match status with
@@ -132,7 +136,7 @@ module Storage = struct
 end
 
 module Big_map_keys = struct
-  type kind = Big_map_keys [@@deriving yojson]
+  type kind = Big_map_keys [@name "big_map_keys"] [@@deriving yojson]
 
   type request = {
     kind : kind;
@@ -145,7 +149,8 @@ module Big_map_keys = struct
 
   let of_yojson json =
     let module T = struct
-      type t = { status : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type t = { status : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
       (*
          TODO: Yojson.Safe.t is taking the place of a "well-formatted json object"
@@ -153,9 +158,10 @@ module Big_map_keys = struct
          It would be better to parse it to a micheline node.
       *)
       type success = { values : Yojson.Safe.t option list }
-      [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
-      type error = { error : string } [@@deriving of_yojson][@@yojson.allow_extra_fields]
+      type error = { error : string }
+      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
     end in
     let T.{ status } = T.t_of_yojson json in
     match status with

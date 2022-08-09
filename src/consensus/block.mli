@@ -15,6 +15,7 @@ type block = private
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
+      payload_hash : BLAKE2b.t;
     }
 
 type t = block [@@deriving eq, ord, yojson]
@@ -30,3 +31,5 @@ val produce :
 val sign : identity:Identity.t -> block -> Verified_signature.t
 
 module Set : Set.S with type elt = block
+
+val pp : Format.formatter -> t -> unit

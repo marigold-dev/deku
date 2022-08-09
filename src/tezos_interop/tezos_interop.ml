@@ -1,6 +1,6 @@
 open Deku_stdlib
 open Deku_crypto
-open Tezos
+open Deku_tezos
 
 type t = {
   rpc_node : Uri.t;
@@ -79,11 +79,14 @@ module Consensus = struct
   open Michelson.Michelson_v1_primitives
   open Tezos_micheline
 
-  let commit_state_hash t ~block_height ~block_payload_hash ~state_hash
+  let commit_state_hash t ~block_level ~block_payload_hash ~state_hash
       ~withdrawal_handles_hash ~validators ~signatures =
+    let block_level =
+      Deku_concepts.Level.to_n block_level |> N.to_z |> Z.to_int64
+    in
     let module Payload = struct
       type t = {
-        block_height : int64;
+        block_level : int64;
         block_payload_hash : BLAKE2b.t;
         signatures : string option list;
         handles_hash : BLAKE2b.t;
@@ -109,7 +112,7 @@ module Consensus = struct
     let validators = List.map Key_hash.to_b58 validators in
     let payload =
       {
-        block_height;
+        block_level;
         block_payload_hash;
         signatures;
         handles_hash = withdrawal_handles_hash;

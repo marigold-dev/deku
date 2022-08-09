@@ -55,4 +55,8 @@ deploy_contract "discovery" \
     "./src/tezos_interop/discovery.mligo" \
     "$(cat ./configs/flextesa/discovery_storage.mligo)"
 
+deploy_contract "dummy_ticket" \
+    "./dummy_ticket.mligo" \
+    "()"
+
 wait

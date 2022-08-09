@@ -1,5 +1,5 @@
 open Deku_crypto
-open Tezos
+open Deku_tezos
 
 (* push *)
 module Listen_transaction : sig

@@ -32,7 +32,11 @@ let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
             Packet.content_of_yojson ~endpoint content
           with
           | content -> (Some content, network)
-          | exception _exn -> (* TODO: dump exception*) (None, network))
+          | exception exn ->
+              (* TODO: proper logging *)
+              Format.eprintf "Exception while parsing packet: %s\n%!"
+                (Printexc.to_string exn);
+              (None, network))
       | false -> (* TODO: spam prevention *) raise Invalid_hash)
 
 let incoming_packet ~endpoint ~packet network =
