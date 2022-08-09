@@ -22,7 +22,8 @@ module Util = struct
 end
 
 let produce identity consensus network =
-  let (Consensus.Consensus { current_level; current_block; _ }) = consensus in
+  let (Consensus.Consensus { state; _ }) = consensus in
+  let (State { current_level; current_block; _ }) = state in
   let level = Level.next current_level in
   let previous = current_block in
   let operations = [] in
@@ -65,7 +66,7 @@ let bootstrap ~size =
     let validators = List.map Identity.key_hash identities in
     Validators.of_key_hash_list validators
   in
-  let consensus = Consensus.make ~validators in
+  let consensus = Consensus.make ~identity:producer ~validators in
   let network = Network.make ~nodes in
   let () = restart ~producer identities consensus network in
   (* TODO: this is lame, but Lwt*)

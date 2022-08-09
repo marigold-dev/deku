@@ -19,56 +19,58 @@ module Node = struct
         chain : Chain.t;
         network : Network.t;
         (* TODO: weird, but for timeouts*)
-        applied_block : unit -> unit;
+        trigger_timeout : unit -> unit;
       }
 
   type t = node
 
-  let make ~identity ~validators ~nodes ~applied_block =
-    let chain = Chain.make ~identity ~validators in
+  let make ~identity ~validators ~nodes ~trigger_timeout =
+    (* TODO: is this pool () here correct? *)
+    let pool = Parallel.pool () in
+    let chain = Chain.make ~identity ~validators ~pool in
     let network = Network.make ~nodes in
-    Node { chain; network; applied_block }
+    Node { chain; network; trigger_timeout }
 
   let dispatch_effect effect node =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; trigger_timeout }) = node in
     let network =
       match effect with
-      | Chain.Reset_timeout ->
-          let () = applied_block () in
+      | Chain.Trigger_timeout ->
+          let () = trigger_timeout () in
           network
-      | Chain.Broadcast_block block -> Network.broadcast_block ~block network
-      | Chain.Broadcast_signature signature ->
+      | Chain.Broadcast_block { block } ->
+          Network.broadcast_block ~block network
+      | Chain.Broadcast_signature { signature } ->
           Network.broadcast_signature ~signature network
     in
-    Node { chain; network; applied_block }
+    Node { chain; network; trigger_timeout }
 
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
   let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
       =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; trigger_timeout }) = node in
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let chain, effects =
       match packet with
       | Some packet -> (
-          let pool = Parallel.pool () in
           match endpoint with
-          | Blocks -> Chain.incoming_block ~pool ~current ~block:packet chain
+          | Blocks -> Chain.incoming_block ~current ~block:packet chain
           | Signatures ->
-              Chain.incoming_signature ~pool ~current ~signature:packet chain
+              Chain.incoming_signature ~current ~signature:packet chain
           | Operations ->
               let chain = Chain.incoming_operation ~operation:packet chain in
               (chain, []))
       | None -> (chain, [])
     in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; trigger_timeout } in
     dispatch_effects effects node
 
   let incoming_timeout ~current node =
-    let (Node { chain; network; applied_block }) = node in
+    let (Node { chain; network; trigger_timeout }) = node in
     let chain, effects = Chain.incoming_timeout ~current chain in
-    let node = Node { chain; network; applied_block } in
+    let node = Node { chain; network; trigger_timeout } in
     dispatch_effects effects node
 end
 
@@ -77,7 +79,7 @@ module Singleton : sig
   val set_state : Node.t -> unit
   val initialize : Storage.t -> unit
 end = struct
-  type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
+  type state = { mutable state : Node.t; mutable trigger : unit Lwt.u }
 
   let state = ref None
 
@@ -94,28 +96,36 @@ end = struct
     let server = get_server () in
     server.state <- new_state
 
-  let rec reset_timeout server =
-    Lwt.cancel server.timeout;
-    server.timeout <-
-      (let open Deku_constants in
-      let%await () = Lwt_unix.sleep block_timeout in
-      let current = Timestamp.of_float (Unix.gettimeofday ()) in
-      server.state <- Node.incoming_timeout ~current server.state;
-      reset_timeout server;
-      Lwt.return_unit)
+  let rec setup_timeout server =
+    let open Deku_constants in
+    let trigger_promise, trigger_resolver = Lwt.wait () in
+    server.trigger <- trigger_resolver;
+
+    let%await () = Lwt.pick [ Lwt_unix.sleep block_timeout; trigger_promise ] in
+    let current = Timestamp.of_float (Unix.gettimeofday ()) in
+    server.state <- Node.incoming_timeout ~current server.state;
+    setup_timeout server
 
   let initialize storage =
     let Storage.{ secret; initial_validators; nodes } = storage in
     let identity = Identity.make secret in
 
-    let applied_block_ref = ref (fun () -> ()) in
-    let applied_block () = !applied_block_ref () in
+    let trigger_timeout_ref = ref (fun () -> ()) in
+    let trigger_timeout () = !trigger_timeout_ref () in
     let node =
-      Node.make ~identity ~validators:initial_validators ~nodes ~applied_block
+      Node.make ~identity ~validators:initial_validators ~nodes ~trigger_timeout
     in
-    let server = { state = node; timeout = Lwt.return_unit } in
-    let () = applied_block_ref := fun () -> reset_timeout server in
-    let () = reset_timeout server in
+    let server =
+      let _, trigger = Lwt.wait () in
+      { state = node; trigger }
+    in
+    let () =
+      trigger_timeout_ref :=
+        fun () ->
+          let trigger = server.trigger in
+          Lwt.wakeup_later trigger ()
+    in
+    let () = Lwt.async (fun () -> setup_timeout server) in
     state := Some server
 end
 

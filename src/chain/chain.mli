@@ -6,37 +6,37 @@ open Deku_consensus
 
 type chain = private
   | Chain of {
+      pool : Parallel.Pool.t;
       protocol : Protocol.t;
       consensus : Consensus.t;
-      verifier : Verifier.t;
-      signer : Signer.t;
       producer : Producer.t;
     }
 
 type t = chain
 
 type external_effect = private
-  | Reset_timeout
-  | Broadcast_block of Block.t
-  | Broadcast_signature of Verified_signature.t
+  (* timer *)
+  | Trigger_timeout
+  (* network *)
+  | Broadcast_block of { block : Block.t }
+  | Broadcast_signature of { signature : Verified_signature.t }
 
-val make : identity:Identity.t -> validators:Key_hash.t list -> chain
+val make :
+  identity:Identity.t ->
+  validators:Key_hash.t list ->
+  pool:Parallel.Pool.t ->
+  chain
 
 val incoming_block :
-  pool:Parallel.Pool.pool ->
-  current:Timestamp.timestamp ->
-  block:Block.block ->
-  chain ->
-  chain * external_effect list
+  current:Timestamp.t -> block:Block.t -> chain -> chain * external_effect list
 
 val incoming_signature :
-  pool:Parallel.Pool.pool ->
-  current:Timestamp.timestamp ->
-  signature:Verified_signature.verified_signature ->
+  current:Timestamp.t ->
+  signature:Verified_signature.t ->
   chain ->
   chain * external_effect list
 
 val incoming_timeout :
-  current:Timestamp.timestamp -> chain -> chain * external_effect list
+  current:Timestamp.t -> chain -> chain * external_effect list
 
-val incoming_operation : operation:Operation.operation -> chain -> chain
+val incoming_operation : operation:Operation.t -> chain -> chain

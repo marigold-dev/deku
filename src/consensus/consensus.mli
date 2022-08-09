@@ -1,24 +1,33 @@
-open Deku_crypto
 open Deku_concepts
+
+type external_effect = private
+  (* protocol *)
+  | Accepted_block of { level : Level.t; payload : string list }
+  (* timer *)
+  | Trigger_timeout
+  (* network *)
+  | Broadcast_signature of { signature : Verified_signature.t }
 
 type consensus = private
   | Consensus of {
-      validators : Validators.t;
-      current_level : Level.t;
-      current_block : Block_hash.t;
-      last_block_author : Key_hash.t;
-      last_block_update : Timestamp.t option;
+      block_pool : Block_pool.t;
+      signer : Signer.t;
+      state : State.t;
     }
 
 and t = consensus
 
-val make : validators:Validators.t -> consensus
+val make : identity:Identity.t -> validators:Validators.t -> consensus
 
-(* transition *)
-val apply_block : current:Timestamp.t -> block:Block.t -> consensus -> consensus
+(* updates *)
+val incoming_block :
+  current:Timestamp.t ->
+  block:Block.t ->
+  consensus ->
+  consensus * external_effect list
 
-(* judging *)
-val is_valid : block:Block.t -> consensus -> bool
-
-val is_expected_author :
-  current:Timestamp.t -> author:Key_hash.t -> consensus -> bool
+val incoming_signature :
+  current:Timestamp.t ->
+  signature:Verified_signature.t ->
+  consensus ->
+  consensus * external_effect list
