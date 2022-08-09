@@ -4,7 +4,7 @@ open Deku_concepts
 open Deku_protocol
 
 module Parallel = struct
-  let domains = 16
+  let domains = 20
   let pool = Parallel.Pool.make ~domains
   let init_p n f = Parallel.init_p pool n f
   let filter_map_p f l = Parallel.filter_map_p pool f l
@@ -24,7 +24,7 @@ module Util = struct
     `Average average
 end
 
-module Zero_ops = struct
+module Block_application = struct
   let generate () =
     let secret = Ed25519.Secret.generate () in
     let secret = Secret.Ed25519 secret in
@@ -60,7 +60,7 @@ module Zero_ops = struct
 
   (* TODO: parametrize over domains *)
   let perform ~runs ~protocol ~level ~payload =
-    let () = Format.eprintf "running...\n%!" in
+    let () = Format.eprintf "running block application...\n%!" in
 
     let (`Average average) =
       Util.benchmark ~runs (fun () ->
@@ -77,9 +77,62 @@ module Zero_ops = struct
     let level = Level.zero in
     let size = 50000 in
     let payload = big_payload ~size ~level in
+    let payload_size =
+      List.fold_left (fun a s -> a + String.length s) 0 payload
+    in
+    Format.printf "Block size: %d\n%!" payload_size;
     let average = perform ~runs:10 ~protocol ~level ~payload in
     let tps = Float.of_int size /. average in
     Format.eprintf "average run time: %3f. tps: %3f\n%!" average tps
 end
 
-let () = Zero_ops.run ()
+module Block_production = struct
+  let producer = Block_application.generate ()
+  let sender = Block_application.generate ()
+
+  let source =
+    let key_hash = Identity.key_hash sender in
+    Address.of_key_hash key_hash
+
+  let receiver =
+    Block_application.generate () |> Identity.key_hash |> Address.of_key_hash
+
+  let operation ~level ~nonce =
+    (* This might not work when the bug is fixed. *)
+    let nonce = Z.of_int nonce |> N.of_z |> Option.get |> Nonce.of_n in
+    let amount = Amount.of_n N.zero in
+    Operation.transaction ~identity:sender ~level ~nonce ~source ~receiver
+      ~amount
+
+  let operations ~size ~level =
+    Parallel.init_p size (fun nonce -> operation ~level ~nonce)
+
+  let produce_block ~size =
+    let open Deku_consensus in
+    let level = Level.zero in
+    let (Block.Block { previous; _ }) = Genesis.block in
+    let operations = operations ~size ~level in
+    let _block =
+      Block.produce ~identity:producer ~level ~previous ~operations
+        ~tezos_operations:[]
+    in
+    ()
+
+  let perform ~runs ~size =
+    let () = Format.eprintf "running block production...\n%!" in
+
+    let (`Average average) =
+      Util.benchmark ~runs (fun () -> produce_block ~size)
+    in
+    average
+
+  let run () =
+    let size = 100000 in
+    let average = perform ~runs:5 ~size in
+    let tx_packed_per_sec = Float.of_int size /. average in
+    Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average
+      tx_packed_per_sec
+end
+
+(* let () = Block_application.run () *)
+let () = Block_production.run ()
