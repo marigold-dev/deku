@@ -275,10 +275,10 @@ let main () =
       ~discovery_contract:(Deku_tezos.Address.of_string discovery |> Option.get)
       ~required_confirmations:!required_confirmations
   in
-  Tezos_bridge.listen ();
   let database_uri = Uri.of_string !database_uri in
   let%await indexer = Indexer.make ~uri:database_uri in
   let () = Singleton.initialize ~indexer ~tezos_interop storage in
+  Tezos_bridge.listen ();
   Server.start !port
 
 let () = Lwt_main.run (main ())

@@ -24,7 +24,7 @@ module Query = struct
     let params = (hash, level, timestamp, block_json) in
     let query =
       (tup4 string int64 float string ->. unit)
-      @@ "insert into blocks (hash, level, timetsamp, block) values (?, ?, ?, \
+      @@ "insert into blocks (hash, level, timestamp, block) values (?, ?, ?, \
           ?)"
     in
     return_unit query params
