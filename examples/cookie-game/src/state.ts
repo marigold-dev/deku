@@ -237,124 +237,85 @@ export const calculateCost = (action: actions, cookieBaker: st.cookieBaker): num
             throw new Error("Cookie does not have cost");
 
         case actions.incr_Cursor:
-            console.log("Calculating price for next cursor, actual price is: " + cookieBaker.cursorCost);
             const new_cursor_price = Math.floor(st.init_cursorCost * Math.pow(1.15, cookieBaker.cursors - cookieBaker.freeCursor));
-            console.log("New cursor price is: " + new_cursor_price);
             return new_cursor_price;
 
         case actions.incr_Grandma:
-            console.log("Calculating price for next grandma, actual price is: " + cookieBaker.grandmaCost);
             const new_grandma_price = Math.floor(st.init_grandmaCost * Math.pow(1.15, cookieBaker.grandmas - cookieBaker.freeGrandma));
-            console.log("New grandma price is: " + new_grandma_price);
             return new_grandma_price;
 
         case actions.incr_Farm:
-            console.log("Calculating price for next farm, actual price is: " + cookieBaker.farmCost);
             const new_farm_price = Math.floor(st.init_farmCost * Math.pow(1.15, cookieBaker.farms - cookieBaker.freeFarm));
-            console.log("New farm price is: " + new_farm_price);
             return new_farm_price;
 
         case actions.incr_Mine:
-            console.log("Calculating price for next mine, actual price is: " + cookieBaker.mineCost);
             const new_mine_price = Math.floor(st.init_mineCost * Math.pow(1.15, cookieBaker.mines - cookieBaker.freeMine));
-            console.log("New mine price is: " + new_mine_price);
             return new_mine_price;
 
         case actions.incr_Factory:
-            console.log("Calculating price for next factory, actual price is: " + cookieBaker.factoryCost);
             const new_factory_price = Math.floor(st.init_factoryCost * Math.pow(1.15, cookieBaker.factories - cookieBaker.freeFactory));
-            console.log("New factory price is: " + new_factory_price);
             return new_factory_price;
 
         case actions.incr_Bank:
-            console.log("Calculating price for next bank, actual price is: " + cookieBaker.bankCost);
             const new_bank_price = Math.floor(st.init_bankCost * Math.pow(1.15, cookieBaker.banks - cookieBaker.freeBank));
-            console.log("New bank price is: " + new_bank_price);
             return new_bank_price;
 
         case actions.incr_Temple:
-            console.log("Calculating price for next temple, actual price is: " + cookieBaker.templeCost);
             const new_temple_price = Math.floor(st.init_templeCost * Math.pow(1.15, cookieBaker.temples - cookieBaker.freeTemple));
-            console.log("New bank price is: " + new_temple_price);
             return new_temple_price;
 
         case actions.incr_Wizard:
-            console.log("Calculating price for next wizard, actual price is: " + cookieBaker.wizardCost);
             const new_wizard_price = Math.floor(st.init_wizardCost * Math.pow(1.15, cookieBaker.wizards - cookieBaker.freeWizard));
-            console.log("New wizard price is: " + new_wizard_price);
             return new_wizard_price;
 
         case actions.incr_Shipment:
-            console.log("Calculating price for next shipment, actual price is: " + cookieBaker.shipmentCost);
             const new_shipment_price = Math.floor(st.init_shipmentCost * Math.pow(1.15, cookieBaker.shipments - cookieBaker.freeShipment));
-            console.log("New shipment price is: " + new_shipment_price);
             return new_shipment_price;
 
         case actions.incr_Alchemy:
-            console.log("Calculating price for next alchemy, actual price is: " + cookieBaker.alchemyCost);
             const new_alchemy_price = Math.floor(st.init_alchemyCost * Math.pow(1.15, cookieBaker.alchemies - cookieBaker.freeAlchemy));
-            console.log("New alchemy price is: " + new_alchemy_price);
             return new_alchemy_price;
 
         case actions.incr_Portal:
-            console.log("Calculating price for next portal, actual price is: " + cookieBaker.portalCost);
             const new_portal_price = Math.floor(st.init_portalCost * Math.pow(1.15, cookieBaker.portals - cookieBaker.freePortal));
-            console.log("New portal price is: " + new_portal_price);
             return new_portal_price;
 
         case actions.incr_TimeMachine:
-            console.log("Calculating price for next time machine, actual price is: " + cookieBaker.timeMachineCost);
             const new_timemachine_price = Math.floor(st.init_timeMachineCost * Math.pow(1.15, cookieBaker.timeMachines - cookieBaker.freeTimeMachine));
-            console.log("New time machine price is: " + new_timemachine_price);
             return new_timemachine_price;
 
         case actions.incr_Antimatter:
-            console.log("Calculating price for next antimatter, actual price is: " + cookieBaker.antimatterCost);
             const new_antimatter_price = Math.floor(st.init_antimatterCost * Math.pow(1.15, cookieBaker.antimatters - cookieBaker.freeAntimatter));
-            console.log("New bank price is: " + new_antimatter_price);
             return new_antimatter_price;
 
         case actions.incr_Prism:
-            console.log("Calculating price for next prism, actual price is: " + cookieBaker.prismCost);
             const new_prism_price = Math.floor(st.init_prismCost * Math.pow(1.15, cookieBaker.prisms - cookieBaker.freePrism));
-            console.log("New prism price is: " + new_prism_price);
             return new_prism_price;
 
         case actions.incr_ChanceMaker:
-            console.log("Calculating price for next chance maker, actual price is: " + cookieBaker.chanceMakerCost);
             const new_chancemaker_price = Math.floor(st.init_chanceMakerCost * Math.pow(1.15, cookieBaker.chanceMakers - cookieBaker.freeChanceMaker));
-            console.log("New chance maker price is: " + new_chancemaker_price);
             return new_chancemaker_price;
 
         case actions.incr_Fractal:
-            console.log("Calculating price for next fractal, actual price is: " + cookieBaker.fractalCost);
             const new_fractal_price = Math.floor(st.init_fractalCost * Math.pow(1.15, cookieBaker.fractals - cookieBaker.freeFractal));
-            console.log("New fractal price is: " + new_fractal_price);
             return new_fractal_price;
 
         case actions.incr_Javascript:
-            console.log("Calculating price for next javascript, actual price is: " + cookieBaker.javaScriptCost);
             const new_javascript_price = Math.floor(st.init_javascriptCost * Math.pow(1.15, cookieBaker.javaScripts - cookieBaker.freeJavaScript));
-            console.log("New javascript price is: " + new_javascript_price);
             return new_javascript_price;
 
         case actions.incr_Idleverse:
-            console.log("Calculating price for next idleverse, actual price is: " + cookieBaker.idleverseCost);
             const new_idleverse_price = Math.floor(st.init_idleverseCost * Math.pow(1.15, cookieBaker.idleverses - cookieBaker.freeIdleverse));
-            console.log("New idleverse price is: " + new_idleverse_price);
             return new_idleverse_price;
 
         case actions.incr_Cordex:
-            console.log("Calculating price for next cordex, actual price is: " + cookieBaker.cordexCost);
             const new_cordex_price = Math.floor(st.init_cordexCost * Math.pow(1.15, cookieBaker.cordexs - cookieBaker.freeCordex));
-            console.log("New cordex price is: " + new_cordex_price);
             return new_cordex_price;
 
     }
 }
 
 export const addCookie = (cookieBaker: st.cookieBaker): st.cookieBaker => {
-    console.log("Adding cookie: " + cookieBaker.cookies);
     cookieBaker.cookies = cookieBaker.cookies + 1;
     console.log("Successfully added cookie: " + cookieBaker.cookies);
     return cookieBaker;
