@@ -152,6 +152,7 @@ const config = {
 
 /** @param {TransactionRequest} content */
 const onTransactionRequest = async (id, content) => {
+  console.error(content.payload);
   const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
     content;
 

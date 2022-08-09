@@ -11,10 +11,13 @@ let secret =
 let secret = Secret.Ed25519 secret
 let rpc_node = Uri.of_string "http://localhost:20000"
 
-let main consensus_contract discovery_contract =
+let main consensus_contract =
   let consensus_contract = Address.of_string consensus_contract |> Option.get in
 
-  let discovery_contract = Address.of_string discovery_contract |> Option.get in
+  (* We can use a random KT1 for the discovery contract since it's not used in this test *)
+  let discovery_contract =
+    Address.of_string "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" |> Option.get
+  in
 
   let t =
     Tezos_interop.make ~rpc_node ~secret ~consensus_contract ~discovery_contract
@@ -62,16 +65,7 @@ let term =
     & opt (some string) None
     & info [ "consensus-contract" ] ~doc ~docv ~env
   in
-  let discovery_contract =
-    let open Arg in
-    let docv = "discovery-contract" in
-    let doc = "TODO:" in
-    let env = Cmd.Env.info "DEKU_DISCOVERY_CONTRACT" in
-    required
-    & opt (some string) None
-    & info [ "discovery-contract" ] ~doc ~docv ~env
-  in
   let open Term in
-  const main $ consensus_contract $ discovery_contract
+  const main $ consensus_contract
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term

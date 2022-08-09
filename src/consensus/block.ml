@@ -1,7 +1,6 @@
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
-open Deku_tezos
 
 type block =
   | Block of {
@@ -59,18 +58,18 @@ module Repr = struct
     let withdrawal_handles_hash =
       BLAKE2b.hash "FIXME: we need the withdraw handles hash"
     in
-    let hash =
-      Deku.Consensus.hash_block ~block_level:block.level ~block_payload_hash
+    let block_hash =
+      Block_hash.hash ~block_level:block.level ~block_payload_hash
         ~state_root_hash ~withdrawal_handles_hash
     in
-    let double_hash = Block_hash.hash (BLAKE2b.to_hex hash) in
-    (block_payload_hash, double_hash)
+    (block_payload_hash, block_hash)
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
     let { author; level; previous; payload } = block in
     (* TODO: serializing after deserializing *)
     let payload_hash, block_hash = hash block in
+
     (match Key_hash.(equal author (of_key key)) with
     | true -> ()
     | false -> raise Invalid_signature);
@@ -146,9 +145,10 @@ let produce ~identity ~level ~previous ~operations =
     }
 
 let pp fmt (Block { hash; level; _ }) =
-  let hash = Block_hash.to_b58 hash in
+  let hash = Block_hash.to_blake2b hash in
   let open Deku_stdlib in
-  Format.fprintf fmt "Block [hash: %s, level: %a]" hash N.pp (Level.to_n level)
+  Format.fprintf fmt "Block [hash: %a, level: %a]" BLAKE2b.pp hash N.pp
+    (Level.to_n level)
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in

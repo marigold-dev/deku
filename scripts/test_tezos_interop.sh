@@ -1,8 +1,10 @@
 #! /usr/bin/env bash
 
 # FIXME: throw this script away - we don't want more scripts
-# FYI, to run this script, you need to deploy fresh contracts first
-# i.e ./scripts/deploy_contracts.sh && ./scripts/test_tezos_interop.sh
+
+message() {
+  echo -e "\e[35m\e[1m**************************    $*    ********************************\e[0m"
+}
 
 RPC_NODE=${RPC_NODE:-http://localhost:20000}
 
@@ -10,8 +12,33 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
-export DEKU_CONSENSUS_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
-export DEKU_DISCOVERY_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
+# FIXME: duplicated form ./deploy_contracts.sh
+deploy_contract () {
+  message "Deploying new $1 contract"
+
+  # Compiles an initial storage for a given contract to a Michelson expression.
+  # The resulting Michelson expression can be passed as an argument in a transaction which originates a contract.
+  storage=$(ligo compile storage "$2" "$3")
+
+  # Compiles a contract to Michelson code.
+  # Expects a source file and an entrypoint function.
+  contract=$(ligo compile contract "$2")
+
+  echo "Originating $1 contract"
+  sleep 2
+  tezos-client --endpoint "$RPC_NODE" originate contract "$1" \
+    transferring 0 from myWallet \
+    running "$contract" \
+    --init "$storage" \
+    --burn-cap 2 \
+    --force
+}
+
+deploy_contract "test_consensus" \
+    "./src/tezos_interop/consensus.mligo" \
+    "$(cat ./configs/flextesa/consensus_storage.mligo)"
+
+export DEKU_CONSENSUS_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract test_consensus | grep KT1 | tr -d '\r')"
 
 dune exec ./src/tezos_interop/tests/deku_update_state_root_hash_test.exe   
 

@@ -19,6 +19,25 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
-let hash string = hash string |> to_raw |> hash
+let hash ~block_level ~block_payload_hash ~state_root_hash
+    ~withdrawal_handles_hash =
+  let level_n = Deku_concepts.Level.to_n block_level in
+  let pre_hash =
+    Deku_tezos.Deku.Consensus.hash_block ~block_level ~block_payload_hash
+      ~state_root_hash ~withdrawal_handles_hash
+  in
+  let final_hash = pre_hash |> to_raw |> hash |> to_blake2b in
+  Format.printf
+    "\n\n\
+     level: %a\n\
+     block_payload_hash:%a\n\
+     state_root_hash:%a\n\
+     withdraw_handles_hash:%a\n\
+     pre_hash:%a\n\
+     final_hash:%a\n\n\n\
+    \   " Deku_stdlib.N.pp level_n BLAKE2b.pp block_payload_hash BLAKE2b.pp
+    state_root_hash BLAKE2b.pp withdrawal_handles_hash BLAKE2b.pp pre_hash
+    BLAKE2b.pp final_hash;
+  final_hash
 
 module Map = Map

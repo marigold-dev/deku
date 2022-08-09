@@ -9,6 +9,11 @@ let identity =
 
 let block =
   let level = Level.zero in
-  let previous = Block_hash.hash "tuturu" in
+  let previous =
+    Block_hash.hash ~block_level:level
+      ~block_payload_hash:(BLAKE2b.hash "mayushi")
+      ~state_root_hash:(BLAKE2b.hash "desu")
+      ~withdrawal_handles_hash:(BLAKE2b.hash "tuturu")
+  in
   let operations = [] in
   Block.produce ~identity ~level ~previous ~operations
