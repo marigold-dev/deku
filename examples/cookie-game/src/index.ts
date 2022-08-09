@@ -1,8 +1,6 @@
 // @ts-ignore
 import { main, get, set, transaction } from "deku_js_interop"
-//import { cookieBaker } from "./types"
 import { cookieBaker } from "./types"
-
 import {
     createCookieBaker, addCookie, addCursor,
     addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
@@ -297,6 +295,3 @@ main(
             }
         }
     }, transition)
-
-
-
