@@ -40,8 +40,11 @@ deploy_contract "test_consensus" \
 
 export DEKU_CONSENSUS_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract test_consensus | grep KT1 | tr -d '\r')"
 
-dune exec ./src/tezos_interop/tests/deku_update_state_root_hash_test.exe   
+dune exec ./src/tezos_interop/tests/update_state_root_hash_test.exe   
 
+deploy_contract "dummy_ticket" \
+    "./dummy_ticket.mligo" \
+    "()"
 
 # TODO: implement deposit test something like this.
 
