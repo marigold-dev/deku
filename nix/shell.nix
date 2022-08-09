@@ -2,7 +2,12 @@
 pkgs.mkShell {
   shellHook = ''
     export PATH="$(pwd)/_build/install/default/bin:$PATH"
-    # Triggers a rebuild before executing the rest of the script.
+    # This is a flag picked up by our sandbox.sh that's used
+    # to know when to use esy instead of nix.
+    # You can turn this off with the command 'unset USE_NIX'.
+    export USE_NIX=y
+    # Similar to above, but triggers a rebuild before executing
+    # the rest of the script.
     export REBUILD=y
   '';
   inputsFrom = [ deku ];
@@ -20,11 +25,15 @@ pkgs.mkShell {
       # Tezos tooling
       ligo
 
+      # Go developer tooling
+      go
+      gopls
+      gore
+
       # formatters
-      treefmt
       nixfmt
       nodePackages.prettier
-      ocamlformat_0_20_1
+      ocamlformat
     ] ++ (pkgs.lib.optional (system != "x86_64-darwin") tilt)
     ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
       # OCaml developer tooling

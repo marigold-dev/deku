@@ -157,40 +157,6 @@ let handle_receive_user_operations_gossip =
             operation)
         () operations)
 
-(* POST/user-operation-custom *)
-(* Propagate a user operation custom *)
-
-let handle_receive_user_operation_custom =
-  handle_request
-    (module Network.User_operation_custom)
-    (fun _update_state request ->
-      let state = Server.get_state () in
-      let pair_blocks = state.applied_blocks in
-      let payload =
-        List.fold_left
-          (fun _ (_, block) ->
-            let operations = block.Protocol.Block.operations in
-            let payload =
-              List.fold_left
-                (fun _ operation ->
-                  match operation with
-                  | Protocol.Operation.Core_user op ->
-                    if
-                      op.Protocol.Operation.Core_user.hash
-                      = request.user_operation
-                    then
-                      match op.data.initial_operation with
-                      | Core_deku.User_operation.Vm_transaction payload ->
-                        Some payload.payload
-                      | _ -> None
-                    else
-                      None
-                  | _ -> None)
-                None operations in
-            payload)
-          None pair_blocks in
-      Ok payload)
-
 (* POST /consensus-operation-gossip *)
 (* Add operation from consensu to pending operations *)
 let handle_receive_consensus_operation =
@@ -275,7 +241,6 @@ let node folder named_pipe_path minimum_block_delay prometheus_port =
              handle_register_uri;
              handle_receive_user_operation_gossip;
              handle_receive_user_operations_gossip;
-             handle_receive_user_operation_custom;
              handle_receive_consensus_operation;
              handle_withdraw_proof;
              handle_ticket_balance;
@@ -299,9 +264,11 @@ let node json_logs style_renderer level folder prometheus_port =
   | Some style_renderer -> Fmt_tty.setup_std_outputs ~style_renderer ()
   | None -> Fmt_tty.setup_std_outputs ());
   Logs.set_level level;
+
   (match json_logs with
   | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
   | false -> Logs.set_reporter (Logs_fmt.reporter ()));
+  
   (* disable all non-deku logs *)
   List.iter
     (fun src ->
