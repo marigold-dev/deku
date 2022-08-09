@@ -219,6 +219,7 @@ EOF
   }
 }
 EOF
+
   )
 
   # Step 4: deploying the consensus and validators discovery contracts

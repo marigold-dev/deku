@@ -268,7 +268,7 @@ let node json_logs style_renderer level folder prometheus_port =
   (match json_logs with
   | true -> Logs.set_reporter (Json_logs_reporter.reporter Fmt.stdout)
   | false -> Logs.set_reporter (Logs_fmt.reporter ()));
-  
+
   (* disable all non-deku logs *)
   List.iter
     (fun src ->
