@@ -12,7 +12,7 @@ import { actions } from "./actions"
 
 const saveState = (source: transaction, sourceValue: cookieBaker) => {
     set(source, sourceValue);
-    console.log("Successfully saved state: " + JSON.stringify(sourceValue));
+    console.log("Successfully saved state");
 }
 
 const transition = (tx: transaction) => {
@@ -21,13 +21,10 @@ const transition = (tx: transaction) => {
     // operation => any
     const source = tx.source;
     const operation = tx.operation;
-    console.log("source: " + source);
     let sourceValue = JSON.parse(get(source));
-    console.log("sourceValue: " + sourceValue);
     let cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
         sourceValue = { source };
-        console.log("sourceValue: " + sourceValue);
         cookieBaker = createCookieBaker(
             0,
             0,
@@ -114,7 +111,6 @@ const transition = (tx: transaction) => {
         );
     }
     sourceValue.cookieBaker = cookieBaker;
-    console.log("sourceValue.cookieBaker: " + JSON.stringify(sourceValue.cookieBaker));
 
     switch (operation) {
 
