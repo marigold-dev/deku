@@ -1,10 +1,18 @@
 open Deku_repr
 open Deku_crypto
 
-type t = BLAKE2b.t [@@deriving eq, ord, yojson]
+type tezos_operation_hash = BLAKE2b.t
+and t = tezos_operation_hash [@@deriving eq, ord]
 
 include BLAKE2b.With_b58 (struct
   let prefix = Prefix.operation_hash
+end)
+
+include With_yojson_of_b58(struct
+  type t = tezos_operation_hash
+
+  let of_b58 = of_b58
+  let to_b58 = to_b58
 end)
 
 module Map = Map.Make (struct
