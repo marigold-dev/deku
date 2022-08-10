@@ -1,10 +1,9 @@
 open Receipt
-open Deku_tezos
 
 type protocol =
   | Protocol of {
       included_operations : Included_operation_set.t;
-      included_tezos_operations : Tezos_operation_hash.Set.t;
+      included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
     }
 
@@ -14,7 +13,7 @@ let initial =
   Protocol
     {
       included_operations = Included_operation_set.empty;
-      included_tezos_operations = Tezos_operation_hash.Set.empty;
+      included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
     }
 
@@ -45,11 +44,13 @@ let apply_operation protocol operation =
       in
       let ledger =
         match content with
-        | Operation_transaction { receiver; amount } -> (
+        | Operation_transaction { receiver; ticket_id; amount } -> (
             let sender = source in
-            match Ledger.transfer ~sender ~receiver amount ledger with
-            | Some ledger -> ledger
-            | None -> ledger)
+            match
+              Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
+            with
+            | Ok ledger -> ledger
+            | Error _ -> ledger)
       in
 
       let receipt = Receipt { operation = hash } in
@@ -63,10 +64,12 @@ let apply_tezos_operation protocol tezos_operation =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
-  match not (Tezos_operation_hash.Set.mem hash included_tezos_operations) with
+  match
+    not (Deku_tezos.Tezos_operation_hash.Set.mem hash included_tezos_operations)
+  with
   | true ->
       let included_tezos_operations =
-        Tezos_operation_hash.Set.add hash included_tezos_operations
+        Deku_tezos.Tezos_operation_hash.Set.add hash included_tezos_operations
       in
       let protocol =
         Protocol { included_operations; included_tezos_operations; ledger }
@@ -74,9 +77,19 @@ let apply_tezos_operation protocol tezos_operation =
       List.fold_left
         (fun protocol tezos_operation ->
           match tezos_operation with
-          | Tezos_operation.Deposit _deposit ->
-              print_endline "todo: handle the deposit in the ticket ledger";
-              protocol)
+          | Tezos_operation.Deposit { destination; amount; ticket } ->
+              let (Protocol
+                    { ledger; included_operations; included_tezos_operations })
+                  =
+                protocol
+              in
+              let ticket_id =
+                Ticket_id.from_tezos_ticket ticket |> Result.get_ok
+              in
+              let destination = Address.of_key_hash destination in
+              let ledger = Ledger.deposit destination amount ticket_id ledger in
+              Protocol
+                { ledger; included_operations; included_tezos_operations })
         protocol operations
   | false -> protocol
 

@@ -4,7 +4,11 @@ open Deku_concepts
 exception Invalid_signature
 
 type operation_content =
-  | Operation_transaction of { receiver : Address.t; amount : Amount.t }
+  | Operation_transaction of {
+      receiver : Address.t;
+      ticket_id : Ticket_id.t;
+      amount : Amount.t;
+    }
 
 and operation =
   | Operation of {
@@ -32,7 +36,11 @@ let compare a b =
 
 module Repr = struct
   type operation_content =
-    | Transaction of { receiver : Address.t; amount : Amount.t }
+    | Transaction of {
+        receiver : Address.t;
+        ticket_id : Ticket_id.ticket_id;
+        amount : Amount.t;
+      }
 
   and operation = {
     level : Level.t;
@@ -60,8 +68,8 @@ module Repr = struct
     let { level; nonce; source; content } = operation in
     let content =
       match content with
-      | Transaction { receiver; amount } ->
-          Operation_transaction { receiver; amount }
+      | Transaction { receiver; ticket_id; amount } ->
+          Operation_transaction { receiver; ticket_id; amount }
     in
     (* TODO: serializing after deserializing *)
     let hash = hash operation in
@@ -87,8 +95,8 @@ module Repr = struct
     in
     let content =
       match content with
-      | Operation_transaction { receiver; amount } ->
-          Transaction { receiver; amount }
+      | Operation_transaction { receiver; ticket_id; amount } ->
+          Transaction { receiver; ticket_id; amount }
     in
     let operation = { level; nonce; source; content } in
     yojson_of_operation_with_signature { key; signature; operation }
@@ -97,10 +105,10 @@ end
 let t_of_yojson = Repr.t_of_yojson
 let yojson_of_t = Repr.yojson_of_t
 
-let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
+let transaction ~identity ~level ~nonce ~source ~receiver ~ticket_id ~amount =
   let hash =
     let open Repr in
-    let content = Transaction { receiver; amount } in
+    let content = Transaction { receiver; ticket_id; amount } in
     let operation = { level; nonce; source; content } in
     hash operation
   in
@@ -109,5 +117,5 @@ let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
     let hash = Operation_hash.to_blake2b hash in
     Identity.sign ~hash identity
   in
-  let content = Operation_transaction { receiver; amount } in
+  let content = Operation_transaction { receiver; ticket_id; amount } in
   Operation { key; signature; hash; level; nonce; source; content }

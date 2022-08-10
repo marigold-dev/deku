@@ -4,7 +4,11 @@ open Deku_concepts
 exception Invalid_signature
 
 type operation_content = private
-  | Operation_transaction of { receiver : Address.t; amount : Amount.t }
+  | Operation_transaction of {
+      receiver : Address.t;
+      ticket_id : Ticket_id.t;
+      amount : Amount.t;
+    }
 
 type operation = private
   | Operation of {
@@ -25,5 +29,6 @@ val transaction :
   nonce:Nonce.t ->
   source:Address.t ->
   receiver:Address.t ->
+  ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   operation

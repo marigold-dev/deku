@@ -8,7 +8,7 @@ include BLAKE2b.With_b58 (struct
   let prefix = Prefix.operation_hash
 end)
 
-include With_yojson_of_b58(struct
+include With_yojson_of_b58 (struct
   type t = tezos_operation_hash
 
   let of_b58 = of_b58

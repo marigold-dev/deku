@@ -26,6 +26,14 @@ module Util = struct
 end
 
 module Block_application = struct
+  let default_ticket_id =
+    let address =
+      Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+      |> Option.get
+    in
+    let data = Bytes.of_string "tuturu" in
+    Ticket_id.make address data
+
   let generate () =
     let secret = Ed25519.Secret.generate () in
     let secret = Secret.Ed25519 secret in
@@ -44,7 +52,9 @@ module Block_application = struct
     in
     let nonce = Nonce.of_n N.zero in
     let amount = Amount.of_n N.zero in
-    Operation.transaction ~identity ~level ~nonce ~source ~receiver ~amount
+    let ticket_id = default_ticket_id in
+    Operation.transaction ~identity ~level ~nonce ~source ~receiver ~ticket_id
+      ~amount
 
   let payload_of_operations operations =
     (* TODO: this likely should not be here *)
@@ -89,6 +99,14 @@ module Block_application = struct
 end
 
 module Block_production = struct
+  let default_ticket_id =
+    let address =
+      Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+      |> Option.get
+    in
+    let data = Bytes.of_string "tuturu" in
+    Ticket_id.make address data
+
   let producer = Block_application.generate ()
   let sender = Block_application.generate ()
 
@@ -102,9 +120,10 @@ module Block_production = struct
   let operation ~nonce =
     let level = Level.zero in
     let nonce = Z.of_int nonce |> N.of_z |> Option.get |> Nonce.of_n in
+    let ticket_id = default_ticket_id in
     let amount = Amount.of_n N.zero in
     Operation.transaction ~identity:sender ~level ~nonce ~source ~receiver
-      ~amount
+      ~ticket_id ~amount
 
   let operations ~size = Parallel.init_p size (fun nonce -> operation ~nonce)
 
