@@ -40,25 +40,26 @@ deploy_contract "test_consensus" \
 
 export DEKU_CONSENSUS_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract test_consensus | grep KT1 | tr -d '\r')"
 
-dune exec ./src/tezos_interop/tests/update_state_root_hash_test.exe   
+dune exec ./src/tezos_interop/tests/update_state_root_hash_test.exe || exit 1
 
+# Deposit test
+
+## Deploying the dummy ticket contract
 deploy_contract "dummy_ticket" \
     "./dummy_ticket.mligo" \
     "()"
+export DEKU_DUMMY_TICKET_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 
-# TODO: implement deposit test something like this.
+dune exec ./src/tezos_interop/tests/deposit_test.exe  &
+pid=$!
 
-# export DEKU_DUMMY_TICKET_CONTRACT="$(tezos-client --endpoint $RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+## Make a deposit
+export DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
+export DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
+ticket_wallet="bob"
+tezos-client --endpoint "$RPC_NODE" transfer 0 from $ticket_wallet to dummy_ticket \
+  --entrypoint mint_to_deku --arg "Pair (Pair \"$DEKU_CONSENSUS_CONTRACT\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
+   --burn-cap 2
 
-# dune exec ./src/tezos_interop/tests/deposit_test.exe  &
-
-# export DEKU_ADDRESS="tz1RPNjHPWuM8ryS5LDttkHdM321t85dSqaf"
-# export DEKU_PRIVATE_KEY="edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK"
-
-# ticket_wallet="bob"
-
-# tezos-client --endpoint "$RPC_NODE" transfer 0 from $ticket_wallet to dummy_ticket \
-#   --entrypoint mint_to_deku --arg "Pair (Pair \"$DEKU_CONSENSUS_CONTRACT\" \"$DEKU_ADDRESS\") (Pair 100 0x)" \
-#   --burn-cap 2
-
-# wait
+## Wait for deposit to be seen by the interop
+wait $pid || exit 1

@@ -46,8 +46,9 @@ let main consensus_contract =
         exit 0)
       t
   in
-  let forever, _ = Lwt.wait () in
-  Lwt_main.run forever
+  Lwt_main.run (Lwt_unix.sleep 10.0);
+  print_endline "👎 State root hash not updated";
+  exit 1
 
 open Cmdliner
 
