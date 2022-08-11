@@ -5,6 +5,7 @@ exception Invalid_signature
 
 type operation_content = private
   | Operation_transaction of { receiver : Address.t; amount : Amount.t }
+  | Operation_noop
 
 type operation = private
   | Operation of {
@@ -27,3 +28,5 @@ val transaction :
   receiver:Address.t ->
   amount:Amount.t ->
   operation
+
+val noop : level:Level.t -> operation

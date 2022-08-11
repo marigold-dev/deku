@@ -11,10 +11,6 @@ let post body uri =
   Piaf.Client.Oneshot.post ~headers ~body uri
 
 let broadcast_json (type a) ~nodes ~(endpoint : a Endpoint.t) ~packet =
-  (* TODO: this definitely should not be here *)
-  let%await () =
-    match endpoint with Blocks -> Lwt_unix.sleep 1.0 | _ -> Lwt.return_unit
-  in
   let endpoint = Endpoint.to_string endpoint in
   let body = Yojson.Safe.to_string packet in
 

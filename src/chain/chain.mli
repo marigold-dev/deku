@@ -42,11 +42,15 @@ val incoming_signature :
   chain * external_effect list
 
 val incoming_timeout :
-  current:Timestamp.timestamp -> chain -> chain * external_effect list
+  pool:Deku_stdlib.Parallel.Pool.pool ->
+  current:Timestamp.timestamp ->
+  chain ->
+  chain * external_effect list
 
 val incoming_operation : operation:Operation.operation -> chain -> chain
 
 val incoming_bootstrap_signal :
+  pool:Deku_stdlib.Parallel.Pool.pool ->
   bootstrap_signal:Bootstrap_signal.t ->
   current:Timestamp.timestamp ->
   chain ->

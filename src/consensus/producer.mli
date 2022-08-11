@@ -18,4 +18,9 @@ val clean :
   producer
 
 val try_to_produce :
-  current:Timestamp.t -> consensus:Consensus.t -> producer -> Block.t option
+  parallel_map:
+    ((Operation.operation -> string) -> Operation.operation list -> string list) ->
+  current:Timestamp.t ->
+  consensus:Consensus.t ->
+  producer ->
+  Block.t option

@@ -26,7 +26,7 @@ let apply_operation protocol operation =
     (* TODO: check code through different lane *)
     not (Included_operation_set.mem operation included_operations)
   with
-  | true ->
+  | true -> (
       let open Operation in
       let included_operations =
         Included_operation_set.add operation included_operations
@@ -43,19 +43,19 @@ let apply_operation protocol operation =
             }) =
         operation
       in
-      let ledger =
-        match content with
-        | Operation_transaction { receiver; amount } -> (
-            let sender = source in
+      match content with
+      | Operation_transaction { receiver; amount } ->
+          let sender = source in
+          let receipt = Receipt { operation = hash } in
+          let ledger =
             match Ledger.transfer ~sender ~receiver amount ledger with
             | Some ledger -> ledger
-            | None -> ledger)
-      in
-
-      let receipt = Receipt { operation = hash } in
-      Some
-        ( Protocol { included_operations; included_tezos_operations; ledger },
-          receipt )
+            | None -> ledger
+          in
+          Some
+            ( Protocol { included_operations; included_tezos_operations; ledger },
+              receipt )
+      | Operation_noop -> None)
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
@@ -93,6 +93,9 @@ let parse_operation operation =
 
 let apply_payload ~parallel payload protocol =
   let operations = parallel parse_operation payload in
+  let () =
+    Format.eprintf "Operations inside block: %d\n%!" (List.length operations)
+  in
   List.fold_left
     (fun (protocol, rev_receipts) operation ->
       match apply_operation protocol operation with

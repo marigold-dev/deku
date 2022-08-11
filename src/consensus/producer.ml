@@ -56,7 +56,9 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { identity; operations; tezos_operations }
 
-let produce ~current_level ~current_block producer =
+let produce ~parallel_map ~current_level ~current_block producer =
+  (* TODO: Make this configurable *)
+  let max_block_size = 50_000 in
   let (Producer { identity; operations; tezos_operations }) = producer in
   let previous = current_block in
   let level = Level.next current_level in
@@ -65,14 +67,21 @@ let produce ~current_level ~current_block producer =
       (fun (_hash, operation) -> operation)
       (Operation_hash.Map.bindings operations)
   in
+  let op_size = List.length operations in
+  let dummy_op_size = max_block_size - op_size in
+  let dummy_operations =
+    List.init dummy_op_size (fun _ -> Operation.noop ~level)
+  in
+  let operations = List.rev_append dummy_operations operations in
   let tezos_operations =
     List.map
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
-  Block.produce ~identity ~level ~previous ~operations ~tezos_operations
+  Block.produce ~parallel_map ~identity ~level ~previous ~operations
+    ~tezos_operations
 
-let try_to_produce ~current ~consensus producer =
+let try_to_produce ~parallel_map ~current ~consensus producer =
   let (Consensus { current_level; current_block; _ }) = consensus in
   let (Producer { identity; operations = _; tezos_operations = _ }) =
     producer
@@ -83,7 +92,7 @@ let try_to_produce ~current ~consensus producer =
   with
   | true ->
       let block =
-        produce ~parallel_map:List.map ~current_level ~current_block producer
+        produce ~parallel_map ~current_level ~current_block producer
       in
       Format.printf "Producing %a \n%!" Block.pp block;
       Some block

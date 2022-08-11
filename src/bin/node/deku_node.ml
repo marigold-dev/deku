@@ -76,8 +76,8 @@ module Node = struct
               let chain = Chain.incoming_operation ~operation:packet chain in
               (chain, [])
           | Bootstrap ->
-              Chain.incoming_bootstrap_signal ~bootstrap_signal:packet ~current
-                chain)
+              Chain.incoming_bootstrap_signal ~pool ~bootstrap_signal:packet
+                ~current chain)
       | None -> (chain, [])
     in
     let node = Node { chain; network; applied_block; tezos_interop; indexer } in
@@ -87,7 +87,8 @@ module Node = struct
     let (Node { chain; network; applied_block; tezos_interop; indexer }) =
       node
     in
-    let chain, effects = Chain.incoming_timeout ~current chain in
+    let pool = Parallel.pool () in
+    let chain, effects = Chain.incoming_timeout ~pool ~current chain in
     let node = Node { chain; network; applied_block; tezos_interop; indexer } in
     dispatch_effects effects node
 end

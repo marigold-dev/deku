@@ -4,7 +4,7 @@ open Deku_concepts
 open Deku_protocol
 
 module Parallel = struct
-  let domains = 20
+  let domains = 12
   let pool = Parallel.Pool.make ~domains
   let init_p n f = Parallel.init_p pool n f
   let filter_map_p f l = Parallel.filter_map_p pool f l

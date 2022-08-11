@@ -41,7 +41,11 @@ let apply_block ~pool ~current ~block chain =
   in
   let producer = Producer.clean ~receipts ~tezos_operations producer in
   let effects =
-    match Producer.try_to_produce ~current ~consensus producer with
+    match
+      Producer.try_to_produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~consensus producer
+    with
     | Some block -> [ Broadcast_block block ]
     | None -> []
   in
@@ -77,11 +81,16 @@ let incoming_signature ~pool ~current ~signature chain =
   | Some block -> apply_block ~pool ~current ~block chain
   | None -> (chain, [])
 
-let incoming_timeout ~current node =
+let incoming_timeout ~pool ~current node =
   let () = Format.eprintf "timeout\n%!" in
   let (Chain { protocol; consensus; verifier; signer; producer }) = node in
   let effects =
-    match Producer.try_to_produce ~current ~consensus producer with
+    (* TODO: do not like duplicating this lambda everywhere. *)
+    match
+      Producer.try_to_produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~consensus producer
+    with
     | Some block -> [ Broadcast_block block ]
     | None -> []
   in
@@ -92,7 +101,7 @@ let incoming_operation ~operation node =
   let producer = Producer.incoming_operation ~operation producer in
   Chain { protocol; consensus; verifier; signer; producer }
 
-let incoming_bootstrap_signal ~bootstrap_signal ~current node =
+let incoming_bootstrap_signal ~pool ~bootstrap_signal ~current node =
   let (Chain { protocol; consensus; verifier; signer; producer }) = node in
   let consensus =
     match
@@ -102,7 +111,11 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current node =
     | None -> consensus
   in
   let effects =
-    match Producer.try_to_produce ~current ~consensus producer with
+    match
+      Producer.try_to_produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~consensus producer
+    with
     | Some block -> [ Broadcast_block block ]
     | None -> []
   in

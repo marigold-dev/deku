@@ -16,5 +16,10 @@ with pkgs; with ocamlPackages; mkShell {
     ocaml-lsp
     ocamlformat-rpc
     utop
+
+    # helpful tooling
+    bc
+    sqlite
+    termdbms
   ];
 }
