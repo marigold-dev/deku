@@ -16,7 +16,7 @@ export enum actions {
     incr_Prism = "prism",
     incr_ChanceMaker = "chancemaker",
     incr_Fractal = "fractal",
-    incr_Javascript = "javascript",
+    incr_JavaScript = "javaScript",
     incr_Idleverse = "idleverse",
     incr_Cordex = "cordex",
 }

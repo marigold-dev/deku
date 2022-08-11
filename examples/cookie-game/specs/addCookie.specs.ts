@@ -1,13 +1,16 @@
 import * as fc from 'fast-check';
 import { cookieBakerArbitrary } from './generators'
-import { addCordex } from '../src/state'
+import {
+    addCookie
+} from '../src/state'
 
-describe('cookieBaker.add_XXX without enough', () => {
-    test('Cannot cordex bank if not enough cookie', () => {
+describe('cookieBaker.addCookie successful', () => {
+    test('add cookie only mint one cookie', () => {
         fc.assert(
             fc.property(
                 cookieBakerArbitrary(),
                 cookieBaker => {
+                    const cookiesBefore = cookieBaker.cookies;
                     const cursorsBefore = cookieBaker.cursors;
                     const grandmasBefore = cookieBaker.grandmas;
                     const farmsBefore = cookieBaker.farms;
@@ -46,6 +49,7 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const freeJavaScriptBefore = cookieBaker.freeJavaScript;
                     const freeIdleverseBefore = cookieBaker.freeIdleverse;
                     const freeCordexBefore = cookieBaker.freeCordex;
+
                     const cursorCostBefore = cookieBaker.cursorCost;
                     const grandmaCostBefore = cookieBaker.grandmaCost;
                     const farmCostBefore = cookieBaker.farmCost;
@@ -65,6 +69,7 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
+
                     const cursorCpsBefore = cookieBaker.cursorCps;
                     const grandmaCpsBefore = cookieBaker.grandmaCps;
                     const farmCpsBefore = cookieBaker.farmCps;
@@ -85,10 +90,8 @@ describe('cookieBaker.add_XXX without enough', () => {
                     const idleverseCpsBefore = cookieBaker.idleverseCps;
                     const cordexCpsBefore = cookieBaker.cordexCps;
 
-                    //make sure we can't buy a cordex
-                    cookieBaker.cookies = 0
-                    const cookie_Baker = addCordex(cookieBaker);
-                    return (cookie_Baker.cookies === 0
+                    const cookie_Baker = addCookie(cookieBaker);
+                    return (cookie_Baker.cookies === cookiesBefore + 1n
                         && cookie_Baker.cursors === cursorsBefore
                         && cookie_Baker.grandmas === grandmasBefore
                         && cookie_Baker.farms === farmsBefore
@@ -108,7 +111,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookie_Baker.javaScripts === javascriptsBefore
                         && cookie_Baker.idleverses === idleversesBefore
                         && cookie_Baker.cordexs === cordexsBefore
-
                         && cookie_Baker.freeCursor === freeCursorBefore
                         && cookie_Baker.freeGrandma === freeGrandmaBefore
                         && cookie_Baker.freeFarm === freeFarmBefore
@@ -128,7 +130,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookie_Baker.freeJavaScript === freeJavaScriptBefore
                         && cookie_Baker.freeIdleverse === freeIdleverseBefore
                         && cookie_Baker.freeCordex === freeCordexBefore
-
                         && cookie_Baker.cursorCost === cursorCostBefore
                         && cookie_Baker.grandmaCost === grandmaCostBefore
                         && cookie_Baker.farmCost === farmCostBefore
@@ -148,7 +149,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
-
                         && cookie_Baker.cursorCps === cursorCpsBefore
                         && cookie_Baker.grandmaCps === grandmaCpsBefore
                         && cookie_Baker.farmCps === farmCpsBefore
@@ -168,7 +168,6 @@ describe('cookieBaker.add_XXX without enough', () => {
                         && cookie_Baker.javaScriptCps === javaScriptCpsBefore
                         && cookie_Baker.idleverseCps === idleverseCpsBefore
                         && cookie_Baker.cordexCps === cordexCpsBefore
-
                     )
                 }));
     });
