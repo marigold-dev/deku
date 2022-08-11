@@ -68,7 +68,7 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (Operation_hash.Map.bindings operations)
   in
   let op_size = List.length operations in
-  let dummy_op_size = max_block_size - op_size in
+  let dummy_op_size =  Int.max (max_block_size - op_size) 0 in
   let dummy_operations =
     List.init dummy_op_size (fun _ -> Operation.noop ~level)
   in
