@@ -1,12 +1,11 @@
 (library
  (name deku_consensus)
- (public_name deku-consensus)
  (libraries
-  deku-stdlib
-  deku-crypto
-  deku-constants
-  deku-concepts
-  deku-protocol
-  deku-tezos)
+  deku_stdlib
+  deku_crypto
+  deku_constants
+  deku_concepts
+  deku_protocol
+  deku_tezos)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq ppx_deriving.ord ppx_yojson_conv)))

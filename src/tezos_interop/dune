@@ -1,7 +1,6 @@
 (library
  (name deku_tezos_interop)
- (public_name deku-tezos-interop)
- (libraries deku-stdlib lwt.unix tezos-micheline deku-crypto deku-tezos)
+ (libraries deku_stdlib lwt.unix tezos-micheline deku_crypto deku_tezos)
  (preprocess
   (pps ppx_yojson_conv ppx_deriving.eq ppx_blob ppx_let_binding))
  (preprocessor_deps

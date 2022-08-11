@@ -3,11 +3,11 @@
  (modules update_state_root_hash_test)
  (libraries
   alcotest
-  deku-stdlib
-  deku-crypto
-  deku-tezos
-  deku-tezos-interop
-  deku-consensus
+  deku_stdlib
+  deku_crypto
+  deku_tezos
+  deku_tezos-interop
+  deku_consensus
   cmdliner
   fixme_name)
  (preprocess
@@ -18,11 +18,11 @@
  (modules deposit_test)
  (libraries
   alcotest
-  deku-stdlib
-  deku-crypto
-  deku-tezos
-  deku-tezos-interop
-  deku-consensus
+  deku_stdlib
+  deku_crypto
+  deku_tezos
+  deku_tezos-interop
+  deku_consensus
   cmdliner
   fixme_name)
  (preprocess
@@ -31,12 +31,12 @@
 (library
  (name fixme_name)
  (modules fixme_name)
- (libraries deku-consensus deku-stdlib deku-concepts))
+ (libraries deku_consensus deku_stdlib deku_concepts))
 
 (executable
  (name deku_tezos_interop_tests)
  (modules deku_tezos_interop_tests)
- (libraries alcotest deku-stdlib deku-consensus fixme_name))
+ (libraries alcotest deku_stdlib deku_consensus fixme_name))
 
 (rule
  (alias runtest)

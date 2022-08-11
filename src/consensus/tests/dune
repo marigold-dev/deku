@@ -2,10 +2,10 @@
  (name deku_consensus_tests)
  (libraries
   deku_consensus
-  deku-crypto
-  deku-constants
-  deku-concepts
-  deku-protocol
+  deku_crypto
+  deku_constants
+  deku_concepts
+  deku_protocol
   alcotest))
 
 (rule

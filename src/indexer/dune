@@ -1,6 +1,5 @@
 (library
  (name deku_indexer)
- (public_name deku-indexer)
  (libraries
   caqti
   caqti-lwt

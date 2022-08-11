@@ -42,7 +42,7 @@
         doCheck = true; 
       };
       in rec {
-        packages = { inherit deku; };
+        packages = { default = deku; };
         devShell = import ./nix/shell.nix { inherit pkgs deku; };
       });
 }
