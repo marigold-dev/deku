@@ -3,13 +3,16 @@ open Deku_concepts
 open Deku_consensus
 open Deku_chain
 open Deku_network
-open Deku_storage
 open Deku_tezos_interop
 open Deku_protocol
 open Deku_indexer
+open Deku_crypto
 
 module Parallel = struct
-  let domains = 8
+  let domains =
+    match Sys.getenv_opt "DEKU_DOMAINS" with
+    | Some str -> int_of_string str
+    | None -> 8
 
   let pool =
     let pool = lazy (Parallel.Pool.make ~domains) in
@@ -98,7 +101,13 @@ module Singleton : sig
   val set_state : Node.t -> unit
 
   val initialize :
-    tezos_interop:Tezos_interop.t -> indexer:Indexer.t -> Storage.t -> unit
+    tezos_interop:Tezos_interop.t ->
+    indexer:Indexer.t ->
+    secret:Secret.t ->
+    bootstrap_key:Key.t ->
+    initial_validators:Key_hash.t list ->
+    validator_uris:Uri.t list ->
+    unit
 end = struct
   type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
 
@@ -127,17 +136,15 @@ end = struct
       reset_timeout server;
       Lwt.return_unit)
 
-  let initialize ~tezos_interop ~indexer storage =
-    let Storage.{ secret; initial_validators; nodes; bootstrap_key } =
-      storage
-    in
+  let initialize ~tezos_interop ~indexer ~secret ~bootstrap_key
+      ~initial_validators ~validator_uris =
     let identity = Identity.make secret in
 
     let applied_block_ref = ref (fun () -> ()) in
     let applied_block () = !applied_block_ref () in
     let node =
-      Node.make ~identity ~bootstrap_key ~validators:initial_validators ~nodes
-        ~applied_block ~tezos_interop ~indexer
+      Node.make ~identity ~bootstrap_key ~validators:initial_validators
+        ~nodes:validator_uris ~applied_block ~tezos_interop ~indexer
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in
@@ -234,52 +241,71 @@ module Tezos_bridge = struct
         Singleton.set_state node)
 end
 
-let main () =
-  let port = ref 8080 in
-  let storage = ref "storage.json" in
-  let rpc_node = ref "http://localhost:20000" in
-  let required_confirmations = ref 2 in
-  let database_uri = ref "sqlite3:database.db" in
-  Arg.parse
-    [
-      ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
-      ("-s", Arg.Set_string storage, " Storage file (storage.json by default)");
-      ( "--rpc-node",
-        Arg.Set_string rpc_node,
-        " Tezos rpc node (http://localhost:20000 by default)" );
-      ( "--required-confirmations",
-        Arg.Set_int required_confirmations,
-        " The number of required confirmations (2 by default)" );
-      ( "-d",
-        Arg.Set_string database_uri,
-        " Database URI (sqlite3:database.db by default)" );
-    ]
-    ignore "Handle Deku communication. Runs forever.";
+type params = {
+  secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
+      (** The base58-encoded secret used as the Deku-node's identity. *)
+  bootstrap_key : Ed25519.Key.t; [@env "DEKU_BOOTSTRAP_KEY"]
+      (** The base58-encoded public key with which to verify signed bootstrap signals. *)
+  validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
+      (** A comma separeted list of the key hashes of all validators in the network. *)
+  validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
+      (** A comma-separated list of the validator URI's used to join the network. *)
+  port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
+  database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
+      (** A URI-encoded path to a SQLite database. Will be created it if it doesn't exist already. *)
+  tezos_rpc_node : Uri.t; [@env "DEKU_TEZOS_RPC_NODE"]
+      (** The URI of this validator's Tezos RPC node. *)
+  tezos_required_confirmations : int;
+      [@default 2] [@env "DEKU_TEZOS_REQUIRED_CONFIRMATIONS"]
+      (** The number of blocks to wait before considering a Tezos block confirmed. *)
+  tezos_secret : Ed25519.Secret.t; [@env "DEKU_TEZOS_SECRET"]
+      (** The base58-encoded ED25519 secret to use as the wallet for submitting Tezos transactions. *)
+  tezos_consensus_address : Deku_tezos.Address.t;
+      [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
+      (** The address of the consensus contract on Tezos.  *)
+  tezos_discovery_address : Deku_tezos.Address.t;
+      [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
+      (** The address of the discovery contract on Tezos. *)
+}
+[@@deriving cmdliner]
 
-  let consensus, discovery, tezos_secret =
-    match
-      ( Sys.getenv_opt "DEKU_CONSENSUS_CONTRACT",
-        Sys.getenv_opt "DEKU_DISCOVERY_CONTRACT",
-        Sys.getenv_opt "DEKU_TEZOS_SECRET" )
-    with
-    | Some consensus, Some discovery, Some tezos_secret ->
-        (consensus, discovery, tezos_secret)
-    | None, _, _ -> failwith "consensus address is required"
-    | _, None, _ -> failwith "discovery address is required"
-    | _, _, None -> failwith "tezos_secret is required"
+let main params =
+  let {
+    bootstrap_key;
+    secret;
+    validators;
+    validator_uris;
+    port;
+    database_uri;
+    tezos_rpc_node;
+    tezos_required_confirmations;
+    tezos_secret;
+    tezos_consensus_address;
+    tezos_discovery_address;
+  } =
+    params
   in
-  let%await storage = Storage.read ~file:!storage in
+  Lwt_main.run
+  @@
+  let bootstrap_key = Key.Ed25519 bootstrap_key in
+  let secret = Secret.Ed25519 secret in
+  let tezos_secret = Secret.Ed25519 tezos_secret in
   let tezos_interop =
-    Tezos_interop.make ~rpc_node:(Uri.of_string !rpc_node)
-      ~secret:(tezos_secret |> Deku_crypto.Secret.of_b58 |> Option.get)
-      ~consensus_contract:(Deku_tezos.Address.of_string consensus |> Option.get)
-      ~discovery_contract:(Deku_tezos.Address.of_string discovery |> Option.get)
-      ~required_confirmations:!required_confirmations
+    Tezos_interop.make ~rpc_node:tezos_rpc_node ~secret:tezos_secret
+      ~consensus_contract:tezos_consensus_address
+      ~discovery_contract:tezos_discovery_address
+      ~required_confirmations:tezos_required_confirmations
   in
-  let database_uri = Uri.of_string !database_uri in
   let%await indexer = Indexer.make ~uri:database_uri in
-  let () = Singleton.initialize ~indexer ~tezos_interop storage in
+  let () =
+    Singleton.initialize ~indexer ~tezos_interop ~secret ~bootstrap_key
+      ~initial_validators:validators ~validator_uris
+  in
   Tezos_bridge.listen ();
-  Server.start !port
+  Server.start port
 
-let () = Lwt_main.run (main ())
+let () =
+  let info = Cmdliner.Cmd.info Sys.argv.(0) in
+  let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
+  let cmd = Cmdliner.Cmd.v info term in
+  exit (Cmdliner.Cmd.eval ~catch:true cmd)

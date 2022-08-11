@@ -6,7 +6,7 @@
   deku_stdlib
   deku_crypto
   deku_tezos
-  deku_tezos-interop
+  deku_tezos_interop
   deku_consensus
   cmdliner
   fixme_name)
@@ -21,7 +21,7 @@
   deku_stdlib
   deku_crypto
   deku_tezos
-  deku_tezos-interop
+  deku_tezos_interop
   deku_consensus
   cmdliner
   fixme_name)

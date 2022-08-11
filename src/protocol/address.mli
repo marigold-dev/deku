@@ -11,3 +11,6 @@ val to_b58 : address -> string
 
 (* TODO: where this is used? *)
 module Map : Map.S with type key = address
+
+val cmdliner_converter :
+  (string -> [> `Ok of t | `Error of string ]) * (Format.formatter -> t -> unit)

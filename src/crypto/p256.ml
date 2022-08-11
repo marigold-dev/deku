@@ -26,6 +26,15 @@ module Secret = struct
   let generate () =
     let secret, _key = Dsa.generate () in
     secret
+
+  let cmdliner_converter =
+    let of_string s =
+      match of_b58 s with
+      | Some x -> `Ok x
+      | None -> `Error "Could not parse P256 secret"
+    in
+    let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+    (of_string, to_string)
 end
 
 module Key = struct
@@ -65,6 +74,15 @@ module Key = struct
   end)
 
   let encoding = Encoding.encoding
+
+  let cmdliner_converter =
+    let of_string s =
+      match of_b58 s with
+      | Some x -> `Ok x
+      | None -> `Error (Format.sprintf "Could not parse '%s' as a P256 key" s)
+    in
+    let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+    (of_string, to_string)
 end
 
 module Key_hash = struct

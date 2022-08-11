@@ -70,3 +70,12 @@ let encoding =
   in
   Encoding_helpers.make_encoding ~name ~title ~to_string:to_b58
     ~of_string:of_b58 ~raw_encoding
+
+let cmdliner_converter =
+  let of_string s =
+    match of_b58 s with
+    | Some s -> `Ok s
+    | None -> `Error (Format.sprintf "Could not parse '%s' as a key hash" s)
+  in
+  let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+  (of_string, to_string)

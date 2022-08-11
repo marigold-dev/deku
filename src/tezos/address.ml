@@ -72,3 +72,13 @@ let encoding =
   in
   Encoding_helpers.make_encoding ~name ~title ~to_string ~of_string
     ~raw_encoding
+
+let cmdliner_converter =
+  let of_string s =
+    match of_string s with
+    | Some s -> `Ok s
+    | None ->
+        `Error (Format.sprintf "Could not parse '%s' as a Tezos address" s)
+  in
+  let to_string fmt t = Format.fprintf fmt "%s" (to_string t) in
+  (of_string, to_string)
