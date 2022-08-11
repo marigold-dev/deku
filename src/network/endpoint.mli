@@ -7,6 +7,7 @@ type _ endpoint = private
   | Signatures : Verified_signature.t endpoint
   | Operations : Operation.t endpoint
   | Bootstrap : Bootstrap_signal.t endpoint
+  | Withdraw_proof : Ledger.withdraw_proof endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
@@ -15,5 +16,6 @@ val blocks : Block.t endpoint
 val signatures : Verified_signature.t endpoint
 val operations : Operation.t endpoint
 val bootstrap : Bootstrap_signal.t endpoint
+val withdraw_proof : Ledger.withdraw_proof endpoint
 val of_string : string -> ex option
 val to_string : _ endpoint -> string

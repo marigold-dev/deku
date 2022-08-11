@@ -77,7 +77,10 @@ module Node = struct
               (chain, [])
           | Bootstrap ->
               Chain.incoming_bootstrap_signal ~bootstrap_signal:packet ~current
-                chain)
+                chain
+          | Withdraw_proof ->
+              (* TODO make this case impossible*)
+              (chain, []))
       | None -> (chain, [])
     in
     let node = Node { chain; network; applied_block; tezos_interop; indexer } in
@@ -158,8 +161,13 @@ module Server = struct
   let with_endpoint Server.{ ctx = _; request } next =
     let path = request.target in
     let meth = request.meth in
+    let body = request.body in
 
     match Endpoint.of_string path with
+    | Some (Ex Withdraw_proof) ->
+        let%await body = Body.to_string body in
+        (* TODO find the receipt, get the proof, send the proof back *)
+        error ~message:"Not implemented yet" `Method_not_allowed
     | Some endpoint -> (
         match meth with
         | `POST -> next Server.{ ctx = endpoint; request }
@@ -281,4 +289,11 @@ let main () =
   Tezos_bridge.listen ();
   Server.start !port
 
-let () = Lwt_main.run (main ())
+let () =
+  (*  Tentative code to produce JSON to test the CLI for PL and I
+  let key = Deku_crypto.Key.of_b58 "edpktuhQHH83GN1Rbkte9kp6URtsw9yqrGuBo7vfmpmgGEBttKeCpN" in
+  let signature = Deku_crypto.Signature.of_b58
+  let operation = Operation.Operation {
+    key;
+  *)
+  Lwt_main.run (main ())

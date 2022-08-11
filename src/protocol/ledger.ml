@@ -31,7 +31,7 @@ type withdraw_handle_tree = Withdrawal_handle_tree.t
 type ledger = Ledger of { table : Ticket_table.t ; withdrawal_handles : withdraw_handle_tree }
 and t = ledger
 
-type withdraw_proof = (BLAKE2b.t * BLAKE2b.t) list
+type withdraw_proof = (BLAKE2b.t * BLAKE2b.t) list [@@deriving yojson]
 
 let initial = Ledger { table = Ticket_table.empty; withdrawal_handles = Withdrawal_handle_tree.empty }
 

@@ -12,7 +12,7 @@ module Withdrawal_handle : sig
   [@@deriving yojson]
 end
 
-type withdraw_proof
+type withdraw_proof [@@deriving yojson]
 type withdraw_handle_tree
 
 type ledger = private Ledger of { table : Ticket_table.t ; withdrawal_handles : withdraw_handle_tree }

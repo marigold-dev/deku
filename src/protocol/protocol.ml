@@ -42,21 +42,27 @@ let apply_operation protocol operation =
             }) =
         operation
       in
-      let ledger =
+      let ledger, receipts =
         match content with
         | Operation_transaction { receiver; ticket_id; amount } -> (
             let sender = source in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
-            | Ok ledger -> ledger
-            | Error _ -> ledger)
+            | Ok ledger -> ledger, []
+            | Error _ -> ledger, [])
+        | Tezos_withdraw { owner; amount; ticket } ->
+            (let sender = source in
+            match
+              Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id:ticket ledger
+            with
+            | Ok (ledger, handle) -> ledger, [Receipt_tezos_withdraw handle]
+            | Error _ -> ledger, [])
       in
-
-      let receipt = Receipt { operation = hash } in
+      let receipts = Receipt_operation { operation = hash } :: receipts in
       Some
         ( Protocol { included_operations; included_tezos_operations; ledger },
-          receipt )
+          receipts )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
@@ -109,7 +115,7 @@ let apply_payload ~parallel payload protocol =
   List.fold_left
     (fun (protocol, rev_receipts) operation ->
       match apply_operation protocol operation with
-      | Some (protocol, receipt) -> (protocol, receipt :: rev_receipts)
+      | Some (protocol, receipts) -> (protocol, receipts @ rev_receipts)
       | None -> (protocol, rev_receipts)
       | exception _exn -> (* TODO: print exception *) (protocol, rev_receipts))
     (protocol, []) operations

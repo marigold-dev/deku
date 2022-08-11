@@ -9,6 +9,11 @@ type operation_content =
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
+  | Tezos_withdraw       of {
+      owner : Deku_tezos.Address.t;
+      amount : Amount.t;
+      ticket : Ticket_id.t;
+    }
 
 and operation =
   | Operation of {
