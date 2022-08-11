@@ -162,6 +162,6 @@ describe('cookie_Baker.add_XXX without enough', function () {
                 && cookie_Baker.javaScriptCps === javaScriptCpsBefore
                 && cookie_Baker.idleverseCps === idleverseCpsBefore
                 && cookie_Baker.cordexCps === cordexCpsBefore);
-        }), { verbose: true });
+        }));
     });
 });

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addCordex = exports.addIdleverse = exports.addJavascript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = void 0;
+exports.addCordex = exports.addIdleverse = exports.addJavascript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.createEmptyCookieBaker = exports.initCookieBaker = void 0;
 var actions_1 = require("./actions");
 var st = require("./types");
 /*
@@ -19,6 +19,22 @@ var st = require("./types");
    - grandma: same as cursor, it requires 100 cookies.
    - farm: it requires 1100 cookies
 */
+/**
+ * Create a new cookieBaker.
+ * We could use the one provided by the state, but re-creating it makes sure the values are OK.
+ * @param cookieBaker: provided by answer of /vm-state
+ * @returns
+ */
+var initCookieBaker = function (cookieBaker) {
+    return (0, exports.createCookieBaker)(cookieBaker.cookies, cookieBaker.cursors, cookieBaker.grandmas, cookieBaker.farms, cookieBaker.mines, cookieBaker.factories, cookieBaker.banks, cookieBaker.temples, cookieBaker.wizards, cookieBaker.shipments, cookieBaker.alchemies, cookieBaker.portals, cookieBaker.timeMachines, cookieBaker.antimatters, cookieBaker.prisms, cookieBaker.chanceMakers, cookieBaker.fractals, cookieBaker.javaScripts, cookieBaker.idleverses, cookieBaker.cordexs, cookieBaker.freeCursor, cookieBaker.freeGrandma, cookieBaker.freeFarm, cookieBaker.freeMine, cookieBaker.freeFactory, cookieBaker.freeBank, cookieBaker.freeTemple, cookieBaker.freeWizard, cookieBaker.freeShipment, cookieBaker.freeAlchemy, cookieBaker.freePortal, cookieBaker.freeTimeMachine, cookieBaker.freeAntimatter, cookieBaker.freePrism, cookieBaker.freeChanceMaker, cookieBaker.freeFractal, cookieBaker.freeJavaScript, cookieBaker.freeIdleverse, cookieBaker.freeCordex);
+};
+exports.initCookieBaker = initCookieBaker;
+var createEmptyCookieBaker = function () {
+    return (0, exports.createCookieBaker)(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+};
+exports.createEmptyCookieBaker = createEmptyCookieBaker;
+//DO NOT USE ME
+// This function is only exported for testing purpose
 var createCookieBaker = function (cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs, freeCursor, freeGrandma, freeFarm, freeMine, freeFactory, freeBank, freeTemple, freeWizard, freeShipment, freeAlchemy, freePortal, freeTimeMachine, freeAntimatter, freePrism, freeChanceMaker, freeFractal, freeJavaScript, freeIdleverse, freeCordex) {
     var cookieBaker = {
         cookies: cookies,
@@ -99,82 +115,44 @@ var createCookieBaker = function (cookies, cursors, grandmas, farms, mines, fact
         idleverseCps: 0,
         cordexCps: 0,
     };
-    var cursorCost = (0, exports.calculateCost)(actions_1.actions.incr_Cursor, cookieBaker);
-    var grandmaCost = (0, exports.calculateCost)(actions_1.actions.incr_Grandma, cookieBaker);
-    var farmCost = (0, exports.calculateCost)(actions_1.actions.incr_Farm, cookieBaker);
-    var mineCost = (0, exports.calculateCost)(actions_1.actions.incr_Mine, cookieBaker);
-    var factoryCost = (0, exports.calculateCost)(actions_1.actions.incr_Factory, cookieBaker);
-    var bankCost = (0, exports.calculateCost)(actions_1.actions.incr_Bank, cookieBaker);
-    var templeCost = (0, exports.calculateCost)(actions_1.actions.incr_Temple, cookieBaker);
-    var wizardCost = (0, exports.calculateCost)(actions_1.actions.incr_Wizard, cookieBaker);
-    var shipmentCost = (0, exports.calculateCost)(actions_1.actions.incr_Shipment, cookieBaker);
-    var alchemyCost = (0, exports.calculateCost)(actions_1.actions.incr_Alchemy, cookieBaker);
-    var portalCost = (0, exports.calculateCost)(actions_1.actions.incr_Portal, cookieBaker);
-    var timeMachineCost = (0, exports.calculateCost)(actions_1.actions.incr_TimeMachine, cookieBaker);
-    var antimatterCost = (0, exports.calculateCost)(actions_1.actions.incr_Antimatter, cookieBaker);
-    var prismCost = (0, exports.calculateCost)(actions_1.actions.incr_Prism, cookieBaker);
-    var chanceMakerCost = (0, exports.calculateCost)(actions_1.actions.incr_ChanceMaker, cookieBaker);
-    var fractalCost = (0, exports.calculateCost)(actions_1.actions.incr_Fractal, cookieBaker);
-    var javaScriptCost = (0, exports.calculateCost)(actions_1.actions.incr_Javascript, cookieBaker);
-    var idleverseCost = (0, exports.calculateCost)(actions_1.actions.incr_Idleverse, cookieBaker);
-    var cordexCost = (0, exports.calculateCost)(actions_1.actions.incr_Cordex, cookieBaker);
-    var cursorCps = cookieBaker.cursors * st.init_cursorCps;
-    var grandmaCps = cookieBaker.grandmas * st.init_grandmaCps;
-    var farmCps = cookieBaker.farms * st.init_farmCps;
-    var mineCps = cookieBaker.mines * st.init_mineCps;
-    var factoryCps = cookieBaker.factories * st.init_factoryCps;
-    var bankCps = cookieBaker.banks * st.init_bankCps;
-    var templeCps = cookieBaker.temples * st.init_templeCps;
-    var wizardCps = cookieBaker.wizards * st.init_wizardCps;
-    var shipmentCps = cookieBaker.shipments * st.init_shipmentCps;
-    var alchemyCps = cookieBaker.alchemies * st.init_alchemyCps;
-    var portalCps = cookieBaker.portals * st.init_portalCps;
-    var timeMachineCps = cookieBaker.timeMachines * st.init_timeMachineCps;
-    var antimatterCps = cookieBaker.antimatters * st.init_antimatterCps;
-    var prismCps = cookieBaker.prisms * st.init_prismCps;
-    var chanceMakerCps = cookieBaker.chanceMakers * st.init_chanceMakerCps;
-    var fractalCps = cookieBaker.fractals * st.init_fractalCps;
-    var javaScriptCps = cookieBaker.javaScripts * st.init_javascriptCps;
-    var idleverseCps = cookieBaker.idleverses * st.init_idleverseCps;
-    var cordexCps = cookieBaker.cordexs * st.init_cordexCps;
-    cookieBaker.cursorCost = cursorCost;
-    cookieBaker.grandmaCost = grandmaCost;
-    cookieBaker.farmCost = farmCost;
-    cookieBaker.mineCost = mineCost;
-    cookieBaker.factoryCost = factoryCost;
-    cookieBaker.bankCost = bankCost;
-    cookieBaker.templeCost = templeCost;
-    cookieBaker.wizardCost = wizardCost;
-    cookieBaker.shipmentCost = shipmentCost;
-    cookieBaker.alchemyCost = alchemyCost;
-    cookieBaker.portalCost = portalCost;
-    cookieBaker.timeMachineCost = timeMachineCost;
-    cookieBaker.antimatterCost = antimatterCost;
-    cookieBaker.prismCost = prismCost;
-    cookieBaker.chanceMakerCost = chanceMakerCost;
-    cookieBaker.fractalCost = fractalCost;
-    cookieBaker.javaScriptCost = javaScriptCost;
-    cookieBaker.idleverseCost = idleverseCost;
-    cookieBaker.cordexCost = cordexCost;
-    cookieBaker.cursorCps = cursorCps;
-    cookieBaker.grandmaCps = grandmaCps;
-    cookieBaker.farmCps = farmCps;
-    cookieBaker.mineCps = mineCps;
-    cookieBaker.factoryCps = factoryCps;
-    cookieBaker.bankCps = bankCps;
-    cookieBaker.templeCps = templeCps;
-    cookieBaker.wizardCps = wizardCps;
-    cookieBaker.shipmentCps = shipmentCps;
-    cookieBaker.alchemyCps = alchemyCps;
-    cookieBaker.portalCps = portalCps;
-    cookieBaker.timeMachineCps = timeMachineCps;
-    cookieBaker.antimatterCps = antimatterCps;
-    cookieBaker.prismCps = prismCps;
-    cookieBaker.chanceMakerCps = chanceMakerCps;
-    cookieBaker.fractalCps = fractalCps;
-    cookieBaker.javaScriptCps = javaScriptCps;
-    cookieBaker.idleverseCps = idleverseCps;
-    cookieBaker.cordexCps = cordexCps;
+    cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.incr_Cursor, cookieBaker);
+    cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.incr_Grandma, cookieBaker);
+    cookieBaker.farmCost = (0, exports.calculateCost)(actions_1.actions.incr_Farm, cookieBaker);
+    cookieBaker.mineCost = (0, exports.calculateCost)(actions_1.actions.incr_Mine, cookieBaker);
+    cookieBaker.factoryCost = (0, exports.calculateCost)(actions_1.actions.incr_Factory, cookieBaker);
+    cookieBaker.bankCost = (0, exports.calculateCost)(actions_1.actions.incr_Bank, cookieBaker);
+    cookieBaker.templeCost = (0, exports.calculateCost)(actions_1.actions.incr_Temple, cookieBaker);
+    cookieBaker.wizardCost = (0, exports.calculateCost)(actions_1.actions.incr_Wizard, cookieBaker);
+    cookieBaker.shipmentCost = (0, exports.calculateCost)(actions_1.actions.incr_Shipment, cookieBaker);
+    cookieBaker.alchemyCost = (0, exports.calculateCost)(actions_1.actions.incr_Alchemy, cookieBaker);
+    cookieBaker.portalCost = (0, exports.calculateCost)(actions_1.actions.incr_Portal, cookieBaker);
+    cookieBaker.timeMachineCost = (0, exports.calculateCost)(actions_1.actions.incr_TimeMachine, cookieBaker);
+    cookieBaker.antimatterCost = (0, exports.calculateCost)(actions_1.actions.incr_Antimatter, cookieBaker);
+    cookieBaker.prismCost = (0, exports.calculateCost)(actions_1.actions.incr_Prism, cookieBaker);
+    cookieBaker.chanceMakerCost = (0, exports.calculateCost)(actions_1.actions.incr_ChanceMaker, cookieBaker);
+    cookieBaker.fractalCost = (0, exports.calculateCost)(actions_1.actions.incr_Fractal, cookieBaker);
+    cookieBaker.javaScriptCost = (0, exports.calculateCost)(actions_1.actions.incr_Javascript, cookieBaker);
+    cookieBaker.idleverseCost = (0, exports.calculateCost)(actions_1.actions.incr_Idleverse, cookieBaker);
+    cookieBaker.cordexCost = (0, exports.calculateCost)(actions_1.actions.incr_Cordex, cookieBaker);
+    cookieBaker.cursorCps = cookieBaker.cursors * st.init_cursorCps;
+    cookieBaker.grandmaCps = cookieBaker.grandmas * st.init_grandmaCps;
+    cookieBaker.farmCps = cookieBaker.farms * st.init_farmCps;
+    cookieBaker.mineCps = cookieBaker.mines * st.init_mineCps;
+    cookieBaker.factoryCps = cookieBaker.factories * st.init_factoryCps;
+    cookieBaker.bankCps = cookieBaker.banks * st.init_bankCps;
+    cookieBaker.templeCps = cookieBaker.temples * st.init_templeCps;
+    cookieBaker.wizardCps = cookieBaker.wizards * st.init_wizardCps;
+    cookieBaker.shipmentCps = cookieBaker.shipments * st.init_shipmentCps;
+    cookieBaker.alchemyCps = cookieBaker.alchemies * st.init_alchemyCps;
+    cookieBaker.portalCps = cookieBaker.portals * st.init_portalCps;
+    cookieBaker.timeMachineCps = cookieBaker.timeMachines * st.init_timeMachineCps;
+    cookieBaker.antimatterCps = cookieBaker.antimatters * st.init_antimatterCps;
+    cookieBaker.prismCps = cookieBaker.prisms * st.init_prismCps;
+    cookieBaker.chanceMakerCps = cookieBaker.chanceMakers * st.init_chanceMakerCps;
+    cookieBaker.fractalCps = cookieBaker.fractals * st.init_fractalCps;
+    cookieBaker.javaScriptCps = cookieBaker.javaScripts * st.init_javascriptCps;
+    cookieBaker.idleverseCps = cookieBaker.idleverses * st.init_idleverseCps;
+    cookieBaker.cordexCps = cookieBaker.cordexs * st.init_cordexCps;
     return cookieBaker;
 };
 exports.createCookieBaker = createCookieBaker;
@@ -263,7 +241,7 @@ var addCursor = function (cookieBaker) {
         return cookieBaker;
     }
     else {
-        console.log("Not enough cookie to buy a cursor, needed: " + cookieBaker.cursorCps + " actual amount: " + cookieBaker.cookies);
+        console.log("Not enough cookie to buy a cursor, needed: " + cookieBaker.cursorCost + " actual amount: " + cookieBaker.cookies);
         return cookieBaker;
     }
 };

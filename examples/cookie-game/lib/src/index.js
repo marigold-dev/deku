@@ -18,10 +18,10 @@ var transition = function (tx) {
     var cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
         sourceValue = { source: source };
-        cookieBaker = (0, state_1.createCookieBaker)(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        cookieBaker = (0, state_1.createEmptyCookieBaker)();
     }
     else {
-        cookieBaker = (0, state_1.createCookieBaker)(sourceValue.cookieBaker.cookies, sourceValue.cookieBaker.cursors, sourceValue.cookieBaker.grandmas, sourceValue.cookieBaker.farms, sourceValue.cookieBaker.mines, sourceValue.cookieBaker.factories, sourceValue.cookieBaker.banks, sourceValue.cookieBaker.temples, sourceValue.cookieBaker.wizards, sourceValue.cookieBaker.shipments, sourceValue.cookieBaker.alchemies, sourceValue.cookieBaker.portals, sourceValue.cookieBaker.timeMachines, sourceValue.cookieBaker.antimatters, sourceValue.cookieBaker.prisms, sourceValue.cookieBaker.chanceMakers, sourceValue.cookieBaker.fractals, sourceValue.cookieBaker.javaScripts, sourceValue.cookieBaker.idleverses, sourceValue.cookieBaker.cordexs, sourceValue.cookieBaker.freeCursor, sourceValue.cookieBaker.freeGrandma, sourceValue.cookieBaker.freeFarm, sourceValue.cookieBaker.freeMine, sourceValue.cookieBaker.freeFactory, sourceValue.cookieBaker.freeBank, sourceValue.cookieBaker.freeTemple, sourceValue.cookieBaker.freeWizard, sourceValue.cookieBaker.freeShipment, sourceValue.cookieBaker.freeAlchemy, sourceValue.cookieBaker.freePortal, sourceValue.cookieBaker.freeTimeMachine, sourceValue.cookieBaker.freeAntimatter, sourceValue.cookieBaker.freePrism, sourceValue.cookieBaker.freeChanceMaker, sourceValue.cookieBaker.freeFractal, sourceValue.cookieBaker.FreeJavaScript, sourceValue.cookieBaker.freeIdleverse, sourceValue.cookieBaker.freeCordex);
+        cookieBaker = (0, state_1.initCookieBaker)(sourceValue.cookieBaker);
     }
     sourceValue.cookieBaker = cookieBaker;
     switch (operation) {

@@ -3,9 +3,9 @@ import { createCookieBaker } from '../src/state';
 // 77
 export const cookieBakerArbitrary = () =>
     fc.tuple(fc.integer({ min: 0, max: 2000000000 }),
-        fc.integer({ min: 0, max: 200 }),
-        fc.integer({ min: 0, max: 200 }),
-        fc.integer({ min: 0, max: 200 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
+        fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),
         fc.integer({ min: 0, max: 10 }),

@@ -22,6 +22,7 @@ export const init_fractalCps: number = 15e10;
 export const init_javascriptCps: number = 1.1e11;
 export const init_idleverseCps: number = 8.3e11;
 export const init_cordexCps: number = 64e12;
+
 export const init_cursorCost: number = 15;
 export const init_grandmaCost: number = 100;
 export const init_farmCost: number = 1100;
@@ -41,7 +42,6 @@ export const init_fractalCost: number = 31e16;
 export const init_javascriptCost: number = 71e18;
 export const init_idleverseCost: number = 12e21;
 export const init_cordexCost: number = 1.9e23;
-
 
 export type cookieBaker = {
     cookies: number;
