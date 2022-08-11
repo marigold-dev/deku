@@ -4,7 +4,7 @@ import { addCursor } from '../src/state'
 
 
 describe('cookieBaker.add_XXX successful', () => {
-    test('add cookie only mint one cursor, decrease cookie amount, increase cursor cost, and increase cursors CPS', () => {
+    test('addCursor only mint one cursor, decrease cookie amount, increase cursor cost, and increase cursors CPS', () => {
         fc.assert(
             fc.property(
                 cookieBakerArbitrary(),
@@ -29,6 +29,7 @@ describe('cookieBaker.add_XXX successful', () => {
                     const javascriptsBefore = cookieBaker.javaScripts;
                     const idleversesBefore = cookieBaker.idleverses;
                     const cordexsBefore = cookieBaker.cordexs;
+
                     const freeCursorBefore = cookieBaker.freeCursor;
                     const freeGrandmaBefore = cookieBaker.freeGrandma;
                     const freeFarmBefore = cookieBaker.freeFarm;
@@ -48,6 +49,7 @@ describe('cookieBaker.add_XXX successful', () => {
                     const freeJavaScriptBefore = cookieBaker.freeJavaScript;
                     const freeIdleverseBefore = cookieBaker.freeIdleverse;
                     const freeCordexBefore = cookieBaker.freeCordex;
+
                     const cursorCostBefore = cookieBaker.cursorCost;
                     const grandmaCostBefore = cookieBaker.grandmaCost;
                     const farmCostBefore = cookieBaker.farmCost;
@@ -67,6 +69,7 @@ describe('cookieBaker.add_XXX successful', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
+
                     const cursorCpsBefore = cookieBaker.cursorCps;
                     const grandmaCpsBefore = cookieBaker.grandmaCps;
                     const farmCpsBefore = cookieBaker.farmCps;
@@ -87,11 +90,13 @@ describe('cookieBaker.add_XXX successful', () => {
                     const idleverseCpsBefore = cookieBaker.idleverseCps;
                     const cordexCpsBefore = cookieBaker.cordexCps;
 
-                    //make sure we have enough cookies to buy a cursor
                     cookieBaker.cookies = cookiesBefore + cursorCostBefore;
                     const cookie_Baker = addCursor(cookieBaker);
-                    return (cookie_Baker.cookies === cookiesBefore
-                        && cookie_Baker.cursors === cursorsBefore
+                    return (cookie_Baker.cursors === cursorsBefore + 1
+                        && cookie_Baker.cursorCost >= cursorCostBefore
+                        && cookie_Baker.cursorCps > cursorCpsBefore
+
+                        && cookie_Baker.cookies === cookiesBefore
                         && cookie_Baker.grandmas === grandmasBefore
                         && cookie_Baker.farms === farmsBefore
                         && cookie_Baker.mines === minesBefore
@@ -129,7 +134,7 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.freeJavaScript === freeJavaScriptBefore
                         && cookie_Baker.freeIdleverse === freeIdleverseBefore
                         && cookie_Baker.freeCordex === freeCordexBefore
-                        && cookie_Baker.cursorCost > cursorCostBefore
+
                         && cookie_Baker.grandmaCost === grandmaCostBefore
                         && cookie_Baker.farmCost === farmCostBefore
                         && cookie_Baker.mineCost === mineCostBefore
@@ -148,7 +153,7 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
-                        && cookie_Baker.cursorCps > cursorCpsBefore
+
                         && cookie_Baker.grandmaCps === grandmaCpsBefore
                         && cookie_Baker.farmCps === farmCpsBefore
                         && cookie_Baker.mineCps === mineCpsBefore
@@ -168,7 +173,6 @@ describe('cookieBaker.add_XXX successful', () => {
                         && cookie_Baker.idleverseCps === idleverseCpsBefore
                         && cookie_Baker.cordexCps === cordexCpsBefore
                     )
-                }), { verbose: true });
+                }));
     });
 });
-
