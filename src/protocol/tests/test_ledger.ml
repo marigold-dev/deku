@@ -4,7 +4,7 @@ open Deku_concepts
 open Deku_protocol
 open Ledger
 
-let total_balance ~ticket_id (Ledger { table }) =
+let total_balance ~ticket_id (Ledger { table; _ }) =
   let open Ticket_table in
   Address_map.fold
     (fun _sender ticket_map total_amount ->
@@ -31,12 +31,19 @@ let random_amount () =
 
 let amount = Alcotest.testable Amount.pp Amount.equal
 
-let default_ticket_id () =
-  let address =
-    Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
-    |> Option.get
+let random_ticket_id () =
+  let random_bytes length =
+    Bytes.init length (fun _ -> Stdlib.Random.int 255 |> Char.chr)
   in
-  let data = Bytes.of_string "tuturu" in
+  (* TODO Should we expose Contract_hash.of_raw? *)
+  let address : Deku_tezos.Contract_hash.t =
+    random_bytes 20
+    |> String.of_bytes
+    |> Deku_crypto.BLAKE2b.BLAKE2b_160.of_raw
+    |> Option.get
+    |> Obj.magic
+  in
+  let data = random_bytes 10 in
   Ticket_id.make address data
 
 let test_total_balance ~expected ~ledger_name ~ticket_id ~ledger () =
@@ -115,7 +122,7 @@ let test_success_transfer ~sender_name ~sender ~expected_sender_balance
   let receiver_balance = balance receiver ticket_id ledger in
   let msg =
     Format.asprintf
-      "Option.is_some (transfer ~sender:%s ~receiver:%s %a %s) = true"
+      "Result.is_ok (transfer ~sender:%s ~receiver:%s %a %s) = true"
       sender_name receiver_name Amount.pp amount ledger_name
   in
   let () =
@@ -204,24 +211,24 @@ let test_deposit_and_transfer ~address_name ~address ~address_balance
 
 let test_initial_total_balance () =
   test_total_balance ~expected:Amount.zero ~ledger_name:"initial"
-    ~ticket_id:(default_ticket_id ()) ~ledger:initial ()
+    ~ticket_id:(random_ticket_id ()) ~ledger:initial ()
 
 let test_unknown_balance_on_initial () =
-  test_unknown_balance ~ledger_name:"initial" ~ticket_id:(default_ticket_id ())
+  test_unknown_balance ~ledger_name:"initial" ~ticket_id:(random_ticket_id ())
     ~ledger:initial ()
 
 let test_unknown_deposit_on_initial () =
-  test_unknown_deposit ~ledger_name:"initial" ~ticket_id:(default_ticket_id ())
+  test_unknown_deposit ~ledger_name:"initial" ~ticket_id:(random_ticket_id ())
     ~ledger:initial ()
 
 let test_unknown_transfer_on_initial () =
-  test_unknown_transfer ~ledger_name:"initial" ~ticket_id:(default_ticket_id ())
+  test_unknown_transfer ~ledger_name:"initial" ~ticket_id:(random_ticket_id ())
     ~ledger:initial ()
 
 let test_simple_deposit () =
   let a = new_address () in
 
-  let ticket_id = default_ticket_id () in
+  let ticket_id = random_ticket_id () in
   let amount = random_amount () in
   let ledger_with_a = deposit a amount ticket_id initial in
 
@@ -244,7 +251,7 @@ let test_simple_transfer () =
   let a = new_address () in
   let b = new_address () in
   let total_amount = amount_of_int 6 in
-  let ticket_id = default_ticket_id () in
+  let ticket_id = random_ticket_id () in
   let ledger_with_a = deposit a total_amount ticket_id initial in
   let ledger_with_a_and_b =
     transfer ~sender:a ~receiver:b ~amount:(amount_of_int 4) ~ticket_id
@@ -253,7 +260,7 @@ let test_simple_transfer () =
   let () =
     Alcotest.(check' bool)
       ~msg:
-        "Option.is_some (transfer ~sender:a ~receiver:b 6 ledger_with_a) = true"
+        "Result.is_ok (transfer ~sender:a ~receiver:b 4 ledger_with_a) = true"
       ~expected:true
       ~actual:
         (Result.is_ok
@@ -288,6 +295,101 @@ let test_simple_transfer () =
   in
   ()
 
+let test_simple_withdraw () =
+  let a = new_address () in
+  let b = new_address () in
+  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let total_amount = amount_of_int 10 in
+  let ticket1 = random_ticket_id () in
+  let ledger = deposit a total_amount ticket1 initial in
+  let ledger =
+    transfer ~sender:a ~receiver:b ~amount:(amount_of_int 4) ~ticket_id:ticket1
+      ledger
+  in
+  let ledger = Result.get_ok ledger in
+  let ledger = withdraw ~sender:b ~destination:c ~amount:(amount_of_int 4) ~ticket_id:ticket1 ledger
+  in
+    Alcotest.(check' bool)
+      ~msg:
+        "Result.is_ok (withdraw ~sender:b ~destination:c 4 ledger_with_a) = true"
+      ~expected:true
+      ~actual:
+        (Result.is_ok ledger)
+
+let test_bad_withdraw1 () =
+  let msg = "Cannot withdraw a ticket that was transferred" in
+  let a = new_address () in
+  let b = new_address () in
+  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let total_amount = amount_of_int 10 in
+  let ticket1 = random_ticket_id () in
+  let ledger = deposit a total_amount ticket1 initial in
+  let ledger =
+    transfer ~sender:a ~receiver:b ~amount:(amount_of_int 4) ~ticket_id:ticket1
+      ledger
+  in
+  let ledger = Result.get_ok ledger in
+  let ledger = withdraw ~sender:a ~destination:c ~amount:(amount_of_int 10) ~ticket_id:ticket1 ledger
+  in
+    Alcotest.(check' bool)
+      ~msg
+      ~expected:true
+      ~actual:
+        (Result.is_error ledger)
+
+let test_bad_withdraw2 () =
+  let msg = "Cannot withdraw a ticket that you do not have" in
+  let a = new_address () in
+  let b = new_address () in
+  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let total_amount = amount_of_int 10 in
+  let ticket1 = random_ticket_id () in
+  let ticket2 = random_ticket_id () in
+  let ledger = deposit a total_amount ticket1 initial in
+  let ledger = deposit a total_amount ticket2 ledger in
+  let ledger =
+    transfer ~sender:a ~receiver:b ~amount:(amount_of_int 4) ~ticket_id:ticket1
+      ledger
+  in
+  let ledger = Result.get_ok ledger in
+  let ledger = withdraw ~sender:b ~destination:c ~amount:(amount_of_int 10) ~ticket_id:ticket2 ledger
+  in
+    Alcotest.(check' bool)
+      ~msg
+      ~expected:true
+      ~actual:
+        (Result.is_error ledger)
+
+let test_withdraw_balance () =
+  let msg = "Total balance goes down after withdraw (tickets are burned)" in
+  let a = new_address () in
+  let b = new_address () in
+  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let initial_amount = amount_of_int 100 in
+  let total_withdrawn = amount_of_int 20 in
+  let ticket1 = random_ticket_id () in
+  let ledger = deposit a initial_amount ticket1 initial in
+  let ledger =
+    transfer ~sender:a ~receiver:b ~amount:(amount_of_int 40) ~ticket_id:ticket1
+      ledger
+  in
+  let ledger = Result.get_ok ledger in
+  let ledger = withdraw ~sender:a ~destination:c ~amount:(total_withdrawn) ~ticket_id:ticket1 ledger
+  in
+  let () = Alcotest.(check' bool)
+      ~msg:"You can withdraw tickets that you didn't transfer"
+      ~expected:true
+      ~actual:
+        (Result.is_ok ledger)
+  in
+  let ledger, _ = Result.get_ok ledger in
+  let total_amount = total_balance ~ticket_id:ticket1 ledger in
+  Alcotest.(check' bool)
+    ~msg
+    ~expected:true
+    ~actual:
+      (Some total_amount = Amount.(initial_amount - total_withdrawn))
+
 let run () =
   let open Alcotest in
   run "Ledger" ~and_exit:false
@@ -303,5 +405,9 @@ let run () =
             test_unknown_transfer_on_initial;
           test_case "simple_deposit" `Quick test_simple_deposit;
           test_case "simple_transfer" `Quick test_simple_transfer;
+          test_case "simple_withdraw" `Quick test_simple_withdraw;
+          test_case "bad_withdraw1" `Quick test_bad_withdraw1;
+          test_case "bad_withdraw2" `Quick test_bad_withdraw2;
+          test_case "withdraw_balance" `Quick test_withdraw_balance;
         ] );
     ]
