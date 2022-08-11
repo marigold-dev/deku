@@ -20,7 +20,7 @@ var actions;
     actions["incr_Prism"] = "prism";
     actions["incr_ChanceMaker"] = "chancemaker";
     actions["incr_Fractal"] = "fractal";
-    actions["incr_Javascript"] = "javascript";
+    actions["incr_JavaScript"] = "javaScript";
     actions["incr_Idleverse"] = "idleverse";
     actions["incr_Cordex"] = "cordex";
 })(actions = exports.actions || (exports.actions = {}));

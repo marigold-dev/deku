@@ -5,7 +5,7 @@ import {
     addCookie, addCursor,
     addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
     addWizard, addShipment, addAlchemy, addPortal, addTimeMachine,
-    addAntimatter, addPrism, addChanceMaker, addFractal, addJavascript,
+    addAntimatter, addPrism, addChanceMaker, addFractal, addJavaScript,
     addIdleverse, addCordex, createEmptyCookieBaker, initCookieBaker
 } from "./state"
 import { actions } from "./actions"
@@ -153,9 +153,9 @@ const transition = (tx: transaction) => {
             saveState(source, sourceValue);
             break;
         }
-        case actions.incr_Javascript: {
+        case actions.incr_JavaScript: {
             //action successful, update state
-            sourceValue.cookieBaker = addJavascript(cookieBaker);
+            sourceValue.cookieBaker = addJavaScript(cookieBaker);
             console.log("Successfully minted javascript");
             saveState(source, sourceValue);
             break;

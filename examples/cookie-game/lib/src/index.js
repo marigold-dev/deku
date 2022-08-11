@@ -1,23 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
-var deku_js_interop_1 = require("deku_js_interop");
-var state_1 = require("./state");
-var actions_1 = require("./actions");
-var saveState = function (source, sourceValue) {
+const deku_js_interop_1 = require("deku_js_interop");
+const state_1 = require("./state");
+const actions_1 = require("./actions");
+const saveState = (source, sourceValue) => {
     (0, deku_js_interop_1.set)(source, sourceValue);
     console.log("Successfully saved state");
 };
-var transition = function (tx) {
+const transition = (tx) => {
     // source -> tz1 address
     // op_hash / tx_hash => BLAKE2B => resolved as string
     // operation => any
-    var source = tx.source;
-    var operation = tx.operation;
-    var sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
-    var cookieBaker;
+    const source = tx.source;
+    const operation = tx.operation;
+    let sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
+    let cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
-        sourceValue = { source: source };
+        sourceValue = { source };
         cookieBaker = (0, state_1.createEmptyCookieBaker)();
     }
     else {
@@ -144,9 +144,9 @@ var transition = function (tx) {
             saveState(source, sourceValue);
             break;
         }
-        case actions_1.actions.incr_Javascript: {
+        case actions_1.actions.incr_JavaScript: {
             //action successful, update state
-            sourceValue.cookieBaker = (0, state_1.addJavascript)(cookieBaker);
+            sourceValue.cookieBaker = (0, state_1.addJavaScript)(cookieBaker);
             console.log("Successfully minted javascript");
             saveState(source, sourceValue);
             break;
