@@ -295,7 +295,10 @@ let test_simple_transfer () =
 let test_simple_withdraw () =
   let a = new_address () in
   let b = new_address () in
-  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let c =
+    Deku_tezos.Address.Implicit
+      (new_address () |> Address.to_key_hash |> Option.get)
+  in
   let total_amount = amount_of_int 10 in
   let ticket1 = random_ticket_id () in
   let ledger = deposit a total_amount ticket1 initial in
@@ -317,7 +320,10 @@ let test_bad_withdraw1 () =
   let msg = "Cannot withdraw a ticket that was transferred" in
   let a = new_address () in
   let b = new_address () in
-  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let c =
+    Deku_tezos.Address.Implicit
+      (new_address () |> Address.to_key_hash |> Option.get)
+  in
   let total_amount = amount_of_int 10 in
   let ticket1 = random_ticket_id () in
   let ledger = deposit a total_amount ticket1 initial in
@@ -336,7 +342,10 @@ let test_bad_withdraw2 () =
   let msg = "Cannot withdraw a ticket that you do not have" in
   let a = new_address () in
   let b = new_address () in
-  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let c =
+    Deku_tezos.Address.Implicit
+      (new_address () |> Address.to_key_hash |> Option.get)
+  in
   let total_amount = amount_of_int 10 in
   let ticket1 = random_ticket_id () in
   let ticket2 = random_ticket_id () in
@@ -357,7 +366,10 @@ let test_withdraw_balance () =
   let msg = "Total balance goes down after withdraw (tickets are burned)" in
   let a = new_address () in
   let b = new_address () in
-  let c = Deku_tezos.Address.Implicit (new_address () |> Address.to_key_hash) in
+  let c =
+    Deku_tezos.Address.Implicit
+      (new_address () |> Address.to_key_hash |> Option.get)
+  in
   let initial_amount = amount_of_int 100 in
   let total_withdrawn = amount_of_int 20 in
   let ticket1 = random_ticket_id () in

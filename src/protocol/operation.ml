@@ -75,8 +75,8 @@ module Repr = struct
     let hash = hash operation in
 
     (match
-       let source = Address.to_key_hash source in
-       Key_hash.(equal source (of_key key))
+       let key_hash = key |> Key_hash.of_key |> Address.of_key_hash in
+       Address.equal source key_hash
      with
     | true -> ()
     | false -> raise Invalid_signature);
