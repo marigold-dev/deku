@@ -1,5 +1,6 @@
 (library
  (name wasm_vm)
- (libraries wasm helpers yojson core)
+ (public_name wasm-vm)
+ (libraries core wasm deku_stdlib yojson)
  (preprocess
-  (pps ppx_let_binding ppx_deriving.show ppx_deriving_yojson)))
+  (pps ppx_let_binding ppx_deriving.show ppx_yojson_conv)))

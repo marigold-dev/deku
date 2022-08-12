@@ -1,4 +1,4 @@
-open Helpers
+open Deku_stdlib
 open Wasm
 
 module S = Set.Make (struct
@@ -21,7 +21,7 @@ let () =
   Import.register (Utf8.decode "env") (fun name _ ->
       if Utf8.encode name = "syscall" then extern
       else (
-        Log.error "The only function avaibale is syscall, %s is not."
+        Format.eprintf "The only function avaibale is syscall, %s is not."
           (Utf8.encode name);
         Errors.raise `Module_validation_error))
 
@@ -32,7 +32,7 @@ let get_memory t =
   match Instance.export t memory with
   | Some (ExternMemory _) -> ()
   | _ ->
-      Log.error "Module should export a memory of name memory";
+      Format.eprintf "Module should export a memory of name memory";
       Errors.raise `Module_validation_error
 
 let validate_main t s1 ~gas =
@@ -50,10 +50,11 @@ let validate_main t s1 ~gas =
               _ ))) ->
         ()
     | Some _ ->
-        Log.error "Module interface mismatch, expected i32 -> (i64, i64, i64)";
+        Format.eprintf
+          "Module interface mismatch, expected i32 -> (i64, i64, i64)";
         Errors.raise `Module_validation_error
     | None ->
-        Log.error
+        Format.eprintf
           "Module validation error, a function named main should be exported";
         Errors.raise `Module_validation_error
   in
@@ -86,7 +87,7 @@ let of_string ~code =
   with
   | Errors.Error err -> Error err
   | Parse.Syntax (at, msg) | Valid.Invalid (at, msg) ->
-      Log.error "Module validation error at %d:%d - %d:%d: %s" at.left.line
+      Format.eprintf "Module validation error at %d:%d - %d:%d: %s" at.left.line
         at.left.column at.right.line at.right.column msg;
       Error `Module_validation_error
 
@@ -102,11 +103,14 @@ let decode t =
   with
   | Errors.Error err -> Error err
   | Decode.Code (_, msg) ->
-      Log.error "Module validation error: %s" msg;
+      Format.eprintf "Module validation error: %s" msg;
       Error `Module_validation_error
 
-let to_yojson t = `String (encode t |> Result.get_ok)
+let yojson_of_t t = `String (encode t |> Result.get_ok)
 
-let of_yojson = function
-  | `String t -> decode t |> Result.map_error Errors.show
-  | #Yojson.Safe.t -> Error "invalid payload"
+let t_of_yojson = function
+  | `String t -> (
+      match decode t with
+      | Ok value -> value
+      | Error err -> failwith (Errors.show err))
+  | #Yojson.Safe.t -> failwith "invalid payload"
