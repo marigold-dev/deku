@@ -77,3 +77,9 @@
 (package
  (name deku-indexer)
  (depends deku-stdlib deku-concepts deku-constants))
+
+(package
+ (name smart-contracts))
+
+(package
+ (name wasm-vm))

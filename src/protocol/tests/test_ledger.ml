@@ -37,11 +37,8 @@ let random_ticket_id () =
   in
   (* TODO Should we expose Contract_hash.of_raw? *)
   let address : Deku_tezos.Contract_hash.t =
-    random_bytes 20
-    |> String.of_bytes
-    |> Deku_crypto.BLAKE2b.BLAKE2b_160.of_raw
-    |> Option.get
-    |> Obj.magic
+    random_bytes 20 |> String.of_bytes |> Deku_crypto.BLAKE2b.BLAKE2b_160.of_raw
+    |> Option.get |> Obj.magic
   in
   let data = random_bytes 10 in
   Ticket_id.make address data
@@ -122,8 +119,8 @@ let test_success_transfer ~sender_name ~sender ~expected_sender_balance
   let receiver_balance = balance receiver ticket_id ledger in
   let msg =
     Format.asprintf
-      "Result.is_ok (transfer ~sender:%s ~receiver:%s %a %s) = true"
-      sender_name receiver_name Amount.pp amount ledger_name
+      "Result.is_ok (transfer ~sender:%s ~receiver:%s %a %s) = true" sender_name
+      receiver_name Amount.pp amount ledger_name
   in
   let () =
     Alcotest.(check' bool)
@@ -307,14 +304,14 @@ let test_simple_withdraw () =
       ledger
   in
   let ledger = Result.get_ok ledger in
-  let ledger = withdraw ~sender:b ~destination:c ~amount:(amount_of_int 4) ~ticket_id:ticket1 ledger
+  let ledger =
+    withdraw ~sender:b ~destination:c ~amount:(amount_of_int 4)
+      ~ticket_id:ticket1 ledger
   in
-    Alcotest.(check' bool)
-      ~msg:
-        "Result.is_ok (withdraw ~sender:b ~destination:c 4 ledger_with_a) = true"
-      ~expected:true
-      ~actual:
-        (Result.is_ok ledger)
+  Alcotest.(check' bool)
+    ~msg:
+      "Result.is_ok (withdraw ~sender:b ~destination:c 4 ledger_with_a) = true"
+    ~expected:true ~actual:(Result.is_ok ledger)
 
 let test_bad_withdraw1 () =
   let msg = "Cannot withdraw a ticket that was transferred" in
@@ -329,13 +326,11 @@ let test_bad_withdraw1 () =
       ledger
   in
   let ledger = Result.get_ok ledger in
-  let ledger = withdraw ~sender:a ~destination:c ~amount:(amount_of_int 10) ~ticket_id:ticket1 ledger
+  let ledger =
+    withdraw ~sender:a ~destination:c ~amount:(amount_of_int 10)
+      ~ticket_id:ticket1 ledger
   in
-    Alcotest.(check' bool)
-      ~msg
-      ~expected:true
-      ~actual:
-        (Result.is_error ledger)
+  Alcotest.(check' bool) ~msg ~expected:true ~actual:(Result.is_error ledger)
 
 let test_bad_withdraw2 () =
   let msg = "Cannot withdraw a ticket that you do not have" in
@@ -352,13 +347,11 @@ let test_bad_withdraw2 () =
       ledger
   in
   let ledger = Result.get_ok ledger in
-  let ledger = withdraw ~sender:b ~destination:c ~amount:(amount_of_int 10) ~ticket_id:ticket2 ledger
+  let ledger =
+    withdraw ~sender:b ~destination:c ~amount:(amount_of_int 10)
+      ~ticket_id:ticket2 ledger
   in
-    Alcotest.(check' bool)
-      ~msg
-      ~expected:true
-      ~actual:
-        (Result.is_error ledger)
+  Alcotest.(check' bool) ~msg ~expected:true ~actual:(Result.is_error ledger)
 
 let test_withdraw_balance () =
   let msg = "Total balance goes down after withdraw (tickets are burned)" in
@@ -374,21 +367,20 @@ let test_withdraw_balance () =
       ledger
   in
   let ledger = Result.get_ok ledger in
-  let ledger = withdraw ~sender:a ~destination:c ~amount:(total_withdrawn) ~ticket_id:ticket1 ledger
+  let ledger =
+    withdraw ~sender:a ~destination:c ~amount:total_withdrawn ~ticket_id:ticket1
+      ledger
   in
-  let () = Alcotest.(check' bool)
-      ~msg:"You can withdraw tickets that you didn't transfer"
-      ~expected:true
-      ~actual:
-        (Result.is_ok ledger)
+  let () =
+    Alcotest.(check' bool)
+      ~msg:"You can withdraw tickets that you didn't transfer" ~expected:true
+      ~actual:(Result.is_ok ledger)
   in
   let ledger, _ = Result.get_ok ledger in
   let total_amount = total_balance ~ticket_id:ticket1 ledger in
   Alcotest.(check' bool)
-    ~msg
-    ~expected:true
-    ~actual:
-      (Some total_amount = Amount.(initial_amount - total_withdrawn))
+    ~msg ~expected:true
+    ~actual:(Some total_amount = Amount.(initial_amount - total_withdrawn))
 
 let run () =
   let open Alcotest in

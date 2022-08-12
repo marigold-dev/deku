@@ -15,7 +15,12 @@ end
 type withdraw_proof
 type withdraw_handle_tree
 
-type ledger = private Ledger of { table : Ticket_table.t ; withdrawal_handles : withdraw_handle_tree }
+type ledger = private
+  | Ledger of {
+      table : Ticket_table.t;
+      withdrawal_handles : withdraw_handle_tree;
+    }
+
 type t = ledger
 
 val with_ticket_table :
@@ -41,10 +46,9 @@ val withdraw :
   amount:Amount.t ->
   ticket_id:Ticket_id.t ->
   t ->
-  (t * Withdrawal_handle.t, [> `Insufficient_funds]) result
+  (t * Withdrawal_handle.t, [> `Insufficient_funds ]) result
 
-val withdrawal_handles_find_proof :
-  Withdrawal_handle.t -> t -> withdraw_proof
+val withdrawal_handles_find_proof : Withdrawal_handle.t -> t -> withdraw_proof
 
 val withdrawal_handles_find_proof_by_id :
   int -> t -> (withdraw_proof * Withdrawal_handle.t) option
