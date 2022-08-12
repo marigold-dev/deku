@@ -1,9 +1,6 @@
-open Deku_crypto
+type t [@@deriving eq, ord, yojson]
 
-type t = BLAKE2b.BLAKE2b_160.t [@@deriving eq, ord, yojson]
-
-val of_user_operation_hash :
-  Operation_hash.operation_hash -> Deku_crypto.BLAKE2b.BLAKE2b_160.hash
+val of_user_operation_hash : Operation_hash.operation_hash -> t
 
 (*repr*)
 val of_b58 : string -> t option
