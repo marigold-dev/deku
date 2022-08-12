@@ -4,7 +4,7 @@ with super; {
   # TODO: this is clearly not right, I should be overriding only 4_14
   ocaml-ng = ocaml-ng // (with ocaml-ng; {
     ocamlPackages_5_00 = ocamlPackages_5_00.overrideScope'
-      (_: super: {
+      (oself: super: {
         dune-rpc = super.dune-rpc.overrideAttrs (_: {
           src = fetchFromGitHub {
             owner = "ocaml";
@@ -41,6 +41,8 @@ with super; {
             fetchSubmodules = true;
           };
         });
+        wasm = oself.callPackage ./packages/wasm.nix { };
+
       });
   });
 }
