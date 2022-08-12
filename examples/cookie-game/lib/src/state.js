@@ -157,8 +157,7 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
 };
 exports.createCookieBaker = createCookieBaker;
 const calculateCursorCost = (cookieBaker) => {
-    const new_cursor_price = Math.floor(st.initialCursorCost * Math.pow(1.15, Number(cookieBaker.cursors - cookieBaker.freeCursor)));
-    return new_cursor_price;
+    return Math.floor(st.initialCursorCost * Math.pow(1.15, Number(cookieBaker.cursors - cookieBaker.freeCursor)));
 };
 exports.calculateCursorCost = calculateCursorCost;
 const calculateCost = (action, cookieBaker) => {
