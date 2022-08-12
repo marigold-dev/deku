@@ -6,6 +6,7 @@ type protocol = private
       included_operations : Included_operation_set.t;
       included_tezos_operations : Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
+      contract_storage : Contract_storage.t;
     }
 
 type t = protocol

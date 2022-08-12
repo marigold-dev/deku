@@ -9,6 +9,7 @@ type operation_content = private
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
+  | Operation_contract of Contract_operation.t
 
 type operation = private
   | Operation of {
@@ -32,3 +33,19 @@ val transaction :
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   operation
+
+val content_of_contract_operation :
+  contract_operation:Contract_operation.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  source:Address.t ->
+  operation_content * Operation_hash.t
+
+val make_transaction_content :
+  level:Level.t ->
+  nonce:Nonce.t ->
+  source:Address.t ->
+  receiver:Address.t ->
+  ticket_id:Ticket_id.t ->
+  amount:Amount.t ->
+  operation_content * Operation_hash.t

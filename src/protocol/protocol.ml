@@ -1,10 +1,9 @@
-open Receipt
-
 type protocol =
   | Protocol of {
       included_operations : Included_operation_set.t;
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
+      contract_storage : Contract_storage.t;
     }
 
 type t = protocol
@@ -15,10 +14,33 @@ let initial =
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
+      contract_storage = Contract_storage.empty;
     }
 
+let rec apply_operation_content ~operation_hash ~source ~level ~nonce
+    contract_storage ledger operation_content =
+  let open Operation in
+  let operation = operation_hash in
+  match operation_content with
+  | Operation_transaction { receiver; ticket_id; amount } -> (
+      let sender = source in
+      match Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger with
+      | Ok ledger -> ((ledger, contract_storage), Receipt.success ~operation)
+      | Error error ->
+          ((ledger, contract_storage), Receipt.error ~operation ~error))
+  | Operation_contract contract_operation ->
+      let sender = source in
+      Deku_vm.apply ~sender ~operation_hash ~level ~nonce
+        ~apply_operation_content ledger contract_storage contract_operation
+
 let apply_operation protocol operation =
-  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+  let (Protocol
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          contract_storage;
+        }) =
     protocol
   in
   match
@@ -31,36 +53,32 @@ let apply_operation protocol operation =
         Included_operation_set.add operation included_operations
       in
       let (Operation
-            {
-              key = _;
-              signature = _;
-              hash;
-              level = _;
-              nonce = _;
-              source;
-              content;
-            }) =
+            { key = _; signature = _; hash; level; nonce; source; content }) =
         operation
       in
-      let ledger =
-        match content with
-        | Operation_transaction { receiver; ticket_id; amount } -> (
-            let sender = source in
-            match
-              Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
-            with
-            | Ok ledger -> ledger
-            | Error _ -> ledger)
+      let (ledger, contract_storage), receipt =
+        apply_operation_content ~operation_hash:hash ~source ~level ~nonce
+          contract_storage ledger content
       in
-
-      let receipt = Receipt { operation = hash } in
       Some
-        ( Protocol { included_operations; included_tezos_operations; ledger },
+        ( Protocol
+            {
+              included_operations;
+              included_tezos_operations;
+              ledger;
+              contract_storage;
+            },
           receipt )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
-  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+  let (Protocol
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          contract_storage;
+        }) =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
@@ -72,15 +90,25 @@ let apply_tezos_operation protocol tezos_operation =
         Deku_tezos.Tezos_operation_hash.Set.add hash included_tezos_operations
       in
       let protocol =
-        Protocol { included_operations; included_tezos_operations; ledger }
+        Protocol
+          {
+            included_operations;
+            included_tezos_operations;
+            ledger;
+            contract_storage;
+          }
       in
       List.fold_left
         (fun protocol tezos_operation ->
           match tezos_operation with
           | Tezos_operation.Deposit { destination; amount; ticket } ->
               let (Protocol
-                    { ledger; included_operations; included_tezos_operations })
-                  =
+                    {
+                      ledger;
+                      included_operations;
+                      included_tezos_operations;
+                      contract_storage;
+                    }) =
                 protocol
               in
               let ticket_id =
@@ -89,7 +117,12 @@ let apply_tezos_operation protocol tezos_operation =
               let destination = Address.of_key_hash destination in
               let ledger = Ledger.deposit destination amount ticket_id ledger in
               Protocol
-                { ledger; included_operations; included_tezos_operations })
+                {
+                  ledger;
+                  included_operations;
+                  included_tezos_operations;
+                  contract_storage;
+                })
         protocol operations
   | false -> protocol
 
@@ -115,13 +148,20 @@ let apply_payload ~parallel payload protocol =
     (protocol, []) operations
 
 let clean ~current_level protocol =
-  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+  let (Protocol
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          contract_storage;
+        }) =
     protocol
   in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol { included_operations; included_tezos_operations; ledger }
+  Protocol
+    { included_operations; included_tezos_operations; ledger; contract_storage }
 
 let apply ~parallel ~current_level ~payload ~tezos_operations protocol =
   let protocol, receipts = apply_payload ~parallel payload protocol in

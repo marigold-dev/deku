@@ -9,6 +9,7 @@ type operation_content =
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
+  | Operation_contract of Contract_operation.t
 
 and operation =
   | Operation of {
@@ -41,6 +42,7 @@ module Repr = struct
         ticket_id : Ticket_id.ticket_id;
         amount : Amount.t;
       }
+    | Contract of Contract_operation.t
 
   and operation = {
     level : Level.t;
@@ -70,6 +72,7 @@ module Repr = struct
       match content with
       | Transaction { receiver; ticket_id; amount } ->
           Operation_transaction { receiver; ticket_id; amount }
+      | Contract contract_operation -> Operation_contract contract_operation
     in
     (* TODO: serializing after deserializing *)
     let hash = hash operation in
@@ -97,6 +100,7 @@ module Repr = struct
       match content with
       | Operation_transaction { receiver; ticket_id; amount } ->
           Transaction { receiver; ticket_id; amount }
+      | Operation_contract contract_operation -> Contract contract_operation
     in
     let operation = { level; nonce; source; content } in
     yojson_of_operation_with_signature { key; signature; operation }
@@ -119,3 +123,24 @@ let transaction ~identity ~level ~nonce ~source ~receiver ~ticket_id ~amount =
   in
   let content = Operation_transaction { receiver; ticket_id; amount } in
   Operation { key; signature; hash; level; nonce; source; content }
+
+let content_of_contract_operation ~contract_operation ~level ~nonce ~source =
+  let hash =
+    let open Repr in
+    let content = Contract contract_operation in
+    let operation = { level; nonce; source; content } in
+    hash operation
+  in
+  let content = Operation_contract contract_operation in
+  (content, hash)
+
+let make_transaction_content ~level ~nonce ~source ~receiver ~ticket_id ~amount
+    =
+  let hash =
+    let open Repr in
+    let content = Transaction { receiver; ticket_id; amount } in
+    let operation = { level; nonce; source; content } in
+    hash operation
+  in
+  let content = Operation_transaction { receiver; ticket_id; amount } in
+  (content, hash)
