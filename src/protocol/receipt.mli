@@ -1,4 +1,14 @@
-type outcome
+type outcome =
+  | Success
+  | Originated of {
+      contract_address : Contract_address.t;
+      tickets : (Ticket_id.t * Deku_concepts.Amount.t) list;
+    }
+  | Insufficient_fund
+  | Invocation_error of (string * Address.t)
+  | Origination_error of (string * Address.t)
+  | Invalid_address_error of string
+  | Invalid_payload of string
 
 type receipt = private
   | Receipt of {
@@ -26,5 +36,3 @@ val contract_originated :
   contract_address:Contract_address.t ->
   tickets:(Ticket_id.t * Deku_concepts.Amount.t) list ->
   receipt
-
-val chain : receipt -> receipt -> receipt

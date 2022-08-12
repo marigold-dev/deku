@@ -20,17 +20,20 @@ let initial =
 let rec apply_operation_content ~operation_hash ~source ~level ~nonce
     contract_storage ledger operation_content =
   let open Operation in
-  let operation = operation_hash in
   match operation_content with
   | Operation_transaction { receiver; ticket_id; amount } -> (
       let sender = source in
+      (* TODO: create receipts in the ledger *)
       match Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger with
-      | Ok ledger -> ((ledger, contract_storage), Receipt.success ~operation)
+      | Ok ledger ->
+          (* TODO: change ~operation to ~operation_hash *)
+          ((ledger, contract_storage), Receipt.success ~operation:operation_hash)
       | Error error ->
-          ((ledger, contract_storage), Receipt.error ~operation ~error))
+          ( (ledger, contract_storage),
+            Receipt.error ~operation:operation_hash ~error ))
   | Operation_contract contract_operation ->
       let sender = source in
-      Deku_vm.apply ~sender ~operation_hash ~level ~nonce
+      let  Deku_vm.apply ~sender ~operation_hash ~level ~nonce
         ~apply_operation_content ledger contract_storage contract_operation
 
 let apply_operation protocol operation =

@@ -19,16 +19,6 @@ type receipt =
 
 type t = receipt
 
-let success ~operation = Receipt { operation; outcome = Success; next = None }
-
-let contract_originated ~operation ~contract_address ~tickets =
-  Receipt
-    {
-      operation;
-      outcome = Originated { contract_address; tickets };
-      next = None;
-    }
-
 let error ~operation ~error =
   match error with
   | `Insufficient_funds ->
@@ -43,6 +33,12 @@ let error ~operation ~error =
   | `Invalid_payload payload ->
       Receipt { operation; outcome = Invalid_payload payload; next = None }
 
-let chain receipt next =
-  let (Receipt { operation; outcome; _ }) = receipt in
-  Receipt { operation; outcome; next = Some next }
+let success ~operation = Receipt { operation; outcome = Success; next = None }
+
+let contract_originated ~operation ~contract_address ~tickets =
+  Receipt
+    {
+      operation;
+      outcome = Originated { contract_address; tickets };
+      next = None;
+    }

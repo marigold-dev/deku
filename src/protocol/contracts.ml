@@ -29,6 +29,7 @@ module Conversions :
     let to_bytes t =
       let (Ticket_id { ticketer; data }) = t in
       let byt =
+        (* TODO: shouldn't this use to_raw? *)
         match ticketer with
         | Deku t -> Address.to_b58 t
         | Tezos t -> Deku_tezos.Contract_hash.to_string t
