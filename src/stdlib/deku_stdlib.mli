@@ -8,6 +8,9 @@ module Uri = Uri_ext
 
 [%%let ("let.some" : 'a option -> ('a -> 'b option) -> 'b option)]
 
+[%%let
+("let.assert" : 'a * bool -> (unit -> ('b, 'a) result) -> ('b, 'a) result)]
+
 module Parallel = Parallel
 module List = List_ext
 

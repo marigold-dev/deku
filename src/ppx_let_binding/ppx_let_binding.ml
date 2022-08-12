@@ -61,7 +61,7 @@ let make_let_extension_rule name =
   Ppxlib.Context_free.Rule.extension extension
 
 let let_extension_rules =
-  List.map make_let_extension_rule [ "await"; "some"; "ok" ]
+  List.map make_let_extension_rule [ "await"; "some"; "ok"; "assert" ]
 
 let () =
   Driver.register_transformation
