@@ -6,7 +6,7 @@ type internal_operation =
   | Deposit of {
       destination : Key_hash.t;
       amount : Amount.t;
-      ticket : Deku_tezos.Ticket_id.t;
+      ticket : Tezos_ticket_id.t;
     }
 
 type tezos_operation = {

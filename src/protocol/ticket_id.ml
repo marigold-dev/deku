@@ -6,7 +6,7 @@ and t = ticket_id [@@deriving eq, ord, yojson]
 let make ticketer data = Ticket_id { ticketer; data }
 
 let from_tezos_ticket tezos_ticket =
-  let Deku_tezos.Ticket_id.{ ticketer; data } = tezos_ticket in
+  let Deku_tezos.Tezos_ticket_id.{ ticketer; data } = tezos_ticket in
   match ticketer with
   | Deku_tezos.Address.Implicit _address -> Error `Ticket_from_implicit
   | Deku_tezos.Address.Originated { contract; _ } ->

@@ -131,7 +131,7 @@ module Consensus = struct
 
   type transaction =
     | Deposit of {
-        ticket : Ticket_id.t;
+        ticket : Tezos_ticket_id.t;
         amount : Z.t;
         destination : Key_hash.t;
       }
@@ -207,7 +207,7 @@ module Consensus = struct
           Data_encoding.Binary.of_bytes_opt Address.encoding ticketer
         in
         let ticket =
-          let open Ticket_id in
+          let open Tezos_ticket_id in
           { ticketer; data }
         in
         Some (Deposit { ticket; destination; amount })

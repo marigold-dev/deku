@@ -27,7 +27,7 @@ module Consensus : sig
 
   type transaction =
     | Deposit of {
-        ticket : Ticket_id.t;
+        ticket : Tezos_ticket_id.t;
         amount : Z.t;
         destination : Key_hash.t;
       }
