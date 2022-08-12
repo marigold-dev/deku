@@ -14,6 +14,12 @@ module Withdrawal_handle = struct
 
   let hash ~id ~owner ~amount ~ticket_id =
     let (Ticket_id.Ticket_id { ticketer; data }) = ticket_id in
+    (*TODO: I am not sure of this *)
+    let ticketer =
+      match ticketer with
+      | Deku _ -> failwith "todo: how to handle this case ?"
+      | Tezos ticketer -> ticketer
+    in
     let ticketer =
       Deku_tezos.Address.Originated { contract = ticketer; entrypoint = None }
     in
