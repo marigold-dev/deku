@@ -1,7 +1,7 @@
 include Int32
 
 module For_yojson = struct
-  type t = Int32.t [@@deriving yojson]
+  type t = int32 [@@deriving yojson]
 end
 
 include For_yojson

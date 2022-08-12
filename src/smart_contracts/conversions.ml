@@ -7,7 +7,6 @@ module type S = sig
     val is_originated : t -> bool
     val of_bytes : bytes -> t
     val to_bytes : t -> bytes
-    val to_string : t -> string
   end
 
   module Ticket_id : sig
@@ -24,7 +23,7 @@ module type S = sig
 
     val zero : t
     val equal : t -> t -> bool
-    val ( - ) : t -> t -> t
+    val ( - ) : t -> t -> t option
     val ( + ) : t -> t -> t
     val size : int
     val of_int : int -> t

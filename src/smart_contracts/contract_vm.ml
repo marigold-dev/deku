@@ -1,4 +1,4 @@
-open Helpers
+open Deku_stdlib
 
 module type S = sig
   module Context : Context.CTX
@@ -64,21 +64,25 @@ open Core
 module Make (CTX : Context.CTX) : S with module Context = CTX = struct
   module Context = CTX
 
-  module Tickets : sig
-    include
-      Helpers.Map.S with type key := Context.Ticket_id.t * Context.Amount.t
-
-    val to_yojson : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
-
-    val of_yojson :
-      (Yojson.Safe.t -> ('a, string) result) ->
-      Yojson.Safe.t ->
-      ('a t, string) result
-  end = Helpers.Map.Make_with_yojson (struct
+  module Ticket_map_key = struct
     type t = CTX.Ticket_id.t * CTX.Amount.t [@@deriving yojson]
 
     let compare a b = Poly.(compare a b)
-  end)
+  end
+
+  module Tickets = Stdlib.Map.Make (Ticket_map_key)
+
+  module Ticket_handle_map = struct
+    type t = Ticket_handle.t Tickets.t
+
+    let yojson_of_t t =
+      Tickets.bindings t
+      |> [%yojson_of: (Ticket_map_key.t * Ticket_handle.t) list]
+
+    let t_of_yojson json =
+      json |> [%of_yojson: (Ticket_map_key.t * Ticket_handle.t) list]
+      |> Stdlib.List.to_seq |> Tickets.of_seq
+  end
 
   module State = Context.State
 
@@ -332,7 +336,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
       type t = {
         code : Wasm_vm.Module.t;
         storage : bytes;
-        tickets : Ticket_handle.t Tickets.t;
+        tickets : Ticket_handle_map.t;
         originated_by : Context.Address.t;
       }
       [@@deriving yojson]
@@ -443,7 +447,7 @@ module Make (CTX : Context.CTX) : S with module Context = CTX = struct
     type t = Wasm of Wasm.Invocation_payload.t [@@deriving yojson]
 
     let wasm_of_yojson ~arg =
-      let%ok arg = Wasm.Invocation_payload.of_yojson arg in
+      let arg = Wasm.Invocation_payload.t_of_yojson arg in
       Ok (Wasm arg)
 
     let of_bytes ~arg = Ok (Wasm arg)
