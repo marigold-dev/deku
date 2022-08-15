@@ -46,6 +46,8 @@ let apply_block ~pool ~current ~block chain =
     | None -> []
   in
   let effects = Save_block block :: Reset_timeout :: effects in
+  let (Protocol { ledger; _ }) = protocol in
+  Ledger.show_ledger ledger;
   (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_block ~pool ~current ~block chain =

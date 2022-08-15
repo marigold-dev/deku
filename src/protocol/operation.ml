@@ -9,10 +9,10 @@ type operation_content =
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Tezos_withdraw       of {
+  | Operation_withdraw of {
       owner : Deku_tezos.Address.t;
       amount : Amount.t;
-      ticket : Ticket_id.t;
+      ticket_id : Ticket_id.t;
     }
 
 and operation =
@@ -46,6 +46,11 @@ module Repr = struct
         ticket_id : Ticket_id.ticket_id;
         amount : Amount.t;
       }
+    | Tezos_withdraw of {
+        owner : Deku_tezos.Address.t;
+        ticket_id : Ticket_id.ticket_id;
+        amount : Amount.t;
+      }
 
   and operation = {
     level : Level.t;
@@ -75,6 +80,8 @@ module Repr = struct
       match content with
       | Transaction { receiver; ticket_id; amount } ->
           Operation_transaction { receiver; ticket_id; amount }
+      | Tezos_withdraw { owner; ticket_id; amount } ->
+          Operation_withdraw { owner; ticket_id; amount }
     in
     (* TODO: serializing after deserializing *)
     let hash = hash operation in
@@ -102,6 +109,8 @@ module Repr = struct
       match content with
       | Operation_transaction { receiver; ticket_id; amount } ->
           Transaction { receiver; ticket_id; amount }
+      | Operation_withdraw { owner; amount; ticket_id } ->
+          Tezos_withdraw { owner; amount; ticket_id }
     in
     let operation = { level; nonce; source; content } in
     yojson_of_operation_with_signature { key; signature; operation }
@@ -123,4 +132,19 @@ let transaction ~identity ~level ~nonce ~source ~receiver ~ticket_id ~amount =
     Identity.sign ~hash identity
   in
   let content = Operation_transaction { receiver; ticket_id; amount } in
+  Operation { key; signature; hash; level; nonce; source; content }
+
+let withdraw ~identity ~level ~nonce ~source ~tezos_owner ~ticket_id ~amount =
+  let hash =
+    let open Repr in
+    let content = Tezos_withdraw { owner = tezos_owner; ticket_id; amount } in
+    let operation = { level; nonce; source; content } in
+    hash operation
+  in
+  let key = Identity.key identity in
+  let signature =
+    let hash = Operation_hash.to_blake2b hash in
+    Identity.sign ~hash identity
+  in
+  let content = Operation_withdraw { owner = tezos_owner; ticket_id; amount } in
   Operation { key; signature; hash; level; nonce; source; content }

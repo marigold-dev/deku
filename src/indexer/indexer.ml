@@ -99,10 +99,13 @@ let save_block ~block ~timestamp (Indexer { pool }) =
 
 let save_packet ~packet ~timestamp (Indexer { pool }) =
   Lwt.async (fun () ->
-      let packet = Yojson.Safe.from_string packet |> Packet.t_of_yojson in
-      let%await result = Query.insert_packet ~packet ~timestamp pool in
-      match result with
-      | Ok () -> Lwt.return_unit
-      | Error err ->
-          (* TODO: how do we want to handle this? *)
-          raise (Caqti_error.Exn err))
+      try
+        let packet = Yojson.Safe.from_string packet |> Packet.t_of_yojson in
+        let%await result = Query.insert_packet ~packet ~timestamp pool in
+        match result with
+        | Ok () -> Lwt.return_unit
+        | Error _err ->
+            (* TODO: how do we want to handle this? *)
+            (* raise (Caqti_error.Exn err)*)
+            Lwt.return_unit
+      with _ -> Lwt.return_unit)

@@ -9,13 +9,19 @@ module Withdrawal_handle : sig
     amount : Amount.t;
     ticket_id : Ticket_id.t;
   }
-  [@@deriving yojson]
+  [@@deriving yojson, eq]
 end
 
-type withdraw_proof [@@deriving yojson]
+type withdraw_proof = (BLAKE2b.t * BLAKE2b.t) list [@@deriving yojson]
 type withdraw_handle_tree
+type withdraw_handle = Withdrawal_handle.t [@@deriving yojson]
 
-type ledger = private Ledger of { table : Ticket_table.t ; withdrawal_handles : withdraw_handle_tree }
+type ledger = private
+  | Ledger of {
+      table : Ticket_table.t;
+      withdrawal_handles : withdraw_handle_tree;
+    }
+
 type t = ledger
 
 val with_ticket_table :
@@ -41,12 +47,12 @@ val withdraw :
   amount:Amount.t ->
   ticket_id:Ticket_id.t ->
   t ->
-  (t * Withdrawal_handle.t, [> `Insufficient_funds]) result
+  (t * Withdrawal_handle.t, [> `Insufficient_funds ]) result
 
-val withdrawal_handles_find_proof :
-  Withdrawal_handle.t -> t -> withdraw_proof
+val withdrawal_handles_find_proof : Withdrawal_handle.t -> t -> withdraw_proof
 
 val withdrawal_handles_find_proof_by_id :
   int -> t -> (withdraw_proof * Withdrawal_handle.t) option
 
 val withdrawal_handles_root_hash : t -> BLAKE2b.t
+val show_ledger : t -> unit

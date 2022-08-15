@@ -9,10 +9,10 @@ type operation_content = private
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Tezos_withdraw       of {
+  | Operation_withdraw of {
       owner : Deku_tezos.Address.t;
       amount : Amount.t;
-      ticket : Ticket_id.t;
+      ticket_id : Ticket_id.t;
     }
 
 type operation = private
@@ -34,6 +34,16 @@ val transaction :
   nonce:Nonce.t ->
   source:Address.t ->
   receiver:Address.t ->
+  ticket_id:Ticket_id.t ->
+  amount:Amount.t ->
+  operation
+
+val withdraw :
+  identity:Identity.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  source:Address.t ->
+  tezos_owner:Deku_tezos.Address.t ->
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   operation

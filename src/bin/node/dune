@@ -11,4 +11,4 @@
   deku-indexer
   cmdliner)
  (preprocess
-  (pps ppx_let_binding)))
+  (pps ppx_let_binding ppx_yojson_conv)))

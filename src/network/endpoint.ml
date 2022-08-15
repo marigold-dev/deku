@@ -7,7 +7,8 @@ type _ endpoint =
   | Signatures : Verified_signature.t endpoint
   | Operations : Operation.t endpoint
   | Bootstrap : Bootstrap_signal.t endpoint
-  | Withdraw_proof : Ledger.withdraw_proof endpoint
+  | Withdraw_proof : Operation_hash.t endpoint
+  | Level : Level.t endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
@@ -17,6 +18,7 @@ let signatures = Signatures
 let operations = Operations
 let bootstrap = Bootstrap
 let withdraw_proof = Withdraw_proof
+let level = Level
 
 let of_string path =
   match path with
@@ -25,6 +27,7 @@ let of_string path =
   | "/operations" -> Some (Ex Operations)
   | "/bootstrap" -> Some (Ex Bootstrap)
   | "/withdraw_proof" -> Some (Ex Withdraw_proof)
+  | "/level" -> Some (Ex Level)
   | _ -> None
 
 let to_string (type a) (endpoint : a endpoint) =
@@ -34,3 +37,4 @@ let to_string (type a) (endpoint : a endpoint) =
   | Operations -> "/operations"
   | Bootstrap -> "/bootstrap"
   | Withdraw_proof -> "/proof"
+  | Level -> "/level"

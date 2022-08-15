@@ -78,8 +78,8 @@ module Node = struct
           | Bootstrap ->
               Chain.incoming_bootstrap_signal ~bootstrap_signal:packet ~current
                 chain
-          | Withdraw_proof ->
-              (* TODO make this case impossible*)
+          | Level | Withdraw_proof ->
+              (* TODO make these cases impossible? *)
               (chain, []))
       | None -> (chain, [])
     in
@@ -158,6 +158,56 @@ module Server = struct
     let response = Response.of_string ~body:message status in
     Lwt.return response
 
+  (*
+  let withdraw_proof () =
+    ()
+  *)
+
+  let level status =
+    let (Node { chain; _ }) = Singleton.get_state () in
+    let (Chain { consensus; _ }) = chain in
+    let (Consensus { current_level; _ }) = consensus in
+    let level = Level.to_n current_level |> N.to_z |> Z.to_int in
+    let response = Printf.sprintf "\"%d\"" level in
+    let response = Response.of_string ~body:response status in
+    Lwt.return response
+
+  let proof body status =
+    let module Proof_response = struct
+      (* TODO: find a place for this module so that it can be shared with
+         cli *)
+      open Deku_crypto
+
+      type t =
+        | Proof of {
+            hash : BLAKE2b.t;
+            handle : Ledger.Withdrawal_handle.t;
+            proof : Ledger.withdraw_proof;
+          }
+      [@@deriving yojson]
+    end in
+    let%await body = Body.to_string body in
+    let body = Result.get_ok body in
+    Printf.eprintf "parsed the body %s\n%!" body;
+    let body = Yojson.Safe.from_string body in
+    let operation_hash = Operation_hash.t_of_yojson body in
+    prerr_endline "parsed the operation hash";
+    let (Node { chain = Chain { protocol; _ }; _ }) = Singleton.get_state () in
+    let response =
+      match Protocol.find_withdraw_proof ~operation_hash protocol with
+      | Error _err ->
+          prerr_endline "could not find proof";
+          Response.of_string ~body:"oops" `Not_found
+      | Ok (handle, proof) ->
+          let open Proof_response in
+          prerr_endline "found the proof";
+          let hash = Operation_hash.to_blake2b operation_hash in
+          let body = Proof { hash; handle; proof } in
+          let response_body = yojson_of_t body |> Yojson.Safe.to_string in
+          Response.of_string ~body:response_body status
+    in
+    Lwt.return response
+
   let with_endpoint Server.{ ctx = _; request } next =
     let path = request.target in
     let meth = request.meth in
@@ -165,9 +215,10 @@ module Server = struct
 
     match Endpoint.of_string path with
     | Some (Ex Withdraw_proof) ->
-        let%await body = Body.to_string body in
+        (* let%await body = Body.to_string body in *)
         (* TODO find the receipt, get the proof, send the proof back *)
-        error ~message:"Not implemented yet" `Method_not_allowed
+        proof body `Accepted
+    | Some (Ex Level) -> level `Accepted
     | Some endpoint -> (
         match meth with
         | `POST -> next Server.{ ctx = endpoint; request }
@@ -289,11 +340,4 @@ let main () =
   Tezos_bridge.listen ();
   Server.start !port
 
-let () =
-  (*  Tentative code to produce JSON to test the CLI for PL and I
-  let key = Deku_crypto.Key.of_b58 "edpktuhQHH83GN1Rbkte9kp6URtsw9yqrGuBo7vfmpmgGEBttKeCpN" in
-  let signature = Deku_crypto.Signature.of_b58
-  let operation = Operation.Operation {
-    key;
-  *)
-  Lwt_main.run (main ())
+let () = Lwt_main.run (main ())

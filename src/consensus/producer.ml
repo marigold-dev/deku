@@ -44,10 +44,9 @@ let clean ~receipts ~tezos_operations producer =
     List.fold_left
       (fun operations receipt ->
         match receipt with
-          | Receipt.Receipt_operation { operation = hash } ->
+        | Receipt.Receipt_operation { operation = hash } ->
             Operation_hash.Map.remove hash operations
-          | _ ->   (* TODO: I think we do nothing here *)
-            operations)
+        | _ -> operations)
       operations receipts
   in
   let tezos_operations =
