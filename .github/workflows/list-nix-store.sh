@@ -24,6 +24,10 @@ for file in /nix/store/*; do
     # Skip patched nixpkgs files
     continue
     ;;
+  *format.sh)
+    # Skip our format.sh
+    continue
+    ;;
   *)
     echo "$file"
     ;;
