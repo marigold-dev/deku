@@ -19,6 +19,21 @@ jobs:
         with:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+      - name: Cache nix store
+        id: cache-native
+        uses: actions/cache@v3
+        with:
+          path: .cache/nix
+          key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
+      - name: Restore cache
+        if: steps.cache-native.outputs.cache-hit == 'true'
+        run: |
+          for narinfo in ./.cache/nix/*.narinfo; do
+            path=$(head -n 1 "$narinfo" | awk '{print $2}')
+            nix copy --no-check-sigs --from "file://$(pwd)/.cache/nix" "$path"
+          done
+      - name: "Check initial store paths"
+        run: ./.github/workflows/list-nix-store.sh > ~/.nix-store-paths
       # Broken because we patch nixpkgs, can add it back when janestreet 0.15 is added upstream
       # - name: "Run nix flake check"
       #   run: nix flake check
@@ -46,6 +61,8 @@ jobs:
       # Includes all our e2e tests
       - name: "tilt ci"
         run: "nix develop -c tilt ci"
+      - name: Upload to cache
+        run: ./.github/workflows/upload-to-cache.sh
 
   # Static and docker are linked because we're using the static build in docker
   static:
@@ -58,6 +75,21 @@ jobs:
         with:
           name: deku
           authToken: "${{ secrets.CACHIX_SIGNING_KEY }}"
+      - name: Cache nix store
+        id: cache-native
+        uses: actions/cache@v3
+        with:
+          path: .cache/nix
+          key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
+      - name: Restore cache
+        if: steps.cache-native.outputs.cache-hit == 'true'
+        run: |
+          for narinfo in ./.cache/nix/*.narinfo; do
+            path=$(head -n 1 "$narinfo" | awk '{print $2}')
+            nix copy --no-check-sigs --from "file://$(pwd)/.cache/nix" "$path"
+          done
+      - name: "Check initial store paths"
+        run: ./.github/workflows/list-nix-store.sh > ~/.nix-store-paths
 
       - name: "Build static deku via flakes"
         run: nix build --verbose .#deku-static
@@ -93,3 +125,5 @@ jobs:
         if: contains(github.event.pull_request.labels.*.name, 'docker')
         run: |
           docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: Upload to cache
+        run: ./.github/workflows/upload-to-cache.sh
