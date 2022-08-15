@@ -32,8 +32,13 @@ jobs:
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
             nix copy --no-check-sigs --from "file://$(pwd)/.cache/nix" "$path"
           done
-      - name: "Check initial store paths"
-        run: ./.github/workflows/list-nix-store.sh > ~/.nix-store-paths
+      - name: "Cache prep"
+        run: |
+          echo $CACHE_PRIV_KEY > ./nix-cache-key.sec
+          sudo mv ./nix-cache-key.sec /etc/nix/nix-cache-key.sec
+          ./.github/workflows/list-nix-store.sh > ~/.nix-store-paths
+        env:
+          CACHE_PRIV_KEY: ${{ secrets.CACHE_PRIV_KEY }}
       # Broken because we patch nixpkgs, can add it back when janestreet 0.15 is added upstream
       # - name: "Run nix flake check"
       #   run: nix flake check
