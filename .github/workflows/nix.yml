@@ -104,7 +104,7 @@ jobs:
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
 
       - name: "Build docker image"
-        run: nix build .#docker
+        run: nix build --extra-substituters ./cache .#docker
       - name: "Load docker image"
         run: docker load < ./result
       - name: "Re-tag image"
