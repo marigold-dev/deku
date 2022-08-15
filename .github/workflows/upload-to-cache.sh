@@ -9,4 +9,4 @@ echo "Signing and uploading paths: [$pathsToPush]"
 
 nix store sign --key-file /etc/nix/nix-cache-key.sec $pathsToPush
 
-exec nix copy --verbose --to './.cache/nix' $pathsToPush
+exec nix copy --verbose --to './cache' $pathsToPush

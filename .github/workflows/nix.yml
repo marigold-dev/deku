@@ -23,14 +23,14 @@ jobs:
         id: cache-native
         uses: actions/cache@v3
         with:
-          path: .cache/nix
+          path: cache
           key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
       - name: Restore cache
         if: steps.cache-native.outputs.cache-hit == 'true'
         run: |
-          for narinfo in ./.cache/nix/*.narinfo; do
+          for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
-            nix copy --no-check-sigs --from "file://$(pwd)/.cache/nix" "$path"
+            nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
           done
       - name: "Cache prep"
         run: |
@@ -84,14 +84,14 @@ jobs:
         id: cache-native
         uses: actions/cache@v3
         with:
-          path: .cache/nix
+          path: cache
           key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
       - name: Restore cache
         if: steps.cache-native.outputs.cache-hit == 'true'
         run: |
-          for narinfo in ./.cache/nix/*.narinfo; do
+          for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
-            nix copy --no-check-sigs --from "file://$(pwd)/.cache/nix" "$path"
+            nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
           done
       - name: "Cache prep"
         run: |
