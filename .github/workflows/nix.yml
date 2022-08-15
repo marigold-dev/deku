@@ -89,6 +89,7 @@ jobs:
       - name: Restore cache
         if: steps.cache-native.outputs.cache-hit == 'true'
         run: |
+          ls ./cache/nix
           for narinfo in ./cache/*.narinfo; do
             path=$(head -n 1 "$narinfo" | awk '{print $2}')
             nix copy --no-check-sigs --from "file://$(pwd)/cache" "$path"
