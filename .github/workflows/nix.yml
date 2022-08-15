@@ -67,9 +67,7 @@ jobs:
       - name: "tilt ci"
         run: "nix develop -c tilt ci"
       - name: Upload to cache
-        run: |
-          nix store sign --key-file /etc/nix/nix-cache-key.sec --all
-          ./.github/workflows/upload-to-cache.sh
+        run: ./.github/workflows/upload-to-cache.sh
 
   # Static and docker are linked because we're using the static build in docker
   static:
@@ -138,6 +136,4 @@ jobs:
         run: |
           docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
       - name: Upload to cache
-        run: |
-          nix store sign --key-file /etc/nix/nix-cache-key.sec --all
-          ./.github/workflows/upload-to-cache.sh
+        run: ./.github/workflows/upload-to-cache.sh

@@ -20,6 +20,10 @@ for file in /nix/store/*; do
     # Skip .lock files
     continue
     ;;
+  *nixpkgs-patched)
+    # Skip patched nixpkgs files
+    continue
+    ;;
   *)
     echo "$file"
     ;;
