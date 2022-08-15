@@ -50,11 +50,11 @@ jobs:
             echo "--------------"
           fi
       - name: "Check shell formatting"
-        run: nix develop -c shellcheck *.sh --extra-substituters ./cache
+        run: nix develop --extra-substituters ./cache -c shellcheck *.sh
       - name: "Run tests"
-        run: nix develop -c dune build @check @runtest --force --no-buffer --extra-substituters ./cache
+        run: nix develop --extra-substituters ./cache -c dune build @check @runtest --force --no-buffer
       - name: "Build deku via flakes"
-        run: nix build --verbose .#deku --extra-substituters ./cache
+        run: nix build --extra-substituters ./cache --verbose .#deku
 
       # Includes all our e2e tests
       - name: "tilt ci"
@@ -88,7 +88,7 @@ jobs:
           CACHE_PRIV_KEY: ${{ secrets.CACHE_PRIV_KEY }}
 
       - name: "Build static deku via flakes"
-        run: nix build --verbose .#deku-static --extra-substituters ./cache
+        run: nix build --extra-substituters ./cache --verbose .#deku-static
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
