@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: cache
-          key: ${{ runner.os }}-devshell-${{ hashFiles('flake.lock') }}
+          key: ${{ runner.os }}-native-${{ hashFiles('flake.lock') }}
       - name: Restore cache
         if: steps.cache-native.outputs.cache-hit == 'true'
         run: |
