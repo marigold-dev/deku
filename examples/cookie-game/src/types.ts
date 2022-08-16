@@ -23,7 +23,7 @@ export const initialJavaScriptCps: bigint = BigInt(1.1e11);
 export const initialIdleverseCps: bigint = BigInt(8.3e11);
 export const initialCordexCps: bigint = BigInt(64e12);
 
-export const initialCursorCost: number = 15;
+export const initialCursorCost: bigint = BigInt(15);
 export const initialGrandmaCost: bigint = BigInt(100);
 export const initialFarmCost: bigint = BigInt(1100);
 export const initialMineCost: bigint = BigInt(12000);
@@ -87,7 +87,7 @@ export type cookieBaker = {
     freeIdleverse: bigint,
     freeCordex: bigint,
 
-    cursorCost: number,
+    cursorCost: bigint,
     grandmaCost: bigint,
     farmCost: bigint,
     mineCost: bigint,
