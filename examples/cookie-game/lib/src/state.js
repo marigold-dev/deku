@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addCordex = exports.addIdleverse = exports.addJavaScript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.calculateCursorCost = exports.createCookieBaker = exports.createEmptyCookieBaker = exports.initCookieBaker = void 0;
+exports.addCordex = exports.addIdleverse = exports.addJavaScript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.createEmptyCookieBaker = exports.initCookieBaker = void 0;
 const actions_1 = require("./actions");
 const st = require("./types");
 /*
@@ -76,7 +76,7 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         freeJavaScript,
         freeIdleverse,
         freeCordex,
-        cursorCost: 0,
+        cursorCost: 0n,
         grandmaCost: 0n,
         farmCost: 0n,
         mineCost: 0n,
@@ -115,7 +115,7 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         idleverseCps: 0n,
         cordexCps: 0n,
     };
-    cookieBaker.cursorCost = (0, exports.calculateCursorCost)(cookieBaker);
+    cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.cursor, cookieBaker);
     cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.grandma, cookieBaker);
     cookieBaker.farmCost = (0, exports.calculateCost)(actions_1.actions.farm, cookieBaker);
     cookieBaker.mineCost = (0, exports.calculateCost)(actions_1.actions.mine, cookieBaker);
@@ -156,18 +156,16 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
     return cookieBaker;
 };
 exports.createCookieBaker = createCookieBaker;
-const calculateCursorCost = (cookieBaker) => {
-    return Math.floor(st.initialCursorCost * Math.pow(1.15, Number(cookieBaker.cursors - cookieBaker.freeCursor)));
-};
-exports.calculateCursorCost = calculateCursorCost;
 const calculateCost = (action, cookieBaker) => {
     switch (action) {
         case actions_1.actions.cookie:
             console.log("Cookie does not have cost");
             throw new Error("Cookie does not have cost");
         case actions_1.actions.cursor:
-            console.log("Cursor is handled by calculateCursorCost");
-            throw new Error("Cursor is handled by calculateCursorCost");
+            const firstCursorOperation = cookieBaker.cursors - cookieBaker.freeCursor;
+            const secondCursorOperation = Math.pow(1.15, Number(firstCursorOperation));
+            const newCursorPrice = Math.floor(Number(st.initialCursorCost) * secondCursorOperation);
+            return BigInt(newCursorPrice);
         case actions_1.actions.grandma:
             const firstGrandmaOperation = cookieBaker.grandmas - cookieBaker.freeGrandma;
             const secondGrandmaOperation = Math.pow(1.15, Number(firstGrandmaOperation));
@@ -269,13 +267,13 @@ const addCookie = (cookieBaker) => {
 exports.addCookie = addCookie;
 const addCursor = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.cursorCost) {
-        console.log("Enough cookie to buy a cursor");
+        console.log("Enough cookie to buy a Cursor");
         // adding cursor
         cookieBaker.cursors = cookieBaker.cursors + 1n;
         // removing cursor cost
         cookieBaker.cookies = cookieBaker.cookies - BigInt(cookieBaker.cursorCost);
         // calculating next cursor price
-        cookieBaker.cursorCost = (0, exports.calculateCursorCost)(cookieBaker);
+        cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.cursor, cookieBaker);
         // calculate new cps
         cookieBaker.cursorCps = Number(cookieBaker.cursors) * st.initialCursorCps;
         return cookieBaker;
@@ -290,14 +288,13 @@ const addGrandma = (cookieBaker) => {
     console.log("I have " + cookieBaker.cookies + " cookies");
     console.log("GrandmaCost is: " + cookieBaker.grandmaCost);
     if (cookieBaker.cookies >= cookieBaker.grandmaCost) {
-        console.log("Enough cookie to buy a grandma");
+        console.log("Enough cookie to buy a Grandma");
         // adding grandma
         cookieBaker.grandmas = cookieBaker.grandmas + 1n;
         // removing grandma cost
         cookieBaker.cookies = cookieBaker.cookies - cookieBaker.grandmaCost;
         // calculating next grandma price
         cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.grandma, cookieBaker);
-        console.log("New grandmaCost: " + cookieBaker.grandmaCost);
         // calculate new cps
         cookieBaker.grandmaCps = cookieBaker.grandmas * st.initialGrandmaCps;
         return cookieBaker;
@@ -310,7 +307,7 @@ const addGrandma = (cookieBaker) => {
 exports.addGrandma = addGrandma;
 const addFarm = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.farmCost) {
-        console.log("Enough cookie to buy a farm");
+        console.log("Enough cookie to buy a Farm");
         // adding farm
         cookieBaker.farms = cookieBaker.farms + 1n;
         // removing farm cost
@@ -329,7 +326,7 @@ const addFarm = (cookieBaker) => {
 exports.addFarm = addFarm;
 const addMine = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.mineCost) {
-        console.log("Enough cookie to buy a mine");
+        console.log("Enough cookie to buy a Mine");
         // adding mine
         cookieBaker.mines = cookieBaker.mines + 1n;
         // removing mine cost
@@ -348,7 +345,7 @@ const addMine = (cookieBaker) => {
 exports.addMine = addMine;
 const addFactory = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.factoryCost) {
-        console.log("Enough cookie to buy a factory");
+        console.log("Enough cookie to buy a Factory");
         // adding factory
         cookieBaker.factories = cookieBaker.factories + 1n;
         // removing factory cost
@@ -367,7 +364,7 @@ const addFactory = (cookieBaker) => {
 exports.addFactory = addFactory;
 const addBank = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.bankCost) {
-        console.log("Enough cookie to buy a bank");
+        console.log("Enough cookie to buy a Bank");
         // adding bank
         cookieBaker.banks = cookieBaker.banks + 1n;
         // removing bank cost
@@ -386,7 +383,7 @@ const addBank = (cookieBaker) => {
 exports.addBank = addBank;
 const addTemple = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.templeCost) {
-        console.log("Enough cookie to buy a temple");
+        console.log("Enough cookie to buy a Temple");
         // adding 
         cookieBaker.temples = cookieBaker.temples + 1n;
         // removing cost
@@ -405,7 +402,7 @@ const addTemple = (cookieBaker) => {
 exports.addTemple = addTemple;
 const addWizard = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.wizardCost) {
-        console.log("Enough cookie to buy a wizard");
+        console.log("Enough cookie to buy a Wizard");
         // adding 
         cookieBaker.wizards = cookieBaker.wizards + 1n;
         // removing cost
@@ -424,7 +421,7 @@ const addWizard = (cookieBaker) => {
 exports.addWizard = addWizard;
 const addShipment = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.shipmentCost) {
-        console.log("Enough cookie to buy a shipment");
+        console.log("Enough cookie to buy a Shipment");
         // adding 
         cookieBaker.shipments = cookieBaker.shipments + 1n;
         // removing cost
@@ -443,7 +440,7 @@ const addShipment = (cookieBaker) => {
 exports.addShipment = addShipment;
 const addAlchemy = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.alchemyCost) {
-        console.log("Enough cookie to buy a alchemy");
+        console.log("Enough cookie to buy an Alchemy");
         // adding 
         cookieBaker.alchemies = cookieBaker.alchemies + 1n;
         // removing cost
@@ -462,7 +459,7 @@ const addAlchemy = (cookieBaker) => {
 exports.addAlchemy = addAlchemy;
 const addPortal = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.portalCost) {
-        console.log("Enough cookie to buy a portal");
+        console.log("Enough cookie to buy a Portal");
         // adding 
         cookieBaker.portals = cookieBaker.portals + 1n;
         // removing cost
@@ -481,7 +478,7 @@ const addPortal = (cookieBaker) => {
 exports.addPortal = addPortal;
 const addTimeMachine = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.timeMachineCost) {
-        console.log("Enough cookie to buy a time machine");
+        console.log("Enough cookie to buy a TimeMachine");
         // adding 
         cookieBaker.timeMachines = cookieBaker.timeMachines + 1n;
         // removing cost
@@ -500,7 +497,7 @@ const addTimeMachine = (cookieBaker) => {
 exports.addTimeMachine = addTimeMachine;
 const addAntimatter = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.antimatterCost) {
-        console.log("Enough cookie to buy a antimatter");
+        console.log("Enough cookie to buy an Antimatter");
         // adding 
         cookieBaker.antimatters = cookieBaker.antimatters + 1n;
         // removing cost
@@ -519,7 +516,7 @@ const addAntimatter = (cookieBaker) => {
 exports.addAntimatter = addAntimatter;
 const addPrism = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.prismCost) {
-        console.log("Enough cookie to buy a prism");
+        console.log("Enough cookie to buy a Prism");
         // adding 
         cookieBaker.prisms = cookieBaker.prisms + 1n;
         // removing cost
@@ -538,7 +535,7 @@ const addPrism = (cookieBaker) => {
 exports.addPrism = addPrism;
 const addChanceMaker = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.chanceMakerCost) {
-        console.log("Enough cookie to buy a chance maker");
+        console.log("Enough cookie to buy a ChanceMaker");
         // adding 
         cookieBaker.chanceMakers = cookieBaker.chanceMakers + 1n;
         // removing cost
@@ -557,7 +554,7 @@ const addChanceMaker = (cookieBaker) => {
 exports.addChanceMaker = addChanceMaker;
 const addFractal = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.fractalCost) {
-        console.log("Enough cookie to buy a fractal");
+        console.log("Enough cookie to buy a Fractal");
         // adding 
         cookieBaker.fractals = cookieBaker.fractals + 1n;
         // removing cost
@@ -576,7 +573,7 @@ const addFractal = (cookieBaker) => {
 exports.addFractal = addFractal;
 const addJavaScript = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.javaScriptCost) {
-        console.log("Enough cookie to buy a javascript");
+        console.log("Enough cookie to buy a Javascript");
         // adding 
         cookieBaker.javaScripts = cookieBaker.javaScripts + 1n;
         // removing cost
@@ -595,7 +592,7 @@ const addJavaScript = (cookieBaker) => {
 exports.addJavaScript = addJavaScript;
 const addIdleverse = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.idleverseCost) {
-        console.log("Enough cookie to buy an idleverse");
+        console.log("Enough cookie to buy an Idleverse");
         // adding 
         cookieBaker.idleverses = cookieBaker.idleverses + 1n;
         // removing cost
@@ -614,7 +611,7 @@ const addIdleverse = (cookieBaker) => {
 exports.addIdleverse = addIdleverse;
 const addCordex = (cookieBaker) => {
     if (cookieBaker.cookies >= cookieBaker.cordexCost) {
-        console.log("Enough cookie to buy a cordex");
+        console.log("Enough cookie to buy a Cordex");
         // adding 
         cookieBaker.cordexs = cookieBaker.cordexs + 1n;
         // removing cost
