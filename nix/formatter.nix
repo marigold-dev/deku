@@ -5,7 +5,7 @@ pkgs.writeShellApplication {
   runtimeInputs = with pkgs; [
     treefmt
     nixfmt
-    ocamlformat_0_20_1
+    ocamlformat_0_21_0
     ocaml
     dune_3
     nodePackages.prettier

@@ -25,7 +25,7 @@ pkgs.mkShell {
       treefmt
       nixfmt
       nodePackages.prettier
-      ocamlformat_0_20_1
+      ocamlformat_0_21_0
     ] ++ (pkgs.lib.optional (system != "x86_64-darwin") tilt)
     ++ (with pkgs.ocaml-ng.ocamlPackages_5_00; [
       # OCaml developer tooling
@@ -34,6 +34,5 @@ pkgs.mkShell {
       dune_2
       odoc
       ocaml-lsp
-      ocamlformat-rpc_0_20_1 # 0.21 is incompatible with latest cmdliner
     ]);
 }

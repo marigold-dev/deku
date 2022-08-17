@@ -56,6 +56,9 @@
           json-logs-reporter.overlays.default
           (self: super: {
             ocamlPackages = super.ocaml-ng.ocamlPackages_5_00;
+            ocaml-ng = super.ocaml-ng // {
+              ocamlPackages = super.ocaml-ng.ocamlPackages_5_00;
+            };
           })
         ];
 
@@ -90,10 +93,12 @@
           inherit deku ligo;
           pkgs = import nixpkgs { inherit system; };
         };
+
+        formatter = pkgs.callPackage ./nix/formatter.nix { };
       in {
         devShell = import ./nix/shell.nix { inherit pkgs system deku ligo; };
         packages = {
-          inherit deku deku-static;
+          inherit deku deku-static formatter;
           docker = import ./nix/docker.nix {
             inherit pkgs;
             deku = deku-static;

@@ -6,6 +6,12 @@ let
       buildInputs = buildInputs ++ checkInputs;
     });
 in {
+  ocamlformat_0_21_0 = prev.ocamlformat_0_21_0.overrideAttrs (o: {
+    postPatch = ''
+      substituteInPlace vendor/parse-wyc/menhir-recover/emitter.ml \
+        --replace "String.capitalize" "String.capitalize_ascii"
+    '';
+  });
   ocaml-ng = builtins.mapAttrs (_: ocamlVersion:
     ocamlVersion.overrideScope' (oself: osuper: {
       lwt_react = osuper.lwt_react.overrideAttrs
