@@ -54,6 +54,9 @@
           prometheus-web.overlays.default
           tezos.overlays.default
           json-logs-reporter.overlays.default
+          (self: super: {
+            ocamlPackages = super.ocaml-ng.ocamlPackages_5_00;
+          })
         ];
 
         pkgs_static = pkgs.pkgsCross.musl64;
