@@ -16,6 +16,7 @@ let restart ~bootstrap_secret ~next_author network =
 
 let bootstrap bootstrap_secret validators validator_uris =
   let producer =
+    (* FIXME: would be nice to take this as an optional param *)
     let length = List.length validators in
     let index = Random.int32 (Int32.of_int length) in
     let () = Format.eprintf "producer: %ld\n%!" index in

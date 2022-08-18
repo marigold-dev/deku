@@ -4,7 +4,14 @@ open Deku_concepts
 open Deku_protocol
 
 module Parallel = struct
-  let domains = 12
+  let domains =
+    match Sys.getenv_opt "DEKU_DOMAINS" with
+    | Some str ->
+        let domains = int_of_string str in
+        let () = Format.eprintf "Using %d domains" domains in
+        domains
+    | None -> 8
+
   let pool = Parallel.Pool.make ~domains
   let init_p n f = Parallel.init_p pool n f
   let filter_map_p f l = Parallel.filter_map_p pool f l
@@ -76,7 +83,8 @@ module Block_application = struct
   let run () =
     let protocol = Protocol.initial in
     let level = Level.zero in
-    let size = 50000 in
+    (* FIXME: make this size configurable *)
+    let size = 50_000 in
     let payload = big_payload ~size ~level in
     let payload_size =
       List.fold_left (fun a s -> a + String.length s) 0 payload
@@ -127,7 +135,8 @@ module Block_production = struct
     average
 
   let run () =
-    let size = 50000 in
+    (* FIXME: make this size configurable *)
+    let size = 50_000 in
     let average = perform ~runs:5 ~size in
     let tx_packed_per_sec = Float.of_int size /. average in
     Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average

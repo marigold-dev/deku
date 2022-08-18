@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-block_size=50000
+block_size=100000
 
 first=$(sqlite3 ./chain/data/0/database.db 'select timestamp from blocks' | head -n 1)
 last=$(sqlite3 ./chain/data/0/database.db 'select timestamp from blocks' | tail -n 1)
@@ -16,3 +16,5 @@ tps=$(echo "$transactions / $duration" | bc -l)
 echo "transactions: $transactions"
 echo "duration: $duration"
 echo "tps: $tps"
+big_sigma=$(echo "$block_size/$tps" | bc -l)
+echo "Big Sigma: $big_sigma"

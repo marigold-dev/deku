@@ -16,16 +16,15 @@ module Query = struct
     C.exec query param
 
   let insert_block block timestamp =
-    let (Block.Block { hash; level; _ }) = block in
-    let hash = Block_hash.yojson_of_t hash |> Yojson.Safe.to_string in
-    let block_json = Block.yojson_of_t block |> Yojson.Safe.to_string in
+    let (Block.Block { hash = _; level; _ }) = block in
+    (* let hash = Block_hash.yojson_of_t hash |> Yojson.Safe.to_string in *)
+    (* let block_json = Block.yojson_of_t block |> Yojson.Safe.to_string in *)
     let timestamp = Timestamp.to_float timestamp in
     let level = Level.to_n level |> N.to_z |> Z.to_int64 in
-    let params = (hash, level, timestamp, block_json) in
+    let params = (level, timestamp) in
     let query =
-      (tup4 string int64 float string ->. unit)
-      @@ "insert into blocks (hash, level, timestamp, block) values (?, ?, ?, \
-          ?)"
+      (tup2 int64 float ->. unit)
+      @@ "insert into blocks (level, timestamp) values (?, ?)"
     in
     return_unit query params
 
@@ -54,10 +53,8 @@ let make_database ~uri =
   let blocks_table_query (module C : Caqti_lwt.CONNECTION) =
     (unit ->. unit)
     @@ {| create table if not exists blocks (
-            hash TEXT not null,
             level BIGINT not null,
-            timestamp DOUBLE not null,
-            block TEXT not null
+            timestamp DOUBLE not null
           )
        |}
     |> fun query -> C.exec query ()

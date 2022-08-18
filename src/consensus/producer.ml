@@ -58,7 +58,7 @@ let clean ~receipts ~tezos_operations producer =
 
 let produce ~parallel_map ~current_level ~current_block producer =
   (* TODO: Make this configurable *)
-  let max_block_size = 50_000 in
+  let max_block_size = 100_000 in
   let (Producer { identity; operations; tezos_operations }) = producer in
   let previous = current_block in
   let level = Level.next current_level in
@@ -68,9 +68,10 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (Operation_hash.Map.bindings operations)
   in
   let op_size = List.length operations in
-  let dummy_op_size =  Int.max (max_block_size - op_size) 0 in
+  let dummy_op_size = Int.max (max_block_size - op_size) 0 in
   let dummy_operations =
-    List.init dummy_op_size (fun _ -> Operation.noop ~level)
+    let noop = Operation.noop ~level in
+    List.init dummy_op_size (fun _ -> noop)
   in
   let operations = List.rev_append dummy_operations operations in
   let tezos_operations =

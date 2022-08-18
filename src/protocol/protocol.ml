@@ -1,5 +1,6 @@
 open Receipt
 open Deku_tezos
+open Deku_stdlib
 
 type protocol =
   | Protocol of {
@@ -114,8 +115,11 @@ let clean ~current_level protocol =
   Protocol { included_operations; included_tezos_operations; ledger }
 
 let apply ~parallel ~current_level ~payload ~tezos_operations protocol =
+  (* Trace.dump "Applying block"; *)
   let protocol, receipts = apply_payload ~parallel payload protocol in
+  (* Trace.dump "Applied block"; *)
   let protocol = clean ~current_level protocol in
+  (* Trace.dump "Cleaned protocol"; *)
   (* TODO: how to clean the set of tezos operations in memory? *)
   let protocol = apply_tezos_operations tezos_operations protocol in
   (protocol, receipts)

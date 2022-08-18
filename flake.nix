@@ -14,35 +14,52 @@
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";
     };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, nixos-generators }:
     flake-utils.lib.eachDefaultSystem (system:
-    let pkgs = (nixpkgs.makePkgs {
-        inherit system;
-        extraOverlays = [
-          tezos.overlays.default
-          (import ./nix/overlay.nix)
-          (final: prev: {
-          ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
-      })
-        ];
-      }); 
-      dream2nix-lib = dream2nix.lib.init {
-        inherit pkgs;
-        config.projectRoot = ./.;
-      };
-      nodejs = pkgs.nodejs-16_x;
-      npmPackages = import ./nix/npm.nix {
-        inherit system dream2nix-lib nix-filter nodejs;
-      };
+      let
+        pkgs = (nixpkgs.makePkgs {
+          inherit system;
+          extraOverlays = [
+            tezos.overlays.default
+            (import ./nix/overlay.nix)
+            (final: prev: {
+              ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
+            })
+          ];
+        });
+        dream2nix-lib = dream2nix.lib.init {
+          inherit pkgs;
+          config.projectRoot = ./.;
+        };
+        nodejs = pkgs.nodejs-16_x;
+        npmPackages = import ./nix/npm.nix {
+          inherit system dream2nix-lib nix-filter nodejs;
+        };
 
-      deku = pkgs.callPackage ./nix { 
-        inherit nodejs npmPackages;
-        doCheck = true; 
-      };
-      in rec {
-        packages = { default = deku; };
+        deku = pkgs.callPackage ./nix {
+          inherit nodejs npmPackages;
+          doCheck = true;
+          static = true;
+        };
+      in
+      rec {
+        packages = {
+          default = deku;
+          ec2-image = nixos-generators.nixosGenerate {
+            inherit pkgs;
+            modules = [
+              ({...}: { amazonImage.sizeMB = 30 * 1024; })
+              (import ./nix/ec2-image.nix { inherit deku; })
+            ];
+            format = "amazon";
+          };
+        };
         devShell = import ./nix/shell.nix { inherit pkgs deku; };
       });
 }

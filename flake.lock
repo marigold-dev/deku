@@ -213,6 +213,42 @@
         "type": "github"
       }
     },
+    "nixlib": {
+      "locked": {
+        "lastModified": 1636849918,
+        "narHash": "sha256-nzUK6dPcTmNVrgTAC1EOybSMsrcx+QrVPyqRdyKLkjA=",
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "rev": "28a5b0557f14124608db68d3ee1f77e9329e9dd5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixpkgs.lib",
+        "type": "github"
+      }
+    },
+    "nixos-generators": {
+      "inputs": {
+        "nixlib": "nixlib",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1657748715,
+        "narHash": "sha256-WecDwDY/hEcDQYzFnccCNa+5Umht0lfjx/d1qGDy/rQ=",
+        "owner": "nix-community",
+        "repo": "nixos-generators",
+        "rev": "3323b944d99b026aebfd8de439e001409dde067d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "nixos-generators",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "inputs": {
         "flake-utils": "flake-utils_2",
@@ -295,6 +331,7 @@
         "dream2nix": "dream2nix",
         "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
+        "nixos-generators": "nixos-generators",
         "nixpkgs": "nixpkgs",
         "tezos": "tezos"
       }
@@ -337,39 +374,6 @@
         "owner": "marigold-dev",
         "repo": "tezos-nix",
         "type": "github"
-      }
-    },
-    "tezos_release": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1651744524,
-        "narHash": "sha256-AEY/m3c+6Yo/gqzO+4vzExQ20ICleIUsSFO1qWTO/OI=",
-        "owner": "tezos",
-        "repo": "tezos",
-        "rev": "cb9f439e58c761e76ade589d1cdbd2abb737dc68",
-        "type": "gitlab"
-      },
-      "original": {
-        "owner": "tezos",
-        "ref": "v13.0",
-        "repo": "tezos",
-        "type": "gitlab"
-      }
-    },
-    "tezos_trunk": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1656577193,
-        "narHash": "sha256-k1wzmuXVY7rm45zkNznLEXeaqM8v789Kzam0xaoXvlI=",
-        "owner": "tezos",
-        "repo": "tezos",
-        "rev": "3829de24b026457d4e6995c21484849e1972f26d",
-        "type": "gitlab"
-      },
-      "original": {
-        "owner": "tezos",
-        "repo": "tezos",
-        "type": "gitlab"
       }
     }
   },

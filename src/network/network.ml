@@ -1,4 +1,5 @@
 open Broadcast
+open Deku_stdlib
 
 type network =
   | Network of { nodes : Uri.t list; known_packets : Packet_hash.Set.t }
@@ -12,9 +13,10 @@ exception Invalid_hash
 
 let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
     a option * network =
+  Trace.dump "Incoming packet";
   let packet_json = Yojson.Safe.from_string packet in
   let (Packet { hash; content } as packet) = Packet.t_of_yojson packet_json in
-
+  Trace.dump "Incoming packet deserialized";
   let (Network { nodes; known_packets }) = network in
   match Packet_hash.Set.mem hash known_packets with
   | true -> raise Duplicated_packet
@@ -28,10 +30,12 @@ let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
             (* TODO: really important, how to prevent spam?
                 Can the same parsed data be derived from two different hashes? *)
             (* TODO: does it make sense here? *)
-            let () = broadcast_json ~nodes ~endpoint ~packet:packet_json in
+            (* let () = broadcast_json ~nodes ~endpoint ~packet:packet_json in *)
             Packet.content_of_yojson ~endpoint content
           with
-          | content -> (Some content, network)
+          | content ->
+              Trace.dump "Incoming packet parsed";
+              (Some content, network)
           | exception exn ->
               (* TODO: proper logging *)
               Format.eprintf "Exception while parsing packet: %s\n%!"

@@ -11,8 +11,11 @@ open Deku_crypto
 module Parallel = struct
   let domains =
     match Sys.getenv_opt "DEKU_DOMAINS" with
-    | Some str -> int_of_string str
-    | None -> 8
+    | Some str ->
+        let domains = int_of_string str in
+        let () = Format.eprintf "Using %d domains\n%!" domains in
+        domains
+    | None -> 64
 
   let pool =
     let pool = lazy (Parallel.Pool.make ~domains) in
@@ -65,7 +68,7 @@ module Node = struct
     let (Node { chain; network; applied_block; tezos_interop; indexer }) =
       node
     in
-    let () = Indexer.save_packet ~packet ~timestamp:current indexer in
+    (* let () = Indexer.save_packet ~packet ~timestamp:current indexer in *)
     let packet, network = Network.incoming_packet ~endpoint ~packet network in
     let chain, effects =
       match packet with

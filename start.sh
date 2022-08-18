@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dune build
+dune build --profile=release
 
 tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"

@@ -21,3 +21,9 @@ module Yojson : sig
     val yojson_of_t : t -> t
   end
 end
+
+module Trace : sig
+  val dump : string -> unit
+  (* val start : unit -> unit *)
+  (* val trace : string -> unit *)
+end

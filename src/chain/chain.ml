@@ -40,19 +40,23 @@ let apply_block ~pool ~current ~block chain =
       ~current_level:level ~payload protocol ~tezos_operations
   in
   let producer = Producer.clean ~receipts ~tezos_operations producer in
+  (* Trace.dump "Starting produce block"; *)
   let effects =
     match
       Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
         ~current ~consensus producer
     with
-    | Some block -> [ Broadcast_block block ]
+    | Some block ->
+        Trace.dump "Produced block";
+        [ Broadcast_block block ]
     | None -> []
   in
   let effects = Save_block block :: Reset_timeout :: effects in
   (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_block ~pool ~current ~block chain =
+  Trace.dump "Incoming block";
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let Verifier.{ apply; verifier } =
     Verifier.incoming_block ~consensus ~block verifier
@@ -64,22 +68,33 @@ let incoming_block ~pool ~current ~block chain =
     | Some signature -> [ Broadcast_signature signature ]
     | None -> []
   in
-  match apply with
-  | Some block ->
-      let chain, additional_effects = apply_block ~pool ~current ~block chain in
-      (chain, effects @ additional_effects)
-  | None -> (chain, effects)
+  let x =
+    match apply with
+    | Some block ->
+        let chain, additional_effects =
+          apply_block ~pool ~current ~block chain
+        in
+        (chain, effects @ additional_effects)
+    | None -> (chain, effects)
+  in
+  Trace.dump "incomind block finished";
+  x
 
 let incoming_signature ~pool ~current ~signature chain =
+  Trace.dump "Incoming signature";
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let Verifier.{ apply; verifier } =
     Verifier.incoming_signature ~consensus ~signature verifier
   in
   let chain = Chain { protocol; consensus; verifier; signer; producer } in
 
-  match apply with
-  | Some block -> apply_block ~pool ~current ~block chain
-  | None -> (chain, [])
+  let x =
+    match apply with
+    | Some block -> apply_block ~pool ~current ~block chain
+    | None -> (chain, [])
+  in
+  Trace.dump "Incoming signature finished";
+  x
 
 let incoming_timeout ~pool ~current node =
   let () = Format.eprintf "timeout\n%!" in
