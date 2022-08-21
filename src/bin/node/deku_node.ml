@@ -48,19 +48,21 @@ module Node = struct
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
-  let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
-      =
+  let incoming_message (type a) ~current ~(endpoint : a Endpoint.t) ~message
+      node =
     let (Node { chain; network; trigger_timeout }) = node in
-    let packet, network = Network.incoming_packet ~endpoint ~packet network in
+    let message, network =
+      Network.incoming_message ~endpoint ~message network
+    in
     let chain, effects =
-      match packet with
-      | Some packet -> (
+      match message with
+      | Some message -> (
           match endpoint with
-          | Blocks -> Chain.incoming_block ~current ~block:packet chain
+          | Blocks -> Chain.incoming_block ~current ~block:message chain
           | Signatures ->
-              Chain.incoming_signature ~current ~signature:packet chain
+              Chain.incoming_signature ~current ~signature:message chain
           | Operations ->
-              let chain = Chain.incoming_operation ~operation:packet chain in
+              let chain = Chain.incoming_operation ~operation:message chain in
               (chain, []))
       | None -> (chain, [])
     in
@@ -159,11 +161,11 @@ module Server = struct
     | Ok body -> next Server.{ ctx = (endpoint, body); request }
     | Error error -> internal_error error
 
-  let apply Server.{ ctx = endpoint, packet; request = _ } =
+  let apply Server.{ ctx = endpoint, message; request = _ } =
     let node = Singleton.get_state () in
     let current = Timestamp.of_float (Unix.gettimeofday ()) in
     let (Endpoint.Ex endpoint) = endpoint in
-    let node = Node.incoming_packet ~current ~endpoint ~packet node in
+    let node = Node.incoming_message ~current ~endpoint ~message node in
     let () = Singleton.set_state node in
     let response = Piaf.Response.of_string ~body:"OK" `OK in
     Lwt.return response

@@ -56,7 +56,7 @@ module Prefix = struct
   let deku_contract_hash = "\001\146\006" (* DK1(36) *)
   let deku_block_hash = "\085\022" (* Db(52) *)
   let deku_operation_hash = "\086\124" (* Do(52) *)
-  let deku_packet_hash = "\086\154" (* Dp(52)*)
+  let deku_message_hash = "\086\064" (* Dm(52)*)
 end
 
 let base = 58

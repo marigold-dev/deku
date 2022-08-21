@@ -10,13 +10,13 @@ let post body uri =
   let body = Piaf.Body.of_string body in
   Piaf.Client.Oneshot.post ~headers ~body uri
 
-let broadcast_json (type a) ~nodes ~(endpoint : a Endpoint.t) ~packet =
+let broadcast_json (type a) ~nodes ~(endpoint : a Endpoint.t) ~message =
   (* TODO: this definitely should not be here *)
   let%await () =
     match endpoint with Blocks -> Lwt_unix.sleep 1.0 | _ -> Lwt.return_unit
   in
   let endpoint = Endpoint.to_string endpoint in
-  let body = Yojson.Safe.to_string packet in
+  let body = Yojson.Safe.to_string message in
 
   Lwt_list.iter_p
     (fun node ->
@@ -34,9 +34,9 @@ let broadcast_json (type a) ~nodes ~(endpoint : a Endpoint.t) ~packet =
       | Error _err -> (* TODO: do something with this error *) Lwt.return_unit)
     nodes
 
-let broadcast_json ~nodes ~endpoint ~packet =
-  Lwt.async (fun () -> broadcast_json ~nodes ~endpoint ~packet)
+let broadcast_json ~nodes ~endpoint ~message =
+  Lwt.async (fun () -> broadcast_json ~nodes ~endpoint ~message)
 
-let broadcast_packet ~nodes ~endpoint ~packet =
-  let packet = Packet.yojson_of_t packet in
-  broadcast_json ~nodes ~endpoint ~packet
+let broadcast_message ~nodes ~endpoint ~message =
+  let message = Message.yojson_of_t message in
+  broadcast_json ~nodes ~endpoint ~message

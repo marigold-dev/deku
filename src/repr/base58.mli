@@ -47,7 +47,7 @@ module Prefix : sig
   val deku_contract_hash : string
   val deku_block_hash : string
   val deku_operation_hash : string
-  val deku_packet_hash : string
+  val deku_message_hash : string
 end
 
 module Alphabet : sig
