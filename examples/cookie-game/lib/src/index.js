@@ -16,7 +16,7 @@ const transition = (tx) => {
     // operation => any
     const source = tx.source;
     const operation = tx.operation;
-    let sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
+    const sourceValue = JSON.parse((0, deku_js_interop_1.get)(source));
     let cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
         cookieBaker = (0, state_1.createEmptyCookieBaker)();
@@ -25,7 +25,6 @@ const transition = (tx) => {
         cookieBaker = JSON.parse(sourceValue, utils_1.parseReviver);
         cookieBaker = (0, state_1.initCookieBaker)(cookieBaker);
     }
-    console.log("Actual cookieBaker retrieved from state: " + JSON.stringify(cookieBaker, utils_1.stringifyReplacer));
     switch (operation) {
         case actions_1.actions.cookie: {
             //update state

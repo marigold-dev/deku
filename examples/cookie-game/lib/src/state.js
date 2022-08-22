@@ -285,8 +285,6 @@ const addCursor = (cookieBaker) => {
 };
 exports.addCursor = addCursor;
 const addGrandma = (cookieBaker) => {
-    console.log("I have " + cookieBaker.cookies + " cookies");
-    console.log("GrandmaCost is: " + cookieBaker.grandmaCost);
     if (cookieBaker.cookies >= cookieBaker.grandmaCost) {
         console.log("Enough cookie to buy a Grandma");
         // adding grandma
