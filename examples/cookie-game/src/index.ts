@@ -23,7 +23,7 @@ const transition = (tx: transaction) => {
     // operation => any
     const source = tx.source;
     const operation = tx.operation;
-    let sourceValue = JSON.parse(get(source));
+    const sourceValue = JSON.parse(get(source));
     let cookieBaker: cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
         cookieBaker = createEmptyCookieBaker();
@@ -32,7 +32,6 @@ const transition = (tx: transaction) => {
         cookieBaker = JSON.parse(sourceValue, parseReviver)
         cookieBaker = initCookieBaker(cookieBaker);
     }
-    console.log("Actual cookieBaker retrieved from state: " + JSON.stringify(cookieBaker, stringifyReplacer));
 
     switch (operation) {
         case actions.cookie: {
