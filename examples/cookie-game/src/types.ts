@@ -3,8 +3,8 @@
    https://cookieclicker.fandom.com/wiki/Building
 */
 
-export const initialCursorCps: number = 0.1;
-export const initialGrandmaCps: bigint = BigInt(1);
+export const initialCursorCps: bigint = BigInt(1);
+export const initialGrandmaCps: bigint = BigInt(3);
 export const initialFarmCps: bigint = BigInt(8);
 export const initialMineCps: bigint = BigInt(47);
 export const initialFactoryCps: bigint = BigInt(260);
@@ -86,23 +86,5 @@ export type cookieBaker = {
     cordexCost: bigint,
 
     /* Cookie per second*/
-    cursorCps: number,
-    grandmaCps: bigint,
-    farmCps: bigint,
-    mineCps: bigint,
-    factoryCps: bigint,
-    bankCps: bigint,
-    templeCps: bigint;
-    wizardCps: bigint,
-    shipmentCps: bigint,
-    alchemyCps: bigint,
-    portalCps: bigint,
-    timeMachineCps: bigint,
-    antimatterCps: bigint,
-    prismCps: bigint,
-    chanceMakerCps: bigint,
-    fractalCps: bigint,
-    javaScriptCps: bigint,
-    idleverseCps: bigint,
-    cordexCps: bigint,
+    passiveCPS: bigint
 }
