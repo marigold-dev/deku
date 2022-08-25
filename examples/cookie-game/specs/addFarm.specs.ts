@@ -47,25 +47,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
-                    const cursorCpsBefore = cookieBaker.cursorCps;
-                    const grandmaCpsBefore = cookieBaker.grandmaCps;
-                    const farmCpsBefore = cookieBaker.farmCps;
-                    const mineCpsBefore = cookieBaker.mineCps;
-                    const factoryCpsBefore = cookieBaker.factoryCps;
-                    const bankCpsBefore = cookieBaker.bankCps;
-                    const templeCpsBefore = cookieBaker.templeCps;
-                    const wizardCpsBefore = cookieBaker.wizardCps;
-                    const shipmentCpsBefore = cookieBaker.shipmentCps;
-                    const alchemyCpsBefore = cookieBaker.alchemyCps;
-                    const portalCpsBefore = cookieBaker.portalCps;
-                    const timeMachineCpsBefore = cookieBaker.timeMachineCps;
-                    const antimatterCpsBefore = cookieBaker.antimatterCps;
-                    const prismCpsBefore = cookieBaker.prismCps;
-                    const chanceMakerCpsBefore = cookieBaker.chanceMakerCps;
-                    const fractalCpsBefore = cookieBaker.fractalCps;
-                    const javaScriptCpsBefore = cookieBaker.javaScriptCps;
-                    const idleverseCpsBefore = cookieBaker.idleverseCps;
-                    const cordexCpsBefore = cookieBaker.cordexCps;
+                    const passiveCPSBefore = cookieBaker.passiveCPS;
 
                     cookieBaker.cookies = cookiesBefore + farmCostBefore;
                     const cookie_Baker = addFarm(cookieBaker);
@@ -108,25 +90,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
-                        && cookie_Baker.cursorCps === cursorCpsBefore
-                        && cookie_Baker.grandmaCps === grandmaCpsBefore
-                        && cookie_Baker.farmCps > farmCpsBefore
-                        && cookie_Baker.mineCps === mineCpsBefore
-                        && cookie_Baker.factoryCps === factoryCpsBefore
-                        && cookie_Baker.bankCps === bankCpsBefore
-                        && cookie_Baker.templeCps === templeCpsBefore
-                        && cookie_Baker.wizardCps === wizardCpsBefore
-                        && cookie_Baker.shipmentCps === shipmentCpsBefore
-                        && cookie_Baker.alchemyCps === alchemyCpsBefore
-                        && cookie_Baker.portalCps === portalCpsBefore
-                        && cookie_Baker.timeMachineCps === timeMachineCpsBefore
-                        && cookie_Baker.antimatterCps === antimatterCpsBefore
-                        && cookie_Baker.prismCps === prismCpsBefore
-                        && cookie_Baker.chanceMakerCps === chanceMakerCpsBefore
-                        && cookie_Baker.fractalCps === fractalCpsBefore
-                        && cookie_Baker.javaScriptCps === javaScriptCpsBefore
-                        && cookie_Baker.idleverseCps === idleverseCpsBefore
-                        && cookie_Baker.cordexCps === cordexCpsBefore
+                        && cookie_Baker.passiveCPS > passiveCPSBefore
                     )
                 }));
     });
@@ -175,25 +139,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
 
-                    const cursorCpsBefore = cookieBaker.cursorCps;
-                    const grandmaCpsBefore = cookieBaker.grandmaCps;
-                    const farmCpsBefore = cookieBaker.farmCps;
-                    const mineCpsBefore = cookieBaker.mineCps;
-                    const factoryCpsBefore = cookieBaker.factoryCps;
-                    const bankCpsBefore = cookieBaker.bankCps;
-                    const templeCpsBefore = cookieBaker.templeCps;
-                    const wizardCpsBefore = cookieBaker.wizardCps;
-                    const shipmentCpsBefore = cookieBaker.shipmentCps;
-                    const alchemyCpsBefore = cookieBaker.alchemyCps;
-                    const portalCpsBefore = cookieBaker.portalCps;
-                    const timeMachineCpsBefore = cookieBaker.timeMachineCps;
-                    const antimatterCpsBefore = cookieBaker.antimatterCps;
-                    const prismCpsBefore = cookieBaker.prismCps;
-                    const chanceMakerCpsBefore = cookieBaker.chanceMakerCps;
-                    const fractalCpsBefore = cookieBaker.fractalCps;
-                    const javaScriptCpsBefore = cookieBaker.javaScriptCps;
-                    const idleverseCpsBefore = cookieBaker.idleverseCps;
-                    const cordexCpsBefore = cookieBaker.cordexCps;
+                    const passiveCPSBefore = cookieBaker.passiveCPS;
 
                     //make sure we can't buy a farm
                     cookieBaker.cookies = 0n
@@ -239,26 +185,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
 
-                        && cookie_Baker.cursorCps === cursorCpsBefore
-                        && cookie_Baker.grandmaCps === grandmaCpsBefore
-                        && cookie_Baker.farmCps === farmCpsBefore
-                        && cookie_Baker.mineCps === mineCpsBefore
-                        && cookie_Baker.factoryCps === factoryCpsBefore
-                        && cookie_Baker.bankCps === bankCpsBefore
-                        && cookie_Baker.templeCps === templeCpsBefore
-                        && cookie_Baker.wizardCps === wizardCpsBefore
-                        && cookie_Baker.shipmentCps === shipmentCpsBefore
-                        && cookie_Baker.alchemyCps === alchemyCpsBefore
-                        && cookie_Baker.portalCps === portalCpsBefore
-                        && cookie_Baker.timeMachineCps === timeMachineCpsBefore
-                        && cookie_Baker.antimatterCps === antimatterCpsBefore
-                        && cookie_Baker.prismCps === prismCpsBefore
-                        && cookie_Baker.chanceMakerCps === chanceMakerCpsBefore
-                        && cookie_Baker.fractalCps === fractalCpsBefore
-                        && cookie_Baker.javaScriptCps === javaScriptCpsBefore
-                        && cookie_Baker.idleverseCps === idleverseCpsBefore
-                        && cookie_Baker.cordexCps === cordexCpsBefore
-
+                        && cookie_Baker.passiveCPS === passiveCPSBefore
                     )
                 }));
     });
