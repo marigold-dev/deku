@@ -26,16 +26,16 @@ const st = require("./types");
  * @returns
  */
 const initCookieBaker = (cookieBaker) => {
-    return (0, exports.createCookieBaker)(cookieBaker.cookies, cookieBaker.cursors, cookieBaker.grandmas, cookieBaker.farms, cookieBaker.mines, cookieBaker.factories, cookieBaker.banks, cookieBaker.temples, cookieBaker.wizards, cookieBaker.shipments, cookieBaker.alchemies, cookieBaker.portals, cookieBaker.timeMachines, cookieBaker.antimatters, cookieBaker.prisms, cookieBaker.chanceMakers, cookieBaker.fractals, cookieBaker.javaScripts, cookieBaker.idleverses, cookieBaker.cordexs, cookieBaker.freeCursor, cookieBaker.freeGrandma, cookieBaker.freeFarm, cookieBaker.freeMine, cookieBaker.freeFactory, cookieBaker.freeBank, cookieBaker.freeTemple, cookieBaker.freeWizard, cookieBaker.freeShipment, cookieBaker.freeAlchemy, cookieBaker.freePortal, cookieBaker.freeTimeMachine, cookieBaker.freeAntimatter, cookieBaker.freePrism, cookieBaker.freeChanceMaker, cookieBaker.freeFractal, cookieBaker.freeJavaScript, cookieBaker.freeIdleverse, cookieBaker.freeCordex);
+    return (0, exports.createCookieBaker)(cookieBaker.cookies, cookieBaker.cursors, cookieBaker.grandmas, cookieBaker.farms, cookieBaker.mines, cookieBaker.factories, cookieBaker.banks, cookieBaker.temples, cookieBaker.wizards, cookieBaker.shipments, cookieBaker.alchemies, cookieBaker.portals, cookieBaker.timeMachines, cookieBaker.antimatters, cookieBaker.prisms, cookieBaker.chanceMakers, cookieBaker.fractals, cookieBaker.javaScripts, cookieBaker.idleverses, cookieBaker.cordexs);
 };
 exports.initCookieBaker = initCookieBaker;
 const createEmptyCookieBaker = () => {
-    return (0, exports.createCookieBaker)(0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n);
+    return (0, exports.createCookieBaker)(0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n);
 };
 exports.createEmptyCookieBaker = createEmptyCookieBaker;
 //DO NOT USE ME
 // This function is only exported for testing purpose
-const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs, freeCursor, freeGrandma, freeFarm, freeMine, freeFactory, freeBank, freeTemple, freeWizard, freeShipment, freeAlchemy, freePortal, freeTimeMachine, freeAntimatter, freePrism, freeChanceMaker, freeFractal, freeJavaScript, freeIdleverse, freeCordex) => {
+const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs) => {
     const cookieBaker = {
         cookies,
         cursors,
@@ -57,25 +57,6 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         javaScripts,
         idleverses,
         cordexs,
-        freeCursor,
-        freeGrandma,
-        freeFarm,
-        freeMine,
-        freeFactory,
-        freeBank,
-        freeTemple,
-        freeWizard,
-        freeShipment,
-        freeAlchemy,
-        freePortal,
-        freeTimeMachine,
-        freeAntimatter,
-        freePrism,
-        freeChanceMaker,
-        freeFractal,
-        freeJavaScript,
-        freeIdleverse,
-        freeCordex,
         cursorCost: 0n,
         grandmaCost: 0n,
         farmCost: 0n,
@@ -162,98 +143,79 @@ const calculateCost = (action, cookieBaker) => {
             console.log("Cookie does not have cost");
             throw new Error("Cookie does not have cost");
         case actions_1.actions.cursor:
-            const firstCursorOperation = cookieBaker.cursors - cookieBaker.freeCursor;
-            const secondCursorOperation = Math.pow(1.15, Number(firstCursorOperation));
+            const secondCursorOperation = Math.pow(1.15, Number(cookieBaker.cursors));
             const newCursorPrice = Math.floor(Number(st.initialCursorCost) * secondCursorOperation);
             return BigInt(newCursorPrice);
         case actions_1.actions.grandma:
-            const firstGrandmaOperation = cookieBaker.grandmas - cookieBaker.freeGrandma;
-            const secondGrandmaOperation = Math.pow(1.15, Number(firstGrandmaOperation));
+            const secondGrandmaOperation = Math.pow(1.15, Number(cookieBaker.grandmas));
             const newGrandmaPrice = Math.floor(Number(st.initialGrandmaCost) * secondGrandmaOperation);
             return BigInt(newGrandmaPrice);
         case actions_1.actions.farm:
-            const firstFarmOperation = cookieBaker.farms - cookieBaker.freeFarm;
-            const secondFarmOperation = Math.pow(1.15, Number(firstFarmOperation));
+            const secondFarmOperation = Math.pow(1.15, Number(cookieBaker.farms));
             const newFarmPrice = Math.floor(Number(st.initialFarmCost) * secondFarmOperation);
             return BigInt(newFarmPrice);
         case actions_1.actions.mine:
-            const firstMineOperation = cookieBaker.mines - cookieBaker.freeMine;
-            const secondMineOperation = Math.pow(1.15, Number(firstMineOperation));
+            const secondMineOperation = Math.pow(1.15, Number(cookieBaker.mines));
             const newMinePrice = Math.floor(Number(st.initialMineCost) * secondMineOperation);
             return BigInt(newMinePrice);
         case actions_1.actions.factory:
-            const firstFactoryOperation = cookieBaker.factories - cookieBaker.freeFactory;
-            const secondFactoryOperation = Math.pow(1.15, Number(firstFactoryOperation));
+            const secondFactoryOperation = Math.pow(1.15, Number(cookieBaker.factories));
             const newFactoryPrice = Math.floor(Number(st.initialFactoryCost) * secondFactoryOperation);
             return BigInt(newFactoryPrice);
         case actions_1.actions.bank:
-            const firstBankOperation = cookieBaker.banks - cookieBaker.freeBank;
-            const secondBankOperation = Math.pow(1.15, Number(firstBankOperation));
+            const secondBankOperation = Math.pow(1.15, Number(cookieBaker.banks));
             const newBankPrice = Math.floor(Number(st.initialBankCost) * secondBankOperation);
             return BigInt(newBankPrice);
         case actions_1.actions.temple:
-            const firstTempleOperation = cookieBaker.temples - cookieBaker.freeTemple;
-            const secondTempleOperation = Math.pow(1.15, Number(firstTempleOperation));
+            const secondTempleOperation = Math.pow(1.15, Number(cookieBaker.temples));
             const newTemplePrice = Math.floor(Number(st.initialTempleCost) * secondTempleOperation);
             return BigInt(newTemplePrice);
         case actions_1.actions.wizard:
-            const firstWizardOperation = cookieBaker.wizards - cookieBaker.freeWizard;
-            const secondWizardOperation = Math.pow(1.15, Number(firstWizardOperation));
+            const secondWizardOperation = Math.pow(1.15, Number(cookieBaker.wizards));
             const newWizardPrice = Math.floor(Number(st.initialWizardCost) * secondWizardOperation);
             return BigInt(newWizardPrice);
         case actions_1.actions.shipment:
-            const firstShipmentOperation = cookieBaker.shipments - cookieBaker.freeShipment;
-            const secondShipmentOperation = Math.pow(1.15, Number(firstShipmentOperation));
+            const secondShipmentOperation = Math.pow(1.15, Number(cookieBaker.shipments));
             const newShipmentPrice = Math.floor(Number(st.initialShipmentCost) * secondShipmentOperation);
             return BigInt(newShipmentPrice);
         case actions_1.actions.alchemy:
-            const firstAlchemyOperation = cookieBaker.alchemies - cookieBaker.freeAlchemy;
-            const secondAlchemyOperation = Math.pow(1.15, Number(firstAlchemyOperation));
+            const secondAlchemyOperation = Math.pow(1.15, Number(cookieBaker.alchemies));
             const newAlchemyPrice = Math.floor(Number(st.initialAlchemyCost) * secondAlchemyOperation);
             return BigInt(newAlchemyPrice);
         case actions_1.actions.portal:
-            const firstPortalOperation = cookieBaker.portals - cookieBaker.freePortal;
-            const secondPortalOperation = Math.pow(1.15, Number(firstPortalOperation));
+            const secondPortalOperation = Math.pow(1.15, Number(cookieBaker.portals));
             const newPortalPrice = Math.floor(Number(st.initialPortalCost) * secondPortalOperation);
             return BigInt(newPortalPrice);
         case actions_1.actions.timeMachine:
-            const firstTimeMachineOperation = cookieBaker.timeMachines - cookieBaker.freeTimeMachine;
-            const secondTimeMachineOperation = Math.pow(1.15, Number(firstTimeMachineOperation));
+            const secondTimeMachineOperation = Math.pow(1.15, Number(cookieBaker.timeMachines));
             const newTimeMachinePrice = Math.floor(Number(st.initialTimeMachineCost) * secondTimeMachineOperation);
             return BigInt(newTimeMachinePrice);
         case actions_1.actions.antimatter:
-            const firstAntimatterOperation = cookieBaker.antimatters - cookieBaker.freeAntimatter;
-            const secondAntimatterOperation = Math.pow(1.15, Number(firstAntimatterOperation));
+            const secondAntimatterOperation = Math.pow(1.15, Number(cookieBaker.antimatters));
             const newAntimatterPrice = Math.floor(Number(st.initialAntimatterCost) * secondAntimatterOperation);
             return BigInt(newAntimatterPrice);
         case actions_1.actions.prism:
-            const firstPrismOperation = cookieBaker.prisms - cookieBaker.freePrism;
-            const secondPrismOperation = Math.pow(1.15, Number(firstPrismOperation));
+            const secondPrismOperation = Math.pow(1.15, Number(cookieBaker.prisms));
             const newPrismPrice = Math.floor(Number(st.initialPrismCost) * secondPrismOperation);
             return BigInt(newPrismPrice);
         case actions_1.actions.chanceMaker:
-            const firstChanceMakerOperation = cookieBaker.chanceMakers - cookieBaker.freeChanceMaker;
-            const secondChanceMakerOperation = Math.pow(1.15, Number(firstChanceMakerOperation));
+            const secondChanceMakerOperation = Math.pow(1.15, Number(cookieBaker.chanceMakers));
             const newChanceMakerPrice = Math.floor(Number(st.initialChanceMakerCost) * secondChanceMakerOperation);
             return BigInt(newChanceMakerPrice);
         case actions_1.actions.fractal:
-            const firstFractalOperation = cookieBaker.fractals - cookieBaker.freeFractal;
-            const secondFractalOperation = Math.pow(1.15, Number(firstFractalOperation));
+            const secondFractalOperation = Math.pow(1.15, Number(cookieBaker.fractals));
             const newFractalPrice = Math.floor(Number(st.initialFractalCost) * secondFractalOperation);
             return BigInt(newFractalPrice);
         case actions_1.actions.javaScript:
-            const firstJavaScriptOperation = cookieBaker.javaScripts - cookieBaker.freeJavaScript;
-            const secondJavaScriptOperation = Math.pow(1.15, Number(firstJavaScriptOperation));
+            const secondJavaScriptOperation = Math.pow(1.15, Number(cookieBaker.javaScripts));
             const newJavaScriptPrice = Math.floor(Number(st.initialJavaScriptCost) * secondJavaScriptOperation);
             return BigInt(newJavaScriptPrice);
         case actions_1.actions.idleverse:
-            const firstIdleverseOperation = cookieBaker.idleverses - cookieBaker.freeIdleverse;
-            const secondIdleverseOperation = Math.pow(1.15, Number(firstIdleverseOperation));
+            const secondIdleverseOperation = Math.pow(1.15, Number(cookieBaker.idleverses));
             const newIdleversePrice = Math.floor(Number(st.initialIdleverseCost) * secondIdleverseOperation);
             return BigInt(newIdleversePrice);
         case actions_1.actions.cordex:
-            const firstCordexOperation = cookieBaker.cordexs - cookieBaker.freeCordex;
-            const secondCordexOperation = Math.pow(1.15, Number(firstCordexOperation));
+            const secondCordexOperation = Math.pow(1.15, Number(cookieBaker.cordexs));
             const newCordexPrice = Math.floor(Number(st.initialCordexCost) * secondCordexOperation);
             return BigInt(newCordexPrice);
     }

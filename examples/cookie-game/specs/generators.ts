@@ -83,26 +83,7 @@ export const cookieBakerArbitrary = () =>
                 fractals,
                 javaScripts,
                 idleverses,
-                cordexs,
-                freeCursor,
-                freeGrandma,
-                freeFarm,
-                freeMine,
-                freeFactory,
-                freeBank,
-                freeTemple,
-                freeWizard,
-                freeShipment,
-                freeAlchemy,
-                freePortal,
-                freeTimeMachine,
-                freeAntimatter,
-                freePrism,
-                freeChanceMaker,
-                freeFractal,
-                freeJavaScript,
-                freeIdleverse,
-                freeCordex,
+                cordexs
             )
             return cookie_baker;
         });
