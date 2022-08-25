@@ -76,25 +76,7 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         javaScriptCost: 0n,
         idleverseCost: 0n,
         cordexCost: 0n,
-        cursorCps: 0,
-        grandmaCps: 0n,
-        farmCps: 0n,
-        mineCps: 0n,
-        factoryCps: 0n,
-        bankCps: 0n,
-        templeCps: 0n,
-        wizardCps: 0n,
-        shipmentCps: 0n,
-        alchemyCps: 0n,
-        portalCps: 0n,
-        timeMachineCps: 0n,
-        antimatterCps: 0n,
-        prismCps: 0n,
-        chanceMakerCps: 0n,
-        fractalCps: 0n,
-        javaScriptCps: 0n,
-        idleverseCps: 0n,
-        cordexCps: 0n,
+        passiveCPS: 0n
     };
     cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.cursor, cookieBaker);
     cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.grandma, cookieBaker);
@@ -115,25 +97,25 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
     cookieBaker.javaScriptCost = (0, exports.calculateCost)(actions_1.actions.javaScript, cookieBaker);
     cookieBaker.idleverseCost = (0, exports.calculateCost)(actions_1.actions.idleverse, cookieBaker);
     cookieBaker.cordexCost = (0, exports.calculateCost)(actions_1.actions.cordex, cookieBaker);
-    cookieBaker.cursorCps = Number(cookieBaker.cursors) * st.initialCursorCps;
-    cookieBaker.grandmaCps = BigInt(cookieBaker.grandmas) * st.initialGrandmaCps;
-    cookieBaker.farmCps = BigInt(cookieBaker.farms) * st.initialFarmCps;
-    cookieBaker.mineCps = BigInt(cookieBaker.mines) * st.initialMineCps;
-    cookieBaker.factoryCps = BigInt(cookieBaker.factories) * st.initialFactoryCps;
-    cookieBaker.bankCps = BigInt(cookieBaker.banks) * st.initialBankCps;
-    cookieBaker.templeCps = BigInt(cookieBaker.temples) * st.initialTempleCps;
-    cookieBaker.wizardCps = BigInt(cookieBaker.wizards) * st.initialWizardCps;
-    cookieBaker.shipmentCps = BigInt(cookieBaker.shipments) * st.initialShipmentCps;
-    cookieBaker.alchemyCps = BigInt(cookieBaker.alchemies) * st.initialAlchemyCps;
-    cookieBaker.portalCps = BigInt(cookieBaker.portals) * st.initialPortalCps;
-    cookieBaker.timeMachineCps = BigInt(cookieBaker.timeMachines) * st.initialTimeMachineCps;
-    cookieBaker.antimatterCps = BigInt(cookieBaker.antimatters) * st.initialAntimatterCps;
-    cookieBaker.prismCps = BigInt(cookieBaker.prisms) * st.initialPrismCps;
-    cookieBaker.chanceMakerCps = BigInt(cookieBaker.chanceMakers) * st.initialChanceMakerCps;
-    cookieBaker.fractalCps = BigInt(cookieBaker.fractals) * st.initialFractalCps;
-    cookieBaker.javaScriptCps = BigInt(cookieBaker.javaScripts) * st.initialJavaScriptCps;
-    cookieBaker.idleverseCps = BigInt(cookieBaker.idleverses) * st.initialIdleverseCps;
-    cookieBaker.cordexCps = BigInt(cookieBaker.cordexs) * st.initialCordexCps;
+    cookieBaker.passiveCPS = (BigInt(cookieBaker.cursors) * st.initialCursorCps
+        + BigInt(cookieBaker.grandmas) * st.initialGrandmaCps
+        + BigInt(cookieBaker.farms) * st.initialFarmCps
+        + BigInt(cookieBaker.mines) * st.initialMineCps
+        + BigInt(cookieBaker.factories) * st.initialFactoryCps
+        + BigInt(cookieBaker.banks) * st.initialBankCps
+        + BigInt(cookieBaker.temples) * st.initialTempleCps
+        + BigInt(cookieBaker.wizards) * st.initialWizardCps
+        + BigInt(cookieBaker.shipments) * st.initialShipmentCps
+        + BigInt(cookieBaker.alchemies) * st.initialAlchemyCps
+        + BigInt(cookieBaker.portals) * st.initialPortalCps
+        + BigInt(cookieBaker.timeMachines) * st.initialTimeMachineCps
+        + BigInt(cookieBaker.antimatters) * st.initialAntimatterCps
+        + BigInt(cookieBaker.prisms) * st.initialPrismCps
+        + BigInt(cookieBaker.chanceMakers) * st.initialChanceMakerCps
+        + BigInt(cookieBaker.fractals) * st.initialFractalCps
+        + BigInt(cookieBaker.javaScripts) * st.initialJavaScriptCps
+        + BigInt(cookieBaker.idleverses) * st.initialIdleverseCps
+        + BigInt(cookieBaker.cordexs) * st.initialCordexCps);
     return cookieBaker;
 };
 exports.createCookieBaker = createCookieBaker;
@@ -237,7 +219,7 @@ const addCursor = (cookieBaker) => {
         // calculating next cursor price
         cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.cursor, cookieBaker);
         // calculate new cps
-        cookieBaker.cursorCps = Number(cookieBaker.cursors) * st.initialCursorCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialCursorCps;
         return cookieBaker;
     }
     else {
@@ -256,7 +238,7 @@ const addGrandma = (cookieBaker) => {
         // calculating next grandma price
         cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.grandma, cookieBaker);
         // calculate new cps
-        cookieBaker.grandmaCps = cookieBaker.grandmas * st.initialGrandmaCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialGrandmaCps;
         return cookieBaker;
     }
     else {
@@ -275,7 +257,7 @@ const addFarm = (cookieBaker) => {
         // calculating next farm price
         cookieBaker.farmCost = (0, exports.calculateCost)(actions_1.actions.farm, cookieBaker);
         // calculate new cps
-        cookieBaker.farmCps = cookieBaker.farms * st.initialFarmCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFarmCps;
         return cookieBaker;
     }
     else {
@@ -294,7 +276,7 @@ const addMine = (cookieBaker) => {
         // calculating next mine price
         cookieBaker.mineCost = (0, exports.calculateCost)(actions_1.actions.mine, cookieBaker);
         // calculate new cps
-        cookieBaker.mineCps = cookieBaker.mines * st.initialMineCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialMineCps;
         return cookieBaker;
     }
     else {
@@ -313,7 +295,7 @@ const addFactory = (cookieBaker) => {
         // calculating next factory price
         cookieBaker.factoryCost = (0, exports.calculateCost)(actions_1.actions.factory, cookieBaker);
         // calculate new cps
-        cookieBaker.factoryCps = cookieBaker.factories * st.initialFactoryCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFactoryCps;
         return cookieBaker;
     }
     else {
@@ -332,7 +314,7 @@ const addBank = (cookieBaker) => {
         // calculating next bank price
         cookieBaker.bankCost = (0, exports.calculateCost)(actions_1.actions.bank, cookieBaker);
         // calculate new cps
-        cookieBaker.bankCps = cookieBaker.banks * st.initialBankCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialBankCps;
         return cookieBaker;
     }
     else {
@@ -351,7 +333,7 @@ const addTemple = (cookieBaker) => {
         // calculating next price
         cookieBaker.templeCost = (0, exports.calculateCost)(actions_1.actions.temple, cookieBaker);
         // calculate new cps
-        cookieBaker.templeCps = cookieBaker.temples * st.initialTempleCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialTempleCps;
         return cookieBaker;
     }
     else {
@@ -370,7 +352,7 @@ const addWizard = (cookieBaker) => {
         // calculating next price
         cookieBaker.wizardCost = (0, exports.calculateCost)(actions_1.actions.wizard, cookieBaker);
         // calculate new cps
-        cookieBaker.wizardCps = cookieBaker.wizards * st.initialWizardCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialWizardCps;
         return cookieBaker;
     }
     else {
@@ -389,7 +371,7 @@ const addShipment = (cookieBaker) => {
         // calculating next price
         cookieBaker.shipmentCost = (0, exports.calculateCost)(actions_1.actions.shipment, cookieBaker);
         // calculate new cps
-        cookieBaker.shipmentCps = cookieBaker.shipments * st.initialShipmentCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialShipmentCps;
         return cookieBaker;
     }
     else {
@@ -408,7 +390,7 @@ const addAlchemy = (cookieBaker) => {
         // calculating next price
         cookieBaker.alchemyCost = (0, exports.calculateCost)(actions_1.actions.alchemy, cookieBaker);
         // calculate new cps
-        cookieBaker.alchemyCps = cookieBaker.alchemies * st.initialAlchemyCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialAlchemyCps;
         return cookieBaker;
     }
     else {
@@ -427,7 +409,7 @@ const addPortal = (cookieBaker) => {
         // calculating next price
         cookieBaker.portalCost = (0, exports.calculateCost)(actions_1.actions.portal, cookieBaker);
         // calculate new cps
-        cookieBaker.portalCps = cookieBaker.portals * st.initialPortalCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialPortalCps;
         return cookieBaker;
     }
     else {
@@ -446,7 +428,7 @@ const addTimeMachine = (cookieBaker) => {
         // calculating next price
         cookieBaker.timeMachineCost = (0, exports.calculateCost)(actions_1.actions.timeMachine, cookieBaker);
         // calculate new cps
-        cookieBaker.timeMachineCps = cookieBaker.timeMachines * st.initialTimeMachineCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialTimeMachineCps;
         return cookieBaker;
     }
     else {
@@ -465,7 +447,7 @@ const addAntimatter = (cookieBaker) => {
         // calculating next price
         cookieBaker.antimatterCost = (0, exports.calculateCost)(actions_1.actions.antimatter, cookieBaker);
         // calculate new cps
-        cookieBaker.antimatterCps = cookieBaker.antimatters * st.initialAntimatterCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialAntimatterCps;
         return cookieBaker;
     }
     else {
@@ -484,7 +466,7 @@ const addPrism = (cookieBaker) => {
         // calculating next price
         cookieBaker.prismCost = (0, exports.calculateCost)(actions_1.actions.prism, cookieBaker);
         // calculate new cps
-        cookieBaker.prismCps = cookieBaker.prisms * st.initialPrismCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialPrismCps;
         return cookieBaker;
     }
     else {
@@ -503,7 +485,7 @@ const addChanceMaker = (cookieBaker) => {
         // calculating next price
         cookieBaker.chanceMakerCost = (0, exports.calculateCost)(actions_1.actions.chanceMaker, cookieBaker);
         // calculate new cps
-        cookieBaker.chanceMakerCps = cookieBaker.chanceMakers * st.initialChanceMakerCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialChanceMakerCps;
         return cookieBaker;
     }
     else {
@@ -522,7 +504,7 @@ const addFractal = (cookieBaker) => {
         // calculating next price
         cookieBaker.fractalCost = (0, exports.calculateCost)(actions_1.actions.fractal, cookieBaker);
         // calculate new cps
-        cookieBaker.fractalCps = cookieBaker.fractals * st.initialFractalCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFractalCps;
         return cookieBaker;
     }
     else {
@@ -541,7 +523,7 @@ const addJavaScript = (cookieBaker) => {
         // calculating next price
         cookieBaker.javaScriptCost = (0, exports.calculateCost)(actions_1.actions.javaScript, cookieBaker);
         // calculate new cps
-        cookieBaker.javaScriptCps = cookieBaker.javaScripts * st.initialJavaScriptCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialJavaScriptCps;
         return cookieBaker;
     }
     else {
@@ -560,7 +542,7 @@ const addIdleverse = (cookieBaker) => {
         // calculating next price
         cookieBaker.idleverseCost = (0, exports.calculateCost)(actions_1.actions.idleverse, cookieBaker);
         // calculate new cps
-        cookieBaker.idleverseCps = cookieBaker.idleverses * st.initialIdleverseCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialIdleverseCps;
         return cookieBaker;
     }
     else {
@@ -579,7 +561,7 @@ const addCordex = (cookieBaker) => {
         // calculating next price
         cookieBaker.cordexCost = (0, exports.calculateCost)(actions_1.actions.cordex, cookieBaker);
         // calculate new cps
-        cookieBaker.cordexCps = cookieBaker.cordexs * st.initialCordexCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialCordexCps;
         return cookieBaker;
     }
     else {

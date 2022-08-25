@@ -5,8 +5,8 @@
 */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initialCordexCost = exports.initialIdleverseCost = exports.initialJavaScriptCost = exports.initialFractalCost = exports.initialChanceMakerCost = exports.initialPrismCost = exports.initialAntimatterCost = exports.initialTimeMachineCost = exports.initialPortalCost = exports.initialAlchemyCost = exports.initialShipmentCost = exports.initialWizardCost = exports.initialTempleCost = exports.initialBankCost = exports.initialFactoryCost = exports.initialMineCost = exports.initialFarmCost = exports.initialGrandmaCost = exports.initialCursorCost = exports.initialCordexCps = exports.initialIdleverseCps = exports.initialJavaScriptCps = exports.initialFractalCps = exports.initialChanceMakerCps = exports.initialPrismCps = exports.initialAntimatterCps = exports.initialTimeMachineCps = exports.initialPortalCps = exports.initialAlchemyCps = exports.initialShipmentCps = exports.initialWizardCps = exports.initialTempleCps = exports.initialBankCps = exports.initialFactoryCps = exports.initialMineCps = exports.initialFarmCps = exports.initialGrandmaCps = exports.initialCursorCps = void 0;
-exports.initialCursorCps = 0.1;
-exports.initialGrandmaCps = BigInt(1);
+exports.initialCursorCps = BigInt(1);
+exports.initialGrandmaCps = BigInt(3);
 exports.initialFarmCps = BigInt(8);
 exports.initialMineCps = BigInt(47);
 exports.initialFactoryCps = BigInt(260);

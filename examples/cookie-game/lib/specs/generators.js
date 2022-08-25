@@ -24,7 +24,7 @@ const cookieBakerArbitrary = () => fc.tuple(fc.bigInt({ min: 0n, max: 2000000000
     const freeJavaScript = BigInt(Math.floor(Math.random() * Number(javaScripts)));
     const freeIdleverse = BigInt(Math.floor(Math.random() * Number(idleverses)));
     const freeCordex = BigInt(Math.floor(Math.random() * Number(cordexs)));
-    const cookie_baker = (0, state_1.createCookieBaker)(cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs, freeCursor, freeGrandma, freeFarm, freeMine, freeFactory, freeBank, freeTemple, freeWizard, freeShipment, freeAlchemy, freePortal, freeTimeMachine, freeAntimatter, freePrism, freeChanceMaker, freeFractal, freeJavaScript, freeIdleverse, freeCordex);
+    const cookie_baker = (0, state_1.createCookieBaker)(cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs);
     return cookie_baker;
 });
 exports.cookieBakerArbitrary = cookieBakerArbitrary;
