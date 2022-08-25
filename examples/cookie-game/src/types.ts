@@ -65,28 +65,6 @@ export type cookieBaker = {
     idleverses: bigint,
     cordexs: bigint,
 
-    /* Gift from application */
-    /* TODO: add the rule to generate them! */
-    freeCursor: bigint,
-    freeGrandma: bigint,
-    freeFarm: bigint,
-    freeMine: bigint,
-    freeFactory: bigint,
-    freeBank: bigint,
-    freeTemple: bigint;
-    freeWizard: bigint,
-    freeShipment: bigint,
-    freeAlchemy: bigint,
-    freePortal: bigint,
-    freeTimeMachine: bigint,
-    freeAntimatter: bigint,
-    freePrism: bigint,
-    freeChanceMaker: bigint,
-    freeFractal: bigint,
-    freeJavaScript: bigint,
-    freeIdleverse: bigint,
-    freeCordex: bigint,
-
     cursorCost: bigint,
     grandmaCost: bigint,
     farmCost: bigint,
