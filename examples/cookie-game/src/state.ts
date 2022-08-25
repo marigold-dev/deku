@@ -45,7 +45,7 @@ export const initCookieBaker = (cookieBaker: st.cookieBaker): st.cookieBaker => 
         cookieBaker.javaScripts,
         cookieBaker.idleverses,
         cookieBaker.cordexs,
-        );
+    );
 }
 
 export const createEmptyCookieBaker = (): st.cookieBaker => {
@@ -140,25 +140,7 @@ export const createCookieBaker = (
         idleverseCost: 0n,
         cordexCost: 0n,
 
-        cursorCps: 0,
-        grandmaCps: 0n,
-        farmCps: 0n,
-        mineCps: 0n,
-        factoryCps: 0n,
-        bankCps: 0n,
-        templeCps: 0n,
-        wizardCps: 0n,
-        shipmentCps: 0n,
-        alchemyCps: 0n,
-        portalCps: 0n,
-        timeMachineCps: 0n,
-        antimatterCps: 0n,
-        prismCps: 0n,
-        chanceMakerCps: 0n,
-        fractalCps: 0n,
-        javaScriptCps: 0n,
-        idleverseCps: 0n,
-        cordexCps: 0n,
+        passiveCPS: 0n
     }
     cookieBaker.cursorCost = calculateCost(actions.cursor, cookieBaker);
     cookieBaker.grandmaCost = calculateCost(actions.grandma, cookieBaker);
@@ -180,25 +162,25 @@ export const createCookieBaker = (
     cookieBaker.idleverseCost = calculateCost(actions.idleverse, cookieBaker);
     cookieBaker.cordexCost = calculateCost(actions.cordex, cookieBaker);
 
-    cookieBaker.cursorCps = Number(cookieBaker.cursors) * st.initialCursorCps;
-    cookieBaker.grandmaCps = BigInt(cookieBaker.grandmas) * st.initialGrandmaCps;
-    cookieBaker.farmCps = BigInt(cookieBaker.farms) * st.initialFarmCps;
-    cookieBaker.mineCps = BigInt(cookieBaker.mines) * st.initialMineCps;
-    cookieBaker.factoryCps = BigInt(cookieBaker.factories) * st.initialFactoryCps;
-    cookieBaker.bankCps = BigInt(cookieBaker.banks) * st.initialBankCps;
-    cookieBaker.templeCps = BigInt(cookieBaker.temples) * st.initialTempleCps;
-    cookieBaker.wizardCps = BigInt(cookieBaker.wizards) * st.initialWizardCps;
-    cookieBaker.shipmentCps = BigInt(cookieBaker.shipments) * st.initialShipmentCps;
-    cookieBaker.alchemyCps = BigInt(cookieBaker.alchemies) * st.initialAlchemyCps;
-    cookieBaker.portalCps = BigInt(cookieBaker.portals) * st.initialPortalCps;
-    cookieBaker.timeMachineCps = BigInt(cookieBaker.timeMachines) * st.initialTimeMachineCps;
-    cookieBaker.antimatterCps = BigInt(cookieBaker.antimatters) * st.initialAntimatterCps;
-    cookieBaker.prismCps = BigInt(cookieBaker.prisms) * st.initialPrismCps;
-    cookieBaker.chanceMakerCps = BigInt(cookieBaker.chanceMakers) * st.initialChanceMakerCps;
-    cookieBaker.fractalCps = BigInt(cookieBaker.fractals) * st.initialFractalCps;
-    cookieBaker.javaScriptCps = BigInt(cookieBaker.javaScripts) * st.initialJavaScriptCps;
-    cookieBaker.idleverseCps = BigInt(cookieBaker.idleverses) * st.initialIdleverseCps;
-    cookieBaker.cordexCps = BigInt(cookieBaker.cordexs) * st.initialCordexCps;
+    cookieBaker.passiveCPS = (BigInt(cookieBaker.cursors) * st.initialCursorCps
+        + BigInt(cookieBaker.grandmas) * st.initialGrandmaCps
+        + BigInt(cookieBaker.farms) * st.initialFarmCps
+        + BigInt(cookieBaker.mines) * st.initialMineCps
+        + BigInt(cookieBaker.factories) * st.initialFactoryCps
+        + BigInt(cookieBaker.banks) * st.initialBankCps
+        + BigInt(cookieBaker.temples) * st.initialTempleCps
+        + BigInt(cookieBaker.wizards) * st.initialWizardCps
+        + BigInt(cookieBaker.shipments) * st.initialShipmentCps
+        + BigInt(cookieBaker.alchemies) * st.initialAlchemyCps
+        + BigInt(cookieBaker.portals) * st.initialPortalCps
+        + BigInt(cookieBaker.timeMachines) * st.initialTimeMachineCps
+        + BigInt(cookieBaker.antimatters) * st.initialAntimatterCps
+        + BigInt(cookieBaker.prisms) * st.initialPrismCps
+        + BigInt(cookieBaker.chanceMakers) * st.initialChanceMakerCps
+        + BigInt(cookieBaker.fractals) * st.initialFractalCps
+        + BigInt(cookieBaker.javaScripts) * st.initialJavaScriptCps
+        + BigInt(cookieBaker.idleverses) * st.initialIdleverseCps
+        + BigInt(cookieBaker.cordexs) * st.initialCordexCps);
 
     return cookieBaker;
 }
@@ -323,7 +305,7 @@ export const addCursor = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next cursor price
         cookieBaker.cursorCost = calculateCost(actions.cursor, cookieBaker);
         // calculate new cps
-        cookieBaker.cursorCps = Number(cookieBaker.cursors) * st.initialCursorCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialCursorCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a cursor, needed: " + cookieBaker.cursorCost + " actual amount: " + cookieBaker.cookies);
@@ -341,7 +323,7 @@ export const addGrandma = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next grandma price
         cookieBaker.grandmaCost = calculateCost(actions.grandma, cookieBaker);
         // calculate new cps
-        cookieBaker.grandmaCps = cookieBaker.grandmas * st.initialGrandmaCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialGrandmaCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a grandma, needed: " + cookieBaker.grandmaCost + " actual amount: " + cookieBaker.cookies);
@@ -359,7 +341,7 @@ export const addFarm = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next farm price
         cookieBaker.farmCost = calculateCost(actions.farm, cookieBaker);
         // calculate new cps
-        cookieBaker.farmCps = cookieBaker.farms * st.initialFarmCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFarmCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a farm, needed: " + cookieBaker.farmCost + " actual amount: " + cookieBaker.cookies);
@@ -377,7 +359,7 @@ export const addMine = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next mine price
         cookieBaker.mineCost = calculateCost(actions.mine, cookieBaker);
         // calculate new cps
-        cookieBaker.mineCps = cookieBaker.mines * st.initialMineCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialMineCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a mine, needed: " + cookieBaker.mineCost + " actual amount: " + cookieBaker.mines);
@@ -395,7 +377,7 @@ export const addFactory = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next factory price
         cookieBaker.factoryCost = calculateCost(actions.factory, cookieBaker);
         // calculate new cps
-        cookieBaker.factoryCps = cookieBaker.factories * st.initialFactoryCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFactoryCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a factory, needed: " + cookieBaker.factoryCost + " actual amount: " + cookieBaker.factories);
@@ -413,7 +395,7 @@ export const addBank = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next bank price
         cookieBaker.bankCost = calculateCost(actions.bank, cookieBaker);
         // calculate new cps
-        cookieBaker.bankCps = cookieBaker.banks * st.initialBankCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialBankCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a bank, needed: " + cookieBaker.bankCost + " actual amount: " + cookieBaker.banks);
@@ -431,7 +413,7 @@ export const addTemple = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.templeCost = calculateCost(actions.temple, cookieBaker);
         // calculate new cps
-        cookieBaker.templeCps = cookieBaker.temples * st.initialTempleCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialTempleCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a temple, needed: " + cookieBaker.templeCost + " actual amount: " + cookieBaker.temples);
@@ -449,7 +431,7 @@ export const addWizard = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.wizardCost = calculateCost(actions.wizard, cookieBaker);
         // calculate new cps
-        cookieBaker.wizardCps = cookieBaker.wizards * st.initialWizardCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialWizardCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a wizard, needed: " + cookieBaker.wizardCost + " actual amount: " + cookieBaker.wizards);
@@ -467,7 +449,7 @@ export const addShipment = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.shipmentCost = calculateCost(actions.shipment, cookieBaker);
         // calculate new cps
-        cookieBaker.shipmentCps = cookieBaker.shipments * st.initialShipmentCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialShipmentCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a shipment, needed: " + cookieBaker.shipmentCost + " actual amount: " + cookieBaker.shipments);
@@ -485,7 +467,7 @@ export const addAlchemy = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.alchemyCost = calculateCost(actions.alchemy, cookieBaker);
         // calculate new cps
-        cookieBaker.alchemyCps = cookieBaker.alchemies * st.initialAlchemyCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialAlchemyCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a alchemy, needed: " + cookieBaker.alchemyCost + " actual amount: " + cookieBaker.alchemies);
@@ -503,7 +485,7 @@ export const addPortal = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.portalCost = calculateCost(actions.portal, cookieBaker);
         // calculate new cps
-        cookieBaker.portalCps = cookieBaker.portals * st.initialPortalCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialPortalCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a portal, needed: " + cookieBaker.portalCost + " actual amount: " + cookieBaker.portals);
@@ -521,7 +503,7 @@ export const addTimeMachine = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.timeMachineCost = calculateCost(actions.timeMachine, cookieBaker);
         // calculate new cps
-        cookieBaker.timeMachineCps = cookieBaker.timeMachines * st.initialTimeMachineCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialTimeMachineCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a time machine, needed: " + cookieBaker.timeMachineCost + " actual amount: " + cookieBaker.timeMachines);
@@ -539,7 +521,7 @@ export const addAntimatter = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.antimatterCost = calculateCost(actions.antimatter, cookieBaker);
         // calculate new cps
-        cookieBaker.antimatterCps = cookieBaker.antimatters * st.initialAntimatterCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialAntimatterCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a antimatter, needed: " + cookieBaker.antimatterCost + " actual amount: " + cookieBaker.antimatters);
@@ -557,7 +539,7 @@ export const addPrism = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.prismCost = calculateCost(actions.prism, cookieBaker);
         // calculate new cps
-        cookieBaker.prismCps = cookieBaker.prisms * st.initialPrismCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialPrismCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a prism, needed: " + cookieBaker.prismCost + " actual amount: " + cookieBaker.prisms);
@@ -575,7 +557,7 @@ export const addChanceMaker = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.chanceMakerCost = calculateCost(actions.chanceMaker, cookieBaker);
         // calculate new cps
-        cookieBaker.chanceMakerCps = cookieBaker.chanceMakers * st.initialChanceMakerCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialChanceMakerCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a chance maker, needed: " + cookieBaker.chanceMakerCost + " actual amount: " + cookieBaker.chanceMakers);
@@ -593,7 +575,7 @@ export const addFractal = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.fractalCost = calculateCost(actions.fractal, cookieBaker);
         // calculate new cps
-        cookieBaker.fractalCps = cookieBaker.fractals * st.initialFractalCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialFractalCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a fractal, needed: " + cookieBaker.fractalCost + " actual amount: " + cookieBaker.fractals);
@@ -611,7 +593,7 @@ export const addJavaScript = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.javaScriptCost = calculateCost(actions.javaScript, cookieBaker);
         // calculate new cps
-        cookieBaker.javaScriptCps = cookieBaker.javaScripts * st.initialJavaScriptCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialJavaScriptCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a javascript, needed: " + cookieBaker.javaScriptCost + " actual amount: " + cookieBaker.javaScripts);
@@ -629,7 +611,7 @@ export const addIdleverse = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.idleverseCost = calculateCost(actions.idleverse, cookieBaker);
         // calculate new cps
-        cookieBaker.idleverseCps = cookieBaker.idleverses * st.initialIdleverseCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialIdleverseCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy an idleverse, needed: " + cookieBaker.idleverseCost + " actual amount: " + cookieBaker.idleverses);
@@ -647,7 +629,7 @@ export const addCordex = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         // calculating next price
         cookieBaker.cordexCost = calculateCost(actions.cordex, cookieBaker);
         // calculate new cps
-        cookieBaker.cordexCps = cookieBaker.cordexs * st.initialCordexCps;
+        cookieBaker.passiveCPS = cookieBaker.passiveCPS + st.initialCordexCps;
         return cookieBaker;
     } else {
         console.log("Not enough cookie to buy a cordex, needed: " + cookieBaker.cordexCost + " actual amount: " + cookieBaker.cordexs);
