@@ -3,15 +3,11 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 
-module Parallel = struct
-  let domains =
-    match Sys.getenv_opt "DEKU_DOMAINS" with
-    | Some str ->
-        let domains = int_of_string str in
-        let () = Format.eprintf "Using %d domains" domains in
-        domains
-    | None -> 8
-
+module Parallel (D : sig
+  val domains : int
+end) =
+struct
+  let domains = D.domains
   let pool = Parallel.Pool.make ~domains
   let init_p n f = Parallel.init_p pool n f
   let filter_map_p f l = Parallel.filter_map_p pool f l
@@ -19,20 +15,24 @@ module Parallel = struct
 end
 
 module Util = struct
-  let benchmark ~runs f =
-    let times =
-      List.init runs (fun _n ->
-          let t1 = Unix.gettimeofday () in
-          let () = f () in
-          let t2 = Unix.gettimeofday () in
-          t2 -. t1)
-    in
-    let total = List.fold_left (fun total time -> total +. time) 0.0 times in
-    let average = total /. Float.of_int runs in
-    `Average average
+  let benchmark f =
+    let t1 = Unix.gettimeofday () in
+    let _ = f () in
+    let t2 = Unix.gettimeofday () in
+    t2 -. t1
+
+  let write_to place data =
+    let oc = open_out place in
+    output_string oc data;
+    close_out oc
 end
 
-module Block_application = struct
+module Block_application (D : sig
+  val domains : int
+end) =
+struct
+  module Parallel = Parallel (D)
+
   let generate () =
     let secret = Ed25519.Secret.generate () in
     let secret = Secret.Ed25519 secret in
@@ -67,36 +67,24 @@ module Block_application = struct
     payload_of_operations operations
 
   (* TODO: parametrize over domains *)
-  let perform ~runs ~protocol ~level ~payload =
-    let () = Format.eprintf "running block application...\n%!" in
+  let perform ~protocol ~level ~payload =
+    Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level ~payload
+      ~tezos_operations:[] protocol
 
-    let (`Average average) =
-      Util.benchmark ~runs (fun () ->
-          let _protocol, _receipts =
-            Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level
-              ~payload ~tezos_operations:[] protocol
-          in
-          ())
-    in
-    average
-
-  let run () =
+  let run ~size =
     let protocol = Protocol.initial in
     let level = Level.zero in
-    (* FIXME: make this size configurable *)
-    let size = 50_000 in
     let payload = big_payload ~size ~level in
-    let payload_size =
-      List.fold_left (fun a s -> a + String.length s) 0 payload
-    in
-    Format.printf "Block size: %d\n%!" payload_size;
-    let average = perform ~runs:10 ~protocol ~level ~payload in
-    let tps = Float.of_int size /. average in
-    Format.eprintf "average run time: %3f. tps: %3f\n%!" average tps;
-    average
+    Util.benchmark (fun () -> perform ~protocol ~level ~payload)
 end
 
-module Block_production = struct
+module Block_production (D : sig
+  val domains : int
+end) =
+struct
+  module Parallel = Parallel (D)
+  module Block_application = Block_application (D)
+
   let producer = Block_application.generate ()
   let sender = Block_application.generate ()
 
@@ -126,25 +114,114 @@ module Block_production = struct
     in
     ()
 
-  let perform ~runs ~size =
+  let perform ~size =
     let () = Format.eprintf "running block production...\n%!" in
     let operations = operations ~size in
-    let (`Average average) =
-      Util.benchmark ~runs (fun () -> produce_block ~operations)
-    in
-    average
+    Util.benchmark (fun () -> produce_block ~operations)
 
-  let run () =
+  let run ~size =
     (* FIXME: make this size configurable *)
-    let size = 50_000 in
-    let average = perform ~runs:5 ~size in
+    let average = perform ~size in
     let tx_packed_per_sec = Float.of_int size /. average in
-    Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average
+    Format.eprintf "run time: %3f. tx packed/s: %3f\n%!" average
       tx_packed_per_sec;
     average
 end
 
-let alpha = Block_application.run ()
-let pi = Block_production.run ()
-let total = alpha +. pi
-let () = Format.printf "alpha + pi: %3f\n%!" total
+let max_domains = 7
+let runs = 15
+let size = 40_000
+
+let application_domains testing ~max_domains ~runs =
+  let rec go domains acc =
+    let module Block_application = Block_application (struct
+      let domains = domains
+    end) in
+    let time_list =
+      List.init runs (fun _ ->
+          Format.sprintf "%d,%f" domains (Block_application.run ~size))
+    in
+    let out = String.concat "\n" time_list in
+    match domains = max_domains with
+    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+    | false -> go (domains + 1) (out :: acc)
+  in
+  go 1 []
+
+let application_transactions testing ~runs ~max_transactions =
+  let rec go transactions acc =
+    let module Block_application = Block_application (struct
+      let domains = max_domains
+    end) in
+    let time_list =
+      List.init runs (fun _ ->
+          Format.sprintf "%d,%f" transactions
+            (Block_application.run ~size:transactions))
+    in
+    let out = String.concat "\n" time_list in
+    match transactions = max_transactions with
+    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+    | false -> go (transactions + 5_000) (out :: acc)
+  in
+  go 5_000 []
+
+let production_domains testing ~max_domains ~runs =
+  let rec go domains acc =
+    let module Block_production = Block_production (struct
+      let domains = domains
+    end) in
+    let time_list =
+      List.init runs (fun _ ->
+          Format.sprintf "%d,%f" domains (Block_production.run ~size))
+    in
+    let out = String.concat "\n" time_list in
+    match domains = max_domains with
+    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+    | false -> go (domains + 1) (out :: acc)
+  in
+  go 1 []
+
+let production_transactions testing ~max_transactions ~runs =
+  let rec go transactions acc =
+    let module Block_production = Block_production (struct
+      let domains = max_domains
+    end) in
+    let time_list =
+      List.init runs (fun _ ->
+          Format.sprintf "%d,%f" transactions
+            (Block_production.run ~size:transactions))
+    in
+    let out = String.concat "\n" time_list in
+    match transactions = max_transactions with
+    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+    | false -> go (transactions + 5_000) (out :: acc)
+  in
+  go 5_000 []
+
+type 'a iterable = { initial : 'a; final : 'a; incr : 'a -> 'a }
+
+let test_model testing ~runs ~iterable =
+  let rec go value acc =
+    let module Block_application = Block_application (struct
+      let domains = max_domains
+    end) in
+    let time_list =
+      List.init runs (fun _ ->
+          Format.sprintf "%d,%f" value (Block_application.run ~size))
+    in
+    let out = String.concat "\n" time_list in
+    match value >= iterable.final with
+    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+    | false -> go (iterable.incr value) (out :: acc)
+  in
+  go iterable.initial []
+
+let () =
+  (* Util.write_to "application_domains"
+       (application_domains "domains" ~max_domains ~runs);
+     Util.write_to "application_transactions"
+       (application_transactions "transactions" ~max_transactions:size ~runs);
+     Util.write_to "production_domains"
+       (production_domains "domains" ~max_domains ~runs); *)
+  Util.write_to "production_transactions"
+    (production_transactions "transactions" ~max_transactions:size ~runs)

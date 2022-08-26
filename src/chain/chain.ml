@@ -29,7 +29,10 @@ let make ~identity ~bootstrap_key ~validators =
   let producer = Producer.make ~identity in
   Chain { protocol; consensus; verifier; signer; producer }
 
+(* Apply entrypoint *)
 let apply_block ~pool ~current ~block chain =
+  (* let sleep = 0.6 in
+     Unix.sleepf sleep; *)
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
   let () = Format.eprintf "%a\n%!" N.pp (Level.to_n level) in
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
@@ -39,6 +42,7 @@ let apply_block ~pool ~current ~block chain =
       ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
       ~current_level:level ~payload protocol ~tezos_operations
   in
+  (* Clean entrypoint *)
   let producer = Producer.clean ~receipts ~tezos_operations producer in
   (* Trace.dump "Starting produce block"; *)
   let effects =
@@ -48,7 +52,7 @@ let apply_block ~pool ~current ~block chain =
         ~current ~consensus producer
     with
     | Some block ->
-        Trace.dump "Produced block";
+        (* Trace.dump "Produced block"; *)
         [ Broadcast_block block ]
     | None -> []
   in
@@ -56,7 +60,7 @@ let apply_block ~pool ~current ~block chain =
   (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_block ~pool ~current ~block chain =
-  Trace.dump "Incoming block";
+  (* Trace.dump "Incoming block"; *)
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let Verifier.{ apply; verifier } =
     Verifier.incoming_block ~consensus ~block verifier
@@ -77,11 +81,11 @@ let incoming_block ~pool ~current ~block chain =
         (chain, effects @ additional_effects)
     | None -> (chain, effects)
   in
-  Trace.dump "incomind block finished";
+  (* Trace.dump "incoming block finished"; *)
   x
 
 let incoming_signature ~pool ~current ~signature chain =
-  Trace.dump "Incoming signature";
+  (* Trace.dump "Incoming signature"; *)
   let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let Verifier.{ apply; verifier } =
     Verifier.incoming_signature ~consensus ~signature verifier
@@ -93,7 +97,7 @@ let incoming_signature ~pool ~current ~signature chain =
     | Some block -> apply_block ~pool ~current ~block chain
     | None -> (chain, [])
   in
-  Trace.dump "Incoming signature finished";
+  (* Trace.dump "Incoming signature finished"; *)
   x
 
 let incoming_timeout ~pool ~current node =

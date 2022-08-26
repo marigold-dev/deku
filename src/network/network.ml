@@ -13,10 +13,10 @@ exception Invalid_hash
 
 let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
     a option * network =
-  Trace.dump "Incoming packet";
+  (* Trace.dump "Incoming packet"; *)
   let packet_json = Yojson.Safe.from_string packet in
   let (Packet { hash; content } as packet) = Packet.t_of_yojson packet_json in
-  Trace.dump "Incoming packet deserialized";
+  (* Trace.dump "Incoming packet deserialized"; *)
   let (Network { nodes; known_packets }) = network in
   match Packet_hash.Set.mem hash known_packets with
   | true -> raise Duplicated_packet
@@ -34,7 +34,7 @@ let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
             Packet.content_of_yojson ~endpoint content
           with
           | content ->
-              Trace.dump "Incoming packet parsed";
+              (* Trace.dump "Incoming packet parsed"; *)
               (Some content, network)
           | exception exn ->
               (* TODO: proper logging *)

@@ -57,8 +57,11 @@ let clean ~receipts ~tezos_operations producer =
   Producer { identity; operations; tezos_operations }
 
 let produce ~parallel_map ~current_level ~current_block producer =
+  (* Produce entrypoint *)
   (* TODO: Make this configurable *)
-  let max_block_size = 100_000 in
+  (* let sleep = 0.25 in
+  Unix.sleepf sleep; *)
+  let max_block_size = 5_000 in
   let (Producer { identity; operations; tezos_operations }) = producer in
   let previous = current_block in
   let level = Level.next current_level in

@@ -27,4 +27,5 @@ export DEKU_BOOTSTRAP_SECRET="edsk2jS9cPs3Tgp6T34NQvPPPUPGYtGysCHS569FgDAKmdkKut
 
 _build/install/default/bin/deku-bootstrap
 
+# sleep 30 && killall deku-node
 wait
