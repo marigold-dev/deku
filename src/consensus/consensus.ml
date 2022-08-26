@@ -2,13 +2,13 @@ open Deku_stdlib
 open Deku_concepts
 open Block
 
-type external_effect =
+type action =
   (* protocol *)
-  | Accepted_block of { level : Level.t; payload : string list }
+  | Consensus_accepted_block of { level : Level.t; payload : string list }
   (* timer *)
-  | Trigger_timeout
+  | Consensus_trigger_timeout
   (* network *)
-  | Broadcast_signature of { signature : Verified_signature.t }
+  | Consensus_broadcast_signature of { signature : Verified_signature.t }
 
 type consensus =
   | Consensus of {
@@ -37,7 +37,11 @@ let incoming_block_or_signature ~current ~block consensus =
           Format.eprintf "%a\n%!" Z.pp_print level
         in
         let state = State.apply_block ~current ~block state in
-        (state, [ Trigger_timeout; Accepted_block { level; payload } ])
+        ( state,
+          [
+            Consensus_trigger_timeout;
+            Consensus_accepted_block { level; payload };
+          ] )
     | false -> (state, [])
   in
 
@@ -62,7 +66,8 @@ let incoming_block ~current ~block consensus =
           | false -> None
         in
         match signature with
-        | Some signature -> Broadcast_signature { signature } :: effects
+        | Some signature ->
+            Consensus_broadcast_signature { signature } :: effects
         | None -> effects)
     | false -> effects
   in

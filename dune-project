@@ -45,6 +45,10 @@
  (depends deku-protocol deku-consensus))
 
 (package
+ (name deku-gossip)
+ (depends deku-protocol deku-consensus))
+
+(package
  (name deku-network)
  (depends deku-protocol deku-consensus))
 

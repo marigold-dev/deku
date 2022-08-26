@@ -2,7 +2,13 @@
  (name deku_bootstrap)
  (public_name deku-bootstrap)
  (package deku-bootstrap)
- (libraries deku-consensus deku-network deku-storage)
+ (libraries
+  deku-consensus
+  deku-network
+  deku-storage
+  deku-gossip
+  logs.fmt
+  fmt.tty)
  (preprocess
   (pps
    ppx_let_binding

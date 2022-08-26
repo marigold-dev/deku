@@ -1,61 +1,131 @@
-open Broadcast
+open Deku_stdlib
+open Piaf
 
-type network =
-  | Network of { nodes : Uri.t list; known_messages : Message_hash.Set.t }
-
+type network = Network of { clients : (Uri.t * Client.t option ref) list }
 type t = network
 
-let make ~nodes = Network { nodes; known_messages = Message_hash.Set.empty }
+let error ~message status =
+  let response = Response.of_string ~body:message status in
+  Lwt.return response
 
-exception Duplicated_message
-exception Invalid_hash
+let internal_error error =
+  let response = Response.or_internal_error (Error error) in
+  Lwt.return response
 
-let incoming_message (type a) ~(endpoint : a Endpoint.t) ~message network :
-    a option * network =
-  let message_json = Yojson.Safe.from_string message in
-  let (Message { hash; content } as message) =
-    Message.t_of_yojson message_json
+let expected_hash_query = "hash"
+
+let with_uri Server.{ ctx = _; request } next =
+  let uri = Uri.of_string request.target in
+  let meth = request.meth in
+  let endpoint = Uri.path uri in
+  match (meth, endpoint) with
+  | `POST, "/messages" -> next Server.{ ctx = uri; request }
+  | _ -> error ~message:"only POST /messages is supported" `Bad_request
+
+let with_raw_expected_hash Server.{ ctx = uri; request } next =
+  match Uri.get_query_param uri expected_hash_query with
+  | Some raw_expected_hash -> next Server.{ ctx = raw_expected_hash; request }
+  | None -> error ~message:"?expected_hash is required" `Bad_request
+
+let with_raw_content Server.{ ctx = raw_expected_hash; request } next =
+  let body = request.body in
+  let%await raw_content = Body.to_string body in
+  match raw_content with
+  | Ok raw_content ->
+      next Server.{ ctx = (raw_expected_hash, raw_content); request }
+  | Error error -> internal_error error
+
+let dispatch on_message
+    Server.{ ctx = raw_expected_hash, raw_content; request = _ } =
+  let () = on_message ~raw_expected_hash ~raw_content in
+  let response = Piaf.Response.of_string ~body:"OK" `OK in
+  Lwt.return response
+
+let handler on_message context =
+  with_uri context @@ fun context ->
+  with_raw_expected_hash context @@ fun context ->
+  with_raw_content context @@ fun context -> dispatch on_message context
+
+let listen ~port ~on_message =
+  let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
+  Lwt.async (fun () ->
+      (* TODO: piaf error_handler *)
+      let%await _server =
+        Lwt_io.establish_server_with_client_socket listen_address
+          (Server.create ?config:None ?error_handler:None (fun context ->
+               (* Format.eprintf "request\n%!"; *)
+               handler on_message context))
+      in
+      let () = Printf.printf "Listening on port %i\n%!" port in
+      Lwt.return_unit)
+
+(* TODO: put this somewhere else *)
+let reconnection_timeout = 5.0
+
+let rec connection_loop ref ~uri =
+  let config = Config.{ default with flush_headers_immediately = true } in
+  let%await client = Client.create ~config uri in
+  match client with
+  | Ok client ->
+      ref := Some client;
+      Lwt.return_unit
+  | Error _error ->
+      (* TODO: do something with this error*)
+      let%await () = Lwt_unix.sleep reconnection_timeout in
+      connection_loop ref ~uri
+
+let connect ~nodes =
+  let clients =
+    List.map
+      (fun uri ->
+        let ref = ref None in
+        let () = Lwt.async (fun () -> connection_loop ref ~uri) in
+        (uri, ref))
+      nodes
   in
+  Network { clients }
 
-  let (Network { nodes; known_messages }) = network in
-  match Message_hash.Set.mem hash known_messages with
-  | true -> raise Duplicated_message
-  | false -> (
-      match Message.verify message with
-      | true -> (
-          let known_messages = Message_hash.Set.add hash known_messages in
-          let network = Network { nodes; known_messages } in
+let endpoint = "/messages"
 
-          match
-            (* TODO: really important, how to prevent spam?
-                Can the same parsed data be derived from two different hashes? *)
-            (* TODO: does it make sense here? *)
-            let () = broadcast_json ~nodes ~endpoint ~message:message_json in
-            Message.content_of_yojson ~endpoint content
-          with
-          | content -> (Some content, network)
-          | exception _exn -> (* TODO: dump exception*) (None, network))
-      | false -> (* TODO: spam prevention *) raise Invalid_hash)
-
-let incoming_message ~endpoint ~message network =
-  match incoming_message ~endpoint ~message network with
-  | message, network -> (message, network)
-  | exception _exn -> (* TODO: dump exception*) (None, network)
-
-let broadcast ~endpoint ~content network =
-  let (Network { nodes; known_messages }) = network in
-  let message =
-    let content = Message.yojson_of_content ~endpoint content in
-    Message.make ~content
+let post ~raw_expected_hash ~raw_content ~uri _client =
+  let headers =
+    let open Headers in
+    (* TODO: maybe add json to Well_known in Piaf*)
+    let json = Mime_types.map_extension "json" in
+    [ (Well_known.content_type, json) ]
   in
-  let () = broadcast_message ~nodes ~endpoint ~message in
-  Network { nodes; known_messages }
+  let target = Uri.with_path uri endpoint in
+  let target =
+    Uri.with_query' target [ (expected_hash_query, raw_expected_hash) ]
+  in
+  (* let target = Uri.to_string target in *)
+  (* Format.eprintf "%a <- %s\n%!" Uri.pp_hum _uri target; *)
+  let body = Body.of_string raw_content in
+  Client.Oneshot.post ~headers ~body target
 
-let broadcast_block ~block network =
-  broadcast ~endpoint:Endpoint.blocks ~content:block network
+let post ~raw_expected_hash ~raw_content ~uri client =
+  Lwt.async (fun () ->
+      let%await post = post ~raw_expected_hash ~raw_content ~uri client in
+      match post with
+      | Ok response -> (
+          let%await drain = Body.drain response.body in
+          match drain with
+          | Ok () -> Lwt.return_unit
+          | Error _error ->
+              (* Format.eprintf "error: %a\n%!" Error.pp_hum _error; *)
+              (* TODO: do something with this error *)
+              Lwt.return_unit)
+      | Error _error ->
+          (* Format.eprintf "error: %a\n%!" Error.pp_hum _error; *)
+          (* TODO: do something with this error *)
+          Lwt.return_unit)
 
-let broadcast_signature ~signature network =
-  broadcast ~endpoint:Endpoint.signatures ~content:signature network
+let broadcast ~raw_expected_hash ~raw_content server =
+  let (Network { clients }) = server in
 
-let broadcast_operation ~operation network =
-  broadcast ~endpoint:Endpoint.operations ~content:operation network
+  List.iter
+    (fun (uri, client) ->
+      match !client with
+      | Some client -> post ~raw_expected_hash ~raw_content ~uri client
+      | None -> ())
+    clients

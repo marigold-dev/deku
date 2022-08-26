@@ -2,8 +2,11 @@ open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_consensus
+open Deku_gossip
 open Deku_network
 open Deku_storage
+
+let sleep_time = 3.0
 
 module Util = struct
   let ensure_folder folder =
@@ -21,6 +24,13 @@ module Util = struct
     Filename.concat folder "storage.json"
 end
 
+let broadcast ~content network =
+  let open Message in
+  let _message, raw_message = Message.encode ~content in
+  let (Raw_message { hash; raw_content }) = raw_message in
+  let raw_expected_hash = Message_hash.to_b58 hash in
+  Network.broadcast ~raw_expected_hash ~raw_content network
+
 let produce identity consensus network =
   let (Consensus.Consensus { state; _ }) = consensus in
   let (State { current_level; current_block; _ }) = state in
@@ -28,13 +38,12 @@ let produce identity consensus network =
   let previous = current_block in
   let operations = [] in
   let block = Block.produce ~identity ~level ~previous ~operations in
-  let _network = Network.broadcast_block ~block network in
+  broadcast ~content:(Message.Content.block block) network;
   block
 
 let sign identity block network =
   let signature = Block.sign ~identity block in
-  let _network = Network.broadcast_signature ~signature network in
-  ()
+  broadcast ~content:(Message.Content.signature signature) network
 
 let restart ~producer identities consensus network =
   let block = produce producer consensus network in
@@ -67,10 +76,12 @@ let bootstrap ~size =
     Validators.of_key_hash_list validators
   in
   let consensus = Consensus.make ~identity:producer ~validators in
-  let network = Network.make ~nodes in
+  let network = Network.connect ~nodes in
+  (* TODO: this is lame, but I'm lazy*)
+  let%await () = Lwt_unix.sleep sleep_time in
   let () = restart ~producer identities consensus network in
   (* TODO: this is lame, but Lwt*)
-  let%await () = Lwt_unix.sleep 3.0 in
+  let%await () = Lwt_unix.sleep sleep_time in
   Lwt.return_unit
 
 let generate ~base_uri ~base_port ~size =
@@ -134,4 +145,10 @@ let main () =
   | Some "bootstrap" -> bootstrap ~size:!size
   | Some _ | None -> failwith "deku-bootstrap <generate|bootstrap>"
 
+(* let setup_log ?style_renderer level =
+     Fmt_tty.setup_std_outputs ?style_renderer ();
+     Logs.set_level (Some level);
+     Logs.set_reporter (Logs_fmt.reporter ())
+
+   let () = setup_log Logs.Debug *)
 let () = Lwt_main.run (main ())

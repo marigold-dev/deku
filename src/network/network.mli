@@ -1,17 +1,12 @@
-open Deku_concepts
-open Deku_protocol
-open Deku_consensus
-
-type network = private
-  | Network of { nodes : Uri.t list; known_messages : Message_hash.Set.t }
-
+type network
 type t = network
 
-val make : nodes:Uri.t list -> network
+val listen :
+  port:int ->
+  on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
+  unit
 
-val incoming_message :
-  endpoint:'a Endpoint.t -> message:string -> network -> 'a option * network
+val connect : nodes:Uri.t list -> network
 
-val broadcast_block : block:Block.t -> network -> network
-val broadcast_signature : signature:Verified_signature.t -> network -> network
-val broadcast_operation : operation:Operation.t -> network -> network
+val broadcast :
+  raw_expected_hash:string -> raw_content:string -> network -> unit

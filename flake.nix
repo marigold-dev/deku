@@ -2,7 +2,7 @@
   description = "Nix Flake";
 
   inputs = {
-    nixpkgs.url = "github:anmonteiro/nix-overlays";
+    nixpkgs.url = "github:EduardoRFS/nix-overlays";
     flake-utils.url = "github:numtide/flake-utils";
   };
 

@@ -2,6 +2,13 @@
  (name deku_node)
  (public_name deku-node)
  (package deku-node)
- (libraries deku-chain deku-network deku-storage cmdliner)
+ (libraries
+  deku-chain
+  deku-network
+  deku-storage
+  deku-gossip
+  cmdliner
+  logs.fmt
+  fmt.tty)
  (preprocess
   (pps ppx_let_binding)))
