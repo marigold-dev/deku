@@ -1,4 +1,5 @@
 open Deku_stdlib
+open Deku_concepts
 open Deku_protocol
 open Deku_consensus
 open Deku_gossip
@@ -24,11 +25,11 @@ let make ~identity ~validators ~pool =
   let producer = Producer.make ~identity in
   Chain { pool; protocol; consensus; producer }
 
-let apply_consensus_action chain consensus_action =
+let rec apply_consensus_action chain consensus_action =
   let open Consensus in
+  let (Chain { pool; protocol; consensus; producer }) = chain in
   match consensus_action with
   | Consensus_accepted_block { level; payload } ->
-      let (Chain { pool; protocol; consensus; producer }) = chain in
       let protocol, receipts =
         Protocol.apply
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
@@ -37,13 +38,20 @@ let apply_consensus_action chain consensus_action =
       let producer = Producer.clean ~receipts producer in
       let chain = Chain { pool; protocol; consensus; producer } in
       (chain, None)
-  | Consensus_trigger_timeout -> (chain, Some Chain_trigger_timeout)
+  | Consensus_trigger_timeout { level } -> (
+      let (Consensus { state; _ }) = consensus in
+      let (State.State { current_level; _ }) = state in
+      match Level.equal current_level level with
+      | true ->
+          let action = Chain_trigger_timeout in
+          (chain, Some action)
+      | false -> (chain, None))
   | Consensus_broadcast_signature { signature } ->
       let content = Message.Content.signature signature in
       let action = Chain_broadcast { content } in
       (chain, Some action)
 
-let apply_consensus_actions chain consensus_actions =
+and apply_consensus_actions chain consensus_actions =
   List.fold_left
     (fun (chain, actions) consensus_action ->
       let chain, action = apply_consensus_action chain consensus_action in
@@ -53,7 +61,7 @@ let apply_consensus_actions chain consensus_actions =
       (chain, actions))
     (chain, []) consensus_actions
 
-let incoming_block ~current ~block chain =
+and incoming_block ~current ~block chain =
   let (Chain { pool; protocol; consensus; producer }) = chain in
   let consensus, effects = Consensus.incoming_block ~current ~block consensus in
   let chain = Chain { pool; protocol; consensus; producer } in

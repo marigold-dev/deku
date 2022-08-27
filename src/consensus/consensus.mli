@@ -4,7 +4,7 @@ type action = private
   (* protocol *)
   | Consensus_accepted_block of { level : Level.t; payload : string list }
   (* timer *)
-  | Consensus_trigger_timeout
+  | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
   | Consensus_broadcast_signature of { signature : Verified_signature.t }
 
