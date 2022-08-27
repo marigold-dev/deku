@@ -87,21 +87,21 @@ let connect ~nodes =
 
 let endpoint = "/messages"
 
-let post ~raw_expected_hash ~raw_content ~uri _client =
+let post ~raw_expected_hash ~raw_content ~uri:_uri client =
   let headers =
     let open Headers in
     (* TODO: maybe add json to Well_known in Piaf*)
     let json = Mime_types.map_extension "json" in
     [ (Well_known.content_type, json) ]
   in
-  let target = Uri.with_path uri endpoint in
+  let target = Uri.of_string endpoint in
   let target =
     Uri.with_query' target [ (expected_hash_query, raw_expected_hash) ]
   in
-  (* let target = Uri.to_string target in *)
+  let target = Uri.to_string target in
   (* Format.eprintf "%a <- %s\n%!" Uri.pp_hum _uri target; *)
   let body = Body.of_string raw_content in
-  Client.Oneshot.post ~headers ~body target
+  Client.post client ~headers ~body target
 
 let post ~raw_expected_hash ~raw_content ~uri client =
   Lwt.async (fun () ->
@@ -112,11 +112,11 @@ let post ~raw_expected_hash ~raw_content ~uri client =
           match drain with
           | Ok () -> Lwt.return_unit
           | Error _error ->
-              (* Format.eprintf "error: %a\n%!" Error.pp_hum _error; *)
+              Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error;
               (* TODO: do something with this error *)
               Lwt.return_unit)
       | Error _error ->
-          (* Format.eprintf "error: %a\n%!" Error.pp_hum _error; *)
+          Format.eprintf "error.post: %a\n%!" Error.pp_hum _error;
           (* TODO: do something with this error *)
           Lwt.return_unit)
 
