@@ -1,4 +1,5 @@
 open Deku_concepts
+open Deku_crypto
 open Consensus
 open Block
 
@@ -13,17 +14,7 @@ type incoming_block_or_signature_result = {
 }
 
 let is_signed_enough ~validators ~signatures =
-  (* TODO: index signatures by signer *)
-  let total_signatures =
-    Verified_signature.Set.fold
-      (fun signature counter ->
-        let signer = Verified_signature.key_hash signature in
-        match Validators.mem signer validators with
-        | true -> counter + 1
-        | false -> counter)
-      signatures 0
-  in
-
+  let total_signatures = Key_hash.Map.cardinal signatures in
   let required_signatures =
     (* TODO: maybe should be 2/3 + 1? *)
     (* TODO: O(1) cardinal *)
@@ -69,3 +60,7 @@ let incoming_signature ~consensus ~signature verifier =
   let hash = Verified_signature.signed_hash signature in
   let hash = Block_hash.of_blake2b hash in
   incoming_block_or_signature ~consensus ~block_hash:hash verifier
+
+let find_signatures ~block_hash verifier =
+  let (Verifier { block_pool }) = verifier in
+  Block_pool.find_signatures ~block_hash block_pool

@@ -1,11 +1,12 @@
 open Deku_concepts
+open Deku_crypto
 open Block
 
 (* TODO: old signatures and blocks are never removed *)
 type block_pool = {
   block_by_hash : Block.t Block_hash.Map.t;
   blocks_by_previous : Block.Set.t Block_hash.Map.t;
-  signatures_by_hash : Verified_signature.Set.t Block_hash.Map.t;
+  signatures_by_hash : Verified_signature.t Key_hash.Map.t Block_hash.Map.t;
 }
 
 type t = block_pool
@@ -19,7 +20,7 @@ let find_blocks hash map =
 let find_signatures hash map =
   match Block_hash.Map.find_opt hash map with
   | Some signatures -> signatures
-  | None -> Verified_signature.Set.empty
+  | None -> Key_hash.Map.empty
 
 let empty =
   {
@@ -45,7 +46,8 @@ let append_signature signature pool =
   let signature_hash = Block_hash.of_blake2b signature_hash in
   let signatures_by_hash =
     let signatures = find_signatures signature_hash signatures_by_hash in
-    let signatures = Verified_signature.Set.add signature signatures in
+    let key_hash = Verified_signature.key_hash signature in
+    let signatures = Key_hash.Map.add key_hash signature signatures in
     Block_hash.Map.add signature_hash signatures signatures_by_hash
   in
   { block_by_hash; blocks_by_previous; signatures_by_hash }
