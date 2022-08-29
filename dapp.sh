@@ -34,8 +34,10 @@ build_tests(){
 
 # Run mock create
 mock(){
-    # run the deku-cli in mock mode
-    # ex: ./dapp.sh wallet.json '"cookie"'
+    # run the deku-cli in mock mode, to be able to run this
+    # first one needs to setup deku (./sanbox.sh setup)
+    # ex: ./dapp.sh mock wallet.json '"cookie"'
+    # deku-cli create-mock-transaction wallet.json '"cookie"' node examples/cookie-game/lib/src/index.js
      deku-cli create-mock-transaction "$node" "$wallet" "$cmd" node examples/cookie-game/lib/src/index.js
 
 }
@@ -52,7 +54,7 @@ deku_cluster(){
 # Run custom create
 custom(){
     # Need to wait for deku_cluster to build some nodes before run this 
-    # ex: ./dapp.sh custom data/0 wallet.json '"cookie'
+    # ex: ./dapp.sh custom data/0 wallet.json '"cookie"'
     deku-cli create-custom-transaction "$node" "$wallet" "$cmd"
 }
 
@@ -70,7 +72,6 @@ build_tests)
   build_tests
 ;;
 mock)
- build_cookie
  mock
  ;;
 deku_cluster)
