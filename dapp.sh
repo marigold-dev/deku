@@ -21,6 +21,8 @@ build_cookie(){
 
 # Build sdks
 build_sdks(){
+    # remember to remove the home/node_modules, sdks/deku_js_interop/node_modules 
+    # examples/cookie_games/node_modules in case it raises error
     cd sdks/deku_js_interop && npm install && npm run build && npm i
 }
 
