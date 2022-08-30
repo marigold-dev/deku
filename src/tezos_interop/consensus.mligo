@@ -265,7 +265,7 @@ let vault_withdraw (withdraw: vault_withdraw) (storage: vault_storage) =
   ) in
   let () = assert_msg (
     "only the owner can withdraw a handle",
-    handle.owner = Tezos.sender
+    handle.owner = Tezos.get_sender ()
   ) in
   let () = vault_check_handle_proof proof handles_hash handle in
 

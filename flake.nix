@@ -41,8 +41,12 @@
         inherit nodejs npmPackages;
         doCheck = true; 
       };
+
+      ligo = pkgs.callPackage ./nix/ligo.nix { };
       in rec {
-        packages = { default = deku; };
-        devShell = import ./nix/shell.nix { inherit pkgs deku; };
+        packages = {
+          default = deku;
+        };
+        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
       });
 }
