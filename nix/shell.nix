@@ -1,4 +1,4 @@
-{ pkgs, deku }:
+{ pkgs, deku, ligo }:
 
 with pkgs; with ocamlPackages; mkShell {
   inputsFrom = [ deku ];
@@ -8,7 +8,7 @@ with pkgs; with ocamlPackages; mkShell {
     ocamlformat
 
     # Tezos tooling
-    ligo 
+    ligo
 
     # OCaml developer tooling
     ocaml
