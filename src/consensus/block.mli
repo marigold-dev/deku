@@ -15,6 +15,7 @@ type block = private
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
+      withdrawal_handles_hash : Ledger.Withdrawal_handle_hash.t;
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
@@ -29,6 +30,7 @@ val produce :
   previous:Block_hash.t ->
   operations:Operation.t list ->
   tezos_operations:Tezos_operation.t list ->
+  withdrawal_handles_hash:BLAKE2b.t ->
   block
 
 (* TODO: tag signatures, should be more than sign of the hash of a block *)

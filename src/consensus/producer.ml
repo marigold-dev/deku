@@ -68,7 +68,7 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (Operation_hash.Map.bindings operations)
   in
   let op_size = List.length operations in
-  let dummy_op_size =  Int.max (max_block_size - op_size) 0 in
+  let dummy_op_size = Int.max (max_block_size - op_size) 0 in
   let dummy_operations =
     List.init dummy_op_size (fun _ -> Operation.noop ~level)
   in
@@ -82,6 +82,8 @@ let produce ~parallel_map ~current_level ~current_block producer =
     ~tezos_operations
 
 let try_to_produce ~parallel_map ~current ~consensus producer =
+  (* FIXME placeholder for incoming withdrawal handles hash *)
+  let withdrawal_handles_hash = Deku_crypto.BLAKE2b.hash "tuturu" in
   let (Consensus { current_level; current_block; _ }) = consensus in
   let (Producer { identity; operations = _; tezos_operations = _ }) =
     producer
@@ -92,7 +94,8 @@ let try_to_produce ~parallel_map ~current ~consensus producer =
   with
   | true ->
       let block =
-        produce ~parallel_map ~current_level ~current_block producer
+        produce ~parallel_map ~current_level ~current_block
+          ~withdrawal_handles_hash producer
       in
       Format.printf "Producing %a \n%!" Block.pp block;
       Some block

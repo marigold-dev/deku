@@ -25,9 +25,11 @@ let identities =
 
 let some_block =
   let producer_identity = List.nth identities 0 in
+  let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
   let level = Level.next genesis_level in
   Block.produce ~parallel_map:List.map ~identity:producer_identity ~level
-    ~previous:genesis_hash ~operations:[] ~tezos_operations:[]
+    ~previous:genesis_hash ~operations:[] ~withdrawal_handles_hash
+    ~tezos_operations:[]
 
 let some_block_keys_and_signatures =
   identities
