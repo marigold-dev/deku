@@ -20,6 +20,14 @@ type external_effect = private
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
   | Save_block of Block.t
+  | Commit_state_hash of {
+      current_level : Level.t;
+      payload_hash : BLAKE2b.t;
+      state_root_hash : BLAKE2b.t;
+      signatures : (Key.t * Signature.t) option list;
+      validators : Key_hash.t list;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle_hash.t;
+    }
 
 val make :
   identity:Identity.t ->

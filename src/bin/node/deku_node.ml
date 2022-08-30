@@ -54,7 +54,30 @@ module Node = struct
           let current = Timestamp.of_float (Unix.gettimeofday ()) in
           let () = Indexer.save_block ~block ~timestamp:current indexer in
           network
+      | Chain.Commit_state_hash
+          {
+            current_level;
+            payload_hash;
+            state_root_hash;
+            signatures;
+            validators;
+            withdrawal_handles_hash;
+          } ->
+          let () =
+            Lwt.async (fun () ->
+                let%await () =
+                  Tezos_interop.Consensus.commit_state_hash
+                    ~block_level:current_level ~block_payload_hash:payload_hash
+                    ~state_hash:state_root_hash ~withdrawal_handles_hash
+                    ~signatures ~validators tezos_interop
+                in
+                let%await () = Lwt_unix.sleep 1. in
+                Printf.eprintf "state hash committed\n%!";
+                Lwt.return_unit)
+          in
+          network
     in
+
     Node { chain; network; applied_block; tezos_interop; indexer }
 
   let dispatch_effects effects node =

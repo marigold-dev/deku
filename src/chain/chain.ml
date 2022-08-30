@@ -2,6 +2,7 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
+open Deku_crypto
 
 type chain =
   | Chain of {
@@ -19,6 +20,14 @@ type external_effect =
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
   | Save_block of Block.t
+  | Commit_state_hash of {
+      current_level : Level.t;
+      payload_hash : BLAKE2b.t;
+      state_root_hash : BLAKE2b.t;
+      signatures : (Key.t * Signature.t) option list;
+      validators : Key_hash.t list;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle_hash.t;
+    }
 
 let make ~identity ~bootstrap_key ~validators =
   let validators = Validators.of_key_hash_list validators in
@@ -28,6 +37,34 @@ let make ~identity ~bootstrap_key ~validators =
   let signer = Signer.make ~identity in
   let producer = Producer.make ~identity in
   Chain { protocol; consensus; verifier; signer; producer }
+
+let commit current_level block verifier validators =
+  let Block.(
+        Block { payload_hash; hash = block_hash; withdrawal_handles_hash; _ }) =
+    block
+  in
+  let state_root_hash =
+    Deku_crypto.BLAKE2b.hash "FIXME: we need to add the state root"
+  in
+  let signatures = Verifier.find_signatures ~block_hash verifier in
+  let signatures =
+    List.map
+      (fun key_hash ->
+        let%some verified = Key_hash.Map.find_opt key_hash signatures in
+        Some
+          ( Verified_signature.key verified,
+            Verified_signature.signature verified ))
+      validators
+  in
+  Commit_state_hash
+    {
+      current_level;
+      payload_hash;
+      state_root_hash;
+      signatures;
+      validators;
+      withdrawal_handles_hash;
+    }
 
 let apply_block ~pool ~current ~block chain =
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
@@ -40,12 +77,22 @@ let apply_block ~pool ~current ~block chain =
       ~current_level:level ~payload protocol ~tezos_operations
   in
   let producer = Producer.clean ~receipts ~tezos_operations producer in
+  (* FIXME: need a time-based procedure for this, not block-based *)
+  (* FIXME: rediscuss the need to commit the previous block instead *)
+  (* FIXME: validators have to watch when commit did not happen *)
+  let (Consensus { current_level; validators; _ }) = consensus in
+  let validators = Validators.to_key_hash_list validators in
+  let level = Level.to_n current_level |> N.to_z |> Z.to_int in
   let effects =
     match
       Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
         ~current ~consensus producer
     with
+    (* FIXME: weird place to commit *)
+    | Some new_block when level mod 5 = 2 ->
+        let commit_effect = commit current_level block verifier validators in
+        [ Broadcast_block new_block; commit_effect ]
     | Some block -> [ Broadcast_block block ]
     | None -> []
   in
