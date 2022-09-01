@@ -90,7 +90,7 @@ let apply_block ~pool ~current ~block chain =
         ~current ~consensus producer
     with
     (* FIXME: weird place to commit *)
-    | Some new_block when level mod 5 = 2 ->
+    | Some new_block when level mod 5 = 0 ->
         let commit_effect = commit current_level block verifier validators in
         [ Broadcast_block new_block; commit_effect ]
     | Some block -> [ Broadcast_block block ]
