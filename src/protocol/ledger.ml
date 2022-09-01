@@ -37,7 +37,7 @@ module Withdrawal_handle_hash = struct
   include Deku_repr.With_b58_and_yojson (struct
     type nonrec t = t
 
-    let prefix = ""
+    let prefix = Deku_repr.Prefix.deku_withdrawal_hash
     let to_raw = BLAKE2b.to_raw
     let of_raw = BLAKE2b.of_raw
   end)

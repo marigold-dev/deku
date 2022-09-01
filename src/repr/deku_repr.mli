@@ -20,6 +20,7 @@ module Prefix : sig
   val deku_block_hash : string
   val deku_operation_hash : string
   val deku_packet_hash : string
+  val deku_withdrawal_hash : string
 end
 
 module With_b58 (P : sig
