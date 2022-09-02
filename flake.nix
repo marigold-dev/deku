@@ -14,18 +14,25 @@
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";
     };
+
+    json-logs-reporter.url = "github:marigold-dev/json-logs-reporter";
+    json-logs-reporter.inputs = {
+      nixpkgs.follows = "nixpkgs";
+      flake-utils.follows = "flake-utils";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos,  json-logs-reporter }:
     flake-utils.lib.eachDefaultSystem (system:
     let pkgs = (nixpkgs.makePkgs {
         inherit system;
         extraOverlays = [
+          json-logs-reporter.overlays.default
           tezos.overlays.default
           (import ./nix/overlay.nix)
           (final: prev: {
-          ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
-      })
+            ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
+          })
         ];
       }); 
       dream2nix-lib = dream2nix.lib.init {
