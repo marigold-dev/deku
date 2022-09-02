@@ -53,3 +53,10 @@ let block_not_found =
     msg = "The block was not found";
     http_code = `Not_found;
   }
+
+let invalid_block_hash hash =
+  {
+    code = "INVALID_BLOCK_HASH";
+    msg = Format.sprintf "The block hash %s is invalid" hash;
+    http_code = `Not_found;
+  }

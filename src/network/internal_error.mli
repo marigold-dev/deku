@@ -8,3 +8,4 @@ val invalid_level : string -> error
 val endpoint_not_found : string -> error
 val internal_error : string -> error
 val block_not_found : error
+val invalid_block_hash : string -> error

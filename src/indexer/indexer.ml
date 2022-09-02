@@ -111,3 +111,8 @@ let find_block_by_level ~block_level (Indexer { pool }) =
   let _ = block_level in
   let _ = pool in
   assert false
+
+let find_block_by_hash ~block_hash (Indexer { pool }) =
+  let _ = block_hash in
+  let _ = pool in
+  assert false

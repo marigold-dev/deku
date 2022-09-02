@@ -103,3 +103,20 @@ module Get_chain_level = Make_handler (struct
     let (Consensus { current_level; _ }) = consensus in
     Ok { level = current_level }
 end)
+
+module Get_block_by_hash = Make_handler_with_indexer (struct
+  open Deku_consensus
+
+  type input = Block_hash.t
+  type output = Block.t [@@deriving yojson_of]
+
+  let handler ~chain ~indexer block_hash =
+    let _ = chain in
+    let%await block = Indexer.find_block_by_hash ~block_hash indexer in
+    let output =
+      match block with
+      | Some block -> Ok block
+      | None -> Error Internal_error.block_not_found
+    in
+    Lwt.return output
+end)
