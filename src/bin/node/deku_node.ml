@@ -203,9 +203,12 @@ module Server = struct
         Internal_error.to_response error |> Lwt.return
 
   let apply Server.{ ctx = endpoint, packet; request = _ } =
+    let open Deku_routes.Handler in
     let node = Singleton.get_state () in
     let current = Timestamp.of_float (Unix.gettimeofday ()) in
     let (Endpoint.Ex endpoint) = endpoint in
+    let (Node { chain; _ }) = node in
+    let path = Endpoint.to_string endpoint in
     match endpoint with
     | Blocks ->
         let node = Node.incoming_packet ~current ~endpoint ~packet node in
@@ -223,6 +226,8 @@ module Server = struct
         let node = Node.incoming_packet ~current ~endpoint ~packet node in
         let () = Singleton.set_state node in
         Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
+    | Get_block_by_level level ->
+        Get_block_by_level.handle ~path ~chain level |> Lwt.return
 
   let handler context =
     (* TODO: weird usage of @@ *)

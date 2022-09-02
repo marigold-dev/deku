@@ -3,12 +3,14 @@ open Deku_protocol
 open Deku_consensus
 
 type 'a post = Post of 'a
+type get = Get
 
 type _ endpoint =
   | Blocks : Block.t post endpoint
   | Signatures : Verified_signature.t post endpoint
   | Operations : Operation.t post endpoint
   | Bootstrap : Bootstrap_signal.t post endpoint
+  | Get_block_by_level : Level.t -> get endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
@@ -38,6 +40,17 @@ module Bootstrap_route = struct
   let parser () = Routes.(path () @--> Ok (Ex Bootstrap))
 end
 
+module Get_block_by_level_route = struct
+  let path () = Routes.(s "chain" / s "blocks" / str /? nil)
+
+  let parser () =
+    Routes.(
+      path () @--> fun level ->
+      level |> Level.of_b58
+      |> Option.to_result ~none:(Internal_error.invalid_level level)
+      |> Result.map (fun level -> Ex (Get_block_by_level level)))
+end
+
 let routes =
   Routes.one_of
     [
@@ -45,6 +58,7 @@ let routes =
       Signatures_route.parser ();
       Operations_route.parser ();
       Bootstrap_route.parser ();
+      Get_block_by_level_route.parser ();
     ]
 
 let parse ~path ~meth =
@@ -55,10 +69,17 @@ let parse ~path ~meth =
   | Some (Ok route) -> (
       let (Ex endpoint) = route in
       match (endpoint, meth) with
-      | Blocks, `POST | Signatures, `POST | Operations, `POST | Bootstrap, `POST
-        ->
+      | Blocks, `POST
+      | Signatures, `POST
+      | Operations, `POST
+      | Bootstrap, `POST
+      | Get_block_by_level _, `GET ->
           Ok route
-      | Blocks, meth | Signatures, meth | Operations, meth | Bootstrap, meth ->
+      | Blocks, meth
+      | Signatures, meth
+      | Operations, meth
+      | Bootstrap, meth
+      | Get_block_by_level _, meth ->
           Error (Internal_error.method_not_allowed meth path))
 
 let to_string (type a) (endpoint : a endpoint) =
@@ -67,3 +88,5 @@ let to_string (type a) (endpoint : a endpoint) =
   | Signatures -> Routes.sprintf (Signatures_route.path ())
   | Operations -> Routes.sprintf (Operations_route.path ())
   | Bootstrap -> Routes.sprintf (Bootstrap_route.path ())
+  | Get_block_by_level level ->
+      Routes.sprintf (Get_block_by_level_route.path ()) (Level.to_b58 level)
