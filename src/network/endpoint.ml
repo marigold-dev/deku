@@ -14,6 +14,7 @@ type _ endpoint =
   | Get_genesis : get endpoint
   | Get_chain_level : get endpoint
   | Get_block_by_hash : Block_hash.t -> get endpoint
+  | Get_last_block : get endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
@@ -75,6 +76,11 @@ module Get_block_by_hash = struct
       |> Result.map (fun hash -> Ex (Get_block_by_hash hash)))
 end
 
+module Get_last_block = struct
+  let path () = Routes.(s "chain" / s "blocks" / s "head" /? nil)
+  let parser () = Routes.(path () @--> Ok (Ex Get_last_block))
+end
+
 let routes =
   Routes.one_of
     [
@@ -86,6 +92,7 @@ let routes =
       Get_genesis.parser ();
       Get_chain_level.parser ();
       Get_block_by_hash.parser ();
+      Get_last_block.parser ();
     ]
 
 let parse ~path ~meth =
@@ -103,7 +110,8 @@ let parse ~path ~meth =
       | Get_block_by_level _, `GET
       | Get_genesis, `GET
       | Get_chain_level, `GET
-      | Get_block_by_hash _, `GET ->
+      | Get_block_by_hash _, `GET
+      | Get_last_block, `GET ->
           Ok route
       | Blocks, meth
       | Signatures, meth
@@ -112,7 +120,8 @@ let parse ~path ~meth =
       | Get_block_by_level _, meth
       | Get_genesis, meth
       | Get_chain_level, meth
-      | Get_block_by_hash _, meth ->
+      | Get_block_by_hash _, meth
+      | Get_last_block, meth ->
           Error (Internal_error.method_not_allowed meth path))
 
 let to_string (type a) (endpoint : a endpoint) =
@@ -127,3 +136,4 @@ let to_string (type a) (endpoint : a endpoint) =
   | Get_chain_level -> Routes.sprintf (Get_chain_level.path ())
   | Get_block_by_hash hash ->
       Routes.sprintf (Get_block_by_hash.path ()) (Block_hash.to_b58 hash)
+  | Get_last_block -> Routes.sprintf (Get_last_block.path ())

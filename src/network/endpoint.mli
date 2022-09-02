@@ -14,6 +14,7 @@ type _ endpoint = private
   | Get_genesis : get endpoint
   | Get_chain_level : get endpoint
   | Get_block_by_hash : Block_hash.t -> get endpoint
+  | Get_last_block : get endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex

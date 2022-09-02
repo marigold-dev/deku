@@ -120,3 +120,21 @@ module Get_block_by_hash = Make_handler_with_indexer (struct
     in
     Lwt.return output
 end)
+
+module Get_last_block = Make_handler_with_indexer (struct
+  open Deku_consensus
+
+  type input = unit
+  type output = Block.t [@@deriving yojson_of]
+
+  let handler ~chain ~indexer () =
+    let (Chain.Chain { consensus; _ }) = chain in
+    let (Consensus { current_block = block_hash; _ }) = consensus in
+    let%await block = Indexer.find_block_by_hash ~block_hash indexer in
+    let output =
+      match block with
+      | Some block -> Ok block
+      | None -> Error Internal_error.block_not_found
+    in
+    Lwt.return output
+end)

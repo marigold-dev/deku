@@ -29,3 +29,12 @@ module Get_block_by_hash : sig
     Block_hash.t ->
     Piaf.Response.t Lwt.t
 end
+
+module Get_last_block : sig
+  val handle :
+    path:string ->
+    chain:Chain.chain ->
+    indexer:Indexer.t ->
+    unit ->
+    Piaf.Response.t Lwt.t
+end

@@ -232,6 +232,7 @@ module Server = struct
     | Get_chain_level -> Get_chain_level.handle ~path ~chain () |> Lwt.return
     | Get_block_by_hash hash ->
         Get_block_by_hash.handle ~path ~chain ~indexer hash
+    | Get_last_block -> Get_last_block.handle ~path ~chain ~indexer ()
 
   let handler context =
     (* TODO: weird usage of @@ *)
