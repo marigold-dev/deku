@@ -155,14 +155,6 @@ end
 module Server = struct
   open Piaf
 
-  let internal_error error =
-    let response = Response.or_internal_error (Error error) in
-    Lwt.return response
-
-  let error ~message status =
-    let response = Response.of_string ~body:message status in
-    Lwt.return response
-
   let with_endpoint Server.{ ctx = _; request } next =
     let path = request.target in
     let meth = request.meth in
@@ -171,8 +163,12 @@ module Server = struct
     | Some endpoint -> (
         match meth with
         | `POST -> next Server.{ ctx = endpoint; request }
-        | _ -> error ~message:"only POST is supported" `Method_not_allowed)
-    | None -> error ~message:"unknown endpoint" `Not_found
+        | _ ->
+            let error = Internal_error.method_not_allowed meth path in
+            Internal_error.to_response error |> Lwt.return)
+    | None ->
+        let error = Internal_error.endpoint_not_found path in
+        Internal_error.to_response error |> Lwt.return
 
   let with_body Server.{ ctx = endpoint; request } next =
     let open Lwt.Infix in
@@ -180,7 +176,10 @@ module Server = struct
     Body.to_string body >>= fun result ->
     match result with
     | Ok body -> next Server.{ ctx = (endpoint, body); request }
-    | Error error -> internal_error error
+    | Error reason ->
+        let reason = Piaf.Error.to_string reason in
+        let error = Internal_error.internal_error reason in
+        Internal_error.to_response error |> Lwt.return
 
   let apply Server.{ ctx = endpoint, packet; request = _ } =
     let node = Singleton.get_state () in
