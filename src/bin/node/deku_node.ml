@@ -207,7 +207,7 @@ module Server = struct
     let node = Singleton.get_state () in
     let current = Timestamp.of_float (Unix.gettimeofday ()) in
     let (Endpoint.Ex endpoint) = endpoint in
-    let (Node { chain; _ }) = node in
+    let (Node { chain; indexer; _ }) = node in
     let path = Endpoint.to_string endpoint in
     match endpoint with
     | Blocks ->
@@ -227,7 +227,7 @@ module Server = struct
         let () = Singleton.set_state node in
         Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
     | Get_block_by_level level ->
-        Get_block_by_level.handle ~path ~chain level |> Lwt.return
+        Get_block_by_level.handle ~path ~chain ~indexer level
 
   let handler context =
     (* TODO: weird usage of @@ *)

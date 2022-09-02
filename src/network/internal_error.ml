@@ -46,3 +46,10 @@ let endpoint_not_found endpoint =
 
 let internal_error error =
   { code = "INTERNAL_ERROR"; msg = error; http_code = `Internal_server_error }
+
+let block_not_found =
+  {
+    code = "BLOCK_NOT_FOUND";
+    msg = "The block was not found";
+    http_code = `Not_found;
+  }

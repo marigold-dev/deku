@@ -7,3 +7,4 @@ val method_not_allowed : Piaf.Method.t -> string -> error
 val invalid_level : string -> error
 val endpoint_not_found : string -> error
 val internal_error : string -> error
+val block_not_found : error

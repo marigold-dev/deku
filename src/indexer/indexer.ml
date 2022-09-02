@@ -106,3 +106,8 @@ let save_packet ~packet ~timestamp (Indexer { pool }) =
       | Error err ->
           (* TODO: how do we want to handle this? *)
           raise (Caqti_error.Exn err))
+
+let find_block_by_level ~block_level (Indexer { pool }) =
+  let _ = block_level in
+  let _ = pool in
+  assert false
