@@ -15,5 +15,7 @@ val blocks : Block.t endpoint
 val signatures : Verified_signature.t endpoint
 val operations : Operation.t endpoint
 val bootstrap : Bootstrap_signal.t endpoint
+
+(* utils *)
 val of_string : string -> ex option
 val to_string : _ endpoint -> string

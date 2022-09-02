@@ -16,17 +16,40 @@ let signatures = Signatures
 let operations = Operations
 let bootstrap = Bootstrap
 
-let of_string path =
-  match path with
-  | "/blocks" -> Some (Ex Blocks)
-  | "/signatures" -> Some (Ex Signatures)
-  | "/operations" -> Some (Ex Operations)
-  | "/bootstrap" -> Some (Ex Bootstrap)
-  | _ -> None
+module Blocks_route = struct
+  let path () = Routes.(s "consensus" / s "blocks" /? nil)
+  let parser () = Routes.(path () @--> Ex Blocks)
+end
+
+module Signatures_route = struct
+  let path () = Routes.(s "consensus" / s "signatures" /? nil)
+  let parser () = Routes.(path () @--> Ex Signatures)
+end
+
+module Operations_route = struct
+  let path () = Routes.(s "operations" /? nil)
+  let parser () = Routes.(path () @--> Ex Operations)
+end
+
+module Bootstrap_route = struct
+  let path () = Routes.(s "consensus" / s "bootstrap" /? nil)
+  let parser () = Routes.(path () @--> Ex Bootstrap)
+end
+
+let routes =
+  Routes.one_of
+    [
+      Blocks_route.parser ();
+      Signatures_route.parser ();
+      Operations_route.parser ();
+      Bootstrap_route.parser ();
+    ]
+
+let of_string path = Routes.match' routes ~target:path
 
 let to_string (type a) (endpoint : a endpoint) =
   match endpoint with
-  | Blocks -> "/blocks"
-  | Signatures -> "/signatures"
-  | Operations -> "/operations"
-  | Bootstrap -> "/bootstrap"
+  | Blocks -> Routes.sprintf (Blocks_route.path ())
+  | Signatures -> Routes.sprintf (Signatures_route.path ())
+  | Operations -> Routes.sprintf (Operations_route.path ())
+  | Bootstrap -> Routes.sprintf (Bootstrap_route.path ())
