@@ -155,6 +155,34 @@ end
 module Server = struct
   open Piaf
 
+  let with_headers response =
+    (* We should add some headers *)
+    let open Piaf in
+    let open Response in
+    let { status; headers; version; body } = response in
+    let headers =
+      Headers.add_list headers
+        [
+          ("Allow", "OPTIONS, GET, HEAD, POST");
+          ("Access-Control-Allow-Origin", "*");
+          ("Access-Control-Allow-Headers", "*");
+          ("Content-Type", "application/json");
+          ("Cache-Control", "no-store, no-cache, max-age=0");
+        ]
+    in
+    let content_length =
+      let body_length = Body.length body in
+      match body_length with
+      | `Fixed length -> Some (Int64.to_string length)
+      | _ -> None
+    in
+    let headers =
+      content_length
+      |> Option.fold ~none:headers ~some:(fun length ->
+             Headers.add headers "Content-Length" length)
+    in
+    Piaf.Response.create ~version ~headers ~body status
+
   let with_endpoint Server.{ ctx = _; request } next =
     let path = request.target in
     let meth = request.meth in
@@ -198,8 +226,11 @@ module Server = struct
 
   let handler context =
     (* TODO: weird usage of @@ *)
-    with_endpoint context @@ fun context ->
-    with_body context @@ fun context -> apply context
+    let%await response =
+      with_endpoint context @@ fun context ->
+      with_body context @@ fun context -> apply context
+    in
+    with_headers response |> Lwt.return
 
   let start port =
     let open Lwt.Infix in
