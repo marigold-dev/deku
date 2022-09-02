@@ -1,0 +1,10 @@
+(library
+ (name deku_routes)
+ (libraries routes piaf deku_consensus deku_chain deku_network)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
