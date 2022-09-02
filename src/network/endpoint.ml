@@ -47,7 +47,18 @@ let routes =
       Bootstrap_route.parser ();
     ]
 
-let of_string path = Routes.match' routes ~target:path
+let parse ~path ~meth =
+  let route = Routes.match' routes ~target:path in
+  match route with
+  | None -> Error (Internal_error.endpoint_not_found path)
+  | Some route -> (
+      let (Ex endpoint) = route in
+      match (endpoint, meth) with
+      | Blocks, `POST | Signatures, `POST | Operations, `POST | Bootstrap, `POST
+        ->
+          Ok route
+      | Blocks, meth | Signatures, meth | Operations, meth | Bootstrap, meth ->
+          Error (Internal_error.method_not_allowed meth path))
 
 let to_string (type a) (endpoint : a endpoint) =
   match endpoint with

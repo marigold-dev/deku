@@ -159,16 +159,9 @@ module Server = struct
     let path = request.target in
     let meth = request.meth in
 
-    match Endpoint.of_string path with
-    | Some endpoint -> (
-        match meth with
-        | `POST -> next Server.{ ctx = endpoint; request }
-        | _ ->
-            let error = Internal_error.method_not_allowed meth path in
-            Internal_error.to_response error |> Lwt.return)
-    | None ->
-        let error = Internal_error.endpoint_not_found path in
-        Internal_error.to_response error |> Lwt.return
+    match Endpoint.parse ~path ~meth with
+    | Ok endpoint -> next Server.{ ctx = endpoint; request }
+    | Error error -> Internal_error.to_response error |> Lwt.return
 
   let with_body Server.{ ctx = endpoint; request } next =
     let open Lwt.Infix in

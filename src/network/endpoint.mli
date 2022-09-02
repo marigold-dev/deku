@@ -19,5 +19,5 @@ val operations : Operation.t post endpoint
 val bootstrap : Bootstrap_signal.t post endpoint
 
 (* utils *)
-val of_string : string -> ex option
+val parse : path:string -> meth:Piaf.Method.t -> (ex, Internal_error.t) result
 val to_string : _ endpoint -> string
