@@ -11,3 +11,7 @@ module Get_block_by_level : sig
     Level.level ->
     Piaf.Response.t Lwt.t
 end
+
+module Get_genesis : sig
+  val handle : path:string -> chain:Chain.chain -> unit -> Piaf.Response.t
+end

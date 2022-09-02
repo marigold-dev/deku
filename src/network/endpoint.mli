@@ -11,6 +11,7 @@ type _ endpoint = private
   | Operations : Operation.t post endpoint
   | Bootstrap : Bootstrap_signal.t post endpoint
   | Get_block_by_level : Level.t -> get endpoint
+  | Get_genesis : get endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
