@@ -15,3 +15,7 @@ end
 module Get_genesis : sig
   val handle : path:string -> chain:Chain.chain -> unit -> Piaf.Response.t
 end
+
+module Get_chain_level : sig
+  val handle : path:string -> chain:Chain.chain -> unit -> Piaf.Response.t
+end

@@ -229,6 +229,7 @@ module Server = struct
     | Get_block_by_level level ->
         Get_block_by_level.handle ~path ~chain ~indexer level
     | Get_genesis -> Get_genesis.handle ~path ~chain () |> Lwt.return
+    | Get_chain_level -> Get_chain_level.handle ~path ~chain () |> Lwt.return
 
   let handler context =
     (* TODO: weird usage of @@ *)

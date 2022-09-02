@@ -90,3 +90,16 @@ module Get_genesis = Make_handler (struct
     let _ = chain in
     Ok Genesis.block
 end)
+
+module Get_chain_level = Make_handler (struct
+  open Deku_concepts
+  open Deku_chain
+
+  type input = unit
+  type output = { level : Level.t } [@@deriving yojson_of]
+
+  let handler ~chain () =
+    let (Chain.Chain { consensus; _ }) = chain in
+    let (Consensus { current_level; _ }) = consensus in
+    Ok { level = current_level }
+end)

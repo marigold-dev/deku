@@ -12,6 +12,7 @@ type _ endpoint =
   | Bootstrap : Bootstrap_signal.t post endpoint
   | Get_block_by_level : Level.t -> get endpoint
   | Get_genesis : get endpoint
+  | Get_chain_level : get endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex
@@ -57,6 +58,11 @@ module Get_genesis = struct
   let parser () = Routes.(path () @--> Ok (Ex Get_genesis))
 end
 
+module Get_chain_level = struct
+  let path () = Routes.(s "chain" / s "level" /? nil)
+  let parser () = Routes.(path () @--> Ok (Ex Get_chain_level))
+end
+
 let routes =
   Routes.one_of
     [
@@ -66,6 +72,7 @@ let routes =
       Bootstrap_route.parser ();
       Get_block_by_level_route.parser ();
       Get_genesis.parser ();
+      Get_chain_level.parser ();
     ]
 
 let parse ~path ~meth =
@@ -81,14 +88,16 @@ let parse ~path ~meth =
       | Operations, `POST
       | Bootstrap, `POST
       | Get_block_by_level _, `GET
-      | Get_genesis, `GET ->
+      | Get_genesis, `GET
+      | Get_chain_level, `GET ->
           Ok route
       | Blocks, meth
       | Signatures, meth
       | Operations, meth
       | Bootstrap, meth
       | Get_block_by_level _, meth
-      | Get_genesis, meth ->
+      | Get_genesis, meth
+      | Get_chain_level, meth ->
           Error (Internal_error.method_not_allowed meth path))
 
 let to_string (type a) (endpoint : a endpoint) =
@@ -100,3 +109,4 @@ let to_string (type a) (endpoint : a endpoint) =
   | Get_block_by_level level ->
       Routes.sprintf (Get_block_by_level_route.path ()) (Level.to_b58 level)
   | Get_genesis -> Routes.sprintf (Get_genesis.path ())
+  | Get_chain_level -> Routes.sprintf (Get_chain_level.path ())
