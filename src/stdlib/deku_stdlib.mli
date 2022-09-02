@@ -21,3 +21,5 @@ module Yojson : sig
     val yojson_of_t : t -> t
   end
 end
+
+module Log = Log

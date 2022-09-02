@@ -1,5 +1,6 @@
 open Deku_chain
 open Deku_network
+open Deku_stdlib
 
 (* Endpoint handlers should implement this signature
    and be generated with the Make_handler
@@ -15,10 +16,12 @@ module Make_handler (Handler : HANDLER) : sig
   val handle : path:string -> chain:Chain.t -> Handler.input -> Piaf.Response.t
 end = struct
   let handle ~path ~chain input =
-    let _ = path in
+    Log.info "handle request in %s" path;
     let result = Handler.handler ~chain input in
     match result with
-    | Error err -> Internal_error.to_response err
+    | Error err ->
+        Log.error "error in path %s: %s" path (Internal_error.to_string err);
+        Internal_error.to_response err
     | Ok output ->
         let body = Handler.yojson_of_output output |> Yojson.Safe.to_string in
         Piaf.Response.of_string ~body `OK

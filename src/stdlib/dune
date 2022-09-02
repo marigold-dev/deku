@@ -1,6 +1,15 @@
 (library
  (name deku_stdlib)
- (libraries deku_repr zarith uri lwt base domainslib)
+ (libraries
+  deku_repr
+  zarith
+  uri
+  lwt
+  base
+  domainslib
+  logs.fmt
+  logs.cli
+  json-logs-reporter)
  (preprocess
   (pps
    ppx_let_binding
