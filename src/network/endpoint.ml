@@ -20,22 +20,22 @@ let bootstrap = Bootstrap
 
 module Blocks_route = struct
   let path () = Routes.(s "consensus" / s "blocks" /? nil)
-  let parser () = Routes.(path () @--> Ex Blocks)
+  let parser () = Routes.(path () @--> Ok (Ex Blocks))
 end
 
 module Signatures_route = struct
   let path () = Routes.(s "consensus" / s "signatures" /? nil)
-  let parser () = Routes.(path () @--> Ex Signatures)
+  let parser () = Routes.(path () @--> Ok (Ex Signatures))
 end
 
 module Operations_route = struct
   let path () = Routes.(s "operations" /? nil)
-  let parser () = Routes.(path () @--> Ex Operations)
+  let parser () = Routes.(path () @--> Ok (Ex Operations))
 end
 
 module Bootstrap_route = struct
   let path () = Routes.(s "consensus" / s "bootstrap" /? nil)
-  let parser () = Routes.(path () @--> Ex Bootstrap)
+  let parser () = Routes.(path () @--> Ok (Ex Bootstrap))
 end
 
 let routes =
@@ -51,7 +51,8 @@ let parse ~path ~meth =
   let route = Routes.match' routes ~target:path in
   match route with
   | None -> Error (Internal_error.endpoint_not_found path)
-  | Some route -> (
+  | Some (Error error) -> Error error
+  | Some (Ok route) -> (
       let (Ex endpoint) = route in
       match (endpoint, meth) with
       | Blocks, `POST | Signatures, `POST | Operations, `POST | Bootstrap, `POST
