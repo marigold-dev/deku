@@ -2,11 +2,13 @@ open Deku_concepts
 open Deku_protocol
 open Deku_consensus
 
+type 'a post = Post of 'a
+
 type _ endpoint =
-  | Blocks : Block.t endpoint
-  | Signatures : Verified_signature.t endpoint
-  | Operations : Operation.t endpoint
-  | Bootstrap : Bootstrap_signal.t endpoint
+  | Blocks : Block.t post endpoint
+  | Signatures : Verified_signature.t post endpoint
+  | Operations : Operation.t post endpoint
+  | Bootstrap : Bootstrap_signal.t post endpoint
 
 type 'a t = 'a endpoint
 type ex = Ex : _ endpoint -> ex

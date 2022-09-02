@@ -10,7 +10,10 @@ type t = network
 val make : nodes:Uri.t list -> network
 
 val incoming_packet :
-  endpoint:'a Endpoint.t -> packet:string -> network -> 'a option * network
+  endpoint:'a Endpoint.post Endpoint.t ->
+  packet:string ->
+  network ->
+  'a option * network
 
 val broadcast_block : block:Block.t -> network -> network
 val broadcast_signature : signature:Verified_signature.t -> network -> network

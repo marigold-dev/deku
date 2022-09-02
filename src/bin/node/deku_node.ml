@@ -60,8 +60,8 @@ module Node = struct
   let dispatch_effects effects node =
     List.fold_left (fun node effect -> dispatch_effect effect node) node effects
 
-  let incoming_packet (type a) ~current ~(endpoint : a Endpoint.t) ~packet node
-      =
+  let incoming_packet (type a) ~current ~(endpoint : a Endpoint.post Endpoint.t)
+      ~packet node =
     let (Node { chain; network; applied_block; tezos_interop; indexer }) =
       node
     in
@@ -186,10 +186,23 @@ module Server = struct
     let node = Singleton.get_state () in
     let current = Timestamp.of_float (Unix.gettimeofday ()) in
     let (Endpoint.Ex endpoint) = endpoint in
-    let node = Node.incoming_packet ~current ~endpoint ~packet node in
-    let () = Singleton.set_state node in
-    let response = Piaf.Response.of_string ~body:"OK" `OK in
-    Lwt.return response
+    match endpoint with
+    | Blocks ->
+        let node = Node.incoming_packet ~current ~endpoint ~packet node in
+        let () = Singleton.set_state node in
+        Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
+    | Signatures ->
+        let node = Node.incoming_packet ~current ~endpoint ~packet node in
+        let () = Singleton.set_state node in
+        Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
+    | Operations ->
+        let node = Node.incoming_packet ~current ~endpoint ~packet node in
+        let () = Singleton.set_state node in
+        Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
+    | Bootstrap ->
+        let node = Node.incoming_packet ~current ~endpoint ~packet node in
+        let () = Singleton.set_state node in
+        Piaf.Response.of_string ~body:"OK" `OK |> Lwt.return
 
   let handler context =
     (* TODO: weird usage of @@ *)

@@ -36,14 +36,15 @@ open Deku_protocol
 open Deku_consensus
 open Endpoint
 
-let content_of_yojson (type a) ~(endpoint : a endpoint) json : a =
+let content_of_yojson (type a) ~(endpoint : a Endpoint.post endpoint) json : a =
   match endpoint with
   | Blocks -> Block.t_of_yojson json
   | Signatures -> Verified_signature.t_of_yojson json
   | Operations -> Operation.t_of_yojson json
   | Bootstrap -> Bootstrap_signal.t_of_yojson json
 
-let yojson_of_content (type a) ~(endpoint : a endpoint) (content : a) =
+let yojson_of_content (type a) ~(endpoint : a Endpoint.post endpoint)
+    (content : a) =
   match endpoint with
   | Blocks -> Block.yojson_of_t content
   | Signatures -> Verified_signature.yojson_of_t content

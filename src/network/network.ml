@@ -10,8 +10,8 @@ let make ~nodes = Network { nodes; known_packets = Packet_hash.Set.empty }
 exception Duplicated_packet
 exception Invalid_hash
 
-let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
-    a option * network =
+let incoming_packet (type a) ~(endpoint : a Endpoint.post Endpoint.t) ~packet
+    network : a option * network =
   let packet_json = Yojson.Safe.from_string packet in
   let (Packet { hash; content } as packet) = Packet.t_of_yojson packet_json in
 
