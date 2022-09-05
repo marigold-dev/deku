@@ -1,8 +1,13 @@
 {
   description = "Nix Flake";
 
+  nixConfig = {
+    extra-substituters = "https://anmonteiro.nix-cache.workers.dev";
+    extra-trusted-public-keys = "ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=";
+  };
+
   inputs = {
-    nixpkgs.url = "github:anmonteiro/nix-overlays";
+    nixpkgs.url = "github:nix-ocaml/nix-overlays";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
 
