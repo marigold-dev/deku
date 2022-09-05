@@ -39,4 +39,6 @@ with ocamlPackages; buildDunePackage rec {
   ++ checkInputs;
 
   checkInputs = [ alcotest ];
+
+  meta.mainProgram = "deku-node";
 }
