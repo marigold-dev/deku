@@ -47,6 +47,20 @@
       in
       rec {
         packages = { default = deku; };
+        apps = {
+          node = {
+            type = "app";
+            program = "${deku}/bin/deku-node";
+          };
+          bootstrap = {
+            type = "app";
+            program = "${deku}/bin/deku-bootstrap";
+          };
+          benchmark = {
+            type = "app";
+            program = "${deku}/bin/deku-benchmark";
+          };
+        };
         devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
       });
 }
