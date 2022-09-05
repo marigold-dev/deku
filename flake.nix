@@ -61,6 +61,6 @@
             program = "${deku}/bin/deku-benchmark";
           };
         };
-        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
+        devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; };
       });
 }
