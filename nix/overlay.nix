@@ -50,6 +50,20 @@ with super; {
             fetchSubmodules = true;
           };
         });
+        ringo = super.ringo.overrideAttrs (_: {
+          src = builtins.fetchurl {
+            url =
+              https://gitlab.com/nomadic-labs/ringo/-/archive/5514a34ccafdea498e4b018fb141217c1bf43da9/ringo-5514a34ccafdea498e4b018fb141217c1bf43da9.tar.gz;
+            sha256 = "1qadbvmqirn1scc4r4lwzqs4rrwmp1vnzhczy9pipfnf9bb9c0j7";
+          };
+        });
+        tezos-stdlib = super.tezos-stdlib.overrideAttrs (_: {
+          postPatch = ''
+            substituteInPlace "src/lib_stdlib/hash_queue.mli" --replace \
+              "val filter : t -> (K.t -> V.t -> bool) -> unit" \
+              ""
+          '';
+        });
       });
   });
 }
