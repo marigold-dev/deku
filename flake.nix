@@ -23,32 +23,34 @@
 
   outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos }:
     flake-utils.lib.eachDefaultSystem (system:
-    let pkgs = (nixpkgs.makePkgs {
-        inherit system;
-        extraOverlays = [
-          tezos.overlays.default
-          (import ./nix/overlay.nix)
-          (final: prev: {
-          ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
-      })
-        ];
-      }); 
-      dream2nix-lib = dream2nix.lib.init {
-        inherit pkgs;
-        config.projectRoot = ./.;
-      };
-      nodejs = pkgs.nodejs-16_x;
-      npmPackages = import ./nix/npm.nix {
-        inherit system dream2nix-lib nix-filter nodejs;
-      };
+      let
+        pkgs = (nixpkgs.makePkgs {
+          inherit system;
+          extraOverlays = [
+            tezos.overlays.default
+            (import ./nix/overlay.nix)
+            (final: prev: {
+              ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
+            })
+          ];
+        });
+        dream2nix-lib = dream2nix.lib.init {
+          inherit pkgs;
+          config.projectRoot = ./.;
+        };
+        nodejs = pkgs.nodejs-16_x;
+        npmPackages = import ./nix/npm.nix {
+          inherit system dream2nix-lib nix-filter nodejs;
+        };
 
-      deku = pkgs.callPackage ./nix { 
-        inherit nodejs npmPackages;
-        doCheck = true; 
-      };
+        deku = pkgs.callPackage ./nix {
+          inherit nodejs npmPackages;
+          doCheck = true;
+        };
 
-      ligo = pkgs.callPackage ./nix/ligo.nix { };
-      in rec {
+        ligo = pkgs.callPackage ./nix/ligo.nix { };
+      in
+      rec {
         packages = {
           default = deku;
         };
