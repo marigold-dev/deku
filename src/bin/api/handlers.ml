@@ -179,3 +179,38 @@ module Helpers_operation_message : HANDLER = struct
     let (Message.Message { hash; content }) = message in
     Lwt.return_ok { hash; content }
 end
+
+module Helpers_hash_operation : HANDLER = struct
+  open Deku_protocol
+  open Deku_concepts
+
+  (* TODO: those declarations are duplicated *)
+  type operation_content =
+    | Transaction of { receiver : Address.t; amount : Amount.t }
+    | Noop
+  [@@deriving yojson]
+
+  type input = {
+    level : Level.t;
+    nonce : Nonce.t;
+    source : Address.t;
+    content : operation_content;
+  }
+  [@@deriving yojson]
+
+  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+
+  let path = "/helpers/hash-operation"
+  let meth = `POST
+
+  let input_from_request request =
+    Api_utils.input_of_body ~of_yojson:input_of_yojson request
+
+  let handle operation state =
+    let _ = state in
+    let hash =
+      operation |> yojson_of_input |> Yojson.Safe.to_string
+      |> Operation_hash.hash
+    in
+    Lwt.return_ok { hash }
+end
