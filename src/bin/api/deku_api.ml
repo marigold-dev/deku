@@ -18,9 +18,18 @@ let make_handler (module Handler : HANDLER) =
   | `POST -> Dream.post Handler.path handler
   | `GET -> Dream.get Handler.path handler
 
-let () =
+type params = { database_uri : Uri.t [@env "DEKU_DATABASE_URI"] }
+[@@deriving cmdliner]
+
+let main params =
+  let { database_uri } = params in
   Lwt_main.run
-  @@
-  let database_uri = Uri.of_string "sqlite3:/tmp/database.db" in
-  let%await () = Api_state.make ~database_uri in
-  Dream.serve @@ Dream.router [ make_handler (module Listen_blocks) ]
+  @@ let%await () = Api_state.make ~database_uri in
+     Dream.serve @@ Dream.router [ make_handler (module Listen_blocks) ]
+
+let () =
+  let open Cmdliner in
+  let info = Cmd.info "API interface of deku." in
+  let term = Term.(const main $ params_cmdliner_term ()) in
+  let cmd = Cmd.v info term in
+  exit (Cmdliner.Cmd.eval ~catch:true cmd)
