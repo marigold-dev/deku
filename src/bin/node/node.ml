@@ -101,7 +101,7 @@ and handle_chain_action node ~action =
   | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
   | Chain_save_block block -> (
       match node.indexer with
-      | Some indexer -> Indexer.save_block ~block indexer
+      | Some indexer -> Indexer.async_save_block ~block indexer
       | None -> ())
 
 and handle_chain_fragment node ~fragment =
