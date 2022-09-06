@@ -48,6 +48,7 @@ let main params =
             make_handler (module Get_level);
             make_handler (module Get_chain_info);
             make_handler (module Helpers_operation_message);
+            make_handler (module Helpers_hash_operation);
           ]
 
 let () =
