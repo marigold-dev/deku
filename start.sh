@@ -23,6 +23,9 @@ for N in 0 1 2 3; do
   sleep 0.1
 done
 
+# Only starting one API
+_build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
+
 export DEKU_BOOTSTRAP_SECRET="edsk2jS9cPs3Tgp6T34NQvPPPUPGYtGysCHS569FgDAKmdkKutQHUw"
 
 _build/install/default/bin/deku-bootstrap
