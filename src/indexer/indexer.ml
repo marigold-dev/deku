@@ -61,6 +61,12 @@ module Query = struct
     return_opt query level
 
   let find_block ~level pool = Caqti_lwt.Pool.use (find_block level) pool
+
+  let biggest_level () =
+    let query = (unit ->! int64) @@ "select max(level) as level from blocks" in
+    return_opt query ()
+
+  let biggest_level pool = Caqti_lwt.Pool.use (biggest_level ()) pool
 end
 
 let make_database ~uri =
@@ -150,3 +156,10 @@ let find_block ~level (Indexer { pool; config = _ }) =
         None
   in
   Lwt.return block
+
+let get_level (Indexer { pool; config = _ }) =
+  let%await result = Query.biggest_level pool in
+  result |> Result.to_option |> Option.join |> Option.map Z.of_int64
+  |> Option.map N.of_z |> Option.join
+  |> Option.map Deku_concepts.Level.of_n
+  |> Lwt.return
