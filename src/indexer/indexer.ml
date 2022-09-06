@@ -20,6 +20,9 @@ module Query = struct
   let return_unit query param (module C : Caqti_lwt.CONNECTION) =
     C.exec query param
 
+  let return_opt query param (module C : Caqti_lwt.CONNECTION) =
+    C.find_opt query param
+
   let insert_block block timestamp =
     let (Block.Block { hash; level; _ }) = block in
     let hash = Block_hash.yojson_of_t hash |> Yojson.Safe.to_string in
@@ -49,6 +52,15 @@ module Query = struct
 
   let insert_message ~message ~timestamp pool =
     Caqti_lwt.Pool.use (insert_message message timestamp) pool
+
+  let find_block level =
+    let query =
+      (int64 ->! string)
+      @@ "select block from blocks where level=? order by timestamp limit 1"
+    in
+    return_opt query level
+
+  let find_block ~level pool = Caqti_lwt.Pool.use (find_block level) pool
 end
 
 let make_database ~uri =
@@ -116,3 +128,17 @@ let save_message ~message (Indexer { pool; config }) =
               (* TODO: how do we want to handle this? *)
               raise (Caqti_error.Exn err))
   | false -> ()
+
+let find_block ~level (Indexer { pool; config = _ }) =
+  let%await result = Query.find_block ~level pool in
+  let block =
+    match result with
+    | Ok res ->
+        res
+        |> Option.map Yojson.Safe.from_string
+        |> Option.map Block.t_of_yojson
+    | Error err ->
+        Caqti_error.show err |> print_endline;
+        None
+  in
+  Lwt.return block
