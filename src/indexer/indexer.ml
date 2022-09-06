@@ -100,7 +100,7 @@ let make ~uri ~config =
   | Ok pool -> Lwt.return (Indexer { pool; config })
   | Error err -> failwith (Caqti_error.show err)
 
-let save_block ~block (Indexer { pool; config }) =
+let async_save_block ~block (Indexer { pool; config }) =
   match config.save_blocks with
   | true ->
       let timestamp = Unix.gettimeofday () in
@@ -115,6 +115,14 @@ let save_block ~block (Indexer { pool; config }) =
               (* TODO: how do we want to handle this? *)
               raise (Caqti_error.Exn err))
   | false -> ()
+
+let save_block ~block (Indexer { pool; config }) =
+  match config.save_blocks with
+  | true ->
+      let timestamp = Unix.gettimeofday () in
+      let%await _ = Query.insert_block ~block ~timestamp pool in
+      Lwt.return_unit
+  | false -> Lwt.return_unit
 
 let save_message ~message (Indexer { pool; config }) =
   match config.save_messages with
