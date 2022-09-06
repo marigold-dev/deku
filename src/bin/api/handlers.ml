@@ -157,3 +157,25 @@ module Get_chain_info : HANDLER = struct
         discovery = Address.to_string discovery;
       }
 end
+
+module Helpers_operation_message : HANDLER = struct
+  open Deku_protocol
+  open Deku_gossip
+
+  type input = Operation.t
+
+  type response = { hash : Message_hash.t; content : Message.Content.t }
+  [@@deriving yojson_of]
+
+  let path = "/helpers/operation-messages"
+  let meth = `POST
+
+  let input_from_request request =
+    Api_utils.input_of_body ~of_yojson:Operation.t_of_yojson request
+
+  let handle operation _ =
+    let content = Message.Content.operation operation in
+    let message, _raw_message = Message.encode ~content in
+    let (Message.Message { hash; content }) = message in
+    Lwt.return_ok { hash; content }
+end

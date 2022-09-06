@@ -47,6 +47,7 @@ let main params =
             make_handler (module Get_block_by_level_or_hash);
             make_handler (module Get_level);
             make_handler (module Get_chain_info);
+            make_handler (module Helpers_operation_message);
           ]
 
 let () =
