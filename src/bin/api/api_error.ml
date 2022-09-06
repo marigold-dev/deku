@@ -3,6 +3,7 @@ type error_kind =
   | Missing_parameter
   | Invalid_body
   | Block_not_found
+  | Internal_error
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -21,6 +22,8 @@ let invalid_parameter msg = { kind = Invalid_parameter; msg }
 let block_not_found =
   { kind = Block_not_found; msg = "The requested block was not found" }
 
+let internal_error msg = { kind = Internal_error; msg }
+
 module Repr = struct
   type t = { code : string; msg : string } [@@deriving yojson_of]
 
@@ -31,6 +34,7 @@ module Repr = struct
       | Missing_parameter -> "MISSING_PARAMETER"
       | Invalid_body -> "INVALID_BLOCK"
       | Block_not_found -> "BLOCK_NOT_FOUND"
+      | Internal_error -> "INTERNAL_ERROR"
     in
     { code; msg }
 end
@@ -43,3 +47,4 @@ let to_http_code { kind; _ } =
   | Missing_parameter -> 400
   | Invalid_body -> 400
   | Block_not_found -> 404
+  | Internal_error -> 500

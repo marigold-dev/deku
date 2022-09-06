@@ -36,7 +36,9 @@ let main params =
      Dream.serve
      @@ Dream.router
           [
-            make_handler (module Listen_blocks); make_handler (module Get_block);
+            make_handler (module Listen_blocks);
+            make_handler (module Get_block);
+            make_handler (module Get_level);
           ]
 
 let () =
