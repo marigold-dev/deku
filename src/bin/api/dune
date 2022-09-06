@@ -1,0 +1,13 @@
+(executable
+ (name deku_api)
+ (public_name deku-api)
+ (libraries
+  dream
+  deku_tezos
+  deku_tezos_interop
+  deku_chain
+  deku_network
+  deku_indexer
+  cmdliner)
+ (preprocess
+  (pps ppx_yojson_conv ppx_let_binding ppx_deriving_cmdliner)))
