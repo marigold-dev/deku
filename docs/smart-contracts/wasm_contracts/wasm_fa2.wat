@@ -63,6 +63,11 @@
         i32.store
 
         local.get $offset
+        i32.const 4
+        i32.add
+        local.set $offset
+
+        local.get $offset
         i32.const 36
         i32.eq
         i32.const 1
@@ -291,10 +296,14 @@
       local.set $ret_3
       ;; i32.const 24
       ;; local.set 0
-      i32.const 0
+      local.get 0
+      i32.const 80
+      i32.add
       global.set $last_balance ;; This way the first entry to the balance list will be created at the start of storage
 
-      i32.const 16
+      global.get $last_balance
+      i32.const 44
+      i32.add
       global.set $first_balance
 
       ;; Begin handling operation
@@ -310,12 +319,12 @@
           i32.const 4
           i32.add ;; $from address
           local.get 0
-          i32.const 48
+          i32.const 40
           i32.add
           local.set $to_addr
           local.get $to_addr
           local.get 0
-          i32.load offset=92 ;; Load amount
+          i32.load offset=76 ;; Load amount
           call $handle_transfer_op
           drop
           local.get $to_addr
@@ -332,14 +341,19 @@
         )
       )
 
-      i64.const 0
+      local.get 0
+      i32.const 80
+      i32.add
+      i64.extend_i32_s
 
       global.get $last_balance
-      i32.const 16
+      i32.const 44
       i32.add ;; Compute size of balance list for return
       i64.extend_i32_s
            
       local.get $ret_3 ;; Arbitrarily high value for operation list
+      drop
+      i64.const 600
       return
     )
 )
