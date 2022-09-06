@@ -54,6 +54,7 @@ module Query = struct
     Caqti_lwt.Pool.use (insert_message message timestamp) pool
 
   let find_block level =
+    let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
     let query =
       (int64 ->! string)
       @@ "select block from blocks where level=? order by timestamp limit 1"
@@ -67,6 +68,17 @@ module Query = struct
     return_opt query ()
 
   let biggest_level pool = Caqti_lwt.Pool.use (biggest_level ()) pool
+
+  let find_block_by_hash block_hash =
+    let hash = block_hash |> Block_hash.yojson_of_t |> Yojson.Safe.to_string in
+    let query =
+      (string ->! string)
+      @@ "select block from blocks where hash=? order by timestamp limit 1"
+    in
+    return_opt query hash
+
+  let find_block_by_hash ~block_hash pool =
+    Caqti_lwt.Pool.use (find_block_by_hash block_hash) pool
 end
 
 let make_database ~uri =
@@ -163,3 +175,15 @@ let get_level (Indexer { pool; config = _ }) =
   |> Option.map N.of_z |> Option.join
   |> Option.map Deku_concepts.Level.of_n
   |> Lwt.return
+
+let find_block_by_hash ~block_hash (Indexer { pool; config = _ }) =
+  let%await result = Query.find_block_by_hash ~block_hash pool in
+  let block =
+    match result with
+    | Ok res ->
+        res
+        |> Option.map Yojson.Safe.from_string
+        |> Option.map Block.t_of_yojson
+    | Error _ -> None
+  in
+  Lwt.return block

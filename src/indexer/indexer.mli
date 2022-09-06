@@ -10,5 +10,8 @@ val make : uri:Uri.t -> config:config -> indexer Lwt.t
 val async_save_block : block:Block.t -> indexer -> unit
 val save_block : block:Block.t -> indexer -> unit Lwt.t
 val save_message : message:Message.raw_message -> indexer -> unit
-val find_block : level:int64 -> indexer -> Block.t option Lwt.t
+val find_block : level:Level.t -> indexer -> Block.t option Lwt.t
 val get_level : indexer -> Level.t option Lwt.t
+
+val find_block_by_hash :
+  block_hash:Block_hash.t -> indexer -> Block.t option Lwt.t
