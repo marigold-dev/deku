@@ -1,5 +1,6 @@
 open Deku_stdlib
 open Handlers
+open Deku_tezos
 
 let error_to_response error =
   let status = Api_error.to_http_code error |> Dream.int_to_status in
@@ -26,19 +27,24 @@ let make_handler (module Handler : HANDLER) =
   | `POST -> Dream.post Handler.path handler
   | `GET -> Dream.get Handler.path handler
 
-type params = { database_uri : Uri.t [@env "DEKU_DATABASE_URI"] }
+type params = {
+  database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
+  consensus : Address.t; [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
+  discovery : Address.t; [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
+}
 [@@deriving cmdliner]
 
 let main params =
-  let { database_uri } = params in
+  let { database_uri; consensus; discovery } = params in
   Lwt_main.run
-  @@ let%await () = Api_state.make ~database_uri in
+  @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery in
      Dream.serve
      @@ Dream.router
           [
             make_handler (module Listen_blocks);
             make_handler (module Get_block);
             make_handler (module Get_level);
+            make_handler (module Get_chain_info);
           ]
 
 let () =

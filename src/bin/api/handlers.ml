@@ -59,7 +59,7 @@ module Get_block : HANDLER = struct
     |> Result.join |> Lwt.return
 
   let handle request state =
-    let { indexer } = state in
+    let { indexer; _ } = state in
     let%await block = Indexer.find_block ~level:request indexer in
     match block with
     | Some block -> Lwt.return_ok block
@@ -75,9 +75,30 @@ module Get_level : HANDLER = struct
   let input_from_request _ = Lwt.return_ok ()
 
   let handle _ state =
-    let { indexer } = state in
+    let { indexer; _ } = state in
     let%await level = Indexer.get_level indexer in
     match level with
     | None -> Lwt.return_error (Api_error.internal_error "Level not found.")
     | Some level -> Lwt.return_ok { level }
+end
+
+module Get_chain_info : HANDLER = struct
+  open Deku_tezos
+
+  type input = unit
+
+  type response = { consensus : string; discovery : string }
+  [@@deriving yojson_of]
+
+  let path = "/chain/info"
+  let meth = `GET
+  let input_from_request _ = Lwt.return_ok ()
+
+  let handle () state =
+    let { indexer = _; consensus; discovery } = state in
+    Lwt.return_ok
+      {
+        consensus = Address.to_string consensus;
+        discovery = Address.to_string discovery;
+      }
 end
