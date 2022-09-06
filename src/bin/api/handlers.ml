@@ -16,10 +16,10 @@ module type HANDLER = sig
   val meth : [> `POST | `GET ]
   (** The method of your endpoint *)
 
-  val input_from_request : Dream.request -> (input, string) result Lwt.t
+  val input_from_request : Dream.request -> (input, Api_error.t) result Lwt.t
   (** Parsing function of the request to make an input *)
 
-  val handle : input -> Api_state.t -> response Lwt.t
+  val handle : input -> Api_state.t -> (response, Api_error.t) result Lwt.t
   (** handler logic *)
 end
 
@@ -39,5 +39,5 @@ module Listen_blocks : HANDLER = struct
     let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
     let%await _block = Indexer.find_block ~level indexer in
     print_endline "Retrieve the new applied block from the chain";
-    Lwt.return_unit
+    Lwt.return_ok ()
 end
