@@ -2,6 +2,7 @@ open Deku_consensus
 open Api_state
 open Deku_indexer
 open Deku_stdlib
+open Deku_concepts
 
 module type HANDLER = sig
   type input
@@ -63,4 +64,20 @@ module Get_block : HANDLER = struct
     match block with
     | Some block -> Lwt.return_ok block
     | None -> Lwt.return_error Api_error.block_not_found
+end
+
+module Get_level : HANDLER = struct
+  type input = unit
+  type response = { level : Level.t } [@@deriving yojson_of]
+
+  let path = "/chain/level"
+  let meth = `GET
+  let input_from_request _ = Lwt.return_ok ()
+
+  let handle _ state =
+    let { indexer } = state in
+    let%await level = Indexer.get_level indexer in
+    match level with
+    | None -> Lwt.return_error (Api_error.internal_error "Level not found.")
+    | Some level -> Lwt.return_ok { level }
 end
