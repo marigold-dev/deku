@@ -42,28 +42,83 @@ module Listen_blocks : HANDLER = struct
 end
 
 (* Return the nth block of the chain. *)
-module Get_block : HANDLER = struct
-  type input = int64 [@@deriving of_yojson]
+module Get_genesis : HANDLER = struct
+  type input = unit
+  type response = Block.t [@@deriving yojson_of]
+
+  let path = "/chain/blocks/genesis"
+  let meth = `GET
+  let input_from_request _ = Lwt.return_ok ()
+  let handle _ _ = Lwt.return_ok Genesis.block
+end
+
+module Get_head : HANDLER = struct
+  type input = unit
+  type response = Block.t [@@deriving yojson_of]
+
+  let path = "/chain/blocks/head"
+  let meth = `GET
+  let input_from_request _ = Lwt.return_ok ()
+
+  let handle _ state =
+    let { indexer; _ } = state in
+
+    let to_result block_opt =
+      match block_opt with
+      | Some block -> Ok block
+      | None -> Error Api_error.block_not_found
+    in
+
+    let%await level = Indexer.get_level indexer in
+    match level with
+    | None ->
+        Lwt.return_error (Api_error.internal_error "level of head not found")
+    | Some level -> Indexer.find_block ~level indexer |> Lwt.map to_result
+end
+
+module Get_block_by_level_or_hash : HANDLER = struct
+  type input = Level of Level.t | Hash of Block_hash.t
   type response = Block.t [@@deriving yojson_of]
 
   let path = "/chain/blocks/:block"
   let meth = `GET
 
   let input_from_request request =
-    Api_utils.param_of_request request "block"
-    |> Option.to_result ~none:(Api_error.missing_parameter "block")
-    |> Result.map Int64.of_string_opt
-    |> Result.map
-         (Option.to_result
-            ~none:(Api_error.invalid_parameter "Level should be a string in64."))
-    |> Result.join |> Lwt.return
+    let input = Api_utils.param_of_request request "block" in
+    let level string =
+      try
+        string |> Z.of_string |> N.of_z |> Option.map Level.of_n
+        |> Option.map (fun level -> Level level)
+      with _ -> None
+    in
+    let hash string =
+      string |> Block_hash.of_b58 |> Option.map (fun hash -> Hash hash)
+    in
+    match input with
+    | None -> Lwt.return_error (Api_error.missing_parameter "block")
+    | Some input -> (
+        let input = [ level; hash ] |> List.find_map (fun f -> f input) in
+        match input with
+        | Some input -> Lwt.return_ok input
+        | None ->
+            Lwt.return_error
+              (Api_error.invalid_parameter
+                 "The block parameter cannot be converted to a Level | 'head' \
+                  | 'genesis' | Block_hash.t"))
 
   let handle request state =
     let { indexer; _ } = state in
-    let%await block = Indexer.find_block ~level:request indexer in
-    match block with
-    | Some block -> Lwt.return_ok block
-    | None -> Lwt.return_error Api_error.block_not_found
+
+    let to_result block_opt =
+      match block_opt with
+      | Some block -> Ok block
+      | None -> Error Api_error.block_not_found
+    in
+
+    match request with
+    | Level level -> Indexer.find_block ~level indexer |> Lwt.map to_result
+    | Hash block_hash ->
+        Indexer.find_block_by_hash ~block_hash indexer |> Lwt.map to_result
 end
 
 module Get_level : HANDLER = struct

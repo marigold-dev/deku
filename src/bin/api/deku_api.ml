@@ -42,7 +42,9 @@ let main params =
      @@ Dream.router
           [
             make_handler (module Listen_blocks);
-            make_handler (module Get_block);
+            make_handler (module Get_genesis);
+            make_handler (module Get_head);
+            make_handler (module Get_block_by_level_or_hash);
             make_handler (module Get_level);
             make_handler (module Get_chain_info);
           ]
