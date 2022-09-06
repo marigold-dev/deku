@@ -1,6 +1,7 @@
 open Deku_consensus
 open Api_state
 open Deku_indexer
+open Deku_stdlib
 
 module type HANDLER = sig
   type input
@@ -15,10 +16,10 @@ module type HANDLER = sig
   val meth : [> `POST | `GET ]
   (** The method of your endpoint *)
 
-  val input_from_request : Dream.request -> (input, string) result Lwt.t
+  val input_from_request : Dream.request -> (input, Api_error.t) result Lwt.t
   (** Parsing function of the request to make an input *)
 
-  val handle : input -> Api_state.t -> response Lwt.t
+  val handle : input -> Api_state.t -> (response, Api_error.t) result Lwt.t
   (** handler logic *)
 end
 
@@ -35,6 +36,6 @@ module Listen_blocks : HANDLER = struct
 
   let handle block state =
     let { indexer; _ } = state in
-    Indexer.save_block ~block indexer;
-    Lwt.return_unit
+    let%await () = Indexer.save_block ~block indexer in
+    Lwt.return_ok ()
 end

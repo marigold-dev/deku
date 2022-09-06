@@ -1,18 +1,26 @@
 open Deku_stdlib
 open Handlers
 
+let error_to_response error =
+  let status = Api_error.to_http_code error |> Dream.int_to_status in
+  let body = Api_error.yojson_of_t error |> Yojson.Safe.to_string in
+  Dream.json ~status body
+
 let make_handler (module Handler : HANDLER) =
   let handler request =
     let%await input = Handler.input_from_request request in
     match input with
-    | Error error -> Dream.json error
-    | Ok input ->
+    | Error error -> error_to_response error
+    | Ok input -> (
         let state = Api_state.get_state () in
         let%await response = Handler.handle input state in
-        let response =
-          Handler.yojson_of_response response |> Yojson.Safe.to_string
-        in
-        Dream.json response
+        match response with
+        | Ok response ->
+            let body =
+              Handler.yojson_of_response response |> Yojson.Safe.to_string
+            in
+            Dream.json ~status:`OK body
+        | Error error -> error_to_response error)
   in
   match Handler.meth with
   | `POST -> Dream.post Handler.path handler

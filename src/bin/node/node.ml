@@ -79,7 +79,7 @@ and handle_chain_action node ~chain_action =
       handle_gossip_fragment node ~fragment
   | Chain_save_block block -> (
       match node.indexer with
-      | Some indexer -> Indexer.save_block ~block indexer
+      | Some indexer -> Indexer.async_save_block ~block indexer
       | None -> ())
 
 and on_gossip_outcome node ~current ~outcome =
