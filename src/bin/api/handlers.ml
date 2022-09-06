@@ -1,5 +1,7 @@
 open Deku_concepts
 open Deku_stdlib
+open Api_state
+open Deku_indexer
 
 module type HANDLER = sig
   type input
@@ -32,9 +34,10 @@ module Listen_blocks : HANDLER = struct
   let input_from_request request =
     Api_utils.input_of_body ~of_yojson:input_of_yojson request
 
-  let handle level _ =
-    print_endline
-      (Format.sprintf "A new block has been applied on level %s"
-         (level |> Level.to_n |> N.show));
+  let handle level state =
+    let { indexer; _ } = state in
+    let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
+    let%await _block = Indexer.find_block ~level indexer in
+    print_endline "Retrieve the new applied block from the chain";
     Lwt.return_unit
 end
