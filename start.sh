@@ -25,4 +25,7 @@ for N in 0 1 2 3; do
   sleep 0.1
 done
 
+# Only starting one API
+_build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
+
 wait
