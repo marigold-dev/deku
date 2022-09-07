@@ -78,7 +78,7 @@
 
     ;; Balance lists are linked lists containing an address, an entry is 16 bytes wide,
     ;; structured like so :
-    ;; address (8 byte i64) | balance (4 byte i32) | next_address_offset (4 byte i32)
+    ;; address_ptr (4 byte i32 pointing to 9 i32s representing a tezos address) | balance (4 byte i32) | next_address_offset (4 byte i32)
     ;; If an entry is the last in a list, its next_address_offset should be 0. Any function
     ;; that accesses the next_address_offset in a list entry should understand a value of 0
     ;; to indicate the end of the list. Balance lists support look-up by address, balance
@@ -254,10 +254,10 @@
       call $strcpy
       global.get $last_balance
       i32.const 0
-      i32.store offset=52 ;; 8 bytes from the offset where we stored $addr, store an empty balance
+      i32.store offset=80 ;; 36 bytes from the offset where we stored $addr, store an empty balance
       global.get $last_balance
       i32.const 0
-      i32.store offset=56 ;; 4 bytes from the balance, store an offset of 0 indicating that there are no more entries
+      i32.store offset=84 ;; 4 bytes from the balance, store an offset of 0 indicating that there are no more entries
       global.get $last_balance
       i32.const 44
       i32.add
@@ -292,6 +292,7 @@
     (func (export "main")  (param i32) (result i64 i64 i64)
       (local $ret_3 i64)
       (local $to_addr i32)
+      (local $storage_offset i32)
       i64.const 340
       local.set $ret_3
       ;; i32.const 24
@@ -344,16 +345,21 @@
       local.get 0
       i32.const 80
       i32.add
+      local.set $storage_offset
+      local.get $storage_offset
       i64.extend_i32_s
 
       global.get $last_balance
       i32.const 44
       i32.add ;; Compute size of balance list for return
+      local.get $storage_offset
+      i32.const -1
+      i32.mul
+      i32.add
       i64.extend_i32_s
            
       local.get $ret_3 ;; Arbitrarily high value for operation list
-      drop
-      i64.const 600
+
       return
     )
 )
