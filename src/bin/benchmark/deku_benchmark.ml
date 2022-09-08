@@ -120,7 +120,6 @@ struct
     Util.benchmark (fun () -> produce_block ~operations)
 
   let run ~size =
-    (* FIXME: make this size configurable *)
     let average = perform ~size in
     let tx_packed_per_sec = Float.of_int size /. average in
     Format.eprintf "run time: %3f. tx packed/s: %3f\n%!" average
@@ -129,8 +128,10 @@ struct
 end
 
 let max_domains = 7
+let default_domains = 1
 let runs = 15
-let size = 40_000
+let max_size = 40_000
+let default_size = 5_000
 
 let application_domains testing ~max_domains ~runs =
   let rec go domains acc =
@@ -139,7 +140,8 @@ let application_domains testing ~max_domains ~runs =
     end) in
     let time_list =
       List.init runs (fun _ ->
-          Format.sprintf "%d,%f" domains (Block_application.run ~size))
+          Format.sprintf "%d,%f" domains
+            (Block_application.run ~size:default_size))
     in
     let out = String.concat "\n" time_list in
     match domains = max_domains with
@@ -151,7 +153,7 @@ let application_domains testing ~max_domains ~runs =
 let application_transactions testing ~runs ~max_transactions =
   let rec go transactions acc =
     let module Block_application = Block_application (struct
-      let domains = max_domains
+      let domains = default_domains
     end) in
     let time_list =
       List.init runs (fun _ ->
@@ -165,6 +167,29 @@ let application_transactions testing ~runs ~max_transactions =
   in
   go 5_000 []
 
+let application_transactions_domains ~max_domains ~max_runs ~max_transactions =
+  let rec domains_loop domains acc =
+    let module Block_application = Block_application (struct
+      let domains = domains
+    end) in
+    let rec transactions_loop transactions acc =
+      let time_list =
+        List.init max_runs (fun _ ->
+            Format.sprintf "%d,%d,%f" transactions domains
+              (Block_application.run ~size:transactions))
+      in
+      let out = String.concat "\n" time_list in
+      match transactions = max_transactions with
+      | true -> String.concat "\n" (out :: acc)
+      | false -> transactions_loop (transactions + 5_000) (out :: acc)
+    in
+    let acc = transactions_loop default_size [] :: acc in
+    match domains = max_domains with
+    | true -> String.concat "\n" ("transactions,domains,time" :: acc)
+    | false -> domains_loop (domains + 1) acc
+  in
+  domains_loop default_domains []
+
 let production_domains testing ~max_domains ~runs =
   let rec go domains acc =
     let module Block_production = Block_production (struct
@@ -172,7 +197,8 @@ let production_domains testing ~max_domains ~runs =
     end) in
     let time_list =
       List.init runs (fun _ ->
-          Format.sprintf "%d,%f" domains (Block_production.run ~size))
+          Format.sprintf "%d,%f" domains
+            (Block_production.run ~size:default_size))
     in
     let out = String.concat "\n" time_list in
     match domains = max_domains with
@@ -184,7 +210,7 @@ let production_domains testing ~max_domains ~runs =
 let production_transactions testing ~max_transactions ~runs =
   let rec go transactions acc =
     let module Block_production = Block_production (struct
-      let domains = max_domains
+      let domains = default_domains
     end) in
     let time_list =
       List.init runs (fun _ ->
@@ -198,7 +224,7 @@ let production_transactions testing ~max_transactions ~runs =
   in
   go 5_000 []
 
-type 'a iterable = { initial : 'a; final : 'a; incr : 'a -> 'a }
+(* type 'a iterable = { initial : 'a; final : 'a; incr : 'a -> 'a }
 
 let test_model testing ~runs ~iterable =
   let rec go value acc =
@@ -207,21 +233,25 @@ let test_model testing ~runs ~iterable =
     end) in
     let time_list =
       List.init runs (fun _ ->
-          Format.sprintf "%d,%f" value (Block_application.run ~size))
+          Format.sprintf "%d,%f" value
+            (Block_application.run ~size:default_size))
     in
     let out = String.concat "\n" time_list in
     match value >= iterable.final with
     | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
     | false -> go (iterable.incr value) (out :: acc)
   in
-  go iterable.initial []
+  go iterable.initial [] *)
 
 let () =
   (* Util.write_to "application_domains"
        (application_domains "domains" ~max_domains ~runs);
      Util.write_to "application_transactions"
-       (application_transactions "transactions" ~max_transactions:size ~runs);
+       (application_transactions "transactions" ~max_transactions:max_size ~runs);
      Util.write_to "production_domains"
-       (production_domains "domains" ~max_domains ~runs); *)
-  Util.write_to "production_transactions"
-    (production_transactions "transactions" ~max_transactions:size ~runs)
+       (production_domains "domains" ~max_domains ~runs);
+     Util.write_to "production_transactions"
+       (production_transactions "transactions" ~max_transactions:max_size ~runs) *)
+  Util.write_to "application_transaction_domains"
+    (application_transactions_domains ~max_domains ~max_runs:1
+       ~max_transactions:max_size)
