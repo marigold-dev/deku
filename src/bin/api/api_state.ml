@@ -1,11 +1,10 @@
 open Deku_indexer
 open Deku_stdlib
-open Deku_tezos
 
 type t = {
   indexer : Indexer.t;
-  consensus : Address.t;
-  discovery : Address.t;
+  consensus : Deku_tezos.Address.t;
+  discovery : Deku_tezos.Address.t;
   websockets : Websocket.t Websocket.Map.t;
   random : Random.State.t;
   node : Uri.t;

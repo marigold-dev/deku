@@ -1,10 +1,9 @@
 open Deku_indexer
-open Deku_tezos
 
 type t = private {
   indexer : Indexer.t;
-  consensus : Address.t;
-  discovery : Address.t;
+  consensus : Deku_tezos.Address.t;
+  discovery : Deku_tezos.Address.t;
   websockets : Websocket.t Websocket.Map.t;
   random : Random.State.t;
   node : Uri.t;
@@ -12,8 +11,8 @@ type t = private {
 
 val make :
   database_uri:Uri.t ->
-  consensus:Address.t ->
-  discovery:Address.t ->
+  consensus:Deku_tezos.Address.t ->
+  discovery:Deku_tezos.Address.t ->
   node:Uri.t ->
   unit Lwt.t
 
