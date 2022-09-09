@@ -215,3 +215,44 @@ module Helpers_hash_operation : HANDLER = struct
     in
     Lwt.return_ok { hash }
 end
+
+(* Parse the operation and send it to the chain *)
+module Post_operation : HANDLER = struct
+  open Deku_gossip
+  open Deku_protocol
+  open Piaf
+
+  type input = Operation.t [@@deriving of_yojson]
+  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = "/operations"
+
+  let input_from_request request =
+    Api_utils.input_of_body ~of_yojson:input_of_yojson request
+
+  let handle operation state =
+    let { node; _ } = state in
+    let target = Uri.with_path node "/messages" in
+
+    let content = Message.Content.operation operation in
+    let _message, raw_message = Message.encode ~content in
+
+    let (Message.Raw_message { hash; raw_content }) = raw_message in
+    let hash = Message_hash.to_b58 hash in
+
+    let (Operation.Operation { hash = operation_hash; _ }) = operation in
+
+    let headers =
+      let open Piaf.Headers in
+      let json = Mime_types.map_extension "json" in
+      [ (Well_known.content_type, json) ]
+    in
+    let target = Uri.with_query' target [ ("hash", hash) ] in
+    let body = Body.of_string raw_content in
+    let%await post_result = Client.Oneshot.post ~headers ~body target in
+    match post_result with
+    | Ok _ -> Lwt.return_ok { hash = operation_hash }
+    | Error err ->
+        Lwt.return_error (Api_error.internal_error (Piaf.Error.to_string err))
+end
