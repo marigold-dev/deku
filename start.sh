@@ -15,6 +15,7 @@ export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
 export DEKU_TEZOS_RPC_NODE="http://localhost:20000"
 export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint http://localhost:20000 show known contract consensus | grep KT1 | tr -d '\r')"
 export DEKU_TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint http://localhost:20000 show known contract discovery | grep KT1 | tr -d '\r')"
+export DEKU_API_PORT=8080
 
 for N in 0 1 2 3; do
   source "./chain/data/$N/env"
