@@ -52,14 +52,15 @@ type params = {
   database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
   consensus : Address.t; [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
   discovery : Address.t; [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
+  port : int; [@env "DEKU_API_PORT"]
 }
 [@@deriving cmdliner]
 
 let main params =
-  let { database_uri; consensus; discovery } = params in
+  let { database_uri; consensus; discovery; port } = params in
   Lwt_main.run
   @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery in
-     Dream.serve ~interface:"0.0.0.0"
+     Dream.serve ~interface:"0.0.0.0" ~port
      @@ Dream.router
           [
             get_websocket;
