@@ -205,7 +205,6 @@ const calculateCost = (action, cookieBaker) => {
 exports.calculateCost = calculateCost;
 const addCookie = (cookieBaker) => {
     cookieBaker.cookies = cookieBaker.cookies + 1n;
-    console.log("Successfully added cookie: " + cookieBaker.cookies);
     return cookieBaker;
 };
 exports.addCookie = addCookie;

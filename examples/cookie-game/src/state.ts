@@ -291,7 +291,6 @@ export const calculateCost = (action: actions, cookieBaker: st.cookieBaker): big
 
 export const addCookie = (cookieBaker: st.cookieBaker): st.cookieBaker => {
     cookieBaker.cookies = cookieBaker.cookies + 1n;
-    console.log("Successfully added cookie: " + cookieBaker.cookies);
     return cookieBaker;
 }
 

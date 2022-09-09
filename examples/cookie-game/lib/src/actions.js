@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.actions = void 0;
+exports.isTransfer = exports.operationType = exports.actions = void 0;
 var actions;
 (function (actions) {
     actions["cookie"] = "cookie";
@@ -24,3 +24,12 @@ var actions;
     actions["idleverse"] = "idleverse";
     actions["cordex"] = "cordex";
 })(actions = exports.actions || (exports.actions = {}));
+var operationType;
+(function (operationType) {
+    operationType["mint"] = "mint";
+    operationType["transfer"] = "transfer";
+})(operationType = exports.operationType || (exports.operationType = {}));
+function isTransfer(operation) {
+    return operation.from !== undefined;
+}
+exports.isTransfer = isTransfer;
