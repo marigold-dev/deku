@@ -32,7 +32,7 @@ module Repr = struct
       match kind with
       | Invalid_parameter -> "INVALID_PARAMETER"
       | Missing_parameter -> "MISSING_PARAMETER"
-      | Invalid_body -> "INVALID_BLOCK"
+      | Invalid_body -> "INVALID_BODY"
       | Block_not_found -> "BLOCK_NOT_FOUND"
       | Internal_error -> "INTERNAL_ERROR"
     in
