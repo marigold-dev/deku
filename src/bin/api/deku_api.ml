@@ -53,6 +53,7 @@ type params = {
   consensus : Address.t; [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
   discovery : Address.t; [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
   port : int; [@env "DEKU_API_PORT"]
+  node : Uri.t; [@env "DEKU_API_DEKU_NODE"]
 }
 [@@deriving cmdliner]
 
@@ -71,13 +72,14 @@ let handler =
              make_handler (module Get_chain_info);
              make_handler (module Helpers_operation_message);
              make_handler (module Helpers_hash_operation);
+             make_handler (module Post_operation);
            ];
        ]
 
 let main params =
-  let { database_uri; consensus; discovery; port } = params in
+  let { database_uri; consensus; discovery; port; node } = params in
   Lwt_main.run
-  @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery in
+  @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery ~node in
      Dream.serve ~interface:"0.0.0.0" ~port handler
 
 let () =
