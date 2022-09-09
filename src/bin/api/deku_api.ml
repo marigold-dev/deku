@@ -7,7 +7,7 @@ let error_to_response error =
   let body = Api_error.yojson_of_t error |> Yojson.Safe.to_string in
   Dream.json ~status body
 
-let make_handler (module Handler : HANDLER) =
+let make_handler middlewares (module Handler : HANDLER) =
   let handler request =
     let%await input = Handler.input_from_request request in
     match input with
@@ -22,6 +22,11 @@ let make_handler (module Handler : HANDLER) =
             in
             Dream.json ~status:`OK body
         | Error error -> error_to_response error)
+  in
+  let handler =
+    List.fold_left
+      (fun handler middleware -> middleware handler)
+      handler middlewares
   in
   match Handler.meth with
   | `POST -> Dream.post Handler.path handler
@@ -58,21 +63,23 @@ type params = {
 [@@deriving cmdliner]
 
 let handler =
-  Middlewares.cors
+  let open Middlewares in
+  cors
   @@ Dream.router
        [
          get_websocket;
          Dream.scope "/api/v1/" []
            [
-             make_handler (module Listen_blocks);
-             make_handler (module Get_genesis);
-             make_handler (module Get_head);
-             make_handler (module Get_block_by_level_or_hash);
-             make_handler (module Get_level);
-             make_handler (module Get_chain_info);
-             make_handler (module Helpers_operation_message);
-             make_handler (module Helpers_hash_operation);
-             make_handler (module Post_operation);
+             make_handler [ no_cache ] (module Listen_blocks);
+             make_handler [] (module Get_genesis);
+             make_handler [ no_cache ] (module Get_head);
+             make_handler [ no_cache ] (module Get_block_by_level_or_hash);
+             (* TODO: find a way to add a headers depending on response*)
+             make_handler [ no_cache ] (module Get_level);
+             make_handler [] (module Get_chain_info);
+             make_handler [] (module Helpers_operation_message);
+             make_handler [] (module Helpers_hash_operation);
+             make_handler [ no_cache ] (module Post_operation);
            ];
        ]
 
