@@ -61,14 +61,17 @@ let handler =
   @@ Dream.router
        [
          get_websocket;
-         make_handler (module Listen_blocks);
-         make_handler (module Get_genesis);
-         make_handler (module Get_head);
-         make_handler (module Get_block_by_level_or_hash);
-         make_handler (module Get_level);
-         make_handler (module Get_chain_info);
-         make_handler (module Helpers_operation_message);
-         make_handler (module Helpers_hash_operation);
+         Dream.scope "/api/v1/" []
+           [
+             make_handler (module Listen_blocks);
+             make_handler (module Get_genesis);
+             make_handler (module Get_head);
+             make_handler (module Get_block_by_level_or_hash);
+             make_handler (module Get_level);
+             make_handler (module Get_chain_info);
+             make_handler (module Helpers_operation_message);
+             make_handler (module Helpers_hash_operation);
+           ];
        ]
 
 let main params =
