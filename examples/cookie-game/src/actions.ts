@@ -20,3 +20,23 @@ export enum actions {
     idleverse = "idleverse",
     cordex = "cordex",
 }
+
+export enum operationType {
+    mint = "mint",
+    transfer = "transfer"
+}
+
+export type operations = {
+    type: operationType
+    operation: actions | transfer
+}
+
+export type transfer = {
+    from: string
+    to: string
+    amount: number
+}
+
+export function isTransfer(operation: actions | transfer): operation is transfer {
+    return (operation as transfer).from !== undefined;
+}
