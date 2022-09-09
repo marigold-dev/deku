@@ -8,6 +8,7 @@
   deku_chain
   deku_network
   deku_indexer
-  cmdliner)
+  cmdliner
+  uuidm)
  (preprocess
   (pps ppx_yojson_conv ppx_let_binding ppx_deriving_cmdliner)))

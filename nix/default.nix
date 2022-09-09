@@ -34,6 +34,7 @@ with ocamlPackages; buildDunePackage rec {
     caqti-driver-sqlite3
     ppx_deriving_cmdliner
     dream
+    uuidm
   ]
   # checkInputs are here because when cross compiling dune needs test dependencies
   # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.

@@ -27,6 +27,27 @@ let make_handler (module Handler : HANDLER) =
   | `POST -> Dream.post Handler.path handler
   | `GET -> Dream.get Handler.path handler
 
+(* Returns a websocket to the client*)
+let get_websocket =
+  let handle _request =
+    (* Loop that does nothing*)
+    let rec listen uuid websocket =
+      let%await message = Dream.receive websocket in
+      match message with
+      | Some _ -> listen uuid websocket
+      | None ->
+          let%await () = Dream.close_websocket websocket in
+          let () = Api_state.remove_websocket uuid in
+          Lwt.return_unit
+    in
+    Dream.websocket ~close:false (fun websocket ->
+        let state = Api_state.get_state () in
+        let uuid = Api_state.register_websocket websocket state in
+        let%await () = listen uuid websocket in
+        Lwt.return_unit)
+  in
+  Dream.get "/websocket" handle
+
 type params = {
   database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
   consensus : Address.t; [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
@@ -38,9 +59,10 @@ let main params =
   let { database_uri; consensus; discovery } = params in
   Lwt_main.run
   @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery in
-     Dream.serve
+     Dream.serve ~interface:"0.0.0.0"
      @@ Dream.router
           [
+            get_websocket;
             make_handler (module Listen_blocks);
             make_handler (module Get_genesis);
             make_handler (module Get_head);
