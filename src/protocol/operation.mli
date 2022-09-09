@@ -2,6 +2,7 @@ open Deku_crypto
 open Deku_concepts
 
 exception Invalid_signature
+exception Invalid_source
 
 type operation_content = private
   | Operation_ticket_transfer of { receiver : Address.t; amount : Amount.t }

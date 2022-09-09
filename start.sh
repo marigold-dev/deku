@@ -27,6 +27,7 @@ for N in 0 1 2 3; do
 done
 
 # Only starting one API
+export DEKU_API_DEKU_NODE="http://localhost:4440"
 _build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
 
 wait

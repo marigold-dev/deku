@@ -4,6 +4,8 @@ type error_kind =
   | Invalid_body
   | Block_not_found
   | Internal_error
+  | Invalid_operation_signature
+  | Invalid_operation_source
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -24,6 +26,18 @@ let block_not_found =
 
 let internal_error msg = { kind = Internal_error; msg }
 
+let invalid_operation_signature =
+  {
+    kind = Invalid_operation_signature;
+    msg = "The signature of your operation does not match";
+  }
+
+let invalid_operation_source =
+  {
+    kind = Invalid_operation_source;
+    msg = "The source of your operation does not match the given key.";
+  }
+
 module Repr = struct
   type t = { code : string; msg : string } [@@deriving yojson_of]
 
@@ -35,6 +49,8 @@ module Repr = struct
       | Invalid_body -> "INVALID_BODY"
       | Block_not_found -> "BLOCK_NOT_FOUND"
       | Internal_error -> "INTERNAL_ERROR"
+      | Invalid_operation_signature -> "INVALID_OPERATION_SIGNATURE"
+      | Invalid_operation_source -> "INVALID_OPERATION_SOURCE"
     in
     { code; msg }
 end
@@ -48,3 +64,5 @@ let to_http_code { kind; _ } =
   | Invalid_body -> 400
   | Block_not_found -> 404
   | Internal_error -> 500
+  | Invalid_operation_signature -> 400
+  | Invalid_operation_source -> 400

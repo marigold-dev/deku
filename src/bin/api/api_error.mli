@@ -4,6 +4,8 @@ type error_kind = private
   | Invalid_body
   | Block_not_found
   | Internal_error
+  | Invalid_operation_signature
+  | Invalid_operation_source
 
 type error = private { kind : error_kind; msg : string }
 type t = error
@@ -13,6 +15,8 @@ val missing_parameter : string -> error
 val invalid_parameter : string -> error
 val block_not_found : error
 val internal_error : string -> error
+val invalid_operation_signature : error
+val invalid_operation_source : error
 
 (* Utils *)
 val yojson_of_t : error -> Yojson.Safe.t

@@ -3,6 +3,7 @@ open Deku_crypto
 open Deku_concepts
 
 exception Invalid_signature
+exception Invalid_source
 
 type operation_content =
   | Operation_ticket_transfer of { receiver : Address.t; amount : Amount.t }
@@ -83,7 +84,7 @@ module Repr = struct
        Key_hash.(equal source (of_key key))
      with
     | true -> ()
-    | false -> raise Invalid_signature);
+    | false -> raise Invalid_source);
     (match
        let hash = Operation_hash.to_blake2b hash in
        Signature.verify key signature hash

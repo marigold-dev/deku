@@ -7,10 +7,15 @@ type t = private {
   discovery : Address.t;
   websockets : Websocket.t Websocket.Map.t;
   random : Random.State.t;
+  node : Uri.t;
 }
 
 val make :
-  database_uri:Uri.t -> consensus:Address.t -> discovery:Address.t -> unit Lwt.t
+  database_uri:Uri.t ->
+  consensus:Address.t ->
+  discovery:Address.t ->
+  node:Uri.t ->
+  unit Lwt.t
 
 val get_state : unit -> t
 val register_websocket : Websocket.t -> t -> Uuidm.t
