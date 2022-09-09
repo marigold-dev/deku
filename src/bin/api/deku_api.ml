@@ -56,23 +56,26 @@ type params = {
 }
 [@@deriving cmdliner]
 
+let handler =
+  Middlewares.cors
+  @@ Dream.router
+       [
+         get_websocket;
+         make_handler (module Listen_blocks);
+         make_handler (module Get_genesis);
+         make_handler (module Get_head);
+         make_handler (module Get_block_by_level_or_hash);
+         make_handler (module Get_level);
+         make_handler (module Get_chain_info);
+         make_handler (module Helpers_operation_message);
+         make_handler (module Helpers_hash_operation);
+       ]
+
 let main params =
   let { database_uri; consensus; discovery; port } = params in
   Lwt_main.run
   @@ let%await () = Api_state.make ~database_uri ~consensus ~discovery in
-     Dream.serve ~interface:"0.0.0.0" ~port
-     @@ Dream.router
-          [
-            get_websocket;
-            make_handler (module Listen_blocks);
-            make_handler (module Get_genesis);
-            make_handler (module Get_head);
-            make_handler (module Get_block_by_level_or_hash);
-            make_handler (module Get_level);
-            make_handler (module Get_chain_info);
-            make_handler (module Helpers_operation_message);
-            make_handler (module Helpers_hash_operation);
-          ]
+     Dream.serve ~interface:"0.0.0.0" ~port handler
 
 let () =
   let open Cmdliner in
