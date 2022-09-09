@@ -224,24 +224,47 @@ let production_transactions testing ~max_transactions ~runs =
   in
   go 5_000 []
 
+let production_transactions_domains ~max_domains ~max_runs ~max_transactions =
+  let rec domains_loop domains acc =
+    let module Block_production = Block_production (struct
+      let domains = domains
+    end) in
+    let rec transactions_loop transactions acc =
+      let time_list =
+        List.init max_runs (fun _ ->
+            Format.sprintf "%d,%d,%f" transactions domains
+              (Block_production.run ~size:transactions))
+      in
+      let out = String.concat "\n" time_list in
+      match transactions = max_transactions with
+      | true -> String.concat "\n" (out :: acc)
+      | false -> transactions_loop (transactions + 5_000) (out :: acc)
+    in
+    let acc = transactions_loop default_size [] :: acc in
+    match domains = max_domains with
+    | true -> String.concat "\n" ("transactions,domains,time" :: acc)
+    | false -> domains_loop (domains + 1) acc
+  in
+  domains_loop default_domains []
+
 (* type 'a iterable = { initial : 'a; final : 'a; incr : 'a -> 'a }
 
-let test_model testing ~runs ~iterable =
-  let rec go value acc =
-    let module Block_application = Block_application (struct
-      let domains = max_domains
-    end) in
-    let time_list =
-      List.init runs (fun _ ->
-          Format.sprintf "%d,%f" value
-            (Block_application.run ~size:default_size))
-    in
-    let out = String.concat "\n" time_list in
-    match value >= iterable.final with
-    | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
-    | false -> go (iterable.incr value) (out :: acc)
-  in
-  go iterable.initial [] *)
+   let test_model testing ~runs ~iterable =
+     let rec go value acc =
+       let module Block_application = Block_application (struct
+         let domains = max_domains
+       end) in
+       let time_list =
+         List.init runs (fun _ ->
+             Format.sprintf "%d,%f" value
+               (Block_application.run ~size:default_size))
+       in
+       let out = String.concat "\n" time_list in
+       match value >= iterable.final with
+       | true -> String.concat "\n" ((testing ^ ",time") :: out :: acc)
+       | false -> go (iterable.incr value) (out :: acc)
+     in
+     go iterable.initial [] *)
 
 let () =
   (* Util.write_to "application_domains"
@@ -252,6 +275,9 @@ let () =
        (production_domains "domains" ~max_domains ~runs);
      Util.write_to "production_transactions"
        (production_transactions "transactions" ~max_transactions:max_size ~runs) *)
-  Util.write_to "application_transaction_domains"
-    (application_transactions_domains ~max_domains ~max_runs:1
+  (* Util.write_to "application_transactions_domains"
+     (application_transactions_domains ~max_domains ~max_runs:1
+        ~max_transactions:max_size) *)
+  Util.write_to "production_transactions_domains"
+    (production_transactions_domains ~max_domains ~max_runs:10
        ~max_transactions:max_size)
