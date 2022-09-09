@@ -4,6 +4,36 @@
     (global $last_balance (mut i32) (i32.const 0))
     (global $first_balance (mut i32) (i32.const 0))
 
+
+    (func $ncpy (param $src i32) (param $len i32) (param $dst i32)
+      (local $offset i32)
+      i32.const 0
+      local.set $offset
+
+      (loop $copy
+        local.get $dst
+        local.get $offset
+        i32.add
+        local.get $src
+        local.get $offset
+        i32.add
+        i32.load
+        i32.store
+
+        local.get $offset
+        i32.const 4
+        i32.add
+        local.set $offset
+
+        local.get $offset
+        local.get $len
+        i32.eq
+        i32.const 1
+        i32.xor
+        br_if $copy
+      )
+    )
+
     (func $strcmp (param $s1 i32) (param $s2 i32) (result i32)
       (local $res i32)
       (local $offset i32)
@@ -272,14 +302,14 @@
     )
 
     (func $handle_transfer_op (param $from i32) (param $to i32) (param $amount i32) (result i32)
-      local.get $from
-      call $add_account
+      ;;local.get $from
+      ;;call $add_account
       local.get $to
       call $add_account
-      local.get $from
-      local.get $amount
-      global.get $first_balance
-      call $adjust_balance ;; Give $from balance of $amount so that the transfer will succeed
+      ;; local.get $from
+      ;; local.get $amount
+      ;; global.get $first_balance
+      ;; call $adjust_balance ;; Give $from balance of $amount so that the transfer will succeed
       local.get $from
       local.get $to
       local.get $amount
@@ -293,13 +323,11 @@
       (local $ret_3 i64)
       (local $to_addr i32)
       (local $storage_offset i32)
-      i64.const 340
-      local.set $ret_3
-      ;; i32.const 24
-      ;; local.set 0
-      local.get 0
-      i32.const 80
-      i32.add
+
+      ;; local.get 0
+      ;; i32.const 80
+      ;; i32.add
+      i32.const 36
       global.set $last_balance ;; This way the first entry to the balance list will be created at the start of storage
 
       global.get $last_balance
@@ -307,24 +335,23 @@
       i32.add
       global.set $first_balance
 
-      ;; Begin handling operation
       local.get 0
+      i32.const 80
+      i32.const 0
+      call $ncpy ;; Copy the contents of the argument to address 0 so that the argument itself can be overwritten
+
+      ;; Begin handling operation
+      i32.const 0
       i32.load ;; Load operation type
       i32.const 1
       i32.eq
       (if (result i32);; If operation_type is 0, then we're doing a transfer
         (then
-          i64.const 240
-          local.set $ret_3
-          local.get 0
           i32.const 4
-          i32.add ;; $from address
-          local.get 0
           i32.const 40
-          i32.add
           local.set $to_addr
           local.get $to_addr
-          local.get 0
+          i32.const 0
           i32.load offset=76 ;; Load amount
           call $handle_transfer_op
           drop
@@ -342,9 +369,11 @@
         )
       )
 
-      local.get 0
-      i32.const 80
-      i32.add
+      i32.const 0
+      i32.const 1024
+      i32.store
+
+      i32.const 0
       local.set $storage_offset
       local.get $storage_offset
       i64.extend_i32_s
@@ -359,7 +388,6 @@
       i64.extend_i32_s
            
       local.get $ret_3 ;; Arbitrarily high value for operation list
-
       return
     )
 )
