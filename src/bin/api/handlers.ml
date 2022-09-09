@@ -36,8 +36,9 @@ module Listen_blocks : HANDLER = struct
     Api_utils.input_of_body ~of_yojson:input_of_yojson request
 
   let handle block state =
-    let { indexer; _ } = state in
+    let { indexer; websockets; _ } = state in
     let%await () = Indexer.save_block ~block indexer in
+    let%await () = Websocket.broadcast websockets (New_block block) in
     Lwt.return_ok ()
 end
 
@@ -150,7 +151,7 @@ module Get_chain_info : HANDLER = struct
   let input_from_request _ = Lwt.return_ok ()
 
   let handle () state =
-    let { indexer = _; consensus; discovery } = state in
+    let { indexer = _; consensus; discovery; _ } = state in
     Lwt.return_ok
       {
         consensus = Address.to_string consensus;
