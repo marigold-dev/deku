@@ -7,11 +7,11 @@ type block =
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
+      withdrawal_handles_hash : BLAKE2b.t;
       author : Key_hash.t;
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
-      withdrawal_handles_hash : BLAKE2b.t;
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
@@ -47,7 +47,7 @@ module Repr = struct
     author : Key_hash.t;
     level : Level.t;
     previous : Block_hash.t;
-    withdrawal_handles_hash : Ledger.Withdrawal_handle_hash.t;
+    withdrawal_handles_hash : Ledger.Withdrawal_handle.hash;
     payload : string list;
     tezos_operations : Tezos_operation.t list;
   }

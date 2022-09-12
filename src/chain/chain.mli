@@ -24,9 +24,9 @@ type external_effect = private
       current_level : Level.t;
       payload_hash : BLAKE2b.t;
       state_root_hash : BLAKE2b.t;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
       signatures : (Key.t * Signature.t) option list;
       validators : Key_hash.t list;
-      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle_hash.t;
     }
 
 val make :

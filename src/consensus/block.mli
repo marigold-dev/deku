@@ -10,12 +10,12 @@ type block = private
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
+      withdrawal_handles_hash : BLAKE2b.t;
       author : Key_hash.t;
       (* TODO: why does it contain a level? *)
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
-      withdrawal_handles_hash : Ledger.Withdrawal_handle_hash.t;
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }

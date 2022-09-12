@@ -1,5 +1,6 @@
 open Deku_concepts
 open Deku_protocol
+open Deku_crypto
 
 type producer
 type t = producer
@@ -22,5 +23,6 @@ val try_to_produce :
     ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   current:Timestamp.t ->
   consensus:Consensus.t ->
+  withdrawal_handles_hash:BLAKE2b.t ->
   producer ->
   Block.t option

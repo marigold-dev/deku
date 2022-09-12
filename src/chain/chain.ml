@@ -24,9 +24,9 @@ type external_effect =
       current_level : Level.t;
       payload_hash : BLAKE2b.t;
       state_root_hash : BLAKE2b.t;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
       signatures : (Key.t * Signature.t) option list;
       validators : Key_hash.t list;
-      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle_hash.t;
     }
 
 let make ~identity ~bootstrap_key ~validators =
@@ -61,9 +61,9 @@ let commit current_level block verifier validators =
       current_level;
       payload_hash;
       state_root_hash;
+      withdrawal_handles_hash;
       signatures;
       validators;
-      withdrawal_handles_hash;
     }
 
 let apply_block ~pool ~current ~block chain =
@@ -77,6 +77,7 @@ let apply_block ~pool ~current ~block chain =
       ~current_level:level ~payload protocol ~tezos_operations
   in
   let producer = Producer.clean ~receipts ~tezos_operations producer in
+  let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
   (* FIXME: need a time-based procedure for this, not block-based *)
   (* FIXME: rediscuss the need to commit the previous block instead *)
   (* FIXME: validators have to watch when commit did not happen *)
@@ -87,7 +88,7 @@ let apply_block ~pool ~current ~block chain =
     match
       Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        ~current ~consensus producer
+        ~current ~consensus ~withdrawal_handles_hash producer
     with
     (* FIXME: weird place to commit *)
     | Some new_block when level mod 5 = 0 ->
@@ -131,12 +132,13 @@ let incoming_signature ~pool ~current ~signature chain =
 let incoming_timeout ~pool ~current node =
   let () = Format.eprintf "timeout\n%!" in
   let (Chain { protocol; consensus; verifier; signer; producer }) = node in
+  let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
   let effects =
     (* TODO: do not like duplicating this lambda everywhere. *)
     match
       Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        ~current ~consensus producer
+        ~current ~consensus producer ~withdrawal_handles_hash
     with
     | Some block -> [ Broadcast_block block ]
     | None -> []
@@ -158,10 +160,11 @@ let incoming_bootstrap_signal ~pool ~bootstrap_signal ~current node =
     | None -> consensus
   in
   let effects =
+    let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
     match
       Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        ~current ~consensus producer
+        ~current ~consensus ~withdrawal_handles_hash producer
     with
     | Some block -> [ Broadcast_block block ]
     | None -> []

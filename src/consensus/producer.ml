@@ -43,8 +43,10 @@ let clean ~receipts ~tezos_operations producer =
   let operations =
     List.fold_left
       (fun operations receipt ->
-        let (Receipt.Receipt { operation = hash }) = receipt in
-        Operation_hash.Map.remove hash operations)
+        match receipt with
+        | Receipt.Transaction_receipt { operation = hash } ->
+            Operation_hash.Map.remove hash operations
+        | _ -> operations)
       operations receipts
   in
   let tezos_operations =
@@ -56,7 +58,8 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { identity; operations; tezos_operations }
 
-let produce ~parallel_map ~current_level ~current_block producer =
+let produce ~parallel_map ~current_level ~current_block ~withdrawal_handles_hash
+    producer =
   (* TODO: Make this configurable *)
   let max_block_size = 50_000 in
   let (Producer { identity; operations; tezos_operations }) = producer in
@@ -79,11 +82,10 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
   Block.produce ~parallel_map ~identity ~level ~previous ~operations
-    ~tezos_operations
+    ~withdrawal_handles_hash ~tezos_operations
 
-let try_to_produce ~parallel_map ~current ~consensus producer =
-  (* FIXME placeholder for incoming withdrawal handles hash *)
-  let withdrawal_handles_hash = Deku_crypto.BLAKE2b.hash "tuturu" in
+let try_to_produce ~parallel_map ~current ~consensus ~withdrawal_handles_hash
+    producer =
   let (Consensus { current_level; current_block; _ }) = consensus in
   let (Producer { identity; operations = _; tezos_operations = _ }) =
     producer
