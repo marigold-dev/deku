@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "models"
+version = "0.0.1"
+authors = [
+  { name="InfiniteSwerve"}
+]
+description = "Some small bad models for curve fitting"
+readme = "README.md"
+requires-python = ">=3.7"
+

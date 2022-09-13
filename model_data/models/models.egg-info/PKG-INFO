@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: models
+Version: 0.0.1
+Summary: Some small bad models for curve fitting
+Author: InfiniteSwerve
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
