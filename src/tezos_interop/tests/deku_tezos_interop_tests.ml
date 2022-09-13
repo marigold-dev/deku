@@ -5,7 +5,8 @@ open Deku_concepts
 
 (* FIXME: I broke these ligo-generated hashes - need to update these comments. *)
 
-(* Deku_crypto.BLAKE2b.hash "tuturu" |> Deku_crypto.BLAKE2b.to_hex;;
+(* TODO: for now this only test a predefined withdrawal_handles_hash, namely
+   Deku_crypto.BLAKE2b.hash "tuturu" |> Deku_crypto.BLAKE2b.to_hex;;
    - : string = "b55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203" *)
 
 (* Derivied with the following code using `ligo repel cameligo`

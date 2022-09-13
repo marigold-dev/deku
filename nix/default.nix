@@ -24,6 +24,8 @@ with ocamlPackages; buildDunePackage rec {
     mirage-crypto-ec
     mirage-crypto-rng
     secp256k1-internal
+    cohttp
+    cohttp-lwt-unix
     piaf
     domainslib
     cmdliner
