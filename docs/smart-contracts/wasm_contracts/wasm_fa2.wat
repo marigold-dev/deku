@@ -5,6 +5,7 @@
     (global $first_balance (mut i32) (i32.const 0))
 
 
+    ;; Copy $len bytes (should be a multiple of 4) from $src to $dst
     (func $ncpy (param $src i32) (param $len i32) (param $dst i32)
       (local $offset i32)
       i32.const 0
@@ -34,6 +35,8 @@
       )
     )
 
+    ;; Check whether 2 36-char strings are equal. $s1 and $s2 should be addresses
+    ;; where strings begin in linear memory. Returns 1 if equal, and 0 if not equal.
     (func $strcmp (param $s1 i32) (param $s2 i32) (result i32)
       (local $res i32)
       (local $offset i32)
@@ -77,6 +80,8 @@
       local.get $res
     )
 
+    ;; Copy the 36-char string beginning at address $src to
+    ;; address $dst.
     (func $strcpy (param $src i32) (param $dst i32)
       (local $offset i32)
       i32.const 0
@@ -106,9 +111,10 @@
       )
     )
 
-    ;; Balance lists are linked lists containing an address, an entry is 16 bytes wide,
+    ;; Balance lists are linked lists containing info about the amount of tokens held by an address.
+    ;; An entry is 44 bytes wide,
     ;; structured like so :
-    ;; address_ptr (4 byte i32 pointing to 9 i32s representing a tezos address) | balance (4 byte i32) | next_address_offset (4 byte i32)
+    ;; address (36-char string represented by 9 i32s) | balance (4 byte i32) | next_address_offset (4 byte i32)
     ;; If an entry is the last in a list, its next_address_offset should be 0. Any function
     ;; that accesses the next_address_offset in a list entry should understand a value of 0
     ;; to indicate the end of the list. Balance lists support look-up by address, balance
@@ -161,7 +167,7 @@
 
     ;; To check the balance of an address, we specify the $addr and $list and look
     ;; it up using $lookup_account. If the address is found, we simply load the balance
-    ;; which is an i32 8 bytes out from the address location. If it's not found, we
+    ;; which is an i32 36 bytes out from the address location. If it's not found, we
     ;; return -1
     (func $get_balance (param $addr i32) (param $list i32) (result i32)
       (local $addr_offset i32)
@@ -277,39 +283,56 @@
     ;; with a balance of 0. 
     (func $add_account (param $addr i32) (result i32)
       (local $next_entry i32)
+      (local $search_result i32)
+
       local.get $addr
-      global.get $last_balance
-      i32.const 44
-      i32.add
-      call $strcpy
-      global.get $last_balance
-      i32.const 0
-      i32.store offset=80 ;; 36 bytes from the offset where we stored $addr, store an empty balance
-      global.get $last_balance
-      i32.const 0
-      i32.store offset=84 ;; 4 bytes from the balance, store an offset of 0 indicating that there are no more entries
-      global.get $last_balance
-      i32.const 44
-      i32.add
-      local.set $next_entry
-      global.get $last_balance
-      local.get $next_entry
-      i32.store offset=40 ;; 40 bytes from the previous last element, store the offset of the new last element, 16 bytes out
-      local.get $next_entry
-      global.set $last_balance ;; Set the offset of the last entry to the beginning of the new entry
-      global.get $last_balance
+      global.get $first_balance
+      call $lookup_account
+      local.set $search_result
+
+      local.get $search_result
+      i32.const -1
+      i32.eq
+      (if (result i32)
+        (then
+          global.get $last_balance
+          i32.const 44
+          i32.add
+          local.set $next_entry ;; Set the next entry to 44 bytes after the current last entry
+
+          local.get $addr
+          local.get $next_entry
+          call $strcpy ;; Copy the new address to the beginning of the next entry
+
+          local.get $next_entry
+          i32.const 0
+          i32.store offset=36 ;; 36 bytes from the offset where we stored $addr, store an empty balance
+
+          local.get $next_entry
+          i32.const 0
+          i32.store offset=40 ;; 4 bytes from the balance, store an offset of 0 indicating that there are no more entries
+
+          global.get $last_balance
+          local.get $next_entry
+          i32.store offset=40 ;; 40 bytes from the previous last element, store the offset of the new last element, 16 bytes out
+
+          local.get $next_entry
+          global.set $last_balance ;; Set the offset of the last entry to the beginning of the new entry
+
+          global.get $last_balance
+        )
+        (else
+          local.get $search_result
+        )
+      )
+
       return
     )
 
     (func $handle_transfer_op (param $from i32) (param $to i32) (param $amount i32) (result i32)
-      ;;local.get $from
-      ;;call $add_account
-      ;;local.get $to
-      ;;call $add_account
-      ;; local.get $from
-      ;; local.get $amount
-      ;; global.get $first_balance
-      ;; call $adjust_balance ;; Give $from balance of $amount so that the transfer will succeed
+      local.get $to
+      call $add_account ;; Create $to's account if it doesn't exist already
+
       local.get $from
       local.get $to
       local.get $amount
@@ -318,35 +341,31 @@
       return
     )
 
-    ;; argument: "\u0000\u0000\u0000\u0000\u0005\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0008\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0003\u0000\u0000\u0000"
     (func (export "main")  (param i32) (result i64 i64 i64)
       (local $ret_3 i64)
       (local $to_addr i32)
-
       
       local.get 0
       i32.const 44
       i32.const -1
       i32.mul
       i32.add
-      global.set $last_balance ;; This way the first entry to the balance list will be created at the start of storage
-      ;;i32.const 80
-      ;;global.set $last_balance
+      global.set $last_balance ;; The last balance begins 44 bytes prior to the end of initial storage
 
       i32.const 80
-      global.set $first_balance
+      global.set $first_balance ;; The first balance begins after the argument in initial storage, at 80 bytes
 
       local.get 0
       i32.const 80
       i32.const 0
-      call $ncpy ;; Copy the contents of the argument to address 0 so that the argument itself can be overwritten
+      call $ncpy ;; Copy the contents of the argument to address 0 so that the argument itself can be overwritten safely
 
       ;; Begin handling operation
       i32.const 0
       i32.load ;; Load operation type
       i32.const 1
       i32.eq
-      (if (result i32);; If operation_type is 0, then we're doing a transfer
+      (if (result i32);; If operation_type is 1, then we're doing a transfer
         (then
           i32.const 4
           i32.const 40
@@ -355,33 +374,20 @@
           i32.const 0
           i32.load offset=76 ;; Load amount
           call $handle_transfer_op
-          drop
-          ;;local.get $to_addr
-          ;;global.get $first_balance
-          ;;call $get_balance
-          ;;i64.extend_i32_s
-          ;;i64.const 100
-          ;;i64.mul
-          ;;local.set $ret_3
-          i32.const 1
         )
         (else ;; Other operations aren't supported yet
           i32.const 0
         )
       )
 
-      i64.const 0
+      i64.const 0 ;; Storage begins at 0 always
 
       global.get $last_balance
       i32.const 44
-      i32.add ;; Compute size of balance list for return
-      i64.extend_i32_s
+      i32.add
+      i64.extend_i32_s ;; Storage ends at the end of the last balance
            
-      ;;local.get $ret_3 ;; Arbitrarily high value for operation list
-
-      i32.const 400
-      i64.extend_i32_s
-      ;; i64.extend_i32_s
+      i64.const 400 ;; Arbitrarily high value for operation list
       return
     )
 )
