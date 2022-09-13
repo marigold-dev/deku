@@ -113,6 +113,7 @@ services:
     command: jakartabox start
     environment:
       - block_time=4
+      - flextesa_node_cors_origin=*
     ports:
       - "20000:20000"
     expose:
