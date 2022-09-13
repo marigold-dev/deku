@@ -304,8 +304,8 @@
     (func $handle_transfer_op (param $from i32) (param $to i32) (param $amount i32) (result i32)
       ;;local.get $from
       ;;call $add_account
-      local.get $to
-      call $add_account
+      ;;local.get $to
+      ;;call $add_account
       ;; local.get $from
       ;; local.get $amount
       ;; global.get $first_balance
@@ -322,17 +322,18 @@
     (func (export "main")  (param i32) (result i64 i64 i64)
       (local $ret_3 i64)
       (local $to_addr i32)
-      (local $storage_offset i32)
 
-      ;; local.get 0
-      ;; i32.const 80
-      ;; i32.add
-      i32.const 36
-      global.set $last_balance ;; This way the first entry to the balance list will be created at the start of storage
-
-      global.get $last_balance
+      
+      local.get 0
       i32.const 44
+      i32.const -1
+      i32.mul
       i32.add
+      global.set $last_balance ;; This way the first entry to the balance list will be created at the start of storage
+      ;;i32.const 80
+      ;;global.set $last_balance
+
+      i32.const 80
       global.set $first_balance
 
       local.get 0
@@ -355,13 +356,13 @@
           i32.load offset=76 ;; Load amount
           call $handle_transfer_op
           drop
-          local.get $to_addr
-          global.get $first_balance
-          call $get_balance
-          i64.extend_i32_s
-          i64.const 100
-          i64.mul
-          local.set $ret_3
+          ;;local.get $to_addr
+          ;;global.get $first_balance
+          ;;call $get_balance
+          ;;i64.extend_i32_s
+          ;;i64.const 100
+          ;;i64.mul
+          ;;local.set $ret_3
           i32.const 1
         )
         (else ;; Other operations aren't supported yet
@@ -369,25 +370,18 @@
         )
       )
 
-      i32.const 0
-      i32.const 1024
-      i32.store
-
-      i32.const 0
-      local.set $storage_offset
-      local.get $storage_offset
-      i64.extend_i32_s
+      i64.const 0
 
       global.get $last_balance
       i32.const 44
       i32.add ;; Compute size of balance list for return
-      local.get $storage_offset
-      i32.const -1
-      i32.mul
-      i32.add
       i64.extend_i32_s
            
-      local.get $ret_3 ;; Arbitrarily high value for operation list
+      ;;local.get $ret_3 ;; Arbitrarily high value for operation list
+
+      i32.const 400
+      i64.extend_i32_s
+      ;; i64.extend_i32_s
       return
     )
 )
