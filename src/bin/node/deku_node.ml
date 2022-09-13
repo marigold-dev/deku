@@ -103,7 +103,10 @@ module Node = struct
               (chain, [])
           | Bootstrap ->
               Chain.incoming_bootstrap_signal ~pool ~bootstrap_signal:packet
-                ~current chain)
+                ~current chain
+          | Level | Withdraw_proof ->
+              (* TODO make these cases impossible? *)
+              (chain, []))
       | None -> (chain, [])
     in
     let node = Node { chain; network; applied_block; tezos_interop; indexer } in
@@ -186,11 +189,41 @@ module Server = struct
     let response = Response.of_string ~body:message status in
     Lwt.return response
 
+  let level status =
+    let (Node { chain; _ }) = Singleton.get_state () in
+    let (Chain { consensus; _ }) = chain in
+    let (Consensus { current_level; _ }) = consensus in
+    let level = Level.to_n current_level |> N.to_z |> Z.to_int in
+    let response = Printf.sprintf "\"%d\"" level in
+    let response = Response.of_string ~body:response status in
+    Lwt.return response
+
+  let proof body status =
+    let%await body = Body.to_string body in
+    let body = Result.get_ok body in
+    let body = Yojson.Safe.from_string body in
+    let operation_hash = Operation_hash.t_of_yojson body in
+    let (Node { chain = Chain { protocol; _ }; _ }) = Singleton.get_state () in
+    let response =
+      match Protocol.find_withdraw_proof ~operation_hash protocol with
+      | Error _err -> Response.of_string ~body:"Proof not found" `Not_found
+      | Ok (handle, proof) ->
+          let open Ledger.Proof_response in
+          let body = Proof { operation_hash; handle; proof } in
+          let response_body = yojson_of_t body |> Yojson.Safe.to_string in
+          Response.of_string ~body:response_body status
+    in
+    Lwt.return response
+
   let with_endpoint Server.{ ctx = _; request } next =
     let path = request.target in
     let meth = request.meth in
+    let body = request.body in
 
     match Endpoint.of_string path with
+    | Some (Ex Withdraw_proof) ->
+        proof body `Accepted
+    | Some (Ex Level) -> level `Accepted
     | Some endpoint -> (
         match meth with
         | `POST -> next Server.{ ctx = endpoint; request }

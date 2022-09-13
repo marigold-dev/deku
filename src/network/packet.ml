@@ -42,6 +42,8 @@ let content_of_yojson (type a) ~(endpoint : a endpoint) json : a =
   | Signatures -> Verified_signature.t_of_yojson json
   | Operations -> Operation.t_of_yojson json
   | Bootstrap -> Bootstrap_signal.t_of_yojson json
+  | Withdraw_proof -> Operation_hash.t_of_yojson json
+  | Level -> Level.t_of_yojson json
 
 let yojson_of_content (type a) ~(endpoint : a endpoint) (content : a) =
   match endpoint with
@@ -49,3 +51,5 @@ let yojson_of_content (type a) ~(endpoint : a endpoint) (content : a) =
   | Signatures -> Verified_signature.yojson_of_t content
   | Operations -> Operation.yojson_of_t content
   | Bootstrap -> Bootstrap_signal.yojson_of_t content
+  | Withdraw_proof -> Operation_hash.yojson_of_t content
+  | Level -> Level.yojson_of_t content
