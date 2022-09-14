@@ -274,10 +274,10 @@ let () =
   Util.write_to "production_domains"
     (production_domains "domains" ~max_domains ~runs);
   Util.write_to "production_transactions"
-    (production_transactions "transactions" ~max_transactions:max_size ~runs)
+    (production_transactions "transactions" ~max_transactions:max_size ~runs);
   Util.write_to "application_transactions_domains"
     (application_transactions_domains ~max_domains ~max_runs:1
-        ~max_transactions:max_size)
+        ~max_transactions:max_size);
   Util.write_to "production_transactions_domains"
     (production_transactions_domains ~max_domains ~max_runs:10
-      ~max_transactions:max_size)
+      ~max_transactions:max_size);
