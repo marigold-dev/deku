@@ -1,3 +1,5 @@
+import JSONValue, { JSONType } from "../utils/json"
+
 const VERSION = "/api/v1"
 
 type endpoint<T> = {
