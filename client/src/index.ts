@@ -2,7 +2,7 @@ import { DekuSigner } from './utils/signers';
 import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
-import { endpoints, get, makeEndpoints, post } from "./network";
+import { endpoints, get, makeEndpoints, parseWebsocketMessage, post, MessageType } from "./network";
 import {Level as LevelType} from "./core/level";
 import {Block as BlockType} from "./core/block";
 import Nonce, {Nonce as NonceType} from "./core/nonce";
@@ -30,16 +30,20 @@ export class DekuToolkit {
     private _discovery: Discovery | undefined;
 
     private websocket: WebSocket
+    private onBlockCallback: (block: BlockType) => void;
+
     constructor(setting: Setting) {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
         this.websocket = this.initializeWebsocket(setting.dekuRpc);
+        this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
     }
 
 
     private initializeWebsocket(dekuRpc: string): WebSocket {
         const wsUri = URI.httpToWs(dekuRpc + "/websocket");
         const websocket = new WebSocket(wsUri);
+        websocket.onmessage = DekuToolkit.onWsMessage(this);
         return websocket;
     }
 
@@ -77,6 +81,17 @@ export class DekuToolkit {
         const discoveryContract = () => get(uri).then(({ discovery }) => tezos.contract.at(discovery));
         this._consensus = new Consensus(consensusContract);
         this._discovery = new Discovery(discoveryContract);
+        return this;
+    }
+
+
+    /**
+     * Sets the callback to call when a block is received
+     * @param callback the callback to be called when a new block arrived to the client
+     * Returns the deku updated toolkit
+     */
+     onBlock(callback: ((block: BlockType) => void)): DekuToolkit {
+        this.onBlockCallback = callback
         return this;
     }
 
@@ -182,6 +197,29 @@ export class DekuToolkit {
         const hash = await post(this.endpoints["OPERATIONS"], body);
         return hash
     }
+
+    private static onWsMessage(deku: DekuToolkit) {
+        return function (message: MessageEvent<string>) {
+            const msg = parseWebsocketMessage(message);
+            if (msg === null) return null;
+            const { type, data } = msg;
+            switch (type) {
+                case MessageType.NewBlock:
+                    deku.onNewBlock(data);
+                    return null;
+            }
+        }
+    }
+    
+    /**
+     * Resolve pending operations when the client receive a new block.
+     * @param block the received block from the API
+     */
+    private onNewBlock(block: BlockType) {
+        // Calling the callback given by the user
+        this.onBlockCallback(block);
+    }
+
 }
 
 export { fromBeaconSigner } from './utils/signers';

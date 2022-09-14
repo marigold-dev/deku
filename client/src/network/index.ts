@@ -105,3 +105,36 @@ export const post = async <T>(endpoint: endpoint<T>, content: JSONType): Promise
 
 }
 
+/**
+ * Websocket part
+ */
+
+export enum MessageType {
+    NewBlock = "NEW_BLOCK"
+}
+
+type NewBlock = {
+    type: MessageType,
+    data: BlockType
+}
+
+type WebsocketMessage = NewBlock
+
+export const parseWebsocketMessage = (message: MessageEvent<string>): WebsocketMessage | null => {
+    const json = JSONValue.of(JSON.parse(message.data));
+    const type = json.at("type").as_string();
+    const payload = json.at("payload");
+    if (type === null) return null;
+    switch (type) {
+        case "NEW_BLOCK": {
+            const block = Block.ofDTO(payload);
+            if (block === null) return null;
+            return {
+                type: MessageType.NewBlock,
+                data: block
+            }
+        }
+        default:
+            return null;
+    }
+}
