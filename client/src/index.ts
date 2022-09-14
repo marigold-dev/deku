@@ -110,6 +110,15 @@ export class DekuToolkit {
         return block
     }
 
+    /**
+     * Returns the current block of deku
+     * @returns the current block
+     */
+     async getCurrentBlock(): Promise<BlockType> {
+        const block = await get(this.endpoints["GET_CURRENT_BLOCK"]);
+        return block
+    }
+
 }
 
 export { fromBeaconSigner } from './utils/signers';
