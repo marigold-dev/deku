@@ -1,0 +1,22 @@
+{
+    "include": [
+        "src/index.ts",
+    ],
+    "exclude": [
+        "node_modules",
+        "**/*.spec.ts"
+    ],
+    "compilerOptions": {
+        "outDir": "lib",
+        "target": "es2016",
+        "declaration": true,
+        "noImplicitAny": true,
+        "moduleResolution": "node",
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitOverride": true
+    }
+}
