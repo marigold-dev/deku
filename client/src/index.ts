@@ -3,6 +3,7 @@ import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
 import { endpoints, get, makeEndpoints } from "./network";
+import {Level as LevelType} from "./core/level";
 
 export type Setting = {
     dekuRpc: string,
@@ -68,6 +69,15 @@ export class DekuToolkit {
      async info(): Promise<{ consensus: string, discovery: string }> {
         const info = await get(this.endpoints["GET_CHAIN_INFO"])
         return info;
+    }
+
+    /**
+     * Returns the current level of the chain
+     * @returns the level of the chain as a promise
+     */
+     async level(): Promise<LevelType> {
+        const level = await get(this.endpoints["GET_CURRENT_LEVEL"]);
+        return level;
     }
 }
 

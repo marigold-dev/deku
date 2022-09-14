@@ -1,5 +1,5 @@
 import JSONValue, { JSONType } from "../utils/json"
-
+import Level, { Level as LevelType } from "../core/level";
 const VERSION = "/api/v1"
 
 type endpoint<T> = {
@@ -10,6 +10,7 @@ type endpoint<T> = {
 
 export type endpoints = {
     "GET_CHAIN_INFO": endpoint<{ consensus: string, discovery: string }>,
+    "GET_CURRENT_LEVEL": endpoint<LevelType>,
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -22,6 +23,14 @@ export const makeEndpoints = (root: string): endpoints => ({
             if (consensus === null) return null;
             if (discovery === null) return null;
             return { consensus, discovery }
+        }
+    },
+    "GET_CURRENT_LEVEL": {
+        uri: `${root}${VERSION}/chain/level`,
+        expectedStatus: 200,
+        parse: (json: JSONValue) => {
+            const level_json = json.at("level");
+            return Level.ofDTO(level_json);
         }
     },
 })
