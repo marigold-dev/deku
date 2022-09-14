@@ -127,7 +127,7 @@ struct
     average
 end
 
-let max_domains = 7
+let max_domains = 24
 let default_domains = 1
 let runs = 15
 let max_size = 40_000
@@ -267,17 +267,17 @@ let production_transactions_domains ~max_domains ~max_runs ~max_transactions =
      go iterable.initial [] *)
 
 let () =
-  (* Util.write_to "application_domains"
-       (application_domains "domains" ~max_domains ~runs);
-     Util.write_to "application_transactions"
-       (application_transactions "transactions" ~max_transactions:max_size ~runs);
-     Util.write_to "production_domains"
-       (production_domains "domains" ~max_domains ~runs);
-     Util.write_to "production_transactions"
-       (production_transactions "transactions" ~max_transactions:max_size ~runs) *)
-  (* Util.write_to "application_transactions_domains"
-     (application_transactions_domains ~max_domains ~max_runs:1
-        ~max_transactions:max_size) *)
+  Util.write_to "application_domains"
+      (application_domains "domains" ~max_domains ~runs);
+  Util.write_to "application_transactions"
+    (application_transactions "transactions" ~max_transactions:max_size ~runs);
+  Util.write_to "production_domains"
+    (production_domains "domains" ~max_domains ~runs);
+  Util.write_to "production_transactions"
+    (production_transactions "transactions" ~max_transactions:max_size ~runs)
+  Util.write_to "application_transactions_domains"
+    (application_transactions_domains ~max_domains ~max_runs:1
+        ~max_transactions:max_size)
   Util.write_to "production_transactions_domains"
     (production_transactions_domains ~max_domains ~max_runs:10
-       ~max_transactions:max_size)
+      ~max_transactions:max_size)
