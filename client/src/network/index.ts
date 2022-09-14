@@ -1,5 +1,6 @@
 import JSONValue, { JSONType } from "../utils/json"
 import Level, { Level as LevelType } from "../core/level";
+import Block, { Block as BlockType } from "../core/block";
 const VERSION = "/api/v1"
 
 type endpoint<T> = {
@@ -11,6 +12,7 @@ type endpoint<T> = {
 export type endpoints = {
     "GET_CHAIN_INFO": endpoint<{ consensus: string, discovery: string }>,
     "GET_CURRENT_LEVEL": endpoint<LevelType>,
+    "GET_BLOCK_BY_LEVEL": (level: LevelType) => endpoint<BlockType>,
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -33,6 +35,11 @@ export const makeEndpoints = (root: string): endpoints => ({
             return Level.ofDTO(level_json);
         }
     },
+    "GET_BLOCK_BY_LEVEL": (level: LevelType) => ({
+        uri: `${root}${VERSION}/chain/blocks/${Level.toDTO(level)}`,
+        expectedStatus: 200,
+        parse: Block.ofDTO
+    }),
 })
 
 const parse = async <T>(endpoint: endpoint<T>, status: number, json: JSONType): Promise<T> => {

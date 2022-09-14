@@ -4,6 +4,7 @@ import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
 import { endpoints, get, makeEndpoints } from "./network";
 import {Level as LevelType} from "./core/level";
+import {Block as BlockType} from "./core/block";
 
 export type Setting = {
     dekuRpc: string,
@@ -78,6 +79,16 @@ export class DekuToolkit {
      async level(): Promise<LevelType> {
         const level = await get(this.endpoints["GET_CURRENT_LEVEL"]);
         return level;
+    }
+
+    /**
+     * Returns the block at the given level
+     * @param level the level of the block to return
+     * @returns the block at the given level
+     */
+     async getBlockByLevel(level: LevelType): Promise<BlockType> {
+        const block = await get(this.endpoints["GET_BLOCK_BY_LEVEL"](level))
+        return block;
     }
 }
 
