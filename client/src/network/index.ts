@@ -13,6 +13,7 @@ export type endpoints = {
     "GET_CHAIN_INFO": endpoint<{ consensus: string, discovery: string }>,
     "GET_CURRENT_LEVEL": endpoint<LevelType>,
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => endpoint<BlockType>,
+    "GET_BLOCK_BY_HASH": (hash: string) => endpoint<BlockType>,
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -37,6 +38,11 @@ export const makeEndpoints = (root: string): endpoints => ({
     },
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => ({
         uri: `${root}${VERSION}/chain/blocks/${Level.toDTO(level)}`,
+        expectedStatus: 200,
+        parse: Block.ofDTO
+    }),
+    "GET_BLOCK_BY_HASH": (blockHash: string) => ({
+        uri: `${root}${VERSION}/chain/blocks/${blockHash}`,
         expectedStatus: 200,
         parse: Block.ofDTO
     }),

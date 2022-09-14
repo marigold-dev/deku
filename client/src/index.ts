@@ -90,6 +90,17 @@ export class DekuToolkit {
         const block = await get(this.endpoints["GET_BLOCK_BY_LEVEL"](level))
         return block;
     }
+
+    /**
+     * Returns the block at the given hash
+     * @param hash the hash of the block to return
+     * @returns the block from the given hash
+     */
+    async getBlockByHash(hash: string): Promise<BlockType> {
+        const block = await get(this.endpoints["GET_BLOCK_BY_HASH"](hash))
+        return block;
+    }
+
 }
 
 export { fromBeaconSigner } from './utils/signers';
