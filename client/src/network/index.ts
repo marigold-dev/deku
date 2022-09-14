@@ -1,6 +1,8 @@
 import JSONValue, { JSONType } from "../utils/json"
 import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
+import { createPacket } from "../utils/hash";
+
 const VERSION = "/api/v1"
 
 type endpoint<T> = {
@@ -16,6 +18,7 @@ export type endpoints = {
     "GET_BLOCK_BY_HASH": (hash: string) => endpoint<BlockType>,
     "GET_GENESIS": endpoint<BlockType>,
     "GET_CURRENT_BLOCK": endpoint<BlockType>,
+    "OPERATIONS": endpoint<string>,
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -58,6 +61,14 @@ export const makeEndpoints = (root: string): endpoints => ({
         expectedStatus: 200,
         parse: Block.ofDTO
     },
+    "OPERATIONS": {
+        uri: `${root}${VERSION}/operations`,
+        expectedStatus: 200,
+        parse: (json: JSONValue) => {
+            const hash = json.at("hash").as_string();
+            return hash;
+        }
+    },
 })
 
 const parse = async <T>(endpoint: endpoint<T>, status: number, json: JSONType): Promise<T> => {
@@ -80,5 +91,17 @@ export const get = async <T>(endpoint: endpoint<T>): Promise<T> => {
     const status = response.status;
     const json: JSONType = await response.json();
     return parse(endpoint, status, json);
+}
+
+export const post = async <T>(endpoint: endpoint<T>, content: JSONType): Promise<T> => {
+    const uri = endpoint.uri;
+    const packet = createPacket(JSONValue.of(content));
+    const body = JSON.stringify(packet.as_json());
+    const response = await fetch(uri, { method: "POST", body });
+
+    const status = response.status;
+    const json: JSONType = await response.json();
+    return parse(endpoint, status, json);
+
 }
 

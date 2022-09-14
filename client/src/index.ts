@@ -2,13 +2,23 @@ import { DekuSigner } from './utils/signers';
 import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
-import { endpoints, get, makeEndpoints } from "./network";
+import { endpoints, get, makeEndpoints, post } from "./network";
 import {Level as LevelType} from "./core/level";
 import {Block as BlockType} from "./core/block";
+import Nonce, {Nonce as NonceType} from "./core/nonce";
+import {Address as AddressType} from "./core/address";
+import {Amount as AmountType} from "./core/amount";
+import Operation from "./core/operation";
+import {OperationHash as OperationHashType} from "./core/operation-hash";
 
 export type Setting = {
     dekuRpc: string,
     dekuSigner?: DekuSigner
+}
+
+export type OptOptions = {
+    nonce?: NonceType,
+    level?: LevelType,
 }
 
 export class DekuToolkit {
@@ -31,6 +41,18 @@ export class DekuToolkit {
         this._dekuSigner = signer;
         return this;
     }
+
+    /**
+     * Utils function that check if the deku signer is setup
+     * @returns void if the signer is set, otherwise the promise is rejected
+     */
+    private assertTzWallet(): DekuSigner {
+        if (!this._dekuSigner) {
+            throw new Error("Tezos wallet required, see setTzWallet")
+        }
+        return this._dekuSigner;
+    }
+
     /**
      * Sets ther tezos rpc node
      * @param rpc the url of the tezos rpc, 
@@ -119,6 +141,36 @@ export class DekuToolkit {
         return block
     }
 
+    /**
+     * Transfer some ticket to someone
+     * @param receiver the address of the ticket receiver
+     * @param amount the amount of ticket you want to send
+     * @param options to define a custom level/nonce
+     * @returns an operation hash of the transfer
+     */
+     async transferTo(receiver: AddressType, amount: AmountType, options?: OptOptions): Promise<OperationHashType> {
+        const dekuSigner = this.assertTzWallet();
+        const level = options === undefined || options.level === undefined ? await this.level() : options.level;
+        const nonce = options === undefined || options.nonce === undefined ? Nonce.rand() : options.nonce;
+        const source = await dekuSigner.publicKeyHash();
+
+        // Create the transaction
+        const transaction = Operation.createTransaction(
+            level,
+            nonce,
+            source,
+            receiver,
+            amount
+        );
+
+        // Sign the transaction
+        const signedOperation = await dekuSigner.signOperation(transaction);
+
+        // Send the operation
+        const body = Operation.signedToDTO(signedOperation);
+        const hash = await post(this.endpoints["OPERATIONS"], body);
+        return hash
+    }
 }
 
 export { fromBeaconSigner } from './utils/signers';
