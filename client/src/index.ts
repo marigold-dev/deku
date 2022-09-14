@@ -101,6 +101,15 @@ export class DekuToolkit {
         return block;
     }
 
+    /**
+     * Returns the genesis block
+     * @returns the genesis block
+     */
+     async getGenesis(): Promise<BlockType> {
+        const block = await get(this.endpoints["GET_GENESIS"])
+        return block
+    }
+
 }
 
 export { fromBeaconSigner } from './utils/signers';

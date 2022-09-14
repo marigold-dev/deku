@@ -14,6 +14,7 @@ export type endpoints = {
     "GET_CURRENT_LEVEL": endpoint<LevelType>,
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => endpoint<BlockType>,
     "GET_BLOCK_BY_HASH": (hash: string) => endpoint<BlockType>,
+    "GET_GENESIS": endpoint<BlockType>,
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -46,6 +47,11 @@ export const makeEndpoints = (root: string): endpoints => ({
         expectedStatus: 200,
         parse: Block.ofDTO
     }),
+    "GET_GENESIS": {
+        uri: `${root}${VERSION}/chain/blocks/genesis`,
+        expectedStatus: 200,
+        parse: Block.ofDTO
+    },
 })
 
 const parse = async <T>(endpoint: endpoint<T>, status: number, json: JSONType): Promise<T> => {
