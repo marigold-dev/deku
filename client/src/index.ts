@@ -10,6 +10,7 @@ import {Address as AddressType} from "./core/address";
 import {Amount as AmountType} from "./core/amount";
 import Operation from "./core/operation";
 import {OperationHash as OperationHashType} from "./core/operation-hash";
+import URI from "./utils/uri";
 
 export type Setting = {
     dekuRpc: string,
@@ -28,10 +29,20 @@ export class DekuToolkit {
     private _consensus: Consensus | undefined;
     private _discovery: Discovery | undefined;
 
+    private websocket: WebSocket
     constructor(setting: Setting) {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
+        this.websocket = this.initializeWebsocket(setting.dekuRpc);
     }
+
+
+    private initializeWebsocket(dekuRpc: string): WebSocket {
+        const wsUri = URI.httpToWs(dekuRpc + "/websocket");
+        const websocket = new WebSocket(wsUri);
+        return websocket;
+    }
+
     /**
      * Sets the deku signer
      * @param wallet the wallet you want to use 
