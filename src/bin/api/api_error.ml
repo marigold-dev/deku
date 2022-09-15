@@ -6,6 +6,7 @@ type error_kind =
   | Internal_error
   | Invalid_operation_signature
   | Invalid_operation_source
+  | Method_not_allowed
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -38,6 +39,14 @@ let invalid_operation_source =
     msg = "The source of your operation does not match the given key.";
   }
 
+let method_not_allowed path allowed_meth =
+  {
+    kind = Method_not_allowed;
+    msg =
+      Format.sprintf "The route [%s] only allows method %s" path
+        (Dream.method_to_string allowed_meth);
+  }
+
 module Repr = struct
   type t = { code : string; msg : string } [@@deriving yojson_of]
 
@@ -51,6 +60,7 @@ module Repr = struct
       | Internal_error -> "INTERNAL_ERROR"
       | Invalid_operation_signature -> "INVALID_OPERATION_SIGNATURE"
       | Invalid_operation_source -> "INVALID_OPERATION_SOURCE"
+      | Method_not_allowed -> "METHOD_NOT_ALLOWED"
     in
     { code; msg }
 end
@@ -66,3 +76,4 @@ let to_http_code { kind; _ } =
   | Internal_error -> 500
   | Invalid_operation_signature -> 400
   | Invalid_operation_source -> 400
+  | Method_not_allowed -> 405
