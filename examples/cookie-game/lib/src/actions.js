@@ -30,6 +30,6 @@ var operationType;
     operationType["transfer"] = "transfer";
 })(operationType = exports.operationType || (exports.operationType = {}));
 function isTransfer(operation) {
-    return operation.from !== undefined;
+    return operation.to !== undefined;
 }
 exports.isTransfer = isTransfer;

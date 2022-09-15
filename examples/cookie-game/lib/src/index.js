@@ -170,30 +170,31 @@ const transition = (tx) => {
         }
     }
     else if (operation.type === actions_1.operationType.transfer) {
-        console.log(typeof operation.operation);
         if ((0, actions_1.isTransfer)(operation.operation)) {
-            console.log("from: " + operation.operation.from);
-            console.log("to: " + operation.operation.to);
-            const to = JSON.parse((0, deku_js_interop_1.get)(operation.operation.to));
+            // make sure the recipient has a started game
+            let to = JSON.parse((0, deku_js_interop_1.get)(operation.operation.to));
             if (to === undefined || to === null) {
-                throw new Error("No game for this user");
+                console.log("Impossible to transfer to this user, no started game for: ", operation.operation.to);
             }
             else {
+                // first step, remove the cookies from the sender
+                cookieBaker.cookies = cookieBaker.cookies - BigInt(operation.operation.amount);
+                saveState(source, cookieBaker);
+                // need to re-get the recipient to make sure the state is up to date
+                to = JSON.parse((0, deku_js_interop_1.get)(operation.operation.to));
+                // then give him the cookies and save his/her state
                 let cookieBakerTo = JSON.parse(to, utils_1.parseReviver);
                 cookieBakerTo = (0, state_1.initCookieBaker)(cookieBakerTo);
-                console.log("recipient: " + cookieBakerTo);
-                console.log("sender: " + cookieBaker);
-                cookieBaker.cookies -= BigInt(operation.operation.amount);
-                cookieBakerTo.cookies += BigInt(operation.operation.amount);
-                console.log("from: " + cookieBaker.cookies);
-                console.log("to: " + cookieBakerTo.cookies);
-                saveState(source, cookieBaker);
+                cookieBakerTo.cookies = cookieBakerTo.cookies + BigInt(operation.operation.amount);
                 saveState(to, cookieBakerTo);
             }
         }
+        else {
+            throw new Error("Impossible case! Expected mint or transfer");
+        }
     }
     else {
-        throw new Error("Impossible case!");
+        throw new Error("Impossible case! Expected mint or transfer");
     }
 };
 (0, deku_js_interop_1.main)({}, transition);
