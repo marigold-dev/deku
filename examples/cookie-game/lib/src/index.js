@@ -176,12 +176,13 @@ const transition = (tx) => {
             if (to === undefined || to === null) {
                 console.log("Impossible to transfer to this user, no started game for: ", operation.operation.to);
             }
+            else if (operation.operation.to === source) {
+                console.log("Impossible to transfer cookies to yourself, doesn't mean anything");
+            }
             else {
                 // first step, remove the cookies from the sender
                 cookieBaker.cookies = cookieBaker.cookies - BigInt(operation.operation.amount);
                 saveState(source, cookieBaker);
-                // need to re-get the recipient to make sure the state is up to date
-                to = JSON.parse((0, deku_js_interop_1.get)(operation.operation.to));
                 // then give him the cookies and save his/her state
                 let cookieBakerTo = JSON.parse(to, utils_1.parseReviver);
                 cookieBakerTo = (0, state_1.initCookieBaker)(cookieBakerTo);
