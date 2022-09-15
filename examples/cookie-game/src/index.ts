@@ -176,23 +176,25 @@ const transition = (tx: transaction) => {
             }
         }
     } else if (operation.type === operationType.transfer) {
-        console.log(typeof operation.operation);
-        if(isTransfer(operation.operation)) {
-            console.log("from: " + operation.operation.from);
-            console.log("to: " + operation.operation.to);
-            const to = JSON.parse(get(operation.operation.to));
+        if (isTransfer(operation.operation)) {
+            // make sure the recipient has a started game
+            let to = JSON.parse(get(operation.operation.to));
             if (to === undefined || to === null) {
-                throw new Error("No game for this user");
+                console.log("Impossible to transfer to this user, no started game for: ", operation.operation.to);
             }
             else {
+                // first step, remove the cookies from the sender
+                cookieBaker.cookies = cookieBaker.cookies - BigInt(operation.operation.amount);
+                saveState(source, cookieBaker);
+                // need to re-get the recipient to make sure the state is up to date
+                to = JSON.parse(get(operation.operation.to));
+                // then give him the cookies and save his/her state
                 let cookieBakerTo = JSON.parse(to, parseReviver)
                 cookieBakerTo = initCookieBaker(cookieBakerTo);
-                cookieBaker.cookies -= BigInt(operation.operation.amount)
-                cookieBakerTo.cookies += BigInt(operation.operation.amount);
-                saveState(source, cookieBaker);
+                cookieBakerTo.cookies = cookieBakerTo.cookies + BigInt(operation.operation.amount);
                 saveState(to, cookieBakerTo);
             }
-        }else {
+        } else {
             throw new Error("Impossible case! Expected mint or transfer");
         }
     } else {
