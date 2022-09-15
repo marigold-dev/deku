@@ -28,7 +28,6 @@ val spawn : unit -> t
 val listen_transaction :
   t ->
   rpc_node:Uri.t ->
-  required_confirmations:int ->
   destination:Address.t ->
   Listen_transaction.t Lwt_stream.t
 
@@ -36,7 +35,6 @@ val inject_transaction :
   t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
-  required_confirmations:int ->
   destination:Address.t ->
   entrypoint:string ->
   payload:Yojson.Safe.t ->

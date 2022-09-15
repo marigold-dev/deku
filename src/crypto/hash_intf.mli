@@ -19,6 +19,10 @@ module type S = sig
   val of_hex : string -> hash option
   val to_hex : hash -> string
 
+  (* internal *)
+  (* TODO: avoid exposing this, currently needed for bridge *)
+  val to_raw : hash -> string
+
   (* utils *)
   val both : hash -> hash -> hash
 

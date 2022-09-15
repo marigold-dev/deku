@@ -12,6 +12,10 @@ include With_encodings (struct
   let prefix = Prefix.deku_block_hash
 end)
 
-let hash = hash
+let genesis = hash "tuturu"
+
+let hash ~block_level ~block_content =
+  let open Deku_tezos in
+  Deku.Consensus.hash_block ~block_level ~block_content
 
 module Map = Map

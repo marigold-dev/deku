@@ -8,7 +8,7 @@ let identity =
   | None -> failwith "bug when parsing edsk key"
 
 let block =
-  let level = Level.zero in
-  let previous = Block_hash.hash "tuturu" in
+  let level = Level.(next zero) in
+  let previous = Block_hash.genesis in
   let operations = [] in
   Block.produce ~identity ~level ~previous ~operations

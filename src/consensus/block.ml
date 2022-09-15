@@ -7,8 +7,9 @@ type block =
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
-      author : Key_hash.t;
       level : Level.t;
+      content : BLAKE2b.t;
+      author : Key_hash.t;
       previous : Block_hash.t;
       payload : string list;
     }
@@ -40,25 +41,30 @@ module Repr = struct
     block : block;
   }
 
-  and block = {
+  and block = { level : Level.t; content : content }
+
+  and content = {
     author : Key_hash.t;
-    level : Level.t;
     previous : Block_hash.t;
     payload : string list;
   }
   [@@deriving yojson]
 
-  (* TODO: we could avoid Yojson.Safe.to_string if we had locations *)
-  let hash block =
-    let json = yojson_of_block block in
+  let hash_content content =
+    let json = yojson_of_content content in
     let json = Yojson.Safe.to_string json in
-    Block_hash.hash json
+    BLAKE2b.hash json
+
+  let hash ~level ~content =
+    Block_hash.hash ~block_level:level ~block_content:content
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
-    let { author; level; previous; payload } = block in
+    let { level; content } = block in
+    let { author; previous; payload } = content in
     (* TODO: serializing after deserializing *)
-    let hash = hash block in
+    let content = hash_content content in
+    let hash = hash ~level ~content in
 
     (match Key_hash.(equal author (of_key key)) with
     | true -> ()
@@ -69,13 +75,24 @@ module Repr = struct
      with
     | true -> ()
     | false -> raise Invalid_signature);
-    Block { key; signature; hash; author; level; previous; payload }
+    Block { key; signature; hash; level; content; author; previous; payload }
 
   let yojson_of_t block =
-    let (Block { key; signature; hash = _; author; level; previous; payload }) =
+    let (Block
+          {
+            key;
+            signature;
+            hash = _;
+            level;
+            content = _;
+            author;
+            previous;
+            payload;
+          }) =
       block
     in
-    let block = { author; level; previous; payload } in
+    let content = { author; previous; payload } in
+    let block = { level; content } in
     yojson_of_block_and_signature { key; signature; block }
 end
 
@@ -94,13 +111,14 @@ let payload_of_operations operations =
 let produce ~identity ~level ~previous ~operations =
   let author = Identity.key_hash identity in
   let payload = payload_of_operations operations in
-  let hash = Repr.hash { author; level; previous; payload } in
+  let content = Repr.hash_content { author; previous; payload } in
+  let hash = Repr.hash ~level ~content in
   let key = Identity.key identity in
   let signature =
     let hash = Block_hash.to_blake2b hash in
     Identity.sign ~hash identity
   in
-  Block { key; signature; hash; author; level; previous; payload }
+  Block { key; signature; hash; level; content; author; previous; payload }
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in

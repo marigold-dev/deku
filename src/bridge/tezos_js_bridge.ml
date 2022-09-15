@@ -20,12 +20,7 @@ end
 module Listen_transaction = struct
   type kind = Listen [@name "listen"] [@@deriving yojson]
 
-  type request = {
-    kind : kind;
-    rpc_node : string;
-    confirmation : int;
-    destination : string;
-  }
+  type request = { kind : kind; rpc_node : string; destination : string }
   [@@deriving yojson]
 
   type transaction = { entrypoint : string; value : Michelson.t }
@@ -42,7 +37,6 @@ module Inject_transaction = struct
     kind : kind;
     rpc_node : string;
     secret : string;
-    confirmation : int;
     destination : string;
     entrypoint : string;
     payload : Yojson.Safe.t;
@@ -98,28 +92,25 @@ let spawn () =
   let file = Scripts.file_tezos_js_bridge in
   Long_lived_js_process.spawn ~file
 
-let listen_transaction t ~rpc_node ~required_confirmations ~destination =
+let listen_transaction t ~rpc_node ~destination =
   let request =
     Listen_transaction.
       {
         kind = Listen;
         rpc_node = Uri.to_string rpc_node;
-        confirmation = required_confirmations;
         destination = Address.to_b58 destination;
       }
   in
   Long_lived_js_process.listen t ~to_yojson:Listen_transaction.yojson_of_request
     ~of_yojson:Listen_transaction.t_of_yojson request
 
-let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
-    ~entrypoint ~payload =
+let inject_transaction t ~rpc_node ~secret ~destination ~entrypoint ~payload =
   let request =
     Inject_transaction.
       {
         kind = Transaction;
         rpc_node = Uri.to_string rpc_node;
         secret = Secret.to_b58 secret;
-        confirmation = required_confirmations;
         destination = Address.to_b58 destination;
         entrypoint;
         payload;

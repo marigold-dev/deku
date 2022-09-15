@@ -10,9 +10,10 @@ type block = private
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
-      author : Key_hash.t;
       (* TODO: why does it contain a level? *)
       level : Level.t;
+      content : BLAKE2b.t;
+      author : Key_hash.t;
       previous : Block_hash.t;
       payload : string list;
     }

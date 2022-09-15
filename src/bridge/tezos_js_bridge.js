@@ -12,7 +12,6 @@ const { inspect } = require("util");
  * @property {"transaction"} kind
  * @property {string} rpc_node
  * @property {string} secret
- * @property {number} confirmation
  * @property {string} destination
  * @property {string} entrypoint
  * @property {object} payload
@@ -21,14 +20,12 @@ const { inspect } = require("util");
  * @type {object}
  * @property {"storage"} kind
  * @property {string} rpc_node
- * @property {number} confirmation
  * @property {string} destination
  * 
  * @typedef BigMapMultipleKeysRequest
  * @type {object}
  * @property {"storage"} kind
  * @property {string} rpc_node
- * @property {number} confirmation
  * @property {string} destination
  * @property {string[]} keys
 
@@ -36,7 +33,6 @@ const { inspect } = require("util");
  * @type {object}
  * @property {"listen"} kind
  * @property {string} rpc_node
- * @property {number} confirmation
  * @property {string} destination
 
  * @typedef RequestContent
@@ -82,6 +78,9 @@ const { inspect } = require("util");
  * @property {TransactionResponse | StorageResponse | TransactionMessage | ErrorResponse} content
  */
 
+// TODO: hard coded stuff?
+const confirmation = 4
+
 const devMode = process.env.NODE_ENV === "development";
 
 const failure = (err) => {
@@ -122,7 +121,7 @@ const read = (callback) => {
         throw TypeError("encoding expected to be utf8");
       }
       buf = buf + chunk;
-
+ 
       const parts = buf.split("\n");
       const messages = parts.slice(0, -1); // everything except last
 
@@ -152,7 +151,7 @@ const config = {
 
 /** @param {TransactionRequest} content */
 const onTransactionRequest = async (id, content) => {
-  const { rpc_node, secret, confirmation, destination, entrypoint, payload } =
+  const { rpc_node, secret, destination, entrypoint, payload } =
     content;
 
   const args = Object.entries(payload)
@@ -173,7 +172,7 @@ const onTransactionRequest = async (id, content) => {
 
 /** @param {StorageRequest} content */
 const onStorageRequest = async (id, content) => {
-  const { rpc_node, confirmation, destination } = content;
+  const { rpc_node, destination } = content;
   const client = new RpcClient(rpc_node);
   const Tezos = new TezosToolkit(rpc_node);
   Tezos.setProvider({ config });
@@ -205,7 +204,7 @@ const onStorageRequest = async (id, content) => {
 
 /** @param {BigMapMultipleKeysRequest} content */
 const onBigMapMultipleKeyRequest = async (id, content) => {
-  const { rpc_node, confirmation, destination, keys } = content;
+  const { rpc_node, destination, keys } = content;
   const client = new RpcClient(rpc_node);
   const Tezos = new TezosToolkit(rpc_node);
   Tezos.setProvider({ config });
@@ -247,7 +246,7 @@ const onBigMapMultipleKeyRequest = async (id, content) => {
 
 /** @param {ListenTransaction} content */
 const onListenTransaction = async (id, content) => {
-  const { rpc_node, confirmation, destination } = content;
+  const { rpc_node, destination } = content;
   const Tezos = new TezosToolkit(rpc_node);
   Tezos.setProvider({ config });
 
