@@ -32,11 +32,10 @@ export type operations = {
 }
 
 export type transfer = {
-    from: string
     to: string
-    amount: number
+    amount: bigint
 }
 
 export function isTransfer(operation: actions | transfer): operation is transfer {
-    return (operation as transfer).from !== undefined;
+    return (operation as transfer).to !== undefined;
 }
