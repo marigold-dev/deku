@@ -23,14 +23,23 @@ let make_handler middlewares (module Handler : HANDLER) =
             Dream.json ~status:`OK body
         | Error error -> error_to_response error)
   in
-  let handler =
+  let apply_middlewares handler =
     List.fold_left
       (fun handler middleware -> middleware handler)
       handler middlewares
   in
-  match Handler.meth with
-  | `POST -> Dream.post Handler.path handler
-  | `GET -> Dream.get Handler.path handler
+  let handler = apply_middlewares handler in
+  let method_not_allowed_handler =
+    apply_middlewares (function _ ->
+        error_to_response
+          (Api_error.method_not_allowed Handler.path Handler.meth))
+  in
+  let route =
+    match Handler.meth with
+    | `POST -> Dream.post Handler.path handler
+    | `GET -> Dream.get Handler.path handler
+  in
+  [ route; Dream.any Handler.path method_not_allowed_handler ]
 
 (* Returns a websocket to the client*)
 let get_websocket =
@@ -69,18 +78,19 @@ let handler =
        [
          get_websocket;
          Dream.scope "/api/v1/" []
-           [
-             make_handler [ no_cache ] (module Listen_blocks);
-             make_handler [] (module Get_genesis);
-             make_handler [ no_cache ] (module Get_head);
-             make_handler [ no_cache ] (module Get_block_by_level_or_hash);
-             (* TODO: find a way to add a headers depending on response*)
-             make_handler [ no_cache ] (module Get_level);
-             make_handler [] (module Get_chain_info);
-             make_handler [] (module Helpers_operation_message);
-             make_handler [] (module Helpers_hash_operation);
-             make_handler [ no_cache ] (module Post_operation);
-           ];
+           (List.flatten
+              [
+                make_handler [ no_cache ] (module Listen_blocks);
+                make_handler [] (module Get_genesis);
+                make_handler [ no_cache ] (module Get_head);
+                make_handler [ no_cache ] (module Get_block_by_level_or_hash);
+                (* TODO: find a way to add a headers depending on response*)
+                make_handler [ no_cache ] (module Get_level);
+                make_handler [] (module Get_chain_info);
+                make_handler [] (module Helpers_operation_message);
+                make_handler [] (module Helpers_hash_operation);
+                make_handler [ no_cache ] (module Post_operation);
+              ]);
        ]
 
 let main params =
