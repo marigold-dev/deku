@@ -86,16 +86,15 @@ let make ~uri =
   | Error err -> failwith (Caqti_error.show err)
 
 let save_block ~block ~timestamp (Indexer { pool }) =
-  Lwt.async (fun () ->
-      let%await result = Query.insert_block ~block ~timestamp pool in
-      match result with
-      | Ok () ->
-          print_endline "block saved";
-          (*  TODO: replace with debug/trace log *)
-          Lwt.return_unit
-      | Error err ->
-          (* TODO: how do we want to handle this? *)
-          raise (Caqti_error.Exn err))
+  let%await result = Query.insert_block ~block ~timestamp pool in
+  match result with
+  | Ok () ->
+      (*  TODO: replace with debug/trace log *)
+      Lwt.return_unit
+  | Error err ->
+      print_endline (Caqti_error.show err);
+      (* TODO: how do we want to handle this? *)
+      raise (Caqti_error.Exn err)
 
 let save_packet ~packet ~timestamp (Indexer { pool }) =
   Lwt.async (fun () ->

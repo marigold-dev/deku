@@ -38,6 +38,13 @@ module Node = struct
     let network = Network.make ~nodes ~api in
     Node { chain; network; applied_block; tezos_interop; indexer }
 
+  let save_effect ~block network indexer =
+    let timestamp = Timestamp.of_float (Unix.gettimeofday ()) in
+    let (Block.Block { level; _ }) = block in
+    (* Saving the block*)
+    let%await () = Indexer.save_block ~block ~timestamp indexer in
+    Network.notify_api ~level network
+
   let dispatch_effect effect node =
     let (Node { chain; network; applied_block; tezos_interop; indexer }) =
       node
@@ -51,8 +58,9 @@ module Node = struct
       | Chain.Broadcast_signature signature ->
           Network.broadcast_signature ~signature network
       | Chain.Save block ->
-          let current = Timestamp.of_float (Unix.gettimeofday ()) in
-          let () = Indexer.save_block ~block ~timestamp:current indexer in
+          Lwt.async (fun () ->
+              let%await () = save_effect ~block network indexer in
+              Lwt.return_unit);
           network
     in
     Node { chain; network; applied_block; tezos_interop; indexer }
