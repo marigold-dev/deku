@@ -10,3 +10,5 @@ let input_of_body ~of_yojson request =
   in
   Lwt.return input
 
+let param_of_request request param =
+  try Dream.param request param |> Option.some with _ -> None

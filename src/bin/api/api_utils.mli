@@ -3,3 +3,4 @@ val input_of_body :
   Dream.request ->
   ('a, Api_error.t) result Lwt.t
 
+val param_of_request : Dream.request -> string -> string option
