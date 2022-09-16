@@ -52,6 +52,8 @@ describe('cookieBaker.addCursor nominal cases', () => {
 
                     const passiveCPSBefore = cookieBaker.passiveCPS;
 
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
+
                     cookieBaker.cookies = cookiesBefore + BigInt(cursorCostBefore);
                     const cookie_Baker = addCursor(cookieBaker);
                     return (cookie_Baker.cursors === cursorsBefore + 1n
@@ -96,6 +98,8 @@ describe('cookieBaker.addCursor nominal cases', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }));
     });
@@ -146,6 +150,8 @@ describe('cookieBaker.addCursor nominal cases', () => {
 
                     const passiveCPSBefore = cookieBaker.passiveCPS;
 
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
+
                     //make sure we can't buy a cursor
                     cookieBaker.cookies = 0n
                     const cookie_Baker = addCursor(cookieBaker);
@@ -191,6 +197,8 @@ describe('cookieBaker.addCursor nominal cases', () => {
                         && cookie_Baker.cordexCost === cordexCostBefore
 
                         && cookie_Baker.passiveCPS === passiveCPSBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }));
     });
