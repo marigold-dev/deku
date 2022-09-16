@@ -50,7 +50,7 @@ module Node = struct
       | Chain.Broadcast_block block -> Network.broadcast_block ~block network
       | Chain.Broadcast_signature signature ->
           Network.broadcast_signature ~signature network
-      | Chain.Save_block block ->
+      | Chain.Save block ->
           let current = Timestamp.of_float (Unix.gettimeofday ()) in
           let () = Indexer.save_block ~block ~timestamp:current indexer in
           network

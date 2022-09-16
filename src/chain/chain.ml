@@ -18,7 +18,7 @@ type external_effect =
   | Reset_timeout
   | Broadcast_block of Block.t
   | Broadcast_signature of Verified_signature.t
-  | Save_block of Block.t
+  | Save of Block.t
 
 let make ~identity ~bootstrap_key ~validators =
   let validators = Validators.of_key_hash_list validators in
@@ -49,7 +49,7 @@ let apply_block ~pool ~current ~block chain =
     | Some block -> [ Broadcast_block block ]
     | None -> []
   in
-  let effects = Save_block block :: Reset_timeout :: effects in
+  let effects = Save block :: Reset_timeout :: effects in
   (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_block ~pool ~current ~block chain =
