@@ -27,8 +27,10 @@ let rec on_network node ~raw_expected_hash ~raw_content =
   | None -> ()
 
 and on_message node ~current ~message =
+  let open Message in
+  let (Message { hash = _; content }) = message in
   let chain, chain_actions =
-    Chain.incoming_message ~current ~message node.chain
+    Chain.incoming_message ~current ~content node.chain
   in
   node.chain <- chain;
   handle_chain_actions node ~chain_actions
@@ -45,6 +47,10 @@ and on_timeout node : unit Lwt.t =
     Lwt.pick [ Lwt_unix.sleep block_timeout; trigger_timeout_promise ]
   in
   let current = current () in
+
+  (* TODO: clean in the future *)
+  node.gossip <- Gossip.clean ~current:(Timestamp.to_float current) node.gossip;
+
   let chain, chain_actions = Chain.incoming_timeout ~current node.chain in
   node.chain <- chain;
   handle_chain_actions node ~chain_actions;
@@ -64,7 +70,9 @@ and handle_chain_action node ~chain_action =
       handle_gossip_fragment node ~fragment
 
 and on_gossip_outcome node ~current ~outcome =
-  let gossip, action = Gossip.apply ~outcome node.gossip in
+  let gossip, action =
+    Gossip.apply ~current:(Timestamp.to_float current) ~outcome node.gossip
+  in
   node.gossip <- gossip;
   match action with
   | Some gossip_action -> handle_gossip_action node ~current ~gossip_action
@@ -107,3 +115,48 @@ let listen node ~port =
     on_network node ~raw_expected_hash ~raw_content
   in
   Network.listen ~port ~on_message
+
+let test () =
+  let open Deku_concepts in
+  let open Deku_crypto in
+  let secret = Ed25519.Secret.generate () in
+  let secret = Secret.Ed25519 secret in
+  let identity = Identity.make secret in
+  let validators =
+    let key = Key.of_secret secret in
+    let key_hash = Key_hash.of_key key in
+    [ key_hash ]
+  in
+  let pool = Parallel.Pool.make ~domains:8 in
+
+  let node, promise = make ~pool ~identity ~validators ~nodes:[] in
+  let (Chain { consensus; _ }) = node.chain in
+  let block =
+    let (Consensus.Consensus { state; _ }) = consensus in
+    let (State { current_level; current_block; _ }) = state in
+    let level = Level.next current_level in
+    let previous = current_block in
+    let operations = [] in
+    let block = Block.produce ~identity ~level ~previous ~operations in
+    block
+  in
+
+  let () =
+    let _message, raw_message =
+      Message.encode ~content:(Message.Content.block block)
+    in
+    let (Raw_message { hash; raw_content }) = raw_message in
+    let raw_expected_hash = Message_hash.to_b58 hash in
+    on_network node ~raw_expected_hash ~raw_content
+  in
+
+  let () =
+    let signature = Block.sign ~identity block in
+    let _message, raw_message =
+      Message.encode ~content:(Message.Content.signature signature)
+    in
+    let (Raw_message { hash; raw_content }) = raw_message in
+    let raw_expected_hash = Message_hash.to_b58 hash in
+    on_network node ~raw_expected_hash ~raw_content
+  in
+  Lwt_main.run promise

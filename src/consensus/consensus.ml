@@ -42,6 +42,7 @@ and with_accepted_block ~current ~block consensus =
     Format.eprintf "%a\n%!" Z.pp_print level
   in
   let state = State.apply_block ~current ~block state in
+  let block_pool = Block_pool.clean ~current block_pool in
   let consensus = Consensus { block_pool; signer; state } in
 
   let blocks = Block_pool.find_next_blocks ~block_previous:hash block_pool in
@@ -64,7 +65,7 @@ and with_accepted_block ~current ~block consensus =
 
 and incoming_block ~current ~block consensus =
   let (Consensus { block_pool; signer; state }) = consensus in
-  let block_pool = Block_pool.append_block block block_pool in
+  let block_pool = Block_pool.append_block ~current block block_pool in
   let consensus = Consensus { block_pool; signer; state } in
 
   let consensus, actions =
@@ -89,7 +90,7 @@ and incoming_block ~current ~block consensus =
 
 let incoming_signature ~current ~signature consensus =
   let (Consensus { block_pool; signer; state }) = consensus in
-  let block_pool = Block_pool.append_signature signature block_pool in
+  let block_pool = Block_pool.append_signature ~current signature block_pool in
   let consensus = Consensus { block_pool; signer; state } in
 
   let block_hash = Verified_signature.signed_hash signature in

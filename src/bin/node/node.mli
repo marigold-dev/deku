@@ -12,3 +12,4 @@ val make :
   node * unit Lwt.t
 
 val listen : node -> port:int -> unit
+val test : unit -> unit
