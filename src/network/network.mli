@@ -22,3 +22,5 @@ val broadcast_operation : operation:Operation.t -> network -> network
 
 val broadcast_bootstrap_signal :
   bootstrap_signal:Bootstrap_signal.t -> network -> network
+
+val notify_api : level:Level.t -> network -> unit Lwt.t

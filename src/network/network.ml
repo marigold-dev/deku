@@ -71,3 +71,9 @@ let broadcast_operation ~operation network =
 
 let broadcast_bootstrap_signal ~bootstrap_signal network =
   broadcast ~endpoint:Endpoint.bootstrap ~content:bootstrap_signal network
+
+let notify_api ~level network =
+  let (Network { api; _ }) = network in
+  match api with
+  | Some api -> Broadcast.notify_api_new_block ~level ~api
+  | None -> Lwt.return_unit

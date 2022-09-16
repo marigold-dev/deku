@@ -36,3 +36,9 @@ let broadcast_json ~nodes ~endpoint ~packet =
 let broadcast_packet ~nodes ~endpoint ~packet =
   let packet = Packet.yojson_of_t packet in
   broadcast_json ~nodes ~endpoint ~packet
+
+let notify_api_new_block ~api ~level =
+  let body = Deku_concepts.Level.yojson_of_t level |> Yojson.Safe.to_string in
+  let uri = Uri.with_path api "/api/v1/listen/blocks" in
+  let%await _ = post body uri in
+  Lwt.return_unit
