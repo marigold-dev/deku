@@ -127,7 +127,7 @@ struct
     average
 end
 
-let max_domains = 24
+let max_domains = 4
 let default_domains = 1
 let runs = 15
 let max_size = 40_000
