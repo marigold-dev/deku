@@ -23,19 +23,27 @@ export enum actions {
 
 export enum operationType {
     mint = "mint",
-    transfer = "transfer"
+    transfer = "transfer",
+    eat = "eat"
 }
 
 export type operations = {
     type: operationType
-    operation: actions | transfer
+    operation: actions | transfer | eat
 }
 
 export type transfer = {
     to: string
     amount: bigint
 }
+export type eat = {
+    amount: bigint
+}
 
-export function isTransfer(operation: actions | transfer): operation is transfer {
-    return (operation as transfer).to !== undefined;
+export function isTransfer(operation: actions | transfer | eat): operation is transfer {
+    return ((operation as transfer).to !== undefined && (operation as transfer).amount !== undefined);
+}
+
+export function isBurn(operation: actions | transfer | eat): operation is transfer {
+    return (operation as transfer).amount !== undefined;
 }
