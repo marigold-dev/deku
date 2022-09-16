@@ -49,6 +49,7 @@ and with_accepted_block ~current ~block consensus =
     Format.eprintf "%a\n%!" Z.pp_print level
   in
   let state = State.apply_block ~current ~block state in
+  let block_pool = Block_pool.clean ~current block_pool in
   let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
 
   let blocks = Block_pool.find_next_blocks ~block_previous:hash block_pool in
