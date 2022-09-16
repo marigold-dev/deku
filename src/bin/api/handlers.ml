@@ -39,3 +39,28 @@ module Listen_blocks : HANDLER = struct
     let%await () = Indexer.save_block ~block indexer in
     Lwt.return_ok ()
 end
+
+(* Return the nth block of the chain. *)
+module Get_block : HANDLER = struct
+  type input = int64 [@@deriving of_yojson]
+  type response = Block.t [@@deriving yojson_of]
+
+  let path = "/chain/blocks/:block"
+  let meth = `GET
+
+  let input_from_request request =
+    Api_utils.param_of_request request "block"
+    |> Option.to_result ~none:(Api_error.missing_parameter "block")
+    |> Result.map Int64.of_string_opt
+    |> Result.map
+         (Option.to_result
+            ~none:(Api_error.invalid_parameter "Level should be a string in64."))
+    |> Result.join |> Lwt.return
+
+  let handle request state =
+    let { indexer } = state in
+    let%await block = Indexer.find_block ~level:request indexer in
+    match block with
+    | Some block -> Lwt.return_ok block
+    | None -> Lwt.return_error Api_error.block_not_found
+end
