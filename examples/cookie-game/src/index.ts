@@ -6,9 +6,9 @@ import {
     addGrandma, addFarm, addMine, addFactory, addBank, addTemple,
     addWizard, addShipment, addAlchemy, addPortal, addTimeMachine,
     addAntimatter, addPrism, addChanceMaker, addFractal, addJavaScript,
-    addIdleverse, addCordex, createEmptyCookieBaker, initCookieBaker
+    addIdleverse, addCordex, createEmptyCookieBaker, initCookieBaker, transferCookies, eatCookies
 } from "./state"
-import { actions, isTransfer, operations, operationType } from "./actions"
+import { actions, isBurn, isTransfer, operations, operationType } from "./actions"
 import { parseReviver, stringifyReplacer } from "./utils"
 
 const saveState = (source: transaction, cookieBaker: cookieBaker) => {
@@ -186,20 +186,22 @@ const transition = (tx: transaction) => {
                 console.log("Impossible to transfer cookies to yourself, doesn't mean anything");
             }
             else {
-                // first step, remove the cookies from the sender
-                cookieBaker.cookies = cookieBaker.cookies - BigInt(operation.operation.amount);
-                saveState(source, cookieBaker);
-                // then give him the cookies and save his/her state
                 let cookieBakerTo = JSON.parse(to, parseReviver)
                 cookieBakerTo = initCookieBaker(cookieBakerTo);
-                cookieBakerTo.cookies = cookieBakerTo.cookies + BigInt(operation.operation.amount);
-                saveState(to, cookieBakerTo);
+                const { from: cookieBakerSender, to: cookieBakerRecipient } = transferCookies(cookieBaker, cookieBakerTo, BigInt(operation.operation.amount));
+                saveState(source, cookieBakerSender);
+                saveState(to, cookieBakerRecipient);
             }
         } else {
-            throw new Error("Impossible case! Expected mint or transfer");
+            throw new Error("Impossible case! Expected mint, transfer or eat");
+        }
+    } else if (operation.type === operationType.eat) {
+        if (isBurn(operation.operation)) {
+            eatCookies(cookieBaker, BigInt(operation.operation.amount));
+            saveState(source, cookieBaker);
         }
     } else {
-        throw new Error("Impossible case! Expected mint or transfer");
+        throw new Error("Impossible case! Expected mint, transfer or eat");
     }
 }
 
