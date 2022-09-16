@@ -1,11 +1,16 @@
 open Broadcast
 
 type network =
-  | Network of { nodes : Uri.t list; known_packets : Packet_hash.Set.t }
+  | Network of {
+      nodes : Uri.t list;
+      known_packets : Packet_hash.Set.t;
+      api : Uri.t option;
+    }
 
 type t = network
 
-let make ~nodes = Network { nodes; known_packets = Packet_hash.Set.empty }
+let make ~nodes ~api =
+  Network { nodes; known_packets = Packet_hash.Set.empty; api }
 
 exception Duplicated_packet
 exception Invalid_hash
@@ -15,14 +20,14 @@ let incoming_packet (type a) ~(endpoint : a Endpoint.t) ~packet network :
   let packet_json = Yojson.Safe.from_string packet in
   let (Packet { hash; content } as packet) = Packet.t_of_yojson packet_json in
 
-  let (Network { nodes; known_packets }) = network in
+  let (Network { nodes; known_packets; api }) = network in
   match Packet_hash.Set.mem hash known_packets with
   | true -> raise Duplicated_packet
   | false -> (
       match Packet.verify packet with
       | true -> (
           let known_packets = Packet_hash.Set.add hash known_packets in
-          let network = Network { nodes; known_packets } in
+          let network = Network { nodes; known_packets; api } in
 
           match
             (* TODO: really important, how to prevent spam?
@@ -45,7 +50,7 @@ let incoming_packet ~endpoint ~packet network =
   | exception _exn -> (* TODO: dump exception*) (None, network)
 
 let broadcast ~endpoint ~content network =
-  let (Network { nodes; known_packets }) = network in
+  let (Network { nodes; known_packets; api }) = network in
   let packet =
     let content = Packet.yojson_of_content ~endpoint content in
     Packet.make ~content
@@ -53,7 +58,7 @@ let broadcast ~endpoint ~content network =
   (* TODO: this is ideal but leads to problems *)
   (* let known_packets = Packet_hash.Set.add hash known_packets in *)
   let () = broadcast_packet ~nodes ~endpoint ~packet in
-  Network { nodes; known_packets }
+  Network { nodes; known_packets; api }
 
 let broadcast_block ~block network =
   broadcast ~endpoint:Endpoint.blocks ~content:block network

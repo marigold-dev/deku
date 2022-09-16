@@ -3,11 +3,15 @@ open Deku_protocol
 open Deku_consensus
 
 type network = private
-  | Network of { nodes : Uri.t list; known_packets : Packet_hash.Set.t }
+  | Network of {
+      nodes : Uri.t list;
+      known_packets : Packet_hash.Set.t;
+      api : Uri.t option;
+    }
 
 type t = network
 
-val make : nodes:Uri.t list -> network
+val make : nodes:Uri.t list -> api:Uri.t option -> network
 
 val incoming_packet :
   endpoint:'a Endpoint.t -> packet:string -> network -> 'a option * network

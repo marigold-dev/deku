@@ -33,9 +33,9 @@ module Node = struct
   type t = node
 
   let make ~identity ~bootstrap_key ~validators ~nodes ~applied_block
-      ~tezos_interop ~indexer =
+      ~tezos_interop ~indexer ~api =
     let chain = Chain.make ~identity ~bootstrap_key ~validators in
-    let network = Network.make ~nodes in
+    let network = Network.make ~nodes ~api in
     Node { chain; network; applied_block; tezos_interop; indexer }
 
   let dispatch_effect effect node =
@@ -107,6 +107,7 @@ module Singleton : sig
     bootstrap_key:Key.t ->
     initial_validators:Key_hash.t list ->
     validator_uris:Uri.t list ->
+    api:Uri.t option ->
     unit
 end = struct
   type state = { mutable state : Node.t; mutable timeout : unit Lwt.t }
@@ -137,14 +138,14 @@ end = struct
       Lwt.return_unit)
 
   let initialize ~tezos_interop ~indexer ~secret ~bootstrap_key
-      ~initial_validators ~validator_uris =
+      ~initial_validators ~validator_uris ~api =
     let identity = Identity.make secret in
 
     let applied_block_ref = ref (fun () -> ()) in
     let applied_block () = !applied_block_ref () in
     let node =
       Node.make ~identity ~bootstrap_key ~validators:initial_validators
-        ~nodes:validator_uris ~applied_block ~tezos_interop ~indexer
+        ~nodes:validator_uris ~applied_block ~tezos_interop ~indexer ~api
     in
     let server = { state = node; timeout = Lwt.return_unit } in
     let () = applied_block_ref := fun () -> reset_timeout server in
@@ -266,6 +267,7 @@ type params = {
   tezos_discovery_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
       (** The address of the discovery contract on Tezos. *)
+  api : Uri.t option; [@env "DEKU_API_URI"]
 }
 [@@deriving cmdliner]
 
@@ -282,6 +284,7 @@ let main params =
     tezos_secret;
     tezos_consensus_address;
     tezos_discovery_address;
+    api;
   } =
     params
   in
@@ -299,7 +302,7 @@ let main params =
   let%await indexer = Indexer.make ~uri:database_uri in
   let () =
     Singleton.initialize ~indexer ~tezos_interop ~secret ~bootstrap_key
-      ~initial_validators:validators ~validator_uris
+      ~initial_validators:validators ~validator_uris ~api
   in
   Tezos_bridge.listen ();
   Server.start port

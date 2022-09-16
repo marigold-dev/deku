@@ -21,7 +21,7 @@ let bootstrap bootstrap_secret validators validator_uris =
     let () = Format.eprintf "producer: %ld\n%!" index in
     List.nth validators (Int32.to_int index)
   in
-  let network = Network.make ~nodes:validator_uris in
+  let network = Network.make ~nodes:validator_uris ~api:None in
   let () = restart ~bootstrap_secret ~next_author:producer network in
   (* TODO: this is lame, but Lwt*)
   let%await () = Lwt_unix.sleep 3.0 in
