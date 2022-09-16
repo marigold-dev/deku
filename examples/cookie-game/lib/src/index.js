@@ -180,22 +180,25 @@ const transition = (tx) => {
                 console.log("Impossible to transfer cookies to yourself, doesn't mean anything");
             }
             else {
-                // first step, remove the cookies from the sender
-                cookieBaker.cookies = cookieBaker.cookies - BigInt(operation.operation.amount);
-                saveState(source, cookieBaker);
-                // then give him the cookies and save his/her state
                 let cookieBakerTo = JSON.parse(to, utils_1.parseReviver);
                 cookieBakerTo = (0, state_1.initCookieBaker)(cookieBakerTo);
-                cookieBakerTo.cookies = cookieBakerTo.cookies + BigInt(operation.operation.amount);
-                saveState(to, cookieBakerTo);
+                const { from: cookieBakerSender, to: cookieBakerRecipient } = (0, state_1.transferCookies)(cookieBaker, cookieBakerTo, BigInt(operation.operation.amount));
+                saveState(source, cookieBakerSender);
+                saveState(to, cookieBakerRecipient);
             }
         }
         else {
-            throw new Error("Impossible case! Expected mint or transfer");
+            throw new Error("Impossible case! Expected mint, transfer or eat");
+        }
+    }
+    else if (operation.type === actions_1.operationType.eat) {
+        if ((0, actions_1.isBurn)(operation.operation)) {
+            (0, state_1.eatCookies)(cookieBaker, BigInt(operation.operation.amount));
+            saveState(source, cookieBaker);
         }
     }
     else {
-        throw new Error("Impossible case! Expected mint or transfer");
+        throw new Error("Impossible case! Expected mint, transfer or eat");
     }
 };
 (0, deku_js_interop_1.main)({}, transition);

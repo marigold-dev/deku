@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addCordex = exports.addIdleverse = exports.addJavaScript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.createEmptyCookieBaker = exports.initCookieBaker = void 0;
+exports.eatCookies = exports.transferCookies = exports.addCordex = exports.addIdleverse = exports.addJavaScript = exports.addFractal = exports.addChanceMaker = exports.addPrism = exports.addAntimatter = exports.addTimeMachine = exports.addPortal = exports.addAlchemy = exports.addShipment = exports.addWizard = exports.addTemple = exports.addBank = exports.addFactory = exports.addMine = exports.addFarm = exports.addGrandma = exports.addCursor = exports.addCookie = exports.calculateCost = exports.createCookieBaker = exports.createEmptyCookieBaker = exports.initCookieBaker = void 0;
 const actions_1 = require("./actions");
 const st = require("./types");
 /*
@@ -26,16 +26,16 @@ const st = require("./types");
  * @returns
  */
 const initCookieBaker = (cookieBaker) => {
-    return (0, exports.createCookieBaker)(cookieBaker.cookies, cookieBaker.cursors, cookieBaker.grandmas, cookieBaker.farms, cookieBaker.mines, cookieBaker.factories, cookieBaker.banks, cookieBaker.temples, cookieBaker.wizards, cookieBaker.shipments, cookieBaker.alchemies, cookieBaker.portals, cookieBaker.timeMachines, cookieBaker.antimatters, cookieBaker.prisms, cookieBaker.chanceMakers, cookieBaker.fractals, cookieBaker.javaScripts, cookieBaker.idleverses, cookieBaker.cordexs);
+    return (0, exports.createCookieBaker)(cookieBaker.cookies, cookieBaker.cursors, cookieBaker.grandmas, cookieBaker.farms, cookieBaker.mines, cookieBaker.factories, cookieBaker.banks, cookieBaker.temples, cookieBaker.wizards, cookieBaker.shipments, cookieBaker.alchemies, cookieBaker.portals, cookieBaker.timeMachines, cookieBaker.antimatters, cookieBaker.prisms, cookieBaker.chanceMakers, cookieBaker.fractals, cookieBaker.javaScripts, cookieBaker.idleverses, cookieBaker.cordexs, cookieBaker.eatenCookies);
 };
 exports.initCookieBaker = initCookieBaker;
 const createEmptyCookieBaker = () => {
-    return (0, exports.createCookieBaker)(0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n);
+    return (0, exports.createCookieBaker)(0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n);
 };
 exports.createEmptyCookieBaker = createEmptyCookieBaker;
 //DO NOT USE ME
 // This function is only exported for testing purpose
-const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs) => {
+const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, banks, temples, wizards, shipments, alchemies, portals, timeMachines, antimatters, prisms, chanceMakers, fractals, javaScripts, idleverses, cordexs, eatenCookies) => {
     const cookieBaker = {
         cookies,
         cursors,
@@ -57,6 +57,7 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         javaScripts,
         idleverses,
         cordexs,
+        eatenCookies,
         cursorCost: 0n,
         grandmaCost: 0n,
         farmCost: 0n,
@@ -569,3 +570,15 @@ const addCordex = (cookieBaker) => {
     }
 };
 exports.addCordex = addCordex;
+const transferCookies = (from, to, amount) => {
+    from.cookies = from.cookies - amount;
+    to.cookies = to.cookies + amount;
+    return { from, to };
+};
+exports.transferCookies = transferCookies;
+const eatCookies = (cookieBaker, amount) => {
+    cookieBaker.cookies = cookieBaker.cookies - amount;
+    cookieBaker.eatenCookies = cookieBaker.eatenCookies + amount;
+    return cookieBaker;
+};
+exports.eatCookies = eatCookies;
