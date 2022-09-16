@@ -27,6 +27,8 @@ describe('cookieBaker.addFactory nominal cases', () => {
                     const fractalsBefore = cookieBaker.fractals;
                     const javascriptsBefore = cookieBaker.javaScripts;
                     const idleversesBefore = cookieBaker.idleverses;
+                    const cordexsBefore = cookieBaker.cordexs;
+
                     const cursorCostBefore = cookieBaker.cursorCost;
                     const grandmaCostBefore = cookieBaker.grandmaCost;
                     const farmCostBefore = cookieBaker.farmCost;
@@ -46,7 +48,10 @@ describe('cookieBaker.addFactory nominal cases', () => {
                     const javaScriptCostBefore = cookieBaker.javaScriptCost;
                     const idleverseCostBefore = cookieBaker.idleverseCost;
                     const cordexCostBefore = cookieBaker.cordexCost;
+
                     const passiveCPSBefore = cookieBaker.passiveCPS;
+
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
 
                     cookieBaker.cookies = cookiesBefore + factoryCostBefore;
                     const cookie_Baker = addFactory(cookieBaker);
@@ -68,6 +73,9 @@ describe('cookieBaker.addFactory nominal cases', () => {
                         && cookie_Baker.chanceMakers === chancemakersBefore
                         && cookie_Baker.fractals === fractalsBefore
                         && cookie_Baker.javaScripts === javascriptsBefore
+                        && cookie_Baker.idleverses === idleversesBefore
+                        && cookie_Baker.cordexs === cordexsBefore
+
                         && cookie_Baker.cursorCost === cursorCostBefore
                         && cookie_Baker.grandmaCost === grandmaCostBefore
                         && cookie_Baker.farmCost === farmCostBefore
@@ -87,7 +95,10 @@ describe('cookieBaker.addFactory nominal cases', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
+                        
                         && cookie_Baker.passiveCPS > passiveCPSBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }));
     });
@@ -137,6 +148,8 @@ describe('cookieBaker.addFactory nominal cases', () => {
                     const cordexCostBefore = cookieBaker.cordexCost;
 
                     const passiveCPSBefore = cookieBaker.passiveCPS;
+                    
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
 
                     //make sure we can't buy a factory
                     cookieBaker.cookies = 0n
@@ -183,6 +196,8 @@ describe('cookieBaker.addFactory nominal cases', () => {
                         && cookie_Baker.cordexCost === cordexCostBefore
 
                         && cookie_Baker.passiveCPS === passiveCPSBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }));
     });
