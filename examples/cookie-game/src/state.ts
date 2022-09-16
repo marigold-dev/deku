@@ -45,11 +45,13 @@ export const initCookieBaker = (cookieBaker: st.cookieBaker): st.cookieBaker => 
         cookieBaker.javaScripts,
         cookieBaker.idleverses,
         cookieBaker.cordexs,
+        cookieBaker.eatenCookies
     );
 }
 
 export const createEmptyCookieBaker = (): st.cookieBaker => {
     return createCookieBaker(
+        0n,
         0n,
         0n,
         0n,
@@ -96,6 +98,7 @@ export const createCookieBaker = (
     javaScripts: bigint,
     idleverses: bigint,
     cordexs: bigint,
+    eatenCookies: bigint
 
 ): st.cookieBaker => {
     const cookieBaker = {
@@ -119,6 +122,7 @@ export const createCookieBaker = (
         javaScripts,
         idleverses,
         cordexs,
+        eatenCookies,
 
         cursorCost: 0n,
         grandmaCost: 0n,
@@ -634,4 +638,17 @@ export const addCordex = (cookieBaker: st.cookieBaker): st.cookieBaker => {
         console.log("Not enough cookie to buy a cordex, needed: " + cookieBaker.cordexCost + " actual amount: " + cookieBaker.cordexs);
         return cookieBaker;
     }
+}
+
+
+export const transferCookies = (from: st.cookieBaker, to: st.cookieBaker, amount: bigint): { from: st.cookieBaker, to: st.cookieBaker } => {
+    from.cookies = from.cookies - amount;
+    to.cookies = to.cookies + amount;
+    return { from, to };
+}
+
+export const eatCookies = (cookieBaker: st.cookieBaker, amount: bigint): st.cookieBaker => {
+    cookieBaker.cookies = cookieBaker.cookies - amount;
+    cookieBaker.eatenCookies = cookieBaker.eatenCookies + amount;
+    return cookieBaker;
 }
