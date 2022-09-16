@@ -51,6 +51,8 @@ describe('cookieBaker.addGrandma nominal cases', () => {
 
                     const passiveCPSBefore = cookieBaker.passiveCPS;
 
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
+
                     cookieBaker.cookies = cookiesBefore + grandmaCostBefore;
                     const cookie_Baker = addGrandma(cookieBaker);
                     return (cookie_Baker.cookies === cookiesBefore
@@ -73,6 +75,7 @@ describe('cookieBaker.addGrandma nominal cases', () => {
                         && cookie_Baker.javaScripts === javascriptsBefore
                         && cookie_Baker.idleverses === idleversesBefore
                         && cookie_Baker.cordexs === cordexsBefore
+
                         && cookie_Baker.cursorCost === cursorCostBefore
                         && cookie_Baker.grandmaCost > grandmaCostBefore
                         && cookie_Baker.farmCost === farmCostBefore
@@ -92,7 +95,10 @@ describe('cookieBaker.addGrandma nominal cases', () => {
                         && cookie_Baker.javaScriptCost === javaScriptCostBefore
                         && cookie_Baker.idleverseCost === idleverseCostBefore
                         && cookie_Baker.cordexCost === cordexCostBefore
+
                         && cookie_Baker.passiveCPS > passiveCPSBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }), { verbose: true });
 
@@ -144,6 +150,8 @@ describe('cookieBaker.addGrandma nominal cases', () => {
 
                     const passiveCPSBefore = cookieBaker.passiveCPS;
 
+                    const eatenCookiesBefore = cookieBaker.eatenCookies;
+
                     //make sure we can't buy a grandma
                     cookieBaker.cookies = 0n
                     const cookie_Baker = addGrandma(cookieBaker);
@@ -189,6 +197,8 @@ describe('cookieBaker.addGrandma nominal cases', () => {
                         && cookie_Baker.cordexCost === cordexCostBefore
 
                         && cookie_Baker.passiveCPS === passiveCPSBefore
+
+                        && cookie_Baker.eatenCookies === eatenCookiesBefore
                     )
                 }), { verbose: true });
     });
