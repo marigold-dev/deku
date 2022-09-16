@@ -86,5 +86,8 @@ export type cookieBaker = {
     cordexCost: bigint,
 
     /* Cookie per second*/
-    passiveCPS: bigint
+    passiveCPS: bigint,
+
+    /* total burnt for leaderboard */
+    eatenCookies: bigint
 }
