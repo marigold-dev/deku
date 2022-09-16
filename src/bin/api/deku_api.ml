@@ -33,7 +33,11 @@ let main params =
   let { database_uri } = params in
   Lwt_main.run
   @@ let%await () = Api_state.make ~database_uri in
-     Dream.serve @@ Dream.router [ make_handler (module Listen_blocks) ]
+     Dream.serve
+     @@ Dream.router
+          [
+            make_handler (module Listen_blocks); make_handler (module Get_block);
+          ]
 
 let () =
   let open Cmdliner in
