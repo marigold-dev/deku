@@ -71,6 +71,7 @@ and incoming_block ~current ~block consensus =
     incoming_block_or_signature ~current ~block consensus
   in
   let actions =
+    (* FIXME: why are we doing this check twice? *)
     match Judger.is_signable ~current ~state block with
     | true -> (
         let signature =
