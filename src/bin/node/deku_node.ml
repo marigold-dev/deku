@@ -77,10 +77,10 @@ let main params =
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   let pool = Parallel.Pool.make ~domains in
+  let nodes = List.map2 (fun a b -> (a, b)) validators validator_uris in
   let node, promise =
-    Node.make ~pool ~identity ~validators ~nodes:validator_uris
-      ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer:(Some indexer)
-      ~default_block_size ()
+    Node.make ~pool ~identity ~nodes ~bootstrap_key:(Key.Ed25519 bootstrap_key)
+      ~indexer:(Some indexer) ~default_block_size ()
   in
   Node.listen node ~port ~tezos_interop;
   promise

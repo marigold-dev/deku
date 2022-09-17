@@ -43,6 +43,12 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
+module Map = Map.Make (struct
+  type t = key_hash
+
+  let compare = compare
+end)
+
 module Set = Set.Make (struct
   type t = key_hash
 

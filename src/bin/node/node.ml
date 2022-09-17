@@ -136,10 +136,11 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~chain_actions node
 
-let make ~pool ~identity ~validators ~nodes ~bootstrap_key ?(indexer = None)
+let make ~pool ~identity ~nodes ~bootstrap_key ?(indexer = None)
     ~default_block_size () =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
+  let validators = List.map fst nodes in
   let chain =
     Chain.make ~identity ~validators ~pool ~bootstrap_key ~default_block_size
   in
@@ -165,17 +166,16 @@ let _test () =
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
   let identity = Identity.make secret in
-  let validators =
+  let nodes =
     let key = Key.of_secret secret in
     let key_hash = Key_hash.of_key key in
-    [ key_hash ]
+    [ (key_hash, Uri.of_string "http://localhost:1234") ]
   in
   let pool = Parallel.Pool.make ~domains:8 in
 
   let node, promise =
-    make ~pool ~identity ~validators ~nodes:[]
-      ~bootstrap_key:(Identity.key identity) ~default_block_size:0 ~indexer:None
-      ()
+    make ~pool ~identity ~nodes ~bootstrap_key:(Identity.key identity)
+      ~default_block_size:0 ~indexer:None ()
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =

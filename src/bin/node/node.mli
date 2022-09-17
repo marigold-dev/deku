@@ -10,8 +10,7 @@ type t = node
 val make :
   pool:Parallel.Pool.pool ->
   identity:Identity.identity ->
-  validators:Deku_crypto.Key_hash.t list ->
-  nodes:Uri.t list ->
+  nodes:(Deku_crypto.Key_hash.t * Uri.t) list ->
   bootstrap_key:Key.t ->
   ?indexer:Indexer.t option ->
   default_block_size:int ->

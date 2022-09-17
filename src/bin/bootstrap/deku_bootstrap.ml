@@ -19,13 +19,14 @@ let restart ~bootstrap_secret ~next_author network =
   Network.broadcast ~raw_expected_hash ~raw_content network
 
 let bootstrap bootstrap_secret validators validator_uris =
+  let validators = List.map2 (fun a b -> (a, b)) validators validator_uris in
   let producer =
     let length = List.length validators in
     let index = Random.int32 (Int32.of_int length) in
     let () = Format.eprintf "producer: %ld\n%!" index in
-    List.nth validators (Int32.to_int index)
+    List.nth validators (Int32.to_int index) |> fst
   in
-  let network = Network.connect ~nodes:validator_uris in
+  let network = Network.connect ~nodes:validators in
   (* TODO: remove this sleep *)
   let%await () = Lwt_unix.sleep 3.0 in
   let () = restart ~bootstrap_secret ~next_author:producer network in
