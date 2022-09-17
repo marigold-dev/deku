@@ -9,7 +9,7 @@ let to_key_hash address = address
 let of_b58 = of_b58
 let to_b58 = to_b58
 
-module Map = Map.Make (struct
+module Map = Stdlib.Map.Make (struct
   type t = address
 
   let compare = compare
