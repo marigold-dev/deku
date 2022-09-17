@@ -1,5 +1,5 @@
 // @ts-ignore
-import { main, get, set, transaction } from "deku_js_interop"
+import { main, get, set, transaction } from "deku-sdk"
 import { cookieBaker } from "./types"
 import {
     addCookie, addCursor,

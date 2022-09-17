@@ -27,7 +27,7 @@
     ]
   },
   "dependencies": {
-    "deku_js_interop": "file:../../sdks/deku_js_interop",
+    "deku-sdk": "file:../../sdks/typescript-sdk",
     "typescript": "^4.7.4"
   },
   "devDependencies": {
