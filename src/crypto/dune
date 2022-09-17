@@ -1,7 +1,7 @@
 (library
  (name deku_crypto)
- (public_name deku-crypto)
  (libraries
+  data-encoding
   deku_repr
   zarith
   mirage-crypto-rng

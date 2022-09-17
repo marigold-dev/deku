@@ -1,4 +1,3 @@
 (library
  (name deku_constants)
- (public_name deku-constants)
- (libraries deku-concepts))
+ (libraries deku_concepts))

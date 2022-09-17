@@ -1,6 +1,5 @@
 (library
  (name deku_stdlib)
- (public_name deku-stdlib)
  (libraries deku_repr zarith uri lwt lwt.unix base domainslib)
  (preprocess
   (pps

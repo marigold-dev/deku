@@ -1,3 +1,6 @@
 _build
 node_modules
 .direnv
+database.db
+database.db-journal
+result

@@ -1,4 +1,4 @@
-{ pkgs, deku }:
+{ pkgs, deku, ligo }:
 
 with pkgs; with ocamlPackages; mkShell {
   inputsFrom = [ deku ];
@@ -7,11 +7,19 @@ with pkgs; with ocamlPackages; mkShell {
     nixfmt
     ocamlformat
 
+    # Tezos tooling
+    ligo
+
     # OCaml developer tooling
     ocaml
     dune_3
     ocaml-lsp
     ocamlformat-rpc
     utop
+
+    # helpful tooling
+    bc
+    sqlite
+    termdbms
   ];
 }

@@ -1,4 +1,4 @@
-{ pkgs, doCheck ? true }:
+{ pkgs, doCheck ? true, nodejs, npmPackages }:
 
 let inherit (pkgs) lib stdenv ocamlPackages; in
 
@@ -9,10 +9,13 @@ with ocamlPackages; buildDunePackage rec {
   src = lib.filterSource {
     src = ./..;
     dirs = [ "src" ];
-    files = [ "dune-project" ];
+    files = [ "dune-project" "deku.opam" ];
   };
 
+  nativeBuildInputs = [ nodejs ] ++ npmPackages;
+
   propagatedBuildInputs = [
+    tezos-micheline
     ppx_deriving
     ppx_yojson_conv
     zarith
@@ -23,10 +26,17 @@ with ocamlPackages; buildDunePackage rec {
     secp256k1-internal
     piaf
     domainslib
+    cmdliner
+    ppx_blob
+    data-encoding
+    caqti
+    caqti-lwt
+    caqti-driver-sqlite3
+    ppx_deriving_cmdliner
   ]
-    # checkInputs are here because when cross compiling dune needs test dependencies
-    # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs;
+  # checkInputs are here because when cross compiling dune needs test dependencies
+  # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
+  ++ checkInputs;
 
   checkInputs = [ alcotest ];
 }
