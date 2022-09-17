@@ -5,3 +5,4 @@ database.db
 database.db-journal
 result
 examples/cookie-game/lib/
+sdks/typescript-sdk/lib
