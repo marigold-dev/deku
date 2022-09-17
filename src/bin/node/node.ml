@@ -99,10 +99,13 @@ and handle_gossip_fragment node ~fragment =
       on_gossip_outcome node ~current ~outcome;
       Lwt.return_unit)
 
-let make ~pool ~identity ~validators ~nodes =
-  let network = Network.connect ~nodes in
+let make ~pool ~identity ~validators =
+  let network = Network.connect ~nodes:validators in
   let gossip = Gossip.empty in
-  let chain = Chain.make ~identity ~validators ~pool in
+  let chain =
+    let validators = List.map (fun (validator, _uri) -> validator) validators in
+    Chain.make ~identity ~validators ~pool
+  in
   let node =
     let trigger_timeout () = () in
     { pool; network; gossip; chain; trigger_timeout }
@@ -125,11 +128,11 @@ let test () =
   let validators =
     let key = Key.of_secret secret in
     let key_hash = Key_hash.of_key key in
-    [ key_hash ]
+    [ (key_hash, Uri.of_string "http://localhost:1234") ]
   in
   let pool = Parallel.Pool.make ~domains:8 in
 
-  let node, promise = make ~pool ~identity ~validators ~nodes:[] in
+  let node, promise = make ~pool ~identity ~validators in
   let (Chain { consensus; _ }) = node.chain in
   let block =
     let (Consensus.Consensus { state; _ }) = consensus in

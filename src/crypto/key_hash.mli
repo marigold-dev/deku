@@ -13,4 +13,5 @@ val to_b58 : key_hash -> string
 (* operations *)
 val of_key : Key.t -> t
 
+module Map : Map.S with type key = key_hash
 module Set : Set.S with type elt = key_hash

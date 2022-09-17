@@ -1,7 +1,10 @@
 open Deku_stdlib
+open Deku_crypto
 open Piaf
 
-type network = Network of { clients : (Uri.t * Client.t option ref) list }
+type network =
+  | Network of { clients : (Uri.t * Client.t option ref) Key_hash.Map.t }
+
 type t = network
 
 let error ~message status =
@@ -76,12 +79,12 @@ let rec connection_loop ref ~uri =
 
 let connect ~nodes =
   let clients =
-    List.map
-      (fun uri ->
+    List.fold_left
+      (fun clients (key, uri) ->
         let ref = ref None in
         let () = Lwt.async (fun () -> connection_loop ref ~uri) in
-        (uri, ref))
-      nodes
+        Key_hash.Map.add key (uri, ref) clients)
+      Key_hash.Map.empty nodes
   in
   Network { clients }
 
@@ -120,11 +123,20 @@ let post ~raw_expected_hash ~raw_content ~uri client =
           (* TODO: do something with this error *)
           Lwt.return_unit)
 
+let send ~to_ ~raw_expected_hash ~raw_content server =
+  let (Network { clients }) = server in
+  match Key_hash.Map.find_opt to_ clients with
+  | Some (uri, client) -> (
+      match !client with
+      | Some client -> post ~raw_expected_hash ~raw_content ~uri client
+      | None -> ())
+  | None -> (* TODO: do something here *) ()
+
 let broadcast ~raw_expected_hash ~raw_content server =
   let (Network { clients }) = server in
 
-  List.iter
-    (fun (uri, client) ->
+  Key_hash.Map.iter
+    (fun _key (uri, client) ->
       match !client with
       | Some client -> post ~raw_expected_hash ~raw_content ~uri client
       | None -> ())

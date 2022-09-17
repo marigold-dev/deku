@@ -1,7 +1,7 @@
 (library
  (name deku_network)
  (public_name deku-network)
- (libraries deku-stdlib piaf)
+ (libraries deku-stdlib deku-crypto piaf)
  (preprocess
   (pps
    ppx_let_binding

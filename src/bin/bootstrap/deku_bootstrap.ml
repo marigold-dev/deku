@@ -67,16 +67,16 @@ let bootstrap ~size =
     let () = Format.eprintf "producer: %ld\n%!" index in
     List.nth identities (Int32.to_int index)
   in
-  let nodes =
-    let storage = List.nth storages 0 in
-    storage.Storage.nodes
-  in
   let validators =
-    let validators = List.map Identity.key_hash identities in
-    Validators.of_key_hash_list validators
+    let storage = List.nth storages 0 in
+    storage.Storage.validators
   in
-  let consensus = Consensus.make ~identity:producer ~validators in
-  let network = Network.connect ~nodes in
+  let consensus =
+    let validators = List.map fst validators in
+    let validators = Validators.of_key_hash_list validators in
+    Consensus.make ~identity:producer ~validators
+  in
+  let network = Network.connect ~nodes:validators in
   (* TODO: this is lame, but I'm lazy*)
   let%await () = Lwt_unix.sleep sleep_time in
   let () = restart ~producer identities consensus network in
@@ -90,23 +90,20 @@ let generate ~base_uri ~base_port ~size =
         let ed25519 = Ed25519.Secret.generate () in
         Secret.Ed25519 ed25519)
   in
-  let initial_validators =
-    List.map
-      (fun secret ->
+  let validators =
+    List.mapi
+      (fun n secret ->
         let key = Key.of_secret secret in
-        Key_hash.of_key key)
-      secrets
-  in
-  let nodes =
-    List.init size (fun n ->
+        let key_hash = Key_hash.of_key key in
+
         let port = base_port + n in
         let uri = Uri.of_string base_uri in
-        Uri.with_port uri (Some port))
+        let uri = Uri.with_port uri (Some port) in
+        (key_hash, uri))
+      secrets
   in
   let storages =
-    List.map
-      (fun secret -> Storage.make ~secret ~initial_validators ~nodes)
-      secrets
+    List.map (fun secret -> Storage.make ~secret ~validators) secrets
   in
 
   let%await cwd = Lwt_unix.getcwd () in

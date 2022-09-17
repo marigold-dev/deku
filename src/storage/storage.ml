@@ -4,14 +4,12 @@ open Deku_crypto
 type storage = {
   secret : Secret.t;
   (* bootstrap *)
-  initial_validators : Key_hash.t list;
-  nodes : Uri.t list;
+  validators : (Key_hash.t * Uri.t) list;
 }
 
 and t = storage [@@deriving yojson]
 
-let make ~secret ~initial_validators ~nodes =
-  { secret; initial_validators; nodes }
+let make ~secret ~validators = { secret; validators }
 
 let read ~file =
   let open Lwt.Infix in
