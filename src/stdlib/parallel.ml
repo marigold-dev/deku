@@ -13,17 +13,19 @@ module Pool = struct
     Task.run pool f
 end
 
-let map_p pool f l =
-  let Pool.{ domains; pool } = pool in
+let map_p _pool f l = List.map f l
+(* FIXME: something is wrong with our use of parallelism, so
+   for now I'm disabling it. *)
+(* let Pool.{ domains; pool } = pool in
 
-  let length = List.length l in
-  let chunk_size = max (length / domains) 1 in
-  let chunks = Base.List.chunks_of l ~length:chunk_size in
+   let length = List.length l in
+   let chunk_size = max (length / domains) 1 in
+   let chunks = Base.List.chunks_of l ~length:chunk_size in
 
-  let promises =
-    List.map (fun chunk -> Task.async pool (fun () -> List.map f chunk)) chunks
-  in
-  List.concat_map (fun promise -> Task.await pool promise) promises
+   let promises =
+     List.map (fun chunk -> Task.async pool (fun () -> List.map f chunk)) chunks
+   in
+   List.concat_map (fun promise -> Task.await pool promise) promises *)
 
 let init_p pool n f =
   let l = List.init n (fun x -> x) in
