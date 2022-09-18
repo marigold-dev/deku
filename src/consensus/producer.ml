@@ -56,5 +56,6 @@ let produce ~current ~state producer =
   with
   | true ->
       let block = produce ~current_level ~current_block producer in
+      Format.printf "Producing %a\n%!" Block.pp block;
       Some block
   | false -> None

@@ -30,3 +30,5 @@ val produce :
 val sign : identity:Identity.t -> block -> Verified_signature.t
 
 module Set : Set.S with type elt = block
+
+val pp : Format.formatter -> t -> unit

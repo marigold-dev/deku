@@ -106,3 +106,8 @@ let sign ~identity block =
   let (Block { hash; _ }) = block in
   let hash = Block_hash.to_blake2b hash in
   Verified_signature.sign hash identity
+
+let pp fmt (Block { hash; level; _ }) =
+  let hash = Block_hash.to_b58 hash in
+  let open Deku_stdlib in
+  Format.fprintf fmt "Block [hash: %s, level: %a]" hash N.pp (Level.to_n level)
