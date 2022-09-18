@@ -27,4 +27,8 @@ let hash ~block_level ~block_payload_hash ~state_root_hash
   in
   pre_hash |> to_raw |> hash |> to_blake2b
 
+module Set = Set
 module Map = Map
+
+let show = to_b58
+let pp fmt t = Format.pp_print_string fmt (to_b58 t)

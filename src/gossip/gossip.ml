@@ -1,3 +1,4 @@
+open Deku_crypto
 open Message
 
 (* TODO: Timestamp.t *)
@@ -15,10 +16,12 @@ type gossip =
 
 type fragment =
   | Fragment_encode of { content : Message.Content.t }
+  | Fragment_send of { to_ : Key_hash.t; content : Message.Content.t }
   | Fragment_decode of { expected_hash : Message_hash.t; raw_content : string }
 
 type outcome =
   | Outcome_message of { message : Message.t; raw_message : Message.raw }
+  | Outcome_send of { to_ : Key_hash.t; raw_message : Message.raw }
   | Outcome_decoded_error of { expected_hash : Message_hash.t }
 
 type action =
@@ -26,6 +29,7 @@ type action =
       message : Message.t;
       raw_message : Message.raw;
     }
+  | Gossip_send of { to_ : Key_hash.t; raw_message : Message.raw }
   | Gossip_fragment of { fragment : fragment }
 
 type t = gossip
@@ -83,6 +87,7 @@ let incoming ~raw_expected_hash ~raw_content gossip =
   | Some expected_hash -> incoming ~expected_hash ~raw_content gossip
   | None -> (gossip, None)
 
+let send ~to_ ~content = Fragment_send { to_; content }
 let broadcast ~content = Fragment_encode { content }
 
 let on_message ~current ~message ~raw_message gossip =
@@ -105,6 +110,10 @@ let on_message ~current ~message ~raw_message gossip =
   | true -> (gossip, None)
   | false -> on_message ~current ~message ~raw_message gossip
 
+let on_send ~to_ ~raw_message gossip =
+  let action = Gossip_send { to_; raw_message } in
+  (gossip, Some action)
+
 let on_decoded_error ~expected_hash gossip =
   let (Gossip { ready; delayed; last_cleanup }) = gossip in
   match Message_hash.Map.find_opt expected_hash delayed with
@@ -125,6 +134,7 @@ let apply ~current ~outcome gossip =
   match outcome with
   | Outcome_message { message; raw_message } ->
       on_message ~current ~message ~raw_message gossip
+  | Outcome_send { to_; raw_message } -> on_send ~to_ ~raw_message gossip
   | Outcome_decoded_error { expected_hash } ->
       on_decoded_error ~expected_hash gossip
 
@@ -132,6 +142,10 @@ let compute fragment =
   let compute_encode ~content =
     let message, raw_message = Message.encode ~content in
     Outcome_message { message; raw_message }
+  in
+  let compute_send ~to_ ~content =
+    let _message, raw_message = Message.encode ~content in
+    Outcome_send { to_; raw_message }
   in
 
   let compute_decode ~expected_hash ~raw_content =
@@ -149,6 +163,7 @@ let compute fragment =
   in
   match fragment with
   | Fragment_encode { content } -> compute_encode ~content
+  | Fragment_send { to_; content } -> compute_send ~to_ ~content
   | Fragment_decode { expected_hash; raw_content } ->
       compute_decode ~expected_hash ~raw_content
 

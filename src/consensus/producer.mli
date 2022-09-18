@@ -21,6 +21,6 @@ val produce :
   parallel_map:
     ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   current:Timestamp.t ->
-  state:State.t ->
+  consensus:Consensus.t ->
   producer ->
   Block.block option

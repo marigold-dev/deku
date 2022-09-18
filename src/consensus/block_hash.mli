@@ -2,7 +2,7 @@ open Deku_crypto
 open Deku_concepts
 
 type block_hash
-type t = block_hash [@@deriving eq, ord, yojson]
+type t = block_hash [@@deriving eq, ord, yojson, show]
 
 (* repr *)
 (* TODO: this API is not ideal *)
@@ -19,4 +19,5 @@ val hash :
   withdrawal_handles_hash:BLAKE2b.t ->
   t
 
+module Set : Set.S with type elt = block_hash
 module Map : Map.S with type key = block_hash

@@ -9,8 +9,6 @@ type params = {
   domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
-  bootstrap_key : Ed25519.Key.t; [@env "DEKU_BOOTSTRAP_KEY"]
-      (** The base58-encoded public key with which to verify signed bootstrap signals. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
   validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
@@ -45,7 +43,6 @@ let main params =
   @@
   let {
     domains;
-    bootstrap_key;
     secret;
     validators;
     validator_uris;
@@ -79,8 +76,8 @@ let main params =
   let pool = Parallel.Pool.make ~domains in
   let nodes = List.map2 (fun a b -> (a, b)) validators validator_uris in
   let node, promise =
-    Node.make ~pool ~identity ~nodes ~bootstrap_key:(Key.Ed25519 bootstrap_key)
-      ~indexer:(Some indexer) ~default_block_size ()
+    Node.make ~pool ~identity ~nodes ~indexer:(Some indexer) ~default_block_size
+      ()
   in
   Node.listen node ~port ~tezos_interop;
   promise
