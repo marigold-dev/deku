@@ -2,7 +2,7 @@ open Deku_crypto
 
 type gossip
 type t = gossip
-type fragment
+type fragment [@@deriving show]
 type outcome
 
 type action = private

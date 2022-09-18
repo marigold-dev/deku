@@ -14,7 +14,6 @@ type node = {
   network : Network.t;
   (* TODO: there is a better way to do this but this is the quick and lazy way. *)
   indexer : Indexer.t option;
-  mutable gossip : Gossip.t;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
 }
@@ -24,23 +23,13 @@ type t = node
 let current () = Timestamp.of_float (Unix.gettimeofday ())
 
 let rec on_network node ~raw_expected_hash ~raw_content =
-  let gossip, fragment =
-    Gossip.incoming ~raw_expected_hash ~raw_content node.gossip
-  in
-  node.gossip <- gossip;
-  match fragment with
-  | Some fragment -> handle_gossip_fragment node ~fragment
-  | None -> ()
-
-and on_message node ~current ~message =
-  let open Message in
-  let (Message { hash = _; content }) = message in
-  Logs.debug (fun m -> m "Node: received message: %a" Content.pp content);
-  let chain, chain_actions =
-    Chain.incoming_message ~current ~content node.chain
+  let chain, fragment =
+    Chain.incoming ~raw_expected_hash ~raw_content node.chain
   in
   node.chain <- chain;
-  handle_chain_actions node ~chain_actions
+  match fragment with
+  | Some fragment -> handle_chain_fragment node ~fragment
+  | None -> ()
 
 and on_timeout node : unit Lwt.t =
   let trigger_timeout_promise, trigger_timeout_resolver = Lwt.wait () in
@@ -55,71 +44,41 @@ and on_timeout node : unit Lwt.t =
   in
   let current = current () in
 
-  (* TODO: clean in the future *)
-  node.gossip <- Gossip.clean ~current:(Timestamp.to_float current) node.gossip;
-
-  let chain, chain_actions = Chain.incoming_timeout ~current node.chain in
-  node.chain <- chain;
-  handle_chain_actions node ~chain_actions;
+  let fragment = Chain.timeout ~current node.chain in
+  (match fragment with
+  | Some fragment -> handle_chain_fragment node ~fragment
+  | None -> ());
   on_timeout node
 
-and handle_chain_actions node ~chain_actions =
-  List.iter
-    (fun chain_action -> handle_chain_action node ~chain_action)
-    chain_actions
+and on_chain_outcome node ~current ~outcome =
+  let chain, actions = Chain.apply ~current ~outcome node.chain in
+  node.chain <- chain;
+  handle_chain_actions node ~actions
 
-and handle_chain_action node ~chain_action =
-  Logs.debug (fun m ->
-      m "Node: handling chain action: %a" Chain.pp_action chain_action);
+and handle_chain_actions node ~actions =
+  List.iter (fun action -> handle_chain_action node ~action) actions
+
+and handle_chain_action node ~action =
   let open Chain in
-  match chain_action with
+  match action with
   | Chain_trigger_timeout -> node.trigger_timeout ()
-  | Chain_broadcast { content } ->
-      let fragment = Gossip.broadcast ~content in
-      handle_gossip_fragment node ~fragment
+  | Chain_broadcast { raw_expected_hash; raw_content } ->
+      Network.broadcast ~raw_expected_hash ~raw_content node.network
+  | Chain_send { to_; raw_expected_hash; raw_content } ->
+      Network.send ~to_ ~raw_expected_hash ~raw_content node.network
+  | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
   | Chain_save_block block -> (
       match node.indexer with
       | Some indexer -> Indexer.save_block ~block indexer
       | None -> ())
-  | Chain_send { to_; content } ->
-      let fragment = Gossip.send ~to_ ~content in
-      handle_gossip_fragment node ~fragment
 
-and on_gossip_outcome node ~current ~outcome =
-  let gossip, action =
-    Gossip.apply ~current:(Timestamp.to_float current) ~outcome node.gossip
-  in
-  node.gossip <- gossip;
-  match action with
-  | Some gossip_action -> handle_gossip_action node ~current ~gossip_action
-  | None -> ()
-
-and handle_gossip_action node ~current ~gossip_action =
-  let open Gossip in
-  match gossip_action with
-  | Gossip_apply_and_broadcast { message; raw_message } -> (
-      let () =
-        let (Raw_message { hash; raw_content }) = raw_message in
-        let raw_expected_hash = Message_hash.to_b58 hash in
-        Network.broadcast ~raw_expected_hash ~raw_content node.network
-      in
-      let () = on_message node ~current ~message in
-      match node.indexer with
-      | Some indexer -> Indexer.save_message ~message:raw_message indexer
-      | None -> ())
-  | Gossip_send { to_; raw_message } ->
-      let (Raw_message { hash; raw_content }) = raw_message in
-      let raw_expected_hash = Message_hash.to_b58 hash in
-      Network.send ~to_ ~raw_expected_hash ~raw_content node.network
-  | Gossip_fragment { fragment } -> handle_gossip_fragment node ~fragment
-
-and handle_gossip_fragment node ~fragment =
+and handle_chain_fragment node ~fragment =
   Lwt.async (fun () ->
       let%await outcome =
-        Parallel.async node.pool (fun () -> Gossip.compute fragment)
+        Parallel.async node.pool (fun () -> Chain.compute fragment)
       in
       let current = current () in
-      on_gossip_outcome node ~current ~outcome;
+      on_chain_outcome node ~current ~outcome;
       Lwt.return_unit)
 
 (* TODO: declare this function elsewhere ? *)
@@ -137,20 +96,19 @@ let handle_tezos_operation node ~operation =
   let Tezos_interop.Consensus.{ hash; transactions } = operation in
   let operations = List.filter_map to_tezos_operation transactions in
   let tezos_operation = Tezos_operation.make hash operations in
-  let chain, chain_actions =
+  let chain, actions =
     Chain.incoming_tezos_operation ~tezos_operation node.chain
   in
   node.chain <- chain;
-  handle_chain_actions ~chain_actions node
+  handle_chain_actions ~actions node
 
 let make ~pool ~identity ~nodes ?(indexer = None) ~default_block_size () =
   let network = Network.connect ~nodes in
-  let gossip = Gossip.empty in
   let validators = List.map fst nodes in
   let chain = Chain.make ~identity ~validators ~pool ~default_block_size in
   let node =
     let trigger_timeout () = () in
-    { pool; network; gossip; chain; trigger_timeout; indexer }
+    { pool; network; chain; trigger_timeout; indexer }
   in
   let promise = on_timeout node in
   (node, promise)
