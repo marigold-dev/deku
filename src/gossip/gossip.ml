@@ -17,7 +17,11 @@ type gossip =
 type fragment =
   | Fragment_encode of { content : Message.Content.t }
   | Fragment_send of { to_ : Key_hash.t; content : Message.Content.t }
-  | Fragment_decode of { expected_hash : Message_hash.t; raw_content : string }
+  | Fragment_decode of {
+      expected_hash : Message_hash.t; [@opaque]
+      raw_content : string;
+    }
+[@@deriving show]
 
 type outcome =
   | Outcome_message of { message : Message.t; raw_message : Message.raw }
