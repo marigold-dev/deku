@@ -5,6 +5,7 @@ exception Invalid_signature
 
 type operation_content = private
   | Operation_transaction of { receiver : Address.t; amount : Amount.t }
+  | Operation_noop
 
 type operation = private
   | Operation of {
@@ -26,6 +27,8 @@ val transaction :
   receiver:Address.t ->
   amount:Amount.t ->
   operation
+
+val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
 
 val is_in_includable_window :
   current_level:Level.t -> operation_level:Level.t -> bool

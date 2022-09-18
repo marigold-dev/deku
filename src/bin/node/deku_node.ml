@@ -22,6 +22,8 @@ type params = {
       (** Configures the debug indexer to save blocks. Defaults to true. *)
   save_messages : bool; [@env "DEKU_DEBUG_SAVE_MESSAGES"] [@default true]
       (** Configures the debug indexer to save consensus messages. Defaults to true. *)
+  default_block_size : int; [@env "DEKU_DEFAULT_BLOCK_SIZE"] [@default 50_000]
+      (** The threshold below which blocks are filled with no-op transactions. *)
 }
 [@@deriving cmdliner]
 
@@ -37,6 +39,7 @@ let main params =
     database_uri;
     save_blocks;
     save_messages;
+    default_block_size;
   } =
     params
   in
@@ -50,6 +53,7 @@ let main params =
       let node, promise =
         Node.make ~pool ~identity ~validators ~nodes:validator_uris
           ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer
+          ~default_block_size
       in
       Node.listen node ~port;
       promise)

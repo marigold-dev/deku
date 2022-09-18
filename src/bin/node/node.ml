@@ -97,10 +97,13 @@ and handle_gossip_fragment node ~fragment =
 
 (* TODO: declare this function elsewhere ? *)
 
-let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer =
+let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
+    ~default_block_size =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
-  let chain = Chain.make ~identity ~validators ~pool ~bootstrap_key in
+  let chain =
+    Chain.make ~identity ~validators ~pool ~bootstrap_key ~default_block_size
+  in
   let node =
     let trigger_timeout () = () in
     { pool; network; gossip; chain; trigger_timeout; indexer }

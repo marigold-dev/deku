@@ -27,22 +27,22 @@ let apply_operation ~current_level protocol operation =
     (not (Included_operation_set.mem operation included_operations))
     && Operation.is_in_includable_window ~current_level ~operation_level:level
   with
-  | true ->
+  | true -> (
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-
-      let ledger =
-        match content with
-        | Operation_transaction { receiver; amount } -> (
-            let sender = source in
+      match content with
+      | Operation_transaction { receiver; amount } ->
+          let sender = source in
+          let ledger =
             match Ledger.transfer ~sender ~receiver amount ledger with
             | Some ledger -> ledger
-            | None -> ledger)
-      in
+            | None -> ledger
+          in
 
-      let receipt = Receipt { operation = hash } in
-      Some (Protocol { included_operations; ledger }, receipt)
+          let receipt = Receipt { operation = hash } in
+          Some (Protocol { included_operations; ledger }, receipt)
+      | Operation_noop -> None)
   | false -> None
 
 let parse_operation operation =

@@ -19,11 +19,11 @@ type action =
   | Chain_broadcast of { content : Message.Content.t }
   | Chain_save_block of Block.t
 
-let make ~identity ~bootstrap_key ~validators ~pool =
+let make ~identity ~bootstrap_key ~validators ~pool ~default_block_size =
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
   let consensus = Consensus.make ~identity ~validators ~bootstrap_key in
-  let producer = Producer.make ~identity in
+  let producer = Producer.make ~identity ~default_block_size in
   Chain { pool; protocol; consensus; producer }
 
 let rec apply_consensus_action chain consensus_action =

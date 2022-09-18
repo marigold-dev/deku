@@ -4,7 +4,7 @@ open Deku_protocol
 type producer
 type t = producer
 
-val make : identity:Identity.t -> producer
+val make : identity:Identity.t -> default_block_size:int -> producer
 val incoming_operation : operation:Operation.t -> producer -> producer
 
 (* TODO: n log n *)

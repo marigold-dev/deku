@@ -13,6 +13,7 @@ val make :
   nodes:Uri.t list ->
   bootstrap_key:Key.t ->
   indexer:Indexer.t ->
+  default_block_size:int ->
   node * unit Lwt.t
 
 val listen : node -> port:int -> unit

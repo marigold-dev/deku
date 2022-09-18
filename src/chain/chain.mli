@@ -25,6 +25,7 @@ val make :
   bootstrap_key:Key.t ->
   validators:Key_hash.t list ->
   pool:Parallel.Pool.t ->
+  default_block_size:int ->
   chain
 
 val incoming_message :
