@@ -1,5 +1,5 @@
-(* Called by a script to do a withdraw and print the hash to stdout *)
 open Deku_protocol
+open Deku_crypto
 open Deku_concepts
 open Lwt_result.Syntax
 open Cohttp_lwt_unix
@@ -9,7 +9,7 @@ let post body uri =
   let body = Cohttp_lwt.Body.of_string body in
   Client.post ~body uri
 
-let main ticket_id tezos_owner secret verbose =
+let main ticket_id receiver secret verbose =
   let url = "http://localhost:4441/level" in
   let level =
     Lwt_main.run
@@ -28,7 +28,7 @@ let main ticket_id tezos_owner secret verbose =
   in
   let nonce = Nonce.of_n (Obj.magic level) in
   let operation =
-    Operation.withdraw ~identity ~level ~nonce ~source ~tezos_owner ~ticket_id
+    Operation.transaction ~identity ~level ~nonce ~source ~receiver ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let uris =
@@ -50,23 +50,18 @@ let main ticket_id tezos_owner secret verbose =
          post body uri >>= fun _ -> Lwt.return_unit)
        uris);
   let (Operation.Operation { hash; _ }) = operation in
-  let hash = Operation_hash.yojson_of_t hash |> Yojson.Safe.to_string in
-  Printf.printf "operation.hash: %s\n%!" hash;
-  if verbose then (
-    Printf.eprintf "operation code: %s\n%!"
-      (Operation.yojson_of_t operation |> Yojson.Safe.to_string);
-    prerr_endline "operation broadcasted")
-(*  we can't test that the withdraws succeeded at this point *)
+  let hash = Operation_hash.to_blake2b hash in
+  Printf.printf "operation.hash: %s\n%!" (BLAKE2b.to_hex hash)
 
 open Cmdliner
 
 let info =
-  let doc = "Do a withdraw" in
-  Cmd.info "deku-withdraw-test" ~version:"%\226\128\140%VERSION%%" ~doc
+  let doc = "Do a transaction" in
+  Cmd.info "deku-transaction-test" ~version:"%\226\128\140%VERSION%%" ~doc
 
 let term =
   let open Term in
-  const main $ Common.ticket_id 0 $ Common.tezos_address 1 $ Common.secret 2
+  const main $ Common.ticket_id 0 $ Common.deku_address 1 $ Common.secret 2
   $ Common.verbose_test
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term
