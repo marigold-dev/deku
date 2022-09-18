@@ -1,3 +1,8 @@
+(library
+ (name common)
+ (modules common)
+ (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts))
+
 (executable
  (name update_state_root_hash_test)
  (modules update_state_root_hash_test)
@@ -24,6 +29,7 @@
   deku_tezos_interop
   deku_consensus
   cmdliner
+  common
   fixme_name)
  (preprocess
   (pps ppx_let_binding)))
@@ -43,6 +49,7 @@
   cohttp-lwt-unix
   yojson
   piaf
+  common
   cmdliner)
  (preprocess
   (pps
@@ -67,6 +74,7 @@
   cohttp-lwt-unix
   yojson
   piaf
+  common
   cmdliner)
  (preprocess
   (pps
