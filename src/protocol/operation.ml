@@ -98,7 +98,8 @@ end
 let t_of_yojson = Repr.t_of_yojson
 let yojson_of_t = Repr.yojson_of_t
 
-let transaction ~identity ~level ~nonce ~source ~receiver ~amount =
+let transaction ~identity ~level ~nonce ~receiver ~amount =
+  let source = Address.of_key_hash (Identity.key_hash identity) in
   let hash =
     let open Repr in
     let content = Transaction { receiver; amount } in

@@ -23,7 +23,6 @@ val transaction :
   identity:Identity.t ->
   level:Level.t ->
   nonce:Nonce.t ->
-  source:Address.t ->
   receiver:Address.t ->
   amount:Amount.t ->
   operation

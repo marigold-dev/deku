@@ -32,10 +32,6 @@ module Zero_ops = struct
 
   let zero_operation ~level =
     let identity = generate () in
-    let source =
-      let key_hash = Identity.key_hash identity in
-      Address.of_key_hash key_hash
-    in
     let receiver =
       let receiver = generate () in
       let receiver = Identity.key_hash receiver in
@@ -43,7 +39,7 @@ module Zero_ops = struct
     in
     let nonce = Nonce.of_n N.zero in
     let amount = Amount.of_n N.zero in
-    Operation.transaction ~identity ~level ~nonce ~source ~receiver ~amount
+    Operation.transaction ~identity ~level ~nonce ~receiver ~amount
 
   let payload_of_operations operations =
     (* TODO: this likely should not be here *)
