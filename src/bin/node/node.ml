@@ -4,10 +4,12 @@ open Deku_chain
 open Deku_network
 open Deku_gossip
 open Deku_constants
+open Deku_indexer
 
 type node = {
   pool : Parallel.Pool.t;
   network : Network.t;
+  indexer : Indexer.t;
   mutable gossip : Gossip.t;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
@@ -62,6 +64,7 @@ and handle_chain_action node ~chain_action =
   | Chain_broadcast { content } ->
       let fragment = Gossip.broadcast ~content in
       handle_gossip_fragment node ~fragment
+  | Chain_save_block block -> Indexer.save_block ~block node.indexer
 
 and on_gossip_outcome node ~current ~outcome =
   let gossip, action = Gossip.apply ~outcome node.gossip in
@@ -79,7 +82,8 @@ and handle_gossip_action node ~current ~gossip_action =
         let raw_expected_hash = Message_hash.to_b58 hash in
         Network.broadcast ~raw_expected_hash ~raw_content node.network
       in
-      on_message node ~current ~message
+      on_message node ~current ~message;
+      Indexer.save_message ~message:raw_message node.indexer
   | Gossip_fragment { fragment } -> handle_gossip_fragment node ~fragment
 
 and handle_gossip_fragment node ~fragment =
@@ -91,13 +95,15 @@ and handle_gossip_fragment node ~fragment =
       on_gossip_outcome node ~current ~outcome;
       Lwt.return_unit)
 
-let make ~pool ~identity ~validators ~nodes ~bootstrap_key =
+(* TODO: declare this function elsewhere ? *)
+
+let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
   let chain = Chain.make ~identity ~validators ~pool ~bootstrap_key in
   let node =
     let trigger_timeout () = () in
-    { pool; network; gossip; chain; trigger_timeout }
+    { pool; network; gossip; chain; trigger_timeout; indexer }
   in
   let promise = on_timeout node in
   (node, promise)

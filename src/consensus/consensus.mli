@@ -3,7 +3,7 @@ open Deku_crypto
 
 type action = private
   (* protocol *)
-  | Consensus_accepted_block of { level : Level.t; payload : string list }
+  | Consensus_accepted_block of Block.t
   (* timer *)
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)

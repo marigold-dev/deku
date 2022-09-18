@@ -15,7 +15,8 @@ export DEKU_VALIDATOR_URIS="http://localhost:4440,http://localhost:4441,http://l
 for N in 0 1 2 3; do
   source "./chain/data/$N/env"
   _build/install/default/bin/deku-node \
-    --port "444$N" |&
+    --port "444$N" \
+    --database-uri "sqlite3:./chain/data/$N/database.db" |&
     awk -v n=$N '{ print "node " n ": " $0}' &
   sleep 0.1
 done

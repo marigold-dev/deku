@@ -5,7 +5,7 @@ open Block
 
 type action =
   (* protocol *)
-  | Consensus_accepted_block of { level : Level.t; payload : string list }
+  | Consensus_accepted_block of block
   (* timer *)
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
@@ -39,7 +39,7 @@ let rec incoming_block_or_signature ~current ~block consensus =
 
 and with_accepted_block ~current ~block consensus =
   let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let (Block { hash; level; payload; _ }) = block in
+  let (Block { hash; level; _ }) = block in
   let () =
     let level = Level.to_n level in
     let level = N.to_z level in
@@ -61,8 +61,7 @@ and with_accepted_block ~current ~block consensus =
   in
   let actions =
     Consensus_trigger_timeout { level }
-    :: Consensus_accepted_block { level; payload }
-    :: actions
+    :: Consensus_accepted_block block :: actions
   in
   (consensus, actions)
 

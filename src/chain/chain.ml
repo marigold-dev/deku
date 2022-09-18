@@ -17,6 +17,7 @@ type t = chain
 type action =
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
+  | Chain_save_block of Block.t
 
 let make ~identity ~bootstrap_key ~validators ~pool =
   let validators = Validators.of_key_hash_list validators in
@@ -29,7 +30,8 @@ let rec apply_consensus_action chain consensus_action =
   let open Consensus in
   let (Chain { pool; protocol; consensus; producer }) = chain in
   match consensus_action with
-  | Consensus_accepted_block { level; payload } ->
+  | Consensus_accepted_block block ->
+      let (Block.Block { level; payload; _ }) = block in
       let protocol, receipts =
         Protocol.apply
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
@@ -37,7 +39,7 @@ let rec apply_consensus_action chain consensus_action =
       in
       let producer = Producer.clean ~receipts producer in
       let chain = Chain { pool; protocol; consensus; producer } in
-      (chain, None)
+      (chain, Some (Chain_save_block block))
   | Consensus_trigger_timeout { level } -> (
       let (Consensus { state; _ }) = consensus in
       let (State.State { current_level; _ }) = state in
@@ -120,6 +122,7 @@ let incoming_timeout ~current chain =
     let (Consensus { block_pool = _; signer = _; state; bootstrap_key = _ }) =
       consensus
     in
+    (* FIXME: I don't like having to duplicate the parallel_map thing *)
     match Producer.produce ~current ~state producer with
     | Some block ->
         let content = Message.Content.block block in

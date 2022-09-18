@@ -18,6 +18,7 @@ type t = chain
 type action = private
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
+  | Chain_save_block of Block.t
 
 val make :
   identity:Identity.t ->

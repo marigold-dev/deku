@@ -1,6 +1,7 @@
 open Deku_stdlib
 open Deku_concepts
 open Deku_crypto
+open Deku_indexer
 include Node
 
 let domains = 8
@@ -15,19 +16,40 @@ type params = {
   validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
       (** A comma-separated list of the validator URI's used to join the network. *)
   port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
+  database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
+      (** A URI-encoded path to a SQLite database. Will be created it if it doesn't exist already. *)
+  save_blocks : bool; [@env "DEKU_DEBUG_SAVE_BLOCKS"] [@default true]
+      (** Configures the debug indexer to save blocks. Defaults to true. *)
+  save_messages : bool; [@env "DEKU_DEBUG_SAVE_MESSAGES"] [@default true]
+      (** Configures the debug indexer to save consensus messages. Defaults to true. *)
 }
 [@@deriving cmdliner]
 
 let main params =
   Lwt_main.run
   @@
-  let { bootstrap_key; secret; validators; validator_uris; port } = params in
-  let pool = Parallel.Pool.make ~domains in
+  let {
+    bootstrap_key;
+    secret;
+    validators;
+    validator_uris;
+    port;
+    database_uri;
+    save_blocks;
+    save_messages;
+  } =
+    params
+  in
+  let%await indexer =
+    Indexer.make ~uri:database_uri
+      ~config:Indexer.{ save_blocks; save_messages }
+  in
   let identity = Identity.make (Secret.Ed25519 secret) in
+  let pool = Parallel.Pool.make ~domains in
   Parallel.Pool.run pool (fun () ->
       let node, promise =
         Node.make ~pool ~identity ~validators ~nodes:validator_uris
-          ~bootstrap_key:(Key.Ed25519 bootstrap_key)
+          ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer
       in
       Node.listen node ~port;
       promise)
