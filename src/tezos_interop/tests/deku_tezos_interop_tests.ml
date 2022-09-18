@@ -9,7 +9,7 @@ open Deku_concepts
    Deku_crypto.BLAKE2b.hash "tuturu" |> Deku_crypto.BLAKE2b.to_hex;;
    - : string = "b55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203" *)
 
-(* Derivied with the following code using `ligo repel cameligo`
+(* Derivied with the following code using `ligo repl cameligo`
     #use "./src/tezos_interop/consensus.mligo";;
     Crypto.blake2b (Bytes.pack ({ block_level = (1 : int);
       block_payload_hash = (0x99586ffad9cfcfe056c7374a42820faec628e7ee5d1bd8cc5ec23ce67f51c5ba : blake2b);

@@ -64,3 +64,10 @@ let incoming_signature ~consensus ~signature verifier =
 let find_signatures ~block_hash verifier =
   let (Verifier { block_pool }) = verifier in
   Block_pool.find_signatures ~block_hash block_pool
+
+let current_withdrawal_hash ~block_hash verifier =
+  let (Verifier { block_pool }) = verifier in
+  Block_pool.find_block ~block_hash block_pool
+  |> Option.map (function Block { withdrawal_handles_hash; _ } ->
+         withdrawal_handles_hash)
+  |> Option.to_result ~none:()

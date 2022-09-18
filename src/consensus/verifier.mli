@@ -25,3 +25,7 @@ val incoming_signature :
 
 val find_signatures :
   block_hash:Block_hash.t -> verifier -> Verified_signature.t Key_hash.Map.t
+
+(* FIXME: try with Protocol instead *)
+val current_withdrawal_hash :
+  block_hash:Block_hash.t -> verifier -> (BLAKE2b.t, unit) Result.t

@@ -38,11 +38,8 @@ let make ~identity ~bootstrap_key ~validators =
   let producer = Producer.make ~identity in
   Chain { protocol; consensus; verifier; signer; producer }
 
-let commit current_level block verifier validators =
-  let Block.(
-        Block { payload_hash; hash = block_hash; withdrawal_handles_hash; _ }) =
-    block
-  in
+let commit current_level block verifier validators withdrawal_handles_hash =
+  let Block.(Block { payload_hash; hash = block_hash; _ }) = block in
   let state_root_hash =
     Deku_crypto.BLAKE2b.hash "FIXME: we need to add the state root"
   in
@@ -92,7 +89,9 @@ let apply_block ~pool ~current ~block chain =
     with
     (* FIXME: weird place to commit *)
     | Some new_block when level mod 5 = 0 ->
-        let commit_effect = commit current_level block verifier validators in
+        let commit_effect =
+          commit current_level block verifier validators withdrawal_handles_hash
+        in
         [ Broadcast_block new_block; commit_effect ]
     | Some block -> [ Broadcast_block block ]
     | None -> []

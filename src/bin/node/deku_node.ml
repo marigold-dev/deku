@@ -203,13 +203,23 @@ module Server = struct
     let body = Result.get_ok body in
     let body = Yojson.Safe.from_string body in
     let operation_hash = Operation_hash.t_of_yojson body in
-    let (Node { chain = Chain { protocol; _ }; _ }) = Singleton.get_state () in
+    let (Node { chain = Chain { protocol; consensus; verifier; _ }; _ }) =
+      Singleton.get_state ()
+    in
+    let (Consensus { current_block = block_hash; _ }) = consensus in
+    let withdrawal_handles_hash =
+      Verifier.current_withdrawal_hash ~block_hash verifier
+    in
+    let withdraw_proof =
+      Protocol.find_withdraw_proof ~operation_hash protocol
+    in
     let response =
-      match Protocol.find_withdraw_proof ~operation_hash protocol with
-      | Error _err -> Response.of_string ~body:"Proof not found" `Not_found
-      | Ok (handle, proof) ->
+      match (withdrawal_handles_hash, withdraw_proof) with
+      | Error _, _ -> Response.of_string ~body:"Unknown error" `Not_found
+      | _, Error _ -> Response.of_string ~body:"Proof not found" `Not_found
+      | Ok withdrawal_handles_hash, Ok (handle, proof) ->
           let open Ledger.Proof_response in
-          let body = Proof { operation_hash; handle; proof } in
+          let body = Proof { withdrawal_handles_hash; handle; proof } in
           let response_body = yojson_of_t body |> Yojson.Safe.to_string in
           Response.of_string ~body:response_body status
     in
@@ -221,8 +231,7 @@ module Server = struct
     let body = request.body in
 
     match Endpoint.of_string path with
-    | Some (Ex Withdraw_proof) ->
-        proof body `Accepted
+    | Some (Ex Withdraw_proof) -> proof body `Accepted
     | Some (Ex Level) -> level `Accepted
     | Some endpoint -> (
         match meth with

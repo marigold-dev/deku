@@ -24,7 +24,7 @@ type withdraw_proof = (Withdrawal_handle.hash * Withdrawal_handle.hash) list
 module Proof_response : sig
   type t =
     | Proof of {
-        operation_hash : Operation_hash.t;
+        withdrawal_handles_hash : Withdrawal_handle.hash;
         handle : Withdrawal_handle.t;
         proof : withdraw_proof;
       }
