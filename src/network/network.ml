@@ -2,9 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 open Piaf_lwt
 
-type network =
-  | Network of { clients : (Uri.t * Client.t option ref) Key_hash.Map.t }
-
+type network = Network of { clients : Uri.t Key_hash.Map.t }
 type t = network
 
 let error ~message status =
@@ -62,59 +60,37 @@ let listen ~port ~on_message =
       Logs.info (fun m -> m "Listening on port %i" port);
       Lwt.return_unit)
 
-(* TODO: put this somewhere else *)
-let reconnection_timeout = 5.0
-
-let rec connection_loop ref ~uri =
-  let config = Config.{ default with flush_headers_immediately = true } in
-  let%await client = Client.create ~config uri in
-  match client with
-  | Ok client ->
-      Logs.debug (fun m ->
-          m "Network: connected successfully to peer %a" Uri.pp uri);
-      ref := Some client;
-      Lwt.return_unit
-  | Error error ->
-      Logs.warn (fun m ->
-          m "Network: connection error %a" Piaf_lwt.Error.pp_hum error);
-      (* TODO: do something with this error*)
-      let%await () = Lwt_unix.sleep reconnection_timeout in
-      connection_loop ref ~uri
-
 let connect ~nodes =
   let clients =
     List.fold_left
-      (fun clients (key, uri) ->
-        let ref = ref None in
-        let () = Lwt.async (fun () -> connection_loop ref ~uri) in
-        Key_hash.Map.add key (uri, ref) clients)
+      (fun clients (key, uri) -> Key_hash.Map.add key uri clients)
       Key_hash.Map.empty nodes
   in
   Network { clients }
 
 let endpoint = "/messages"
 
-let post ~raw_expected_hash ~raw_content ~uri:_uri client =
+let post ~raw_expected_hash ~raw_content ~uri =
   let headers =
     let open Headers in
     (* TODO: maybe add json to Well_known in Piaf*)
     let json = Mime_types.map_extension "json" in
     [ (Well_known.content_type, json) ]
   in
-  let target = Uri.of_string endpoint in
+  let target = Uri.with_path uri endpoint in
   let target =
     Uri.with_query' target [ (expected_hash_query, raw_expected_hash) ]
   in
-  let target = Uri.to_string target in
+  (* let target = Uri.to_string target in *)
   (* Format.eprintf "%a <- %s\n%!" Uri.pp_hum _uri target; *)
   let body = Body.of_string raw_content in
-  Client.post client ~headers ~body target
+  Client.Oneshot.post ~headers ~body target
 
-let post ~raw_expected_hash ~raw_content ~uri client =
+let post ~raw_expected_hash ~raw_content ~uri =
   Lwt.async (fun () ->
       Logs.debug (fun m ->
           m "Network: Posting message to %a: %s" Uri.pp uri raw_content);
-      let%await post = post ~raw_expected_hash ~raw_content ~uri client in
+      let%await post = post ~raw_expected_hash ~raw_content ~uri in
       match post with
       | Ok response -> (
           let%await drain = Body.drain response.body in
@@ -123,29 +99,23 @@ let post ~raw_expected_hash ~raw_content ~uri client =
               Logs.debug (fun m -> m "Post successful");
               Lwt.return_unit
           | Error _error ->
-              Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error;
+              (* Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error; *)
               (* TODO: do something with this error *)
               Lwt.return_unit)
       | Error _error ->
-          Format.eprintf "error.post: %a" Error.pp_hum _error;
+          (* Format.eprintf "error.post: %a\n%!" Error.pp_hum _error; *)
           (* TODO: do something with this error *)
           Lwt.return_unit)
 
 let send ~to_ ~raw_expected_hash ~raw_content server =
   let (Network { clients }) = server in
   match Key_hash.Map.find_opt to_ clients with
-  | Some (uri, client) -> (
-      match !client with
-      | Some client -> post ~raw_expected_hash ~raw_content ~uri client
-      | None -> ())
+  | Some uri -> post ~raw_expected_hash ~raw_content ~uri
   | None -> (* TODO: do something here *) ()
 
 let broadcast ~raw_expected_hash ~raw_content server =
   let (Network { clients }) = server in
 
   Key_hash.Map.iter
-    (fun _key (uri, client) ->
-      match !client with
-      | Some client -> post ~raw_expected_hash ~raw_content ~uri client
-      | None -> ())
+    (fun _key uri -> post ~raw_expected_hash ~raw_content ~uri)
     clients
