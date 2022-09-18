@@ -1,4 +1,5 @@
 open Deku_stdlib
+open Deku_crypto
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
@@ -10,6 +11,7 @@ type chain =
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
+      applied : Block.t Block_hash.Map.t;
     }
 
 type t = chain
@@ -18,42 +20,49 @@ type action =
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
   | Chain_save_block of Block.t
+  | Chain_send of { to_ : Key_hash.t; content : Message.Content.t }
 [@@deriving show]
 
-let make ~identity ~bootstrap_key ~validators ~pool ~default_block_size =
+let make ~identity ~validators ~pool ~default_block_size =
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
-  let consensus = Consensus.make ~identity ~validators ~bootstrap_key in
+  let consensus = Consensus.make ~identity ~validators in
   let producer = Producer.make ~identity ~default_block_size in
-  Chain { pool; protocol; consensus; producer }
+  let applied = Block_hash.Map.empty in
+  Chain { pool; protocol; consensus; producer; applied }
 
 let rec apply_consensus_action chain consensus_action =
   Logs.debug (fun m ->
       m "Chain: applying consensus action: %a" Consensus.pp_action
         consensus_action);
   let open Consensus in
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
   match consensus_action with
-  | Consensus_accepted_block block ->
-      let (Block.Block { level; payload; tezos_operations; _ }) = block in
+  | Consensus_accepted_block { block } ->
+      let (Block { hash; level; payload; tezos_operations; _ }) = block in
       let protocol, receipts =
         Protocol.apply
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
           ~current_level:level ~payload protocol ~tezos_operations
       in
       let producer = Producer.clean ~receipts ~tezos_operations producer in
-      let chain = Chain { pool; protocol; consensus; producer } in
+      let applied = Block_hash.Map.add hash block applied in
+      let chain = Chain { pool; protocol; consensus; producer; applied } in
       (chain, Some (Chain_save_block block))
   | Consensus_trigger_timeout { level } -> (
-      let (Consensus { state; _ }) = consensus in
-      let (State.State { current_level; _ }) = state in
+      let (Consensus { current_block; _ }) = consensus in
+      let (Block { level = current_level; _ }) = current_block in
       match Level.equal current_level level with
       | true ->
           let action = Chain_trigger_timeout in
           (chain, Some action)
       | false -> (chain, None))
-  | Consensus_broadcast_signature { signature } ->
-      let content = Message.Content.signature signature in
+  | Consensus_broadcast_vote { vote } ->
+      let content = Message.Content.vote vote in
+      let action = Chain_broadcast { content } in
+      (chain, Some action)
+  | Consensus_request_block { self; hash } ->
+      let content = Message.Content.request_block ~to_:self ~hash in
       let action = Chain_broadcast { content } in
       (chain, Some action)
 
@@ -68,39 +77,43 @@ and apply_consensus_actions chain consensus_actions =
     (chain, []) consensus_actions
 
 and incoming_block ~current ~block chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
   let consensus, effects = Consensus.incoming_block ~current ~block consensus in
-  let chain = Chain { pool; protocol; consensus; producer } in
+  let chain = Chain { pool; protocol; consensus; producer; applied } in
   apply_consensus_actions chain effects
 
-let incoming_signature ~current ~signature chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  let consensus, effects =
-    Consensus.incoming_signature ~current ~signature consensus
-  in
-  let chain = Chain { pool; protocol; consensus; producer } in
-  apply_consensus_actions chain effects
+let incoming_vote ~current ~vote chain =
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
+  let consensus, actions = Consensus.incoming_vote ~current ~vote consensus in
+  let chain = Chain { pool; protocol; consensus; producer; applied } in
+  apply_consensus_actions chain actions
 
-let incoming_operation ~operation node =
-  let (Chain { pool; protocol; consensus; producer }) = node in
+let incoming_operation ~operation chain =
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
   let producer = Producer.incoming_operation ~operation producer in
-  Chain { pool; protocol; consensus; producer }
+  let chain = Chain { pool; protocol; consensus; producer; applied } in
+  (chain, [])
 
-let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+let incoming_request_block ~to_ ~hash chain =
+  let (Chain { applied; _ }) = chain in
+  match Block_hash.Map.find_opt hash applied with
+  | Some block ->
+      (* TODO: this is very inneficient as it serializes the block many times *)
+      let content = Message.Content.block block in
+      (* TODO: not broadcast *)
+      (chain, [ Chain_send { to_; content } ])
+  | None -> (chain, [])
+
+let incoming_bootstrap_signal ~current chain =
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
   let consensus =
-    match
-      Consensus.incoming_bootstrap_signal ~bootstrap_signal ~current consensus
-    with
+    match Consensus.incoming_bootstrap_signal ~current consensus with
     | Some consensus -> consensus
     | None -> consensus
   in
   let effects =
-    let (Consensus { block_pool = _; signer = _; bootstrap_key = _; state }) =
-      consensus
-    in
     match
-      Producer.produce ~current ~state
+      Producer.produce ~current ~consensus
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
         producer
     with
@@ -110,37 +123,33 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
         [ Chain_broadcast { content } ]
     | None -> []
   in
-  (Chain { pool; protocol; consensus; producer }, effects)
+  (Chain { pool; protocol; consensus; producer; applied }, effects)
 
 let incoming_tezos_operation ~tezos_operation chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
-  (Chain { pool; protocol; consensus; producer }, [])
+  (Chain { pool; protocol; consensus; producer; applied }, [])
 
 let incoming_message ~current ~content chain =
   Logs.debug (fun m -> m "Incoming message: %a" Message.Content.pp content);
   let open Message.Content in
   match content with
   | Content_block block -> incoming_block ~current ~block chain
-  | Content_signature signature -> incoming_signature ~current ~signature chain
-  | Content_operation operation ->
-      let chain = incoming_operation ~operation chain in
-      (chain, [])
-  | Content_bootstrap_signal bootstrap_signal ->
-      incoming_bootstrap_signal ~bootstrap_signal ~current chain
+  | Content_vote vote -> incoming_vote ~current ~vote chain
+  | Content_operation operation -> incoming_operation ~operation chain
+  | Content_request_block { to_; hash } ->
+      incoming_request_block ~to_ ~hash chain
+  | Content_bootstrap_signal _bootstrap_signal ->
+      incoming_bootstrap_signal ~current chain
 
 let incoming_timeout ~current chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  let chain = Chain { pool; protocol; consensus; producer } in
+  let (Chain { pool; protocol; consensus; producer; applied }) = chain in
+  let chain = Chain { pool; protocol; consensus; producer; applied } in
   let actions =
-    let (Consensus { block_pool = _; signer = _; state; bootstrap_key = _ }) =
-      consensus
-    in
-    (* FIXME: I don't like having to duplicate the parallel_map thing *)
     match
-      Producer.produce
+      Producer.produce ~current ~consensus
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        ~current ~state producer
+        producer
     with
     | Some block ->
         let content = Message.Content.block block in
@@ -163,14 +172,13 @@ let test () =
   in
   let pool = Parallel.Pool.make ~domains:8 in
 
-  let chain =
-    make ~identity ~validators ~pool ~bootstrap_key:(Identity.key identity)
-      ~default_block_size:0
-  in
+  let chain = make ~identity ~validators ~pool ~default_block_size:0 in
   let (Chain { consensus; _ }) = chain in
   let block =
-    let (Consensus.Consensus { state; _ }) = consensus in
-    let (State { current_level; current_block; _ }) = state in
+    let (Consensus { current_block; _ }) = consensus in
+    let (Block { hash = current_block; level = current_level; _ }) =
+      current_block
+    in
     let level = Level.next current_level in
     let previous = current_block in
     let operations = [] in
@@ -185,10 +193,8 @@ let test () =
   let chain, actions = incoming_block ~current:(get_current ()) ~block chain in
   assert (actions = []);
 
-  let signature = Block.sign ~identity block in
-  let chain, actions =
-    incoming_signature ~current:(get_current ()) ~signature chain
-  in
+  let vote = Block.sign ~identity block in
+  let chain, actions = incoming_vote ~current:(get_current ()) ~vote chain in
   assert (actions <> []);
 
   let rec loop chain actions =
@@ -202,6 +208,8 @@ let test () =
             | Chain_broadcast { content } ->
                 incoming_message ~current ~content chain
             | Chain_save_block _ -> (chain, [])
+            | Chain_send { to_ = _; content } ->
+                incoming_message ~current ~content chain
           in
           (chain, actions @ additional_actions))
         (chain, []) actions

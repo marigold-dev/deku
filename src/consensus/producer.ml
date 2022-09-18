@@ -2,7 +2,6 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_tezos
-open State
 
 type producer =
   | Producer of {
@@ -96,23 +95,15 @@ let produce ~parallel_map ~current_level ~current_block producer =
   Block.produce ~parallel_map ~identity ~level ~previous ~operations
     ~tezos_operations
 
-let produce ~parallel_map ~current ~state producer =
-  let (State { current_level; current_block; _ }) = state in
-  let (Producer
-        {
-          identity;
-          operations = _;
-          tezos_operations = _;
-          default_block_size = _;
-        }) =
-    producer
-  in
+let produce ~parallel_map ~current ~consensus producer =
+  let open Consensus in
+  let (Consensus { current_block; _ }) = consensus in
 
-  match
-    let self = Identity.key_hash identity in
-    Judger.is_producer ~current ~state self
-  with
+  match is_producer ~current consensus with
   | true ->
+      let (Block { hash = current_block; level = current_level; _ }) =
+        current_block
+      in
       let block =
         produce ~parallel_map ~current_level ~current_block producer
       in

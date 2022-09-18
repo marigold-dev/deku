@@ -81,6 +81,9 @@ and handle_chain_action node ~chain_action =
       match node.indexer with
       | Some indexer -> Indexer.save_block ~block indexer
       | None -> ())
+  | Chain_send { to_; content } ->
+      let fragment = Gossip.send ~to_ ~content in
+      handle_gossip_fragment node ~fragment
 
 and on_gossip_outcome node ~current ~outcome =
   let gossip, action =
@@ -104,6 +107,10 @@ and handle_gossip_action node ~current ~gossip_action =
       match node.indexer with
       | Some indexer -> Indexer.save_message ~message:raw_message indexer
       | None -> ())
+  | Gossip_send { to_; raw_message } ->
+      let (Raw_message { hash; raw_content }) = raw_message in
+      let raw_expected_hash = Message_hash.to_b58 hash in
+      Network.send ~to_ ~raw_expected_hash ~raw_content node.network
   | Gossip_fragment { fragment } -> handle_gossip_fragment node ~fragment
 
 and handle_gossip_fragment node ~fragment =
@@ -136,14 +143,11 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~chain_actions node
 
-let make ~pool ~identity ~nodes ~bootstrap_key ?(indexer = None)
-    ~default_block_size () =
+let make ~pool ~identity ~nodes ?(indexer = None) ~default_block_size () =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
   let validators = List.map fst nodes in
-  let chain =
-    Chain.make ~identity ~validators ~pool ~bootstrap_key ~default_block_size
-  in
+  let chain = Chain.make ~identity ~validators ~pool ~default_block_size in
   let node =
     let trigger_timeout () = () in
     { pool; network; gossip; chain; trigger_timeout; indexer }
@@ -174,13 +178,14 @@ let _test () =
   let pool = Parallel.Pool.make ~domains:8 in
 
   let node, promise =
-    make ~pool ~identity ~nodes ~bootstrap_key:(Identity.key identity)
-      ~default_block_size:0 ~indexer:None ()
+    make ~pool ~identity ~nodes ~default_block_size:0 ~indexer:None ()
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =
-    let (Consensus.Consensus { state; _ }) = consensus in
-    let (State { current_level; current_block; _ }) = state in
+    let (Consensus { current_block; _ }) = consensus in
+    let (Block { hash = current_block; level = current_level; _ }) =
+      current_block
+    in
     let level = Level.next current_level in
     let previous = current_block in
     let operations = [] in
@@ -202,9 +207,9 @@ let _test () =
   in
 
   let () =
-    let signature = Block.sign ~identity block in
+    let vote = Block.sign ~identity block in
     let _message, raw_message =
-      Message.encode ~content:(Message.Content.signature signature)
+      Message.encode ~content:(Message.Content.vote vote)
     in
     let (Raw_message { hash; raw_content }) = raw_message in
     let raw_expected_hash = Message_hash.to_b58 hash in

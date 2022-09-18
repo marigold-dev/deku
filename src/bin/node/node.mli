@@ -1,6 +1,5 @@
 open Deku_stdlib
 open Deku_concepts
-open Deku_crypto
 open Deku_indexer
 open Deku_tezos_interop
 
@@ -11,7 +10,6 @@ val make :
   pool:Parallel.Pool.pool ->
   identity:Identity.identity ->
   nodes:(Deku_crypto.Key_hash.t * Uri.t) list ->
-  bootstrap_key:Key.t ->
   ?indexer:Indexer.t option ->
   default_block_size:int ->
   unit ->
