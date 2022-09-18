@@ -102,6 +102,10 @@ let setup_log ?style_renderer ?level () =
 let () = setup_log ~level:Logs.Info ()
 
 let () =
+  Lwt.async_exception_hook :=
+    fun exn -> Logs.err (fun m -> m "async: %s" (Printexc.to_string exn))
+
+let () =
   Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
   let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
