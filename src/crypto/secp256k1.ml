@@ -38,6 +38,15 @@ module Secret = struct
   let generate () =
     let seed = Random.generate 32 |> Cstruct.to_bytes in
     Libsecp256k1.Key.read_sk_exn context (Bigstring.of_bytes seed)
+
+  let cmdliner_converter =
+    let of_string s =
+      match of_b58 s with
+      | Some x -> `Ok x
+      | None -> `Error "Could not parse secp256k1 secret"
+    in
+    let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+    (of_string, to_string)
 end
 
 module Key = struct
@@ -62,6 +71,16 @@ module Key = struct
       Libsecp256k1.Key.read_pk context (Bigstring.of_string string)
       |> Result.to_option
   end)
+
+  let cmdliner_converter =
+    let of_string s =
+      match of_b58 s with
+      | Some x -> `Ok x
+      | None ->
+          `Error (Format.sprintf "Could not parse '%s' as a secp256k1 key" s)
+    in
+    let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+    (of_string, to_string)
 end
 
 module Key_hash = struct

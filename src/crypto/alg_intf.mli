@@ -9,6 +9,10 @@ module type S = sig
 
     (* utils *)
     val generate : unit -> secret
+
+    val cmdliner_converter :
+      (string -> [> `Ok of t | `Error of string ])
+      * (Format.formatter -> t -> unit)
   end
 
   module Key : sig
@@ -21,6 +25,10 @@ module type S = sig
 
     (* operations *)
     val of_secret : Secret.t -> key
+
+    val cmdliner_converter :
+      (string -> [> `Ok of t | `Error of string ])
+      * (Format.formatter -> t -> unit)
   end
 
   module Key_hash : sig

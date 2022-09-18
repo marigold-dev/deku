@@ -1,30 +1,35 @@
 open Deku_stdlib
 open Deku_concepts
-open Deku_storage
+open Deku_crypto
 include Node
 
 let domains = 8
 
-let main () =
-  let port = ref 8080 in
-  let storage = ref "storage.json" in
-  Arg.parse
-    [
-      ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
-      ("-s", Arg.Set_string storage, " Storage file (storage.json by default)");
-    ]
-    ignore "Handle Deku communication. Runs forever.";
+type params = {
+  secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
+      (** The base58-encoded secret used as the Deku-node's identity. *)
+  bootstrap_key : Ed25519.Key.t; [@env "DEKU_BOOTSTRAP_KEY"]
+      (** The base58-encoded public key with which to verify signed bootstrap signals. *)
+  validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
+      (** A comma separeted list of the key hashes of all validators in the network. *)
+  validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
+      (** A comma-separated list of the validator URI's used to join the network. *)
+  port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
+}
+[@@deriving cmdliner]
 
+let main params =
+  Lwt_main.run
+  @@
+  let { bootstrap_key; secret; validators; validator_uris; port } = params in
   let pool = Parallel.Pool.make ~domains in
-  let%await storage = Storage.read ~file:!storage in
-  let Storage.{ secret; initial_validators; nodes; bootstrap_key } = storage in
-  let identity = Identity.make secret in
+  let identity = Identity.make (Secret.Ed25519 secret) in
   Parallel.Pool.run pool (fun () ->
       let node, promise =
-        Node.make ~pool ~identity ~validators:initial_validators ~nodes
-          ~bootstrap_key
+        Node.make ~pool ~identity ~validators ~nodes:validator_uris
+          ~bootstrap_key:(Key.Ed25519 bootstrap_key)
       in
-      Node.listen node ~port:!port;
+      Node.listen node ~port;
       promise)
 
 (* let setup_log ?style_renderer level =
@@ -33,4 +38,9 @@ let main () =
      Logs.set_reporter (Logs_fmt.reporter ())
 
    let () = setup_log Logs.Debug *)
-let () = Lwt_main.run (main ())
+
+let () =
+  let info = Cmdliner.Cmd.info Sys.argv.(0) in
+  let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
+  let cmd = Cmdliner.Cmd.v info term in
+  exit (Cmdliner.Cmd.eval ~catch:true cmd)

@@ -14,3 +14,6 @@ val to_b58 : key_hash -> string
 val of_key : Key.t -> t
 
 module Set : Set.S with type elt = key_hash
+
+val cmdliner_converter :
+  (string -> [> `Ok of t | `Error of string ]) * (Format.formatter -> t -> unit)
