@@ -11,4 +11,4 @@ val incoming_operation : operation:Operation.t -> producer -> producer
 val clean : receipts:Receipt.t list -> producer -> producer
 
 val produce :
-  current:Timestamp.t -> state:State.t -> producer -> Block.block option
+  current:Timestamp.t -> consensus:Consensus.t -> producer -> Block.block option

@@ -21,4 +21,5 @@ end)
 
 let hash = hash
 
+module Set = Set
 module Map = Map

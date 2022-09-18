@@ -32,8 +32,10 @@ let broadcast ~content network =
   Network.broadcast ~raw_expected_hash ~raw_content network
 
 let produce identity consensus network =
-  let (Consensus.Consensus { state; _ }) = consensus in
-  let (State { current_level; current_block; _ }) = state in
+  let (Consensus.Consensus { current_block; _ }) = consensus in
+  let (Block { hash = current_block; level = current_level; _ }) =
+    current_block
+  in
   let level = Level.next current_level in
   let previous = current_block in
   let operations = [] in
@@ -42,8 +44,8 @@ let produce identity consensus network =
   block
 
 let sign identity block network =
-  let signature = Block.sign ~identity block in
-  broadcast ~content:(Message.Content.signature signature) network
+  let vote = Block.sign ~identity block in
+  broadcast ~content:(Message.Content.vote vote) network
 
 let restart ~producer identities consensus network =
   let block = produce producer consensus network in
@@ -77,10 +79,10 @@ let bootstrap ~size =
     Consensus.make ~identity:producer ~validators
   in
   let network = Network.connect ~nodes:validators in
-  (* TODO: this is lame, but I'm lazy*)
+  (* TODO: this is lame, but I'm lazy *)
   let%await () = Lwt_unix.sleep sleep_time in
   let () = restart ~producer identities consensus network in
-  (* TODO: this is lame, but Lwt*)
+  (* TODO: this is lame, but Lwt *)
   let%await () = Lwt_unix.sleep sleep_time in
   Lwt.return_unit
 

@@ -13,4 +13,5 @@ val to_b58 : block_hash -> string
 (* operations *)
 val hash : string -> block_hash
 
+module Set : Set.S with type elt = block_hash
 module Map : Map.S with type key = block_hash

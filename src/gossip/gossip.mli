@@ -1,3 +1,5 @@
+open Deku_crypto
+
 type gossip
 type t = gossip
 type fragment
@@ -8,6 +10,7 @@ type action = private
       message : Message.t;
       raw_message : Message.raw;
     }
+  | Gossip_send of { to_ : Key_hash.t; raw_message : Message.raw }
   | Gossip_fragment of { fragment : fragment }
 
 (* TODO: Timestamp.t *)
@@ -21,6 +24,9 @@ val incoming :
   gossip ->
   gossip * fragment option
 (** [incoming ~raw_expected_hash ~raw_content gossip] *)
+
+val send : to_:Key_hash.t -> content:Message.Content.t -> fragment
+(** [send ~content gossip] *)
 
 val broadcast : content:Message.Content.t -> fragment
 (** [broadcast ~content gossip] *)

@@ -1,6 +1,5 @@
 open Deku_concepts
 open Deku_protocol
-open State
 
 type producer =
   | Producer of {
@@ -46,15 +45,15 @@ let produce ~current_level ~current_block producer =
   in
   Block.produce ~identity ~level ~previous ~operations
 
-let produce ~current ~state producer =
-  let (State { current_level; current_block; _ }) = state in
-  let (Producer { identity; operations = _ }) = producer in
+let produce ~current ~consensus producer =
+  let open Consensus in
+  let (Consensus { current_block; _ }) = consensus in
 
-  match
-    let self = Identity.key_hash identity in
-    Judger.is_producer ~current ~state self
-  with
+  match is_producer ~current consensus with
   | true ->
+      let (Block { hash = current_block; level = current_level; _ }) =
+        current_block
+      in
       let block = produce ~current_level ~current_block producer in
       Some block
   | false -> None

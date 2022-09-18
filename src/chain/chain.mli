@@ -11,6 +11,7 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
+      applied : Block.t Block_hash.Map.t;
     }
 
 type t = chain
@@ -18,6 +19,7 @@ type t = chain
 type action = private
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
+  | Chain_send of { to_ : Key_hash.t; content : Message.Content.t }
 
 val make :
   identity:Identity.t ->

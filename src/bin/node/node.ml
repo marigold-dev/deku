@@ -68,6 +68,9 @@ and handle_chain_action node ~chain_action =
   | Chain_broadcast { content } ->
       let fragment = Gossip.broadcast ~content in
       handle_gossip_fragment node ~fragment
+  | Chain_send { to_; content } ->
+      let fragment = Gossip.send ~to_ ~content in
+      handle_gossip_fragment node ~fragment
 
 and on_gossip_outcome node ~current ~outcome =
   let gossip, action =
@@ -88,6 +91,10 @@ and handle_gossip_action node ~current ~gossip_action =
         Network.broadcast ~raw_expected_hash ~raw_content node.network
       in
       on_message node ~current ~message
+  | Gossip_send { to_; raw_message } ->
+      let (Raw_message { hash; raw_content }) = raw_message in
+      let raw_expected_hash = Message_hash.to_b58 hash in
+      Network.send ~to_ ~raw_expected_hash ~raw_content node.network
   | Gossip_fragment { fragment } -> handle_gossip_fragment node ~fragment
 
 and handle_gossip_fragment node ~fragment =
@@ -135,8 +142,10 @@ let test () =
   let node, promise = make ~pool ~identity ~validators in
   let (Chain { consensus; _ }) = node.chain in
   let block =
-    let (Consensus.Consensus { state; _ }) = consensus in
-    let (State { current_level; current_block; _ }) = state in
+    let (Consensus { current_block; _ }) = consensus in
+    let (Block { hash = current_block; level = current_level; _ }) =
+      current_block
+    in
     let level = Level.next current_level in
     let previous = current_block in
     let operations = [] in
@@ -154,9 +163,9 @@ let test () =
   in
 
   let () =
-    let signature = Block.sign ~identity block in
+    let vote = Block.sign ~identity block in
     let _message, raw_message =
-      Message.encode ~content:(Message.Content.signature signature)
+      Message.encode ~content:(Message.Content.vote vote)
     in
     let (Raw_message { hash; raw_content }) = raw_message in
     let raw_expected_hash = Message_hash.to_b58 hash in
