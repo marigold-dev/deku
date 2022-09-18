@@ -30,4 +30,8 @@ let main () =
      Logs.set_reporter (Logs_fmt.reporter ())
 
    let () = setup_log Logs.Debug *)
+let () =
+  Lwt.async_exception_hook :=
+    fun exn -> Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
+
 let () = Lwt_main.run (main ())
