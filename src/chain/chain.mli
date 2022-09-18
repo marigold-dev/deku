@@ -8,6 +8,7 @@ open Deku_gossip
 type chain = private
   | Chain of {
       pool : Parallel.Pool.t;
+      gossip : Gossip.t;
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
@@ -15,11 +16,18 @@ type chain = private
     }
 
 type t = chain
+type fragment
+type outcome
 
 type action = private
   | Chain_trigger_timeout
-  | Chain_broadcast of { content : Message.Content.t }
-  | Chain_send of { to_ : Key_hash.t; content : Message.Content.t }
+  | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
+  | Chain_send of {
+      to_ : Key_hash.t;
+      raw_expected_hash : string;
+      raw_content : string;
+    }
+  | Chain_fragment of { fragment : fragment }
 
 val make :
   identity:Identity.t ->
@@ -27,15 +35,22 @@ val make :
   pool:Parallel.Pool.t ->
   chain
 
-val incoming_message :
-  current:Timestamp.t ->
-  content:Message.Content.t ->
+val incoming :
+  raw_expected_hash:string ->
+  raw_content:string ->
   chain ->
-  chain * action list
-(** [incoming ~current ~message chain] *)
+  chain * fragment option
+(** [incoming ~raw_expected_hash ~raw_content chain] *)
 
-val incoming_timeout : current:Timestamp.t -> chain -> chain * action list
+val timeout : current:Timestamp.t -> chain -> fragment option
 (** [incoming_timeout ~current chain] *)
+
+val apply :
+  current:Timestamp.t -> outcome:outcome -> chain -> chain * action list
+(** [apply ~current ~outcome chain ]*)
+
+val compute : fragment -> outcome
+(** [compute fragment] Can be executed in parallel *)
 
 (* TODO: remove this in the future *)
 val test : unit -> unit
