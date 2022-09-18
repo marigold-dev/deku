@@ -22,7 +22,8 @@ const transition = (tx: transaction) => {
     // op_hash / tx_hash => BLAKE2B => resolved as string
     // operation => any
     const source = tx.source;
-    const operation: operations = tx.operation;
+    const op: string = tx.operation;
+    const operation = JSON.parse(op);
     const sourceValue = JSON.parse(get(source));
     let cookieBaker: cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
