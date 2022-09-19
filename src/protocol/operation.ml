@@ -12,6 +12,7 @@ and operation =
   | Operation of {
       (* TODO: I don't like that operation carries signature *)
       key : Key.t;
+      (* TODO: should we use verified signatures here and elsewhere? *)
       signature : Signature.t;
       hash : Operation_hash.t;
       level : Level.t;
