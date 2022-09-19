@@ -87,6 +87,7 @@ in
       description = "Deku node";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
+      path = [ pkgs.nodejs-16_x ];
       environment = {
         DEKU_BOOTSTRAP_KEY = "${cfg.boostrapKeyPath}";
         DEKU_DATABASE_URI = "sqlite3://${cfg.databaseUri}";
@@ -121,7 +122,7 @@ in
         RestrictNamespaces = "yes";
         RestrictRealtime = "yes";
         RestrictSUIDSGID = "yes";
-        MemoryDenyWriteExecute = "yes";
+        MemoryDenyWriteExecute = "no";
         LockPersonality = "yes";
       };
     };
