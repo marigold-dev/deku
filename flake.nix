@@ -67,6 +67,10 @@
             type = "app";
             program = "${deku}/bin/deku-benchmark";
           };
+          generate-identity = {
+            type = "app";
+            program = "${deku}/bin/deku-generate-identity";
+          };
         };
         devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; };
         nixosModules = {
