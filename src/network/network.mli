@@ -32,3 +32,4 @@ val respond :
   unit
 
 val not_found : id:Request_id.t -> network -> unit
+val notify_api : block:Deku_consensus.Block.t -> Uri.t -> unit
