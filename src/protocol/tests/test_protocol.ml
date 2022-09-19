@@ -22,7 +22,7 @@ let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
   let nonce = Nonce.of_n (N.of_z (Z.of_int nonce) |> Option.get) in
   let amount = Amount.of_n (N.of_z (Z.of_int amount) |> Option.get) in
   let operation =
-    Operation.transaction ~identity:alice ~level ~nonce
+    Operation.ticket_transfer ~identity:alice ~level ~nonce
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
       ~amount
   in

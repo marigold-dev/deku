@@ -157,6 +157,7 @@ let listen node ~port ~tezos_interop =
 let _test () =
   let open Deku_concepts in
   let open Deku_crypto in
+  let open Deku_external_vm in
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
   let identity = Identity.make secret in
@@ -170,7 +171,10 @@ let _test () =
     [ uri ]
   in
   let pool = Parallel.Pool.make ~domains:8 in
-  let chain = Chain.make ~identity ~validators ~default_block_size:0 in
+  let chain =
+    Chain.make ~identity ~validators ~default_block_size:0
+      ~vm_state:External_vm_protocol.State.empty
+  in
   let dump _chain = () in
   let node, promise = make ~pool ~dump ~chain ~nodes ~indexer:None () in
   let (Chain { consensus; _ }) = node.chain in

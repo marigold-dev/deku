@@ -39,7 +39,7 @@ module Zero_ops = struct
     in
     let nonce = Nonce.of_n N.zero in
     let amount = Amount.of_n N.zero in
-    Operation.transaction ~identity ~level ~nonce ~receiver ~amount
+    Operation.ticket_transfer ~identity ~level ~nonce ~receiver ~amount
 
   let payload_of_operations operations =
     (* TODO: this likely should not be here *)

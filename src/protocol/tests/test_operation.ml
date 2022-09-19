@@ -16,7 +16,7 @@ let bob =
 
 let test_serde_transaction () =
   let transaction =
-    Operation.transaction ~identity:alice ~level:Level.zero
+    Operation.ticket_transfer ~identity:alice ~level:Level.zero
       ~nonce:(Nonce.of_n N.one)
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
       ~amount:Amount.zero

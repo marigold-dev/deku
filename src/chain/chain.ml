@@ -31,10 +31,10 @@ type action =
   | Chain_fragment of { fragment : fragment [@opaque] }
 [@@deriving show]
 
-let make ~identity ~validators ~default_block_size =
+let make ~identity ~validators ~default_block_size ~vm_state =
   let gossip = Gossip.empty in
   let validators = Validators.of_key_hash_list validators in
-  let protocol = Protocol.initial in
+  let protocol = Protocol.initial_with_vm_state ~vm_state in
   let consensus = Consensus.make ~identity ~validators in
   let producer = Producer.make ~identity ~default_block_size in
   let applied = Block_hash.Map.empty in
@@ -229,7 +229,10 @@ let test () =
     [ key_hash ]
   in
 
-  let chain = make ~identity ~validators ~default_block_size:0 in
+  let chain =
+    make ~identity ~validators ~default_block_size:0
+      ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
+  in
   let (Chain { consensus; _ }) = chain in
   let block =
     let (Consensus { current_block; _ }) = consensus in
