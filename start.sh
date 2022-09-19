@@ -22,8 +22,9 @@ for N in 0 1 2 3; do
     --port "444$N" \
     --database-uri "sqlite3:./chain/data/$N/database.db" \
     --data-folder "./chain/data/$N" |&
-    awk -v n=$N '{ print "node " n ": " $0}' &
+      awk -v n=$N '{ print "node " n ": " $0}' &
   sleep 0.1
+  unset DEKU_API_URI
 done
 
 # Only starting one API
