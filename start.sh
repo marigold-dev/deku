@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+rm chain/data/*/database.db
+rm /tmp/database.db
 
 dune build
 
@@ -22,8 +24,9 @@ for N in 0 1 2 3; do
   _build/install/default/bin/deku-node \
     --port "444$N" \
     --database-uri "sqlite3:./chain/data/$N/database.db" |&
-    awk -v n=$N '{ print "node " n ": " $0}' &
+      awk -v n=$N '{ print "node " n ": " $0}' &
   sleep 0.1
+  unset DEKU_API_URI
 done
 
 # Only starting one API
