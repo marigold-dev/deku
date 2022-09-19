@@ -1,0 +1,19 @@
+{
+  "name": "deku-sdk",
+  "main": "lib/interop.js",
+  "scripts": {
+    "build": "tsc src/interop.ts --lib es6 --outDir lib/",
+    "dev": "tsc --project . -w --outDir lib/",
+    "postinstall": "tsc --project . --outDir lib/",
+    "lint": "eslint --ext .ts src/"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.29",
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.14.0"
+  },
+  "peerDependencies": {
+    "typescript": "^4.6.3"
+  }
+}
