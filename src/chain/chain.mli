@@ -29,7 +29,10 @@ val make :
   chain
 
 val incoming_message :
-  current:Timestamp.t -> message:Message.t -> chain -> chain * action list
+  current:Timestamp.t ->
+  content:Message.Content.t ->
+  chain ->
+  chain * action list
 (** [incoming ~current ~message chain] *)
 
 val incoming_timeout : current:Timestamp.t -> chain -> chain * action list
@@ -38,3 +41,6 @@ val incoming_timeout : current:Timestamp.t -> chain -> chain * action list
 val incoming_tezos_operation :
   tezos_operation:Tezos_operation.t -> chain -> chain * action list
 (** [incoming_tezos_operation ~tezos_operation chain] *)
+
+(* TODO: remove this in the future *)
+val test : unit -> unit

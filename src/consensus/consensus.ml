@@ -67,7 +67,7 @@ and with_accepted_block ~current ~block consensus =
 
 and incoming_block ~current ~block consensus =
   let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let block_pool = Block_pool.append_block block block_pool in
+  let block_pool = Block_pool.append_block ~current block block_pool in
   let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
 
   let consensus, actions =
@@ -93,7 +93,7 @@ and incoming_block ~current ~block consensus =
 
 let incoming_signature ~current ~signature consensus =
   let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let block_pool = Block_pool.append_signature signature block_pool in
+  let block_pool = Block_pool.append_signature ~current signature block_pool in
   let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
 
   let block_hash = Verified_signature.signed_hash signature in

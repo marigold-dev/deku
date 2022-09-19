@@ -78,8 +78,8 @@ let main params =
   Parallel.Pool.run pool (fun () ->
       let node, promise =
         Node.make ~pool ~identity ~validators ~nodes:validator_uris
-          ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer
-          ~default_block_size
+          ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer:(Some indexer)
+          ~default_block_size ()
       in
       Node.listen node ~port ~tezos_interop;
       promise)

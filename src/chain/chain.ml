@@ -112,9 +112,8 @@ let incoming_tezos_operation ~tezos_operation chain =
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
   (Chain { pool; protocol; consensus; producer }, [])
 
-let incoming_message ~current ~message chain =
-  let open Message in
-  let (Message { hash = _; content }) = message in
+let incoming_message ~current ~content chain =
+  let open Message.Content in
   match content with
   | Content_block block -> incoming_block ~current ~block chain
   | Content_signature signature -> incoming_signature ~current ~signature chain
@@ -143,3 +142,64 @@ let incoming_timeout ~current chain =
     | None -> []
   in
   (chain, actions)
+
+let test () =
+  let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
+
+  let open Deku_crypto in
+  let secret = Ed25519.Secret.generate () in
+  let secret = Secret.Ed25519 secret in
+  let identity = Identity.make secret in
+  let validators =
+    let key = Key.of_secret secret in
+    let key_hash = Key_hash.of_key key in
+    [ key_hash ]
+  in
+  let pool = Parallel.Pool.make ~domains:8 in
+
+  let chain =
+    make ~identity ~validators ~pool ~bootstrap_key:(Identity.key identity)
+      ~default_block_size:0
+  in
+  let (Chain { consensus; _ }) = chain in
+  let block =
+    let (Consensus.Consensus { state; _ }) = consensus in
+    let (State { current_level; current_block; _ }) = state in
+    let level = Level.next current_level in
+    let previous = current_block in
+    let operations = [] in
+    let tezos_operations = [] in
+    let block =
+      Block.produce ~parallel_map:List.map ~identity ~level ~previous
+        ~operations ~tezos_operations
+    in
+    block
+  in
+
+  let chain, actions = incoming_block ~current:(get_current ()) ~block chain in
+  assert (actions = []);
+
+  let signature = Block.sign ~identity block in
+  let chain, actions =
+    incoming_signature ~current:(get_current ()) ~signature chain
+  in
+  assert (actions <> []);
+
+  let rec loop chain actions =
+    let current = get_current () in
+    let chain, actions =
+      List.fold_left
+        (fun (chain, actions) action ->
+          let chain, additional_actions =
+            match action with
+            | Chain_trigger_timeout -> incoming_timeout ~current chain
+            | Chain_broadcast { content } ->
+                incoming_message ~current ~content chain
+            | Chain_save_block _ -> (chain, [])
+          in
+          (chain, actions @ additional_actions))
+        (chain, []) actions
+    in
+    loop chain actions
+  in
+  loop chain actions
