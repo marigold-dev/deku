@@ -14,3 +14,5 @@ val to_z : nat -> Z.t
 val ( + ) : nat -> nat -> nat
 val ( - ) : nat -> nat -> nat option
 val ( < ) : nat -> nat -> bool
+
+module Map : Map.S with type key = nat

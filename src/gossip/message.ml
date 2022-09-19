@@ -1,5 +1,4 @@
 module Content = struct
-  open Deku_crypto
   open Deku_concepts
   open Deku_protocol
   open Deku_consensus
@@ -8,15 +7,12 @@ module Content = struct
     | Content_block of Block.t
     | Content_vote of Verified_signature.t
     | Content_operation of Operation.t
-    (* TODO: this allows DDoS *)
-    | Content_request_block of { to_ : Key_hash.t; hash : Block_hash.t }
 
   and t = content [@@deriving yojson]
 
   let block block = Content_block block
   let vote vote = Content_vote vote
   let operation operation = Content_operation operation
-  let request_block ~to_ ~hash = Content_request_block { to_; hash }
 end
 
 type message = Message of { hash : Message_hash.t; content : Content.t }

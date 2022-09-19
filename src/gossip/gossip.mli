@@ -1,5 +1,3 @@
-open Deku_crypto
-
 type gossip
 type t = gossip
 type fragment
@@ -10,36 +8,35 @@ type action = private
       message : Message.t;
       raw_message : Message.raw;
     }
-  | Gossip_send of { to_ : Key_hash.t; raw_message : Message.raw }
+  | Gossip_send_request of { raw_request : Request.raw }
+  | Gossip_incoming_request of { id : Request_id.t; request : Request.t }
+  | Gossip_send_response of { id : Request_id.t; raw_response : Response.raw }
+  | Gossip_incoming_response of { response : Response.t }
   | Gossip_fragment of { fragment : fragment }
 
-(* TODO: Timestamp.t *)
-type timestamp = float
-
 val empty : gossip
+val broadcast_message : content:Message.Content.t -> fragment
 
-val incoming :
+val incoming_message :
   raw_expected_hash:string ->
   raw_content:string ->
   gossip ->
   gossip * fragment option
-(** [incoming ~raw_expected_hash ~raw_content gossip] *)
 
-val send : to_:Key_hash.t -> content:Message.Content.t -> fragment
-(** [send ~content gossip] *)
+val send_request : content:Request.Content.t -> fragment
 
-val broadcast : content:Message.Content.t -> fragment
-(** [broadcast ~content gossip] *)
+val incoming_request :
+  id:Request_id.t ->
+  raw_expected_hash:string ->
+  raw_content:string ->
+  fragment option
 
-val apply :
-  current:timestamp -> outcome:outcome -> gossip -> gossip * action option
-(** [apply ~compute gossip] *)
+val send_response : id:Request_id.t -> content:Response.Content.t -> fragment
+
+val incoming_response :
+  raw_expected_hash:string -> raw_content:string -> fragment option
+
+val apply : outcome:outcome -> gossip -> gossip * action option
 
 val compute : fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
-
-(* TODO: this is weird *)
-val clean : current:timestamp -> gossip -> gossip
-
-(* TODO: remove this *)
-val test : unit -> unit

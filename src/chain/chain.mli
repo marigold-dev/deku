@@ -22,8 +22,9 @@ type outcome
 type action = private
   | Chain_trigger_timeout
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
-  | Chain_send of {
-      to_ : Key_hash.t;
+  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
+  | Chain_send_response of {
+      id : Request_id.t;
       raw_expected_hash : string;
       raw_content : string;
     }
@@ -41,6 +42,21 @@ val incoming :
   chain ->
   chain * fragment option
 (** [incoming ~raw_expected_hash ~raw_content chain] *)
+
+val request :
+  id:Request_id.t ->
+  raw_expected_hash:string ->
+  raw_content:string ->
+  chain ->
+  chain * fragment option
+(** [request ~id ~raw_expected_hash ~raw_content chain] *)
+
+val response :
+  raw_expected_hash:string ->
+  raw_content:string ->
+  chain ->
+  chain * fragment option
+(** [response ~id ~raw_expected_hash ~raw_content chain] *)
 
 val timeout : current:Timestamp.t -> chain -> fragment option
 (** [incoming_timeout ~current chain] *)

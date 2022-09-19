@@ -69,16 +69,15 @@ let bootstrap ~size =
     let () = Format.eprintf "producer: %ld\n%!" index in
     List.nth identities (Int32.to_int index)
   in
-  let validators =
+  let validators, nodes =
     let storage = List.nth storages 0 in
-    storage.Storage.validators
+    List.split storage.Storage.validators
   in
   let consensus =
-    let validators = List.map fst validators in
     let validators = Validators.of_key_hash_list validators in
     Consensus.make ~identity:producer ~validators
   in
-  let network = Network.connect ~nodes:validators in
+  let network = Network.connect ~nodes in
   (* TODO: this is lame, but I'm lazy *)
   let%await () = Lwt_unix.sleep sleep_time in
   let () = restart ~producer identities consensus network in

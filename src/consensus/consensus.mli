@@ -1,4 +1,3 @@
-open Deku_crypto
 open Deku_concepts
 
 type action = private
@@ -8,7 +7,7 @@ type action = private
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
   | Consensus_broadcast_vote of { vote : Verified_signature.t }
-  | Consensus_request_block of { self : Key_hash.t; hash : Block_hash.t }
+  | Consensus_request_block of { hash : Block_hash.t }
 
 type consensus = private
   | Consensus of {

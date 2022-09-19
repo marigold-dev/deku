@@ -24,3 +24,9 @@ let to_z x = x
 let ( + ) a b = a + b
 let ( - ) a b = check (a - b)
 let ( < ) a b = a < b
+
+module Map = Map.Make (struct
+  type t = nat
+
+  let compare = compare
+end)

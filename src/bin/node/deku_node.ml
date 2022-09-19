@@ -18,9 +18,11 @@ let main () =
   let pool = Parallel.Pool.make ~domains in
   let%await storage = Storage.read ~file:!storage in
   let Storage.{ secret; validators } = storage in
+  (* TODO: this is a hack *)
+  let validators, nodes = List.split validators in
   let identity = Identity.make secret in
   Parallel.Pool.run pool (fun () ->
-      let node, promise = Node.make ~pool ~identity ~validators in
+      let node, promise = Node.make ~pool ~identity ~validators ~nodes in
       Node.listen node ~port:!port;
       promise)
 
@@ -30,8 +32,14 @@ let main () =
      Logs.set_reporter (Logs_fmt.reporter ())
 
    let () = setup_log Logs.Debug *)
+
+(* handle external failures *)
 let () =
   Lwt.async_exception_hook :=
     fun exn -> Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
+
+let () =
+  Sys.set_signal Sys.sigpipe
+    (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
 
 let () = Lwt_main.run (main ())

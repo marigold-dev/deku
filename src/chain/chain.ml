@@ -1,5 +1,4 @@
 open Deku_stdlib
-open Deku_crypto
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
@@ -22,8 +21,9 @@ type outcome = Gossip.outcome
 type action =
   | Chain_trigger_timeout
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
-  | Chain_send of {
-      to_ : Key_hash.t;
+  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
+  | Chain_send_response of {
+      id : Request_id.t;
       raw_expected_hash : string;
       raw_content : string;
     }
@@ -65,12 +65,12 @@ let rec apply_consensus_action chain consensus_action =
       | false -> (chain, None))
   | Consensus_broadcast_vote { vote } ->
       let content = Message.Content.vote vote in
-      let fragment = Gossip.broadcast ~content in
+      let fragment = Gossip.broadcast_message ~content in
       let fragment = Chain_fragment { fragment } in
       (chain, Some fragment)
-  | Consensus_request_block { self; hash } ->
-      let content = Message.Content.request_block ~to_:self ~hash in
-      let fragment = Gossip.broadcast ~content in
+  | Consensus_request_block { hash } ->
+      let content = Request.Content.block hash in
+      let fragment = Gossip.send_request ~content in
       let fragment = Chain_fragment { fragment } in
       (chain, Some fragment)
 
@@ -103,17 +103,6 @@ let incoming_operation ~operation chain =
   let chain = Chain { chain with producer } in
   (chain, [])
 
-let incoming_request_block ~to_ ~hash chain =
-  let (Chain { applied; _ }) = chain in
-  match Block_hash.Map.find_opt hash applied with
-  | Some block ->
-      (* TODO: this is very inneficient as it serializes the block many times *)
-      let content = Message.Content.block block in
-      let fragment = Gossip.send ~to_ ~content in
-      let fragment = Chain_fragment { fragment } in
-      (chain, [ fragment ])
-  | None -> (chain, [])
-
 let incoming_message ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
@@ -121,13 +110,32 @@ let incoming_message ~current ~message chain =
   | Content_block block -> incoming_block ~current ~block chain
   | Content_vote vote -> incoming_vote ~current ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
-  | Content_request_block { to_; hash } ->
-      incoming_request_block ~to_ ~hash chain
+
+let incoming_request ~id ~request chain =
+  let open Request in
+  let (Chain { applied; _ }) = chain in
+  let (Request { hash = _; content }) = request in
+  match content with
+  | Content_block hash ->
+      let content =
+        match Block_hash.Map.find_opt hash applied with
+        | Some block -> Response.Content.block block
+        | None -> Response.Content.none
+      in
+      let fragment = Gossip.send_response ~id ~content in
+      let fragment = Chain_fragment { fragment } in
+      (chain, [ fragment ])
+
+let incoming_response ~current ~response chain =
+  let open Response in
+  let (Response { hash = _; content }) = response in
+  match content with
+  | Content_none -> (chain, [])
+  | Content_block block -> incoming_block ~current ~block chain
 
 let apply_gossip_action ~current ~gossip_action chain =
-  let open Gossip in
   match gossip_action with
-  | Gossip_apply_and_broadcast { message; raw_message } ->
+  | Gossip.Gossip_apply_and_broadcast { message; raw_message } ->
       let chain, actions = incoming_message ~current ~message chain in
       let broadcast =
         let (Raw_message { hash; raw_content }) = raw_message in
@@ -136,12 +144,21 @@ let apply_gossip_action ~current ~gossip_action chain =
       in
       let actions = broadcast :: actions in
       (chain, actions)
-  | Gossip_send { to_; raw_message } ->
-      let (Raw_message { hash; raw_content }) = raw_message in
-      let raw_expected_hash = Message_hash.to_b58 hash in
-      let send = Chain_send { to_; raw_expected_hash; raw_content } in
+  | Gossip.Gossip_send_request { raw_request } ->
+      let (Raw_request { hash; raw_content }) = raw_request in
+      let raw_expected_hash = Request_hash.to_b58 hash in
+      let send = Chain_send_request { raw_expected_hash; raw_content } in
       (chain, [ send ])
-  | Gossip_fragment { fragment } ->
+  | Gossip.Gossip_incoming_request { id; request } ->
+      incoming_request ~id ~request chain
+  | Gossip.Gossip_send_response { id; raw_response } ->
+      let (Raw_response { hash; raw_content }) = raw_response in
+      let raw_expected_hash = Response_hash.to_b58 hash in
+      let send = Chain_send_response { id; raw_expected_hash; raw_content } in
+      (chain, [ send ])
+  | Gossip.Gossip_incoming_response { response } ->
+      incoming_response ~current ~response chain
+  | Gossip.Gossip_fragment { fragment } ->
       let fragment = Chain_fragment { fragment } in
       (chain, [ fragment ])
 
@@ -149,9 +166,17 @@ let apply_gossip_action ~current ~gossip_action chain =
 let incoming ~raw_expected_hash ~raw_content chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip, fragment =
-    Gossip.incoming ~raw_expected_hash ~raw_content gossip
+    Gossip.incoming_message ~raw_expected_hash ~raw_content gossip
   in
   let chain = Chain { chain with gossip } in
+  (chain, fragment)
+
+let request ~id ~raw_expected_hash ~raw_content chain =
+  let fragment = Gossip.incoming_request ~id ~raw_expected_hash ~raw_content in
+  (chain, fragment)
+
+let response ~raw_expected_hash ~raw_content chain =
+  let fragment = Gossip.incoming_response ~raw_expected_hash ~raw_content in
   (chain, fragment)
 
 let timeout ~current chain =
@@ -160,7 +185,7 @@ let timeout ~current chain =
     match Producer.produce ~current ~consensus producer with
     | Some block ->
         let content = Message.Content.block block in
-        let fragment = Gossip.broadcast ~content in
+        let fragment = Gossip.broadcast_message ~content in
         Some fragment
     | None -> None
   in
@@ -168,9 +193,7 @@ let timeout ~current chain =
 
 let apply ~current ~outcome chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
-  let gossip, gossip_action =
-    Gossip.apply ~current:(Timestamp.to_float current) ~outcome gossip
-  in
+  let gossip, gossip_action = Gossip.apply ~outcome gossip in
   let chain = Chain { chain with gossip } in
   match gossip_action with
   | Some gossip_action -> apply_gossip_action ~current ~gossip_action chain
@@ -231,10 +254,34 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_broadcast { raw_expected_hash; raw_content }
-            | Chain_send { to_ = _; raw_expected_hash; raw_content } ->
+            | Chain_broadcast { raw_expected_hash; raw_content } ->
                 let chain, fragment =
                   incoming ~raw_expected_hash ~raw_content chain
+                in
+                let actions =
+                  match fragment with
+                  | Some fragment ->
+                      let fragment = Chain_fragment { fragment } in
+                      [ fragment ]
+                  | None -> []
+                in
+                (chain, actions)
+            | Chain_send_request { raw_expected_hash; raw_content } ->
+                let id = Request_id.initial in
+                let chain, fragment =
+                  request ~id ~raw_expected_hash ~raw_content chain
+                in
+                let actions =
+                  match fragment with
+                  | Some fragment ->
+                      let fragment = Chain_fragment { fragment } in
+                      [ fragment ]
+                  | None -> []
+                in
+                (chain, actions)
+            | Chain_send_response { id = _; raw_expected_hash; raw_content } ->
+                let chain, fragment =
+                  response ~raw_expected_hash ~raw_content chain
                 in
                 let actions =
                   match fragment with
