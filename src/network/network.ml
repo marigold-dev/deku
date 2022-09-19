@@ -1,5 +1,5 @@
 open Deku_stdlib
-open Piaf
+open Piaf_lwt
 
 type network = Network of { clients : (Uri.t * Client.t option ref) list }
 type t = network
@@ -38,7 +38,7 @@ let with_raw_content Server.{ ctx = raw_expected_hash; request } next =
 let dispatch on_message
     Server.{ ctx = raw_expected_hash, raw_content; request = _ } =
   let () = on_message ~raw_expected_hash ~raw_content in
-  let response = Piaf.Response.of_string ~body:"OK" `OK in
+  let response = Piaf_lwt.Response.of_string ~body:"OK" `OK in
   Lwt.return response
 
 let handler on_message context =
