@@ -5,6 +5,7 @@ open Deku_crypto
 open Deku_indexer
 open Deku_storage
 open Deku_chain
+open Deku_external_vm
 include Node
 
 let make_dump_loop ~pool ~folder ~chain =
@@ -60,6 +61,8 @@ type params = {
   tezos_discovery_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
       (** The address of the discovery contract on Tezos. *)
+  named_pipe_path : string; [@default "deku_vm"]
+      (** Named pipe path to use for IPC with the VM *)
 }
 [@@deriving cmdliner]
 
@@ -82,12 +85,10 @@ let main params =
     tezos_secret;
     tezos_consensus_address;
     tezos_discovery_address;
+    named_pipe_path;
   } =
     params
   in
-  (* TODO: one problem of loading from disk like this, is that there
-           may be pending actions such as fragments being processed *)
-  let%await chain = Storage.Chain.read ~folder:data_folder in
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
@@ -100,13 +101,24 @@ let main params =
       ~required_confirmations:tezos_required_confirmations
   in
   let pool = Parallel.Pool.make ~domains in
+  (* The VM must be started before the node because this call is blocking  *)
+  let () = External_vm_client.start_vm_ipc ~named_pipe_path in
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
+  (* TODO: one problem of loading from disk like this, is that there
+          may be pending actions such as fragments being processed *)
+  let%await chain = Storage.Chain.read ~folder:data_folder in
   let chain =
     match chain with
-    | Some chain -> chain
-    | None -> Chain.make ~identity ~validators ~default_block_size
+    | Some chain ->
+        let (Chain { protocol; _ }) = chain in
+        let (Protocol { vm_state; _ }) = protocol in
+        External_vm_client.set_initial_state vm_state;
+        chain
+    | None ->
+        let vm_state = External_vm_client.get_initial_state () in
+        Chain.make ~vm_state ~identity ~validators ~default_block_size
   in
   let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
   let node, promise =
