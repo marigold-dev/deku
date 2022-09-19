@@ -1,5 +1,4 @@
 open Deku_stdlib
-open Deku_crypto
 open Deku_consensus
 open Deku_gossip
 open Deku_network
@@ -14,9 +13,8 @@ let restart network =
   let raw_expected_hash = Message_hash.to_b58 hash in
   Network.broadcast ~raw_expected_hash ~raw_content network
 
-let bootstrap validators validator_uris =
-  let validators = List.map2 (fun a b -> (a, b)) validators validator_uris in
-  let network = Network.connect ~nodes:validators in
+let bootstrap validator_uris =
+  let network = Network.connect ~nodes:validator_uris in
   (* TODO: remove this sleep *)
   let%await () = Lwt_unix.sleep 3.0 in
   let () = restart network in
@@ -47,33 +45,11 @@ let uri =
   let open Arg in
   conv (parser, printer)
 
-let key_hash =
-  let parser key_hash =
-    match Key_hash.of_b58 key_hash with
-    | Some key_hash -> Ok key_hash
-    | None ->
-        Error (`Msg (Format.sprintf "Unable to parse key hash '%s'" key_hash))
-  in
-  let printer ppf key_hash =
-    Format.fprintf ppf "%s" (key_hash |> Key_hash.to_b58)
-  in
-  let open Arg in
-  conv (parser, printer)
-
 let info =
   let doc = "Shows identity key and address of the node." in
   Cmd.info "deku-bootstrap" ~version:"%\226\128\140%VERSION%%" ~doc ~man ~exits
 
 let term =
-  let validators =
-    let open Arg in
-    let docv = "validators" in
-    let doc = "Comma-separated list of validator public key hashes" in
-    let env = Cmd.Env.info "DEKU_VALIDATORS" in
-    required
-    & opt (some (list key_hash)) None
-    & info [ "validators" ] ~doc ~docv ~env
-  in
   let validator_uris =
     let open Arg in
     let docv = "validator_uris" in
@@ -87,6 +63,6 @@ let term =
     & info [ "validator-uris" ] ~doc ~docv ~env
   in
   let open Term in
-  lwt_ret (const bootstrap $ validators $ validator_uris)
+  lwt_ret (const bootstrap $ validator_uris)
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term

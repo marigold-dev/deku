@@ -8,3 +8,5 @@ val next : level -> level
 val of_n : N.t -> level
 val to_n : level -> N.t
 val ( < ) : level -> level -> bool
+
+module Map : Map.S with type key = level

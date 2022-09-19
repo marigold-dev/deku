@@ -1,7 +1,7 @@
 open Deku_crypto
 
 type message_hash
-type t = message_hash [@@deriving eq, ord, yojson]
+type t = message_hash [@@deriving eq, ord, yojson, show]
 
 (* repr *)
 val to_blake2b : message_hash -> BLAKE2b.t

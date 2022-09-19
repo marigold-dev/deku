@@ -10,3 +10,5 @@ let next x = x + one
 let of_n n = n
 let to_n n = n
 let ( < ) = ( < )
+
+module Map = Map

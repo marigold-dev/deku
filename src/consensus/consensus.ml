@@ -11,7 +11,7 @@ type action =
   (* network *)
   | Consensus_broadcast_vote of { vote : Verified_signature.t }
   (* TODO: this is clearly hackish *)
-  | Consensus_request_block of { self : Key_hash.t; hash : Block_hash.t }
+  | Consensus_request_block of { hash : Block_hash.t }
 [@@deriving show]
 
 type consensus =
@@ -110,7 +110,7 @@ let rec incoming_block_or_vote ~current ~block consensus =
     | true -> accept_block ~hash consensus
     | false -> consensus
   in
-  let (Consensus { identity; current_block; block_pool; _ }) = consensus in
+  let (Consensus { current_block; block_pool; _ }) = consensus in
   let (Block { hash = current_block; level = current_level; _ }) =
     current_block
   in
@@ -134,15 +134,7 @@ let rec incoming_block_or_vote ~current ~block consensus =
                   (* TODO: ensure that previous.level = level - 1 *)
                   incoming_block_or_vote ~current ~block:previous consensus
               | None ->
-                  let () =
-                    let level = Level.to_n level in
-                    let level = N.to_z level in
-                    Format.eprintf "requesting: %a\n%!" Z.pp_print level
-                  in
-                  let self = Identity.key_hash identity in
-                  let action =
-                    Consensus_request_block { self; hash = previous }
-                  in
+                  let action = Consensus_request_block { hash = previous } in
                   (consensus, [ action ]))
           | false ->
               (* old block *)
