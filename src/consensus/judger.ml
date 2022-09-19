@@ -58,10 +58,10 @@ let is_signed ~validators ~block_pool block =
     (* TODO: O(1) cardinal *)
     let validators = Validators.cardinal validators in
     let validators = Float.of_int validators in
-    let required_signatures = Float.ceil (validators *. (2.0 /. 3.0)) in
+    let required_signatures = Float.floor (validators *. (2.0 /. 3.0)) +. 1.0 in
     Float.to_int required_signatures
   in
-  total_signatures > required_signatures
+  total_signatures >= required_signatures
 
 let is_accepted ~state ~block_pool block =
   let (State
