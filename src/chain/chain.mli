@@ -4,6 +4,7 @@ open Deku_concepts
 open Deku_protocol
 open Deku_consensus
 open Deku_gossip
+open Deku_external_vm
 
 type chain = private
   | Chain of {
@@ -27,6 +28,7 @@ val make :
   validators:Key_hash.t list ->
   pool:Parallel.Pool.t ->
   default_block_size:int ->
+  vm_state:External_vm_protocol.State.t ->
   chain
 
 val incoming_message :

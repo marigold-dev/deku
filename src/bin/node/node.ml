@@ -136,12 +136,13 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~chain_actions node
 
-let make ~pool ~identity ~validators ~nodes ~bootstrap_key ?(indexer = None)
-    ~default_block_size () =
+let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
+    ~default_block_size ~vm_state =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
   let chain =
     Chain.make ~identity ~validators ~pool ~bootstrap_key ~default_block_size
+      ~vm_state
   in
   let node =
     let trigger_timeout () = () in
@@ -175,7 +176,7 @@ let _test () =
   let node, promise =
     make ~pool ~identity ~validators ~nodes:[]
       ~bootstrap_key:(Identity.key identity) ~default_block_size:0 ~indexer:None
-      ()
+      ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =
