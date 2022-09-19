@@ -1,6 +1,6 @@
 (library
  (name deku_network)
- (libraries piaf deku_consensus)
+ (libraries piaf-lwt deku_consensus)
  (preprocess
   (pps
    ppx_let_binding

@@ -1,8 +1,13 @@
 {
   description = "Nix Flake";
 
+  nixConfig = {
+    extra-substituters = "https://anmonteiro.nix-cache.workers.dev";
+    extra-trusted-public-keys = "ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=";
+  };
+
   inputs = {
-    nixpkgs.url = "github:EduardoRFS/nix-overlays";
+    nixpkgs.url = "github:nix-ocaml/nix-overlays";
     flake-utils.url = "github:numtide/flake-utils";
     nix-filter.url = "github:numtide/nix-filter";
 
@@ -47,6 +52,27 @@
       in
       rec {
         packages = { default = deku; };
-        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
+        apps = {
+          node = {
+            type = "app";
+            program = "${deku}/bin/deku-node";
+          };
+          bootstrap = {
+            type = "app";
+            program = "${deku}/bin/deku-bootstrap";
+          };
+          benchmark = {
+            type = "app";
+            program = "${deku}/bin/deku-benchmark";
+          };
+          generate-identity = {
+            type = "app";
+            program = "${deku}/bin/deku-generate-identity";
+          };
+        };
+        devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; };
+        nixosModules = {
+          deku-node = import ./nix/service.nix { inherit deku; };
+        };
       });
 }

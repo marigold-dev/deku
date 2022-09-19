@@ -24,7 +24,7 @@ with ocamlPackages; buildDunePackage rec {
     mirage-crypto-ec
     mirage-crypto-rng
     secp256k1-internal
-    piaf
+    piaf-lwt
     domainslib
     cmdliner
     ppx_blob
@@ -39,4 +39,6 @@ with ocamlPackages; buildDunePackage rec {
   ++ checkInputs;
 
   checkInputs = [ alcotest ];
+
+  meta.mainProgram = "deku-node";
 }
