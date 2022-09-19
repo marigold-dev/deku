@@ -15,6 +15,7 @@ val of_key : Key.t -> t
 val encoding : t Data_encoding.t
 
 module Set : Set.S with type elt = key_hash
+module Map : Map.S with type key = key_hash
 
 val cmdliner_converter :
   (string -> [> `Ok of t | `Error of string ]) * (Format.formatter -> t -> unit)

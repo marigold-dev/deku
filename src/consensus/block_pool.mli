@@ -1,4 +1,5 @@
 open Deku_concepts
+open Deku_crypto
 
 type block_pool
 type t = block_pool
@@ -10,4 +11,4 @@ val find_block : block_hash:Block_hash.t -> block_pool -> Block.t option
 val find_next_blocks : block_previous:Block_hash.t -> block_pool -> Block.Set.t
 
 val find_signatures :
-  block_hash:Block_hash.t -> block_pool -> Verified_signature.Set.t
+  block_hash:Block_hash.t -> block_pool -> Verified_signature.t Key_hash.Map.t

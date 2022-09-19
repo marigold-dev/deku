@@ -1,15 +1,10 @@
 open Deku_consensus
 open Deku_concepts
 open Deku_stdlib
-open Deku_gossip
-
-type config = { save_messages : bool; save_blocks : bool }
+open Deku_network
 
 type indexer =
-  | Indexer of {
-      pool : (Caqti_lwt.connection, Caqti_error.t) Caqti_lwt.Pool.t;
-      config : config;
-    }
+  | Indexer of { pool : (Caqti_lwt.connection, Caqti_error.t) Caqti_lwt.Pool.t }
 
 type t = indexer
 
@@ -24,6 +19,7 @@ module Query = struct
     let (Block.Block { hash; level; _ }) = block in
     let hash = Block_hash.yojson_of_t hash |> Yojson.Safe.to_string in
     let block_json = Block.yojson_of_t block |> Yojson.Safe.to_string in
+    let timestamp = Timestamp.to_float timestamp in
     let level = Level.to_n level |> N.to_z |> Z.to_int64 in
     let params = (hash, level, timestamp, block_json) in
     let query =
@@ -36,19 +32,20 @@ module Query = struct
   let insert_block ~block ~timestamp pool =
     Caqti_lwt.Pool.use (insert_block block timestamp) pool
 
-  let insert_message message timestamp =
-    let (Message.Raw_message { hash; raw_content }) = message in
-    ignore (message, hash);
-    let hash = Message_hash.to_b58 hash in
-    let params = (hash, timestamp, raw_content) in
+  let insert_packet packet timestamp =
+    let (Packet.Packet { hash; _ }) = packet in
+    let hash = Packet_hash.yojson_of_t hash |> Yojson.Safe.to_string in
+    let packet_json = Packet.yojson_of_t packet |> Yojson.Safe.to_string in
+    let timestamp = Timestamp.to_float timestamp in
+    let params = (hash, timestamp, packet_json) in
     let query =
       (tup3 string float string ->. unit)
       @@ "insert into packets (hash, timestamp, packet) values (?, ?, ?)"
     in
     return_unit query params
 
-  let insert_message ~message ~timestamp pool =
-    Caqti_lwt.Pool.use (insert_message message timestamp) pool
+  let insert_packet ~packet ~timestamp pool =
+    Caqti_lwt.Pool.use (insert_packet packet timestamp) pool
 end
 
 let make_database ~uri =
@@ -82,37 +79,30 @@ let make_database ~uri =
   | Error err, _ -> failwith (Caqti_error.show err)
   | _, Error err -> failwith (Caqti_error.show err)
 
-let make ~uri ~config =
+let make ~uri =
   let%await () = make_database ~uri in
   match Caqti_lwt.connect_pool uri with
-  | Ok pool -> Lwt.return (Indexer { pool; config })
+  | Ok pool -> Lwt.return (Indexer { pool })
   | Error err -> failwith (Caqti_error.show err)
 
-let save_block ~block (Indexer { pool; config }) =
-  match config.save_blocks with
-  | true ->
-      let timestamp = Unix.gettimeofday () in
-      Lwt.async (fun () ->
-          let%await result = Query.insert_block ~block ~timestamp pool in
-          match result with
-          | Ok () ->
-              print_endline "block saved";
-              (*  TODO: replace with debug/trace log *)
-              Lwt.return_unit
-          | Error err ->
-              (* TODO: how do we want to handle this? *)
-              raise (Caqti_error.Exn err))
-  | false -> ()
+let save_block ~block ~timestamp (Indexer { pool }) =
+  Lwt.async (fun () ->
+      let%await result = Query.insert_block ~block ~timestamp pool in
+      match result with
+      | Ok () ->
+          print_endline "block saved";
+          (*  TODO: replace with debug/trace log *)
+          Lwt.return_unit
+      | Error err ->
+          (* TODO: how do we want to handle this? *)
+          raise (Caqti_error.Exn err))
 
-let save_message ~message (Indexer { pool; config }) =
-  match config.save_messages with
-  | true ->
-      Lwt.async (fun () ->
-          let timestamp = Unix.gettimeofday () in
-          let%await result = Query.insert_message ~message ~timestamp pool in
-          match result with
-          | Ok () -> Lwt.return_unit
-          | Error err ->
-              (* TODO: how do we want to handle this? *)
-              raise (Caqti_error.Exn err))
-  | false -> ()
+let save_packet ~packet ~timestamp (Indexer { pool }) =
+  Lwt.async (fun () ->
+      let packet = Yojson.Safe.from_string packet |> Packet.t_of_yojson in
+      let%await result = Query.insert_packet ~packet ~timestamp pool in
+      match result with
+      | Ok () -> Lwt.return_unit
+      | Error err ->
+          (* TODO: how do we want to handle this? *)
+          raise (Caqti_error.Exn err))

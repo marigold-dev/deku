@@ -9,6 +9,7 @@ module Uri = Uri_ext
 [%%let ("let.some" : 'a option -> ('a -> 'b option) -> 'b option)]
 
 module Parallel = Parallel
+module List = List_ext
 
 (* FIXME: not sure if this is the right thing to do.  *)
 module Yojson : sig

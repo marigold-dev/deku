@@ -1,117 +1,127 @@
-open Deku_stdlib
-open Deku_concepts
 open Deku_crypto
+open Deku_concepts
 open Block
-
-type action =
-  (* protocol *)
-  | Consensus_accepted_block of block
-  (* timer *)
-  | Consensus_trigger_timeout of { level : Level.t }
-  (* network *)
-  | Consensus_broadcast_signature of { signature : Verified_signature.t }
 
 type consensus =
   | Consensus of {
-      block_pool : Block_pool.t;
-      signer : Signer.t;
-      state : State.t;
       bootstrap_key : Key.t;
+      validators : Validators.t;
+      current_level : Level.t;
+      current_block : Block_hash.t;
+      last_block_author : Key_hash.t;
+      last_block_update : Timestamp.t option;
     }
 
 and t = consensus
 
-let make ~identity ~validators ~bootstrap_key =
-  let block_pool = Block_pool.empty in
-  let signer = Signer.make ~identity in
-  let state = State.genesis ~validators in
-  Consensus { block_pool; signer; state; bootstrap_key }
+let make ~validators ~bootstrap_key =
+  let (Block { hash; level; author; _ }) = Genesis.block in
 
-let rec incoming_block_or_signature ~current ~block consensus =
-  match
-    let (Consensus { block_pool; signer = _; state; bootstrap_key = _ }) =
-      consensus
-    in
-    Judger.is_accepted ~state ~block_pool block
-  with
-  | true -> with_accepted_block ~current ~block consensus
-  | false -> (consensus, [])
+  let current_block = hash in
+  let current_level = level in
+  let last_block_author = author in
+  let last_block_update = None in
+  Consensus
+    {
+      bootstrap_key;
+      validators;
+      current_level;
+      current_block;
+      last_block_author;
+      last_block_update;
+    }
 
-and with_accepted_block ~current ~block consensus =
-  let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let (Block { hash; level; _ }) = block in
-  let () =
-    let level = Level.to_n level in
-    let level = N.to_z level in
-    Format.eprintf "%a\n%!" Z.pp_print level
+let apply_block ~current ~block consensus =
+  let (Block { hash; level; author; _ }) = block in
+  let (Consensus
+        {
+          bootstrap_key;
+          validators;
+          current_level = _;
+          current_block = _;
+          last_block_author = _;
+          last_block_update = _;
+        }) =
+    consensus
   in
-  let state = State.apply_block ~current ~block state in
-  let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
 
-  let blocks = Block_pool.find_next_blocks ~block_previous:hash block_pool in
-  let consensus, actions =
-    Block.Set.fold
-      (fun block (consensus, actions) ->
-        let consensus, additional_actions =
-          incoming_block ~current ~block consensus
-        in
-        let actions = actions @ additional_actions in
-        (consensus, actions))
-      blocks (consensus, [])
-  in
-  let actions =
-    Consensus_trigger_timeout { level }
-    :: Consensus_accepted_block block :: actions
-  in
-  (consensus, actions)
+  let current_block = hash in
+  let current_level = level in
+  let last_block_author = author in
+  let last_block_update = Some current in
+  Consensus
+    {
+      bootstrap_key;
+      validators;
+      current_level;
+      current_block;
+      last_block_author;
+      last_block_update;
+    }
 
-and incoming_block ~current ~block consensus =
-  let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let block_pool = Block_pool.append_block block block_pool in
-  let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
-
-  let consensus, actions =
-    incoming_block_or_signature ~current ~block consensus
-  in
-  let actions =
-    (* FIXME: why are we doing this check twice? *)
-    match Judger.is_signable ~current ~state block with
-    | true -> (
-        let signature =
-          (* TODO: this will emit the same signature twice, isn't that bad? *)
-          match Judger.is_signable ~current ~state block with
-          | true -> Some (Signer.sign ~block signer)
-          | false -> None
-        in
-        match signature with
-        | Some signature ->
-            Consensus_broadcast_signature { signature } :: actions
-        | None -> actions)
-    | false -> actions
-  in
-  (consensus, actions)
-
-let incoming_signature ~current ~signature consensus =
-  let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
-  let block_pool = Block_pool.append_signature signature block_pool in
-  let consensus = Consensus { block_pool; signer; state; bootstrap_key } in
-
-  let block_hash = Verified_signature.signed_hash signature in
-  let block_hash = Block_hash.of_blake2b block_hash in
-  match Block_pool.find_block ~block_hash block_pool with
-  | Some block -> incoming_block_or_signature ~current ~block consensus
-  | None -> (consensus, [])
-
-let incoming_bootstrap_signal ~bootstrap_signal ~current consensus =
-  let (Consensus { block_pool; signer; state; bootstrap_key }) = consensus in
+let apply_bootstrap_signal ~bootstrap_signal ~current consensus =
   let (Bootstrap_signal.Bootstrap_signal
         { bootstrap_key = given_key; next_author; signature = _ }) =
     bootstrap_signal
   in
+  let (Consensus
+        {
+          bootstrap_key;
+          validators;
+          current_level;
+          current_block;
+          last_block_author = _;
+          last_block_update = _;
+        }) =
+    consensus
+  in
   match Key.equal bootstrap_key given_key with
-  | true -> (
-      match State.apply_bootstrap_signal ~current ~author:next_author state with
-      | Some state ->
-          Some (Consensus { block_pool; signer; state; bootstrap_key })
-      | None -> None)
+  | true ->
+      Some
+        (Consensus
+           {
+             bootstrap_key;
+             validators;
+             current_level;
+             current_block;
+             last_block_author = next_author;
+             last_block_update = Some current;
+           })
   | false -> None
+
+(* judging *)
+let is_expected_level ~current_level block =
+  let (Block { level; _ }) = block in
+  Level.(equal (next current_level) level)
+
+let is_expected_previous ~current_block block =
+  let (Block { previous; _ }) = block in
+  Block_hash.equal current_block previous
+
+let is_valid ~block consensus =
+  let (Consensus { current_level; current_block; _ }) = consensus in
+  is_expected_level ~current_level block
+  && is_expected_previous ~current_block block
+
+let expected_author ~current consensus =
+  let (Consensus
+        {
+          bootstrap_key = _;
+          validators;
+          current_level = _;
+          current_block = _;
+          last_block_author;
+          last_block_update;
+        }) =
+    consensus
+  in
+  match last_block_update with
+  | Some last_block_update ->
+      let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
+      Validators.skip ~after:last_block_author ~skip validators
+  | None -> None
+
+let is_expected_author ~current ~author consensus =
+  match expected_author ~current consensus with
+  | Some expected_author -> Key_hash.equal expected_author author
+  | None -> false

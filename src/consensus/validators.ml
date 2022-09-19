@@ -1,11 +1,12 @@
 open Deku_crypto
 
-type validators = Key_hash.Set.t
+type validators = { as_set : Key_hash.Set.t; as_list : Key_hash.t list }
 type t = validators
 
-let of_key_hash_list = Key_hash.Set.of_list
-let cardinal validators = Key_hash.Set.cardinal validators
-let mem key_hash validators = Key_hash.Set.mem key_hash validators
+let of_key_hash_list l = { as_set = Key_hash.Set.of_list l; as_list = l }
+let to_key_hash_list t = t.as_list
+let cardinal validators = Key_hash.Set.cardinal validators.as_set
+let mem key_hash validators = Key_hash.Set.mem key_hash validators.as_set
 
 let rec findi_opt n f l =
   match l with
@@ -18,7 +19,7 @@ let find_after_index ~after validators =
   findi_opt (fun validator -> Key_hash.equal validator after) validators
 
 let skip ~after ~skip validators =
-  let validators = Key_hash.Set.elements validators in
+  let validators = validators.as_list in
   let length = List.length validators in
   match find_after_index ~after validators with
   | Some n ->

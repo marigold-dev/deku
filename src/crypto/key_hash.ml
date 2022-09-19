@@ -49,6 +49,12 @@ module Set = Set.Make (struct
   let compare = compare
 end)
 
+module Map = Map.Make (struct
+  type t = key_hash
+
+  let compare = compare
+end)
+
 let encoding =
   let open Data_encoding in
   let name = "Signature.Public_key_hash" in

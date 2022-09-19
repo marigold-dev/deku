@@ -7,6 +7,7 @@ type block =
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
+      withdrawal_handles_hash : BLAKE2b.t;
       author : Key_hash.t;
       level : Level.t;
       previous : Block_hash.t;
@@ -46,6 +47,7 @@ module Repr = struct
     author : Key_hash.t;
     level : Level.t;
     previous : Block_hash.t;
+    withdrawal_handles_hash : Ledger.Withdrawal_handle.hash;
     payload : string list;
     tezos_operations : Tezos_operation.t list;
   }
@@ -57,18 +59,24 @@ module Repr = struct
       yojson_of_block block |> Yojson.Safe.to_string |> BLAKE2b.hash
     in
     let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
-    let withdrawal_handles_hash =
-      BLAKE2b.hash "FIXME: we need the withdraw handles hash"
-    in
     let block_hash =
       Block_hash.hash ~block_level:block.level ~block_payload_hash
-        ~state_root_hash ~withdrawal_handles_hash
+        ~state_root_hash ~withdrawal_handles_hash:block.withdrawal_handles_hash
     in
     (block_payload_hash, block_hash)
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
-    let { author; level; previous; payload; tezos_operations } = block in
+    let {
+      author;
+      level;
+      previous;
+      payload;
+      tezos_operations;
+      withdrawal_handles_hash;
+    } =
+      block
+    in
     (* TODO: serializing after deserializing *)
     let payload_hash, block_hash = hash block in
 
@@ -92,6 +100,7 @@ module Repr = struct
         payload;
         payload_hash;
         tezos_operations;
+        withdrawal_handles_hash;
       }
 
   let yojson_of_t block =
@@ -106,10 +115,20 @@ module Repr = struct
             payload;
             payload_hash = _;
             tezos_operations;
+            withdrawal_handles_hash;
           }) =
       block
     in
-    let block = { author; level; previous; payload; tezos_operations } in
+    let block =
+      {
+        author;
+        level;
+        previous;
+        payload;
+        tezos_operations;
+        withdrawal_handles_hash;
+      }
+    in
     yojson_of_block_and_signature { key; signature; block }
 end
 
@@ -125,11 +144,19 @@ let payload_of_operations ~parallel_map operations =
     operations
 
 let produce ~parallel_map ~identity ~level ~previous ~operations
-    ~tezos_operations =
+    ~tezos_operations ~withdrawal_handles_hash =
   let author = Identity.key_hash identity in
   let payload = payload_of_operations ~parallel_map operations in
   let payload_hash, block_hash =
-    Repr.hash { author; level; previous; payload; tezos_operations }
+    Repr.hash
+      {
+        author;
+        level;
+        previous;
+        payload;
+        tezos_operations;
+        withdrawal_handles_hash;
+      }
   in
   let key = Identity.key identity in
   let signature =
@@ -147,14 +174,16 @@ let produce ~parallel_map ~identity ~level ~previous ~operations
       payload;
       payload_hash;
       tezos_operations;
+      withdrawal_handles_hash;
     }
+
+let pp fmt (Block { hash; level; _ }) =
+  let hash = Block_hash.to_blake2b hash in
+  let open Deku_stdlib in
+  Format.fprintf fmt "Block [hash: %a, level: %a]" BLAKE2b.pp hash N.pp
+    (Level.to_n level)
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in
   let hash = Block_hash.to_blake2b hash in
   Verified_signature.sign hash identity
-
-let pp fmt (Block { hash; level; _ }) =
-  let hash = Block_hash.to_b58 hash in
-  let open Deku_stdlib in
-  Format.fprintf fmt "Block [hash: %s, level: %a]" hash N.pp (Level.to_n level)

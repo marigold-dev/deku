@@ -2,144 +2,175 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
-open Deku_gossip
+open Deku_crypto
 
 type chain =
   | Chain of {
-      pool : Parallel.Pool.t;
       protocol : Protocol.t;
       consensus : Consensus.t;
+      verifier : Verifier.t;
+      signer : Signer.t;
       producer : Producer.t;
     }
 
 type t = chain
 
-type action =
-  | Chain_trigger_timeout
-  | Chain_broadcast of { content : Message.Content.t }
-  | Chain_save_block of Block.t
+type external_effect =
+  | Reset_timeout
+  | Broadcast_block of Block.t
+  | Broadcast_signature of Verified_signature.t
+  | Save_block of Block.t
+  | Commit_state_hash of {
+      current_level : Level.t;
+      payload_hash : BLAKE2b.t;
+      state_root_hash : BLAKE2b.t;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
+      signatures : (Key.t * Signature.t) option list;
+      validators : Key_hash.t list;
+    }
 
-let make ~identity ~bootstrap_key ~validators ~pool ~default_block_size =
+let make ~identity ~bootstrap_key ~validators =
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
-  let consensus = Consensus.make ~identity ~validators ~bootstrap_key in
-  let producer = Producer.make ~identity ~default_block_size in
-  Chain { pool; protocol; consensus; producer }
+  let consensus = Consensus.make ~validators ~bootstrap_key in
+  let verifier = Verifier.empty in
+  let signer = Signer.make ~identity in
+  let producer = Producer.make ~identity in
+  Chain { protocol; consensus; verifier; signer; producer }
 
-let rec apply_consensus_action chain consensus_action =
-  let open Consensus in
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  match consensus_action with
-  | Consensus_accepted_block block ->
-      let (Block.Block { level; payload; tezos_operations; _ }) = block in
-      let protocol, receipts =
-        Protocol.apply
-          ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
-          ~current_level:level ~payload protocol ~tezos_operations
-      in
-      let producer = Producer.clean ~receipts ~tezos_operations producer in
-      let chain = Chain { pool; protocol; consensus; producer } in
-      (chain, Some (Chain_save_block block))
-  | Consensus_trigger_timeout { level } -> (
-      let (Consensus { state; _ }) = consensus in
-      let (State.State { current_level; _ }) = state in
-      match Level.equal current_level level with
-      | true ->
-          let action = Chain_trigger_timeout in
-          (chain, Some action)
-      | false -> (chain, None))
-  | Consensus_broadcast_signature { signature } ->
-      let content = Message.Content.signature signature in
-      let action = Chain_broadcast { content } in
-      (chain, Some action)
-
-and apply_consensus_actions chain consensus_actions =
-  List.fold_left
-    (fun (chain, actions) consensus_action ->
-      let chain, action = apply_consensus_action chain consensus_action in
-      let actions =
-        match action with Some action -> action :: actions | None -> actions
-      in
-      (chain, actions))
-    (chain, []) consensus_actions
-
-and incoming_block ~current ~block chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  let consensus, effects = Consensus.incoming_block ~current ~block consensus in
-  let chain = Chain { pool; protocol; consensus; producer } in
-  apply_consensus_actions chain effects
-
-let incoming_signature ~current ~signature chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  let consensus, effects =
-    Consensus.incoming_signature ~current ~signature consensus
+let commit current_level block verifier validators withdrawal_handles_hash =
+  let Block.(Block { payload_hash; hash = block_hash; _ }) = block in
+  let state_root_hash =
+    Deku_crypto.BLAKE2b.hash "FIXME: we need to add the state root"
   in
-  let chain = Chain { pool; protocol; consensus; producer } in
-  apply_consensus_actions chain effects
+  let signatures = Verifier.find_signatures ~block_hash verifier in
+  let signatures =
+    List.map
+      (fun key_hash ->
+        let%some verified = Key_hash.Map.find_opt key_hash signatures in
+        Some
+          ( Verified_signature.key verified,
+            Verified_signature.signature verified ))
+      validators
+  in
+  Commit_state_hash
+    {
+      current_level;
+      payload_hash;
+      state_root_hash;
+      withdrawal_handles_hash;
+      signatures;
+      validators;
+    }
+
+let apply_block ~pool ~current ~block chain =
+  let (Block.Block { level; payload; tezos_operations; _ }) = block in
+  let () = Format.eprintf "%a\n%!" N.pp (Level.to_n level) in
+  let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
+  let consensus = Consensus.apply_block ~current ~block consensus in
+  let protocol, receipts =
+    Protocol.apply
+      ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
+      ~current_level:level ~payload protocol ~tezos_operations
+  in
+  let producer = Producer.clean ~receipts ~tezos_operations producer in
+  let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
+  (* FIXME: need a time-based procedure for this, not block-based *)
+  (* FIXME: rediscuss the need to commit the previous block instead *)
+  (* FIXME: validators have to watch when commit did not happen *)
+  let (Consensus { current_level; validators; _ }) = consensus in
+  let validators = Validators.to_key_hash_list validators in
+  let level = Level.to_n current_level |> N.to_z |> Z.to_int in
+  let effects =
+    match
+      Producer.try_to_produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~consensus ~withdrawal_handles_hash producer
+    with
+    (* FIXME: weird place to commit *)
+    | Some new_block when level mod 5 = 0 ->
+        let commit_effect =
+          commit current_level block verifier validators withdrawal_handles_hash
+        in
+        [ Broadcast_block new_block; commit_effect ]
+    | Some block -> [ Broadcast_block block ]
+    | None -> []
+  in
+  let effects = Save_block block :: Reset_timeout :: effects in
+  (Chain { protocol; consensus; verifier; signer; producer }, effects)
+
+let incoming_block ~pool ~current ~block chain =
+  let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
+  let Verifier.{ apply; verifier } =
+    Verifier.incoming_block ~consensus ~block verifier
+  in
+  let chain = Chain { protocol; consensus; verifier; signer; producer } in
+
+  let effects =
+    match Signer.try_to_sign ~current ~consensus ~block signer with
+    | Some signature -> [ Broadcast_signature signature ]
+    | None -> []
+  in
+  match apply with
+  | Some block ->
+      let chain, additional_effects = apply_block ~pool ~current ~block chain in
+      (chain, effects @ additional_effects)
+  | None -> (chain, effects)
+
+let incoming_signature ~pool ~current ~signature chain =
+  let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
+  let Verifier.{ apply; verifier } =
+    Verifier.incoming_signature ~consensus ~signature verifier
+  in
+  let chain = Chain { protocol; consensus; verifier; signer; producer } in
+
+  match apply with
+  | Some block -> apply_block ~pool ~current ~block chain
+  | None -> (chain, [])
+
+let incoming_timeout ~pool ~current node =
+  let () = Format.eprintf "timeout\n%!" in
+  let (Chain { protocol; consensus; verifier; signer; producer }) = node in
+  let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
+  let effects =
+    (* TODO: do not like duplicating this lambda everywhere. *)
+    match
+      Producer.try_to_produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~consensus producer ~withdrawal_handles_hash
+    with
+    | Some block -> [ Broadcast_block block ]
+    | None -> []
+  in
+  (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_operation ~operation node =
-  let (Chain { pool; protocol; consensus; producer }) = node in
+  let (Chain { protocol; consensus; verifier; signer; producer }) = node in
   let producer = Producer.incoming_operation ~operation producer in
-  Chain { pool; protocol; consensus; producer }
+  Chain { protocol; consensus; verifier; signer; producer }
 
-let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+let incoming_bootstrap_signal ~pool ~bootstrap_signal ~current node =
+  let (Chain { protocol; consensus; verifier; signer; producer }) = node in
   let consensus =
     match
-      Consensus.incoming_bootstrap_signal ~bootstrap_signal ~current consensus
+      Consensus.apply_bootstrap_signal ~bootstrap_signal ~current consensus
     with
     | Some consensus -> consensus
     | None -> consensus
   in
   let effects =
-    let (Consensus { block_pool = _; signer = _; bootstrap_key = _; state }) =
-      consensus
-    in
+    let withdrawal_handles_hash = Protocol.withdrawal_handles_hash protocol in
     match
-      Producer.produce ~current ~state
+      Producer.try_to_produce
         ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        producer
+        ~current ~consensus ~withdrawal_handles_hash producer
     with
-    | Some block ->
-        let content = Message.Content.block block in
-        [ Chain_broadcast { content } ]
+    | Some block -> [ Broadcast_block block ]
     | None -> []
   in
-  (Chain { pool; protocol; consensus; producer }, effects)
+  (Chain { protocol; consensus; verifier; signer; producer }, effects)
 
 let incoming_tezos_operation ~tezos_operation chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let (Chain { protocol; consensus; verifier; signer; producer }) = chain in
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
-  (Chain { pool; protocol; consensus; producer }, [])
-
-let incoming_message ~current ~message chain =
-  let open Message in
-  let (Message { hash = _; content }) = message in
-  match content with
-  | Content_block block -> incoming_block ~current ~block chain
-  | Content_signature signature -> incoming_signature ~current ~signature chain
-  | Content_operation operation ->
-      let chain = incoming_operation ~operation chain in
-      (chain, [])
-  | Content_bootstrap_signal bootstrap_signal ->
-      incoming_bootstrap_signal ~bootstrap_signal ~current chain
-
-let incoming_timeout ~current chain =
-  let (Chain { pool; protocol; consensus; producer }) = chain in
-  let chain = Chain { pool; protocol; consensus; producer } in
-  let actions =
-    let (Consensus { block_pool = _; signer = _; state; bootstrap_key = _ }) =
-      consensus
-    in
-    (* FIXME: I don't like having to duplicate the parallel_map thing *)
-    match
-      Producer.produce
-        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-        ~current ~state producer
-    with
-    | Some block ->
-        let content = Message.Content.block block in
-        [ Chain_broadcast { content } ]
-    | None -> []
-  in
-  (chain, actions)
+  (Chain { protocol; consensus; verifier; signer; producer }, [])

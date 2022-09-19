@@ -5,6 +5,7 @@ type t = operation_hash [@@deriving eq, ord, yojson]
 
 (* repr *)
 val to_blake2b : operation_hash -> BLAKE2b.t
+val of_blake2b : BLAKE2b.t -> operation_hash
 val of_b58 : string -> operation_hash option
 val to_b58 : operation_hash -> string
 

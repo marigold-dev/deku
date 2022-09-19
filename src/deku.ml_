@@ -1,0 +1,1255 @@
+(* TODO: unique type for each hash *)
+module rec BLAKE2b : sig
+  type hash
+  type t = hash
+
+  val equal : hash -> hash -> bool
+  val compare : hash -> hash -> int
+
+  module Map : Map.S with type key = hash
+  module Set : Set.S with type elt = hash
+end =
+  BLAKE2b
+
+module Level : sig
+  type level
+  type t = level
+
+  val equal : level -> level -> bool
+  val next : level -> level
+  val ( <= ) : level -> level -> bool
+end = struct
+  type level = Z.t
+  type t = level
+
+  let equal a b = Z.equal a b
+  let next x = Z.succ x
+  let ( <= ) a b = equal a b || Z.lt a b
+end
+
+module Key = struct
+  type key
+  type t = key
+end
+
+module rec Key_hash : sig
+  type key_hash
+  type t = key_hash
+
+  (* TODO: memoize of_key? function *)
+  val of_key : Key.t -> t
+  val equal : key_hash -> key_hash -> bool
+  val compare : key_hash -> key_hash -> int
+
+  module Set : Set.S with type elt = key_hash
+end =
+  Key_hash
+
+module rec Signature : sig
+  type signature
+  type t = signature
+
+  val verify : Key.t -> signature -> BLAKE2b.t -> bool
+  val equal : signature -> signature -> bool
+  val compare : signature -> signature -> int
+end =
+  Signature
+(* consensus *)
+
+module Constants = struct
+  let block_timeout = 10.0
+end
+
+module Timestamp : sig
+  type timestamp
+  type t = timestamp
+
+  (* TODO: better naming, TLDR it measures how many skips since some time
+      like for timeouts*)
+
+  val timeouts_since : current:timestamp -> since:timestamp -> int
+end = struct
+  type timestamp = float
+  type t = timestamp
+
+  (* TODO: I don't like this, side-effects *)
+  let current () = Unix.gettimeofday ()
+
+  let timeouts_since ~current ~since =
+    let diff = current -. since in
+    let skips = diff /. Constants.block_timeout in
+    Float.(to_int (floor skips))
+end
+
+module Nonce : sig
+  type nonce
+  type t = nonce
+
+  val equal : int32 -> int32 -> bool
+  val compare : int32 -> int32 -> int
+end = struct
+  type nonce = int32
+  type t = nonce
+
+  let equal a b = Int32.equal a b
+  let compare a b = Int32.compare a b
+end
+
+module Amount : sig
+  type amount
+  type t = amount
+
+  val zero : amount
+  val of_z : Z.t -> amount option
+  val to_z : amount -> Z.t
+  val ( + ) : amount -> amount -> amount
+  val ( - ) : amount -> amount -> amount option
+  val equal : amount -> amount -> bool
+  val compare : amount -> amount -> int
+end = struct
+  type amount = Z.t
+  type t = amount
+
+  let zero = Z.zero
+  let of_z _x = failwith "not implemented"
+  let to_z x = x
+  let ( + ) a b = Z.add a b
+  let ( - ) _a _b = failwith "not implemented"
+  let equal a b = Z.equal a b
+  let compare a b = Z.compare a b
+end
+
+module Address : sig
+  type address
+  type t = address
+
+  val of_key_hash : Key_hash.t -> address
+  val to_key_hash : address -> Key_hash.t
+  val equal : address -> address -> bool
+  val compare : address -> address -> int
+
+  module Map : Map.S with type key = address
+end = struct
+  type address = Key_hash.t
+  type t = address
+
+  let of_key_hash x = x
+  let to_key_hash x = x
+  let equal a b = Key_hash.equal a b
+  let compare a b = Key_hash.compare a b
+
+  module Map = Map.Make (struct
+    type t = address
+
+    let compare = compare
+  end)
+end
+
+module Tezos = struct
+  module Address = struct
+    type address
+    type t = address
+
+    let equal : address -> address -> bool = failwith "not implemented"
+    let compare : address -> address -> int = failwith "not implemented"
+  end
+
+  module Operation_hash = struct
+    type operation_hash
+    type t = operation_hash
+
+    let equal : t -> t -> bool = failwith "not implemented"
+    let compare : t -> t -> int = failwith "not implemented"
+
+    module Set = Set.Make (struct
+      type t = operation_hash
+
+      let compare = compare
+    end)
+  end
+
+  module Ticket_id = struct
+    type t
+  end
+end
+
+module Ticket_id : sig
+  type ticket_id = { ticketer : Tezos.Address.t; data : bytes }
+  type t = ticket_id
+
+  val equal : ticket_id -> ticket_id -> bool
+  val compare : ticket_id -> ticket_id -> int
+end = struct
+  type ticket_id = { ticketer : Tezos.Address.t; data : bytes }
+  type t = ticket_id
+
+  let equal a b =
+    let { ticketer = ticketer_a; data = data_a } = a in
+    let { ticketer = ticketer_b; data = data_b } = b in
+    Tezos.Address.equal ticketer_a ticketer_b && Bytes.equal data_a data_b
+
+  let compare a b =
+    let { ticketer = ticketer_a; data = data_a } = a in
+    let { ticketer = ticketer_b; data = data_b } = b in
+    match Tezos.Address.compare ticketer_a ticketer_b with
+    | 0 -> Bytes.compare data_a data_b
+    | n -> n
+end
+
+module Validator_change : sig
+  type validator_change = private
+    | Validator_change_add of Key_hash.t
+    | Validator_change_remove of Key_hash.t
+
+  type t = validator_change
+
+  val add : Key_hash.t -> validator_change
+  val remove : Key_hash.t -> validator_change
+  val equal : validator_change -> validator_change -> bool
+  val compare : validator_change -> validator_change -> int
+
+  module Set : Set.S with type elt = validator_change
+end = struct
+  type validator_change =
+    | Validator_change_add of Key_hash.t
+    | Validator_change_remove of Key_hash.t
+
+  type t = validator_change
+
+  let add key_hash = Validator_change_add key_hash
+  let remove key_hash = Validator_change_remove key_hash
+
+  let equal a b =
+    match (a, b) with
+    | Validator_change_add a, Validator_change_add b
+    | Validator_change_remove a, Validator_change_remove b ->
+        Key_hash.equal a b
+    | Validator_change_add _, Validator_change_remove _
+    | Validator_change_remove _, Validator_change_add _ ->
+        false
+
+  let compare a b =
+    match (a, b) with
+    | Validator_change_add a, Validator_change_add b
+    | Validator_change_remove a, Validator_change_remove b ->
+        Key_hash.compare a b
+    | Validator_change_add _, Validator_change_remove _ -> 1
+    | Validator_change_remove _, Validator_change_add _ -> -1
+
+  module Set = Set.Make (struct
+    type t = validator_change
+
+    let compare = compare
+  end)
+end
+
+module Validators : sig
+  (* TODO: should we care about the adding validator order *)
+  type validators
+  type t = validators
+
+  val empty : validators
+  val mem : Key_hash.t -> validators -> bool
+  val skip : after:Key_hash.t -> skip:int -> validators -> Key_hash.t option
+  val apply : change:Validator_change.t -> validators -> validators
+  val hash : validators -> BLAKE2b.t
+end = struct
+  type validators = Key_hash.Set.t
+  type t = validators
+
+  let empty = Key_hash.Set.empty
+  let mem key_hash validators = Key_hash.Set.mem key_hash validators
+
+  let rec findi_opt n f l =
+    match l with
+    | [] -> None
+    | el :: tl -> if f el then Some n else findi_opt (n + 1) f tl
+
+  let findi_opt f l = findi_opt 0 f l
+
+  let find_after_index ~after validators =
+    findi_opt (fun validator -> Key_hash.equal validator after) validators
+
+  let skip ~after ~skip validators =
+    let validators = Key_hash.Set.elements validators in
+    let length = List.length validators in
+    match find_after_index ~after validators with
+    | Some n ->
+        let i = (n + skip) mod length in
+        List.nth_opt validators i
+    | None -> None
+
+  let apply ~change validators =
+    let open Validator_change in
+    match change with
+    | Validator_change_add key_hash -> Key_hash.Set.add key_hash validators
+    | Validator_change_remove key_hash ->
+        Key_hash.Set.remove key_hash validators
+
+  let hash = failwith "not implemented"
+end
+
+module Tezos_operation : sig
+  type internal_operation = private
+    | Internal_operation_deposit of {
+        receiver : Tezos.Address.t;
+        amount : Amount.t;
+        ticket : Tezos.Ticket_id.t;
+      }
+
+  type tezos_operation = private
+    | Tezos_operation of {
+        tezos_operation_hash : Tezos.Operation_hash.t;
+        internal_operations : internal_operation list;
+      }
+
+  type t = tezos_operation
+
+  val equal : tezos_operation -> tezos_operation -> bool
+  val compare : tezos_operation -> tezos_operation -> int
+
+  module Map : Map.S with type key = tezos_operation
+  module Set : Set.S with type elt = tezos_operation
+end = struct
+  type internal_operation =
+    | Internal_operation_deposit of {
+        receiver : Tezos.Address.t;
+        amount : Amount.t;
+        ticket : Tezos.Ticket_id.t;
+      }
+
+  type tezos_operation =
+    | Tezos_operation of {
+        tezos_operation_hash : Tezos.Operation_hash.t;
+        internal_operations : internal_operation list;
+      }
+
+  type t = tezos_operation
+
+  let equal a b =
+    let (Tezos_operation { tezos_operation_hash = a; _ }) = a in
+    let (Tezos_operation { tezos_operation_hash = b; _ }) = b in
+    Tezos.Operation_hash.equal a b
+
+  let compare a b =
+    let (Tezos_operation { tezos_operation_hash = a; _ }) = a in
+    let (Tezos_operation { tezos_operation_hash = b; _ }) = b in
+    Tezos.Operation_hash.compare a b
+
+  module Map = Map.Make (struct
+    type t = tezos_operation
+
+    let compare = compare
+  end)
+
+  module Set = Set.Make (struct
+    type t = tezos_operation
+
+    let compare = compare
+  end)
+end
+
+module User_operation : sig
+  type user_operation_data = private
+    | User_operation_transaction of {
+        receiver : BLAKE2b.t;
+        amount : Amount.t;
+        ticket : Ticket_id.t;
+      }
+
+  type user_operation = private
+    | User_operation of {
+        hash : BLAKE2b.t;
+        key : Key.t;
+        signature : Signature.t;
+        level : Level.t;
+        nonce : Nonce.t;
+        data : user_operation_data;
+      }
+
+  type t = user_operation
+
+  val equal : user_operation -> user_operation -> bool
+  val compare : user_operation -> user_operation -> int
+
+  module Set : Set.S with type elt = user_operation
+end = struct
+  (* TODO: this type name is not great *)
+  type user_operation_data =
+    | User_operation_transaction of {
+        receiver : BLAKE2b.t;
+        amount : Amount.t;
+        ticket : Ticket_id.t;
+      }
+
+  type user_operation =
+    | User_operation of {
+        hash : BLAKE2b.t;
+        key : Key.t;
+        signature : Signature.t;
+        level : Level.t;
+        nonce : Nonce.t;
+        data : user_operation_data;
+      }
+
+  type t = user_operation
+
+  let equal a b =
+    let (User_operation { hash = a; _ }) = a in
+    let (User_operation { hash = b; _ }) = b in
+    BLAKE2b.equal a b
+
+  let compare a b =
+    let (User_operation { hash = a; _ }) = a in
+    let (User_operation { hash = b; _ }) = b in
+    BLAKE2b.compare a b
+
+  module Set = Set.Make (struct
+    type t = user_operation
+
+    let compare = compare
+  end)
+end
+
+module Included_tezos_operation_set : sig
+  type included_tezos_operation_set
+  type t = included_tezos_operation_set
+
+  val empty : included_tezos_operation_set
+
+  val add :
+    Tezos_operation.t ->
+    included_tezos_operation_set ->
+    included_tezos_operation_set
+
+  val mem : Tezos_operation.t -> included_tezos_operation_set -> bool
+
+  (* TODO: this should have a crop function and also a way on chain
+     to return if not added*)
+end = struct
+  open Tezos_operation
+
+  type included_tezos_operation_set = Tezos.Operation_hash.Set.t
+  type t = included_tezos_operation_set
+
+  let empty = Tezos.Operation_hash.Set.empty
+
+  let add tezos_operation t =
+    let (Tezos_operation { tezos_operation_hash; _ }) = tezos_operation in
+    Tezos.Operation_hash.Set.add tezos_operation_hash t
+
+  let mem tezos_operation t =
+    let (Tezos_operation { tezos_operation_hash; _ }) = tezos_operation in
+    Tezos.Operation_hash.Set.mem tezos_operation_hash t
+end
+
+module Included_user_operation_set : sig
+  type included_user_operation_set
+  type t = included_user_operation_set
+
+  val empty : included_user_operation_set
+
+  val add :
+    User_operation.t ->
+    included_user_operation_set ->
+    included_user_operation_set
+
+  val mem : User_operation.t -> included_user_operation_set -> bool
+
+  val crop :
+    level:Level.t -> included_user_operation_set -> included_user_operation_set
+end = struct
+  open User_operation
+
+  (* TODO: idea here is that because of that we don't need to hold the
+      full operation on the protocol only it's hash temporarily*)
+  type included_user_operation_set = Level.t BLAKE2b.Map.t [@@deriving yojson]
+  type t = included_user_operation_set
+
+  let empty = BLAKE2b.Map.empty
+
+  let add user_operation t =
+    let (User_operation { hash; level; _ }) = user_operation in
+    BLAKE2b.Map.add hash level t
+
+  let mem user_operation t =
+    let (User_operation { hash; _ }) = user_operation in
+    BLAKE2b.Map.mem hash t
+
+  let crop ~level t =
+    BLAKE2b.Map.filter
+      (fun _hash operation_level -> Level.(operation_level <= level))
+      t
+end
+
+module Ledger : sig
+  type ledger
+  type t = ledger
+
+  val initial : ledger
+
+  val transfer :
+    sender:Address.t ->
+    receiver:Address.t ->
+    Ticket_id.t ->
+    Amount.t ->
+    ledger ->
+    ledger option
+
+  val deposit : Address.t -> Ticket_id.t -> Amount.t -> ledger -> ledger
+  val burn : Address.t -> Ticket_id.t -> Amount.t -> ledger -> ledger option
+end = struct
+  open Amount
+
+  module Address_ticket_map = Map.Make (struct
+    type t = Address.t * Ticket_id.t
+
+    let compare a b =
+      let address_a, ticket_id_a = a in
+      let address_b, ticket_id_b = b in
+      match Address.compare address_a address_b with
+      | 0 -> Ticket_id.compare ticket_id_a ticket_id_b
+      | n -> n
+  end)
+
+  type ledger = Amount.t Address_ticket_map.t
+  type t = ledger
+
+  let initial = Address_ticket_map.empty
+
+  let balance key ledger =
+    match Address_ticket_map.find_opt key ledger with
+    | Some balance -> balance
+    | None -> Amount.zero
+
+  let transfer ~sender ~receiver ticket_id amount ledger =
+    let sender_key = (sender, ticket_id) in
+    let receiver_key = (receiver, ticket_id) in
+    let sender_balance = balance sender_key ledger in
+    let receiver_balance = balance receiver_key ledger in
+
+    match sender_balance - amount with
+    | Some sender_balance ->
+        let receiver_balance = receiver_balance + amount in
+        let ledger = Address_ticket_map.add sender_key sender_balance ledger in
+        let ledger =
+          Address_ticket_map.add receiver_key receiver_balance ledger
+        in
+        Some ledger
+    | None -> None
+
+  let deposit address ticket_id amount ledger =
+    let key = (address, ticket_id) in
+    let balance = balance key ledger in
+    let balance = balance + amount in
+    Address_ticket_map.add key balance ledger
+
+  let burn address ticket_id amount ledger =
+    let key = (address, ticket_id) in
+    let balance = balance key ledger in
+    match balance - amount with
+    | Some balance ->
+        let ledger = Address_ticket_map.add key balance ledger in
+        Some ledger
+    | None -> None
+end
+
+module Protocol : sig
+  type protocol
+  type t = protocol
+
+  val initial : protocol
+
+  val apply :
+    level:Level.t ->
+    tezos_operations:Tezos_operation.t list ->
+    user_operations:User_operation.t list ->
+    protocol ->
+    protocol
+end = struct
+  (* TODO: should protocol witness level or block hash? if so why??? *)
+  type protocol =
+    | Protocol of {
+        (* deduplication *)
+        included_tezos_operation_set : Included_tezos_operation_set.t;
+        included_user_operation_set : Included_user_operation_set.t;
+        (* state *)
+        ledger : Ledger.t;
+      }
+
+  type t = protocol
+
+  let initial =
+    Protocol
+      {
+        included_tezos_operation_set = Included_tezos_operation_set.empty;
+        included_user_operation_set = Included_user_operation_set.empty;
+        ledger = Ledger.initial;
+      }
+
+  let clean ~level protocol =
+    (* TODO: included_tezos_operation_set never shrinks *)
+    let (Protocol
+          { included_tezos_operation_set; included_user_operation_set; ledger })
+        =
+      protocol
+    in
+    let included_user_operation_set =
+      let level = failwith "not implemented" in
+      Included_user_operation_set.crop ~level included_user_operation_set
+    in
+    Protocol
+      { included_tezos_operation_set; included_user_operation_set; ledger }
+
+  let apply ~level ~tezos_operations ~user_operations protocol =
+    failwith "not implemented"
+end
+
+module Block : sig
+  type block = private
+    | Block of {
+        hash : BLAKE2b.t;
+        author : Key_hash.t;
+        level : Level.t;
+        previous : BLAKE2b.t;
+        validators : BLAKE2b.t;
+        state_root : BLAKE2b.t;
+        payload : BLAKE2b.t;
+        validator_change : Validator_change.t option;
+        tezos_operations : Tezos_operation.t list;
+        user_operations : User_operation.t list;
+      }
+
+  type t = block
+
+  val make :
+    author:Key_hash.t ->
+    level:Level.t ->
+    previous:BLAKE2b.t ->
+    validators:BLAKE2b.t ->
+    state_root:BLAKE2b.t ->
+    validator_change:Validator_change.t option ->
+    tezos_operations:Tezos_operation.t list ->
+    user_operations:User_operation.t list ->
+    block
+
+  val equal : block -> block -> bool
+  val compare : block -> block -> int
+
+  module Set : Set.S with type elt = block
+end = struct
+  (* TODO: block should recognize current block time *)
+  type block =
+    | Block of {
+        hash : BLAKE2b.t;
+        (* header *)
+        author : Key_hash.t;
+        level : Level.t;
+        (* TODO:
+            possible attack vector,
+            what if someone puts another author here?
+        *)
+        (* witness *)
+        previous : BLAKE2b.t;
+        validators : BLAKE2b.t;
+        state_root : BLAKE2b.t;
+        payload : BLAKE2b.t;
+        (* payload *)
+        validator_change : Validator_change.t option;
+        tezos_operations : Tezos_operation.t list;
+        user_operations : User_operation.t list;
+      }
+
+  type t = block
+
+  let make = failwith "not implemented"
+
+  let equal a b =
+    let (Block { hash = a; _ }) = a in
+    let (Block { hash = b; _ }) = b in
+    BLAKE2b.equal a b
+
+  let compare a b =
+    let (Block { hash = a; _ }) = a in
+    let (Block { hash = b; _ }) = b in
+    BLAKE2b.compare a b
+
+  module Set = Set.Make (struct
+    type t = block
+
+    let compare = compare
+  end)
+end
+
+module rec Identity : sig
+  type identity
+  type t = identity
+
+  val key_hash : identity -> Key_hash.t
+end =
+  Identity
+
+module Verified_signature : sig
+  type verified_signature
+  type t = verified_signature
+
+  val verify : BLAKE2b.t -> Key.t -> Signature.t -> verified_signature option
+  val hash : verified_signature -> BLAKE2b.t
+  val key : verified_signature -> Key.t
+  val key_hash : verified_signature -> Key_hash.t
+  val signature : verified_signature -> Signature.t
+  val equal : verified_signature -> verified_signature -> bool
+  val compare : verified_signature -> verified_signature -> int
+
+  module Set : Set.S with type elt = verified_signature
+end = struct
+  type verified_signature = {
+    hash : BLAKE2b.t;
+    key : Key.t;
+    (* TODO: is this denomarlization? *)
+    key_hash : Key_hash.t;
+    signature : Signature.t;
+  }
+
+  type t = verified_signature
+
+  let verify hash key signature =
+    let key_hash = Key_hash.of_key key in
+    if Signature.verify key signature hash then
+      Some { hash; key; key_hash; signature }
+    else None
+
+  let hash signature =
+    let { hash; _ } = signature in
+    hash
+
+  let key signature =
+    let { key; _ } = signature in
+    key
+
+  let key_hash signature =
+    let { key_hash; _ } = signature in
+    key_hash
+
+  let signature signature =
+    let { signature; _ } = signature in
+    signature
+
+  (* TODO: is comparing only the signature safe? *)
+  let equal a b = Signature.equal (signature a) (signature b)
+  let compare a b = Signature.compare (signature a) (signature b)
+
+  module Set = Set.Make (struct
+    type t = verified_signature
+
+    let compare = compare
+  end)
+end
+
+module Block_pool : sig
+  type block_pool
+  type t = block_pool
+
+  val empty : block_pool
+  val append_block : Block.t -> block_pool -> block_pool
+  val append_signature : Verified_signature.t -> block_pool -> block_pool
+  val find_block : block_hash:BLAKE2b.t -> block_pool -> Block.t option
+  val find_next_blocks : block_previous:BLAKE2b.t -> block_pool -> Block.Set.t
+
+  val find_signatures :
+    block_hash:BLAKE2b.t -> block_pool -> Verified_signature.Set.t
+end = struct
+  open Block
+
+  (* TODO: old signatures and blocks are never removed *)
+  type block_pool = {
+    block_by_hash : Block.t BLAKE2b.Map.t;
+    blocks_by_previous : Block.Set.t BLAKE2b.Map.t;
+    signatures_by_hash : Verified_signature.Set.t BLAKE2b.Map.t;
+  }
+
+  type t = block_pool
+
+  (* helpers *)
+  let find_blocks hash map =
+    match BLAKE2b.Map.find_opt hash map with
+    | Some blocks -> blocks
+    | None -> Block.Set.empty
+
+  let find_signatures hash map =
+    match BLAKE2b.Map.find_opt hash map with
+    | Some signatures -> signatures
+    | None -> Verified_signature.Set.empty
+
+  let empty =
+    {
+      block_by_hash = BLAKE2b.Map.empty;
+      blocks_by_previous = BLAKE2b.Map.empty;
+      signatures_by_hash = BLAKE2b.Map.empty;
+    }
+
+  let append_block block pool =
+    let { block_by_hash; blocks_by_previous; signatures_by_hash } = pool in
+    let (Block { hash; previous; _ }) = block in
+    let block_by_hash = BLAKE2b.Map.add hash block block_by_hash in
+    let blocks_by_previous =
+      let blocks = find_blocks previous blocks_by_previous in
+      let blocks = Block.Set.add block blocks in
+      BLAKE2b.Map.add previous blocks blocks_by_previous
+    in
+    { block_by_hash; blocks_by_previous; signatures_by_hash }
+
+  let append_signature signature pool =
+    let { block_by_hash; blocks_by_previous; signatures_by_hash } = pool in
+    let signature_hash = Verified_signature.hash signature in
+    let signatures_by_hash =
+      let signatures = find_signatures signature_hash signatures_by_hash in
+      let signatures = Verified_signature.Set.add signature signatures in
+      BLAKE2b.Map.add signature_hash signatures signatures_by_hash
+    in
+    { block_by_hash; blocks_by_previous; signatures_by_hash }
+
+  let find_block ~block_hash pool =
+    let { block_by_hash; blocks_by_previous = _; signatures_by_hash = _ } =
+      pool
+    in
+    BLAKE2b.Map.find_opt block_hash block_by_hash
+
+  let find_next_blocks ~block_previous pool =
+    let { block_by_hash = _; blocks_by_previous; signatures_by_hash = _ } =
+      pool
+    in
+    find_blocks block_previous blocks_by_previous
+
+  let find_signatures ~block_hash pool =
+    let { block_by_hash = _; blocks_by_previous = _; signatures_by_hash } =
+      pool
+    in
+    find_signatures block_hash signatures_by_hash
+end
+
+module Operation_pool : sig
+  (* TODO: probably user operations shuold be outside of the consensus
+     to avoid blocking the consensus when many operations arrive *)
+  type operation_pool
+  type t = operation_pool
+
+  val empty : operation_pool
+
+  val append_validator_change :
+    Validator_change.t -> operation_pool -> operation_pool
+
+  val includable_validator_change : operation_pool -> Validator_change.t option
+
+  val remove_validator_change :
+    Validator_change.t -> operation_pool -> operation_pool
+
+  val append_tezos_operation :
+    current:Timestamp.t -> Tezos_operation.t -> operation_pool -> operation_pool
+
+  val includable_tezos_operations :
+    current:Timestamp.t -> operation_pool -> Tezos_operation.t list
+
+  val mem_tezos_operation : Tezos_operation.t -> operation_pool -> bool
+
+  val remove_tezos_operation :
+    Tezos_operation.t -> operation_pool -> operation_pool
+
+  val append_user_operation :
+    User_operation.t -> operation_pool -> operation_pool
+
+  val includable_user_operations : operation_pool -> User_operation.t list
+
+  val remove_user_operation :
+    User_operation.t -> operation_pool -> operation_pool
+end = struct
+  type operation_pool = {
+    validator_changes : Validator_change.Set.t;
+    tezos_operations : Timestamp.t Tezos_operation.Map.t;
+    user_operations : User_operation.Set.t;
+  }
+
+  type t = operation_pool
+
+  let empty =
+    {
+      validator_changes = Validator_change.Set.empty;
+      tezos_operations = Tezos_operation.Map.empty;
+      user_operations = User_operation.Set.empty;
+    }
+
+  let append_validator_change validator_change pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let validator_changes =
+      Validator_change.Set.add validator_change validator_changes
+    in
+    { validator_changes; tezos_operations; user_operations }
+
+  let includable_validator_change pool =
+    let { validator_changes; tezos_operations = _; user_operations = _ } =
+      pool
+    in
+    Validator_change.Set.choose_opt validator_changes
+
+  let remove_validator_change validator_change pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let validator_changes =
+      Validator_change.Set.remove validator_change validator_changes
+    in
+    { validator_changes; tezos_operations; user_operations }
+
+  let append_tezos_operation ~current tezos_operation pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let tezos_operations =
+      Tezos_operation.Map.add tezos_operation current tezos_operations
+    in
+    { validator_changes; tezos_operations; user_operations }
+
+  let includable_tezos_operations ~current pool = failwith "not implemented"
+
+  let mem_tezos_operation tezos_operation pool =
+    let { validator_changes = _; tezos_operations; user_operations = _ } =
+      pool
+    in
+    Tezos_operation.Map.mem tezos_operation tezos_operations
+
+  let remove_tezos_operation tezos_operation pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let tezos_operations =
+      Tezos_operation.Map.remove tezos_operation tezos_operations
+    in
+    { validator_changes; tezos_operations; user_operations }
+
+  let append_user_operation user_operation pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let user_operations =
+      User_operation.Set.add user_operation user_operations
+    in
+    { validator_changes; tezos_operations; user_operations }
+
+  let includable_user_operations pool =
+    let { validator_changes = _; tezos_operations = _; user_operations } =
+      pool
+    in
+    User_operation.Set.elements user_operations
+
+  let remove_user_operation user_operation pool =
+    let { validator_changes; tezos_operations; user_operations } = pool in
+    let user_operations =
+      User_operation.Set.add user_operation user_operations
+    in
+    { validator_changes; tezos_operations; user_operations }
+end
+
+module Producer : sig
+  type producer
+  type t = producer
+
+  val make : identity:Identity.t -> producer
+
+  (* TODO: serialization *)
+  val produce :
+    current:Timestamp.t ->
+    level:Level.t ->
+    previous:BLAKE2b.t ->
+    validators:BLAKE2b.t ->
+    state_root:BLAKE2b.t ->
+    producer ->
+    Block.t * producer
+end = struct
+  type producer = { identity : Identity.t; operation_pool : Operation_pool.t }
+  type t = producer
+
+  let make ~identity = { identity; operation_pool = Operation_pool.empty }
+
+  let produce ~current ~level ~previous ~validators ~state_root producer =
+    let { identity; operation_pool } = producer in
+    let author = Identity.key_hash identity in
+
+    let validator_change =
+      Operation_pool.includable_validator_change operation_pool
+    in
+    let tezos_operations =
+      Operation_pool.includable_tezos_operations ~current operation_pool
+    in
+    let user_operations =
+      Operation_pool.includable_user_operations operation_pool
+    in
+    let block =
+      Block.make ~level ~author ~previous ~validators ~state_root
+        ~validator_change ~tezos_operations ~user_operations
+    in
+    (block, producer)
+end
+
+module Is_valid : sig
+  type validity = Invalid | Unknown_state_root | Valid
+
+  val is_valid :
+    current_level:Level.t ->
+    current_block:BLAKE2b.t ->
+    current_validators:Validators.t ->
+    current_state_root:BLAKE2b.t ->
+    next_state_root:BLAKE2b.t option ->
+    Block.t ->
+    validity
+end = struct
+  open Block
+
+  type validity = Invalid | Unknown_state_root | Valid
+
+  let is_expected_level ~current_level block =
+    let (Block { level; _ }) = block in
+    Level.(equal (next current_level) level)
+
+  let is_expected_previous ~current_block block =
+    let (Block { previous; _ }) = block in
+    BLAKE2b.equal current_block previous
+
+  let is_expected_validators ~current_validators block =
+    let (Block { validators; _ }) = block in
+    BLAKE2b.equal (Validators.hash current_validators) validators
+
+  let is_expected_state_root ~current_state_root ~next_state_root block =
+    let (Block { state_root; _ }) = block in
+    if BLAKE2b.equal current_state_root state_root then Valid
+    else
+      match next_state_root with
+      | Some next_state_root ->
+          if BLAKE2b.equal next_state_root state_root then Valid else Invalid
+      | None -> Unknown_state_root
+
+  let is_valid ~current_level ~current_block ~current_validators
+      ~current_state_root ~next_state_root block =
+    match is_expected_state_root ~current_state_root ~next_state_root block with
+    | Valid ->
+        if
+          is_expected_level ~current_level block
+          && is_expected_previous ~current_block block
+          && is_expected_validators ~current_validators block
+        then Valid
+        else Invalid
+    | Unknown_state_root -> Unknown_state_root
+    | Invalid -> Invalid
+end
+
+module Signer : sig
+  type signer
+  type t = signer
+
+  val make : identity:Identity.t -> block:Block.t -> signer
+
+  (* val  *)
+  val trust_validator_change : change:Validator_change.t -> signer -> signer
+  val untrust_validator_change : change:Validator_change.t -> signer -> signer
+  val apply_block : current:Timestamp.t -> block:Block.t -> signer -> signer
+  (* val incoming_block : current:Timestamp.t -> block:Block.t -> signer -> signer *)
+  (* val try_to_sign :
+     current:Timestamp.t ->
+     last_block_update:Timestamp.t ->
+     next_state_root:BLAKE2b.t option ->
+     block:Block.t ->
+     signer ->
+     Verified_signature.t option *)
+end = struct
+  open Block
+
+  type signer =
+    | Signer of {
+        identity : Identity.t;
+        current_level : Level.t;
+        current_block : BLAKE2b.t;
+        last_block_author : Key_hash.t;
+        last_block_update : Timestamp.t option;
+        (* validators *)
+        current_validators : Validators.t;
+        (* TODO:
+            it will never be signable to change the validator as
+            everyone starts at None *)
+        last_validators_update : Timestamp.t option;
+        trusted_changes : Validator_change.Set.t;
+      }
+
+  type t = signer
+
+  let make ~identity ~block =
+    let (Block { hash; level; author; _ }) = block in
+    Signer
+      {
+        identity;
+        current_level = level;
+        current_block = hash;
+        last_block_author = author;
+        last_block_update = None;
+        current_validators = Validators.empty;
+        last_validators_update = None;
+        trusted_changes = Validator_change.Set.empty;
+      }
+
+  let trust_validator_change ~change signer =
+    let (Signer ({ trusted_changes; _ } as signer)) = signer in
+    let trusted_changes = Validator_change.Set.add change trusted_changes in
+    Signer { signer with trusted_changes }
+
+  let untrust_validator_change ~change signer =
+    let (Signer ({ trusted_changes; _ } as signer)) = signer in
+    let trusted_changes = Validator_change.Set.remove change trusted_changes in
+    Signer { signer with trusted_changes }
+
+  let apply_block ~current ~block signer =
+    let (Block { author; validator_change; _ }) = block in
+    let (Signer ({ current_validators; last_validators_update; _ } as signer)) =
+      signer
+    in
+
+    let last_block_author = author in
+    let last_block_update = Some current in
+    let current_validators, last_validators_update =
+      match validator_change with
+      | Some validator_change ->
+          let current_validators =
+            Validators.apply ~change:validator_change current_validators
+          in
+          let last_validators_update = Some current in
+          (current_validators, last_validators_update)
+      | None -> (current_validators, last_validators_update)
+    in
+    Signer
+      {
+        signer with
+        last_block_author;
+        last_block_update;
+        current_validators;
+        last_validators_update;
+      }
+
+  let is_expected_author ~current block signer =
+    let (Block { author; _ }) = block in
+    let (Signer { last_block_author; last_block_update; current_validators; _ })
+        =
+      signer
+    in
+    match last_block_update with
+    | Some last_block_update -> (
+        let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
+        let expected_author =
+          Validators.skip ~after:last_block_author ~skip current_validators
+        in
+        match expected_author with
+        | Some expected_author -> Key_hash.equal expected_author author
+        | None -> false)
+    | None -> false
+
+  let incoming_block ~current ~block signer = failwith "not implemented"
+end
+
+module Consensus = struct
+  type snapshots
+
+  (* TODO: conditions to be in sync *)
+  type assumption =
+    | Block of { level : Level.t; block_hash : BLAKE2b.t }
+    | Snapshot of { level : Level.t; snapshot_hash : BLAKE2b.t }
+
+  type consensus = {
+    identity : Identity.t;
+    (* consensus *)
+    current_level : Level.t;
+    current_block : BLAKE2b.t;
+    (* validators *)
+    current_validators : Validators.t;
+    (* state root *)
+    current_state_root : BLAKE2b.t;
+    last_state_root_update_level : Level.t;
+    last_state_root_update_time : Timestamp.t option;
+    (* mempool *)
+    block_pool : Block_pool.t;
+    known_tezos_operations : Tezos.Operation_hash.Set.t;
+    (* protocol *)
+    current_protocol_level : Level.t;
+    current_protocol : Protocol.t;
+    snapshots : snapshots;
+  }
+
+  let incoming_block block consensus = ()
+
+  let update_protocol level protocol consensus =
+    let { current_protocol_level; _ } = consensus in
+    if Level.(equal level (next current_protocol_level)) then
+      Ok
+        {
+          consensus with
+          current_protocol = protocol;
+          current_protocol_level = level;
+        }
+    else Error `Outdated_protocol
+
+  module Is_signable = struct
+    open Block
+
+    let is_next block consensus =
+      let { current_level; current_block; _ } = consensus in
+      let { block_level; block_previous; _ } = block in
+
+      BLAKE2b.equal block_previous current_block
+      && Level.(equal block_level (next current_level))
+
+    let is_expected_producer : block -> consensus -> bool =
+      failwith "not implemented"
+
+    let is_expected_state_root : block -> consensus -> bool =
+      failwith "not implemented"
+
+    let is_trusted_payload : block -> consensus -> bool =
+      failwith "not implemented"
+
+    let is_latest : block -> consensus -> bool = failwith "not implemented"
+
+    let is_signable block consensus =
+      is_next block consensus
+      && is_expected_producer block consensus
+      && is_expected_state_root block consensus
+      && is_trusted_payload block consensus
+      && is_latest block consensus
+  end
+
+  module Fragment = struct
+    type fragment =
+      | Fragment_protocol of {
+          level : Level.t;
+          payload : payload;
+          protocol : Protocol.t;
+        }
+      | Fragment_snapshot of { level : Level.t; protocol : Protocol.t }
+
+    type t = fragment
+
+    type output =
+      | Output_protocol of { level : Level.t; protocol : Protocol.t }
+      | Output_snapshot of { level : Level.t; protocol_hash : BLAKE2b.t }
+
+    let compute fragment =
+      match fragment with
+      | Fragment_protocol { level; payload; protocol } ->
+          let protocol = Protocol.apply level payload protocol in
+          Output_protocol { level; protocol }
+      | Fragment_snapshot { level; protocol } ->
+          let protocol_hash = Protocol.hash protocol in
+          Output_snapshot { level; protocol_hash }
+
+    let apply output consensus =
+      match output with
+      | Output_protocol { level; protocol } ->
+          update_protocol level protocol consensus
+  end
+end
+
+(*
+
+type o = |
+type _ s = |
+type 'a nat = O : o nat | S : 'a nat -> 'a s nat
+
+let succ (type a) (n: a nat) = S n
+
+*)

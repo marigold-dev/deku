@@ -1,22 +1,18 @@
 open Deku_stdlib
 open Deku_crypto
 open Deku_consensus
-open Deku_gossip
 open Deku_network
 
 let restart ~bootstrap_secret ~next_author network =
   let hash = BLAKE2b.hash (Key_hash.to_b58 next_author) in
+
   let bootstrap_key = Key.of_secret bootstrap_secret in
   let signature = Signature.sign bootstrap_secret hash in
   let bootstrap_signal =
     Bootstrap_signal.Bootstrap_signal { next_author; signature; bootstrap_key }
   in
-  let _message, raw_message =
-    Message.encode ~content:(Message.Content.bootstrap_signal bootstrap_signal)
-  in
-  let (Raw_message { hash; raw_content }) = raw_message in
-  let raw_expected_hash = Message_hash.to_b58 hash in
-  Network.broadcast ~raw_expected_hash ~raw_content network
+  let _network = Network.broadcast_bootstrap_signal ~bootstrap_signal network in
+  ()
 
 let bootstrap bootstrap_secret validators validator_uris =
   let producer =
@@ -25,9 +21,7 @@ let bootstrap bootstrap_secret validators validator_uris =
     let () = Format.eprintf "producer: %ld\n%!" index in
     List.nth validators (Int32.to_int index)
   in
-  let network = Network.connect ~nodes:validator_uris in
-  (* TODO: remove this sleep *)
-  let%await () = Lwt_unix.sleep 3.0 in
+  let network = Network.make ~nodes:validator_uris in
   let () = restart ~bootstrap_secret ~next_author:producer network in
   (* TODO: this is lame, but Lwt*)
   let%await () = Lwt_unix.sleep 3.0 in

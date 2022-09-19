@@ -10,6 +10,7 @@ type block = private
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
+      withdrawal_handles_hash : BLAKE2b.t;
       author : Key_hash.t;
       (* TODO: why does it contain a level? *)
       level : Level.t;
@@ -29,6 +30,7 @@ val produce :
   previous:Block_hash.t ->
   operations:Operation.t list ->
   tezos_operations:Tezos_operation.t list ->
+  withdrawal_handles_hash:BLAKE2b.t ->
   block
 
 (* TODO: tag signatures, should be more than sign of the hash of a block *)

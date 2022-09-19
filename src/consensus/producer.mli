@@ -1,10 +1,11 @@
 open Deku_concepts
 open Deku_protocol
+open Deku_crypto
 
 type producer
 type t = producer
 
-val make : identity:Identity.t -> default_block_size:int -> producer
+val make : identity:Identity.t -> producer
 val incoming_operation : operation:Operation.t -> producer -> producer
 
 val incoming_tezos_operation :
@@ -17,10 +18,11 @@ val clean :
   producer ->
   producer
 
-val produce :
+val try_to_produce :
   parallel_map:
     ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   current:Timestamp.t ->
-  state:State.t ->
+  consensus:Consensus.t ->
+  withdrawal_handles_hash:BLAKE2b.t ->
   producer ->
-  Block.block option
+  Block.t option
