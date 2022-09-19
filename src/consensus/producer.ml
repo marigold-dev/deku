@@ -71,7 +71,7 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { identity; operations; tezos_operations; default_block_size }
 
-let produce ~current_level ~current_block producer =
+let produce ~parallel_map ~current_level ~current_block producer =
   let (Producer { identity; operations; tezos_operations; default_block_size })
       =
     producer
@@ -93,9 +93,10 @@ let produce ~current_level ~current_block producer =
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
-  Block.produce ~identity ~level ~previous ~operations ~tezos_operations
+  Block.produce ~parallel_map ~identity ~level ~previous ~operations
+    ~tezos_operations
 
-let produce ~current ~state producer =
+let produce ~parallel_map ~current ~state producer =
   let (State { current_level; current_block; _ }) = state in
   let (Producer
         {
@@ -112,7 +113,9 @@ let produce ~current ~state producer =
     Judger.is_producer ~current ~state self
   with
   | true ->
-      let block = produce ~current_level ~current_block producer in
+      let block =
+        produce ~parallel_map ~current_level ~current_block producer
+      in
       Format.printf "Producing %a\n%!" Block.pp block;
       Some block
   | false -> None

@@ -21,7 +21,9 @@ type block = private
 
 type t = block [@@deriving eq, ord, yojson]
 
-val produce (* FIXME: inject parallelism here *) :
+val produce :
+  parallel_map:
+    ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   identity:Identity.t ->
   level:Level.t ->
   previous:Block_hash.t ->

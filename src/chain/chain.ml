@@ -95,7 +95,11 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
     let (Consensus { block_pool = _; signer = _; bootstrap_key = _; state }) =
       consensus
     in
-    match Producer.produce ~current ~state producer with
+    match
+      Producer.produce ~current ~state
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        producer
+    with
     | Some block ->
         let content = Message.Content.block block in
         [ Chain_broadcast { content } ]
@@ -128,7 +132,11 @@ let incoming_timeout ~current chain =
       consensus
     in
     (* FIXME: I don't like having to duplicate the parallel_map thing *)
-    match Producer.produce ~current ~state producer with
+    match
+      Producer.produce
+        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~current ~state producer
+    with
     | Some block ->
         let content = Message.Content.block block in
         [ Chain_broadcast { content } ]

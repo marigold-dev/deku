@@ -18,8 +18,9 @@ val clean :
   producer
 
 val produce :
-  current:(* FIXME: inject parallelism here *)
-          Timestamp.t ->
+  parallel_map:
+    ((Operation.operation -> string) -> Operation.operation list -> string list) ->
+  current:Timestamp.t ->
   state:State.t ->
   producer ->
   Block.block option

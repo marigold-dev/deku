@@ -106,7 +106,7 @@ let clean ~current_level protocol =
 
 let apply ~parallel ~current_level ~payload ~tezos_operations protocol =
   let protocol, receipts =
-    apply_payload ~parallel ~current_level payload protocol
+    apply_payload ~current_level ~parallel payload protocol
   in
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)

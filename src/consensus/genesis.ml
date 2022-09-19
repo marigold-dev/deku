@@ -17,4 +17,5 @@ let block =
   in
   let operations = [] in
   let tezos_operations = [] in
-  Block.produce ~identity ~level ~previous ~operations ~tezos_operations
+  Block.produce ~parallel_map:List.map ~identity ~level ~previous ~operations
+    ~tezos_operations
