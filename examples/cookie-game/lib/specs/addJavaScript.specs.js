@@ -46,6 +46,7 @@ describe('cookieBaker.addJavaScript nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             cookieBaker.cookies = cookiesBefore + javaScriptCostBefore;
             const cookie_Baker = (0, state_1.addJavaScript)(cookieBaker);
             return (cookie_Baker.cookies === cookiesBefore
@@ -87,7 +88,8 @@ describe('cookieBaker.addJavaScript nominal cases', () => {
                 && cookie_Baker.javaScriptCost > javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS > passiveCPSBefore);
+                && cookie_Baker.passiveCPS > passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
     test('Cannot mint temple if not enough cookie', () => {
@@ -131,6 +133,7 @@ describe('cookieBaker.addJavaScript nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             //make sure we can't buy a temple
             cookieBaker.cookies = 0n;
             const cookie_Baker = (0, state_1.addJavaScript)(cookieBaker);
@@ -173,7 +176,8 @@ describe('cookieBaker.addJavaScript nominal cases', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS === passiveCPSBefore);
+                && cookie_Baker.passiveCPS === passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
 });

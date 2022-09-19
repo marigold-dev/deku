@@ -122,7 +122,6 @@ export const createCookieBaker = (
         javaScripts,
         idleverses,
         cordexs,
-        eatenCookies,
 
         cursorCost: 0n,
         grandmaCost: 0n,
@@ -144,7 +143,8 @@ export const createCookieBaker = (
         idleverseCost: 0n,
         cordexCost: 0n,
 
-        passiveCPS: 0n
+        passiveCPS: 0n,
+        eatenCookies,
     }
     cookieBaker.cursorCost = calculateCost(actions.cursor, cookieBaker);
     cookieBaker.grandmaCost = calculateCost(actions.grandma, cookieBaker);

@@ -46,6 +46,7 @@ describe('cookieBaker.addBank nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             cookieBaker.cookies = cookiesBefore + bankCostBefore;
             const cookie_Baker = (0, state_1.addBank)(cookieBaker);
             return (cookie_Baker.cookies === cookiesBefore
@@ -87,7 +88,8 @@ describe('cookieBaker.addBank nominal cases', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS > passiveCPSBefore);
+                && cookie_Baker.passiveCPS > passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
     test('Cannot mint bank if not enough cookie', () => {
@@ -131,6 +133,7 @@ describe('cookieBaker.addBank nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             //make sure we can't buy a factory
             cookieBaker.cookies = 0n;
             const cookie_Baker = (0, state_1.addBank)(cookieBaker);
@@ -173,7 +176,8 @@ describe('cookieBaker.addBank nominal cases', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS === passiveCPSBefore);
+                && cookie_Baker.passiveCPS === passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
 });

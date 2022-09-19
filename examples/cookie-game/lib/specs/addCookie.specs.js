@@ -46,6 +46,7 @@ describe('cookieBaker.addCookie successful', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             const cookie_Baker = (0, state_1.addCookie)(cookieBaker);
             return (cookie_Baker.cookies === cookiesBefore + 1n
                 && cookie_Baker.cursors === cursorsBefore
@@ -86,7 +87,8 @@ describe('cookieBaker.addCookie successful', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS === passiveCPSBefore);
+                && cookie_Baker.passiveCPS === passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
 });

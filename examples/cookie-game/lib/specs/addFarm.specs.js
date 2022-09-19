@@ -46,6 +46,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             cookieBaker.cookies = cookiesBefore + farmCostBefore;
             const cookie_Baker = (0, state_1.addFarm)(cookieBaker);
             return (cookie_Baker.cookies === cookiesBefore
@@ -87,7 +88,8 @@ describe('cookieBaker.addFarm nominal cases', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS > passiveCPSBefore);
+                && cookie_Baker.passiveCPS > passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
     test('Cannot mint farm if not enough cookie', () => {
@@ -131,6 +133,7 @@ describe('cookieBaker.addFarm nominal cases', () => {
             const idleverseCostBefore = cookieBaker.idleverseCost;
             const cordexCostBefore = cookieBaker.cordexCost;
             const passiveCPSBefore = cookieBaker.passiveCPS;
+            const eatenCookiesBefore = cookieBaker.eatenCookies;
             //make sure we can't buy a farm
             cookieBaker.cookies = 0n;
             const cookie_Baker = (0, state_1.addFarm)(cookieBaker);
@@ -173,7 +176,8 @@ describe('cookieBaker.addFarm nominal cases', () => {
                 && cookie_Baker.javaScriptCost === javaScriptCostBefore
                 && cookie_Baker.idleverseCost === idleverseCostBefore
                 && cookie_Baker.cordexCost === cordexCostBefore
-                && cookie_Baker.passiveCPS === passiveCPSBefore);
+                && cookie_Baker.passiveCPS === passiveCPSBefore
+                && cookie_Baker.eatenCookies === eatenCookiesBefore);
         }));
     });
 });

@@ -8,7 +8,7 @@ import {
     addAntimatter, addPrism, addChanceMaker, addFractal, addJavaScript,
     addIdleverse, addCordex, createEmptyCookieBaker, initCookieBaker, transferCookies, eatCookies
 } from "./state"
-import { actions, isBurn, isTransfer, operations, operationType } from "./actions"
+import { actions, isEaten, isTransfer, operations, operationType } from "./actions"
 import { parseReviver, stringifyReplacer } from "./utils"
 
 const saveState = (source: transaction, cookieBaker: cookieBaker) => {
@@ -196,7 +196,7 @@ const transition = (tx: transaction) => {
             throw new Error("Impossible case! Expected mint, transfer or eat");
         }
     } else if (operation.type === operationType.eat) {
-        if (isBurn(operation.operation)) {
+        if (isEaten(operation.operation)) {
             eatCookies(cookieBaker, BigInt(operation.operation.amount));
             saveState(source, cookieBaker);
         }

@@ -192,7 +192,7 @@ const transition = (tx) => {
         }
     }
     else if (operation.type === actions_1.operationType.eat) {
-        if ((0, actions_1.isBurn)(operation.operation)) {
+        if ((0, actions_1.isEaten)(operation.operation)) {
             (0, state_1.eatCookies)(cookieBaker, BigInt(operation.operation.amount));
             saveState(source, cookieBaker);
         }

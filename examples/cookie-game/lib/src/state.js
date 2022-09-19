@@ -57,7 +57,6 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         javaScripts,
         idleverses,
         cordexs,
-        eatenCookies,
         cursorCost: 0n,
         grandmaCost: 0n,
         farmCost: 0n,
@@ -77,7 +76,8 @@ const createCookieBaker = (cookies, cursors, grandmas, farms, mines, factories, 
         javaScriptCost: 0n,
         idleverseCost: 0n,
         cordexCost: 0n,
-        passiveCPS: 0n
+        passiveCPS: 0n,
+        eatenCookies,
     };
     cookieBaker.cursorCost = (0, exports.calculateCost)(actions_1.actions.cursor, cookieBaker);
     cookieBaker.grandmaCost = (0, exports.calculateCost)(actions_1.actions.grandma, cookieBaker);
