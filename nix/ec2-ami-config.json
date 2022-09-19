@@ -1,0 +1,10 @@
+[
+    {
+        "Description": "Deku Benchmark Image",
+        "Format": "vhd",
+        "UserBucket": {
+            "S3Bucket": "nixosami",
+            "S3Key": "nixos-amazon-image-22.11.20220726.c7532da-x86_64-linux.vhd"
+        }
+    }
+]

@@ -14,9 +14,13 @@
       nixpkgs.follows = "nixpkgs";
       flake-utils.follows = "flake-utils";
     };
+    nixos-generators = {
+      url = "github:nix-community/nixos-generators";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, nixos-generators }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = (nixpkgs.makePkgs {
@@ -41,12 +45,21 @@
         deku = pkgs.callPackage ./nix {
           inherit nodejs npmPackages;
           doCheck = true;
+          static = true;
         };
-
-        ligo = pkgs.callPackage ./nix/ligo.nix { };
       in
       rec {
-        packages = { default = deku; };
-        devShell = import ./nix/shell.nix { inherit pkgs deku ligo; };
+        packages = {
+          default = deku;
+          ec2-image = nixos-generators.nixosGenerate {
+            inherit pkgs;
+            modules = [
+              ({...}: { amazonImage.sizeMB = 30 * 1024; })
+              (import ./nix/ec2-image.nix { inherit deku; })
+            ];
+            format = "amazon";
+          };
+        };
+        devShell = import ./nix/shell.nix { inherit pkgs deku; };
       });
 }
