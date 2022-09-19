@@ -1,11 +1,13 @@
 open Receipt
-open Deku_tezos
+open Deku_external_vm
+module Tezos_operation_hash = Deku_tezos.Tezos_operation_hash
 
 type protocol =
   | Protocol of {
       included_operations : Included_operation_set.t;
       included_tezos_operations : Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
+      vm_state : External_vm_protocol.State.t;
     }
 
 type t = protocol
@@ -16,11 +18,21 @@ let initial =
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
+      vm_state = External_vm_protocol.State.empty;
     }
+
+let initial_with_vm_state ~vm_state =
+  let (Protocol
+        { included_operations; included_tezos_operations; ledger; vm_state = _ })
+      =
+    initial
+  in
+  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
 
 let apply_operation ~current_level protocol operation =
   let open Operation in
-  let (Protocol { included_operations; ledger; included_tezos_operations }) =
+  let (Protocol
+        { included_operations; ledger; included_tezos_operations; vm_state }) =
     protocol
   in
   let (Operation
@@ -37,23 +49,46 @@ let apply_operation ~current_level protocol operation =
         Included_operation_set.add operation included_operations
       in
       match content with
-      | Operation_transaction { receiver; amount } ->
+      | Operation_ticket_transfer { receiver; amount } ->
           let sender = source in
           let ledger =
             match Ledger.transfer ~sender ~receiver amount ledger with
             | Some ledger -> ledger
             | None -> ledger
           in
-
           let receipt = Receipt { operation = hash } in
           Some
-            ( Protocol { included_operations; included_tezos_operations; ledger },
+            ( Protocol
+                {
+                  included_operations;
+                  included_tezos_operations;
+                  ledger;
+                  vm_state;
+                },
+              receipt )
+      | Operation_vm_transaction { operation; tickets } ->
+          (* FIXME: fix this *)
+          let vm_state =
+            External_vm_client.apply_vm_operation ~state:vm_state
+              ~source:(Address.to_key_hash source)
+              ~tickets operation
+          in
+          let receipt = Receipt { operation = hash } in
+          Some
+            ( Protocol
+                {
+                  included_operations;
+                  included_tezos_operations;
+                  ledger;
+                  vm_state;
+                },
               receipt )
       | Operation_noop -> None)
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
-  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+  let (Protocol
+        { included_operations; included_tezos_operations; ledger; vm_state }) =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
@@ -63,7 +98,8 @@ let apply_tezos_operation protocol tezos_operation =
         Tezos_operation_hash.Set.add hash included_tezos_operations
       in
       let protocol =
-        Protocol { included_operations; included_tezos_operations; ledger }
+        Protocol
+          { included_operations; included_tezos_operations; ledger; vm_state }
       in
       List.fold_left
         (fun protocol tezos_operation ->
@@ -96,13 +132,14 @@ let apply_payload ~parallel ~current_level payload protocol =
     (protocol, []) operations
 
 let clean ~current_level protocol =
-  let (Protocol { included_operations; included_tezos_operations; ledger }) =
+  let (Protocol
+        { included_operations; included_tezos_operations; ledger; vm_state }) =
     protocol
   in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol { included_operations; included_tezos_operations; ledger }
+  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
 
 let apply ~parallel ~current_level ~payload ~tezos_operations protocol =
   let protocol, receipts =

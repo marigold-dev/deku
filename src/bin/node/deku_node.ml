@@ -3,6 +3,7 @@ open Deku_concepts
 open Deku_tezos_interop
 open Deku_crypto
 open Deku_indexer
+open Deku_external_vm
 include Node
 
 type params = {
@@ -37,6 +38,8 @@ type params = {
   tezos_discovery_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
       (** The address of the discovery contract on Tezos. *)
+  named_pipe_path : string; [@default "deku_vm"]
+      (** Named pipe path to use for IPC with the VM *)
 }
 [@@deriving cmdliner]
 
@@ -59,6 +62,7 @@ let main params =
     tezos_secret;
     tezos_consensus_address;
     tezos_discovery_address;
+    named_pipe_path;
   } =
     params
   in
@@ -73,13 +77,20 @@ let main params =
       ~discovery_contract:tezos_discovery_address
       ~required_confirmations:tezos_required_confirmations
   in
+  (* FIXME: we need to load the initial state when we have snapshotting.
+     This involves one of two things:
+       - load some initial state defined by the VM.
+       - load the state from disk. *)
+  (* FIXME: Also, startup order matters, otherwise you hit deadlock on the named pipes. *)
+  let () = External_vm_client.start_vm_ipc ~named_pipe_path in
+  let vm_state = External_vm_client.get_initial_state () in
   let identity = Identity.make (Secret.Ed25519 secret) in
   let pool = Parallel.Pool.make ~domains in
   Parallel.Pool.run pool (fun () ->
       let node, promise =
         Node.make ~pool ~identity ~validators ~nodes:validator_uris
           ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer
-          ~default_block_size
+          ~default_block_size ~vm_state
       in
       Node.listen node ~port ~tezos_interop;
       promise)
