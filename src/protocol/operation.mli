@@ -4,7 +4,8 @@ open Deku_concepts
 exception Invalid_signature
 
 type operation_content = private
-  | Operation_transaction of { receiver : Address.t; amount : Amount.t }
+  | Operation_ticket_transfer of { receiver : Address.t; amount : Amount.t }
+  | Operation_vm_transaction of { operation : string; tickets : Ticket.t list }
   | Operation_noop
 
 type operation = private
@@ -20,7 +21,7 @@ type operation = private
 
 type t = operation [@@deriving eq, ord, yojson]
 
-val transaction :
+val ticket_transfer :
   identity:Identity.t ->
   level:Level.t ->
   nonce:Nonce.t ->
