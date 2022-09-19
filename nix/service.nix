@@ -1,4 +1,4 @@
-{ config, pkgs, lib, deku, ... }:
+{ deku }: { config, pkgs, lib, ... }:
 
 with lib;
 
@@ -78,12 +78,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    services.deku-node.settings = {
-      # We use this to open the firewall, so we need to know about the default at eval time
-      port = cfg.port;
-    };
-
-    systemd.services.n8n = {
+    systemd.services.deku-node = {
       description = "Deku node";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];

@@ -70,7 +70,7 @@
         };
         devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; };
         nixosModules = {
-          deku-node = import ./nix/service.nix;
+          deku-node = import ./nix/service.nix { inherit deku; };
         };
       });
 }
