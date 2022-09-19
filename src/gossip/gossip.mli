@@ -10,6 +10,9 @@ type action = private
     }
   | Gossip_fragment of { fragment : fragment }
 
+(* TODO: Timestamp.t *)
+type timestamp = float
+
 val empty : gossip
 
 val incoming :
@@ -22,8 +25,15 @@ val incoming :
 val broadcast : content:Message.Content.t -> fragment
 (** [broadcast ~content gossip] *)
 
-val apply : outcome:outcome -> gossip -> gossip * action option
+val apply :
+  current:timestamp -> outcome:outcome -> gossip -> gossip * action option
 (** [apply ~compute gossip] *)
 
 val compute : fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
+
+(* TODO: this is weird *)
+val clean : current:timestamp -> gossip -> gossip
+
+(* TODO: remove this *)
+val test : unit -> unit

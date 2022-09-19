@@ -13,8 +13,9 @@ val make :
   validators:Deku_crypto.Key_hash.t list ->
   nodes:Uri.t list ->
   bootstrap_key:Key.t ->
-  indexer:Indexer.t ->
+  ?indexer:Indexer.t option ->
   default_block_size:int ->
+  unit ->
   node * unit Lwt.t
 
 val listen : node -> port:int -> tezos_interop:Tezos_interop.t -> unit
