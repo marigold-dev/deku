@@ -5,9 +5,8 @@ open Deku_crypto
 open Deku_indexer
 include Node
 
-let domains = 8
-
 type params = {
+  domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
   bootstrap_key : Ed25519.Key.t; [@env "DEKU_BOOTSTRAP_KEY"]
@@ -45,6 +44,7 @@ let main params =
   Lwt_main.run
   @@
   let {
+    domains;
     bootstrap_key;
     secret;
     validators;
