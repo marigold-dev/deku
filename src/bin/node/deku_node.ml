@@ -74,10 +74,9 @@ let main params =
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   let pool = Parallel.Pool.make ~domains in
-  let nodes = List.map2 (fun a b -> (a, b)) validators validator_uris in
   let node, promise =
-    Node.make ~pool ~identity ~nodes ~indexer:(Some indexer) ~default_block_size
-      ()
+    Node.make ~pool ~identity ~validators ~nodes:validator_uris
+      ~indexer:(Some indexer) ~default_block_size ()
   in
   Node.listen node ~port ~tezos_interop;
   promise
@@ -101,6 +100,10 @@ let () = setup_log ~level:Logs.Info ()
 let () =
   Lwt.async_exception_hook :=
     fun exn -> Logs.err (fun m -> m "async: %s" (Printexc.to_string exn))
+
+let () =
+  Sys.set_signal Sys.sigpipe
+    (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
 
 let () =
   Logs.info (fun m -> m "Starting node");

@@ -1,8 +1,15 @@
 open Deku_stdlib
 open Deku_crypto
+open Deku_gossip
 open Piaf_lwt
 
-type network = Network of { clients : Uri.t Key_hash.Map.t }
+type network = {
+  nodes : Uri.t list;
+  mutable next_request_id : Request_id.t;
+  mutable requests :
+    (raw_expected_hash:string -> raw_content:string -> unit) Request_id.Map.t;
+}
+
 type t = network
 
 let error ~message status =
@@ -13,76 +20,95 @@ let internal_error error =
   let response = Response.or_internal_error (Error error) in
   Lwt.return response
 
-let expected_hash_query = "hash"
+let raw_expected_hash_header = "X-Raw-Expected-Hash"
+let broadcast_endpoint = "/messages"
+let request_endpoint = "/request"
 
-let with_uri Server.{ ctx = _; request } next =
-  let uri = Uri.of_string request.target in
-  let meth = request.meth in
-  let endpoint = Uri.path uri in
-  match (meth, endpoint) with
-  | `POST, "/messages" -> next Server.{ ctx = uri; request }
-  | _ -> error ~message:"only POST /messages is supported" `Bad_request
+let headers ~raw_expected_hash =
+  let open Headers in
+  (* TODO: maybe add json to Well_known in Piaf*)
+  let json = Mime_types.map_extension "json" in
+  [
+    (Well_known.content_type, json);
+    (raw_expected_hash_header, raw_expected_hash);
+  ]
 
-let with_raw_expected_hash Server.{ ctx = uri; request } next =
-  match Uri.get_query_param uri expected_hash_query with
-  | Some raw_expected_hash -> next Server.{ ctx = raw_expected_hash; request }
-  | None -> error ~message:"?expected_hash is required" `Bad_request
-
-let with_raw_content Server.{ ctx = raw_expected_hash; request } next =
-  let body = request.body in
+let with_raw_content ~request k =
+  let body = request.Request.body in
   let%await raw_content = Body.to_string body in
   match raw_content with
-  | Ok raw_content ->
-      next Server.{ ctx = (raw_expected_hash, raw_content); request }
+  | Ok raw_content -> k raw_content
   | Error error -> internal_error error
 
-let dispatch on_message
-    Server.{ ctx = raw_expected_hash, raw_content; request = _ } =
+let with_raw_expected_hash ~request k =
+  let headers = request.Request.headers in
+  match Headers.get headers raw_expected_hash_header with
+  | Some raw_expected_hash -> k raw_expected_hash
+  | None -> error ~message:"?expected_hash is required" `Bad_request
+
+let handler_messages ~on_message request =
+  with_raw_expected_hash ~request @@ fun raw_expected_hash ->
+  with_raw_content ~request @@ fun raw_content ->
   let () = on_message ~raw_expected_hash ~raw_content in
   let response = Piaf_lwt.Response.of_string ~body:"OK" `OK in
   Lwt.return response
 
-let handler on_message context =
-  with_uri context @@ fun context ->
-  with_raw_expected_hash context @@ fun context ->
-  with_raw_content context @@ fun context -> dispatch on_message context
+let handler_request ~on_request ~network request =
+  with_raw_expected_hash ~request @@ fun raw_expected_hash ->
+  with_raw_content ~request @@ fun raw_content ->
+  let id = network.next_request_id in
+  network.next_request_id <- Request_id.next id;
 
-let listen ~port ~on_message =
-  let listen_address = Unix.(ADDR_INET (inet_addr_any, port)) in
+  let response_promise, response_resolver = Lwt.wait () in
+  let resolver ~raw_expected_hash ~raw_content =
+    network.requests <- Request_id.Map.remove id network.requests;
+    Lwt.wakeup_later response_resolver (raw_expected_hash, raw_content)
+  in
+  network.requests <- Request_id.Map.add id resolver network.requests;
+  on_request ~id ~raw_expected_hash ~raw_content;
+
+  let%await raw_expected_hash, raw_content = response_promise in
+  let headers = headers ~raw_expected_hash in
+  let headers = Headers.of_list headers in
+  let response = Piaf_lwt.Response.of_string ~headers ~body:raw_content `OK in
+  Lwt.return response
+
+let handler ~on_message ~on_request ~network Server.{ ctx = _; request } =
+  let uri = Uri.of_string request.target in
+  let meth = request.meth in
+  let endpoint = Uri.path uri in
+  match (meth, endpoint) with
+  | `POST, "/messages" -> handler_messages ~on_message request
+  | `POST, "/request" -> handler_request ~on_request ~network request
+  | _ ->
+      error ~message:"only POST /messages and POST /request are supported"
+        `Bad_request
+
+let listen ~port ~on_message ~on_request network =
+  let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
   Lwt.async (fun () ->
       (* TODO: piaf error_handler *)
       let%await _server =
         Lwt_io.establish_server_with_client_socket listen_address
           (Server.create ?config:None ?error_handler:None (fun context ->
                (* Format.eprintf "request\n%!"; *)
-               handler on_message context))
+               handler ~on_message ~on_request ~network context))
       in
       Logs.info (fun m -> m "Listening on port %i" port);
       Lwt.return_unit)
 
 let connect ~nodes =
-  let clients =
-    List.fold_left
-      (fun clients (key, uri) -> Key_hash.Map.add key uri clients)
-      Key_hash.Map.empty nodes
-  in
-  Network { clients }
-
-let endpoint = "/messages"
+  {
+    nodes;
+    next_request_id = Request_id.initial;
+    requests = Request_id.Map.empty;
+  }
 
 let post ~raw_expected_hash ~raw_content ~uri =
-  let headers =
-    let open Headers in
-    (* TODO: maybe add json to Well_known in Piaf*)
-    let json = Mime_types.map_extension "json" in
-    [ (Well_known.content_type, json) ]
-  in
-  let target = Uri.with_path uri endpoint in
-  let target =
-    Uri.with_query' target [ (expected_hash_query, raw_expected_hash) ]
-  in
+  let target = Uri.with_path uri broadcast_endpoint in
   (* let target = Uri.to_string target in *)
   (* Format.eprintf "%a <- %s\n%!" Uri.pp_hum _uri target; *)
+  let headers = headers ~raw_expected_hash in
   let body = Body.of_string raw_content in
   Client.Oneshot.post ~headers ~body target
 
@@ -107,15 +133,63 @@ let post ~raw_expected_hash ~raw_content ~uri =
           (* TODO: do something with this error *)
           Lwt.return_unit)
 
-let send ~to_ ~raw_expected_hash ~raw_content server =
-  let (Network { clients }) = server in
-  match Key_hash.Map.find_opt to_ clients with
-  | Some uri -> post ~raw_expected_hash ~raw_content ~uri
-  | None -> (* TODO: do something here *) ()
+let broadcast ~raw_expected_hash ~raw_content network =
+  List.iter (fun uri -> post ~raw_expected_hash ~raw_content ~uri) network.nodes
 
-let broadcast ~raw_expected_hash ~raw_content server =
-  let (Network { clients }) = server in
+let post ~raw_expected_hash ~raw_content ~uri =
+  let target = Uri.with_path uri request_endpoint in
+  let headers = headers ~raw_expected_hash in
+  let body = Body.of_string raw_content in
+  let%await post = Client.Oneshot.post ~headers ~body target in
+  match post with
+  | Ok response -> (
+      let headers = response.headers in
+      match Headers.get headers raw_expected_hash_header with
+      | Some raw_expected_hash -> (
+          let%await body = Body.to_string response.body in
+          match body with
+          | Ok body -> Lwt.return (Some (raw_expected_hash, body))
+          | Error _error ->
+              (* Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error; *)
+              (* TODO: do something with this error *)
+              Lwt.return_none)
+      | None ->
+          (* TODO: do something with this error *)
+          Lwt.return_none)
+  | Error _error ->
+      (* Format.eprintf "error.post: %a\n%!" Error.pp_hum _error; *)
+      (* TODO: do something with this error *)
+      Lwt.return_none
 
-  Key_hash.Map.iter
-    (fun _key uri -> post ~raw_expected_hash ~raw_content ~uri)
-    clients
+let request_from_uri ~raw_expected_hash ~raw_content ~uri =
+  Lwt.try_bind
+    (fun () -> post ~raw_expected_hash ~raw_content ~uri)
+    (fun response ->
+      match response with
+      | Some (raw_expected_hash, raw_content) ->
+          Lwt.return (Some (raw_expected_hash, raw_content))
+      | None -> Lwt.return_none)
+    (fun _exn -> (* TODO: do something with this error *) Lwt.return_none)
+
+let rec request ~raw_expected_hash ~raw_content network =
+  (* TODO: this is non ideal but works *)
+  let size = List.length network.nodes in
+  let n = Random.int size in
+  let uri = List.nth network.nodes n in
+
+  (* TODO: slow loris *)
+
+  (* TODO: make it cancellable *)
+  let%await response = request_from_uri ~raw_expected_hash ~raw_content ~uri in
+  match response with
+  | Some (raw_expected_hash, raw_content) ->
+      Lwt.return (raw_expected_hash, raw_content)
+  | None -> request ~raw_expected_hash ~raw_content network
+
+let respond ~id ~raw_expected_hash ~raw_content network =
+  match Request_id.Map.find_opt id network.requests with
+  | Some resolver -> resolver ~raw_expected_hash ~raw_content
+  | None ->
+      (* TODO: what do I do here? *)
+      Format.eprintf "duplicated respond\n%!";
+      ()

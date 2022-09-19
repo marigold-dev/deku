@@ -2,17 +2,17 @@ open Deku_repr
 open Deku_crypto
 open BLAKE2b
 
-type message_hash = BLAKE2b.t
-and t = message_hash [@@deriving eq, ord]
+type response_hash = BLAKE2b.t
+and t = response_hash [@@deriving eq, ord]
 
-let to_blake2b message_hash = message_hash
+let to_blake2b response_hash = response_hash
 
 include With_b58 (struct
-  let prefix = Prefix.deku_message_hash
+  let prefix = Prefix.deku_response_hash
 end)
 
 include With_yojson_of_b58 (struct
-  type t = message_hash
+  type t = response_hash
 
   let of_b58 = of_b58
   let to_b58 = to_b58

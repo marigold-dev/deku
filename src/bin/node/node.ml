@@ -22,9 +22,27 @@ type t = node
 
 let current () = Timestamp.of_float (Unix.gettimeofday ())
 
-let rec on_network node ~raw_expected_hash ~raw_content =
+let rec on_network_message node ~raw_expected_hash ~raw_content =
   let chain, fragment =
     Chain.incoming ~raw_expected_hash ~raw_content node.chain
+  in
+  node.chain <- chain;
+  match fragment with
+  | Some fragment -> handle_chain_fragment node ~fragment
+  | None -> ()
+
+and on_network_request node ~id ~raw_expected_hash ~raw_content =
+  let chain, fragment =
+    Chain.request ~id ~raw_expected_hash ~raw_content node.chain
+  in
+  node.chain <- chain;
+  match fragment with
+  | Some fragment -> handle_chain_fragment node ~fragment
+  | None -> ()
+
+and on_network_response node ~raw_expected_hash ~raw_content =
+  let chain, fragment =
+    Chain.response ~raw_expected_hash ~raw_content node.chain
   in
   node.chain <- chain;
   match fragment with
@@ -64,8 +82,16 @@ and handle_chain_action node ~action =
   | Chain_trigger_timeout -> node.trigger_timeout ()
   | Chain_broadcast { raw_expected_hash; raw_content } ->
       Network.broadcast ~raw_expected_hash ~raw_content node.network
-  | Chain_send { to_; raw_expected_hash; raw_content } ->
-      Network.send ~to_ ~raw_expected_hash ~raw_content node.network
+  | Chain_send_request { raw_expected_hash; raw_content } ->
+      Lwt.async (fun () ->
+          (* TODO: this is non ideal *)
+          let%await raw_expected_hash, raw_content =
+            Network.request ~raw_expected_hash ~raw_content node.network
+          in
+          on_network_response node ~raw_expected_hash ~raw_content;
+          Lwt.return_unit)
+  | Chain_send_response { id; raw_expected_hash; raw_content } ->
+      Network.respond ~id ~raw_expected_hash ~raw_content node.network
   | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
   | Chain_save_block block -> (
       match node.indexer with
@@ -102,9 +128,9 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~actions node
 
-let make ~pool ~identity ~nodes ?(indexer = None) ~default_block_size () =
+let make ~pool ~identity ~validators ~nodes ?(indexer = None)
+    ~default_block_size () =
   let network = Network.connect ~nodes in
-  let validators = List.map fst nodes in
   let chain = Chain.make ~identity ~validators ~pool ~default_block_size in
   let node =
     let trigger_timeout () = () in
@@ -115,10 +141,12 @@ let make ~pool ~identity ~nodes ?(indexer = None) ~default_block_size () =
 
 let listen node ~port ~tezos_interop =
   let on_message ~raw_expected_hash ~raw_content =
-    on_network node ~raw_expected_hash ~raw_content
+    on_network_message node ~raw_expected_hash ~raw_content
   in
-  Network.listen ~port ~on_message;
-  let open Deku_tezos_interop in
+  let on_request ~id ~raw_expected_hash ~raw_content =
+    on_network_request node ~id ~raw_expected_hash ~raw_content
+  in
+  Network.listen ~port ~on_message ~on_request node.network;
   Tezos_interop.Consensus.listen_operations tezos_interop
     ~on_operation:(fun operation -> handle_tezos_operation node ~operation)
 
@@ -128,15 +156,19 @@ let _test () =
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
   let identity = Identity.make secret in
-  let nodes =
+  let validators =
     let key = Key.of_secret secret in
     let key_hash = Key_hash.of_key key in
-    [ (key_hash, Uri.of_string "http://localhost:1234") ]
+    [ key_hash ]
+  in
+  let nodes =
+    let uri = Uri.of_string "http://localhost:1234" in
+    [ uri ]
   in
   let pool = Parallel.Pool.make ~domains:8 in
 
   let node, promise =
-    make ~pool ~identity ~nodes ~default_block_size:0 ~indexer:None ()
+    make ~pool ~identity ~validators ~nodes ~default_block_size:0 ()
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =
@@ -161,7 +193,7 @@ let _test () =
     in
     let (Raw_message { hash; raw_content }) = raw_message in
     let raw_expected_hash = Message_hash.to_b58 hash in
-    on_network node ~raw_expected_hash ~raw_content
+    on_network_message node ~raw_expected_hash ~raw_content
   in
 
   let () =
@@ -171,6 +203,6 @@ let _test () =
     in
     let (Raw_message { hash; raw_content }) = raw_message in
     let raw_expected_hash = Message_hash.to_b58 hash in
-    on_network node ~raw_expected_hash ~raw_content
+    on_network_message node ~raw_expected_hash ~raw_content
   in
   Lwt_main.run promise
