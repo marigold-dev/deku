@@ -137,3 +137,18 @@ let broadcast ~raw_expected_hash ~raw_content server =
       | Some client -> post ~raw_expected_hash ~raw_content ~uri client
       | None -> ())
     clients
+
+let notify_api ~block uri =
+  Lwt.async (fun () ->
+      let headers =
+        let open Headers in
+        let json = Mime_types.map_extension "json" in
+        [ (Well_known.content_type, json) ]
+      in
+      let target = Uri.with_path uri "/api/v1/listen/blocks" in
+      let body =
+        Body.of_string
+          (Deku_consensus.Block.yojson_of_t block |> Yojson.Safe.to_string)
+      in
+      let%await _ = Client.Oneshot.post ~headers ~body target in
+      Lwt.return_unit)
