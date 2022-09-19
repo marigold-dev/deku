@@ -11,6 +11,8 @@ type block =
       level : Level.t;
       previous : Block_hash.t;
       payload : string list;
+      payload_hash : BLAKE2b.t;
+      tezos_operations : Tezos_operation.t list;
     }
 
 type t = block
@@ -45,37 +47,69 @@ module Repr = struct
     level : Level.t;
     previous : Block_hash.t;
     payload : string list;
+    tezos_operations : Tezos_operation.t list;
   }
   [@@deriving yojson]
 
   (* TODO: we could avoid Yojson.Safe.to_string if we had locations *)
   let hash block =
-    let json = yojson_of_block block in
-    let json = Yojson.Safe.to_string json in
-    Block_hash.hash json
+    let block_payload_hash =
+      yojson_of_block block |> Yojson.Safe.to_string |> BLAKE2b.hash
+    in
+    let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
+    let withdrawal_handles_hash =
+      BLAKE2b.hash "FIXME: we need the withdraw handles hash"
+    in
+    let block_hash =
+      Block_hash.hash ~block_level:block.level ~block_payload_hash
+        ~state_root_hash ~withdrawal_handles_hash
+    in
+    (block_payload_hash, block_hash)
 
   let t_of_yojson json =
     let { key; signature; block } = block_and_signature_of_yojson json in
-    let { author; level; previous; payload } = block in
+    let { author; level; previous; payload; tezos_operations } = block in
     (* TODO: serializing after deserializing *)
-    let hash = hash block in
+    let payload_hash, block_hash = hash block in
 
     (match Key_hash.(equal author (of_key key)) with
     | true -> ()
     | false -> raise Invalid_signature);
     (match
-       let hash = Block_hash.to_blake2b hash in
+       let hash = Block_hash.to_blake2b block_hash in
        Signature.verify key signature hash
      with
     | true -> ()
     | false -> raise Invalid_signature);
-    Block { key; signature; hash; author; level; previous; payload }
+    Block
+      {
+        key;
+        signature;
+        hash = block_hash;
+        author;
+        level;
+        previous;
+        payload;
+        payload_hash;
+        tezos_operations;
+      }
 
   let yojson_of_t block =
-    let (Block { key; signature; hash = _; author; level; previous; payload }) =
+    let (Block
+          {
+            key;
+            signature;
+            hash = _;
+            author;
+            level;
+            previous;
+            payload;
+            payload_hash = _;
+            tezos_operations;
+          }) =
       block
     in
-    let block = { author; level; previous; payload } in
+    let block = { author; level; previous; payload; tezos_operations } in
     yojson_of_block_and_signature { key; signature; block }
 end
 
@@ -83,7 +117,6 @@ let t_of_yojson = Repr.t_of_yojson
 let yojson_of_t = Repr.yojson_of_t
 
 let payload_of_operations operations =
-  (* TODO: produce parallel? *)
   (* TODO: this likely should not be here *)
   List.map
     (fun operation ->
@@ -91,16 +124,29 @@ let payload_of_operations operations =
       Yojson.Safe.to_string json)
     operations
 
-let produce ~identity ~level ~previous ~operations =
+let produce ~identity ~level ~previous ~operations ~tezos_operations =
   let author = Identity.key_hash identity in
   let payload = payload_of_operations operations in
-  let hash = Repr.hash { author; level; previous; payload } in
+  let payload_hash, block_hash =
+    Repr.hash { author; level; previous; payload; tezos_operations }
+  in
   let key = Identity.key identity in
   let signature =
-    let hash = Block_hash.to_blake2b hash in
+    let hash = Block_hash.to_blake2b block_hash in
     Identity.sign ~hash identity
   in
-  Block { key; signature; hash; author; level; previous; payload }
+  Block
+    {
+      key;
+      signature;
+      hash = block_hash;
+      author;
+      level;
+      previous;
+      payload;
+      payload_hash;
+      tezos_operations;
+    }
 
 let sign ~identity block =
   let (Block { hash; _ }) = block in

@@ -1,5 +1,6 @@
 open Deku_stdlib
 open Deku_concepts
+open Deku_tezos_interop
 open Deku_crypto
 open Deku_indexer
 include Node
@@ -24,6 +25,19 @@ type params = {
       (** Configures the debug indexer to save consensus messages. Defaults to true. *)
   default_block_size : int; [@env "DEKU_DEFAULT_BLOCK_SIZE"] [@default 50_000]
       (** The threshold below which blocks are filled with no-op transactions. *)
+  tezos_rpc_node : Uri.t; [@env "DEKU_TEZOS_RPC_NODE"]
+      (** The URI of this validator's Tezos RPC node. *)
+  tezos_required_confirmations : int;
+      [@default 2] [@env "DEKU_TEZOS_REQUIRED_CONFIRMATIONS"]
+      (** The number of blocks to wait before considering a Tezos block confirmed. *)
+  tezos_secret : Ed25519.Secret.t; [@env "DEKU_TEZOS_SECRET"]
+      (** The base58-encoded ED25519 secret to use as the wallet for submitting Tezos transactions. *)
+  tezos_consensus_address : Deku_tezos.Address.t;
+      [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
+      (** The address of the consensus contract on Tezos.  *)
+  tezos_discovery_address : Deku_tezos.Address.t;
+      [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
+      (** The address of the discovery contract on Tezos. *)
 }
 [@@deriving cmdliner]
 
@@ -40,12 +54,24 @@ let main params =
     save_blocks;
     save_messages;
     default_block_size;
+    tezos_rpc_node;
+    tezos_required_confirmations;
+    tezos_secret;
+    tezos_consensus_address;
+    tezos_discovery_address;
   } =
     params
   in
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
+  in
+  let tezos_interop =
+    Tezos_interop.make ~rpc_node:tezos_rpc_node
+      ~secret:(Secret.Ed25519 tezos_secret)
+      ~consensus_contract:tezos_consensus_address
+      ~discovery_contract:tezos_discovery_address
+      ~required_confirmations:tezos_required_confirmations
   in
   let identity = Identity.make (Secret.Ed25519 secret) in
   let pool = Parallel.Pool.make ~domains in
@@ -55,7 +81,7 @@ let main params =
           ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer
           ~default_block_size
       in
-      Node.listen node ~port;
+      Node.listen node ~port ~tezos_interop;
       promise)
 
 (* let setup_log ?style_renderer level =

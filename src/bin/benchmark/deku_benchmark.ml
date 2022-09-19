@@ -62,7 +62,7 @@ module Zero_ops = struct
       Util.benchmark ~runs (fun () ->
           let _protocol, _receipts =
             Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level
-              ~payload protocol
+              ~tezos_operations:[] ~payload protocol
           in
           ())
     in

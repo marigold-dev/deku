@@ -43,3 +43,25 @@ include With_yojson_of_b58 (struct
   let of_b58 = of_b58
   let to_b58 = to_b58
 end)
+
+let encoding =
+  let open Data_encoding in
+  let name = "Signature.Public_key" in
+  let title = "A Ed25519, Secp256k1, or P256 public key" in
+  let raw_encoding =
+    def "public_key" ~description:title
+    @@ union
+         [
+           case (Tag 0) Ed25519.Key.encoding ~title:"Ed25519"
+             (function Ed25519 key -> Some key | _ -> None)
+             (fun key -> Ed25519 key);
+           case (Tag 1) Secp256k1.Key.encoding ~title:"Secp256k1"
+             (function Secp256k1 x -> Some x | _ -> None)
+             (fun x -> Secp256k1 x);
+           case (Tag 2) P256.Key.encoding ~title:"P256"
+             (function P256 x -> Some x | _ -> None)
+             (fun x -> P256 x);
+         ]
+  in
+  Encoding_helpers.make_encoding ~name ~title ~to_string:to_b58
+    ~of_string:of_b58 ~raw_encoding

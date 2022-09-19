@@ -31,13 +31,13 @@ let rec apply_consensus_action chain consensus_action =
   let (Chain { pool; protocol; consensus; producer }) = chain in
   match consensus_action with
   | Consensus_accepted_block block ->
-      let (Block.Block { level; payload; _ }) = block in
+      let (Block.Block { level; payload; tezos_operations; _ }) = block in
       let protocol, receipts =
         Protocol.apply
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
-          ~current_level:level ~payload protocol
+          ~current_level:level ~payload protocol ~tezos_operations
       in
-      let producer = Producer.clean ~receipts producer in
+      let producer = Producer.clean ~receipts ~tezos_operations producer in
       let chain = Chain { pool; protocol; consensus; producer } in
       (chain, Some (Chain_save_block block))
   | Consensus_trigger_timeout { level } -> (
@@ -102,6 +102,11 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
     | None -> []
   in
   (Chain { pool; protocol; consensus; producer }, effects)
+
+let incoming_tezos_operation ~tezos_operation chain =
+  let (Chain { pool; protocol; consensus; producer }) = chain in
+  let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
+  (Chain { pool; protocol; consensus; producer }, [])
 
 let incoming_message ~current ~message chain =
   let open Message in

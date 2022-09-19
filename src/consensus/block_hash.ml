@@ -19,6 +19,12 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
-let hash = hash
+let hash ~block_level ~block_payload_hash ~state_root_hash
+    ~withdrawal_handles_hash =
+  let pre_hash =
+    Deku_tezos.Deku.Consensus.hash_block ~block_level ~block_payload_hash
+      ~state_root_hash ~withdrawal_handles_hash
+  in
+  pre_hash |> to_raw |> hash |> to_blake2b
 
 module Map = Map

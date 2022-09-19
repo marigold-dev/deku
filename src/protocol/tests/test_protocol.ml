@@ -60,6 +60,7 @@ let test_apply_one_operation () =
   let protocol, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   Alcotest.(check bool)
     "operation is included" true
@@ -78,6 +79,7 @@ let test_many_operations () =
   let protocol, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload
+         ~tezos_operations:[]
   in
   Alcotest.(check bool)
     "all operations have receipts and vice versa" true
@@ -88,7 +90,7 @@ let test_duplicated_operation_same_level () =
 
   let _, receipts =
     Protocol.initial
-    |> Protocol.apply ~parallel ~current_level:Level.zero
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~tezos_operations:[]
          ~payload:[ op_str; op_str ]
   in
   let (Receipt.Receipt { operation }) = List.hd receipts in
@@ -110,9 +112,10 @@ let test_duplicated_operation_different_level () =
   let _, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
     |> fst
     |> Protocol.apply ~parallel ~current_level:(Level.next Level.zero)
-         ~payload:[ op_str ]
+         ~tezos_operations:[] ~payload:[ op_str ]
   in
   Alcotest.(check bool)
     "second operation shouldn't be applied" true
@@ -123,18 +126,19 @@ let test_duplicated_operation_after_includable_window () =
   let protocol, _receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   (* TODO: should we have an integrity check in Protocol.apply that checks
      that the block being applied is a valid next block? *)
   let protocol, _recipets =
     protocol
-    |> Protocol.apply ~parallel
+    |> Protocol.apply ~parallel ~tezos_operations:[]
          ~current_level:(Level.of_n N.(zero + includable_operation_window))
          ~payload:[]
   in
   let _protocol, receipts =
     protocol
-    |> Protocol.apply ~parallel
+    |> Protocol.apply ~parallel ~tezos_operations:[]
          ~current_level:
            (Level.of_n N.(zero + includable_operation_window + one))
          ~payload:[ op_str ]
@@ -147,7 +151,7 @@ let test_invalid_string () =
   let wrong_op_str = "waku waku" in
   let _, receipts =
     Protocol.initial
-    |> Protocol.apply ~parallel ~current_level:Level.zero
+    |> Protocol.apply ~parallel ~current_level:Level.zero ~tezos_operations:[]
          ~payload:[ wrong_op_str ]
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
@@ -188,6 +192,7 @@ let test_invalid_signature () =
   let _, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
@@ -230,6 +235,7 @@ let test_valid_signature_but_different_key () =
   let _, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
@@ -238,6 +244,7 @@ let test_receipt_implied_included_operations () =
   let protocol, receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   let (Protocol.Protocol { included_operations; _ }) = protocol in
   let is_included = Included_operation_set.mem op included_operations in
@@ -249,10 +256,11 @@ let test_included_operation_clean_after_window () =
   let protocol, _receipts =
     Protocol.initial
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
     |> fst
     |> Protocol.apply ~parallel
          ~current_level:(Level.of_n N.(one + includable_operation_window))
-         ~payload:[]
+         ~tezos_operations:[] ~payload:[]
   in
   let (Protocol.Protocol { included_operations; _ }) = protocol in
   let is_included = Included_operation_set.mem op included_operations in
@@ -273,6 +281,7 @@ let test_cannot_create_amount_ex_nihilo () =
   let protocol, _ =
     protocol
     |> Protocol.apply ~parallel ~current_level:Level.zero ~payload:[ op_str ]
+         ~tezos_operations:[]
   in
   let (Protocol.Protocol { ledger; _ }) = protocol in
   let bob_balance =

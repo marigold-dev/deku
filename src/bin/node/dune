@@ -1,6 +1,12 @@
 (executable
  (name deku_node)
  (public_name deku-node)
- (libraries deku_chain deku_network deku_indexer cmdliner)
+ (libraries
+  deku_chain
+  deku_network
+  deku_indexer
+  deku_tezos
+  deku_tezos_interop
+  cmdliner)
  (preprocess
   (pps ppx_let_binding ppx_deriving_cmdliner)))

@@ -72,6 +72,24 @@ module Key = struct
       |> Result.to_option
   end)
 
+  (*TODO: clean this*)
+  module Encoding = Encoding_helpers.Make_b58 (struct
+    type nonrec t = t
+
+    let name = "Secp256k1.Public_key"
+    let title = "A Secp256k1 public key"
+    let size = Libsecp256k1.Key.compressed_pk_bytes
+    let prefix = Base58.Prefix.secp256k1_public_key
+    let to_raw = to_raw
+
+    let of_raw string =
+      string |> Bigstring.of_string
+      |> Libsecp256k1.Key.read_pk context
+      |> Result.to_option
+  end)
+
+  let encoding = Encoding.encoding
+
   let cmdliner_converter =
     let of_string s =
       match of_b58 s with
@@ -103,6 +121,19 @@ module Key_hash = struct
     let of_b58 = of_b58
     let to_b58 = to_b58
   end)
+
+  module Encoding = Encoding_helpers.Make_b58 (struct
+    type nonrec t = t
+
+    let name = "Secp256k1.Public_key_hash"
+    let title = "A Secp256k1 public key hash"
+    let size = BLAKE2b.BLAKE2b_160.digest_size
+    let prefix = Base58.Prefix.secp256k1_public_key_hash
+    let to_raw = BLAKE2b.BLAKE2b_160.to_raw
+    let of_raw = BLAKE2b.BLAKE2b_160.of_raw
+  end)
+
+  let encoding = Encoding.encoding
 end
 
 module Signature = struct

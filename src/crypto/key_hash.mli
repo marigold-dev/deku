@@ -12,6 +12,7 @@ val to_b58 : key_hash -> string
 
 (* operations *)
 val of_key : Key.t -> t
+val encoding : t Data_encoding.t
 
 module Set : Set.S with type elt = key_hash
 

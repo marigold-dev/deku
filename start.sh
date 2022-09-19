@@ -11,6 +11,10 @@ tezos-client() {
 export DEKU_BOOTSTRAP_KEY="edpku8312JdFovNcX9AkFiafkAcVCHDvAe3zBTvF4YMyLEPz4KFFMd"
 export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
 export DEKU_VALIDATOR_URIS="http://localhost:4440,http://localhost:4441,http://localhost:4442,http://localhost:4443"
+export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
+export DEKU_TEZOS_RPC_NODE="http://localhost:20000"
+export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos-client --endpoint http://localhost:20000 show known contract consensus | grep KT1 | tr -d '\r')"
+export DEKU_TEZOS_DISCOVERY_ADDRESS="$(tezos-client --endpoint http://localhost:20000 show known contract discovery | grep KT1 | tr -d '\r')"
 
 for N in 0 1 2 3; do
   source "./chain/data/$N/env"

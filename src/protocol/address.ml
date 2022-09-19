@@ -14,3 +14,13 @@ module Map = Map.Make (struct
 
   let compare = compare
 end)
+
+let cmdliner_converter =
+  let of_string s =
+    match of_b58 s with
+    | Some s -> `Ok s
+    | None ->
+        `Error (Format.sprintf "Could not parse '%s' as a Tezos address" s)
+  in
+  let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
+  (of_string, to_string)

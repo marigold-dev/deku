@@ -5,6 +5,9 @@ open Deku_network
 open Deku_gossip
 open Deku_constants
 open Deku_indexer
+open Deku_tezos_interop
+open Deku_concepts
+open Deku_protocol
 
 type node = {
   pool : Parallel.Pool.t;
@@ -96,6 +99,25 @@ and handle_gossip_fragment node ~fragment =
       Lwt.return_unit)
 
 (* TODO: declare this function elsewhere ? *)
+let to_tezos_operation transaction =
+  let open Deku_tezos_interop.Tezos_interop.Consensus in
+  let open Deku_protocol in
+  match transaction with
+  | Deposit { ticket; amount; destination } ->
+      N.of_z amount |> Option.map Amount.of_n
+      |> Option.map (fun amount ->
+             Tezos_operation.Deposit { ticket; amount; destination })
+  | _ -> None
+
+let handle_tezos_operation node ~operation =
+  let Tezos_interop.Consensus.{ hash; transactions } = operation in
+  let operations = List.filter_map to_tezos_operation transactions in
+  let tezos_operation = Tezos_operation.make hash operations in
+  let chain, chain_actions =
+    Chain.incoming_tezos_operation ~tezos_operation node.chain
+  in
+  node.chain <- chain;
+  handle_chain_actions ~chain_actions node
 
 let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
     ~default_block_size =
@@ -111,8 +133,11 @@ let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
   let promise = on_timeout node in
   (node, promise)
 
-let listen node ~port =
+let listen node ~port ~tezos_interop =
   let on_message ~raw_expected_hash ~raw_content =
     on_network node ~raw_expected_hash ~raw_content
   in
-  Network.listen ~port ~on_message
+  Network.listen ~port ~on_message;
+  let open Deku_tezos_interop in
+  Tezos_interop.Consensus.listen_operations tezos_interop
+    ~on_operation:(fun operation -> handle_tezos_operation node ~operation)

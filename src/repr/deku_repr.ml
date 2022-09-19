@@ -72,3 +72,5 @@ let rec decode_variant l string =
       | Some v -> Some v
       | None -> decode_variant l string)
   | [] -> None
+
+module Base58 = Base58

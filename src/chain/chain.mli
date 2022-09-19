@@ -34,3 +34,7 @@ val incoming_message :
 
 val incoming_timeout : current:Timestamp.t -> chain -> chain * action list
 (** [incoming_timeout ~current chain] *)
+
+val incoming_tezos_operation :
+  tezos_operation:Tezos_operation.t -> chain -> chain * action list
+(** [incoming_tezos_operation ~tezos_operation chain] *)

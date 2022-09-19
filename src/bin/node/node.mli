@@ -2,6 +2,7 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_crypto
 open Deku_indexer
+open Deku_tezos_interop
 
 type node
 type t = node
@@ -16,4 +17,4 @@ val make :
   default_block_size:int ->
   node * unit Lwt.t
 
-val listen : node -> port:int -> unit
+val listen : node -> port:int -> tezos_interop:Tezos_interop.t -> unit
