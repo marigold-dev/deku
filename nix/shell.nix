@@ -1,4 +1,4 @@
-{ pkgs, deku, ligo }:
+{ pkgs, deku, ligo, deploy-rs }:
 
 with pkgs; with ocamlPackages; mkShell {
   inputsFrom = [ deku ];
@@ -16,6 +16,9 @@ with pkgs; with ocamlPackages; mkShell {
     ocaml-lsp
     ocamlformat-rpc
     utop
+
+    # deployment
+    deploy-rs
 
     # helpful tooling
     bc

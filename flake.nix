@@ -17,62 +17,72 @@
     tezos.url = "github:marigold-dev/tezos-nix";
     tezos.inputs = {
       nixpkgs.follows = "nixpkgs";
-      flake-utils.follows = "flake-utils";
     };
+    deploy-rs.url = "github:serokell/deploy-rs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = (nixpkgs.makePkgs {
-          inherit system;
-          extraOverlays = [
-            tezos.overlays.default
-            (import ./nix/overlay.nix)
-            (final: prev: {
-              ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
-            })
-          ];
-        });
-        dream2nix-lib = dream2nix.lib.init {
-          inherit pkgs;
-          config.projectRoot = ./.;
-        };
-        nodejs = pkgs.nodejs-16_x;
-        npmPackages = import ./nix/npm.nix {
-          inherit system dream2nix-lib nix-filter nodejs;
-        };
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, deploy-rs }:
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = (nixpkgs.makePkgs {
+            inherit system;
+            extraOverlays = [
+              tezos.overlays.default
+              (import ./nix/overlay.nix)
+              (final: prev: {
+                ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
+              })
+            ];
+          });
+          dream2nix-lib = dream2nix.lib.init {
+            inherit pkgs;
+            config.projectRoot = ./.;
+          };
+          nodejs = pkgs.nodejs-16_x;
+          npmPackages = import ./nix/npm.nix {
+            inherit system dream2nix-lib nix-filter nodejs;
+          };
 
-        deku = pkgs.callPackage ./nix {
-          inherit nodejs npmPackages;
-          doCheck = true;
-        };
+          deku = pkgs.callPackage ./nix {
+            inherit nodejs npmPackages;
+            doCheck = true;
+          };
 
-        ligo = pkgs.callPackage ./nix/ligo.nix { };
-      in
-      rec {
-        packages = { default = deku; };
-        apps = {
-          node = {
-            type = "app";
-            program = "${deku}/bin/deku-node";
+          ligo = pkgs.callPackage ./nix/ligo.nix { };
+        in
+        rec {
+          packages = { default = deku; };
+          apps = {
+            node = {
+              type = "app";
+              program = "${deku}/bin/deku-node";
+            };
+            bootstrap = {
+              type = "app";
+              program = "${deku}/bin/deku-bootstrap";
+            };
+            benchmark = {
+              type = "app";
+              program = "${deku}/bin/deku-benchmark";
+            };
+            generate-identity = {
+              type = "app";
+              program = "${deku}/bin/deku-generate-identity";
+            };
           };
-          bootstrap = {
-            type = "app";
-            program = "${deku}/bin/deku-bootstrap";
-          };
-          benchmark = {
-            type = "app";
-            program = "${deku}/bin/deku-benchmark";
-          };
-          generate-identity = {
-            type = "app";
-            program = "${deku}/bin/deku-generate-identity";
-          };
+          devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
+        }) // {
+      nixosModules = {
+        deku-node = import ./nix/service.nix { deku-packages = self.packages; };
+      };
+      deploy = {
+        nodes = import ./alphanet/fleet.nix {
+          inherit nixpkgs deploy-rs;
+          deku-node = self.nixosModules.deku-node;
         };
-        devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; };
-        nixosModules = {
-          deku-node = import ./nix/service.nix { inherit deku; };
-        };
-      });
+        sshUser = "root";
+      };
+      checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
+    };
 }
