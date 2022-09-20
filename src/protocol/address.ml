@@ -2,7 +2,7 @@ open Deku_crypto
 open Key_hash
 
 type address = Key_hash.t
-and t = address [@@deriving eq, ord, yojson]
+and t = address [@@deriving eq, ord, yojson, show]
 
 let of_key_hash key_hash = key_hash
 let to_key_hash address = address

@@ -7,6 +7,9 @@
   deku_indexer
   deku_tezos
   deku_tezos_interop
-  cmdliner)
+  cmdliner
+  logs
+  logs.fmt
+  fmt.tty)
  (preprocess
   (pps ppx_let_binding ppx_deriving_cmdliner)))

@@ -116,6 +116,6 @@ let produce ~parallel_map ~current ~state producer =
       let block =
         produce ~parallel_map ~current_level ~current_block producer
       in
-      Format.printf "Producing %a\n%!" Block.pp block;
+      Logs.info (fun m -> m "Producing %a" Block.pp block);
       Some block
   | false -> None

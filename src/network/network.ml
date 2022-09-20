@@ -47,7 +47,7 @@ let handler on_message context =
   with_raw_content context @@ fun context -> dispatch on_message context
 
 let listen ~port ~on_message =
-  let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
+  let listen_address = Unix.(ADDR_INET (inet_addr_any, port)) in
   Lwt.async (fun () ->
       (* TODO: piaf error_handler *)
       let%await _server =
@@ -56,7 +56,7 @@ let listen ~port ~on_message =
                (* Format.eprintf "request\n%!"; *)
                handler on_message context))
       in
-      let () = Printf.printf "Listening on port %i\n%!" port in
+      Logs.info (fun m -> m "Listening on port %i" port);
       Lwt.return_unit)
 
 (* TODO: put this somewhere else *)
@@ -67,9 +67,13 @@ let rec connection_loop ref ~uri =
   let%await client = Client.create ~config uri in
   match client with
   | Ok client ->
+      Logs.debug (fun m ->
+          m "Network: connected successfully to peer %a" Uri.pp uri);
       ref := Some client;
       Lwt.return_unit
-  | Error _error ->
+  | Error error ->
+      Logs.warn (fun m ->
+          m "Network: connection error %a" Piaf_lwt.Error.pp_hum error);
       (* TODO: do something with this error*)
       let%await () = Lwt_unix.sleep reconnection_timeout in
       connection_loop ref ~uri
@@ -105,18 +109,22 @@ let post ~raw_expected_hash ~raw_content ~uri:_uri client =
 
 let post ~raw_expected_hash ~raw_content ~uri client =
   Lwt.async (fun () ->
+      Logs.debug (fun m ->
+          m "Network: Posting message to %a: %s" Uri.pp uri raw_content);
       let%await post = post ~raw_expected_hash ~raw_content ~uri client in
       match post with
       | Ok response -> (
           let%await drain = Body.drain response.body in
           match drain with
-          | Ok () -> Lwt.return_unit
+          | Ok () ->
+              Logs.debug (fun m -> m "Post successful");
+              Lwt.return_unit
           | Error _error ->
               Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error;
               (* TODO: do something with this error *)
               Lwt.return_unit)
       | Error _error ->
-          Format.eprintf "error.post: %a\n%!" Error.pp_hum _error;
+          Format.eprintf "error.post: %a" Error.pp_hum _error;
           (* TODO: do something with this error *)
           Lwt.return_unit)
 

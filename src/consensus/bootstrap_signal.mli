@@ -9,4 +9,4 @@ type bootstrap_signal =
       next_author : Key_hash.key_hash;
     }
 
-and t = bootstrap_signal [@@deriving yojson]
+and t = bootstrap_signal [@@deriving yojson, show]

@@ -75,3 +75,5 @@ module Set = Set.Make (struct
 
   let compare = compare
 end)
+
+let pp fmt _t = Format.pp_print_string fmt "<opaque>"

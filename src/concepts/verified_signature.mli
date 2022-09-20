@@ -12,5 +12,6 @@ val key : verified_signature -> Key.t
 val key_hash : verified_signature -> Key_hash.t
 val signed_hash : verified_signature -> BLAKE2b.t
 val signature : verified_signature -> Signature.t
+val pp : Format.formatter -> t -> unit
 
 module Set : Set.S with type elt = verified_signature

@@ -79,3 +79,6 @@ let cmdliner_converter =
   in
   let to_string fmt t = Format.fprintf fmt "%s" (to_b58 t) in
   (of_string, to_string)
+
+let show = to_b58
+let pp fmt t = Format.pp_print_string fmt (to_b58 t)
