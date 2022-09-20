@@ -1,0 +1,10 @@
+(executable
+ (name deku_consensus_tests)
+ (libraries deku-consensus alcotest))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./deku_consensus_tests.exe))
+ (action
+  (run %{exe})))
