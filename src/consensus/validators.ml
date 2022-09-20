@@ -4,6 +4,7 @@ type validators = Key_hash.Set.t
 type t = validators
 
 let of_key_hash_list = Key_hash.Set.of_list
+let to_key_hash_list = Key_hash.Set.elements
 
 let cardinal validators =
   (* TODO: O(1) cardinality *)
