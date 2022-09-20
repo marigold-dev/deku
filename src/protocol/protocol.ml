@@ -49,7 +49,9 @@ let apply_operation ~current_level protocol operation =
           Some
             ( Protocol { included_operations; included_tezos_operations; ledger },
               receipt )
-      | Operation_noop -> None)
+      | Operation_noop ->
+          Unix.sleepf 0.1;
+          None)
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
