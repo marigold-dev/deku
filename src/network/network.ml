@@ -6,8 +6,7 @@ open Piaf
 type network = {
   nodes : Uri.t list;
   mutable next_request_id : Request_id.t;
-  mutable requests :
-    (raw_expected_hash:string -> raw_content:string -> unit) Request_id.Map.t;
+  mutable requests : ((string * string) option -> unit) Request_id.Map.t;
 }
 
 type t = network
@@ -60,17 +59,22 @@ let handler_request ~on_request ~network request =
   network.next_request_id <- Request_id.next id;
 
   let response_promise, response_resolver = Lwt.wait () in
-  let resolver ~raw_expected_hash ~raw_content =
+  let resolver response =
     network.requests <- Request_id.Map.remove id network.requests;
-    Lwt.wakeup_later response_resolver (raw_expected_hash, raw_content)
+    Lwt.wakeup_later response_resolver response
   in
   network.requests <- Request_id.Map.add id resolver network.requests;
   on_request ~id ~raw_expected_hash ~raw_content;
 
-  let%await raw_expected_hash, raw_content = response_promise in
-  let headers = headers ~raw_expected_hash in
-  let headers = Headers.of_list headers in
-  let response = Piaf.Response.of_string ~headers ~body:raw_content `OK in
+  let%await response = response_promise in
+  let response =
+    match response with
+    | Some (raw_expected_hash, raw_content) ->
+        let headers = headers ~raw_expected_hash in
+        let headers = Headers.of_list headers in
+        Piaf.Response.of_string ~headers ~body:raw_content `OK
+    | None -> Piaf.Response.of_string ~body:"Not Found" `Not_found
+  in
   Lwt.return response
 
 let handler ~on_message ~on_request ~network Server.{ ctx = _; request } =
@@ -184,7 +188,15 @@ let rec request ~raw_expected_hash ~raw_content network =
 
 let respond ~id ~raw_expected_hash ~raw_content network =
   match Request_id.Map.find_opt id network.requests with
-  | Some resolver -> resolver ~raw_expected_hash ~raw_content
+  | Some resolver -> resolver (Some (raw_expected_hash, raw_content))
+  | None ->
+      (* TODO: what do I do here? *)
+      Format.eprintf "duplicated respond\n%!";
+      ()
+
+let not_found ~id network =
+  match Request_id.Map.find_opt id network.requests with
+  | Some resolver -> resolver None
   | None ->
       (* TODO: what do I do here? *)
       Format.eprintf "duplicated respond\n%!";

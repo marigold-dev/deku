@@ -1,14 +1,13 @@
 open Deku_stdlib
-open Deku_crypto
-open Deku_concepts
+open Deku_chain
 
 type node
 type t = node
 
 val make :
   pool:Parallel.Pool.pool ->
-  identity:Identity.identity ->
-  validators:Key_hash.t list ->
+  dump:(Chain.t -> unit) ->
+  chain:Chain.t ->
   nodes:Uri.t list ->
   node * unit Lwt.t
 

@@ -1,4 +1,3 @@
-open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
@@ -7,7 +6,6 @@ open Deku_gossip
 
 type chain = private
   | Chain of {
-      pool : Parallel.Pool.t;
       gossip : Gossip.t;
       protocol : Protocol.t;
       consensus : Consensus.t;
@@ -28,13 +26,10 @@ type action = private
       raw_expected_hash : string;
       raw_content : string;
     }
+  | Chain_send_not_found of { id : Request_id.t }
   | Chain_fragment of { fragment : fragment }
 
-val make :
-  identity:Identity.t ->
-  validators:Key_hash.t list ->
-  pool:Parallel.Pool.t ->
-  chain
+val make : identity:Identity.t -> validators:Key_hash.t list -> chain
 
 val incoming :
   raw_expected_hash:string ->

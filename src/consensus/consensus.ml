@@ -133,6 +133,11 @@ let rec incoming_block_or_vote ~current ~block consensus =
                   (* TODO: ensure that previous.level = level - 1 *)
                   incoming_block_or_vote ~current ~block:previous consensus
               | None ->
+                  let () =
+                    let level = Level.to_n level in
+                    let level = N.to_z level in
+                    Format.eprintf "requesting: %a\n%!" Z.pp_print level
+                  in
                   let action = Consensus_request_block { hash = previous } in
                   (consensus, [ action ]))
           | false ->

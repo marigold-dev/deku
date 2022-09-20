@@ -1,10 +1,9 @@
 module Content : sig
   open Deku_consensus
 
-  type content = private Content_none | Content_block of Block.t
+  type content = private Content_block of Block.t
   type t = content [@@deriving yojson]
 
-  val none : content
   val block : Block.t -> content
 end
 

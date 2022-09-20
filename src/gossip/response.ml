@@ -1,10 +1,9 @@
 module Content = struct
   open Deku_consensus
 
-  type content = Content_none | Content_block of Block.t
+  type content = Content_block of Block.t
   and t = content [@@deriving yojson]
 
-  let none = Content_none
   let block block = Content_block block
 end
 

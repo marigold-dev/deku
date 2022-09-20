@@ -5,6 +5,7 @@ open Deku_consensus
 open Deku_gossip
 open Deku_network
 open Deku_storage
+open Deku_chain
 
 let sleep_time = 3.0
 
@@ -39,6 +40,11 @@ let produce identity consensus network =
   let level = Level.next current_level in
   let previous = current_block in
   let operations = [] in
+  let () =
+    let level = Level.to_n level in
+    let level = N.to_z level in
+    Format.eprintf "produced: %a\n%!" Z.pp_print level
+  in
   let block = Block.produce ~identity ~level ~previous ~operations in
   broadcast ~content:(Message.Content.block block) network;
   block
@@ -51,15 +57,15 @@ let restart ~producer identities consensus network =
   let block = produce producer consensus network in
   List.iter (fun identity -> sign identity block network) identities
 
-let bootstrap ~size =
+let bootstrap ~size ~chain_file =
   let%await storages =
     let files = List.init size (fun n -> Util.storage_file ~n) in
-    Lwt_list.map_p (fun file -> Storage.read ~file) files
+    Lwt_list.map_p (fun file -> Storage.Config.read ~file) files
   in
   let identities =
     List.map
       (fun storage ->
-        let secret = storage.Storage.secret in
+        let secret = storage.Storage.Config.secret in
         Identity.make secret)
       storages
   in
@@ -69,13 +75,19 @@ let bootstrap ~size =
     let () = Format.eprintf "producer: %ld\n%!" index in
     List.nth identities (Int32.to_int index)
   in
-  let validators, nodes =
+  let validators =
     let storage = List.nth storages 0 in
-    List.split storage.Storage.validators
+    storage.Storage.Config.validators
   in
-  let consensus =
-    let validators = Validators.of_key_hash_list validators in
-    Consensus.make ~identity:producer ~validators
+  let nodes =
+    let storage = List.nth storages 0 in
+    storage.Storage.Config.nodes
+  in
+  let%await chain = Storage.Chain.read ~file:chain_file in
+  let (Chain { consensus; _ }) =
+    match chain with
+    | Some chain -> chain
+    | None -> Chain.make ~identity:producer ~validators
   in
   let network = Network.connect ~nodes in
   (* TODO: this is lame, but I'm lazy *)
@@ -92,19 +104,23 @@ let generate ~base_uri ~base_port ~size =
         Secret.Ed25519 ed25519)
   in
   let validators =
-    List.mapi
-      (fun n secret ->
+    List.map
+      (fun secret ->
         let key = Key.of_secret secret in
         let key_hash = Key_hash.of_key key in
-
-        let port = base_port + n in
-        let uri = Uri.of_string base_uri in
-        let uri = Uri.with_port uri (Some port) in
-        (key_hash, uri))
+        key_hash)
       secrets
   in
+  let nodes =
+    List.init size (fun n ->
+        let port = base_port + n in
+        let uri = Uri.of_string base_uri in
+        Uri.with_port uri (Some port))
+  in
   let storages =
-    List.map (fun secret -> Storage.make ~secret ~validators) secrets
+    List.map
+      (fun secret -> Storage.Config.make ~secret ~validators ~nodes)
+      secrets
   in
 
   let%await cwd = Lwt_unix.getcwd () in
@@ -117,7 +133,7 @@ let generate ~base_uri ~base_port ~size =
       let%await () = Util.ensure_folder folder in
 
       let file = Filename.concat folder "storage.json" in
-      Storage.write ~file storage)
+      Storage.Config.write ~file storage)
     storages
 
 let main () =
@@ -125,7 +141,7 @@ let main () =
   let base_port = ref 4440 in
   let size = ref 4 in
   let kind = ref None in
-
+  let chain_file = ref "chain.bin" in
   Arg.parse
     [
       ( "-s",
@@ -133,6 +149,7 @@ let main () =
         {|Base URI for validators ("http://localhost" by default)|} );
       ("-p", Arg.Set_int base_port, "Base PORT for validators (4440 by default)");
       ("-n", Arg.Set_int size, "Number of validators (4 by default)");
+      ("-c", Arg.Set_string chain_file, " Chain file (chain.bin by default)");
     ]
     (fun selected -> kind := Some selected)
     "Handle Deku communication. Runs forever.";
@@ -140,7 +157,7 @@ let main () =
   match !kind with
   | Some "generate" ->
       generate ~base_uri:!base_uri ~base_port:!base_port ~size:!size
-  | Some "bootstrap" -> bootstrap ~size:!size
+  | Some "bootstrap" -> bootstrap ~size:!size ~chain_file:!chain_file
   | Some _ | None -> failwith "deku-bootstrap <generate|bootstrap>"
 
 (* let setup_log ?style_renderer level =
