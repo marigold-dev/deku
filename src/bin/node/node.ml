@@ -11,6 +11,7 @@ open Deku_protocol
 
 type node = {
   pool : Parallel.Pool.t;
+  dump : Chain.t -> unit;
   network : Network.t;
   (* TODO: there is a better way to do this but this is the quick and lazy way. *)
   indexer : Indexer.t option;
@@ -22,11 +23,15 @@ type t = node
 
 let current () = Timestamp.of_float (Unix.gettimeofday ())
 
+let write_chain ~chain node =
+  node.dump chain;
+  node.chain <- chain
+
 let rec on_network_message node ~raw_expected_hash ~raw_content =
   let chain, fragment =
     Chain.incoming ~raw_expected_hash ~raw_content node.chain
   in
-  node.chain <- chain;
+  write_chain ~chain node;
   match fragment with
   | Some fragment -> handle_chain_fragment node ~fragment
   | None -> ()
@@ -35,7 +40,7 @@ and on_network_request node ~id ~raw_expected_hash ~raw_content =
   let chain, fragment =
     Chain.request ~id ~raw_expected_hash ~raw_content node.chain
   in
-  node.chain <- chain;
+  write_chain ~chain node;
   match fragment with
   | Some fragment -> handle_chain_fragment node ~fragment
   | None -> ()
@@ -44,7 +49,7 @@ and on_network_response node ~raw_expected_hash ~raw_content =
   let chain, fragment =
     Chain.response ~raw_expected_hash ~raw_content node.chain
   in
-  node.chain <- chain;
+  write_chain ~chain node;
   match fragment with
   | Some fragment -> handle_chain_fragment node ~fragment
   | None -> ()
@@ -70,7 +75,7 @@ and on_timeout node : unit Lwt.t =
 
 and on_chain_outcome node ~current ~outcome =
   let chain, actions = Chain.apply ~current ~outcome node.chain in
-  node.chain <- chain;
+  write_chain ~chain node;
   handle_chain_actions node ~actions
 
 and handle_chain_actions node ~actions =
@@ -92,6 +97,7 @@ and handle_chain_action node ~action =
           Lwt.return_unit)
   | Chain_send_response { id; raw_expected_hash; raw_content } ->
       Network.respond ~id ~raw_expected_hash ~raw_content node.network
+  | Chain_send_not_found { id } -> Network.not_found ~id node.network
   | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
   | Chain_save_block block -> (
       match node.indexer with
@@ -128,13 +134,11 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~actions node
 
-let make ~pool ~identity ~validators ~nodes ?(indexer = None)
-    ~default_block_size () =
+let make ~pool ~dump ~chain ~nodes ?(indexer = None) () =
   let network = Network.connect ~nodes in
-  let chain = Chain.make ~identity ~validators ~pool ~default_block_size in
   let node =
     let trigger_timeout () = () in
-    { pool; network; chain; trigger_timeout; indexer }
+    { pool; dump; network; chain; trigger_timeout; indexer }
   in
   let promise = on_timeout node in
   (node, promise)
@@ -166,10 +170,9 @@ let _test () =
     [ uri ]
   in
   let pool = Parallel.Pool.make ~domains:8 in
-
-  let node, promise =
-    make ~pool ~identity ~validators ~nodes ~default_block_size:0 ()
-  in
+  let chain = Chain.make ~identity ~validators ~default_block_size:0 in
+  let dump _chain = () in
+  let node, promise = make ~pool ~dump ~chain ~nodes ~indexer:None () in
   let (Chain { consensus; _ }) = node.chain in
   let block =
     let (Consensus { current_block; _ }) = consensus in

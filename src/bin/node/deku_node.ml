@@ -3,12 +3,16 @@ open Deku_concepts
 open Deku_tezos_interop
 open Deku_crypto
 open Deku_indexer
+open Deku_storage
+open Deku_chain
 include Node
 
 type params = {
   domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
+  chain_file : string; [@env "DEKU_CHAIN_FILE"]
+      (** Path to file where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
   validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
@@ -44,6 +48,7 @@ let main params =
   let {
     domains;
     secret;
+    chain_file;
     validators;
     validator_uris;
     port;
@@ -59,6 +64,8 @@ let main params =
   } =
     params
   in
+  let pool = Parallel.Pool.make ~domains in
+  let%await chain = Storage.Chain.read ~file:chain_file in
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
@@ -73,12 +80,36 @@ let main params =
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
-  let pool = Parallel.Pool.make ~domains in
+  let chain =
+    match chain with
+    | Some chain -> chain
+    | None -> Chain.make ~identity ~validators ~default_block_size
+  in
+  let () =
+    let (Chain { consensus; _ }) = chain in
+    let (Consensus { current_block; _ }) = consensus in
+    let (Block { level; _ }) = current_block in
+    let level = Level.to_n level in
+    let level = N.to_z level in
+    Format.eprintf "%a\n%!" Z.pp_print level
+  in
+  let chain_ref = ref chain in
+  let dump_loop () =
+    let rec loop () =
+      let chain = !chain_ref in
+      Lwt.finalize
+        (fun () -> Storage.Chain.write ~pool ~file:chain_file chain)
+        loop
+    in
+    loop ()
+  in
+  let dump chain = chain_ref := chain in
   let node, promise =
-    Node.make ~pool ~identity ~validators ~nodes:validator_uris
-      ~indexer:(Some indexer) ~default_block_size ()
+    Node.make ~pool ~dump ~chain ~nodes:validator_uris ~indexer:(Some indexer)
+      ()
   in
   Node.listen node ~port ~tezos_interop;
+  Lwt.async (fun () -> dump_loop ());
   promise
 
 let setup_log ?style_renderer ?level () =

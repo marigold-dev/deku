@@ -1,4 +1,3 @@
-open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
@@ -6,7 +5,6 @@ open Deku_gossip
 
 type chain =
   | Chain of {
-      pool : Parallel.Pool.t;
       gossip : Gossip.t;
       protocol : Protocol.t;
       consensus : Consensus.t;
@@ -28,17 +26,18 @@ type action =
       raw_expected_hash : string;
       raw_content : string;
     }
+  | Chain_send_not_found of { id : Request_id.t [@opaque] }
   | Chain_fragment of { fragment : fragment }
 [@@deriving show]
 
-let make ~identity ~validators ~pool ~default_block_size =
+let make ~identity ~validators ~default_block_size =
   let gossip = Gossip.empty in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
   let consensus = Consensus.make ~identity ~validators in
   let producer = Producer.make ~identity ~default_block_size in
   let applied = Block_hash.Map.empty in
-  Chain { pool; gossip; protocol; consensus; producer; applied }
+  Chain { gossip; protocol; consensus; producer; applied }
 
 (* after gossip *)
 let rec apply_consensus_action chain consensus_action =
@@ -48,12 +47,12 @@ let rec apply_consensus_action chain consensus_action =
   let open Consensus in
   match consensus_action with
   | Consensus_accepted_block { block } ->
-      let (Chain ({ pool; protocol; producer; applied; _ } as chain)) = chain in
+      let (Chain ({ protocol; producer; applied; _ } as chain)) = chain in
       let (Block { hash; level; payload; tezos_operations; _ }) = block in
       let protocol, receipts =
         Protocol.apply
-          ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
-          ~current_level:level ~payload protocol ~tezos_operations
+          ~parallel:(fun f l -> List.filter_map f l)
+          ~current_level:level ~payload ~tezos_operations protocol
       in
       let producer = Producer.clean ~receipts ~tezos_operations producer in
       let applied = Block_hash.Map.add hash block applied in
@@ -109,22 +108,18 @@ let incoming_operation ~operation chain =
   (chain, [])
 
 let incoming_bootstrap_signal ~current chain =
-  let (Chain { pool; gossip; protocol; consensus; producer; applied }) =
-    chain
-  in
+  let (Chain { gossip; protocol; consensus; producer; applied }) = chain in
   let consensus =
     match Consensus.incoming_bootstrap_signal ~current consensus with
     | Some consensus -> consensus
     | None -> consensus
   in
-  (Chain { pool; gossip; protocol; consensus; producer; applied }, [])
+  (Chain { gossip; protocol; consensus; producer; applied }, [])
 
 let incoming_tezos_operation ~tezos_operation chain =
-  let (Chain { pool; gossip; protocol; consensus; producer; applied }) =
-    chain
-  in
+  let (Chain { gossip; protocol; consensus; producer; applied }) = chain in
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
-  (Chain { pool; gossip; protocol; consensus; producer; applied }, [])
+  (Chain { gossip; protocol; consensus; producer; applied }, [])
 
 let incoming_message ~current ~message chain =
   let open Message in
@@ -141,21 +136,21 @@ let incoming_request ~id ~request chain =
   let (Chain { applied; _ }) = chain in
   let (Request { hash = _; content }) = request in
   match content with
-  | Content_block hash ->
-      let content =
-        match Block_hash.Map.find_opt hash applied with
-        | Some block -> Response.Content.block block
-        | None -> Response.Content.none
-      in
-      let fragment = Gossip.send_response ~id ~content in
-      let fragment = Chain_fragment { fragment } in
-      (chain, [ fragment ])
+  | Content_block hash -> (
+      match Block_hash.Map.find_opt hash applied with
+      | Some block ->
+          let content = Response.Content.block block in
+          let fragment = Gossip.send_response ~id ~content in
+          let fragment = Chain_fragment { fragment } in
+          (chain, [ fragment ])
+      | None ->
+          let action = Chain_send_not_found { id } in
+          (chain, [ action ]))
 
 let incoming_response ~current ~response chain =
   let open Response in
   let (Response { hash = _; content }) = response in
   match content with
-  | Content_none -> (chain, [])
   | Content_block block -> incoming_block ~current ~block chain
 
 let apply_gossip_action ~current ~gossip_action chain =
@@ -205,11 +200,11 @@ let response ~raw_expected_hash ~raw_content chain =
   (chain, fragment)
 
 let timeout ~current chain =
-  let (Chain { pool; consensus; producer; _ }) = chain in
+  let (Chain { consensus; producer; _ }) = chain in
   let fragment =
     match
       Producer.produce
-        ~parallel_map:(fun f l -> Parallel.map_p pool f l)
+        ~parallel_map:(fun f l -> List.map f l)
         ~current ~consensus producer
     with
     | Some block ->
@@ -242,9 +237,8 @@ let test () =
     let key_hash = Key_hash.of_key key in
     [ key_hash ]
   in
-  let pool = Parallel.Pool.make ~domains:8 in
 
-  let chain = make ~identity ~validators ~pool ~default_block_size:0 in
+  let chain = make ~identity ~validators ~default_block_size:0 in
   let (Chain { consensus; _ }) = chain in
   let block =
     let (Consensus { current_block; _ }) = consensus in
@@ -323,6 +317,7 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
+            | Chain_send_not_found { id = _ } -> (chain, [])
             | Chain_fragment { fragment } ->
                 let outcome = compute fragment in
                 apply ~current ~outcome chain
