@@ -14,11 +14,11 @@ module Config : sig
   val make :
     secret:Secret.t -> validators:Key_hash.t list -> nodes:Uri.t list -> config
 
-  val read : file:string -> config Lwt.t
-  val write : file:string -> config -> unit Lwt.t
+  val read : folder:string -> config Lwt.t
+  val write : folder:string -> config -> unit Lwt.t
 end
 
 module Chain : sig
-  val read : file:string -> Chain.t option Lwt.t
-  val write : pool:Parallel.Pool.t -> file:string -> Chain.t -> unit Lwt.t
+  val read : folder:string -> Chain.t option Lwt.t
+  val write : pool:Parallel.Pool.t -> folder:string -> Chain.t -> unit Lwt.t
 end

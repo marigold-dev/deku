@@ -18,11 +18,10 @@ module Util = struct
       else raise (Invalid_argument (folder ^ " is not a folder"))
     else Lwt_unix.mkdir folder 0o700
 
-  let storage_file ~n =
+  let data_folders ~n =
     let cwd = Unix.getcwd () in
     let data_folder = Filename.concat cwd "data" in
-    let folder = Filename.concat data_folder (Int.to_string n) in
-    Filename.concat folder "storage.json"
+    Filename.concat data_folder (Int.to_string n)
 end
 
 let broadcast ~content network =
@@ -57,10 +56,10 @@ let restart ~producer identities consensus network =
   let block = produce producer consensus network in
   List.iter (fun identity -> sign identity block network) identities
 
-let bootstrap ~size ~chain_file =
+let bootstrap ~size ~folder =
   let%await storages =
-    let files = List.init size (fun n -> Util.storage_file ~n) in
-    Lwt_list.map_p (fun file -> Storage.Config.read ~file) files
+    let files = List.init size (fun n -> Util.data_folders ~n) in
+    Lwt_list.map_p (fun folder -> Storage.Config.read ~folder) files
   in
   let identities =
     List.map
@@ -83,7 +82,7 @@ let bootstrap ~size ~chain_file =
     let storage = List.nth storages 0 in
     storage.Storage.Config.nodes
   in
-  let%await chain = Storage.Chain.read ~file:chain_file in
+  let%await chain = Storage.Chain.read ~folder in
   let (Chain { consensus; _ }) =
     match chain with
     | Some chain -> chain
@@ -131,9 +130,7 @@ let generate ~base_uri ~base_port ~size =
     (fun n storage ->
       let folder = Filename.concat data_folder (Int.to_string n) in
       let%await () = Util.ensure_folder folder in
-
-      let file = Filename.concat folder "storage.json" in
-      Storage.Config.write ~file storage)
+      Storage.Config.write ~folder storage)
     storages
 
 let main () =
@@ -141,7 +138,7 @@ let main () =
   let base_port = ref 4440 in
   let size = ref 4 in
   let kind = ref None in
-  let chain_file = ref "chain.bin" in
+  let data_folder = ref "./data" in
   Arg.parse
     [
       ( "-s",
@@ -149,7 +146,7 @@ let main () =
         {|Base URI for validators ("http://localhost" by default)|} );
       ("-p", Arg.Set_int base_port, "Base PORT for validators (4440 by default)");
       ("-n", Arg.Set_int size, "Number of validators (4 by default)");
-      ("-c", Arg.Set_string chain_file, " Chain file (chain.bin by default)");
+      ("-d", Arg.Set_string data_folder, " Data folder (./data by default)");
     ]
     (fun selected -> kind := Some selected)
     "Handle Deku communication. Runs forever.";
@@ -157,7 +154,7 @@ let main () =
   match !kind with
   | Some "generate" ->
       generate ~base_uri:!base_uri ~base_port:!base_port ~size:!size
-  | Some "bootstrap" -> bootstrap ~size:!size ~chain_file:!chain_file
+  | Some "bootstrap" -> bootstrap ~size:!size ~folder:!data_folder
   | Some _ | None -> failwith "deku-bootstrap <generate|bootstrap>"
 
 (* let setup_log ?style_renderer level =

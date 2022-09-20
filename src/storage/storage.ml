@@ -11,16 +11,19 @@ module Config = struct
 
   and t = config [@@deriving yojson]
 
+  let file = "config.json"
   let make ~secret ~validators ~nodes = { secret; validators; nodes }
 
-  let read ~file =
+  let read ~folder =
+    let file = Filename.concat folder file in
     Lwt_io.with_file ~mode:Input file (fun ic ->
         let%await json = Lwt_io.read ic in
         let json = Yojson.Safe.from_string json in
         let config = config_of_yojson json in
         Lwt.return config)
 
-  let write ~file storage =
+  let write ~folder storage =
+    let file = Filename.concat folder file in
     Lwt_io.with_file ~mode:Output file (fun oc ->
         let json = yojson_of_config storage in
         let string = Yojson.Safe.pretty_to_string json in
@@ -30,8 +33,13 @@ end
 module Chain = struct
   open Deku_chain
 
-  let read ~file =
+  let temp = "chain.tmp.bin"
+  let file = "chain.bin"
+
+  let read ~folder =
+    let file = Filename.concat folder file in
     let%await exists = Lwt_unix.file_exists file in
+
     match exists with
     | true ->
         Lwt_io.with_file ~mode:Input file (fun ic ->
@@ -39,15 +47,16 @@ module Chain = struct
             Lwt.return (Some chain))
     | false -> Lwt.return_none
 
-  let write ~pool ~file (chain : Chain.t) =
-    let%await temp, oc =
-      Lwt_io.open_temp_file ~prefix:"chain" ~suffix:".bin" ()
-    in
+  let write ~pool ~folder (chain : Chain.t) =
+    let temp = Filename.concat folder temp in
+    let file = Filename.concat folder file in
     let%await bin =
       Parallel.async pool (fun () -> Marshal.to_string chain [])
     in
-    (* TODO: if those fails it will leak temp_files *)
-    let%await () = Lwt_io.write oc bin in
-    let%await () = Lwt_io.close oc in
+    let%await () =
+      Lwt_io.with_file ~mode:Output temp (fun oc ->
+          let%await () = Lwt_io.write oc bin in
+          Lwt_io.close oc)
+    in
     Lwt_unix.rename temp file
 end

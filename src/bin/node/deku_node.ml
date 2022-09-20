@@ -8,28 +8,22 @@ let domains = 8
 
 let main () =
   let port = ref 8080 in
-  let storage_file = ref "storage.json" in
-  let chain_file = ref "chain.bin" in
+  let data_folder = ref "./data" in
   Arg.parse
     [
       ("-p", Arg.Set_int port, " Listening port number (8080 by default)");
-      ( "-s",
-        Arg.Set_string storage_file,
-        " Storage file (storage.json by default)" );
-      ("-c", Arg.Set_string chain_file, " Chain file (chain.bin by default)");
+      ("-d", Arg.Set_string data_folder, " Data folder (./data by default)");
     ]
     ignore "Handle Deku communication. Runs forever.";
-
-  let storage_file = !storage_file in
-  let chain_file = !chain_file in
+  let data_folder = !data_folder in
 
   let pool = Parallel.Pool.make ~domains in
-  let%await storage = Storage.Config.read ~file:storage_file in
+  let%await storage = Storage.Config.read ~folder:data_folder in
   let Storage.Config.{ secret; validators; nodes } = storage in
 
   Parallel.Pool.run pool (fun () ->
       let identity = Identity.make secret in
-      let%await chain = Storage.Chain.read ~file:chain_file in
+      let%await chain = Storage.Chain.read ~folder:data_folder in
       let chain =
         match chain with
         | Some chain -> chain
@@ -47,10 +41,14 @@ let main () =
       let dump_loop () =
         let rec loop () =
           let chain = !chain_ref in
-          Lwt.finalize
-            (fun () -> Storage.Chain.write ~pool ~file:chain_file chain)
+          Lwt.try_bind
+            (fun () -> Storage.Chain.write ~pool ~folder:data_folder chain)
             loop
+            (fun exn ->
+              Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
+              Lwt.return_unit)
         in
+
         loop ()
       in
       let dump chain = chain_ref := chain in
