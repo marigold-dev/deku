@@ -21,17 +21,18 @@ export DEKU_API_PORT=8080
 
 for N in 0 1 2 3; do
   source "./chain/data/$N/env"
+
   _build/install/default/bin/deku-node \
     --port "444$N" \
-    --database-uri "sqlite3:./chain/data/$N/database.db" |&
+    --database-uri "sqlite3:./chain/data/$N/database.db" \
+    --default-block-size "100" |&
       awk -v n=$N '{ print "node " n ": " $0}' &
   sleep 0.1
-  unset DEKU_API_URI
 done
 
 # Only starting one API
-export DEKU_API_DEKU_NODE="http://localhost:4440"
-_build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
+# export DEKU_API_DEKU_NODE="http://localhost:4440"
+# _build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
 
 export DEKU_BOOTSTRAP_SECRET="edsk2jS9cPs3Tgp6T34NQvPPPUPGYtGysCHS569FgDAKmdkKutQHUw"
 

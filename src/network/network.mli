@@ -10,5 +10,3 @@ val connect : nodes:Uri.t list -> network
 
 val broadcast :
   raw_expected_hash:string -> raw_content:string -> network -> unit
-
-val notify_api : block:Deku_consensus.Block.t -> Uri.t -> unit

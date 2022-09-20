@@ -1,1 +1,2 @@
 export DEKU_SECRET="edsk3MwFfcGp5FsZgrX8FGiBiDutX2kfAuPzU6VdZpKYLyDRVPb879"
+export DEKU_API_ENABLED=false

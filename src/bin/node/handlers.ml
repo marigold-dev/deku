@@ -1,8 +1,39 @@
 open Deku_consensus
-open Api_state
 open Deku_indexer
 open Deku_stdlib
+open Deku_protocol
 open Deku_concepts
+open Deku_gossip
+open Deku_chain
+include Node
+
+module Handler_utils = struct
+  let input_of_body ~of_yojson request =
+    let%await body = Dream.body request in
+    let input =
+      try body |> Yojson.Safe.from_string |> of_yojson |> Result.ok
+      with exn ->
+        let msg = Printexc.to_string exn in
+        Error (Api_error.invalid_body msg)
+    in
+    Lwt.return input
+
+  let param_of_request request param =
+    try Dream.param request param |> Option.some with _ -> None
+end
+
+module Api_constants = struct
+  type api_constants = {
+    consensus_address : Deku_tezos.Address.t;
+    discovery_address : Deku_tezos.Address.t;
+    node_uri : Uri.t;
+  }
+
+  type t = api_constants
+
+  let make ~consensus_address ~discovery_address ~node_uri =
+    { consensus_address; discovery_address; node_uri }
+end
 
 module type HANDLER = sig
   type input
@@ -20,26 +51,13 @@ module type HANDLER = sig
   val input_from_request : Dream.request -> (input, Api_error.t) result Lwt.t
   (** Parsing function of the request to make an input *)
 
-  val handle : input -> Api_state.t -> (response, Api_error.t) result Lwt.t
+  val handle :
+    node:node ->
+    indexer:Indexer.t ->
+    constants:Api_constants.t ->
+    input ->
+    (response, Api_error.t) result Lwt.t
   (** handler logic *)
-end
-
-(** Listen to the deku-node for new blocks *)
-module Listen_blocks : HANDLER = struct
-  type input = Block.t [@@deriving of_yojson]
-  type response = unit [@@deriving yojson_of]
-
-  let path = "/listen/blocks"
-  let meth = `POST
-
-  let input_from_request request =
-    Api_utils.input_of_body ~of_yojson:input_of_yojson request
-
-  let handle block state =
-    let { indexer; websockets; _ } = state in
-    let%await () = Indexer.save_block ~block indexer in
-    let%await () = Websocket.broadcast websockets (New_block block) in
-    Lwt.return_ok ()
 end
 
 (* Return the nth block of the chain. *)
@@ -50,7 +68,7 @@ module Get_genesis : HANDLER = struct
   let path = "/chain/blocks/genesis"
   let meth = `GET
   let input_from_request _ = Lwt.return_ok ()
-  let handle _ _ = Lwt.return_ok Genesis.block
+  let handle ~node:_ ~indexer:_ ~constants:_ () = Lwt.return_ok Genesis.block
 end
 
 module Get_head : HANDLER = struct
@@ -61,20 +79,16 @@ module Get_head : HANDLER = struct
   let meth = `GET
   let input_from_request _ = Lwt.return_ok ()
 
-  let handle _ state =
-    let { indexer; _ } = state in
+  let handle ~node ~indexer ~constants:_ () =
+    let { chain; _ } = node in
+    let (Chain.Chain { consensus; _ }) = chain in
+    let (Consensus.Consensus { state; _ }) = consensus in
+    let (State.State { current_block = block_hash; _ }) = state in
 
-    let to_result block_opt =
-      match block_opt with
-      | Some block -> Ok block
-      | None -> Error Api_error.block_not_found
-    in
-
-    let%await level = Indexer.get_level indexer in
-    match level with
-    | None ->
-        Lwt.return_error (Api_error.internal_error "level of head not found")
-    | Some level -> Indexer.find_block ~level indexer |> Lwt.map to_result
+    let%await block = Indexer.find_block_by_hash ~block_hash indexer in
+    match block with
+    | None -> Lwt.return_error Api_error.block_not_found
+    | Some block -> Lwt.return_ok block
 end
 
 module Get_block_by_level_or_hash : HANDLER = struct
@@ -85,7 +99,7 @@ module Get_block_by_level_or_hash : HANDLER = struct
   let meth = `GET
 
   let input_from_request request =
-    let input = Api_utils.param_of_request request "block" in
+    let input = Handler_utils.param_of_request request "block" in
     let level string =
       try
         string |> Z.of_string |> N.of_z |> Option.map Level.of_n
@@ -107,8 +121,9 @@ module Get_block_by_level_or_hash : HANDLER = struct
                  "The block parameter cannot be converted to a Level | 'head' \
                   | 'genesis' | Block_hash.t"))
 
-  let handle request state =
-    let { indexer; _ } = state in
+  let handle ~node ~indexer ~constants request =
+    let _ = node in
+    let _ = constants in
 
     let to_result block_opt =
       match block_opt with
@@ -130,17 +145,16 @@ module Get_level : HANDLER = struct
   let meth = `GET
   let input_from_request _ = Lwt.return_ok ()
 
-  let handle _ state =
-    let { indexer; _ } = state in
-    let%await level = Indexer.get_level indexer in
-    match level with
-    | None -> Lwt.return_error (Api_error.internal_error "Level not found.")
-    | Some level -> Lwt.return_ok { level }
+  let handle ~node ~indexer:_ ~constants:_ () =
+    let { chain; _ } = node in
+    let (Chain.Chain { consensus; _ }) = chain in
+    let (Consensus.Consensus { state; _ }) = consensus in
+    let (State.State { current_level; _ }) = state in
+
+    Lwt.return_ok { level = current_level }
 end
 
 module Get_chain_info : HANDLER = struct
-  open Deku_tezos
-
   type input = unit
 
   type response = { consensus : string; discovery : string }
@@ -150,19 +164,16 @@ module Get_chain_info : HANDLER = struct
   let meth = `GET
   let input_from_request _ = Lwt.return_ok ()
 
-  let handle () state =
-    let { indexer = _; consensus; discovery; _ } = state in
+  let handle ~node:_ ~indexer:_ ~constants () =
+    let Api_constants.{ consensus_address; discovery_address; _ } = constants in
     Lwt.return_ok
       {
-        consensus = Address.to_string consensus;
-        discovery = Address.to_string discovery;
+        consensus = Deku_tezos.Address.to_string consensus_address;
+        discovery = Deku_tezos.Address.to_string discovery_address;
       }
 end
 
 module Helpers_operation_message : HANDLER = struct
-  open Deku_protocol
-  open Deku_gossip
-
   type input = Operation.t
 
   type response = { hash : Message_hash.t; content : Message.Content.t }
@@ -172,9 +183,9 @@ module Helpers_operation_message : HANDLER = struct
   let meth = `POST
 
   let input_from_request request =
-    Api_utils.input_of_body ~of_yojson:Operation.t_of_yojson request
+    Handler_utils.input_of_body ~of_yojson:Operation.t_of_yojson request
 
-  let handle operation _ =
+  let handle ~node:_ ~indexer:_ ~constants:_ operation =
     let content = Message.Content.operation operation in
     let message, _raw_message = Message.encode ~content in
     let (Message.Message { hash; content }) = message in
@@ -182,9 +193,6 @@ module Helpers_operation_message : HANDLER = struct
 end
 
 module Helpers_hash_operation : HANDLER = struct
-  open Deku_protocol
-  open Deku_concepts
-
   (* TODO: those declarations are duplicated *)
   type operation_content =
     | Transaction of { receiver : Address.t; amount : Amount.t }
@@ -205,10 +213,9 @@ module Helpers_hash_operation : HANDLER = struct
   let meth = `POST
 
   let input_from_request request =
-    Api_utils.input_of_body ~of_yojson:input_of_yojson request
+    Handler_utils.input_of_body ~of_yojson:input_of_yojson request
 
-  let handle operation state =
-    let _ = state in
+  let handle ~node:_ ~indexer:_ ~constants:_ operation =
     let hash =
       operation |> yojson_of_input |> Yojson.Safe.to_string
       |> Operation_hash.hash
@@ -218,9 +225,7 @@ end
 
 (* Parse the operation and send it to the chain *)
 module Post_operation : HANDLER = struct
-  open Deku_gossip
-  open Deku_protocol
-  open Piaf
+  open Piaf_lwt
 
   type input = Operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
@@ -229,11 +234,12 @@ module Post_operation : HANDLER = struct
   let path = "/operations"
 
   let input_from_request request =
-    Api_utils.input_of_body ~of_yojson:input_of_yojson request
+    Handler_utils.input_of_body ~of_yojson:input_of_yojson request
 
-  let handle operation state =
-    let { node; _ } = state in
-    let target = Uri.with_path node "/messages" in
+  let handle ~node:_ ~indexer:_ ~constants operation =
+    let Api_constants.{ node_uri; _ } = constants in
+
+    let target = Uri.with_path node_uri "/messages" in
 
     let content = Message.Content.operation operation in
     let _message, raw_message = Message.encode ~content in
@@ -244,7 +250,7 @@ module Post_operation : HANDLER = struct
     let (Operation.Operation { hash = operation_hash; _ }) = operation in
 
     let headers =
-      let open Piaf.Headers in
+      let open Piaf_lwt.Headers in
       let json = Mime_types.map_extension "json" in
       [ (Well_known.content_type, json) ]
     in
@@ -254,5 +260,6 @@ module Post_operation : HANDLER = struct
     match post_result with
     | Ok _ -> Lwt.return_ok { hash = operation_hash }
     | Error err ->
-        Lwt.return_error (Api_error.internal_error (Piaf.Error.to_string err))
+        Lwt.return_error
+          (Api_error.internal_error (Piaf_lwt.Error.to_string err))
 end
