@@ -6,6 +6,26 @@ include Node
 
 let domains = 8
 
+let make_dump_loop ~pool ~folder ~chain =
+  let chain_ref = ref chain in
+  let dump_loop () =
+    let rec loop () =
+      let chain = !chain_ref in
+      let%await () =
+        Lwt.catch
+          (fun () -> Storage.Chain.write ~pool ~folder chain)
+          (fun exn ->
+            Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
+            Lwt.return_unit)
+      in
+      loop ()
+    in
+    loop ()
+  in
+  let dump chain = chain_ref := chain in
+  Lwt.async (fun () -> dump_loop ());
+  dump
+
 let main () =
   let port = ref 8080 in
   let data_folder = ref "./data" in
@@ -26,9 +46,13 @@ let main () =
       let%await chain = Storage.Chain.read ~folder:data_folder in
       let chain =
         match chain with
-        | Some chain -> chain
+        | Some chain -> Chain.clear chain
         | None -> Chain.make ~identity ~validators
       in
+
+      let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
+      let node, promise = Node.make ~pool ~dump ~chain ~nodes in
+      Node.listen node ~port:!port;
       let () =
         let (Chain { consensus; _ }) = chain in
         let (Consensus { current_block; _ }) = consensus in
@@ -37,24 +61,6 @@ let main () =
         let level = N.to_z level in
         Format.eprintf "%a\n%!" Z.pp_print level
       in
-      let chain_ref = ref chain in
-      let dump_loop () =
-        let rec loop () =
-          let chain = !chain_ref in
-          Lwt.try_bind
-            (fun () -> Storage.Chain.write ~pool ~folder:data_folder chain)
-            loop
-            (fun exn ->
-              Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
-              Lwt.return_unit)
-        in
-
-        loop ()
-      in
-      let dump chain = chain_ref := chain in
-      let node, promise = Node.make ~pool ~dump ~chain ~nodes in
-      Node.listen node ~port:!port;
-      Lwt.async (fun () -> dump_loop ());
       promise)
 
 (* let setup_log ?style_renderer level =

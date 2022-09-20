@@ -37,3 +37,6 @@ val incoming_vote :
   vote:Verified_signature.t ->
   consensus ->
   consensus * action list
+
+val clear : consensus -> consensus
+(** [clear consensus] To be used when restarting the chain *)

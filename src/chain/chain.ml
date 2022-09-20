@@ -201,6 +201,12 @@ let apply ~current ~outcome chain =
 
 let compute fragment = Gossip.compute fragment
 
+let clear chain =
+  let (Chain ({ gossip; consensus; _ } as chain)) = chain in
+  let gossip = Gossip.clear gossip in
+  let consensus = Consensus.clear consensus in
+  Chain { chain with gossip; consensus }
+
 let test () =
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
 

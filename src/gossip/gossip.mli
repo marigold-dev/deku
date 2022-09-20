@@ -40,3 +40,6 @@ val apply : outcome:outcome -> gossip -> gossip * action option
 
 val compute : fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
+
+val clear : gossip -> gossip
+(** [clear gossip] To be used when restarting the chain *)

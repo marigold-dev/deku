@@ -214,3 +214,7 @@ let incoming_vote ~current ~vote consensus =
       | Some block -> incoming_block_or_vote ~current ~block consensus
       | None -> (consensus, []))
   | false -> (Consensus consensus, [])
+
+let clear consensus =
+  let (Consensus consensus) = consensus in
+  Consensus { consensus with last_update = None }
