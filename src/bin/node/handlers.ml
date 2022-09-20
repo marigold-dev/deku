@@ -5,6 +5,7 @@ open Deku_protocol
 open Deku_concepts
 open Deku_gossip
 open Deku_chain
+open Deku_external_vm
 include Node
 
 module Handler_utils = struct
@@ -79,16 +80,11 @@ module Get_head : HANDLER = struct
   let meth = `GET
   let input_from_request _ = Lwt.return_ok ()
 
-  let handle ~node ~indexer ~constants:_ () =
+  let handle ~node ~indexer:_indexer ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
-    let (Consensus.Consensus { state; _ }) = consensus in
-    let (State.State { current_block = block_hash; _ }) = state in
-
-    let%await block = Indexer.find_block_by_hash ~block_hash indexer in
-    match block with
-    | None -> Lwt.return_error Api_error.block_not_found
-    | Some block -> Lwt.return_ok block
+    let (Consensus.Consensus { current_block; _ }) = consensus in
+    Lwt.return_ok current_block
 end
 
 module Get_block_by_level_or_hash : HANDLER = struct
@@ -148,10 +144,9 @@ module Get_level : HANDLER = struct
   let handle ~node ~indexer:_ ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
-    let (Consensus.Consensus { state; _ }) = consensus in
-    let (State.State { current_level; _ }) = state in
-
-    Lwt.return_ok { level = current_level }
+    let (Consensus.Consensus { current_block; _ }) = consensus in
+    let (Block.Block { level; _ }) = current_block in
+    Lwt.return_ok { level }
 end
 
 module Get_chain_info : HANDLER = struct
@@ -262,4 +257,19 @@ module Post_operation : HANDLER = struct
     | Error err ->
         Lwt.return_error
           (Api_error.internal_error (Piaf_lwt.Error.to_string err))
+end
+
+module Get_vm_state : HANDLER = struct
+  type input = unit
+  type response = External_vm_protocol.State.t [@@deriving yojson_of]
+
+  let meth = `GET
+  let path = "/state/unix/"
+  let input_from_request _ = Lwt.return_ok ()
+
+  let handle ~node ~indexer:_ ~constants:_ () =
+    let { chain; _ } = node in
+    let (Chain.Chain { protocol; _ }) = chain in
+    let (Protocol.Protocol { vm_state; _ }) = protocol in
+    Lwt.return_ok vm_state
 end

@@ -30,3 +30,5 @@ val respond :
   raw_content:string ->
   network ->
   unit
+
+val not_found : id:Request_id.t -> network -> unit
