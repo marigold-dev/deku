@@ -7,7 +7,6 @@
        - Shuffling message order
 *)
 
-open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_consensus
@@ -97,6 +96,8 @@ let chains_after_first_block =
 
 module Map = Key_hash.Map
 
+let map_find_log msg = function Some stuff -> stuff | None -> failwith msg
+
 let chain_actions_map =
   let module Map = Key_hash.Map in
   List.fold_left2
@@ -129,10 +130,16 @@ let chain_actions_map =
    (** [compute fragment] Can be executed in parallel *)
 *)
 
-type message_filter =
-  | Prevent of { from : Key_hash.t; to_ : Key_hash.t; message : Message.t }
-
 type message_kind = Response | Request | Broadcast
+
+(* type message_filter =
+   | Prevent of {
+       from : Key_hash.t;
+       to_ : Key_hash.t;
+       raw_expected_hash : string;
+       raw_content : string;
+       kind : message_kind;
+     } *)
 
 type local_message =
   | Message of {
@@ -146,9 +153,9 @@ type local_message =
 
 (* does filter catch message *)
 (* let catch filter message =
-   let (Prevent {from=ffrom; to_=fto_; message=fmessage }) = filter
-   let (Local_broadcast { from=mfrom; to_=mto_; raw_expected_hash raw_content; }) = message in
-   () *)
+   let (Prevent { from = ffrom; to_ = fto_; kind = fkind; _ }) = filter in
+   let (Message { from = mfrom; to_ = mto_; kind = mkind; _ }) = message in
+   ffrom = mfrom && fto_ = mto_ && fkind = mkind *)
 
 let request = Atomic.make Request_id.initial
 
@@ -248,7 +255,9 @@ let process_chain_action (chain, actions, messages_to_receive) action =
         in
         let new_messages =
           Map.add to_
-            (message :: Map.find to_ messages_to_receive)
+            (message
+            :: (Map.find_opt to_ messages_to_receive
+               |> map_find_log "fails at 258"))
             messages_to_receive
         in
         (chain, actions, new_messages)
@@ -267,11 +276,13 @@ let process_chain_action (chain, actions, messages_to_receive) action =
         in
         let new_messages =
           Map.add to_
-            (message :: Map.find to_ messages_to_receive)
+            (message
+            :: (Map.find_opt to_ messages_to_receive
+               |> map_find_log "fails at 277"))
             messages_to_receive
         in
         (chain, actions, new_messages)
-    | Chain_send_not_found { id = _ } -> assert false
+    | Chain_send_not_found { id = _ } -> (chain, actions, messages_to_receive)
     | Chain_fragment { fragment } ->
         let outcome = compute fragment in
         let chain, actions = apply ~current ~outcome chain in
@@ -298,18 +309,32 @@ let eval chain_actions_map =
   in
 
   (* TODO: Add message filter *)
+  (* let filters =
+     let chains_action_map = *)
 
   (* Convert sent messages to chain actions *)
   let chains_action_map =
     Map.mapi
       (fun validator (chain, (actions : Chain.action list)) ->
-        let messages = Map.find validator messages_to_receive in
-        List.fold_left message_to_action (chain, actions) messages)
+        let messages = Map.find_opt validator messages_to_receive in
+        (* let messages = map_find_log "fails at 317" messages in *)
+        match messages with
+        | None -> (chain, actions)
+        | Some messages ->
+            List.fold_left message_to_action (chain, actions) messages)
       chain_actions_maps
   in
   chains_action_map
 
 (* TODO: Case where we prevent any initial messages to someone from getting through. Make sure that those messages will eventually be received by the person *)
 
-let second_state = eval chain_actions_map
-let third_state = eval second_state
+(* let second_state = eval chain_actions_map
+   let third_state = eval second_state *)
+let () =
+  let rec loop chain_actions_map =
+    Format.eprintf "called loop\n%!";
+    Unix.sleep 1;
+    let chain_actions_map = eval chain_actions_map in
+    loop chain_actions_map
+  in
+  loop chain_actions_map

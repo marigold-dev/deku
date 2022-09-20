@@ -2,9 +2,9 @@
  (name deku_chain_tests)
  (libraries deku_chain alcotest))
 
-(rule
- (alias runtest)
- (deps
-  (:exe ./deku_chain_tests.exe))
- (action
-  (run %{exe})))
+; (rule
+;  (alias runtest)
+;  (deps
+;   (:exe ./deku_chain_tests.exe))
+;  (action
+;   (run %{exe})))

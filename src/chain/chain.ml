@@ -39,6 +39,7 @@ let make ~identity ~validators =
 
 (* after gossip *)
 let rec apply_consensus_action chain consensus_action =
+  Format.eprintf "LOG: called apply consensus action\n%!";
   let open Consensus in
   match consensus_action with
   | Consensus_accepted_block { block } ->
@@ -74,6 +75,7 @@ let rec apply_consensus_action chain consensus_action =
       (chain, Some fragment)
 
 and apply_consensus_actions chain consensus_actions =
+  Format.eprintf "LOG: called apply_consensus actions\n%!";
   List.fold_left
     (fun (chain, actions) consensus_action ->
       let chain, action = apply_consensus_action chain consensus_action in
@@ -88,6 +90,7 @@ let incoming_block ~current ~block chain =
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions = Consensus.incoming_block ~current ~block consensus in
   let chain = Chain { chain with consensus } in
+  Format.eprintf "LOG: hit end of consensus 'incoming_block'\n%!";
   apply_consensus_actions chain actions
 
 let incoming_vote ~current ~vote chain =
@@ -106,7 +109,9 @@ let incoming_message ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
   match content with
-  | Content_block block -> incoming_block ~current ~block chain
+  | Content_block block ->
+      Format.eprintf "LOG: incoming message caled incoming block\n%!";
+      incoming_block ~current ~block chain
   | Content_vote vote -> incoming_vote ~current ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
 
@@ -130,7 +135,9 @@ let incoming_response ~current ~response chain =
   let open Response in
   let (Response { hash = _; content }) = response in
   match content with
-  | Content_block block -> incoming_block ~current ~block chain
+  | Content_block block ->
+      Format.eprintf "LOG: incoming response called incoming block\n%!";
+      incoming_block ~current ~block chain
 
 let apply_gossip_action ~current ~gossip_action chain =
   match gossip_action with

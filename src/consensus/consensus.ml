@@ -120,6 +120,7 @@ let rec incoming_block_or_vote ~current ~block consensus =
       match is_expected_level ~current_level block with
       | true -> (
           match is_expected_previous ~current_block block with
+          (* Here at least*)
           | true -> with_block ~current ~block consensus
           | false ->
               (* this means network was corrupted *)
@@ -131,6 +132,8 @@ let rec incoming_block_or_vote ~current ~block consensus =
               match Block_pool.find_block ~hash:previous block_pool with
               | Some previous ->
                   (* TODO: ensure that previous.level = level - 1 *)
+                  Format.eprintf
+                    "LOG: hit recursive 'incomingblock_or_vote'\n%!";
                   incoming_block_or_vote ~current ~block:previous consensus
               | None ->
                   let () =
@@ -168,7 +171,6 @@ and with_block ~current ~block consensus =
   in
 
   let next_blocks = Block_pool.find_next ~hash block_pool in
-
   let consensus, actions =
     Block.Set.fold
       (fun block (consensus, actions) ->
@@ -184,6 +186,7 @@ and with_block ~current ~block consensus =
     :: Consensus_accepted_block { block }
     :: actions
   in
+  Format.eprintf "LOG: end of 'with_block'\n%!";
   (consensus, actions)
 
 and incoming_block ~current ~block consensus =
@@ -199,6 +202,7 @@ and incoming_block ~current ~block consensus =
         Consensus_broadcast_vote { vote } :: actions
     | false -> actions
   in
+  Format.eprintf "LOG: hit the end of 'incoming_block'\n%!";
   (consensus, actions)
 
 let incoming_vote ~current ~vote consensus =
