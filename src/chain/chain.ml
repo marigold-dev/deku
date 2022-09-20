@@ -28,6 +28,18 @@ type action =
   | Chain_send_not_found of { id : Request_id.t }
   | Chain_fragment of { fragment : fragment }
 
+let pp_action action =
+  match action with
+  | Chain_trigger_timeout -> Format.eprintf "Chain trigger timeout\n%!"
+  | Chain_broadcast { raw_content = _; _ } ->
+      Format.eprintf "Chain broadcast\n%!"
+  | Chain_send_request { raw_content = _; _ } ->
+      Format.eprintf "Chain send request\n%!"
+  | Chain_send_response { raw_content = _; _ } ->
+      Format.eprintf "Chain send response\n%!"
+  | Chain_send_not_found { id = _; _ } | Chain_fragment { fragment = _ } ->
+      Format.eprintf "Chain fragment\n%!"
+
 let make ~identity ~validators =
   let gossip = Gossip.empty in
   let validators = Validators.of_key_hash_list validators in

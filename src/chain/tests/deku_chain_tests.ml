@@ -80,7 +80,6 @@ let chains_after_first_block =
         Block.sign ~identity first_block)
       chains
   in
-
   (* Apply votes to chain, actions *)
   let apply_votes chain =
     List.fold_left
@@ -88,11 +87,15 @@ let chains_after_first_block =
         let chain, actions =
           Chain.incoming_vote ~current:(get_current ()) ~vote chain
         in
+
         (chain, initial_actions @ actions))
       chain votes
   in
-
-  List.map apply_votes chains_actions
+  let chains_actions = List.map apply_votes chains_actions in
+  List.iter
+    (fun (_, actions) -> List.iter Chain.pp_action actions)
+    chains_actions;
+  chains_actions
 
 module Map = Key_hash.Map
 
@@ -298,6 +301,8 @@ let eval chain_actions_map =
   let chain_actions_maps, messages_to_receive =
     Map.fold
       (fun validator (chain, actions) (new_map, messages_to_receive) ->
+        Format.eprintf "validator has %d actions\n%!" (List.length actions);
+        List.iter Chain.pp_action actions;
         let chain, new_actions, messages_to_receive =
           List.fold_left process_chain_action
             (chain, [], messages_to_receive)
@@ -338,3 +343,5 @@ let () =
     loop chain_actions_map
   in
   loop chain_actions_map
+
+(* TODO: Remove all map_find_log *)
