@@ -63,8 +63,23 @@ type params = {
       (** The address of the discovery contract on Tezos. *)
   named_pipe_path : string; [@default "deku_vm"]
       (** Named pipe path to use for IPC with the VM *)
+  api_enabled : bool; [@env "DEKU_API_ENABLED"]
+  api_port : int; [@default 8080] [@env "DEKU_API_PORT"]
 }
 [@@deriving cmdliner]
+
+let start_api ~node ~indexer ~port ~tezos_consensus_address
+    ~tezos_discovery_address ~node_uri ~enabled =
+  match enabled with
+  | false -> ()
+  | true ->
+      let api_constants =
+        Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
+          ~discovery_address:tezos_discovery_address ~node_uri
+      in
+      Lwt.async (fun () ->
+          Dream.serve ~interface:"0.0.0.0" ~port
+            (Deku_api.make_routes node indexer api_constants))
 
 let main params =
   Lwt_main.run
@@ -86,6 +101,8 @@ let main params =
     tezos_consensus_address;
     tezos_discovery_address;
     named_pipe_path;
+    api_enabled;
+    api_port;
   } =
     params
   in
@@ -125,6 +142,10 @@ let main params =
     Node.make ~pool ~dump ~chain ~nodes:validator_uris ~indexer:(Some indexer)
       ()
   in
+  let node_uri = Uri.of_string "http://localhost" in
+  let node_uri = Uri.with_port node_uri (Some port) in
+  start_api ~node ~indexer ~port:api_port ~tezos_consensus_address
+    ~tezos_discovery_address ~node_uri ~enabled:api_enabled;
   Node.listen node ~port ~tezos_interop;
   let () =
     let (Chain { consensus; _ }) = chain in
