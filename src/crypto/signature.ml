@@ -61,3 +61,6 @@ let verify key signature hash =
   | ( (Key.Ed25519 _ | Key.Secp256k1 _ | Key.P256 _),
       (Ed25519 _ | Secp256k1 _ | P256 _) ) ->
       false
+
+let show = to_b58
+let pp fmt t = Format.pp_print_string fmt (to_b58 t)

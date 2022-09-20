@@ -8,6 +8,7 @@ type action = private
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
   | Consensus_broadcast_signature of { signature : Verified_signature.t }
+[@@deriving show]
 
 type consensus = private
   | Consensus of {

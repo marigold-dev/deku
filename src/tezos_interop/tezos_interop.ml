@@ -332,11 +332,12 @@ module Consensus = struct
             List.iter
               (function
                 | key_hash, None ->
-                    Format.printf
-                      "Validator with key_hash %s not found in discovery \
-                       contract (%s)."
-                      (Key_hash.to_b58 key_hash)
-                      (Address.to_string discovery_contract)
+                    Logs.err (fun m ->
+                        m
+                          "Validator with key_hash %a not found in discovery \
+                           contract (%s)."
+                          Key_hash.pp key_hash
+                          (Address.to_string discovery_contract))
                 | _, Some _ -> ())
               validator_uri_pairs;
             Lwt.return (Ok validator_uri_pairs))

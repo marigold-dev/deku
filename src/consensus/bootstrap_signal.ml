@@ -7,7 +7,7 @@ type bootstrap_signal =
       next_author : Key_hash.t;
     }
 
-and t = bootstrap_signal [@@deriving yojson]
+and t = bootstrap_signal [@@deriving yojson, show]
 
 exception Invalid_signature
 

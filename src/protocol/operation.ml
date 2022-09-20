@@ -13,7 +13,7 @@ and operation =
       (* TODO: I don't like that operation carries signature *)
       key : Key.t;
       (* TODO: should we use verified signatures here and elsewhere? *)
-      signature : Signature.t;
+      signature : Signature.t; [@opaque]
       hash : Operation_hash.t;
       level : Level.t;
       nonce : Nonce.t;
@@ -21,7 +21,7 @@ and operation =
       content : operation_content;
     }
 
-and t = operation [@@deriving yojson]
+and t = operation [@@deriving yojson, show]
 
 let equal a b =
   let (Operation { hash = a; _ }) = a in

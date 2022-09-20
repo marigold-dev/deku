@@ -21,3 +21,6 @@ end)
 let hash = hash
 
 module Map = Map
+
+let show = to_b58
+let pp fmt t = Format.pp_print_string fmt (to_b58 t)

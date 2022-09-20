@@ -74,6 +74,8 @@ let main params =
       ~required_confirmations:tezos_required_confirmations
   in
   let identity = Identity.make (Secret.Ed25519 secret) in
+  Logs.info (fun m ->
+      m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   let pool = Parallel.Pool.make ~domains in
   Parallel.Pool.run pool (fun () ->
       let node, promise =
@@ -84,14 +86,24 @@ let main params =
       Node.listen node ~port ~tezos_interop;
       promise)
 
-(* let setup_log ?style_renderer level =
-     Fmt_tty.setup_std_outputs ?style_renderer ();
-     Logs.set_level (Some level);
-     Logs.set_reporter (Logs_fmt.reporter ())
+let setup_log ?style_renderer ?level () =
+  Fmt_tty.setup_std_outputs ?style_renderer ();
+  Logs.set_level level;
+  Logs.set_reporter (Logs_fmt.reporter ());
+  (* disable all non-deku logs *)
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if
+        (not (String.starts_with ~prefix:"deku" src_name))
+        && not (String.equal src_name "application")
+      then Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ())
 
-   let () = setup_log Logs.Debug *)
+let () = setup_log ~level:Logs.Debug ()
 
 let () =
+  Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
   let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
   let cmd = Cmdliner.Cmd.v info term in

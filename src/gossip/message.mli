@@ -5,11 +5,12 @@ module Content : sig
 
   type content = private
     | Content_block of Block.t
-    | Content_signature of Verified_signature.t
+    | Content_signature of Verified_signature.t [@opaque]
     | Content_operation of Operation.t
     | Content_bootstrap_signal of Bootstrap_signal.t
+  [@@deriving show]
 
-  type t = content [@@deriving yojson]
+  type t = content [@@deriving yojson, show]
 
   val block : Block.t -> content
   val signature : Verified_signature.t -> content

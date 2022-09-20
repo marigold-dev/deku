@@ -5,11 +5,14 @@ open Block
 
 type action =
   (* protocol *)
-  | Consensus_accepted_block of block
+  | Consensus_accepted_block of Block.t
   (* timer *)
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
-  | Consensus_broadcast_signature of { signature : Verified_signature.t }
+  | Consensus_broadcast_signature of {
+      signature : Verified_signature.t; [@opaque]
+    }
+[@@deriving show]
 
 type consensus =
   | Consensus of {

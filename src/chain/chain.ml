@@ -18,6 +18,7 @@ type action =
   | Chain_trigger_timeout
   | Chain_broadcast of { content : Message.Content.t }
   | Chain_save_block of Block.t
+[@@deriving show]
 
 let make ~identity ~bootstrap_key ~validators ~pool ~default_block_size =
   let validators = Validators.of_key_hash_list validators in
@@ -27,6 +28,9 @@ let make ~identity ~bootstrap_key ~validators ~pool ~default_block_size =
   Chain { pool; protocol; consensus; producer }
 
 let rec apply_consensus_action chain consensus_action =
+  Logs.debug (fun m ->
+      m "Chain: applying consensus action: %a" Consensus.pp_action
+        consensus_action);
   let open Consensus in
   let (Chain { pool; protocol; consensus; producer }) = chain in
   match consensus_action with
@@ -101,6 +105,7 @@ let incoming_bootstrap_signal ~bootstrap_signal ~current chain =
         producer
     with
     | Some block ->
+        Logs.debug (fun m -> m "Broadcasting block");
         let content = Message.Content.block block in
         [ Chain_broadcast { content } ]
     | None -> []
@@ -113,6 +118,7 @@ let incoming_tezos_operation ~tezos_operation chain =
   (Chain { pool; protocol; consensus; producer }, [])
 
 let incoming_message ~current ~content chain =
+  Logs.debug (fun m -> m "Incoming message: %a" Message.Content.pp content);
   let open Message.Content in
   match content with
   | Content_block block -> incoming_block ~current ~block chain

@@ -5,12 +5,14 @@ module Content = struct
 
   type content =
     | Content_block of Block.t
-    | Content_signature of Verified_signature.t
+    | Content_signature of Verified_signature.t [@opaque]
     | Content_operation of Operation.t
     | Content_bootstrap_signal of Bootstrap_signal.t
+  [@@deriving show]
 
   and t = content [@@deriving yojson]
 
+  let pp = pp_content
   let block block = Content_block block
   let signature siganture = Content_signature siganture
   let operation operation = Content_operation operation

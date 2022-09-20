@@ -35,6 +35,7 @@ let rec on_network node ~raw_expected_hash ~raw_content =
 and on_message node ~current ~message =
   let open Message in
   let (Message { hash = _; content }) = message in
+  Logs.debug (fun m -> m "Node: received message: %a" Content.pp content);
   let chain, chain_actions =
     Chain.incoming_message ~current ~content node.chain
   in
@@ -68,6 +69,8 @@ and handle_chain_actions node ~chain_actions =
     chain_actions
 
 and handle_chain_action node ~chain_action =
+  Logs.debug (fun m ->
+      m "Node: handling chain action: %a" Chain.pp_action chain_action);
   let open Chain in
   match chain_action with
   | Chain_trigger_timeout -> node.trigger_timeout ()

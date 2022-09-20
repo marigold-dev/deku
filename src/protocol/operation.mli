@@ -18,7 +18,7 @@ type operation = private
       content : operation_content;
     }
 
-type t = operation [@@deriving eq, ord, yojson]
+type t = operation [@@deriving eq, ord, yojson, show]
 
 val transaction :
   identity:Identity.t ->
