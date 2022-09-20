@@ -64,5 +64,6 @@ let make_routes node indexer constants =
                 make_handler node indexer constants
                   (module Helpers_hash_operation);
                 make_handler node indexer constants (module Post_operation);
+                make_handler node indexer constants (module Get_vm_state);
               ]);
        ]

@@ -5,6 +5,7 @@ open Deku_protocol
 open Deku_concepts
 open Deku_gossip
 open Deku_chain
+open Deku_external_vm
 include Node
 
 module Handler_utils = struct
@@ -262,4 +263,19 @@ module Post_operation : HANDLER = struct
     | Error err ->
         Lwt.return_error
           (Api_error.internal_error (Piaf_lwt.Error.to_string err))
+end
+
+module Get_vm_state : HANDLER = struct
+  type input = unit
+  type response = External_vm_protocol.State.t [@@deriving yojson_of]
+
+  let meth = `GET
+  let path = "/state/unix/"
+  let input_from_request _ = Lwt.return_ok ()
+
+  let handle ~node ~indexer:_ ~constants:_ () =
+    let { chain; _ } = node in
+    let (Chain.Chain { protocol; _ }) = chain in
+    let (Protocol.Protocol { vm_state; _ }) = protocol in
+    Lwt.return_ok vm_state
 end
