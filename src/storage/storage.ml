@@ -41,7 +41,7 @@ module Chain = struct
 
   let write ~pool ~file (chain : Chain.t) =
     let%await temp, oc =
-      Lwt_io.open_temp_file ~prefix:"chain" ~suffix:"bin" ()
+      Lwt_io.open_temp_file ~prefix:"chain" ~suffix:".bin" ()
     in
     let%await bin =
       Parallel.async pool (fun () -> Marshal.to_string chain [])
