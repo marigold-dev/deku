@@ -3,13 +3,13 @@ import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
 import { endpoints, get, makeEndpoints, parseWebsocketMessage, post, MessageType } from "./network";
-import {Level as LevelType} from "./core/level";
-import {Block as BlockType} from "./core/block";
-import Nonce, {Nonce as NonceType} from "./core/nonce";
-import {Address as AddressType} from "./core/address";
-import {Amount as AmountType} from "./core/amount";
+import { Level as LevelType } from "./core/level";
+import { Block as BlockType } from "./core/block";
+import Nonce, { Nonce as NonceType } from "./core/nonce";
+import { Address as AddressType } from "./core/address";
+import { Amount as AmountType } from "./core/amount";
 import Operation from "./core/operation";
-import {OperationHash as OperationHashType} from "./core/operation-hash";
+import { OperationHash as OperationHashType } from "./core/operation-hash";
 import URI from "./utils/uri";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
@@ -31,7 +31,7 @@ export class DekuToolkit {
     private _consensus: Consensus | undefined;
     private _discovery: Discovery | undefined;
 
-    private websocket: WebSocket
+    // private websocket: WebSocket
     private onBlockCallback: (block: BlockType) => void;
 
     /**
@@ -57,7 +57,7 @@ export class DekuToolkit {
     constructor(setting: Setting) {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
-        this.websocket = this.initializeWebsocket(setting.dekuRpc);
+        // this.websocket = this.initializeWebsocket(setting.dekuRpc); TODO: add stream or websocket to the API
         this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
         this.pendingOperations = {};
     }
@@ -111,9 +111,10 @@ export class DekuToolkit {
     /**
      * Sets the callback to call when a block is received
      * @param callback the callback to be called when a new block arrived to the client
+     * @deprecated will do nothing in this version
      * Returns the deku updated toolkit
      */
-     onBlock(callback: ((block: BlockType) => void)): DekuToolkit {
+    onBlock(callback: ((block: BlockType) => void)): DekuToolkit {
         this.onBlockCallback = callback
         return this;
     }
@@ -138,7 +139,7 @@ export class DekuToolkit {
      * Returns the address of the consensus and discovery used by the deku chain
      * @returns the consensus and discovery addresses
      */
-     async info(): Promise<{ consensus: string, discovery: string }> {
+    async info(): Promise<{ consensus: string, discovery: string }> {
         const info = await get(this.endpoints["GET_CHAIN_INFO"])
         return info;
     }
@@ -147,7 +148,7 @@ export class DekuToolkit {
      * Returns the current level of the chain
      * @returns the level of the chain as a promise
      */
-     async level(): Promise<LevelType> {
+    async level(): Promise<LevelType> {
         const level = await get(this.endpoints["GET_CURRENT_LEVEL"]);
         return level;
     }
@@ -157,7 +158,7 @@ export class DekuToolkit {
      * @param level the level of the block to return
      * @returns the block at the given level
      */
-     async getBlockByLevel(level: LevelType): Promise<BlockType> {
+    async getBlockByLevel(level: LevelType): Promise<BlockType> {
         const block = await get(this.endpoints["GET_BLOCK_BY_LEVEL"](level))
         return block;
     }
@@ -176,7 +177,7 @@ export class DekuToolkit {
      * Returns the genesis block
      * @returns the genesis block
      */
-     async getGenesis(): Promise<BlockType> {
+    async getGenesis(): Promise<BlockType> {
         const block = await get(this.endpoints["GET_GENESIS"])
         return block
     }
@@ -185,7 +186,7 @@ export class DekuToolkit {
      * Returns the current block of deku
      * @returns the current block
      */
-     async getCurrentBlock(): Promise<BlockType> {
+    async getCurrentBlock(): Promise<BlockType> {
         const block = await get(this.endpoints["GET_CURRENT_BLOCK"]);
         return block
     }
@@ -197,7 +198,7 @@ export class DekuToolkit {
      * @param options to define a custom level/nonce
      * @returns an operation hash of the transfer
      */
-     async transferTo(receiver: AddressType, amount: AmountType, options?: OptOptions): Promise<OperationHashType> {
+    async transferTo(receiver: AddressType, amount: AmountType, options?: OptOptions): Promise<OperationHashType> {
         const dekuSigner = this.assertTzWallet();
         const level = options === undefined || options.level === undefined ? await this.level() : options.level;
         const nonce = options === undefined || options.nonce === undefined ? Nonce.rand() : options.nonce;
@@ -237,10 +238,11 @@ export class DekuToolkit {
             }
         }
     }
-    
+
     /**
      * Resolve pending operations when the client receive a new block.
      * @param block the received block from the API
+     * @deprecated won't work in this version
      */
     private onNewBlock(block: BlockType) {
         // Calling the callback given by the user
@@ -305,6 +307,7 @@ export class DekuToolkit {
      * Wait for the given operations during a given duration
      * @param operation the hash of the operation to wait
      * @param options {maxAge} the max duration to wait (in blocks)
+     * @deprecated won't work in this version
      */
     async wait(operation: OperationHashType, options?: { maxAge?: number }): Promise<LevelType> {
         // Parsing the options
