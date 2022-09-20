@@ -1,4 +1,4 @@
-{ deku }: { config, pkgs, lib, ... }:
+{ deku-packages }: { config, pkgs, lib, ... }:
 
 with lib;
 
@@ -9,6 +9,16 @@ in
 {
   options.services.deku-node = {
     enable = mkEnableOption "deku node";
+    port = mkOption {
+      type = types.int;
+      default = 4440;
+      description = lib.mDoc "The port to listen to";
+    };
+    openFirewall = mkOption {
+      type = types.bool;
+      default = false;
+      description = lib.mdDoc "Open ports in the firewall for the deku node.";
+    };
     # FIXME: we should probably create real config options here but for now
     # I don't want to maintain the same options in many places.
     environment = mkOption {
@@ -26,7 +36,7 @@ in
       environment = cfg.environment;
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${deku}/bin/deku-node";
+        ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node";
         Restart = "on-failure";
         StateDirectory = "deku";
 
