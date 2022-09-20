@@ -1,6 +1,11 @@
 open Deku_crypto
 
-type block_pool
+type block_pool = private
+  | Pool of {
+      by_hash : (Block.t option * Key_hash.Set.t) Block_hash.Map.t;
+      by_previous : Block.Set.t Block_hash.Map.t;
+    }
+
 type t = block_pool
 
 val empty : block_pool
