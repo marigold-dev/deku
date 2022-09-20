@@ -49,10 +49,11 @@ let rec apply_consensus_action chain consensus_action =
   | Consensus_accepted_block { block } ->
       let (Chain ({ protocol; producer; applied; _ } as chain)) = chain in
       let (Block { hash; level; payload; tezos_operations; _ }) = block in
+      let payload =
+        Protocol.prepare ~parallel:(fun f l -> List.filter_map f l) ~payload
+      in
       let protocol, receipts =
-        Protocol.apply
-          ~parallel:(fun f l -> List.filter_map f l)
-          ~current_level:level ~payload ~tezos_operations protocol
+        Protocol.apply ~current_level:level ~payload ~tezos_operations protocol
       in
       let producer = Producer.clean ~receipts ~tezos_operations producer in
       let applied = Block_hash.Map.add hash block applied in
