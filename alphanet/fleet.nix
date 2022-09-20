@@ -1,4 +1,4 @@
-{ nixpkgs, deploy-rs, deku-node }:
+{ nixpkgs, deploy-rs, deku-node, rev }:
 let
   network_config_to_nixos_config = { bootstrapper_key, tezos_consensus_address, tezos_discovery_address, nodes }:
     let
@@ -57,6 +57,7 @@ let
                               curl
                               htop
                             ];
+                            environment.etc."deku/revision".text = "${rev}";
                             programs.tmux.enable = true;
                             programs.zsh.enable = true;
                           })

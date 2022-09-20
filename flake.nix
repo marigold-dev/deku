@@ -80,6 +80,7 @@
         nodes = import ./alphanet/fleet.nix {
           inherit nixpkgs deploy-rs;
           deku-node = self.nixosModules.deku-node;
+          rev = if self ? rev then self.rev else "dirty";
         };
         sshUser = "root";
       };
