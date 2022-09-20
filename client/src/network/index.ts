@@ -1,7 +1,6 @@
 import JSONValue, { JSONType } from "../utils/json"
 import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
-import { createPacket } from "../utils/hash";
 
 const VERSION = "/api/v1"
 
@@ -95,10 +94,8 @@ export const get = async <T>(endpoint: endpoint<T>): Promise<T> => {
 
 export const post = async <T>(endpoint: endpoint<T>, content: JSONType): Promise<T> => {
     const uri = endpoint.uri;
-    const packet = createPacket(JSONValue.of(content));
-    const body = JSON.stringify(packet.as_json());
+    const body = JSON.stringify(content);
     const response = await fetch(uri, { method: "POST", body });
-
     const status = response.status;
     const json: JSONType = await response.json();
     return parse(endpoint, status, json);

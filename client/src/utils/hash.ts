@@ -6,7 +6,6 @@ import * as bs58check from 'bs58check';
 
 const PREFIX = {
     "Do": new Uint8Array([86, 124]),
-    "Dp": new Uint8Array([86, 154]),
     "Db": new Uint8Array([85, 22]),
 }
 
@@ -26,17 +25,8 @@ const toB58Hash = (prefix: Uint8Array) => (payload: JSONValue) => {
 }
 
 const createOperationHash = toB58Hash(PREFIX.Do);
-const createPacketHash = toB58Hash(PREFIX.Dp);
 
 export const hashOperation = (operation: OperationType): OperationHashType => {
     const json = Operation.toDTO(operation);
     return createOperationHash(json);
-}
-
-export const createPacket = (content: JSONValue): JSONValue => {
-    const hash = createPacketHash(content);
-    return JSONValue.of({
-        hash,
-        content: content.as_json()
-    })
 }
