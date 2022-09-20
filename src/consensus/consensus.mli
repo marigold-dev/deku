@@ -41,3 +41,6 @@ val incoming_vote :
 
 val incoming_bootstrap_signal :
   current:Timestamp.t -> consensus -> consensus option
+
+val clear : consensus -> consensus
+(** [clear consensus] To be used when restarting the chain *)

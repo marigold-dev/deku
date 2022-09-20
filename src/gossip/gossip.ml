@@ -253,3 +253,7 @@ let apply ~outcome gossip =
       on_request_decoded_error ~expected_hash gossip
   | Outcome_response_decoded_error { expected_hash } ->
       on_response_decoded_error ~expected_hash gossip
+
+let clear gossip =
+  let (Gossip gossip) = gossip in
+  Gossip { gossip with pending_request = false }

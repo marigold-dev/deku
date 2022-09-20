@@ -221,3 +221,7 @@ let incoming_bootstrap_signal ~current consensus =
   match last_update with
   | None -> Some (Consensus { consensus with last_update = Some current })
   | Some _ -> None
+
+let clear consensus =
+  let (Consensus consensus) = consensus in
+  Consensus { consensus with last_update = None }
