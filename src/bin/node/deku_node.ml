@@ -77,14 +77,13 @@ let main params =
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   let pool = Parallel.Pool.make ~domains in
-  Parallel.Pool.run pool (fun () ->
-      let node, promise =
-        Node.make ~pool ~identity ~validators ~nodes:validator_uris
-          ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer:(Some indexer)
-          ~default_block_size ()
-      in
-      Node.listen node ~port ~tezos_interop;
-      promise)
+  let node, promise =
+    Node.make ~pool ~identity ~validators ~nodes:validator_uris
+      ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer:(Some indexer)
+      ~default_block_size ()
+  in
+  Node.listen node ~port ~tezos_interop;
+  promise
 
 let setup_log ?style_renderer ?level () =
   Fmt_tty.setup_std_outputs ?style_renderer ();

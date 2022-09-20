@@ -3,7 +3,6 @@ module Pool : sig
   type t = pool
 
   val make : domains:int -> pool
-  val run : pool -> (unit -> 'a) -> 'a
 end
 
 val init_p : Pool.t -> int -> (int -> 'a) -> 'a list
