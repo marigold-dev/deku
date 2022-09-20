@@ -64,9 +64,11 @@ module Zero_ops = struct
 
     let (`Average average) =
       Util.benchmark ~runs (fun () ->
+          let payload =
+            Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
+          in
           let _protocol, _receipts =
-            Protocol.apply ~parallel:Parallel.filter_map_p ~current_level:level
-              ~payload protocol
+            Protocol.apply ~current_level:level ~payload protocol
           in
           ())
     in

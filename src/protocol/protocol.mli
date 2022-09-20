@@ -10,9 +10,13 @@ type t = protocol
 
 val initial : protocol
 
-val apply :
+val prepare :
   parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->
-  current_level:Level.t ->
   payload:string list ->
+  Operation.t list
+
+val apply :
+  current_level:Level.t ->
+  payload:Operation.t list ->
   protocol ->
   protocol * Receipt.t list

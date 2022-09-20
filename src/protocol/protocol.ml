@@ -53,15 +53,14 @@ let parse_operation operation =
   | operation -> Some operation
   | exception _exn -> (* TODO: print exception *) None
 
-let apply_payload ~parallel ~current_level payload protocol =
-  let operations = parallel parse_operation payload in
+let apply_payload ~current_level ~payload protocol =
   List.fold_left
     (fun (protocol, rev_receipts) operation ->
       match apply_operation ~current_level protocol operation with
       | Some (protocol, receipt) -> (protocol, receipt :: rev_receipts)
       | None -> (protocol, rev_receipts)
       | exception _exn -> (* TODO: print exception *) (protocol, rev_receipts))
-    (protocol, []) operations
+    (protocol, []) payload
 
 let clean ~current_level protocol =
   let (Protocol { included_operations; ledger }) = protocol in
@@ -70,9 +69,9 @@ let clean ~current_level protocol =
   in
   Protocol { included_operations; ledger }
 
-let apply ~parallel ~current_level ~payload protocol =
-  let protocol, receipts =
-    apply_payload ~parallel ~current_level payload protocol
-  in
+let prepare ~parallel ~payload = parallel parse_operation payload
+
+let apply ~current_level ~payload protocol =
+  let protocol, receipts = apply_payload ~current_level ~payload protocol in
   let protocol = clean ~current_level protocol in
   (protocol, receipts)
