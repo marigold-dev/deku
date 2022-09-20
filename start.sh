@@ -24,11 +24,10 @@ for N in 0 1 2 3; do
     --data-folder "./chain/data/$N" |&
       awk -v n=$N '{ print "node " n ": " $0}' &
   sleep 0.1
-  unset DEKU_API_URI
 done
 
 # Only starting one API
-export DEKU_API_DEKU_NODE="http://localhost:4440"
-_build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
+# export DEKU_API_DEKU_NODE="http://localhost:4440"
+# _build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
 
 wait

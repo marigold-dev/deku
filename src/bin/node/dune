@@ -11,6 +11,8 @@
   cmdliner
   logs
   logs.fmt
-  fmt.tty)
+  fmt.tty
+  dream
+  piaf-lwt)
  (preprocess
-  (pps ppx_let_binding ppx_deriving_cmdliner)))
+  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
