@@ -37,7 +37,8 @@ let make_block ~identity previous =
   let (Block { hash = previous; level = previous_level; _ }) = previous in
   let level = Level.next previous_level in
   let operations = [] in
-  Block.produce ~identity ~level ~previous ~operations
+  Block.produce ~parallel_map:List.map ~identity ~level ~previous ~operations
+    ~tezos_operations:[]
 
 let make_validators n =
   assert (n > 0);

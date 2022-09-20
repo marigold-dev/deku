@@ -1,6 +1,6 @@
 (executable
  (name deku_consensus_tests)
- (libraries deku-consensus alcotest))
+ (libraries deku_consensus alcotest))
 
 (rule
  (alias runtest)

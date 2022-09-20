@@ -11,8 +11,8 @@ type params = {
   domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
-  chain_file : string; [@env "DEKU_CHAIN_FILE"]
-      (** Path to file where node's state is stored. *)
+  data_folder : string; [@env "DEKU_CHAIN_DATA_FOLDER"]
+      (** Folder path where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
   validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
@@ -48,7 +48,7 @@ let main params =
   let {
     domains;
     secret;
-    chain_file;
+    data_folder;
     validators;
     validator_uris;
     port;
@@ -65,7 +65,7 @@ let main params =
     params
   in
   let pool = Parallel.Pool.make ~domains in
-  let%await chain = Storage.Chain.read ~file:chain_file in
+  let%await chain = Storage.Chain.read ~folder:data_folder in
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
@@ -97,9 +97,12 @@ let main params =
   let dump_loop () =
     let rec loop () =
       let chain = !chain_ref in
-      Lwt.finalize
-        (fun () -> Storage.Chain.write ~pool ~file:chain_file chain)
+      Lwt.try_bind
+        (fun () -> Storage.Chain.write ~pool ~folder:data_folder chain)
         loop
+        (fun exn ->
+          Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
+          Lwt.return_unit)
     in
     loop ()
   in
