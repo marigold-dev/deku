@@ -8,7 +8,7 @@ import { Block as BlockType } from "./core/block";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
 import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
-import Operation, {Operation as OperationType} from "./core/operation";
+import Operation, { Operation as OperationType } from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
@@ -64,11 +64,10 @@ export class DekuToolkit {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
         this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
-        this.initializeStream(setting.dekuRpc)
-            .catch(err => console.error(`error: ${err}`));
+        // this.initializeStream(setting.dekuRpc) // NOT YET AVAILABLE
+        //     .catch(err => console.error(`error: ${err}`));
         this.pendingOperations = {};
     }
-
 
     private async initializeStream(dekuRpc: string) {
         const streamUri = dekuRpc + "/api/v1/chain/blocks/monitor";
@@ -77,7 +76,7 @@ export class DekuToolkit {
         if (!body) return null;
         const reader = body.getReader();
         // eslint-disable-next-line no-constant-condition
-        while(true) {
+        while (true) {
             const { value, done } = await reader.read();
             if (done) break;
             const decoder = new TextDecoder("utf-8");
@@ -257,7 +256,7 @@ export class DekuToolkit {
      * @returns an operation hash of the transfer
      */
     async transferTo(receiver: AddressType, amount: AmountType, options?: OptOptions): Promise<OperationHashType> {
-        const {source, level, nonce} = await this.parseOperationOptions(options);
+        const { source, level, nonce } = await this.parseOperationOptions(options);
         // Create the transaction
         const transaction = Operation.createTransaction(
             level,
