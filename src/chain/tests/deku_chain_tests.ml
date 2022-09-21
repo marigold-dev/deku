@@ -208,17 +208,18 @@ let process_chain_action (chain, actions, messages_to_receive) action =
   let from = Identity.key_hash identity in
   let current = get_current () in
   let chain, additional_actions, messages_to_receive =
+    let new_actions = [] in
     match action with
     | Chain_trigger_timeout ->
         let fragment = timeout ~current chain in
-        let actions =
+        let new_actions =
           match fragment with
           | Some fragment ->
               let fragment = Chain_fragment { fragment } in
-              [ fragment ]
+              fragment :: new_actions
           | None -> []
         in
-        (chain, actions, messages_to_receive)
+        (chain, new_actions, messages_to_receive)
     | Chain_broadcast { raw_expected_hash; raw_content } ->
         let new_messages =
           Map.mapi
@@ -234,10 +235,11 @@ let process_chain_action (chain, actions, messages_to_receive) action =
                     id = Request_id.initial;
                   }
               in
+
               message :: messages)
             messages_to_receive
         in
-        (chain, actions, new_messages)
+        (chain, new_actions, new_messages)
     | Chain_send_request { raw_expected_hash; raw_content } ->
         let to_ =
           let rec get_someone_else () =
@@ -268,7 +270,7 @@ let process_chain_action (chain, actions, messages_to_receive) action =
             (message :: (Map.find_opt to_ messages_to_receive |> map_find_list))
             messages_to_receive
         in
-        (chain, actions, new_messages)
+        (chain, new_actions, new_messages)
     | Chain_send_response { id; raw_expected_hash; raw_content } ->
         let to_ = Hashtbl.find id_handler id in
         let message =
@@ -287,16 +289,16 @@ let process_chain_action (chain, actions, messages_to_receive) action =
             (message :: (Map.find_opt to_ messages_to_receive |> map_find_list))
             messages_to_receive
         in
-        (chain, actions, new_messages)
-    | Chain_send_not_found { id = _ } -> (chain, actions, messages_to_receive)
+        (chain, new_actions, new_messages)
+    | Chain_send_not_found { id = _ } ->
+        (chain, new_actions, messages_to_receive)
     | Chain_fragment { fragment } ->
         let outcome = compute fragment in
-        Format.eprintf "apply\n%!";
-        let chain, actions = apply ~current ~outcome chain in
-        Format.eprintf "finished apply\n%!";
-        (chain, actions, messages_to_receive)
+        let chain, new_actions = apply ~current ~outcome chain in
+        (chain, new_actions, messages_to_receive)
   in
-  (chain, additional_actions @ actions, messages_to_receive)
+  let actions = additional_actions @ actions in
+  (chain, actions, messages_to_receive)
 
 let messages_to_receive =
   List.fold_left
@@ -313,19 +315,20 @@ let eval ?(filters = Fun.id) chain_actions_map =
   let chain_actions_maps, messages_to_receive =
     Map.fold
       (fun validator (chain, actions) (new_map, messages_to_receive) ->
-        Format.eprintf "validator has %d actions\n%!" (List.length actions);
-        List.iter Chain.pp_action actions;
         let chain, new_actions, messages_to_receive =
-          List.fold_left process_chain_action
+          List.fold_left
+            (fun acc action ->
+              let chain, actions, messages_to_receive =
+                process_chain_action acc action
+              in
+              (chain, actions, messages_to_receive))
             (chain, [], messages_to_receive)
             actions
         in
-
         (Map.add validator (chain, new_actions) new_map, messages_to_receive))
       chain_actions_map
       (chain_actions_map, messages_to_receive)
   in
-  Format.eprintf "after process chain actions\n%!";
   let filtered_messages = filters messages_to_receive in
 
   (* Convert sent messages to chain actions *)

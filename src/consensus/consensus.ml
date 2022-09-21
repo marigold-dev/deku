@@ -132,8 +132,6 @@ let rec incoming_block_or_vote ~current ~block consensus =
               match Block_pool.find_block ~hash:previous block_pool with
               | Some previous ->
                   (* TODO: ensure that previous.level = level - 1 *)
-                  Format.eprintf
-                    "LOG: hit recursive 'incomingblock_or_vote'\n%!";
                   incoming_block_or_vote ~current ~block:previous consensus
               | None ->
                   let () =
@@ -186,7 +184,6 @@ and with_block ~current ~block consensus =
     :: Consensus_accepted_block { block }
     :: actions
   in
-  Format.eprintf "LOG: end of 'with_block'\n%!";
   (consensus, actions)
 
 and incoming_block ~current ~block consensus =
@@ -202,7 +199,6 @@ and incoming_block ~current ~block consensus =
         Consensus_broadcast_vote { vote } :: actions
     | false -> actions
   in
-  Format.eprintf "LOG: hit the end of 'incoming_block'\n%!";
   (consensus, actions)
 
 let incoming_vote ~current ~vote consensus =
