@@ -1,2 +1,2 @@
 export DEKU_SECRET="edsk4UWkJqpZrAm26qvJE8uY9ZFGFqQiFuBcDyEPASXeHxuD68WvvF"
-export DEKU_API_URI="http://localhost:8080"
+export DEKU_API_ENABLED=true
