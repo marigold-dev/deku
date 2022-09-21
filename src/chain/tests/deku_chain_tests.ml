@@ -230,6 +230,8 @@ let process_chain_action (chain, actions, messages_to_receive) action =
                     id = Request_id.initial;
                   }
               in
+              Format.eprintf "new message length is : %d\n%!"
+                (List.length (message :: messages));
               message :: messages)
             messages_to_receive
         in
@@ -298,6 +300,11 @@ let process_chain_action (chain, actions, messages_to_receive) action =
    This makes things conceptually simpler and also prevents potential bugs. *)
 let eval chain_actions_map =
   (* Iterate through all the present actions *)
+  let messages_to_receive =
+    List.fold_left
+      (fun map validator -> Map.add validator [] map)
+      Map.empty validators
+  in
   let chain_actions_maps, messages_to_receive =
     Map.fold
       (fun validator (chain, actions) (new_map, messages_to_receive) ->
@@ -310,7 +317,7 @@ let eval chain_actions_map =
         in
         (Map.add validator (chain, new_actions) new_map, messages_to_receive))
       chain_actions_map
-      (chain_actions_map, Map.empty)
+      (chain_actions_map, messages_to_receive)
   in
 
   (* TODO: Add message filter *)
@@ -324,8 +331,11 @@ let eval chain_actions_map =
         let messages = Map.find_opt validator messages_to_receive in
         (* let messages = map_find_log "fails at 317" messages in *)
         match messages with
-        | None -> (chain, actions)
+        | None ->
+            Format.eprintf "no messages\n%!";
+            (chain, actions)
         | Some messages ->
+            Format.eprintf "messages : %d\n%!" (List.length messages);
             List.fold_left message_to_action (chain, actions) messages)
       chain_actions_maps
   in
