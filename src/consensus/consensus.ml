@@ -18,7 +18,7 @@ type consensus =
   | Consensus of {
       (* state *)
       current_block : Block.t;
-      last_update : Timestamp.t option;
+      last_update : Timestamp.t;
       (* consensus *)
       identity : Identity.t;
       validators : Validators.t;
@@ -30,7 +30,7 @@ type t = consensus
 
 let make ~identity ~validators =
   let current_block = Genesis.block in
-  let last_update = None in
+  let last_update = Timestamp.of_float 0. in
   let accepted = Block_hash.Set.empty in
   let block_pool = Block_pool.empty in
   Consensus
@@ -50,25 +50,21 @@ let is_expected_author ~current_author block =
 
 let current_author ~current consensus =
   let (Consensus { validators; current_block; last_update; _ }) = consensus in
-  match last_update with
-  | Some last_update ->
-      let (Block { author = last_author; _ }) = current_block in
-      let skip = Timestamp.timeouts_since ~current ~since:last_update in
-      Validators.skip ~after:last_author ~skip validators
-  | None -> None
+  let (Block { author = last_author; _ }) = current_block in
+  let skip = Timestamp.timeouts_since ~current ~since:last_update in
+  Validators.skip ~after:last_author ~skip validators
 
 let is_signable ~current ~consensus block =
   let (Consensus { current_block; _ }) = consensus in
-  let (Block { hash = current_block; level = current_level; _ }) =
+  let (Block { hash = current_block; level = current_level; author; _ }) =
     current_block
   in
   let current_author = current_author ~current consensus in
-  match current_author with
-  | Some current_author ->
-      is_expected_level ~current_level block
-      && is_expected_previous ~current_block block
-      && is_expected_author ~current_author block
-  | None -> false
+  Format.printf "expected author: %a, actual author: %a" Key_hash.pp
+    current_author Key_hash.pp author;
+  is_expected_level ~current_level block
+  && is_expected_previous ~current_block block
+  && is_expected_author ~current_author block
 
 let required_signatures consensus =
   let (Consensus { validators; _ }) = consensus in
@@ -88,10 +84,8 @@ let is_signed ~block consensus =
 let is_producer ~current consensus =
   let (Consensus { identity; _ }) = consensus in
   let self = Identity.key_hash identity in
-  let current_author = current_author ~current consensus in
-  match current_author with
-  | Some expected_author -> Key_hash.equal expected_author self
-  | None -> (* TODO: this is misleading, false may mean "not sure" *) false
+  let expected_author = current_author ~current consensus in
+  Key_hash.equal expected_author self
 
 let is_accepted ~block consensus =
   let (Consensus { accepted; _ }) = consensus in
@@ -161,7 +155,7 @@ and with_block ~current ~block consensus =
   in
 
   let current_block = block in
-  let last_update = Some current in
+  let last_update = current in
   let block_pool = Block_pool.remove ~block block_pool in
   let consensus =
     Consensus
@@ -215,13 +209,3 @@ let incoming_vote ~current ~vote consensus =
       | Some block -> incoming_block_or_vote ~current ~block consensus
       | None -> (consensus, []))
   | false -> (Consensus consensus, [])
-
-let incoming_bootstrap_signal ~current consensus =
-  let (Consensus ({ last_update; _ } as consensus)) = consensus in
-  match last_update with
-  | None -> Some (Consensus { consensus with last_update = Some current })
-  | Some _ -> None
-
-let clear consensus =
-  let (Consensus consensus) = consensus in
-  Consensus { consensus with last_update = None }

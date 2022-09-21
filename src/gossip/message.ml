@@ -7,7 +7,6 @@ module Content = struct
     | Content_block of Block.t
     | Content_vote of Verified_signature.t
     | Content_operation of Operation.t
-    | Content_bootstrap_signal of Bootstrap_signal.t
   [@@deriving show]
 
   and t = content [@@deriving yojson]
@@ -16,9 +15,6 @@ module Content = struct
   let block block = Content_block block
   let vote vote = Content_vote vote
   let operation operation = Content_operation operation
-
-  let bootstrap_signal bootstrap_signal =
-    Content_bootstrap_signal bootstrap_signal
 end
 
 type message = Message of { hash : Message_hash.t; content : Content.t }

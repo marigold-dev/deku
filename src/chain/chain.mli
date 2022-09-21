@@ -73,8 +73,5 @@ val apply :
 val compute : fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
 
-val clear : chain -> chain
-(** [clear chain] To be used when restarting the chain *)
-
 (* TODO: remove this in the future *)
 val test : unit -> unit

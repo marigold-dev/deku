@@ -1,6 +1,7 @@
 type timestamp = float
 type t = timestamp
 
+let zero = 0.
 let of_float float = float
 let to_float timestamp = timestamp
 

@@ -14,7 +14,7 @@ type consensus = private
   | Consensus of {
       (* state *)
       current_block : Block.t;
-      last_update : Timestamp.t option;
+      last_update : Timestamp.t;
       (* consensus *)
       identity : Identity.t;
       validators : Validators.t;
@@ -38,9 +38,3 @@ val incoming_vote :
   vote:Verified_signature.t ->
   consensus ->
   consensus * action list
-
-val incoming_bootstrap_signal :
-  current:Timestamp.t -> consensus -> consensus option
-
-val clear : consensus -> consensus
-(** [clear consensus] To be used when restarting the chain *)

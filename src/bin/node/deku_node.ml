@@ -12,6 +12,7 @@ let make_dump_loop ~pool ~folder ~chain =
   let dump_loop () =
     let rec loop () =
       let chain = !chain_ref in
+      let%await () = Lwt_unix.sleep 1. in
       let%await () =
         Lwt.catch
           (fun () -> Storage.Chain.write ~pool ~folder chain)
@@ -84,7 +85,6 @@ let main params =
   } =
     params
   in
-  let pool = Parallel.Pool.make ~domains in
   let%await chain = Storage.Chain.read ~folder:data_folder in
   let%await indexer =
     Indexer.make ~uri:database_uri
@@ -97,6 +97,7 @@ let main params =
       ~discovery_contract:tezos_discovery_address
       ~required_confirmations:tezos_required_confirmations
   in
+  let pool = Parallel.Pool.make ~domains in
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));

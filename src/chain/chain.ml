@@ -108,15 +108,6 @@ let incoming_operation ~operation chain =
   let chain = Chain { chain with producer } in
   (chain, [])
 
-let incoming_bootstrap_signal ~current chain =
-  let (Chain { gossip; protocol; consensus; producer; applied }) = chain in
-  let consensus =
-    match Consensus.incoming_bootstrap_signal ~current consensus with
-    | Some consensus -> consensus
-    | None -> consensus
-  in
-  (Chain { gossip; protocol; consensus; producer; applied }, [])
-
 let incoming_tezos_operation ~tezos_operation chain =
   let (Chain { gossip; protocol; consensus; producer; applied }) = chain in
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
@@ -129,8 +120,6 @@ let incoming_message ~current ~message chain =
   | Content_block block -> incoming_block ~current ~block chain
   | Content_vote vote -> incoming_vote ~current ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
-  | Content_bootstrap_signal _bootstrap_signal ->
-      incoming_bootstrap_signal ~current chain
 
 let incoming_request ~id ~request chain =
   let open Request in
@@ -225,12 +214,6 @@ let apply ~current ~outcome chain =
   | None -> (chain, [])
 
 let compute fragment = Gossip.compute fragment
-
-let clear chain =
-  let (Chain ({ gossip; consensus; _ } as chain)) = chain in
-  let gossip = Gossip.clear gossip in
-  let consensus = Consensus.clear consensus in
-  Chain { chain with gossip; consensus }
 
 let test () =
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
