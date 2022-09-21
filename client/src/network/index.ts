@@ -18,6 +18,7 @@ export type endpoints = {
     "GET_GENESIS": endpoint<BlockType>,
     "GET_CURRENT_BLOCK": endpoint<BlockType>,
     "OPERATIONS": endpoint<string>,
+    "GET_VM_STATE": endpoint<JSONType>
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -68,6 +69,13 @@ export const makeEndpoints = (root: string): endpoints => ({
             return hash;
         }
     },
+    "GET_VM_STATE": {
+        uri: `${root}${VERSION}/state/unix/`,
+        expectedStatus: 200,
+        parse: (json: JSONValue) => {
+            return json.as_json();
+        }
+    }
 })
 
 const parse = async <T>(endpoint: endpoint<T>, status: number, json: JSONType): Promise<T> => {

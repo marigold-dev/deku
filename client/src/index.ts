@@ -11,7 +11,7 @@ import { Amount as AmountType } from "./core/amount";
 import Operation, { Operation as OperationType } from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
 import { hashOperation } from './utils/hash';
-import JSONValue from './utils/json';
+import JSONValue, { JSONType } from './utils/json';
 import { KeyHash as KeyHashType } from './core/key-hash';
 
 export type Setting = {
@@ -212,6 +212,15 @@ export class DekuToolkit {
     }
 
     /**
+     * Returns the vm state of deku
+     * @returns a json like object, key as string, value is an object
+     */
+    async getVmState(): Promise<JSONType> {
+        const block = await get(this.endpoints["GET_VM_STATE"]);
+        return block;
+    }
+
+    /**
      * Convert an optional operation options to operation info: source, level, nonce
      * If the level is not provided, the returned level is the current level of the chain
      * If the nonce is not provided, the returned nonce is a random one
@@ -232,7 +241,7 @@ export class DekuToolkit {
     private async submitOperation(operation: OperationType): Promise<OperationHashType> {
         // Retrieve the deku signer
         const dekuSigner = this.assertTzWallet();
-        
+
         // Add the operation to the pending operation list
         const operationHash = hashOperation(operation);
         this.addPendingOperation(operationHash);
