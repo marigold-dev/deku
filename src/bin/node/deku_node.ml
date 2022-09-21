@@ -32,7 +32,7 @@ type params = {
   domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
-  data_folder : string; [@env "DEKU_CHAIN_DATA_FOLDER"]
+  data_folder : string; [@env "DEKU_DATA_FOLDER"]
       (** Folder path where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
