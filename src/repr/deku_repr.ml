@@ -16,7 +16,6 @@ end
 
 (* TODO: exceptions???*)
 exception Not_a_string
-exception Not_an_integer
 exception Not_a_b58
 
 (* TODO: this is clearly not in the right file *)
@@ -55,14 +54,6 @@ struct
     let to_b58 = to_b58
   end)
 end
-
-let z_of_yojson json =
-  match json with
-  | `String string -> (
-      try Z.of_string string with Invalid_argument _ -> raise Not_an_integer)
-  | _ -> raise Not_a_string
-
-let yojson_of_z z = `String (Z.to_string z)
 
 (* TODO: this is dumb *)
 let rec decode_variant l string =

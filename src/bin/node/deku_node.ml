@@ -85,6 +85,8 @@ let main params =
   } =
     params
   in
+  (* TODO: one problem of loading from disk like this, is that there
+           may be pending actions such as fragments being processed *)
   let%await chain = Storage.Chain.read ~folder:data_folder in
   let%await indexer =
     Indexer.make ~uri:database_uri

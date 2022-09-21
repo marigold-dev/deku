@@ -2,6 +2,7 @@
  (name deku_crypto)
  (libraries
   data-encoding
+  deku_stdlib
   deku_repr
   zarith
   mirage-crypto-rng

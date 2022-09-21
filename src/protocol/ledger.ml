@@ -2,7 +2,7 @@ open Deku_concepts
 open Amount
 
 type ledger = Amount.t Address.Map.t
-type t = ledger
+and t = ledger [@@deriving yojson]
 
 let initial = Address.Map.empty
 

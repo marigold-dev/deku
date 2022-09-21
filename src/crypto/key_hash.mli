@@ -1,3 +1,5 @@
+open Deku_stdlib
+
 (* TODO: make those GADTs *)
 type key_hash =
   | Ed25519 of Ed25519.Key_hash.t

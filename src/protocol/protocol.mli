@@ -8,7 +8,7 @@ type protocol = private
       ledger : Ledger.t;
     }
 
-type t = protocol
+type t = protocol [@@deriving yojson]
 
 val initial : protocol
 

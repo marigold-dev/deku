@@ -12,8 +12,9 @@ type chain =
       applied : Block.t Block_hash.Map.t;
     }
 
-type t = chain
-type fragment = Gossip.fragment [@@deriving show]
+and t = chain [@@deriving yojson]
+
+type fragment = Gossip.fragment
 type outcome = Gossip.outcome
 
 type action =
@@ -27,7 +28,7 @@ type action =
       raw_content : string;
     }
   | Chain_send_not_found of { id : Request_id.t [@opaque] }
-  | Chain_fragment of { fragment : fragment }
+  | Chain_fragment of { fragment : fragment [@opaque] }
 [@@deriving show]
 
 let make ~identity ~validators ~default_block_size =
