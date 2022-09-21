@@ -46,6 +46,32 @@ let no_cache_middleware handler req =
   Dream.add_header response "Cache-Control" "max-age=0, no-cache, no-store";
   Lwt.return response
 
+let streams : Dream.stream list ref = ref []
+
+(* just a dummy route...*)
+let monitor_blocks_route =
+  let handler _ =
+    Dream.stream ~status:`OK ~close:false (fun stream ->
+        streams := stream :: !streams;
+        (* Do we need a loop ? *)
+        Lwt.return_unit)
+  in
+  let path = "/chain/blocks/monitor" in
+  let route = Dream.get path handler in
+  let method_not_allowed _ =
+    Api_error.method_not_allowed path `GET |> error_to_response
+  in
+  [ route; Dream.any path method_not_allowed ]
+
+let on_block block =
+  let open Deku_consensus in
+  let Block.Block {hash; _} = block in
+  let hash_str = Block_hash.to_b58 hash in
+  let broadcast () =
+    Lwt_list.iter_p (fun stream -> Dream.write stream hash_str) !streams
+  in
+  Lwt.async broadcast
+
 let make_routes node indexer constants =
   cors_middleware @@ no_cache_middleware
   @@ Dream.router
@@ -53,6 +79,7 @@ let make_routes node indexer constants =
          Dream.scope "/api/v1/" []
            (List.flatten
               [
+                monitor_blocks_route;
                 make_handler node indexer constants (module Get_genesis);
                 make_handler node indexer constants (module Get_head);
                 make_handler node indexer constants (module Get_level);

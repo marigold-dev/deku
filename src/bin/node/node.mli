@@ -7,6 +7,7 @@ open Deku_tezos_interop
 open Deku_external_vm
 open Deku_concepts
 open Deku_crypto
+open Deku_consensus
 
 type node = private {
   pool : Parallel.Pool.t;
@@ -15,6 +16,7 @@ type node = private {
   mutable gossip : Gossip.t;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
+  notify_api : Block.t -> unit;
 }
 
 type t = node
@@ -28,6 +30,7 @@ val make :
   indexer:Indexer.t option ->
   default_block_size:int ->
   vm_state:External_vm_protocol.State.t ->
+  notify_api:(Block.t -> unit) ->
   node * unit Lwt.t
 
 val listen : node -> port:int -> tezos_interop:Tezos_interop.t -> unit

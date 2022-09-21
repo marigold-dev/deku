@@ -17,6 +17,7 @@ type node = {
   mutable gossip : Gossip.t;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
+  notify_api : Block.t -> unit;
 }
 
 type t = node
@@ -78,6 +79,7 @@ and handle_chain_action node ~chain_action =
       let fragment = Gossip.broadcast ~content in
       handle_gossip_fragment node ~fragment
   | Chain_save_block block -> (
+      node.notify_api block;
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~block indexer
       | None -> ())
@@ -137,7 +139,7 @@ let handle_tezos_operation node ~operation =
   handle_chain_actions ~chain_actions node
 
 let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
-    ~default_block_size ~vm_state =
+    ~default_block_size ~vm_state ~notify_api =
   let network = Network.connect ~nodes in
   let gossip = Gossip.empty in
   let chain =
@@ -146,7 +148,7 @@ let make ~pool ~identity ~validators ~nodes ~bootstrap_key ~indexer
   in
   let node =
     let trigger_timeout () = () in
-    { pool; network; gossip; chain; trigger_timeout; indexer }
+    { pool; network; gossip; chain; trigger_timeout; indexer; notify_api }
   in
   let promise = on_timeout node in
   (node, promise)
@@ -177,6 +179,7 @@ let _test () =
     make ~pool ~identity ~validators ~nodes:[]
       ~bootstrap_key:(Identity.key identity) ~default_block_size:0 ~indexer:None
       ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
+      ~notify_api:(fun _ -> ())
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =

@@ -105,10 +105,14 @@ let main params =
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   let pool = Parallel.Pool.make ~domains in
+
+  let notify_api =
+    match api_enabled with true -> Deku_api.on_block | false -> fun _ -> ()
+  in
   let node, promise =
     Node.make ~pool ~identity ~validators ~nodes:validator_uris
       ~bootstrap_key:(Key.Ed25519 bootstrap_key) ~indexer:(Some indexer)
-      ~default_block_size ~vm_state
+      ~default_block_size ~vm_state ~notify_api
   in
   let node_uri = Uri.of_string "http://localhost" in
   let node_uri = Uri.with_port node_uri (Some port) in
