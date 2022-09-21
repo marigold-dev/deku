@@ -1,10 +1,38 @@
-(* You have the same powers as an adversary in the partially synchronous model. You can split the network however you like.
-   Tests for chain:
-       - Sending block 2 before block 1
-       - Accepting block 2 before block 1
-       - Receiving votes for block b before block is received
-       - Trigger timeout at 1 after receiving block 2
-       - Shuffling message order
+(*
+ This code is designed to wrap the following interface (basically all the internal Deku logic)
+   Process handlers in chain.ml:
+
+      val make :
+        identity:Identity.t ->
+        validators:Key_hash.t list ->
+        pool:Parallel.Pool.t ->
+        chain
+
+      val incoming :
+        raw_expected_hash:string ->
+        raw_content:string ->
+        chain ->
+        chain * fragment option
+      (** [incoming ~raw_expected_hash ~raw_content chain] *)
+
+      val timeout : current:Timestamp.t -> chain -> fragment option
+      (** [incoming_timeout ~current chain] *)
+
+      val apply :
+        current:Timestamp.t -> outcome:outcome -> chain -> chain * action list
+      (** [apply ~current ~outcome chain ]*)
+
+      val compute : fragment -> outcome
+      (** [compute fragment] Can be executed in parallel *)
+
+  You have the same powers as an adversary in the partially synchronous model. You can split the network however you like.
+      Tests for chain:
+          - Sending block 2 before block 1
+          - Accepting block 2 before block 1
+          - Receiving votes for block b before block is received
+          - Trigger timeout at 1 after receiving block 2
+          - Shuffling message order
+
 *)
 
 open Deku_crypto
@@ -99,7 +127,7 @@ let chains_after_first_block =
 
 module Map = Key_hash.Map
 
-let map_find_log msg = function Some stuff -> stuff | None -> failwith msg
+let map_find_list = function Some stuff -> stuff | None -> []
 
 let chain_actions_map =
   let module Map = Key_hash.Map in
@@ -107,42 +135,15 @@ let chain_actions_map =
     (fun map validator chain_actions -> Map.add validator chain_actions map)
     Map.empty validators chains_after_first_block
 
-(* Process handlers in chainl.ml:
-
-   val make :
-     identity:Identity.t ->
-     validators:Key_hash.t list ->
-     pool:Parallel.Pool.t ->
-     chain
-
-   val incoming :
-     raw_expected_hash:string ->
-     raw_content:string ->
-     chain ->
-     chain * fragment option
-   (** [incoming ~raw_expected_hash ~raw_content chain] *)
-
-   val timeout : current:Timestamp.t -> chain -> fragment option
-   (** [incoming_timeout ~current chain] *)
-
-   val apply :
-     current:Timestamp.t -> outcome:outcome -> chain -> chain * action list
-   (** [apply ~current ~outcome chain ]*)
-
-   val compute : fragment -> outcome
-   (** [compute fragment] Can be executed in parallel *)
-*)
-
 type message_kind = Response | Request | Broadcast
+type 'a quantifier = Existential of 'a | Universal
 
-(* type message_filter =
-   | Prevent of {
-       from : Key_hash.t;
-       to_ : Key_hash.t;
-       raw_expected_hash : string;
-       raw_content : string;
-       kind : message_kind;
-     } *)
+type message_filter =
+  | Prevent of {
+      from : Key_hash.t quantifier;
+      to_ : Key_hash.t quantifier;
+      kind : message_kind quantifier;
+    }
 
 type local_message =
   | Message of {
@@ -155,10 +156,13 @@ type local_message =
     }
 
 (* does filter catch message *)
-(* let catch filter message =
-   let (Prevent { from = ffrom; to_ = fto_; kind = fkind; _ }) = filter in
-   let (Message { from = mfrom; to_ = mto_; kind = mkind; _ }) = message in
-   ffrom = mfrom && fto_ = mto_ && fkind = mkind *)
+let catch filter message =
+  let eou a b =
+    match (a, b) with Universal, _ -> true | Existential a, b -> a = b
+  in
+  let (Prevent { from = ffrom; to_ = fto_; kind = fkind; _ }) = filter in
+  let (Message { from = mfrom; to_ = mto_; kind = mkind; _ }) = message in
+  eou ffrom mfrom && eou fto_ mto_ && eou fkind mkind
 
 let request = Atomic.make Request_id.initial
 
@@ -230,8 +234,6 @@ let process_chain_action (chain, actions, messages_to_receive) action =
                     id = Request_id.initial;
                   }
               in
-              Format.eprintf "new message length is : %d\n%!"
-                (List.length (message :: messages));
               message :: messages)
             messages_to_receive
         in
@@ -240,7 +242,10 @@ let process_chain_action (chain, actions, messages_to_receive) action =
         let to_ =
           let rec get_someone_else () =
             let validator =
-              List.nth validator_list (Random.int validators_len - 1)
+              let validator =
+                List.nth validator_list (Random.int (validators_len - 1))
+              in
+              validator
             in
             if validator = from then get_someone_else () else validator
           in
@@ -260,9 +265,7 @@ let process_chain_action (chain, actions, messages_to_receive) action =
         in
         let new_messages =
           Map.add to_
-            (message
-            :: (Map.find_opt to_ messages_to_receive
-               |> map_find_log "fails at 258"))
+            (message :: (Map.find_opt to_ messages_to_receive |> map_find_list))
             messages_to_receive
         in
         (chain, actions, new_messages)
@@ -281,30 +284,32 @@ let process_chain_action (chain, actions, messages_to_receive) action =
         in
         let new_messages =
           Map.add to_
-            (message
-            :: (Map.find_opt to_ messages_to_receive
-               |> map_find_log "fails at 277"))
+            (message :: (Map.find_opt to_ messages_to_receive |> map_find_list))
             messages_to_receive
         in
         (chain, actions, new_messages)
     | Chain_send_not_found { id = _ } -> (chain, actions, messages_to_receive)
     | Chain_fragment { fragment } ->
         let outcome = compute fragment in
+        Format.eprintf "apply\n%!";
         let chain, actions = apply ~current ~outcome chain in
+        Format.eprintf "finished apply\n%!";
         (chain, actions, messages_to_receive)
   in
   (chain, additional_actions @ actions, messages_to_receive)
 
+let messages_to_receive =
+  List.fold_left
+    (fun map validator -> Map.add validator [] map)
+    Map.empty validators
+
 (* Breaks up evaluation into execution and broadcasting.
    Broadcasting is always performed after execution.
-   This makes things conceptually simpler and also prevents potential bugs. *)
-let eval chain_actions_map =
+   This makes things conceptually simpler and also prevents potential bugs.
+   Uses func filters to eliminate messages from the message pool *)
+
+let eval ?(filters = Fun.id) chain_actions_map =
   (* Iterate through all the present actions *)
-  let messages_to_receive =
-    List.fold_left
-      (fun map validator -> Map.add validator [] map)
-      Map.empty validators
-  in
   let chain_actions_maps, messages_to_receive =
     Map.fold
       (fun validator (chain, actions) (new_map, messages_to_receive) ->
@@ -315,21 +320,19 @@ let eval chain_actions_map =
             (chain, [], messages_to_receive)
             actions
         in
+
         (Map.add validator (chain, new_actions) new_map, messages_to_receive))
       chain_actions_map
       (chain_actions_map, messages_to_receive)
   in
-
-  (* TODO: Add message filter *)
-  (* let filters =
-     let chains_action_map = *)
+  Format.eprintf "after process chain actions\n%!";
+  let filtered_messages = filters messages_to_receive in
 
   (* Convert sent messages to chain actions *)
   let chains_action_map =
     Map.mapi
       (fun validator (chain, (actions : Chain.action list)) ->
-        let messages = Map.find_opt validator messages_to_receive in
-        (* let messages = map_find_log "fails at 317" messages in *)
+        let messages = Map.find_opt validator filtered_messages in
         match messages with
         | None ->
             Format.eprintf "no messages\n%!";
@@ -343,8 +346,27 @@ let eval chain_actions_map =
 
 (* TODO: Case where we prevent any initial messages to someone from getting through. Make sure that those messages will eventually be received by the person *)
 
-(* let second_state = eval chain_actions_map
-   let third_state = eval second_state *)
+let filter =
+  let validator2 = List.nth validators 2 in
+  Prevent { from = Universal; to_ = Existential validator2; kind = Universal }
+
+let _filtered_messages messages_to_receive =
+  Map.map
+    (fun messages ->
+      List.filter (fun message -> not (catch filter message)) messages)
+    messages_to_receive
+
+let state = eval ~filters:_filtered_messages chain_actions_map
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+let state = eval ~filters:_filtered_messages state
+
 let () =
   let rec loop chain_actions_map =
     Format.eprintf "called loop\n%!";
@@ -352,6 +374,4 @@ let () =
     let chain_actions_map = eval chain_actions_map in
     loop chain_actions_map
   in
-  loop chain_actions_map
-
-(* TODO: Remove all map_find_log *)
+  loop state
