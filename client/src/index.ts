@@ -2,7 +2,7 @@ import { DekuSigner } from './utils/signers';
 import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
-import { endpoints, get, makeEndpoints, parseWebsocketMessage, post, MessageType } from "./network";
+import { endpoints, get, makeEndpoints, post } from "./network";
 import { Level as LevelType } from "./core/level";
 import { Block as BlockType } from "./core/block";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
@@ -10,7 +10,6 @@ import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
 import Operation from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
-import URI from "./utils/uri";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
 
@@ -57,17 +56,33 @@ export class DekuToolkit {
     constructor(setting: Setting) {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
-        // this.websocket = this.initializeWebsocket(setting.dekuRpc); TODO: add stream or websocket to the API
         this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
+        this.initializeStream(setting.dekuRpc)
+            .catch(err => console.error(`error: ${err}`));
         this.pendingOperations = {};
     }
 
 
-    private initializeWebsocket(dekuRpc: string): WebSocket {
-        const wsUri = URI.httpToWs(dekuRpc + "/websocket");
-        const websocket = new WebSocket(wsUri);
-        websocket.onmessage = DekuToolkit.onWsMessage(this);
-        return websocket;
+    private async initializeStream(dekuRpc: string) {
+        const streamUri = dekuRpc + "/api/v1/chain/blocks/monitor";
+        const response = await fetch(streamUri);
+        const body = response.body;
+        if (!body) return null;
+        const reader = body.getReader();
+        // eslint-disable-next-line no-constant-condition
+        while(true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const decoder = new TextDecoder("utf-8");
+            const json: JSONValue = JSONValue.of(JSON.parse(decoder.decode(value)));
+            const block_hash = json.as_string();
+            // Add parsing for a block hash
+            if (block_hash === null) return null;
+            const block = await this.getBlockByHash(block_hash);
+            this.handleBlock(block);
+            return null;
+        }
+        return;
     }
 
     /**
@@ -111,7 +126,6 @@ export class DekuToolkit {
     /**
      * Sets the callback to call when a block is received
      * @param callback the callback to be called when a new block arrived to the client
-     * @deprecated will do nothing in this version
      * Returns the deku updated toolkit
      */
     onBlock(callback: ((block: BlockType) => void)): DekuToolkit {
@@ -226,25 +240,11 @@ export class DekuToolkit {
         return hash
     }
 
-    private static onWsMessage(deku: DekuToolkit) {
-        return function (message: MessageEvent<string>) {
-            const msg = parseWebsocketMessage(message);
-            if (msg === null) return null;
-            const { type, data } = msg;
-            switch (type) {
-                case MessageType.NewBlock:
-                    deku.onNewBlock(data);
-                    return null;
-            }
-        }
-    }
-
     /**
      * Resolve pending operations when the client receive a new block.
      * @param block the received block from the API
-     * @deprecated won't work in this version
      */
-    private onNewBlock(block: BlockType) {
+    private handleBlock(block: BlockType) {
         // Calling the callback given by the user
         this.onBlockCallback(block);
         // Get the hash of every operations in the block
@@ -307,7 +307,6 @@ export class DekuToolkit {
      * Wait for the given operations during a given duration
      * @param operation the hash of the operation to wait
      * @param options {maxAge} the max duration to wait (in blocks)
-     * @deprecated won't work in this version
      */
     async wait(operation: OperationHashType, options?: { maxAge?: number }): Promise<LevelType> {
         // Parsing the options
