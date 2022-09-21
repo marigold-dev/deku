@@ -7,9 +7,9 @@ import { fromBeaconSigner, fromMemorySigner } from 'deku-toolkit';
 import { InMemorySigner } from '@taquito/signer';
 
 const containerStyle: CSS.Properties = {
-    textAlign: "center",
-    fontFamily: "monospace",
-    fontSize: "1.2rem",
+  textAlign: "center",
+  fontFamily: "monospace",
+  fontSize: "1.2rem",
 }
 
 // const client = new DAppClient({ name: 'Deku' });
@@ -90,18 +90,42 @@ const App = () => {
       .catch(console.error)
   }, [isActive])
 
-  // useEffect(() => {
-  //   client.requestPermissions()
-  //     .then(setActive)
-  //     .catch(console.error);
-  // }, []);
+  /**
+   * How to get the vm state 
+   */
+
+  const getVmStateExample = async () => {
+    deku.getVmState()
+      .then(console.log)
+      .catch(console.error);
+  }
+
+  useEffect(() => {
+    console.log("Retrieving the Vm State");
+    getVmStateExample();
+  }, [])
+
+  /**
+   * How to make a vm request
+   */
+
+  const sendVmRequest = async () => {
+    console.log("Send vm request");
+    deku.submitVmOperation("HOPE")
+      .then(() => console.log("vm operation submitted"))
+      .catch(console.error)
+  }
+
+  useEffect(() => {
+    sendVmRequest();
+  }, []);
 
   return (
     <div style={containerStyle}>
-        <img src={logo} alt="deku logo" />
-        {info && <div>Consensus : {info.consensus} </div>}
-        {info && <div>Discovery : {info.discovery} </div>}
-        <div>Level : {level} </div>
+      <img src={logo} alt="deku logo" />
+      {info && <div>Consensus : {info.consensus} </div>}
+      {info && <div>Discovery : {info.discovery} </div>}
+      <div>Level : {level} </div>
     </div>
   );
 }
