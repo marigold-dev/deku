@@ -1,3 +1,3 @@
 (* FIXME: actually implement tickets *)
 
-type t [@@deriving yojson]
+type t = string [@@deriving yojson, show]
