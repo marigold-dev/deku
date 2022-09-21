@@ -10,7 +10,7 @@ type state =
       current_level : Level.t;
       current_block : Block_hash.t;
       last_block_author : Key_hash.t;
-      last_block_update : Timestamp.t option;
+      last_block_update : Timestamp.t;
     }
 
 and t = state
@@ -30,7 +30,8 @@ let make ~current ~validators ~block =
       last_block_update;
     }
 
-let genesis ~validators = make ~current:None ~validators ~block:Genesis.block
+let genesis ~validators =
+  make ~current:Timestamp.zero ~validators ~block:Genesis.block
 
 let apply_block ~current ~block state =
   let (State
@@ -43,7 +44,6 @@ let apply_block ~current ~block state =
         }) =
     state
   in
-  let current = Some current in
   make ~current ~validators ~block
 
 let current_author ~current consensus =
@@ -57,11 +57,8 @@ let current_author ~current consensus =
         }) =
     consensus
   in
-  match last_block_update with
-  | Some last_block_update ->
-      let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
-      Validators.skip ~after:last_block_author ~skip validators
-  | None -> None
+  let skip = Timestamp.timeouts_since ~current ~since:last_block_update in
+  Validators.skip ~after:last_block_author ~skip validators
 
 let is_in_sync ~current state =
   let (State
@@ -74,14 +71,11 @@ let is_in_sync ~current state =
         }) =
     state
   in
-  match last_block_update with
-  | None -> false
-  | Some last_block_update ->
-      let validators = Validators.cardinal validators in
-      let timeouts_since_last_update =
-        Timestamp.timeouts_since ~current ~since:last_block_update
-      in
-      timeouts_since_last_update <= validators
+  let validators = Validators.cardinal validators in
+  let timeouts_since_last_update =
+    Timestamp.timeouts_since ~current ~since:last_block_update
+  in
+  timeouts_since_last_update <= validators
 
 let apply_bootstrap_signal ~current ~author state =
   let (State
@@ -104,5 +98,5 @@ let apply_bootstrap_signal ~current ~author state =
              current_level;
              current_block;
              last_block_author = author;
-             last_block_update = Some current;
+             last_block_update = current;
            })

@@ -2,6 +2,7 @@
 type timestamp
 type t = timestamp
 
+val zero : t
 val of_float : float -> timestamp
 
 (* TODO: remove this function *)

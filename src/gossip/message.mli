@@ -7,7 +7,6 @@ module Content : sig
     | Content_block of Block.t
     | Content_vote of Verified_signature.t
     | Content_operation of Operation.t
-    | Content_bootstrap_signal of Bootstrap_signal.t
   [@@deriving show]
 
   type t = content [@@deriving yojson, show]
@@ -15,7 +14,6 @@ module Content : sig
   val block : Block.t -> content
   val vote : Verified_signature.t -> content
   val operation : Operation.t -> content
-  val bootstrap_signal : Bootstrap_signal.t -> content
 end
 
 type message = private

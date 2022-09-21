@@ -24,8 +24,8 @@ let find_after_index ~after validators =
 let skip ~after ~skip validators =
   let validators = Key_hash.Set.elements validators in
   let length = List.length validators in
-  match find_after_index ~after validators with
-  | Some n ->
-      let i = (n + skip) mod length in
-      List.nth_opt validators i
-  | None -> None
+  let n =
+    match find_after_index ~after validators with Some n -> n | None -> 0
+  in
+  let i = (n + skip) mod length in
+  List.nth validators i

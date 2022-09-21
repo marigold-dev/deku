@@ -63,7 +63,7 @@ let test_initial_consensus () =
 
   ensure "initial.current_block = Genesis.block"
     (initial.current_block = Genesis.block);
-  ensure "initial.last_update = None" (initial.last_update = None);
+  ensure "initial.last_update = 0." (initial.last_update = Timestamp.zero);
   ensure "initial.identity = identity" (initial.identity = identity);
   ensure "initial.validators = validators" (initial.validators = validators);
   ensure "initial.accepted = []" (initial.accepted = Block_hash.Set.empty);
@@ -81,7 +81,7 @@ let test_new_block_on_initial () =
 
   ensure "with_block.current_block = Genesis.block"
     (with_block.current_block = Genesis.block);
-  ensure "with_block.last_update = None" (with_block.last_update = None);
+  ensure "with_block.last_update = 0" (with_block.last_update = Timestamp.zero);
   ensure "with_block.identity = identity" (with_block.identity = identity);
   ensure "with_block.validators = validators"
     (with_block.validators = validators);
@@ -101,7 +101,7 @@ let test_new_vote_on_initial () =
   assert (actions = []);
   ensure "with_vote.current_block = Genesis.block"
     (with_vote.current_block = Genesis.block);
-  ensure "with_vote.last_update = None" (with_vote.last_update = None);
+  ensure "with_vote.last_update = 0" (with_vote.last_update = Timestamp.zero);
   ensure "with_vote.identity = identity" (with_vote.identity = identity);
   ensure "with_vote.validators = validators" (with_vote.validators = validators);
   ensure "with_vote.accepted = []" (with_vote.accepted = Block_hash.Set.empty);
@@ -126,7 +126,7 @@ let test_vote_then_block_on_initial () =
   ensure "accepted_block.current_block = block"
     (accepted_block.current_block = block);
   ensure "accepted_block.last_update = Some"
-    (accepted_block.last_update = Some (time 0.1));
+    (accepted_block.last_update = time 0.1);
   ensure "accepted_block.identity = identity"
     (accepted_block.identity = identity);
   ensure "accepted_block.validators = validators"
@@ -167,8 +167,7 @@ let test_signable_block () =
 
   ensure "after_voting.current_block = block_a"
     (after_voting.current_block = block_a);
-  ensure "after_voting.last_update = Some"
-    (after_voting.last_update = Some (time 0.1));
+  ensure "after_voting.last_update = Some" (after_voting.last_update = time 0.1);
   ensure "after_voting.identity = identity" (after_voting.identity = identity);
   ensure "after_voting.validators = validators"
     (after_voting.validators = validators);
@@ -213,8 +212,7 @@ let test_fast_forwarding () =
 
   ensure "after_skip.current_block = block_b"
     (after_skip.current_block = block_b);
-  ensure "after_skip.last_update = Some"
-    (after_skip.last_update = Some (time 0.3));
+  ensure "after_skip.last_update = Some" (after_skip.last_update = time 0.3);
   ensure "after_skip.identity = identity" (after_skip.identity = identity);
   ensure "after_skip.validators = validators"
     (after_skip.validators = validators);
@@ -265,7 +263,7 @@ let test_missing_block () =
 
   ensure "after_b.current_block = genesis"
     (after_b.current_block = Genesis.block);
-  ensure "after_b.last_update = None" (after_b.last_update = None);
+  ensure "after_b.last_update = 0" (after_b.last_update = Timestamp.zero);
   ensure "after_b.identity = identity" (after_b.identity = identity);
   ensure "after_b.validators = validators" (after_b.validators = validators);
   ensure "after_b.accepted = [block_b; block_a]"
