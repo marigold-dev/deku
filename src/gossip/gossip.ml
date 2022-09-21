@@ -11,6 +11,8 @@ type gossip =
       delayed : string list Message_hash.Map.t;
     }
 
+and t = gossip [@@deriving yojson]
+
 type fragment =
   | Fragment_encode_message of { content : Message.Content.t }
   | Fragment_decode_message of {
@@ -52,8 +54,6 @@ type action =
   | Gossip_send_response of { id : Request_id.t; raw_response : Response.raw }
   | Gossip_incoming_response of { response : Response.t }
   | Gossip_fragment of { fragment : fragment }
-
-type t = gossip
 
 let empty =
   Gossip
@@ -255,4 +255,6 @@ let apply ~outcome gossip =
 
 let clear gossip =
   let (Gossip gossip) = gossip in
-  Gossip { gossip with pending_request = false }
+  let pending_request = false in
+  let delayed = Message_hash.Map.empty in
+  Gossip { gossip with pending_request; delayed }

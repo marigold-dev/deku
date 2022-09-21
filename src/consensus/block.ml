@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
@@ -24,12 +25,6 @@ let compare a b =
   let (Block { hash = a; _ }) = a in
   let (Block { hash = b; _ }) = b in
   Block_hash.compare a b
-
-module Set = Set.Make (struct
-  type t = block
-
-  let compare = compare
-end)
 
 exception Invalid_signature
 
@@ -106,3 +101,11 @@ let sign ~identity block =
   let (Block { hash; _ }) = block in
   let hash = Block_hash.to_blake2b hash in
   Verified_signature.sign hash identity
+
+module Set = Set.Make (struct
+  type t = block
+
+  let compare = compare
+  let t_of_yojson = t_of_yojson
+  let yojson_of_t = yojson_of_t
+end)

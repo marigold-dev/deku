@@ -43,6 +43,8 @@ let main () =
 
   Parallel.Pool.run pool (fun () ->
       let identity = Identity.make secret in
+      (* TODO: one problem of loading from disk like this, is that there
+           may be pending actions such as fragments being processed *)
       let%await chain = Storage.Chain.read ~folder:data_folder in
       let chain =
         match chain with

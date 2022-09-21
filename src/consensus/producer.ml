@@ -7,7 +7,7 @@ type producer =
       operations : Operation.t Operation_hash.Map.t;
     }
 
-and t = producer
+and t = producer [@@deriving yojson]
 
 let make ~identity =
   let operations = Operation_hash.Map.empty in

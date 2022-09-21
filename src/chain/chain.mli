@@ -13,7 +13,7 @@ type chain = private
       applied : Block.t Block_hash.Map.t;
     }
 
-type t = chain
+type t = chain [@@deriving yojson]
 type fragment
 type outcome
 

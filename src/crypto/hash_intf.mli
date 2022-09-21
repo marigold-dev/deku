@@ -1,3 +1,5 @@
+open Deku_stdlib
+
 module type Alg = sig
   type secret
   type key

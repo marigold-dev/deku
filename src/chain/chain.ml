@@ -12,7 +12,8 @@ type chain =
       applied : Block.t Block_hash.Map.t;
     }
 
-type t = chain
+and t = chain [@@deriving yojson]
+
 type fragment = Gossip.fragment
 type outcome = Gossip.outcome
 

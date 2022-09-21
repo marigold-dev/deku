@@ -6,7 +6,7 @@ type protocol =
       ledger : Ledger.t;
     }
 
-type t = protocol
+and t = protocol [@@deriving yojson]
 
 let initial =
   Protocol

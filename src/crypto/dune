@@ -2,6 +2,7 @@
  (name deku_crypto)
  (public_name deku-crypto)
  (libraries
+  deku-stdlib
   deku_repr
   zarith
   mirage-crypto-rng

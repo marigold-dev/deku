@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_crypto
 
 type block_hash

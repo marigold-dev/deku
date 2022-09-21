@@ -33,8 +33,8 @@ end
 module Chain = struct
   open Deku_chain
 
-  let temp = "chain.tmp.bin"
-  let file = "chain.bin"
+  let temp = "chain.tmp.json"
+  let file = "chain.json"
 
   let read ~folder =
     let file = Filename.concat folder file in
@@ -43,7 +43,9 @@ module Chain = struct
     match exists with
     | true ->
         Lwt_io.with_file ~mode:Input file (fun ic ->
-            let%await (chain : Chain.t) = Lwt_io.read_value ic in
+            let%await json = Lwt_io.read ic in
+            let json = Yojson.Safe.from_string json in
+            let chain = Chain.t_of_yojson json in
             Lwt.return (Some chain))
     | false -> Lwt.return_none
 
@@ -51,7 +53,9 @@ module Chain = struct
     let temp = Filename.concat folder temp in
     let file = Filename.concat folder file in
     let%await bin =
-      Parallel.async pool (fun () -> Marshal.to_string chain [])
+      Parallel.async pool (fun () ->
+          let json = Chain.yojson_of_t chain in
+          Yojson.Safe.to_string json)
     in
     let%await () =
       Lwt_io.with_file ~mode:Output temp (fun oc ->

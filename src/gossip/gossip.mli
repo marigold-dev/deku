@@ -1,5 +1,5 @@
 type gossip
-type t = gossip
+type t = gossip [@@deriving yojson]
 type fragment
 type outcome
 

@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_repr
 
 module Make (P : sig
@@ -13,6 +14,7 @@ struct
 
   (* TODO: this compare is unsafe*)
   let compare a b = unsafe_compare a b
+  let compare_hash = compare
   let of_raw string = of_raw_string_opt string
   let to_raw hash = to_raw_string hash
 
@@ -46,16 +48,21 @@ struct
     let of_raw = of_raw
   end)
 
-  module Set = Set.Make (struct
-    type t = hash
+  (* TODO: expose this exception *)
+  exception Not_a_hash
 
-    let compare = compare
+  let hash_of_yojson json =
+    let string = [%of_yojson: string] json in
+    match of_hex string with Some hash -> hash | None -> raise Not_a_hash
+
+  let yojson_of_hash hash = [%yojson_of: string] (to_hex hash)
+
+  module Set = Set.Make (struct
+    type t = hash [@@deriving ord, yojson]
   end)
 
   module Map = Map.Make (struct
-    type t = hash
-
-    let compare = compare
+    type t = hash [@@deriving ord, yojson]
   end)
 end
 
