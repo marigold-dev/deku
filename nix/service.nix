@@ -39,6 +39,7 @@ in
         ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node";
         Restart = "on-failure";
         StateDirectory = "deku";
+        MemoryMax = "55G";
 
         # Basic Hardening
         NoNewPrivileges = "yes";
