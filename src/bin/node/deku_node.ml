@@ -63,7 +63,9 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let main params =
+let prometheus config = Prometheus_piaf.serve config
+
+let main params prometheus_config =
   Lwt_main.run
   @@
   let {
@@ -122,7 +124,7 @@ let main params =
     let level = N.to_z level in
     Format.eprintf "%a\n%!" Z.pp_print level
   in
-  promise
+  Lwt.join [ promise; prometheus prometheus_config ]
 
 let setup_log ?style_renderer ?level () =
   Fmt_tty.setup_std_outputs ?style_renderer ();
@@ -151,6 +153,8 @@ let () =
 let () =
   Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
-  let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
+  let term =
+    Cmdliner.Term.(const main $ params_cmdliner_term () $ Prometheus_piaf.opts)
+  in
   let cmd = Cmdliner.Cmd.v info term in
   exit (Cmdliner.Cmd.eval ~catch:true cmd)

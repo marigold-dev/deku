@@ -10,6 +10,7 @@
   deku_storage
   cmdliner
   logs
+  prometheus-piaf
   logs.fmt
   fmt.tty)
  (preprocess
