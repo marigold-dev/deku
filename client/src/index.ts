@@ -8,10 +8,11 @@ import { Block as BlockType } from "./core/block";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
 import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
-import Operation from "./core/operation";
+import Operation, {Operation as OperationType} from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
+import { KeyHash as KeyHashType } from './core/key-hash';
 
 export type Setting = {
     dekuRpc: string,
@@ -21,6 +22,12 @@ export type Setting = {
 export type OptOptions = {
     nonce?: NonceType,
     level?: LevelType,
+}
+
+type OperationInfo = {
+    source: KeyHashType
+    nonce: NonceType,
+    level: LevelType
 }
 
 export class DekuToolkit {
@@ -206,6 +213,43 @@ export class DekuToolkit {
     }
 
     /**
+     * Convert an optional operation options to operation info: source, level, nonce
+     * If the level is not provided, the returned level is the current level of the chain
+     * If the nonce is not provided, the returned nonce is a random one
+     * The source is always the source of the signer
+     * @param options 
+     * @returns the source, a level and a nonce
+     */
+    private async parseOperationOptions(options?: OptOptions): Promise<OperationInfo> {
+        const dekuSigner = this.assertTzWallet();
+        const source = await dekuSigner.publicKeyHash();
+        const level = options === undefined || options.level === undefined ? await this.level() : options.level;
+        const nonce = options === undefined || options.nonce === undefined ? Nonce.rand() : options.nonce;
+        return {
+            source, level, nonce
+        }
+    }
+
+    private async submitOperation(operation: OperationType): Promise<OperationHashType> {
+        // Retrieve the deku signer
+        const dekuSigner = this.assertTzWallet();
+        
+        // Add the operation to the pending operation list
+        const operationHash = hashOperation(operation);
+        this.addPendingOperation(operationHash);
+
+        // Sign the transaction
+        const signedOperation = await dekuSigner.signOperation(operation);
+
+        // Send the operation
+        const body = Operation.signedToDTO(signedOperation);
+        const hash = await post(this.endpoints["OPERATIONS"], body);
+        console.info("operation submitted");
+        console.info(`same hash: ${operationHash === hash}`);
+        return hash
+    }
+
+    /**
      * Transfer some ticket to someone
      * @param receiver the address of the ticket receiver
      * @param amount the amount of ticket you want to send
@@ -213,11 +257,7 @@ export class DekuToolkit {
      * @returns an operation hash of the transfer
      */
     async transferTo(receiver: AddressType, amount: AmountType, options?: OptOptions): Promise<OperationHashType> {
-        const dekuSigner = this.assertTzWallet();
-        const level = options === undefined || options.level === undefined ? await this.level() : options.level;
-        const nonce = options === undefined || options.nonce === undefined ? Nonce.rand() : options.nonce;
-        const source = await dekuSigner.publicKeyHash();
-
+        const {source, level, nonce} = await this.parseOperationOptions(options);
         // Create the transaction
         const transaction = Operation.createTransaction(
             level,
@@ -226,18 +266,20 @@ export class DekuToolkit {
             receiver,
             amount
         );
+        return this.submitOperation(transaction);
+    }
 
-        // Sign the transaction
-        const signedOperation = await dekuSigner.signOperation(transaction);
-
-        // Add the transaction in the pending operation list
-        const operationHash = hashOperation(transaction);
-        this.addPendingOperation(operationHash);
-
-        // Send the operation
-        const body = Operation.signedToDTO(signedOperation);
-        const hash = await post(this.endpoints["OPERATIONS"], body);
-        return hash
+    /**
+     * Submits an operation to the vm
+     * @param payload the string (TODO: is it better to have a json instead of a string ?)
+     * @param options {level, nonce} optional options
+     * @returns the hash the submitted operation
+     */
+    async submitVmOperation(payload: string, options?: OptOptions): Promise<OperationHashType> {
+        console.info("info submit vm operation");
+        const { source, level, nonce } = await this.parseOperationOptions(options);
+        const vmOperation = Operation.createVmOperation(level, nonce, source, payload);
+        return this.submitOperation(vmOperation);
     }
 
     /**

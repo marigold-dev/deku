@@ -10,6 +10,10 @@ type TransactionContent = {
     amount: AmountType,
 }
 
+type VmOperationContent = {
+    payload: string
+}
+
 type GenericOperation<T, C> = {
     level: LevelType,
     nonce: NonceType,
@@ -18,17 +22,15 @@ type GenericOperation<T, C> = {
     content: C
 }
 
-type GenericSignedOperation<T, C> = {
-    key: KeyType,
-    signature: string // TODO: replace this by a real type,
-    operation: GenericOperation<T, C>
-}
-
 type Transaction = GenericOperation<"Transaction", TransactionContent>
-type SignedTransaction = GenericSignedOperation<"Transaction", TransactionContent>
+type VmOperation = GenericOperation<"Vm", VmOperationContent>
 
-export type Operation = Transaction
-export type SignedOperation = SignedTransaction
+export type Operation = Transaction | VmOperation
+export type SignedOperation = {
+    key: KeyType,
+    signature: string,
+    operation: Operation
+}
 
 const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashType, receiver: KeyHashType, amount: AmountType): Operation => {
     return {
@@ -43,16 +45,38 @@ const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashTy
     }
 }
 
-const toDTO = (operation: Operation): JSONValue => {
-    const { level, nonce, source, type, content: { receiver, amount } } = operation;
+const createVmOperation = (level: LevelType, nonce: NonceType, source: KeyHashType, payload: string): Operation => {
+    return {
+        level,
+        nonce,
+        source,
+        type: "Vm",
+        content: {
+            payload
+        }
+    }
+}
 
+const toDTO = (operation: Operation): JSONValue => {
+    const { level, nonce, source, type, content} = operation;
     switch (type) {
         case "Transaction": {
+            const { receiver, amount } = content;
             const dto = {
                 level: Level.toDTO(level),
                 nonce: Nonce.toDTO(nonce),
                 source: source,
                 content: ["Transaction", { receiver, amount: Amount.toDTO(amount) }]
+            }
+            return JSONValue.of(dto);
+        }
+        case "Vm": {
+            const {payload} = content;
+            const dto = {
+                level: Level.toDTO(level),
+                nonce: Nonce.toDTO(nonce),
+                source: source,
+                content: ["Vm_transaction", {operation:payload, tickets:[]}]
             }
             return JSONValue.of(dto);
         }
@@ -69,7 +93,7 @@ const signedToDTO = (signedOperation: SignedOperation): JSONType => {
     }
 }
 
-const ofDTO = (json: JSONValue): Transaction | null => {
+const ofDTO = (json: JSONValue): Operation | null => {
     const level_json = json.at("level");
     const nonce_json = json.at("nonce");
     const source = json.at("source").as_string();
@@ -81,16 +105,25 @@ const ofDTO = (json: JSONValue): Transaction | null => {
     const type = type_str.as_string();
     if (type === null) return null;
 
+    const level = Level.ofDTO(level_json);
+    if(level === null) return null;
+    
+    const nonce = Nonce.ofDTO(nonce_json);
+    if(nonce === null) return null;
+    
     switch (type) {
         case "Transaction": {
             const amount_json = payload.at("amount");
             const receiver_str = payload.at("receiver").as_string();
             if (receiver_str === null) return null;
-            const level = Level.ofDTO(level_json);
-            const nonce = Nonce.ofDTO(nonce_json);
             const amount = Amount.ofDTO(amount_json);
-            if (level === null || nonce === null || amount === null) return null;
+            if (amount === null) return null;
             return createTransaction(level, nonce, source, receiver_str, amount);
+        }
+        case "Vm_transaction": {
+            const operation = payload.at("operation").as_string();
+            if(operation === null) return null;
+            return createVmOperation(level, nonce, source, operation);
         }
         default:
             return null
@@ -99,6 +132,7 @@ const ofDTO = (json: JSONValue): Transaction | null => {
 
 export default {
     createTransaction,
+    createVmOperation,
     toDTO,
     ofDTO,
     signedToDTO
