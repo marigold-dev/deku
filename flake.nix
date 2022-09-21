@@ -18,10 +18,12 @@
     tezos.inputs = {
       nixpkgs.follows = "nixpkgs";
     };
+    prometheus-web.url = "github:marigold-dev/prometheus-web";
+    prometheus-web.inputs.nixpkgs.follows = "nixpkgs";
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, deploy-rs }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, prometheus-web, deploy-rs }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -30,6 +32,7 @@
             extraOverlays = [
               tezos.overlays.default
               (import ./nix/overlay.nix)
+              prometheus-web.overlays.default
               (final: prev: {
                 ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
               })

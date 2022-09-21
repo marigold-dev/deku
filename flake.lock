@@ -255,6 +255,21 @@
         "type": "github"
       }
     },
+    "flake-utils_3": {
+      "locked": {
+        "lastModified": 1659877975,
+        "narHash": "sha256-zllb8aq3YO3h8B/U0/J1WBgAL8EX5yWf5pMj3G0NAmc=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "c0e246b9b83f637f4681389ecabcb2681b4f3af0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "flakeCompat": {
       "flake": false,
       "locked": {
@@ -426,6 +441,45 @@
         "type": "github"
       }
     },
+    "prometheus-web": {
+      "inputs": {
+        "flake-utils": "flake-utils_3",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "prometheus_source": "prometheus_source"
+      },
+      "locked": {
+        "lastModified": 1663773563,
+        "narHash": "sha256-zWn4vJA5C4joLefx6orVYPX/w1MnPVVS/r3GlSXuIfU=",
+        "owner": "marigold-dev",
+        "repo": "prometheus-web",
+        "rev": "f64e3afa483bd2c751b1d5be95a63816a0658f4e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "marigold-dev",
+        "repo": "prometheus-web",
+        "type": "github"
+      }
+    },
+    "prometheus_source": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1663762500,
+        "narHash": "sha256-0NDTkksdFe6Hgd6O1Xzgb0JKNCQi2ymO4+rALdmeGv8=",
+        "owner": "ulrikstrid",
+        "repo": "prometheus",
+        "rev": "5acd3509eb5679a26374316356fb6455c879cd5a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ulrikstrid",
+        "ref": "5acd3509eb5679a26374316356fb6455c879cd5a",
+        "repo": "prometheus",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "deploy-rs": "deploy-rs",
@@ -433,6 +487,7 @@
         "flake-utils": "flake-utils",
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs_2",
+        "prometheus-web": "prometheus-web",
         "tezos": "tezos"
       }
     },
