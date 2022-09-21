@@ -36,7 +36,7 @@ in
       environment = cfg.environment;
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node";
+        ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node --listen-prometheus=9001";
         Restart = "on-failure";
         StateDirectory = "deku";
         MemoryMax = "55G";
@@ -62,7 +62,7 @@ in
     };
 
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [ cfg.port ];
+      allowedTCPPorts = [ cfg.port 9001 ];
     };
   };
 }
