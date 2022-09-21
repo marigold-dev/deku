@@ -13,6 +13,12 @@ interface BeaconSigner {
     requestSignPayload: ({ payload }: { payload: string }) => Promise<{ signature: string } | undefined | null>
 }
 
+interface CustomSigner {
+    sign: (payload:string) => Promise<string>
+    publicKey: () => Promise<Key>,
+    publicKeyHash: () => Promise<KeyHash>
+}
+
 export abstract class DekuSigner {
     abstract sign(payload: string): Promise<string>
     abstract publicKey: () => Promise<Key>
@@ -79,4 +85,13 @@ export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
         }
     }
     return new BeaconSigner()
+}
+
+export const fromCustomSigner = (signer: CustomSigner): DekuSigner => {
+    class CustomSigner extends DekuSigner {
+        sign = async (payload: string) => signer.sign(payload);
+        publicKey = async () => signer.publicKey();
+        publicKeyHash = async () => signer.publicKeyHash();
+    }
+    return new CustomSigner();
 }

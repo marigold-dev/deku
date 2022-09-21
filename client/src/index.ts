@@ -326,3 +326,4 @@ export class DekuToolkit {
 
 export { fromBeaconSigner } from './utils/signers';
 export { fromMemorySigner } from './utils/signers';
+export { fromCustomSigner } from './utils/signers';
