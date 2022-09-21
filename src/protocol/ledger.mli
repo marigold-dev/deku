@@ -1,7 +1,7 @@
 open Deku_concepts
 
 type ledger = private Amount.t Address.Map.t
-type t = ledger
+type t = ledger [@@deriving yojson]
 
 val initial : ledger
 val balance : Address.t -> ledger -> Amount.t

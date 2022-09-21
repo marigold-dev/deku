@@ -22,7 +22,7 @@ type consensus = private
       block_pool : Block_pool.t;
     }
 
-and t = consensus
+type t = consensus [@@deriving yojson]
 
 val make : identity:Identity.t -> validators:Validators.t -> consensus
 

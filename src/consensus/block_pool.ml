@@ -66,3 +66,36 @@ let find_votes ~hash pool =
 let find_next ~hash pool =
   let (Pool { by_hash = _; by_previous }) = pool in
   find_by_previous hash by_previous
+
+(* yojson *)
+(* TODO: this is not safe, because we don't reload the signatures from
+   validators*)
+let t_of_yojson json =
+  let list =
+    [%of_yojson: (Block_hash.t * Block.t option * Key_hash.t list) list] json
+  in
+  List.fold_left
+    (fun pool (hash, block, votes) ->
+      let hash, pool =
+        match block with
+        | Some block ->
+            let (Block { hash; _ }) = block in
+            let pool = append_block ~block pool in
+            (hash, pool)
+        | None -> (hash, pool)
+      in
+      List.fold_left
+        (fun pool validator -> append_vote ~validator ~hash pool)
+        pool votes)
+    empty list
+
+let yojson_of_t pool =
+  let (Pool { by_hash; by_previous = _ }) = pool in
+  let list =
+    Block_hash.Map.fold
+      (fun hash (block, votes) list ->
+        let votes = Key_hash.Set.elements votes in
+        (hash, block, votes) :: list)
+      by_hash []
+  in
+  [%yojson_of: (Block_hash.t * Block.t option * Key_hash.t list) list] list

@@ -18,7 +18,17 @@ end = struct
   let initial = 0
   let next t = t + 1
 
-  module Map = Map.Make (Int)
+  module Map = Map.Make (struct
+    include Int
+
+    let t_of_yojson = function
+      | `Int i -> i
+      | _ ->
+          (* FIXME: what to do here? *)
+          failwith "unable to parse json as int"
+
+    let yojson_of_t t = `Int t
+  end)
 end
 
 exception Process_closed of Unix.process_status

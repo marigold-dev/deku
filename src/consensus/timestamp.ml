@@ -1,5 +1,5 @@
 type timestamp = float
-type t = timestamp
+and t = timestamp [@@deriving yojson]
 
 let zero = 0.
 let of_float float = float

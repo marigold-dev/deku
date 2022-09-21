@@ -2,7 +2,7 @@ open Deku_concepts
 open Deku_protocol
 
 type producer
-type t = producer
+type t = producer [@@deriving yojson]
 
 val make : identity:Identity.t -> default_block_size:int -> producer
 val incoming_operation : operation:Operation.t -> producer -> producer

@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_repr
 
 type key_hash =
@@ -5,7 +6,7 @@ type key_hash =
   | Secp256k1 of Secp256k1.Key_hash.t
   | P256 of P256.Key_hash.t
 
-and t = key_hash [@@deriving eq, ord]
+and t = key_hash [@@deriving eq, ord, yojson]
 
 let of_b58 =
   let ed25519 string =
@@ -44,15 +45,11 @@ include With_yojson_of_b58 (struct
 end)
 
 module Map = Map.Make (struct
-  type t = key_hash
-
-  let compare = compare
+  type t = key_hash [@@deriving ord, yojson]
 end)
 
 module Set = Set.Make (struct
-  type t = key_hash
-
-  let compare = compare
+  type t = key_hash [@@deriving ord, yojson]
 end)
 
 let encoding =

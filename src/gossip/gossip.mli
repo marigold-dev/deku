@@ -1,6 +1,6 @@
 type gossip
-type t = gossip
-type fragment [@@deriving show]
+type t = gossip [@@deriving yojson, show]
+type fragment
 type outcome
 
 type action = private
