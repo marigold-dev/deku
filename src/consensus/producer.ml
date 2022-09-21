@@ -83,6 +83,7 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (fun (_hash, operation) -> operation)
       (Operation_hash.Map.bindings operations)
   in
+  print_endline @@ Format.sprintf "operation to be included %i" (List.length operations);
   let op_size = List.length operations in
   let dummy_op_size = Int.max (default_block_size - op_size) 0 in
   let noop = Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) in
@@ -93,6 +94,7 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
+  Unix.sleep 3;
   Block.produce ~parallel_map ~identity ~level ~previous ~operations
     ~tezos_operations
 

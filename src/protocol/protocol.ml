@@ -50,6 +50,7 @@ let apply_operation ~current_level protocol operation =
       in
       match content with
       | Operation_ticket_transfer { receiver; amount } ->
+          print_endline "a transfer";
           let sender = source in
           let ledger =
             match Ledger.transfer ~sender ~receiver amount ledger with
@@ -67,12 +68,14 @@ let apply_operation ~current_level protocol operation =
                 },
               receipt )
       | Operation_vm_transaction { operation; tickets } ->
+          print_endline "vm operation";
           (* FIXME: fix this *)
           let vm_state =
             External_vm_client.apply_vm_operation ~state:vm_state
               ~source:(Address.to_key_hash source)
               ~tickets operation
           in
+          print_endline "new vm state";
           let receipt = Receipt { operation = hash } in
           Some
             ( Protocol
