@@ -1,6 +1,6 @@
 (* TODO: probably should be under concepts *)
 type timestamp
-type t = timestamp
+type t = timestamp [@@deriving yojson]
 
 val zero : t
 val of_float : float -> timestamp

@@ -6,7 +6,7 @@ type block_pool = private
       by_previous : Block.Set.t Block_hash.Map.t;
     }
 
-type t = block_pool
+type t = block_pool [@@deriving yojson]
 
 val empty : block_pool
 val append_block : block:Block.t -> block_pool -> block_pool

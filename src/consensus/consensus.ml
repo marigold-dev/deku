@@ -26,7 +26,7 @@ type consensus =
       block_pool : Block_pool.t;
     }
 
-type t = consensus
+and t = consensus [@@deriving yojson]
 
 let make ~identity ~validators =
   let current_block = Genesis.block in

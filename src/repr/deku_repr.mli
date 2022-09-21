@@ -37,7 +37,6 @@ end
 
 (* yojson exceptions *)
 exception Not_a_string
-exception Not_an_integer
 exception Not_a_b58
 
 module With_yojson_of_b58 (P : sig
@@ -63,8 +62,6 @@ end) : sig
   val yojson_of_t : P.t -> [> `String of string ]
 end
 
-val z_of_yojson : Yojson.Safe.t -> Z.t
-val yojson_of_z : Z.t -> Yojson.Safe.t
 val decode_variant : (string -> 'a option) list -> string -> 'a option
 
 (* FIXME: can we avoid exporting this somehow?*)

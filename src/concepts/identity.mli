@@ -2,7 +2,7 @@ open Deku_crypto
 
 (* TODO: probably should be under concepts *)
 type identity
-type t = identity
+type t = identity [@@deriving yojson]
 
 val make : Secret.t -> identity
 val key : identity -> Key.t

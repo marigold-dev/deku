@@ -5,11 +5,13 @@ type gossip =
   | Gossip of {
       (* TODO: this is clearly not ideal *)
       pending_request : bool;
-      consumed : Message_hash.Set.t;
+      consumed : Message_hash.Set.t; [@opaque]
       (* TODO: at max one delayed per connection,
           prevents infinite spam *)
-      delayed : string list Message_hash.Map.t;
+      delayed : string list Message_hash.Map.t; [@opaque]
     }
+
+and t = gossip [@@deriving yojson, show]
 
 type fragment =
   | Fragment_encode_message of { content : Message.Content.t }
@@ -31,7 +33,6 @@ type fragment =
       expected_hash : Response_hash.t;
       raw_content : string;
     }
-[@@deriving show]
 
 type outcome =
   | Outcome_message of { message : Message.t; raw_message : Message.raw }
@@ -53,8 +54,6 @@ type action =
   | Gossip_send_response of { id : Request_id.t; raw_response : Response.raw }
   | Gossip_incoming_response of { response : Response.t }
   | Gossip_fragment of { fragment : fragment }
-
-type t = gossip
 
 let empty =
   Gossip
@@ -256,4 +255,6 @@ let apply ~outcome gossip =
 
 let clear gossip =
   let (Gossip gossip) = gossip in
-  Gossip { gossip with pending_request = false }
+  let pending_request = false in
+  let delayed = Message_hash.Map.empty in
+  Gossip { gossip with pending_request; delayed }

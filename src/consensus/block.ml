@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
@@ -26,12 +27,6 @@ let compare a b =
   let (Block { hash = a; _ }) = a in
   let (Block { hash = b; _ }) = b in
   Block_hash.compare a b
-
-module Set = Set.Make (struct
-  type t = block
-
-  let compare = compare
-end)
 
 exception Invalid_signature
 
@@ -158,3 +153,11 @@ let pp fmt (Block { hash; level; _ }) =
   let hash = Block_hash.to_b58 hash in
   let open Deku_stdlib in
   Format.fprintf fmt "Block [hash: %s, level: %a]" hash N.pp (Level.to_n level)
+
+module Set = Set.Make (struct
+  type t = block
+
+  let compare = compare
+  let t_of_yojson = t_of_yojson
+  let yojson_of_t = yojson_of_t
+end)

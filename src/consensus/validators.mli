@@ -2,7 +2,7 @@ open Deku_crypto
 
 (* TODO: should we care about the adding validator order *)
 type validators
-type t = validators
+type t = validators [@@deriving yojson]
 
 (* repr *)
 val of_key_hash_list : Key_hash.t list -> validators

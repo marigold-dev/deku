@@ -4,7 +4,7 @@ open Operation
 (* TODO: idea here is that because of that we don't need to hold the
     full operation on the protocol only it's hash temporarily*)
 type included_operation_set = Level.t Operation_hash.Map.t
-type t = included_operation_set
+and t = included_operation_set [@@deriving yojson]
 
 let empty = Operation_hash.Map.empty
 

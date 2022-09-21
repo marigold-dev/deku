@@ -1,7 +1,7 @@
 open Deku_crypto
 
 type validators = Key_hash.Set.t
-type t = validators
+and t = validators [@@deriving yojson]
 
 let of_key_hash_list = Key_hash.Set.of_list
 

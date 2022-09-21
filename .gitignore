@@ -4,4 +4,4 @@ node_modules
 database.db
 database.db-journal
 result
-chain*.bin
+chain*.json

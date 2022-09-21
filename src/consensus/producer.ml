@@ -13,7 +13,7 @@ type producer =
       default_block_size : int;
     }
 
-and t = producer
+and t = producer [@@deriving yojson]
 
 let make ~identity ~default_block_size =
   let operations = Operation_hash.Map.empty in
