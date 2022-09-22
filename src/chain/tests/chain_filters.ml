@@ -1,8 +1,4 @@
 open Deku_crypto
-open Deku_concepts
-open Deku_consensus
-open Deku_chain
-open Deku_gossip
 open Chain_messages
 open Chain_genesis
 

@@ -227,22 +227,32 @@ let print_levels chains_actions_map round =
    total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
 *)
 
-let rec run chains_actions_map round
-    ((to_steal, stolen_messages, rounds_left) as thief_stuff) =
-  (* TODO: Print out all chain levels *)
-  print_levels chains_actions_map round;
-  Unix.sleep 1;
-  let chains_actions_map, messages_to_receive =
-    eval_actions chains_actions_map empty_messages
-  in
-  let filtered_messages = messages_to_receive in
+let stopping_point = 10
 
-  (* let filtered_messages = filter_messages Fun.id messages_to_receive in *)
-  let messages_to_receive, stolen_messages =
-    if rounds_left <= 0 then jumble_and_mix filtered_messages stolen_messages
-    else steal_messages filtered_messages thief_stuff
-  in
-  let chains_actions_map =
-    convert_messages_to_actions chains_actions_map messages_to_receive
-  in
-  run chains_actions_map (round + 1) (to_steal, stolen_messages, rounds_left - 1)
+let rec run chains_actions_map round
+    ((to_steal, stolen_messages, rounds_left) as thief_stuff) stopping_point =
+  match round = stopping_point with
+  | true -> chains_actions_map
+  | false ->
+      (* TODO: Print out all chain levels *)
+      print_levels chains_actions_map round;
+      let chains_actions_map, messages_to_receive =
+        eval_actions chains_actions_map empty_messages
+      in
+
+      (* let filtered_messages = messages_to_receive in *)
+      let filtered_messages =
+        let open Chain_filters in
+        _filter_messages (_generate_filter ()) messages_to_receive
+      in
+      let messages_to_receive, stolen_messages =
+        if rounds_left <= 0 then
+          jumble_and_mix filtered_messages stolen_messages
+        else steal_messages filtered_messages thief_stuff
+      in
+      let chains_actions_map =
+        convert_messages_to_actions chains_actions_map messages_to_receive
+      in
+      run chains_actions_map (round + 1)
+        (to_steal, stolen_messages, rounds_left - 1)
+        stopping_point
