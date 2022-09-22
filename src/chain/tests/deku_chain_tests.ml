@@ -298,53 +298,79 @@ let process_chain_action (chain, actions, messages_to_receive) action =
   let actions = additional_actions @ actions in
   (chain, actions, messages_to_receive)
 
-let messages_to_receive =
-  List.fold_left
-    (fun map validator -> Map.add validator [] map)
-    Map.empty validators
-
 (* Breaks up evaluation into execution and broadcasting.
    Broadcasting is always performed after execution.
    This makes things conceptually simpler and also prevents potential bugs.
    Uses func filters to eliminate messages from the message pool *)
 
-let eval ?(filters = Fun.id) chain_actions_map =
-  (* Iterate through all the present actions *)
-  let chain_actions_maps, messages_to_receive =
-    Map.fold
-      (fun validator (chain, actions) (new_map, messages_to_receive) ->
-        let chain, new_actions, messages_to_receive =
-          List.fold_left
-            (fun acc action ->
-              Chain.pp_action action;
-              let chain, actions, messages_to_receive =
-                process_chain_action acc action
-              in
-              (chain, actions, messages_to_receive))
-            (chain, [], messages_to_receive)
-            actions
-        in
-        (Map.add validator (chain, new_actions) new_map, messages_to_receive))
-      chain_actions_map
-      (chain_actions_map, messages_to_receive)
-  in
-  let filtered_messages = filters messages_to_receive in
+let empty_messages =
+  List.fold_left
+    (fun map validator -> Map.add validator [] map)
+    Map.empty validators
 
-  (* Convert sent messages to chain actions *)
-  let chains_action_map =
-    Map.mapi
-      (fun validator (chain, (actions : Chain.action list)) ->
-        let messages = Map.find_opt validator filtered_messages in
-        match messages with
-        | None ->
-            Format.eprintf "no messages\n%!";
-            (chain, actions)
-        | Some messages ->
-            Format.eprintf "messages : %d\n%!" (List.length messages);
-            List.fold_left message_to_action (chain, actions) messages)
-      chain_actions_maps
+let eval_actions chains_actions_map messages_to_receive =
+  Map.fold
+    (fun validator (chain, actions) (new_map, messages_to_receive) ->
+      let chain, new_actions, messages_to_receive =
+        List.fold_left
+          (fun acc action ->
+            Chain.pp_action action;
+            let chain, actions, messages_to_receive =
+              process_chain_action acc action
+            in
+            (chain, actions, messages_to_receive))
+          (chain, [], messages_to_receive)
+          actions
+      in
+      (Map.add validator (chain, new_actions) new_map, messages_to_receive))
+    chains_actions_map
+    (chain_actions_map, messages_to_receive)
+
+let steal_messages all_messages thief_stuff =
+  let to_steal, stolen, rounds_left = thief_stuff in
+  if rounds_left <= 0 then (all_messages, stolen)
+  else
+    let messages, stolen =
+      List.fold_left
+        (fun (all_messages, stolen_messages) validator ->
+          let messages_to_steal = Map.find validator all_messages in
+          let stolen_messages =
+            Map.add validator messages_to_steal stolen_messages
+          in
+          let all_messages = Map.add validator [] all_messages in
+          (all_messages, stolen_messages))
+        (all_messages, stolen) to_steal
+    in
+    (messages, stolen)
+
+let jumble_and_mix messages stolen_messages =
+  let shuffle messages =
+    Stdlib.Random.self_init ();
+    let cmp = List.map (fun c -> (Stdlib.Random.bits (), c)) messages in
+    let sond = List.sort compare cmp in
+    List.map snd sond
   in
-  chains_action_map
+  let all_messages =
+    Map.fold
+      (fun validator filtered_messages all_messages ->
+        let stolen_messages = shuffle @@ Map.find validator stolen_messages in
+        Map.add validator (stolen_messages @ filtered_messages) all_messages)
+      messages empty_messages
+  in
+  (all_messages, empty_messages)
+
+let convert_messages_to_actions chain_actions_map messages =
+  Map.mapi
+    (fun validator (chain, actions) ->
+      let messages = Map.find_opt validator messages in
+      match messages with
+      | None ->
+          Format.eprintf "no messages\n%!";
+          (chain, actions)
+      | Some messages ->
+          Format.eprintf "messages : %d\n%!" (List.length messages);
+          List.fold_left message_to_action (chain, actions) messages)
+    chain_actions_map
 
 (* Generate random filters of arbitrarily bad scale *)
 (* 3 message kinds to block with two quantifiers = 4
@@ -353,8 +379,6 @@ let eval ?(filters = Fun.id) chain_actions_map =
    total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
 *)
 
-(* let chaos_monkey () = () *)
-
 let validators_quant = Universal :: List.map (fun v -> Existential v) validators
 
 let kind_quant =
@@ -362,7 +386,7 @@ let kind_quant =
     Existential Response; Existential Request; Existential Broadcast; Universal;
   ]
 
-let generate_filter () =
+let _generate_filter () =
   let from = Random.int 5 in
   let to_ = Random.int 5 in
   let kind = Random.int 4 in
@@ -379,26 +403,41 @@ let _universal_filter =
   Prevent { from = Universal; to_ = Universal; kind = Universal }
 
 (* TODO: Generalize to handle many filters *)
-let filtered_messages filter messages_to_receive =
+let _filter_messages filter messages_to_receive =
   Map.map
     (fun messages ->
       List.filter (fun message -> not (catch filter message)) messages)
     messages_to_receive
 
-let () =
-  let rec loop chain_actions_map round =
-    let chain = Map.find (List.hd validators) chain_actions_map |> fst in
-    let (Chain.Chain { consensus; _ }) = chain in
-    let (Consensus.Consensus { current_block; _ }) = consensus in
-    let (Block { level; _ }) = current_block in
-    let level = Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int in
-    Format.eprintf "round %d, block %d\n%!" round level;
-    Unix.sleep 1;
-    let message_filterer = filtered_messages (generate_filter ()) in
-    let chain_actions_map = eval ~filters:message_filterer chain_actions_map in
-    loop chain_actions_map (round + 1)
+let rec loop chains_actions_map round
+    ((to_steal, stolen_messages, rounds_left) as thief_stuff) =
+  (* TODO: Print out all chain levels *)
+  Map.iter
+    (fun _ (chain, _) ->
+      let (Chain.Chain { consensus; _ }) = chain in
+      let (Consensus.Consensus { current_block; _ }) = consensus in
+      let (Block { level; _ }) = current_block in
+      let level = Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int in
+      Format.eprintf "round %d, block %d\n%!" round level)
+    chains_actions_map;
+  Unix.sleep 1;
+  let chains_actions_map, messages_to_receive =
+    eval_actions chains_actions_map empty_messages
   in
-  loop chain_actions_map 0
+  let filtered_messages = messages_to_receive in
+
+  (* let filtered_messages = filter_messages Fun.id messages_to_receive in *)
+  let messages_to_receive, stolen_messages =
+    if rounds_left <= 0 then jumble_and_mix filtered_messages stolen_messages
+    else steal_messages filtered_messages thief_stuff
+  in
+  let chains_actions_map =
+    convert_messages_to_actions chains_actions_map messages_to_receive
+  in
+  loop chains_actions_map (round + 1)
+    (to_steal, stolen_messages, rounds_left - 1)
+
+let () = loop chain_actions_map 0 ([ List.hd validators ], empty_messages, 0)
 
 (* Things we can do:
    [ ] Handle large block sizes
