@@ -8,6 +8,12 @@ tezos-client() {
   docker exec -t deku_flextesa tezos-client "$@"
 }
 
+for i in 0 1 2 3
+do
+  rm chain/data/$i/chain.json
+  rm chain/data/$i/database.db
+done
+
 # Rebuild the sdk
 cd sdks/typescript-sdk
 echo $PWD
