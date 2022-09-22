@@ -196,8 +196,6 @@ let message_to_action (chain, actions) message =
   (chain, actions)
 
 (* Handles a single iteration of chain actions and saves fragments as actions. Also saves broadcasts for later consumption. *)
-(* TODO: How many times do we need to run this to make progress?
-   Who cares? We only need to add conditionals for the weird cases later *)
 let process_chain_action (chain, actions, messages_to_receive) action =
   let module Map = Key_hash.Map in
   let open Chain in
@@ -318,6 +316,7 @@ let eval ?(filters = Fun.id) chain_actions_map =
         let chain, new_actions, messages_to_receive =
           List.fold_left
             (fun acc action ->
+              Chain.pp_action action;
               let chain, actions, messages_to_receive =
                 process_chain_action acc action
               in
@@ -347,34 +346,65 @@ let eval ?(filters = Fun.id) chain_actions_map =
   in
   chains_action_map
 
-(* TODO: Case where we prevent any initial messages to someone from getting through. Make sure that those messages will eventually be received by the person *)
+(* Generate random filters of arbitrarily bad scale *)
+(* 3 message kinds to block with two quantifiers = 4
+   four validators to receive with two quantifiers = 5
+   four validators to send with two quantifiers = 5
+   total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
+*)
 
-let filter =
+(* let chaos_monkey () = () *)
+
+let validators_quant = Universal :: List.map (fun v -> Existential v) validators
+
+let kind_quant =
+  [
+    Existential Response; Existential Request; Existential Broadcast; Universal;
+  ]
+
+let generate_filter () =
+  let from = Random.int 5 in
+  let to_ = Random.int 5 in
+  let kind = Random.int 4 in
+  let from = List.nth validators_quant from in
+  let to_ = List.nth validators_quant to_ in
+  let kind = List.nth kind_quant kind in
+  Prevent { from; to_; kind }
+
+let _filter =
   let validator2 = List.nth validators 2 in
   Prevent { from = Universal; to_ = Existential validator2; kind = Universal }
 
-let _filtered_messages messages_to_receive =
+let _universal_filter =
+  Prevent { from = Universal; to_ = Universal; kind = Universal }
+
+(* TODO: Generalize to handle many filters *)
+let filtered_messages filter messages_to_receive =
   Map.map
     (fun messages ->
       List.filter (fun message -> not (catch filter message)) messages)
     messages_to_receive
 
-let state = eval ~filters:_filtered_messages chain_actions_map
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-let state = eval ~filters:_filtered_messages state
-
 let () =
-  let rec loop chain_actions_map =
-    Format.eprintf "called loop\n%!";
+  let rec loop chain_actions_map round =
+    let chain = Map.find (List.hd validators) chain_actions_map |> fst in
+    let (Chain.Chain { consensus; _ }) = chain in
+    let (Consensus.Consensus { current_block; _ }) = consensus in
+    let (Block { level; _ }) = current_block in
+    let level = Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int in
+    Format.eprintf "round %d, block %d\n%!" round level;
     Unix.sleep 1;
-    let chain_actions_map = eval chain_actions_map in
-    loop chain_actions_map
+    let message_filterer = filtered_messages (generate_filter ()) in
+    let chain_actions_map = eval ~filters:message_filterer chain_actions_map in
+    loop chain_actions_map (round + 1)
   in
-  loop state
+  loop chain_actions_map 0
+
+(* Things we can do:
+   [ ] Handle large block sizes
+   [X] Filter random messages
+   [ ] Filter random groups of messages (multiple filters)
+   [ ] DDos a node? (Universal Filter)
+   [ ] Send a single set of messages out of order
+   [ ] Send random messages out of order
+*)
