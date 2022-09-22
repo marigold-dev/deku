@@ -33,6 +33,8 @@ end
 type set = { key : string; value : string } [@@deriving yojson]
 
 type transaction = {
+  (* raw bytes used to create the contract address *)
+  operation_hash_raw : string;
   source : Key_hash.t;
   operation : string;
   tickets : Ticket.t list;
