@@ -52,5 +52,7 @@ type vm_server_message =
   | Init of set list
   | Stop
   | Set of set
-  | Error of string
+  | Take_tickets of Address.t
+  | Deposit_tickets of { address : Address.t; tickets : (Ticket_id.t * amount) list }
+ | Error of string
 [@@deriving yojson]
