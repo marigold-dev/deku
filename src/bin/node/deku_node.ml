@@ -106,6 +106,7 @@ let main params =
   } =
     params
   in
+  Logs.info (fun m ->m  "Default block size: %i" default_block_size);
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }

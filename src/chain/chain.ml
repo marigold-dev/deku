@@ -42,7 +42,7 @@ let make ~identity ~validators ~default_block_size ~vm_state =
 
 (* after gossip *)
 let rec apply_consensus_action chain consensus_action =
-  Logs.debug (fun m ->
+  Logs.info (fun m ->
       m "Chain: applying consensus action: %a" Consensus.pp_action
         consensus_action);
   let open Consensus in
@@ -117,6 +117,7 @@ let incoming_tezos_operation ~tezos_operation chain =
 let incoming_message ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
+  Logs.info (fun m -> m "Incoming message: %a" Message.Content.pp content);
   match content with
   | Content_block block -> incoming_block ~current ~block chain
   | Content_vote vote -> incoming_vote ~current ~vote chain

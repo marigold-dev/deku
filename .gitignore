@@ -7,3 +7,4 @@ result
 chain*.json
 examples/cookie-game/lib
 sdks/typescript-sdk/lib
+node-*-chain.json
