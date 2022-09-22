@@ -53,7 +53,7 @@ for N in 0 1 2 3; do
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=100 \
+    --default-block-size=4000 \
     --port "444$N" \
     --database-uri "sqlite3:./chain/data/$N/database.db" \
     --named-pipe-path "./chain/data/$N/pipe" \
