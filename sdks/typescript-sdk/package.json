@@ -1,10 +1,10 @@
 {
   "name": "deku-sdk",
   "main": "lib/interop.js",
+  "version": "1.0.0",
   "scripts": {
     "build": "tsc src/interop.ts --lib es6 --outDir lib/",
     "dev": "tsc --project . -w --outDir lib/",
-    "postinstall": "tsc --project . --outDir lib/",
     "lint": "eslint --ext .ts src/"
   },
   "devDependencies": {
