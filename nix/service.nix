@@ -46,22 +46,22 @@ in
             MemoryMax = "55G";
 
             # Basic Hardening
-            NoNewPrivileges = "yes";
-            PrivateTmp = "yes";
-            PrivateDevices = "yes";
-            DevicePolicy = "closed";
-            DynamicUser = "true";
-            ProtectSystem = "strict";
-            ProtectHome = "read-only";
-            ProtectControlGroups = "yes";
-            ProtectKernelModules = "yes";
-            ProtectKernelTunables = "yes";
-            RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6 AF_NETLINK";
-            RestrictNamespaces = "yes";
-            RestrictRealtime = "yes";
-            RestrictSUIDSGID = "yes";
-            MemoryDenyWriteExecute = "no";
-            LockPersonality = "yes";
+            # NoNewPrivileges = "yes";
+            # PrivateTmp = "yes";
+            # PrivateDevices = "yes";
+            # DevicePolicy = "closed";
+            # DynamicUser = "true";
+            # ProtectSystem = "strict";
+            # ProtectHome = "read-only";
+            # ProtectControlGroups = "yes";
+            # ProtectKernelModules = "yes";
+            # ProtectKernelTunables = "yes";
+            # RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6 AF_NETLINK";
+            # RestrictNamespaces = "yes";
+            # RestrictRealtime = "yes";
+            # RestrictSUIDSGID = "yes";
+            # MemoryDenyWriteExecute = "no";
+            # LockPersonality = "yes";
           };
         };
 
@@ -81,22 +81,22 @@ in
             RuntimeDirectoryPreserve = "yes";
 
             # Basic Hardening
-            NoNewPrivileges = "yes";
-            PrivateTmp = "yes";
-            PrivateDevices = "yes";
-            DevicePolicy = "closed";
-            DynamicUser = "true";
-            ProtectSystem = "strict";
-            ProtectHome = "read-only";
-            ProtectControlGroups = "yes";
-            ProtectKernelModules = "yes";
-            ProtectKernelTunables = "yes";
-            RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6 AF_NETLINK";
-            RestrictNamespaces = "yes";
-            RestrictRealtime = "yes";
-            RestrictSUIDSGID = "yes";
-            MemoryDenyWriteExecute = "no";
-            LockPersonality = "yes";
+            # NoNewPrivileges = "yes";
+            # PrivateTmp = "yes";
+            # PrivateDevices = "yes";
+            # DevicePolicy = "closed";
+            # DynamicUser = "true";
+            # ProtectSystem = "strict";
+            # ProtectHome = "read-only";
+            # ProtectControlGroups = "yes";
+            # ProtectKernelModules = "yes";
+            # ProtectKernelTunables = "yes";
+            # RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6 AF_NETLINK";
+            # RestrictNamespaces = "yes";
+            # RestrictRealtime = "yes";
+            # RestrictSUIDSGID = "yes";
+            # MemoryDenyWriteExecute = "no";
+            # LockPersonality = "yes";
           };
         };
       };
