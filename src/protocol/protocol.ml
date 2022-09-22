@@ -83,7 +83,9 @@ let apply_operation ~current_level protocol operation =
                   vm_state;
                 },
               receipt )
-      | Operation_noop -> None)
+      | Operation_noop ->
+          Unix.sleepf 1.;
+          None)
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
