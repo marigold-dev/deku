@@ -34,3 +34,10 @@ val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
 
 val is_in_includable_window :
   current_level:Level.t -> operation_level:Level.t -> bool
+
+val vm_transaction :
+  level:Level.t ->
+  nonce:Nonce.t ->
+  content:Yojson.Safe.t ->
+  identity:Identity.t ->
+  operation

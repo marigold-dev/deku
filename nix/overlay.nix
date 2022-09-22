@@ -50,6 +50,9 @@ with super; {
             fetchSubmodules = true;
           };
         });
+        tezos-micheline = super.tezos-micheline.overrideAttrs (_: {
+          doCheck = false;
+        });
         ringo = super.ringo.overrideAttrs (_: {
           src = builtins.fetchurl {
             url =
