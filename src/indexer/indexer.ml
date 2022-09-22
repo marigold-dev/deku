@@ -126,7 +126,7 @@ let async_save_block ~block (Indexer { pool; config }) =
           let%await result = Query.insert_block ~block ~timestamp pool in
           match result with
           | Ok () ->
-              print_endline "block saved";
+              Logs.debug (fun m -> m "save %a in database" Block.pp block);
               (*  TODO: replace with debug/trace log *)
               Lwt.return_unit
           | Error err ->
