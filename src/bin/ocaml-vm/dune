@@ -1,0 +1,4 @@
+(executable
+ (name deku_ocaml_vm)
+ (public_name deku-ocaml-vm)
+ (libraries deku_external_vm))
