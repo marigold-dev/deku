@@ -9,6 +9,7 @@ type node = private {
   dump : Chain.t -> unit;
   network : Network.t;
   indexer : Indexer.t option;
+  tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
 }
@@ -21,6 +22,7 @@ val make :
   chain:Chain.t ->
   nodes:Uri.t list ->
   ?indexer:Indexer.t option ->
+  ?tezos_interop:Tezos_interop.t option ->
   unit ->
   node * unit Lwt.t
 

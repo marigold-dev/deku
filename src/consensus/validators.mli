@@ -6,6 +6,7 @@ type t = validators [@@deriving yojson]
 
 (* repr *)
 val of_key_hash_list : Key_hash.t list -> validators
+val to_key_hash_list : validators -> Key_hash.t list
 
 (* operations *)
 val cardinal : validators -> int

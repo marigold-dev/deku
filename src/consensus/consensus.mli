@@ -1,8 +1,11 @@
 open Deku_concepts
+open Deku_crypto
 
-type action = private
-  (* protocol *)
-  | Consensus_accepted_block of { block : Block.t }
+type action = private (* protocol *)
+  | Consensus_accepted_block of {
+      block : Block.t;
+      votes : Verified_signature.t Key_hash.Map.t; [@opaque]
+    }
   (* timer *)
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)

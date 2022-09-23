@@ -5,9 +5,18 @@ exception Invalid_signature
 exception Invalid_source
 
 type operation_content = private
-  | Operation_ticket_transfer of { receiver : Address.t; amount : Amount.t }
+  | Operation_ticket_transfer of {
+      receiver : Address.t;
+      ticket_id : Ticket_id.t;
+      amount : Amount.t;
+    }
   | Operation_vm_transaction of { operation : string; tickets : Ticket.t list }
   | Operation_noop
+  | Operation_withdraw of {
+      owner : Deku_tezos.Address.t;
+      amount : Amount.t;
+      ticket_id : Ticket_id.t;
+    }
 
 type operation = private
   | Operation of {
@@ -27,6 +36,7 @@ val ticket_transfer :
   level:Level.t ->
   nonce:Nonce.t ->
   receiver:Address.t ->
+  ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   operation
 
@@ -34,3 +44,12 @@ val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
 
 val is_in_includable_window :
   current_level:Level.t -> operation_level:Level.t -> bool
+
+val withdraw :
+  identity:Identity.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  tezos_owner:Deku_tezos.Address.t ->
+  ticket_id:Ticket_id.t ->
+  amount:Amount.t ->
+  operation

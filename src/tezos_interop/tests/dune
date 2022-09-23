@@ -1,3 +1,8 @@
+(library
+ (name common)
+ (modules common)
+ (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts))
+
 (executable
  (name update_state_root_hash_test)
  (modules update_state_root_hash_test)
@@ -24,9 +29,85 @@
   deku_tezos_interop
   deku_consensus
   cmdliner
+  common
   fixme_name)
  (preprocess
   (pps ppx_let_binding)))
+
+(executable
+ (name withdraw_test)
+ (modules withdraw_test)
+ (libraries
+  deku_tezos
+  deku_tezos_interop
+  deku_chain
+  deku_network
+  deku_protocol
+  deku_stdlib
+  cohttp
+  cohttp-lwt
+  cohttp-lwt-unix
+  yojson
+  piaf
+  common
+  cmdliner)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
+
+(executable
+ (name proof_test)
+ (modules proof_test)
+ (libraries
+  deku_tezos
+  deku_tezos_interop
+  deku_chain
+  deku_network
+  deku_indexer
+  deku_protocol
+  cohttp
+  cohttp-lwt
+  cohttp-lwt-unix
+  yojson
+  piaf
+  common
+  cmdliner)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
+
+(executable
+ (name transaction_test)
+ (modules transaction_test)
+ (libraries
+  deku_tezos
+  deku_tezos_interop
+  deku_chain
+  deku_network
+  deku_indexer
+  deku_protocol
+  cohttp
+  cohttp-lwt
+  cohttp-lwt-unix
+  yojson
+  piaf
+  common
+  cmdliner)
+ (preprocess
+  (pps
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
 
 (library
  (name fixme_name)

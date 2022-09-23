@@ -15,6 +15,8 @@ type node = {
   network : Network.t;
   (* TODO: there is a better way to do this but this is the quick and lazy way. *)
   indexer : Indexer.t option;
+  (*  TODO: there is a better way to do this but this is the quick and lazy way.  *)
+  tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
 }
@@ -103,6 +105,29 @@ and handle_chain_action node ~action =
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~block indexer
       | None -> ())
+  | Chain_commit
+      {
+        current_level;
+        payload_hash;
+        state_root_hash;
+        signatures;
+        validators;
+        withdrawal_handles_hash;
+      } ->
+      Lwt.async (fun () ->
+          match node.tezos_interop with
+          | Some tezos_interop ->
+              let%await () =
+                Tezos_interop.Consensus.commit_state_hash
+                  ~block_level:current_level ~block_payload_hash:payload_hash
+                  ~state_hash:state_root_hash ~withdrawal_handles_hash
+                  ~signatures ~validators tezos_interop
+              in
+              Logs.info (fun m -> m "State hash committed to Tezos");
+              Lwt.return_unit
+          | None ->
+              (* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
+              failwith "Node was not initialized with Tezos interop enabled.")
 
 and handle_chain_fragment node ~fragment =
   Lwt.async (fun () ->
@@ -134,11 +159,12 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~actions node
 
-let make ~pool ~dump ~chain ~nodes ?(indexer = None) () =
+let make ~pool ~dump ~chain ~nodes ?(indexer = None) ?(tezos_interop = None) ()
+    =
   let network = Network.connect ~nodes in
   let node =
     let trigger_timeout () = () in
-    { pool; dump; network; chain; trigger_timeout; indexer }
+    { pool; dump; network; chain; trigger_timeout; indexer; tezos_interop }
   in
   let promise = on_timeout node in
   (node, promise)
@@ -176,7 +202,9 @@ let _test () =
       ~vm_state:External_vm_protocol.State.empty
   in
   let dump _chain = () in
-  let node, promise = make ~pool ~dump ~chain ~nodes ~indexer:None () in
+  let node, promise =
+    make ~pool ~dump ~chain ~nodes ~indexer:None ~tezos_interop:None ()
+  in
   let (Chain { consensus; _ }) = node.chain in
   let block =
     let (Consensus { current_block; _ }) = consensus in
@@ -184,12 +212,13 @@ let _test () =
       current_block
     in
     let level = Level.next current_level in
+    let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     let previous = current_block in
     let operations = [] in
     let tezos_operations = [] in
     let block =
       Block.produce ~parallel_map:List.map ~identity ~level ~previous
-        ~operations ~tezos_operations
+        ~operations ~tezos_operations ~withdrawal_handles_hash
     in
     block
   in

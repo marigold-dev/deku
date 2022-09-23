@@ -1,5 +1,5 @@
-open Deku_concepts
 open Deku_crypto
+open Deku_tezos
 
 module State : sig
   type t [@@deriving yojson]
@@ -14,7 +14,7 @@ type set = { key : string; value : string } [@@deriving yojson]
 type transaction = {
   source : Key_hash.t;
   operation : string;
-  tickets : Ticket.t list;
+  tickets : Ticket_id.t list;
 }
 [@@deriving yojson]
 

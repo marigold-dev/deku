@@ -13,13 +13,13 @@ let pool blocks votes =
         let (Block { hash; _ }) = block in
         let pool = append_block ~block pool in
         List.fold_left
-          (fun pool validator -> append_vote ~validator ~hash pool)
+          (fun pool vote -> append_vote ~vote ~hash pool)
           pool votes)
       pool blocks
   in
   let pool =
     List.fold_left
-      (fun pool (hash, validator) -> append_vote ~validator ~hash pool)
+      (fun pool (hash, vote) -> append_vote ~vote ~hash pool)
       pool votes
   in
   pool
@@ -37,8 +37,9 @@ let make_block ~identity previous =
   let (Block { hash = previous; level = previous_level; _ }) = previous in
   let level = Level.next previous_level in
   let operations = [] in
+  let withdrawal_handles_hash = Deku_crypto.BLAKE2b.hash "tuturu" in
   Block.produce ~parallel_map:List.map ~identity ~level ~previous ~operations
-    ~tezos_operations:[]
+    ~tezos_operations:[] ~withdrawal_handles_hash
 
 let make_validators n =
   assert (n > 0);
@@ -106,7 +107,7 @@ let test_new_vote_on_initial () =
   ensure "with_vote.validators = validators" (with_vote.validators = validators);
   ensure "with_vote.accepted = []" (with_vote.accepted = Block_hash.Set.empty);
   ensure "with_vote.block_pool = [(Only_hash block, [self])]"
-    (with_vote.block_pool = pool [] [ (hash, Identity.key_hash identity) ])
+    (with_vote.block_pool = pool [] [ (hash, vote) ])
 
 let test_vote_then_block_on_initial () =
   let identity, _identities, validators = make_validators 1 in
@@ -138,7 +139,7 @@ let test_vote_then_block_on_initial () =
   match actions with
   | [
    Consensus_trigger_timeout { level = trigger_level };
-   Consensus_accepted_block { block = accepted_block };
+   Consensus_accepted_block { block = accepted_block; votes = _ };
   ] ->
       ensure "trigger_level = level" (trigger_level = level);
       ensure "accepted_block = block" (accepted_block = block)
@@ -224,9 +225,9 @@ let test_fast_forwarding () =
   match actions with
   | [
    Consensus_trigger_timeout { level = timeout_a };
-   Consensus_accepted_block { block = accepted_a };
+   Consensus_accepted_block { block = accepted_a; votes = _ };
    Consensus_trigger_timeout { level = timeout_b };
-   Consensus_accepted_block { block = accepted_b };
+   Consensus_accepted_block { block = accepted_b; votes = _ };
   ] ->
       ensure "timeout_a = level_a" (timeout_a = level_a);
       ensure "accepted_a = block_b" (accepted_a = block_a);
@@ -252,7 +253,6 @@ let test_missing_block () =
   assert (actions = []);
 
   let vote = make_vote ~hash:hash_b identity in
-  let validator = Identity.key_hash identity in
   let (Consensus after_b as consensus), actions =
     incoming_vote ~current:(time 0.3) ~vote consensus
   in
@@ -269,7 +269,7 @@ let test_missing_block () =
   ensure "after_b.accepted = [block_b; block_a]"
     (after_b.accepted = Block_hash.Set.of_list [ hash_b; hash_a ]);
   ensure "after_b.block_pool = [(block_b, [vote])]"
-    (after_b.block_pool = pool [ (block_b, [ validator ]) ] []);
+    (after_b.block_pool = pool [ (block_b, [ vote ]) ] []);
 
   let Consensus after_a, actions =
     incoming_block ~current:(time 0.4) ~block:block_a consensus
@@ -287,9 +287,9 @@ let test_missing_block () =
   match actions with
   | [
    Consensus_trigger_timeout { level = timeout_a };
-   Consensus_accepted_block { block = accepted_a };
+   Consensus_accepted_block { block = accepted_a; votes = _ };
    Consensus_trigger_timeout { level = timeout_b };
-   Consensus_accepted_block { block = accepted_b };
+   Consensus_accepted_block { block = accepted_b; votes = _ };
   ] ->
       ensure "timeout_a = level_a" (timeout_a = level_a);
       ensure "accepted_a = block_b" (accepted_a = block_a);

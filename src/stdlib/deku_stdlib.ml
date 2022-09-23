@@ -4,6 +4,7 @@ module Map = Map_ext
 module Set = Set_ext
 include Let_syntax
 module Parallel = Parallel
+module List = List_ext
 
 module Yojson = struct
   include Yojson

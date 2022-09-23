@@ -21,7 +21,7 @@ module Consensus = struct
       (pair (hash withdrawal_handles_hash) (hash state_root_hash))
     |> hash_packed_data
 
-  let hash_withdraw_handle ~id ~owner ~amount ~ticketer ~data =
+  let hash_withdrawal_handle ~id ~owner ~amount ~ticketer ~data =
     pair
       (pair (pair (nat amount) (bytes data)) (pair (nat id) (address owner)))
       (address ticketer)

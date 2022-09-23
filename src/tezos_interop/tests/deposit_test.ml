@@ -49,28 +49,7 @@ let info =
   Cmd.info "deku-deposit-test" ~version:"%\226\128\140%VERSION%%" ~doc
 
 let term =
-  let address =
-    let open Arg in
-    let parser string =
-      string |> Address.of_string
-      |> Option.to_result ~none:(`Msg "Cannot parse the given contract address")
-    in
-    let printer ppf address =
-      Format.fprintf ppf "%s" (address |> Address.to_string)
-    in
-    conv (parser, printer)
-  in
-
-  let consensus_contract =
-    let open Arg in
-    let docv = "consensus-contract" in
-    let doc = "The address of the consensus contract to listen." in
-    let env = Cmd.Env.info "DEKU_CONSENSUS_CONTRACT" in
-    required
-    & opt (some address) None
-    & info [ "consensus-contract" ] ~doc ~docv ~env
-  in
   let open Term in
-  const main $ consensus_contract
+  const main $ Common.consensus_contract
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term
