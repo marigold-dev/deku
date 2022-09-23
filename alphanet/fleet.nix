@@ -45,6 +45,8 @@ let
                                 DEKU_TEZOS_DISCOVERY_ADDRESS = tezos_discovery_address;
                                 DEKU_DATABASE_URI = "sqlite3:///var/lib/deku/db.sqlite";
                                 DEKU_DATA_FOLDER = "/var/lib/deku";
+                                DEKU_DEFAULT_BLOCK_SIZE = "1";
+                                DEKU_API_ENABLED = "true";
                               };
                             };
 
