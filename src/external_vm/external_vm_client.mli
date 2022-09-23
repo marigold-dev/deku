@@ -13,7 +13,7 @@ val apply_vm_operation :
     State.t ->
   source:Key_hash.t ->
   tickets:Ticket.t list ->
-  string ->
+  string option ->
   State.t
 
 val close_vm_ipc : unit -> unit

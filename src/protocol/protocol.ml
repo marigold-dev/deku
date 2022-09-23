@@ -71,7 +71,7 @@ let apply_operation ~current_level protocol operation =
           let vm_state =
             External_vm_client.apply_vm_operation ~state:vm_state
               ~source:(Address.to_key_hash source)
-              ~tickets operation
+              ~tickets (Some operation)
           in
           let receipt = Receipt { operation = hash } in
           Some
@@ -83,7 +83,23 @@ let apply_operation ~current_level protocol operation =
                   vm_state;
                 },
               receipt )
-      | Operation_noop -> None)
+      | Operation_noop ->
+          let vm_state =
+            External_vm_client.apply_vm_operation ~state:vm_state
+              ~source:(Address.to_key_hash source)
+              ~tickets:[] None
+          in
+          let receipt = Receipt { operation = hash } in
+          (*TODO: should be we return None ? *)
+          Some
+            ( Protocol
+                {
+                  included_operations;
+                  included_tezos_operations;
+                  ledger;
+                  vm_state;
+                },
+              receipt ))
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =

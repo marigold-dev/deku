@@ -21,6 +21,7 @@ type transaction = {
 type vm_client_message =
   | Control
   | Transaction of transaction
+  | Noop_transaction
   | Set of set
   | Get_Initial_State
   | Set_Initial_State of State.t
