@@ -23,6 +23,7 @@ type vm_client_message =
   | Transaction of transaction
   | Set of set
   | Get_Initial_State
+  | Give_Tickets of (Ticket.t * int64) list
   | Set_Initial_State of State.t
   | Get of string
 [@@deriving yojson]
