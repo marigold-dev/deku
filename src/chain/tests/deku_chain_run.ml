@@ -200,25 +200,9 @@ let jumble_and_mix messages stolen_messages =
 let convert_messages_to_actions chain_actions_map messages =
   Map.mapi
     (fun validator (chain, actions) ->
-      let messages = Map.find_opt validator messages in
-      match messages with
-      | None ->
-          Format.eprintf "no messages\n%!";
-          (chain, actions)
-      | Some messages ->
-          Format.eprintf "messages : %d\n%!" (List.length messages);
-          List.fold_left message_to_action (chain, actions) messages)
+      let messages = Map.find validator messages in
+      List.fold_left message_to_action (chain, actions) messages)
     chain_actions_map
-
-let print_levels chains_actions_map round =
-  Map.iter
-    (fun _ (chain, _) ->
-      let (Chain.Chain { consensus; _ }) = chain in
-      let (Consensus.Consensus { current_block; _ }) = consensus in
-      let (Block { level; _ }) = current_block in
-      let level = Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int in
-      Format.eprintf "round %d, block %d\n%!" round level)
-    chains_actions_map
 
 (* Generate random filters of arbitrarily bad scale *)
 (* 3 message kinds to block with two quantifiers = 4
@@ -227,20 +211,15 @@ let print_levels chains_actions_map round =
    total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
 *)
 
-let stopping_point = 10
-
 let rec run chains_actions_map round
     ((to_steal, stolen_messages, rounds_left) as thief_stuff) stopping_point =
   match round = stopping_point with
   | true -> chains_actions_map
   | false ->
-      (* TODO: Print out all chain levels *)
-      print_levels chains_actions_map round;
+      Chain_printers.print_round_levels chains_actions_map round;
       let chains_actions_map, messages_to_receive =
         eval_actions chains_actions_map empty_messages
       in
-
-      (* let filtered_messages = messages_to_receive in *)
       let filtered_messages =
         let open Chain_filters in
         _filter_messages (_generate_filter ()) messages_to_receive
@@ -250,6 +229,7 @@ let rec run chains_actions_map round
           jumble_and_mix filtered_messages stolen_messages
         else steal_messages filtered_messages thief_stuff
       in
+      Chain_printers.print_messages messages_to_receive;
       let chains_actions_map =
         convert_messages_to_actions chains_actions_map messages_to_receive
       in

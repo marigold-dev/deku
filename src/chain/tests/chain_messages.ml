@@ -18,3 +18,9 @@ let empty_messages =
   List.fold_left
     (fun map validator -> Map.add validator [] map)
     Map.empty validators
+
+let pp_message_kind = function
+  | Response -> "Response"
+  | Request -> "Request"
+  | Broadcast -> "Broadcast"
+
