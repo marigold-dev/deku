@@ -89,7 +89,7 @@ let handler ~on_message ~on_request ~network Server.{ ctx = _; request } =
         `Bad_request
 
 let listen ~port ~on_message ~on_request network =
-  let listen_address = Unix.(ADDR_INET (inet_addr_loopback, port)) in
+  let listen_address = Unix.(ADDR_INET (inet_addr_any, port)) in
   Lwt.async (fun () ->
       (* TODO: piaf error_handler *)
       let%await _server =
@@ -118,7 +118,7 @@ let post ~raw_expected_hash ~raw_content ~uri =
 
 let post ~raw_expected_hash ~raw_content ~uri =
   Lwt.async (fun () ->
-      Logs.debug (fun m ->
+      Logs.info (fun m ->
           m "Network: Posting message to %a: %s" Uri.pp uri raw_content);
       let%await post = post ~raw_expected_hash ~raw_content ~uri in
       match post with
@@ -126,15 +126,17 @@ let post ~raw_expected_hash ~raw_content ~uri =
           let%await drain = Body.drain response.body in
           match drain with
           | Ok () ->
-              Logs.debug (fun m -> m "Post successful");
+              Logs.info (fun m -> m "Post successful");
               Lwt.return_unit
           | Error _error ->
               (* Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error; *)
               (* TODO: do something with this error *)
               Lwt.return_unit)
-      | Error _error ->
+      | Error error ->
           (* Format.eprintf "error.post: %a\n%!" Error.pp_hum _error; *)
           (* TODO: do something with this error *)
+          Logs.warn (fun m ->
+              m "Failed to post to %a: %a" Uri.pp_hum uri Error.pp_hum error);
           Lwt.return_unit)
 
 let broadcast ~raw_expected_hash ~raw_content network =
