@@ -19,6 +19,7 @@ type node = {
   tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable trigger_timeout : unit -> unit;
+  notify_api : Block.t -> unit;
 }
 
 type t = node
@@ -102,6 +103,7 @@ and handle_chain_action node ~action =
   | Chain_send_not_found { id } -> Network.not_found ~id node.network
   | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
   | Chain_save_block block -> (
+      node.notify_api block;
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~block indexer
       | None -> ())
@@ -159,12 +161,21 @@ let handle_tezos_operation node ~operation =
   node.chain <- chain;
   handle_chain_actions ~actions node
 
-let make ~pool ~dump ~chain ~nodes ?(indexer = None) ?(tezos_interop = None) ()
-    =
+let make ~pool ~dump ~chain ~nodes ?(indexer = None) ?(tezos_interop = None)
+    ~notify_api () =
   let network = Network.connect ~nodes in
   let node =
     let trigger_timeout () = () in
-    { pool; dump; network; chain; trigger_timeout; indexer; tezos_interop }
+    {
+      pool;
+      dump;
+      network;
+      chain;
+      trigger_timeout;
+      indexer;
+      tezos_interop;
+      notify_api;
+    }
   in
   let promise = on_timeout node in
   (node, promise)
@@ -204,6 +215,7 @@ let _test () =
   let dump _chain = () in
   let node, promise =
     make ~pool ~dump ~chain ~nodes ~indexer:None ~tezos_interop:None ()
+      ~notify_api:(fun _ -> ())
   in
   let (Chain { consensus; _ }) = node.chain in
   let block =

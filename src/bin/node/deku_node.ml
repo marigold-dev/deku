@@ -156,9 +156,13 @@ let main params =
         |> Lwt.return
   in
   let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
+  let notify_api =
+    match api_enabled with true -> Deku_api.on_block | false -> fun _ -> ()
+  in
+
   let node, promise =
     Node.make ~pool ~dump ~chain ~nodes:validator_uris ~indexer:(Some indexer)
-      ~tezos_interop:(Some tezos_interop) ()
+      ~tezos_interop:(Some tezos_interop) ~notify_api ()
   in
   let node_uri = Uri.of_string "http://localhost" in
   let node_uri = Uri.with_port node_uri (Some port) in
