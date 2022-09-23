@@ -180,7 +180,7 @@ const transition = (tx: transaction) => {
         if (isTransfer(operation.operation)) {
             // make sure the recipient has a started game
             let to = JSON.parse(get(operation.operation.to));
-            if (to === undefined || to === null) {
+            if (!to) {
                 console.log("Impossible to transfer to this user, no started game for: ", operation.operation.to);
             }
             else if (operation.operation.to === source) {
@@ -191,7 +191,7 @@ const transition = (tx: transaction) => {
                 cookieBakerTo = initCookieBaker(cookieBakerTo);
                 const { from: cookieBakerSender, to: cookieBakerRecipient } = transferCookies(cookieBaker, cookieBakerTo, BigInt(operation.operation.amount));
                 saveState(source, cookieBakerSender);
-                saveState(to, cookieBakerRecipient);
+                saveState(operation.operation.to, cookieBakerRecipient);
             }
         } else {
             throw new Error("Impossible case! Expected mint, transfer or eat");
