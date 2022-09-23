@@ -1,5 +1,7 @@
 open External_vm_protocol
 
+type error = [ `Vm_lifecycle_error of string | `Vm_execution_error of string ]
+
 let vm = ref None
 
 let start_vm_ipc ~named_pipe_path =
@@ -34,30 +36,36 @@ let set_initial_state state =
          state"
   | Some vm -> vm.send (Set_Initial_State state)
 
+let rec while_result acc f =
+  let open Deku_stdlib in
+  let%ok cond, acc = f acc in
+  match cond with true -> while_result acc f | false -> Ok acc
+
 let apply_vm_operation ~state ~source ~tickets operation =
-  match !vm with
-  | Some vm ->
-      (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
-         For now, I send an empty message if there's nothing extra to do. *)
-      vm.send Control;
-      (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
-      vm.send
-        (Transaction
-           { source; operation; tickets; operation_hash_raw = operation });
-      let finished = ref false in
-      let state = ref state in
-      while not !finished do
-        match vm.receive () with
-        | Init _ -> failwith "Init shouldn't be received, TODO: better error"
-        | Stop -> finished := true
-        | Set { key; value } -> state := State.set key value !state
-        | Error message ->
-            Format.eprintf "VM error: %s\n%!" message;
-            finished := true
-      done;
-      !state
-  | None ->
-      failwith "You must initialize the Vm IPC before applying a Vm transaction"
+  let open Deku_stdlib in
+  let%ok vm =
+    Option.to_result
+      ~none:
+        (`Vm_lifecycle_error
+          "You must initialize the Vm IPC before applying a Vm transaction")
+      !vm
+  in
+  vm.send Control;
+  (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
+  vm.send
+    (Transaction { source; operation; tickets; operation_hash_raw = operation });
+  while_result state (fun state ->
+      match vm.receive () with
+      | Init _ ->
+          Error
+            (`Vm_lifecycle_error
+              "Init shouldn't be received, TODO: better error")
+      | Stop -> Ok (false, state)
+      | Set { key; value } -> Ok (true, State.set key value state)
+      | Take_tickets _ | Deposit_tickets _ -> failwith "TODO"
+      | Error message ->
+          Error
+            (`Vm_execution_error (Format.sprintf "VM error: %s\n%!" message)))
 
 let close_vm_ipc () =
   match !vm with

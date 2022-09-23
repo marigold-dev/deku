@@ -66,23 +66,27 @@ let apply_operation ~current_level protocol operation =
                   vm_state;
                 },
               receipt )
-      | Operation_vm_transaction { operation; tickets } ->
+      | Operation_vm_transaction { operation; tickets } -> (
           (* FIXME: fix this *)
-          let vm_state =
+          match
             External_vm_client.apply_vm_operation ~state:vm_state
               ~source:(Address.to_key_hash source)
               ~tickets operation
-          in
-          let receipt = Receipt { operation = hash } in
-          Some
-            ( Protocol
-                {
-                  included_operations;
-                  included_tezos_operations;
-                  ledger;
-                  vm_state;
-                },
-              receipt )
+          with
+          | Ok vm_state ->
+              let receipt = Receipt { operation = hash } in
+              Some
+                ( Protocol
+                    {
+                      included_operations;
+                      included_tezos_operations;
+                      ledger;
+                      vm_state;
+                    },
+                  receipt )
+          | Error _error_string ->
+              (*todo should this be logged?*)
+              None)
       | Operation_noop -> None)
   | false -> None
 
