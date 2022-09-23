@@ -102,6 +102,16 @@ let test_run_30_round_random_filter () =
     ~expected:(true, true)
     ~actual:(level > 1, levels_are_equal)
 
+let test_run_100_round_random_filter () =
+  let output = run chains_actions_map 100 ([], empty_messages, 0) 130 in
+  let extraction = extract_levels output in
+  let levels_are_equal = elements_are_equal extraction in
+  let level = List.hd extraction in
+  Alcotest.(check' (pair bool bool))
+    ~msg:"chain runs with filters for 100 rounds, and recovers in 130 rounds"
+    ~expected:(true, true)
+    ~actual:(level > 4, levels_are_equal)
+
 let test_run_5_round_message_steal () =
   let output =
     run chains_actions_map 0 ([ List.hd validators ], empty_messages, 5) 40
@@ -118,7 +128,7 @@ let test_run_5_round_message_steal () =
 
 let test_run_10_round_message_steal () =
   let output =
-    run chains_actions_map 0 ([ List.hd validators ], empty_messages, 10) 120
+    run chains_actions_map 0 ([ List.hd validators ], empty_messages, 10) 80
   in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
@@ -148,13 +158,21 @@ let run () =
   let open Alcotest in
   run "running chain tests" ~and_exit:false
     [
-      ("1", [ test_case "" `Slow test_run_normally ]);
-      ("2", [ test_case "" `Slow test_run_10_round_random_filter ]);
-      ("3", [ test_case "" `Slow test_run_20_round_random_filter ]);
-      ("4", [ test_case "" `Slow test_run_30_round_random_filter ]);
-      ("5", [ test_case "" `Slow test_run_5_round_message_steal ]);
-      ("6", [ test_case "" `Slow test_run_10_round_message_steal ]);
-      ("7", [ test_case "" `Slow test_run_15_round_message_steal ]);
+      ("normally", [ test_case "" `Slow test_run_normally ]);
+      ( "10_round_random_filter",
+        [ test_case "" `Slow test_run_10_round_random_filter ] );
+      ( "20_round_random_filter",
+        [ test_case "" `Slow test_run_20_round_random_filter ] );
+      ( "30_round_random_filter",
+        [ test_case "" `Slow test_run_30_round_random_filter ] );
+      ( "100_round_random_filter",
+        [ test_case "" `Slow test_run_100_round_random_filter ] );
+      ( "5_round_message_steal",
+        [ test_case "" `Slow test_run_5_round_message_steal ] );
+      ( "10_round_message_steal",
+        [ test_case "" `Slow test_run_10_round_message_steal ] );
+      ( "15_round_message_steal",
+        [ test_case "" `Slow test_run_15_round_message_steal ] );
     ]
 
 let () = run ()

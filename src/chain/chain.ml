@@ -32,13 +32,13 @@ let pp_action action =
   match action with
   | Chain_trigger_timeout -> Format.eprintf "Chain trigger timeout\n%!"
   | Chain_broadcast { raw_content = _; _ } ->
-      Format.eprintf "Chain broadcast\n%!"
+      Format.eprintf "  Chain broadcast\n%!"
   | Chain_send_request { raw_content = _; _ } ->
-      Format.eprintf "Chain send request\n%!"
+      Format.eprintf "  Chain send request\n%!"
   | Chain_send_response { raw_content = _; _ } ->
-      Format.eprintf "Chain send response\n%!"
+      Format.eprintf "  Chain send response\n%!"
   | Chain_send_not_found { id = _; _ } | Chain_fragment { fragment = _ } ->
-      Format.eprintf "Chain fragment\n%!"
+      Format.eprintf "  Chain fragment\n%!"
 
 let make ~identity ~validators =
   let gossip = Gossip.empty in
@@ -118,8 +118,7 @@ let incoming_message ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
   match content with
-  | Content_block block ->
-      incoming_block ~current ~block chain
+  | Content_block block -> incoming_block ~current ~block chain
   | Content_vote vote -> incoming_vote ~current ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
 
@@ -143,8 +142,7 @@ let incoming_response ~current ~response chain =
   let open Response in
   let (Response { hash = _; content }) = response in
   match content with
-  | Content_block block ->
-      incoming_block ~current ~block chain
+  | Content_block block -> incoming_block ~current ~block chain
 
 let apply_gossip_action ~current ~gossip_action chain =
   match gossip_action with

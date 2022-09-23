@@ -170,20 +170,23 @@ let steal_messages all_messages thief_stuff =
   else
     let messages, stolen =
       List.fold_left
-        (fun (all_messages, stolen_messages) validator ->
+        (fun (all_messages, all_stolen_messages) validator ->
           let messages_to_steal = Map.find validator all_messages in
-          let stolen_messages =
-            Map.add validator messages_to_steal stolen_messages
+          let stolen_messages = Map.find validator all_stolen_messages in
+          let all_stolen_messages =
+            Map.add validator
+              (stolen_messages @ messages_to_steal)
+              all_stolen_messages
           in
           let all_messages = Map.add validator [] all_messages in
-          (all_messages, stolen_messages))
+          (all_messages, all_stolen_messages))
         (all_messages, stolen) to_steal
     in
     (messages, stolen)
 
 let jumble_and_mix messages stolen_messages =
   let shuffle messages =
-    Stdlib.Random.self_init ();
+    Stdlib.Random.init 0;
     let cmp = List.map (fun c -> (Stdlib.Random.bits (), c)) messages in
     let sond = List.sort compare cmp in
     List.map snd sond
@@ -220,15 +223,22 @@ let rec run chains_actions_map round
       let chains_actions_map, messages_to_receive =
         eval_actions chains_actions_map empty_messages
       in
-      let filtered_messages =
-        let open Chain_filters in
-        _filter_messages (_generate_filter ()) messages_to_receive
-      in
+      let filtered_messages = messages_to_receive in
+      (* let filtered_messages =
+           let open Chain_filters in
+           _filter_messages (_generate_filter ()) messages_to_receive
+         in *)
       let messages_to_receive, stolen_messages =
-        if rounds_left <= 0 then
+        if rounds_left < 0 then (messages_to_receive, stolen_messages)
+        else if rounds_left = 0 then
           jumble_and_mix filtered_messages stolen_messages
         else steal_messages filtered_messages thief_stuff
       in
+      Format.eprintf "We've stolen %d messages!\n%!"
+        (Map.fold
+           (fun _ messages total -> List.length messages + total)
+           stolen_messages 0);
+      
       Chain_printers.print_messages messages_to_receive;
       let chains_actions_map =
         convert_messages_to_actions chains_actions_map messages_to_receive

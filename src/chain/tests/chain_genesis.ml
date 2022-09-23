@@ -4,6 +4,7 @@ open Deku_consensus
 open Deku_chain
 
 let get_current () = Timestamp.of_float (Unix.gettimeofday ())
+(* TODO: Abstract this generation process *)
 let secret1 = Ed25519.Secret.generate ()
 let secret1 = Secret.Ed25519 secret1
 let identity1 = Identity.make secret1
