@@ -50,7 +50,6 @@ let apply_vm_operation ~state ~source ~tickets operation =
           "You must initialize the Vm IPC before applying a Vm transaction")
       !vm
   in
-  vm.send Control;
   (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
   vm.send
     (Transaction { source; operation; tickets; operation_hash_raw = operation });

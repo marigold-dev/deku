@@ -20,7 +20,6 @@ type transaction = {
 [@@deriving yojson]
 
 type vm_client_message =
-  | Control
   | Transaction of transaction
   | Set of set
   | Get_Initial_State
