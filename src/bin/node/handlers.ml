@@ -247,9 +247,8 @@ module Post_operation : HANDLER = struct
     let headers =
       let open Piaf_lwt.Headers in
       let json = Mime_types.map_extension "json" in
-      [ (Well_known.content_type, json) ]
+      [ ("X-Raw-Expected-Hash", hash); (Well_known.content_type, json) ]
     in
-    let target = Uri.with_query' target [ ("hash", hash) ] in
     let body = Body.of_string raw_content in
     let%await post_result = Client.Oneshot.post ~headers ~body target in
     match post_result with
