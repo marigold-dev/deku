@@ -13,6 +13,7 @@ import { OperationHash as OperationHashType } from "./core/operation-hash";
 import { hashOperation } from './utils/hash';
 import JSONValue, { JSONType } from './utils/json';
 import { KeyHash as KeyHashType } from './core/key-hash';
+import IncompleteBlock, { IncompleteBlock as IncompleteBlockType } from './core/incomplete-block';
 
 export type Setting = {
     dekuRpc: string,
@@ -37,8 +38,8 @@ export class DekuToolkit {
     private _consensus: Consensus | undefined;
     private _discovery: Discovery | undefined;
 
-    // private websocket: WebSocket
-    private onBlockCallback: (block: BlockType) => void;
+    private websocket: WebSocket
+    private onBlockCallback: (block: IncompleteBlockType) => void;
 
     /**
      * A hashmap to watch pending operations
@@ -64,31 +65,20 @@ export class DekuToolkit {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
         this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
-        // this.initializeStream(setting.dekuRpc) // NOT YET AVAILABLE
-        //     .catch(err => console.error(`error: ${err}`));
+        const websocket = this.initializeStream(setting.dekuRpc) // NOT YET AVAILABLE
+        this.websocket = websocket;
         this.pendingOperations = {};
     }
 
-    private async initializeStream(dekuRpc: string) {
-        const streamUri = dekuRpc + "/api/v1/chain/blocks/monitor";
-        const response = await fetch(streamUri);
-        const body = response.body;
-        if (!body) return null;
-        const reader = body.getReader();
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            const decoder = new TextDecoder("utf-8");
-            const json: JSONValue = JSONValue.of(JSON.parse(decoder.decode(value)));
-            const block_hash = json.as_string();
-            // Add parsing for a block hash
-            if (block_hash === null) return null;
-            const block = await this.getBlockByHash(block_hash);
-            this.handleBlock(block);
-            return null;
-        }
-        return;
+    private initializeStream(dekuRpc: string): WebSocket {
+        const websocket = new WebSocket(dekuRpc.replace("http", "ws").replace("https", "wss") + "/api/v1/chain/blocks/monitor");
+        websocket.onmessage = ((event: MessageEvent<string>) => {
+            const block = JSONValue.of(JSON.parse(event.data));
+            const incomplete_block = IncompleteBlock.ofDTO(block);
+            if (incomplete_block === null) return;
+            this.handleBlock(incomplete_block);
+        });
+        return websocket;
     }
 
     /**
@@ -134,7 +124,7 @@ export class DekuToolkit {
      * @param callback the callback to be called when a new block arrived to the client
      * Returns the deku updated toolkit
      */
-    onBlock(callback: ((block: BlockType) => void)): DekuToolkit {
+    onBlock(callback: ((block: IncompleteBlockType) => void)): DekuToolkit {
         this.onBlockCallback = callback
         return this;
     }
@@ -294,16 +284,11 @@ export class DekuToolkit {
      * Resolve pending operations when the client receive a new block.
      * @param block the received block from the API
      */
-    private handleBlock(block: BlockType) {
+    private handleBlock(block: IncompleteBlockType) {
         // Calling the callback given by the user
         this.onBlockCallback(block);
         // Get the hash of every operations in the block
-        const hashes = block.block.payload.flatMap(string => {
-            const operationContent = JSONValue.of(JSON.parse(string)).at("operation");
-            const operation = Operation.ofDTO(operationContent);
-            if (operation === null) return []
-            return [hashOperation(operation)];
-        })
+        const hashes = block.operations;
 
         hashes.forEach(hash => {
             // Check if there is a pending operation
@@ -315,7 +300,7 @@ export class DekuToolkit {
             // Check if the resolve function exists (it exists if the user is calling the "wait" function)
             if (resolve === undefined) return null;
             // if so call it with the block level
-            resolve(block.block.level);
+            resolve(block.level);
             // Drop the watched operations
             delete this.pendingOperations[hash];
             return null;

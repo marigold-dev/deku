@@ -79,8 +79,8 @@ const App = () => {
 
   const transferExample = async () => {
     const operatioHash = await deku.transferTo("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb", 0);
-    // const blockLevel = await deku.wait(operatioHash, { maxAge: 5 }); FEATURE not yet available
-    // console.log(`User operation applied on block : ${blockLevel}`);
+    const blockLevel = await deku.wait(operatioHash, { maxAge: 5 });
+    console.log(`User operation applied on block : ${blockLevel}`);
   }
 
   useEffect(() => {
