@@ -3,6 +3,15 @@ open Deku_concepts
 open Deku_protocol
 open Deku_tezos
 
+type producer_data =
+  | Producer_data of {
+      operations : Operation.t Operation_hash.Map.t;
+      (* TODO: should this be a set instead of map since
+         we never do random access? *)
+      tezos_operations : Tezos_operation.t Tezos_operation_hash.Map.t;
+    }
+[@@deriving yojson]
+
 type producer =
   | Producer of {
       identity : Identity.t;
@@ -13,12 +22,20 @@ type producer =
       default_block_size : int;
     }
 
-and t = producer [@@deriving yojson]
+and t = producer
 
 let make ~identity ~default_block_size =
   let operations = Operation_hash.Map.empty in
   let tezos_operations = Tezos_operation_hash.Map.empty in
   Producer { identity; operations; tezos_operations; default_block_size }
+
+let rehydrate ~identity ~default_block_size producer_data =
+  let (Producer_data { operations; tezos_operations }) = producer_data in
+  Producer { identity; operations; tezos_operations; default_block_size }
+
+let dehydrate producer =
+  let (Producer { operations; tezos_operations; _ }) = producer in
+  Producer_data { operations; tezos_operations }
 
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)

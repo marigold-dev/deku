@@ -2,10 +2,16 @@ open Deku_concepts
 open Deku_protocol
 open Deku_crypto
 
+type producer_data [@@deriving yojson]
 type producer
-type t = producer [@@deriving yojson]
+type t = producer
 
 val make : identity:Identity.t -> default_block_size:int -> producer
+
+val rehydrate :
+  identity:Identity.t -> default_block_size:int -> producer_data -> producer
+
+val dehydrate : producer -> producer_data
 val incoming_operation : operation:Operation.t -> producer -> producer
 
 val incoming_tezos_operation :

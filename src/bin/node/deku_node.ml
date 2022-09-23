@@ -9,14 +9,15 @@ open Deku_external_vm
 include Node
 
 let make_dump_loop ~pool ~folder ~chain =
-  let chain_ref = ref chain in
+  let chain_data = Chain.dehydrate chain in
+  let chain_data_ref = ref chain_data in
   let dump_loop () =
     let rec loop () =
-      let chain = !chain_ref in
+      let chain_data = !chain_data_ref in
       let%await () = Lwt_unix.sleep 1. in
       let%await () =
         Lwt.catch
-          (fun () -> Storage.Chain.write ~pool ~folder chain)
+          (fun () -> Storage.Chain.write ~pool ~folder chain_data)
           (fun exn ->
             Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
             Lwt.return_unit)
@@ -25,7 +26,10 @@ let make_dump_loop ~pool ~folder ~chain =
     in
     loop ()
   in
-  let dump chain = chain_ref := chain in
+  let dump chain =
+    let chain_data = Chain.dehydrate chain in
+    chain_data_ref := chain_data
+  in
   Lwt.async (fun () -> dump_loop ());
   dump
 
@@ -126,10 +130,11 @@ let main params =
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
   (* TODO: one problem of loading from disk like this, is that there
           may be pending actions such as fragments being processed *)
-  let%await chain = Storage.Chain.read ~folder:data_folder in
+  let%await chain_data = Storage.Chain.read ~folder:data_folder in
   let chain =
-    match chain with
-    | Some chain ->
+    match chain_data with
+    | Some chain_data ->
+        let chain = Chain.rehydrate ~identity ~default_block_size chain_data in
         let (Chain { protocol; _ }) = chain in
         let (Protocol { vm_state; _ }) = protocol in
         External_vm_client.set_initial_state vm_state;

@@ -5,6 +5,8 @@ open Deku_consensus
 open Deku_gossip
 open Deku_external_vm
 
+type chain_data [@@deriving yojson]
+
 type chain = private
   | Chain of {
       gossip : Gossip.t;
@@ -14,9 +16,12 @@ type chain = private
       applied : Block.t Block_hash.Map.t;
     }
 
-type t = chain [@@deriving yojson]
+type t = chain
 type fragment
 type outcome
+
+val rehydrate : identity:Identity.t -> default_block_size:int -> chain_data -> t
+val dehydrate : t -> chain_data
 
 type action = private
   | Chain_trigger_timeout
