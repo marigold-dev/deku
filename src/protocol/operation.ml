@@ -192,10 +192,27 @@ let withdraw ~identity ~level ~nonce ~tezos_owner ~ticket_id ~amount =
     let operation = { level; nonce; source; content } in
     hash operation
   in
-  let key = Identity.key identity in
   let signature =
     let hash = Operation_hash.to_blake2b hash in
     Identity.sign ~hash identity
   in
+  let key = Identity.key identity in
   let content = Operation_withdraw { owner = tezos_owner; ticket_id; amount } in
+  Operation { key; signature; hash; level; nonce; source; content }
+
+let vm_transaction ~level ~nonce ~content ~identity =
+  let operation = content in
+  let key = Identity.key identity in
+  let source = Identity.key_hash identity |> Address.of_key_hash in
+  let hash =
+    let open Repr in
+    let content = Vm_transaction { operation; tickets = [] } in
+    let operation = { level; nonce; source; content } in
+    hash operation
+  in
+  let signature =
+    let hash = Operation_hash.to_blake2b hash in
+    Identity.sign ~hash identity
+  in
+  let content = Operation_vm_transaction { operation; tickets = [] } in
   Operation { key; signature; hash; level; nonce; source; content }
