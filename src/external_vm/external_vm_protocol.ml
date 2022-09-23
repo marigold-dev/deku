@@ -2,6 +2,8 @@ open Deku_concepts
 open Deku_crypto
 module String_map = Map.Make (String)
 
+type set = { key : string; value : string } [@@deriving yojson]
+
 module State = struct
   type t = string String_map.t
 
@@ -13,24 +15,23 @@ module State = struct
   let yojson_of_t map =
     let assoc =
       String_map.bindings map
-      |> List.map (fun (k, v) ->
+      |> List.map (fun (key, value) ->
              (* FIXME: doing this for convenience for now, but it seems
                 like a bad idea in the long run. We should make the protocol
                 agnostic of the serialization format. *)
-             let v_json = Yojson.Safe.from_string v in
-             (k, v_json))
+             yojson_of_set { key; value })
     in
-    `Assoc assoc
+    `List assoc
 
   let t_of_yojson : Yojson.Safe.t -> t = function
-    | `Assoc l ->
-        List.to_seq l
-        |> Seq.map (fun (k, v) -> (k, Yojson.Safe.to_string v))
-        |> String_map.of_seq
+    | `List l ->
+        List.fold_left
+          (fun acc x ->
+            let { key; value } = set_of_yojson x in
+            String_map.add key value acc)
+          String_map.empty l
     | _ -> failwith "FIXME: what to do here?"
 end
-
-type set = { key : string; value : string } [@@deriving yojson]
 
 type transaction = {
   (* raw bytes used to create the contract address *)
@@ -50,11 +51,13 @@ type vm_client_message =
   | Get of string
 [@@deriving yojson]
 
+open Deku_concepts
+
 type vm_server_message =
   | Init of set list
   | Stop
   | Set of set
-  | Take_tickets of Address.t
-  | Deposit_tickets of { address : Address.t; tickets : (Ticket_id.t * amount) list }
- | Error of string
+  | Take_tickets of string
+  | Deposit_tickets of { address : string; tickets : (Ticket.t * int64) list }
+  | Error of string
 [@@deriving yojson]

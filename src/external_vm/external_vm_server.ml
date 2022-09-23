@@ -40,7 +40,7 @@ let main ~named_pipe_path initial_state transition =
   let rec runtime_loop transition =
     if chain.receive () = Control then (
       (match chain.receive () with
-      | Transaction { source; operation; tickets } ->
+      | Transaction { source; operation; tickets; operation_hash_raw = _ } ->
           transition storage source tickets operation
       | _ -> Error "protocol not respected")
       |> Result.fold

@@ -41,7 +41,9 @@ let apply_vm_operation ~state ~source ~tickets operation =
          For now, I send an empty message if there's nothing extra to do. *)
       vm.send Control;
       (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
-      vm.send (Transaction { source; operation; tickets });
+      vm.send
+        (Transaction
+           { source; operation; tickets; operation_hash_raw = operation });
       let finished = ref false in
       let state = ref state in
       while not !finished do

@@ -33,37 +33,15 @@ let raise exn =
   Format.eprintf "external_vm failure: %s\n%!" (Printexc.to_string exn);
   exit 1
 
-let read_all fd length =
-  let message = Bytes.create length in
-  let pos = ref 0 in
-  while length > !pos do
-    let read = Unix.read fd message !pos length in
-    pos := !pos + read
-  done;
-  message
-
-let write_all fd bytes_ =
-  let bytes_len = Bytes.length bytes_ in
-  let remaining = ref bytes_len in
-  while !remaining > 0 do
-    let pos = Bytes.length bytes_ - !remaining in
-    let wrote = Unix.write fd bytes_ pos bytes_len in
-    remaining := !remaining - wrote
-  done
+let write_all fd bytes_ = Out_channel.output_string fd bytes_
 
 let send_to_vm ~fd (message : Yojson.Safe.t) =
-  let message = Bytes.of_string (Yojson.Safe.to_string message) in
-  let message_length = Bytes.create 8 in
-  Bytes.set_int64_ne message_length 0 (Int64.of_int (Bytes.length message));
-  let _ = Unix.write fd message_length 0 (Bytes.length message_length) in
+  let message = Yojson.Safe.to_string message in
   write_all fd message
 
 let read_from_vm ~fd =
   let fd = fd in
-  let message_length = Bytes.create 8 in
-  let _ = Unix.read fd message_length 0 8 in
-  let message_length = Bytes.get_int64_ne message_length 0 |> Int64.to_int in
-  let message = read_all fd message_length |> Bytes.to_string in
+  let message = In_channel.input_all fd in
   Yojson.Safe.from_string message
 
 type ('a, 'b) t = {
@@ -77,9 +55,12 @@ let open_pipes ~named_pipe_path ~of_yojson ~to_yojson ~is_chain =
   let vm_to_chain, chain_to_vm =
     Named_pipe.get_pipe_pair_file_descriptors ~is_chain named_pipe_path
   in
+
   let read, write =
     if is_chain then (vm_to_chain, chain_to_vm) else (chain_to_vm, vm_to_chain)
   in
+  let read = Unix.in_channel_of_descr read in
+  let write = Unix.out_channel_of_descr write in
   let send x = to_yojson x |> send_to_vm ~fd:write in
   let receive () =
     let json = read_from_vm ~fd:read in
