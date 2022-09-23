@@ -15,12 +15,16 @@ let start_chain_ipc ~named_pipe_path =
   in
   opened_chain
 
-let rec init_state (chain : chain) initial_state =
+let init_state (chain : chain) initial_state =
   let message = chain.receive () in
   match message with
   | Get_Initial_State ->
       chain.send (Init initial_state);
-      init_state chain initial_state
+      initial_state
+      |> List.fold_left
+           (fun state External_vm_protocol.{ key; value } ->
+             External_vm_protocol.State.set key value state)
+           External_vm_protocol.State.empty
   | Set_Initial_State vm_state -> vm_state
   | _ -> failwith "protocol not respected"
 (* initialize the state of the *)
@@ -34,8 +38,10 @@ let get key = External_vm_protocol.State.get key !state
 
 let main ~named_pipe_path initial_state transition =
   let chain = start_chain_ipc ~named_pipe_path in
+  print_endline "VM initilization";
   state := init_state chain initial_state;
   let storage = { set = set chain; get } in
+  print_endline "VM started";
 
   let rec runtime_loop transition =
     if chain.receive () = Control then (
