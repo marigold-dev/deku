@@ -14,12 +14,20 @@ let bob =
     (Secret.of_b58 "edsk4Qejwxwj7JD93B45gvhYHVfMzNjkBWRQDaYkdt5JcUWLT4VDkh"
     |> Option.get)
 
+let ticket_id =
+  let address =
+    Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+    |> Option.get
+  in
+  let data = Bytes.of_string "" in
+  Ticket_id.make address data
+
 let test_serde_transaction () =
   let transaction =
     Operation.ticket_transfer ~identity:alice ~level:Level.zero
       ~nonce:(Nonce.of_n N.one)
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
-      ~amount:Amount.zero
+      ~ticket_id ~amount:Amount.zero
   in
   let transaction_str () =
     transaction |> Operation.yojson_of_t |> Operation.t_of_yojson |> fun _ -> ()

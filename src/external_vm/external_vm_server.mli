@@ -1,4 +1,4 @@
-open Deku_concepts
+open Deku_tezos
 
 type storage = { set : string -> string -> unit; get : string -> string option }
 
@@ -7,7 +7,7 @@ val main :
   External_vm_protocol.set list ->
   (storage ->
   Deku_crypto.Key_hash.t ->
-  Ticket.t list ->
+  Ticket_id.t list ->
   string ->
   (unit, string) result) ->
   unit

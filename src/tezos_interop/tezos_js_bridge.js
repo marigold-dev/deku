@@ -318,6 +318,7 @@ const onRequest = (id, content) => {
 
 read((request) => {
   const { id, content } = request;
+  console.error(content);
   onRequest(id, content)
     .catch((err) => {
       const status = "error";

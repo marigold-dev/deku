@@ -32,6 +32,8 @@ var init_state = function (initial_state) {
             write(Buffer.from(init_message));
             return initial_state;
         }
+        case "Set_Initial_State":
+            return message[1];
         default:
             throw new Error("protocol not respected");
     }

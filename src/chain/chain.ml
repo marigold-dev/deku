@@ -1,7 +1,9 @@
 open Deku_concepts
 open Deku_protocol
 open Deku_consensus
+open Deku_crypto
 open Deku_gossip
+open Deku_stdlib
 
 type chain =
   | Chain of {
@@ -29,6 +31,14 @@ type action =
     }
   | Chain_send_not_found of { id : Request_id.t [@opaque] }
   | Chain_fragment of { fragment : fragment [@opaque] }
+  | Chain_commit of {
+      current_level : Level.t;
+      payload_hash : BLAKE2b.t;
+      state_root_hash : BLAKE2b.t;
+      signatures : (Key.t * Signature.t) option list;
+      validators : Key_hash.t list;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
+    }
 [@@deriving show]
 
 let make ~identity ~validators ~default_block_size ~vm_state =
@@ -40,6 +50,39 @@ let make ~identity ~validators ~default_block_size ~vm_state =
   let applied = Block_hash.Map.empty in
   Chain { gossip; protocol; consensus; producer; applied }
 
+let commit ~current_level ~block ~votes ~validators () =
+  let Block.(Block { payload_hash; _ }) = block in
+  let state_root_hash =
+    Deku_crypto.BLAKE2b.hash "FIXME: we need to add the state root"
+  in
+  Logs.info (fun m -> m "Commiting block: %a" Block.pp block);
+  let (Block.Block { withdrawal_handles_hash; _ }) = block in
+  Key_hash.Map.iter
+    (fun _ s ->
+      Logs.info (fun m ->
+          m "Signature: %a" Yojson.Safe.pp (Verified_signature.yojson_of_t s)))
+    votes;
+  let signatures =
+    List.map
+      (fun key_hash ->
+        match Key_hash.Map.find_opt key_hash votes with
+        | Some verified ->
+            Some
+              ( Verified_signature.key verified,
+                Verified_signature.signature verified )
+        | None -> None)
+      validators
+  in
+  Chain_commit
+    {
+      current_level;
+      payload_hash;
+      state_root_hash;
+      signatures;
+      validators;
+      withdrawal_handles_hash;
+    }
+
 (* after gossip *)
 let rec apply_consensus_action chain consensus_action =
   Logs.debug (fun m ->
@@ -47,8 +90,8 @@ let rec apply_consensus_action chain consensus_action =
         consensus_action);
   let open Consensus in
   match consensus_action with
-  | Consensus_accepted_block { block } ->
-      let (Chain ({ protocol; producer; applied; _ } as chain)) = chain in
+  | Consensus_accepted_block { block; votes } ->
+      let (Chain { protocol; producer; applied; consensus; gossip }) = chain in
       let (Block { hash; level; payload; tezos_operations; _ }) = block in
       let payload =
         Protocol.prepare ~parallel:(fun f l -> List.filter_map f l) ~payload
@@ -58,8 +101,27 @@ let rec apply_consensus_action chain consensus_action =
       in
       let producer = Producer.clean ~receipts ~tezos_operations producer in
       let applied = Block_hash.Map.add hash block applied in
-      let chain = Chain { chain with protocol; producer; applied } in
-      (chain, Some (Chain_save_block block))
+      let chain = Chain { protocol; producer; applied; consensus; gossip } in
+      (* FIXME: need a time-based procedure for tezos commits, not block-based *)
+      (* FIXME: rediscuss the need to commit the previous block instead *)
+      (* FIXME: validators have to watch when commit did not happen *)
+      let (Consensus { identity; current_block; validators; _ }) = consensus in
+      let (Block.Block { level = current_level; author = last_block_author; _ })
+          =
+        current_block
+      in
+      let validators = Validators.to_key_hash_list validators in
+      (* FIXME: I don't understand how blocks are produced here, so
+         I don't know who's the producer. So everyone commits. *)
+      let level = Level.to_n current_level |> N.to_z |> Z.to_int in
+      (* Only the producer should commit on Tezos *)
+      let self = Identity.key_hash identity in
+      let commit_effect =
+        if level mod 15 = 0 && Key_hash.equal self last_block_author then
+          [ commit ~current_level ~block ~votes ~validators () ]
+        else []
+      in
+      (chain, Chain_save_block block :: commit_effect)
   | Consensus_trigger_timeout { level } -> (
       let (Chain { consensus; _ }) = chain in
       let (Consensus { current_block; _ }) = consensus in
@@ -67,27 +129,24 @@ let rec apply_consensus_action chain consensus_action =
       match Level.equal current_level level with
       | true ->
           let action = Chain_trigger_timeout in
-          (chain, Some action)
-      | false -> (chain, None))
+          (chain, [ action ])
+      | false -> (chain, []))
   | Consensus_broadcast_vote { vote } ->
       let content = Message.Content.vote vote in
       let fragment = Gossip.broadcast_message ~content in
       let fragment = Chain_fragment { fragment } in
-      (chain, Some fragment)
+      (chain, [ fragment ])
   | Consensus_request_block { hash } ->
       let content = Request.Content.block hash in
       let fragment = Gossip.send_request ~content in
       let fragment = Chain_fragment { fragment } in
-      (chain, Some fragment)
+      (chain, [ fragment ])
 
 and apply_consensus_actions chain consensus_actions =
   List.fold_left
     (fun (chain, actions) consensus_action ->
-      let chain, action = apply_consensus_action chain consensus_action in
-      let actions =
-        match action with Some action -> action :: actions | None -> actions
-      in
-      (chain, actions))
+      let chain, more_actions = apply_consensus_action chain consensus_action in
+      (chain, more_actions @ actions))
     (chain, []) consensus_actions
 
 (* core *)
@@ -191,12 +250,14 @@ let response ~raw_expected_hash ~raw_content chain =
   (chain, fragment)
 
 let timeout ~current chain =
-  let (Chain { consensus; producer; _ }) = chain in
+  let (Chain { consensus; producer; protocol; _ }) = chain in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let withdrawal_handles_hash = Ledger.withdrawal_handles_root_hash ledger in
   let fragment =
     match
       Producer.produce
         ~parallel_map:(fun f l -> List.map f l)
-        ~current ~consensus producer
+        ~current ~consensus ~withdrawal_handles_hash producer
     with
     | Some block ->
         let content = Message.Content.block block in
@@ -243,9 +304,10 @@ let test () =
     let previous = current_block in
     let operations = [] in
     let tezos_operations = [] in
+    let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     let block =
       Block.produce ~parallel_map:List.map ~identity ~level ~previous
-        ~operations ~tezos_operations
+        ~operations ~tezos_operations ~withdrawal_handles_hash
     in
     block
   in
@@ -316,6 +378,9 @@ let test () =
                 let outcome = compute fragment in
                 apply ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
+            | Chain_commit _ ->
+                Printf.eprintf "FIXME: commit not implemented in Chain.test";
+                (chain, [])
           in
           (chain, actions @ additional_actions))
         (chain, []) actions

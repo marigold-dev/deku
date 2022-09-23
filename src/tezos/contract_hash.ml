@@ -2,7 +2,7 @@ open Deku_crypto
 open Deku_repr
 open BLAKE2b
 
-type t = BLAKE2b_160.t [@@deriving eq, ord]
+type t = BLAKE2b_160.t [@@deriving eq, ord, show]
 
 include Encoding_helpers.Make_b58 (struct
   type nonrec t = t

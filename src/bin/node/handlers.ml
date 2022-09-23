@@ -149,6 +149,89 @@ module Get_level : HANDLER = struct
     Lwt.return_ok { level }
 end
 
+module Get_proof : HANDLER = struct
+  open Deku_protocol.Ledger
+
+  type input = Deku_protocol.Operation_hash.t
+
+  type response = {
+    withdrawal_handles_hash : Withdrawal_handle.hash;
+    handle : Withdrawal_handle.t;
+    proof : withdraw_proof;
+  }
+  [@@deriving yojson_of]
+
+  let path = "/proof/:proof"
+  let meth = `GET
+
+  let input_from_request request =
+    Handler_utils.param_of_request request "proof"
+    |> Option.map Operation_hash.of_b58
+    |> Option.join
+    |> Option.to_result
+         ~none:(Api_error.invalid_parameter "could not parse hash")
+    |> Lwt.return
+
+  let handle ~node ~indexer:_ ~constants:_ operation_hash =
+    let { chain = Chain { protocol; _ }; _ } = node in
+    let withdraw_proof =
+      Protocol.find_withdraw_proof ~operation_hash protocol
+    in
+    match withdraw_proof with
+    | Error _ ->
+        Lwt.return_error (Api_error.invalid_parameter "Proof not found")
+    | Ok (handle, proof, withdrawal_handles_hash) ->
+        let proof = { withdrawal_handles_hash; handle; proof } in
+        Lwt.return_ok proof
+end
+
+module Get_balance : HANDLER = struct
+  type input = {
+    address : Deku_protocol.Address.t;
+    ticket_id : Deku_protocol.Ticket_id.t;
+  }
+  [@@deriving of_yojson]
+
+  type response = { balance : int } [@@deriving yojson_of]
+
+  let path = "/balance/:address/:ticketer/:data"
+  let meth = `GET
+
+  let input_from_request request =
+    let open Lwt_result.Syntax in
+    let* address =
+      Handler_utils.param_of_request request "address"
+      |> Option.map Deku_protocol.Address.of_b58
+      |> Option.join
+      |> Option.to_result
+           ~none:(Api_error.invalid_parameter "could not parse address")
+      |> Lwt.return
+    in
+    let* ticketer =
+      Handler_utils.param_of_request request "ticketer"
+      |> Option.map Deku_tezos.Contract_hash.of_string
+      |> Option.join
+      |> Option.to_result
+           ~none:(Api_error.invalid_parameter "could not parse ticketer")
+      |> Lwt.return
+    in
+    let* data =
+      Handler_utils.param_of_request request "ticket_id"
+      |> Option.map Bytes.of_string
+      |> Option.to_result
+           ~none:(Api_error.invalid_parameter "could not parse bytes (?)")
+      |> Lwt.return
+    in
+    let ticket_id = Deku_protocol.Ticket_id.make ticketer data in
+    Lwt.return_ok { address; ticket_id }
+
+  let handle ~node ~indexer:_ ~constants:_ { address; ticket_id } =
+    let { chain = Chain { protocol = Protocol { ledger; _ }; _ }; _ } = node in
+    let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
+    let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
+    Lwt.return_ok { balance = amount }
+end
+
 module Get_chain_info : HANDLER = struct
   type input = unit
 

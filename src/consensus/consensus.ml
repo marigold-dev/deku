@@ -5,7 +5,10 @@ open Block
 
 type action =
   (* protocol *)
-  | Consensus_accepted_block of { block : Block.t }
+  | Consensus_accepted_block of {
+      block : Block.t;
+      votes : Verified_signature.t Key_hash.Map.t; [@opaque]
+    }
   (* timer *)
   | Consensus_trigger_timeout of { level : Level.t }
   (* network *)
@@ -78,7 +81,7 @@ let is_signed ~block consensus =
   let (Block { hash; _ }) = block in
   let required_signatures = required_signatures consensus in
   let votes = Block_pool.find_votes ~hash block_pool in
-  let votes = Key_hash.Set.cardinal votes in
+  let votes = Key_hash.Map.cardinal votes in
   votes >= required_signatures
 
 let is_producer ~current consensus =
@@ -156,6 +159,7 @@ and with_block ~current ~block consensus =
 
   let current_block = block in
   let last_update = current in
+  let votes = Block_pool.find_votes ~hash block_pool in
   let block_pool = Block_pool.remove ~block block_pool in
   let consensus =
     Consensus
@@ -176,7 +180,7 @@ and with_block ~current ~block consensus =
   in
   let actions =
     Consensus_trigger_timeout { level }
-    :: Consensus_accepted_block { block }
+    :: Consensus_accepted_block { block; votes }
     :: actions
   in
   (consensus, actions)
@@ -203,9 +207,13 @@ let incoming_vote ~current ~vote consensus =
   let hash = Block_hash.of_blake2b hash in
   match Validators.mem validator validators with
   | true -> (
-      let block_pool = Block_pool.append_vote ~validator ~hash block_pool in
+      let block_pool = Block_pool.append_vote ~vote ~hash block_pool in
       let consensus = Consensus { consensus with block_pool } in
       match Block_pool.find_block ~hash block_pool with
       | Some block -> incoming_block_or_vote ~current ~block consensus
       | None -> (consensus, []))
   | false -> (Consensus consensus, [])
+
+let find_votes ~block_hash consensus =
+  let (Consensus { block_pool; _ }) = consensus in
+  Block_pool.find_votes ~hash:block_hash block_pool

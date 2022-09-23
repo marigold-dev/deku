@@ -1,4 +1,4 @@
-open Deku_concepts
+open Deku_tezos
 open Deku_crypto
 module String_map = Map.Make (String)
 
@@ -35,7 +35,7 @@ type set = { key : string; value : string } [@@deriving yojson]
 type transaction = {
   source : Key_hash.t;
   operation : string;
-  tickets : Ticket.t list;
+  tickets : Ticket_id.t list;
 }
 [@@deriving yojson]
 

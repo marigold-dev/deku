@@ -57,8 +57,10 @@ let clean ~receipts ~tezos_operations producer =
   let operations =
     List.fold_left
       (fun operations receipt ->
-        let (Receipt.Receipt { operation = hash }) = receipt in
-        Operation_hash.Map.remove hash operations)
+        match receipt with
+        | Receipt.Transaction_receipt { operation = hash } ->
+            Operation_hash.Map.remove hash operations
+        | _ -> operations)
       operations receipts
   in
   let tezos_operations =
@@ -70,7 +72,8 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { identity; operations; tezos_operations; default_block_size }
 
-let produce ~parallel_map ~current_level ~current_block producer =
+let produce ~parallel_map ~current_level ~current_block ~withdrawal_handles_hash
+    producer =
   let (Producer { identity; operations; tezos_operations; default_block_size })
       =
     producer
@@ -93,19 +96,20 @@ let produce ~parallel_map ~current_level ~current_block producer =
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
   Block.produce ~parallel_map ~identity ~level ~previous ~operations
-    ~tezos_operations
+    ~withdrawal_handles_hash ~tezos_operations
 
-let produce ~parallel_map ~current ~consensus producer =
+let produce ~parallel_map ~current ~consensus ~withdrawal_handles_hash producer
+    =
   let open Consensus in
   let (Consensus { current_block; _ }) = consensus in
-
   match is_producer ~current consensus with
   | true ->
       let (Block { hash = current_block; level = current_level; _ }) =
         current_block
       in
       let block =
-        produce ~parallel_map ~current_level ~current_block producer
+        produce ~parallel_map ~current_level ~current_block
+          ~withdrawal_handles_hash producer
       in
       Logs.info (fun m -> m "Producing %a" Block.pp block);
       Some block

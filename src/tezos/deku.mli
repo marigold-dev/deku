@@ -13,7 +13,7 @@ module Consensus : sig
     withdrawal_handles_hash:BLAKE2b.t ->
     BLAKE2b.t
 
-  val hash_withdraw_handle :
+  val hash_withdrawal_handle :
     id:Z.t ->
     owner:Address.t ->
     amount:Z.t ->
