@@ -49,10 +49,14 @@
             doCheck = true;
           };
 
+          cookie-game = pkgs.callPackage ./nix/cookie-game.nix {
+            inherit dream2nix-lib nix-filter nodejs;
+          };
+
           ligo = pkgs.callPackage ./nix/ligo.nix { };
         in
         rec {
-          packages = { default = deku; };
+          packages = { default = deku; inherit cookie-game; };
           apps = {
             node = {
               type = "app";
