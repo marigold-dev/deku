@@ -1,0 +1,15 @@
+(executable
+ (public_name deku-helper)
+ (name deku_helper)
+ (libraries
+  deku_chain
+  deku_network
+  deku_storage
+  deku_gossip
+  deku_external_vm
+  cmdliner
+  logs.fmt
+  fmt.tty
+  piaf-lwt)
+ (preprocess
+  (pps ppx_let_binding)))

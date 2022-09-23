@@ -158,3 +158,20 @@ let is_in_includable_window ~current_level ~operation_level =
   in
   (* limits for how many blocks we need to hold the operations *)
   last_includable_block > current_level
+
+let vm_transaction ~level ~nonce ~content ~identity =
+  let operation = Yojson.Safe.to_string content in
+  let key = Identity.key identity in
+  let source = Identity.key_hash identity |> Address.of_key_hash in
+  let hash =
+    let open Repr in
+    let content = Vm_transaction { operation; tickets = [] } in
+    let operation = { level; nonce; source; content } in
+    hash operation
+  in
+  let signature =
+    let hash = Operation_hash.to_blake2b hash in
+    Identity.sign ~hash identity
+  in
+  let content = Operation_vm_transaction { operation; tickets = [] } in
+  Operation { key; signature; hash; level; nonce; source; content }
