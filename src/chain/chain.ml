@@ -5,6 +5,15 @@ open Deku_crypto
 open Deku_gossip
 open Deku_stdlib
 
+type chain_data =
+  | Chain_data of {
+      gossip : Gossip.t;
+      protocol : Protocol.t;
+      consensus : Consensus.consensus_data;
+      producer : Producer.producer_data;
+      applied : Block.t Block_hash.Map.t;
+    }[@@deriving yojson]
+
 type chain =
   | Chain of {
       gossip : Gossip.t;
@@ -14,8 +23,21 @@ type chain =
       applied : Block.t Block_hash.Map.t;
     }
 
-and t = chain [@@deriving yojson]
+let rehydrate ~identity ~default_block_size chain_data =
+  let (Chain_data { gossip; protocol; consensus; producer; applied }) =
+    chain_data
+  in
+  let producer = Producer.rehydrate ~identity ~default_block_size producer in
+  let consensus = Consensus.rehydrate ~identity consensus in
+  Chain { gossip; protocol; consensus; producer; applied }
 
+let dehydrate chain =
+  let (Chain { gossip; protocol; consensus; producer; applied }) = chain in
+  let producer = Producer.dehydrate producer in
+  let consensus = Consensus.dehydrate consensus in
+  Chain_data { gossip; protocol; consensus; producer; applied }
+
+type t = chain
 type fragment = Gossip.fragment
 type outcome = Gossip.outcome
 

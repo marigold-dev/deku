@@ -17,6 +17,18 @@ type action =
   | Consensus_request_block of { hash : Block_hash.t }
 [@@deriving show]
 
+type consensus_data =
+  | Consensus_data of {
+      (* state *)
+      current_block : Block.t;
+      last_update : Timestamp.t;
+      (* consensus *)
+      validators : Validators.t;
+      accepted : Block_hash.Set.t;
+      block_pool : Block_pool.t;
+    }
+[@@deriving yojson]
+
 type consensus =
   | Consensus of {
       (* state *)
@@ -29,7 +41,7 @@ type consensus =
       block_pool : Block_pool.t;
     }
 
-and t = consensus [@@deriving yojson]
+type t = consensus
 
 let make ~identity ~validators =
   let current_block = Genesis.block in
@@ -38,6 +50,29 @@ let make ~identity ~validators =
   let block_pool = Block_pool.empty in
   Consensus
     { current_block; last_update; identity; accepted; block_pool; validators }
+
+let rehydrate ~identity consensus_data =
+  let (Consensus_data
+        { current_block; last_update; validators; accepted; block_pool }) =
+    consensus_data
+  in
+  Consensus
+    { current_block; last_update; validators; accepted; block_pool; identity }
+
+let dehydrate consensus =
+  let (Consensus
+        {
+          current_block;
+          last_update;
+          validators;
+          accepted;
+          block_pool;
+          identity = _;
+        }) =
+    consensus
+  in
+  Consensus_data
+    { current_block; last_update; validators; accepted; block_pool }
 
 let is_expected_level ~current_level block =
   let (Block { level; _ }) = block in
