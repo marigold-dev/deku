@@ -2,7 +2,7 @@
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
-dune build
+dune build || exit 1
 
 dir=$(dirname $0)
 source $dir/scripts/common.sh
