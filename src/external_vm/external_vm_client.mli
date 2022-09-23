@@ -1,4 +1,4 @@
-open Deku_concepts
+open Deku_tezos
 open Deku_crypto
 open External_vm_protocol
 
@@ -12,7 +12,7 @@ val apply_vm_operation :
        TODO: find a better way to structure this. *)
     State.t ->
   source:Key_hash.t ->
-  tickets:Ticket.t list ->
+  tickets:Ticket_id.t list ->
   string ->
   State.t
 

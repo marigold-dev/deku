@@ -7,6 +7,9 @@ with pkgs; with ocamlPackages; mkShell {
     nixfmt
     ocamlformat
 
+    # Typescript for decookie
+    nodePackages.typescript
+
     # Tezos tooling
     ligo
 

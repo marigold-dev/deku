@@ -22,6 +22,7 @@ module Prefix : sig
   val deku_message_hash : string
   val deku_request_hash : string
   val deku_response_hash : string
+  val deku_withdrawal_hash : string
 end
 
 module With_b58 (P : sig

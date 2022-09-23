@@ -25,6 +25,10 @@ with ocamlPackages; buildDunePackage rec {
     mirage-crypto-rng
     secp256k1-internal
     piaf-lwt
+    # TODO: we cna probably remove piaf and cohttp and use piaf-lwt instead.
+    piaf
+    cohttp
+    cohttp-lwt-unix
     domainslib
     cmdliner
     ppx_blob

@@ -1,11 +1,12 @@
+open Deku_concepts
 open Deku_crypto
 open Block
 
 (* TODO: not accepted blocks and signatures are never removed *)
-
 type block_pool =
   | Pool of {
-      by_hash : (Block.t option * Key_hash.Set.t) Block_hash.Map.t;
+      by_hash :
+        (Block.t option * Verified_signature.t Key_hash.Map.t) Block_hash.Map.t;
       by_previous : Block.Set.t Block_hash.Map.t;
     }
 
@@ -15,7 +16,7 @@ type t = block_pool
 let find_by_hash hash map =
   match Block_hash.Map.find_opt hash map with
   | Some (block, votes) -> (block, votes)
-  | None -> (None, Key_hash.Set.empty)
+  | None -> (None, Key_hash.Map.empty)
 
 let find_by_previous hash map =
   match Block_hash.Map.find_opt hash map with
@@ -39,10 +40,12 @@ let append_block ~block pool =
       in
       Pool { by_hash; by_previous }
 
-let append_vote ~validator ~hash pool =
+let append_vote ~vote ~hash pool =
   let (Pool { by_hash; by_previous }) = pool in
   let block, votes = find_by_hash hash by_hash in
-  let votes = Key_hash.Set.add validator votes in
+  (* FIXME: do we konw for sure this is actually an approved validator? *)
+  let validator = Verified_signature.key_hash vote in
+  let votes = Key_hash.Map.add validator vote votes in
   let by_hash = Block_hash.Map.add hash (block, votes) by_hash in
   Pool { by_hash; by_previous }
 
@@ -72,7 +75,8 @@ let find_next ~hash pool =
    validators*)
 let t_of_yojson json =
   let list =
-    [%of_yojson: (Block_hash.t * Block.t option * Key_hash.t list) list] json
+    [%of_yojson:
+      (Block_hash.t * Block.t option * Verified_signature.t list) list] json
   in
   List.fold_left
     (fun pool (hash, block, votes) ->
@@ -84,9 +88,7 @@ let t_of_yojson json =
             (hash, pool)
         | None -> (hash, pool)
       in
-      List.fold_left
-        (fun pool validator -> append_vote ~validator ~hash pool)
-        pool votes)
+      List.fold_left (fun pool vote -> append_vote ~vote ~hash pool) pool votes)
     empty list
 
 let yojson_of_t pool =
@@ -94,8 +96,9 @@ let yojson_of_t pool =
   let list =
     Block_hash.Map.fold
       (fun hash (block, votes) list ->
-        let votes = Key_hash.Set.elements votes in
+        let votes = Key_hash.Map.bindings votes |> List.map snd in
         (hash, block, votes) :: list)
       by_hash []
   in
-  [%yojson_of: (Block_hash.t * Block.t option * Key_hash.t list) list] list
+  [%yojson_of: (Block_hash.t * Block.t option * Verified_signature.t list) list]
+    list

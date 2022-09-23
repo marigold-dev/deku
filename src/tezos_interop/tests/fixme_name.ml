@@ -7,9 +7,7 @@ let (Block.Block { level = genesis_level; hash = genesis_hash; _ }) =
 
 (* FIXME: Copied these hard-coded hashes *)
 let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root"
-
-let withdrawal_handles_hash =
-  BLAKE2b.hash "FIXME: we need the withdraw handles hash"
+let withdrawal_handles_hash = BLAKE2b.hash "tuturu"
 
 let identities =
   [
@@ -27,7 +25,8 @@ let some_block =
   let producer_identity = List.nth identities 0 in
   let level = Level.next genesis_level in
   Block.produce ~parallel_map:List.map ~identity:producer_identity ~level
-    ~previous:genesis_hash ~operations:[] ~tezos_operations:[]
+    ~previous:genesis_hash ~operations:[] ~withdrawal_handles_hash
+    ~tezos_operations:[]
 
 let some_block_keys_and_signatures =
   identities

@@ -16,6 +16,14 @@ let bob_secret =
 
 let bob = Identity.make bob_secret
 
+let ticket_id =
+  let address =
+    Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+    |> Option.get
+  in
+  let data = Bytes.of_string "" in
+  Ticket_id.make address data
+
 (* helper to create in an easy way an operation that transfer n token from alice to bob *)
 let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
   let level = Level.of_n (N.of_z (Z.of_int level) |> Option.get) in
@@ -24,7 +32,7 @@ let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
   let operation =
     Operation.ticket_transfer ~identity:alice ~level ~nonce
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
-      ~amount
+      ~ticket_id ~amount
   in
   let operation_str =
     operation |> Operation.yojson_of_t |> Yojson.Safe.to_string
@@ -46,8 +54,10 @@ let assert_all_were_applied_with_receipts ~operations ~protocol ~receipts =
     List.map (fun (Operation.Operation { hash; _ }) -> hash) operations
     |> List.sort Operation_hash.compare
   in
-  let op_hashes_from_receipts =
-    List.map (fun (Receipt.Receipt { operation; _ }) -> operation) receipts
+  let[@warning "-8"] op_hashes_from_receipts =
+    List.map
+      (fun (Receipt.Transaction_receipt { operation; _ }) -> operation)
+      receipts
     |> List.sort Operation_hash.compare
   in
   let all_receipts_have_hashes_and_vice_versa =
@@ -93,7 +103,9 @@ let test_duplicated_operation_same_level () =
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
   in
-  let (Receipt.Receipt { operation }) = List.hd receipts in
+  let[@warning "-8"] (Receipt.Transaction_receipt { operation }) =
+    List.hd receipts
+  in
   Alcotest.(check bool)
     "there should only be one receipt" true
     (List.length receipts = 1);
@@ -282,10 +294,16 @@ let test_cannot_create_amount_ex_nihilo () =
   let protocol = Protocol.initial in
   let (Protocol.Protocol { ledger; _ }) = protocol in
   let bob_previous_balance =
-    ledger |> Ledger.balance (bob |> Identity.key_hash |> Address.of_key_hash)
+    ledger
+    |> Ledger.balance
+         (bob |> Identity.key_hash |> Address.of_key_hash)
+         ticket_id
   in
   let alice_previous_balance =
-    ledger |> Ledger.balance (alice |> Identity.key_hash |> Address.of_key_hash)
+    ledger
+    |> Ledger.balance
+         (alice |> Identity.key_hash |> Address.of_key_hash)
+         ticket_id
   in
   let protocol, _ =
     let payload = [ op_str ] in
@@ -295,10 +313,16 @@ let test_cannot_create_amount_ex_nihilo () =
   in
   let (Protocol.Protocol { ledger; _ }) = protocol in
   let bob_balance =
-    ledger |> Ledger.balance (bob |> Identity.key_hash |> Address.of_key_hash)
+    ledger
+    |> Ledger.balance
+         (bob |> Identity.key_hash |> Address.of_key_hash)
+         ticket_id
   in
   let alice_balance =
-    ledger |> Ledger.balance (alice |> Identity.key_hash |> Address.of_key_hash)
+    ledger
+    |> Ledger.balance
+         (alice |> Identity.key_hash |> Address.of_key_hash)
+         ticket_id
   in
   Alcotest.(check amount)
     "balance of alice has not changed" bob_previous_balance bob_balance;

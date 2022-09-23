@@ -30,6 +30,14 @@ type action = private
     }
   | Chain_send_not_found of { id : Request_id.t }
   | Chain_fragment of { fragment : fragment }
+  | Chain_commit of {
+      current_level : Level.t;
+      payload_hash : BLAKE2b.t;
+      state_root_hash : BLAKE2b.t;
+      signatures : (Key.t * Signature.t) option list;
+      validators : Key_hash.t list;
+      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
+    }
 [@@deriving show]
 
 val make :

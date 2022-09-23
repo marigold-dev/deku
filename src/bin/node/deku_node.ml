@@ -106,6 +106,7 @@ let main params =
   } =
     params
   in
+  Logs.info (fun m -> m "Default block size: %d" default_block_size);
   let%await indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
@@ -140,7 +141,7 @@ let main params =
   let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
   let node, promise =
     Node.make ~pool ~dump ~chain ~nodes:validator_uris ~indexer:(Some indexer)
-      ()
+      ~tezos_interop:(Some tezos_interop) ()
   in
   let node_uri = Uri.of_string "http://localhost" in
   let node_uri = Uri.with_port node_uri (Some port) in

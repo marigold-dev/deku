@@ -17,12 +17,14 @@ let make_block previous =
   let (Block { hash = previous; level = previous_level; _ }) = previous in
   let level = Level.next previous_level in
   let operations = [] in
+  let withdrawal_handles_hash = Deku_crypto.BLAKE2b.hash "tuturu" in
   Block.produce ~parallel_map:List.map ~identity ~level ~previous ~operations
-    ~tezos_operations:[]
+    ~tezos_operations:[] ~withdrawal_handles_hash
 
-let make_validator () =
+let make_vote () =
   let identity = identity () in
-  Identity.key_hash identity
+  let hash = BLAKE2b.hash "kyyyyyouma" in
+  Verified_signature.sign hash identity
 
 let size pool =
   let (Pool { by_hash; by_previous }) = pool in
@@ -40,7 +42,7 @@ let test_append_block_appends_to_both () =
   ensure {|find_next (append empty) = [block]|}
     (find_next ~hash:previous pool = Block.Set.of_list [ block ]);
   ensure {|find_votes (append empty) = []|}
-    (find_votes ~hash pool = Key_hash.Set.empty)
+    (find_votes ~hash pool = Key_hash.Map.empty)
 
 let test_double_append_block_is_noop () =
   let block = Genesis.block in
@@ -52,15 +54,16 @@ let test_append_block_with_dangling_votes () =
   let (Block { hash; previous; _ } as block) = Genesis.block in
   let pool = empty in
 
-  let validator = make_validator () in
-  let pool = append_vote ~validator ~hash pool in
+  let vote = make_vote () in
+  let validator = Verified_signature.key_hash vote in
+  let pool = append_vote ~vote ~hash pool in
 
   ensure {|size (append_vote empty) = 1|} (size pool = 1);
   ensure {|find_block (append_vote empty) = None|} (find_block ~hash pool = None);
   ensure {|find_next (append empty) = []|}
     (find_next ~hash:previous pool = Block.Set.empty);
   ensure {|find_votes (append empty) = [validator]|}
-    (find_votes ~hash pool = Key_hash.Set.of_list [ validator ]);
+    (find_votes ~hash pool = Key_hash.Map.singleton validator vote);
 
   let pool = append_block ~block pool in
   ensure {|size (append_block (append_vote empty)) = 2|} (size pool = 2);
@@ -69,7 +72,7 @@ let test_append_block_with_dangling_votes () =
   ensure {|find_next (append empty) = [block]|}
     (find_next ~hash:previous pool = Block.Set.of_list [ block ]);
   ensure {|find_votes (append empty) = [validator]|}
-    (find_votes ~hash pool = Key_hash.Set.of_list [ validator ])
+    (find_votes ~hash pool = Key_hash.Map.singleton validator vote)
 
 let test_appends_two_different_blocks () =
   let (Block { hash = hash_a; previous = previous_a; _ } as block_a) =
@@ -95,9 +98,9 @@ let test_appends_two_different_blocks () =
   ensure {|find_next_b (append_block_a empty) = []|}
     (find_next ~hash:hash_b pool = Block.Set.empty);
   ensure {|find_votes_a (append_block_a empty) = []|}
-    (find_votes ~hash:hash_a pool = Key_hash.Set.empty);
+    (find_votes ~hash:hash_a pool = Key_hash.Map.empty);
   ensure {|find_votes_b (append_block_b empty) = []|}
-    (find_votes ~hash:hash_b pool = Key_hash.Set.empty);
+    (find_votes ~hash:hash_b pool = Key_hash.Map.empty);
 
   let pool = append_block ~block:block_b pool in
   ensure {|size (append_block_b (append_block_a empty)) = 4|} (size pool = 4);
@@ -113,9 +116,9 @@ let test_appends_two_different_blocks () =
   ensure {|find_next_b (append_block_b (append_block_a empty)) = []|}
     (find_next ~hash:hash_b pool = Block.Set.empty);
   ensure {|find_votes_a (append_block_b (append_block_a empty)) = []|}
-    (find_votes ~hash:hash_a pool = Key_hash.Set.empty);
+    (find_votes ~hash:hash_a pool = Key_hash.Map.empty);
   ensure {|find_votes_b (append_block_b empty) = []|}
-    (find_votes ~hash:hash_b pool = Key_hash.Set.empty)
+    (find_votes ~hash:hash_b pool = Key_hash.Map.empty)
 
 let test_remove_block () =
   let (Block { hash = hash_a; previous = previous_a; _ } as block_a) =
@@ -129,8 +132,9 @@ let test_remove_block () =
   let pool = empty in
   let pool = append_block ~block:block_a pool in
   let pool = append_block ~block:block_b pool in
-  let validator = make_validator () in
-  let pool = append_vote ~validator ~hash:hash_a pool in
+  let vote = make_vote () in
+  let validator = Verified_signature.key_hash vote in
+  let pool = append_vote ~vote ~hash:hash_a pool in
 
   ensure {|size pool_blocks_and_vote = 4|} (size pool = 4);
   ensure {|find_block_a pool_blocks_and_vote = Some block_a|}
@@ -144,9 +148,9 @@ let test_remove_block () =
   ensure {|find_next_b pool_blocks_and_vote = []|}
     (find_next ~hash:hash_b pool = Block.Set.empty);
   ensure {|find_votes_a pool_blocks_and_vote = [validator]|}
-    (find_votes ~hash:hash_a pool = Key_hash.Set.of_list [ validator ]);
+    (find_votes ~hash:hash_a pool = Key_hash.Map.singleton validator vote);
   ensure {|find_votes_b pool_blocks_and_vote = []|}
-    (find_votes ~hash:hash_b pool = Key_hash.Set.empty);
+    (find_votes ~hash:hash_b pool = Key_hash.Map.empty);
 
   let pool = remove ~block:block_a pool in
   ensure {|size (remove_a pool_blocks_and_vote) = 2|} (size pool = 2);
@@ -161,9 +165,9 @@ let test_remove_block () =
   ensure {|find_next_b (remove_a pool_blocks_and_vote) = []|}
     (find_next ~hash:hash_b pool = Block.Set.empty);
   ensure {|find_votes_a (remove_a pool_blocks_and_vote) = []|}
-    (find_votes ~hash:hash_a pool = Key_hash.Set.empty);
+    (find_votes ~hash:hash_a pool = Key_hash.Map.empty);
   ensure {|find_votes_b (remove_a pool_blocks_and_vote) = []|}
-    (find_votes ~hash:hash_b pool = Key_hash.Set.empty)
+    (find_votes ~hash:hash_b pool = Key_hash.Map.empty)
 
 let run () =
   let open Alcotest in
