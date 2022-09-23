@@ -53,3 +53,10 @@ val withdraw :
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   operation
+
+val vm_transaction :
+  level:Level.t ->
+  nonce:Nonce.t ->
+  content:string ->
+  identity:Identity.t ->
+  operation
