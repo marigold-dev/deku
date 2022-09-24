@@ -118,7 +118,7 @@ let post ~raw_expected_hash ~raw_content ~uri =
 
 let post ~raw_expected_hash ~raw_content ~uri =
   Lwt.async (fun () ->
-      Logs.info (fun m ->
+      Logs.debug (fun m ->
           m "Network: Posting message to %a: %s" Uri.pp uri raw_content);
       let%await post = post ~raw_expected_hash ~raw_content ~uri in
       match post with
@@ -126,7 +126,7 @@ let post ~raw_expected_hash ~raw_content ~uri =
           let%await drain = Body.drain response.body in
           match drain with
           | Ok () ->
-              Logs.info (fun m -> m "Post successful");
+              Logs.debug (fun m -> m "Post successful");
               Lwt.return_unit
           | Error _error ->
               (* Format.eprintf "error.drain: %a\n%!" Error.pp_hum _error; *)

@@ -80,11 +80,6 @@ let commit ~current_level ~block ~votes ~validators () =
   in
   Logs.info (fun m -> m "Commiting block: %a" Block.pp block);
   let (Block.Block { withdrawal_handles_hash; _ }) = block in
-  Key_hash.Map.iter
-    (fun _ s ->
-      Logs.info (fun m ->
-          m "Signature: %a" Yojson.Safe.pp (Verified_signature.yojson_of_t s)))
-    votes;
   let signatures =
     List.map
       (fun key_hash ->
