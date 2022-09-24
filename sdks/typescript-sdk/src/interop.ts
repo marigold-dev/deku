@@ -100,6 +100,7 @@ interface transaction {
     // tx_hash: string; // FIXME: I don't think we need these hashes
     // op_hash: string;
     operation: { [key: string]: any }; // TODO: find a better way for JSON typing
+    operation_raw_hash: string;
     tickets: any // FIXME: proper type signature for tickets
 }
 

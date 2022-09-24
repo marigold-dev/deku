@@ -1,5 +1,16 @@
 open External_vm_protocol
 
+exception Vm_lifecycle_error of string
+exception Vm_execution_error of string
+
+let () =
+  Printexc.register_printer (function
+    | Vm_lifecycle_error error ->
+        Some (Format.sprintf "VM Lifecycle Error: %s" error)
+    | Vm_execution_error error ->
+        Some (Format.sprintf "VM Execution Error: %s" error)
+    | _ -> None)
+
 let vm = ref None
 
 let start_vm_ipc ~named_pipe_path =
@@ -34,25 +45,32 @@ let set_initial_state state =
          state"
   | Some vm -> vm.send (Set_Initial_State state)
 
-let apply_vm_operation ~state ~source ~tickets operation =
+let apply_vm_operation_exn ~state ~source ~tickets operation =
   match !vm with
   | Some vm ->
       (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
-      vm.send (Transaction { source; operation; tickets });
+      vm.send
+        (Transaction
+           { source; operation; tickets; operation_hash_raw = operation });
       let finished = ref false in
       let state = ref state in
       while not !finished do
         match vm.receive () with
-        | Init _ -> failwith "Init shouldn't be received, TODO: better error"
+        | Init _ ->
+            raise
+              (Vm_lifecycle_error
+                 "External VM protocol violated: received Init after already \
+                  initialized")
         | Stop -> finished := true
         | Set { key; value } -> state := State.set key value !state
-        | Error message ->
-            Format.eprintf "VM error: %s\n%!" message;
-            finished := true
+        | Take_tickets _ | Deposit_tickets _ -> failwith "FIXME:"
+        | Error message -> raise (Vm_execution_error message)
       done;
       !state
   | None ->
-      failwith "You must initialize the Vm IPC before applying a Vm transaction"
+      raise
+        (Vm_lifecycle_error
+           "You must initialize the Vm IPC before applying a Vm transaction")
 
 let close_vm_ipc () =
   match !vm with
