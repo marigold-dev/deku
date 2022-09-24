@@ -65,6 +65,7 @@ let
                               enable = true;
                               ohMyZsh = {
                                 enable = true;
+                                plugins = [ "history-substring-search" ];
                               };
                             };
 
