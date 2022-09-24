@@ -14,7 +14,7 @@ type set = { key : string; value : string } [@@deriving yojson]
 type transaction = {
   source : Key_hash.t;
   operation : string;
-  tickets : Ticket_id.t list;
+  tickets : (Ticket_id.t * int64) list;
 }
 [@@deriving yojson]
 

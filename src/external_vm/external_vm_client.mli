@@ -12,7 +12,7 @@ val apply_vm_operation :
        TODO: find a better way to structure this. *)
     State.t ->
   source:Key_hash.t ->
-  tickets:Ticket_id.t list ->
+  tickets:(Ticket_id.t * int64) list ->
   string ->
   State.t
 

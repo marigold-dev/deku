@@ -1,6 +1,8 @@
 open Deku_crypto
 open Deku_concepts
 
+exception Insufficient_funds
+
 module Withdrawal_handle : sig
   module Withdrawal_handle_hash : sig
     type t = BLAKE2b.t [@@deriving yojson]
@@ -60,7 +62,7 @@ val transfer :
   amount:Amount.t ->
   ticket_id:Ticket_id.t ->
   t ->
-  (t, [> `Insufficient_funds ]) result
+  (t, exn) result
 
 val withdraw :
   sender:Address.t ->
@@ -68,7 +70,7 @@ val withdraw :
   amount:Amount.t ->
   ticket_id:Ticket_id.t ->
   t ->
-  (t * Withdrawal_handle.t, [> `Insufficient_funds ]) result
+  (t * Withdrawal_handle.t, exn) result
 
 val withdrawal_handles_find_proof : Withdrawal_handle.t -> t -> withdraw_proof
 

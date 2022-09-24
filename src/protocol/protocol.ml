@@ -46,7 +46,8 @@ let initial_with_vm_state ~vm_state =
       vm_state;
     }
 
-let apply_operation ~current_level protocol operation =
+let apply_operation ~current_level protocol operation :
+    (t * Receipt.t option * exn option) option =
   let open Operation in
   let (Protocol
         {
@@ -72,36 +73,50 @@ let apply_operation ~current_level protocol operation =
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-      let ledger, new_receipts =
+      let ledger, receipt, vm_state, error =
         match content with
         | Operation_ticket_transfer { receiver; ticket_id; amount } -> (
             let sender = source in
+            let receipt = Ticket_transfer_receipt { operation = hash } in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
-            | Ok ledger -> (ledger, [])
-            | Error _ -> (ledger, []))
-        | Operation_vm_transaction _ -> assert false
+            | Ok ledger -> (ledger, Some receipt, vm_state, None)
+            | Error error -> (ledger, Some receipt, vm_state, Some error))
+        | Operation_vm_transaction { operation; tickets } ->
+            let tickets =
+              List.map
+                (fun (ticket, amount) ->
+                  (Ticket_id.to_tezos_ticket ticket, amount))
+                tickets
+            in
+            let receipt = Vm_transaction_receipt { operation = hash } in
+            let vm_state =
+              External_vm_client.apply_vm_operation ~state:vm_state
+                ~source:(Address.to_key_hash source)
+                ~tickets operation
+            in
+            (ledger, Some receipt, vm_state, None)
         | Operation_noop ->
             Unix.sleepf 1.;
-            (ledger, [])
+            (ledger, None, vm_state, None)
         | Operation_withdraw { owner; amount; ticket_id } -> (
             let sender = source in
             match
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id
                 ledger
             with
-            | Ok (ledger, handle) -> (ledger, [ Withdraw_receipt handle ])
-            | Error _ -> (ledger, []))
-      in
-      (* Add a receipt for all operations to remove them from the pool *)
-      let new_receipts =
-        Transaction_receipt { operation = hash } :: new_receipts
+            | Ok (ledger, handle) ->
+                ( ledger,
+                  Some (Withdraw_receipt { handle; operation = hash }),
+                  vm_state,
+                  None )
+            | Error error -> (ledger, None, vm_state, Some error))
       in
       let receipts =
-        List.fold_left
-          (fun receipts receipt -> Operation_hash.Map.add hash receipt receipts)
-          receipts new_receipts
+        match receipt with
+        | Some receipt -> Operation_hash.Map.add hash receipt receipts
+        | None -> receipts
       in
       Some
         ( Protocol
@@ -112,7 +127,8 @@ let apply_operation ~current_level protocol operation =
               receipts;
               vm_state;
             },
-          new_receipts )
+          receipt,
+          error )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
@@ -187,12 +203,21 @@ let parse_operation operation =
 
 let apply_payload ~current_level ~payload protocol =
   List.fold_left
-    (fun (protocol, rev_receipts) operation ->
+    (fun (protocol, rev_receipts, errors) operation ->
       match apply_operation ~current_level protocol operation with
-      | Some (protocol, receipts) -> (protocol, receipts @ rev_receipts)
-      | None -> (protocol, rev_receipts)
-      | exception _exn -> (* TODO: print exception *) (protocol, rev_receipts))
-    (protocol, []) payload
+      | Some (protocol, receipt, error) ->
+          let rev_receipts =
+            match receipt with
+            | Some receipt -> receipt :: rev_receipts
+            | None -> rev_receipts
+          in
+          let errors =
+            match error with Some error -> error :: errors | None -> errors
+          in
+          (protocol, rev_receipts, errors)
+      | None -> (protocol, rev_receipts, errors)
+      | exception exn -> (protocol, rev_receipts, exn :: errors))
+    (protocol, [], []) payload
 
 let clean ~current_level protocol =
   let (Protocol
@@ -221,7 +246,7 @@ let find_withdraw_proof ~operation_hash protocol =
   let (Protocol { receipts; ledger; _ }) = protocol in
   match Operation_hash.Map.find_opt operation_hash receipts with
   | None -> Error `Unknown_operation
-  | Some (Withdraw_receipt handle) ->
+  | Some (Withdraw_receipt { operation = _; handle }) ->
       let withdrawal_handles_hash =
         Ledger.withdrawal_handles_root_hash ledger
       in
@@ -237,8 +262,10 @@ let find_withdraw_proof ~operation_hash protocol =
 let prepare ~parallel ~payload = parallel parse_operation payload
 
 let apply ~current_level ~payload ~tezos_operations protocol =
-  let protocol, receipts = apply_payload ~current_level ~payload protocol in
+  let protocol, receipts, errors =
+    apply_payload ~current_level ~payload protocol
+  in
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)
   let protocol = apply_tezos_operations tezos_operations protocol in
-  (protocol, receipts)
+  (protocol, receipts, errors)

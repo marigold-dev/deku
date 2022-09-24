@@ -7,7 +7,7 @@ val main :
   External_vm_protocol.set list ->
   (storage ->
   Deku_crypto.Key_hash.t ->
-  Ticket_id.t list ->
+  (Ticket_id.t * int64) list ->
   string ->
   (unit, string) result) ->
   unit

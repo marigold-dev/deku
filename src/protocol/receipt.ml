@@ -1,5 +1,9 @@
 type receipt =
-  | Transaction_receipt of { operation : Operation_hash.t }
-  | Withdraw_receipt of Ledger.Withdrawal_handle.t
+  | Ticket_transfer_receipt of { operation : Operation_hash.t }
+  | Withdraw_receipt of {
+      operation : Operation_hash.t;
+      handle : Ledger.Withdrawal_handle.t;
+    }
+  | Vm_transaction_receipt of { operation : Operation_hash.t }
 
 and t = receipt [@@deriving eq, yojson]
