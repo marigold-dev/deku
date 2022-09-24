@@ -6,5 +6,6 @@ database.db-journal
 result
 chain*.json
 examples/cookie-game/lib
-sdks/typescript-sdk/lib
+# DON'T REMOVE THIS until you fix the nix build
+# sdks/typescript-sdk/lib
 node-*-chain.json
