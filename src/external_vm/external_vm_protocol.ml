@@ -2,6 +2,8 @@ open Deku_tezos
 open Deku_crypto
 module String_map = Map.Make (String)
 
+type set = { key : string; value : string } [@@deriving yojson]
+
 module State = struct
   type t = string String_map.t
 
@@ -13,20 +15,21 @@ module State = struct
   let yojson_of_t map =
     let assoc =
       String_map.bindings map
-      |> List.map (fun (k, v) ->
+      |> List.map (fun (key, value) ->
              (* FIXME: doing this for convenience for now, but it seems
                 like a bad idea in the long run. We should make the protocol
                 agnostic of the serialization format. *)
-             let v_json = Yojson.Safe.from_string v in
-             (k, v_json))
+             yojson_of_set { key; value })
     in
-    `Assoc assoc
+    `List assoc
 
   let t_of_yojson : Yojson.Safe.t -> t = function
-    | `Assoc l ->
-        List.to_seq l
-        |> Seq.map (fun (k, v) -> (k, Yojson.Safe.to_string v))
-        |> String_map.of_seq
+    | `List l ->
+        List.fold_left
+          (fun acc x ->
+            let { key; value } = set_of_yojson x in
+            String_map.add key value acc)
+          String_map.empty l
     | _ -> failwith "FIXME: what to do here?"
 end
 
