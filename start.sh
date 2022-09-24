@@ -11,16 +11,16 @@ tezos-client() {
 # Rebuild the sdk
 cd sdks/typescript-sdk
 echo $PWD
-npm i > /dev/null
-npm run build > /dev/null
+npm i >/dev/null
+npm run build >/dev/null
 cd ../../
 echo $PWD
 
 # Rebuild the library
 cd examples/cookie-game/
 echo $PWD
-npm i > /dev/null
-npm run build > /dev/null
+npm i >/dev/null
+npm run build >/dev/null
 cd ../../
 echo $PWD
 
@@ -40,8 +40,7 @@ for N in 0 1 2 3; do
   test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
 
   # Starts the VM
-  node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" |&
-  awk -v n=$N '{ print "vm " n ": " $0}' &
+  node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" &
 
   sleep 2
 
@@ -51,8 +50,7 @@ for N in 0 1 2 3; do
     --port "444$N" \
     --database-uri "sqlite3:./chain/data/$N/database.db" \
     --named-pipe-path "./chain/data/$N/pipe" \
-    --data-folder "./chain/data/$N" |&
-    awk -v n=$N '{ print "node " n ": " $0}' &
+    --data-folder "./chain/data/$N" &
   sleep 0.1
 done
 
