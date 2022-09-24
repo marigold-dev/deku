@@ -216,11 +216,22 @@ module Get_balance : HANDLER = struct
       |> Lwt.return
     in
     let* data =
-      Handler_utils.param_of_request request "ticket_id"
-      |> Option.map Bytes.of_string
-      |> Option.to_result
-           ~none:(Api_error.invalid_parameter "could not parse bytes (?)")
-      |> Lwt.return
+      (* FIXME: does this handle the empty string correctly? *)
+      let data = Handler_utils.param_of_request request "data" in
+      match data with
+      | Some data -> (
+          match Base64.decode data with
+          | Ok b -> Lwt.return (Ok (Bytes.of_string b))
+          | Error _ ->
+              Lwt.return
+                (Error
+                   (Api_error.invalid_parameter
+                      (Format.sprintf "could not parse bytes '%s'" data))))
+      | None ->
+          Lwt.return
+            (Error
+               (Api_error.invalid_parameter
+                  "could not parse bytes for data parameter"))
     in
     let ticket_id = Deku_protocol.Ticket_id.make ticketer data in
     Lwt.return_ok { address; ticket_id }
