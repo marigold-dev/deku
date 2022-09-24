@@ -5,7 +5,7 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 dune build
 
 tezos-client() {
-  docker exec -t deku_flextesa tezos-client "$@"
+    nix run github:marigold-dev/tezos-nix#tezos-client -- "$@"
 }
 
 # Rebuild the sdk
