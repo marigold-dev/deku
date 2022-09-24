@@ -38,17 +38,15 @@ let main ~named_pipe_path initial_state transition =
   let storage = { set = set chain; get } in
 
   let rec runtime_loop transition =
-    if chain.receive () = Control then (
-      (match chain.receive () with
-      | Transaction { source; operation; tickets } ->
-          transition storage source tickets operation
-      | _ -> Error "protocol not respected")
-      |> Result.fold
-           ~ok:(fun _ -> External_vm_protocol.Stop)
-           ~error:(fun err -> External_vm_protocol.Error err)
-      |> chain.send;
-      runtime_loop transition)
-    else chain.send (External_vm_protocol.Error "control not received")
+    (match chain.receive () with
+    | Transaction { source; operation; tickets } ->
+        transition storage source tickets operation
+    | _ -> Error "protocol not respected")
+    |> Result.fold
+         ~ok:(fun _ -> External_vm_protocol.Stop)
+         ~error:(fun err -> External_vm_protocol.Error err)
+    |> chain.send;
+    runtime_loop transition
   in
 
   runtime_loop transition

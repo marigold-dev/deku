@@ -37,9 +37,6 @@ let set_initial_state state =
 let apply_vm_operation ~state ~source ~tickets operation =
   match !vm with
   | Some vm ->
-      (* TODO: I'm using the first message as a control, but we should have a dedicated control pipe.
-         For now, I send an empty message if there's nothing extra to do. *)
-      vm.send Control;
       (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
       vm.send (Transaction { source; operation; tickets });
       let finished = ref false in

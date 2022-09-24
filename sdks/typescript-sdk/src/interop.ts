@@ -117,11 +117,6 @@ const main = (
     console.log("vm started");
 
     for (; ;) {
-        const control = read().toString();
-        console.log(control);
-        if (control === '"close"') {
-            break;
-        }
         const message = read().toString();
         const transaction = JSON.parse(message)[1];
         let error = "";
