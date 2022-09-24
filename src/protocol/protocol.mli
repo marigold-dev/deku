@@ -34,4 +34,4 @@ val apply :
   payload:Operation.t list ->
   tezos_operations:Tezos_operation.t list ->
   protocol ->
-  protocol * Receipt.t list
+  protocol * Receipt.t list * exn list

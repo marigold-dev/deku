@@ -74,7 +74,7 @@ module Zero_ops = struct
           let payload =
             Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
           in
-          let _protocol, _receipts =
+          let _protocol, _receipts, _errors =
             Protocol.apply ~current_level:level ~tezos_operations:[] ~payload
               protocol
           in

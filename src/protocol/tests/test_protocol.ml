@@ -56,7 +56,7 @@ let assert_all_were_applied_with_receipts ~operations ~protocol ~receipts =
   in
   let[@warning "-8"] op_hashes_from_receipts =
     List.map
-      (fun (Receipt.Transaction_receipt { operation; _ }) -> operation)
+      (fun (Receipt.Ticket_transfer_receipt { operation; _ }) -> operation)
       receipts
     |> List.sort Operation_hash.compare
   in
@@ -67,7 +67,7 @@ let assert_all_were_applied_with_receipts ~operations ~protocol ~receipts =
 
 let test_apply_one_operation () =
   let op, op_str, _ = make_operation () in
-  let protocol, receipts =
+  let protocol, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload:[ op_str ] in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
@@ -86,7 +86,7 @@ let test_many_operations () =
            (op :: ops, op_str :: payload, op_hash :: hashes))
          ([], [], [])
   in
-  let protocol, receipts =
+  let protocol, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
@@ -98,12 +98,12 @@ let test_many_operations () =
 let test_duplicated_operation_same_level () =
   let _, op_str, hash = make_operation () in
 
-  let _, receipts =
+  let _, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload:[ op_str; op_str ] in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
   in
-  let[@warning "-8"] (Receipt.Transaction_receipt { operation }) =
+  let[@warning "-8"] (Receipt.Ticket_transfer_receipt { operation }) =
     List.hd receipts
   in
   Alcotest.(check bool)
@@ -121,10 +121,10 @@ let test_duplicated_operation_same_level () =
 *)
 let test_duplicated_operation_different_level () =
   let _, op_str, _ = make_operation () in
-  let _, receipts =
+  let _, receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
-    let protocol, _ =
+    let protocol, _, _errors =
       Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
         Protocol.initial
     in
@@ -137,7 +137,7 @@ let test_duplicated_operation_different_level () =
 
 let test_duplicated_operation_after_includable_window () =
   let _, op_str, _ = make_operation () in
-  let protocol, _receipts =
+  let protocol, _receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
@@ -145,12 +145,12 @@ let test_duplicated_operation_after_includable_window () =
   in
   (* TODO: should we have an integrity check in Protocol.apply that checks
      that the block being applied is a valid next block? *)
-  let protocol, _recipets =
+  let protocol, _recipets, _errors =
     Protocol.apply
       ~current_level:(Level.of_n N.(zero + includable_operation_window))
       ~tezos_operations:[] ~payload:[] protocol
   in
-  let _protocol, receipts =
+  let _protocol, receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply
@@ -163,7 +163,7 @@ let test_duplicated_operation_after_includable_window () =
 
 let test_invalid_string () =
   let wrong_op_str = "waku waku" in
-  let _, receipts =
+  let _, receipts, _errors =
     let payload = [ wrong_op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
@@ -204,7 +204,7 @@ let test_invalid_signature () =
       ]
   in
   let op_str = Yojson.Safe.to_string json in
-  let _, receipts =
+  let _, receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
@@ -248,7 +248,7 @@ let test_valid_signature_but_different_key () =
       ]
   in
   let op_str = Yojson.Safe.to_string json in
-  let _, receipts =
+  let _, receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
@@ -258,7 +258,7 @@ let test_valid_signature_but_different_key () =
 
 let test_receipt_implied_included_operations () =
   let op, op_str, _ = make_operation () in
-  let protocol, receipts =
+  let protocol, receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
@@ -271,10 +271,10 @@ let test_receipt_implied_included_operations () =
 
 let test_included_operation_clean_after_window () =
   let op, op_str, _ = make_operation () in
-  let protocol, _receipts =
+  let protocol, _receipts, _errors =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
-    let protocol, _receipts =
+    let protocol, _receipts, _errors =
       Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
         Protocol.initial
     in
@@ -305,7 +305,7 @@ let test_cannot_create_amount_ex_nihilo () =
          (alice |> Identity.key_hash |> Address.of_key_hash)
          ticket_id
   in
-  let protocol, _ =
+  let protocol, _, _ =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]

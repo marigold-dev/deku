@@ -10,7 +10,10 @@ type operation_content = private
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Operation_vm_transaction of { operation : string; tickets : Ticket.t list }
+  | Operation_vm_transaction of {
+      operation : string;
+      tickets : (Ticket_id.t * int64) list;
+    }
   | Operation_noop
   | Operation_withdraw of {
       owner : Deku_tezos.Address.t;

@@ -1,6 +1,7 @@
 open Deku_crypto
 open Key_hash
 
+(* TODO add contract address *)
 type address = Key_hash.t
 and t = address [@@deriving eq, ord, yojson, show]
 

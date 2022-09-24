@@ -13,7 +13,7 @@ type operation_content =
     }
   | Operation_vm_transaction of {
       operation : string;
-      tickets : Ticket.t list; [@opaque]
+      tickets : (Ticket_id.t * int64) list; [@opaque]
     }
   | Operation_noop
   | Operation_withdraw of {
@@ -54,7 +54,10 @@ module Repr = struct
         ticket_id : Ticket_id.ticket_id;
         amount : Amount.t;
       }
-    | Vm_transaction of { operation : string; tickets : Ticket.t list }
+    | Vm_transaction of {
+        operation : string;
+        tickets : (Ticket_id.t * int64) list;
+      }
     | Noop
     | Tezos_withdraw of {
         owner : Deku_tezos.Address.t;
@@ -122,8 +125,8 @@ module Repr = struct
       match content with
       | Operation_ticket_transfer { receiver; ticket_id; amount } ->
           Ticket_transfer { receiver; ticket_id; amount }
-      | Operation_vm_transaction { operation : string; tickets : Ticket.t list }
-        ->
+      | Operation_vm_transaction
+          { operation : string; tickets : (Ticket_id.t * int64) list } ->
           Vm_transaction { operation; tickets }
       | Operation_noop -> Noop
       | Operation_withdraw { owner; amount; ticket_id } ->

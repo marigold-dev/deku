@@ -13,6 +13,14 @@ let from_tezos_ticket tezos_ticket =
   | Deku_tezos.Address.Originated { contract; _ } ->
       Ok (Ticket_id { ticketer = contract; data })
 
+let to_tezos_ticket ticket =
+  let open Deku_tezos in
+  let (Ticket_id { ticketer; data }) = ticket in
+  let ticketer =
+    Address.Originated { contract = ticketer; entrypoint = None }
+  in
+  Ticket_id.{ ticketer; data }
+
 let of_string string =
   (* TODO: support Deku tickets *)
   let tezos_ticket =

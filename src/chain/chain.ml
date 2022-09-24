@@ -12,7 +12,8 @@ type chain_data =
       consensus : Consensus.consensus_data;
       producer : Producer.producer_data;
       applied : Block.t Block_hash.Map.t;
-    }[@@deriving yojson]
+    }
+[@@deriving yojson]
 
 type chain =
   | Chain of {
@@ -118,9 +119,14 @@ let rec apply_consensus_action chain consensus_action =
       let payload =
         Protocol.prepare ~parallel:(fun f l -> List.filter_map f l) ~payload
       in
-      let protocol, receipts =
+      let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload ~tezos_operations protocol
       in
+      List.iter
+        (fun error ->
+          Logs.warn (fun m ->
+              m "Error while applying block: %s" (Printexc.to_string error)))
+        errors;
       let producer = Producer.clean ~receipts ~tezos_operations producer in
       let applied = Block_hash.Map.add hash block applied in
       let chain = Chain { protocol; producer; applied; consensus; gossip } in

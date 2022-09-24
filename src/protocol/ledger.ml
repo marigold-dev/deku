@@ -2,6 +2,13 @@ open Deku_crypto
 open Deku_concepts
 open Deku_stdlib
 
+exception Insufficient_funds
+
+let () =
+  Printexc.register_printer (function
+    | Insufficient_funds -> Some "Ledger error: insufficient funds"
+    | _ -> None)
+
 module Withdrawal_handle = struct
   module Withdrawal_handle_hash = struct
     type t = BLAKE2b.t [@@deriving show]
@@ -93,7 +100,7 @@ let transfer ~sender ~receiver ~amount ~ticket_id
     (Ledger { table; withdrawal_handles }) =
   let%ok table =
     Ticket_table.transfer table ~sender ~receiver ~amount ~ticket_id
-    |> Result.map_error (fun _ -> `Insufficient_funds)
+    |> Result.map_error (fun _ -> Insufficient_funds)
   in
   Ok (Ledger { table; withdrawal_handles })
 
@@ -101,7 +108,7 @@ let withdraw ~sender ~destination ~amount ~ticket_id t =
   let (Ledger { table; withdrawal_handles }) = t in
   let%ok table =
     Ticket_table.withdraw ~sender ~amount ~ticket_id table
-    |> Result.map_error (function _ -> `Insufficient_funds)
+    |> Result.map_error (function _ -> Insufficient_funds)
   in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add
