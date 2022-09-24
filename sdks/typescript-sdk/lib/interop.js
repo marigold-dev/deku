@@ -99,11 +99,6 @@ state_transition) {
     state = init_state(initial_state);
     console.log("vm started");
     for (;;) {
-        var control = read().toString();
-        console.log(control);
-        if (control === '"close"') {
-            break;
-        }
         var message = read().toString();
         var transaction = JSON.parse(message)[1];
         var error = "";
