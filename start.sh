@@ -8,22 +8,6 @@ tezos-client() {
     nix run github:marigold-dev/tezos-nix#tezos-client -- "$@"
 }
 
-# Rebuild the sdk
-cd sdks/typescript-sdk
-echo $PWD
-npm i >/dev/null
-npm run build >/dev/null
-cd ../../
-echo $PWD
-
-# Rebuild the library
-cd examples/cookie-game/
-echo $PWD
-npm i >/dev/null
-npm run build >/dev/null
-cd ../../
-echo $PWD
-
 export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
 export DEKU_VALIDATOR_URIS="http://localhost:4440,http://localhost:4441,http://localhost:4442,http://localhost:4443"
 export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -40,7 +24,7 @@ for N in 0 1 2 3; do
   test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
 
   # Starts the VM
-  node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" &
+  nix run '.#cookie-game' -- "./chain/data/$N/pipe" &
 
   sleep 2
 

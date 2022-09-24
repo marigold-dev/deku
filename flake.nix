@@ -74,6 +74,17 @@
               type = "app";
               program = "${deku}/bin/deku-generate-identity";
             };
+            cookie-game =
+              let script = pkgs.writeScriptBin "cookie-game" ''
+                export NODE_PATH="${cookie-game}/lib/node_modules/cookie-game/node_modules"
+                ${pkgs.nodejs-16_x}/bin/node ${cookie-game}/lib/node_modules/cookie-game/lib/src/index.js "$@"
+              '';
+              in
+              {
+                type = "app";
+                # FIXME: should we standardize the version of node used with an overlay?
+                program = "${script}/bin/cookie-game";
+              };
           };
           devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
         }) // {
