@@ -1,3 +1,4 @@
+open Deku_crypto
 open External_vm_protocol
 
 exception Vm_lifecycle_error of string
@@ -49,9 +50,13 @@ let apply_vm_operation_exn ~state ~source ~tickets operation =
   match !vm with
   | Some vm ->
       (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
-      vm.send
-        (Transaction
-           { source; operation; tickets; operation_hash_raw = operation });
+      (match operation with
+      | None -> vm.send Noop_transaction
+      | Some (operation_hash, operation) ->
+          let operation_hash_raw = BLAKE2b.to_raw operation_hash in
+          vm.send
+            (Transaction { source; operation; tickets; operation_hash_raw }));
+
       let finished = ref false in
       let state = ref state in
       while not !finished do

@@ -34,7 +34,7 @@ const init_state = (initial_state) => {
             write(Buffer.from(init_message));
             return initial_state;
         }
-        case "Set_Initial_State": 
+        case "Set_Initial_State":
             return message[1];
         default:
             throw new Error("protocol not respected");
@@ -118,13 +118,17 @@ const main = (
     console.log("vm started");
 
     for (; ;) {
-        const message = read().toString();
-        const transaction = JSON.parse(message)[1];
+        const message = JSON.parse(read().toString());
         let error = "";
-        try {
-            error = state_transition(transaction);
-        } catch (error) {
-            error = "Unhandle exception from the VM."
+        if(message[0] !== "Noop_transaction") {
+            const transaction = JSON.parse(message[1]);
+            try {
+                error = state_transition(transaction);
+            } catch (error) {
+                error = "Unhandle exception from the VM."
+            }
+        } else {
+            console.log("Received noop operation");
         }
         const end_message = error ? `["Error", "${error}"]` : '["Stop"]';
         write(Buffer.from(end_message));
