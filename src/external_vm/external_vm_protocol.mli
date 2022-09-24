@@ -21,6 +21,7 @@ type transaction = {
 
 type vm_client_message =
   | Transaction of transaction
+  | Noop_transaction
   | Set of set
   | Get_Initial_State
   | Give_Tickets of (Ticket_id.t * int64) list

@@ -13,7 +13,7 @@ val apply_vm_operation_exn :
   state:State.t ->
   source:Key_hash.t ->
   tickets:(Ticket_id.t * int64) list ->
-  string ->
+  (BLAKE2b.t * string) option ->
   State.t
 
 val close_vm_ipc : unit -> unit

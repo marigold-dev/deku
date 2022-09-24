@@ -41,6 +41,7 @@ let main ~named_pipe_path initial_state transition =
     (match chain.receive () with
     | Transaction { source; operation; tickets; operation_hash_raw } ->
         transition ~storage ~source ~tickets ~operation ~operation_hash_raw
+    | Noop_transaction -> Ok ()
     | _ -> Error "protocol not respected")
     |> Result.fold
          ~ok:(fun _ -> External_vm_protocol.Stop)

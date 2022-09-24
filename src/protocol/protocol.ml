@@ -94,7 +94,8 @@ let apply_operation ~current_level protocol operation :
             match
               External_vm_client.apply_vm_operation_exn ~state:vm_state
                 ~source:(Address.to_key_hash source)
-                ~tickets operation
+                ~tickets
+                (Some (Operation_hash.to_blake2b hash, operation))
             with
             | vm_state -> (ledger, Some receipt, vm_state, None)
             | exception External_vm_client.Vm_execution_error error ->
@@ -103,6 +104,11 @@ let apply_operation ~current_level protocol operation :
                   vm_state,
                   Some (External_vm_client.Vm_execution_error error) ))
         | Operation_noop ->
+            let vm_state =
+              External_vm_client.apply_vm_operation_exn ~state:vm_state
+                ~source:(Address.to_key_hash source)
+                ~tickets:[] None
+            in
             Unix.sleepf 1.;
             (ledger, None, vm_state, None)
         | Operation_withdraw { owner; amount; ticket_id } -> (
