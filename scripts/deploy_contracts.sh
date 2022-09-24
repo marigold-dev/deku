@@ -21,7 +21,6 @@ message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
 
 message "Configuring Tezos client"
 tezos-client --endpoint "$DEKU_TEZOS_RPC_NODE" bootstrapped
-tezos-client --endpoint "$DEKU_TEZOS_RPC_NODE" config update
 tezos-client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
 
 # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
