@@ -61,7 +61,14 @@ let
                             ];
                             environment.etc."deku/revision".text = "${rev}";
                             programs.tmux.enable = true;
-                            programs.zsh.enable = true;
+                            programs.zsh = {
+                              enable = true;
+                              ohMyZsh = {
+                                enable = true;
+                              };
+                            };
+
+                            users.defaultUserShell = pkgs.zsh;
                           })
                         # EC2 specific config
                         ({ modulesPath, ... }: {
