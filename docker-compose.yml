@@ -109,8 +109,8 @@ services:
   flextesa:
     container_name: deku_flextesa
     restart: always
-    image: oxheadalpha/flextesa:20220510
-    command: jakartabox start
+    image: oxheadalpha/flextesa:20220715
+    command: kathmandubox start
     environment:
       - block_time=4
       - flextesa_node_cors_origin=*
