@@ -38,6 +38,27 @@ let dehydrate chain =
   let consensus = Consensus.dehydrate consensus in
   Chain_data { gossip; protocol; consensus; producer; applied }
 
+let add_block ~block ~block_timestamp chain_data =
+  let (Chain_data { gossip; protocol; consensus; producer; applied }) =
+    chain_data
+  in
+  let (Consensus.Consensus_data { current_block; _ }) = consensus in
+  let (Block.Block { level = current_level; _ }) = current_block in
+  let consensus = Consensus.add_block ~block ~block_timestamp consensus in
+  let (Block.Block { payload; tezos_operations; _ }) = block in
+  let payload =
+    payload
+    |> List.filter_map (fun str ->
+           match str |> Yojson.Safe.from_string |> Operation.t_of_yojson with
+           | operation -> Some operation
+           | exception _ -> None)
+  in
+  let protocol, receipts, _ =
+    Protocol.apply ~current_level ~payload ~tezos_operations protocol
+  in
+  let producer = Producer.clean_data ~receipts ~tezos_operations producer in
+  Chain_data { gossip; protocol; consensus; producer; applied }
+
 type t = chain
 type fragment = Gossip.fragment
 type outcome = Gossip.outcome

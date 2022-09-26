@@ -74,6 +74,18 @@ let dehydrate consensus =
   Consensus_data
     { current_block; last_update; validators; accepted; block_pool }
 
+let add_block ~block ~block_timestamp consensus_data =
+  let (Consensus_data { validators; accepted; block_pool; _ }) =
+    consensus_data
+  in
+  let (Block.Block { hash; _ }) = block in
+  let current_block = block in
+  let last_update = block_timestamp in
+  let accepted = Block_hash.Set.add hash accepted in
+  let block_pool = block_pool in
+  Consensus_data
+    { current_block; last_update; validators; accepted; block_pool }
+
 let is_expected_level ~current_level block =
   let (Block { level; _ }) = block in
   Level.(equal (next current_level) level)
