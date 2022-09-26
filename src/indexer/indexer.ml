@@ -56,8 +56,9 @@ module Query = struct
   let find_block level =
     let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
     let query =
-      (int64 ->! string)
-      @@ "select block from blocks where level=? order by timestamp limit 1"
+      (int64 ->! tup2 float string)
+      @@ "select timestamp, block from blocks where level=? order by timestamp \
+          limit 1"
     in
     return_opt query level
 
@@ -159,15 +160,41 @@ let find_block ~level (Indexer { pool; config = _ }) =
   let%await result = Query.find_block ~level pool in
   let block =
     match result with
-    | Ok res ->
-        res
-        |> Option.map Yojson.Safe.from_string
-        |> Option.map Block.t_of_yojson
+    | Ok None -> None
+    | Ok (Some (_, block_str)) ->
+        block_str |> Yojson.Safe.from_string |> Block.t_of_yojson |> Option.some
     | Error err ->
         Caqti_error.show err |> print_endline;
         None
   in
   Lwt.return block
+
+let find_block_with_timestamp ~level (Indexer { pool; config = _ }) =
+  let%await result = Query.find_block ~level pool in
+  let block =
+    match result with
+    | Ok None -> None
+    | Ok (Some (timestamp, block_str)) ->
+        let block = block_str |> Yojson.Safe.from_string |> Block.t_of_yojson in
+        let timestamp = Timestamp.of_float timestamp in
+        Some (block, timestamp)
+    | Error err ->
+        Caqti_error.show err |> print_endline;
+        None
+  in
+  Lwt.return block
+
+let find_blocks_from_level ~level indexer =
+  let rec find_blocks_from_level acc level =
+    let level = Level.next level in
+    let%await block = find_block_with_timestamp ~level indexer in
+    match block with
+    | None -> Lwt.return (acc |> List.rev)
+    | Some (block, timestamp) ->
+        let acc = (block, timestamp) :: acc in
+        find_blocks_from_level acc level
+  in
+  find_blocks_from_level [] level
 
 let get_level (Indexer { pool; config = _ }) =
   let%await result = Query.biggest_level pool in
