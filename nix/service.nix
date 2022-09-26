@@ -1,10 +1,12 @@
-{ deku-packages }: { config, pkgs, lib, ... }:
+{ deku-packages, wasm-vm }: { config, pkgs, lib, ... }:
 
 with lib;
 
 let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
+  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.cookie-game}/lib/node_modules/cookie-game/lib/src/index.js";
+  wasmVM = "${wasm-vm.packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
 in
 {
   options.services.deku-node = {
@@ -24,6 +26,12 @@ in
     environment = mkOption {
       type = types.attrsOf types.str;
       description = lib.mdDoc "Environment variables passed to the Deku node";
+    };
+
+    vmType = mkOption {
+      type = types.str;
+      description = lib.mdDoc "The Deku VM that will be used";
+      default = "wasm";
     };
   };
 
@@ -65,8 +73,8 @@ in
           };
         };
 
-        deku-cookie-vm = {
-          description = "Deku cookie VM";
+        deku-vm = {
+          description = "Deku VM";
           after = [ "network.target" ];
           wantedBy = [ "multi-user.target" ];
           before = [ "deku-node.service" ];
@@ -74,7 +82,13 @@ in
           environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
-            ExecStart = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.cookie-game}/lib/node_modules/cookie-game/lib/src/index.js /run/deku/pipe";
+            ExecStart = (let
+              command = if cfg.vmType == "wasm" then
+                wasmVM
+              else
+                cookieVM;
+              in
+              "${command} /run/deku/pipe");
             Restart = "on-failure";
             StateDirectory = "deku";
             RuntimeDirectory = "deku";
@@ -106,7 +120,7 @@ in
           description = "Sockets to communicate between Deku and VM";
           unitConfig = { RequiresMountsFor = "/run/deku"; };
           socketConfig = { ListenFIFO = [ "/run/deku/pipe_read" "/run/deku/pipe_write" ]; };
-          before = [ "deku-node.service" "deku-cookie-vm.service" ];
+          before = [ "deku-node.service" "deku-vm.service" ];
         };
       };
     };
