@@ -99,7 +99,7 @@
           devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
         }) // {
       nixosModules = {
-        deku-node = import ./nix/service.nix { deku-packages = self.packages; };
+        deku-node = import ./nix/service.nix { deku-packages = self.packages; inherit wasm-vm; };
       };
       deploy = {
         nodes = import ./alphanet/fleet.nix {
