@@ -91,9 +91,13 @@
                 program = "${script}/bin/cookie-game";
               };
             wasm-vm =
+              let script = pkgs.writeScriptBin "wasm-vm" ''
+                  RUST_LOG=info ${wasm-vm.packages."${system}".vm_library}/bin/vm_library "$@"
+              '';
+              in
               {
                 type = "app";
-                program = "${wasm-vm.packages."${system}".vm_library}/bin/vm_library";
+                program = "${script}/bin/wasm-vm";
               };
           };
           devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
