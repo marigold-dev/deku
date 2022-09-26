@@ -94,12 +94,10 @@ let current_author ~current consensus =
 
 let is_signable ~current ~consensus block =
   let (Consensus { current_block; _ }) = consensus in
-  let (Block { hash = current_block; level = current_level; author; _ }) =
+  let (Block { hash = current_block; level = current_level; _ }) =
     current_block
   in
   let current_author = current_author ~current consensus in
-  Format.printf "expected author: %a, actual author: %a" Key_hash.pp
-    current_author Key_hash.pp author;
   is_expected_level ~current_level block
   && is_expected_previous ~current_block block
   && is_expected_author ~current_author block
