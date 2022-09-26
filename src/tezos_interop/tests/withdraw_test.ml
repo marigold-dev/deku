@@ -10,11 +10,11 @@ let post body uri =
   let body = Cohttp_lwt.Body.of_string body in
   Client.post ~body uri
 
-let main ticket_id tezos_owner secret verbose =
-  let url = "http://localhost:8080/api/v1/chain/level" in
+let main ticket_id tezos_owner secret verbose host =
+  let url = Uri.with_path host "api/v1/chain/level" in
   let level =
     Lwt_main.run
-      (let* response = Piaf_lwt.Client.Oneshot.get (Uri.of_string url) in
+      (let* response = Piaf_lwt.Client.Oneshot.get url in
        let* level = Piaf_lwt.Body.to_string response.body in
        if verbose then prerr_endline level;
        match Yojson.Safe.from_string level with
@@ -26,17 +26,16 @@ let main ticket_id tezos_owner secret verbose =
   in
   let identity = Identity.make secret in
   let nonce = Nonce.of_n (Obj.magic level) in
-  let node = "http://localhost:8080/api/v1/operations" in
+  let url = Uri.with_path host "api/v1/operations" in
   let transaction =
     Deku_protocol.Operation.withdraw ~identity ~level ~nonce ~tezos_owner
       ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let json = Deku_protocol.Operation.yojson_of_t transaction in
-  let uri = Uri.of_string node in
   Lwt_main.run
     (let body = Yojson.Safe.to_string json in
-     let%await response, _body = post body uri in
+     let%await response, _body = post body url in
      let code = response |> Response.status |> Cohttp.Code.code_of_status in
      Printf.eprintf "%d\n%!" code;
      Lwt.return_unit);
@@ -58,6 +57,6 @@ let info =
 let term =
   let open Term in
   const main $ Common.ticket_id 0 $ Common.tezos_address 1 $ Common.secret 2
-  $ Common.verbose_test
+  $ Common.verbose_test $ Common.host
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term

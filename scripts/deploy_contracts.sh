@@ -3,26 +3,6 @@
 dir=$(dirname $0)
 source $dir/common.sh
 
-# This secret key never changes.
-# We need this secret key for sigining Tezos operations.
-SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
-
-# tz1aSkwEot3L2kmUvcoxzjMomb9mvBNuzFK6 (or "bob" on flextesa defaults)
-SECRET_KEY2="edsk3RFfvaFaxbHx8BMtEW1rKQcPtDML3LXjNqMNLCzC3wLC1bWbAt"
-
-# Using a Tezos node on localhost:20000 that is provided by the docker-compose file
-DEKU_TEZOS_RPC_NODE=${DEKU_TEZOS_RPC_NODE:-http://localhost:20000}
-
-message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
-
-message "Configuring Tezos client"
-tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" bootstrapped
-tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" config update
-tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
-tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key bob "unencrypted:$SECRET_KEY2" --force
-
-# [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
-# the [initial_storage] expression and originates the contract as myWallet on Tezos.
 deploy_contract() {
     message "Deploying new $1 contract"
 
@@ -48,19 +28,43 @@ deploy_contract() {
         --force
 }
 
-storage_path=${1:-./configs/flextesa}
+# if main
+if [ $(basename "$0") == deploy_contracts.sh ]
+then
+  # This secret key never changes.
+  # We need this secret key for sigining Tezos operations.
+  SECRET_KEY="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 
-deploy_contract "consensus" \
-    "./src/tezos_interop/consensus.mligo" \
-    "$(cat "$storage_path/consensus_storage.mligo")"
+  # tz1aSkwEot3L2kmUvcoxzjMomb9mvBNuzFK6 (or "bob" on flextesa defaults)
+  SECRET_KEY2="edsk3RFfvaFaxbHx8BMtEW1rKQcPtDML3LXjNqMNLCzC3wLC1bWbAt"
 
-deploy_contract "discovery" \
-    "./src/tezos_interop/discovery.mligo" \
-    "$(cat "$storage_path/discovery_storage.mligo")" \
-    bob # switch wallet to avoid the "Only one manager operation per block" error
+  # Using a Tezos node on localhost:20000 that is provided by the docker-compose file
+  DEKU_TEZOS_RPC_NODE=${DEKU_TEZOS_RPC_NODE:-http://localhost:20000}
 
-deploy_contract "dummy_ticket" \
-    "./dummy_ticket.mligo" \
-    "()"
+  message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
 
-wait
+  message "Configuring Tezos client"
+  tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" bootstrapped
+  tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
+  tezos_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key bob "unencrypted:$SECRET_KEY2" --force
+
+  # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
+  # the [initial_storage] expression and originates the contract as myWallet on Tezos.
+
+  storage_path=${1:-./configs/flextesa}
+
+  deploy_contract "consensus" \
+      "./src/tezos_interop/consensus.mligo" \
+      "$(cat "$storage_path/consensus_storage.mligo")"
+
+  deploy_contract "discovery" \
+      "./src/tezos_interop/discovery.mligo" \
+      "$(cat "$storage_path/discovery_storage.mligo")" \
+      bob # switch wallet to avoid the "Only one manager operation per block" error
+
+  deploy_contract "dummy_ticket" \
+      "./dummy_ticket.mligo" \
+      "()"
+
+  wait
+fi
