@@ -55,6 +55,12 @@ let operation_hash =
   in
   conv (parser, printer)
 
+let uri =
+  let parser uri = Ok (uri |> Uri.of_string) in
+  let printer ppf uri = Format.fprintf ppf "%s" (uri |> Uri.to_string) in
+  let open Arg in
+  conv (parser, printer)
+
 let consensus_contract =
   let docv = "consensus-contract" in
   let doc = "The address of the consensus contract to listen." in
@@ -94,3 +100,10 @@ let verbose_test =
   let default = false in
   let env = Cmd.Env.info "DEKU_VERBOSE_TESTS" in
   value & opt bool default & info [ "verbose-test" ] ~doc ~docv ~env
+
+let host =
+  let docv = "api-node" in
+  let doc = "Deku API hostname (default http://localhost:8080)" in
+  let default = Uri.of_string "http://localhost:8080" in
+  let env = Cmd.Env.info "DEKU_API_NODE" in
+  value & opt uri default & info [ "api-node" ] ~doc ~docv ~env

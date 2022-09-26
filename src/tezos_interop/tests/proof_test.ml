@@ -15,14 +15,13 @@ type api_response = {
 }
 [@@deriving of_yojson]
 
-let main operation_hash verbose =
+let main operation_hash verbose host =
   try
     let body = Operation_hash.to_b58 operation_hash in
+    let url = Uri.with_path host ("api/v1/proof/" ^ body) in
     Lwt_main.run
       (let open Lwt.Syntax in
-      let* response, body =
-        get (Uri.of_string ("http://localhost:8080/api/v1/proof/" ^ body))
-      in
+      let* response, body = get url in
       let code =
         Cohttp.Response.status response |> Cohttp.Code.code_of_status
       in
@@ -67,6 +66,6 @@ let info =
 
 let term =
   let open Term in
-  const main $ Common.operation_hash 0 $ Common.verbose_test
+  const main $ Common.operation_hash 0 $ Common.verbose_test $ Common.host
 
 let _ = Cmd.eval ~catch:true @@ Cmd.v info term
