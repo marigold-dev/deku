@@ -159,7 +159,7 @@ let main params =
     let (Block { level; _ }) = current_block in
     let level = Level.to_n level in
     let level = N.to_z level in
-    Format.eprintf "%a\n%!" Z.pp_print level
+    Format.eprintf "Chain started at level: %a\n%!" Z.pp_print level
   in
   promise
 
