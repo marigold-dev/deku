@@ -9,6 +9,6 @@ val main :
   source:Deku_crypto.Key_hash.t ->
   tickets:(Ticket_id.t * int64) list ->
   operation:string ->
-  operation_hash_raw:string ->
+  operation_raw_hash:string ->
   (unit, string) result) ->
   unit
