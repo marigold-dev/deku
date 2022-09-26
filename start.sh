@@ -24,7 +24,7 @@ for N in 0 1 2 3; do
   test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
 
   # Starts the VM
-  nix run '.#cookie-game' -- "./chain/data/$N/pipe" &
+  nix run '.#wasm-vm' -- "./chain/data/$N/pipe" &
 
   sleep 2
 

@@ -19,9 +19,14 @@
       nixpkgs.follows = "nixpkgs";
     };
     deploy-rs.url = "github:serokell/deploy-rs";
+
+    wasm-vm.url = "github:marigold-dev/tuna";
+    wasm-vm.inputs = {
+      nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, deploy-rs }:
+  outputs = { self, nixpkgs, flake-utils, nix-filter, dream2nix, tezos, deploy-rs, wasm-vm }:
     flake-utils.lib.eachDefaultSystem
       (system:
         let
@@ -84,6 +89,11 @@
                 type = "app";
                 # FIXME: should we standardize the version of node used with an overlay?
                 program = "${script}/bin/cookie-game";
+              };
+            wasm-vm =
+              {
+                type = "app";
+                program = "${wasm-vm.packages."${system}".vm_library}/bin/vm_library";
               };
           };
           devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
