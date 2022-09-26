@@ -12,7 +12,7 @@ end
 type set = { key : string; value : string } [@@deriving yojson]
 
 type transaction = {
-  operation_hash_raw : string;
+  operation_raw_hash : string;
   source : Key_hash.t;
   operation : string;
   tickets : (Ticket_id.t * int64) list;

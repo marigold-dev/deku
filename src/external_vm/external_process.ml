@@ -33,12 +33,14 @@ let raise exn =
   Format.eprintf "external_vm failure: %s\n%!" (Printexc.to_string exn);
   exit 1
 
-let read_all fd length =
-  let message = Bytes.create length in
+let read_all fd lengtht =
+  let message = Bytes.create lengtht in
+  let length = ref lengtht in
   let pos = ref 0 in
-  while length > !pos do
-    let read = Unix.read fd message !pos length in
-    pos := !pos + read
+  while lengtht > !pos do
+    let read = Unix.read fd message !pos !length in
+    pos := !pos + read;
+    length := !length - read
   done;
   message
 
@@ -55,7 +57,7 @@ let send_to_vm ~fd (message : Yojson.Safe.t) =
   let message = Bytes.of_string (Yojson.Safe.to_string message) in
   let message_length = Bytes.create 8 in
   Bytes.set_int64_ne message_length 0 (Int64.of_int (Bytes.length message));
-  let _ = Unix.write fd message_length 0 (Bytes.length message_length) in
+  let _ = Unix.write fd message_length 0 8 in
   write_all fd message
 
 let read_from_vm ~fd =

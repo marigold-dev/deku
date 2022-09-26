@@ -17,7 +17,7 @@ module State = struct
              (* FIXME: doing this for convenience for now, but it seems
                 like a bad idea in the long run. We should make the protocol
                 agnostic of the serialization format. *)
-             let v_json = Yojson.Safe.from_string v in
+             let v_json = `String v in
              (k, v_json))
     in
     `Assoc assoc
@@ -25,7 +25,10 @@ module State = struct
   let t_of_yojson : Yojson.Safe.t -> t = function
     | `Assoc l ->
         List.to_seq l
-        |> Seq.map (fun (k, v) -> (k, Yojson.Safe.to_string v))
+        |> Seq.map (fun (k, v) ->
+               match v with
+               | `String v -> (k, v)
+               | _ -> failwith "FIXME: better error message")
         |> String_map.of_seq
     | _ -> failwith "FIXME: what to do here?"
 end
@@ -34,7 +37,7 @@ type set = { key : string; value : string } [@@deriving yojson]
 
 type transaction = {
   (* raw bytes used to create the contract address *)
-  operation_hash_raw : string;
+  operation_raw_hash : string;
   source : Key_hash.t;
   operation : string;
   tickets : (Ticket_id.t * int64) list;

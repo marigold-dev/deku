@@ -53,9 +53,9 @@ let apply_vm_operation_exn ~state ~source ~tickets operation =
       (match operation with
       | None -> vm.send Noop_transaction
       | Some (operation_hash, operation) ->
-          let operation_hash_raw = BLAKE2b.to_raw operation_hash in
+          let operation_raw_hash = BLAKE2b.BLAKE2b_256.to_hex operation_hash in
           vm.send
-            (Transaction { source; operation; tickets; operation_hash_raw }));
+            (Transaction { source; operation; tickets; operation_raw_hash }));
 
       let finished = ref false in
       let state = ref state in
@@ -68,7 +68,9 @@ let apply_vm_operation_exn ~state ~source ~tickets operation =
                   initialized")
         | Stop -> finished := true
         | Set { key; value } -> state := State.set key value !state
-        | Take_tickets _ | Deposit_tickets _ -> failwith "FIXME:"
+        | Take_tickets _ | Deposit_tickets _ ->
+            Logs.warn (fun m ->
+                m "FIXME: implement take tickets and deposit tickets")
         | Error message -> raise (Vm_execution_error message)
       done;
       !state
