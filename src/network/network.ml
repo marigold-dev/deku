@@ -98,7 +98,7 @@ let listen ~port ~on_message ~on_request network =
                (* Format.eprintf "request\n%!"; *)
                handler ~on_message ~on_request ~network context))
       in
-      Logs.info (fun m -> m "Listening on port %i" port);
+      Logs.debug (fun m -> m "Listening on port %i" port);
       Lwt.return_unit)
 
 let connect ~nodes =
