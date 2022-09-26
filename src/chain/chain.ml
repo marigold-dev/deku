@@ -50,6 +50,7 @@ let add_block ~block ~block_timestamp chain_data =
     payload
     |> List.filter_map (fun str ->
            match str |> Yojson.Safe.from_string |> Operation.t_of_yojson with
+           | Operation { content = Operation.Operation_noop; _ } -> None
            | operation -> Some operation
            | exception _ -> None)
   in
