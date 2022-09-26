@@ -37,6 +37,35 @@ let dehydrate producer =
   let (Producer { operations; tezos_operations; _ }) = producer in
   Producer_data { operations; tezos_operations }
 
+let clean ~receipts ~tezos_operations operations old_tezos_operations =
+  let operations =
+    List.fold_left
+      (fun operations receipt ->
+        match receipt with
+        | Receipt.Ticket_transfer_receipt { operation = hash }
+        | Receipt.Vm_transaction_receipt { operation = hash }
+        | Receipt.Withdraw_receipt { operation = hash; _ } ->
+            Operation_hash.Map.remove hash operations)
+      operations receipts
+  in
+  let tezos_operations =
+    List.fold_left
+      (fun tezos_operations tezos_operation ->
+        Tezos_operation_hash.Map.remove tezos_operation.Tezos_operation.hash
+          tezos_operations)
+      old_tezos_operations tezos_operations
+  in
+  (operations, tezos_operations)
+
+let clean_data ~receipts ~tezos_operations producer_data =
+  let (Producer_data { operations; tezos_operations = old_tezos_operations }) =
+    producer_data
+  in
+  let operations, tezos_operations =
+    clean ~receipts ~tezos_operations operations old_tezos_operations
+  in
+  Producer_data { operations; tezos_operations }
+
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
@@ -71,22 +100,8 @@ let clean ~receipts ~tezos_operations producer =
         }) =
     producer
   in
-  let operations =
-    List.fold_left
-      (fun operations receipt ->
-        match receipt with
-        | Receipt.Ticket_transfer_receipt { operation = hash }
-        | Receipt.Vm_transaction_receipt { operation = hash }
-        | Receipt.Withdraw_receipt { operation = hash; _ } ->
-            Operation_hash.Map.remove hash operations)
-      operations receipts
-  in
-  let tezos_operations =
-    List.fold_left
-      (fun tezos_operations tezos_operation ->
-        Tezos_operation_hash.Map.remove tezos_operation.Tezos_operation.hash
-          tezos_operations)
-      old_tezos_operations tezos_operations
+  let operations, tezos_operations =
+    clean ~receipts ~tezos_operations operations old_tezos_operations
   in
   Producer { identity; operations; tezos_operations; default_block_size }
 

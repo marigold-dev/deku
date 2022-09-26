@@ -5,7 +5,15 @@ open Deku_consensus
 open Deku_gossip
 open Deku_external_vm
 
-type chain_data [@@deriving yojson]
+type chain_data = private
+  | Chain_data of {
+      gossip : Gossip.t;
+      protocol : Protocol.t;
+      consensus : Consensus.consensus_data;
+      producer : Producer.producer_data;
+      applied : Block.t Block_hash.Map.t;
+    }
+[@@deriving yojson]
 
 type chain = private
   | Chain of {
@@ -22,6 +30,9 @@ type outcome
 
 val rehydrate : identity:Identity.t -> default_block_size:int -> chain_data -> t
 val dehydrate : t -> chain_data
+
+val add_block :
+  block:Block.t -> block_timestamp:Timestamp.t -> chain_data -> chain_data
 
 type action = private
   | Chain_trigger_timeout

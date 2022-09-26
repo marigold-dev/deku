@@ -6,6 +6,8 @@ open Deku_indexer
 open Deku_storage
 open Deku_chain
 open Deku_external_vm
+open Deku_protocol
+open Deku_consensus
 include Node
 
 let make_dump_loop ~pool ~folder ~chain =
@@ -131,17 +133,27 @@ let main params =
   (* TODO: one problem of loading from disk like this, is that there
           may be pending actions such as fragments being processed *)
   let%await chain_data = Storage.Chain.read ~folder:data_folder in
-  let chain =
+  let%await chain =
     match chain_data with
     | Some chain_data ->
-        let chain = Chain.rehydrate ~identity ~default_block_size chain_data in
-        let (Chain { protocol; _ }) = chain in
-        let (Protocol { vm_state; _ }) = protocol in
+        let (Chain.Chain_data { protocol; consensus; _ }) = chain_data in
+        let (Protocol.Protocol { vm_state; _ }) = protocol in
+        let (Consensus.Consensus_data { current_block; _ }) = consensus in
+        let (Block.Block { level; _ }) = current_block in
         External_vm_client.set_initial_state vm_state;
-        chain
+        let%await blocks = Indexer.find_blocks_from_level ~level indexer in
+        let chain_data =
+          List.fold_left
+            (fun chain_data (block, block_timestamp) ->
+              Chain.add_block ~block ~block_timestamp chain_data)
+            chain_data blocks
+        in
+        let chain = Chain.rehydrate ~identity ~default_block_size chain_data in
+        chain |> Lwt.return
     | None ->
         let vm_state = External_vm_client.get_initial_state () in
         Chain.make ~vm_state ~identity ~validators ~default_block_size
+        |> Lwt.return
   in
   let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
   let node, promise =

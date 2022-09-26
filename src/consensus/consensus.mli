@@ -13,7 +13,17 @@ type action = private (* protocol *)
   | Consensus_request_block of { hash : Block_hash.t }
 [@@deriving show]
 
-type consensus_data [@@deriving yojson]
+type consensus_data = private
+  | Consensus_data of {
+      (* state *)
+      current_block : Block.t;
+      last_update : Timestamp.t;
+      (* consensus *)
+      validators : Validators.t;
+      accepted : Block_hash.Set.t;
+      block_pool : Block_pool.t;
+    }
+[@@deriving yojson]
 
 type consensus = private
   | Consensus of {
@@ -32,6 +42,12 @@ type t = consensus
 val make : identity:Identity.t -> validators:Validators.t -> consensus
 val rehydrate : identity:Identity.t -> consensus_data -> consensus
 val dehydrate : consensus -> consensus_data
+
+val add_block :
+  block:Block.t ->
+  block_timestamp:Timestamp.t ->
+  consensus_data ->
+  consensus_data
 
 (* helpers *)
 val is_producer : current:Timestamp.t -> consensus -> bool
