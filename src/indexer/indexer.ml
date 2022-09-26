@@ -88,7 +88,7 @@ let make_database ~uri =
     (unit ->. unit)
     @@ {| create table if not exists blocks (
             hash TEXT not null,
-            level BIGINT not null,
+            level BIGINT not null primary key,
             timestamp DOUBLE not null,
             block TEXT not null
           )
