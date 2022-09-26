@@ -745,11 +745,11 @@
         "tezos": "tezos_2"
       },
       "locked": {
-        "lastModified": 1664222307,
-        "narHash": "sha256-Fi/qujbfdkW1pjaN4+2u9EUjugHhUW2uepvvcMktEzc=",
+        "lastModified": 1664235165,
+        "narHash": "sha256-DTKMMgOCcmKQ0j65UeFmoFG8M7pP/HTlTZxAOPERrqE=",
         "owner": "marigold-dev",
         "repo": "tuna",
-        "rev": "82b14e9fd5292540fd67ad4f21aaa03ad9ba40fb",
+        "rev": "3a664b5f6cb15b061ad355ca3fa74641750b2cb5",
         "type": "github"
       },
       "original": {

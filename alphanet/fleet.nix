@@ -48,6 +48,8 @@ let
                                 DEKU_DATA_FOLDER = "/var/lib/deku";
                                 DEKU_DEFAULT_BLOCK_SIZE = "1";
                                 DEKU_API_ENABLED = "true";
+                                # This might not be necessary but I suspect it is.
+                                RUST_LOG = "info";
                               };
                             };
 
