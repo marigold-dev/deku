@@ -53,6 +53,18 @@ type action =
   | Gossip_incoming_response of { response : Response.t }
   | Gossip_fragment of { fragment : fragment }
 
+let pp_gossip_action action =
+  match action with
+  | Gossip_apply_and_broadcast _ ->
+      Format.eprintf "    Gossip apply and broadcast\n%!"
+  | Gossip_send_request _ -> Format.eprintf "    Gossip send request\n%!"
+  | Gossip_incoming_request _ ->
+      Format.eprintf "    Gossip incoming request\n%!"
+  | Gossip_send_response _ -> Format.eprintf "    Gossip send response\n%!"
+  | Gossip_incoming_response _ ->
+      Format.eprintf "    Gossip incoming request\n%!"
+  | Gossip_fragment _ -> Format.eprintf "    Gossip fragment"
+
 type t = gossip
 
 let empty =
@@ -174,9 +186,9 @@ let on_message ~message ~raw_message gossip =
   let delayed = Message_hash.Map.remove hash delayed in
   let gossip = Gossip { pending_request; consumed; delayed } in
 
-  (* TODO: when encode, apply could be faster *)
-  let action = Gossip_apply_and_broadcast { message; raw_message } in
-  (gossip, Some action)
+(* TODO: when encode, apply could be faster *)
+let action = Gossip_apply_and_broadcast { message; raw_message } in
+(gossip, Some action)
 
 let on_message ~message ~raw_message gossip =
   let (Gossip { pending_request = _; consumed; delayed = _ }) = gossip in

@@ -152,7 +152,7 @@ let eval_actions chains_actions_map messages_to_receive =
       let chain, new_actions, messages_to_receive =
         List.fold_left
           (fun acc action ->
-            Chain.pp_action action;
+            Chain_printers.pp_action action;
             let chain, actions, messages_to_receive =
               process_chain_action acc action
             in
@@ -201,6 +201,15 @@ let jumble_and_mix messages stolen_messages =
   (all_messages, empty_messages)
 
 let convert_messages_to_actions chain_actions_map messages =
+  (* Ensures we timeout iif we don't receive a block in time *)
+  let chain_actions_map =
+    if Chain_messages.message_count messages = 0 then
+      Map.mapi
+        (fun _ (chain, actions) ->
+          (chain, Chain.Chain_trigger_timeout :: actions))
+        chain_actions_map
+    else chain_actions_map
+  in
   Map.mapi
     (fun validator (chain, actions) ->
       let messages = Map.find validator messages in
@@ -213,7 +222,6 @@ let convert_messages_to_actions chain_actions_map messages =
    four validators to send with two quantifiers = 5
    total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
 *)
-(* TODO: How do we control filters over time? *)
 (* TODO: Change thief stuff into a closure with a function similar to filters *)
 
 let rec run chains_actions_map ?(round = 0) ?(filters = fun _ -> [])
@@ -236,11 +244,6 @@ let rec run chains_actions_map ?(round = 0) ?(filters = fun _ -> [])
           jumble_and_mix filtered_messages stolen_messages
         else steal_messages filtered_messages thief_stuff
       in
-      Format.eprintf "We've stolen %d messages!\n%!"
-        (Chain_messages.message_count stolen_messages);
-      Format.eprintf "There are %d messages!\n%!"
-        (Chain_messages.message_count messages_to_receive);
-      Chain_printers.print_messages messages_to_receive;
       let chains_actions_map =
         convert_messages_to_actions chains_actions_map messages_to_receive
       in

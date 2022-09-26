@@ -124,7 +124,12 @@ let test_run_10_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_20_round_random_filter () =
-  let output = run chains_actions_map ([], empty_messages, 0) 80 in
+  let output =
+    run
+      ~filters:(fun round ->
+        if round <= 20 then [ Chain_filters._generate_filter () ] else [])
+      chains_actions_map ([], empty_messages, 0) 80
+  in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -134,7 +139,12 @@ let test_run_20_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_30_round_random_filter () =
-  let output = run chains_actions_map ([], empty_messages, 0) 120 in
+  let output =
+    run
+      ~filters:(fun round ->
+        if round <= 30 then [ Chain_filters._generate_filter () ] else [])
+      chains_actions_map ([], empty_messages, 0) 120
+  in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -144,7 +154,12 @@ let test_run_30_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_100_round_random_filter () =
-  let output = run chains_actions_map ([], empty_messages, 0) 130 in
+  let output =
+    run
+      ~filters:(fun round ->
+        if round <= 100 then [ Chain_filters._generate_filter () ] else [])
+      chains_actions_map ([], empty_messages, 0) 130
+  in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -175,7 +190,7 @@ let test_run_100_round_universal_filter () =
   let output =
     run chains_actions_map
       ~filters:(fun round ->
-        if round >= 11 then [] else [ Chain_filters._universal_filter ])
+        if round >= 101 then [] else [ Chain_filters._universal_filter ])
       ([], empty_messages, 0) 150
   in
   let extraction = extract_levels output in
@@ -209,7 +224,7 @@ let test_run_10_round_message_steal () =
   let level = List.hd extraction in
   Alcotest.(check' (pair bool bool))
     ~msg:
-      "chain runs with stolen messsages for 10 rounds and progresses after 120 \
+      "chain runs with stolen messsages for 10 rounds and progresses after 80 \
        rounds"
     ~expected:(true, true)
     ~actual:(level > 3, levels_are_equal)
@@ -277,7 +292,7 @@ let () = run ()
    [ ] Handle lar ge block sizes
    [X] Filter random messages
    [ ] Filter random groups of messages (multiple filters)
-   [ ] DDos a node? (Universal Filter)
-   [ ] Send a single set of messages out of order
+   [X] DDos a node? (Universal Filter)
+   [X] Send a single set of messages out of order
    [ ] Send random messages out of order
 *)

@@ -4,6 +4,7 @@ open Deku_consensus
 open Deku_chain
 
 let get_current () = Timestamp.of_float (Unix.gettimeofday ())
+
 (* TODO: Abstract this generation process *)
 let secret1 = Ed25519.Secret.generate ()
 let secret1 = Secret.Ed25519 secret1
@@ -83,9 +84,6 @@ let chains_after_first_block =
       chain votes
   in
   let chains_actions = List.map apply_votes chains_actions in
-  List.iter
-    (fun (_, actions) -> List.iter Chain.pp_action actions)
-    chains_actions;
   chains_actions
 
 module Map = Key_hash.Map
