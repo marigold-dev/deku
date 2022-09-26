@@ -135,6 +135,14 @@ run-test() {
   # Withdraw 3 should fail
   # 2 and 3 proofs are also reversed
 
+  balance=$(curl --silent "$DEKU_API_NODE/api/v1/balance/$tz_addr1/$DUMMY_TICKET_ADDRESS/0x" | jq -r '.balance')
+  if (( "$balance" != 100 ))
+  then
+    echo "balance should be 100, but is $balance"
+    test-failed
+  else
+    echo "Received $balance tickets"
+  fi
 
   message Withdraw 1
   op_hash1="$(dune exec src/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret1 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')"
