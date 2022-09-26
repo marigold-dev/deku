@@ -1,0 +1,35 @@
+{
+  "name": "deku-toolkit",
+  "version": "1.0.0",
+  "description": "toolkit to interact with deku",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc --project . && eslint .",
+    "dev": "tsc --project . -w",
+    "lint": "eslint .",
+    "postinstall": "tsc --project .",
+    "ship": "npm run build && npm run lint"
+  },
+  "files": [
+    "src/",
+    "package.json"
+  ],
+  "author": "contact@marigold.dev",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bs58check": "^2.1.0",
+    "@types/node": "^18.7.13",
+    "@typescript-eslint/eslint-plugin": "^5.35.1",
+    "@typescript-eslint/parser": "^5.35.1",
+    "eslint": "^8.23.0"
+  },
+  "dependencies": {
+    "@taquito/taquito": "^13.0.1",
+    "blakejs": "^1.2.1",
+    "bs58check": "^2.1.2"
+  },
+  "peerDependencies": {
+    "typescript": "^4.7.4"
+  }
+}
