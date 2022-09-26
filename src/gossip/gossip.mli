@@ -1,6 +1,5 @@
 type gossip
 type t = gossip
-type fragment
 type outcome
 
 type action = private
@@ -14,6 +13,28 @@ type action = private
   | Gossip_incoming_response of { response : Response.t }
   | Gossip_fragment of { fragment : fragment }
 
+and fragment = private
+  | Fragment_encode_message of { content : Message.Content.t }
+  | Fragment_decode_message of {
+      expected_hash : Message_hash.t;
+      raw_content : string;
+    }
+  | Fragment_send_request of { content : Request.Content.t }
+  | Fragment_incoming_request of {
+      id : Request_id.t;
+      expected_hash : Request_hash.t;
+      raw_content : string;
+    }
+  | Fragment_send_response of {
+      id : Request_id.t;
+      content : Response.Content.t;
+    }
+  | Fragment_incoming_response of {
+      expected_hash : Response_hash.t;
+      raw_content : string;
+    }
+
+val pp_gossip_action : action -> unit
 val empty : gossip
 val broadcast_message : content:Message.Content.t -> fragment
 
