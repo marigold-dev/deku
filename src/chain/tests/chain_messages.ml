@@ -24,3 +24,5 @@ let pp_message_kind = function
   | Request -> "Request"
   | Broadcast -> "Broadcast"
 
+let message_count messages =
+  Map.fold (fun _ messages count -> List.length messages + count) messages 0

@@ -42,6 +42,9 @@ open Deku_chain
 open Deku_consensus
 open Deku_concepts
 
+let cartesian_product l l' =
+  List.concat (List.map (fun e -> List.map (fun e' -> (e, e')) l') l)
+
 let elements_are_equal = function
   | [] -> true
   | hd :: tl ->
@@ -51,7 +54,6 @@ let elements_are_equal = function
       in
       go tl
 
-(* TODO: Should we extract much more data about the chain state with this? Then we can run more detailed tests *)
 let extract_levels chains_actions_map =
   Map.fold
     (fun _ (chain, _) list ->
@@ -62,8 +64,42 @@ let extract_levels chains_actions_map =
       level :: list)
     chains_actions_map []
 
+let test_universal_filter_work () =
+  let messages =
+    let data =
+      cartesian_product validators validators
+      |> cartesian_product [ Response; Request; Broadcast ]
+      |> List.map (fun (e, (e', e'')) -> (e, e', e''))
+    in
+    List.map
+      (fun (kind, to_, from) ->
+        Message
+          {
+            from;
+            to_;
+            raw_expected_hash = "";
+            raw_content = "";
+            kind;
+            id = Deku_gossip.Request_id.initial;
+          })
+      data
+  in
+  let messages =
+    List.fold_left
+      (fun map validator -> Map.add validator messages map)
+      Chain_messages.empty_messages validators
+  in
+  let message_amount = message_count messages in
+  let messages =
+    Chain_filters._filter_messages [ Chain_filters._universal_filter ] messages
+  in
+  Alcotest.(check' (pair int int))
+    ~msg:"universal filter knocks out all messages"
+    ~expected:(48 * 4, 0)
+    ~actual:(message_amount, Chain_messages.message_count messages)
+
 let test_run_normally () =
-  let output = run chains_actions_map 0 ([], empty_messages, 0) 20 in
+  let output = run chains_actions_map ([], empty_messages, 0) 20 in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -73,7 +109,12 @@ let test_run_normally () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_10_round_random_filter () =
-  let output = run chains_actions_map 10 ([], empty_messages, 0) 40 in
+  let output =
+    run chains_actions_map
+      ~filters:(fun round ->
+        if round >= 11 then [] else [ Chain_filters._generate_filter () ])
+      ([], empty_messages, 0) 40
+  in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -83,7 +124,7 @@ let test_run_10_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_20_round_random_filter () =
-  let output = run chains_actions_map 20 ([], empty_messages, 0) 80 in
+  let output = run chains_actions_map ([], empty_messages, 0) 80 in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -93,7 +134,7 @@ let test_run_20_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_30_round_random_filter () =
-  let output = run chains_actions_map 30 ([], empty_messages, 0) 120 in
+  let output = run chains_actions_map ([], empty_messages, 0) 120 in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -103,7 +144,7 @@ let test_run_30_round_random_filter () =
     ~actual:(level > 1, levels_are_equal)
 
 let test_run_100_round_random_filter () =
-  let output = run chains_actions_map 100 ([], empty_messages, 0) 130 in
+  let output = run chains_actions_map ([], empty_messages, 0) 130 in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
   let level = List.hd extraction in
@@ -112,9 +153,42 @@ let test_run_100_round_random_filter () =
     ~expected:(true, true)
     ~actual:(level > 4, levels_are_equal)
 
+let test_run_10_round_universal_filter () =
+  let output =
+    run chains_actions_map
+      ~filters:(fun round ->
+        if round >= 11 then []
+        else (
+          Format.eprintf "Passing in universal filter!\n%!";
+          [ Chain_filters._universal_filter ]))
+      ([], empty_messages, 0) 40
+  in
+  let extraction = extract_levels output in
+  let levels_are_equal = elements_are_equal extraction in
+  let level = List.hd extraction in
+  Alcotest.(check' (pair bool bool))
+    ~msg:"chain blocks all messages for 10 rounds, and recovers in 40 rounds"
+    ~expected:(true, true)
+    ~actual:(level > 3, levels_are_equal)
+
+let test_run_100_round_universal_filter () =
+  let output =
+    run chains_actions_map
+      ~filters:(fun round ->
+        if round >= 11 then [] else [ Chain_filters._universal_filter ])
+      ([], empty_messages, 0) 150
+  in
+  let extraction = extract_levels output in
+  let levels_are_equal = elements_are_equal extraction in
+  let level = List.hd extraction in
+  Alcotest.(check' (pair bool bool))
+    ~msg:"chain blocks all messages for 10 rounds, and recovers in 40 rounds"
+    ~expected:(true, true)
+    ~actual:(level > 3, levels_are_equal)
+
 let test_run_5_round_message_steal () =
   let output =
-    run chains_actions_map 0 ([ List.hd validators ], empty_messages, 5) 40
+    run chains_actions_map ([ List.hd validators ], empty_messages, 5) 40
   in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
@@ -128,7 +202,7 @@ let test_run_5_round_message_steal () =
 
 let test_run_10_round_message_steal () =
   let output =
-    run chains_actions_map 0 ([ List.hd validators ], empty_messages, 10) 80
+    run chains_actions_map ([ List.hd validators ], empty_messages, 10) 80
   in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
@@ -142,7 +216,7 @@ let test_run_10_round_message_steal () =
 
 let test_run_15_round_message_steal () =
   let output =
-    run chains_actions_map 0 ([ List.hd validators ], empty_messages, 15) 40
+    run chains_actions_map ([ List.hd validators ], empty_messages, 15) 40
   in
   let extraction = extract_levels output in
   let levels_are_equal = elements_are_equal extraction in
@@ -154,25 +228,48 @@ let test_run_15_round_message_steal () =
     ~expected:(true, true)
     ~actual:(level > 3, levels_are_equal)
 
+let test_run_40_round_message_steal_all () =
+  let output = run chains_actions_map (validators, empty_messages, 40) 80 in
+  let extraction = extract_levels output in
+  let levels_are_equal = elements_are_equal extraction in
+  let level = List.hd extraction in
+  Alcotest.(check' (pair bool bool))
+    ~msg:
+      "chain steals all messages for 40 rounds and progresses after 80 rounds"
+    ~expected:(true, true)
+    ~actual:(level > 3, levels_are_equal)
+
 let run () =
   let open Alcotest in
-  run "running chain tests" ~and_exit:false
+  run "chain tests" ~and_exit:false
     [
-      ("normally", [ test_case "" `Slow test_run_normally ]);
-      ( "10_round_random_filter",
-        [ test_case "" `Slow test_run_10_round_random_filter ] );
-      ( "20_round_random_filter",
-        [ test_case "" `Slow test_run_20_round_random_filter ] );
-      ( "30_round_random_filter",
-        [ test_case "" `Slow test_run_30_round_random_filter ] );
-      ( "100_round_random_filter",
-        [ test_case "" `Slow test_run_100_round_random_filter ] );
-      ( "5_round_message_steal",
-        [ test_case "" `Slow test_run_5_round_message_steal ] );
-      ( "10_round_message_steal",
-        [ test_case "" `Slow test_run_10_round_message_steal ] );
-      ( "15_round_message_steal",
-        [ test_case "" `Slow test_run_15_round_message_steal ] );
+      ( "Utils",
+        [ test_case "Universal filter works" `Quick test_universal_filter_work ]
+      );
+      ( "chain run",
+        [
+          test_case "normally" `Quick test_run_normally;
+          test_case "10_round_random_filter" `Quick
+            test_run_10_round_random_filter;
+          test_case "20_round_random_filter" `Quick
+            test_run_20_round_random_filter;
+          test_case "30_round_random_filter" `Quick
+            test_run_30_round_random_filter;
+          test_case "100_round_random_filter" `Quick
+            test_run_100_round_random_filter;
+          test_case "10_round_universal_filter" `Quick
+            test_run_10_round_universal_filter;
+          test_case "100_round_universal_filter" `Quick
+            test_run_100_round_universal_filter;
+          test_case "5_round_message_steal" `Quick
+            test_run_5_round_message_steal;
+          test_case "10_round_message_steal" `Quick
+            test_run_10_round_message_steal;
+          test_case "15_round_message_steal" `Quick
+            test_run_15_round_message_steal;
+          test_case "40_round_message_steal_all" `Quick
+            test_run_40_round_message_steal_all;
+        ] );
     ]
 
 let () = run ()

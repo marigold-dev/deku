@@ -213,8 +213,10 @@ let convert_messages_to_actions chain_actions_map messages =
    four validators to send with two quantifiers = 5
    total is 4 * 5 * 5 = 100 different filters. Some of which are redundant, but who cares. There's one option which completely kills the network for some amount of time.
 *)
+(* TODO: How do we control filters over time? *)
+(* TODO: Change thief stuff into a closure with a function similar to filters *)
 
-let rec run chains_actions_map round
+let rec run chains_actions_map ?(round = 0) ?(filters = fun _ -> [])
     ((to_steal, stolen_messages, rounds_left) as thief_stuff) stopping_point =
   match round = stopping_point with
   | true -> chains_actions_map
@@ -223,26 +225,25 @@ let rec run chains_actions_map round
       let chains_actions_map, messages_to_receive =
         eval_actions chains_actions_map empty_messages
       in
-      let filtered_messages = messages_to_receive in
-      (* let filtered_messages =
-           let open Chain_filters in
-           _filter_messages (_generate_filter ()) messages_to_receive
-         in *)
+      let filter_list = filters round in
+      let filtered_messages =
+        let open Chain_filters in
+        _filter_messages filter_list messages_to_receive
+      in
       let messages_to_receive, stolen_messages =
-        if rounds_left < 0 then (messages_to_receive, stolen_messages)
+        if rounds_left < 0 then (filtered_messages, stolen_messages)
         else if rounds_left = 0 then
           jumble_and_mix filtered_messages stolen_messages
         else steal_messages filtered_messages thief_stuff
       in
       Format.eprintf "We've stolen %d messages!\n%!"
-        (Map.fold
-           (fun _ messages total -> List.length messages + total)
-           stolen_messages 0);
-      
+        (Chain_messages.message_count stolen_messages);
+      Format.eprintf "There are %d messages!\n%!"
+        (Chain_messages.message_count messages_to_receive);
       Chain_printers.print_messages messages_to_receive;
       let chains_actions_map =
         convert_messages_to_actions chains_actions_map messages_to_receive
       in
-      run chains_actions_map (round + 1)
+      run chains_actions_map ~round:(round + 1) ~filters
         (to_steal, stolen_messages, rounds_left - 1)
         stopping_point
