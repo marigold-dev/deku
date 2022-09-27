@@ -20,6 +20,7 @@ let
                       inherit system;
                       modules = [
                         (import ./config/modules/node-exporter.nix)
+                        (import ./config/modules/nginx.nix)
                         (import ./config/modules/promtail.nix)
                         deku-node
                         ({ pkgs, ... }:
