@@ -14,7 +14,7 @@ import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
 import { KeyHash as KeyHashType } from './core/key-hash';
 import { Proof } from './core/proof';
-import { TicketID } from './core/ticket-id';
+import TicketID, { TicketID as TicketIDType } from './core/ticket-id';
 
 export type Setting = {
     dekuRpc: string,
@@ -214,7 +214,8 @@ export class DekuToolkit {
         return block
     }
 
-    async getBalance(address: string, ticket_id: TicketID): Promise<number> {
+    async getBalance(address: string, ticketer: string, data: string): Promise<number> {
+        const ticket_id = TicketID.createTicketID(ticketer, data);
         const balance = await get(this.endpoints["GET_BALANCE"](address, ticket_id));
         return balance
     }
