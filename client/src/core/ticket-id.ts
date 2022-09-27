@@ -3,6 +3,13 @@ export type TicketID = {
   data: string
 }
 
-export default {
+const createTicketID = (ticketer: string, data: string) : TicketID => {
+  return {
+    ticketer,
+    data
+  }
+}
 
+export default {
+  createTicketID
 }
