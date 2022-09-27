@@ -88,7 +88,6 @@ let
       { }
       nodes;
   decookies_network = network_config_to_nixos_config (import ./config/decookies_network.nix);
-  # TODO: depoy deku-c
   deku_c_network = network_config_to_nixos_config (import ./config/deku_c_network.nix);
 in
 decookies_network // deku_c_network
