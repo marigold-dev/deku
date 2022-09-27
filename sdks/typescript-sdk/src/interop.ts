@@ -118,10 +118,11 @@ const main = (
     console.log("vm started");
 
     for (; ;) {
-        const message = JSON.parse(read().toString());
+        const raw = read().toString();
+        const message = JSON.parse(raw);
         let error = "";
-        if(message[0] !== "Noop_transaction") {
-            const transaction = JSON.parse(message[1]);
+        if (message[0] !== "Noop_transaction") {
+            const transaction = message[1];
             try {
                 error = state_transition(transaction);
             } catch (error) {
