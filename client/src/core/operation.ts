@@ -42,7 +42,8 @@ export type SignedOperation = {
 }
 
 const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashType, receiver: KeyHashType, amount: AmountType, ticketer: string, data: string): Transaction => {
-   const a : Transaction = {
+  const hexData = Buffer.from(data, "hex").toString();  // FIXME: make this type safe
+  const a : Transaction = {
         level,
         nonce,
         source,
@@ -51,7 +52,7 @@ const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashTy
             receiver,
             ticket_id: ["Ticket_id", {
               ticketer: ticketer,
-              data: data
+              data: hexData
             }],
             amount
         }
@@ -73,7 +74,8 @@ const createVmOperation = (level: LevelType, nonce: NonceType, source: KeyHashTy
 }
 
 const createWithdraw = (level: LevelType, nonce: NonceType, source: KeyHashType, owner: KeyHashType, amount: AmountType, ticketer: string, data: string): Withdraw => {
-   const a : Withdraw = {
+  const hexData = Buffer.from(data, "hex").toString(); // FIXME: make this type safe
+  const a : Withdraw = {
         level,
         nonce,
         source,
@@ -82,7 +84,7 @@ const createWithdraw = (level: LevelType, nonce: NonceType, source: KeyHashType,
             owner,
             ticket_id: ["Ticket_id", {
               ticketer: ticketer,
-              data: data
+              data: hexData
             }],
             amount
         }
