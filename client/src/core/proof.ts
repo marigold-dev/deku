@@ -12,7 +12,8 @@ export type Proof = {
       ticketer: string,
       data: string
     },
-    hash: string
+    hash: string,
+    amount: number
   };
   proof: string[]
 }
@@ -41,6 +42,7 @@ const ofDTO = (json: JSONValue): Proof | null => {
   const id = handle.at("id").as_int();
   const owner = handle.at("owner").as_array();
   const ticket_id = handle.at("ticket_id").as_array();
+  const amount = handle.at("amount").as_int()
 
   if (ticket_id === null) return null;
 
@@ -62,10 +64,12 @@ const ofDTO = (json: JSONValue): Proof | null => {
   console.log("f");
   if (hash === null) return null;
   console.log("g");
+  if (amount === null) return null;
+  console.log("h");
 
   const address = owner[1].at("contract").as_string();
   if (address === null) return null;
-  console.log("h");
+  console.log("i");
 
   return {
     withdrawal_handles_hash: fromB58Hash(withdrawal_handles_hash),
@@ -76,7 +80,8 @@ const ofDTO = (json: JSONValue): Proof | null => {
         ticketer,
         data
       },
-      hash
+      hash,
+      amount
     },
     proof: proof3
   };
