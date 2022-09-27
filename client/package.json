@@ -1,6 +1,6 @@
 {
-  "name": "deku-toolkit",
-  "version": "1.0.0",
+  "name": "@marigold-dev/deku-toolkit",
+  "version": "0.1.2",
   "description": "toolkit to interact with deku",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -8,11 +8,10 @@
     "build": "tsc --project . && eslint .",
     "dev": "tsc --project . -w",
     "lint": "eslint .",
-    "postinstall": "tsc --project .",
     "ship": "npm run build && npm run lint"
   },
   "files": [
-    "src/",
+    "lib/",
     "package.json"
   ],
   "author": "contact@marigold.dev",
