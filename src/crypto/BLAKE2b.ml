@@ -82,7 +82,7 @@ include BLAKE2b_256
 let yojson_of_t t = `String (to_hex t)
 
 let t_of_yojson json =
-  let json_str = Yojson.Safe.to_string json in
+  let json_str = Yojson.Safe.Util.to_string json in
   match json_str |> of_hex with
   | Some t -> t
   | None ->
