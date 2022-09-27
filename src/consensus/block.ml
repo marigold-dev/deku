@@ -10,6 +10,7 @@ type block =
       hash : Block_hash.t;
       author : Key_hash.t;
       level : Level.t;
+      (* TODO: nonce *)
       previous : Block_hash.t;
       payload : string list;
     }
