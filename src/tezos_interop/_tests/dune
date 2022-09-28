@@ -44,9 +44,6 @@
   deku_network
   deku_protocol
   deku_stdlib
-  cohttp
-  cohttp-lwt
-  cohttp-lwt-unix
   yojson
   piaf
   common
@@ -69,9 +66,6 @@
   deku_network
   deku_indexer
   deku_protocol
-  cohttp
-  cohttp-lwt
-  cohttp-lwt-unix
   yojson
   piaf
   common
@@ -94,9 +88,6 @@
   deku_network
   deku_indexer
   deku_protocol
-  cohttp
-  cohttp-lwt
-  cohttp-lwt-unix
   yojson
   piaf
   common
