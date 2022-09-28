@@ -1,6 +1,5 @@
 open Deku_concepts
 open Deku_protocol
-open Deku_crypto
 open Deku_tezos
 
 type producer_data = private
@@ -34,16 +33,15 @@ val incoming_tezos_operation :
 
 (* TODO: n log n *)
 val clean :
-  receipts:Receipt.t list ->
-  tezos_operations:Tezos_operation.t list ->
-  producer ->
-  producer
+  receipts:Receipt.receipt list ->
+  tezos_operations:Tezos_operation.tezos_operation list ->
+  t ->
+  t
 
 val produce :
   parallel_map:
     ((Operation.operation -> string) -> Operation.operation list -> string list) ->
-  current:Timestamp.t ->
-  consensus:Consensus.t ->
-  withdrawal_handles_hash:BLAKE2b.t ->
-  producer ->
-  Block.block option
+  above:Block.block ->
+  withdrawal_handles_hash:Deku_crypto.BLAKE2b.BLAKE2b_256.hash ->
+  t ->
+  Block.block
