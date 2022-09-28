@@ -1,16 +1,20 @@
 open Deku_crypto
 
-type validators = Key_hash.t list
+type validators = Key_hash.Set.t
 and t = validators [@@deriving yojson]
 
-let of_key_hash_list t = t
-let to_key_hash_list t = t
+let of_key_hash_list validators =
+  match validators with
+  | [] -> raise (Invalid_argument "validators cannot be empty")
+  | validators -> Key_hash.Set.of_list validators
+
+let to_key_hash_list validators = Key_hash.Set.elements validators
 
 let cardinal validators =
   (* TODO: O(1) cardinality *)
-  List.length validators
+  Key_hash.Set.cardinal validators
 
-let mem key_hash validators = List.mem key_hash validators
+let mem key_hash validators = Key_hash.Set.mem key_hash validators
 
 let rec findi_opt n f l =
   match l with
@@ -22,15 +26,20 @@ let findi_opt f l = findi_opt 0 f l
 let find_after_index ~after validators =
   findi_opt (fun validator -> Key_hash.equal validator after) validators
 
-let modulo x y =
-  let result = x mod y in
-  if result >= 0 then result else result + y
-
 let skip ~after ~skip validators =
+  let validators = to_key_hash_list validators in
   let length = List.length validators in
-  let n =
-    match find_after_index ~after validators with Some n -> n | None -> 0
+  let index =
+    match find_after_index ~after validators with
+    | Some index -> index
+    | None -> 0
   in
-  (* FIXME: how could this be negative? *)
-  let i = modulo (n + skip) length in
-  List.nth validators i
+  let index = (index + skip) mod length in
+  let index =
+    match index < 0 with
+    | true ->
+        Logs.warn (fun m -> m "negative skip: %d" skip);
+        0
+    | false -> index
+  in
+  List.nth validators index

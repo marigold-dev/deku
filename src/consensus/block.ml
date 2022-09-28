@@ -8,9 +8,11 @@ type block =
       key : Key.t;
       signature : Signature.t;
       hash : Block_hash.t;
+      (* FIXME: withdrawal_handles_hash??? TYPO*)
       withdrawal_handles_hash : BLAKE2b.t;
       author : Key_hash.t;
       level : Level.t;
+      (* TODO: nonce *)
       previous : Block_hash.t;
       payload : string list;
       payload_hash : BLAKE2b.t;
