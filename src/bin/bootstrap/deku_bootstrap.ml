@@ -10,31 +10,33 @@ open Deku_chain
 let sleep_time = 3.0
 
 module Util = struct
-  let ensure_folder folder =
-    let%await exists = Lwt_unix.file_exists folder in
-    if exists then
-      let%await stat = Lwt_unix.stat folder in
-      if stat.st_kind = Lwt_unix.S_DIR then Lwt.return ()
-      else raise (Invalid_argument (folder ^ " is not a folder"))
-    else Lwt_unix.mkdir folder 0o700
+  let ensure_folder ~env folder =
+    let cwd = Eio.Stdenv.cwd env in
+    match
+      let folder = Filename.concat (Unix.getcwd ()) folder in
+
+      IO.file_exists folder
+    with
+    | true -> ()
+    | false ->
+        let folder = Eio.Path.(cwd / folder) in
+        Eio.Path.mkdir ~perm:0o755 folder
 
   let data_folders ~n =
-    let cwd = Unix.getcwd () in
-    let data_folder = Filename.concat cwd "data" in
+    let data_folder = "data" in
     Filename.concat data_folder (Int.to_string n)
 end
 
-let broadcast ~content network =
+let broadcast ~sw ~content network =
   let open Message in
   let _message, raw_message = Message.encode ~content in
   let (Raw_message { hash; raw_content }) = raw_message in
   let raw_expected_hash = Message_hash.to_b58 hash in
-  Network.broadcast ~raw_expected_hash ~raw_content network
+  Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content network
 
-let produce identity consensus network =
-  let (Consensus.Consensus { current_block; _ }) = consensus in
+let produce ~sw identity consensus network =
   let (Block { hash = current_block; level = current_level; _ }) =
-    current_block
+    Deku_consensus.Consensus.trusted_block consensus
   in
   let level = Level.next current_level in
   let previous = current_block in
@@ -45,21 +47,23 @@ let produce identity consensus network =
     Format.eprintf "produced: %a\n%!" Z.pp_print level
   in
   let block = Block.produce ~identity ~level ~previous ~operations in
-  broadcast ~content:(Message.Content.block block) network;
+  broadcast ~sw ~content:(Message.Content.block block) network;
   block
 
-let sign identity block network =
+let sign ~sw identity block network =
   let vote = Block.sign ~identity block in
-  broadcast ~content:(Message.Content.vote vote) network
+  let (Block { level; _ }) = block in
+  let content = Message.Content.vote ~level ~vote in
+  broadcast ~sw ~content network
 
-let restart ~producer identities consensus network =
-  let block = produce producer consensus network in
-  List.iter (fun identity -> sign identity block network) identities
+let restart ~sw ~producer identities consensus network =
+  let block = produce ~sw producer consensus network in
+  List.iter (fun identity -> sign ~sw identity block network) identities
 
-let bootstrap ~size ~folder =
-  let%await storages =
+let bootstrap ~sw ~env ~size ~folder =
+  let storages =
     let files = List.init size (fun n -> Util.data_folders ~n) in
-    Lwt_list.map_p (fun folder -> Storage.Config.read ~folder) files
+    Eio.Fiber.List.map (fun folder -> Storage.Config.read ~env ~folder) files
   in
   let identities =
     List.map
@@ -68,6 +72,7 @@ let bootstrap ~size ~folder =
         Identity.make secret)
       storages
   in
+
   let producer =
     let length = List.length identities in
     let index = Random.int32 (Int32.of_int length) in
@@ -82,21 +87,28 @@ let bootstrap ~size ~folder =
     let storage = List.nth storages 0 in
     storage.Storage.Config.nodes
   in
-  let%await chain = Storage.Chain.read ~folder in
+  let chain = Storage.Chain.read ~env ~folder in
   let (Chain { consensus; _ }) =
     match chain with
     | Some chain -> chain
     | None -> Chain.make ~identity:producer ~validators
   in
-  let network = Network.connect ~nodes in
+  let network = Network_manager.make () in
+  let () =
+    Eio.Fiber.fork ~sw @@ fun () ->
+    Network_manager.connect ~sw ~env ~nodes
+      ~on_request:(fun ~id:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
+      ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())
+      network
+  in
   (* TODO: this is lame, but I'm lazy *)
-  let%await () = Lwt_unix.sleep sleep_time in
-  let () = restart ~producer identities consensus network in
+  let clock = Eio.Stdenv.clock env in
+  let () = Eio.Time.sleep clock sleep_time in
+  let () = restart ~sw ~producer identities consensus network in
   (* TODO: this is lame, but Lwt *)
-  let%await () = Lwt_unix.sleep sleep_time in
-  Lwt.return_unit
+  Eio.Time.sleep clock sleep_time
 
-let generate ~base_uri ~base_port ~size =
+let generate ~env ~base_uri ~base_port ~size =
   let secrets =
     List.init size (fun _n ->
         let ed25519 = Ed25519.Secret.generate () in
@@ -113,8 +125,7 @@ let generate ~base_uri ~base_port ~size =
   let nodes =
     List.init size (fun n ->
         let port = base_port + n in
-        let uri = Uri.of_string base_uri in
-        Uri.with_port uri (Some port))
+        (base_uri, port))
   in
   let storages =
     List.map
@@ -122,19 +133,18 @@ let generate ~base_uri ~base_port ~size =
       secrets
   in
 
-  let%await cwd = Lwt_unix.getcwd () in
-  let data_folder = Filename.concat cwd "data" in
-  let%await () = Util.ensure_folder data_folder in
+  let data_folder = "data" in
+  let () = Util.ensure_folder ~env data_folder in
 
-  Lwt_list.iteri_p
+  List.iteri
     (fun n storage ->
       let folder = Filename.concat data_folder (Int.to_string n) in
-      let%await () = Util.ensure_folder folder in
-      Storage.Config.write ~folder storage)
+      let () = Util.ensure_folder ~env folder in
+      Storage.Config.write ~env ~folder storage)
     storages
 
 let main () =
-  let base_uri = ref "http://localhost" in
+  let base_uri = ref "localhost" in
   let base_port = ref 4440 in
   let size = ref 4 in
   let kind = ref None in
@@ -143,7 +153,7 @@ let main () =
     [
       ( "-s",
         Arg.Set_string base_uri,
-        {|Base URI for validators ("http://localhost" by default)|} );
+        {|Base URI for validators ("localhost" by default)|} );
       ("-p", Arg.Set_int base_port, "Base PORT for validators (4440 by default)");
       ("-n", Arg.Set_int size, "Number of validators (4 by default)");
       ("-d", Arg.Set_string data_folder, " Data folder (./data by default)");
@@ -151,10 +161,12 @@ let main () =
     (fun selected -> kind := Some selected)
     "Handle Deku communication. Runs forever.";
 
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
   match !kind with
   | Some "generate" ->
-      generate ~base_uri:!base_uri ~base_port:!base_port ~size:!size
-  | Some "bootstrap" -> bootstrap ~size:!size ~folder:!data_folder
+      generate ~env ~base_uri:!base_uri ~base_port:!base_port ~size:!size
+  | Some "bootstrap" -> bootstrap ~sw ~env ~size:!size ~folder:!data_folder
   | Some _ | None -> failwith "deku-bootstrap <generate|bootstrap>"
 
 (* let setup_log ?style_renderer level =
@@ -163,4 +175,4 @@ let main () =
      Logs.set_reporter (Logs_fmt.reporter ())
 
    let () = setup_log Logs.Debug *)
-let () = Lwt_main.run (main ())
+let () = main ()
