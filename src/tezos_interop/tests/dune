@@ -48,7 +48,6 @@
   cohttp-lwt
   cohttp-lwt-unix
   yojson
-  piaf
   common
   cmdliner)
  (preprocess
@@ -73,7 +72,6 @@
   cohttp-lwt
   cohttp-lwt-unix
   yojson
-  piaf
   common
   cmdliner)
  (preprocess
@@ -98,7 +96,6 @@
   cohttp-lwt
   cohttp-lwt-unix
   yojson
-  piaf
   common
   cmdliner)
  (preprocess

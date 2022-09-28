@@ -5,7 +5,7 @@ module Pool = struct
   type t = pool
 
   let make ~domains =
-    let pool = Task.setup_pool ~num_additional_domains:domains () in
+    let pool = Task.setup_pool ~num_domains:domains () in
     { domains; pool }
 end
 
