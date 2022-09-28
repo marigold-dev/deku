@@ -105,12 +105,13 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { identity; operations; tezos_operations; default_block_size }
 
-let produce ~parallel_map ~current_level ~current_block ~withdrawal_handles_hash
-    producer =
+let produce ~parallel_map ~above ~withdrawal_handles_hash producer =
+  let open Block in
   let (Producer { identity; operations; tezos_operations; default_block_size })
       =
     producer
   in
+  let (Block { hash = current_block; level = current_level; _ }) = above in
   let previous = current_block in
   let level = Level.next current_level in
   let operations =
@@ -128,22 +129,9 @@ let produce ~parallel_map ~current_level ~current_block ~withdrawal_handles_hash
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
-  Block.produce ~parallel_map ~identity ~level ~previous ~operations
-    ~withdrawal_handles_hash ~tezos_operations
-
-let produce ~parallel_map ~current ~consensus ~withdrawal_handles_hash producer
-    =
-  let open Consensus in
-  let (Consensus { current_block; _ }) = consensus in
-  match is_producer ~current consensus with
-  | true ->
-      let (Block { hash = current_block; level = current_level; _ }) =
-        current_block
-      in
-      let block =
-        produce ~parallel_map ~current_level ~current_block
-          ~withdrawal_handles_hash producer
-      in
-      Logs.info (fun m -> m "Producing %a" Block.pp block);
-      Some block
-  | false -> None
+  let block =
+    Block.produce ~parallel_map ~identity ~level ~previous ~operations
+      ~withdrawal_handles_hash ~tezos_operations
+  in
+  Logs.info (fun m -> m "Producing %a" Block.pp block);
+  block
