@@ -64,6 +64,9 @@ with super; {
               ""
           '';
         });
+        tezos-micheline = super.tezos-micheline.overrideAttrs (_: {
+          doCheck = false;
+        });
       });
   });
 }
