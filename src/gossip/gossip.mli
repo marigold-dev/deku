@@ -9,12 +9,14 @@ type action = private
       raw_message : Message.raw;
     }
   | Gossip_send_message of {
-      (* TODO: Connection_id.t *)
-      id : Request_id.t;
+      connection : Connection_id.t;
       raw_message : Message.raw;
     }
   | Gossip_send_request of { raw_request : Request.raw }
-  | Gossip_incoming_request of { id : Request_id.t; request : Request.t }
+  | Gossip_incoming_request of {
+      connection : Connection_id.t;
+      request : Request.t;
+    }
   | Gossip_fragment of { fragment : fragment }
 
 val empty : gossip
@@ -26,11 +28,13 @@ val incoming_message :
   gossip ->
   gossip * fragment option
 
-val send_message : id:Request_id.t -> content:Message.Content.t -> fragment
+val send_message :
+  connection:Connection_id.t -> content:Message.Content.t -> fragment
+
 val send_request : content:Request.Content.t -> fragment
 
 val incoming_request :
-  id:Request_id.t ->
+  connection:Connection_id.t ->
   raw_expected_hash:string ->
   raw_content:string ->
   fragment option

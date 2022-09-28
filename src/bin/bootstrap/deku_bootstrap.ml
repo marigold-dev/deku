@@ -27,14 +27,14 @@ module Util = struct
     Filename.concat data_folder (Int.to_string n)
 end
 
-let broadcast ~sw ~content network =
+let broadcast ~content network =
   let open Message in
   let _message, raw_message = Message.encode ~content in
   let (Raw_message { hash; raw_content }) = raw_message in
   let raw_expected_hash = Message_hash.to_b58 hash in
-  Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content network
+  Network_manager.broadcast ~raw_expected_hash ~raw_content network
 
-let produce ~sw identity consensus network =
+let produce identity consensus network =
   let (Block { hash = current_block; level = current_level; _ }) =
     Deku_consensus.Consensus.trusted_block consensus
   in
@@ -47,20 +47,22 @@ let produce ~sw identity consensus network =
     Format.eprintf "produced: %a\n%!" Z.pp_print level
   in
   let block = Block.produce ~identity ~level ~previous ~operations in
-  broadcast ~sw ~content:(Message.Content.block block) network;
+  broadcast ~content:(Message.Content.block block) network;
   block
 
-let sign ~sw identity block network =
+let sign identity block network =
   let vote = Block.sign ~identity block in
   let (Block { level; _ }) = block in
   let content = Message.Content.vote ~level ~vote in
-  broadcast ~sw ~content network
+  broadcast ~content network
 
-let restart ~sw ~producer identities consensus network =
-  let block = produce ~sw producer consensus network in
-  List.iter (fun identity -> sign ~sw identity block network) identities
+let restart ~producer identities consensus network =
+  let block = produce producer consensus network in
+  List.iter (fun identity -> sign identity block network) identities
 
 let bootstrap ~sw ~env ~size ~folder =
+  let net = Eio.Stdenv.net env in
+  let clock = Eio.Stdenv.clock env in
   let storages =
     let files = List.init size (fun n -> Util.data_folders ~n) in
     Eio.Fiber.List.map (fun folder -> Storage.Config.read ~env ~folder) files
@@ -96,15 +98,15 @@ let bootstrap ~sw ~env ~size ~folder =
   let network = Network_manager.make () in
   let () =
     Eio.Fiber.fork ~sw @@ fun () ->
-    Network_manager.connect ~sw ~env ~nodes
-      ~on_request:(fun ~id:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
+    Network_manager.connect ~net ~clock
+      ~on_request:(fun ~connection:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
       ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())
-      network
+      ~nodes network
   in
   (* TODO: this is lame, but I'm lazy *)
   let clock = Eio.Stdenv.clock env in
   let () = Eio.Time.sleep clock sleep_time in
-  let () = restart ~sw ~producer identities consensus network in
+  let () = restart ~producer identities consensus network in
   (* TODO: this is lame, but Lwt *)
   Eio.Time.sleep clock sleep_time
 

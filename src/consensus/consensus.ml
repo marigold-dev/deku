@@ -2,6 +2,9 @@ open Deku_crypto
 open Deku_concepts
 open Block
 
+(* TODO: maybe pipeline produce?
+        this would allow producing next while applying current *)
+
 (* TODO: this only detects double signed level when its time to apply *)
 (* TODO: only check signatures if block is known? *)
 type action =

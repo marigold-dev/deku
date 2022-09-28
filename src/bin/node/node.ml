@@ -28,14 +28,12 @@ and handle_chain_action ~sw ~env ~action node =
   match action with
   | Chain_timeout { from } -> start_timeout ~sw ~env ~from node
   | Chain_broadcast { raw_expected_hash; raw_content } ->
-      (* Format.eprintf "broadcast(%.3f): %s\n%!" (Unix.gettimeofday ())
-         raw_expected_hash; *)
-      Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content node.network
-  | Chain_send_message { id; raw_expected_hash; raw_content } ->
-      Network_manager.respond ~id ~raw_expected_hash ~raw_content node.network
+      Network_manager.broadcast ~raw_expected_hash ~raw_content node.network
+  | Chain_send_message { connection; raw_expected_hash; raw_content } ->
+      Network_manager.send ~connection ~raw_expected_hash ~raw_content
+        node.network
   | Chain_send_request { raw_expected_hash; raw_content } ->
-      Network_manager.request ~sw ~raw_expected_hash ~raw_content node.network
-  | Chain_send_not_found { id } -> Network_manager.not_found ~id node.network
+      Network_manager.request ~raw_expected_hash ~raw_content node.network
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
 
 and handle_chain_fragment ~sw ~env ~fragment node =
@@ -85,8 +83,9 @@ let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
   | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-let on_network_request ~sw ~env ~id ~raw_expected_hash ~raw_content node =
-  let fragment = Chain.request ~id ~raw_expected_hash ~raw_content in
+let on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
+    =
+  let fragment = Chain.request ~connection ~raw_expected_hash ~raw_content in
   match fragment with
   | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
@@ -106,15 +105,18 @@ let start ~sw ~env ~port ~nodes node =
        raw_expected_hash; *)
     on_network_message ~sw ~env ~raw_expected_hash ~raw_content node
   in
-  let on_request ~id ~raw_expected_hash ~raw_content =
-    on_network_request ~sw ~env ~id ~raw_expected_hash ~raw_content node
+  let on_request ~connection ~raw_expected_hash ~raw_content =
+    on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
   in
   start_timeout ~sw ~env ~from:(current ()) node;
+  let net = Eio.Stdenv.net env in
+  let clock = Eio.Stdenv.clock env in
   Eio.Fiber.both
     (fun () ->
-      Network_manager.listen ~sw ~env ~port ~on_message ~on_request node.network)
+      Network_manager.listen ~sw ~net ~clock ~port ~on_message ~on_request
+        node.network)
     (fun () ->
-      Network_manager.connect ~sw ~env ~nodes ~on_message ~on_request
+      Network_manager.connect ~net ~clock ~nodes ~on_message ~on_request
         node.network)
 
 let test () =
@@ -123,6 +125,7 @@ let test () =
   Eio_main.run @@ fun env ->
   let open Deku_concepts in
   let open Deku_crypto in
+  let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
   let domains = Eio.Stdenv.domain_mgr env in
   let identity () =
@@ -167,8 +170,9 @@ let test () =
     Eio.Time.sleep clock 0.2;
     let () =
       Eio.Fiber.fork ~sw @@ fun () ->
-      Network_manager.connect ~sw ~env ~nodes
-        ~on_request:(fun ~id:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
+      Network_manager.connect ~net ~clock ~nodes
+        ~on_request:(fun ~connection:_ ~raw_expected_hash:_ ~raw_content:_ ->
+          ())
         ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())
         network
     in
@@ -178,7 +182,7 @@ let test () =
       let _message, raw_message = Message.encode ~content in
       let (Raw_message { hash; raw_content }) = raw_message in
       let raw_expected_hash = Message_hash.to_b58 hash in
-      Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content network
+      Network_manager.broadcast ~raw_expected_hash ~raw_content network
     in
 
     let (Block.Block { hash = current_block; level = current_level; _ }) =

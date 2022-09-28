@@ -19,19 +19,28 @@ type fragment =
       expected_hash : Message_hash.t;
       raw_content : string;
     }
-  | Fragment_send_message of { id : Request_id.t; content : Message.Content.t }
+  | Fragment_send_message of {
+      connection : Connection_id.t;
+      content : Message.Content.t;
+    }
   | Fragment_send_request of { content : Request.Content.t }
   | Fragment_incoming_request of {
-      id : Request_id.t;
+      connection : Connection_id.t;
       expected_hash : Request_hash.t;
       raw_content : string;
     }
 
 type outcome =
   | Outcome_message of { message : Message.t; raw_message : Message.raw }
-  | Outcome_send_message of { id : Request_id.t; raw_message : Message.raw }
+  | Outcome_send_message of {
+      connection : Connection_id.t;
+      raw_message : Message.raw;
+    }
   | Outcome_send_request of { raw_request : Request.raw }
-  | Outcome_incoming_request of { id : Request_id.t; request : Request.t }
+  | Outcome_incoming_request of {
+      connection : Connection_id.t;
+      request : Request.t;
+    }
   | Outcome_message_decoded_error of { expected_hash : Message_hash.t }
   | Outcome_request_decoded_error of { expected_hash : Request_hash.t }
 
@@ -40,9 +49,15 @@ type action =
       message : Message.t;
       raw_message : Message.raw;
     }
-  | Gossip_send_message of { id : Request_id.t; raw_message : Message.raw }
+  | Gossip_send_message of {
+      connection : Connection_id.t;
+      raw_message : Message.raw;
+    }
   | Gossip_send_request of { raw_request : Request.raw }
-  | Gossip_incoming_request of { id : Request_id.t; request : Request.t }
+  | Gossip_incoming_request of {
+      connection : Connection_id.t;
+      request : Request.t;
+    }
   | Gossip_fragment of { fragment : fragment }
 
 let empty =
@@ -94,17 +109,18 @@ let incoming_message ~raw_expected_hash ~raw_content gossip =
   | Some expected_hash -> incoming_message ~expected_hash ~raw_content gossip
   | None -> (gossip, None)
 
-let send_message ~id ~content = Fragment_send_message { id; content }
+let send_message ~connection ~content =
+  Fragment_send_message { connection; content }
 
 let send_request ~content =
   (* TODO: prevent duplicated requests flying *)
   Fragment_send_request { content }
 
-let incoming_request ~id ~raw_expected_hash ~raw_content =
+let incoming_request ~connection ~raw_expected_hash ~raw_content =
   match Request_hash.of_b58 raw_expected_hash with
   | Some expected_hash ->
       let fragment =
-        Fragment_incoming_request { id; expected_hash; raw_content }
+        Fragment_incoming_request { connection; expected_hash; raw_content }
       in
       Some fragment
   | None -> None
@@ -122,20 +138,20 @@ let compute_decode_message ~expected_hash ~raw_content =
       | false -> Outcome_message_decoded_error { expected_hash })
   | None -> Outcome_message_decoded_error { expected_hash }
 
-let compute_send_message ~id ~content =
+let compute_send_message ~connection ~content =
   let _message, raw_message = Message.encode ~content in
-  Outcome_send_message { id; raw_message }
+  Outcome_send_message { connection; raw_message }
 
 let compute_send_request ~content =
   let _request, raw_request = Request.encode ~content in
   Outcome_send_request { raw_request }
 
-let compute_incoming_request ~id ~expected_hash ~raw_content =
+let compute_incoming_request ~connection ~expected_hash ~raw_content =
   match Request.decode ~raw_content with
   | Some (request, _raw_request) -> (
       let (Request { hash = actual_hash; _ }) = request in
       match Request_hash.equal expected_hash actual_hash with
-      | true -> Outcome_incoming_request { id; request }
+      | true -> Outcome_incoming_request { connection; request }
       | false -> Outcome_request_decoded_error { expected_hash })
   | None -> Outcome_request_decoded_error { expected_hash }
 
@@ -144,10 +160,11 @@ let compute fragment =
   | Fragment_encode_message { content } -> compute_encode_message ~content
   | Fragment_decode_message { expected_hash; raw_content } ->
       compute_decode_message ~expected_hash ~raw_content
-  | Fragment_send_message { id; content } -> compute_send_message ~id ~content
+  | Fragment_send_message { connection; content } ->
+      compute_send_message ~connection ~content
   | Fragment_send_request { content } -> compute_send_request ~content
-  | Fragment_incoming_request { id; expected_hash; raw_content } ->
-      compute_incoming_request ~id ~expected_hash ~raw_content
+  | Fragment_incoming_request { connection; expected_hash; raw_content } ->
+      compute_incoming_request ~connection ~expected_hash ~raw_content
 
 let on_message ~message ~raw_message gossip =
   let (Gossip { pending_request; consumed; delayed }) = gossip in
@@ -176,8 +193,8 @@ let on_message ~message ~raw_message gossip =
   | true -> (gossip, None)
   | false -> on_message ~message ~raw_message gossip
 
-let on_send_message ~id ~raw_message gossip =
-  let action = Gossip_send_message { id; raw_message } in
+let on_send_message ~connection ~raw_message gossip =
+  let action = Gossip_send_message { connection; raw_message } in
   (gossip, Some action)
 
 let on_send_request ~raw_request gossip =
@@ -190,8 +207,8 @@ let on_send_request ~raw_request gossip =
       let action = Gossip_send_request { raw_request } in
       (gossip, Some action)
 
-let on_incoming_request ~id ~request gossip =
-  let action = Gossip_incoming_request { id; request } in
+let on_incoming_request ~connection ~request gossip =
+  let action = Gossip_incoming_request { connection; request } in
   (gossip, Some action)
 
 let on_message_decoded_error ~expected_hash gossip =
@@ -218,11 +235,11 @@ let apply ~outcome gossip =
   match outcome with
   | Outcome_message { message; raw_message } ->
       on_message ~message ~raw_message gossip
-  | Outcome_send_message { id; raw_message } ->
-      on_send_message ~id ~raw_message gossip
+  | Outcome_send_message { connection; raw_message } ->
+      on_send_message ~connection ~raw_message gossip
   | Outcome_send_request { raw_request } -> on_send_request ~raw_request gossip
-  | Outcome_incoming_request { id; request } ->
-      on_incoming_request ~id ~request gossip
+  | Outcome_incoming_request { connection; request } ->
+      on_incoming_request ~connection ~request gossip
   | Outcome_message_decoded_error { expected_hash } ->
       on_message_decoded_error ~expected_hash gossip
   | Outcome_request_decoded_error { expected_hash } ->

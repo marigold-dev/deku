@@ -22,12 +22,11 @@ type action = private
   | Chain_timeout of { from : Timestamp.t }
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
   | Chain_send_message of {
-      id : Request_id.t;
+      connection : Connection_id.t;
       raw_expected_hash : string;
       raw_content : string;
     }
   | Chain_send_request of { raw_expected_hash : string; raw_content : string }
-  | Chain_send_not_found of { id : Request_id.t }
   | Chain_fragment of { fragment : fragment }
 
 val make : identity:Identity.t -> validators:Key_hash.t list -> chain
@@ -40,7 +39,7 @@ val incoming :
 (** [incoming ~raw_expected_hash ~raw_content chain] *)
 
 val request :
-  id:Request_id.t ->
+  connection:Connection_id.t ->
   raw_expected_hash:string ->
   raw_content:string ->
   fragment option

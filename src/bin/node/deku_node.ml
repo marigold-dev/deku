@@ -70,7 +70,9 @@ let main () =
 
 (* handle external failures *)
 
-(* let main () = Node.test () *)
+(* let _ = main
+   let main () = Node.test () *)
+
 let () =
   Sys.set_signal Sys.sigpipe
     (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
