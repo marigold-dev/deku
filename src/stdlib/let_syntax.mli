@@ -1,5 +1,3 @@
-[%%let ("let.await" : 'a Lwt.t -> ('a -> 'b Lwt.t) -> 'b Lwt.t)]
-
 [%%let
 ("let.ok" : ('a, 'err) result -> ('a -> ('b, 'err) result) -> ('b, 'err) result)]
 

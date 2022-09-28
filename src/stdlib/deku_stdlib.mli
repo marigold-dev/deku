@@ -2,8 +2,7 @@ module N = N
 module Uri = Uri_ext
 module Map = Map_ext
 module Set = Set_ext
-
-[%%let ("let.await" : 'a Lwt.t -> ('a -> 'b Lwt.t) -> 'b Lwt.t)]
+module IO = Io
 
 [%%let
 ("let.ok" : ('a, 'err) result -> ('a -> ('b, 'err) result) -> ('b, 'err) result)]
