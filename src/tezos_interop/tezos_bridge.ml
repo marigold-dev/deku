@@ -176,9 +176,9 @@ end
 
 type t = Long_lived_js_process.t
 
-let spawn () =
+let spawn ~sw =
   let file = Scripts.file_tezos_js_bridge in
-  Long_lived_js_process.spawn ~file
+  Long_lived_js_process.spawn ~sw ~file
 
 let listen_transaction t ~rpc_node ~required_confirmations ~destination =
   let request =

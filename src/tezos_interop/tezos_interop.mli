@@ -6,6 +6,7 @@ open Deku_concepts
 type t
 
 val make :
+  sw:Eio.Switch.t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
   consensus_contract:Address.t ->
@@ -22,7 +23,7 @@ module Consensus : sig
     withdrawal_handles_hash:BLAKE2b.t ->
     validators:Key_hash.t list ->
     signatures:(Key.t * Signature.t) option list ->
-    unit Lwt.t
+    unit
   (** ~signatures should be in the same order as the old validators *)
 
   type transaction =
@@ -39,7 +40,5 @@ module Consensus : sig
   }
 
   val listen_operations : t -> on_operation:(operation -> unit) -> unit
-
-  val fetch_validators :
-    t -> ((Key_hash.t * Uri.t option) list, string) result Lwt.t
+  val fetch_validators : t -> ((Key_hash.t * Uri.t option) list, string) result
 end

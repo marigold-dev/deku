@@ -31,23 +31,13 @@ end = struct
   end)
 end
 
-exception Process_closed of Unix.process_status
 exception Duplicated_id of Id.t
 exception Unknown_id of Id.t * Yojson.Safe.t
 
 (* enhance error messages *)
 let () =
   let open Format in
-  let pp_process_status fmt status =
-    match status with
-    | Unix.WEXITED content -> fprintf fmt "WEXITED %d" content
-    | Unix.WSIGNALED content -> fprintf fmt "WSIGNALED %d" content
-    | Unix.WSTOPPED content -> fprintf fmt "WSTOPPED %d" content
-  in
-
   let printer = function
-    | Process_closed status ->
-        Some (asprintf "Process_closed (%a)" pp_process_status status)
     | Duplicated_id id -> Some (asprintf "Duplicated_id (%a)" Id.pp id)
     | Unknown_id (id, json) ->
         Some
@@ -142,48 +132,44 @@ let request t kind ~resolver ~to_yojson content =
   | Ok () -> ()
   | Error (Duplicated_id id) -> raise_and_exit (Duplicated_id id)
 
-let listen t ~to_yojson ~of_yojson content =
-  let message_stream, push = Lwt_stream.create () in
+let listen t ~to_yojson ~of_yojson content k =
   let resolver json =
     let value = of_yojson json in
-    push (Some value)
+    k value
   in
-  request t Listen ~resolver ~to_yojson content;
-  message_stream
+  request t Listen ~resolver ~to_yojson content
 
 let request t ~to_yojson ~of_yojson content =
-  let promise, wakeup = Lwt.wait () in
-  let resolver json = Lwt.wakeup_later wakeup json in
+  let promise, resolver = Eio.Promise.create () in
+  let resolver json =
+    let value = of_yojson json in
+    Eio.Promise.resolve resolver value
+  in
   request t Request ~resolver ~to_yojson content;
-  let%await json = promise in
-  Lwt.return (of_yojson json)
+  Eio.Promise.await promise
 
-let spawn ~file =
-  let message_stream, push = Lwt_stream.create () in
+let spawn ~sw ~file =
+  let write_ref = ref (fun _json -> ()) in
+  let write message =
+    let json = Message.yojson_of_t message in
+    !write_ref json
+  in
   let t =
     let next_id = Id.initial in
-    let push message = push (Some message) in
     let pending = Pending.make () in
-    { next_id; push; pending }
+    { next_id; push = write; pending }
   in
 
-  let on_close status = raise_and_exit (Process_closed status) in
-  let on_error exn = raise_and_exit exn in
-  let input_stream =
-    Lwt_stream.map (fun message -> Message.yojson_of_t message) message_stream
+  let on_error exn =
+    Format.eprintf "spawn.error: %s\n%!" (Printexc.to_string exn)
   in
-  let output_stream =
-    Long_lived_process.spawn ~file ~on_error ~on_close input_stream
+  let on_json json =
+    let message = Message.t_of_yojson json in
+    handle_message t message
   in
-
-  (* deal with an exception in the output *)
-  let handle_outputs () =
-    Lwt_stream.iter
-      (fun json ->
-        let message = Message.t_of_yojson json in
-        handle_message t message)
-      output_stream
+  let () =
+    Eio.Fiber.fork ~sw @@ fun () ->
+    Long_lived_process.spawn ~file ~on_error ~on_json @@ fun ~write ->
+    write_ref := write
   in
-  Lwt.async (fun () -> Lwt.catch (fun () -> handle_outputs ()) on_error);
-
   t
