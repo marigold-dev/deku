@@ -102,7 +102,7 @@ const toDTO = (operation: Operation): JSONValue => {
                 level: Level.toDTO(level),
                 nonce: Nonce.toDTO(nonce),
                 source: source,
-                content: ["Transaction", { receiver, ticket_id, amount: Amount.toDTO(amount) }]
+                content: ["Ticket_transfer", { receiver, ticket_id, amount: Amount.toDTO(amount) }]
             }
             return JSONValue.of(dto);
         }
