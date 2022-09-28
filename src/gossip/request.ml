@@ -1,10 +1,10 @@
 module Content = struct
-  open Deku_consensus
+  open Deku_concepts
 
-  type content = Content_block of Block_hash.t
+  type content = Content_accepted of { above : Level.t }
   and t = content [@@deriving yojson]
 
-  let block block = Content_block block
+  let accepted ~above = Content_accepted { above }
 end
 
 type request = Request of { hash : Request_hash.t; content : Content.t }

@@ -1,10 +1,10 @@
 module Content : sig
-  open Deku_consensus
+  open Deku_concepts
 
-  type content = private Content_block of Block_hash.t
+  type content = private Content_accepted of { above : Level.t }
   type t = content [@@deriving yojson]
 
-  val block : Block_hash.t -> content
+  val accepted : above:Level.t -> content
 end
 
 type request = private
