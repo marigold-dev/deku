@@ -1,15 +1,8 @@
 open Deku_concepts
-open Deku_crypto
 
 type block_pool = private
-  | Pool of {
-      by_hash :
-        (Block.t option
-        * (* FIXME: I think this can just be a set and it will be simpler *)
-        Verified_signature.t Key_hash.Map.t)
-        Block_hash.Map.t;
-      by_previous : Block.Set.t Block_hash.Map.t;
-    }
+  | Pool of
+      (Block.t option * Verified_signature.Set.t) Block_hash.Map.t Level.Map.t
 
 type t = block_pool [@@deriving yojson]
 
@@ -17,12 +10,13 @@ val empty : block_pool
 val append_block : block:Block.t -> block_pool -> block_pool
 
 val append_vote :
-  vote:Verified_signature.t -> hash:Block_hash.t -> block_pool -> block_pool
+  level:Level.t -> vote:Verified_signature.t -> block_pool -> block_pool
 
-val remove : block:Block.t -> block_pool -> block_pool
-val find_block : hash:Block_hash.t -> block_pool -> Block.t option
+val find_block :
+  level:Level.t -> hash:Block_hash.t -> block_pool -> Block.t option
 
 val find_votes :
-  hash:Block_hash.t -> block_pool -> Verified_signature.t Key_hash.Map.t
+  level:Level.t -> hash:Block_hash.t -> block_pool -> Verified_signature.Set.t
 
-val find_next : hash:Block_hash.t -> block_pool -> Block.Set.t
+val find_level : level:Level.t -> block_pool -> Block.t list
+val close_level : level:Level.t -> block_pool -> block_pool
