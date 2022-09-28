@@ -215,7 +215,7 @@ export class DekuToolkit {
     }
 
     async getBalance(address: string, ticketer: string, data: string): Promise<number> {
-        const ticket_id = TicketID.createTicketID(ticketer, data);
+        const ticket_id = TicketID.createTicketID(ticketer, data.startsWith("0x")?data:"0x"+data);
         const balance = await get(this.endpoints["GET_BALANCE"](address, ticket_id));
         return balance
     }
@@ -409,3 +409,4 @@ export class DekuToolkit {
 export { fromBeaconSigner } from './utils/signers';
 export { fromMemorySigner } from './utils/signers';
 export { fromCustomSigner } from './utils/signers';
+export { Proof} from './core/proof';
