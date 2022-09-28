@@ -23,14 +23,15 @@ end
 
 type t
 
-val spawn : unit -> t
+val spawn : sw:Eio.Switch.t -> t
 
 val listen_transaction :
   t ->
   rpc_node:Uri.t ->
   required_confirmations:int ->
   destination:Address.t ->
-  Listen_transaction.t Lwt_stream.t
+  (Listen_transaction.t -> unit) ->
+  unit
 
 val inject_transaction :
   t ->
@@ -40,14 +41,14 @@ val inject_transaction :
   destination:Address.t ->
   entrypoint:string ->
   payload:Yojson.Safe.t ->
-  Inject_transaction.t Lwt.t
+  Inject_transaction.t
 
 val storage :
   t ->
   rpc_node:Uri.t ->
   required_confirmations:int ->
   destination:Address.t ->
-  Michelson.t Lwt.t
+  Michelson.t
 
 val big_map_keys :
   t ->
@@ -55,4 +56,4 @@ val big_map_keys :
   required_confirmations:int ->
   destination:Address.t ->
   keys:Michelson.big_map_key list ->
-  Yojson.Safe.t option list Lwt.t
+  Yojson.Safe.t option list

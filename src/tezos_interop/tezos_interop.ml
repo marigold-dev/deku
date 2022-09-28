@@ -11,9 +11,9 @@ type t = {
   bridge_process : Tezos_bridge.t;
 }
 
-let make ~rpc_node ~secret ~consensus_contract ~discovery_contract
+let make ~sw ~rpc_node ~secret ~consensus_contract ~discovery_contract
     ~required_confirmations =
-  let bridge_process = Tezos_bridge.spawn () in
+  let bridge_process = Tezos_bridge.spawn ~sw in
   {
     rpc_node;
     secret;
@@ -45,7 +45,7 @@ module Fetch_storage : sig
     rpc_node:Uri.t ->
     required_confirmations:int ->
     contract_address:Address.t ->
-    Michelson.t Lwt.t
+    Michelson.t
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address =
     Tezos_bridge.storage t.bridge_process ~rpc_node ~required_confirmations
@@ -59,7 +59,7 @@ module Fetch_big_map_keys : sig
     required_confirmations:int ->
     contract_address:Address.t ->
     keys:Michelson.big_map_key list ->
-    Yojson.Safe.t option list Lwt.t
+    Yojson.Safe.t option list
 end = struct
   let run t ~rpc_node ~required_confirmations ~contract_address ~keys =
     Tezos_bridge.big_map_keys t.bridge_process ~rpc_node ~required_confirmations
@@ -68,11 +68,8 @@ end
 
 module Listen_transactions = struct
   let listen t ~rpc_node ~required_confirmations ~destination ~on_message =
-    let message_stream =
-      Tezos_bridge.listen_transaction t.bridge_process ~rpc_node
-        ~required_confirmations ~destination
-    in
-    Lwt.async (fun () -> Lwt_stream.iter on_message message_stream)
+    Tezos_bridge.listen_transaction t.bridge_process ~rpc_node
+      ~required_confirmations ~destination on_message
 end
 
 module Consensus = struct
@@ -122,12 +119,12 @@ module Consensus = struct
       }
     in
     (* TODO: check result *)
-    let%await _ =
+    let _transaction =
       Run_contract.run t ~destination:t.consensus_contract
         ~entrypoint:"update_root_hash"
         ~payload:(Payload.yojson_of_t payload)
     in
-    Lwt.return_unit
+    ()
 
   type transaction =
     | Deposit of {
@@ -244,7 +241,7 @@ module Consensus = struct
       | `String uri -> Ok (Uri.of_string uri)
       | _ -> Error "Failed to parse storage micheline expression"
     in
-    let%await micheline_uris =
+    let micheline_uris =
       Fetch_big_map_keys.run t ~required_confirmations ~rpc_node
         ~contract_address:discovery_contract
         ~keys:
@@ -272,10 +269,7 @@ module Consensus = struct
               Ok (Some key_hash))
         micheline_uris
     in
-    let key_hash_uri_pairs =
-      Result.map (fun uris -> List.combine validator_key_hashes uris) uris
-    in
-    Lwt.return key_hash_uri_pairs
+    Result.map (fun uris -> List.combine validator_key_hashes uris) uris
 
   let fetch_validators t =
     let {
@@ -315,19 +309,17 @@ module Consensus = struct
             [] (List.rev key_hashes)
       | _ -> Error "Failed to parse storage micheline expression"
     in
-    let%await micheline_storage =
+    let micheline_storage =
       Fetch_storage.run t ~required_confirmations ~rpc_node
         ~contract_address:consensus_contract
     in
     let validators = micheline_to_validators micheline_storage in
     match validators with
-    | Error e -> Lwt.return (Error e)
+    | Error e -> Error e
     | Ok validators -> (
-        let%await validator_uri_pairs =
-          fetch_uris_from_discovery t validators
-        in
+        let validator_uri_pairs = fetch_uris_from_discovery t validators in
         match validator_uri_pairs with
-        | Error e -> Lwt.return (Error e)
+        | Error e -> Error e
         | Ok validator_uri_pairs ->
             List.iter
               (function
@@ -340,5 +332,5 @@ module Consensus = struct
                           (Address.to_string discovery_contract))
                 | _, Some _ -> ())
               validator_uri_pairs;
-            Lwt.return (Ok validator_uri_pairs))
+            Ok validator_uri_pairs)
 end
