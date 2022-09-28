@@ -34,7 +34,6 @@ type state =
 
 and consensus =
   | Consensus of {
-      identity : Identity.t;
       validators : Validators.t;
       block_pool : Block_pool.t;
       state : state;
@@ -44,11 +43,11 @@ and consensus =
 
 and t = consensus [@@deriving yojson]
 
-let make ~identity ~validators =
+let make ~validators =
   let block_pool = Block_pool.empty in
   let state = Propose { finalized = Genesis.block } in
   let accepted_at = Timestamp.genesis in
-  Consensus { identity; validators; block_pool; state; accepted_at }
+  Consensus { validators; block_pool; state; accepted_at }
 
 (* views *)
 let trusted_block consensus =
@@ -147,9 +146,8 @@ let find_author_after ~current ~after consensus =
   let skip = Timestamp.timeouts_since ~current ~since:accepted_at in
   Validators.skip ~after:last_author ~skip validators
 
-let try_to_sign_block ~current ~block consensus =
-  let (Consensus ({ identity; validators; state; accepted_at; _ } as consensus))
-      =
+let try_to_sign_block ~identity ~current ~block consensus =
+  let (Consensus ({ validators; state; accepted_at; _ } as consensus)) =
     consensus
   in
   match state with
@@ -186,8 +184,8 @@ let try_to_sign_block ~current ~block consensus =
   | Corrupted_apply _ ->
       None
 
-let try_to_produce ~current consensus =
-  let (Consensus { identity; state; _ }) = consensus in
+let try_to_produce ~identity ~current consensus =
+  let (Consensus { state; _ }) = consensus in
   let self = Identity.key_hash identity in
   match state with
   | Propose { finalized } -> (
@@ -317,13 +315,13 @@ let incoming_block_or_vote ~current ~block consensus =
   | true -> accept_block ~current ~block consensus
   | false -> (consensus, None, None)
 
-let incoming_block ~current ~block consensus =
+let incoming_block ~identity ~current ~block consensus =
   let (Block { level; _ }) = block in
   match is_pending_level ~level consensus with
   | true ->
       let consensus = append_block ~block consensus in
       let consensus, vote =
-        match try_to_sign_block ~current ~block consensus with
+        match try_to_sign_block ~identity ~current ~block consensus with
         | Some (consensus, vote) -> (consensus, Some vote)
         | None -> (consensus, None)
       in
@@ -371,7 +369,7 @@ let incoming_vote ~current ~level ~vote consensus =
       | None -> (consensus, []))
   | false -> (consensus, [])
 
-let try_next_blocks ~current consensus =
+let try_next_blocks ~identity ~current consensus =
   let (Consensus { block_pool; _ }) = consensus in
   let (Block { level = trusted_level; _ }) = trusted_block consensus in
   let level = Level.next trusted_level in
@@ -380,7 +378,7 @@ let try_next_blocks ~current consensus =
   (* TODO: this cannot detect double signed level *)
   let vote =
     List.find_map
-      (fun block -> try_to_sign_block ~current ~block consensus)
+      (fun block -> try_to_sign_block ~identity ~current ~block consensus)
       blocks
   in
   let consensus, action =
@@ -406,13 +404,13 @@ let try_next_blocks ~current consensus =
   in
   (consensus, actions)
 
-let timeout ~current consensus =
+let timeout ~identity ~current consensus =
   let (Consensus { state; _ }) = consensus in
   let consensus, actions =
     match state with
     | Propose { finalized } | Vote { finalized } ->
-        let action = try_to_produce ~current consensus in
-        let consensus, actions = try_next_blocks ~current consensus in
+        let action = try_to_produce ~identity ~current consensus in
+        let consensus, actions = try_next_blocks ~identity ~current consensus in
         let (Consensus consensus) = consensus in
         let state = Propose { finalized } in
         let consensus = Consensus { consensus with state } in
@@ -428,7 +426,7 @@ let timeout ~current consensus =
   let actions = timeout :: actions in
   (consensus, actions)
 
-let finished ~current ~block consensus =
+let finished ~identity ~current ~block consensus =
   let (Consensus { state; _ }) = consensus in
   (* TODO: not a big fan of bind *)
   let ( let* ) = Result.bind in
@@ -451,8 +449,8 @@ let finished ~current ~block consensus =
       let (Block { level; _ }) = pending in
       let state = Propose { finalized = pending } in
       let consensus = finish_level ~state ~level consensus in
-      let consensus, actions = try_next_blocks ~current consensus in
-      let produce = try_to_produce ~current consensus in
+      let consensus, actions = try_next_blocks ~identity ~current consensus in
+      let produce = try_to_produce ~identity ~current consensus in
       let actions =
         match produce with Some action -> action :: actions | None -> actions
       in
@@ -466,8 +464,8 @@ let finished ~current ~block consensus =
       let (Block { level; _ }) = pending in
       let state = Pending_missing { finalized = pending; accepted } in
       let consensus = finish_level ~state ~level consensus in
-      let consensus, actions = try_next_blocks ~current consensus in
-      let produce = try_to_produce ~current consensus in
+      let consensus, actions = try_next_blocks ~identity ~current consensus in
+      let produce = try_to_produce ~identity ~current consensus in
       let actions =
         match produce with Some action -> action :: actions | None -> actions
       in
@@ -486,7 +484,7 @@ let test () =
     let validator = Identity.key_hash identity in
     Validators.of_key_hash_list [ validator ]
   in
-  let consensus = make ~identity ~validators in
+  let consensus = make ~validators in
 
   let produce_on_top ~above =
     let (Block { hash = current_block; level = current_level; _ }) = above in
@@ -501,7 +499,7 @@ let test () =
 
   let block = produce_on_top ~above:Genesis.block in
   let consensus, actions =
-    incoming_block ~current:(get_current ()) ~block consensus
+    incoming_block ~identity ~current:(get_current ()) ~block consensus
   in
   let rec loop next consensus actions =
     match actions with
@@ -513,13 +511,13 @@ let test () =
           | Consensus_timeout _ -> (consensus, [])
           | Consensus_produce { above } ->
               let block = produce_on_top ~above in
-              incoming_block ~current ~block consensus
+              incoming_block ~identity ~current ~block consensus
           | Consensus_vote { level; vote } ->
               incoming_vote ~current ~level ~vote consensus
           | Consensus_apply { block; votes = _ } -> (
               let (Block { level; _ }) = block in
               Format.eprintf "%a\n%!" Level.pp level;
-              match finished ~current ~block consensus with
+              match finished ~identity ~current ~block consensus with
               | Ok (consensus, actions) -> (consensus, actions)
               | Error `No_pending_block -> failwith "no pending block"
               | Error `Wrong_pending_block -> failwith "wrong pending block")
