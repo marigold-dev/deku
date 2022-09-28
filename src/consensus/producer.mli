@@ -4,7 +4,7 @@ open Deku_protocol
 type producer
 type t = producer [@@deriving yojson]
 
-val make : identity:Identity.t -> default_block_size:int -> producer
+val empty : producer
 val incoming_operation : operation:Operation.t -> producer -> producer
 
 val incoming_tezos_operation :
@@ -18,6 +18,8 @@ val clean :
   t
 
 val produce :
+  identity:Identity.t ->
+  default_block_size:int ->
   parallel_map:
     ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   above:Block.block ->

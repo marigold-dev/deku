@@ -106,14 +106,17 @@ let main params =
         let (Chain { protocol; _ }) = chain in
         let (Protocol.Protocol { vm_state; _ }) = protocol in
         External_vm_client.set_initial_state vm_state;
-        chain
+        Chain.clear chain
     | None ->
         let vm_state = External_vm_client.get_initial_state () in
-        Chain.make ~vm_state ~identity ~validators ~default_block_size
+        Chain.make ~validators ~vm_state
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
   let notify_api _ = () in
-  let node = Node.make ~pool ~dump ~chain ~indexer:(Some indexer) ~notify_api in
+  let node =
+    Node.make ~identity ~default_block_size ~pool ~dump ~chain
+      ~indexer:(Some indexer) ~notify_api
+  in
 
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in

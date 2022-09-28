@@ -1,4 +1,5 @@
 open Deku_stdlib
+open Deku_concepts
 open Deku_chain
 open Deku_network
 open Deku_indexer
@@ -6,6 +7,8 @@ open Deku_tezos_interop
 open Deku_consensus
 
 type node = private {
+  identity : Identity.t;
+  default_block_size : int;
   pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
   network : Network_manager.t;
@@ -19,6 +22,8 @@ type node = private {
 type t = node
 
 val make :
+  identity:Identity.t ->
+  default_block_size:int ->
   pool:Parallel.Pool.t ->
   dump:(Chain.t -> unit) ->
   chain:Chain.t ->
