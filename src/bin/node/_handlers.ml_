@@ -9,15 +9,19 @@ open Deku_external_vm
 include Node
 
 module Handler_utils = struct
+  let to_eio lwt =
+    let eio, resolver = Eio.Promise.create () in
+    Lwt.async (fun () ->
+        Lwt.map (fun value -> Eio.Promise.resolve resolver value) lwt);
+    Eio.Promise.await eio
+
   let input_of_body ~of_yojson request =
-    let%await body = Dream.body request in
-    let input =
-      try body |> Yojson.Safe.from_string |> of_yojson |> Result.ok
-      with exn ->
-        let msg = Printexc.to_string exn in
-        Error (Api_error.invalid_body msg)
-    in
-    Lwt.return input
+    try
+      let body = to_eio (Dream.body request) in
+      body |> Yojson.Safe.from_string |> of_yojson |> Result.ok
+    with exn ->
+      let msg = Printexc.to_string exn in
+      Error (Api_error.invalid_body msg)
 
   let param_of_request request param =
     try Dream.param request param |> Option.some with _ -> None
@@ -49,7 +53,7 @@ module type HANDLER = sig
   val meth : [> `POST | `GET ]
   (** The method of your endpoint *)
 
-  val input_from_request : Dream.request -> (input, Api_error.t) result Lwt.t
+  val input_from_request : Dream.request -> (input, Api_error.t) result
   (** Parsing function of the request to make an input *)
 
   val handle :
@@ -57,7 +61,7 @@ module type HANDLER = sig
     indexer:Indexer.t ->
     constants:Api_constants.t ->
     input ->
-    (response, Api_error.t) result Lwt.t
+    (response, Api_error.t) result
   (** handler logic *)
 end
 
@@ -68,8 +72,8 @@ module Get_genesis : HANDLER = struct
 
   let path = "/chain/blocks/genesis"
   let meth = `GET
-  let input_from_request _ = Lwt.return_ok ()
-  let handle ~node:_ ~indexer:_ ~constants:_ () = Lwt.return_ok Genesis.block
+  let input_from_request _ = Ok ()
+  let handle ~node:_ ~indexer:_ ~constants:_ () = Ok Genesis.block
 end
 
 module Get_head : HANDLER = struct
@@ -78,13 +82,13 @@ module Get_head : HANDLER = struct
 
   let path = "/chain/blocks/head"
   let meth = `GET
-  let input_from_request _ = Lwt.return_ok ()
+  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_indexer ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
-    let (Consensus.Consensus { current_block; _ }) = consensus in
-    Lwt.return_ok current_block
+    let current_block = Consensus.trusted_block consensus in
+    Ok current_block
 end
 
 module Get_block_by_level_or_hash : HANDLER = struct
@@ -106,13 +110,13 @@ module Get_block_by_level_or_hash : HANDLER = struct
       string |> Block_hash.of_b58 |> Option.map (fun hash -> Hash hash)
     in
     match input with
-    | None -> Lwt.return_error (Api_error.missing_parameter "block")
+    | None -> Error (Api_error.missing_parameter "block")
     | Some input -> (
         let input = [ level; hash ] |> List.find_map (fun f -> f input) in
         match input with
-        | Some input -> Lwt.return_ok input
+        | Some input -> Ok input
         | None ->
-            Lwt.return_error
+            Error
               (Api_error.invalid_parameter
                  "The block parameter cannot be converted to a Level | 'head' \
                   | 'genesis' | Block_hash.t"))
@@ -128,9 +132,9 @@ module Get_block_by_level_or_hash : HANDLER = struct
     in
 
     match request with
-    | Level level -> Indexer.find_block ~level indexer |> Lwt.map to_result
+    | Level level -> to_result (Indexer.find_block ~level indexer)
     | Hash block_hash ->
-        Indexer.find_block_by_hash ~block_hash indexer |> Lwt.map to_result
+        to_result (Indexer.find_block_by_hash ~block_hash indexer)
 end
 
 module Get_level : HANDLER = struct
@@ -139,14 +143,14 @@ module Get_level : HANDLER = struct
 
   let path = "/chain/level"
   let meth = `GET
-  let input_from_request _ = Lwt.return_ok ()
+  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_ ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
-    let (Consensus.Consensus { current_block; _ }) = consensus in
+    let current_block = Consensus.trusted_block consensus in
     let (Block.Block { level; _ }) = current_block in
-    Lwt.return_ok { level }
+    Ok { level }
 end
 
 module Get_proof : HANDLER = struct
@@ -170,7 +174,6 @@ module Get_proof : HANDLER = struct
     |> Option.join
     |> Option.to_result
          ~none:(Api_error.invalid_parameter "could not parse hash")
-    |> Lwt.return
 
   let handle ~node ~indexer:_ ~constants:_ operation_hash =
     let { chain = Chain { protocol; _ }; _ } = node in
@@ -178,11 +181,9 @@ module Get_proof : HANDLER = struct
       Protocol.find_withdraw_proof ~operation_hash protocol
     in
     match withdraw_proof with
-    | Error _ ->
-        Lwt.return_error (Api_error.invalid_parameter "Proof not found")
+    | Error _ -> Error (Api_error.invalid_parameter "Proof not found")
     | Ok (handle, proof, withdrawal_handles_hash) ->
-        let proof = { withdrawal_handles_hash; handle; proof } in
-        Lwt.return_ok proof
+        Ok { withdrawal_handles_hash; handle; proof }
 end
 
 module Get_balance : HANDLER = struct
@@ -198,65 +199,59 @@ module Get_balance : HANDLER = struct
   let meth = `GET
 
   let input_from_request request =
-    let open Lwt_result.Syntax in
-    let* address =
+    let%ok address =
       Handler_utils.param_of_request request "address"
       |> Option.map Deku_protocol.Address.of_b58
       |> Option.join
       |> Option.to_result
            ~none:(Api_error.invalid_parameter "could not parse address")
-      |> Lwt.return
     in
-    let* ticketer =
+    let%ok ticketer =
       Handler_utils.param_of_request request "ticketer"
       |> Option.map Deku_tezos.Contract_hash.of_string
       |> Option.join
       |> Option.to_result
            ~none:(Api_error.invalid_parameter "could not parse ticketer")
-      |> Lwt.return
     in
-    let* data =
+    let%ok data =
       let parse_0x s =
-        if String.length s < 2 then
-          None
+        if String.length s < 2 then None
         else if String.starts_with ~prefix:"0x" s then
           Some (String.sub s 2 (String.length s - 2))
-        else
-          None
+        else None
       in
       (* FIXME: does this handle the empty string correctly? *)
       let data = Handler_utils.param_of_request request "data" in
       match data with
       | Some s -> (
-        match parse_0x s with
+          match parse_0x s with
           | None ->
-          Lwt.return
-            (Error
-             (Api_error.invalid_parameter
-                (Format.sprintf "could not parse data '%s' in 0x format" s)))
-          | Some s ->
-            try (* FIXME can this be a security issue? *)
-              Lwt.return_ok (Hex.to_string (`Hex s)) (* also works when s is empty *)
-            with
-              | Invalid_argument _ ->
-                Lwt.return
-                  (Error
-                     (Api_error.invalid_parameter
-                        (Format.sprintf "Invalid hex %s" s))))
+              Error
+                (Api_error.invalid_parameter
+                   (Format.sprintf "could not parse data '%s' in 0x format" s))
+          | Some s -> (
+              try
+                (* FIXME can this be a security issue? *)
+                Ok (Hex.to_string (`Hex s))
+                (* also works when s is empty *)
+              with Invalid_argument _ ->
+                Error
+                  (Api_error.invalid_parameter
+                     (Format.sprintf "Invalid hex %s" s))))
       | None ->
-          Lwt.return
-            (Error
-               (Api_error.invalid_parameter
-                  "could not parse data in 0x format"))
+          Error
+            (Api_error.invalid_parameter "could not parse data in 0x format")
     in
-    let ticket_id = Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data) in
-    Lwt.return_ok { address; ticket_id }
+    let ticket_id =
+      Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data)
+    in
+    Ok { address; ticket_id }
 
   let handle ~node ~indexer:_ ~constants:_ { address; ticket_id } =
     let { chain = Chain { protocol = Protocol { ledger; _ }; _ }; _ } = node in
     let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
     let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
-    Lwt.return_ok { balance = amount }
+    Ok { balance = amount }
 end
 
 module Get_chain_info : HANDLER = struct
@@ -267,11 +262,11 @@ module Get_chain_info : HANDLER = struct
 
   let path = "/chain/info"
   let meth = `GET
-  let input_from_request _ = Lwt.return_ok ()
+  let input_from_request _ = Ok ()
 
   let handle ~node:_ ~indexer:_ ~constants () =
     let Api_constants.{ consensus_address; discovery_address; _ } = constants in
-    Lwt.return_ok
+    Ok
       {
         consensus = Deku_tezos.Address.to_string consensus_address;
         discovery = Deku_tezos.Address.to_string discovery_address;
@@ -294,7 +289,7 @@ module Helpers_operation_message : HANDLER = struct
     let content = Message.Content.operation operation in
     let message, _raw_message = Message.encode ~content in
     let (Message.Message { hash; content }) = message in
-    Lwt.return_ok { hash; content }
+    Ok { hash; content }
 end
 
 module Helpers_hash_operation : HANDLER = struct
@@ -325,13 +320,13 @@ module Helpers_hash_operation : HANDLER = struct
       operation |> yojson_of_input |> Yojson.Safe.to_string
       |> Operation_hash.hash
     in
-    Lwt.return_ok { hash }
+    Ok { hash }
 end
 
 (* Parse the operation and send it to the chain *)
-module Post_operation : HANDLER = struct
-  open Piaf_lwt
-
+module Post_operation (P : sig
+  val env : Eio.Stdenv.t
+end) : HANDLER = struct
   type input = Operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
@@ -355,17 +350,15 @@ module Post_operation : HANDLER = struct
     let (Operation.Operation { hash = operation_hash; _ }) = operation in
 
     let headers =
-      let open Piaf_lwt.Headers in
+      let open Piaf.Headers in
       let json = Mime_types.map_extension "json" in
       [ ("X-Raw-Expected-Hash", hash); (Well_known.content_type, json) ]
     in
-    let body = Body.of_string raw_content in
-    let%await post_result = Client.Oneshot.post ~headers ~body target in
-    match post_result with
-    | Ok _ -> Lwt.return_ok { hash = operation_hash }
-    | Error err ->
-        Lwt.return_error
-          (Api_error.internal_error (Piaf_lwt.Error.to_string err))
+    let body = Piaf.Body.of_string raw_content in
+    Eio.Switch.run @@ fun sw ->
+    match Piaf.Client.Oneshot.post ~sw ~headers ~body P.env target with
+    | Ok _ -> Ok { hash = operation_hash }
+    | Error err -> Error (Api_error.internal_error (Piaf.Error.to_string err))
 end
 
 module Get_vm_state : HANDLER = struct
@@ -374,11 +367,11 @@ module Get_vm_state : HANDLER = struct
 
   let meth = `GET
   let path = "/state/unix/"
-  let input_from_request _ = Lwt.return_ok ()
+  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_ ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { protocol; _ }) = chain in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Lwt.return_ok vm_state
+    Ok vm_state
 end
