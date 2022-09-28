@@ -19,7 +19,6 @@ type state = private
 
 type consensus = private
   | Consensus of {
-      identity : Identity.t;
       validators : Validators.t;
       block_pool : Block_pool.t;
       state : state;
@@ -29,11 +28,16 @@ type consensus = private
 
 type t = consensus [@@deriving yojson]
 
-val make : identity:Identity.t -> validators:Validators.t -> consensus
+val make : validators:Validators.t -> consensus
 
 (* updates *)
 val incoming_block :
-  current:Timestamp.t -> block:Block.t -> consensus -> consensus * action list
+  identity:Identity.t ->
+  current:Timestamp.t ->
+  (* TODO: move those to a context *)
+  block:Block.t ->
+  consensus ->
+  consensus * action list
 
 val incoming_vote :
   current:Timestamp.t ->
@@ -43,9 +47,14 @@ val incoming_vote :
   consensus ->
   consensus * action list
 
-val timeout : current:Timestamp.t -> consensus -> consensus * action list
+val timeout :
+  identity:Identity.t ->
+  current:Timestamp.t ->
+  consensus ->
+  consensus * action list
 
 val finished :
+  identity:Identity.t ->
   current:Timestamp.t ->
   block:Block.t ->
   consensus ->

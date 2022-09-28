@@ -61,12 +61,12 @@ type action =
     }
 [@@deriving show]
 
-let make ~identity ~validators ~default_block_size ~vm_state =
+let make ~validators ~vm_state =
   let gossip = Gossip.empty in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial_with_vm_state ~vm_state in
-  let consensus = Consensus.make ~identity ~validators in
-  let producer = Producer.make ~identity ~default_block_size in
+  let consensus = Consensus.make ~validators in
+  let producer = Producer.empty in
   let applied = Level.Map.empty in
   Chain { gossip; protocol; consensus; producer; applied }
 
@@ -149,10 +149,12 @@ let apply_consensus_actions chain consensus_actions =
     (chain, []) consensus_actions
 
 (* core *)
-let incoming_block ~current ~block chain =
+let incoming_block ~identity ~current ~block chain =
   Logs.info (fun m -> m "Incoming block %a" Block.pp block);
   let (Chain ({ consensus; _ } as chain)) = chain in
-  let consensus, actions = Consensus.incoming_block ~current ~block consensus in
+  let consensus, actions =
+    Consensus.incoming_block ~identity ~current ~block consensus
+  in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
@@ -181,16 +183,16 @@ let incoming_tezos_operation ~tezos_operation chain =
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
   (Chain { gossip; protocol; consensus; producer; applied }, [])
 
-let incoming_message ~current ~message chain =
+let incoming_message ~identity ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
   match content with
-  | Content_block block -> incoming_block ~current ~block chain
+  | Content_block block -> incoming_block ~identity ~current ~block chain
   | Content_vote { level; vote } -> incoming_vote ~current ~level ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
   | Content_accepted { block; votes } ->
       let (Block { level; _ }) = block in
-      let chain, actions = incoming_block ~current ~block chain in
+      let chain, actions = incoming_block ~identity ~current ~block chain in
       Format.eprintf "accepted: %a\n%!" Level.pp level;
       List.fold_left
         (fun (chain, actions) vote ->
@@ -218,10 +220,10 @@ let incoming_request ~connection ~request chain =
           (chain, [ fragment ])
       | None -> (chain, []))
 
-let apply_gossip_action ~current ~gossip_action chain =
+let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
   | Gossip.Gossip_apply_and_broadcast { message; raw_message } ->
-      let chain, actions = incoming_message ~current ~message chain in
+      let chain, actions = incoming_message ~identity ~current ~message chain in
       let broadcast =
         let (Raw_message { hash; raw_content }) = raw_message in
         let raw_expected_hash = Message_hash.to_b58 hash in
@@ -267,18 +269,19 @@ let request ~connection ~raw_expected_hash ~raw_content =
   | Some fragment -> Some (Fragment_gossip { fragment })
   | None -> None
 
-let timeout ~current chain =
+let timeout ~identity ~current chain =
   let (Chain ({ consensus; _ } as chain)) = chain in
-  let consensus, actions = Consensus.timeout ~current consensus in
+  let consensus, actions = Consensus.timeout ~identity ~current consensus in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
-let apply_gossip_outcome ~current ~outcome chain =
+let apply_gossip_outcome ~identity ~current ~outcome chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip, gossip_action = Gossip.apply ~outcome gossip in
   let chain = Chain { chain with gossip } in
   match gossip_action with
-  | Some gossip_action -> apply_gossip_action ~current ~gossip_action chain
+  | Some gossip_action ->
+      apply_gossip_action ~identity ~current ~gossip_action chain
   | None -> (chain, [])
 
 let apply_protocol_produce ~block chain =
@@ -287,9 +290,10 @@ let apply_protocol_produce ~block chain =
   let fragment = Fragment_gossip { fragment } in
   (chain, [ Chain_fragment { fragment } ])
 
-let apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain =
+let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
+    chain =
   let (Chain ({ consensus; producer; _ } as chain)) = chain in
-  match Consensus.finished ~current ~block consensus with
+  match Consensus.finished ~identity ~current ~block consensus with
   | Ok (consensus, actions) ->
       (* TODO: make this parallel *)
       let (Block { tezos_operations; _ }) = block in
@@ -299,7 +303,7 @@ let apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain =
       (* FIXME: need a time-based procedure for tezos commits, not block-based *)
       (* FIXME: rediscuss the need to commit the previous block instead *)
       (* FIXME: validators have to watch when commit did not happen *)
-      let (Consensus { identity; validators; _ }) = consensus in
+      let (Consensus { validators; _ }) = consensus in
       let current_block = Consensus.trusted_block consensus in
       let (Block.Block { level = current_level; author = last_block_author; _ })
           =
@@ -326,22 +330,25 @@ let apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain =
       Format.eprintf "chain: wrong pending block\n%!";
       (Chain chain, [])
 
-let apply ~current ~outcome chain =
+let apply ~identity ~current ~outcome chain =
   match outcome with
-  | Outcome_gossip { outcome } -> apply_gossip_outcome ~current ~outcome chain
+  | Outcome_gossip { outcome } ->
+      apply_gossip_outcome ~identity ~current ~outcome chain
   | Outcome_produce { block } -> apply_protocol_produce ~block chain
   | Outcome_apply { block; votes; protocol; receipts } ->
-      apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain
+      apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
+        chain
 
-let compute fragment =
+let compute ~identity ~default_block_size fragment =
+  (* TODO: identity parameter here not ideal *)
   match fragment with
   | Fragment_gossip { fragment } ->
       let outcome = Gossip.compute fragment in
       Outcome_gossip { outcome }
   | Fragment_produce { producer; above; withdrawal_handles_hash } ->
       let block =
-        Producer.produce ~parallel_map:List.map ~above ~withdrawal_handles_hash
-          producer
+        Producer.produce ~identity ~default_block_size ~parallel_map:List.map
+          ~above ~withdrawal_handles_hash producer
       in
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
@@ -389,8 +396,7 @@ let test () =
   in
 
   let chain =
-    make ~identity ~validators ~default_block_size:0
-      ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
+    make ~validators ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
   in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =
@@ -408,7 +414,9 @@ let test () =
     block
   in
 
-  let chain, actions = incoming_block ~current:(get_current ()) ~block chain in
+  let chain, actions =
+    incoming_block ~identity ~current:(get_current ()) ~block chain
+  in
 
   let rec loop chain actions =
     let current = get_current () in
@@ -457,8 +465,10 @@ let test () =
                 in
                 (chain, actions)
             | Chain_fragment { fragment } ->
-                let outcome = compute fragment in
-                apply ~current ~outcome chain
+                let outcome =
+                  compute ~identity ~default_block_size:2 fragment
+                in
+                apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
             | Chain_commit _ ->
                 Printf.eprintf "FIXME: commit not implemented in Chain.test";

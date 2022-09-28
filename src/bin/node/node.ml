@@ -9,6 +9,8 @@ open Deku_concepts
 open Deku_protocol
 
 type node = {
+  identity : Identity.t;
+  default_block_size : int;
   pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
   network : Network_manager.t;
@@ -71,15 +73,20 @@ and handle_chain_action ~sw ~env ~action node =
 
 and handle_chain_fragment ~sw ~env ~fragment node =
   Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error (fun sw ->
+      let identity = node.identity in
+      let default_block_size = node.default_block_size in
       let outcome =
-        Parallel.async node.pool (fun () -> Chain.compute fragment)
+        Parallel.async node.pool (fun () ->
+            Chain.compute ~identity ~default_block_size fragment)
       in
       let outcome = Eio.Promise.await outcome in
       let current = current () in
       on_chain_outcome ~sw ~env ~current ~outcome node)
 
 and on_chain_outcome ~sw ~env ~current ~outcome node =
-  let chain, actions = Chain.apply ~current ~outcome node.chain in
+  let identity = node.identity in
+
+  let chain, actions = Chain.apply ~identity ~current ~outcome node.chain in
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
@@ -103,7 +110,8 @@ and start_timeout ~sw ~env ~from node =
       on_timeout ~sw ~env ~current node
 
 and on_timeout ~sw ~env ~current node =
-  let chain, actions = Chain.timeout ~current node.chain in
+  let identity = node.identity in
+  let chain, actions = Chain.timeout ~identity ~current node.chain in
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
@@ -123,11 +131,22 @@ let on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
   | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-let make ~pool ~dump ~chain ~indexer ~notify_api =
+let make ~identity ~default_block_size ~pool ~dump ~chain ~indexer ~notify_api =
   let network = Network_manager.make () in
   let tezos_interop = None in
   let cancel () = () in
-  { pool; dump; network; indexer; tezos_interop; chain; cancel; notify_api }
+  {
+    identity;
+    default_block_size;
+    pool;
+    dump;
+    network;
+    indexer;
+    tezos_interop;
+    chain;
+    cancel;
+    notify_api;
+  }
 
 (* TODO: declare this function elsewhere ? *)
 let to_tezos_operation transaction =
@@ -214,12 +233,12 @@ let test () =
 
   let start ~sw ~identity ~port =
     let chain =
-      Chain.make ~identity ~validators
-        ~vm_state:External_vm_protocol.State.empty ~default_block_size:2
+      Chain.make ~validators ~vm_state:External_vm_protocol.State.empty
     in
     let dump _chain = () in
     let node =
-      make ~pool ~dump ~chain ~indexer:None ~notify_api:(fun _ -> ())
+      make ~identity ~default_block_size:2 ~pool ~dump ~chain ~indexer:None
+        ~notify_api:(fun _ -> ())
     in
     start ~sw ~env ~port ~nodes ~tezos:None node
   in
