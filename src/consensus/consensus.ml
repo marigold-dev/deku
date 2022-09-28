@@ -9,8 +9,12 @@ type action =
   | Consensus_produce of { above : Block.t }
   | Consensus_vote of { level : Level.t; vote : Verified_signature.t }
   (* TODO: maybe consensus should hold the votes *)
-  | Consensus_apply of { block : Block.t; votes : Verified_signature.Set.t }
+  | Consensus_apply of {
+      block : Block.t;
+      votes : Verified_signature.Set.t; [@opaque]
+    }
   | Consensus_request of { above : Level.t }
+[@@deriving show]
 
 type state =
   (* normal *)
