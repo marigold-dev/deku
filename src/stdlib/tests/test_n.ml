@@ -154,32 +154,32 @@ let test_sub_2_2 () =
   Alcotest.(check' (option n))
     ~msg:"2 - 2" ~expected:(Some zero) ~actual:(two - two)
 
-let test_lt_0_0 () =
-  Alcotest.(check' bool) ~msg:"0 < 0" ~expected:false ~actual:(zero < zero)
+let test_gt_0_0 () =
+  Alcotest.(check' bool) ~msg:"0 > 0" ~expected:false ~actual:(zero > zero)
 
-let test_lt_0_1 () =
-  Alcotest.(check' bool) ~msg:"0 < 1" ~expected:true ~actual:(zero < one)
+let test_gt_0_1 () =
+  Alcotest.(check' bool) ~msg:"0 > 1" ~expected:false ~actual:(zero > one)
 
-let test_lt_1_0 () =
-  Alcotest.(check' bool) ~msg:"1 < 0" ~expected:false ~actual:(one < zero)
+let test_gt_1_0 () =
+  Alcotest.(check' bool) ~msg:"1 > 0" ~expected:true ~actual:(one > zero)
 
-let test_lt_1_1 () =
-  Alcotest.(check' bool) ~msg:"1 < 1" ~expected:false ~actual:(one < one)
+let test_gt_1_1 () =
+  Alcotest.(check' bool) ~msg:"1 > 1" ~expected:false ~actual:(one > one)
 
-let test_lt_0_2 () =
-  Alcotest.(check' bool) ~msg:"0 < 2" ~expected:true ~actual:(zero < two)
+let test_gt_0_2 () =
+  Alcotest.(check' bool) ~msg:"0 > 2" ~expected:false ~actual:(zero > two)
 
-let test_lt_1_2 () =
-  Alcotest.(check' bool) ~msg:"1 < 2" ~expected:true ~actual:(one < two)
+let test_gt_1_2 () =
+  Alcotest.(check' bool) ~msg:"1 > 2" ~expected:false ~actual:(one > two)
 
-let test_lt_2_0 () =
-  Alcotest.(check' bool) ~msg:"2 < 0" ~expected:false ~actual:(two < zero)
+let test_gt_2_0 () =
+  Alcotest.(check' bool) ~msg:"2 > 0" ~expected:true ~actual:(two > zero)
 
-let test_lt_2_1 () =
-  Alcotest.(check' bool) ~msg:"2 < 1" ~expected:false ~actual:(two < one)
+let test_gt_2_1 () =
+  Alcotest.(check' bool) ~msg:"2 > 1" ~expected:true ~actual:(two > one)
 
-let test_lt_2_2 () =
-  Alcotest.(check' bool) ~msg:"2 < 2" ~expected:false ~actual:(two < two)
+let test_gt_2_2 () =
+  Alcotest.(check' bool) ~msg:"2 > 2" ~expected:false ~actual:(two > two)
 
 let run () =
   let open Alcotest in
@@ -246,16 +246,16 @@ let run () =
           test_case "sub_1_2" `Quick test_sub_1_2;
           test_case "sub_2_2" `Quick test_sub_2_2;
         ] );
-      ( "lt",
+      ( "gt",
         [
-          test_case "lt_0_0" `Quick test_lt_0_0;
-          test_case "lt_0_1" `Quick test_lt_0_1;
-          test_case "lt_1_0" `Quick test_lt_1_0;
-          test_case "lt_1_1" `Quick test_lt_1_1;
-          test_case "lt_0_2" `Quick test_lt_0_2;
-          test_case "lt_1_2" `Quick test_lt_1_2;
-          test_case "lt_2_0" `Quick test_lt_2_0;
-          test_case "lt_2_1" `Quick test_lt_2_1;
-          test_case "lt_2_2" `Quick test_lt_2_2;
+          test_case "gt_0_0" `Quick test_gt_0_0;
+          test_case "gt_0_1" `Quick test_gt_0_1;
+          test_case "gt_1_0" `Quick test_gt_1_0;
+          test_case "gt_1_1" `Quick test_gt_1_1;
+          test_case "gt_0_2" `Quick test_gt_0_2;
+          test_case "gt_1_2" `Quick test_gt_1_2;
+          test_case "gt_2_0" `Quick test_gt_2_0;
+          test_case "gt_2_1" `Quick test_gt_2_1;
+          test_case "gt_2_2" `Quick test_gt_2_2;
         ] );
     ]
