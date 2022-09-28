@@ -19,14 +19,14 @@ module Trace = struct
   let outer_timer = Atomic.make (Unix.gettimeofday ())
   let inner_timer = Atomic.make (Unix.gettimeofday ())
 
-  let start () =
+  let _start () =
     let now = Unix.gettimeofday () in
     let elapsed = now -. Atomic.get outer_timer in
     Format.printf "Total Elapsed time: %3f\n%!" elapsed;
     Atomic.set outer_timer now;
     Atomic.set inner_timer now
 
-  let trace msg =
+  let _trace msg =
     let now = Unix.gettimeofday () in
     let elapsed = now -. Atomic.get inner_timer in
     Format.printf "%s: %3f\n%!" msg elapsed;
