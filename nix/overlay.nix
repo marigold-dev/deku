@@ -41,15 +41,7 @@ with super; {
             fetchSubmodules = true;
           };
         });
-        httpaf = super.httpaf.overrideAttrs (_: {
-          src = fetchFromGitHub {
-            owner = "anmonteiro";
-            repo = "httpaf";
-            rev = "50dfb219718ef370e9d238f4e1ce4a4dc8956ec6";
-            sha256 = "ZoMHeEWJF4ZjqvQe4Tv4S4YkAiHXI2BNk8NlBi1+1uM=";
-            fetchSubmodules = true;
-          };
-        });
+        eio_main = super.eio_main.override { eio_linux = null; };
       });
   });
 }

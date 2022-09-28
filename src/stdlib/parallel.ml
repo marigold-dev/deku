@@ -35,17 +35,10 @@ let filter_map_p pool f l =
 
 let async pool task =
   let Pool.{ domains = _; pool } = pool in
-  let task_lazy = lazy (try Ok (task ()) with exn -> Error exn) in
-
-  let waiter, wakener = Lwt.wait () in
-  let id =
-    Lwt_unix.make_notification ~once:true (fun () ->
-        let task_result = Lazy.force task_lazy in
-        Lwt.wakeup_result wakener task_result)
-  in
+  let promise, resolver = Eio.Promise.create () in
   let _promise =
-    Task.async pool (fun _ ->
-        let _task_result = Lazy.force task_lazy in
-        Lwt_unix.send_notification id)
+    Task.async pool (fun () ->
+        let task_result = task () in
+        Eio.Promise.resolve resolver task_result)
   in
-  waiter
+  promise
