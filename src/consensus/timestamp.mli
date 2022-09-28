@@ -1,6 +1,6 @@
 (* TODO: probably should be under concepts *)
 type timestamp
-type t = timestamp [@@deriving yojson]
+type t = timestamp [@@deriving show, yojson]
 
 val genesis : timestamp
 val of_float : float -> timestamp
