@@ -13,3 +13,6 @@ let clean_gossip_time =
   let minutes = 60.0 *. 2.0 (* hours *) in
   (* let minutes = 0.2 in *)
   60.0 (* seconds *) *. minutes
+
+let async_on_error exn = Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
+let genesis_time = 0.0
