@@ -13,6 +13,6 @@ val to_z : nat -> Z.t
 (* operations *)
 val ( + ) : nat -> nat -> nat
 val ( - ) : nat -> nat -> nat option
-val ( < ) : nat -> nat -> bool
+val ( > ) : nat -> nat -> bool
 
 module Map : Map_ext.S with type key = nat

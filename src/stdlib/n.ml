@@ -20,7 +20,7 @@ let of_z x = check x
 let to_z x = x
 let ( + ) a b = a + b
 let ( - ) a b = check (a - b)
-let ( < ) a b = a < b
+let ( > ) a b = Z.gt a b
 
 module Map = Map_ext.Make (struct
   type t = nat [@@deriving ord, yojson]
