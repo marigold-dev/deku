@@ -4,16 +4,19 @@ module Content : sig
   open Deku_consensus
 
   type content = private
+    (* TODO: signing and hashing should not be happening on the consensus thread *)
     | Content_block of Block.t
-    | Content_vote of Verified_signature.t
+    | Content_vote of { level : Level.t; vote : Verified_signature.t }
     | Content_operation of Operation.t
+    | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
   [@@deriving show]
 
   type t = content [@@deriving yojson, show]
 
   val block : Block.t -> content
-  val vote : Verified_signature.t -> content
+  val vote : level:Level.t -> vote:Verified_signature.t -> content
   val operation : Operation.t -> content
+  val accepted : block:Block.t -> votes:Verified_signature.t list -> content
 end
 
 type message = private
