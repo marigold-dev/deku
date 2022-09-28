@@ -3,14 +3,17 @@ open Deku_stdlib
 open Deku_protocol
 open Deku_concepts
 open Lwt_result.Syntax
-open Cohttp_lwt_unix
 
 (* Still have that Piaf bug *)
-let post body uri =
-  let body = Cohttp_lwt.Body.of_string body in
-  Client.post ~body uri
+let post ~sw ~env body uri =
+  let body = Piaf.Body.of_string body in
+  match Piaf.Client.Oneshot.post ~body env uri ~sw with
+  | Ok response -> response
+  | Error error -> failwith (Piaf.Error.to_string error)
 
 let main ticket_id tezos_owner secret verbose host =
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
   let url = Uri.with_path host "api/v1/chain/level" in
   let level =
     Lwt_main.run
@@ -33,12 +36,14 @@ let main ticket_id tezos_owner secret verbose host =
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let json = Deku_protocol.Operation.yojson_of_t transaction in
-  Lwt_main.run
-    (let body = Yojson.Safe.to_string json in
-     let%await response, _body = post body url in
-     let code = response |> Response.status |> Cohttp.Code.code_of_status in
-     Printf.eprintf "%d\n%!" code;
-     Lwt.return_unit);
+
+  let () =
+    let body = Yojson.Safe.to_string json in
+    let response = post ~sw ~env body url in
+    let status = response.Piaf.Response.status in
+    Printf.eprintf "%a\n%!" code;
+    Lwt.return_unit
+  in
   let (Operation.Operation { hash; _ }) = transaction in
   let hash = Operation_hash.yojson_of_t hash |> Yojson.Safe.to_string in
   Printf.printf "operation.hash: %s\n%!" hash;
