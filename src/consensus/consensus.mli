@@ -6,6 +6,7 @@ type action = private
   | Consensus_vote of { level : Level.t; vote : Verified_signature.t }
   | Consensus_apply of { block : Block.t; votes : Verified_signature.Set.t }
   | Consensus_request of { above : Level.t }
+[@@deriving show]
 
 type state = private
   | Propose of { finalized : Block.t }

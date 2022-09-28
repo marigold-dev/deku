@@ -1,5 +1,5 @@
 type timestamp = float
-and t = timestamp [@@deriving yojson]
+and t = timestamp [@@deriving show, yojson]
 
 let genesis = Deku_constants.genesis_time
 let of_float float = float
