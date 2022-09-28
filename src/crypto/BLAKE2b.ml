@@ -82,6 +82,9 @@ include BLAKE2b_256
 let yojson_of_t t = `String (to_hex t)
 
 let t_of_yojson json =
+  (* TODO: Is this warning correct? *)
+  Logs.warn (fun m ->
+      m "error, an 'untyped' hash is circulating on the network");
   let json_str = Yojson.Safe.Util.to_string json in
   match json_str |> of_hex with
   | Some t -> t
