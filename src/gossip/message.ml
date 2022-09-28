@@ -5,14 +5,16 @@ module Content = struct
 
   type content =
     | Content_block of Block.t
-    | Content_vote of Verified_signature.t
+    | Content_vote of { level : Level.t; vote : Verified_signature.t }
     | Content_operation of Operation.t
+    | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
   and t = content [@@deriving yojson]
 
   let block block = Content_block block
-  let vote vote = Content_vote vote
+  let vote ~level ~vote = Content_vote { level; vote }
   let operation operation = Content_operation operation
+  let accepted ~block ~votes = Content_accepted { block; votes }
 end
 
 type message = Message of { hash : Message_hash.t; content : Content.t }
