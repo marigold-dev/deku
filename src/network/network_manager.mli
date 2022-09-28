@@ -7,44 +7,41 @@ val make : unit -> network
 
 val listen :
   sw:Eio.Switch.t ->
-  env:Eio.Stdenv.t ->
+  net:Eio.Net.t ->
+  clock:Eio.Time.clock ->
   port:int ->
   on_request:
-    (id:Request_id.t -> raw_expected_hash:string -> raw_content:string -> unit) ->
+    (connection:Connection_id.t ->
+    raw_expected_hash:string ->
+    raw_content:string ->
+    unit) ->
   on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
   network ->
-  unit
+  'a
 
 val connect :
-  sw:Eio.Switch.t ->
-  env:Eio.Stdenv.t ->
+  net:Eio.Net.t ->
+  clock:Eio.Time.clock ->
   nodes:(string * int) list ->
   on_request:
-    (id:Request_id.t -> raw_expected_hash:string -> raw_content:string -> unit) ->
+    (connection:Connection_id.t ->
+    raw_expected_hash:string ->
+    raw_content:string ->
+    unit) ->
   on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
   network ->
   unit
 
 val broadcast :
-  sw:Eio.Switch.t ->
+  raw_expected_hash:string -> raw_content:string -> network -> unit
+
+val request : raw_expected_hash:string -> raw_content:string -> network -> unit
+
+val send :
+  connection:Connection_id.t ->
   raw_expected_hash:string ->
   raw_content:string ->
   network ->
   unit
 
-val request :
-  sw:Eio.Switch.t ->
-  raw_expected_hash:string ->
-  raw_content:string ->
-  network ->
-  unit
-
-val respond :
-  id:Request_id.t ->
-  raw_expected_hash:string ->
-  raw_content:string ->
-  network ->
-  unit
-
-val not_found : id:Request_id.t -> network -> unit
 val test : unit -> unit
