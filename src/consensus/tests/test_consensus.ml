@@ -319,29 +319,37 @@ let test_fast_forwarding () =
   let (Block { hash = hash_a; level = level_a; _ } as block_a) =
     make_block ~identity Genesis.block
   in
-  (* S : Vote , A : Empty *)
+  let (Block { hash = hash_b; level = level_b; _ } as block_b) =
+    make_block ~identity block_a
+  in
+  (* S : Propose, A : Empty *)
   let consensus, _actions1 =
-    incoming_block ~current:(time 0.1) ~block:block_a ~prevent_self_sign:true
+    incoming_block ~current:(time 0.1) ~block:block_b ~prevent_self_sign:true
       consensus
   in
   pp_state_action consensus _actions1 1;
 
-  (* S : Vote, A : Empty *)
-  let (Block { hash = hash_b; level = level_b; _ } as block_b) =
-    make_block ~identity block_a
-  in
+  (* S : propose, A : Empty *)
   let consensus, _actions2 =
-    incoming_block ~current:(time 0.2) ~block:block_b consensus
+    incoming_block ~current:(time 0.2) ~block:block_a consensus
       ~prevent_self_sign:true
   in
   pp_state_action consensus _actions2 2;
 
   let vote = make_vote ~hash:hash_b identity in
-  (* S : Vote, A : Empty *)
+  (* S : Pending missing, A : [Timeout; Request] *)
   let Consensus after_skip, _actions3 =
     incoming_vote ~level:level_b ~current:(time 0.3) ~vote consensus
   in
   pp_state_action (Consensus after_skip) _actions3 3;
+
+  let vote = make_vote ~hash:hash_a identity in
+  (* S : Pending missing, A : [Consensus apply] *)
+  let Consensus after_catch_up, _actions4 =
+    incoming_vote ~current:(time 0.4) ~level:level_a ~vote
+      (Consensus after_skip)
+  in
+  pp_state_action (Consensus after_catch_up) _actions4 4;
   ensure "after_skip.identity = identity" (after_skip.identity = identity);
   ensure "after_skip.validators = validators"
     (after_skip.validators = validators);
@@ -351,28 +359,25 @@ let test_fast_forwarding () =
     (after_skip.state
     = Pending_missing
         { finalized = Genesis.block; accepted = Level.(zero |> next |> next) });
-  (* match (actions3 @ actions2 @ actions1) with
-       | [
-        Consensus_timeout { from
-     = timeout_b };
-        Consensus_accepted_block { block = accepted_a };
-        Consensus_trigger_timeout { level = timeout_b };
-        Consensus_accepted_block { block = accepted_b };
-       ] ->
-           ensure "timeout_a = level_a" (timeout_a = level_a);
-           ensure "accepted_a = block_b" (accepted_a = block_a);
-           ensure "timeout_b = level_b" (timeout_b = level_b);
-           ensure "accepted_b = block_b" (accepted_b = block_b)
-       | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false
-  *)
-  let vote = make_vote ~hash:hash_a identity in
-  let Consensus after_catch_up, _actions4 =
-    incoming_vote ~current:(time 0.4) ~level:level_a ~vote
-      (Consensus after_skip)
-  in
-  pp_state_action (Consensus after_catch_up) _actions4 4;
-  ensure "after_catch_up.state = Apply { pending = block_a }"
-    (after_catch_up.state = Apply { pending = block_a })
+  ensure
+    "after_catch_up.state = Pending_apply { pending = block_a; accepted = \
+     level_a}"
+    (after_catch_up.state
+    = Pending_apply { pending = block_a; accepted = level_a })
+(* match (actions3 @ actions2 @ actions1) with
+     | [
+      Consensus_timeout { from
+   = timeout_b };
+      Consensus_accepted_block { block = accepted_a };
+      Consensus_trigger_timeout { level = timeout_b };
+      Consensus_accepted_block { block = accepted_b };
+     ] ->
+         ensure "timeout_a = level_a" (timeout_a = level_a);
+         ensure "accepted_a = block_b" (accepted_a = block_a);
+         ensure "timeout_b = level_b" (timeout_b = level_b);
+         ensure "accepted_b = block_b" (accepted_b = block_b)
+     | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false
+*)
 
 let test_missing_block () =
   let identity, _identities, validators = make_validators 1 in
@@ -495,6 +500,6 @@ let run () =
           test_case "signable block 2" `Quick test_signable_block_2;
           test_case "fast forwarding" `Quick test_fast_forwarding;
           test_case "missing block" `Quick test_missing_block;
-          test_case "reverse ordering" `Quick test_reverse_ordering;
+          test_case "reverse ordering" `Quick test_reverse_ordering_2;
         ] );
     ]
