@@ -18,7 +18,12 @@ type t = chain
 
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
-  | Fragment_protocol of {
+  | Fragment_produce of {
+      producer : Producer.t;
+      above : Block.t;
+      withdrawal_handles_hash : BLAKE2b.t;
+    }
+  | Fragment_apply of {
       (* TODO: votes here is weird, only happens to commit after fragment *)
       block : Block.t;
       votes : Verified_signature.Set.t;
@@ -27,7 +32,8 @@ type fragment =
 
 type outcome =
   | Outcome_gossip of { outcome : Gossip.outcome }
-  | Outcome_protocol of {
+  | Outcome_produce of { block : Block.t }
+  | Outcome_apply of {
       block : Block.t;
       votes : Verified_signature.t Key_hash.Map.t;
       protocol : Protocol.t;
@@ -38,12 +44,11 @@ type action =
   | Chain_timeout of { from : Timestamp.t }
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
   | Chain_send_message of {
-      id : Request_id.t; [@opaque]
+      connection : Connection_id.t; [@opaque]
       raw_expected_hash : string;
       raw_content : string;
     }
   | Chain_send_request of { raw_expected_hash : string; raw_content : string }
-  | Chain_send_not_found of { id : Request_id.t [@opaque] }
   | Chain_fragment of { fragment : fragment [@opaque] }
   | Chain_save_block of { block : Block.t }
   | Chain_commit of {
@@ -102,20 +107,14 @@ let apply_consensus_action chain consensus_action =
   match consensus_action with
   | Consensus_timeout { from } -> (chain, Chain_timeout { from })
   | Consensus_produce { above } ->
-      (* TODO: maybe produce in fragment?
-          this would allow producing next while applying current *)
       let (Chain { protocol; producer; _ }) = chain in
       let (Protocol { ledger; _ }) = protocol in
       let withdrawal_handles_hash =
         Ledger.withdrawal_handles_root_hash ledger
       in
-      let block =
-        Producer.produce ~parallel_map:List.map ~above ~withdrawal_handles_hash
-          producer
+      let fragment =
+        Fragment_produce { producer; above; withdrawal_handles_hash }
       in
-      let content = Message.Content.block block in
-      let fragment = Gossip.broadcast_message ~content in
-      let fragment = Fragment_gossip { fragment } in
       (chain, Chain_fragment { fragment })
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
@@ -134,7 +133,7 @@ let apply_consensus_action chain consensus_action =
         let applied = Level.Map.add level (block, votes) applied in
         Chain { chain with applied }
       in
-      let fragment = Fragment_protocol { protocol; votes; block } in
+      let fragment = Fragment_apply { block; votes; protocol } in
       (chain, Chain_fragment { fragment })
   | Consensus_request { above } ->
       let content = Request.Content.accepted ~above in
@@ -195,7 +194,7 @@ let incoming_message ~current ~message chain =
   | Content_accepted { block; votes } ->
       let (Block { level; _ }) = block in
       let chain, actions = incoming_block ~current ~block chain in
-      (* TODO: *)
+      Format.eprintf "accepted: %a\n%!" Level.pp level;
       List.fold_left
         (fun (chain, actions) vote ->
           let chain, additional = incoming_vote ~current ~level ~vote chain in
@@ -203,7 +202,7 @@ let incoming_message ~current ~message chain =
           (chain, additional @ actions))
         (chain, actions) votes
 
-let incoming_request ~id ~request chain =
+let incoming_request ~connection ~request chain =
   let open Request in
   let (Chain { applied; _ }) = chain in
   let (Request { hash = _; content }) = request in
@@ -212,16 +211,15 @@ let incoming_request ~id ~request chain =
       (* TODO: probably single domain is a better idea
          even better would be storing the raw messages per level *)
       (* TODO: send all blocks above *)
-      match Level.Map.find_opt above applied with
+      let level = Level.next above in
+      match Level.Map.find_opt level applied with
       | Some (block, votes) ->
           let content = Message.Content.accepted ~block ~votes in
-          let fragment = Gossip.send_message ~id ~content in
+          let fragment = Gossip.send_message ~connection ~content in
           let fragment = Fragment_gossip { fragment } in
           let fragment = Chain_fragment { fragment } in
           (chain, [ fragment ])
-      | None ->
-          let action = Chain_send_not_found { id } in
-          (chain, [ action ]))
+      | None -> (chain, []))
 
 let apply_gossip_action ~current ~gossip_action chain =
   match gossip_action with
@@ -234,18 +232,20 @@ let apply_gossip_action ~current ~gossip_action chain =
       in
       let actions = broadcast :: actions in
       (chain, actions)
-  | Gossip.Gossip_send_message { id; raw_message } ->
+  | Gossip.Gossip_send_message { connection; raw_message } ->
       let (Raw_message { hash; raw_content }) = raw_message in
       let raw_expected_hash = Message_hash.to_b58 hash in
-      let send = Chain_send_message { id; raw_expected_hash; raw_content } in
+      let send =
+        Chain_send_message { connection; raw_expected_hash; raw_content }
+      in
       (chain, [ send ])
   | Gossip.Gossip_send_request { raw_request } ->
       let (Raw_request { hash; raw_content }) = raw_request in
       let raw_expected_hash = Request_hash.to_b58 hash in
       let send = Chain_send_request { raw_expected_hash; raw_content } in
       (chain, [ send ])
-  | Gossip.Gossip_incoming_request { id; request } ->
-      incoming_request ~id ~request chain
+  | Gossip.Gossip_incoming_request { connection; request } ->
+      incoming_request ~connection ~request chain
   | Gossip.Gossip_fragment { fragment } ->
       let fragment = Fragment_gossip { fragment } in
       let fragment = Chain_fragment { fragment } in
@@ -265,8 +265,8 @@ let incoming ~raw_expected_hash ~raw_content chain =
   let chain = Chain { chain with gossip } in
   (chain, fragment)
 
-let request ~id ~raw_expected_hash ~raw_content =
-  match Gossip.incoming_request ~id ~raw_expected_hash ~raw_content with
+let request ~connection ~raw_expected_hash ~raw_content =
+  match Gossip.incoming_request ~connection ~raw_expected_hash ~raw_content with
   | Some fragment -> Some (Fragment_gossip { fragment })
   | None -> None
 
@@ -284,7 +284,13 @@ let apply_gossip_outcome ~current ~outcome chain =
   | Some gossip_action -> apply_gossip_action ~current ~gossip_action chain
   | None -> (chain, [])
 
-let apply_protocol_outcome ~current ~block ~votes ~protocol ~receipts chain =
+let apply_protocol_produce ~block chain =
+  let content = Message.Content.block block in
+  let fragment = Gossip.broadcast_message ~content in
+  let fragment = Fragment_gossip { fragment } in
+  (chain, [ Chain_fragment { fragment } ])
+
+let apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain =
   let (Chain ({ consensus; producer; _ } as chain)) = chain in
   match Consensus.finished ~current ~block consensus with
   | Ok (consensus, actions) ->
@@ -326,15 +332,22 @@ let apply_protocol_outcome ~current ~block ~votes ~protocol ~receipts chain =
 let apply ~current ~outcome chain =
   match outcome with
   | Outcome_gossip { outcome } -> apply_gossip_outcome ~current ~outcome chain
-  | Outcome_protocol { block; votes; protocol; receipts } ->
-      apply_protocol_outcome ~current ~block ~votes ~protocol ~receipts chain
+  | Outcome_produce { block } -> apply_protocol_produce ~block chain
+  | Outcome_apply { block; votes; protocol; receipts } ->
+      apply_protocol_apply ~current ~block ~votes ~protocol ~receipts chain
 
 let compute fragment =
   match fragment with
   | Fragment_gossip { fragment } ->
       let outcome = Gossip.compute fragment in
       Outcome_gossip { outcome }
-  | Fragment_protocol { block; votes; protocol } ->
+  | Fragment_produce { producer; above; withdrawal_handles_hash } ->
+      let block =
+        Producer.produce ~parallel_map:List.map ~above ~withdrawal_handles_hash
+          producer
+      in
+      Outcome_produce { block }
+  | Fragment_apply { protocol; votes; block } ->
       let (Block { level; payload; tezos_operations; _ }) = block in
       let () =
         Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
@@ -358,7 +371,7 @@ let compute fragment =
             Key_hash.Map.add key_hash vote map)
           votes Key_hash.Map.empty
       in
-      Outcome_protocol { block; votes; protocol; receipts }
+      Outcome_apply { block; votes; protocol; receipts }
 
 let clear chain =
   let (Chain ({ gossip; consensus; _ } as chain)) = chain in
@@ -420,7 +433,8 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_message { id = _; raw_expected_hash; raw_content } ->
+            | Chain_send_message
+                { connection = _; raw_expected_hash; raw_content } ->
                 let chain, fragment =
                   incoming ~raw_expected_hash ~raw_content chain
                 in
@@ -433,8 +447,10 @@ let test () =
                 in
                 (chain, actions)
             | Chain_send_request { raw_expected_hash; raw_content } ->
-                let id = Request_id.initial in
-                let fragment = request ~id ~raw_expected_hash ~raw_content in
+                let connection = Connection_id.initial in
+                let fragment =
+                  request ~connection ~raw_expected_hash ~raw_content
+                in
                 let actions =
                   match fragment with
                   | Some fragment ->
@@ -443,7 +459,6 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_not_found { id = _ } -> (chain, [])
             | Chain_fragment { fragment } ->
                 let outcome = compute fragment in
                 apply ~current ~outcome chain

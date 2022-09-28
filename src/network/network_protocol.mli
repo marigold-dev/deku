@@ -1,16 +1,15 @@
+(* server *)
 val listen :
   sw:Eio.Switch.t ->
   net:#Eio.Net.t ->
   port:int ->
   on_error:(exn -> unit) ->
-  on_request:
-    (send:(raw_expected_hash:string -> raw_content:string -> unit) ->
-    raw_expected_hash:string ->
-    raw_content:string ->
-    unit) ->
-  on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
-  unit
+  (read:(unit -> Network_message.t) ->
+  write:(Network_message.t -> unit) ->
+  unit) ->
+  'a
 
+(* client *)
 exception Invalid_host
 
 val connect :
@@ -18,15 +17,7 @@ val connect :
   net:#Eio.Net.t ->
   host:string ->
   port:int ->
-  on_request:
-    (send:(raw_expected_hash:string -> raw_content:string -> unit) ->
-    raw_expected_hash:string ->
-    raw_content:string ->
-    unit) ->
-  on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
-  (request:(raw_expected_hash:string -> raw_content:string -> unit) ->
-  send:(raw_expected_hash:string -> raw_content:string -> unit) ->
-  unit) ->
-  unit
+  (read:(unit -> Network_message.t) -> write:(Network_message.t -> unit) -> 'a) ->
+  'a
 
 val test : unit -> unit
