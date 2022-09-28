@@ -1,4 +1,3 @@
-open Deku_stdlib
 open Deku_crypto
 open Deku_chain
 
@@ -6,19 +5,22 @@ module Config : sig
   type config = private {
     secret : Secret.t; (* bootstrap *)
     validators : Key_hash.t list;
-    nodes : Uri.t list;
+    nodes : (string * int) list;
   }
 
   type t = config [@@deriving yojson]
 
   val make :
-    secret:Secret.t -> validators:Key_hash.t list -> nodes:Uri.t list -> config
+    secret:Secret.t ->
+    validators:Key_hash.t list ->
+    nodes:(string * int) list ->
+    config
 
-  val read : folder:string -> config Lwt.t
-  val write : folder:string -> config -> unit Lwt.t
+  val read : env:Eio.Stdenv.t -> folder:string -> config
+  val write : env:Eio.Stdenv.t -> folder:string -> config -> unit
 end
 
 module Chain : sig
-  val read : folder:string -> Chain.t option Lwt.t
-  val write : pool:Parallel.Pool.t -> folder:string -> Chain.t -> unit Lwt.t
+  val read : env:Eio.Stdenv.t -> folder:string -> Chain.t option
+  val write : env:Eio.Stdenv.t -> folder:string -> Chain.t -> unit
 end
