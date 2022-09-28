@@ -1,11 +1,16 @@
 open Deku_stdlib
+open Deku_concepts
 open Deku_chain
 
 type node
 type t = node
 
 val make :
-  pool:Parallel.Pool.t -> dump:(Chain.t -> unit) -> chain:Chain.t -> node
+  identity:Identity.t ->
+  pool:Parallel.Pool.t ->
+  dump:(Chain.t -> unit) ->
+  chain:Chain.t ->
+  node
 
 val start :
   sw:Eio.Switch.t ->

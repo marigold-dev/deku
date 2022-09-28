@@ -48,11 +48,11 @@ let main () =
   let chain =
     match chain with
     | Some chain -> Chain.clear chain
-    | None -> Chain.make ~identity ~validators
+    | None -> Chain.make ~validators
   in
 
   let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
-  let node = Node.make ~pool ~dump ~chain in
+  let node = Node.make ~identity ~pool ~dump ~chain in
 
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in

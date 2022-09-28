@@ -29,7 +29,7 @@ type action = private
   | Chain_send_request of { raw_expected_hash : string; raw_content : string }
   | Chain_fragment of { fragment : fragment }
 
-val make : identity:Identity.t -> validators:Key_hash.t list -> chain
+val make : validators:Key_hash.t list -> chain
 
 val incoming :
   raw_expected_hash:string ->
@@ -45,14 +45,19 @@ val request :
   fragment option
 (** [request ~id ~raw_expected_hash ~raw_content chain] *)
 
-val timeout : current:Timestamp.t -> chain -> chain * action list
+val timeout :
+  identity:Identity.t -> current:Timestamp.t -> chain -> chain * action list
 (** [incoming_timeout ~current chain] *)
 
 val apply :
-  current:Timestamp.t -> outcome:outcome -> chain -> chain * action list
+  identity:Identity.t ->
+  current:Timestamp.t ->
+  outcome:outcome ->
+  chain ->
+  chain * action list
 (** [apply ~current ~outcome chain ]*)
 
-val compute : fragment -> outcome
+val compute : identity:Identity.t -> fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
 
 val clear : chain -> chain

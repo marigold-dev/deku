@@ -91,9 +91,7 @@ let bootstrap ~sw ~env ~size ~folder =
   in
   let chain = Storage.Chain.read ~env ~folder in
   let (Chain { consensus; _ }) =
-    match chain with
-    | Some chain -> chain
-    | None -> Chain.make ~identity:producer ~validators
+    match chain with Some chain -> chain | None -> Chain.make ~validators
   in
   let network = Network_manager.make () in
   let () =

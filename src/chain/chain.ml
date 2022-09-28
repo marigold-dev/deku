@@ -39,12 +39,12 @@ type action =
   | Chain_send_request of { raw_expected_hash : string; raw_content : string }
   | Chain_fragment of { fragment : fragment }
 
-let make ~identity ~validators =
+let make ~validators =
   let gossip = Gossip.empty in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial in
-  let consensus = Consensus.make ~identity ~validators in
-  let producer = Producer.make ~identity in
+  let consensus = Consensus.make ~validators in
+  let producer = Producer.empty in
   let applied = Level.Map.empty in
   Chain { gossip; protocol; consensus; producer; applied }
 
@@ -90,14 +90,16 @@ let apply_consensus_actions chain consensus_actions =
     (chain, []) consensus_actions
 
 (* core *)
-let incoming_block ~current ~block chain =
+let incoming_block ~identity ~current ~block chain =
   (* let () =
        let (Block.Block { hash; level; _ }) = block in
        Format.eprintf "incoming.block(%a)(%.3f): %s\n%!" Level.pp level
          (Unix.gettimeofday ()) (Block_hash.to_b58 hash)
      in *)
   let (Chain ({ consensus; _ } as chain)) = chain in
-  let consensus, actions = Consensus.incoming_block ~current ~block consensus in
+  let consensus, actions =
+    Consensus.incoming_block ~identity ~current ~block consensus
+  in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
@@ -120,16 +122,16 @@ let incoming_operation ~operation chain =
   let chain = Chain { chain with producer } in
   (chain, [])
 
-let incoming_message ~current ~message chain =
+let incoming_message ~identity ~current ~message chain =
   let open Message in
   let (Message { hash = _; content }) = message in
   match content with
-  | Content_block block -> incoming_block ~current ~block chain
+  | Content_block block -> incoming_block ~identity ~current ~block chain
   | Content_vote { level; vote } -> incoming_vote ~current ~level ~vote chain
   | Content_operation operation -> incoming_operation ~operation chain
   | Content_accepted { block; votes } ->
       let (Block { level; _ }) = block in
-      let chain, actions = incoming_block ~current ~block chain in
+      let chain, actions = incoming_block ~identity ~current ~block chain in
       Format.eprintf "accepted: %a\n%!" Level.pp level;
       List.fold_left
         (fun (chain, actions) vote ->
@@ -157,10 +159,10 @@ let incoming_request ~connection ~request chain =
           (chain, [ fragment ])
       | None -> (chain, []))
 
-let apply_gossip_action ~current ~gossip_action chain =
+let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
   | Gossip.Gossip_apply_and_broadcast { message; raw_message } ->
-      let chain, actions = incoming_message ~current ~message chain in
+      let chain, actions = incoming_message ~identity ~current ~message chain in
       let broadcast =
         let (Raw_message { hash; raw_content }) = raw_message in
         let raw_expected_hash = Message_hash.to_b58 hash in
@@ -206,18 +208,19 @@ let request ~connection ~raw_expected_hash ~raw_content =
   | Some fragment -> Some (Fragment_gossip { fragment })
   | None -> None
 
-let timeout ~current chain =
+let timeout ~identity ~current chain =
   let (Chain ({ consensus; _ } as chain)) = chain in
-  let consensus, actions = Consensus.timeout ~current consensus in
+  let consensus, actions = Consensus.timeout ~identity ~current consensus in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
-let apply_gossip_outcome ~current ~outcome chain =
+let apply_gossip_outcome ~identity ~current ~outcome chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip, gossip_action = Gossip.apply ~outcome gossip in
   let chain = Chain { chain with gossip } in
   match gossip_action with
-  | Some gossip_action -> apply_gossip_action ~current ~gossip_action chain
+  | Some gossip_action ->
+      apply_gossip_action ~identity ~current ~gossip_action chain
   | None -> (chain, [])
 
 let apply_protocol_produce ~block chain =
@@ -226,9 +229,9 @@ let apply_protocol_produce ~block chain =
   let fragment = Fragment_gossip { fragment } in
   (chain, [ Chain_fragment { fragment } ])
 
-let apply_protocol_apply ~current ~protocol ~block ~receipts chain =
+let apply_protocol_apply ~identity ~current ~protocol ~block ~receipts chain =
   let (Chain ({ consensus; producer; _ } as chain)) = chain in
-  match Consensus.finished ~current ~block consensus with
+  match Consensus.finished ~identity ~current ~block consensus with
   | Ok (consensus, actions) ->
       (* TODO: make this parallel *)
       let producer = Producer.clean ~receipts producer in
@@ -241,20 +244,22 @@ let apply_protocol_apply ~current ~protocol ~block ~receipts chain =
       Format.eprintf "chain: wrong pending block\n%!";
       (Chain chain, [])
 
-let apply ~current ~outcome chain =
+let apply ~identity ~current ~outcome chain =
   match outcome with
-  | Outcome_gossip { outcome } -> apply_gossip_outcome ~current ~outcome chain
+  | Outcome_gossip { outcome } ->
+      apply_gossip_outcome ~identity ~current ~outcome chain
   | Outcome_produce { block } -> apply_protocol_produce ~block chain
   | Outcome_apply { protocol; block; receipts } ->
-      apply_protocol_apply ~current ~protocol ~block ~receipts chain
+      apply_protocol_apply ~identity ~current ~protocol ~block ~receipts chain
 
-let compute fragment =
+let compute ~identity fragment =
+  (* TODO: identity parameter here not ideal *)
   match fragment with
   | Fragment_gossip { fragment } ->
       let outcome = Gossip.compute fragment in
       Outcome_gossip { outcome }
   | Fragment_produce { producer; above } ->
-      let block = Producer.produce ~above producer in
+      let block = Producer.produce ~identity ~above producer in
       Outcome_produce { block }
   | Fragment_apply { protocol; block } ->
       let (Block { level; payload; _ }) = block in
@@ -287,7 +292,7 @@ let test () =
     [ key_hash ]
   in
 
-  let chain = make ~identity ~validators in
+  let chain = make ~validators in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =
       Genesis.block
@@ -299,7 +304,9 @@ let test () =
     block
   in
 
-  let chain, actions = incoming_block ~current:(get_current ()) ~block chain in
+  let chain, actions =
+    incoming_block ~identity ~current:(get_current ()) ~block chain
+  in
 
   let rec loop chain actions =
     let current = get_current () in
@@ -348,8 +355,8 @@ let test () =
                 in
                 (chain, actions)
             | Chain_fragment { fragment } ->
-                let outcome = compute fragment in
-                apply ~current ~outcome chain
+                let outcome = compute ~identity fragment in
+                apply ~identity ~current ~outcome chain
           in
           (chain, actions @ additional_actions))
         (chain, []) actions

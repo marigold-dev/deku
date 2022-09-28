@@ -1,10 +1,12 @@
 open Deku_stdlib
+open Deku_concepts
 open Deku_consensus
 open Deku_chain
 open Deku_network
 open Deku_gossip
 
 type node = {
+  identity : Identity.t;
   pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
   network : Network_manager.t;
@@ -38,15 +40,17 @@ and handle_chain_action ~sw ~env ~action node =
 
 and handle_chain_fragment ~sw ~env ~fragment node =
   Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error (fun sw ->
+      let identity = node.identity in
       let outcome =
-        Parallel.async node.pool (fun () -> Chain.compute fragment)
+        Parallel.async node.pool (fun () -> Chain.compute ~identity fragment)
       in
       let outcome = Eio.Promise.await outcome in
       let current = current () in
       on_chain_outcome ~sw ~env ~current ~outcome node)
 
 and on_chain_outcome ~sw ~env ~current ~outcome node =
-  let chain, actions = Chain.apply ~current ~outcome node.chain in
+  let identity = node.identity in
+  let chain, actions = Chain.apply ~identity ~current ~outcome node.chain in
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
@@ -70,7 +74,8 @@ and start_timeout ~sw ~env ~from node =
       on_timeout ~sw ~env ~current node
 
 and on_timeout ~sw ~env ~current node =
-  let chain, actions = Chain.timeout ~current node.chain in
+  let identity = node.identity in
+  let chain, actions = Chain.timeout ~identity ~current node.chain in
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
@@ -90,10 +95,10 @@ let on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
   | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-let make ~pool ~dump ~chain =
+let make ~identity ~pool ~dump ~chain =
   let network = Network_manager.make () in
   let cancel () = () in
-  { pool; dump; network; chain; cancel }
+  { identity; pool; dump; network; chain; cancel }
 
 let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
   (* bench "message" @@ fun () -> *)
@@ -149,9 +154,9 @@ let test () =
   in
 
   let start ~sw ~identity ~port =
-    let chain = Chain.make ~identity ~validators in
+    let chain = Chain.make ~validators in
     let dump _chain = () in
-    let node = make ~pool ~dump ~chain in
+    let node = make ~identity ~pool ~dump ~chain in
     start ~sw ~env ~port ~nodes node
   in
   let start ~identity ~port =

@@ -1,30 +1,25 @@
 open Deku_concepts
 open Deku_protocol
 
-type producer =
-  | Producer of {
-      identity : Identity.t;
-      operations : Operation.t Operation_hash.Map.t;
-    }
-
+type producer = Producer of { operations : Operation.t Operation_hash.Map.t }
 and t = producer [@@deriving yojson]
 
-let make ~identity =
+let empty =
   let operations = Operation_hash.Map.empty in
-  Producer { identity; operations }
+  Producer { operations }
 
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
-  let (Producer { identity; operations }) = producer in
+  let (Producer { operations }) = producer in
   let operations =
     let (Operation.Operation { hash; _ }) = operation in
     Operation_hash.Map.add hash operation operations
   in
-  Producer { identity; operations }
+  Producer { operations }
 
 let clean ~receipts producer =
-  let (Producer { identity; operations }) = producer in
+  let (Producer { operations }) = producer in
   let operations =
     List.fold_left
       (fun operations receipt ->
@@ -32,12 +27,12 @@ let clean ~receipts producer =
         Operation_hash.Map.remove hash operations)
       operations receipts
   in
-  Producer { identity; operations }
+  Producer { operations }
 
-let produce ~above producer =
+let produce ~identity ~above producer =
   let open Block in
   let (Block { hash = current_block; level = current_level; _ }) = above in
-  let (Producer { identity; operations }) = producer in
+  let (Producer { operations }) = producer in
   let previous = current_block in
   let level = Level.next current_level in
   let operations =
