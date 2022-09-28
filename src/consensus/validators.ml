@@ -3,7 +3,10 @@ open Deku_crypto
 type validators = Key_hash.Set.t
 and t = validators [@@deriving yojson]
 
-let of_key_hash_list = Key_hash.Set.of_list
+let of_key_hash_list validators =
+  match validators with
+  | [] -> raise (Invalid_argument "validators cannot be empty")
+  | validators -> Key_hash.Set.of_list validators
 
 let cardinal validators =
   (* TODO: O(1) cardinality *)
@@ -24,8 +27,10 @@ let find_after_index ~after validators =
 let skip ~after ~skip validators =
   let validators = Key_hash.Set.elements validators in
   let length = List.length validators in
-  match find_after_index ~after validators with
-  | Some n ->
-      let i = (n + skip) mod length in
-      List.nth_opt validators i
-  | None -> None
+  let index =
+    match find_after_index ~after validators with
+    | Some index -> index
+    | None -> 0
+  in
+  let index = (index + skip) mod length in
+  List.nth validators index

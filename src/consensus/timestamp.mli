@@ -2,6 +2,7 @@
 type timestamp
 type t = timestamp [@@deriving yojson]
 
+val genesis : timestamp
 val of_float : float -> timestamp
 
 (* TODO: remove this function *)

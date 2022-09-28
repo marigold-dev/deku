@@ -34,7 +34,9 @@ let clean ~receipts producer =
   in
   Producer { identity; operations }
 
-let produce ~current_level ~current_block producer =
+let produce ~above producer =
+  let open Block in
+  let (Block { hash = current_block; level = current_level; _ }) = above in
   let (Producer { identity; operations }) = producer in
   let previous = current_block in
   let level = Level.next current_level in
@@ -44,16 +46,3 @@ let produce ~current_level ~current_block producer =
       (Operation_hash.Map.bindings operations)
   in
   Block.produce ~identity ~level ~previous ~operations
-
-let produce ~current ~consensus producer =
-  let open Consensus in
-  let (Consensus { current_block; _ }) = consensus in
-
-  match is_producer ~current consensus with
-  | true ->
-      let (Block { hash = current_block; level = current_level; _ }) =
-        current_block
-      in
-      let block = produce ~current_level ~current_block producer in
-      Some block
-  | false -> None

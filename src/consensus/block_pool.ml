@@ -1,13 +1,12 @@
-open Deku_crypto
+open Deku_concepts
 open Block
 
+(* TODO: clean block pool *)
 (* TODO: not accepted blocks and signatures are never removed *)
 
 type block_pool =
-  | Pool of {
-      by_hash : (Block.t option * Key_hash.Set.t) Block_hash.Map.t;
-      by_previous : Block.Set.t Block_hash.Map.t;
-    }
+  | Pool of
+      (Block.t option * Verified_signature.Set.t) Block_hash.Map.t Level.Map.t
 
 type t = block_pool
 
@@ -15,87 +14,100 @@ type t = block_pool
 let find_by_hash hash map =
   match Block_hash.Map.find_opt hash map with
   | Some (block, votes) -> (block, votes)
-  | None -> (None, Key_hash.Set.empty)
+  | None -> (None, Verified_signature.Set.empty)
 
-let find_by_previous hash map =
-  match Block_hash.Map.find_opt hash map with
+let find_by_level level map =
+  match Level.Map.find_opt level map with
   | Some blocks -> blocks
-  | None -> Block.Set.empty
+  | None -> Block_hash.Map.empty
 
-let empty =
-  Pool { by_hash = Block_hash.Map.empty; by_previous = Block_hash.Map.empty }
+let empty = Pool Level.Map.empty
 
 let append_block ~block pool =
-  let (Pool { by_hash; by_previous }) = pool in
-  let (Block { hash; previous; _ }) = block in
+  let (Block { hash; level; _ }) = block in
+  let (Pool by_level) = pool in
+  let by_hash = find_by_level level by_level in
   match find_by_hash hash by_hash with
   | Some _block, _votes -> pool
   | None, votes ->
       let by_hash = Block_hash.Map.add hash (Some block, votes) by_hash in
-      let by_previous =
-        let blocks = find_by_previous previous by_previous in
-        let blocks = Block.Set.add block blocks in
-        Block_hash.Map.add previous blocks by_previous
-      in
-      Pool { by_hash; by_previous }
+      let by_level = Level.Map.add level by_hash by_level in
+      Pool by_level
 
-let append_vote ~validator ~hash pool =
-  let (Pool { by_hash; by_previous }) = pool in
+let append_vote ~level ~vote pool =
+  let (Pool by_level) = pool in
+  let hash = Verified_signature.signed_hash vote in
+  let hash = Block_hash.of_blake2b hash in
+  let by_hash = find_by_level level by_level in
   let block, votes = find_by_hash hash by_hash in
-  let votes = Key_hash.Set.add validator votes in
+  let votes = Verified_signature.Set.add vote votes in
   let by_hash = Block_hash.Map.add hash (block, votes) by_hash in
-  Pool { by_hash; by_previous }
+  let by_level = Level.Map.add level by_hash by_level in
+  Pool by_level
 
-let remove ~block pool =
-  let (Pool { by_hash; by_previous }) = pool in
-  let (Block { hash; previous; _ }) = block in
-  let by_hash = Block_hash.Map.remove hash by_hash in
-  let by_previous = Block_hash.Map.remove previous by_previous in
-  Pool { by_hash; by_previous }
-
-let find_block ~hash pool =
-  let (Pool { by_hash; by_previous = _ }) = pool in
+let find_block ~level ~hash pool =
+  let (Pool by_level) = pool in
+  let by_hash = find_by_level level by_level in
   let block, _votes = find_by_hash hash by_hash in
   block
 
-let find_votes ~hash pool =
-  let (Pool { by_hash; by_previous = _ }) = pool in
+let find_votes ~level ~hash pool =
+  let (Pool by_level) = pool in
+  let by_hash = find_by_level level by_level in
   let _block, votes = find_by_hash hash by_hash in
   votes
 
-let find_next ~hash pool =
-  let (Pool { by_hash = _; by_previous }) = pool in
-  find_by_previous hash by_previous
+let find_level ~level pool =
+  let (Pool by_level) = pool in
+  let by_hash = find_by_level level by_level in
+  Block_hash.Map.fold
+    (fun _hash (block, _votes) blocks ->
+      match block with Some block -> block :: blocks | None -> blocks)
+    by_hash []
+
+let close_level ~level pool =
+  let (Pool by_level) = pool in
+  let by_level = Level.Map.remove level by_level in
+  Pool by_level
 
 (* yojson *)
-(* TODO: this is not safe, because we don't reload the signatures from
-   validators*)
-let t_of_yojson json =
-  let list =
-    [%of_yojson: (Block_hash.t * Block.t option * Key_hash.t list) list] json
+(* TODO: not safe, doesn't check if signatures match validator *)
+type repr = {
+  blocks : Block.t list;
+  votes : (Level.t * Verified_signature.t) list;
+}
+[@@deriving yojson]
+
+let t_of_yojson json : block_pool =
+  let { blocks; votes } = repr_of_yojson json in
+  let pool =
+    List.fold_left (fun pool block -> append_block ~block pool) empty blocks
   in
   List.fold_left
-    (fun pool (hash, block, votes) ->
-      let hash, pool =
-        match block with
-        | Some block ->
-            let (Block { hash; _ }) = block in
-            let pool = append_block ~block pool in
-            (hash, pool)
-        | None -> (hash, pool)
-      in
-      List.fold_left
-        (fun pool validator -> append_vote ~validator ~hash pool)
-        pool votes)
-    empty list
+    (fun pool (level, vote) -> append_vote ~level ~vote pool)
+    pool votes
 
 let yojson_of_t pool =
-  let (Pool { by_hash; by_previous = _ }) = pool in
-  let list =
-    Block_hash.Map.fold
-      (fun hash (block, votes) list ->
-        let votes = Key_hash.Set.elements votes in
-        (hash, block, votes) :: list)
-      by_hash []
+  let (Pool by_level) = pool in
+  let blocks =
+    Level.Map.fold
+      (fun _level by_hash blocks ->
+        Block_hash.Map.fold
+          (fun _hash (block, _votes) blocks ->
+            match block with Some block -> block :: blocks | None -> blocks)
+          by_hash blocks)
+      by_level []
   in
-  [%yojson_of: (Block_hash.t * Block.t option * Key_hash.t list) list] list
+  let votes =
+    Level.Map.fold
+      (fun level by_hash list ->
+        Block_hash.Map.fold
+          (fun _hash (_block, votes) list ->
+            Verified_signature.Set.fold
+              (fun vote list -> (level, vote) :: list)
+              votes list)
+          by_hash list)
+      by_level []
+  in
+  let repr = { blocks; votes } in
+  yojson_of_repr repr
