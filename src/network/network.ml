@@ -22,6 +22,16 @@ let internal_error error =
 let raw_expected_hash_header = "X-Raw-Expected-Hash"
 let broadcast_endpoint = "/messages"
 let request_endpoint = "/request"
+let clients : (Uri.t, Piaf_lwt.Client.t) Hashtbl.t = Hashtbl.create 16
+
+let get_client uri =
+  match Hashtbl.find_opt clients uri with
+  | Some c -> Lwt_result.return c
+  | None ->
+      Piaf_lwt.Client.create uri
+      |> Lwt_result.map (fun client ->
+             Hashtbl.add clients uri client;
+             client)
 
 let headers ~raw_expected_hash =
   let open Headers in
@@ -109,12 +119,12 @@ let connect ~nodes =
   }
 
 let post ~raw_expected_hash ~raw_content ~uri =
-  let target = Uri.with_path uri broadcast_endpoint in
   (* let target = Uri.to_string target in *)
   (* Format.eprintf "%a <- %s\n%!" Uri.pp_hum _uri target; *)
   let headers = headers ~raw_expected_hash in
   let body = Body.of_string raw_content in
-  Client.Oneshot.post ~headers ~body target
+  Lwt_result.bind (get_client uri) (fun client ->
+      Piaf_lwt.Client.post client ~headers ~body broadcast_endpoint)
 
 let post ~raw_expected_hash ~raw_content ~uri =
   Lwt.async (fun () ->
@@ -143,10 +153,13 @@ let broadcast ~raw_expected_hash ~raw_content network =
   List.iter (fun uri -> post ~raw_expected_hash ~raw_content ~uri) network.nodes
 
 let post ~raw_expected_hash ~raw_content ~uri =
-  let target = Uri.with_path uri request_endpoint in
+  let open Lwt_result.Infix in
   let headers = headers ~raw_expected_hash in
   let body = Body.of_string raw_content in
-  let%await post = Client.Oneshot.post ~headers ~body target in
+  let%await post =
+    get_client uri >>= fun client ->
+    Piaf_lwt.Client.post client ~headers ~body request_endpoint
+  in
   match post with
   | Ok response -> (
       let headers = response.headers in
