@@ -87,7 +87,7 @@ let next_timeout ~current consensus =
 
 let is_pending_level ~level consensus =
   let (Block { level = trusted_level; _ }) = trusted_block consensus in
-  Level.(level > trusted_level)
+  level > trusted_level
 
 let is_validator ~validator consensus =
   let (Consensus { validators; _ }) = consensus in
@@ -309,7 +309,7 @@ let accept_future_block ~current ~block consensus =
 let accept_future_block ~current ~block consensus =
   let (Block { level; _ }) = block in
   let accepted = accepted_level consensus in
-  match Level.(level > accepted) with
+  match level > accepted with
   | true -> accept_future_block ~current ~block consensus
   | false -> (consensus, None, None)
 
@@ -329,15 +329,18 @@ let incoming_block_or_vote ~current ~block consensus =
   | true -> accept_block ~current ~block consensus
   | false -> (consensus, None, None)
 
-let incoming_block ~identity ~current ~block consensus =
+let incoming_block ~current ~block ?(prevent_self_sign = false) consensus =
   let (Block { level; _ }) = block in
   match is_pending_level ~level consensus with
   | true ->
       let consensus = append_block ~block consensus in
       let consensus, vote =
-        match try_to_sign_block ~identity ~current ~block consensus with
-        | Some (consensus, vote) -> (consensus, Some vote)
-        | None -> (consensus, None)
+        match prevent_self_sign with
+        | true -> (consensus, None)
+        | false -> (
+            match try_to_sign_block ~current ~block consensus with
+            | Some (consensus, vote) -> (consensus, Some vote)
+            | None -> (consensus, None))
       in
       let actions = match vote with Some vote -> [ vote ] | None -> [] in
 
@@ -548,8 +551,9 @@ let test () =
               incoming_vote ~current ~level ~vote consensus
           | Consensus_apply { block; votes = _ } -> (
               let (Block { level; _ }) = block in
-              Format.eprintf "%a\n%!" Level.pp level;
-              match finished ~identity ~current ~block consensus with
+              Format.eprintf "%d\n%!"
+                (Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int);
+              match finished ~current ~block consensus with
               | Ok (consensus, actions) -> (consensus, actions)
               | Error `No_pending_block -> failwith "no pending block"
               | Error `Wrong_pending_block -> failwith "wrong pending block")

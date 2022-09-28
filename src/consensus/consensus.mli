@@ -31,10 +31,9 @@ val make : validators:Validators.t -> consensus
 
 (* updates *)
 val incoming_block :
-  identity:Identity.t ->
   current:Timestamp.t ->
-  (* TODO: move those to a context *)
   block:Block.t ->
+  ?prevent_self_sign:bool ->
   consensus ->
   consensus * action list
 
