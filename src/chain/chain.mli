@@ -10,7 +10,8 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      applied : Block.t Block_hash.Map.t;
+      applied :
+        (Block.block * Verified_signature.verified_signature list) Level.Map.t;
     }
 
 type t = chain [@@deriving yojson]
@@ -18,14 +19,14 @@ type fragment
 type outcome
 
 type action = private
-  | Chain_trigger_timeout
+  | Chain_timeout of { from : Timestamp.t }
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
-  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
-  | Chain_send_response of {
+  | Chain_send_message of {
       id : Request_id.t;
       raw_expected_hash : string;
       raw_content : string;
     }
+  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
   | Chain_send_not_found of { id : Request_id.t }
   | Chain_fragment of { fragment : fragment }
 
@@ -42,18 +43,10 @@ val request :
   id:Request_id.t ->
   raw_expected_hash:string ->
   raw_content:string ->
-  chain ->
-  chain * fragment option
+  fragment option
 (** [request ~id ~raw_expected_hash ~raw_content chain] *)
 
-val response :
-  raw_expected_hash:string ->
-  raw_content:string ->
-  chain ->
-  chain * fragment option
-(** [response ~id ~raw_expected_hash ~raw_content chain] *)
-
-val timeout : current:Timestamp.t -> chain -> fragment option
+val timeout : current:Timestamp.t -> chain -> chain * action list
 (** [incoming_timeout ~current chain] *)
 
 val apply :
