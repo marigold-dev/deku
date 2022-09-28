@@ -111,7 +111,7 @@ let test_vote_then_block_on_initial () =
   let identity, _identities, validators = make_validators 1 in
   let consensus = Consensus.make ~identity ~validators in
 
-  let (Block { hash; previous; level; _ } as block) =
+  let (Block { hash; previous; _ } as block) =
     make_block ~identity Genesis.block
   in
   let vote = make_vote ~hash identity in
@@ -136,10 +136,9 @@ let test_vote_then_block_on_initial () =
     (accepted_block.block_pool = Block_pool.empty);
   match actions with
   | [
-   Consensus_trigger_timeout { level = trigger_level };
+   Consensus_trigger_timeout;
    Consensus_accepted_block { block = accepted_block };
   ] ->
-      ensure "trigger_level = level" (trigger_level = level);
       ensure "accepted_block = block" (accepted_block = block)
   | _ -> ensure "actions = [trigger; accepted]" false
 
@@ -188,8 +187,7 @@ let test_fast_forwarding () =
   let identity, _identities, validators = make_validators 1 in
   let consensus = Consensus.make ~identity ~validators in
 
-  let (Block { hash = hash_a; previous = previous_a; level = level_a; _ } as
-      block_a) =
+  let (Block { hash = hash_a; previous = previous_a; _ } as block_a) =
     make_block ~identity Genesis.block
   in
   let consensus, actions =
@@ -197,9 +195,7 @@ let test_fast_forwarding () =
   in
   assert (List.length actions = 0);
 
-  let (Block { hash = hash_b; level = level_b; _ } as block_b) =
-    make_block ~identity block_a
-  in
+  let (Block { hash = hash_b; _ } as block_b) = make_block ~identity block_a in
   let consensus, actions =
     incoming_block ~current:(time 0.2) ~block:block_b consensus
   in
@@ -224,14 +220,12 @@ let test_fast_forwarding () =
 
   match actions with
   | [
-   Consensus_trigger_timeout { level = timeout_a };
+   Consensus_trigger_timeout;
    Consensus_accepted_block { block = accepted_a };
-   Consensus_trigger_timeout { level = timeout_b };
+   Consensus_trigger_timeout;
    Consensus_accepted_block { block = accepted_b };
   ] ->
-      ensure "timeout_a = level_a" (timeout_a = level_a);
       ensure "accepted_a = block_b" (accepted_a = block_a);
-      ensure "timeout_b = level_b" (timeout_b = level_b);
       ensure "accepted_b = block_b" (accepted_b = block_b)
   | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false
 
@@ -239,14 +233,11 @@ let test_missing_block () =
   let identity, _identities, validators = make_validators 1 in
   let consensus = Consensus.make ~identity ~validators in
 
-  let (Block { hash = hash_a; previous = previous_a; level = level_a; _ } as
-      block_a) =
+  let (Block { hash = hash_a; previous = previous_a; _ } as block_a) =
     make_block ~identity Genesis.block
   in
 
-  let (Block { hash = hash_b; level = level_b; _ } as block_b) =
-    make_block ~identity block_a
-  in
+  let (Block { hash = hash_b; _ } as block_b) = make_block ~identity block_a in
   let consensus, actions =
     incoming_block ~current:(time 0.2) ~block:block_b consensus
   in
@@ -287,14 +278,12 @@ let test_missing_block () =
   (* TODO: this is probably a bug, *)
   match actions with
   | [
-   Consensus_trigger_timeout { level = timeout_a };
+   Consensus_trigger_timeout;
    Consensus_accepted_block { block = accepted_a };
-   Consensus_trigger_timeout { level = timeout_b };
+   Consensus_trigger_timeout;
    Consensus_accepted_block { block = accepted_b };
   ] ->
-      ensure "timeout_a = level_a" (timeout_a = level_a);
       ensure "accepted_a = block_b" (accepted_a = block_a);
-      ensure "timeout_b = level_b" (timeout_b = level_b);
       ensure "accepted_b = block_b" (accepted_b = block_b)
   | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false
 
