@@ -3,14 +3,13 @@ open Deku_consensus
 open Deku_chain
 open Deku_network
 open Deku_gossip
-open Deku_constants
 
 type node = {
   pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
-  network : Network.t;
+  network : Network_manager.t;
   mutable chain : Chain.t;
-  mutable trigger_timeout : unit -> unit;
+  mutable cancel : unit -> unit;
 }
 
 type t = node
@@ -21,154 +20,182 @@ let write_chain ~chain node =
   node.dump chain;
   node.chain <- chain
 
-let rec on_network_message node ~raw_expected_hash ~raw_content =
+let rec handle_chain_actions ~sw ~env ~actions node =
+  List.iter (fun action -> handle_chain_action ~sw ~env ~action node) actions
+
+and handle_chain_action ~sw ~env ~action node =
+  let open Chain in
+  match action with
+  | Chain_timeout { from } -> start_timeout ~sw ~env ~from node
+  | Chain_broadcast { raw_expected_hash; raw_content } ->
+      (* Format.eprintf "broadcast(%.3f): %s\n%!" (Unix.gettimeofday ())
+         raw_expected_hash; *)
+      Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content node.network
+  | Chain_send_message { id; raw_expected_hash; raw_content } ->
+      Network_manager.respond ~id ~raw_expected_hash ~raw_content node.network
+  | Chain_send_request { raw_expected_hash; raw_content } ->
+      Network_manager.request ~sw ~raw_expected_hash ~raw_content node.network
+  | Chain_send_not_found { id } -> Network_manager.not_found ~id node.network
+  | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
+
+and handle_chain_fragment ~sw ~env ~fragment node =
+  Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error (fun sw ->
+      let outcome =
+        Parallel.async node.pool (fun () -> Chain.compute fragment)
+      in
+      let outcome = Eio.Promise.await outcome in
+      let current = current () in
+      on_chain_outcome ~sw ~env ~current ~outcome node)
+
+and on_chain_outcome ~sw ~env ~current ~outcome node =
+  let chain, actions = Chain.apply ~current ~outcome node.chain in
+  write_chain ~chain node;
+  handle_chain_actions ~sw ~env ~actions node
+
+and start_timeout ~sw ~env ~from node =
+  node.cancel ();
+  let cancelled = ref false in
+  node.cancel <- (fun () -> cancelled := true);
+
+  Eio.Fiber.fork ~sw @@ fun () ->
+  let clock = Eio.Stdenv.clock env in
+  let until =
+    (* TODO: non ideal *)
+    let from = Timestamp.to_float from in
+    from +. Deku_constants.block_timeout
+  in
+  let () = Eio.Time.sleep_until clock until in
+  match !cancelled with
+  | true -> ()
+  | false ->
+      let current = current () in
+      on_timeout ~sw ~env ~current node
+
+and on_timeout ~sw ~env ~current node =
+  let chain, actions = Chain.timeout ~current node.chain in
+  write_chain ~chain node;
+  handle_chain_actions ~sw ~env ~actions node
+
+let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
   let chain, fragment =
     Chain.incoming ~raw_expected_hash ~raw_content node.chain
   in
   write_chain ~chain node;
   match fragment with
-  | Some fragment -> handle_chain_fragment node ~fragment
+  | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-and on_network_request node ~id ~raw_expected_hash ~raw_content =
-  let chain, fragment =
-    Chain.request ~id ~raw_expected_hash ~raw_content node.chain
-  in
-  write_chain ~chain node;
+let on_network_request ~sw ~env ~id ~raw_expected_hash ~raw_content node =
+  let fragment = Chain.request ~id ~raw_expected_hash ~raw_content in
   match fragment with
-  | Some fragment -> handle_chain_fragment node ~fragment
+  | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-and on_network_response node ~raw_expected_hash ~raw_content =
-  let chain, fragment =
-    Chain.response ~raw_expected_hash ~raw_content node.chain
-  in
-  write_chain ~chain node;
-  match fragment with
-  | Some fragment -> handle_chain_fragment node ~fragment
-  | None -> ()
+let make ~pool ~dump ~chain =
+  let network = Network_manager.make () in
+  let cancel () = () in
+  { pool; dump; network; chain; cancel }
 
-and on_timeout node : unit Lwt.t =
-  let trigger_timeout_promise, trigger_timeout_resolver = Lwt.wait () in
-  let trigger_timeout () =
-    match Lwt.wakeup_later trigger_timeout_resolver () with
-    | () -> ()
-    | exception _exn -> ()
-  in
-  node.trigger_timeout <- trigger_timeout;
-  let%await () =
-    Lwt.pick [ Lwt_unix.sleep block_timeout; trigger_timeout_promise ]
-  in
-  let current = current () in
+let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
+  (* bench "message" @@ fun () -> *)
+  on_network_message ~sw ~env ~raw_expected_hash ~raw_content node
 
-  let fragment = Chain.timeout ~current node.chain in
-  (match fragment with
-  | Some fragment -> handle_chain_fragment node ~fragment
-  | None -> ());
-  on_timeout node
-
-and on_chain_outcome node ~current ~outcome =
-  let chain, actions = Chain.apply ~current ~outcome node.chain in
-  write_chain ~chain node;
-  handle_chain_actions node ~actions
-
-and handle_chain_actions node ~actions =
-  List.iter (fun action -> handle_chain_action node ~action) actions
-
-and handle_chain_action node ~action =
-  let open Chain in
-  match action with
-  | Chain_trigger_timeout -> node.trigger_timeout ()
-  | Chain_broadcast { raw_expected_hash; raw_content } ->
-      Network.broadcast ~raw_expected_hash ~raw_content node.network
-  | Chain_send_request { raw_expected_hash; raw_content } ->
-      Lwt.async (fun () ->
-          (* TODO: this is non ideal *)
-          let%await raw_expected_hash, raw_content =
-            Network.request ~raw_expected_hash ~raw_content node.network
-          in
-          on_network_response node ~raw_expected_hash ~raw_content;
-          Lwt.return_unit)
-  | Chain_send_response { id; raw_expected_hash; raw_content } ->
-      Network.respond ~id ~raw_expected_hash ~raw_content node.network
-  | Chain_send_not_found { id } -> Network.not_found ~id node.network
-  | Chain_fragment { fragment } -> handle_chain_fragment node ~fragment
-
-and handle_chain_fragment node ~fragment =
-  Lwt.async (fun () ->
-      let%await outcome =
-        Parallel.async node.pool (fun () -> Chain.compute fragment)
-      in
-      let current = current () in
-      on_chain_outcome node ~current ~outcome;
-      Lwt.return_unit)
-
-let make ~pool ~dump ~chain ~nodes =
-  let network = Network.connect ~nodes in
-  let node =
-    let trigger_timeout () = () in
-    { pool; dump; network; chain; trigger_timeout }
-  in
-  let promise = on_timeout node in
-  (node, promise)
-
-let listen node ~port =
+let start ~sw ~env ~port ~nodes node =
   let on_message ~raw_expected_hash ~raw_content =
-    on_network_message node ~raw_expected_hash ~raw_content
+    (* Format.eprintf "incoming(%.3f): %s\n%!" (Unix.gettimeofday ())
+       raw_expected_hash; *)
+    on_network_message ~sw ~env ~raw_expected_hash ~raw_content node
   in
   let on_request ~id ~raw_expected_hash ~raw_content =
-    on_network_request node ~id ~raw_expected_hash ~raw_content
+    on_network_request ~sw ~env ~id ~raw_expected_hash ~raw_content node
   in
-  Network.listen ~port ~on_message ~on_request node.network
+  start_timeout ~sw ~env ~from:(current ()) node;
+  Eio.Fiber.both
+    (fun () ->
+      Network_manager.listen ~sw ~env ~port ~on_message ~on_request node.network)
+    (fun () ->
+      Network_manager.connect ~sw ~env ~nodes ~on_message ~on_request
+        node.network)
 
 let test () =
+  let pool = Parallel.Pool.make ~domains:8 in
+  Parallel.Pool.run pool @@ fun () ->
+  Eio_main.run @@ fun env ->
   let open Deku_concepts in
   let open Deku_crypto in
-  let secret = Ed25519.Secret.generate () in
-  let secret = Secret.Ed25519 secret in
-  let identity = Identity.make secret in
-  let validators =
-    let key = Key.of_secret secret in
-    let key_hash = Key_hash.of_key key in
-    [ key_hash ]
+  let clock = Eio.Stdenv.clock env in
+  let domains = Eio.Stdenv.domain_mgr env in
+  let identity () =
+    let secret = Ed25519.Secret.generate () in
+    let secret = Secret.Ed25519 secret in
+    Identity.make secret
+  in
+  let identities =
+    [
+      (identity (), 4440);
+      (identity (), 4441);
+      (identity (), 4442);
+      (identity (), 4443);
+    ]
   in
   let nodes =
-    let uri = Uri.of_string "http://localhost:1234" in
-    [ uri ]
+    List.map (fun (_identity, port) -> ("localhost", port)) identities
   in
-  let pool = Parallel.Pool.make ~domains:8 in
-  let chain = Chain.make ~identity ~validators in
-  let dump _chain = () in
-  let node, promise = make ~pool ~dump ~chain ~nodes in
-  let (Chain { consensus; _ }) = node.chain in
-  let block =
-    let (Consensus { current_block; _ }) = consensus in
-    let (Block { hash = current_block; level = current_level; _ }) =
-      current_block
+  let validators =
+    List.map (fun (identity, _port) -> Identity.key_hash identity) identities
+  in
+
+  let start ~sw ~identity ~port =
+    let chain = Chain.make ~identity ~validators in
+    let dump _chain = () in
+    let node = make ~pool ~dump ~chain in
+    start ~sw ~env ~port ~nodes node
+  in
+  let start ~identity ~port =
+    Eio.Domain_manager.run domains (fun () ->
+        Eio.Switch.run @@ fun sw -> start ~sw ~identity ~port)
+  in
+  let start_nodes () =
+    Eio.Fiber.all
+      (List.map (fun (identity, port) () -> start ~identity ~port) identities)
+  in
+
+  let bootstrap () =
+    Eio.Switch.run @@ fun sw ->
+    let identity, _ = List.nth identities 0 in
+    let network = Network_manager.make () in
+    Eio.Time.sleep clock 0.2;
+    let () =
+      Eio.Fiber.fork ~sw @@ fun () ->
+      Network_manager.connect ~sw ~env ~nodes
+        ~on_request:(fun ~id:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
+        ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())
+        network
+    in
+    Eio.Time.sleep clock 0.2;
+    let broadcast ~content =
+      let open Message in
+      let _message, raw_message = Message.encode ~content in
+      let (Raw_message { hash; raw_content }) = raw_message in
+      let raw_expected_hash = Message_hash.to_b58 hash in
+      Network_manager.broadcast ~sw ~raw_expected_hash ~raw_content network
+    in
+
+    let (Block.Block { hash = current_block; level = current_level; _ }) =
+      Genesis.block
     in
     let level = Level.next current_level in
     let previous = current_block in
     let operations = [] in
     let block = Block.produce ~identity ~level ~previous ~operations in
-    block
+    let votes =
+      List.map (fun (identity, _port) -> Block.sign ~identity block) identities
+    in
+    broadcast ~content:(Message.Content.block block);
+    List.iter
+      (fun vote -> broadcast ~content:(Message.Content.vote ~level ~vote))
+      votes
   in
 
-  let () =
-    let _message, raw_message =
-      Message.encode ~content:(Message.Content.block block)
-    in
-    let (Raw_message { hash; raw_content }) = raw_message in
-    let raw_expected_hash = Message_hash.to_b58 hash in
-    on_network_message node ~raw_expected_hash ~raw_content
-  in
-
-  let () =
-    let vote = Block.sign ~identity block in
-    let _message, raw_message =
-      Message.encode ~content:(Message.Content.vote vote)
-    in
-    let (Raw_message { hash; raw_content }) = raw_message in
-    let raw_expected_hash = Message_hash.to_b58 hash in
-    on_network_message node ~raw_expected_hash ~raw_content
-  in
-  Lwt_main.run promise
+  Eio.Switch.run @@ fun _sw ->
+  Eio.Fiber.both (fun () -> start_nodes ()) (fun () -> bootstrap ())

@@ -2,28 +2,24 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_storage
 open Deku_chain
-include Node
 
 let domains = 8
 
-let make_dump_loop ~pool ~folder ~chain =
+let make_dump_loop ~sw ~env ~folder ~chain =
   let chain_ref = ref chain in
-  let dump_loop () =
-    let rec loop () =
-      let chain = !chain_ref in
-      let%await () =
-        Lwt.catch
-          (fun () -> Storage.Chain.write ~pool ~folder chain)
-          (fun exn ->
-            Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
-            Lwt.return_unit)
-      in
-      loop ()
-    in
+
+  let domains = Eio.Stdenv.domain_mgr env in
+
+  let rec loop () : unit =
+    let chain = !chain_ref in
+    (try Storage.Chain.write ~env ~folder chain
+     with exn ->
+       Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn));
     loop ()
   in
   let dump chain = chain_ref := chain in
-  Lwt.async (fun () -> dump_loop ());
+  ( Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error @@ fun _sw ->
+    Eio.Domain_manager.run domains (fun () -> loop ()) );
   dump
 
 let main () =
@@ -38,32 +34,32 @@ let main () =
   let data_folder = !data_folder in
 
   let pool = Parallel.Pool.make ~domains in
-  let%await storage = Storage.Config.read ~folder:data_folder in
+
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
+  Parallel.Pool.run pool @@ fun () ->
+  let storage = Storage.Config.read ~env ~folder:data_folder in
   let Storage.Config.{ secret; validators; nodes } = storage in
 
-  Parallel.Pool.run pool (fun () ->
-      let identity = Identity.make secret in
-      (* TODO: one problem of loading from disk like this, is that there
-           may be pending actions such as fragments being processed *)
-      let%await chain = Storage.Chain.read ~folder:data_folder in
-      let chain =
-        match chain with
-        | Some chain -> Chain.clear chain
-        | None -> Chain.make ~identity ~validators
-      in
+  let identity = Identity.make secret in
+  (* TODO: one problem of loading from disk like this, is that there
+       may be pending actions such as fragments being processed *)
+  let chain = Storage.Chain.read ~env ~folder:data_folder in
+  let chain =
+    match chain with
+    | Some chain -> Chain.clear chain
+    | None -> Chain.make ~identity ~validators
+  in
 
-      let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
-      let node, promise = Node.make ~pool ~dump ~chain ~nodes in
-      Node.listen node ~port:!port;
-      let () =
-        let (Chain { consensus; _ }) = chain in
-        let (Consensus { current_block; _ }) = consensus in
-        let (Block { level; _ }) = current_block in
-        let level = Level.to_n level in
-        let level = N.to_z level in
-        Format.eprintf "%a\n%!" Z.pp_print level
-      in
-      promise)
+  let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
+  let node = Node.make ~pool ~dump ~chain in
+
+  let (Chain { consensus; _ }) = chain in
+  let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
+  let level = Level.to_n level in
+  let level = N.to_z level in
+  Format.eprintf "%a\n%!" Z.pp_print level;
+  Node.start ~sw ~env ~port:!port ~nodes node
 
 (* let setup_log ?style_renderer level =
      Fmt_tty.setup_std_outputs ?style_renderer ();
@@ -73,12 +69,10 @@ let main () =
    let () = setup_log Logs.Debug *)
 
 (* handle external failures *)
-let () =
-  Lwt.async_exception_hook :=
-    fun exn -> Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
 
+(* let main () = Node.test () *)
 let () =
   Sys.set_signal Sys.sigpipe
     (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
 
-let () = Lwt_main.run (main ())
+let () = main ()
