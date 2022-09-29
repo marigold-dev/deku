@@ -142,6 +142,7 @@ let main params =
         let (Block.Block { level; _ }) = current_block in
         External_vm_client.set_initial_state vm_state;
         let%await blocks = Indexer.find_blocks_from_level ~level indexer in
+        Logs.info (fun m -> m "Applying %d old blocks" (List.length blocks));
         let chain_data =
           List.fold_left
             (fun chain_data (block, block_timestamp) ->
@@ -193,7 +194,7 @@ let setup_log ?style_renderer ?level () =
       then Logs.Src.set_level src (Some Logs.Error))
     (Logs.Src.list ())
 
-let () = setup_log ~level:Logs.Info ()
+let () = setup_log ~level:Logs.Debug ()
 
 let () =
   Lwt.async_exception_hook :=

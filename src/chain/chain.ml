@@ -196,12 +196,14 @@ and apply_consensus_actions chain consensus_actions =
 
 (* core *)
 let incoming_block ~current ~block chain =
+  Logs.info (fun m -> m "Incoming block %a" Block.pp block);
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions = Consensus.incoming_block ~current ~block consensus in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
 let incoming_vote ~current ~vote chain =
+  Logs.info (fun m -> m "Incoming vote %a" Verified_signature.pp vote);
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions = Consensus.incoming_vote ~current ~vote consensus in
   let chain = Chain { chain with consensus } in
