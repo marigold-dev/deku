@@ -107,3 +107,32 @@ let host =
   let default = Uri.of_string "http://localhost:8080" in
   let env = Cmd.Env.info "DEKU_API_NODE" in
   value & opt uri default & info [ "api-node" ] ~doc ~docv ~env
+
+(* Helpers to post/get json on the network*)
+module Net = struct
+  let post ~sw ~env json uri =
+    let body = Yojson.Safe.to_string json in
+    let body = Piaf.Body.of_string body in
+    match Piaf.Client.Oneshot.post ~body env uri ~sw with
+    | Ok response -> response
+    | Error error -> failwith (Piaf.Error.to_string error)
+
+  let get ~sw ~env uri =
+    match Piaf.Client.Oneshot.get env uri ~sw with
+    | Ok response -> response
+    | Error error -> failwith (Piaf.Error.to_string error)
+
+  let body_of_response (response : Piaf.Response.t) =
+    match Piaf.Body.to_string response.body with
+    | Ok body -> body
+    | Error error -> failwith (Piaf.Error.to_string error)
+
+  let code_of_response (response : Piaf.Response.t) =
+    response.Piaf.Response.status |> Piaf.Status.to_code
+
+  let level_body_of_yojson json =
+    let open Deku_concepts in
+    match Yojson.Safe.from_string json with
+    | `Assoc [ ("level", level) ] -> Level.t_of_yojson level
+    | _ -> failwith "Wrong body received from level endpoint"
+end
