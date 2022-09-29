@@ -1,6 +1,6 @@
 (library
  (name deku_network)
- (libraries piaf-lwt deku_stdlib deku_crypto deku_gossip)
+ (libraries deku_stdlib deku_crypto deku_gossip)
  (preprocess
   (pps
    ppx_let_binding
