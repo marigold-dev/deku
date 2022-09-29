@@ -120,6 +120,7 @@ const main = (
     for (; ;) {
         const raw = read().toString();
         const message = JSON.parse(raw);
+        console.log("Parsed message:", message);
         let error = "";
         if (message[0] !== "Noop_transaction") {
             const transaction = message[1];

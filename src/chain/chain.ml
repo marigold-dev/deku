@@ -203,13 +203,13 @@ let incoming_block ~current ~block chain =
   apply_consensus_actions chain actions
 
 let incoming_vote ~current ~vote chain =
-  Logs.info (fun m -> m "Incoming vote %a" Verified_signature.pp vote);
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions = Consensus.incoming_vote ~current ~vote consensus in
   let chain = Chain { chain with consensus } in
   apply_consensus_actions chain actions
 
 let incoming_operation ~operation chain =
+  Logs.info (fun m -> m "Incoming operation: %a" Operation.pp operation);
   let (Chain ({ producer; _ } as chain)) = chain in
   let producer = Producer.incoming_operation ~operation producer in
   let chain = Chain { chain with producer } in

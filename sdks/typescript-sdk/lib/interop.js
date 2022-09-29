@@ -99,10 +99,12 @@ state_transition) {
     state = init_state(initial_state);
     console.log("vm started");
     for (;;) {
-        var message = JSON.parse(read().toString());
+        var raw = read().toString();
+        var message = JSON.parse(raw);
+        console.log("Parsed message:", message);
         var error = "";
         if (message[0] !== "Noop_transaction") {
-            var transaction = JSON.parse(message[1]);
+            var transaction = message[1];
             try {
                 error = state_transition(transaction);
             }
