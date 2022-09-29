@@ -1,38 +1,27 @@
 open Deku_stdlib
 open Deku_concepts
-open Deku_tezos_interop
 open Deku_crypto
 open Deku_indexer
 open Deku_storage
 open Deku_chain
 open Deku_external_vm
 open Deku_protocol
-open Deku_consensus
-include Node
 
-let make_dump_loop ~pool ~folder ~chain =
-  let chain_data = Chain.dehydrate chain in
-  let chain_data_ref = ref chain_data in
-  let dump_loop () =
-    let rec loop () =
-      let chain_data = !chain_data_ref in
-      let%await () = Lwt_unix.sleep 1. in
-      let%await () =
-        Lwt.catch
-          (fun () -> Storage.Chain.write ~pool ~folder chain_data)
-          (fun exn ->
-            Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn);
-            Lwt.return_unit)
-      in
-      loop ()
-    in
+let make_dump_loop ~sw ~env ~folder ~chain =
+  let chain_ref = ref chain in
+
+  let domains = Eio.Stdenv.domain_mgr env in
+
+  let rec loop () : unit =
+    let chain = !chain_ref in
+    (try Storage.Chain.write ~env ~folder chain
+     with exn ->
+       Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn));
     loop ()
   in
-  let dump chain =
-    let chain_data = Chain.dehydrate chain in
-    chain_data_ref := chain_data
-  in
-  Lwt.async (fun () -> dump_loop ());
+  let dump chain = chain_ref := chain in
+  ( Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error @@ fun _sw ->
+    Eio.Domain_manager.run domains (fun () -> loop ()) );
   dump
 
 type params = {
@@ -43,7 +32,7 @@ type params = {
       (** Folder path where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
-  validator_uris : Uri.t list; [@env "DEKU_VALIDATOR_URIS"]
+  validator_uris : (string * int) list; [@env "DEKU_VALIDATOR_URIS"]
       (** A comma-separated list of the validator URI's used to join the network. *)
   port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
   database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
@@ -56,9 +45,6 @@ type params = {
       (** The threshold below which blocks are filled with no-op transactions. *)
   tezos_rpc_node : Uri.t; [@env "DEKU_TEZOS_RPC_NODE"]
       (** The URI of this validator's Tezos RPC node. *)
-  tezos_required_confirmations : int;
-      [@default 2] [@env "DEKU_TEZOS_REQUIRED_CONFIRMATIONS"]
-      (** The number of blocks to wait before considering a Tezos block confirmed. *)
   tezos_secret : Ed25519.Secret.t; [@env "DEKU_TEZOS_SECRET"]
       (** The base58-encoded ED25519 secret to use as the wallet for submitting Tezos transactions. *)
   tezos_consensus_address : Deku_tezos.Address.t;
@@ -74,22 +60,7 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let start_api ~node ~indexer ~port ~tezos_consensus_address
-    ~tezos_discovery_address ~node_uri ~enabled =
-  match enabled with
-  | false -> ()
-  | true ->
-      let api_constants =
-        Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
-          ~discovery_address:tezos_discovery_address ~node_uri
-      in
-      Lwt.async (fun () ->
-          Dream.serve ~interface:"0.0.0.0" ~port
-            (Deku_api.make_routes node indexer api_constants))
-
 let main params =
-  Lwt_main.run
-  @@
   let {
     domains;
     secret;
@@ -102,27 +73,19 @@ let main params =
     save_messages;
     default_block_size;
     tezos_rpc_node;
-    tezos_required_confirmations;
     tezos_secret;
     tezos_consensus_address;
-    tezos_discovery_address;
+    tezos_discovery_address = _;
     named_pipe_path;
-    api_enabled;
-    api_port;
+    api_enabled = _;
+    api_port = _;
   } =
     params
   in
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
-  let%await indexer =
+  let indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
-  in
-  let tezos_interop =
-    Tezos_interop.make ~rpc_node:tezos_rpc_node
-      ~secret:(Secret.Ed25519 tezos_secret)
-      ~consensus_contract:tezos_consensus_address
-      ~discovery_contract:tezos_discovery_address
-      ~required_confirmations:tezos_required_confirmations
   in
   let pool = Parallel.Pool.make ~domains in
   (* The VM must be started before the node because this call is blocking  *)
@@ -130,55 +93,35 @@ let main params =
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
+
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
+  Parallel.Pool.run pool @@ fun () ->
   (* TODO: one problem of loading from disk like this, is that there
-          may be pending actions such as fragments being processed *)
-  let%await chain_data = Storage.Chain.read ~folder:data_folder in
-  let%await chain =
-    match chain_data with
-    | Some chain_data ->
-        let (Chain.Chain_data { protocol; consensus; _ }) = chain_data in
+       may be pending actions such as fragments being processed *)
+  let chain = Storage.Chain.read ~env ~folder:data_folder in
+  let chain =
+    match chain with
+    | Some chain ->
+        let (Chain { protocol; _ }) = chain in
         let (Protocol.Protocol { vm_state; _ }) = protocol in
-        let (Consensus.Consensus_data { current_block; _ }) = consensus in
-        let (Block.Block { level; _ }) = current_block in
         External_vm_client.set_initial_state vm_state;
-        let%await blocks = Indexer.find_blocks_from_level ~level indexer in
-        Logs.info (fun m -> m "Applying %d old blocks" (List.length blocks));
-        let chain_data =
-          List.fold_left
-            (fun chain_data (block, block_timestamp) ->
-              Chain.add_block ~block ~block_timestamp chain_data)
-            chain_data blocks
-        in
-        let chain = Chain.rehydrate ~identity ~default_block_size chain_data in
-        chain |> Lwt.return
+        chain
     | None ->
         let vm_state = External_vm_client.get_initial_state () in
         Chain.make ~vm_state ~identity ~validators ~default_block_size
-        |> Lwt.return
   in
-  let dump = make_dump_loop ~pool ~folder:data_folder ~chain in
-  let notify_api =
-    match api_enabled with true -> Deku_api.on_block | false -> fun _ -> ()
-  in
+  let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
+  let notify_api _ = () in
+  let node = Node.make ~pool ~dump ~chain ~indexer:(Some indexer) ~notify_api in
 
-  let node, promise =
-    Node.make ~pool ~dump ~chain ~nodes:validator_uris ~indexer:(Some indexer)
-      ~tezos_interop:(Some tezos_interop) ~notify_api ()
+  let (Chain { consensus; _ }) = chain in
+  let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
+  Format.eprintf "Chain started at level: %a\n%!" Level.pp level;
+  let tezos =
+    (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
   in
-  let node_uri = Uri.of_string "http://localhost" in
-  let node_uri = Uri.with_port node_uri (Some port) in
-  start_api ~node ~indexer ~port:api_port ~tezos_consensus_address
-    ~tezos_discovery_address ~node_uri ~enabled:api_enabled;
-  Node.listen node ~port ~tezos_interop;
-  let () =
-    let (Chain { consensus; _ }) = chain in
-    let (Consensus { current_block; _ }) = consensus in
-    let (Block { level; _ }) = current_block in
-    let level = Level.to_n level in
-    let level = N.to_z level in
-    Format.eprintf "Chain started at level: %a\n%!" Z.pp_print level
-  in
-  promise
+  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
 
 let setup_log ?style_renderer ?level () =
   Fmt_tty.setup_std_outputs ?style_renderer ();
@@ -196,10 +139,7 @@ let setup_log ?style_renderer ?level () =
 
 let () = setup_log ~level:Logs.Debug ()
 
-let () =
-  Lwt.async_exception_hook :=
-    fun exn -> Logs.err (fun m -> m "async: %s" (Printexc.to_string exn))
-
+(* let main () = Node.test () *)
 let () =
   Sys.set_signal Sys.sigpipe
     (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
