@@ -27,7 +27,7 @@ type consensus = private
       accepted_at : Timestamp.t;
     }
 
-type t = consensus
+type t = consensus [@@deriving yojson]
 
 val make : identity:Identity.t -> validators:Validators.t -> consensus
 
