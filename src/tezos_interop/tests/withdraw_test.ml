@@ -2,30 +2,18 @@
 open Deku_stdlib
 open Deku_protocol
 open Deku_concepts
-open Lwt_result.Syntax
-
-(* Still have that Piaf bug *)
-let post ~sw ~env body uri =
-  let body = Piaf.Body.of_string body in
-  match Piaf.Client.Oneshot.post ~body env uri ~sw with
-  | Ok response -> response
-  | Error error -> failwith (Piaf.Error.to_string error)
+open Common
 
 let main ticket_id tezos_owner secret verbose host =
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   let url = Uri.with_path host "api/v1/chain/level" in
   let level =
-    Lwt_main.run
-      (let* response = Piaf_lwt.Client.Oneshot.get url in
-       let* level = Piaf_lwt.Body.to_string response.body in
-       if verbose then prerr_endline level;
-       match Yojson.Safe.from_string level with
-       | `Assoc [ ("level", level) ] ->
-           let level = Level.next (Level.next (Level.t_of_yojson level)) in
-           Lwt.return (Ok level)
-       | _ -> Lwt.return (Error `Bad_request))
-    |> Result.get_ok
+    let response = Net.get ~sw ~env url in
+    let body = Net.body_of_response response in
+    if verbose then prerr_endline body;
+    let level = Net.level_body_of_yojson body in
+    Level.next (Level.next level)
   in
   let identity = Identity.make secret in
   let nonce = Nonce.of_n (Obj.magic level) in
@@ -36,13 +24,10 @@ let main ticket_id tezos_owner secret verbose host =
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let json = Deku_protocol.Operation.yojson_of_t transaction in
-
   let () =
-    let body = Yojson.Safe.to_string json in
-    let response = post ~sw ~env body url in
-    let status = response.Piaf.Response.status in
-    Printf.eprintf "%a\n%!" code;
-    Lwt.return_unit
+    let response = Net.post ~sw ~env json url in
+    let status = Net.code_of_response response in
+    Printf.eprintf "%i\n%!" status
   in
   let (Operation.Operation { hash; _ }) = transaction in
   let hash = Operation_hash.yojson_of_t hash |> Yojson.Safe.to_string in
