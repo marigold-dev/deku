@@ -32,7 +32,7 @@ type params = {
       (** Folder path where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
-  validator_uris : (string * int) list; [@env "DEKU_VALIDATOR_URIS"]
+  validator_uris : string list; [@env "DEKU_VALIDATOR_URIS"]
       (** A comma-separated list of the validator URI's used to join the network. *)
   port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
   database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
@@ -82,21 +82,28 @@ let main params =
   } =
     params
   in
+  let pool = Parallel.Pool.make ~domains in
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
+  Parallel.Pool.run pool @@ fun () ->
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
   let indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }
   in
-  let pool = Parallel.Pool.make ~domains in
+  let validator_uris =
+    List.map
+      (fun s ->
+        match String.split_on_char ':' s with
+        | [ domain; port ] -> (domain, int_of_string port)
+        | _ -> failwith "FIXME: error message")
+      validator_uris
+  in
   (* The VM must be started before the node because this call is blocking  *)
   let () = External_vm_client.start_vm_ipc ~named_pipe_path in
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
-
-  Eio_main.run @@ fun env ->
-  Eio.Switch.run @@ fun sw ->
-  Parallel.Pool.run pool @@ fun () ->
   (* TODO: one problem of loading from disk like this, is that there
        may be pending actions such as fragments being processed *)
   let chain = Storage.Chain.read ~env ~folder:data_folder in
