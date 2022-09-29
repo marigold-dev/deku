@@ -217,39 +217,39 @@ module Get_balance : HANDLER = struct
     in
     let* data =
       let parse_0x s =
-        if String.length s < 2 then
-          None
+        if String.length s < 2 then None
         else if String.starts_with ~prefix:"0x" s then
           Some (String.sub s 2 (String.length s - 2))
-        else
-          None
+        else None
       in
       (* FIXME: does this handle the empty string correctly? *)
       let data = Handler_utils.param_of_request request "data" in
       match data with
       | Some s -> (
-        match parse_0x s with
+          match parse_0x s with
           | None ->
-          Lwt.return
-            (Error
-             (Api_error.invalid_parameter
-                (Format.sprintf "could not parse data '%s' in 0x format" s)))
-          | Some s ->
-            try (* FIXME can this be a security issue? *)
-              Lwt.return_ok (Hex.to_string (`Hex s)) (* also works when s is empty *)
-            with
-              | Invalid_argument _ ->
+              Lwt.return
+                (Error
+                   (Api_error.invalid_parameter
+                      (Format.sprintf "could not parse data '%s' in 0x format" s)))
+          | Some s -> (
+              try
+                (* FIXME can this be a security issue? *)
+                Lwt.return_ok (Hex.to_string (`Hex s))
+                (* also works when s is empty *)
+              with Invalid_argument _ ->
                 Lwt.return
                   (Error
                      (Api_error.invalid_parameter
-                        (Format.sprintf "Invalid hex %s" s))))
+                        (Format.sprintf "Invalid hex %s" s)))))
       | None ->
           Lwt.return
             (Error
-               (Api_error.invalid_parameter
-                  "could not parse data in 0x format"))
+               (Api_error.invalid_parameter "could not parse data in 0x format"))
     in
-    let ticket_id = Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data) in
+    let ticket_id =
+      Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data)
+    in
     Lwt.return_ok { address; ticket_id }
 
   let handle ~node ~indexer:_ ~constants:_ { address; ticket_id } =
