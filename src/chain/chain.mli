@@ -15,7 +15,7 @@ type chain = private
         (Block.block * Verified_signature.verified_signature list) Level.Map.t;
     }
 
-type t = chain
+type t = chain [@@deriving yojson]
 type fragment
 type outcome
 

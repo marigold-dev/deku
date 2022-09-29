@@ -42,7 +42,7 @@ and consensus =
       accepted_at : Timestamp.t;
     }
 
-type t = consensus
+and t = consensus [@@deriving yojson]
 
 let make ~identity ~validators =
   let block_pool = Block_pool.empty in

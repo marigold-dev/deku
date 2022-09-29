@@ -14,7 +14,7 @@ type chain =
       applied : (Block.t * Verified_signature.t list) Level.Map.t;
     }
 
-type t = chain
+and t = chain [@@deriving yojson]
 
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
