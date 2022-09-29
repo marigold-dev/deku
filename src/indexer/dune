@@ -2,7 +2,7 @@
  (name deku_indexer)
  (libraries
   caqti
-  caqti-lwt
+  caqti-eio
   caqti-driver-sqlite3
   deku_network
   deku_consensus
