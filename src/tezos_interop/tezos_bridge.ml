@@ -15,27 +15,12 @@ module Michelson = struct
   let yojson_of_t t =
     Data_encoding.Json.construct Michelson.expr_encoding t
     |> Data_encoding.Json.to_string |> Yojson.Safe.from_string
-
-  let yojson_of_big_map_key (Key_hash key_hash) : Yojson.Safe.t =
-    `String (Key_hash.to_b58 key_hash)
-
-  let big_map_key_of_yojson json =
-    match json with
-    | `String string ->
-        let key_hash = Key_hash.of_b58 string |> Option.get in
-        Key_hash key_hash
-    | _ -> failwith "big_map_key was not properly serialized"
 end
 
 module Listen_transaction = struct
   type kind = Listen [@name "listen"] [@@deriving yojson]
 
-  type request = {
-    kind : kind;
-    rpc_node : string;
-    confirmation : int;
-    destination : string;
-  }
+  type request = { kind : kind; rpc_node : string; destination : string }
   [@@deriving yojson]
 
   type transaction = { entrypoint : string; value : Michelson.t }
@@ -52,7 +37,6 @@ module Inject_transaction = struct
     kind : kind;
     rpc_node : string;
     secret : string;
-    confirmation : int;
     destination : string;
     entrypoint : string;
     payload : Yojson.Safe.t;
@@ -68,7 +52,7 @@ module Inject_transaction = struct
     | Unknown of { hash : string option }
     | Error of { error : string }
 
-  let of_yojson json =
+  let t_of_yojson json =
     let module T = struct
       type t = { status : string }
       [@@deriving of_yojson] [@@yojson.allow_extra_fields]
@@ -102,138 +86,84 @@ module Inject_transaction = struct
     | _ -> failwith "invalid status"
 end
 
-module Storage = struct
-  type kind = Storage [@@deriving yojson]
+type bridge =
+  | Bridge of {
+      rpc_node : Uri.t;
+      secret : Secret.t;
+      destination : Address.t;
+      (* TODO: I don't like this *)
+      on_transactions : transactions:Listen_transaction.t -> unit;
+      inject_transaction :
+        entrypoint:string ->
+        payload:Deku_stdlib.Yojson.Safe.t ->
+        Inject_transaction.t option;
+    }
 
-  type request = {
-    kind : kind;
-    rpc_node : string;
-    confirmation : int;
-    destination : string;
-  }
-  [@@deriving yojson]
+type t = bridge
 
-  let of_yojson json =
-    let module T = struct
-      type t = { status : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type success = { storage : Michelson.t }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type error = { error : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-    end in
-    let T.{ status } = T.t_of_yojson json in
-    match status with
-    | "success" ->
-        let T.{ storage } = T.success_of_yojson json in
-        storage
-    | "error" ->
-        let T.{ error } = T.error_of_yojson json in
-        failwith error
-    | _ -> failwith "invalid status"
-end
-
-module Big_map_keys = struct
-  type kind = Big_map_keys [@name "big_map_keys"] [@@deriving yojson]
-
-  type request = {
-    kind : kind;
-    rpc_node : string;
-    confirmation : int;
-    destination : string;
-    keys : Michelson.big_map_key list;
-  }
-  [@@deriving yojson]
-
-  let of_yojson json =
-    let module T = struct
-      type t = { status : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      (*
-         TODO: Yojson.Safe.t is taking the place of a "well-formatted json object"
-         See: https://github.com/ecadlabs/taquito/blob/fcee40a6235ed0dd56ff6a8f3e64fb9d0c16cab3/packages/taquito/src/contract/big-map.ts#L46
-         It would be better to parse it to a micheline node.
-      *)
-      type success = { values : Yojson.Safe.t option list }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type error = { error : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-    end in
-    let T.{ status } = T.t_of_yojson json in
-    match status with
-    | "success" ->
-        let T.{ values } = T.success_of_yojson json in
-        values
-    | "error" ->
-        let T.{ error } = T.error_of_yojson json in
-        failwith error
-    | _ -> failwith "invalid status"
-end
-
-type t = Long_lived_js_process.t
-
-let spawn ~sw =
-  let file = Scripts.file_tezos_js_bridge in
-  Long_lived_js_process.spawn ~sw ~file
-
-let listen_transaction t ~rpc_node ~required_confirmations ~destination =
+let listen_transaction ~bridge process =
+  let (Bridge { rpc_node; destination; on_transactions; _ }) = bridge in
   let request =
     Listen_transaction.
       {
         kind = Listen;
         rpc_node = Uri.to_string rpc_node;
-        confirmation = required_confirmations;
         destination = Address.to_string destination;
       }
   in
-  Long_lived_js_process.listen t ~to_yojson:Listen_transaction.yojson_of_request
-    ~of_yojson:Listen_transaction.t_of_yojson request
+  let request = Listen_transaction.yojson_of_request request in
+  let on_message message =
+    let transactions = Listen_transaction.t_of_yojson message in
+    on_transactions ~transactions
+  in
+  Js_process.listen process request ~on_message
 
-let inject_transaction t ~rpc_node ~secret ~required_confirmations ~destination
-    ~entrypoint ~payload =
-  let request =
+let inject_transaction ~bridge ~entrypoint ~payload process =
+  let (Bridge { rpc_node; secret; destination; _ }) = bridge in
+  let input =
     Inject_transaction.
       {
         kind = Transaction;
         rpc_node = Uri.to_string rpc_node;
         secret = Secret.to_b58 secret;
-        confirmation = required_confirmations;
         destination = Address.to_string destination;
         entrypoint;
         payload;
       }
   in
-  Long_lived_js_process.request t
-    ~to_yojson:Inject_transaction.yojson_of_request
-    ~of_yojson:Inject_transaction.of_yojson request
+  let input = Inject_transaction.yojson_of_request input in
+  let response = Js_process.request process input in
+  Inject_transaction.t_of_yojson response
 
-let storage t ~rpc_node ~required_confirmations ~destination =
-  let request =
-    Storage.
-      {
-        kind = Storage;
-        rpc_node = Uri.to_string rpc_node;
-        confirmation = required_confirmations;
-        destination = Address.to_string destination;
-      }
+let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
+  let dummy_inject_transaction ~entrypoint:_ ~payload:_ = None in
+  let inject_transaction_ref = ref dummy_inject_transaction in
+  let bridge =
+    let inject_transaction ~entrypoint ~payload =
+      try !inject_transaction_ref ~entrypoint ~payload
+      with exn ->
+        Format.eprintf "inject: %s\n%!" (Printexc.to_string exn);
+        None
+    in
+    Bridge
+      { rpc_node; secret; destination; on_transactions; inject_transaction }
   in
-  Long_lived_js_process.request t ~to_yojson:Storage.yojson_of_request
-    ~of_yojson:Storage.of_yojson request
+  let rec respawn () =
+    try
+      let file = Scripts.file_tezos_js_bridge in
+      Js_process.spawn ~file @@ fun process ->
+      let inject_transaction ~entrypoint ~payload =
+        Some (inject_transaction ~bridge ~entrypoint ~payload process)
+      in
+      inject_transaction_ref := inject_transaction;
+      listen_transaction ~bridge process
+    with exn ->
+      Format.eprintf "spawn: %s\n%!" (Printexc.to_string exn);
+      respawn ()
+  in
+  let () = Eio.Fiber.fork ~sw @@ fun () -> respawn () in
+  bridge
 
-let big_map_keys t ~rpc_node ~required_confirmations ~destination ~keys =
-  let request =
-    Big_map_keys.
-      {
-        kind = Big_map_keys;
-        rpc_node = Uri.to_string rpc_node;
-        confirmation = required_confirmations;
-        destination = Address.to_string destination;
-        keys;
-      }
-  in
-  Long_lived_js_process.request t ~to_yojson:Big_map_keys.yojson_of_request
-    ~of_yojson:Big_map_keys.of_yojson request
+let inject_transaction bridge ~entrypoint ~payload =
+  let (Bridge { inject_transaction; _ }) = bridge in
+  inject_transaction ~entrypoint ~payload

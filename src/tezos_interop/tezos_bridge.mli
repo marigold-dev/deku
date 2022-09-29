@@ -21,39 +21,19 @@ module Inject_transaction : sig
     | Error of { error : string }
 end
 
-type t
+type bridge
+type t = bridge
 
-val spawn : sw:Eio.Switch.t -> t
-
-val listen_transaction :
-  t ->
-  rpc_node:Uri.t ->
-  required_confirmations:int ->
-  destination:Address.t ->
-  (Listen_transaction.t -> unit) ->
-  unit
-
-val inject_transaction :
-  t ->
+val spawn :
+  sw:Eio.Switch.t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
-  required_confirmations:int ->
   destination:Address.t ->
+  on_transactions:(transactions:Listen_transaction.t -> unit) ->
+  bridge
+
+val inject_transaction :
+  bridge ->
   entrypoint:string ->
   payload:Yojson.Safe.t ->
-  Inject_transaction.t
-
-val storage :
-  t ->
-  rpc_node:Uri.t ->
-  required_confirmations:int ->
-  destination:Address.t ->
-  Michelson.t
-
-val big_map_keys :
-  t ->
-  rpc_node:Uri.t ->
-  required_confirmations:int ->
-  destination:Address.t ->
-  keys:Michelson.big_map_key list ->
-  Yojson.Safe.t option list
+  Inject_transaction.t option
