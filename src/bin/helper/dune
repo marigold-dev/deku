@@ -4,11 +4,11 @@
  (libraries
   deku_chain
   deku_network
-  deku_storage
   deku_gossip
   deku_external_vm
   cmdliner
   logs.fmt
-  fmt.tty)
+  fmt.tty
+  piaf)
  (preprocess
   (pps ppx_yojson_conv ppx_let_binding)))
