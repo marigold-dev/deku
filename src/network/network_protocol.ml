@@ -12,7 +12,8 @@ let on_connection stream handler =
   let write message = write write_buf message in
   handler ~read ~write
 
-let listen ~sw ~net ~port ~on_error handler =
+let listen ~net ~port ~on_error handler =
+  Eio.Switch.run @@ fun sw ->
   let interface = Eio.Net.Ipaddr.V4.any in
   let socket = Eio.Net.listen ~backlog ~sw net (`Tcp (interface, port)) in
   let rec loop () =
@@ -24,7 +25,8 @@ let listen ~sw ~net ~port ~on_error handler =
 
 exception Invalid_host
 
-let connect ~sw ~net ~host ~port handler =
+let connect ~net ~host ~port handler =
+  Eio.Switch.run @@ fun sw ->
   let service = string_of_int port in
   let address = Eio.Net.getaddrinfo_stream ~service net host in
   let address =
@@ -37,7 +39,6 @@ let connect ~sw ~net ~host ~port handler =
 let test () =
   Eio_main.run @@ fun env ->
   let net = Eio.Stdenv.net env in
-  Eio.Switch.run @@ fun sw ->
   let on_request ~send ~raw_expected_hash ~raw_content =
     Format.eprintf "request.hash: %s; content: %s\n%!" raw_expected_hash
       raw_content;
@@ -71,10 +72,10 @@ let test () =
   in
 
   let server () =
-    listen ~sw ~net ~port ~on_error:Deku_constants.async_on_error handler
+    listen ~net ~port ~on_error:Deku_constants.async_on_error handler
   in
   let client () =
-    connect ~sw ~net ~host ~port @@ fun ~read ~write ->
+    connect ~net ~host ~port @@ fun ~read ~write ->
     let rec loop_write counter =
       Eio.Fiber.both
         (fun () ->
