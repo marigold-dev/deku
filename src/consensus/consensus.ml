@@ -8,7 +8,7 @@ open Block
 (* TODO: this only detects double signed level when its time to apply *)
 (* TODO: only check signatures if block is known? *)
 type action =
-  | Consensus_timeout of { from : Timestamp.t }
+  | Consensus_timeout of { until : Timestamp.t }
   | Consensus_produce of { above : Block.t }
   | Consensus_vote of { level : Level.t; vote : Verified_signature.t }
   (* TODO: maybe consensus should hold the votes *)
@@ -71,6 +71,10 @@ let accepted_level consensus =
   | Pending_missing { finalized = _; accepted }
   | Pending_apply { pending = _; accepted } ->
       accepted
+
+let next_timeout ~current consensus =
+  let (Consensus { accepted_at; _ }) = consensus in
+  Timestamp.next_timeout ~current ~since:accepted_at
 
 let is_pending_level ~level consensus =
   let (Block { level = trusted_level; _ }) = trusted_block consensus in
@@ -251,7 +255,9 @@ let accept_next_block ~current ~block consensus =
   in
   let timeout =
     match timeout with
-    | true -> Some (Consensus_timeout { from = current })
+    | true ->
+        let next_timeout = next_timeout ~current consensus in
+        Some (Consensus_timeout { until = next_timeout })
     | false -> None
   in
   (consensus, apply, timeout)
@@ -285,7 +291,10 @@ let accept_future_block ~current ~block consensus =
     | Corrupted_apply _ ->
         None
   in
-  let timeout = Some (Consensus_timeout { from = current }) in
+  let timeout =
+    let next_timeout = next_timeout ~current consensus in
+    Some (Consensus_timeout { until = next_timeout })
+  in
   (consensus, request, timeout)
 
 let accept_future_block ~current ~block consensus =
@@ -418,7 +427,10 @@ let timeout ~identity ~current consensus =
     | Corrupted_apply _ ->
         (consensus, [])
   in
-  let timeout = Consensus_timeout { from = current } in
+  let timeout =
+    let next_timeout = next_timeout ~current consensus in
+    Consensus_timeout { until = next_timeout }
+  in
   let actions = timeout :: actions in
   (consensus, actions)
 

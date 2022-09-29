@@ -28,7 +28,7 @@ let rec handle_chain_actions ~sw ~env ~actions node =
 and handle_chain_action ~sw ~env ~action node =
   let open Chain in
   match action with
-  | Chain_timeout { from } -> start_timeout ~sw ~env ~from node
+  | Chain_timeout { until } -> start_timeout ~sw ~env ~until node
   | Chain_broadcast { raw_expected_hash; raw_content } ->
       Network_manager.broadcast ~raw_expected_hash ~raw_content node.network
   | Chain_send_message { connection; raw_expected_hash; raw_content } ->
@@ -54,19 +54,17 @@ and on_chain_outcome ~sw ~env ~current ~outcome node =
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
-and start_timeout ~sw ~env ~from node =
+and start_timeout ~sw ~env ~until node =
   node.cancel ();
   let cancelled = ref false in
   node.cancel <- (fun () -> cancelled := true);
 
   Eio.Fiber.fork ~sw @@ fun () ->
   let clock = Eio.Stdenv.clock env in
-  let until =
-    (* TODO: non ideal *)
-    let from = Timestamp.to_float from in
-    from +. Deku_constants.block_timeout
+  let () =
+    let until = Timestamp.to_float until in
+    Eio.Time.sleep_until clock until
   in
-  let () = Eio.Time.sleep_until clock until in
   match !cancelled with
   | true -> ()
   | false ->
@@ -113,7 +111,13 @@ let start ~sw ~env ~port ~nodes node =
   let on_request ~connection ~raw_expected_hash ~raw_content =
     on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
   in
-  start_timeout ~sw ~env ~from:(current ()) node;
+
+  let () =
+    let (Chain { consensus; _ }) = node.chain in
+    let current = current () in
+    let until = Consensus.next_timeout ~current consensus in
+    start_timeout ~sw ~env ~until node
+  in
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
   Eio.Fiber.both

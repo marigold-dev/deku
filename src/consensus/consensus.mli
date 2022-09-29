@@ -1,7 +1,7 @@
 open Deku_concepts
 
 type action =
-  | Consensus_timeout of { from : Timestamp.t }
+  | Consensus_timeout of { until : Timestamp.t }
   | Consensus_produce of { above : Block.t }
   | Consensus_vote of { level : Level.t; vote : Verified_signature.t }
   | Consensus_apply of { block : Block.t; votes : Verified_signature.Set.t }
@@ -63,4 +63,5 @@ val finished :
 
 (* helpers *)
 val trusted_block : consensus -> Block.t
+val next_timeout : current:Timestamp.t -> consensus -> Timestamp.t
 val test : unit -> unit

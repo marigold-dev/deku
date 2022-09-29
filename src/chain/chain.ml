@@ -29,7 +29,7 @@ type outcome =
     }
 
 type action =
-  | Chain_timeout of { from : Timestamp.t }
+  | Chain_timeout of { until : Timestamp.t }
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
   | Chain_send_message of {
       connection : Connection_id.t;
@@ -52,7 +52,7 @@ let make ~validators =
 let apply_consensus_action chain consensus_action =
   let open Consensus in
   match consensus_action with
-  | Consensus_timeout { from } -> (chain, Chain_timeout { from })
+  | Consensus_timeout { until } -> (chain, Chain_timeout { until })
   | Consensus_produce { above } ->
       let (Chain { producer; _ }) = chain in
       let fragment = Fragment_produce { producer; above } in
