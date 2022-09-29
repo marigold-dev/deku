@@ -8,25 +8,31 @@ open Deku_consensus
 type node = private {
   pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
-  network : Network.t;
+  network : Network_manager.t;
   indexer : Indexer.t option;
-  tezos_interop : Tezos_interop.t option;
+  mutable tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
-  mutable trigger_timeout : unit -> unit;
+  mutable cancel : unit -> unit;
   notify_api : Block.t -> unit;
 }
 
 type t = node
 
 val make :
-  pool:Parallel.Pool.pool ->
+  pool:Parallel.Pool.t ->
   dump:(Chain.t -> unit) ->
   chain:Chain.t ->
-  nodes:Uri.t list ->
-  ?indexer:Indexer.t option ->
-  ?tezos_interop:Tezos_interop.t option ->
+  indexer:Indexer.t option ->
   notify_api:(Block.t -> unit) ->
-  unit ->
-  node * unit Lwt.t
+  node
 
-val listen : node -> port:int -> tezos_interop:Tezos_interop.t -> unit
+val start :
+  sw:Eio.Switch.t ->
+  env:Eio.Stdenv.t ->
+  port:int ->
+  nodes:(string * int) list ->
+  tezos:(Uri.t * Deku_crypto.Secret.secret * Deku_tezos.Address.t) option ->
+  node ->
+  unit
+
+val test : unit -> unit
