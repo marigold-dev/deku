@@ -8,4 +8,4 @@ chain*.json
 examples/cookie-game/lib
 # DON'T REMOVE THIS until you fix the nix build
 # sdks/typescript-sdk/lib
-node-*-chain.json
+*-node-*-deku_state_*.tar.gz
