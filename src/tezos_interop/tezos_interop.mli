@@ -3,42 +3,35 @@ open Deku_crypto
 open Deku_tezos
 open Deku_concepts
 
-type t
+type interop
+type t = interop
 
-val make :
+type transaction =
+  private
+  | Deposit of { ticket : Ticket_id.t; amount : Z.t; destination : Key_hash.t }
+  | Update_root_hash of BLAKE2b.t
+
+type operation = private {
+  hash : Tezos_operation_hash.t;
+  transactions : transaction list;
+}
+
+val start :
   sw:Eio.Switch.t ->
   rpc_node:Uri.t ->
   secret:Secret.t ->
   consensus_contract:Address.t ->
-  discovery_contract:Address.t ->
-  required_confirmations:int ->
+  on_operation:(operation -> unit) ->
   t
 
-module Consensus : sig
-  val commit_state_hash :
-    t ->
-    block_level:Level.t ->
-    block_payload_hash:BLAKE2b.t ->
-    state_hash:BLAKE2b.t ->
-    withdrawal_handles_hash:BLAKE2b.t ->
-    validators:Key_hash.t list ->
-    signatures:(Key.t * Signature.t) option list ->
-    unit
+val commit_state_hash :
+  interop ->
+  block_level:Level.t ->
+  block_payload_hash:BLAKE2b.t ->
+  state_hash:BLAKE2b.t ->
+  withdrawal_handles_hash:BLAKE2b.t ->
+  validators:Key_hash.t list ->
   (** ~signatures should be in the same order as the old validators *)
+  signatures:(Key.t * Signature.t) option list ->
+  unit
 
-  type transaction =
-    | Deposit of {
-        ticket : Ticket_id.t;
-        amount : Z.t;
-        destination : Key_hash.t;
-      }
-    | Update_root_hash of BLAKE2b.t
-
-  type operation = {
-    hash : Tezos_operation_hash.t;
-    transactions : transaction list;
-  }
-
-  val listen_operations : t -> on_operation:(operation -> unit) -> unit
-  val fetch_validators : t -> ((Key_hash.t * Uri.t option) list, string) result
-end
