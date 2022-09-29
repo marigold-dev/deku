@@ -3,6 +3,7 @@ open Deku_tezos
 open Deku_tezos_interop
 open Deku_consensus
 open Deku_stdlib
+open Eio
 
 let secret =
   Ed25519.Secret.of_b58 "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
@@ -12,41 +13,28 @@ let secret = Secret.Ed25519 secret
 let rpc_node = Uri.of_string "http://localhost:20000"
 
 let main consensus_contract =
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run @@ fun sw ->
+  let clock = Eio.Stdenv.clock env in
   let consensus_contract = Address.of_string consensus_contract |> Option.get in
 
-  (* We can use a random KT1 for the discovery contract since it's not used in this test *)
-  let discovery_contract =
-    Address.of_string "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" |> Option.get
-  in
-
   let t =
-    Tezos_interop.make ~rpc_node ~secret ~consensus_contract ~discovery_contract
-      ~required_confirmations:2
-  in
-
-  let (Block.Block { payload_hash; level; _ }) = Fixme_name.some_block in
-  let () =
-    Lwt.async (fun () ->
-        let%await () =
-          Tezos_interop.Consensus.commit_state_hash ~block_level:level
-            ~block_payload_hash:payload_hash
-            ~state_hash:Fixme_name.state_root_hash
-            ~withdrawal_handles_hash:Fixme_name.withdrawal_handles_hash
-            ~signatures:Fixme_name.some_block_keys_and_signatures
-            ~validators:Fixme_name.validators t
-        in
-        let%await () = Lwt_unix.sleep 1. in
-        failwith "Should have exited successfully before now")
-  in
-  let () =
-    Tezos_interop.Consensus.listen_operations
+    Tezos_interop.start ~sw ~rpc_node ~secret ~consensus_contract
       ~on_operation:(fun { hash; transactions = _ } ->
         Format.printf "👍 State root update successful. Operation hash: %s\n%!"
           (Tezos_operation_hash.to_b58 hash);
         exit 0)
-      t
   in
-  Lwt_main.run (Lwt_unix.sleep 10.0);
+
+  let (Block.Block { payload_hash; level; _ }) = Fixme_name.some_block in
+  Fiber.fork ~sw (fun () ->
+      Tezos_interop.commit_state_hash ~block_level:level
+        ~block_payload_hash:payload_hash ~state_hash:Fixme_name.state_root_hash
+        ~withdrawal_handles_hash:Fixme_name.withdrawal_handles_hash
+        ~signatures:Fixme_name.some_block_keys_and_signatures
+        ~validators:Fixme_name.validators t);
+
+  Eio.Time.sleep clock 1.0;
   print_endline "👎 State root hash not updated";
   exit 1
 
