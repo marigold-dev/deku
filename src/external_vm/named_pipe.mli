@@ -6,6 +6,3 @@ val get_pipe_pair_file_descriptors :
   is_chain:bool -> string -> Unix.file_descr * Unix.file_descr
 (** [get_pipe_pair_file_descriptors path] returns a pair or file descriptors
     created with [make_pipe_pair] opened for writing and writing respectively. *)
-
-val get_pipe_pair_channels :
-  string -> Lwt_io.input Lwt_io.channel * Lwt_io.output Lwt_io.channel
