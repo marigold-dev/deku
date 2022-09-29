@@ -16,7 +16,6 @@ export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLF
 export DEKU_VALIDATOR_URIS="localhost:4440,localhost:4441,localhost:4442,localhost:4443"
 export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
-export DEKU_TEZOS_DISCOVERY_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
 export DEKU_API_PORT=8080
 
 for N in 0 1 2 3; do
@@ -29,7 +28,7 @@ for N in 0 1 2 3; do
   # Starts the VM
   nix run ".#$vm" -- "./chain/data/$N/pipe" &
 
-  sleep 2
+  sleep 0.4
 
   # Starts the Node
   _build/install/default/bin/deku-node \
