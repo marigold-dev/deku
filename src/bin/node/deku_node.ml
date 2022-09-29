@@ -50,9 +50,6 @@ type params = {
   tezos_consensus_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
-  tezos_discovery_address : Deku_tezos.Address.t;
-      [@env "DEKU_TEZOS_DISCOVERY_ADDRESS"]
-      (** The address of the discovery contract on Tezos. *)
   named_pipe_path : string; [@default "deku_vm"]
       (** Named pipe path to use for IPC with the VM *)
   api_enabled : bool; [@env "DEKU_API_ENABLED"]
@@ -75,7 +72,6 @@ let main params =
     tezos_rpc_node;
     tezos_secret;
     tezos_consensus_address;
-    tezos_discovery_address = _;
     named_pipe_path;
     api_enabled = _;
     api_port = _;
