@@ -1,9 +1,6 @@
-open Deku_stdlib
-open Deku_chain
-
 module Chain : sig
-  val read : folder:string -> Chain.chain_data option Lwt.t
+  open Deku_chain
 
-  val write :
-    pool:Parallel.Pool.t -> folder:string -> Chain.chain_data -> unit Lwt.t
+  val read : env:Eio.Stdenv.t -> folder:string -> Chain.t option
+  val write : env:Eio.Stdenv.t -> folder:string -> Chain.t -> unit
 end
