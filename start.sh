@@ -2,6 +2,8 @@
 
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
+vm=${1:-"wasm-vm"}
+
 dune build || exit 1
 
 dir=$(dirname $0)
@@ -25,7 +27,7 @@ for N in 0 1 2 3; do
   test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
 
   # Starts the VM
-  nix run '.#wasm-vm' -- "./chain/data/$N/pipe" &
+  nix run ".#$vm" -- "./chain/data/$N/pipe" &
 
   sleep 2
 
