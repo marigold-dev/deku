@@ -56,8 +56,8 @@ let with_connection ~on_request ~on_message network k =
   in
   k ~handler
 
-let connect ~clock ~net ~host ~port ~on_request ~on_message network =
-  let rec reconnect_loop ~clock ~net ~host ~port ~handler =
+let connect ~net ~clock ~host ~port ~on_request ~on_message network =
+  let rec reconnect_loop ~net ~clock ~host ~port ~handler =
     try
       Eio.Switch.run @@ fun sw ->
       Network_protocol.connect ~sw ~net ~host ~port handler
@@ -65,25 +65,27 @@ let connect ~clock ~net ~host ~port ~on_request ~on_message network =
       Format.eprintf "reconnect(%s:%d): %s\n%!" host port
         (Printexc.to_string exn);
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
-      reconnect_loop ~clock ~net ~host ~port ~handler
+      reconnect_loop ~net ~clock ~host ~port ~handler
   in
   with_connection ~on_request ~on_message network @@ fun ~handler ->
-  reconnect_loop ~clock ~net ~host ~port ~handler
+  reconnect_loop ~net ~clock ~host ~port ~handler
 
-let rec listen ~sw ~net ~clock ~port ~on_request ~on_message network =
+let listen ~net ~clock ~port ~on_request ~on_message network =
+  let on_error exn =
+    Format.eprintf "listen.connection: %s\n%!" (Printexc.to_string exn)
+  in
+  let rec relisten ~net ~clock ~port ~on_error handler =
+    try Network_protocol.listen ~net ~port ~on_error handler
+    with exn ->
+      Format.eprintf "relisten: %s\n%!" (Printexc.to_string exn);
+      Eio.Time.sleep clock Deku_constants.listen_timeout;
+      relisten ~net ~clock ~port ~on_error handler
+  in
   let handler ~read ~write =
     with_connection ~on_request ~on_message network @@ fun ~handler ->
     handler ~read ~write
   in
-  try
-    let on_error exn =
-      Format.eprintf "listen.connection: %s\n%!" (Printexc.to_string exn)
-    in
-    Network_protocol.listen ~sw ~net ~port ~on_error handler
-  with exn ->
-    Format.eprintf "listen: %s\n%!" (Printexc.to_string exn);
-    Eio.Time.sleep clock Deku_constants.listen_timeout;
-    listen ~sw ~clock ~net ~port ~on_request ~on_message network
+  relisten ~net ~clock ~port ~on_error handler
 
 let connect ~net ~clock ~nodes ~on_request ~on_message network =
   Eio.Fiber.List.iter
@@ -128,7 +130,7 @@ let test () =
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
 
-  let start ~sw ~port : unit =
+  let start ~port : unit =
     let network = make () in
     let on_request ~connection ~raw_expected_hash ~raw_content =
       Format.eprintf "request(%s): %s\n%!" raw_expected_hash raw_content;
@@ -136,15 +138,6 @@ let test () =
     in
     let on_message ~raw_expected_hash ~raw_content =
       Format.eprintf "message(%s): %s\n%!" raw_expected_hash raw_content
-    in
-
-    let () =
-      Eio.Fiber.fork ~sw (fun () ->
-          listen ~sw ~net ~clock ~port ~on_request ~on_message network)
-    in
-    let () =
-      Eio.Fiber.fork ~sw (fun () ->
-          connect ~net ~clock ~nodes ~on_request ~on_message network)
     in
 
     let rec loop counter =
@@ -160,12 +153,14 @@ let test () =
           broadcast ~raw_expected_hash ~raw_content network);
       loop (counter + 1)
     in
-    loop 0
+    Eio.Fiber.all
+      [
+        (fun () -> listen ~net ~clock ~port ~on_request ~on_message network);
+        (fun () -> connect ~net ~clock ~nodes ~on_request ~on_message network);
+        (fun () -> loop 0);
+      ]
   in
 
   let domains = Eio.Stdenv.domain_mgr env in
-  let start ~port =
-    Eio.Domain_manager.run domains (fun () ->
-        Eio.Switch.run @@ fun sw -> start ~sw ~port)
-  in
+  let start ~port = Eio.Domain_manager.run domains (fun () -> start ~port) in
   Eio.Fiber.List.iter (fun (_host, port) -> start ~port) nodes
