@@ -118,7 +118,7 @@ let start ~sw ~env ~port ~nodes node =
   let clock = Eio.Stdenv.clock env in
   Eio.Fiber.both
     (fun () ->
-      Network_manager.listen ~sw ~net ~clock ~port ~on_message ~on_request
+      Network_manager.listen ~net ~clock ~port ~on_message ~on_request
         node.network)
     (fun () ->
       Network_manager.connect ~net ~clock ~nodes ~on_message ~on_request

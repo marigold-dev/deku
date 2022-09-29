@@ -6,7 +6,6 @@ type t = network
 val make : unit -> network
 
 val listen :
-  sw:Eio.Switch.t ->
   net:Eio.Net.t ->
   clock:Eio.Time.clock ->
   port:int ->
