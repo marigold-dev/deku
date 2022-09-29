@@ -18,6 +18,20 @@ let _level_from_block block =
 
 let level_to_int level = Level.to_n level |> Deku_stdlib.N.to_z |> Z.to_int
 
+let accepted_level consensus =
+  let (Consensus { state; _ }) = consensus in
+  match state with
+  | Propose { finalized = accepted }
+  | Vote { finalized = accepted }
+  | Apply { pending = accepted }
+  | Corrupted_stuck { finalized = accepted; clash = _ }
+  | Corrupted_apply { pending = accepted; clash = _ } ->
+      let (Block { level = accepted_level; _ }) = accepted in
+      accepted_level
+  | Pending_missing { finalized = _; accepted }
+  | Pending_apply { pending = _; accepted } ->
+      accepted
+
 let pp_action action depth =
   let depth = String.make (depth * 4) ' ' in
   match action with
@@ -50,6 +64,8 @@ let pp_state state depth =
 
 let pp_state_action (Consensus consensus) actions index =
   Format.eprintf "Index: %d\n%!" index;
+  Format.eprintf "Level: %d\n%!"
+    (accepted_level (Consensus consensus) |> level_to_int);
   Format.eprintf "State:\n%!";
   pp_state consensus.state 1;
   Format.eprintf "Actions:\n%!";
