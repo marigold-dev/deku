@@ -20,7 +20,7 @@ type fragment
 type outcome
 
 type action = private
-  | Chain_timeout of { from : Timestamp.t }
+  | Chain_timeout of { until : Timestamp.t }
   | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
   | Chain_send_message of {
       connection : Connection_id.t;
