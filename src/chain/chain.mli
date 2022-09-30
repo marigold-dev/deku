@@ -15,6 +15,9 @@ type chain = private
     }
 
 type t = chain [@@deriving yojson]
+
+val prune : t -> t
+
 type fragment
 type outcome
 

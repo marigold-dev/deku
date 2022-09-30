@@ -16,6 +16,12 @@ type chain =
 
 and t = chain [@@deriving yojson]
 
+let prune chain =
+  let (Chain { consensus; protocol; producer; _ }) = chain in
+  let consensus = Consensus.prune consensus in
+  let gossip = Gossip.empty in
+  Chain { gossip; protocol; consensus; producer; trusted = Level.Map.empty }
+
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
   | Fragment_produce of {
