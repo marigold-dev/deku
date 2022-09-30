@@ -102,6 +102,12 @@ let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
   (* bench "message" @@ fun () -> *)
   on_network_message ~sw ~env ~raw_expected_hash ~raw_content node
 
+let reload ~sw ~env node =
+  let current = current () in
+  let chain, actions = Chain.reload ~current node.chain in
+  write_chain ~chain node;
+  handle_chain_actions ~sw ~env ~actions node
+
 let start ~sw ~env ~port ~nodes node =
   let on_connection ~connection =
     let (Chain { consensus; _ }) = node.chain in
@@ -123,21 +129,18 @@ let start ~sw ~env ~port ~nodes node =
     on_network_request ~sw ~env ~connection ~raw_expected_hash ~raw_content node
   in
 
-  let () =
-    let (Chain { consensus; _ }) = node.chain in
-    let current = current () in
-    let until = Consensus.next_timeout ~current consensus in
-    start_timeout ~sw ~env ~until node
-  in
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
-  Eio.Fiber.both
-    (fun () ->
-      Network_manager.listen ~net ~clock ~port ~on_connection ~on_message
-        ~on_request node.network)
-    (fun () ->
-      Network_manager.connect ~net ~clock ~nodes ~on_connection ~on_message
-        ~on_request node.network)
+  Eio.Fiber.all
+    [
+      (fun () -> reload ~sw ~env node);
+      (fun () ->
+        Network_manager.listen ~net ~clock ~port ~on_connection ~on_message
+          ~on_request node.network);
+      (fun () ->
+        Network_manager.connect ~net ~clock ~nodes ~on_connection ~on_message
+          ~on_request node.network);
+    ]
 
 let test () =
   let pool = Parallel.Pool.make ~domains:8 in

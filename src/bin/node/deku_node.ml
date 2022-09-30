@@ -46,9 +46,7 @@ let main () =
        may be pending actions such as fragments being processed *)
   let chain = Storage.Chain.read ~env ~folder:data_folder in
   let chain =
-    match chain with
-    | Some chain -> Chain.clear chain
-    | None -> Chain.make ~validators
+    match chain with Some chain -> chain | None -> Chain.make ~validators
   in
 
   let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
