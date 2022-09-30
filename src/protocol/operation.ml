@@ -173,6 +173,13 @@ let noop ~identity ~level ~nonce =
   Operation
     { key; signature; hash; level; nonce; source; content = Operation_noop }
 
+let last_includable_level operation =
+  let open Level in
+  let open Deku_constants in
+  let (Operation { level = operation_level; _ }) = operation in
+  let operation_level = to_n operation_level in
+  of_n N.(operation_level + includable_operation_window)
+
 (* TODO: This seems like a weird place to put this function *)
 let is_in_includable_window ~current_level ~operation_level =
   let open Level in

@@ -11,25 +11,22 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      trusted : (string * string) Level.Map.t;
+      trusted : Message.Network.t Level.Map.t;
     }
 
 type t = chain [@@deriving yojson]
-
-val prune : t -> t
-
 type fragment
 type outcome
 
 type action = private
   | Chain_timeout of { until : Timestamp.t }
-  | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
+  | Chain_broadcast of { raw_header : string; raw_content : string }
   | Chain_send_message of {
       connection : Connection_id.t;
-      raw_expected_hash : string;
+      raw_header : string;
       raw_content : string;
     }
-  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
+  | Chain_send_request of { raw_header : string; raw_content : string }
   | Chain_fragment of { fragment : fragment }
   | Chain_save_block of { block : Block.t }
   | Chain_commit of {
@@ -46,17 +43,14 @@ val make :
   validators:Key_hash.t list -> vm_state:External_vm_protocol.State.t -> chain
 
 val incoming :
-  raw_expected_hash:string ->
-  raw_content:string ->
-  chain ->
-  chain * fragment option
+  raw_header:string -> raw_content:string -> chain -> chain * fragment option
 (** [incoming ~raw_expected_hash ~raw_content chain] *)
 
 val request :
   connection:Connection_id.t ->
-  raw_expected_hash:string ->
+  raw_header:string ->
   raw_content:string ->
-  fragment option
+  fragment
 (** [request ~id ~raw_expected_hash ~raw_content chain] *)
 
 val timeout :

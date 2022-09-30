@@ -10,7 +10,7 @@ type config = { save_messages : bool; save_blocks : bool }
 val make : uri:Uri.t -> config:config -> indexer
 val async_save_block : sw:Switch.t -> block:Block.t -> indexer -> unit
 val save_block : block:Block.t -> indexer -> unit
-val save_message : sw:Switch.t -> message:Message.raw_message -> indexer -> unit
+val save_message : sw:Switch.t -> message:Message.Network.t -> indexer -> unit
 val find_block : level:Level.t -> indexer -> Block.t option
 
 val find_blocks_from_level :

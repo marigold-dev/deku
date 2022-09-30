@@ -111,6 +111,7 @@ let make ~write = { pending = Pending.empty; write }
 let spawn ~file k =
   let prog = "node" in
   let args = [| prog; file |] in
+  Format.eprintf "prog: %s, file: %s\n%!" prog file;
   IO.spawn ~prog ~args @@ Protocol.handler
   @@ fun ~read ~write ->
   let process = make ~write in

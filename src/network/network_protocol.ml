@@ -39,29 +39,27 @@ let connect ~net ~host ~port handler =
 let test () =
   Eio_main.run @@ fun env ->
   let net = Eio.Stdenv.net env in
-  let on_request ~send ~raw_expected_hash ~raw_content =
-    Format.eprintf "request.hash: %s; content: %s\n%!" raw_expected_hash
-      raw_content;
-    send ~raw_expected_hash ~raw_content
+  let on_request ~send ~raw_header ~raw_content =
+    Format.eprintf "request.header: %s; content: %s\n%!" raw_header raw_content;
+    send ~raw_header ~raw_content
   in
-  let on_message ~raw_expected_hash ~raw_content =
-    Format.eprintf "message.hash: %s; content: %s\n%!" raw_expected_hash
-      raw_content
+  let on_message ~raw_header ~raw_content =
+    Format.eprintf "message.header: %s; content: %s\n%!" raw_header raw_content
   in
 
   let host = "localhost" in
   let port = 1234 in
   let handler ~read ~write =
-    let send ~raw_expected_hash ~raw_content =
-      let message = Network_message.message ~raw_expected_hash ~raw_content in
+    let send ~raw_header ~raw_content =
+      let message = Network_message.message ~raw_header ~raw_content in
       write message
     in
     let on_message message =
       match message with
-      | Network_message.Message { raw_expected_hash; raw_content } ->
-          on_message ~raw_expected_hash ~raw_content
-      | Network_message.Request { raw_expected_hash; raw_content } ->
-          on_request ~send ~raw_expected_hash ~raw_content
+      | Network_message.Message { raw_header; raw_content } ->
+          on_message ~raw_header ~raw_content
+      | Network_message.Request { raw_header; raw_content } ->
+          on_request ~send ~raw_header ~raw_content
     in
     let rec loop () =
       let message = read () in
@@ -79,18 +77,14 @@ let test () =
     let rec loop_write counter =
       Eio.Fiber.both
         (fun () ->
-          let raw_expected_hash = Format.sprintf "rh%d" counter in
+          let raw_header = Format.sprintf "rh%d" counter in
           let raw_content = Format.sprintf "rc%d" counter in
-          let message =
-            Network_message.request ~raw_expected_hash ~raw_content
-          in
+          let message = Network_message.request ~raw_header ~raw_content in
           write message)
         (fun () ->
-          let raw_expected_hash = Format.sprintf "sh%d" counter in
+          let raw_header = Format.sprintf "sh%d" counter in
           let raw_content = Format.sprintf "sc%d" counter in
-          let message =
-            Network_message.message ~raw_expected_hash ~raw_content
-          in
+          let message = Network_message.message ~raw_header ~raw_content in
           write message);
       loop_write (counter + 1)
     in

@@ -43,10 +43,11 @@ module Query = struct
     use (insert_block block timestamp) pool
 
   let insert_message message timestamp =
-    let (Message.Raw_message { hash; raw_content }) = message in
-    ignore (message, hash);
-    let hash = Message_hash.to_b58 hash in
-    let params = (hash, timestamp, raw_content) in
+    let (Message.Network.Network_message { raw_header; raw_content }) =
+      message
+    in
+    ignore (message, raw_header);
+    let params = (raw_header, timestamp, raw_content) in
     let query =
       (tup3 string float string ->. unit)
       @@ "insert into packets (hash, timestamp, packet) values (?, ?, ?)"

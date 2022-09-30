@@ -12,10 +12,10 @@ val listen :
   on_connection:(connection:Connection_id.t -> unit) ->
   on_request:
     (connection:Connection_id.t ->
-    raw_expected_hash:string ->
+    raw_header:string ->
     raw_content:string ->
     unit) ->
-  on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
+  on_message:(raw_header:string -> raw_content:string -> unit) ->
   network ->
   'a
 
@@ -26,28 +26,26 @@ val connect :
   on_connection:(connection:Connection_id.t -> unit) ->
   on_request:
     (connection:Connection_id.t ->
-    raw_expected_hash:string ->
+    raw_header:string ->
     raw_content:string ->
     unit) ->
-  on_message:(raw_expected_hash:string -> raw_content:string -> unit) ->
+  on_message:(raw_header:string -> raw_content:string -> unit) ->
   network ->
   unit
 
-val broadcast :
-  raw_expected_hash:string -> raw_content:string -> network -> unit
-
-val request : raw_expected_hash:string -> raw_content:string -> network -> unit
+val broadcast : raw_header:string -> raw_content:string -> network -> unit
+val request : raw_header:string -> raw_content:string -> network -> unit
 
 val send :
   connection:Connection_id.t ->
-  raw_expected_hash:string ->
+  raw_header:string ->
   raw_content:string ->
   network ->
   unit
 
 val send_request :
   connection:Connection_id.t ->
-  raw_expected_hash:string ->
+  raw_header:string ->
   raw_content:string ->
   network ->
   unit

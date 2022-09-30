@@ -1,5 +1,5 @@
 type connection_id = int
-and t = connection_id [@@deriving eq, ord]
+and t = connection_id [@@deriving show, eq, ord]
 
 let initial = 0
 let next id = id + 1

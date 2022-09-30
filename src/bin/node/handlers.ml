@@ -285,8 +285,8 @@ module Helpers_operation_message = struct
 
   let handle ~node:_ ~indexer:_ ~constants:_ operation =
     let content = Message.Content.operation operation in
-    let message, _raw_message = Message.encode ~content in
-    let (Message.Message { hash; content }) = message in
+    let (Message { header; content; network = _ }) = Message.encode ~content in
+    let (Message_header { hash; level = _ }) = header in
     Ok { hash; content }
 
   let path ~node ~indexer ~constants =
@@ -358,13 +358,12 @@ module Post_operation = struct
     in
     let net = Eio.Stdenv.net env in
     let content = Message.Content.operation operation in
-    let _, message_raw = Message.encode ~content in
-    let (Message.Raw_message { hash = raw_expected_hash; raw_content }) =
-      message_raw
+    let (Message { header = _; content = _; network }) =
+      Message.encode ~content
     in
-    let raw_expected_hash = Message_hash.to_b58 raw_expected_hash in
     let open Deku_network in
-    let message = Network_message.message ~raw_expected_hash ~raw_content in
+    let (Network_message { raw_header; raw_content }) = network in
+    let message = Network_message.message ~raw_header ~raw_content in
     Network_protocol.connect ~net ~host ~port @@ fun ~read:_ ~write ->
     write message;
 

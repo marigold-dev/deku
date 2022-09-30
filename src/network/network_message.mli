@@ -1,14 +1,14 @@
 type message = private
-  | Message of { raw_expected_hash : string; raw_content : string }
-  | Request of { raw_expected_hash : string; raw_content : string }
+  | Message of { raw_header : string; raw_content : string }
+  | Request of { raw_header : string; raw_content : string }
 
 type t = message
 
 val max_size : int
 
 (* constructors *)
-val message : raw_expected_hash:string -> raw_content:string -> message
-val request : raw_expected_hash:string -> raw_content:string -> message
+val message : raw_header:string -> raw_content:string -> message
+val request : raw_header:string -> raw_content:string -> message
 
 (* communication *)
 exception Invalid_tag

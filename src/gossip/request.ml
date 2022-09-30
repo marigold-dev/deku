@@ -1,39 +1,41 @@
-module Content = struct
-  open Deku_concepts
+open Deku_concepts
 
-  type content = Content_accepted of { above : Level.t }
-  and t = content [@@deriving yojson]
+module Network = struct
+  type network =
+    | Network_request of { raw_header : string; raw_content : string }
 
-  let accepted ~above = Content_accepted { above }
+  type t = network
+
+  let make ~raw_header ~raw_content =
+    Network_request { raw_header; raw_content }
 end
 
-type request = Request of { hash : Request_hash.t; content : Content.t }
+type request =
+  | Request of { hash : Request_hash.t; above : Level.t; network : Network.t }
+
 type t = request
 
-type raw_request =
-  | Raw_request of { hash : Request_hash.t; raw_content : string }
-
-type raw = raw_request
-
-let hash ~json_content =
+let hash ~above =
   (* guarantees canonical representation *)
-  let raw_content = Yojson.Safe.to_string json_content in
+  let json = Level.yojson_of_t above in
+  let raw_content = Yojson.Safe.to_string json in
   let hash = Request_hash.hash raw_content in
-  (hash, raw_content)
+  let raw_header = Request_hash.to_b58 hash in
+  (hash, raw_header, raw_content)
 
-let encode ~content =
-  let json_content = Content.yojson_of_t content in
-  let hash, raw_content = hash ~json_content in
-  let request = Request { hash; content } in
-  let raw_request = Raw_request { hash; raw_content } in
-  (request, raw_request)
+exception Expected_hash_mismatch
 
-let decode ~raw_content =
-  try
-    let json_content = Yojson.Safe.from_string raw_content in
-    let hash, raw_content = hash ~json_content in
-    let content = Content.t_of_yojson json_content in
-    let request = Request { hash; content } in
-    let raw_request = Raw_request { hash; raw_content } in
-    Some (request, raw_request)
-  with _exn -> None (* TODO: dump this exception *)
+let encode ~above =
+  let hash, raw_header, raw_content = hash ~above in
+  let network = Network.make ~raw_header ~raw_content in
+  Request { hash; above; network }
+
+let decode ~expected ~raw_content =
+  let json = Yojson.Safe.from_string raw_content in
+  let above = Level.t_of_yojson json in
+  let hash, raw_header, raw_content = hash ~above in
+  let network = Network.make ~raw_header ~raw_content in
+  (match Request_hash.equal expected hash with
+  | true -> ()
+  | false -> raise Expected_hash_mismatch);
+  Request { hash; above; network }

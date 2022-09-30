@@ -44,6 +44,7 @@ val ticket_transfer :
   operation
 
 val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
+val last_includable_level : operation -> Level.t
 
 val is_in_includable_window :
   current_level:Level.t -> operation_level:Level.t -> bool

@@ -1,14 +1,11 @@
 type message =
-  | Message of { raw_expected_hash : string; raw_content : string }
-  | Request of { raw_expected_hash : string; raw_content : string }
+  | Message of { raw_header : string; raw_content : string }
+  | Request of { raw_header : string; raw_content : string }
 
 type t = message
 
-let message ~raw_expected_hash ~raw_content =
-  Message { raw_expected_hash; raw_content }
-
-let request ~raw_expected_hash ~raw_content =
-  Request { raw_expected_hash; raw_content }
+let message ~raw_header ~raw_content = Message { raw_header; raw_content }
+let request ~raw_header ~raw_content = Request { raw_header; raw_content }
 
 (* communication *)
 exception Invalid_tag
@@ -60,18 +57,18 @@ end = struct
     take size
 
   let message =
-    (* tag:size:hash:size:content\r\n *)
+    (* tag:size:header:size:content\r\n *)
     let open Syntax in
     let* tag = tag in
     let* () = separator in
-    let* raw_expected_hash = string in
+    let* raw_header = string in
     let* () = separator in
     let* raw_content = string in
     let* () = eol in
     let message =
       match tag with
-      | Message -> Message { raw_expected_hash; raw_content }
-      | Request -> Request { raw_expected_hash; raw_content }
+      | Message -> Message { raw_header; raw_content }
+      | Request -> Request { raw_header; raw_content }
     in
     return message
 end
@@ -99,10 +96,10 @@ end = struct
     write_separator buf;
     string buf s
 
-  let write_message buf ~tag ~raw_expected_hash ~raw_content =
+  let write_message buf ~tag ~raw_header ~raw_content =
     write_tag buf ~tag;
     write_separator buf;
-    write_string buf raw_expected_hash;
+    write_string buf raw_header;
     write_separator buf;
     write_string buf raw_content;
     write_eol buf;
@@ -110,10 +107,10 @@ end = struct
 
   let message buf message =
     match message with
-    | Message { raw_expected_hash; raw_content } ->
-        write_message buf ~tag:Message ~raw_expected_hash ~raw_content
-    | Request { raw_expected_hash; raw_content } ->
-        write_message buf ~tag:Request ~raw_expected_hash ~raw_content
+    | Message { raw_header; raw_content } ->
+        write_message buf ~tag:Message ~raw_header ~raw_content
+    | Request { raw_header; raw_content } ->
+        write_message buf ~tag:Request ~raw_header ~raw_content
 end
 
 let read = Reader.message

@@ -43,10 +43,6 @@ and consensus =
 
 and t = consensus [@@deriving yojson]
 
-let prune consensus =
-  let (Consensus { state; validators; accepted_at; _ }) = consensus in
-  Consensus { validators; block_pool = Block_pool.empty; state; accepted_at }
-
 let make ~validators =
   let block_pool = Block_pool.empty in
   let state = Propose { finalized = Genesis.block } in

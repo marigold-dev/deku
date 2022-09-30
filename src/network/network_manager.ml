@@ -35,10 +35,10 @@ let with_connection ~on_connection ~on_request ~on_message network k =
     let on_message message =
       Eio.Fiber.fork ~sw @@ fun () ->
       match message with
-      | Network_message.Message { raw_expected_hash; raw_content } ->
-          on_message ~raw_expected_hash ~raw_content
-      | Network_message.Request { raw_expected_hash; raw_content } ->
-          on_request ~connection ~raw_expected_hash ~raw_content
+      | Network_message.Message { raw_header; raw_content } ->
+          on_message ~raw_header ~raw_content
+      | Network_message.Request { raw_header; raw_content } ->
+          on_request ~connection ~raw_header ~raw_content
     in
     let rec loop () =
       let message = read () in
@@ -110,27 +110,27 @@ let broadcast message network =
     (fun _connection write -> send ~message ~write)
     network.connections
 
-let request ~raw_expected_hash ~raw_content network =
-  let request = Network_message.request ~raw_expected_hash ~raw_content in
+let request ~raw_header ~raw_content network =
+  let request = Network_message.request ~raw_header ~raw_content in
   broadcast request network
 
-let broadcast ~raw_expected_hash ~raw_content network =
-  let message = Network_message.message ~raw_expected_hash ~raw_content in
+let broadcast ~raw_header ~raw_content network =
+  let message = Network_message.message ~raw_header ~raw_content in
   broadcast message network
 
-let send_request ~connection ~raw_expected_hash ~raw_content network =
+let send_request ~connection ~raw_header ~raw_content network =
   match Connection_id.Map.find_opt connection network.connections with
   | Some write ->
-      let message = Network_message.request ~raw_expected_hash ~raw_content in
+      let message = Network_message.request ~raw_header ~raw_content in
       send ~message ~write
   | None ->
       (* dead connection *)
       ()
 
-let send ~connection ~raw_expected_hash ~raw_content network =
+let send ~connection ~raw_header ~raw_content network =
   match Connection_id.Map.find_opt connection network.connections with
   | Some write ->
-      let message = Network_message.message ~raw_expected_hash ~raw_content in
+      let message = Network_message.message ~raw_header ~raw_content in
       send ~message ~write
   | None ->
       (* dead connection *)
@@ -146,25 +146,25 @@ let test () =
   let start ~port : unit =
     let network = make () in
     let on_connection ~connection:_ = Format.eprintf "connected\n%!" in
-    let on_request ~connection ~raw_expected_hash ~raw_content =
-      Format.eprintf "request(%s): %s\n%!" raw_expected_hash raw_content;
-      send ~connection ~raw_expected_hash ~raw_content network
+    let on_request ~connection ~raw_header ~raw_content =
+      Format.eprintf "request(%s): %s\n%!" raw_header raw_content;
+      send ~connection ~raw_header ~raw_content network
     in
-    let on_message ~raw_expected_hash ~raw_content =
-      Format.eprintf "message(%s): %s\n%!" raw_expected_hash raw_content
+    let on_message ~raw_header ~raw_content =
+      Format.eprintf "message(%s): %s\n%!" raw_header raw_content
     in
 
     let rec loop counter =
       Eio.Fiber.yield ();
       Eio.Fiber.both
         (fun () ->
-          let raw_expected_hash = Format.sprintf "rh%d" counter in
+          let raw_header = Format.sprintf "rh%d" counter in
           let raw_content = Format.sprintf "rc%d" counter in
-          request ~raw_expected_hash ~raw_content network)
+          request ~raw_header ~raw_content network)
         (fun () ->
-          let raw_expected_hash = Format.sprintf "sh%d" counter in
+          let raw_header = Format.sprintf "sh%d" counter in
           let raw_content = Format.sprintf "sc%d" counter in
-          broadcast ~raw_expected_hash ~raw_content network);
+          broadcast ~raw_header ~raw_content network);
       loop (counter + 1)
     in
     Eio.Fiber.all

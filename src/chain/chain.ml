@@ -11,16 +11,10 @@ type chain =
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      trusted : (string * string) Level.Map.t;
+      trusted : Message.Network.t Level.Map.t;
     }
 
 and t = chain [@@deriving yojson]
-
-let prune chain =
-  let (Chain { consensus; protocol; producer; _ }) = chain in
-  let consensus = Consensus.prune consensus in
-  let gossip = Gossip.empty in
-  Chain { gossip; protocol; consensus; producer; trusted = Level.Map.empty }
 
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
@@ -46,21 +40,17 @@ type outcome =
       protocol : Protocol.t;
       receipts : Receipt.t list;
     }
-  | Outcome_store of {
-      level : Level.t;
-      raw_expected_hash : string;
-      raw_content : string;
-    }
+  | Outcome_store of { level : Level.t; network : Message.Network.t }
 
 type action =
   | Chain_timeout of { until : Timestamp.t }
-  | Chain_broadcast of { raw_expected_hash : string; raw_content : string }
+  | Chain_broadcast of { raw_header : string; raw_content : string }
   | Chain_send_message of {
       connection : Connection_id.t; [@opaque]
-      raw_expected_hash : string;
+      raw_header : string;
       raw_content : string;
     }
-  | Chain_send_request of { raw_expected_hash : string; raw_content : string }
+  | Chain_send_request of { raw_header : string; raw_content : string }
   | Chain_fragment of { fragment : fragment [@opaque] }
   | Chain_save_block of { block : Block.t }
   | Chain_commit of {
@@ -74,7 +64,7 @@ type action =
 [@@deriving show]
 
 let make ~validators ~vm_state =
-  let gossip = Gossip.empty in
+  let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial_with_vm_state ~vm_state in
   let consensus = Consensus.make ~validators in
@@ -142,10 +132,17 @@ let apply_consensus_action chain consensus_action =
       let store = Chain_fragment { fragment = store } in
       (chain, [ apply; store ])
   | Consensus_request { above } ->
-      let content = Request.Content.accepted ~above in
-      let fragment = Gossip.send_request ~content in
-      let fragment = Fragment_gossip { fragment } in
-      (chain, [ Chain_fragment { fragment } ])
+      let (Chain ({ gossip; _ } as chain)) = chain in
+      let gossip, network = Gossip.send_request ~above gossip in
+      let chain = Chain { chain with gossip } in
+      let actions =
+        match network with
+        | Some network ->
+            let (Network_request { raw_header; raw_content }) = network in
+            [ Chain_send_request { raw_header; raw_content } ]
+        | None -> []
+      in
+      (chain, actions)
 
 let apply_consensus_actions chain consensus_actions =
   List.fold_left
@@ -189,9 +186,8 @@ let incoming_tezos_operation ~tezos_operation chain =
   let producer = Producer.incoming_tezos_operation ~tezos_operation producer in
   (Chain { chain with producer }, [])
 
-let incoming_message ~identity ~current ~message chain =
-  let open Message in
-  let (Message { hash = _; content }) = message in
+let incoming_message ~identity ~current ~content chain =
+  let open Message.Content in
   match content with
   | Content_block block -> incoming_block ~identity ~current ~block chain
   | Content_vote { level; vote } -> incoming_vote ~current ~level ~vote chain
@@ -207,63 +203,54 @@ let incoming_message ~identity ~current ~message chain =
           (chain, additional @ actions))
         (chain, actions) votes
 
-let incoming_request ~connection ~request chain =
-  let open Request in
+let incoming_request ~connection ~above chain =
   let (Chain { trusted; _ }) = chain in
-  let (Request { hash = _; content }) = request in
-  match content with
-  | Content_accepted { above } ->
-      let rev_messages =
-        Level.Map.fold
-          (fun level message messages ->
-            match Level.(level > above) with
-            | true -> message :: messages
-            | false -> messages)
-          trusted []
-      in
-      let actions =
-        List.rev_map
-          (fun (raw_expected_hash, raw_content) ->
-            Chain_send_message { connection; raw_expected_hash; raw_content })
-          rev_messages
-      in
-      (chain, actions)
+  let rev_messages =
+    Level.Map.fold
+      (fun level message messages ->
+        match Level.(level > above) with
+        | true -> message :: messages
+        | false -> messages)
+      trusted []
+  in
+  let actions =
+    List.rev_map
+      (fun network ->
+        let open Message.Network in
+        let (Network_message { raw_header; raw_content }) = network in
+        Chain_send_message { connection; raw_header; raw_content })
+      rev_messages
+  in
+  (chain, actions)
 
 let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
-  | Gossip.Gossip_apply_and_broadcast { message; raw_message } ->
-      let chain, actions = incoming_message ~identity ~current ~message chain in
+  | Gossip.Gossip_apply_and_broadcast { content; network } ->
+      let chain, actions = incoming_message ~identity ~current ~content chain in
       let broadcast =
-        let (Raw_message { hash; raw_content }) = raw_message in
-        let raw_expected_hash = Message_hash.to_b58 hash in
-        Chain_broadcast { raw_expected_hash; raw_content }
+        let (Network_message { raw_header; raw_content }) = network in
+        Chain_broadcast { raw_header; raw_content }
       in
       let actions = broadcast :: actions in
       (chain, actions)
-  | Gossip.Gossip_send_message { connection; raw_message } ->
-      let (Raw_message { hash; raw_content }) = raw_message in
-      let raw_expected_hash = Message_hash.to_b58 hash in
+  | Gossip.Gossip_send_message { connection; network } ->
       let send =
-        Chain_send_message { connection; raw_expected_hash; raw_content }
+        let (Network_message { raw_header; raw_content }) = network in
+        Chain_send_message { connection; raw_header; raw_content }
       in
       (chain, [ send ])
-  | Gossip.Gossip_send_request { raw_request } ->
-      let (Raw_request { hash; raw_content }) = raw_request in
-      let raw_expected_hash = Request_hash.to_b58 hash in
-      let send = Chain_send_request { raw_expected_hash; raw_content } in
-      (chain, [ send ])
-  | Gossip.Gossip_incoming_request { connection; request } ->
-      incoming_request ~connection ~request chain
+  | Gossip.Gossip_incoming_request { connection; above } ->
+      incoming_request ~connection ~above chain
   | Gossip.Gossip_fragment { fragment } ->
       let fragment = Fragment_gossip { fragment } in
       let fragment = Chain_fragment { fragment } in
       (chain, [ fragment ])
 
 (* external *)
-let incoming ~raw_expected_hash ~raw_content chain =
+let incoming ~raw_header ~raw_content chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip, fragment =
-    Gossip.incoming_message ~raw_expected_hash ~raw_content gossip
+    Gossip.incoming_message ~raw_header ~raw_content gossip
   in
   let fragment =
     match fragment with
@@ -273,10 +260,9 @@ let incoming ~raw_expected_hash ~raw_content chain =
   let chain = Chain { chain with gossip } in
   (chain, fragment)
 
-let request ~connection ~raw_expected_hash ~raw_content =
-  match Gossip.incoming_request ~connection ~raw_expected_hash ~raw_content with
-  | Some fragment -> Some (Fragment_gossip { fragment })
-  | None -> None
+let request ~connection ~raw_header ~raw_content =
+  let fragment = Gossip.incoming_request ~connection ~raw_header ~raw_content in
+  Fragment_gossip { fragment }
 
 let timeout ~identity ~current chain =
   let (Chain ({ consensus; _ } as chain)) = chain in
@@ -339,10 +325,10 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       Format.eprintf "chain: wrong pending block\n%!";
       (Chain chain, [])
 
-let apply_store_outcome ~level ~raw_expected_hash ~raw_content chain =
+let apply_store_outcome ~level ~network chain =
   let (Chain ({ trusted; _ } as chain)) = chain in
   (* TODO: detect if already trusted? *)
-  let trusted = Level.Map.add level (raw_expected_hash, raw_content) trusted in
+  let trusted = Level.Map.add level network trusted in
   (Chain { chain with trusted }, [])
 
 let apply ~identity ~current ~outcome chain =
@@ -353,8 +339,8 @@ let apply ~identity ~current ~outcome chain =
   | Outcome_apply { block; votes; protocol; receipts } ->
       apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
         chain
-  | Outcome_store { level; raw_expected_hash; raw_content } ->
-      apply_store_outcome ~level ~raw_expected_hash ~raw_content chain
+  | Outcome_store { level; network } ->
+      apply_store_outcome ~level ~network chain
 
 let compute ~identity ~default_block_size fragment =
   (* TODO: identity parameter here not ideal *)
@@ -399,10 +385,10 @@ let compute ~identity ~default_block_size fragment =
       let (Block { level; _ }) = block in
       let votes = Verified_signature.Set.elements votes in
       let content = Message.Content.accepted ~block ~votes in
-      let _message, raw_message = Message.encode ~content in
-      let (Raw_message { hash; raw_content }) = raw_message in
-      let raw_expected_hash = Message_hash.to_b58 hash in
-      Outcome_store { level; raw_expected_hash; raw_content }
+      let (Message { header = _; content = _; network }) =
+        Message.encode ~content
+      in
+      Outcome_store { level; network }
 
 let reload ~current chain =
   let chain, actions =
@@ -412,8 +398,11 @@ let reload ~current chain =
     apply_consensus_actions chain actions
   in
 
-  let (Chain ({ gossip; _ } as chain)) = chain in
-  let gossip = Gossip.clear gossip in
+  let (Chain ({ gossip; consensus; _ } as chain)) = chain in
+  let (Block { level = current_level; _ }) =
+    Consensus.trusted_block consensus
+  in
+  let gossip = Gossip.close ~until:current_level gossip in
   (Chain { chain with gossip }, actions)
 
 let test () =
@@ -460,10 +449,8 @@ let test () =
           let chain, additional_actions =
             match action with
             | Chain_timeout _ -> (chain, [])
-            | Chain_broadcast { raw_expected_hash; raw_content } ->
-                let chain, fragment =
-                  incoming ~raw_expected_hash ~raw_content chain
-                in
+            | Chain_broadcast { raw_header; raw_content } ->
+                let chain, fragment = incoming ~raw_header ~raw_content chain in
                 let actions =
                   match fragment with
                   | Some fragment ->
@@ -472,11 +459,8 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_message
-                { connection = _; raw_expected_hash; raw_content } ->
-                let chain, fragment =
-                  incoming ~raw_expected_hash ~raw_content chain
-                in
+            | Chain_send_message { connection = _; raw_header; raw_content } ->
+                let chain, fragment = incoming ~raw_header ~raw_content chain in
                 let actions =
                   match fragment with
                   | Some fragment ->
@@ -485,19 +469,11 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_request { raw_expected_hash; raw_content } ->
+            | Chain_send_request { raw_header; raw_content } ->
                 let connection = Connection_id.initial in
-                let fragment =
-                  request ~connection ~raw_expected_hash ~raw_content
-                in
-                let actions =
-                  match fragment with
-                  | Some fragment ->
-                      let fragment = Chain_fragment { fragment } in
-                      [ fragment ]
-                  | None -> []
-                in
-                (chain, actions)
+                let fragment = request ~connection ~raw_header ~raw_content in
+                let fragment = Chain_fragment { fragment } in
+                (chain, [ fragment ])
             | Chain_fragment { fragment } ->
                 let outcome =
                   compute ~identity ~default_block_size:2 fragment
