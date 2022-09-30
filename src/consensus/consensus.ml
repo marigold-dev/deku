@@ -132,7 +132,7 @@ let append_vote ~level ~vote consensus =
 
 let finish_level ~state ~level consensus =
   let (Consensus ({ block_pool; _ } as consensus)) = consensus in
-  let block_pool = Block_pool.close_level ~level block_pool in
+  let block_pool = Block_pool.close_level ~until:level block_pool in
   Consensus { consensus with block_pool; state }
 
 let with_accept_block ~state ~accepted_at consensus =
@@ -493,6 +493,10 @@ let finished ~identity ~current ~block consensus =
       Ok (consensus, actions)
 
 let reload ~current consensus =
+  let (Block { level = current_level; _ }) = trusted_block consensus in
+  let (Consensus ({ block_pool; _ } as consensus)) = consensus in
+  let block_pool = Block_pool.close_level ~until:current_level block_pool in
+  let consensus = Consensus { consensus with block_pool } in
   let timeout =
     let next_timeout = next_timeout ~current consensus in
     Consensus_timeout { until = next_timeout }

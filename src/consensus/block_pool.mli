@@ -19,4 +19,4 @@ val find_votes :
   level:Level.t -> hash:Block_hash.t -> block_pool -> Verified_signature.Set.t
 
 val find_level : level:Level.t -> block_pool -> Block.t list
-val close_level : level:Level.t -> block_pool -> block_pool
+val close_level : until:Level.t -> block_pool -> block_pool

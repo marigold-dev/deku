@@ -64,9 +64,23 @@ let find_level ~level pool =
       match block with Some block -> block :: blocks | None -> blocks)
     by_hash []
 
-let close_level ~level pool =
+(* TODO: dedup*)
+let rec drop ~level ~until by_level =
+  match Level.(until > level) with
+  | true ->
+      let by_level = Level.Map.remove level by_level in
+      let level = Level.next level in
+      drop ~level ~until by_level
+  | false -> Level.Map.remove until by_level
+
+let drop ~until by_level =
+  match Level.Map.min_binding_opt by_level with
+  | Some (level, _by_hash) -> drop ~level ~until by_level
+  | None -> by_level
+
+let close_level ~until pool =
   let (Pool by_level) = pool in
-  let by_level = Level.Map.remove level by_level in
+  let by_level = drop ~until by_level in
   Pool by_level
 
 (* yojson *)
