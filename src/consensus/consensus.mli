@@ -13,7 +13,7 @@ type action = private (* protocol *)
   | Consensus_request_block of { hash : Block_hash.t }
 [@@deriving show]
 
-type consensus_data = private
+type consensus_data =
   | Consensus_data of {
       (* state *)
       current_block : Block.t;

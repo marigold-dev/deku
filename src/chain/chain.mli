@@ -5,7 +5,7 @@ open Deku_consensus
 open Deku_gossip
 open Deku_external_vm
 
-type chain_data = private
+type chain_data =
   | Chain_data of {
       gossip : Gossip.t;
       protocol : Protocol.t;
