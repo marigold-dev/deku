@@ -6,21 +6,28 @@ and t = ticket_id [@@deriving eq, ord]
 
 let ticket_id_of_yojson json =
   match json with
-    | `Assoc [("data", `String data); ("ticketer", json)] ->
+  | `List
+      [
+        `String "Ticket_id";
+        `Assoc [ ("ticketer", json); ("data", `String data) ];
+      ] ->
       let ticketer = Deku_tezos.Contract_hash.t_of_yojson json in
-      let data = Hex.to_string (`Hex data ) |> Bytes.of_string in
+      let data = Hex.to_string (`Hex data) |> Bytes.of_string in
       Ticket_id { ticketer : Deku_tezos.Contract_hash.t; data : bytes }
-    | _ -> failwith "Wrong ticket_id format"
+  | _ -> failwith "Wrong ticket_id format"
 
-let yojson_of_ticket_id t = 
-  let Ticket_id {ticketer; data} = t in
+let yojson_of_ticket_id t =
+  let (Ticket_id { ticketer; data }) = t in
   let ticketer = Deku_tezos.Contract_hash.yojson_of_t ticketer in
   let data = Bytes.to_string data |> Hex.of_string |> Hex.show in
-  `Assoc [("data", `String data); ("ticketer", ticketer)]
+  `List
+    [
+      `String "Ticket_id";
+      `Assoc [ ("ticketer", ticketer); ("data", `String data) ];
+    ]
 
 let t_of_yojson = ticket_id_of_yojson
 let yojson_of_t = yojson_of_ticket_id
-
 let make ticketer data = Ticket_id { ticketer; data }
 
 let from_tezos_ticket tezos_ticket =
