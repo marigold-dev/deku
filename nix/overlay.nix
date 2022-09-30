@@ -59,6 +59,14 @@ with super; {
           doCheck = false;
         });
         eio_main = super.eio_main.override { eio_linux = null; };
+        routes = super.routes.overrideAttrs (_: {
+          src = fetchFromGitHub {
+            owner = "anuragsoni";
+            repo = "routes";
+            rev = "3cf574ebed7b60366fa8ddcbe8f7c2c5f83c678f";
+            sha256 = "sha256-Q7ZWcCIiA0K+m8DvnXBhQlVKFmMly1D+Fz+hmLhE2WU=";
+          };
+        });
       });
   });
 }
