@@ -17,6 +17,7 @@
   "author": "contact@marigold.dev",
   "license": "ISC",
   "devDependencies": {
+    "typescript": "^4.7.4",
     "@types/bs58check": "^2.1.0",
     "@types/node": "^18.7.13",
     "@typescript-eslint/eslint-plugin": "^5.35.1",
@@ -27,8 +28,5 @@
     "@taquito/taquito": "^13.0.1",
     "blakejs": "^1.2.1",
     "bs58check": "^2.1.2"
-  },
-  "peerDependencies": {
-    "typescript": "^4.7.4"
   }
 }

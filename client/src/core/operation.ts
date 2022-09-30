@@ -42,7 +42,6 @@ export type SignedOperation = {
 }
 
 const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashType, receiver: KeyHashType, amount: AmountType, ticketer: string, data: string): Transaction => {
-  const hexData = Buffer.from(data, "hex").toString();  // FIXME: make this type safe
   const a : Transaction = {
         level,
         nonce,
@@ -52,12 +51,11 @@ const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashTy
             receiver,
             ticket_id: ["Ticket_id", {
               ticketer: ticketer,
-              data: hexData
+              data
             }],
             amount
         }
     }
-  console.log(a);
   return a;
 }
 
@@ -74,8 +72,7 @@ const createVmOperation = (level: LevelType, nonce: NonceType, source: KeyHashTy
 }
 
 const createWithdraw = (level: LevelType, nonce: NonceType, source: KeyHashType, owner: KeyHashType, amount: AmountType, ticketer: string, data: string): Withdraw => {
-  const hexData = Buffer.from(data, "hex").toString(); // FIXME: make this type safe
-  const a : Withdraw = {
+    const a : Withdraw = {
         level,
         nonce,
         source,
@@ -84,12 +81,11 @@ const createWithdraw = (level: LevelType, nonce: NonceType, source: KeyHashType,
             owner,
             ticket_id: ["Ticket_id", {
               ticketer: ticketer,
-              data: hexData
+              data
             }],
             amount
         }
     }
-  console.log(a);
   return a;
 }
 
@@ -112,7 +108,7 @@ const toDTO = (operation: Operation): JSONValue => {
                 level: Level.toDTO(level),
                 nonce: Nonce.toDTO(nonce),
                 source: source,
-                content: ["Tezos_withdraw", { owner: ["Originated", {"contract": owner, "entrypoint": null}], ticket_id, amount: Amount.toDTO(amount) }]
+                content: ["Tezos_withdraw", { owner: ["Implicit", owner], ticket_id, amount: Amount.toDTO(amount) }]
             }
             return JSONValue.of(dto);
         }
