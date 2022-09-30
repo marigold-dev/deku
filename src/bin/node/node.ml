@@ -76,7 +76,7 @@ and handle_chain_fragment ~sw ~env ~fragment node =
       let default_block_size = node.default_block_size in
       let outcome =
         Parallel.async node.pool (fun () ->
-            Chain.compute ~identity ~default_block_size fragment)
+            Chain.compute ~pool:node.pool ~identity ~default_block_size fragment)
       in
       let outcome = Eio.Promise.await outcome in
       let current = current () in

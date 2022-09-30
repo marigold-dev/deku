@@ -342,7 +342,7 @@ let apply ~identity ~current ~outcome chain =
   | Outcome_store { level; network } ->
       apply_store_outcome ~level ~network chain
 
-let compute ~identity ~default_block_size fragment =
+let compute ~pool ~identity ~default_block_size fragment =
   (* TODO: identity parameter here not ideal *)
   match fragment with
   | Fragment_gossip { fragment } ->
@@ -350,7 +350,8 @@ let compute ~identity ~default_block_size fragment =
       Outcome_gossip { outcome }
   | Fragment_produce { producer; above; withdrawal_handles_hash } ->
       let block =
-        Producer.produce ~identity ~default_block_size ~parallel_map:List.map
+        Producer.produce ~identity ~default_block_size
+          ~parallel_map:(fun f l -> Parallel.map_p pool f l)
           ~above ~withdrawal_handles_hash producer
       in
       Outcome_produce { block }
@@ -360,7 +361,9 @@ let compute ~identity ~default_block_size fragment =
         Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
       in
       let payload =
-        Protocol.prepare ~parallel:(fun f l -> List.filter_map f l) ~payload
+        Protocol.prepare
+          ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
+          ~payload
       in
       let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload protocol ~tezos_operations
@@ -406,6 +409,8 @@ let reload ~current chain =
   (Chain { chain with gossip }, actions)
 
 let test () =
+  let pool = Parallel.Pool.make ~domains:8 in
+  Parallel.Pool.run pool @@ fun () ->
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
 
   let open Deku_crypto in
@@ -476,7 +481,7 @@ let test () =
                 (chain, [ fragment ])
             | Chain_fragment { fragment } ->
                 let outcome =
-                  compute ~identity ~default_block_size:2 fragment
+                  compute ~identity ~default_block_size:2 ~pool fragment
                 in
                 apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
