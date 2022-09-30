@@ -4,8 +4,10 @@
   "description": "toolkit to interact with deku",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "module": "lib/deku-toolkit.es6.js",
   "scripts": {
-    "build": "tsc --project . && eslint .",
+    "start": "rollup -c rollup.config.ts -w",
+    "build": "tsc --project . --module commonjs && rollup -c rollup.config.ts && eslint .",
     "dev": "tsc --project . -w",
     "lint": "eslint .",
     "ship": "npm run build && npm run lint"
@@ -22,7 +24,11 @@
     "@types/node": "^18.7.13",
     "@typescript-eslint/eslint-plugin": "^5.35.1",
     "@typescript-eslint/parser": "^5.35.1",
-    "eslint": "^8.23.0"
+    "eslint": "^8.23.0",
+    "rollup": "^2.79.1",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-typescript2": "^0.34.0"
   },
   "dependencies": {
     "@taquito/taquito": "^13.0.1",

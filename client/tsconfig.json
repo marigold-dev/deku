@@ -1,22 +1,33 @@
 {
-    "include": [
-        "src/index.ts",
+  "include": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ],
+  "compilerOptions": {
+    "outDir": "lib",
+    "moduleResolution": "node",
+    "target": "es6",
+    "module": "es2015",
+    "lib": [
+      "es2020",
+      "dom"
     ],
-    "exclude": [
-        "node_modules",
-        "**/*.spec.ts"
-    ],
-    "compilerOptions": {
-        "outDir": "lib",
-        "target": "es2016",
-        "declaration": true,
-        "noImplicitAny": true,
-        "moduleResolution": "node",
-        "strict": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitReturns": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "forceConsistentCasingInFileNames": true,
-        "noImplicitOverride": true
-    }
+    "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true
+  }
 }
