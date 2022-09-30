@@ -66,8 +66,9 @@ export class DekuToolkit {
         this.endpoints = makeEndpoints(setting.dekuRpc)
         this._dekuSigner = setting.dekuSigner;
         this.onBlockCallback = () => { return; }; // The callback is not provided by the user in the constructor
-        this.initializeStream(setting.dekuRpc)
-            .catch(err => console.error(`error: ${err}`));
+        // FIXME: not working properly
+        //this.initializeStream(setting.dekuRpc)
+        //    .catch(err => console.error(`error: ${err}`));
         this.pendingOperations = {};
     }
 
@@ -214,7 +215,7 @@ export class DekuToolkit {
         return block
     }
 
-    async getBalance(address: string, ticketer: string, data: string): Promise<number> {
+    async getBalance(address: string, {ticketer, data}:{ticketer: string, data: string}): Promise<number> {
         const ticket_id = TicketID.createTicketID(ticketer, data.startsWith("0x")?data:"0x"+data);
         const balance = await get(this.endpoints["GET_BALANCE"](address, ticket_id));
         return balance
