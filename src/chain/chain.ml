@@ -381,6 +381,15 @@ let compute ~pool ~identity ~default_block_size fragment =
             Key_hash.Map.add key_hash vote map)
           votes Key_hash.Map.empty
       in
+      let () =
+        let level = Level.to_n level |> N.to_z |> Z.to_int in
+        (* TODO: this is a workaround *)
+        match level mod 60 = 0 with
+        | true ->
+            let _ = Gc.major_slice 0 in
+            ()
+        | false -> ()
+      in
       Outcome_apply { block; votes; protocol; receipts }
   | Fragment_store { block; votes } ->
       (* TODO: problem here is that only the initial 2/3 of votes
