@@ -57,6 +57,21 @@ type params = {
 }
 [@@deriving cmdliner]
 
+let start_api ~sw ~node ~indexer ~port ~tezos_consensus_address
+    ~tezos_discovery_address ~node_uri ~enabled =
+  match enabled with
+  | false -> ()
+  | true ->
+      let api_constants =
+        Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
+          ~discovery_address:tezos_discovery_address ~node_uri
+      in
+      let request_handler = Deku_api.make_routes node indexer api_constants in
+      let config = Server.Config.create port in
+      let server = Server.create ~config request_handler in
+      let _command = Server.Command.start ~sw env server in
+      ()
+
 let main params =
   let {
     domains;
@@ -119,6 +134,11 @@ let main params =
   let node =
     Node.make ~identity ~default_block_size ~pool ~dump ~chain
       ~indexer:(Some indexer) ~notify_api
+  in
+
+  let () =
+    start_api ~sw node ~indexer ~port:api_port ~tezos_consensus_address
+      ~tezos_discovery_address ~node_uri ~enabled:api_enabled
   in
 
   let (Chain { consensus; _ }) = chain in

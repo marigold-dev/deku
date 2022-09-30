@@ -18,7 +18,7 @@ val block_not_found : error
 val internal_error : string -> error
 val invalid_operation_signature : error
 val invalid_operation_source : error
-val method_not_allowed : string -> Dream.method_ -> error
+val method_not_allowed : string -> Piaf.Method.t -> error
 
 (* Utils *)
 val yojson_of_t : error -> Yojson.Safe.t
