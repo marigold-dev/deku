@@ -329,18 +329,15 @@ let incoming_block_or_vote ~current ~block consensus =
   | true -> accept_block ~current ~block consensus
   | false -> (consensus, None, None)
 
-let incoming_block ~current ~block ?(prevent_self_sign = false) consensus =
+let incoming_block ~current ~block consensus =
   let (Block { level; _ }) = block in
   match is_pending_level ~level consensus with
   | true ->
       let consensus = append_block ~block consensus in
       let consensus, vote =
-        match prevent_self_sign with
-        | true -> (consensus, None)
-        | false -> (
-            match try_to_sign_block ~current ~block consensus with
-            | Some (consensus, vote) -> (consensus, Some vote)
-            | None -> (consensus, None))
+        match try_to_sign_block ~current ~block consensus with
+        | Some (consensus, vote) -> (consensus, Some vote)
+        | None -> (consensus, None)
       in
       let actions = match vote with Some vote -> [ vote ] | None -> [] in
 

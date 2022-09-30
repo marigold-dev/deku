@@ -3,15 +3,33 @@ open Deku_concepts
 open Deku_consensus
 open Consensus
 
-(* TODO: Add action tests *)
-(* TODO: Tests for message ordering *)
-(* 0 -> 1 -> V1 -> 2 *)
-(* 0 -> 1 -> 2 -> V1 *)
-(* 0 -> 2 -> 1 -> V1 *)
-(* 0 -> 2 -> V2 -> V1 *)
-(* 0 -> 2 -> V2 -> 1 *)
-(* 0 -> 2 -> 1 -> V2 -> V1 *)
+(* TODO: Block pool tests *)
+(* TODO: Name these by test *)
+(* Tests done:
+   All blocks start on 0
+   # is the block sent
+   V# is receiving all neccesary votes for block #
+   A# is applying block #
 
+     [X] 0
+     [X] V1
+     [X] 1 -> V1
+     on 2 no vote
+     [X] 1 -> V1 -> 2 -> V2 -> A1 -> A2
+     multi on 2 vote
+     [X] 1 -> V1 -> 2 -> V2
+     [X] 1 -> V1 -> A1 -> 2
+     [X] 1 -> V1 -> A1 -> 2 -> V2
+     [X] 2 -> 1 -> V2 -> V1
+     [X] 2 -> V2 -> 1
+     [X] 2 -> V2 -> 1 -> V1 -> A1 -> A2
+     [X] 1 -> 2 -> V1
+     [X] 2 -> 1 -> V1
+     [X] 2 -> V2 -> V1
+     [ ] 2 -> 3
+     [ ] 2 -> 1 -> V2 -> V1
+     [ ] 2 -> 1 -> V1 -> (before apply) -> V3 -> V2
+*)
 let _level_from_block block =
   let (Block.Block { level; _ }) = block in
   level
@@ -58,7 +76,7 @@ let pp_state state depth =
             Level.next level))
   | Apply _ -> Format.eprintf "%sApply\n%!" depth
   | Pending_missing _ -> Format.eprintf "%sPending missing\n%!" depth
-  | Pending_apply _ -> Format.eprintf "%sPending missing\n%!" depth
+  | Pending_apply _ -> Format.eprintf "%sPending apply\n%!" depth
   | Corrupted_stuck _ -> Format.eprintf "%sCorrupted stuck\n%!" depth
   | Corrupted_apply _ -> Format.eprintf "%sCorrupted apply\n%!" depth
 
@@ -110,7 +128,6 @@ let make_validators n =
 let make_vote ~hash identity =
   let hash = Block_hash.to_blake2b hash in
   Verified_signature.sign hash identity
-
 (* let make_votes ~hash identities =
    List.map (fun identity -> make_vote ~hash identity) identities *)
 
@@ -139,9 +156,6 @@ let test_new_block_on_initial () =
   ensure "with_block.identity = identity" (with_block.identity = identity);
   ensure "with_block.validators = validators"
     (with_block.validators = validators);
-  (* TODO: This should fail and need block_a as well *)
-  (* ensure "with_block.block_pool = [(block, [])]"
-     (with_block.block_pool = pool [ (block, []) ] []); *)
   Format.eprintf "Expected with_block.actions = [], but received ";
   List.iter (fun action -> pp_action action 1) actions;
   Format.eprintf
@@ -199,8 +213,9 @@ let test_vote_then_block_on_initial () =
 
   (* S : Vote genesis *)
   let Consensus accepted_block, actions =
-    incoming_block ~current:(time 0.2) ~block with_vote ~prevent_self_sign:true
+    incoming_block ~current:(time 0.2) ~block with_vote
   in
+  pp_state_action (Consensus accepted_block) actions 2;
 
   ensure "accepted_block.identity = identity"
     (accepted_block.identity = identity);
@@ -214,13 +229,150 @@ let test_vote_then_block_on_initial () =
   ensure "accepted_block.accepted_at = 0.2"
     (accepted_block.accepted_at = time 0.2);
   match actions with
-  | [ Consensus_timeout { from }; Consensus_apply { block = applied_block; _ } ]
-    ->
+  | [
+   Consensus_timeout { from };
+   Consensus_apply { block = applied_block; _ };
+   Consensus_vote { level; vote };
+  ] ->
       ensure "Consensus_timeout { from = time 0.2 }" (from = time 0.2);
-      ensure "Consensus_apply { block = applied_block }" (applied_block = block)
+      ensure "Consensus_apply { block = applied_block }" (applied_block = block);
+      ensure "Consensus_vote {level = Level.(zero |> next)}"
+        (level = Level.(zero |> next));
+      ensure "Consensus_Vote {vote = vote}"
+        (Deku_concepts.Verified_signature.signed_hash vote
+        = Block_hash.to_blake2b hash)
   | _ -> ensure "actions = [accepted]" false
 
-(* Prevent self signing on receiving block 3 *)
+let test_on_2_no_vote () =
+  let identity, _identities, validators = make_validators 1 in
+  (* S : Propose Genesis *)
+  let consensus = Consensus.make ~identity ~validators in
+
+  let (Block { hash = hash_1; level; _ } as block_1) =
+    make_block ~identity Genesis.block
+  in
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.1) ~block:block_1 consensus
+  in
+  pp_state_action _consensus _actions 1;
+
+  let vote1 = make_vote ~hash:hash_1 identity in
+  let _consensus, _actions2 =
+    incoming_vote ~current:(time 0.2) ~level ~vote:vote1 _consensus
+  in
+  pp_state_action _consensus _actions 2;
+
+  let (Block { hash = hash_2; level = level_2; _ } as block_2) =
+    make_block ~identity block_1
+  in
+  let vote2 = make_vote ~hash:hash_2 identity in
+  let _consensus, _actions3 =
+    incoming_block ~current:(time 0.3) ~block:block_2 _consensus
+  in
+  pp_state_action _consensus _actions3 3;
+  let Consensus _consensus, _actions4 =
+    incoming_vote ~current:(time 0.4) ~level:level_2 ~vote:vote2 _consensus
+  in
+  pp_state_action (Consensus _consensus) _actions 4;
+
+  ensure "_consensus.identity = identity" (_consensus.identity = identity);
+  ensure "_consensus.validators = validators"
+    (_consensus.validators = validators);
+  ensure
+    "_consensus.state = Pending_apply { pending = block_1; accepted = level_2 }"
+    (_consensus.state = Pending_apply { pending = block_1; accepted = level_2 });
+  let _ =
+    match _actions4 with
+    | [ Consensus_timeout { from } ] ->
+        ensure "Consensus_timeout {from = 0.4}" (from = time 0.4)
+    | _ -> ensure "actions == stuff" false
+  in
+  ensure "_consensus.accepted_at = 0.4" (_consensus.accepted_at = time 0.4);
+
+  let Consensus _consensus, _actions =
+    match
+      finished ~current:(time 0.5) ~block:block_1 (Consensus _consensus)
+    with
+    | Ok stuff -> stuff
+    | Error `No_pending_block -> failwith "no pending block"
+    | Error `Wrong_pending_block -> failwith "wrong pending block"
+  in
+  pp_state_action (Consensus _consensus) _actions 5;
+  ensure "_consensus.state = Apply {pending = block_2}"
+    (_consensus.state = Apply { pending = block_2 });
+
+  let Consensus _consensus, _actions =
+    match
+      finished ~current:(time 0.6) ~block:block_2 (Consensus _consensus)
+    with
+    | Ok stuff -> stuff
+    | Error `No_pending_block -> failwith "no pending block"
+    | Error `Wrong_pending_block -> failwith "wrong pending block"
+  in
+  pp_state_action (Consensus _consensus) _actions 6;
+  ensure "_consensus.state = Propose {finalized = block_2}"
+    (_consensus.state = Propose { finalized = block_2 });
+  ()
+
+let test_multi_on_2_no_vote () =
+  let _, identitites, validators = make_validators 4 in
+  let i1, i2, i3, i4 =
+    match identitites with
+    | [ h1; h2; h3; h4 ] -> (h1, h2, h3, h4)
+    | _ -> failwith "something went wrong!"
+  in
+  let consensus = Consensus.make ~identity:i4 ~validators in
+  let (Block { hash = hash_1; level = level_1; _ } as block_1) =
+    make_block ~identity:i1 Genesis.block
+  in
+
+  let votes1 = List.map (fun id -> make_vote ~hash:hash_1 id) [ i1; i2; i3 ] in
+
+  let (Block { hash = hash_2; level = level_2; _ } as block_2) =
+    make_block ~identity:i2 block_1
+  in
+
+  let votes2 = List.map (fun id -> make_vote ~hash:hash_2 id) [ i1; i2; i3 ] in
+
+  let consensus, _actions =
+    List.fold_left
+      (fun (consensus, _) vote ->
+        incoming_vote ~current:(time 0.1) ~level:level_1 ~vote consensus)
+      (consensus, []) votes1
+  in
+  pp_state_action consensus _actions 1;
+  let consensus, _actions =
+    incoming_block ~current:(time 0.2) ~block:block_1 consensus
+  in
+
+  pp_state_action consensus _actions 2;
+  Format.eprintf "level_2 is %a\n%!" Level.pp level_2;
+  let consensus, _actions =
+    List.fold_left
+      (fun (consensus, _) vote ->
+        incoming_vote ~current:(time 0.3) ~level:level_2 ~vote consensus)
+      (consensus, []) votes2
+  in
+  pp_state_action consensus _actions 3;
+
+  let Consensus consensus, _actions =
+    incoming_block ~current:(time 0.4) ~block:block_2 consensus
+  in
+  pp_state_action (Consensus consensus) _actions 4;
+
+  ensure "consensus.identity = identity" (consensus.identity = i4);
+  ensure "consensus.validators = validators" (consensus.validators = validators);
+  ensure
+    "consensus.state = Pending_apply { pending = block_1; accepted = level_2 }"
+    (consensus.state = Pending_apply { pending = block_1; accepted = level_2 });
+  let _ =
+    match _actions with
+    | [ Consensus_timeout { from } ] ->
+        ensure "Consensus_timeout { from = 0.4 }" (from = time 0.4)
+    | _ -> ensure "actions == stuff" false
+  in
+  ensure "_consensus.accepted_at = 0.4" (consensus.accepted_at = time 0.4)
+
 let test_signable_block_1 () =
   let identity, _identities, validators = make_validators 1 in
   (* S : Propose Genesis *)
@@ -237,8 +389,7 @@ let test_signable_block_1 () =
   pp_state_action _consensus _actions 1;
   (* S : Apply block_a A : [Timeout .2; Consensus_apply (block_a, votes)] *)
   let _consensus, _actions =
-    incoming_block ~current:(time 0.2) ~block:block_a ~prevent_self_sign:true
-      _consensus
+    incoming_block ~current:(time 0.2) ~block:block_a _consensus
   in
   pp_state_action _consensus _actions 2;
 
@@ -246,16 +397,18 @@ let test_signable_block_1 () =
   let _consensus, _actions =
     match finished ~current:(time 0.3) ~block:block_a _consensus with
     | Ok stuff -> stuff
-    | Error _ -> failwith "bad stuff happen on line 216\n%!"
+    | Error `No_pending_block -> failwith "no pending block"
+    | Error `Wrong_pending_block -> failwith "wrong pending block"
   in
   pp_state_action _consensus _actions 3;
 
-  let block_b = make_block ~identity block_a in
+  let (Block { hash = hash_b; level = level_b; _ } as block_b) =
+    make_block ~identity block_a
+  in
 
   (* S : Propose A : Pending_apply { pending = block_b ; accepted = level_b?} *)
   let _consensus, _actions =
-    incoming_block ~current:(time 0.4) ~block:block_b ~prevent_self_sign:true
-      _consensus
+    incoming_block ~current:(time 0.4) ~block:block_b _consensus
   in
   pp_state_action _consensus _actions 4;
 
@@ -266,8 +419,16 @@ let test_signable_block_1 () =
   ensure
     "after_voting.state = Pending_apply { pending = block_b; accepted = \
      level_b }"
-    (_consensus.state = Propose { finalized = block_a });
-  ensure "actions = []" (_actions = []);
+    (_consensus.state = Vote { finalized = block_a });
+  let _ =
+    match _actions with
+    | [ Consensus_vote { level; vote; _ } ] ->
+        ensure "level = level_b" (level = level_b);
+        ensure "hash = hash_b"
+          (Deku_concepts.Verified_signature.signed_hash vote
+          = Block_hash.to_blake2b hash_b)
+    | _ -> ensure "actions == []" false
+  in
   ensure "after_voting.accepted_at = 0.2" (_consensus.accepted_at = time 0.2)
 
 let test_signable_block_2 () =
@@ -286,8 +447,7 @@ let test_signable_block_2 () =
   pp_state_action _consensus _actions 1;
   (* S : Apply block_a A : [Timeout .2; Consensus_apply (block_a, votes)] *)
   let _consensus, _actions =
-    incoming_block ~current:(time 0.2) ~block:block_a ~prevent_self_sign:true
-      _consensus
+    incoming_block ~current:(time 0.2) ~block:block_a _consensus
   in
   pp_state_action _consensus _actions 2;
 
@@ -295,7 +455,8 @@ let test_signable_block_2 () =
   let _consensus, _actions =
     match finished ~current:(time 0.3) ~block:block_a _consensus with
     | Ok stuff -> stuff
-    | Error _ -> failwith "bad stuff happen on line 216\n%!"
+    | Error `No_pending_block -> failwith "no pending block"
+    | Error `Wrong_pending_block -> failwith "wrong pending block"
   in
   pp_state_action _consensus _actions 3;
 
@@ -340,16 +501,15 @@ let test_fast_forwarding () =
   in
   (* S : Propose, A : Empty *)
   let consensus, _actions1 =
-    incoming_block ~current:(time 0.1) ~block:block_b ~prevent_self_sign:true
-      consensus
+    incoming_block ~current:(time 0.1) ~block:block_b consensus
   in
   pp_state_action consensus _actions1 1;
 
   (* S : propose, A : Empty *)
   let consensus, _actions2 =
     incoming_block ~current:(time 0.2) ~block:block_a consensus
-      ~prevent_self_sign:true
   in
+
   pp_state_action consensus _actions2 2;
 
   let vote = make_vote ~hash:hash_b identity in
@@ -379,21 +539,7 @@ let test_fast_forwarding () =
     "after_catch_up.state = Pending_apply { pending = block_a; accepted = \
      level_a}"
     (after_catch_up.state
-    = Pending_apply { pending = block_a; accepted = level_a })
-(* match (actions3 @ actions2 @ actions1) with
-     | [
-      Consensus_timeout { from
-   = timeout_b };
-      Consensus_accepted_block { block = accepted_a };
-      Consensus_trigger_timeout { level = timeout_b };
-      Consensus_accepted_block { block = accepted_b };
-     ] ->
-         ensure "timeout_a = level_a" (timeout_a = level_a);
-         ensure "accepted_a = block_b" (accepted_a = block_a);
-         ensure "timeout_b = level_b" (timeout_b = level_b);
-         ensure "accepted_b = block_b" (accepted_b = block_b)
-     | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false
-*)
+    = Pending_apply { pending = block_a; accepted = level_b })
 
 let test_missing_block () =
   let identity, _identities, validators = make_validators 1 in
@@ -406,47 +552,27 @@ let test_missing_block () =
   in
   let consensus, _actions =
     incoming_block ~current:(time 0.2) ~block:block_b consensus
-      ~prevent_self_sign:true
   in
 
   let vote = make_vote ~hash:hash_b identity in
-  let _validator = Identity.key_hash identity in
   let (Consensus after_b as consensus), actions =
     incoming_vote ~level:level_b ~current:(time 0.3) ~vote consensus
   in
+  pp_state_action consensus actions 3;
   ensure "after_b.identity = identity" (after_b.identity = identity);
   ensure "after_b.validators = validators" (after_b.validators = validators);
   let _ =
     match actions with
-    | [ Consensus_request { above } ] ->
-        ensure "Consensus_request { above } = level_b" (above = level_b)
+    | [ Consensus_timeout { from }; Consensus_request { above } ] ->
+        ensure "Consensus_request { above } = level_b" (above = Level.zero);
+        ensure "Consensus_timeout { from } = 0.3" (from = time 0.3)
     | _ -> ensure "actions = [request]" false
   in
   let Consensus after_a, _actions =
     incoming_block ~current:(time 0.4) ~block:block_a consensus
   in
-
-  (* TODO: this is a bug last_update should be when the last block was singed *)
-  (* ensure "after_a.last_update = Some 0.2" (after_a.last_update = Some (time 0.2)); *)
   ensure "after_a.identity = identity" (after_a.identity = identity);
   ensure "after_a.validators = validators" (after_a.validators = validators)
-(* TODO: Block pool tests *)
-(* (after_a.accepted = Block_hash.Set.of_list [ hash_b; hash_a; previous_a ]);
-   ensure "after_a.block_pool = []" (after_a.block_pool = Block_pool.empty); *)
-(* TODO: this is probably a bug, *)
-(* TODO: action tests *)
-(* match actions with
-   | [
-    Consensus_trigger_timeout { level = timeout_a };
-    Consensus_accepted_block { block = accepted_a };
-    Consensus_trigger_timeout { level = timeout_b };
-    Consensus_accepted_block { block = accepted_b };
-   ] ->
-       ensure "timeout_a = level_a" (timeout_a = level_a);
-       ensure "accepted_a = block_b" (accepted_a = block_a);
-       ensure "timeout_b = level_b" (timeout_b = level_b);
-       ensure "accepted_b = block_b" (accepted_b = block_b)
-   | _ -> ensure "actions = [trigger_b; accepted_b; trigger_a; accepted_a]" false *)
 
 let test_reverse_ordering_2 () =
   let identity, _identities, validators = make_validators 1 in
@@ -463,42 +589,185 @@ let test_reverse_ordering_2 () =
   let vote_2 = make_vote ~hash:hash_2 identity in
   let _consensus1, _actions1 =
     incoming_block ~current:(time 0.1) ~block:block_2 consensus
-      ~prevent_self_sign:true
   in
+
+  pp_state_action _consensus1 _actions1 1;
   let _consensus2, _actions2 =
     incoming_vote ~current:(time 0.2) ~level:level_2 ~vote:vote_2 _consensus1
   in
 
+  pp_state_action _consensus2 _actions2 2;
   let _consensus3, _actions3 =
     incoming_block ~current:(time 0.3) ~block:block_1 _consensus2
-      ~prevent_self_sign:true
   in
+
+  pp_state_action _consensus3 _actions3 3;
   let _consensus4, _actions4 =
     incoming_vote ~current:(time 0.4) ~level:level_1 ~vote:vote_1 _consensus3
   in
+  pp_state_action _consensus4 _actions4 4;
   let _consensus5, _actions5 =
     match finished ~current:(time 0.5) ~block:block_1 _consensus4 with
     | Ok (consensus, actions) -> (consensus, actions)
     | Error `No_pending_block -> failwith "no pending block\n%!"
     | Error `Wrong_pending_block -> failwith "wrong pending block\n%!"
   in
+  pp_state_action _consensus5 _actions5 5;
   let Consensus _consensus6, _actions6 =
     match finished ~current:(time 0.6) ~block:block_2 _consensus5 with
     | Ok (consensus, actions) -> (consensus, actions)
     | Error `No_pending_block -> failwith "no pending block\n%!"
     | Error `Wrong_pending_block -> failwith "wrong pending block\n%!"
   in
+  pp_state_action (Consensus _consensus6) _actions6 6;
   ensure "_consensus.identity = identity" (_consensus6.identity = identity);
   ensure "_consensus.validators = validators"
     (_consensus6.validators = validators);
-  pp_state_action _consensus1 _actions1 1;
-  pp_state_action _consensus2 _actions2 2;
-  pp_state_action _consensus3 _actions3 3;
-  pp_state_action _consensus4 _actions4 4;
-  pp_state_action _consensus5 _actions5 5;
-  pp_state_action (Consensus _consensus6) _actions6 6;
   ensure "_consensus.state = Apply { pending = block_1 }"
-    (_consensus6.state = Apply { pending = block_1 });
+    (_consensus6.state = Propose { finalized = block_2 });
+  ()
+
+let test_one_two_V1 () =
+  let identity, _identities, validators = make_validators 1 in
+  let consensus = Consensus.make ~identity ~validators in
+
+  let (Block { hash = hash_1; level = level_1; _ } as block_1) =
+    make_block ~identity Genesis.block
+  in
+
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.1) ~block:block_1 consensus
+  in
+
+  let (Block { hash = _hash_2; level = _level_2; _ } as block_2) =
+    make_block ~identity Genesis.block
+  in
+
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.2) ~block:block_2 _consensus
+  in
+
+  let vote_1 = make_vote ~hash:hash_1 identity in
+
+  let Consensus _consensus, _actions =
+    incoming_vote ~level:level_1 ~current:(time 0.3) ~vote:vote_1 _consensus
+  in
+
+  pp_state_action (Consensus _consensus) _actions 3;
+
+  ensure "_consensus.identity = identity" (_consensus.identity = identity);
+  ensure "_consensus.validators = validators"
+    (_consensus.validators = validators);
+  ensure "_consensus.state = Apply { pending = block_1 }"
+    (_consensus.state = Apply { pending = block_1 });
+  let _ =
+    match _actions with
+    | [ Consensus_timeout { from }; Consensus_apply { block; votes } ] ->
+        ensure "from = 0.3" (from = time 0.3);
+        ensure "block = block_1" (block = block_1);
+        ensure "vote = hash"
+          (Verified_signature.Set.choose votes
+          |> Verified_signature.signed_hash
+          = Block_hash.to_blake2b hash_1)
+    | _ -> ensure "actions == [Consensus_timeout]" false
+  in
+  ()
+
+let test_two_one_V1 () =
+  let identity, _identities, validators = make_validators 1 in
+  let _consensus = Consensus.make ~identity ~validators in
+
+  let (Block { hash = hash_1; level = level_1; _ } as block_1) =
+    make_block ~identity Genesis.block
+  in
+
+  let (Block { hash = _hash_2; level = _level_2; _ } as block_2) =
+    make_block ~identity block_1
+  in
+
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.2) ~block:block_2 _consensus
+  in
+
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.1) ~block:block_1 _consensus
+  in
+
+  let vote_1 = make_vote ~hash:hash_1 identity in
+
+  let Consensus _consensus, _actions =
+    incoming_vote ~level:level_1 ~current:(time 0.3) ~vote:vote_1 _consensus
+  in
+
+  pp_state_action (Consensus _consensus) _actions 3;
+
+  ensure "_consensus.identity = identity" (_consensus.identity = identity);
+  ensure "_consensus.validators = validators"
+    (_consensus.validators = validators);
+  ensure "_consensus.state = Apply { pending = block_1 }"
+    (_consensus.state = Apply { pending = block_1 });
+  let _ =
+    match _actions with
+    | [ Consensus_timeout { from }; Consensus_apply { block; votes } ] ->
+        ensure "from = 0.3" (from = time 0.3);
+        ensure "block = block_1" (block = block_1);
+        ensure "vote = hash"
+          (Verified_signature.Set.choose votes
+          |> Verified_signature.signed_hash
+          = Block_hash.to_blake2b hash_1)
+    | _ -> ensure "actions == [Consensus_timeout]" false
+  in
+  ()
+
+let test_two_V2_V1 () =
+  let identity, _identities, validators = make_validators 1 in
+  let _consensus = Consensus.make ~identity ~validators in
+
+  let (Block { hash = hash_1; level = level_1; _ } as block_1) =
+    make_block ~identity Genesis.block
+  in
+
+  let (Block { hash = hash_2; level = level_2; _ } as block_2) =
+    make_block ~identity block_1
+  in
+
+  let _consensus, _actions =
+    incoming_block ~current:(time 0.1) ~block:block_2 _consensus
+  in
+  pp_state_action _consensus _actions 1;
+
+  let vote_2 = make_vote ~hash:hash_2 identity in
+
+  let _consensus, _actions =
+    incoming_vote ~level:level_2 ~current:(time 0.2) ~vote:vote_2 _consensus
+  in
+  pp_state_action _consensus _actions 2;
+
+  let vote_1 = make_vote ~hash:hash_1 identity in
+
+  let Consensus _consensus, _actions =
+    incoming_vote ~level:level_1 ~current:(time 0.3) ~vote:vote_1 _consensus
+  in
+
+  pp_state_action (Consensus _consensus) _actions 3;
+
+  ensure "_consensus.identity = identity" (_consensus.identity = identity);
+  ensure "_consensus.validators = validators"
+    (_consensus.validators = validators);
+  ensure "_consensus.state = Apply { pending = block_1 }"
+    (_consensus.state = Apply { pending = block_1 });
+  let _ =
+    match _actions with
+    | [ Consensus_timeout { from }; Consensus_apply { block; votes } ] ->
+        ensure "from = 0.3" (from = time 0.3);
+
+        ensure "block = block_1" (block = block_1);
+        ensure "vote = hash"
+          (Verified_signature.Set.choose votes
+          |> Verified_signature.signed_hash
+          = Block_hash.to_blake2b hash_1)
+    | _ -> ensure "actions == [Consensus_timeout]" false
+  in
   ()
 
 let run () =
@@ -510,6 +779,8 @@ let run () =
           test_case "initial consensus" `Quick test_initial_consensus;
           test_case "new block on initial" `Quick test_new_block_on_initial;
           test_case "new vote on initial" `Quick test_new_vote_on_initial;
+          test_case "on 2 no vote" `Quick test_on_2_no_vote;
+          test_case "multi on 2 no vote" `Quick test_multi_on_2_no_vote;
           test_case "vote then block on initial" `Quick
             test_vote_then_block_on_initial;
           test_case "signable block 1" `Quick test_signable_block_1;
@@ -517,5 +788,8 @@ let run () =
           test_case "fast forwarding" `Quick test_fast_forwarding;
           test_case "missing block" `Quick test_missing_block;
           test_case "reverse ordering" `Quick test_reverse_ordering_2;
+          test_case "one two v1" `Quick test_one_two_V1;
+          test_case "two one v1" `Quick test_two_one_V1;
+          test_case "two v2 v1" `Quick test_two_V2_V1;
         ] );
     ]
