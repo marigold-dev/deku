@@ -6,8 +6,7 @@ open Deku_concepts
 type interop
 type t = interop
 
-type transaction =
-  private
+type transaction = private
   | Deposit of { ticket : Ticket_id.t; amount : Z.t; destination : Key_hash.t }
   | Update_root_hash of BLAKE2b.t
 
@@ -31,7 +30,6 @@ val commit_state_hash :
   state_hash:BLAKE2b.t ->
   withdrawal_handles_hash:BLAKE2b.t ->
   validators:Key_hash.t list ->
-  (** ~signatures should be in the same order as the old validators *)
+  (* ~signatures should be in the same order as the old validators *)
   signatures:(Key.t * Signature.t) option list ->
   unit
-

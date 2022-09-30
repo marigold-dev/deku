@@ -150,8 +150,7 @@ const config = {
 
 /** @param {TransactionRequest} content */
 const onTransactionRequest = async (id, content) => {
-  const { rpc_node, secret, destination, entrypoint, payload } =
-    content;
+  const { rpc_node, secret, destination, entrypoint, payload } = content;
 
   const args = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
