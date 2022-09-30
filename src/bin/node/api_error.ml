@@ -44,7 +44,7 @@ let method_not_allowed path allowed_meth =
     kind = Method_not_allowed;
     msg =
       Format.sprintf "The route [%s] only allows method %s" path
-        (Dream.method_to_string allowed_meth);
+        (Piaf.Method.to_string allowed_meth);
   }
 
 module Repr = struct
