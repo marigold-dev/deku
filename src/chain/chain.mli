@@ -10,8 +10,7 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      applied :
-        (Block.block * Verified_signature.verified_signature list) Level.Map.t;
+      trusted : (string * string) Level.Map.t;
     }
 
 type t = chain [@@deriving yojson]

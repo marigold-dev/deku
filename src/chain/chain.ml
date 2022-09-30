@@ -9,7 +9,7 @@ type chain =
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      applied : (Block.t * Verified_signature.t list) Level.Map.t;
+      trusted : (string * string) Level.Map.t;
     }
 
 and t = chain [@@deriving yojson]
@@ -18,6 +18,7 @@ type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
   | Fragment_produce of { producer : Producer.t; above : Block.t }
   | Fragment_apply of { protocol : Protocol.t; block : Block.t }
+  | Fragment_store of { block : Block.t; votes : Verified_signature.Set.t }
 
 type outcome =
   | Outcome_gossip of { outcome : Gossip.outcome }
@@ -26,6 +27,11 @@ type outcome =
       protocol : Protocol.t;
       block : Block.t;
       receipts : Receipt.t list;
+    }
+  | Outcome_store of {
+      level : Level.t;
+      raw_expected_hash : string;
+      raw_content : string;
     }
 
 type action =
@@ -45,48 +51,42 @@ let make ~validators =
   let protocol = Protocol.initial in
   let consensus = Consensus.make ~validators in
   let producer = Producer.empty in
-  let applied = Level.Map.empty in
-  Chain { gossip; protocol; consensus; producer; applied }
+  let trusted = Level.Map.empty in
+  Chain { gossip; protocol; consensus; producer; trusted }
 
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
   let open Consensus in
   match consensus_action with
-  | Consensus_timeout { until } -> (chain, Chain_timeout { until })
+  | Consensus_timeout { until } -> (chain, [ Chain_timeout { until } ])
   | Consensus_produce { above } ->
       let (Chain { producer; _ }) = chain in
       let fragment = Fragment_produce { producer; above } in
-      (chain, Chain_fragment { fragment })
+      (chain, [ Chain_fragment { fragment } ])
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
       let fragment = Gossip.broadcast_message ~content in
       let fragment = Fragment_gossip { fragment } in
-      (chain, Chain_fragment { fragment })
+      (chain, [ Chain_fragment { fragment } ])
   | Consensus_apply { block; votes } ->
       (* TODO: restarting here is weird and probably half buggy *)
-      let (Chain ({ protocol; applied; _ } as chain)) = chain in
-      let (Block { level; _ }) = block in
-      let chain =
-        (* TODO: problem here is that only the initial 2/3 of votes
-           is stored, ideally we should hold more votes *)
-        let votes = Verified_signature.Set.elements votes in
-        (* TODO: detect if already applied? *)
-        let applied = Level.Map.add level (block, votes) applied in
-        Chain { chain with applied }
-      in
-      let fragment = Fragment_apply { protocol; block } in
-      (chain, Chain_fragment { fragment })
+      let (Chain { protocol; _ }) = chain in
+      let apply = Fragment_apply { protocol; block } in
+      let apply = Chain_fragment { fragment = apply } in
+      let store = Fragment_store { block; votes } in
+      let store = Chain_fragment { fragment = store } in
+      (chain, [ apply; store ])
   | Consensus_request { above } ->
       let content = Request.Content.accepted ~above in
       let fragment = Gossip.send_request ~content in
       let fragment = Fragment_gossip { fragment } in
-      (chain, Chain_fragment { fragment })
+      (chain, [ Chain_fragment { fragment } ])
 
 let apply_consensus_actions chain consensus_actions =
   List.fold_left
     (fun (chain, actions) consensus_action ->
-      let chain, action = apply_consensus_action chain consensus_action in
-      (chain, action :: actions))
+      let chain, additional = apply_consensus_action chain consensus_action in
+      (chain, additional @ actions))
     (chain, []) consensus_actions
 
 (* core *)
@@ -142,7 +142,7 @@ let incoming_message ~identity ~current ~message chain =
 
 let incoming_request ~connection ~request chain =
   let open Request in
-  let (Chain { applied; _ }) = chain in
+  let (Chain { trusted; _ }) = chain in
   let (Request { hash = _; content }) = request in
   match content with
   | Content_accepted { above } -> (
@@ -150,13 +150,12 @@ let incoming_request ~connection ~request chain =
          even better would be storing the raw messages per level *)
       (* TODO: send all blocks above *)
       let level = Level.next above in
-      match Level.Map.find_opt level applied with
-      | Some (block, votes) ->
-          let content = Message.Content.accepted ~block ~votes in
-          let fragment = Gossip.send_message ~connection ~content in
-          let fragment = Fragment_gossip { fragment } in
-          let fragment = Chain_fragment { fragment } in
-          (chain, [ fragment ])
+      match Level.Map.find_opt level trusted with
+      | Some (raw_expected_hash, raw_content) ->
+          let action =
+            Chain_send_message { connection; raw_expected_hash; raw_content }
+          in
+          (chain, [ action ])
       | None -> (chain, []))
 
 let apply_gossip_action ~identity ~current ~gossip_action chain =
@@ -244,6 +243,12 @@ let apply_protocol_apply ~identity ~current ~protocol ~block ~receipts chain =
       Format.eprintf "chain: wrong pending block\n%!";
       (Chain chain, [])
 
+let apply_store_outcome ~level ~raw_expected_hash ~raw_content chain =
+  let (Chain ({ trusted; _ } as chain)) = chain in
+  (* TODO: detect if already trusted? *)
+  let trusted = Level.Map.add level (raw_expected_hash, raw_content) trusted in
+  (Chain { chain with trusted }, [])
+
 let apply ~identity ~current ~outcome chain =
   match outcome with
   | Outcome_gossip { outcome } ->
@@ -251,6 +256,8 @@ let apply ~identity ~current ~outcome chain =
   | Outcome_produce { block } -> apply_protocol_produce ~block chain
   | Outcome_apply { protocol; block; receipts } ->
       apply_protocol_apply ~identity ~current ~protocol ~block ~receipts chain
+  | Outcome_store { level; raw_expected_hash; raw_content } ->
+      apply_store_outcome ~level ~raw_expected_hash ~raw_content chain
 
 let compute ~identity fragment =
   (* TODO: identity parameter here not ideal *)
@@ -273,6 +280,16 @@ let compute ~identity fragment =
         Protocol.apply ~current_level:level ~payload protocol
       in
       Outcome_apply { protocol; block; receipts }
+  | Fragment_store { block; votes } ->
+      (* TODO: problem here is that only the initial 2/3 of votes
+         is stored, ideally we should hold more votes *)
+      let (Block { level; _ }) = block in
+      let votes = Verified_signature.Set.elements votes in
+      let content = Message.Content.accepted ~block ~votes in
+      let _message, raw_message = Message.encode ~content in
+      let (Raw_message { hash; raw_content }) = raw_message in
+      let raw_expected_hash = Message_hash.to_b58 hash in
+      Outcome_store { level; raw_expected_hash; raw_content }
 
 let clear chain =
   let (Chain ({ gossip; consensus; _ } as chain)) = chain in
