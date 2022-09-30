@@ -28,6 +28,7 @@ type consensus = private
 
 type t = consensus [@@deriving yojson]
 
+val prune : t -> t
 val make : validators:Validators.t -> consensus
 
 (* updates *)
