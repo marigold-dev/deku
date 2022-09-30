@@ -9,22 +9,16 @@ open Deku_external_vm
 include Node
 
 module Handler_utils = struct
-  let to_eio lwt =
-    let eio, resolver = Eio.Promise.create () in
-    Lwt.async (fun () ->
-        Lwt.map (fun value -> Eio.Promise.resolve resolver value) lwt);
-    Eio.Promise.await eio
-
-  let input_of_body ~of_yojson request =
+  let input_of_body ~of_yojson (request : Piaf.Request.t) =
     try
-      let body = to_eio (Dream.body request) in
+      let body = Piaf.Body.to_string request.body |> Result.get_ok in
       body |> Yojson.Safe.from_string |> of_yojson |> Result.ok
     with exn ->
       let msg = Printexc.to_string exn in
       Error (Api_error.invalid_body msg)
 
   let param_of_request request param =
-    try Dream.param request param |> Option.some with _ -> None
+    Uri.get_query_param (Piaf.Request.uri request) param
 end
 
 module Api_constants = struct
@@ -53,7 +47,7 @@ module type HANDLER = sig
   val meth : [> `POST | `GET ]
   (** The method of your endpoint *)
 
-  val input_from_request : Dream.request -> (input, Api_error.t) result
+  val input_from_request : Piaf.Request.t -> (input, Api_error.t) result
   (** Parsing function of the request to make an input *)
 
   val handle :
