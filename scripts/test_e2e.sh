@@ -78,7 +78,7 @@ local-setup() {
   # Copied from start.sh
   export DEKU_BOOTSTRAP_KEY="edpku8312JdFovNcX9AkFiafkAcVCHDvAe3zBTvF4YMyLEPz4KFFMd"
   export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
-  export DEKU_VALIDATOR_URIS="http://localhost:4440,http://localhost:4441,http://localhost:4442,http://localhost:4443"
+  export DEKU_VALIDATOR_URIS="127.0.0.1:4440,127.0.0.1:4441,127.0.0.1:4442,127.0.0.1:4443"
   export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
   export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
@@ -93,19 +93,19 @@ local-setup() {
     test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
 
     # Starts the VM
-    node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" |&
-    awk -v n=$N '{ print "vm " n ": " $0}' &
+    node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" &
+    #awk -v n=$N '{ print "vm " n ": " $0}' &
 
     sleep 2
 
     # Starts the Node
     _build/install/default/bin/deku-node \
-      --default-block-size=100 \
+      --default-block-size=1000 \
       --port "444$N" \
       --database-uri "sqlite3:./chain/data/$N/database.db" \
       --named-pipe-path "./chain/data/$N/pipe" \
-      --data-folder "./chain/data/$N" |&
-      awk -v n=$N '{ print "node " n ": " $0}' &
+      --data-folder "./chain/data/$N" &
+      #awk -v n=$N '{ print "node " n ": " $0}' &
     sleep 0.1
   done
 
