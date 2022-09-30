@@ -64,5 +64,9 @@ val finished :
 
 (* helpers *)
 val trusted_block : consensus -> Block.t
-val next_timeout : current:Timestamp.t -> consensus -> Timestamp.t
+
+(* restarting *)
+val reload : current:Timestamp.t -> consensus -> consensus * action list
+
+(* testing *)
 val test : unit -> unit

@@ -398,10 +398,17 @@ let compute ~identity ~default_block_size fragment =
       let raw_expected_hash = Message_hash.to_b58 hash in
       Outcome_store { level; raw_expected_hash; raw_content }
 
-let clear chain =
-  let (Chain ({ gossip; consensus; _ } as chain)) = chain in
+let reload ~current chain =
+  let chain, actions =
+    let (Chain ({ consensus; _ } as chain)) = chain in
+    let consensus, actions = Consensus.reload ~current consensus in
+    let chain = Chain { chain with consensus } in
+    apply_consensus_actions chain actions
+  in
+
+  let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip = Gossip.clear gossip in
-  Chain { chain with gossip; consensus }
+  (Chain { chain with gossip }, actions)
 
 let test () =
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
