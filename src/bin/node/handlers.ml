@@ -24,12 +24,14 @@ end
 module Api_constants = struct
   type api_constants = {
     consensus_address : Deku_tezos.Address.t;
-    node_uri : Uri.t;
+    node_address : string;
+    node_port : int;
   }
 
   type t = api_constants
 
-  let make ~consensus_address ~node_uri = { consensus_address; node_uri }
+  let make ~consensus_address ~node_port =
+    { consensus_address; node_address = "127.0.0.1"; node_port }
 end
 
 type ('response, 'input) handler =
@@ -343,31 +345,23 @@ module Post_operation = struct
     Handler_utils.input_of_body ~of_yojson:input_of_yojson request
 
   let handle ~env ~node:_ ~indexer:_ ~constants operation =
-    let Api_constants.{ node_uri; _ } = constants in
-
-    let target = Uri.with_path node_uri "/messages" in
-
+    let Api_constants.{ node_address = host; node_port = port; _ } =
+      constants
+    in
+    let net = Eio.Stdenv.net env in
     let content = Message.Content.operation operation in
-    let _message, raw_message = Message.encode ~content in
-
-    let (Message.Raw_message { hash; raw_content }) = raw_message in
-    let hash = Message_hash.to_b58 hash in
+    let _, message_raw = Message.encode ~content in
+    let (Message.Raw_message { hash = raw_expected_hash; raw_content }) =
+      message_raw
+    in
+    let raw_expected_hash = Message_hash.to_b58 raw_expected_hash in
+    let open Deku_network in
+    let message = Network_message.message ~raw_expected_hash ~raw_content in
+    Network_protocol.connect ~net ~host ~port @@ fun ~read:_ ~write ->
+    write message;
 
     let (Operation.Operation { hash = operation_hash; _ }) = operation in
-
-    let headers =
-      let open Piaf.Headers in
-      let json = Mime_types.map_extension "json" in
-      [ ("X-Raw-Expected-Hash", hash); (Well_known.content_type, json) ]
-    in
-    let body = Piaf.Body.of_string raw_content in
-
-    Logs.info (fun m -> m "%a" Uri.pp_hum target);
-
-    Eio.Switch.run @@ fun sw ->
-    match Piaf.Client.Oneshot.post ~sw ~headers ~body env target with
-    | Ok _ -> { hash = operation_hash } |> yojson_of_response |> Result.ok
-    | Error err -> Error (Api_error.internal_error (Piaf.Error.to_string err))
+    { hash = operation_hash } |> yojson_of_response |> Result.ok
 
   let path ~env ~node ~indexer ~constants =
     let handler request =
