@@ -103,6 +103,17 @@ let on_network_message ~sw ~env ~raw_expected_hash ~raw_content node =
   on_network_message ~sw ~env ~raw_expected_hash ~raw_content node
 
 let start ~sw ~env ~port ~nodes node =
+  let on_connection ~connection =
+    let (Chain { consensus; _ }) = node.chain in
+    let (Block { level; _ }) = Consensus.trusted_block consensus in
+    (* TODO: attack, reconnect, this should be in domain *)
+    let content = Request.Content.accepted ~above:level in
+    let _request, raw_request = Request.encode ~content in
+    let (Raw_request { hash; raw_content }) = raw_request in
+    let raw_expected_hash = Request_hash.to_b58 hash in
+    Network_manager.send_request ~connection ~raw_expected_hash ~raw_content
+      node.network
+  in
   let on_message ~raw_expected_hash ~raw_content =
     (* Format.eprintf "incoming(%.3f): %s\n%!" (Unix.gettimeofday ())
        raw_expected_hash; *)
@@ -122,11 +133,11 @@ let start ~sw ~env ~port ~nodes node =
   let clock = Eio.Stdenv.clock env in
   Eio.Fiber.both
     (fun () ->
-      Network_manager.listen ~net ~clock ~port ~on_message ~on_request
-        node.network)
+      Network_manager.listen ~net ~clock ~port ~on_connection ~on_message
+        ~on_request node.network)
     (fun () ->
-      Network_manager.connect ~net ~clock ~nodes ~on_message ~on_request
-        node.network)
+      Network_manager.connect ~net ~clock ~nodes ~on_connection ~on_message
+        ~on_request node.network)
 
 let test () =
   let pool = Parallel.Pool.make ~domains:8 in
@@ -180,6 +191,7 @@ let test () =
     let () =
       Eio.Fiber.fork ~sw @@ fun () ->
       Network_manager.connect ~net ~clock ~nodes
+        ~on_connection:(fun ~connection:_ -> ())
         ~on_request:(fun ~connection:_ ~raw_expected_hash:_ ~raw_content:_ ->
           ())
         ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())

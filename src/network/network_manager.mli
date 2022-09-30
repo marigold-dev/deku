@@ -9,6 +9,7 @@ val listen :
   net:Eio.Net.t ->
   clock:Eio.Time.clock ->
   port:int ->
+  on_connection:(connection:Connection_id.t -> unit) ->
   on_request:
     (connection:Connection_id.t ->
     raw_expected_hash:string ->
@@ -22,6 +23,7 @@ val connect :
   net:Eio.Net.t ->
   clock:Eio.Time.clock ->
   nodes:(string * int) list ->
+  on_connection:(connection:Connection_id.t -> unit) ->
   on_request:
     (connection:Connection_id.t ->
     raw_expected_hash:string ->
@@ -37,6 +39,13 @@ val broadcast :
 val request : raw_expected_hash:string -> raw_content:string -> network -> unit
 
 val send :
+  connection:Connection_id.t ->
+  raw_expected_hash:string ->
+  raw_content:string ->
+  network ->
+  unit
+
+val send_request :
   connection:Connection_id.t ->
   raw_expected_hash:string ->
   raw_content:string ->

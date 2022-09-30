@@ -97,6 +97,7 @@ let bootstrap ~sw ~env ~size ~folder =
   let () =
     Eio.Fiber.fork ~sw @@ fun () ->
     Network_manager.connect ~net ~clock
+      ~on_connection:(fun ~connection:_ -> ())
       ~on_request:(fun ~connection:_ ~raw_expected_hash:_ ~raw_content:_ -> ())
       ~on_message:(fun ~raw_expected_hash:_ ~raw_content:_ -> ())
       ~nodes network
