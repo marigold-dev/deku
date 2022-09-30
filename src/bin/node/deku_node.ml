@@ -57,14 +57,14 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let start_api ~env ~sw ~node ~indexer ~port ~tezos_consensus_address ~node_uri
+let start_api ~env ~sw ~node ~indexer ~port ~tezos_consensus_address ~node_port
     ~enabled =
   match enabled with
   | false -> ()
   | true ->
       let api_constants =
         Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
-          ~node_uri
+          ~node_port
       in
       let request_handler =
         Deku_api.make_routes ~env node indexer api_constants
@@ -139,11 +139,8 @@ let main params =
   in
 
   let () =
-    let node_uri =
-      Uri.with_port (Uri.of_string "http://localhost") (Some port)
-    in
     start_api ~env ~sw ~node ~indexer ~port:api_port ~tezos_consensus_address
-      ~node_uri ~enabled:api_enabled
+      ~node_port:port ~enabled:api_enabled
   in
 
   let (Chain { consensus; _ }) = chain in
