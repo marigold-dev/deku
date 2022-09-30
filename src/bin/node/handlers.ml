@@ -54,7 +54,7 @@ module Get_genesis = struct
   let path ~node:_ ~indexer:_ ~constants:_ =
     let handler _ = Ok (yojson_of_response Genesis.block) in
     Routes.(
-      (s "chain" / s "blocks" / s "genesis" /? nil)
+      (s "api" / s "v1" / s "chain" / s "blocks" / s "genesis" /? nil)
       @--> check_method meth handler)
 end
 
@@ -72,7 +72,8 @@ module Get_head = struct
   let path ~node ~indexer ~constants =
     let handler _ = handle ~node ~indexer ~constants () in
     Routes.(
-      (s "chain" / s "blocks" / s "head" /? nil) @--> check_method meth handler)
+      (s "api" / s "v1" / s "chain" / s "blocks" / s "head" /? nil)
+      @--> check_method meth handler)
 end
 
 module Get_block_by_level_or_hash = struct
@@ -123,7 +124,7 @@ module Get_block_by_level_or_hash = struct
       |> Result.map yojson_of_response
     in
     Routes.(
-      (s "chain" / s "blocks" / str /? nil) @--> fun str ->
+      (s "api" / s "v1" / s "chain" / s "blocks" / str /? nil) @--> fun str ->
       check_method meth (handler str))
 end
 
@@ -141,7 +142,9 @@ module Get_level = struct
 
   let path ~node ~indexer ~constants =
     let handler _request = handle ~node ~indexer ~constants () in
-    Routes.((s "chain" / s "level" /? nil) @--> check_method meth handler)
+    Routes.(
+      (s "api" / s "v1" / s "chain" / s "level" /? nil)
+      @--> check_method meth handler)
 end
 
 module Get_proof = struct
@@ -179,7 +182,8 @@ module Get_proof = struct
       |> Result.map yojson_of_response
     in
     Routes.(
-      (s "proof" / str /? nil) @--> fun str -> check_method meth (handler str))
+      (s "api" / s "v1" / s "proof" / str /? nil) @--> fun str ->
+      check_method meth (handler str))
 end
 
 module Get_balance = struct
@@ -246,7 +250,8 @@ module Get_balance = struct
       |> Result.map yojson_of_response
     in
     Routes.(
-      (s "balance" / str / str / str /? nil) @--> fun addr ticketer data ->
+      (s "api" / s "v1" / s "balance" / str / str / str /? nil)
+      @--> fun addr ticketer data ->
       check_method meth (handler addr ticketer data))
 end
 
@@ -264,7 +269,9 @@ module Get_chain_info = struct
     let handler _request =
       handle ~node ~indexer ~constants () |> Result.map yojson_of_response
     in
-    Routes.((s "chain" / s "info" /? nil) @--> check_method meth handler)
+    Routes.(
+      (s "api" / s "v1" / s "chain" / s "info" /? nil)
+      @--> check_method meth handler)
 end
 
 module Helpers_operation_message = struct
@@ -290,7 +297,7 @@ module Helpers_operation_message = struct
       |> Result.map yojson_of_response
     in
     Routes.(
-      (s "helpers" / s "operation-messages" /? nil)
+      (s "api" / s "v1" / s "helpers" / s "operation-messages" /? nil)
       @--> check_method meth handler)
 end
 
@@ -331,7 +338,8 @@ module Helpers_hash_operation = struct
       |> Result.map yojson_of_response
     in
     Routes.(
-      (s "helpers" / s "hash-operation" /? nil) @--> check_method meth handler)
+      (s "api" / s "v1" / s "helpers" / s "hash-operation" /? nil)
+      @--> check_method meth handler)
 end
 
 (* Parse the operation and send it to the chain *)
@@ -369,7 +377,8 @@ module Post_operation = struct
         (input_from_request request)
         (handle ~env ~node ~indexer ~constants)
     in
-    Routes.((s "operations" /? nil) @--> check_method meth handler)
+    Routes.(
+      (s "api" / s "v1" / s "operations" /? nil) @--> check_method meth handler)
 end
 
 module Get_vm_state = struct
@@ -385,5 +394,7 @@ module Get_vm_state = struct
 
   let path ~node ~indexer ~constants =
     let handler _request = handle ~node ~indexer ~constants () in
-    Routes.((s "state" / s "unix" /? nil) @--> check_method meth handler)
+    Routes.(
+      (s "api" / s "v1" / s "state" / s "unix" /? nil)
+      @--> check_method meth handler)
 end
