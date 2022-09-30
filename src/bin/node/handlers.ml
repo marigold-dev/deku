@@ -24,76 +24,62 @@ end
 module Api_constants = struct
   type api_constants = {
     consensus_address : Deku_tezos.Address.t;
-    discovery_address : Deku_tezos.Address.t;
     node_uri : Uri.t;
   }
 
   type t = api_constants
 
-  let make ~consensus_address ~discovery_address ~node_uri =
-    { consensus_address; discovery_address; node_uri }
+  let make ~consensus_address ~node_uri = { consensus_address; node_uri }
 end
 
-module type HANDLER = sig
-  type input
-  (** The input of your handler: body, params, etc...*)
+type ('response, 'input) handler =
+  node:node ->
+  indexer:Indexer.t ->
+  constants:Api_constants.t ->
+  'input ->
+  ('response, Api_error.t) result
 
-  type response [@@deriving yojson_of]
-  (** The response of your handler *)
-
-  val path : string
-  (** The path of your endpoint *)
-
-  val meth : [> `POST | `GET ]
-  (** The method of your endpoint *)
-
-  val input_from_request : Piaf.Request.t -> (input, Api_error.t) result
-  (** Parsing function of the request to make an input *)
-
-  val handle :
-    node:node ->
-    indexer:Indexer.t ->
-    constants:Api_constants.t ->
-    input ->
-    (response, Api_error.t) result
-  (** handler logic *)
-end
+let check_method method_ fn (request : Piaf.Request.t) =
+  if method_ = request.meth then fn request
+  else Error (Api_error.method_not_allowed request.target method_)
 
 (* Return the nth block of the chain. *)
-module Get_genesis : HANDLER = struct
-  type input = unit
+module Get_genesis = struct
   type response = Block.t [@@deriving yojson_of]
 
-  let path = "/chain/blocks/genesis"
   let meth = `GET
-  let input_from_request _ = Ok ()
-  let handle ~node:_ ~indexer:_ ~constants:_ () = Ok Genesis.block
+
+  let path ~node:_ ~indexer:_ ~constants:_ =
+    let handler _ = Ok (yojson_of_response Genesis.block) in
+    Routes.(
+      (s "chain" / s "blocks" / s "genesis" /? nil)
+      @--> check_method meth handler)
 end
 
-module Get_head : HANDLER = struct
-  type input = unit
+module Get_head = struct
   type response = Block.t [@@deriving yojson_of]
 
-  let path = "/chain/blocks/head"
   let meth = `GET
-  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_indexer ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
     let current_block = Consensus.trusted_block consensus in
-    Ok current_block
+    Ok (current_block |> yojson_of_response)
+
+  let path ~node ~indexer ~constants =
+    let handler _ = handle ~node ~indexer ~constants () in
+    Routes.(
+      (s "chain" / s "blocks" / s "head" /? nil) @--> check_method meth handler)
 end
 
-module Get_block_by_level_or_hash : HANDLER = struct
+module Get_block_by_level_or_hash = struct
   type input = Level of Level.t | Hash of Block_hash.t
   type response = Block.t [@@deriving yojson_of]
 
-  let path = "/chain/blocks/:block"
   let meth = `GET
 
-  let input_from_request request =
-    let input = Handler_utils.param_of_request request "block" in
+  let input_from_request input _request =
     let level string =
       try
         string |> Z.of_string |> N.of_z |> Option.map Level.of_n
@@ -103,17 +89,14 @@ module Get_block_by_level_or_hash : HANDLER = struct
     let hash string =
       string |> Block_hash.of_b58 |> Option.map (fun hash -> Hash hash)
     in
+    let input = [ level; hash ] |> List.find_map (fun f -> f input) in
     match input with
-    | None -> Error (Api_error.missing_parameter "block")
-    | Some input -> (
-        let input = [ level; hash ] |> List.find_map (fun f -> f input) in
-        match input with
-        | Some input -> Ok input
-        | None ->
-            Error
-              (Api_error.invalid_parameter
-                 "The block parameter cannot be converted to a Level | 'head' \
-                  | 'genesis' | Block_hash.t"))
+    | Some input -> Ok input
+    | None ->
+        Error
+          (Api_error.invalid_parameter
+             "The block parameter cannot be converted to a Level | 'head' | \
+              'genesis' | Block_hash.t")
 
   let handle ~node ~indexer ~constants request =
     let _ = node in
@@ -129,28 +112,38 @@ module Get_block_by_level_or_hash : HANDLER = struct
     | Level level -> to_result (Indexer.find_block ~level indexer)
     | Hash block_hash ->
         to_result (Indexer.find_block_by_hash ~block_hash indexer)
+
+  let path ~node ~indexer ~constants =
+    let handler str request =
+      Result.bind
+        (input_from_request str request)
+        (handle ~node ~indexer ~constants)
+      |> Result.map yojson_of_response
+    in
+    Routes.(
+      (s "chain" / s "blocks" / str /? nil) @--> fun str ->
+      check_method meth (handler str))
 end
 
-module Get_level : HANDLER = struct
-  type input = unit
+module Get_level = struct
   type response = { level : Level.t } [@@deriving yojson_of]
 
-  let path = "/chain/level"
   let meth = `GET
-  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_ ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { consensus; _ }) = chain in
     let current_block = Consensus.trusted_block consensus in
     let (Block.Block { level; _ }) = current_block in
-    Ok { level }
+    Ok (yojson_of_response { level })
+
+  let path ~node ~indexer ~constants =
+    let handler _request = handle ~node ~indexer ~constants () in
+    Routes.((s "chain" / s "level" /? nil) @--> check_method meth handler)
 end
 
-module Get_proof : HANDLER = struct
+module Get_proof = struct
   open Deku_protocol.Ledger
-
-  type input = Deku_protocol.Operation_hash.t
 
   type response = {
     withdrawal_handles_hash : Withdrawal_handle.hash;
@@ -159,13 +152,10 @@ module Get_proof : HANDLER = struct
   }
   [@@deriving yojson_of]
 
-  let path = "/proof/:proof"
   let meth = `GET
 
-  let input_from_request request =
-    Handler_utils.param_of_request request "proof"
-    |> Option.map Operation_hash.of_b58
-    |> Option.join
+  let input_from_request proof _request =
+    proof |> Operation_hash.of_b58
     |> Option.to_result
          ~none:(Api_error.invalid_parameter "could not parse hash")
 
@@ -178,9 +168,19 @@ module Get_proof : HANDLER = struct
     | Error _ -> Error (Api_error.invalid_parameter "Proof not found")
     | Ok (handle, proof, withdrawal_handles_hash) ->
         Ok { withdrawal_handles_hash; handle; proof }
+
+  let path ~node ~indexer ~constants =
+    let handler proof request =
+      Result.bind
+        (input_from_request proof request)
+        (handle ~node ~indexer ~constants)
+      |> Result.map yojson_of_response
+    in
+    Routes.(
+      (s "proof" / str /? nil) @--> fun str -> check_method meth (handler str))
 end
 
-module Get_balance : HANDLER = struct
+module Get_balance = struct
   type input = {
     address : Deku_protocol.Address.t;
     ticket_id : Deku_protocol.Ticket_id.t;
@@ -189,21 +189,16 @@ module Get_balance : HANDLER = struct
 
   type response = { balance : int } [@@deriving yojson_of]
 
-  let path = "/balance/:address/:ticketer/:data"
   let meth = `GET
 
-  let input_from_request request =
+  let input_from_request address ticketer data _request =
     let%ok address =
-      Handler_utils.param_of_request request "address"
-      |> Option.map Deku_protocol.Address.of_b58
-      |> Option.join
+      address |> Deku_protocol.Address.of_b58
       |> Option.to_result
            ~none:(Api_error.invalid_parameter "could not parse address")
     in
     let%ok ticketer =
-      Handler_utils.param_of_request request "ticketer"
-      |> Option.map Deku_tezos.Contract_hash.of_string
-      |> Option.join
+      ticketer |> Deku_tezos.Contract_hash.of_string
       |> Option.to_result
            ~none:(Api_error.invalid_parameter "could not parse ticketer")
     in
@@ -215,26 +210,20 @@ module Get_balance : HANDLER = struct
         else None
       in
       (* FIXME: does this handle the empty string correctly? *)
-      let data = Handler_utils.param_of_request request "data" in
-      match data with
-      | Some s -> (
-          match parse_0x s with
-          | None ->
-              Error
-                (Api_error.invalid_parameter
-                   (Format.sprintf "could not parse data '%s' in 0x format" s))
-          | Some s -> (
-              try
-                (* FIXME can this be a security issue? *)
-                Ok (Hex.to_string (`Hex s))
-                (* also works when s is empty *)
-              with Invalid_argument _ ->
-                Error
-                  (Api_error.invalid_parameter
-                     (Format.sprintf "Invalid hex %s" s))))
+      match parse_0x data with
       | None ->
           Error
-            (Api_error.invalid_parameter "could not parse data in 0x format")
+            (Api_error.invalid_parameter
+               (Format.sprintf "could not parse data '%s' in 0x format" data))
+      | Some s -> (
+          try
+            (* FIXME can this be a security issue? *)
+            Ok (Hex.to_string (`Hex s))
+            (* also works when s is empty *)
+          with Invalid_argument _ ->
+            Error
+              (Api_error.invalid_parameter
+                 (Format.sprintf "Invalid hex %s" data)))
     in
     let ticket_id =
       Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data)
@@ -246,34 +235,40 @@ module Get_balance : HANDLER = struct
     let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
     let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
     Ok { balance = amount }
+
+  let path ~node ~indexer ~constants =
+    let handler address ticketer data request =
+      Result.bind
+        (input_from_request address ticketer data request)
+        (handle ~node ~indexer ~constants)
+      |> Result.map yojson_of_response
+    in
+    Routes.(
+      (s "balance" / str / str / str /? nil) @--> fun addr ticketer data ->
+      check_method meth (handler addr ticketer data))
 end
 
-module Get_chain_info : HANDLER = struct
-  type input = unit
+module Get_chain_info = struct
+  type response = { consensus : string } [@@deriving yojson_of]
 
-  type response = { consensus : string; discovery : string }
-  [@@deriving yojson_of]
-
-  let path = "/chain/info"
   let meth = `GET
-  let input_from_request _ = Ok ()
 
   let handle ~node:_ ~indexer:_ ~constants () =
-    let Api_constants.{ consensus_address; discovery_address; _ } = constants in
-    Ok
-      {
-        consensus = Deku_tezos.Address.to_string consensus_address;
-        discovery = Deku_tezos.Address.to_string discovery_address;
-      }
+    let Api_constants.{ consensus_address; _ } = constants in
+    Ok { consensus = Deku_tezos.Address.to_string consensus_address }
+    [@@deriving yojson_of]
+
+  let path ~node ~indexer ~constants =
+    let handler _request =
+      handle ~node ~indexer ~constants () |> Result.map yojson_of_response
+    in
+    Routes.((s "chain" / s "info" /? nil) @--> check_method meth handler)
 end
 
-module Helpers_operation_message : HANDLER = struct
-  type input = Operation.t
-
+module Helpers_operation_message = struct
   type response = { hash : Message_hash.t; content : Message.Content.t }
   [@@deriving yojson_of]
 
-  let path = "/helpers/operation-messages"
   let meth = `POST
 
   let input_from_request request =
@@ -284,9 +279,20 @@ module Helpers_operation_message : HANDLER = struct
     let message, _raw_message = Message.encode ~content in
     let (Message.Message { hash; content }) = message in
     Ok { hash; content }
+
+  let path ~node ~indexer ~constants =
+    let handler request =
+      Result.bind
+        (input_from_request request)
+        (handle ~node ~indexer ~constants)
+      |> Result.map yojson_of_response
+    in
+    Routes.(
+      (s "helpers" / s "operation-messages" /? nil)
+      @--> check_method meth handler)
 end
 
-module Helpers_hash_operation : HANDLER = struct
+module Helpers_hash_operation = struct
   (* TODO: those declarations are duplicated *)
   type operation_content =
     | Transaction of { receiver : Address.t; amount : Amount.t }
@@ -303,7 +309,6 @@ module Helpers_hash_operation : HANDLER = struct
 
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
-  let path = "/helpers/hash-operation"
   let meth = `POST
 
   let input_from_request request =
@@ -315,22 +320,29 @@ module Helpers_hash_operation : HANDLER = struct
       |> Operation_hash.hash
     in
     Ok { hash }
+
+  let path ~node ~indexer ~constants =
+    let handler request =
+      Result.bind
+        (input_from_request request)
+        (handle ~node ~indexer ~constants)
+      |> Result.map yojson_of_response
+    in
+    Routes.(
+      (s "helpers" / s "hash-operation" /? nil) @--> check_method meth handler)
 end
 
 (* Parse the operation and send it to the chain *)
-module Post_operation (P : sig
-  val env : Eio.Stdenv.t
-end) : HANDLER = struct
+module Post_operation = struct
   type input = Operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
   let meth = `POST
-  let path = "/operations"
 
   let input_from_request request =
     Handler_utils.input_of_body ~of_yojson:input_of_yojson request
 
-  let handle ~node:_ ~indexer:_ ~constants operation =
+  let handle ~env ~node:_ ~indexer:_ ~constants operation =
     let Api_constants.{ node_uri; _ } = constants in
 
     let target = Uri.with_path node_uri "/messages" in
@@ -349,23 +361,35 @@ end) : HANDLER = struct
       [ ("X-Raw-Expected-Hash", hash); (Well_known.content_type, json) ]
     in
     let body = Piaf.Body.of_string raw_content in
+
+    Logs.info (fun m -> m "%a" Uri.pp_hum target);
+
     Eio.Switch.run @@ fun sw ->
-    match Piaf.Client.Oneshot.post ~sw ~headers ~body P.env target with
-    | Ok _ -> Ok { hash = operation_hash }
+    match Piaf.Client.Oneshot.post ~sw ~headers ~body env target with
+    | Ok _ -> { hash = operation_hash } |> yojson_of_response |> Result.ok
     | Error err -> Error (Api_error.internal_error (Piaf.Error.to_string err))
+
+  let path ~env ~node ~indexer ~constants =
+    let handler request =
+      Result.bind
+        (input_from_request request)
+        (handle ~env ~node ~indexer ~constants)
+    in
+    Routes.((s "operations" /? nil) @--> check_method meth handler)
 end
 
-module Get_vm_state : HANDLER = struct
-  type input = unit
+module Get_vm_state = struct
   type response = External_vm_protocol.State.t [@@deriving yojson_of]
 
   let meth = `GET
-  let path = "/state/unix/"
-  let input_from_request _ = Ok ()
 
   let handle ~node ~indexer:_ ~constants:_ () =
     let { chain; _ } = node in
     let (Chain.Chain { protocol; _ }) = chain in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ok vm_state
+    vm_state |> yojson_of_response |> Result.ok
+
+  let path ~node ~indexer ~constants =
+    let handler _request = handle ~node ~indexer ~constants () in
+    Routes.((s "state" / s "unix" /? nil) @--> check_method meth handler)
 end

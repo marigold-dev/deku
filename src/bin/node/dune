@@ -13,6 +13,7 @@
   logs
   logs.fmt
   fmt.tty
-  piaf)
+  piaf
+  routes)
  (preprocess
   (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
