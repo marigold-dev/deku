@@ -109,7 +109,7 @@ let main params =
         let (Chain { protocol; _ }) = chain in
         let (Protocol.Protocol { vm_state; _ }) = protocol in
         External_vm_client.set_initial_state vm_state;
-        Chain.clear chain
+        chain
     | None ->
         let vm_state = External_vm_client.get_initial_state () in
         Chain.make ~validators ~vm_state

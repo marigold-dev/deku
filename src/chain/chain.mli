@@ -76,7 +76,8 @@ val compute :
   identity:Identity.t -> default_block_size:int -> fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
 
-val clear : chain -> chain
+val reload : current:Timestamp.t -> chain -> chain * action list
+(** [reload chain] To be used when restarting the chain *)
 
 (* TODO: remove this in the future *)
 val test : unit -> unit

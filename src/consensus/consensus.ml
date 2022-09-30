@@ -62,6 +62,15 @@ let trusted_block consensus =
   | Corrupted_apply { pending = trusted; clash = _ } ->
       trusted
 
+let pending_block consensus =
+  let (Consensus { state; _ }) = consensus in
+  match state with
+  | Apply { pending }
+  | Pending_apply { pending; accepted = _ }
+  | Corrupted_apply { pending; clash = _ } ->
+      Some pending
+  | Propose _ | Vote _ | Pending_missing _ | Corrupted_stuck _ -> None
+
 let accepted_level consensus =
   let (Consensus { state; _ }) = consensus in
   match state with
@@ -482,6 +491,24 @@ let finished ~identity ~current ~block consensus =
         match produce with Some action -> action :: actions | None -> actions
       in
       Ok (consensus, actions)
+
+let reload ~current consensus =
+  let timeout =
+    let next_timeout = next_timeout ~current consensus in
+    Consensus_timeout { until = next_timeout }
+  in
+  let apply =
+    match pending_block consensus with
+    | Some block ->
+        let (Block { hash; level; _ }) = block in
+        let votes = find_votes ~level ~hash consensus in
+        Some (Consensus_apply { block; votes })
+    | None -> None
+  in
+  let actions =
+    match apply with Some apply -> [ timeout; apply ] | None -> [ timeout ]
+  in
+  (consensus, actions)
 
 let test () =
   let open Deku_crypto in
