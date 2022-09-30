@@ -145,18 +145,22 @@ let incoming_request ~connection ~request chain =
   let (Chain { trusted; _ }) = chain in
   let (Request { hash = _; content }) = request in
   match content with
-  | Content_accepted { above } -> (
-      (* TODO: probably single domain is a better idea
-         even better would be storing the raw messages per level *)
-      (* TODO: send all blocks above *)
-      let level = Level.next above in
-      match Level.Map.find_opt level trusted with
-      | Some (raw_expected_hash, raw_content) ->
-          let action =
-            Chain_send_message { connection; raw_expected_hash; raw_content }
-          in
-          (chain, [ action ])
-      | None -> (chain, []))
+  | Content_accepted { above } ->
+      let rev_messages =
+        Level.Map.fold
+          (fun level message messages ->
+            match Level.(level > above) with
+            | true -> message :: messages
+            | false -> messages)
+          trusted []
+      in
+      let actions =
+        List.rev_map
+          (fun (raw_expected_hash, raw_content) ->
+            Chain_send_message { connection; raw_expected_hash; raw_content })
+          rev_messages
+      in
+      (chain, actions)
 
 let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
