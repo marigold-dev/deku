@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import CSS from 'csstype';
 import logo from './logo.png';
-import { DekuToolkit } from 'deku-toolkit';
+import { DekuToolkit, fromBeaconSigner, fromMemorySigner } from '@marigold-dev/deku-toolkit';
 import { DAppClient } from '@airgap/beacon-sdk';
-import { fromBeaconSigner, fromMemorySigner } from 'deku-toolkit';
 import { InMemorySigner } from '@taquito/signer';
 
 const containerStyle: CSS.Properties = {
