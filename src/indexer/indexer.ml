@@ -129,10 +129,14 @@ let make ~uri ~config =
 
 let async_save_block ~sw ~block (Indexer { pool; config }) =
   let open Deku_consensus in
+  let on_error exn =
+    Logs.err (fun m ->
+        m "database/sqlite: exception %s" (Printexc.to_string exn))
+  in
   match config.save_blocks with
   | true ->
       let timestamp = Unix.gettimeofday () in
-      Eio.Fiber.fork ~sw (fun () ->
+      Eio.Fiber.fork_sub ~sw ~on_error (fun _sw ->
           let result = Query.insert_block ~block ~timestamp pool in
           let (Block.Block { level; _ }) = block in
           match result with
@@ -152,7 +156,8 @@ let save_block ~block (Indexer { pool; config }) =
       ()
   | false -> ()
 
-let save_message ~sw ~message (Indexer { pool; config }) =
+(* TODO: use this function *)
+let _save_message ~sw ~message (Indexer { pool; config }) =
   match config.save_messages with
   | true ->
       Fiber.fork ~sw (fun () ->
