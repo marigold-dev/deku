@@ -26,7 +26,7 @@ let set_connection ~connection ~write network =
 let close_connection ~connection network =
   network.connections <- Connection_id.Map.remove connection network.connections
 
-let with_connection ~on_request ~on_message network k =
+let with_connection ~on_connection ~on_request ~on_message network k =
   let connection = create_connection network in
   let handler ~sw ~read ~write =
     let write message = Eio.Fiber.fork ~sw @@ fun () -> write message in
@@ -45,6 +45,7 @@ let with_connection ~on_request ~on_message network k =
       on_message message;
       loop ()
     in
+    on_connection ~connection;
     loop ()
   in
   let handler ~read ~write =
@@ -56,7 +57,8 @@ let with_connection ~on_request ~on_message network k =
   in
   k ~handler
 
-let connect ~net ~clock ~host ~port ~on_request ~on_message network =
+let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
+    network =
   let rec reconnect_loop ~net ~clock ~host ~port ~handler =
     try
       Eio.Switch.run @@ fun sw ->
@@ -67,10 +69,10 @@ let connect ~net ~clock ~host ~port ~on_request ~on_message network =
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
       reconnect_loop ~net ~clock ~host ~port ~handler
   in
-  with_connection ~on_request ~on_message network @@ fun ~handler ->
-  reconnect_loop ~net ~clock ~host ~port ~handler
+  with_connection ~on_connection ~on_request ~on_message network
+  @@ fun ~handler -> reconnect_loop ~net ~clock ~host ~port ~handler
 
-let listen ~net ~clock ~port ~on_request ~on_message network =
+let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
   let on_error exn =
     Format.eprintf "listen.connection: %s\n%!" (Printexc.to_string exn)
   in
@@ -82,15 +84,17 @@ let listen ~net ~clock ~port ~on_request ~on_message network =
       relisten ~net ~clock ~port ~on_error handler
   in
   let handler ~read ~write =
-    with_connection ~on_request ~on_message network @@ fun ~handler ->
-    handler ~read ~write
+    with_connection ~on_connection ~on_request ~on_message network
+    @@ fun ~handler -> handler ~read ~write
   in
   relisten ~net ~clock ~port ~on_error handler
 
-let connect ~net ~clock ~nodes ~on_request ~on_message network =
+let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
   Eio.Fiber.List.iter
     (fun (host, port) ->
-      try connect ~clock ~net ~host ~port ~on_request ~on_message network
+      try
+        connect ~clock ~net ~host ~port ~on_connection ~on_request ~on_message
+          network
       with exn ->
         Format.eprintf "connect(%s:%d): %s\n%!" host port
           (Printexc.to_string exn))
@@ -114,6 +118,15 @@ let broadcast ~raw_expected_hash ~raw_content network =
   let message = Network_message.message ~raw_expected_hash ~raw_content in
   broadcast message network
 
+let send_request ~connection ~raw_expected_hash ~raw_content network =
+  match Connection_id.Map.find_opt connection network.connections with
+  | Some write ->
+      let message = Network_message.request ~raw_expected_hash ~raw_content in
+      send ~message ~write
+  | None ->
+      (* dead connection *)
+      ()
+
 let send ~connection ~raw_expected_hash ~raw_content network =
   match Connection_id.Map.find_opt connection network.connections with
   | Some write ->
@@ -132,6 +145,7 @@ let test () =
 
   let start ~port : unit =
     let network = make () in
+    let on_connection ~connection:_ = Format.eprintf "connected\n%!" in
     let on_request ~connection ~raw_expected_hash ~raw_content =
       Format.eprintf "request(%s): %s\n%!" raw_expected_hash raw_content;
       send ~connection ~raw_expected_hash ~raw_content network
@@ -155,8 +169,12 @@ let test () =
     in
     Eio.Fiber.all
       [
-        (fun () -> listen ~net ~clock ~port ~on_request ~on_message network);
-        (fun () -> connect ~net ~clock ~nodes ~on_request ~on_message network);
+        (fun () ->
+          listen ~net ~clock ~port ~on_connection ~on_request ~on_message
+            network);
+        (fun () ->
+          connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message
+            network);
         (fun () -> loop 0);
       ]
   in
