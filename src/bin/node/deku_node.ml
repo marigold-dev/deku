@@ -57,19 +57,21 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let start_api ~sw ~node ~indexer ~port ~tezos_consensus_address
-    ~tezos_discovery_address ~node_uri ~enabled =
+let start_api ~env ~sw ~node ~indexer ~port ~tezos_consensus_address ~node_uri
+    ~enabled =
   match enabled with
   | false -> ()
   | true ->
       let api_constants =
         Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
-          ~discovery_address:tezos_discovery_address ~node_uri
+          ~node_uri
       in
-      let request_handler = Deku_api.make_routes node indexer api_constants in
-      let config = Server.Config.create port in
-      let server = Server.create ~config request_handler in
-      let _command = Server.Command.start ~sw env server in
+      let request_handler =
+        Deku_api.make_routes ~env node indexer api_constants
+      in
+      let config = Piaf.Server.Config.create port in
+      let server = Piaf.Server.create ~config request_handler in
+      let _command = Piaf.Server.Command.start ~sw env server in
       ()
 
 let main params =
@@ -88,8 +90,8 @@ let main params =
     tezos_secret;
     tezos_consensus_address;
     named_pipe_path;
-    api_enabled = _;
-    api_port = _;
+    api_enabled;
+    api_port;
   } =
     params
   in
@@ -137,8 +139,11 @@ let main params =
   in
 
   let () =
-    start_api ~sw node ~indexer ~port:api_port ~tezos_consensus_address
-      ~tezos_discovery_address ~node_uri ~enabled:api_enabled
+    let node_uri =
+      Uri.with_port (Uri.of_string "http://localhost") (Some port)
+    in
+    start_api ~env ~sw ~node ~indexer ~port:api_port ~tezos_consensus_address
+      ~node_uri ~enabled:api_enabled
   in
 
   let (Chain { consensus; _ }) = chain in

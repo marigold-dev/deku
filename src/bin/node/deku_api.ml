@@ -1,9 +1,8 @@
 open Deku_stdlib
-open Deku_indexer
 open Handlers
 include Node
 
-let json_response ~body status =
+let json_response ~status body =
   let body = Piaf.Body.of_string body in
   let headers =
     Piaf.Headers.of_list
@@ -14,44 +13,19 @@ let json_response ~body status =
 let error_to_response error =
   let status = Api_error.to_http_code error |> Piaf.Status.of_code in
   let body = Api_error.yojson_of_t error |> Yojson.Safe.to_string in
-  json_response ~body status
+  json_response ~status body
 
 let method_not_allowed_handler path meth _ =
   Api_error.method_not_allowed path meth |> error_to_response
 
-let make_handler (node : t) (indexer : Indexer.t) (constants : Api_constants.t)
-    (module Handler : HANDLER) =
-  let handler request =
-    let input = Handler.input_from_request request in
-    match input with
-    | Error error -> error_to_response error
-    | Ok input -> (
-        let response = Handler.handle ~node ~indexer ~constants input in
-        match response with
-        | Ok response ->
-            let body =
-              Handler.yojson_of_response response |> Yojson.Safe.to_string
-            in
-            json_response ~body `OK
-        | Error error -> error_to_response error)
-  in
-  let method_not_allowed_handler req =
-    method_not_allowed_handler Handler.path Handler.meth req
-  in
-  let route =
-    match (Handler.meth, Handler.path) with
-    | `POST -> Dream.post Handler.path handler
-    | `GET -> Dream.get Handler.path handler
-  in
-  [ route; Dream.any Handler.path method_not_allowed_handler ]
-
 let cors_middleware handler req =
   let response : Piaf.Response.t = handler req in
+  let add_header name value headers = Piaf.Headers.add headers name value in
   let headers =
     response.headers
-    |> Piaf.Headers.add "Access-Control-Allow-Origin" "*"
-    |> Piaf.Headers.add "Access-Control-Allow-Headers" "*"
-    |> Piaf.Headers.add "Allow" "*"
+    |> add_header "Access-Control-Allow-Origin" "*"
+    |> add_header "Access-Control-Allow-Headers" "*"
+    |> add_header "Allow" "*"
   in
   let response =
     Piaf.Response.create ~version:response.version ~headers ~body:response.body
@@ -62,8 +36,8 @@ let cors_middleware handler req =
 let no_cache_middleware handler req =
   let response : Piaf.Response.t = handler req in
   let headers =
-    response.headers
-    |> Piaf.Headers.add "Cache-Control" "max-age=0, no-cache, no-store"
+    Piaf.Headers.add response.headers "Cache-Control"
+      "max-age=0, no-cache, no-store"
   in
   let response =
     Piaf.Response.create ~version:response.version ~headers ~body:response.body
@@ -150,27 +124,29 @@ let no_cache_middleware handler req =
 
    let on_block block = Lwt.async (fun () -> on_block block)
 *)
-let make_routes node indexer constants =
+let make_routes ~env node indexer constants =
   cors_middleware @@ no_cache_middleware
-  @@ Dream.router
-       [
-         Dream.scope "/api/v1/" []
-           (List.flatten
-              [
-                ws_block_monitor;
-                make_handler node indexer constants (module Get_genesis);
-                make_handler node indexer constants (module Get_head);
-                make_handler node indexer constants (module Get_level);
-                make_handler node indexer constants (module Get_chain_info);
-                make_handler node indexer constants
-                  (module Get_block_by_level_or_hash);
-                make_handler node indexer constants
-                  (module Helpers_operation_message);
-                make_handler node indexer constants
-                  (module Helpers_hash_operation);
-                make_handler node indexer constants (module Post_operation);
-                make_handler node indexer constants (module Get_balance);
-                make_handler node indexer constants (module Get_proof);
-                make_handler node indexer constants (module Get_vm_state);
-              ]);
-       ]
+  @@ fun Piaf.Server.Handler.{ request : Piaf.Request.t; _ } ->
+  let router =
+    Routes.one_of
+      [
+        Get_genesis.path ~node ~indexer ~constants;
+        Get_head.path ~node ~indexer ~constants;
+        Get_level.path ~node ~indexer ~constants;
+        Get_chain_info.path ~node ~indexer ~constants;
+        Get_block_by_level_or_hash.path ~node ~indexer ~constants;
+        Helpers_operation_message.path ~node ~indexer ~constants;
+        Helpers_hash_operation.path ~node ~indexer ~constants;
+        Post_operation.path ~env ~node ~indexer ~constants;
+        Get_balance.path ~node ~indexer ~constants;
+        Get_proof.path ~node ~indexer ~constants;
+        Get_vm_state.path ~node ~indexer ~constants;
+        (* ws_block_monitor; *)
+      ]
+  in
+  match Routes.match' router ~target:request.target with
+  | Routes.NoMatch -> Piaf.Response.create `Not_found
+  | FullMatch handler | MatchWithTrailingSlash handler -> (
+      match handler request with
+      | Ok json -> Yojson.Safe.to_string json |> json_response ~status:`OK
+      | Error error -> error_to_response error)
