@@ -3,7 +3,7 @@ let
   network_config_to_nixos_config = { bootstrapper_key, tezos_consensus_address, tezos_discovery_address, nodes, vmType }:
     let
       validators = builtins.concatStringsSep "," (builtins.map ({ validator, ... }: validator) nodes);
-      validator_uris = builtins.concatStringsSep "," (builtins.map ({ validator_uri, ... }: "http://${validator_uri}:4440") nodes);
+      validator_uris = builtins.concatStringsSep "," (builtins.map ({ validator_uri, ... }: "${validator_uri}:4440") nodes);
     in
     builtins.foldl'
       (nodes: { name, secret, validator, validator_uri, tezos_secret, tezos_rpc_node }:
