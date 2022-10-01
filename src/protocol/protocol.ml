@@ -274,6 +274,7 @@ let prepare ~parallel ~payload = parallel parse_operation payload
 let apply ~current_level ~payload ~tezos_operations protocol =
   (* FIXME: This is a temporary hack until we understand what's happening in
      the betanet. *)
+  let () = Unix.sleep 1 in
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
   in
