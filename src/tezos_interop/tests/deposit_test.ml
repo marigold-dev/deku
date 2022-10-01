@@ -1,5 +1,4 @@
 open Deku_crypto
-open Deku_tezos
 open Deku_tezos_interop
 open Deku_stdlib
 
