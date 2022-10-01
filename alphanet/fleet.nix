@@ -1,6 +1,6 @@
 { nixpkgs, deploy-rs, deku-node, rev }:
 let
-  network_config_to_nixos_config = { bootstrapper_key, tezos_consensus_address, tezos_discovery_address, nodes, vmType }:
+  network_config_to_nixos_config = { bootstrapper_key, tezos_consensus_address, nodes, vmType }:
     let
       validators = builtins.concatStringsSep "," (builtins.map ({ validator, ... }: validator) nodes);
       validator_uris = builtins.concatStringsSep "," (builtins.map ({ validator_uri, ... }: "${validator_uri}:4440") nodes);
@@ -44,7 +44,6 @@ let
                                 DEKU_TEZOS_SECRET = tezos_secret;
                                 DEKU_TEZOS_RPC_NODE = tezos_rpc_node;
                                 DEKU_TEZOS_CONSENSUS_ADDRESS = tezos_consensus_address;
-                                DEKU_TEZOS_DISCOVERY_ADDRESS = tezos_discovery_address;
                                 DEKU_DATABASE_URI = "sqlite3:///var/lib/deku/db.sqlite";
                                 DEKU_DATA_FOLDER = "/var/lib/deku";
                                 DEKU_DEFAULT_BLOCK_SIZE = "100";

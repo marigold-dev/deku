@@ -57,11 +57,6 @@ then
       "./src/tezos_interop/consensus.mligo" \
       "$(cat "$storage_path/consensus_storage.mligo")"
 
-  deploy_contract "discovery" \
-      "./src/tezos_interop/discovery.mligo" \
-      "$(cat "$storage_path/discovery_storage.mligo")" \
-      bob # switch wallet to avoid the "Only one manager operation per block" error
-
   deploy_contract "dummy_ticket" \
       "./dummy_ticket.mligo" \
       "()"

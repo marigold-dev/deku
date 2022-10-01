@@ -46,7 +46,6 @@ public-setup() {
 
   chain_info=$(curl --silent "$DEKU_API_NODE/api/v1/chain/info")
   export DEKU_TEZOS_CONSENSUS_ADDRESS=$(echo "$chain_info" | jq -r '.consensus')
-  export DEKU_TEZOS_DISCOVERY_ADDRESS=$(echo "$chain_info" | jq -r '.discovery')
   export DEKU_TEST_MODE="kathmandu" # for commons.sh
 
   # We deploy our own dummy ticket for now
@@ -82,7 +81,6 @@ local-setup() {
   export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
   export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
-  export DEKU_TEZOS_DISCOVERY_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract discovery | grep KT1 | tr -d '\r')"
   export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 
   for N in 0 1 2 3; do
@@ -117,7 +115,6 @@ run-test() {
   echo "Dummy ticket address:" $DUMMY_TICKET_ADDRESS
   echo "Tezos RPC node:" $DEKU_TEZOS_RPC_NODE
   echo "Consensus address:" $DEKU_TEZOS_CONSENSUS_ADDRESS
-  echo "Discovery address:" $DEKU_TEZOS_DISCOVERY_ADDRESS
 
   message "Doing the deposit"
 

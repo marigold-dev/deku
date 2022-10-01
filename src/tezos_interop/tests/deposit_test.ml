@@ -9,10 +9,6 @@ let secret =
 
 let rpc_node = Uri.of_string "http://localhost:20000"
 
-(* We can use a random discovery contract address *)
-let discovery_contract =
-  Address.of_string "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" |> Option.get
-
 let main consensus_contract =
   let wait sw =
     Tezos_interop.start ~sw ~rpc_node ~secret ~consensus_contract
