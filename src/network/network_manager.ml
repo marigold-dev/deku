@@ -1,4 +1,5 @@
 open Deku_gossip
+open Network_protocol
 
 type network = {
   mutable connection_id : Connection_id.t;
@@ -19,73 +20,70 @@ let create_connection network =
   network.connection_id <- Connection_id.next connection_id;
   connection_id
 
-let set_connection ~connection ~write network =
+let set_connection ~connection_id ~write network =
   network.connections <-
-    Connection_id.Map.add connection write network.connections
+    Connection_id.Map.add connection_id write network.connections
 
-let close_connection ~connection network =
-  network.connections <- Connection_id.Map.remove connection network.connections
+let close_connection ~connection_id network =
+  network.connections <-
+    Connection_id.Map.remove connection_id network.connections
 
 let with_connection ~on_connection ~on_request ~on_message network k =
-  let connection = create_connection network in
-  let handler ~sw ~read ~write =
-    let write message = Eio.Fiber.fork ~sw @@ fun () -> write message in
-    set_connection ~connection ~write network;
-
+  let connection_id = create_connection network in
+  let handler ~sw connection =
+    let write message =
+      Eio.Fiber.fork ~sw @@ fun () -> Connection.write connection message
+    in
     let on_message message =
-      Eio.Fiber.fork ~sw @@ fun () ->
       match message with
       | Network_message.Message { raw_header; raw_content } ->
           on_message ~raw_header ~raw_content
       | Network_message.Request { raw_header; raw_content } ->
-          on_request ~connection ~raw_header ~raw_content
+          on_request ~connection:connection_id ~raw_header ~raw_content
     in
     let rec loop () =
-      let message = read () in
+      let message = Connection.read connection in
       on_message message;
       loop ()
     in
-    on_connection ~connection;
+    set_connection ~connection_id ~write network;
+    on_connection ~connection:connection_id;
     loop ()
   in
-  let handler ~read ~write =
-    try Eio.Switch.run @@ fun sw -> handler ~sw ~read ~write
-    with exn ->
-      close_connection ~connection network;
-      (* TODO: reraise *)
-      raise exn
+  let handler connection =
+    Fun.protect
+      ~finally:(fun () -> close_connection ~connection_id network)
+      (fun () -> Eio.Switch.run @@ fun sw -> handler ~sw connection)
   in
-  k ~handler
+  k handler
 
 let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
     network =
-  let rec reconnect_loop ~net ~clock ~host ~port ~handler =
-    try
-      Eio.Switch.run @@ fun sw ->
-      Network_protocol.connect ~sw ~net ~host ~port handler
+  let rec reconnect_loop ~net ~clock ~host ~port handler =
+    try Network_protocol.Client.connect ~net ~host ~port handler
     with exn ->
       Format.eprintf "reconnect(%s:%d): %s\n%!" host port
         (Printexc.to_string exn);
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
-      reconnect_loop ~net ~clock ~host ~port ~handler
+      reconnect_loop ~net ~clock ~host ~port handler
   in
   with_connection ~on_connection ~on_request ~on_message network
-  @@ fun ~handler -> reconnect_loop ~net ~clock ~host ~port ~handler
+  @@ fun handler -> reconnect_loop ~net ~clock ~host ~port handler
 
 let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
   let on_error exn =
     Format.eprintf "listen.connection: %s\n%!" (Printexc.to_string exn)
   in
   let rec relisten ~net ~clock ~port ~on_error handler =
-    try Network_protocol.listen ~net ~port ~on_error handler
+    try Network_protocol.Server.listen ~net ~port ~on_error handler
     with exn ->
       Format.eprintf "relisten: %s\n%!" (Printexc.to_string exn);
       Eio.Time.sleep clock Deku_constants.listen_timeout;
       relisten ~net ~clock ~port ~on_error handler
   in
-  let handler ~read ~write =
+  let handler connection =
     with_connection ~on_connection ~on_request ~on_message network
-    @@ fun ~handler -> handler ~read ~write
+    @@ fun handler -> handler connection
   in
   relisten ~net ~clock ~port ~on_error handler
 

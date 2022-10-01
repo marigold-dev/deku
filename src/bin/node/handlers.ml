@@ -364,8 +364,8 @@ module Post_operation = struct
     let open Deku_network in
     let (Network_message { raw_header; raw_content }) = network in
     let message = Network_message.message ~raw_header ~raw_content in
-    Network_protocol.connect ~net ~host ~port @@ fun ~read:_ ~write ->
-    write message;
+    ( Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
+      Network_protocol.Connection.write connection message );
 
     let (Operation.Operation { hash = operation_hash; _ }) = operation in
     { hash = operation_hash } |> yojson_of_response |> Result.ok

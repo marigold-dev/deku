@@ -13,8 +13,8 @@ let post_directly_to_node ~env ~operation =
   let (Network_message { raw_header; raw_content }) = network in
   let open Deku_network in
   let message = Network_message.message ~raw_header ~raw_content in
-  Network_protocol.connect ~net ~host ~port @@ fun ~read:_ ~write ->
-  write message
+  Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
+  Network_protocol.Connection.write connection message
 
 let post_to_api ~sw ~env ~operation =
   let node = "http://localhost:8080/api/v1/operations" |> Uri.of_string in

@@ -1,21 +1,25 @@
-(* server *)
-val listen :
-  net:#Eio.Net.t ->
-  port:int ->
-  on_error:(exn -> unit) ->
-  (read:(unit -> Network_message.t) ->
-  write:(Network_message.t -> unit) ->
-  unit) ->
-  'a
+module Connection : sig
+  type connection
+  type t = connection
 
-(* client *)
-exception Invalid_host
+  val read : connection -> Network_message.t
+  val write : connection -> Network_message.t -> unit
+end
 
-val connect :
-  net:#Eio.Net.t ->
-  host:string ->
-  port:int ->
-  (read:(unit -> Network_message.t) -> write:(Network_message.t -> unit) -> 'a) ->
-  'a
+module Client : sig
+  exception Invalid_host
+
+  val connect :
+    net:#Eio.Net.t -> host:string -> port:int -> (Connection.t -> 'a) -> 'a
+end
+
+module Server : sig
+  val listen :
+    net:#Eio.Net.t ->
+    port:int ->
+    on_error:(exn -> unit) ->
+    (Connection.t -> unit) ->
+    'a
+end
 
 val test : unit -> unit
