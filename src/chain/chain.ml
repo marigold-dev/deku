@@ -11,6 +11,7 @@ type chain =
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
+      oldest_trusted : Level.t;
       trusted : Message.Network.t Level.Map.t;
     }
 
@@ -63,14 +64,29 @@ type action =
     }
 [@@deriving show]
 
+(* helpers *)
+let rec drop ~level ~until by_level =
+  match Level.(until > level) with
+  | true ->
+      let by_level = Level.Map.remove level by_level in
+      let level = Level.next level in
+      drop ~level ~until by_level
+  | false -> Level.Map.remove until by_level
+
+let drop ~until by_level =
+  match Level.Map.min_binding_opt by_level with
+  | Some (level, _by_hash) -> drop ~level ~until by_level
+  | None -> by_level
+
 let make ~validators ~vm_state =
   let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial_with_vm_state ~vm_state in
   let consensus = Consensus.make ~validators in
   let producer = Producer.empty in
+  let oldest_trusted = Level.zero in
   let trusted = Level.Map.empty in
-  Chain { gossip; protocol; consensus; producer; trusted }
+  Chain { gossip; protocol; consensus; producer; oldest_trusted; trusted }
 
 let commit ~current_level ~block ~votes ~validators =
   let Block.(Block { payload_hash; _ }) = block in
@@ -326,10 +342,24 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       (Chain chain, [])
 
 let apply_store_outcome ~level ~network chain =
-  let (Chain ({ trusted; _ } as chain)) = chain in
+  let (Chain ({ oldest_trusted; trusted; _ } as chain)) = chain in
   (* TODO: detect if already trusted? *)
   let trusted = Level.Map.add level network trusted in
-  (Chain { chain with trusted }, [])
+  let oldest_trusted, trusted =
+    let open Deku_constants in
+    let level_n = Level.to_n level in
+    let level_int = Z.to_int (N.to_z level_n) in
+    let trusted_cycle_int = Z.to_int (N.to_z trusted_cycle) in
+    (* TODO: this is a workaround *)
+    match level_int mod trusted_cycle_int = 0 with
+    | true ->
+        let trusted = drop ~until:oldest_trusted trusted in
+        let oldest_trusted = N.(level_n + trusted_cycle) in
+        let oldest_trusted = Level.of_n oldest_trusted in
+        (oldest_trusted, trusted)
+    | false -> (oldest_trusted, trusted)
+  in
+  (Chain { chain with oldest_trusted; trusted }, [])
 
 let apply ~identity ~current ~outcome chain =
   match outcome with

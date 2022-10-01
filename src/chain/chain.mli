@@ -12,6 +12,7 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
+      oldest_trusted : Level.t;
       trusted : Message.Network.t Level.Map.t;
     }
 
