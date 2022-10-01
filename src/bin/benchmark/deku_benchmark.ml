@@ -3,13 +3,8 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 
-module Parallel = struct
-  let domains = 16
-  let pool = Parallel.Pool.make ~domains
-  let init_p n f = Parallel.init_p pool n f
-  let filter_map_p f l = Parallel.filter_map_p pool f l
-  let map_p f l = Parallel.map_p pool f l
-end
+let domains = 16
+let pool = Parallel.Pool.make ~domains
 
 module Util = struct
   let benchmark ~runs f =
@@ -62,7 +57,9 @@ module Zero_ops = struct
 
   let big_payload ~size ~level =
     let () = Format.eprintf "preparing...\n%!" in
-    let operations = Parallel.init_p size (fun _ -> zero_operation ~level) in
+    let operations =
+      Parallel.init_p pool size (fun _ -> zero_operation ~level)
+    in
     payload_of_operations operations
 
   (* TODO: parametrize over domains *)
@@ -72,7 +69,7 @@ module Zero_ops = struct
     let (`Average average) =
       Util.benchmark ~runs (fun () ->
           let payload =
-            Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
+            Protocol.prepare ~parallel:(Parallel.filter_map_p pool) ~payload
           in
           let _protocol, _receipts, _errors =
             Protocol.apply ~current_level:level ~tezos_operations:[] ~payload
@@ -113,15 +110,16 @@ module Block_production = struct
     Operation.ticket_transfer ~identity:sender ~level ~nonce ~receiver
       ~ticket_id ~amount
 
-  let operations ~size = Parallel.init_p size (fun nonce -> operation ~nonce)
+  let operations ~size =
+    Parallel.init_p pool size (fun nonce -> operation ~nonce)
 
   let produce_block ~operations =
     let open Deku_consensus in
     let level = Level.zero in
     let (Block.Block { previous; _ }) = Genesis.block in
     let _block =
-      Block.produce ~parallel_map:Parallel.map_p ~identity:producer ~level
-        ~previous ~operations ~tezos_operations:[]
+      Block.produce ~parallel_map:(Parallel.map_p pool) ~identity:producer
+        ~level ~previous ~operations ~tezos_operations:[]
     in
     ()
 
@@ -142,7 +140,7 @@ module Block_production = struct
     average
 end
 
-let alpha = Zero_ops.run ()
-let pi = Block_production.run ()
+let alpha = Parallel.Pool.run pool Zero_ops.run
+let pi = Parallel.Pool.run pool Block_production.run
 let total = alpha +. pi
 let () = Format.printf "alpha + pi: %3f\n%!" total
