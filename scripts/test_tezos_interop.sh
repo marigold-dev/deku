@@ -31,7 +31,7 @@ deploy_contract () {
 
 deploy_contract "test_consensus" \
     "./src/tezos_interop/consensus.mligo" \
-    "$(cat ./configs/flextesa/consensus_storage.mligo)"
+    "$(cat ./networks/flextesa/consensus_storage.mligo)"
 
 export DEKU_CONSENSUS_CONTRACT="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract test_consensus | grep KT1 | tr -d '\r')"
 

@@ -106,7 +106,7 @@
         deku-node = import ./nix/service.nix { deku-packages = self.packages; inherit wasm-vm; };
       };
       deploy = {
-        nodes = import ./alphanet/fleet.nix {
+        nodes = import ./networks/betanets/fleet.nix {
           inherit nixpkgs deploy-rs;
           deku-node = self.nixosModules.deku-node;
           rev = if self ? rev then self.rev else "dirty";

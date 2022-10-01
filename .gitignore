@@ -10,3 +10,4 @@ examples/cookie-game/lib
 # sdks/typescript-sdk/lib
 *-node-*-deku_state_*.tar.gz
 tezos_js_bridge.bundle.js
+chain/data
