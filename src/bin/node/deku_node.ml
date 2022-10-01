@@ -178,6 +178,11 @@ let () =
     (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
 
 let () =
+  let control = Gc.get () in
+  let control = { control with minor_heap_size = 2048; space_overhead = 60 } in
+  Gc.set control
+
+let () =
   Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
   let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
