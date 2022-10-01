@@ -17,6 +17,7 @@ export DEKU_VALIDATOR_URIS="127.0.0.1:4440,127.0.0.1:4441,127.0.0.1:4442,127.0.0
 export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
 export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
 export DEKU_API_PORT=8080
+export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
@@ -41,9 +42,5 @@ for N in 0 1 2 3; do
     --data-folder "./chain/data/$N" &
   sleep 0.1
 done
-
-# Only starting one API
-# export DEKU_API_DEKU_NODE="http://localhost:4440"
-# _build/install/default/bin/deku-api --database-uri "sqlite3:/tmp/database.db" &
 
 wait
