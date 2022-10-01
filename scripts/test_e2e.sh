@@ -84,7 +84,7 @@ local-setup() {
   export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 
   for N in 0 1 2 3; do
-    source "./chain/data/$N/env"
+    source "./networks/flextesa/node_${N}_env"
 
     # Creates the FIFO
     test -p "./chain/data/$N/pipe_write" || mkfifo "./chain/data/$N/pipe_write"

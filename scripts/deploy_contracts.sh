@@ -51,7 +51,7 @@ then
   # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
   # the [initial_storage] expression and originates the contract as myWallet on Tezos.
 
-  storage_path=${1:-./configs/flextesa}
+  storage_path=${1:-./networks/flextesa}
 
   deploy_contract "consensus" \
       "./src/tezos_interop/consensus.mligo" \
