@@ -342,8 +342,10 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       (Chain chain, [])
 
 let apply_store_outcome ~level ~network chain =
-  let (Chain ({ oldest_trusted; trusted; _ } as chain)) = chain in
+  let (Chain ({ gossip; oldest_trusted; trusted; _ } as chain)) = chain in
   (* TODO: detect if already trusted? *)
+  (* TODO: is this the right place? *)
+  let gossip = Gossip.close ~until:level gossip in
   let trusted = Level.Map.add level network trusted in
   let oldest_trusted, trusted =
     let open Deku_constants in
@@ -351,7 +353,7 @@ let apply_store_outcome ~level ~network chain =
     let level_int = Z.to_int (N.to_z level_n) in
     let trusted_cycle_int = Z.to_int (N.to_z trusted_cycle) in
     (* TODO: this is a workaround *)
-    match level_int mod trusted_cycle_int = 0 with
+    match level_int mod trusted_cycle_int = 0 && level_int <> 0 with
     | true ->
         let trusted = drop ~until:oldest_trusted trusted in
         let oldest_trusted = N.(level_n + trusted_cycle) in
@@ -359,7 +361,7 @@ let apply_store_outcome ~level ~network chain =
         (oldest_trusted, trusted)
     | false -> (oldest_trusted, trusted)
   in
-  (Chain { chain with oldest_trusted; trusted }, [])
+  (Chain { chain with gossip; oldest_trusted; trusted }, [])
 
 let apply ~identity ~current ~outcome chain =
   match outcome with
