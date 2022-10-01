@@ -22,37 +22,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-version: "3.8"
+version: "3.6"
 services:
-  elastic:
-    container_name: deku_elastic
-    image: ghcr.io/baking-bad/bcdhub-elastic:4.1.0
-    restart: always
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
-    environment:
-      - bootstrap.memory_lock=true
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms256m -Xmx256m"
-
   db:
     container_name: deku_postgres
-    image: postgres:12
+    image: postgres:14
     shm_size: 1g
     restart: always
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=indexer
+      - POSTGRES_DB=bcd
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
-      - db:/var/lib/postgresql/data
-
+      - db:/var/lib/postgresql/data 
   api:
     container_name: deku_api
     restart: always
-    image: ghcr.io/baking-bad/bcdhub-api:4.1.0
+    image: ghcr.io/baking-bad/bcdhub-api:4.3.0
     environment:
       - BCD_ENV=sandbox
       - GIN_MODE=debug
@@ -61,7 +48,6 @@ services:
       - SANDBOX_NODE_URI=http://sandbox:20000
       - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
     depends_on:
-      - elastic
       - db
     ports:
       - 127.0.0.1:14000:14000
@@ -69,11 +55,10 @@ services:
       - bcdshare:/etc/bcd
     links:
       - "flextesa:sandbox"
-
   indexer:
     container_name: deku_indexer
     restart: always
-    image: ghcr.io/baking-bad/bcdhub-indexer:4.1.0
+    image: ghcr.io/baking-bad/bcdhub-indexer:4.3.0
     environment:
       - BCD_ENV=sandbox
       - POSTGRES_USER=root
@@ -82,30 +67,10 @@ services:
       - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
     depends_on:
       - db
-      - metrics
     links:
       - "flextesa:sandbox"
     volumes:
       - bcdshare:/etc/bcd
-
-  metrics:
-    container_name: deku_metrics
-    restart: always
-    image: ghcr.io/baking-bad/bcdhub-metrics:4.1.0
-    environment:
-      - BCD_ENV=sandbox
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - SANDBOX_NODE_URI=http://sandbox:20000
-      - SANDBOX_IPFS_GATEWAY=https://cloudflare-ipfs.com
-    depends_on:
-      - elastic
-      - db
-    links:
-      - "flextesa:sandbox"
-    volumes:
-      - bcdshare:/etc/bcd
-
   flextesa:
     container_name: deku_flextesa
     restart: always
@@ -115,33 +80,19 @@ services:
       - block_time=4
       - flextesa_node_cors_origin=*
     ports:
-      - "20000:20000"
+      - 127.0.0.1:20000:20000
     expose:
       - 20000/tcp
-
   gui:
     container_name: sandbox_gui
     restart: always
-    image: bakingbad/bcdhub-gui:4.0
+    image: ghcr.io/baking-bad/bcdhub-gui:4.3.0
     depends_on:
       - api
     ports:
       - 127.0.0.1:8000:80
-  prometheus:
-    container_name: deku_prometheus
-    restart: always
-    image: prom/prometheus
-    # "host" network mode is used so that the Prometheus container
-    # can still communicate with the deku nodes when running in
-    # local mode.
-    network_mode: host
-    expose:
-      - 9090/tcp
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
 volumes:
-  esdata:
   bcdshare:
   db:
     driver: local
