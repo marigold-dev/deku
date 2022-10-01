@@ -7,19 +7,24 @@ open Deku_chain
 open Deku_external_vm
 open Deku_protocol
 
-let make_dump_loop ~sw ~env ~folder ~chain =
-  let chain_ref = ref chain in
-
+let make_dump_loop ~sw ~env ~folder =
+  let resolver_ref = Atomic.make None in
   let domains = Eio.Stdenv.domain_mgr env in
 
   let rec loop () : unit =
-    let chain = !chain_ref in
+    let promise, resolver = Eio.Promise.create () in
+    Atomic.set resolver_ref (Some resolver);
+    let chain = Eio.Promise.await promise in
     (try Storage.Chain.write ~env ~folder chain
      with exn ->
        Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn));
     loop ()
   in
-  let dump chain = chain_ref := chain in
+  let dump chain =
+    match Atomic.exchange resolver_ref None with
+    | Some resolver -> Eio.Promise.resolve resolver chain
+    | None -> ()
+  in
   ( Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error @@ fun _sw ->
     Eio.Domain_manager.run domains (fun () -> loop ()) );
   dump
@@ -131,7 +136,7 @@ let main params =
         let vm_state = External_vm_client.get_initial_state () in
         Chain.make ~validators ~vm_state
   in
-  let dump = make_dump_loop ~sw ~env ~folder:data_folder ~chain in
+  let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let notify_api _ = () in
   let node =
     Node.make ~identity ~default_block_size ~pool ~dump ~chain
