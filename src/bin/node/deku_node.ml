@@ -170,7 +170,7 @@ let setup_log ?style_renderer ?level () =
       then Logs.Src.set_level src (Some Logs.Error))
     (Logs.Src.list ())
 
-let () = setup_log ~level:Logs.Debug ()
+let () = setup_log ~level:Logs.Info ()
 
 (* let main () = Node.test () *)
 let () =
