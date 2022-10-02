@@ -64,8 +64,7 @@ and handle_chain_action ~sw ~env ~action node =
           Eio.Fiber.fork ~sw @@ fun () ->
           Tezos_interop.commit_state_hash ~block_level:current_level
             ~block_payload_hash:payload_hash ~state_hash:state_root_hash
-            ~withdrawal_handles_hash ~signatures ~validators tezos_interop;
-          Logs.info (fun m -> m "State hash committed to Tezos")
+            ~withdrawal_handles_hash ~signatures ~validators tezos_interop
       | None ->
           (* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
           failwith "Node was not initialized with Tezos interop enabled.")
