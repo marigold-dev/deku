@@ -143,9 +143,25 @@ let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
     }
   in
   (* TODO: check result *)
-  let _transaction : Tezos_bridge.Inject_transaction.t option =
+  let transaction : Tezos_bridge.Inject_transaction.t option =
     Tezos_bridge.inject_transaction interop ~entrypoint:"update_root_hash"
       ~payload:(Payload.yojson_of_t payload)
   in
 
-  ()
+  let open Tezos_bridge.Inject_transaction in
+  match transaction with
+  | Some (Applied { hash }) ->
+      Logs.debug (fun m ->
+          m "Successfully committed state hash on operation %s" hash)
+  | Some (Failed _) -> Logs.warn (fun m -> m "Failed to commit state hash")
+  | Some (Skipped _) -> Logs.warn (fun m -> m "Tezos operation was skipped")
+  | Some (Backtracked _) ->
+      Logs.warn (fun m -> m "Tezos operation was backtracked")
+  | Some (Unknown _) ->
+      Logs.warn (fun m -> m "Unknown result of Tezos operation")
+  | Some (Error { error }) ->
+      Logs.warn (fun m -> m "Received error from Tezos Bridge: %s" error)
+  | None ->
+      (* TODO: I think we can improve the types of this - maybe result would be better? *)
+      Logs.warn (fun m ->
+          m "Tezos bridge had an exception while trying to commit state hash")

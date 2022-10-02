@@ -142,6 +142,8 @@ let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
     let inject_transaction ~entrypoint ~payload =
       try !inject_transaction_ref ~entrypoint ~payload
       with exn ->
+        (* TODO: this should probably be a result. Currently if
+           the None case is just ignored. *)
         Format.eprintf "inject: %s\n%!" (Printexc.to_string exn);
         None
     in
