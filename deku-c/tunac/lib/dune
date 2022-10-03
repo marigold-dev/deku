@@ -1,6 +1,5 @@
 (library
  (name tunac)
- (public_name tunac)
  (libraries tezos-micheline data-encoding zarith wasm)
  (modules_without_implementation interface)
  (preprocess
