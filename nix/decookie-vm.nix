@@ -1,10 +1,13 @@
 { dream2nix-lib, nix-filter, nodejs }:
+# FIXME: pass in the typescript-sdk
+# or maybe we use relative paths in package.json?
 
 let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
       root = ../.;
-      include = [ "./examples/cookie-game" "./sdks/typescript-sdk" ];
+      # FIXME: get this working
+      include = [ "./decookies/cookie-game" "./sdks/typescript-sdk" ];
     };
 
     settings =
