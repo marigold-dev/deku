@@ -18,7 +18,7 @@ with ocamlPackages; buildDunePackage rec {
 
   src = lib.filterSource {
     src = ./..;
-    dirs = [ "src" ];
+    dirs = [ "deku-p" ];
     files = [ "dune-project" "deku.opam" ];
   };
 
