@@ -23,14 +23,14 @@ export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
 
-  mkdir -p ./chain/data/$N
+  mkdir -p ./flextesa_chain/data/$N
 
   # Creates the FIFO
-  test -p "./chain/data/$N/pipe_write" || mkfifo "./chain/data/$N/pipe_write"
-  test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
+  test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
+  test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
   # Starts the VM
-  nix run ".#$vm" -- "./chain/data/$N/pipe" &
+  nix run ".#$vm" -- "./flextesa_chain/data/$N/pipe" &
 
   sleep 0.4
 
@@ -38,9 +38,9 @@ for N in 0 1 2 3; do
   _build/install/default/bin/deku-node \
     --default-block-size=10000 \
     --port "444$N" \
-    --database-uri "sqlite3:./chain/data/$N/database.db" \
-    --named-pipe-path "./chain/data/$N/pipe" \
-    --data-folder "./chain/data/$N" &
+    --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
+    --named-pipe-path "./flextesa_chain/data/$N/pipe" \
+    --data-folder "./flextesa_chain/data/$N" &
   sleep 0.1
 done
 

@@ -87,11 +87,11 @@ local-setup() {
     source "./networks/flextesa/node_${N}_env"
 
     # Creates the FIFO
-    test -p "./chain/data/$N/pipe_write" || mkfifo "./chain/data/$N/pipe_write"
-    test -p "./chain/data/$N/pipe_read" || mkfifo "./chain/data/$N/pipe_read"
+    test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
+    test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
     # Starts the VM
-    node examples/cookie-game/lib/src/index.js "./chain/data/$N/pipe" &
+    node examples/cookie-game/lib/src/index.js "./flextesa_chain/data/$N/pipe" &
     #awk -v n=$N '{ print "vm " n ": " $0}' &
 
     sleep 2
@@ -100,9 +100,9 @@ local-setup() {
     _build/install/default/bin/deku-node \
       --default-block-size=1000 \
       --port "444$N" \
-      --database-uri "sqlite3:./chain/data/$N/database.db" \
-      --named-pipe-path "./chain/data/$N/pipe" \
-      --data-folder "./chain/data/$N" &
+      --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
+      --named-pipe-path "./flextesa_chain/data/$N/pipe" \
+      --data-folder "./flextesa_chain/data/$N" &
       #awk -v n=$N '{ print "node " n ": " $0}' &
     sleep 0.1
   done
