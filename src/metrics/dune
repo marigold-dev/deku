@@ -1,0 +1,11 @@
+(library
+ (name deku_metrics)
+ (libraries
+  deku_concepts
+  deku_consensus
+  zarith
+  eio
+  routes
+  piaf
+  prometheus
+  prometheus-reporter))

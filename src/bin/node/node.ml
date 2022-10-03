@@ -47,6 +47,7 @@ and handle_chain_action ~sw ~env ~action node =
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block } -> (
       node.notify_api block;
+      Deku_metrics.Blocks.save_block block;
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~sw ~block indexer
       | None -> ())
@@ -59,6 +60,7 @@ and handle_chain_action ~sw ~env ~action node =
         validators;
         withdrawal_handles_hash;
       } -> (
+      Deku_metrics.State.commit_state ();
       match node.tezos_interop with
       | Some tezos_interop ->
           Eio.Fiber.fork ~sw @@ fun () ->

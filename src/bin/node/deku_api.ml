@@ -144,7 +144,7 @@ let make_routes ~env node indexer constants =
         (* ws_block_monitor; *)
       ]
   in
-  let metrics_router = Routes.one_of [ Metrics.path () ] in
+  let metrics_router = Routes.one_of [ Deku_metrics.Api.path () ] in
   match Routes.match' router ~target:request.target with
   | Routes.NoMatch -> (
       Routes.(
