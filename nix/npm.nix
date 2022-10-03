@@ -4,7 +4,7 @@ let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
       root = ../.;
-      include = [ ../package-lock.json ../package.json ];
+      include = [ ../deku-p/src/tezos_interop/package-lock.json ../deku-p/src/tezos_inteorp/package.json ];
     };
 
     packageOverrides = {
@@ -33,4 +33,5 @@ let
   });
   node_modules = node_modules' ++ [ webpack ];
 
-in node_modules
+in
+node_modules
