@@ -4,7 +4,7 @@ with super; {
   # TODO: this is clearly not right, I should be overriding only 4_14
   ocaml-ng = ocaml-ng // (with ocaml-ng; {
     ocamlPackages_5_00 = ocamlPackages_5_00.overrideScope'
-      (_: super: {
+      (oself: super: {
         dune-rpc = super.dune-rpc.overrideAttrs (_: {
           src = fetchFromGitHub {
             owner = "ocaml";
@@ -67,6 +67,40 @@ with super; {
             sha256 = "sha256-Q7ZWcCIiA0K+m8DvnXBhQlVKFmMly1D+Fz+hmLhE2WU=";
           };
         });
+        prometheus = oself.buildDunePackage {
+          version = "1.2.0";
+          pname = "prometheus";
+          src = fetchFromGitHub {
+            owner = "ulrikstrid";
+            repo = "prometheus";
+            rev = "0dec54c777f0f3916f76fe7fe2a4517388f812ed";
+            sha256 = "sha256-XeP+yx+V+Pl3uRZ5Ul2iZvPWlw0B7COKxhAfqmhGMFo=";
+          };
+
+          strictDeps = true;
+
+          propagatedBuildInputs = with oself; [
+            astring
+            asetmap
+            fmt
+            re
+            eio_main
+            alcotest
+          ];
+        };
+        prometheus-reporter = oself.buildDunePackage {
+          pname = "prometheus-reporter";
+
+          inherit (oself.prometheus) version src;
+
+          checkInputs = [ oself.alcotest ];
+
+          propagatedBuildInputs = with oself; [ prometheus fmt cmdliner logs fmt ];
+
+          doCheck = true;
+
+          meta = { description = "Client library for Prometheus monitoring"; };
+        };
       });
   });
 }

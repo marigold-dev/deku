@@ -105,6 +105,7 @@ let main params =
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run pool @@ fun () ->
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
+  Deku_metrics.Blocks.set_transactions_per_block default_block_size;
   let indexer =
     Indexer.make ~uri:database_uri
       ~config:Indexer.{ save_blocks; save_messages }

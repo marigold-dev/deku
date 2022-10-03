@@ -144,8 +144,13 @@ let make_routes ~env node indexer constants =
         (* ws_block_monitor; *)
       ]
   in
+  let metrics_router = Routes.one_of [ Deku_metrics.Api.path () ] in
   match Routes.match' router ~target:request.target with
-  | Routes.NoMatch -> Piaf.Response.create `Not_found
+  | Routes.NoMatch -> (
+      Routes.(
+        match match' metrics_router ~target:request.target with
+        | FullMatch handler | MatchWithTrailingSlash handler -> handler request
+        | NoMatch -> Piaf.Response.create `Not_found))
   | FullMatch handler | MatchWithTrailingSlash handler -> (
       match handler request with
       | Ok json -> Yojson.Safe.to_string json |> json_response ~status:`OK
