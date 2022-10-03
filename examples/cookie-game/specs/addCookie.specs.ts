@@ -55,7 +55,7 @@ describe('cookieBaker.addCookie successful', () => {
 
                     const eatenCookiesBefore = cookieBaker.eatenCookies;
 
-                    const cookie_Baker = addCookie(cookieBaker);
+                    const cookie_Baker = addCookie(cookieBaker, 1n);
                     return (cookie_Baker.cookies === cookiesBefore + 1n
                         && cookie_Baker.cursors === cursorsBefore
                         && cookie_Baker.grandmas === grandmasBefore
