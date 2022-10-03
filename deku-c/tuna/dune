@@ -1,0 +1,6 @@
+(env
+ (dev
+  (flags
+   (:standard -w +A-48-42-44-70-66 -warn-error +A-3))))
+
+(dirs :standard \ target crates)

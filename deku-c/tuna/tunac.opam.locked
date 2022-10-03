@@ -1,0 +1,22 @@
+opam-version: "2.0"
+name: "tunac"
+version: "~dev"
+synopsis: "michelson to wasm compiler"
+description: "michelson to wasm compiler"
+maintainer: "Marigold.dev"
+authors: "Marigold.dev"
+license: "MIT"
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]

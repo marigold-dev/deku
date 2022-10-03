@@ -1,0 +1,37 @@
+{ parameter
+    (pair (or %operation (or (unit %cookie) (unit %cursor)) (unit %grandma))
+          (or %operationType (or (unit %eat) (unit %mint)) (unit %transfer))) ;
+  storage (pair (pair (int %cookies) (int %cursors)) (int %grandmas)) ;
+  code { UNPAIR ;
+         CAR ;
+         IF_LEFT
+           { IF_LEFT
+               { DROP ;
+                 PUSH int 1 ;
+                 DUP 2 ;
+                 CAR ;
+                 CAR ;
+                 ADD ;
+                 DUP 2 ;
+                 CDR ;
+                 DIG 2 ;
+                 CAR ;
+                 CDR ;
+                 DIG 2 }
+               { DROP ;
+                 PUSH int 1 ;
+                 DUP 2 ;
+                 CAR ;
+                 CDR ;
+                 ADD ;
+                 DUP 2 ;
+                 CDR ;
+                 SWAP ;
+                 DIG 2 ;
+                 CAR ;
+                 CAR } ;
+             PAIR }
+           { DROP ; PUSH int 1 ; DUP 2 ; CDR ; ADD ; SWAP ; CAR } ;
+         PAIR ;
+         NIL operation ;
+         PAIR } }
