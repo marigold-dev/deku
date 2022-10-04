@@ -57,9 +57,7 @@ module Zero_ops = struct
 
   let big_payload ~size ~level =
     let () = Format.eprintf "preparing...\n%!" in
-    let operations =
-      Parallel.init_p pool size (fun _ -> zero_operation ~level)
-    in
+    let operations = Parallel.init_p size (fun _ -> zero_operation ~level) in
     payload_of_operations operations
 
   (* TODO: parametrize over domains *)
@@ -69,7 +67,7 @@ module Zero_ops = struct
     let (`Average average) =
       Util.benchmark ~runs (fun () ->
           let payload =
-            Protocol.prepare ~parallel:(Parallel.filter_map_p pool) ~payload
+            Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
           in
           let _protocol, _receipts, _errors =
             Protocol.apply ~current_level:level ~tezos_operations:[] ~payload

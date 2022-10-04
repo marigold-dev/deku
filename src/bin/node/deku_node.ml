@@ -139,8 +139,8 @@ let main params =
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let notify_api _ = () in
   let node =
-    Node.make ~identity ~default_block_size ~pool ~dump ~chain
-      ~indexer:(Some indexer) ~notify_api
+    Node.make ~identity ~default_block_size ~dump ~chain ~indexer:(Some indexer)
+      ~notify_api
   in
 
   let () =
@@ -170,21 +170,22 @@ let setup_log ?style_renderer ?level () =
       then Logs.Src.set_level src (Some Logs.Error))
     (Logs.Src.list ())
 
-let () = setup_log ~level:Logs.Debug ()
+let main () =
+  setup_log ~level:Logs.Debug ();
 
-(* let main () = Node.test () *)
-let () =
   Sys.set_signal Sys.sigpipe
-    (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"))
+    (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"));
 
-let () =
   let control = Gc.get () in
   let control = { control with minor_heap_size = 2048; space_overhead = 60 } in
-  Gc.set control
+  Gc.set control;
 
-let () =
   Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
   let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
   let cmd = Cmdliner.Cmd.v info term in
   exit (Cmdliner.Cmd.eval ~catch:true cmd)
+
+(* let _ = main
+   let main () = Node.test () *)
+let () = main ()

@@ -9,7 +9,6 @@ open Deku_consensus
 type node = private {
   identity : Identity.t;
   default_block_size : int;
-  pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
   network : Network_manager.t;
   indexer : Indexer.t option;
@@ -24,7 +23,6 @@ type t = node
 val make :
   identity:Identity.t ->
   default_block_size:int ->
-  pool:Parallel.Pool.t ->
   dump:(Chain.t -> unit) ->
   chain:Chain.t ->
   indexer:Indexer.t option ->

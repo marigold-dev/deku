@@ -11,7 +11,6 @@ open Deku_protocol
 type node = {
   identity : Identity.t;
   default_block_size : int;
-  pool : Parallel.Pool.t;
   dump : Chain.t -> unit;
   network : Network_manager.t;
   (* TODO: there is a better way to do this but this is the quick and lazy way. *)
@@ -70,16 +69,15 @@ and handle_chain_action ~sw ~env ~action node =
           failwith "Node was not initialized with Tezos interop enabled.")
 
 and handle_chain_fragment ~sw ~env ~fragment node =
-  Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error (fun sw ->
-      let identity = node.identity in
-      let default_block_size = node.default_block_size in
-      let outcome =
-        Parallel.async node.pool (fun () ->
-            Chain.compute ~pool:node.pool ~identity ~default_block_size fragment)
-      in
-      let outcome = Eio.Promise.await outcome in
-      let current = current () in
-      on_chain_outcome ~sw ~env ~current ~outcome node)
+  let identity = node.identity in
+  let default_block_size = node.default_block_size in
+  let outcome =
+    Parallel.async (fun () ->
+        Chain.compute ~identity ~default_block_size fragment)
+  in
+  let outcome = Eio.Promise.await outcome in
+  let current = current () in
+  on_chain_outcome ~sw ~env ~current ~outcome node
 
 and on_chain_outcome ~sw ~env ~current ~outcome node =
   let identity = node.identity in
@@ -122,14 +120,13 @@ let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
   let fragment = Chain.request ~connection ~raw_header ~raw_content in
   handle_chain_fragment ~sw ~env ~fragment node
 
-let make ~identity ~default_block_size ~pool ~dump ~chain ~indexer ~notify_api =
+let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
   let network = Network_manager.make () in
   let tezos_interop = None in
   let cancel () = () in
   {
     identity;
     default_block_size;
-    pool;
     dump;
     network;
     indexer;
@@ -246,7 +243,7 @@ let test () =
     in
     let dump _chain = () in
     let node =
-      make ~identity ~default_block_size:2 ~pool ~dump ~chain ~indexer:None
+      make ~identity ~default_block_size:2 ~dump ~chain ~indexer:None
         ~notify_api:(fun _ -> ())
     in
     start ~sw ~env ~port ~nodes ~tezos:None node

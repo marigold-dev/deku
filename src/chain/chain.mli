@@ -1,4 +1,3 @@
-open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
@@ -72,11 +71,7 @@ val apply :
 (** [apply ~current ~outcome chain ]*)
 
 val compute :
-  pool:Parallel.Pool.t ->
-  identity:Identity.t ->
-  default_block_size:int ->
-  fragment ->
-  outcome
+  identity:Identity.t -> default_block_size:int -> fragment -> outcome
 (** [compute fragment] Can be executed in parallel *)
 
 val reload : current:Timestamp.t -> chain -> chain * action list

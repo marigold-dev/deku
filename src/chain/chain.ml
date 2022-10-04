@@ -374,7 +374,7 @@ let apply ~identity ~current ~outcome chain =
   | Outcome_store { level; network } ->
       apply_store_outcome ~level ~network chain
 
-let compute ~pool ~identity ~default_block_size fragment =
+let compute ~identity ~default_block_size fragment =
   (* TODO: identity parameter here not ideal *)
   match fragment with
   | Fragment_gossip { fragment } ->
@@ -391,11 +391,7 @@ let compute ~pool ~identity ~default_block_size fragment =
       let () =
         Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
       in
-      let payload =
-        Protocol.prepare
-          ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
-          ~payload
-      in
+      let payload = Protocol.prepare ~parallel:Parallel.filter_map_p ~payload in
       let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload protocol ~tezos_operations
       in
@@ -413,12 +409,12 @@ let compute ~pool ~identity ~default_block_size fragment =
           votes Key_hash.Map.empty
       in
       (* TODO: this is a workaround *)
-      (* let () = Gc.major () in
-         let () =
-           let level = Level.to_n level |> N.to_z |> Z.to_int in
-           (* TODO: this is a workaround *)
-           match level mod 600 = 0 with true -> Gc.compact () | false -> ()
-         in *)
+      let () = Gc.major () in
+      let () =
+        let level = Level.to_n level |> N.to_z |> Z.to_int in
+        (* TODO: this is a workaround *)
+        match level mod 600 = 0 with true -> Gc.compact () | false -> ()
+      in
       Outcome_apply { block; votes; protocol; receipts }
   | Fragment_store { block; votes } ->
       (* TODO: problem here is that only the initial 2/3 of votes
@@ -449,6 +445,7 @@ let reload ~current chain =
 let test () =
   let pool = Parallel.Pool.make ~domains:16 in
   Parallel.Pool.run pool @@ fun () ->
+  Eio_main.run @@ fun _env ->
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
 
   let open Deku_crypto in
@@ -519,8 +516,10 @@ let test () =
                 (chain, [ fragment ])
             | Chain_fragment { fragment } ->
                 let outcome =
-                  compute ~identity ~default_block_size:100_000 ~pool fragment
+                  Parallel.async (fun () ->
+                      compute ~identity ~default_block_size:100_000 fragment)
                 in
+                let outcome = Eio.Promise.await outcome in
                 apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
             | Chain_commit _ ->
