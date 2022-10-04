@@ -30,3 +30,12 @@ module Block_hash : Rapper.CUSTOM with type t = Block_hash.t = struct
     in
     Caqti_type.(custom ~encode ~decode string)
 end
+
+module Timestamp : Rapper.CUSTOM with type t = Timestamp.t = struct
+  type t = Timestamp.t
+
+  let t =
+    let encode timestamp = timestamp |> Timestamp.to_float |> Result.ok in
+    let decode float = Timestamp.of_float float |> Result.ok in
+    Caqti_type.(custom ~encode ~decode float)
+end
