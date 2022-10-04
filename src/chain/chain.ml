@@ -388,7 +388,9 @@ let compute ~pool ~identity ~default_block_size fragment =
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
       let (Block { level; payload; tezos_operations; _ }) = block in
-      let () = Format.printf "%a\n%!" Level.pp level in
+      let () =
+        Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
+      in
       let payload =
         Protocol.prepare
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
