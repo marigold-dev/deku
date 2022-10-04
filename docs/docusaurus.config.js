@@ -106,6 +106,11 @@ const config = {
         darkTheme: darkCodeTheme,
       },
     }),
+    plugins: [
+      [
+        './src/plugins/syntax', {},
+      ]
+    ],
 };
 
 module.exports = config;

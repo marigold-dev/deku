@@ -22,7 +22,7 @@ with ocamlPackages; buildDunePackage rec {
     files = [ "dune-project" "deku.opam" ];
   };
 
-  nativeBuildInputs = [ nodejs ] ++ npmPackages;
+  nativeBuildInputs = [ nodejs ] ;# ++ npmPackages;
 
   propagatedBuildInputs = [
     tezos-micheline
@@ -45,6 +45,9 @@ with ocamlPackages; buildDunePackage rec {
     dream
     caqti-eio
     routes
+    js_of_ocaml
+    ppx_jane
+    wasm
   ]
   # checkInputs are here because when cross compiling dune needs test dependencies
   # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
