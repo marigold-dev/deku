@@ -73,21 +73,23 @@ module Query = struct
     Caqti_eio.Pool.use (insert_message ~hash ~timestamp ~packet) pool
     |> Promise.await
 
+  let find_block_by_level =
+    let open Types in
+    [%rapper
+      get_opt
+        {sql|
+          SELECT @Block{block}
+          FROM blocks
+          WHERE level = %Level{level}
+        |sql}]
+
+  let find_block_by_level ~level pool =
+    Caqti_eio.Pool.use (find_block_by_level ~level) pool |> Promise.await
+
   let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
 
   let return_opt query param (module C : Caqti_eio.CONNECTION) =
     C.find_opt query param
-
-  let find_block level =
-    let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
-    let query =
-      (int64 ->! tup2 float string)
-      @@ "select timestamp, block from blocks where level=? order by timestamp \
-          limit 1"
-    in
-    return_opt query level
-
-  let find_block ~level pool = use (find_block level) pool
 
   let find_block_by_hash block_hash =
     let hash = block_hash |> Block_hash.yojson_of_t |> Yojson.Safe.to_string in
@@ -169,11 +171,9 @@ let _save_message ~sw ~message (Indexer { pool; config }) =
   | false -> ()
 
 let find_block_by_level ~level (Indexer { pool; config = _ }) =
-  let result = Query.find_block ~level pool in
+  let result = Query.find_block_by_level ~level pool in
   match result with
-  | Ok None -> None
-  | Ok (Some (_, block_str)) ->
-      block_str |> Yojson.Safe.from_string |> Block.t_of_yojson |> Option.some
+  | Ok block -> block
   | Error err ->
       Caqti_error.show err |> print_endline;
       None
