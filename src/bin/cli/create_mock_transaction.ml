@@ -1,4 +1,3 @@
-open Deku_crypto
 open Deku_concepts
 open Deku_protocol
 open Deku_stdlib
@@ -7,17 +6,18 @@ open Cmdliner
 open Common
 
 type params = {
-  secret : Ed25519.Secret.t;
+  wallet : string; [@pos 0]
   named_pipe_path : string; [@default "/tmp/vm_pipe"]
-  content : string; [@pos 0]
-  vm : string; [@post 1]
+  content : string; [@pos 1]
+  vm : string; [@post 2]
 }
 [@@deriving cmdliner]
 
 (* Submits a parametric operation to the chain*)
-let main { secret; named_pipe_path; content; vm } =
+let main { wallet; named_pipe_path; content; vm } =
+  Eio_main.run @@ fun env ->
   let () = Stdlib.Random.self_init () in
-  let secret = Secret.Ed25519 secret in
+  let secret = Wallet.read ~env ~file:wallet |> Wallet.priv_key in
   let identity = Identity.make secret in
   let nonce = Utils.make_rnd_nonce () in
   let level = Level.zero in
@@ -25,19 +25,16 @@ let main { secret; named_pipe_path; content; vm } =
   let (Operation.Operation { hash; _ }) = operation in
   let operation_raw_hash = Operation_hash.to_blake2b hash in
 
-  (*starts the vm*)
-  (*TODO: find a way to start the VM*)
   let prog, args =
     match String.split_on_char ' ' vm with
-    | prog :: args -> (prog, args)
+    | prog :: args -> (prog, prog :: args)  (* We need to keep $0 in the args list *)
     | [] -> failwith "invalid vm parameter"
   in
-  let args = List.append args [ named_pipe_path ] |> Array.of_list in
-  print_endline prog;
-  Array.iter print_endline args;
+  let args = (args @ [named_pipe_path]) |> Array.of_list in
+  (* TODO: see if fifo exist
+  let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
+   *)
   let _pid = Unix.create_process prog args Unix.stdin Unix.stdout Unix.stderr in
-
-  (* The rest of the code should worl :grimacing:*)
   let () = External_vm_client.start_vm_ipc ~named_pipe_path in
   let state = External_vm_client.get_initial_state () in
   let source = Identity.key_hash identity in
@@ -46,8 +43,8 @@ let main { secret; named_pipe_path; content; vm } =
       (Some (operation_raw_hash, content))
   in
   let json = External_vm_protocol.State.yojson_of_t state in
-  print_endline (Yojson.Safe.to_string json);
-  ()
+  External_vm_client.close_vm_ipc ();
+  print_endline (Yojson.Safe.pretty_to_string json) (* FIXME: do better? *)
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in
