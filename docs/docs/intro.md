@@ -2,46 +2,26 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Introduction
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## Raison d'être
+
+Deku is a framework for developing high-performance, application specific [sidechains](https://www.marigold.dev/post/announcing-deku-c-betanet) that interop with the Tezos blockchain.
+
+Deku blockchains use a fast, deterministic consensus algorithm based on Tendermint to acheive
+consensus on blocks. Deku is parametric with respect to the virtual machine being run,
+allowing developers to write custom virtual machine tailored to their application. SDK's for the VM exist
+in NodeJS and OCaml, but the [VM protocol](https://github.com/marigold-dev/deku/blob/main/src/external_vm/external_vm_server.ml) can be implemented in any language.
+
+Deku has native support for Tezos tickets, allowing virtually any type of asset to be transferred
+to and from Deku networks via the [bridge contract](https://github.com/marigold-dev/deku/blob/main/src/tezos_interop/consensus.mligo) in the timespan of a single Tezos block.
+
+Deku is used to power Deku Canonical - an L2 WebAssembly smart contract platform for Tezos operated by Marigold.
 
 ## Getting Started
 
-Get started by **creating a new site**.
+To develop and deploy a WASM smart contract to Deku-C, head over to the [Tuna compiler docs](https://github.com/marigold-dev/tuna).
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+To develop DApps and client-side applications for Deku networks, see [the client library](https://github.com/marigold-dev/deku/tree/main/client) and the [the OpenAPI schema](https://github.com/marigold-dev/deku/blob/main/docs/api.json). You can fork the [Deku-C DApp template](https://github.com/marigold-dev/deku-c-dapp-template) to get started developing DApps Deku-C.
 
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+To get started developing your own Deku network, you can fork the [Deku template](https://github.com/marigold-dev/deku-template).

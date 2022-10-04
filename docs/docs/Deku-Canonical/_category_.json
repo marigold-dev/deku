@@ -1,0 +1,8 @@
+{
+  "label": "Deku Canonical",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "description": "A WebAssembly Smart Contract platform for Tezos"
+  }
+}
