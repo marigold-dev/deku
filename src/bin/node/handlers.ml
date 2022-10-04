@@ -112,7 +112,7 @@ module Get_block_by_level_or_hash = struct
     in
 
     match request with
-    | Level level -> to_result (Indexer.find_block ~level indexer)
+    | Level level -> to_result (Indexer.find_block_by_level ~level indexer)
     | Hash block_hash ->
         to_result (Indexer.find_block_by_hash ~block_hash indexer)
 

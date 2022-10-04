@@ -164,7 +164,7 @@ let _save_message ~sw ~message (Indexer { pool; config }) =
               raise (Caqti_error.Exn err))
   | false -> ()
 
-let find_block ~level (Indexer { pool; config = _ }) =
+let find_block_by_level ~level (Indexer { pool; config = _ }) =
   let result = Query.find_block ~level pool in
   match result with
   | Ok None -> None
