@@ -1,4 +1,5 @@
 import { DekuSigner } from './utils/signers';
+import * as path from 'path';
 import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
@@ -74,7 +75,7 @@ export class DekuToolkit {
 
 
     private async initializeStream(dekuRpc: string) {
-        const streamUri = dekuRpc + "/api/v1/chain/blocks/monitor";
+        const streamUri = path.join(dekuRpc, "/api/v1/chain/blocks/monitor");
         const response = await fetch(streamUri);
         const body = response.body;
         if (!body) return null;
