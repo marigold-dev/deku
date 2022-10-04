@@ -45,6 +45,8 @@ with ocamlPackages; buildDunePackage rec {
     dream
     caqti-eio
     routes
+    ppx_rapper
+    ppx_rapper_eio
   ]
   # checkInputs are here because when cross compiling dune needs test dependencies
   # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
