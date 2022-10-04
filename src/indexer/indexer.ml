@@ -54,28 +54,29 @@ module Query = struct
     Caqti_eio.Pool.use (insert_block ~block_hash ~level ~block ~timestamp) pool
     |> Promise.await
 
-  let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
+  let insert_message =
+    let open Types in
+    [%rapper
+      execute
+        {sql|
+          INSERT INTO packets 
+          (hash, timestamp, message)
+          VALUES
+          (%string{hash}, %Timestamp{timestamp}, %string{packet})    
+          |sql}]
 
-  let return_unit query param (module C : Caqti_eio.CONNECTION) =
-    C.exec query param
+  let insert_message ~message ~timestamp pool =
+    let (Message.Network.Network_message
+          { raw_header = hash; raw_content = packet }) =
+      message
+    in
+    Caqti_eio.Pool.use (insert_message ~hash ~timestamp ~packet) pool
+    |> Promise.await
+
+  let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
 
   let return_opt query param (module C : Caqti_eio.CONNECTION) =
     C.find_opt query param
-
-  let insert_message message timestamp =
-    let (Message.Network.Network_message { raw_header; raw_content }) =
-      message
-    in
-    ignore (message, raw_header);
-    let params = (raw_header, timestamp, raw_content) in
-    let query =
-      (tup3 string float string ->. unit)
-      @@ "insert into packets (hash, timestamp, packet) values (?, ?, ?)"
-    in
-    return_unit query params
-
-  let insert_message ~message ~timestamp pool =
-    use (insert_message message timestamp) pool
 
   let find_block level =
     let level = level |> Level.to_n |> N.to_z |> Z.to_int64 in
@@ -154,7 +155,7 @@ let _save_message ~sw ~message (Indexer { pool; config }) =
   match config.save_messages with
   | true ->
       Fiber.fork ~sw (fun () ->
-          let timestamp = Unix.gettimeofday () in
+          let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
           let result = Query.insert_message ~message ~timestamp pool in
           match result with
           | Ok () -> ()
