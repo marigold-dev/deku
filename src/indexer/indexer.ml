@@ -18,6 +18,26 @@ module Query = struct
   open Caqti_request.Infix
   open Caqti_type.Std
 
+  let create_blocks_table =
+    [%rapper
+      execute
+        {sql|
+        CREATE TABLE IF NOT EXISTS blocks (
+        hash TEXT not null,
+        level BIGINT not null primary key,
+        timestamp DOUBLE not null,
+        block TEXT not null)
+        |sql}]
+
+  let create_packets_table =
+    [%rapper
+      execute
+        {sql| CREATE TABLE IF NOT EXISTS packets (
+              hash TEXT not null,
+              timestamp DOUBLE not null,
+              packet TEXT not null
+              )|sql}]
+
   let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
 
   let return_unit query param (module C : Caqti_eio.CONNECTION) =
@@ -81,34 +101,13 @@ module Query = struct
 end
 
 let make_database ~uri =
-  let open Caqti_request.Infix in
-  let open Caqti_type.Std in
-  let blocks_table_query (module C : Caqti_eio.CONNECTION) =
-    (unit ->. unit)
-    @@ {| create table if not exists blocks (
-            hash TEXT not null,
-            level BIGINT not null primary key,
-            timestamp DOUBLE not null,
-            block TEXT not null
-          )
-       |}
-    |> fun query -> C.exec query ()
-  in
-  let packets_table_query (module C : Caqti_eio.CONNECTION) =
-    (unit ->. unit)
-    @@ {| create table if not exists packets (
-            hash TEXT not null,
-            timestamp DOUBLE not null,
-            packet TEXT not null
-          )
-        |}
-    |> fun query -> C.exec query ()
-  in
   let blocks_res =
-    Caqti_eio.with_connection uri blocks_table_query |> Promise.await
+    Caqti_eio.with_connection uri (Query.create_blocks_table ())
+    |> Promise.await
   in
   let packets_res =
-    Caqti_eio.with_connection uri packets_table_query |> Promise.await
+    Caqti_eio.with_connection uri (Query.create_packets_table ())
+    |> Promise.await
   in
   match (blocks_res, packets_res) with
   | Ok _, Ok _ -> ()
