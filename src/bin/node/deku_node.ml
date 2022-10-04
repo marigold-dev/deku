@@ -125,6 +125,7 @@ let main params =
   (* TODO: one problem of loading from disk like this, is that there
        may be pending actions such as fragments being processed *)
   let chain = Storage.Chain.read ~env ~folder:data_folder in
+  Logs.info (fun m -> m "Loaded chain from disk");
   let chain =
     match chain with
     | Some chain ->
