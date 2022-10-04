@@ -2,6 +2,21 @@ open Deku_protocol
 open Deku_concepts
 open Deku_stdlib
 
+let read_json of_yojson ~env ~file =
+  let open Eio.Path in
+  let file = Eio.Stdenv.cwd env / file in
+  let string = Eio.Path.load file in
+  let json = Yojson.Safe.from_string string in
+  of_yojson json
+
+(* TODO
+   (*
+   let write_json to_yojson data ~file =
+     Lwt_io.with_file ~mode:Output file (fun oc ->
+         Lwt_io.write oc (Yojson.Safe.pretty_to_string (to_yojson data)))
+   *)
+*)
+
 module Utils = struct
   let make_rnd_nonce () =
     Stdlib.Random.bits64 () |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get
@@ -36,4 +51,17 @@ module Api = struct
     match post_result with
     | Ok _ -> ()
     | Error err -> failwith (Piaf.Error.to_string err)
+end
+
+module Wallet = struct
+  type t = { address : Deku_crypto.Key_hash.t; priv_key : Deku_crypto.Secret.t }
+  [@@deriving yojson]
+
+  let read ~env ~file = read_json t_of_yojson ~env ~file
+  let address w = w.address
+  let priv_key w = w.priv_key
+
+  (* TODO
+     (* let write = write_json to_yojson *)
+  *)
 end

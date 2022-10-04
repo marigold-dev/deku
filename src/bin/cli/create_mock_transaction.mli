@@ -1,7 +1,5 @@
-open Deku_crypto
-
 type params = {
-  secret : Ed25519.Secret.t;
+  wallet : string;
   named_pipe_path : string;
   content : string;
   vm : string;
