@@ -1,6 +1,9 @@
 { pkgs, deku, ligo, deploy-rs }:
 
 with pkgs; with ocamlPackages; mkShell {
+  shellHook = ''
+      export PATH="$(pwd)/_build/install/default/bin:$PATH"
+  '';
   inputsFrom = [ deku ];
   packages = [
     # Formatters
