@@ -38,6 +38,22 @@ module Query = struct
               packet TEXT not null
               )|sql}]
 
+  let insert_block =
+    let open Types in
+    [%rapper
+      execute
+        {sql|
+        INSERT INTO blocks 
+        (hash, level, timestamp, block) 
+        VALUES
+        (%Block_hash{block_hash}, %Level{level}, %Timestamp{timestamp}, %Block{block})    
+        |sql}]
+
+  let insert_block ~block ~timestamp pool =
+    let (Block.Block { hash = block_hash; level; _ }) = block in
+    Caqti_eio.Pool.use (insert_block ~block_hash ~level ~block ~timestamp) pool
+    |> Promise.await
+
   let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
 
   let return_unit query param (module C : Caqti_eio.CONNECTION) =
@@ -45,22 +61,6 @@ module Query = struct
 
   let return_opt query param (module C : Caqti_eio.CONNECTION) =
     C.find_opt query param
-
-  let insert_block block timestamp =
-    let (Block.Block { hash; level; _ }) = block in
-    let hash = Block_hash.yojson_of_t hash |> Yojson.Safe.to_string in
-    let block_json = Block.yojson_of_t block |> Yojson.Safe.to_string in
-    let level = Level.to_n level |> N.to_z |> Z.to_int64 in
-    let params = (hash, level, timestamp, block_json) in
-    let query =
-      (tup4 string int64 float string ->. unit)
-      @@ "insert into blocks (hash, level, timestamp, block) values (?, ?, ?, \
-          ?)"
-    in
-    return_unit query params
-
-  let insert_block ~block ~timestamp pool =
-    use (insert_block block timestamp) pool
 
   let insert_message message timestamp =
     let (Message.Network.Network_message { raw_header; raw_content }) =
@@ -128,12 +128,12 @@ let async_save_block ~sw ~block (Indexer { pool; config }) =
   in
   match config.save_blocks with
   | true ->
-      let timestamp = Unix.gettimeofday () in
       Eio.Fiber.fork_sub ~sw ~on_error (fun _sw ->
+          let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
           let result = Query.insert_block ~block ~timestamp pool in
-          let (Block.Block { level; _ }) = block in
           match result with
           | Ok () ->
+              let (Block.Block { level; _ }) = block in
               Logs.info (fun m ->
                   m "database/sqlite: block at level %a saved" Level.pp level)
           | Error err ->
@@ -144,7 +144,7 @@ let async_save_block ~sw ~block (Indexer { pool; config }) =
 let save_block ~block (Indexer { pool; config }) =
   match config.save_blocks with
   | true ->
-      let timestamp = Unix.gettimeofday () in
+      let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
       let _ = Query.insert_block ~block ~timestamp pool in
       ()
   | false -> ()
