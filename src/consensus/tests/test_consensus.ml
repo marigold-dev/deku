@@ -26,9 +26,6 @@ open Consensus
      [X] 1 -> 2 -> V1
      [X] 2 -> 1 -> V1
      [X] 2 -> V2 -> V1
-     [ ] 2 -> 3
-     [ ] 2 -> 1 -> V2 -> V1
-     [ ] 2 -> 1 -> V1 -> (before apply) -> V3 -> V2
 *)
 let _level_from_block block =
   let (Block.Block { level; _ }) = block in
