@@ -68,12 +68,6 @@ module Query = struct
 
   let find_block ~level pool = use (find_block level) pool
 
-  let biggest_level () =
-    let query = (unit ->! int64) @@ "select max(level) as level from blocks" in
-    return_opt query ()
-
-  let biggest_level pool = use (biggest_level ()) pool
-
   let find_block_by_hash block_hash =
     let hash = block_hash |> Block_hash.yojson_of_t |> Yojson.Safe.to_string in
     let query =
@@ -179,36 +173,6 @@ let find_block ~level (Indexer { pool; config = _ }) =
   | Error err ->
       Caqti_error.show err |> print_endline;
       None
-
-let find_block_with_timestamp ~level (Indexer { pool; config = _ }) =
-  let result = Query.find_block ~level pool in
-  match result with
-  | Ok None -> None
-  | Ok (Some (timestamp, block_str)) ->
-      let block = block_str |> Yojson.Safe.from_string |> Block.t_of_yojson in
-      let timestamp = Timestamp.of_float timestamp in
-      Some (block, timestamp)
-  | Error err ->
-      Caqti_error.show err |> print_endline;
-      None
-
-let find_blocks_from_level ~level indexer =
-  let rec find_blocks_from_level acc level =
-    let level = Level.next level in
-    let block = find_block_with_timestamp ~level indexer in
-    match block with
-    | None -> acc |> List.rev
-    | Some (block, timestamp) ->
-        let acc = (block, timestamp) :: acc in
-        find_blocks_from_level acc level
-  in
-  find_blocks_from_level [] level
-
-let get_level (Indexer { pool; config = _ }) =
-  let result = Query.biggest_level pool in
-  result |> Result.to_option |> Option.join |> Option.map Z.of_int64
-  |> Option.map N.of_z |> Option.join
-  |> Option.map Deku_concepts.Level.of_n
 
 let find_block_by_hash ~block_hash (Indexer { pool; config = _ }) =
   let result = Query.find_block_by_hash ~block_hash pool in
