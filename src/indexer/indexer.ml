@@ -1,7 +1,6 @@
 open Eio
 open Deku_consensus
 open Deku_concepts
-open Deku_stdlib
 open Deku_gossip
 
 type config = { save_messages : bool; save_blocks : bool }
@@ -15,9 +14,6 @@ type indexer =
 type t = indexer
 
 module Query = struct
-  open Caqti_request.Infix
-  open Caqti_type.Std
-
   let create_blocks_table =
     [%rapper
       execute
@@ -86,21 +82,18 @@ module Query = struct
   let find_block_by_level ~level pool =
     Caqti_eio.Pool.use (find_block_by_level ~level) pool |> Promise.await
 
-  let use q pool = Caqti_eio.Pool.use q pool |> Promise.await
+  let find_block_by_hash =
+    let open Types in
+    [%rapper
+      get_opt
+        {sql|
+          SELECT @Block{block}
+          FROM blocks
+          WHERE hash = %Block_hash{hash}
+          |sql}]
 
-  let return_opt query param (module C : Caqti_eio.CONNECTION) =
-    C.find_opt query param
-
-  let find_block_by_hash block_hash =
-    let hash = block_hash |> Block_hash.yojson_of_t |> Yojson.Safe.to_string in
-    let query =
-      (string ->! string)
-      @@ "select block from blocks where hash=? order by timestamp limit 1"
-    in
-    return_opt query hash
-
-  let find_block_by_hash ~block_hash pool =
-    use (find_block_by_hash block_hash) pool
+  let find_block_by_hash ~hash pool =
+    Caqti_eio.Pool.use (find_block_by_hash ~hash) pool |> Promise.await
 end
 
 let make_database ~uri =
@@ -179,8 +172,5 @@ let find_block_by_level ~level (Indexer { pool; config = _ }) =
       None
 
 let find_block_by_hash ~block_hash (Indexer { pool; config = _ }) =
-  let result = Query.find_block_by_hash ~block_hash pool in
-  match result with
-  | Ok res ->
-      res |> Option.map Yojson.Safe.from_string |> Option.map Block.t_of_yojson
-  | Error _ -> None
+  let result = Query.find_block_by_hash ~hash:block_hash pool in
+  match result with Ok res -> res | Error _ -> None
