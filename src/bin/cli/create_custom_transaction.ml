@@ -1,4 +1,3 @@
-open Deku_crypto
 open Deku_concepts
 open Deku_protocol
 open Deku_stdlib
@@ -6,18 +5,18 @@ open Cmdliner
 open Common
 
 type params = {
-  secret : Ed25519.Secret.t;
+  wallet : string; [@pos 0]
   api_uri : Uri.t; [@default Uri.of_string "http://localhost:8080"]
-  content : string; [@pos 0]
+  content : string; [@pos 1]
 }
 [@@deriving cmdliner]
 
 (* Submits a parametric operation to the chain*)
-let main { secret; api_uri; content } =
+let main { wallet; api_uri; content } =
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   let () = Stdlib.Random.self_init () in
-  let secret = Secret.Ed25519 secret in
+  let secret = Wallet.read ~env ~file:wallet |> Wallet.priv_key in
   let identity = Identity.make secret in
   let nonce = Utils.make_rnd_nonce () in
   let level = Api.current_level ~sw ~env ~api_uri in
