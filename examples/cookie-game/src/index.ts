@@ -37,7 +37,6 @@ const transition = (tx: transaction) => {
         switch (operation.operation) {
             case actions.cookie: {
                 //update state
-                console.log("cookies to mint: ", operation.amount);
                 cookieBaker = addCookie(cookieBaker, operation.amount);
                 console.log("Successfully minted cookie");
                 saveState(source, cookieBaker);
