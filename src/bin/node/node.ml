@@ -289,11 +289,11 @@ let test () =
     let level = Level.next current_level in
     let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     let previous = current_block in
-    let operations = [] in
+    let payload = [] in
     let tezos_operations = [] in
     let block =
-      Block.produce ~parallel_map:List.map ~identity ~level ~previous
-        ~operations ~tezos_operations ~withdrawal_handles_hash
+      Block.produce ~identity ~level ~previous ~payload ~tezos_operations
+        ~withdrawal_handles_hash
     in
     broadcast ~content:(Message.Content.block block)
   in

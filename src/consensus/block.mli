@@ -24,12 +24,10 @@ type block = private
 type t = block [@@deriving eq, ord, yojson]
 
 val produce :
-  parallel_map:
-    ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   identity:Identity.t ->
   level:Level.t ->
   previous:Block_hash.t ->
-  operations:Operation.t list ->
+  payload:string list ->
   tezos_operations:Tezos_operation.t list ->
   withdrawal_handles_hash:BLAKE2b.t ->
   block

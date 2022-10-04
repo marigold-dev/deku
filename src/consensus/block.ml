@@ -132,18 +132,9 @@ end
 let t_of_yojson = Repr.t_of_yojson
 let yojson_of_t = Repr.yojson_of_t
 
-let payload_of_operations ~parallel_map operations =
-  (* TODO: this likely should not be here *)
-  parallel_map
-    (fun operation ->
-      let json = Operation.yojson_of_t operation in
-      Yojson.Safe.to_string json)
-    operations
-
-let produce ~parallel_map ~identity ~level ~previous ~operations
-    ~tezos_operations ~withdrawal_handles_hash =
+let produce ~identity ~level ~previous ~payload ~tezos_operations
+    ~withdrawal_handles_hash =
   let author = Identity.key_hash identity in
-  let payload = payload_of_operations ~parallel_map operations in
   let payload_hash, block_hash =
     Repr.hash
       {

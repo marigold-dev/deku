@@ -87,60 +87,61 @@ module Zero_ops = struct
     perform ~runs:10 ~protocol ~level ~payload
 end
 
-module Block_production = struct
-  let default_ticket_id =
-    let address =
-      Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
-      |> Option.get
-    in
-    let data = Bytes.of_string "tuturu" in
-    Ticket_id.make address data
+(* TODO: enable this *)
+(* module Block_production = struct
+     let default_ticket_id =
+       let address =
+         Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+         |> Option.get
+       in
+       let data = Bytes.of_string "tuturu" in
+       Ticket_id.make address data
 
-  let producer = Zero_ops.generate ()
-  let sender = Zero_ops.generate ()
+     let producer = Zero_ops.generate ()
+     let sender = Zero_ops.generate ()
 
-  let receiver =
-    Zero_ops.generate () |> Identity.key_hash |> Address.of_key_hash
+     let receiver =
+       Zero_ops.generate () |> Identity.key_hash |> Address.of_key_hash
 
-  let operation ~nonce =
-    let level = Level.zero in
-    let nonce = Z.of_int nonce |> N.of_z |> Option.get |> Nonce.of_n in
-    let ticket_id = default_ticket_id in
-    let amount = Amount.of_n N.zero in
-    Operation.ticket_transfer ~identity:sender ~level ~nonce ~receiver
-      ~ticket_id ~amount
+     let operation ~nonce =
+       let level = Level.zero in
+       let nonce = Z.of_int nonce |> N.of_z |> Option.get |> Nonce.of_n in
+       let ticket_id = default_ticket_id in
+       let amount = Amount.of_n N.zero in
+       Operation.ticket_transfer ~identity:sender ~level ~nonce ~receiver
+         ~ticket_id ~amount
 
-  let operations ~size =
-    Parallel.init_p pool size (fun nonce -> operation ~nonce)
+     let operations ~size =
+       Parallel.init_p pool size (fun nonce -> operation ~nonce)
 
-  let produce_block ~operations =
-    let open Deku_consensus in
-    let level = Level.zero in
-    let (Block.Block { previous; _ }) = Genesis.block in
-    let _block =
-      Block.produce ~parallel_map:(Parallel.map_p pool) ~identity:producer
-        ~level ~previous ~operations ~tezos_operations:[]
-    in
-    ()
+     let produce_block ~operations =
+       let open Deku_consensus in
+       let level = Level.zero in
+       let (Block.Block { previous; _ }) = Genesis.block in
+       let _block =
+         Block.produce ~parallel_map:(Parallel.map_p pool) ~identity:producer
+           ~level ~previous ~operations ~tezos_operations:[]
+       in
+       ()
 
-  let perform ~runs ~size =
-    let () = Format.eprintf "running block production...\n%!" in
-    let operations = operations ~size in
-    let (`Average average) =
-      Util.benchmark ~runs (fun () -> produce_block ~operations)
-    in
-    average
+     let perform ~runs ~size =
+       let () = Format.eprintf "running block production...\n%!" in
+       let operations = operations ~size in
+       let (`Average average) =
+         Util.benchmark ~runs (fun () -> produce_block ~operations)
+       in
+       average
 
-  let run () =
-    let size = 50000 in
-    let average = perform ~runs:5 ~size in
-    let tx_packed_per_sec = Float.of_int size /. average in
-    Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average
-      tx_packed_per_sec;
-    average
-end
+     let run () =
+       let size = 50000 in
+       let average = perform ~runs:5 ~size in
+       let tx_packed_per_sec = Float.of_int size /. average in
+       Format.eprintf "average run time: %3f. tx packed/s: %3f\n%!" average
+         tx_packed_per_sec;
+       average
+   end *)
 
-let alpha = Parallel.Pool.run pool Zero_ops.run
-let pi = Parallel.Pool.run pool Block_production.run
-let total = alpha +. pi
-let () = Format.printf "alpha + pi: %3f\n%!" total
+let _alpha = Parallel.Pool.run pool Zero_ops.run
+(* let pi = Parallel.Pool.run pool Block_production.run
+   let total = alpha +. pi
+   let () = Format.printf "alpha + pi: %3f\n%!" total *)

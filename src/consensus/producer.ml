@@ -5,7 +5,7 @@ open Deku_tezos
 
 type producer =
   | Producer of {
-      operations : Operation.t Operation_hash.Map.t;
+      operations : string Operation_hash.Map.t;
       (* TODO: should this be a set instead of map since
          we never do random access? *)
       tezos_operations : Tezos_operation.t Tezos_operation_hash.Map.t;
@@ -18,12 +18,17 @@ let empty =
   let tezos_operations = Tezos_operation_hash.Map.empty in
   Producer { operations; tezos_operations }
 
+let serialize_operation_to_payload operation =
+  let json = Operation.yojson_of_t operation in
+  Yojson.Safe.to_string json
+
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
   let (Producer { operations; tezos_operations }) = producer in
   let operations =
     let (Operation.Operation { hash; _ }) = operation in
+    let operation = serialize_operation_to_payload operation in
     Operation_hash.Map.add hash operation operations
   in
   Producer { operations; tezos_operations }
@@ -59,8 +64,20 @@ let clean ~receipts ~tezos_operations producer =
   in
   Producer { operations; tezos_operations }
 
-let produce ~identity ~default_block_size ~parallel_map ~above
-    ~withdrawal_handles_hash producer =
+let fill_with_noop ~identity ~level ~default_block_size operations =
+  let noop = Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) in
+  let noop = serialize_operation_to_payload noop in
+  let rec fill counter operations =
+    match counter <= 0 with
+    | true -> operations
+    | false -> fill (counter - 1) (noop :: operations)
+  in
+  let op_size = List.length operations in
+  let dummy_op_size = Int.max (default_block_size - op_size) 0 in
+  fill dummy_op_size operations
+
+let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
+    producer =
   let open Block in
   let (Producer { operations; tezos_operations }) = producer in
   let (Block { hash = current_block; level = current_level; _ }) = above in
@@ -71,18 +88,16 @@ let produce ~identity ~default_block_size ~parallel_map ~above
       (fun (_hash, operation) -> operation)
       (Operation_hash.Map.bindings operations)
   in
-  let op_size = List.length operations in
-  let dummy_op_size = Int.max (default_block_size - op_size) 0 in
-  let noop = Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) in
-  let dummy_operations = List.init dummy_op_size (fun _ -> noop) in
-  let operations = List.rev_append dummy_operations operations in
+  let operations =
+    fill_with_noop ~identity ~level ~default_block_size operations
+  in
   let tezos_operations =
     List.map
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
   let block =
-    Block.produce ~parallel_map ~identity ~level ~previous ~operations
+    Block.produce ~identity ~level ~previous ~payload:operations
       ~withdrawal_handles_hash ~tezos_operations
   in
   Logs.info (fun m -> m "Producing %a" Block.pp block);

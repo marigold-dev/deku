@@ -382,16 +382,13 @@ let compute ~pool ~identity ~default_block_size fragment =
       Outcome_gossip { outcome }
   | Fragment_produce { producer; above; withdrawal_handles_hash } ->
       let block =
-        Producer.produce ~identity ~default_block_size
-          ~parallel_map:(fun f l -> Parallel.map_p pool f l)
-          ~above ~withdrawal_handles_hash producer
+        Producer.produce ~identity ~default_block_size ~above
+          ~withdrawal_handles_hash producer
       in
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
       let (Block { level; payload; tezos_operations; _ }) = block in
-      let () =
-        Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
-      in
+      let () = Format.printf "%a\n%!" Level.pp level in
       let payload =
         Protocol.prepare
           ~parallel:(fun f l -> Parallel.filter_map_p pool f l)
@@ -414,12 +411,12 @@ let compute ~pool ~identity ~default_block_size fragment =
           votes Key_hash.Map.empty
       in
       (* TODO: this is a workaround *)
-      let () = Gc.major () in
-      let () =
-        let level = Level.to_n level |> N.to_z |> Z.to_int in
-        (* TODO: this is a workaround *)
-        match level mod 600 = 0 with true -> Gc.compact () | false -> ()
-      in
+      (* let () = Gc.major () in
+         let () =
+           let level = Level.to_n level |> N.to_z |> Z.to_int in
+           (* TODO: this is a workaround *)
+           match level mod 600 = 0 with true -> Gc.compact () | false -> ()
+         in *)
       Outcome_apply { block; votes; protocol; receipts }
   | Fragment_store { block; votes } ->
       (* TODO: problem here is that only the initial 2/3 of votes
@@ -448,7 +445,7 @@ let reload ~current chain =
   (Chain { chain with gossip }, actions)
 
 let test () =
-  let pool = Parallel.Pool.make ~domains:8 in
+  let pool = Parallel.Pool.make ~domains:16 in
   Parallel.Pool.run pool @@ fun () ->
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
 
@@ -471,12 +468,12 @@ let test () =
     in
     let level = Level.next current_level in
     let previous = current_block in
-    let operations = [] in
+    let payload = [] in
     let tezos_operations = [] in
     let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     let block =
-      Block.produce ~parallel_map:List.map ~identity ~level ~previous
-        ~operations ~tezos_operations ~withdrawal_handles_hash
+      Block.produce ~identity ~level ~previous ~payload ~tezos_operations
+        ~withdrawal_handles_hash
     in
     block
   in
@@ -520,7 +517,7 @@ let test () =
                 (chain, [ fragment ])
             | Chain_fragment { fragment } ->
                 let outcome =
-                  compute ~identity ~default_block_size:2 ~pool fragment
+                  compute ~identity ~default_block_size:100_000 ~pool fragment
                 in
                 apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])

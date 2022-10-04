@@ -20,8 +20,6 @@ val clean :
 val produce :
   identity:Identity.t ->
   default_block_size:int ->
-  parallel_map:
-    ((Operation.operation -> string) -> Operation.operation list -> string list) ->
   above:Block.block ->
   withdrawal_handles_hash:Deku_crypto.BLAKE2b.BLAKE2b_256.hash ->
   t ->
