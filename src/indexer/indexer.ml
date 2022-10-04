@@ -152,9 +152,13 @@ let save_block ~block (Indexer { pool; config }) =
 
 (* TODO: use this function *)
 let _save_message ~sw ~message (Indexer { pool; config }) =
+  let on_error exn =
+    Logs.err (fun m ->
+        m "database/sqlite: exception %s" (Printexc.to_string exn))
+  in
   match config.save_messages with
   | true ->
-      Fiber.fork ~sw (fun () ->
+      Fiber.fork_sub ~sw ~on_error (fun _sw ->
           let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
           let result = Query.insert_message ~message ~timestamp pool in
           match result with
