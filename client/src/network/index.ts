@@ -3,6 +3,7 @@ import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
 import Proof, { Proof as ProofType } from "../core/proof";
 import { TicketID } from "../core/ticket-id";
+import * as path from 'path'
 
 const VERSION = "/api/v1"
 
@@ -26,7 +27,7 @@ export type endpoints = {
 
 export const makeEndpoints = (root: string): endpoints => ({
     "GET_CHAIN_INFO": {
-        uri: `${root}${VERSION}/chain/info`,
+        uri: path.join(root, `${VERSION}/chain/info`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const consensus = json.at("consensus").as_string();
@@ -37,7 +38,7 @@ export const makeEndpoints = (root: string): endpoints => ({
         }
     },
     "GET_CURRENT_LEVEL": {
-        uri: `${root}${VERSION}/chain/level`,
+        uri: path.join(root, `${VERSION}/chain/level`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const level_json = json.at("level");
@@ -45,39 +46,39 @@ export const makeEndpoints = (root: string): endpoints => ({
         }
     },
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => ({
-        uri: `${root}${VERSION}/chain/blocks/${Level.toDTO(level)}`,
+        uri: path.join(root, `${VERSION}/chain/blocks/${Level.toDTO(level)}`),
         expectedStatus: 200,
         parse: Block.ofDTO
     }),
     "GET_BLOCK_BY_HASH": (blockHash: string) => ({
-        uri: `${root}${VERSION}/chain/blocks/${blockHash}`,
+        uri: path.join(root, `${VERSION}/chain/blocks/${blockHash}`),
         expectedStatus: 200,
         parse: Block.ofDTO
     }),
     "GET_GENESIS": {
-        uri: `${root}${VERSION}/chain/blocks/genesis`,
+        uri: path.join(root, `${VERSION}/chain/blocks/genesis`),
         expectedStatus: 200,
         parse: Block.ofDTO
     },
     "GET_CURRENT_BLOCK": {
-        uri: `${root}${VERSION}/chain/blocks/genesis`,
+        uri: path.join(root, `${VERSION}/chain/blocks/genesis`),
         expectedStatus: 200,
         parse: Block.ofDTO
     },
     "GET_BALANCE": (address: string, ticket_id: TicketID) => ({
-        uri: `${root}${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`,
+        uri: path.join(root, `${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
           return json.at("balance").as_int();
         }
     }),
     "GET_PROOF": (operation_hash: string) => ({
-        uri: `${root}${VERSION}/proof/${operation_hash}`,
+        uri: path.join(root, `${VERSION}/proof/${operation_hash}`),
         expectedStatus: 200,
         parse: Proof.ofDTO
     }),
     "OPERATIONS": {
-        uri: `${root}${VERSION}/operations`,
+        uri: path.join(root, `${VERSION}/operations`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const hash = json.at("hash").as_string();
