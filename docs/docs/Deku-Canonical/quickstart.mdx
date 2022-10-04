@@ -43,9 +43,24 @@ more on developing with Ligo, and don't hesitate to [reach out](https://ligolang
 
 ## Compiling 
 
+Before a Ligo contract can be deployed to Deku-C, it must first be compiled to WebAssembly
+via Michelson.
+
+
+You can compile Ligo contracts using the Ligo cli, e.g.:
 ```bash
 ligo compile contract ./increment.jsligo
 ```
-```michelson
 
+Or, for convenience, you can use [Online Ligo IDE](https://ide.ligolang.org/).
+
+Either way, you'll get Michelson code like this:
+
+```michelson
+{ parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+  storage int ;
+  code { UNPAIR ;
+         IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+         NIL operation ;
+         PAIR } }
 ```
