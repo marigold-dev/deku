@@ -39,3 +39,20 @@ module Timestamp : Rapper.CUSTOM with type t = Timestamp.t = struct
     let decode float = Timestamp.of_float float |> Result.ok in
     Caqti_type.(custom ~encode ~decode float)
 end
+
+module Block : Rapper.CUSTOM with type t = Block.t = struct
+  type t = Block.t
+
+  let t =
+    let encode block =
+      block |> Block.yojson_of_t |> Yojson.Safe.to_string |> Result.ok
+    in
+    let decode json =
+      try json |> Yojson.Safe.from_string |> Block.t_of_yojson |> Result.ok
+      with exn ->
+        Error
+          (Format.sprintf "cannot decode block from the database: %s"
+             (Printexc.to_string exn))
+    in
+    Caqti_type.(custom ~encode ~decode string)
+end
