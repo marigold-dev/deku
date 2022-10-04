@@ -1,5 +1,9 @@
-type ticket_id =
-  | Ticket_id of { ticketer : Deku_tezos.Contract_hash.t; data : bytes }
+type ticketer =
+  | Tezos of Deku_tezos.Contract_hash.t
+  | Deku of Contract_address.t
+[@@deriving eq, ord, show]
+
+type ticket_id = Ticket_id of { ticketer : ticketer; data : bytes }
 [@@deriving show, ord]
 
 and t = ticket_id [@@deriving eq, ord]
@@ -11,14 +15,21 @@ let ticket_id_of_yojson json =
         `String "Ticket_id";
         `Assoc [ ("ticketer", json); ("data", `String data) ];
       ] ->
-      let ticketer = Deku_tezos.Contract_hash.t_of_yojson json in
+      let ticketer =
+        try Tezos (Deku_tezos.Contract_hash.t_of_yojson json)
+        with _ -> Deku (Contract_address.t_of_yojson json)
+      in
       let data = Hex.to_string (`Hex data) |> Bytes.of_string in
-      Ticket_id { ticketer : Deku_tezos.Contract_hash.t; data : bytes }
+      Ticket_id { ticketer; data : bytes }
   | _ -> failwith "Wrong ticket_id format"
 
 let yojson_of_ticket_id t =
   let (Ticket_id { ticketer; data }) = t in
-  let ticketer = Deku_tezos.Contract_hash.yojson_of_t ticketer in
+  let ticketer =
+    match ticketer with
+    | Tezos ticketer -> Deku_tezos.Contract_hash.yojson_of_t ticketer
+    | Deku ticketer -> Contract_address.yojson_of_t ticketer
+  in
   let data = Bytes.to_string data |> Hex.of_string |> Hex.show in
   `List
     [
@@ -35,28 +46,54 @@ let from_tezos_ticket tezos_ticket =
   match ticketer with
   | Deku_tezos.Address.Implicit _address -> Error `Ticket_from_implicit
   | Deku_tezos.Address.Originated { contract; _ } ->
-      Ok (Ticket_id { ticketer = contract; data })
+      Ok (Ticket_id { ticketer = Tezos contract; data })
 
 let to_tezos_ticket ticket =
   let open Deku_tezos in
   let (Ticket_id { ticketer; data }) = ticket in
-  let ticketer =
-    Address.Originated { contract = ticketer; entrypoint = None }
-  in
-  Ticket_id.{ ticketer; data }
+  match ticketer with
+  | Deku _ -> None
+  | Tezos ticketer ->
+      let ticketer =
+        Address.Originated { contract = ticketer; entrypoint = None }
+      in
+      Some Ticket_id.{ ticketer; data }
+
+let parse_micheline string =
+  let open Tezos_micheline in
+  let tokens, errors = Micheline_parser.tokenize string in
+  match errors with
+  | [] -> (
+      let micheline, errors = Micheline_parser.parse_expression tokens in
+      match errors with [] -> Some micheline | _ -> None)
+  | _ -> None
 
 let of_string string =
-  (* TODO: support Deku tickets *)
-  let tezos_ticket =
-    Deku_tezos.Ticket_id.of_string string
+  let open Deku_stdlib in
+  let%ok micheline =
+    parse_micheline string |> Option.to_result ~none:`Cannot_parse
+  in
+  let%ok ticketer, data =
+    (match micheline with
+    | Prim (_, "Pair", [ String (_, ticketer); Bytes (_, data) ], []) ->
+        Some (ticketer, data)
+    | _ -> None)
     |> Option.to_result ~none:`Cannot_parse
   in
-  Result.bind tezos_ticket from_tezos_ticket
+  let%ok ticketer =
+    Deku_tezos.Contract_hash.of_string ticketer
+    |> Option.map (fun x -> Some (Tezos x))
+    |> Option.value
+         ~default:
+           (Contract_address.of_b58 ticketer |> Option.map (fun x -> Deku x))
+    |> Option.to_result ~none:`Cannot_parse
+  in
+  Some (Ticket_id { ticketer; data }) |> Option.to_result ~none:`Cannot_parse
 
 let to_string t =
   let open Tezos_micheline in
   match t with
-  | Ticket_id { ticketer; data } ->
+  | Ticket_id { ticketer = Tezos ticketer; data } ->
       let loc =
         let open Micheline_printer in
         { comment = None }
@@ -73,6 +110,20 @@ let to_string t =
               String (loc, Deku_tezos.Address.to_string address);
               Bytes (loc, data);
             ],
+            [] )
+      in
+      Format.asprintf "%a" Micheline_printer.print_expr micheline
+  | Ticket_id { ticketer = Deku ticketer; data } ->
+      let loc =
+        let open Micheline_printer in
+        { comment = None }
+      in
+      let address = ticketer in
+      let micheline =
+        Micheline.Prim
+          ( loc,
+            "Pair",
+            [ String (loc, Contract_address.to_b58 address); Bytes (loc, data) ],
             [] )
       in
       Format.asprintf "%a" Micheline_printer.print_expr micheline

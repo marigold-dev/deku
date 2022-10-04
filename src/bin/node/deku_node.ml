@@ -4,7 +4,6 @@ open Deku_crypto
 open Deku_indexer
 open Deku_storage
 open Deku_chain
-open Deku_external_vm
 open Deku_protocol
 
 let make_dump_loop ~sw ~env ~folder =

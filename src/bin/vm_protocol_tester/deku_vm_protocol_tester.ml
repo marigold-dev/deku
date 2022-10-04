@@ -9,6 +9,9 @@ type params = {
 }
 [@@deriving cmdliner]
 
+module External_vm_client =
+  External_vm_client.Make (Deku_protocol.Ticket_id) (Deku_protocol.Address)
+
 (* FIXME: loop over a json array of transactions passed via 'content' *)
 let main { named_pipe_path; content = _ } =
   let content =
@@ -35,7 +38,12 @@ let main { named_pipe_path; content = _ } =
   let state =
     External_vm_client.apply_vm_operation_exn ~state
       ~source:(Identity.key_hash identity)
-      ~tickets:[]
+      ~tickets:[] ~level:Deku_concepts.Level.zero
+      ~ledger_api:
+        (object
+           method take_tickets _ = assert false
+           method deposit _ _ = assert false
+        end)
       (Some (operation_raw_hash, content))
   in
   let json = External_vm_protocol.State.yojson_of_t state in
@@ -62,7 +70,12 @@ let main { named_pipe_path; content = _ } =
   let state =
     External_vm_client.apply_vm_operation_exn ~state
       ~source:(Identity.key_hash identity)
-      ~tickets:[]
+      ~tickets:[] ~level:Deku_concepts.Level.zero
+      ~ledger_api:
+        (object
+           method take_tickets _ = assert false
+           method deposit _ _ = assert false
+        end)
       (Some (operation_raw_hash, content))
   in
   let json = External_vm_protocol.State.yojson_of_t state in

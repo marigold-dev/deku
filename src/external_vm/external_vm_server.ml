@@ -1,53 +1,69 @@
-type storage = { set : string -> string -> unit; get : string -> string option }
+open External_vm_protocol
 
-type chain =
-  ( External_vm_protocol.vm_server_message,
-    External_vm_protocol.vm_client_message )
-  External_process.t
+module Make (Ticket_id : sig
+  type t [@@deriving yojson]
+end) (Address : sig
+  type t [@@deriving yojson]
+end) =
+struct
+  module External_vm_protocol_functor =
+    External_vm_protocol.Make (Ticket_id) (Address)
 
-let state = ref External_vm_protocol.State.empty
+  type storage = {
+    set : string -> string -> unit;
+    get : string -> string option;
+  }
 
-let start_chain_ipc ~named_pipe_path =
-  let opened_chain =
-    External_process.open_chain_pipes ~named_pipe_path
-      ~to_yojson:External_vm_protocol.yojson_of_vm_server_message
-      ~of_yojson:External_vm_protocol.vm_client_message_of_yojson
-  in
-  opened_chain
+  type chain =
+    ( External_vm_protocol_functor.vm_server_message,
+      External_vm_protocol_functor.vm_client_message )
+    External_process.t
 
-let rec init_state (chain : chain) initial_state =
-  let message = chain.receive () in
-  match message with
-  | Get_Initial_State ->
-      chain.send (Init initial_state);
-      init_state chain initial_state
-  | Set_Initial_State vm_state -> vm_state
-  | _ -> failwith "protocol not respected"
-(* initialize the state of the *)
+  let state = ref External_vm_protocol.State.empty
 
-let set (chain : chain) key value =
-  chain.send (Set { key; value });
-  (* TODO: need to check if it fails or not ? *)
-  state := External_vm_protocol.State.set key value !state
+  let start_chain_ipc ~named_pipe_path =
+    let opened_chain =
+      External_process.open_chain_pipes ~named_pipe_path
+        ~to_yojson:External_vm_protocol_functor.yojson_of_vm_server_message
+        ~of_yojson:External_vm_protocol_functor.vm_client_message_of_yojson
+    in
+    opened_chain
 
-let get key = External_vm_protocol.State.get key !state
+  let rec init_state (chain : chain) initial_state =
+    let message = chain.receive () in
+    match message with
+    | Get_Initial_State ->
+        chain.send (Init initial_state);
+        init_state chain initial_state
+    | Set_Initial_State vm_state -> vm_state
+    | _ -> failwith "protocol not respected"
+  (* initialize the state of the *)
 
-let main ~named_pipe_path initial_state transition =
-  let chain = start_chain_ipc ~named_pipe_path in
-  state := init_state chain initial_state;
-  let storage = { set = set chain; get } in
+  let set (chain : chain) key value =
+    chain.send (Set { key; value });
+    (* TODO: need to check if it fails or not ? *)
+    state := External_vm_protocol.State.set key value !state
 
-  let rec runtime_loop transition =
-    (match chain.receive () with
-    | Transaction { source; operation; tickets; operation_raw_hash } ->
-        transition ~storage ~source ~tickets ~operation ~operation_raw_hash
-    | Noop_transaction -> Ok ()
-    | _ -> Error "protocol not respected")
-    |> Result.fold
-         ~ok:(fun _ -> External_vm_protocol.Stop)
-         ~error:(fun err -> External_vm_protocol.Error err)
-    |> chain.send;
+  let get key = External_vm_protocol.State.get key !state
+
+  let main ~named_pipe_path initial_state transition =
+    let chain = start_chain_ipc ~named_pipe_path in
+    state := init_state chain initial_state;
+    let storage = { set = set chain; get } in
+
+    let rec runtime_loop transition =
+      (match chain.receive () with
+      | Transaction
+          { source; operation; tickets; operation_raw_hash; level = _ } ->
+          transition ~storage ~source ~tickets ~operation ~operation_raw_hash
+      | Noop_transaction -> Ok ()
+      | _ -> Error "protocol not respected")
+      |> Result.fold
+           ~ok:(fun _ -> External_vm_protocol_functor.Stop)
+           ~error:(fun err -> External_vm_protocol_functor.Error err)
+      |> chain.send;
+      runtime_loop transition
+    in
+
     runtime_loop transition
-  in
-
-  runtime_loop transition
+end

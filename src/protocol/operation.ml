@@ -13,7 +13,7 @@ type operation_content =
     }
   | Operation_vm_transaction of {
       operation : string;
-      tickets : (Ticket_id.t * int64) list; [@opaque]
+      tickets : (Ticket_id.t * N.t) list; [@opaque]
     }
   | Operation_noop
   | Operation_withdraw of {
@@ -56,7 +56,7 @@ module Repr = struct
       }
     | Vm_transaction of {
         operation : string;
-        tickets : (Ticket_id.t * int64) list;
+        tickets : (Ticket_id.t * N.t) list;
       }
     | Noop
     | Tezos_withdraw of {
@@ -104,7 +104,7 @@ module Repr = struct
 
     (match
        let source = Address.to_key_hash source in
-       Key_hash.(equal source (of_key key))
+       Option.equal Key_hash.equal source (Some Key_hash.(of_key key))
      with
     | true -> ()
     | false -> raise Invalid_source);
@@ -126,7 +126,7 @@ module Repr = struct
       | Operation_ticket_transfer { receiver; ticket_id; amount } ->
           Ticket_transfer { receiver; ticket_id; amount }
       | Operation_vm_transaction
-          { operation : string; tickets : (Ticket_id.t * int64) list } ->
+          { operation : string; tickets : (Ticket_id.t * N.t) list } ->
           Vm_transaction { operation; tickets }
       | Operation_noop -> Noop
       | Operation_withdraw { owner; amount; ticket_id } ->

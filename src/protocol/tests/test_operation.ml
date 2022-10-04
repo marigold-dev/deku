@@ -20,7 +20,7 @@ let ticket_id =
     |> Option.get
   in
   let data = Bytes.of_string "" in
-  Ticket_id.make address data
+  Ticket_id.make (Tezos address) data
 
 let test_serde_transaction () =
   let transaction =

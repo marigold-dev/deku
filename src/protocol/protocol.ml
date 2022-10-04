@@ -1,5 +1,4 @@
 open Receipt
-open Deku_external_vm
 module Tezos_operation_hash = Deku_tezos.Tezos_operation_hash
 open Deku_stdlib
 
@@ -8,7 +7,7 @@ type protocol =
       included_operations : Included_operation_set.t;
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
-      vm_state : External_vm_protocol.State.t;
+      vm_state : Deku_external_vm.External_vm_protocol.State.t;
       receipts : Receipt.t Operation_hash.Map.t;
           (** Receipts of the included operations; also contains withdrawal receipts, which are used to
           generate withdrawal proofs. *)
@@ -22,7 +21,7 @@ let initial =
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
-      vm_state = External_vm_protocol.State.empty;
+      vm_state = Deku_external_vm.External_vm_protocol.State.empty;
       receipts = Operation_hash.Map.empty;
     }
 
@@ -73,7 +72,7 @@ let apply_operation ~current_level protocol operation :
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-      let ledger, receipt, vm_state, error =
+      let%some result =
         match content with
         | Operation_ticket_transfer { receiver; ticket_id; amount } -> (
             let sender = source in
@@ -81,35 +80,59 @@ let apply_operation ~current_level protocol operation :
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
-            | Ok ledger -> (ledger, Some receipt, vm_state, None)
-            | Error error -> (ledger, Some receipt, vm_state, Some error))
+            | Ok ledger -> Some (ledger, Some receipt, vm_state, None)
+            | Error error -> Some (ledger, Some receipt, vm_state, Some error))
         | Operation_vm_transaction { operation; tickets } -> (
-            let tickets =
-              List.map
-                (fun (ticket, amount) ->
-                  (Ticket_id.to_tezos_ticket ticket, amount))
-                tickets
-            in
             let receipt = Vm_transaction_receipt { operation = hash } in
-            match
-              External_vm_client.apply_vm_operation_exn ~state:vm_state
-                ~source:(Address.to_key_hash source)
-                ~tickets
-                (Some (Operation_hash.to_blake2b hash, operation))
-            with
-            | vm_state -> (ledger, Some receipt, vm_state, None)
-            | exception External_vm_client.Vm_execution_error error ->
-                ( ledger,
-                  Some receipt,
-                  vm_state,
-                  Some (External_vm_client.Vm_execution_error error) ))
-        | Operation_noop ->
-            let vm_state =
-              External_vm_client.apply_vm_operation_exn ~state:vm_state
-                ~source:(Address.to_key_hash source)
-                ~tickets:[] None
+            let ledger_state =
+              object
+                val mutable ledger_state = ledger
+                method get_ledger = ledger_state
+
+                method take_tickets address =
+                  Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
+                      let tickets, table =
+                        Ticket_table.take_all_tickets (get_table ())
+                          ~sender:address
+                      in
+                      ledger_state <- set_table table;
+                      List.map
+                        (fun (ticket_id, amount) ->
+                          (ticket_id, Deku_concepts.Amount.to_n amount))
+                        (List.of_seq tickets))
+
+                method deposit addr (ticket_id, amount) =
+                  let amount = Deku_concepts.Amount.of_n amount in
+                  ledger_state <- Ledger.deposit addr amount ticket_id ledger
+              end
             in
-            (ledger, None, vm_state, None)
+            let%some source = Address.to_key_hash source in
+            match
+              ( External_vm_client.apply_vm_operation_exn ~state:vm_state
+                  ~source ~level ~tickets ~ledger_api:ledger_state
+                  (Some (Operation_hash.to_blake2b hash, operation)),
+                ledger_state#get_ledger )
+            with
+            | vm_state, ledger -> Some (ledger, Some receipt, vm_state, None)
+            | exception External_vm_client.Vm_execution_error error ->
+                Some
+                  ( ledger,
+                    Some receipt,
+                    vm_state,
+                    Some (External_vm_client.Vm_execution_error error) ))
+        | Operation_noop ->
+            let%some source = Address.to_key_hash source in
+
+            let vm_state =
+              External_vm_client.apply_vm_operation_exn
+                ~ledger_api:
+                  (object
+                     method take_tickets _ = assert false
+                     method deposit _ _ = assert false
+                  end)
+                ~state:vm_state ~level ~source ~tickets:[] None
+            in
+            Some (ledger, None, vm_state, None)
         | Operation_withdraw { owner; amount; ticket_id } -> (
             let sender = source in
             match
@@ -117,12 +140,14 @@ let apply_operation ~current_level protocol operation :
                 ledger
             with
             | Ok (ledger, handle) ->
-                ( ledger,
-                  Some (Withdraw_receipt { handle; operation = hash }),
-                  vm_state,
-                  None )
-            | Error error -> (ledger, None, vm_state, Some error))
+                Some
+                  ( ledger,
+                    Some (Withdraw_receipt { handle; operation = hash }),
+                    vm_state,
+                    None )
+            | Error error -> Some (ledger, None, vm_state, Some error))
       in
+      let ledger, receipt, vm_state, error = result in
       let receipts =
         match receipt with
         | Some receipt -> Operation_hash.Map.add hash receipt receipts

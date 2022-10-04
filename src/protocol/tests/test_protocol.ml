@@ -22,7 +22,7 @@ let ticket_id =
     |> Option.get
   in
   let data = Bytes.of_string "" in
-  Ticket_id.make address data
+  Ticket_id.make (Tezos address) data
 
 (* helper to create in an easy way an operation that transfer n token from alice to bob *)
 let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =

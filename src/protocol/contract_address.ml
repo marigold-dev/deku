@@ -1,7 +1,7 @@
 open Deku_crypto
 open BLAKE2b
 
-type t = BLAKE2b_160.t [@@deriving eq, ord]
+type t = BLAKE2b_160.t [@@deriving eq, ord, show]
 
 let of_user_operation_hash t = BLAKE2b_256.to_raw t |> BLAKE2b_160.hash
 

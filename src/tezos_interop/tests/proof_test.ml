@@ -31,7 +31,10 @@ let main operation_hash verbose host =
         api_response_of_yojson body
       in
       let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
-      let (Ticket_id { ticketer; data }) = ticket_id in
+      let[@warning "-8"] (Ticket_id.Ticket_id
+                           { ticketer = Tezos ticketer; data }) =
+        ticket_id
+      in
       Format.printf
         {|(Pair (Pair %S
       (Pair (Pair %s 0x%s) %d %S)

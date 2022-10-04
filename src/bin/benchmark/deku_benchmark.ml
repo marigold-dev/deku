@@ -27,7 +27,7 @@ module Zero_ops = struct
       |> Option.get
     in
     let data = Bytes.of_string "" in
-    Ticket_id.make address data
+    Ticket_id.make (Tezos address) data
 
   let generate () =
     let secret = Ed25519.Secret.generate () in
@@ -94,7 +94,7 @@ module Block_production = struct
       |> Option.get
     in
     let data = Bytes.of_string "tuturu" in
-    Ticket_id.make address data
+    Ticket_id.make (Tezos address) data
 
   let producer = Zero_ops.generate ()
   let sender = Zero_ops.generate ()

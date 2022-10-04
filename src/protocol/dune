@@ -4,6 +4,7 @@
   deku_crypto
   deku_concepts
   deku_constants
+  deku_stdlib
   tezos-micheline
   deku_external_vm
   deku_tezos)

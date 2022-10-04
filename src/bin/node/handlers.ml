@@ -232,7 +232,7 @@ module Get_balance = struct
                  (Format.sprintf "Invalid hex %s" data)))
     in
     let ticket_id =
-      Deku_protocol.Ticket_id.make ticketer (Bytes.of_string data)
+      Deku_protocol.Ticket_id.make (Tezos ticketer) (Bytes.of_string data)
     in
     Ok { address; ticket_id }
 
