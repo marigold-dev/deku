@@ -5,8 +5,8 @@ module type Alg = sig
   type key
   type signature
 
-  val sign : secret -> string -> signature
-  val verify : key -> signature -> string -> bool
+  val sign : ?prefix:string -> secret -> string -> signature
+  val verify : ?prefix:string -> key -> signature -> string -> bool
 end
 
 module type S = sig
@@ -29,8 +29,8 @@ module type S = sig
   module With_alg (Alg : Alg) : sig
     open Alg
 
-    val sign : secret -> hash -> signature
-    val verify : key -> signature -> hash -> bool
+    val sign : ?prefix:string -> secret -> hash -> signature
+    val verify : ?prefix:string -> key -> signature -> hash -> bool
   end
 
   module With_b58 (_ : sig

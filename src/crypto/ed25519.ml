@@ -145,14 +145,14 @@ module Signature = struct
     type key = Key.t
     type signature = t
 
-    let sign secret hash =
-      let hash = Cstruct.of_string hash in
-      let signature = sign ~key:secret hash in
+    let sign ?(prefix = "") secret hash =
+      let prefix_and_hash = Cstruct.of_string (prefix ^ hash) in
+      let signature = sign ~key:secret prefix_and_hash in
       Cstruct.to_string signature
 
-    let verify key signature hash =
-      let hash = Cstruct.of_string hash in
+    let verify ?(prefix = "") key signature hash =
+      let prefix_and_hash = Cstruct.of_string (prefix ^ hash) in
       let signature = Cstruct.of_string signature in
-      verify ~key ~msg:hash signature
+      verify ~key ~msg:prefix_and_hash signature
   end)
 end

@@ -30,10 +30,11 @@ struct
   let digest_size = P.digest_size
 
   module With_alg (Alg : Hash_intf.Alg) = struct
-    let sign secret hash = Alg.sign secret (to_raw_string hash)
+    let sign ?(prefix = "") secret hash =
+      Alg.sign secret (prefix ^ to_raw_string hash)
 
-    let verify key signature hash =
-      Alg.verify key signature (to_raw_string hash)
+    let verify ?(prefix = "") key signature hash =
+      Alg.verify key signature (prefix ^ to_raw_string hash)
   end
 
   module With_b58 (P : sig

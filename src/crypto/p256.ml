@@ -153,17 +153,17 @@ module Signature = struct
     type key = Key.t
     type signature = t
 
-    let sign secret hash =
-      let hash = Cstruct.of_string hash in
+    let sign ?(prefix = "") secret hash =
+      let prefix_and_hash = Cstruct.of_string (prefix ^ hash) in
       (* TODO: explain r and s*)
-      let r, s = sign ~key:secret hash in
+      let r, s = sign ~key:secret prefix_and_hash in
       let signature = Cstruct.append r s in
       Cstruct.to_string signature
 
-    let verify key signature hash =
+    let verify ?(prefix = "") key signature hash =
       let r, s = (String.sub signature 0 32, String.sub signature 32 32) in
       let r, s = (Cstruct.of_string r, Cstruct.of_string s) in
-      let hash = Cstruct.of_string hash in
-      verify ~key (r, s) hash
+      let prefix_and_hash = Cstruct.of_string (prefix ^ hash) in
+      verify ~key (r, s) prefix_and_hash
   end)
 end

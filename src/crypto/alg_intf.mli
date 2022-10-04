@@ -63,7 +63,7 @@ module type S = sig
     val size : int
 
     (* operations *)
-    val sign : Secret.t -> BLAKE2b.t -> signature
-    val verify : Key.t -> signature -> BLAKE2b.t -> bool
+    val sign : ?prefix:string -> Secret.t -> BLAKE2b.t -> signature
+    val verify : ?prefix:string -> Key.t -> signature -> BLAKE2b.t -> bool
   end
 end

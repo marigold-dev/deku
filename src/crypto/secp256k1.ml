@@ -165,12 +165,12 @@ module Signature = struct
     type key = Key.t
     type signature = t
 
-    let sign secret hash =
-      let hash = Bigstring.of_string hash in
-      Sign.sign_exn context ~sk:secret hash
+    let sign ?(prefix = "") secret hash =
+      let prefix_and_hash = Bigstring.of_string (prefix ^ hash) in
+      Sign.sign_exn context ~sk:secret prefix_and_hash
 
-    let verify public signature hash =
-      let hash = Bigstring.of_string hash in
-      Sign.verify_exn context ~pk:public ~msg:hash ~signature
+    let verify ?(prefix = "") public signature hash =
+      let prefix_and_hash = Bigstring.of_string (prefix ^ hash) in
+      Sign.verify_exn context ~pk:public ~msg:prefix_and_hash ~signature
   end)
 end

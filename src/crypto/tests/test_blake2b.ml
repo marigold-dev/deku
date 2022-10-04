@@ -136,11 +136,11 @@ end = struct
     type key = secret
     type signature = { secret : secret; hash : string }
 
-    let sign secret hash = { secret; hash }
+    let sign ?(prefix = "") secret hash = { secret; hash = prefix ^ hash }
 
-    let verify key signature hash =
+    let verify ?(prefix = "") key signature hash =
       let { secret; hash = signature_hash } = signature in
-      Int.equal secret key && String.equal signature_hash hash
+      Int.equal secret key && String.equal signature_hash (prefix ^ hash)
   end
 
   open With_alg (Dummy_alg)
