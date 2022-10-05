@@ -4,7 +4,7 @@ open Deku_concepts
 open Deku_protocol
 
 let domains =
-  match Sys.getenv_opt "" with
+  match Sys.getenv_opt "DEKU_DOMAINS" with
   | Some domains -> int_of_string domains
   | None -> 16
 
