@@ -6,10 +6,10 @@ open Cmdliner
 open Common
 
 type params = {
-  wallet : string; [@pos 0]
+  wallet : string; [@pos 0] [@docv "wallet"]
   named_pipe_path : string; [@default "/tmp/vm_pipe"]
-  content : string; [@pos 1]
-  vm : string; [@post 2]
+  content : string; [@pos 1] [@docv "transaction"]
+  vm : string; [@pos 2] [@docv "vm"]
 }
 [@@deriving cmdliner]
 
