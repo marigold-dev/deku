@@ -139,11 +139,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1664283452,
-        "narHash": "sha256-DYH3CzMnAAR8kJlVbHbfkhrARD8HiazuEktNWcr1b8I=",
+        "lastModified": 1664882193,
+        "narHash": "sha256-uiAYOxN/M4dpaB6ieY3xOvOH6XgHP9NVXDTzSRa3pMc=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "12ae9b891b0395bbf2b5d90432d9560b3ddb379a",
+        "rev": "785b76894263fd76a0e69955e4cd990b7b735bdf",
         "type": "github"
       },
       "original": {
@@ -472,11 +472,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1664345928,
-        "narHash": "sha256-bDhzw7pkOfih4JQqFYFu6NF42exa5/NhexCOGXus5zU=",
+        "lastModified": 1664986305,
+        "narHash": "sha256-lwBCmpiBGqriHfAAz3R/3G6otMLYUdja5rkK49lBLeY=",
         "owner": "nix-ocaml",
         "repo": "nix-overlays",
-        "rev": "b2ce484edab24b226dc72cbe5af0dec7aeb26b2a",
+        "rev": "912b3fbb161d693d968d8047498971f01c1dc440",
         "type": "github"
       },
       "original": {
@@ -487,17 +487,17 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1664281702,
-        "narHash": "sha256-haixZ4TJLu1Dciow54wrHrHvlGDVr5sW6MTeAV/ZLuI=",
+        "lastModified": 1664859869,
+        "narHash": "sha256-OPM2eN7Ja8iZVJMhHH+dTB4v2fn7FLX38rSLLHvyWj0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "7e52b35fe98481a279d89f9c145f8076d049d2b9",
+        "rev": "490a05c4a82236a86e1e1a4822f714c972e8c4f0",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "7e52b35fe98481a279d89f9c145f8076d049d2b9",
+        "rev": "490a05c4a82236a86e1e1a4822f714c972e8c4f0",
         "type": "github"
       }
     },
@@ -745,11 +745,11 @@
         "tezos": "tezos_2"
       },
       "locked": {
-        "lastModified": 1664235165,
-        "narHash": "sha256-DTKMMgOCcmKQ0j65UeFmoFG8M7pP/HTlTZxAOPERrqE=",
+        "lastModified": 1664915481,
+        "narHash": "sha256-kiG8DwU2uf6Ve645UCgu0OmS1g4cBpFyZYrJfdoQTCo=",
         "owner": "marigold-dev",
         "repo": "tuna",
-        "rev": "3a664b5f6cb15b061ad355ca3fa74641750b2cb5",
+        "rev": "1a6605c36e5ecaba81f2ff4f3b2bd01af5dfa9d0",
         "type": "github"
       },
       "original": {
