@@ -1,5 +1,5 @@
 // @ts-ignore
-import { main, get, set, transaction } from "deku_js_interop"
+import { main, get, set, transaction } from "deku-sdk"
 
 const transition = (tx: transaction) => {
     console.log("Getting source");
