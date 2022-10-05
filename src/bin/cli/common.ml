@@ -4,18 +4,16 @@ open Deku_stdlib
 
 let read_json of_yojson ~env ~file =
   let open Eio.Path in
-  let file = Eio.Stdenv.cwd env / file in
-  let string = Eio.Path.load file in
+  let path = Eio.Stdenv.cwd env / file in
+  let string = load path in
   let json = Yojson.Safe.from_string string in
   of_yojson json
 
-(* TODO
-   (*
-   let write_json to_yojson data ~file =
-     Lwt_io.with_file ~mode:Output file (fun oc ->
-         Lwt_io.write oc (Yojson.Safe.pretty_to_string (to_yojson data)))
-   *)
-*)
+let write_json to_yojson data ~env ~file =
+  let open Eio.Path in
+  let path = Eio.Stdenv.cwd env / file in
+  let json = to_yojson data in
+  Eio.Path.save ~create:(`Exclusive 0o600) path @@ Yojson.Safe.pretty_to_string json
 
 module Utils = struct
   let make_rnd_nonce () =
@@ -61,7 +59,5 @@ module Wallet = struct
   let address w = w.address
   let priv_key w = w.priv_key
 
-  (* TODO
-     (* let write = write_json to_yojson *)
-  *)
+  let write wallet ~env ~file = write_json yojson_of_t wallet ~env ~file
 end
