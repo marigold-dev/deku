@@ -187,7 +187,6 @@ let bench msg ~items ~domains ~prepare run =
   Format.eprintf "%s: %.3f/s\n%!" msg per_second
 
 let produce () =
-  let domains = 8 in
   let items = 1_000_000 in
   let prepare () = () in
   (* 6kk/s on 8 domains *)
@@ -196,7 +195,6 @@ let produce () =
   ()
 
 let string_of_block () =
-  let domains = 8 in
   let items = 1_000_000 in
   let prepare () = block ~default_block_size:items in
   (* 1kk/s on 8 domains *)
@@ -206,7 +204,6 @@ let string_of_block () =
   ()
 
 let block_of_string () =
-  let domains = 8 in
   let items = 1_000_000 in
   let prepare () =
     let block = block ~default_block_size:items in
@@ -221,7 +218,6 @@ let block_of_string () =
 
 let prepare () =
   let items = 100_000 in
-  let domains = 8 in
   let prepare () =
     let (Block.Block { payload; _ }) = block ~default_block_size:items in
     payload
