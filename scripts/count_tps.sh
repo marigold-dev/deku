@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-block_size=50000
+echo "WARNING: USING HARDCODED BLOCKSIZE OF 10000. IS THIS CORRECT?"
+block_size=10000
 
 first=$(sqlite3 ./chain/data/0/database.db 'select timestamp from blocks' | head -n 1)
 last=$(sqlite3 ./chain/data/0/database.db 'select timestamp from blocks' | tail -n 1)
