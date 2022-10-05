@@ -67,6 +67,10 @@
               type = "app";
               program = "${deku}/bin/deku-node";
             };
+            cli = {
+              type = "app";
+              program = "${deku}/bin/deku-cli";
+            };
             bootstrap = {
               type = "app";
               program = "${deku}/bin/deku-bootstrap";
