@@ -3,7 +3,12 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 
-let domains = 16
+let domains =
+  match Sys.getenv_opt "" with
+  | Some domains -> int_of_string domains
+  | None -> 16
+
+let () = Format.printf "Using %d domains\n%!" domains
 
 module Util = struct
   let benchmark ~runs f =
