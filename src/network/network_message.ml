@@ -12,7 +12,7 @@ exception Invalid_tag
 exception Invalid_message_size
 
 (* TODO: max size *)
-let max_size = 16 * 1024 * 1024
+let max_size = 128 * 1024 * 1024
 
 module Tag = struct
   type tag = Request | Message
