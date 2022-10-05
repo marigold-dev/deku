@@ -1,0 +1,113 @@
+---
+sidebar_position: 2
+---
+
+
+# Quick-start with Deku-C
+
+In this 15-minute tutorial, we'll create our first Dapp to Deku-C.
+
+You'll learn how to:
+
+- Write a simple smart contract in [Ligo](https://ligolang.org/).
+- Compile and deploy it to Deku-C
+- Interact with the contract via `deku-toolkit` npm package
+- Create a DApp using React Hooks provided `deku-toolkit`
+
+## Installing the Tools
+
+You can run deploy the contract in-browser without installing any additional
+tools.
+
+However, to follow along on along on the command line and to start developing
+your own contracts, you'll need to install:
+
+- The Ligo compiler (see the
+  [installation instructions](https://ligolang.org/docs/intro/installation))
+  ```
+  wget https://gitlab.com/ligolang/ligo/-/jobs/3097040721/artifacts/raw/ligo
+  chmod +x ./ligo
+  sudo cp ./ligo /usr/local/bin
+  ```
+- The Deku-C CLI
+  ```
+  npm i -g @marigold/deku-c-cli
+  ```
+
+## Our First Smart Contract
+
+Let's write a simple counter, accepting the commands `Increment`, `Decrement`,
+`Reset`.
+
+```js
+type storage = int;
+
+type parameter = ["Increment", int] | ["Decrement", int] | ["Reset"];
+
+type return_ = [list<operation>, storage];
+
+let main = (action: parameter, store: storage): return_ => {
+  return [
+    list([]),
+    match(action, {
+      Increment: (n) => store + n,
+      Decrement: (n) => store - n,
+      Reset: () => 0,
+    }),
+  ];
+};
+```
+
+Refer to the [Ligo documentation](https://ligolang.org/docs/intro/introduction)
+for more on developing with Ligo, and don't hesitate to
+[reach out](https://ligolang.org/contact)!
+
+## Compiling
+
+Before a Ligo contract can be deployed to Deku-C, it must first be compiled to
+WebAssembly via Michelson.
+
+For example:
+
+```bash
+ligo compile contract ./increment.jsligo | deku-c compile > increment.wat
+```
+
+In the case of our increment contract, this will produce the following
+WebAssembly:
+
+
+## Deploying Our Contract
+
+We can deploy our contract using the Deku Toolkit, a Javascript package for
+interacting with The toolkit depends on [Taquito](https://tezostaquito.io/) for
+signing interactions with Deku chain
+
+```js live noInline
+// import { DekuToolkit } from "@marigold-dev/deku-toolkit"
+// import { DekuCClient } from "@marigold-dev/deku-c"
+// import { InMemorySigner } from "@taquito/signer"
+const signer = new window.InMemorySigner(
+  "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
+);
+console.log("my signer: ", signer);
+
+// const dekuConnection = new DekuToolkit({
+//   signer,
+//   tezosRPC: "https://ghostnet.tezos.marigold.dev/",
+// });
+
+// const dekuClient = new DekuCClient(dekuConnection);
+
+println("hello")
+```
+
+:::info You can also deploy from the commandline with
+
+```bash
+storage=$(ligo compile storage ./increment.jsligo '')
+dekuc-cli create-wallet # if you haven't already
+deku-cli deploy-contract ./increment.wat 42
+```
+
+:::
