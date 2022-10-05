@@ -48,5 +48,5 @@ let main { wallet; named_pipe_path; content; vm } =
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in
-  let info = Cmd.info "create-mock-transaction" in
+  let info = Cmd.info "mock-transaction" in
   Cmd.v info term
