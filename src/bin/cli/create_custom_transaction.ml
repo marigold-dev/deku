@@ -5,9 +5,9 @@ open Cmdliner
 open Common
 
 type params = {
-  wallet : string; [@pos 0]
+  wallet : string; [@pos 0] [@docv "wallet"]
   api_uri : Uri.t; [@default Uri.of_string "http://localhost:8080"]
-  content : string; [@pos 1]
+  content : string; [@pos 1] [@docv "transaction"]
 }
 [@@deriving cmdliner]
 
