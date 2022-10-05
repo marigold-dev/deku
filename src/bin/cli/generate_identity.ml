@@ -2,9 +2,7 @@ open Deku_crypto
 open Cmdliner
 open Common
 
-type params = {
-  output : string; [@post 0] [@default ""] [@docv "output"]
-}
+type params = { output : string [@post 0] [@default ""] [@docv "output"] }
 [@@deriving cmdliner]
 
 let main { output } =
@@ -16,15 +14,11 @@ let main { output } =
   if String.equal output "" then (
     Format.printf "Secret: %s\n%!" (Ed25519.Secret.to_b58 priv_key);
     Format.printf "Key: %s\n%!" (Ed25519.Key.to_b58 key);
-    Format.printf "Address: %s\n%!" (Ed25519.Key_hash.to_b58 address)
-  )
+    Format.printf "Address: %s\n%!" (Ed25519.Key_hash.to_b58 address))
   else
-    try
-      Eio_main.run @@ fun env ->
-        Wallet.write wallet ~env ~file:output
-    with
-      Eio.Fs.Already_exists _ ->
-        Printf.eprintf "Error: file %s already exists!\n%!" output
+    try Eio_main.run @@ fun env -> Wallet.write wallet ~env ~file:output
+    with Eio.Fs.Already_exists _ ->
+      Printf.eprintf "Error: file %s already exists!\n%!" output
 
 let info =
   let doc = "Generates an Ed25519 key pair." in
