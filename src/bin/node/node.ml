@@ -45,6 +45,11 @@ and handle_chain_action ~sw ~env ~action node =
       Network_manager.request ~raw_header ~raw_content node.network
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block } -> (
+      (* This log is used by our infra. *)
+      Logs.app (fun m ->
+          let (Block { payload; _ }) = block in
+          m "Saving block: %a, Transaction count: %d" Block.pp block
+            (List.length payload));
       node.notify_api block;
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~sw ~block indexer
