@@ -27,13 +27,14 @@ let main { wallet; named_pipe_path; content; vm } =
 
   let prog, args =
     match String.split_on_char ' ' vm with
-    | prog :: args -> (prog, prog :: args)  (* We need to keep $0 in the args list *)
+    | prog :: args ->
+        (prog, prog :: args) (* We need to keep $0 in the args list *)
     | [] -> failwith "invalid vm parameter"
   in
-  let args = (args @ [named_pipe_path]) |> Array.of_list in
+  let args = args @ [ named_pipe_path ] |> Array.of_list in
   (* TODO: see if fifo exist
-  let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
-   *)
+     let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
+  *)
   let _pid = Unix.create_process prog args Unix.stdin Unix.stdout Unix.stderr in
   let () = External_vm_client.start_vm_ipc ~named_pipe_path in
   let state = External_vm_client.get_initial_state () in
@@ -44,9 +45,10 @@ let main { wallet; named_pipe_path; content; vm } =
   in
   let json = External_vm_protocol.State.yojson_of_t state in
   External_vm_client.close_vm_ipc ();
-  print_endline (Yojson.Safe.pretty_to_string json) (* FIXME: do better? *)
+  (* FIXME: better formatting? *)
+  print_endline (Yojson.Safe.pretty_to_string json)
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in
-  let info = Cmd.info "create-mock-transaction" in
+  let info = Cmd.info "mock-transaction" in
   Cmd.v info term

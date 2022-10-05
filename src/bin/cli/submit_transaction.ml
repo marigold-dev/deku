@@ -28,5 +28,5 @@ let main { wallet; api_uri; content } =
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in
-  let info = Cmd.info "create-custom-transaction" in
+  let info = Cmd.info "submit-transaction" in
   Cmd.v info term
