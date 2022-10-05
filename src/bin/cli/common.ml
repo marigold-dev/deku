@@ -13,7 +13,8 @@ let write_json to_yojson data ~env ~file =
   let open Eio.Path in
   let path = Eio.Stdenv.cwd env / file in
   let json = to_yojson data in
-  Eio.Path.save ~create:(`Exclusive 0o600) path @@ Yojson.Safe.pretty_to_string json
+  Eio.Path.save ~create:(`Exclusive 0o600) path
+  @@ Yojson.Safe.pretty_to_string json
 
 module Utils = struct
   let make_rnd_nonce () =
@@ -59,6 +60,5 @@ module Wallet = struct
   let make address priv_key = { address; priv_key }
   let address w = w.address
   let priv_key w = w.priv_key
-
   let write wallet ~env ~file = write_json yojson_of_t wallet ~env ~file
 end
