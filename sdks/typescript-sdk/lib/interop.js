@@ -101,6 +101,9 @@ state_transition) {
     for (;;) {
         var raw = read().toString();
         var message = JSON.parse(raw);
+        if (message === "close") {
+            break;
+        }
         console.log("Parsed message:", message);
         var error = "";
         if (message[0] !== "Noop_transaction") {
