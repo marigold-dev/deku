@@ -1,12 +1,12 @@
-{ deku-packages, wasm-vm }: { config, pkgs, lib, ... }:
+{ deku-packages }: { config, pkgs, lib, ... }:
 
 with lib;
 
 let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
-  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.cookie-game}/lib/node_modules/cookie-game/lib/src/index.js";
-  wasmVM = "${wasm-vm.packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
+  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookie-vm}/lib/node_modules/cookie-game/lib/src/index.js";
+  wasmVM = "${deku-packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
 in
 {
   options.services.deku-node = {

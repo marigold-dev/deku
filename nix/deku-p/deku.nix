@@ -1,25 +1,18 @@
-{ pkgs, doCheck ? true, nodejs, npmPackages }:
+{ pkgs, doCheck ? true, nodejs, npmPackages, nix-filter }:
 
 let inherit (pkgs) lib stdenv ocamlPackages; in
 with ocamlPackages; buildDunePackage rec {
   pname = "deku";
 
-  caqti-eio = buildDunePackage {
-    pname = "caqti-eio";
-    version = "n/a";
-    src = builtins.fetchurl {
-      url = https://github.com/anmonteiro/caqti-eio/archive/c709dad.tar.gz;
-      sha256 = "0mmjms378akcs7lifpz3s82hw7g6sdxbsyqlb0yrry7as29rccsz";
-    };
-    propagatedBuildInputs = [ eio eio_main caqti ];
-  };
-
   version = "0.0.0-dev";
 
-  src = lib.filterSource {
-    src = ./..;
-    dirs = [ "deku-p" ];
-    files = [ "dune-project" "deku.opam" ];
+  src = with nix-filter.lib; filter {
+    root = ../..;
+    include = [
+      "deku.opam"
+      "deku-p/src"
+      "dune-project"
+    ];
   };
 
   nativeBuildInputs = [ nodejs ] ;# ++ npmPackages;

@@ -5,9 +5,9 @@
 let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
-      root = ../.;
+      root = ../..;
       # FIXME: get this working
-      include = [ "./decookies/cookie-game" "./sdks/typescript-sdk" ];
+      include = [ "./decookies/typescript-vm" "./sdks/typescript-sdk" ];
     };
 
     settings =

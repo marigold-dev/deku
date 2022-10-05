@@ -3,8 +3,8 @@
 let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
-      root = ../.;
-      include = [ ../deku-p/src/tezos_interop/package-lock.json ../deku-p/src/tezos_inteorp/package.json ];
+      root = ../../deku-p/src/tezos_interop;
+      include = [ "package-lock.json" "package.json" "tezos_js_bridge.js" "webpack.config.json" ];
     };
 
     packageOverrides = {

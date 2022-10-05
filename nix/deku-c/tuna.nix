@@ -19,13 +19,11 @@ buildDunePackage rec {
   version = "1.0.0";
 
   src = with nix-filter.lib; filter {
-    root = ../.;
+    root = ../..;
     include = [
-      "packages"
       "tunac.opam"
+      "deku-c/tunac"
       "dune-project"
-      "dune"
-      ".ocamlformat"
     ];
   };
 
@@ -49,7 +47,7 @@ buildDunePackage rec {
     alcotest
   ];
 
-  doCheck = true;
+  doCheck = false;
 
-  meta.mainProgram = "tunacc_test_operation";
+  meta.mainProgram = "tunac";
 }
