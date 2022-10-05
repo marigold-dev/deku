@@ -58,7 +58,6 @@ with super; {
         tezos-micheline = super.tezos-micheline.overrideAttrs (_: {
           doCheck = false;
         });
-        eio_main = super.eio_main.override { eio_linux = null; };
         routes = super.routes.overrideAttrs (_: {
           src = fetchFromGitHub {
             owner = "anuragsoni";
