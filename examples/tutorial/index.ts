@@ -8,8 +8,6 @@ const transition = (tx: transaction) => {
     const nextValue = tx.operation;
     console.log("New value: " + nextValue);
     set("state", nextValue);
-
-
 }
 
 main({ myState: "" }, transition);
