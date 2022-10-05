@@ -35,7 +35,9 @@ module Pool = struct
       List.init domains (fun _n () -> Eio.Domain_manager.run domain_mgr spawn)
     in
     (* TODO: maybe this should be fork daemon? *)
-    (Eio.Fiber.fork ~sw @@ fun () -> Eio.Fiber.all create_domains);
+    ( Eio.Fiber.fork_daemon ~sw @@ fun () ->
+      Eio.Fiber.all create_domains;
+      `Stop_daemon );
     let pool = { domains; pending } in
     pool_ref := Some pool;
     f ()

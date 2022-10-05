@@ -50,10 +50,63 @@ module Repr = struct
   }
   [@@deriving yojson]
 
+  (* TODO: bad naming*)
+  module Payload_hash = struct
+    type payload_hash = {
+      author : Key_hash.t;
+      level : Level.t;
+      previous : Block_hash.t;
+      withdrawal_handles_hash : Ledger.Withdrawal_handle.hash;
+      payload : BLAKE2b.t;
+      tezos_operations : Tezos_operation.t list;
+    }
+    [@@deriving yojson_of]
+
+    let hash ~author ~level ~previous ~withdrawal_handles_hash ~payload
+        ~tezos_operations =
+      let payload_size = List.length payload in
+      let chunk_size =
+        max (payload_size / Deku_constants.max_payload_chunks) 1
+      in
+      let chunks = List.chunks_of ~length:chunk_size payload in
+      let chunks =
+        Parallel.map_p
+          (fun chunk ->
+            let chunk = List.map BLAKE2b.hash chunk in
+            BLAKE2b.all chunk)
+          chunks
+      in
+      let payload = BLAKE2b.all chunks in
+      let json =
+        yojson_of_payload_hash
+          {
+            author;
+            level;
+            previous;
+            withdrawal_handles_hash;
+            payload;
+            tezos_operations;
+          }
+      in
+      let json = Yojson.Safe.to_string json in
+      BLAKE2b.hash json
+  end
+
   (* TODO: we could avoid Yojson.Safe.to_string if we had locations *)
   let hash block =
     let block_payload_hash =
-      yojson_of_block block |> Yojson.Safe.to_string |> BLAKE2b.hash
+      let {
+        author;
+        level;
+        previous;
+        withdrawal_handles_hash;
+        payload;
+        tezos_operations;
+      } =
+        block
+      in
+      Payload_hash.hash ~author ~level ~previous ~withdrawal_handles_hash
+        ~payload ~tezos_operations
     in
     let state_root_hash = BLAKE2b.hash "FIXME: we need to add the state root" in
     let block_hash =

@@ -27,6 +27,11 @@ struct
   let to_hex hash = to_hex hash
   let hash data = digest_string data
   let both a b = hash (to_raw_string a ^ to_raw_string b)
+
+  let all l =
+    let l = List.map to_raw_string l in
+    hash (String.concat "" l)
+
   let digest_size = P.digest_size
 
   module With_alg (Alg : Hash_intf.Alg) = struct

@@ -19,3 +19,4 @@ let clean_gossip_time =
 let async_on_error exn = Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
 let genesis_time = 0.0
 let trusted_cycle = Option.get (N.of_z (Z.of_int 600))
+let max_payload_chunks = 32

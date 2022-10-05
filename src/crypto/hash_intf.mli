@@ -23,6 +23,7 @@ module type S = sig
 
   (* utils *)
   val both : hash -> hash -> hash
+  val all : hash list -> hash
   val digest_size : int
 
   (* TODO: better name for this*)

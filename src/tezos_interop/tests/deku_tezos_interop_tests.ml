@@ -23,16 +23,16 @@ open Deku_concepts
 
 (* This  *)
 let expected_block_structure_hash =
-  "36b832fb5aff5cba4ad4075cf7f6d6d20a83c793f8e550cb18a559f1a9c8355e"
+  "dc39b713ece41b56d5015774851fa1eaf21b969a0f8e992101fac5506d800043"
 
 let expected_block_hash =
-  "6d6804725b0d680eb81b50439d75e3fa67ea45f0d644fc91eb0f9ad5fa0e110e"
+  "7faf2f5cb239c4c262d815a97736423b2e4cbd496f39817bb3afbd968d985868"
 
 let test_deku_block_hashing () =
   let level = Level.zero |> Level.next in
   let block_payload_hash =
     BLAKE2b.of_hex
-      "99586ffad9cfcfe056c7374a42820faec628e7ee5d1bd8cc5ec23ce67f51c5ba"
+      "3af24b06c0eb96185f4da96bfb188cecc764877ce78b4b39db98b781635e55d2"
     |> Option.get
   in
   let state_root_hash =
@@ -140,7 +140,7 @@ let test_block_signing () =
     |> Verified_signature.signature |> Signature.to_b58
   in
   let expected_signature =
-    "edsigtwfg8hjDdAEKY8j9Yv7zQhnBaFKUtpvhYrKk9ipP4hzMDcWndgMdqQBBtKkDFBftfiGaQ6VZaNxH3eRqLJ7WLUqSETVi13"
+    "edsigtncqNYtCjL5e88QvK6SEUvbniGv9PRCGw3nybE1kv8sWHQgyWwcEDgJwohLAhc6uMB5YAkcznbK4zGUSjC4ipuVnkFA3tC"
   in
   Alcotest.(
     check string "Deku block signing is Tezos compatible" expected_signature
