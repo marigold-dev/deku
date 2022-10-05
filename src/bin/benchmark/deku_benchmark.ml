@@ -144,3 +144,93 @@ let _alpha =
 (* let pi = Parallel.Pool.run pool Block_production.run
    let total = alpha +. pi
    let () = Format.printf "alpha + pi: %3f\n%!" total *)
+
+open Deku_stdlib
+open Deku_crypto
+open Deku_concepts
+open Deku_protocol
+open Deku_consensus
+
+let identity =
+  let secret = Ed25519.Secret.generate () in
+  let secret = Secret.Ed25519 secret in
+  Identity.make secret
+
+let block ~default_block_size =
+  let above = Genesis.block in
+  let withdrawal_handles_hash = BLAKE2b.hash "potato" in
+  let producer = Producer.empty in
+  Producer.produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
+    producer
+
+let bench f =
+  let t1 = Unix.gettimeofday () in
+  let () = f () in
+  let t2 = Unix.gettimeofday () in
+  t2 -. t1
+
+let bench msg ~items ~domains ~prepare run =
+  Eio_main.run @@ fun env ->
+  Parallel.Pool.run ~env ~domains @@ fun () ->
+  let runs = 10 in
+  let value = prepare () in
+  let results =
+    List.init runs (fun n ->
+        let time = bench (fun () -> run value) in
+        Format.eprintf "%s(%d): %.3f\n%!" msg n time;
+        time)
+  in
+  let total = List.fold_left (fun acc time -> acc +. time) 0.0 results in
+  let average = total /. Int.to_float runs in
+  let per_second = Int.to_float items /. average in
+  Format.eprintf "%s: %.3f\n%!" msg average;
+  Format.eprintf "%s: %.3f/s\n%!" msg per_second
+
+let produce () =
+  let domains = 8 in
+  let items = 1_000_000 in
+  let prepare () = () in
+  (* 6kk/s on 8 domains *)
+  bench "produce" ~items ~domains ~prepare @@ fun () ->
+  let (_ : Block.t) = block ~default_block_size:items in
+  ()
+
+let string_of_block () =
+  let domains = 8 in
+  let items = 1_000_000 in
+  let prepare () = block ~default_block_size:items in
+  (* 1kk/s on 8 domains *)
+  bench "string_of_block" ~items ~domains ~prepare @@ fun block ->
+  let json = Block.yojson_of_t block in
+  let (_ : string) = Yojson.Safe.to_string json in
+  ()
+
+let block_of_string () =
+  let domains = 8 in
+  let items = 1_000_000 in
+  let prepare () =
+    let block = block ~default_block_size:items in
+    let json = Block.yojson_of_t block in
+    Yojson.Safe.to_string json
+  in
+  (* 500k/s on 8 domains *)
+  bench "block_of_string" ~items ~domains ~prepare @@ fun string ->
+  let json = Yojson.Safe.from_string string in
+  let (_ : Block.t) = Block.t_of_yojson json in
+  ()
+
+let prepare () =
+  let items = 100_000 in
+  let domains = 8 in
+  let prepare () =
+    let (Block.Block { payload; _ }) = block ~default_block_size:items in
+    payload
+  in
+  let parallel = Parallel.filter_map_p in
+  (* 100k/s on 8 domains *)
+  bench "prepare" ~items ~domains ~prepare @@ fun payload ->
+  let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
+  ()
+
+let benches = [ produce; string_of_block; block_of_string; prepare ]
+let () = List.iter (fun bench -> bench ()) benches
