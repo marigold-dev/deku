@@ -56,6 +56,7 @@ module Wallet = struct
   [@@deriving yojson]
 
   let read ~env ~file = read_json t_of_yojson ~env ~file
+  let make address priv_key = { address; priv_key }
   let address w = w.address
   let priv_key w = w.priv_key
 

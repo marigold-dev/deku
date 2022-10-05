@@ -67,6 +67,10 @@
               type = "app";
               program = "${deku}/bin/deku-node";
             };
+            cli = {
+              type = "app";
+              program = "${deku}/bin/deku-cli";
+            };
             bootstrap = {
               type = "app";
               program = "${deku}/bin/deku-bootstrap";
@@ -77,7 +81,7 @@
             };
             generate-identity = {
               type = "app";
-              program = "${deku}/bin/deku-generate-identity";
+              program = "${deku}/bin/deku-cli generate-identity";
             };
             cookie-game =
               let script = pkgs.writeScriptBin "cookie-game" ''
