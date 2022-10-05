@@ -10,7 +10,7 @@ const dekuSigner = fromMemorySigner(
 
 (async () => {
   const deku = new DekuToolkit({
-    dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev",
+    dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
     dekuSigner,
   }).setTezosRpc("https://ghostnet.tezos.marigold.dev/");
   const data = `${Buffer.from("hello world").toString("hex")}`;
