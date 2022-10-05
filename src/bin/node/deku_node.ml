@@ -100,10 +100,9 @@ let main params =
   } =
     params
   in
-  let pool = Parallel.Pool.make ~domains in
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
-  Parallel.Pool.run pool @@ fun () ->
+  Parallel.Pool.run ~env ~domains @@ fun () ->
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
   let indexer =
     Indexer.make ~uri:database_uri

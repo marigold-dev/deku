@@ -64,18 +64,18 @@ and handle_chain_action ~sw ~env ~action node =
           Tezos_interop.commit_state_hash ~block_level:current_level
             ~block_payload_hash:payload_hash ~state_hash:state_root_hash
             ~withdrawal_handles_hash ~signatures ~validators tezos_interop
-      | None ->
-          (* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
-          failwith "Node was not initialized with Tezos interop enabled.")
+      | None -> ())
+(* FIXME: this is probably an indication of bad abstraction but being lazy right now *)
+(* failwith "Node was not initialized with Tezos interop enabled.") *)
 
 and handle_chain_fragment ~sw ~env ~fragment node =
+  Eio.Fiber.fork ~sw @@ fun () ->
   let identity = node.identity in
   let default_block_size = node.default_block_size in
   let outcome =
-    Parallel.async (fun () ->
+    Parallel.parallel (fun () ->
         Chain.compute ~identity ~default_block_size fragment)
   in
-  let outcome = Eio.Promise.await outcome in
   let current = current () in
   on_chain_outcome ~sw ~env ~current ~outcome node
 
@@ -207,9 +207,8 @@ let start ~sw ~env ~port ~nodes ~tezos node =
     ]
 
 let test () =
-  let pool = Parallel.Pool.make ~domains:8 in
-  Parallel.Pool.run pool @@ fun () ->
   Eio_main.run @@ fun env ->
+  Parallel.Pool.run ~env ~domains:8 @@ fun () ->
   let open Deku_concepts in
   let open Deku_crypto in
   let open Deku_external_vm in

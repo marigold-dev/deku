@@ -35,7 +35,6 @@ with ocamlPackages; buildDunePackage rec {
     mirage-crypto-rng
     secp256k1-internal
     piaf
-    domainslib
     cmdliner
     ppx_blob
     data-encoding

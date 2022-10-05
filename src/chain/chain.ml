@@ -443,11 +443,9 @@ let reload ~current chain =
   (Chain { chain with gossip }, actions)
 
 let test () =
-  let pool = Parallel.Pool.make ~domains:16 in
-  Parallel.Pool.run pool @@ fun () ->
-  Eio_main.run @@ fun _env ->
+  Eio_main.run @@ fun env ->
+  Parallel.Pool.run ~env ~domains:16 @@ fun () ->
   let get_current () = Timestamp.of_float (Unix.gettimeofday ()) in
-
   let open Deku_crypto in
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
@@ -516,10 +514,9 @@ let test () =
                 (chain, [ fragment ])
             | Chain_fragment { fragment } ->
                 let outcome =
-                  Parallel.async (fun () ->
+                  Parallel.parallel (fun () ->
                       compute ~identity ~default_block_size:100_000 fragment)
                 in
-                let outcome = Eio.Promise.await outcome in
                 apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
             | Chain_commit _ ->
