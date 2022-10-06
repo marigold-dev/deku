@@ -37,12 +37,12 @@ and handle_chain_action ~sw ~env ~action node =
   let open Chain in
   match action with
   | Chain_timeout { until } -> start_timeout ~sw ~env ~until node
-  | Chain_broadcast { raw_header; raw_content } ->
-      Network_manager.broadcast ~raw_header ~raw_content node.network
-  | Chain_send_message { connection; raw_header; raw_content } ->
-      Network_manager.send ~connection ~raw_header ~raw_content node.network
-  | Chain_send_request { raw_header; raw_content } ->
-      Network_manager.request ~raw_header ~raw_content node.network
+  | Chain_broadcast { raw_header; raw_fragments } ->
+      Network_manager.broadcast ~raw_header ~raw_fragments node.network
+  | Chain_send_message { connection; raw_header; raw_fragments } ->
+      Network_manager.send ~connection ~raw_header ~raw_fragments node.network
+  | Chain_send_request { raw_header; raw_fragments } ->
+      Network_manager.request ~raw_header ~raw_fragments node.network
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block } -> (
       node.notify_api block;
@@ -109,15 +109,15 @@ and on_timeout ~sw ~env ~current node =
   write_chain ~chain node;
   handle_chain_actions ~sw ~env ~actions node
 
-let on_network_message ~sw ~env ~raw_header ~raw_content node =
-  let chain, fragment = Chain.incoming ~raw_header ~raw_content node.chain in
+let on_network_message ~sw ~env ~raw_header ~raw_fragments node =
+  let chain, fragment = Chain.incoming ~raw_header ~raw_fragments node.chain in
   write_chain ~chain node;
   match fragment with
   | Some fragment -> handle_chain_fragment ~sw ~env ~fragment node
   | None -> ()
 
-let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
-  let fragment = Chain.request ~connection ~raw_header ~raw_content in
+let on_network_request ~sw ~env ~connection ~raw_header ~raw_fragments node =
+  let fragment = Chain.request ~connection ~raw_header ~raw_fragments in
   handle_chain_fragment ~sw ~env ~fragment node
 
 let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
@@ -171,17 +171,16 @@ let start ~sw ~env ~port ~nodes ~tezos node =
     let (Request { hash = _; above = _; network }) =
       Request.encode ~above:level
     in
-    let (Network_request { raw_header; raw_content }) = network in
-    Network_manager.send_request ~connection ~raw_header ~raw_content
+    let (Network_request { raw_header; raw_fragments }) = network in
+    Network_manager.send_request ~connection ~raw_header ~raw_fragments
       node.network
   in
-  let on_message ~raw_header ~raw_content =
-    (* Format.eprintf "incoming(%.3f): %s\n%!" (Unix.gettimeofday ())
-       raw_expected_hash; *)
-    on_network_message ~sw ~env ~raw_header ~raw_content node
+  let on_message ~raw_header ~raw_fragments =
+    (* Format.eprintf "incoming(%.3f): %s\n%!" (Unix.gettimeofday ()) raw_header; *)
+    on_network_message ~sw ~env ~raw_header ~raw_fragments node
   in
-  let on_request ~connection ~raw_header ~raw_content =
-    on_network_request ~sw ~env ~connection ~raw_header ~raw_content node
+  let on_request ~connection ~raw_header ~raw_fragments =
+    on_network_request ~sw ~env ~connection ~raw_header ~raw_fragments node
   in
 
   (match tezos with
@@ -208,7 +207,7 @@ let start ~sw ~env ~port ~nodes ~tezos node =
 
 let test () =
   Eio_main.run @@ fun env ->
-  Parallel.Pool.run ~env ~domains:8 @@ fun () ->
+  Parallel.Pool.run ~env ~domains:16 @@ fun () ->
   let open Deku_concepts in
   let open Deku_crypto in
   let open Deku_external_vm in
@@ -224,8 +223,8 @@ let test () =
     [
       (identity (), 4440);
       (identity (), 4441);
-      (identity (), 4442);
-      (identity (), 4443);
+      (* (identity (), 4442);
+         (identity (), 4443); *)
     ]
   in
 
@@ -242,7 +241,7 @@ let test () =
     in
     let dump _chain = () in
     let node =
-      make ~identity ~default_block_size:2 ~dump ~chain ~indexer:None
+      make ~identity ~default_block_size:100_000 ~dump ~chain ~indexer:None
         ~notify_api:(fun _ -> ())
     in
     start ~sw ~env ~port ~nodes ~tezos:None node
@@ -265,18 +264,18 @@ let test () =
       Eio.Fiber.fork ~sw @@ fun () ->
       Network_manager.connect ~net ~clock ~nodes
         ~on_connection:(fun ~connection:_ -> ())
-        ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-        ~on_message:(fun ~raw_header:_ ~raw_content:_ -> ())
+        ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_fragments:_ -> ())
+        ~on_message:(fun ~raw_header:_ ~raw_fragments:_ -> ())
         network
     in
     Eio.Time.sleep clock 0.2;
     let broadcast ~content =
       let open Message in
-      let (Message { network = Network_message { raw_header; raw_content }; _ })
-          =
+      let (Message
+            { network = Network_message { raw_header; raw_fragments }; _ }) =
         Message.encode ~content
       in
-      Network_manager.broadcast ~raw_header ~raw_content network
+      Network_manager.broadcast ~raw_header ~raw_fragments network
     in
 
     let (Block.Block { hash = current_block; level = current_level; _ }) =

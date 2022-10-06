@@ -2,12 +2,12 @@ open Deku_concepts
 
 module Network = struct
   type network =
-    | Network_request of { raw_header : string; raw_content : string }
+    | Network_request of { raw_header : string; raw_fragments : string list }
 
   type t = network
 
-  let make ~raw_header ~raw_content =
-    Network_request { raw_header; raw_content }
+  let make ~raw_header ~raw_fragments =
+    Network_request { raw_header; raw_fragments }
 end
 
 type request =
@@ -24,17 +24,25 @@ let hash ~above =
   (hash, raw_header, raw_content)
 
 exception Expected_hash_mismatch
+exception Invalid_message
 
 let encode ~above =
   let hash, raw_header, raw_content = hash ~above in
-  let network = Network.make ~raw_header ~raw_content in
+  let raw_fragments = [ raw_content ] in
+  let network = Network.make ~raw_header ~raw_fragments in
   Request { hash; above; network }
 
-let decode ~expected ~raw_content =
+let decode ~expected ~raw_fragments =
+  let raw_content =
+    match raw_fragments with
+    | [ raw_content ] -> raw_content
+    | _ -> raise Invalid_message
+  in
   let json = Yojson.Safe.from_string raw_content in
   let above = Level.t_of_yojson json in
   let hash, raw_header, raw_content = hash ~above in
-  let network = Network.make ~raw_header ~raw_content in
+  let raw_fragments = [ raw_content ] in
+  let network = Network.make ~raw_header ~raw_fragments in
   (match Request_hash.equal expected hash with
   | true -> ()
   | false -> raise Expected_hash_mismatch);

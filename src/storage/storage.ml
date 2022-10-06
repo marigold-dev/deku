@@ -11,6 +11,7 @@ module Chain = struct
     | true ->
         let chain =
           Eio_unix.run_in_systhread (fun () ->
+              Eio.Switch.run @@ fun _sw ->
               let json = Yojson.Safe.from_file file in
               Chain.t_of_yojson json)
         in

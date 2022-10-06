@@ -221,6 +221,25 @@ let block_of_string () =
   let (_ : Block.t) = Block.t_of_yojson json in
   ()
 
+let block_encode () =
+  let items = 1_000_000 in
+  let prepare () = block ~default_block_size:items in
+  (* 1kk/s on 8 domains *)
+  bench "block_encode" ~items ~domains ~prepare @@ fun block ->
+  let (_ : string list) = Block.encode block in
+  ()
+
+let block_decode () =
+  let items = 1_000_000 in
+  let prepare () =
+    let block = block ~default_block_size:items in
+    Block.encode block
+  in
+  (* 500k/s on 8 domains *)
+  bench "block_decode" ~items ~domains ~prepare @@ fun fragments ->
+  let (_ : Block.t) = Block.decode fragments in
+  ()
+
 let prepare () =
   let items = 100_000 in
   let prepare () =
@@ -233,5 +252,14 @@ let prepare () =
   let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
   ()
 
-let benches = [ produce; string_of_block; block_of_string; prepare ]
+let benches =
+  [
+    produce;
+    string_of_block;
+    block_of_string;
+    block_encode;
+    block_decode;
+    prepare;
+  ]
+
 let () = List.iter (fun bench -> bench ()) benches

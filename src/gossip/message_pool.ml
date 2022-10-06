@@ -2,7 +2,7 @@ open Deku_concepts
 
 type message_state =
   | Accepted
-  | Pending of { queue : string list }
+  | Pending of { queue : string list list }
   | Unknown
   | Late
 [@@deriving yojson]
@@ -17,7 +17,10 @@ and t = message_pool [@@deriving yojson]
 
 type fragment =
   | Fragment_encode of { content : Message.Content.t }
-  | Fragment_decode of { expected : Message.Header.t; raw_content : string }
+  | Fragment_decode of {
+      expected : Message.Header.t;
+      raw_fragments : string list;
+    }
 
 type outcome =
   | Outcome_message of { message : Message.t }
@@ -70,7 +73,7 @@ let encode ~content =
   (* TODO: content hash to prevent double encoding *)
   Fragment_encode { content }
 
-let decode ~raw_header ~raw_content pool =
+let decode ~raw_header ~raw_fragments pool =
   let open Message.Header in
   try
     let expected = Message.Header.decode ~raw_header in
@@ -78,7 +81,7 @@ let decode ~raw_header ~raw_content pool =
     match state ~hash ~level pool with
     | Accepted -> (pool, None)
     | Pending { queue } ->
-        let queue = raw_content :: queue in
+        let queue = raw_fragments :: queue in
         let state = Pending { queue } in
         let pool = with_state ~hash ~level state pool in
         (pool, None)
@@ -86,7 +89,7 @@ let decode ~raw_header ~raw_content pool =
         let queue = [] in
         let state = Pending { queue } in
         let pool = with_state ~hash ~level state pool in
-        let fragment = Fragment_decode { expected; raw_content } in
+        let fragment = Fragment_decode { expected; raw_fragments } in
         (pool, Some fragment)
     | Late -> (pool, None)
   with exn ->
@@ -98,9 +101,9 @@ let compute fragment =
   | Fragment_encode { content } ->
       let message = Message.encode ~content in
       Outcome_message { message }
-  | Fragment_decode { expected; raw_content } -> (
+  | Fragment_decode { expected; raw_fragments } -> (
       try
-        let message = Message.decode ~expected ~raw_content in
+        let message = Message.decode ~expected ~raw_fragments in
         Outcome_message { message }
       with exn -> Outcome_error { expected; exn })
 
@@ -125,11 +128,11 @@ let apply ~outcome pool =
           | [] ->
               let pool = with_state ~hash ~level Unknown pool in
               (pool, None)
-          | raw_content :: queue ->
+          | raw_fragments :: queue ->
               (* TODO: dedup logic *)
               let state = Pending { queue } in
               let pool = with_state ~hash ~level state pool in
-              let fragment = Fragment_decode { expected; raw_content } in
+              let fragment = Fragment_decode { expected; raw_fragments } in
               let fragment = Message_pool_fragment { fragment } in
               (pool, Some fragment))
       | Accepted | Unknown | Late -> (pool, None))

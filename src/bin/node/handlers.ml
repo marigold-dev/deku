@@ -362,8 +362,8 @@ module Post_operation = struct
       Message.encode ~content
     in
     let open Deku_network in
-    let (Network_message { raw_header; raw_content }) = network in
-    let message = Network_message.message ~raw_header ~raw_content in
+    let (Network_message { raw_header; raw_fragments }) = network in
+    let message = Network_message.message ~raw_header ~raw_fragments in
     ( Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
       Network_protocol.Connection.write connection message );
 

@@ -13,9 +13,9 @@ val listen :
   on_request:
     (connection:Connection_id.t ->
     raw_header:string ->
-    raw_content:string ->
+    raw_fragments:string list ->
     unit) ->
-  on_message:(raw_header:string -> raw_content:string -> unit) ->
+  on_message:(raw_header:string -> raw_fragments:string list -> unit) ->
   network ->
   'a
 
@@ -27,26 +27,28 @@ val connect :
   on_request:
     (connection:Connection_id.t ->
     raw_header:string ->
-    raw_content:string ->
+    raw_fragments:string list ->
     unit) ->
-  on_message:(raw_header:string -> raw_content:string -> unit) ->
+  on_message:(raw_header:string -> raw_fragments:string list -> unit) ->
   network ->
   unit
 
-val broadcast : raw_header:string -> raw_content:string -> network -> unit
-val request : raw_header:string -> raw_content:string -> network -> unit
+val broadcast :
+  raw_header:string -> raw_fragments:string list -> network -> unit
+
+val request : raw_header:string -> raw_fragments:string list -> network -> unit
 
 val send :
   connection:Connection_id.t ->
   raw_header:string ->
-  raw_content:string ->
+  raw_fragments:string list ->
   network ->
   unit
 
 val send_request :
   connection:Connection_id.t ->
   raw_header:string ->
-  raw_content:string ->
+  raw_fragments:string list ->
   network ->
   unit
 

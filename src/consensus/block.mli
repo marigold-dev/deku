@@ -3,8 +3,6 @@ open Deku_crypto
 open Deku_concepts
 open Deku_protocol
 
-exception Invalid_signature
-
 type block = private
   | Block of {
       (* TODO: I don't like that block carries signature *)
@@ -31,6 +29,11 @@ val produce :
   tezos_operations:Tezos_operation.t list ->
   withdrawal_handles_hash:BLAKE2b.t ->
   block
+
+exception Failed_to_decode
+
+val encode : block -> string list
+val decode : string list -> block
 
 (* TODO: tag signatures, should be more than sign of the hash of a block *)
 val sign : identity:Identity.t -> block -> Verified_signature.t
