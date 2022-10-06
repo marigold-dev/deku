@@ -55,9 +55,9 @@ module Get_head : NO_BODY_HANDLERS = struct
   let path = Routes.(version / s "chain" / s "blocks" / s "head" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~env:_ ~path:_ ~state:_ =
-    (*TODO*)
-    Ok Genesis.block
+  let handler ~env:_ ~path:_ ~state =
+    let Api_state.{ current_block; _ } = state in
+    Ok current_block
 end
 
 module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
@@ -94,9 +94,10 @@ module Get_level : NO_BODY_HANDLERS = struct
   let path = Routes.(version / s "chain" / s "level" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~env:_ ~path:_ ~state:_ =
-    (*TODO*)
-    Ok { level = Level.zero }
+  let handler ~env:_ ~path:_ ~state =
+    let Api_state.{ current_block; _ } = state in
+    let (Block.Block { level; _ }) = current_block in
+    Ok { level }
 end
 
 (* module Get_proof : NO_BODY_HANDLERS = struct
