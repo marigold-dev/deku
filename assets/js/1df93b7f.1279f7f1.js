@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[237],{69754:(e,t,s)=>{s.r(t),s.d(t,{default:()=>i});var n=s(67294),u=s(52263),c=s(16550);function i(){const{siteConfig:e}=(0,u.Z)();return n.createElement(c.l_,{to:"/deku/docs/intro"})}}}]);
