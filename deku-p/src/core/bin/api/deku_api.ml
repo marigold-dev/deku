@@ -97,9 +97,7 @@ let main params =
   let network = Network_manager.make ~identity in
   let config = Indexer.{ save_blocks = true; save_messages = true } in
   let indexer = Indexer.make ~uri:database_uri ~config in
-  let state =
-    Api_state.make ~consensus_address ~indexer ~node_port ~network ~identity
-  in
+  let state = Api_state.make ~consensus_address ~indexer ~network ~identity in
   Eio.Fiber.all
     [
       (fun () ->
