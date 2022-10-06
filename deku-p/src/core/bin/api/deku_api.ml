@@ -6,21 +6,31 @@ open Deku_network
 open Deku_gossip
 open Api_state
 open Deku_protocol
+open Deku_consensus
 
 let on_accepted_block ~state ~block =
   state.current_block <- block;
-  Indexer.save_block ~block state.indexer
+  Indexer.save_block ~block state.indexer;
+  let (Block.Block { level; payload; tezos_operations; _ }) = block in
+  let Payload.Payload payload = Payload.decode ~payload in
+  let payload =
+    Parallel.map_p
+      (fun string -> string |> Yojson.Safe.from_string |> Operation.t_of_yojson)
+      payload
+  in
+  let protocol, _receipts, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations
+      state.protocol
+  in
+  state.protocol <- protocol;
+  ()
 
 let listen_to_node ~net ~clock ~state =
   let port = 5550 in
   let Api_state.{ network; _ } = state in
   let on_connection ~connection:_ = () in
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
-  let on_accepted_block ~block ~votes:_ =
-    let open Api_state in
-    state.current_block <- block;
-    Indexer.save_block ~block state.indexer
-  in
+  let on_accepted_block ~block ~votes:_ = on_accepted_block ~state ~block in
   let on_message ~raw_header ~raw_content =
     let header = Message.Header.decode ~raw_header in
     let message = Message.decode ~expected:header ~raw_content in

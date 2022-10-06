@@ -10,7 +10,7 @@ type api_state = {
   indexer : Indexer.t;
   network : Network_manager.t;
   identity : Identity.t;
-  protocol : Protocol.t;
+  mutable protocol : Protocol.t;
 }
 
 type t = api_state
