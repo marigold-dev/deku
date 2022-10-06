@@ -5,17 +5,6 @@ open Api_middlewares
 open Deku_network
 open Deku_gossip
 
-let parse_message_v1 ~raw_header ~raw_content =
-  let header = Message.Header.decode ~raw_header in
-  let message = Message.decode ~expected:header ~raw_content in
-  let (Message.Message { header = _; content; network = _ }) = message in
-  match content with
-  | Message.Content.Content_accepted { block = _; votes = _ } ->
-      print_endline "block accepted"
-  | Message.Content.Content_block _ -> print_endline "content block"
-  | Message.Content.Content_operation _ -> print_endline "content operation"
-  | Message.Content.Content_vote _ -> print_endline "content vote"
-
 let listen_to_node ~net ~clock ~state =
   let port = 5550 in
   let Api_state.{ network; _ } = state in
