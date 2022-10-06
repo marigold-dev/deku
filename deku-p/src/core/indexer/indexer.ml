@@ -47,6 +47,7 @@ module Query = struct
 
   let insert_block ~block ~timestamp pool =
     let (Block.Block { hash = block_hash; level; _ }) = block in
+    let block = Block.yojson_of_t block in
     Caqti_eio.Pool.use (insert_block ~block_hash ~level ~block ~timestamp) pool
     |> Promise.await
 
