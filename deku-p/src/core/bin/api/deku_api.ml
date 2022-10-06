@@ -7,12 +7,13 @@ open Deku_gossip
 open Api_state
 open Deku_protocol
 open Deku_consensus
+open Deku_external_vm
 
 let on_accepted_block ~state ~block =
   state.current_block <- block;
   Indexer.save_block ~block state.indexer;
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
-  let Payload.Payload payload = Payload.decode ~payload in
+  let (Payload.Payload payload) = Payload.decode ~payload in
   let payload =
     Parallel.map_p
       (fun string -> string |> Yojson.Safe.from_string |> Operation.t_of_yojson)
@@ -76,11 +77,21 @@ type params = {
   port : int; [@env "DEKU_API_PORT"]
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
+  named_pipe_path : string; [@env "DEKU_API_VM"]
 }
 [@@deriving cmdliner]
 
 let main params =
-  let { consensus_address; node_uri; port; database_uri; domains } = params in
+  let {
+    consensus_address;
+    node_uri;
+    port;
+    database_uri;
+    domains;
+    named_pipe_path;
+  } =
+    params
+  in
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
@@ -102,11 +113,15 @@ let main params =
   let network = Network_manager.make ~identity in
   let config = Indexer.{ save_blocks = true; save_messages = true } in
   let indexer = Indexer.make ~uri:database_uri ~config in
-  let protocol = Protocol.initial in
+
+  External_vm_client.start_vm_ipc ~named_pipe_path;
+  let vm_state = External_vm_client.get_initial_state () in
+  let protocol = Protocol.initial_with_vm_state ~vm_state in
+
   let state =
     Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
   in
-
+  print_endline "api started";
   Eio.Fiber.all
     [
       (fun () ->

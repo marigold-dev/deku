@@ -27,8 +27,12 @@ export DEKU_API_NODE_URI="127.0.0.1:4440"
 export DEKU_API_PORT=8080
 export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
 export DEKU_API_DOMAINS=8
+export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
+export DEKU_API_DATA_FOLDER="./chain/data/0/"
 
- _build/install/default/bin/deku-api &
+## The api needs its own vm
+nix run ".#$vm" -- "$DEKU_API_VM" &
+_build/install/default/bin/deku-api &
 
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
