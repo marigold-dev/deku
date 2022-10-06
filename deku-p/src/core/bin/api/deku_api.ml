@@ -5,6 +5,7 @@ open Api_middlewares
 open Deku_network
 open Deku_gossip
 open Api_state
+open Deku_protocol
 
 let on_accepted_block ~state ~block =
   state.current_block <- block;
@@ -75,7 +76,6 @@ let main params =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
-
   let node_host, node_port =
     match String.split_on_char ':' node_uri with
     | [ node_host; node_port ] -> (node_host, node_port |> int_of_string)
@@ -92,7 +92,11 @@ let main params =
   let network = Network_manager.make ~identity in
   let config = Indexer.{ save_blocks = true; save_messages = true } in
   let indexer = Indexer.make ~uri:database_uri ~config in
-  let state = Api_state.make ~consensus_address ~indexer ~network ~identity in
+  let protocol = Protocol.initial in
+  let state =
+    Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
+  in
+
   Eio.Fiber.all
     [
       (fun () ->
