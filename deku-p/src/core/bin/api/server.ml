@@ -1,8 +1,6 @@
 open Handlers
 
-type handler =
-  env:Eio.Stdenv.t -> state:Api_state.t -> body:string -> Piaf.Response.t
-
+type handler = state:Api_state.t -> body:string -> Piaf.Response.t
 type server = { get : handler Routes.router; post : handler Routes.router }
 type t = server
 
@@ -31,7 +29,7 @@ let add_route route meth server =
 let with_body (module Handler : HANDLERS) server =
   let route =
     Routes.map
-      (fun path ~env ~state ~body ->
+      (fun path ~state ~body ->
         let body =
           try
             Yojson.Safe.from_string body |> Handler.body_of_yojson |> Result.ok
@@ -44,7 +42,7 @@ let with_body (module Handler : HANDLERS) server =
         match body with
         | Error err -> error_to_response err
         | Ok body -> (
-            let response = Handler.handler ~env ~path ~body ~state in
+            let response = Handler.handler ~path ~body ~state in
             match response with
             | Error error -> error_to_response error
             | Ok response ->
@@ -57,8 +55,8 @@ let with_body (module Handler : HANDLERS) server =
 let without_body (module Handler : NO_BODY_HANDLERS) server =
   let route =
     Routes.map
-      (fun path ~env ~state ~body:_ ->
-        let response = Handler.handler ~env ~path ~state in
+      (fun path ~state ~body:_ ->
+        let response = Handler.handler ~path ~state in
         match response with
         | Error error -> error_to_response error
         | Ok response ->
@@ -68,7 +66,7 @@ let without_body (module Handler : NO_BODY_HANDLERS) server =
   in
   add_route route Handler.meth server
 
-let make_handler ~env ~state server request =
+let make_handler ~state server request =
   let Piaf.Server.Handler.{ request : Piaf.Request.t; _ } = request in
   let target = request.target in
   let meth = request.meth in
@@ -86,7 +84,7 @@ let make_handler ~env ~state server request =
       match matched_route with
       | Ok (Routes.FullMatch handler)
       | Ok (Routes.MatchWithTrailingSlash handler) ->
-          handler ~env ~state ~body
+          handler ~state ~body
       | Ok Routes.NoMatch ->
           Api_error.endpoint_not_found target |> error_to_response
       | Error error -> error |> error_to_response)
