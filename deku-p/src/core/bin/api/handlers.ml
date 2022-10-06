@@ -5,6 +5,7 @@ open Deku_concepts
 open Deku_gossip
 open Deku_external_vm
 open Deku_network
+open Deku_protocol
 
 let version p = Routes.(s "api" / s "v1") p
 
@@ -257,10 +258,8 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
   let path = Routes.(version / s "state" / s "unix" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~path:_ ~state:_ =
-    (* let { chain; _ } = node in
-       let (Chain.Chain { protocol; _ }) = chain in
-       let (Protocol.Protocol { vm_state; _ }) = protocol in
-       Ok vm_state *)
-    Ok External_vm_protocol.State.empty
+  let handler ~path:_ ~state =
+    let Api_state.{ protocol; _ } = state in
+    let (Protocol.Protocol { vm_state; _ }) = protocol in
+    Ok vm_state
 end
