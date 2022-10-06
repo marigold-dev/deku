@@ -18,12 +18,7 @@ let parse_message_v1 ~raw_header ~raw_content =
 
 let listen_to_node ~net ~clock ~state =
   let port = 5550 in
-  let identity =
-    let secret = Deku_crypto.Ed25519.Secret.generate () in
-    let secret = Deku_crypto.Secret.Ed25519 secret in
-    Deku_concepts.Identity.make secret
-  in
-  let network = Network_manager.make ~identity in
+  let Api_state.{ network; _ } = state in
   let on_connection ~connection:_ = () in
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
   let on_accepted_block ~block ~votes:_ =
@@ -68,31 +63,43 @@ let start_api ~env ~sw ~port ~state =
   let _command = Piaf.Server.Command.start ~sw env server in
   ()
 
-let () =
+type params = {
+  consensus_address : Deku_tezos.Address.t;
+      [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
+  node_uri : string; [@env "DEKU_API_NODE_URI"]
+  port : int; [@env "DEKU_API_PORT"]
+  database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
+  domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
+}
+[@@deriving cmdliner]
+
+let main params =
+  let { consensus_address; node_uri; port; database_uri; domains } = params in
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
-  Parallel.Pool.run ~env ~domains:8 @@ fun () ->
+  Parallel.Pool.run ~env ~domains @@ fun () ->
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
-  let _gossip = Deku_gossip.Gossip.initial in
-  let consensus_address =
-    Deku_tezos.Address.of_string "KT1JFPh1zQfhdhEUxKU9ayetgQd92xXvYg5p"
-    |> Option.get
+
+  let node_host, node_port =
+    match String.split_on_char ':' node_uri with
+    | [ node_host; node_port ] -> (node_host, node_port |> int_of_string)
+    | _ -> failwith "wrong node uri"
   in
-  let port = 8080 in
-  let uri = Uri.of_string "sqlite3:/tmp/database.db" in
-  let config = Indexer.{ save_blocks = true; save_messages = true } in
-  let indexer = Indexer.make ~uri ~config in
-  let node_port = 4440 in
-  let node_host = "127.0.0.1" in
+
   let identity =
-    let secret = Deku_crypto.Ed25519.Secret.generate () in
-    let secret = Deku_crypto.Secret.Ed25519 secret in
+    let secret =
+      Deku_crypto.Secret.Ed25519 (Deku_crypto.Ed25519.Secret.generate ())
+    in
     Deku_concepts.Identity.make secret
   in
-  let network = Network_manager.make ~identity in
-  let state = Api_state.make ~consensus_address ~indexer ~node_port ~network in
 
+  let network = Network_manager.make ~identity in
+  let config = Indexer.{ save_blocks = true; save_messages = true } in
+  let indexer = Indexer.make ~uri:database_uri ~config in
+  let state =
+    Api_state.make ~consensus_address ~indexer ~node_port ~network ~identity
+  in
   Eio.Fiber.all
     [
       (fun () ->
@@ -105,3 +112,10 @@ let () =
       (fun () -> start_api ~env ~sw ~port ~state);
       (fun () -> listen_to_node ~net ~clock ~state);
     ]
+
+let () =
+  let open Cmdliner in
+  let info = Cmd.info "deku-api" in
+  let term = Term.(const main $ params_cmdliner_term ()) in
+  let cmd = Cmd.v info term in
+  exit (Cmd.eval ~catch:true cmd)
