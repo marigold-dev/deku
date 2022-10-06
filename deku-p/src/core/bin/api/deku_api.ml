@@ -59,7 +59,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.without_body (module Get_chain_info)
        |> Server.with_body (module Helpers_operation_message)
        |> Server.with_body (module Helpers_hash_operation)
-       (* |> Server.with_body (module Post_operation) *)
+       |> Server.with_body (module Post_operation)
        |> Server.without_body (module Get_vm_state)
        |> Server.make_handler ~env ~state)
   in
@@ -84,10 +84,24 @@ let () =
   let config = Indexer.{ save_blocks = true; save_messages = true } in
   let indexer = Indexer.make ~uri ~config in
   let node_port = 4440 in
-  let state = Api_state.make ~consensus_address ~indexer ~node_port in
+  let node_host = "127.0.0.1" in
+  let identity =
+    let secret = Deku_crypto.Ed25519.Secret.generate () in
+    let secret = Deku_crypto.Secret.Ed25519 secret in
+    Deku_concepts.Identity.make secret
+  in
+  let network = Network_manager.make ~identity in
+  let state = Api_state.make ~consensus_address ~indexer ~node_port ~network in
 
   Eio.Fiber.all
     [
+      (fun () ->
+        Network_manager.connect ~net ~clock
+          ~nodes:[ (node_host, node_port) ]
+          ~on_connection:(fun ~connection:_ -> ())
+          ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
+          ~on_message:(fun ~raw_header:_ ~raw_content:_ -> ())
+          network);
       (fun () -> start_api ~env ~sw ~port ~state);
       (fun () -> listen_to_node ~net ~clock ~state);
     ]

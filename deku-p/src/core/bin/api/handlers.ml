@@ -4,6 +4,7 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_gossip
 open Deku_external_vm
+open Deku_network
 
 let version p = Routes.(s "api" / s "v1") p
 
@@ -227,48 +228,32 @@ module Helpers_hash_operation : HANDLERS = struct
 end
 
 (* Parse the operation and send it to the chain *)
-(* module Post_operation : HANDLERS = struct
-     open Deku_protocol
+module Post_operation : HANDLERS = struct
+  open Deku_protocol
 
-     type path = unit
-     type body = Operation.t [@@deriving of_yojson]
-     type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+  type path = unit
+  type body = Operation.t [@@deriving of_yojson]
+  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
-     let meth = `POST
-     let path = Routes.(version / s "operations" /? nil)
-     let route = Routes.(path @--> ())
+  let meth = `POST
+  let path = Routes.(version / s "operations" /? nil)
+  let route = Routes.(path @--> ())
 
-<<<<<<< HEAD
-     let handler ~env ~path:_ ~body:operation ~constants ~indexer:_ =
-       let Api_state.{ node_address = host; node_port = port; _ } = constants in
-       let net = Eio.Stdenv.net env in
-       let content = Message.Content.operation operation in
-       let (Message { header = _; content = _; network }) =
-         Message.encode ~content
-       in
-       let open Deku_network in
-       let (Network_message { raw_header; raw_content }) = network in
-       let message = Network_message.message ~raw_header ~raw_content in
-       ( Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
-         Network_protocol.Connection.write connection message );
-=======
-  let handler ~env ~path:_ ~body:operation ~state =
-    let Api_state.{ node_address = host; node_port = port; _ } = state in
-    let net = Eio.Stdenv.net env in
+  let handler ~env:_ ~path:_ ~body:operation ~state =
+    let Api_state.{ network; _ } = state in
     let content = Message.Content.operation operation in
-    let (Message { header = _; content = _; network }) =
+    let (Message
+          {
+            header = _;
+            content = _;
+            network = Network_message { raw_header; raw_content };
+          }) =
       Message.encode ~content
     in
-    let open Deku_network in
-    let (Network_message { raw_header; raw_content }) = network in
-    let message = Network_message.message ~raw_header ~raw_content in
-    ( Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
-      Network_protocol.Connection.write connection message );
->>>>>>> 24b8011a (refacto/api: rename constant to state)
-
-       let (Operation.Operation { hash = operation_hash; _ }) = operation in
-       Ok { hash = operation_hash }
-   end *)
+    let (Operation.Operation { hash = operation_hash; _ }) = operation in
+    Network_manager.broadcast ~raw_header ~raw_content network;
+    Ok { hash = operation_hash }
+end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
   type path = unit
