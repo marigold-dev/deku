@@ -366,7 +366,11 @@ let apply_store_outcome ~level ~network chain =
         (oldest_trusted, trusted)
     | false -> (oldest_trusted, trusted)
   in
-  (Chain { chain with gossip; oldest_trusted; trusted }, [])
+  let broadcast =
+    let (Network_message { raw_header; raw_content }) = network in
+    Chain_broadcast { raw_header; raw_content }
+  in
+  (Chain { chain with gossip; oldest_trusted; trusted }, [ broadcast ])
 
 let apply ~identity ~current ~outcome chain =
   match outcome with
