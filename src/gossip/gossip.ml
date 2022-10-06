@@ -58,10 +58,10 @@ let broadcast_message ~content =
   let fragment = Message_pool.encode ~content in
   Fragment_broadcast_message { fragment }
 
-let incoming_message ~raw_header ~raw_content gossip =
+let incoming_message ~raw_header ~raw_fragments gossip =
   let (Gossip { pending_request; message_pool }) = gossip in
   let message_pool, fragment =
-    Message_pool.decode ~raw_header ~raw_content message_pool
+    Message_pool.decode ~raw_header ~raw_fragments message_pool
   in
   let gossip = Gossip { pending_request; message_pool } in
   let fragment =

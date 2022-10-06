@@ -7,7 +7,7 @@ module Connection = struct
   type t = connection
 
   let of_stream stream k =
-    let max_size = Network_message.max_size in
+    let max_size = Network_message.max_fragment_size in
     Eio.Buf_write.with_flow ~initial_size:max_size stream @@ fun write_buf ->
     let read_buf =
       Eio.Buf_read.of_flow ~initial_size:max_size ~max_size stream
@@ -68,27 +68,29 @@ end
 let test () =
   Eio_main.run @@ fun env ->
   let net = Eio.Stdenv.net env in
-  let on_request ~send ~raw_header ~raw_content =
-    Format.eprintf "request.header: %s; content: %s\n%!" raw_header raw_content;
-    send ~raw_header ~raw_content
+  let on_request ~send ~raw_header ~raw_fragments =
+    Format.eprintf "request.header: %s; fragments: %s\n%!" raw_header
+      (String.concat ":" raw_fragments);
+    send ~raw_header ~raw_fragments
   in
-  let on_message ~raw_header ~raw_content =
-    Format.eprintf "message.header: %s; content: %s\n%!" raw_header raw_content
+  let on_message ~raw_header ~raw_fragments =
+    Format.eprintf "message.header: %s; content: %s\n%!" raw_header
+      (String.concat ":" raw_fragments)
   in
 
   let host = "localhost" in
   let port = 1234 in
   let handler connection =
-    let send ~raw_header ~raw_content =
-      let message = Network_message.message ~raw_header ~raw_content in
+    let send ~raw_header ~raw_fragments =
+      let message = Network_message.message ~raw_header ~raw_fragments in
       Connection.write connection message
     in
     let on_message message =
       match message with
-      | Network_message.Message { raw_header; raw_content } ->
-          on_message ~raw_header ~raw_content
-      | Network_message.Request { raw_header; raw_content } ->
-          on_request ~send ~raw_header ~raw_content
+      | Network_message.Message { raw_header; raw_fragments } ->
+          on_message ~raw_header ~raw_fragments
+      | Network_message.Request { raw_header; raw_fragments } ->
+          on_request ~send ~raw_header ~raw_fragments
     in
     let rec loop () =
       let message = Connection.read connection in
@@ -107,13 +109,13 @@ let test () =
       Eio.Fiber.both
         (fun () ->
           let raw_header = Format.sprintf "rh%d" counter in
-          let raw_content = Format.sprintf "rc%d" counter in
-          let message = Network_message.request ~raw_header ~raw_content in
+          let raw_fragments = [ Format.sprintf "rc%d" counter ] in
+          let message = Network_message.request ~raw_header ~raw_fragments in
           Connection.write connection message)
         (fun () ->
           let raw_header = Format.sprintf "sh%d" counter in
-          let raw_content = Format.sprintf "sc%d" counter in
-          let message = Network_message.message ~raw_header ~raw_content in
+          let raw_fragments = [ Format.sprintf "sc%d" counter ] in
+          let message = Network_message.message ~raw_header ~raw_fragments in
           Connection.write connection message);
       loop_write (counter + 1)
     in

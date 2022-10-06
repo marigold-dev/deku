@@ -45,13 +45,13 @@ type outcome =
 
 type action =
   | Chain_timeout of { until : Timestamp.t }
-  | Chain_broadcast of { raw_header : string; raw_content : string }
+  | Chain_broadcast of { raw_header : string; raw_fragments : string list }
   | Chain_send_message of {
       connection : Connection_id.t; [@opaque]
       raw_header : string;
-      raw_content : string;
+      raw_fragments : string list;
     }
-  | Chain_send_request of { raw_header : string; raw_content : string }
+  | Chain_send_request of { raw_header : string; raw_fragments : string list }
   | Chain_fragment of { fragment : fragment [@opaque] }
   | Chain_save_block of { block : Block.t }
   | Chain_commit of {
@@ -142,6 +142,11 @@ let apply_consensus_action chain consensus_action =
   | Consensus_apply { block; votes } ->
       (* TODO: restarting here is weird and probably half buggy *)
       let (Chain { protocol; _ }) = chain in
+      let () =
+        let (Block { level; _ }) = block in
+        Format.printf "trusted(%.3f): %a\n%!" (Unix.gettimeofday ()) Level.pp
+          level
+      in
       let apply = Fragment_apply { block; votes; protocol } in
       let apply = Chain_fragment { fragment = apply } in
       let store = Fragment_store { block; votes } in
@@ -155,7 +160,8 @@ let apply_consensus_action chain consensus_action =
         match network with
         | Some network ->
             let (Network_request { raw_header; raw_content }) = network in
-            [ Chain_send_request { raw_header; raw_content } ]
+            let raw_fragments = [ raw_content ] in
+            [ Chain_send_request { raw_header; raw_fragments } ]
         | None -> []
       in
       (chain, actions)
@@ -233,8 +239,8 @@ let incoming_request ~connection ~above chain =
     List.rev_map
       (fun network ->
         let open Message.Network in
-        let (Network_message { raw_header; raw_content }) = network in
-        Chain_send_message { connection; raw_header; raw_content })
+        let (Network_message { raw_header; raw_fragments }) = network in
+        Chain_send_message { connection; raw_header; raw_fragments })
       rev_messages
   in
   (chain, actions)
@@ -244,15 +250,15 @@ let apply_gossip_action ~identity ~current ~gossip_action chain =
   | Gossip.Gossip_apply_and_broadcast { content; network } ->
       let chain, actions = incoming_message ~identity ~current ~content chain in
       let broadcast =
-        let (Network_message { raw_header; raw_content }) = network in
-        Chain_broadcast { raw_header; raw_content }
+        let (Network_message { raw_header; raw_fragments }) = network in
+        Chain_broadcast { raw_header; raw_fragments }
       in
       let actions = broadcast :: actions in
       (chain, actions)
   | Gossip.Gossip_send_message { connection; network } ->
       let send =
-        let (Network_message { raw_header; raw_content }) = network in
-        Chain_send_message { connection; raw_header; raw_content }
+        let (Network_message { raw_header; raw_fragments }) = network in
+        Chain_send_message { connection; raw_header; raw_fragments }
       in
       (chain, [ send ])
   | Gossip.Gossip_incoming_request { connection; above } ->
@@ -263,10 +269,10 @@ let apply_gossip_action ~identity ~current ~gossip_action chain =
       (chain, [ fragment ])
 
 (* external *)
-let incoming ~raw_header ~raw_content chain =
+let incoming ~raw_header ~raw_fragments chain =
   let (Chain ({ gossip; _ } as chain)) = chain in
   let gossip, fragment =
-    Gossip.incoming_message ~raw_header ~raw_content gossip
+    Gossip.incoming_message ~raw_header ~raw_fragments gossip
   in
   let fragment =
     match fragment with
@@ -276,9 +282,14 @@ let incoming ~raw_header ~raw_content chain =
   let chain = Chain { chain with gossip } in
   (chain, fragment)
 
-let request ~connection ~raw_header ~raw_content =
-  let fragment = Gossip.incoming_request ~connection ~raw_header ~raw_content in
-  Fragment_gossip { fragment }
+let request ~connection ~raw_header ~raw_fragments =
+  match raw_fragments with
+  | [ raw_content ] ->
+      let fragment =
+        Gossip.incoming_request ~connection ~raw_header ~raw_content
+      in
+      Some (Fragment_gossip { fragment })
+  | _ -> None
 
 let timeout ~identity ~current chain =
   let (Chain ({ consensus; _ } as chain)) = chain in
@@ -385,13 +396,16 @@ let compute ~identity ~default_block_size fragment =
         Producer.produce ~identity ~default_block_size ~above
           ~withdrawal_handles_hash producer
       in
+      let () = Format.printf "produce(%.3f)\n%!" (Unix.gettimeofday ()) in
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
       let (Block { level; payload; tezos_operations; _ }) = block in
       let () =
-        Format.printf "%a(%.3f)\n%!" Level.pp level (Unix.gettimeofday ())
+        Format.printf "applying(%.3f): %a\n%!" (Unix.gettimeofday ()) Level.pp
+          level
       in
       let payload = Protocol.prepare ~parallel:Parallel.filter_map_p ~payload in
+      let () = Format.printf "prepared(%.3f)\n%!" (Unix.gettimeofday ()) in
       let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload protocol ~tezos_operations
       in
@@ -487,8 +501,10 @@ let test () =
           let chain, additional_actions =
             match action with
             | Chain_timeout _ -> (chain, [])
-            | Chain_broadcast { raw_header; raw_content } ->
-                let chain, fragment = incoming ~raw_header ~raw_content chain in
+            | Chain_broadcast { raw_header; raw_fragments } ->
+                let chain, fragment =
+                  incoming ~raw_header ~raw_fragments chain
+                in
                 let actions =
                   match fragment with
                   | Some fragment ->
@@ -497,8 +513,11 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_message { connection = _; raw_header; raw_content } ->
-                let chain, fragment = incoming ~raw_header ~raw_content chain in
+            | Chain_send_message { connection = _; raw_header; raw_fragments }
+              ->
+                let chain, fragment =
+                  incoming ~raw_header ~raw_fragments chain
+                in
                 let actions =
                   match fragment with
                   | Some fragment ->
@@ -507,11 +526,14 @@ let test () =
                   | None -> []
                 in
                 (chain, actions)
-            | Chain_send_request { raw_header; raw_content } ->
+            | Chain_send_request { raw_header; raw_fragments } -> (
                 let connection = Connection_id.initial in
-                let fragment = request ~connection ~raw_header ~raw_content in
-                let fragment = Chain_fragment { fragment } in
-                (chain, [ fragment ])
+                let fragment = request ~connection ~raw_header ~raw_fragments in
+                match fragment with
+                | Some fragment ->
+                    let fragment = Chain_fragment { fragment } in
+                    (chain, [ fragment ])
+                | None -> (chain, []))
             | Chain_fragment { fragment } ->
                 let outcome =
                   Parallel.parallel (fun () ->

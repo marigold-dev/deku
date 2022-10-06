@@ -186,6 +186,6 @@ let main () =
   let cmd = Cmdliner.Cmd.v info term in
   exit (Cmdliner.Cmd.eval ~catch:true cmd)
 
-(* let _ = main
-   let main () = Node.test () *)
+let _ = main
+let main () = Node.test ()
 let () = main ()

@@ -29,6 +29,8 @@ module Content = struct
 
   and t = content [@@deriving show, yojson]
 
+  exception Invalid_content
+
   let block block = Content_block block
   let vote ~level ~vote = Content_vote { level; vote }
   let operation operation = Content_operation operation
@@ -41,16 +43,57 @@ module Content = struct
         level
     | Content_vote { level; vote = _ } -> level
     | Content_operation operation -> Operation.last_includable_level operation
+
+  (* TODO: this is a hack*)
+  let encode content =
+    match content with
+    | Content_block block ->
+        let content = Block.yojson_of_t block in
+        let content = Yojson.Safe.Util.to_assoc content in
+        let _key, payload =
+          List.find (fun (key, _value) -> key = "payload") content
+        in
+        let fragments =
+          Yojson.Safe.Util.to_list payload
+          |> List.map (fun item -> Yojson.Safe.Util.to_string item)
+        in
+        let content =
+          List.filter (fun (key, _value) -> key <> "payload") content
+        in
+        let content = ("payload", `List []) :: content in
+        let header = `Assoc content in
+        Yojson.Safe.to_string header :: "tag" :: fragments
+    | _ ->
+        let json = yojson_of_t content in
+        Yojson.Safe.to_string json :: []
+
+  let decode fragments =
+    match fragments with
+    | [] -> raise Invalid_content
+    | header :: [] ->
+        let json = Yojson.Safe.from_string header in
+        t_of_yojson json
+    | header :: _tag :: fragments ->
+        let header = Yojson.Safe.from_string header in
+        let payload = List.map (fun string -> `String string) fragments in
+        let header = Yojson.Safe.Util.to_assoc header in
+        let header =
+          List.filter (fun (key, _value) -> key <> "payload") header
+        in
+        let header = ("payload", `List payload) :: header in
+        let header = `Assoc header in
+        let block = Block.t_of_yojson header in
+        Content_block block
 end
 
 module Network = struct
   type network_message =
-    | Network_message of { raw_header : string; raw_content : string }
+    | Network_message of { raw_header : string; raw_fragments : string list }
 
   and t = network_message [@@deriving yojson]
 
-  let make ~raw_header ~raw_content =
-    Network_message { raw_header; raw_content }
+  let make ~raw_header ~raw_fragments =
+    Network_message { raw_header; raw_fragments }
 end
 
 type message =
@@ -60,11 +103,10 @@ type t = message
 
 exception Expected_header_mismatch
 
-let hash ~json_content =
+let hash ~raw_fragments =
   (* guarantees canonical representation *)
-  let raw_content = Yojson.Safe.to_string json_content in
-  let hash = Message_hash.hash raw_content in
-  (hash, raw_content)
+  let raw_content = String.concat ":" raw_fragments in
+  Message_hash.hash raw_content
 
 let header ~hash ~content =
   let level = Content.last_relevant_level content in
@@ -73,19 +115,18 @@ let header ~hash ~content =
   (header, raw_header)
 
 let encode ~content =
-  let json_content = Content.yojson_of_t content in
-  let hash, raw_content = hash ~json_content in
+  let raw_fragments = Content.encode content in
+  let hash = hash ~raw_fragments in
   let header, raw_header = header ~hash ~content in
-  let network = Network.make ~raw_header ~raw_content in
+  let network = Network.make ~raw_header ~raw_fragments in
   Message { header; content; network }
 
-let decode ~expected ~raw_content =
+let decode ~expected ~raw_fragments =
   (* TODO: why not use encode here? To avoid reserializing again *)
-  let json_content = Yojson.Safe.from_string raw_content in
-  let hash, raw_content = hash ~json_content in
-  let content = Content.t_of_yojson json_content in
+  let hash = hash ~raw_fragments in
+  let content = Content.decode raw_fragments in
   let header, raw_header = header ~hash ~content in
-  let network = Network.make ~raw_header ~raw_content in
+  let network = Network.make ~raw_header ~raw_fragments in
   (match Header.equal expected header with
   | true -> ()
   | false -> raise Expected_header_mismatch);

@@ -1,18 +1,17 @@
 type message = private
-  | Message of { raw_header : string; raw_content : string }
-  | Request of { raw_header : string; raw_content : string }
+  | Message of { raw_header : string; raw_fragments : string list }
+  | Request of { raw_header : string; raw_fragments : string list }
 
 type t = message
 
-val max_size : int
+val max_fragment_size : int
 
 (* constructors *)
-val message : raw_header:string -> raw_content:string -> message
-val request : raw_header:string -> raw_content:string -> message
+val message : raw_header:string -> raw_fragments:string list -> message
+val request : raw_header:string -> raw_fragments:string list -> message
 
 (* communication *)
-exception Invalid_tag
-exception Invalid_message_size
+exception Invalid_message
 
 val read : Eio.Buf_read.t -> message
 val write : Eio.Buf_write.t -> message -> unit

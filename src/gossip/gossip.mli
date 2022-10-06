@@ -21,7 +21,10 @@ val initial : gossip
 val broadcast_message : content:Message.Content.t -> fragment
 
 val incoming_message :
-  raw_header:string -> raw_content:string -> gossip -> gossip * fragment option
+  raw_header:string ->
+  raw_fragments:string list ->
+  gossip ->
+  gossip * fragment option
 
 val send_message :
   connection:Connection_id.t -> content:Message.Content.t -> fragment

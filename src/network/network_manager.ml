@@ -36,10 +36,10 @@ let with_connection ~on_connection ~on_request ~on_message network k =
     in
     let on_message message =
       match message with
-      | Network_message.Message { raw_header; raw_content } ->
-          on_message ~raw_header ~raw_content
-      | Network_message.Request { raw_header; raw_content } ->
-          on_request ~connection:connection_id ~raw_header ~raw_content
+      | Network_message.Message { raw_header; raw_fragments } ->
+          on_message ~raw_header ~raw_fragments
+      | Network_message.Request { raw_header; raw_fragments } ->
+          on_request ~connection:connection_id ~raw_header ~raw_fragments
     in
     let rec loop () =
       let message = Connection.read connection in
@@ -108,27 +108,27 @@ let broadcast message network =
     (fun _connection write -> send ~message ~write)
     network.connections
 
-let request ~raw_header ~raw_content network =
-  let request = Network_message.request ~raw_header ~raw_content in
+let request ~raw_header ~raw_fragments network =
+  let request = Network_message.request ~raw_header ~raw_fragments in
   broadcast request network
 
-let broadcast ~raw_header ~raw_content network =
-  let message = Network_message.message ~raw_header ~raw_content in
+let broadcast ~raw_header ~raw_fragments network =
+  let message = Network_message.message ~raw_header ~raw_fragments in
   broadcast message network
 
-let send_request ~connection ~raw_header ~raw_content network =
+let send_request ~connection ~raw_header ~raw_fragments network =
   match Connection_id.Map.find_opt connection network.connections with
   | Some write ->
-      let message = Network_message.request ~raw_header ~raw_content in
+      let message = Network_message.request ~raw_header ~raw_fragments in
       send ~message ~write
   | None ->
       (* dead connection *)
       ()
 
-let send ~connection ~raw_header ~raw_content network =
+let send ~connection ~raw_header ~raw_fragments network =
   match Connection_id.Map.find_opt connection network.connections with
   | Some write ->
-      let message = Network_message.message ~raw_header ~raw_content in
+      let message = Network_message.message ~raw_header ~raw_fragments in
       send ~message ~write
   | None ->
       (* dead connection *)
@@ -136,7 +136,7 @@ let send ~connection ~raw_header ~raw_content network =
 
 let test () =
   Eio_main.run @@ fun env ->
-  let nodes = [ ("localhost", 1234) ] in
+  let nodes = [ ("localhost", 1234); ("localhost", 1235) ] in
 
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
@@ -144,27 +144,40 @@ let test () =
   let start ~port : unit =
     let network = make () in
     let on_connection ~connection:_ = Format.eprintf "connected\n%!" in
-    let on_request ~connection ~raw_header ~raw_content =
-      Format.eprintf "request(%s): %s\n%!" raw_header raw_content;
-      send ~connection ~raw_header ~raw_content network
+    let on_request ~connection ~raw_header ~raw_fragments =
+      Format.eprintf "request(%s:%.3f): %d\n%!" raw_header
+        (Unix.gettimeofday ())
+        (List.length raw_fragments);
+      send ~connection ~raw_header ~raw_fragments network
     in
-    let on_message ~raw_header ~raw_content =
-      Format.eprintf "message(%s): %s\n%!" raw_header raw_content
+    let on_message ~raw_header ~raw_fragments =
+      Format.eprintf "message(%s:%.3f): %d\n%!" raw_header
+        (Unix.gettimeofday ())
+        (List.length raw_fragments)
     in
-
+    let raw_fragments = [ String.make 10_000_000 'a' ] in
+    (* let rec loop counter =
+         Eio.Fiber.yield ();
+         Eio.Fiber.both
+           (fun () ->
+             let raw_header = Format.sprintf "rh%d" counter in
+             request ~raw_header ~raw_content network)
+           (fun () ->
+             let raw_header = Format.sprintf "sh%d" counter in
+             broadcast ~raw_header ~raw_content network);
+         loop (counter + 1)
+       in *)
     let rec loop counter =
-      Eio.Fiber.yield ();
-      Eio.Fiber.both
-        (fun () ->
-          let raw_header = Format.sprintf "rh%d" counter in
-          let raw_content = Format.sprintf "rc%d" counter in
-          request ~raw_header ~raw_content network)
-        (fun () ->
-          let raw_header = Format.sprintf "sh%d" counter in
-          let raw_content = Format.sprintf "sc%d" counter in
-          broadcast ~raw_header ~raw_content network);
+      let raw_header = Format.sprintf "sh%d" counter in
+      Format.eprintf "sending(%s:%.3f): %d\n%!" raw_header
+        (Unix.gettimeofday ())
+        (List.length raw_fragments);
+      broadcast ~raw_header ~raw_fragments network;
+
+      Eio.Time.sleep clock 0.5;
       loop (counter + 1)
     in
+
     Eio.Fiber.all
       [
         (fun () ->

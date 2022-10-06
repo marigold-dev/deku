@@ -30,7 +30,7 @@ end
 
 module Network : sig
   type network_message = private
-    | Network_message of { raw_header : string; raw_content : string }
+    | Network_message of { raw_header : string; raw_fragments : string list }
 
   type t = network_message [@@deriving yojson]
 end
@@ -43,4 +43,4 @@ type t = message
 exception Expected_header_mismatch
 
 val encode : content:Content.t -> message
-val decode : expected:Header.t -> raw_content:string -> message
+val decode : expected:Header.t -> raw_fragments:string list -> message
