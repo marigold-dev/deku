@@ -4,6 +4,11 @@ open Deku_indexer
 open Api_middlewares
 open Deku_network
 open Deku_gossip
+open Api_state
+
+let on_accepted_block ~state ~block =
+  state.current_block <- block;
+  Indexer.save_block ~block state.indexer
 
 let listen_to_node ~net ~clock ~state =
   let port = 5550 in
@@ -50,7 +55,7 @@ let start_api ~env ~sw ~port ~state =
   in
   let config = Piaf.Server.Config.create port in
   let server = Piaf.Server.create ~config request_handler in
-  let _command = Piaf.Server.Command.start ~sw env server in
+  let _ = Piaf.Server.Command.start ~sw env server in
   ()
 
 type params = {
