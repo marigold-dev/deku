@@ -127,34 +127,36 @@ end
            Ok { withdrawal_handles_hash; handle; proof }
    end *)
 
-(* module Get_balance : NO_BODY_HANDLERS = struct
-     type path = {
-       address : Deku_protocol.Address.t;
-       ticket_id : Deku_protocol.Ticket_id.t;
-     }
+module Get_balance : NO_BODY_HANDLERS = struct
+  open Api_path
 
-     type response = { balance : int } [@@deriving yojson_of]
+  type path = {
+    address : Deku_protocol.Address.t;
+    ticket_id : Deku_protocol.Ticket_id.t;
+  }
 
-     let meth = `GET
+  type response = { balance : int } [@@deriving yojson_of]
 
-     let path =
-       let open Path in
-       Routes.(
-         version / s "balance" / Address.parser / Ticketer.parser / Data.parser
-         /? nil)
+  let meth = `GET
 
-     let route =
-       Routes.(
-         path @--> fun address ticketer data ->
-         { address; ticket_id = Deku_protocol.Ticket_id.make ticketer data })
+  let path =
+    Routes.(
+      version / s "balance" / Address.parser / Ticketer.parser / Data.parser
+      /? nil)
 
-     let handler ~path ~state:_ =
-       let { address; ticket_id } = path in
-       let { chain = Chain { protocol = Protocol { ledger; _ }; _ }; _ } = node in
-       let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
-       let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
-       Ok { balance = amount }
-   end *)
+  let route =
+    Routes.(
+      path @--> fun address ticketer data ->
+      { address; ticket_id = Deku_protocol.Ticket_id.make ticketer data })
+
+  let handler ~path ~state =
+    let { address; ticket_id } = path in
+    let Api_state.{ protocol; _ } = state in
+    let (Protocol { ledger; _ }) = protocol in
+    let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
+    let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
+    Ok { balance = amount }
+end
 
 module Get_chain_info : NO_BODY_HANDLERS = struct
   type path = unit

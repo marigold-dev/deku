@@ -31,6 +31,7 @@ end
 
 module Operation_hash = struct
   open Deku_protocol
+
   type t = Operation_hash.t
 
   let parser path =
@@ -41,6 +42,7 @@ end
 
 module Address = struct
   open Deku_protocol
+
   type t = Address
 
   let parser path =
@@ -62,10 +64,13 @@ module Data = struct
   type t = bytes
 
   let parser path =
-    let serialize data =
-      data |> Bytes.to_string |> Hex.of_string |> Hex.show
-    in
+    let serialize data = data |> Bytes.to_string |> Hex.of_string |> Hex.show in
     let parse string =
+      let string =
+        match String.starts_with ~prefix:"0x" string with
+        | false -> string
+        | true -> String.sub string 2 (String.length string - 2)
+      in
       Hex.to_string (`Hex string) |> Bytes.of_string |> Option.some
     in
     Routes.custom ~serialize ~parse ~label:":data" path
