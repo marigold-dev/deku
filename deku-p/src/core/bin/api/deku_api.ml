@@ -12,7 +12,8 @@ let listen_to_node ~net ~clock ~state =
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
   let on_accepted_block ~block ~votes:_ =
     let open Api_state in
-    state.current_block <- block
+    state.current_block <- block;
+    Indexer.save_block ~block state.indexer
   in
   let on_message ~raw_header ~raw_content =
     let header = Message.Header.decode ~raw_header in
