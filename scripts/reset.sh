@@ -12,3 +12,5 @@ for N in 0 1 2 3; do
     rm -rf "./chain/data/$N/api_vm_pipe_write"
     rm -rf "./chain/data/$N/deku_api.json"
 done
+
+rm -rf /tmp/api_database.db
