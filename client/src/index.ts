@@ -17,6 +17,8 @@ import { KeyHash as KeyHashType } from './core/key-hash';
 import { Proof } from './core/proof';
 import TicketID, { TicketID as TicketIDType } from './core/ticket-id';
 
+/* FIXME: reintroduce discovery when the API supports it */
+
 export type Setting = {
     dekuRpc: string,
     dekuSigner?: DekuSigner
@@ -127,9 +129,9 @@ export class DekuToolkit {
         // get the consensus and discovery address
         const uri = this.endpoints["GET_CHAIN_INFO"];
         const consensusContract = () => get(uri).then(({ consensus }) => tezos.contract.at(consensus));
-        const discoveryContract = () => get(uri).then(({ discovery }) => tezos.contract.at(discovery));
+        // const discoveryContract = () => get(uri).then(({ discovery }) => tezos.contract.at(discovery));
         this._consensus = new Consensus(consensusContract);
-        this._discovery = new Discovery(discoveryContract);
+        // this._discovery = new Discovery(discoveryContract);
         return this;
     }
 
@@ -157,14 +159,15 @@ export class DekuToolkit {
      * @return the consensus contract
      */
     get discovery(): Discovery | undefined {
-        return this._discovery;
+        throw "Not implemented"
+        // return this._discovery;
     }
 
     /**
      * Returns the address of the consensus and discovery used by the deku chain
      * @returns the consensus and discovery addresses
      */
-    async info(): Promise<{ consensus: string, discovery: string }> {
+    async info(): Promise<{ consensus: string }> {
         const info = await get(this.endpoints["GET_CHAIN_INFO"])
         return info;
     }

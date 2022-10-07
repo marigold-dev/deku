@@ -13,8 +13,12 @@ type endpoint<T> = {
     parse: (json: JSONValue) => T | null
 }
 
+/* FIXME: reintroduce discovery when the API supports it */
 export type endpoints = {
-    "GET_CHAIN_INFO": endpoint<{ consensus: string, discovery: string }>,
+    "GET_CHAIN_INFO": endpoint<{
+      consensus: string
+      //, discovery: string
+    }>,
     "GET_CURRENT_LEVEL": endpoint<LevelType>,
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => endpoint<BlockType>,
     "GET_BLOCK_BY_HASH": (hash: string) => endpoint<BlockType>,
@@ -31,10 +35,10 @@ export const makeEndpoints = (root: string): endpoints => ({
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const consensus = json.at("consensus").as_string();
-            const discovery = json.at("discovery").as_string();
+            // const discovery = json.at("discovery").as_string();
             if (consensus === null) return null;
-            if (discovery === null) return null;
-            return { consensus, discovery }
+            // if (discovery === null) return null;
+            return { consensus }
         }
     },
     "GET_CURRENT_LEVEL": {
