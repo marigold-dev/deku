@@ -10,7 +10,8 @@
   deku_concepts
   deku_constants
   deku_gossip
-  ppx_rapper_eio)
+  ppx_rapper_eio
+  ezgzip)
  (preprocess
   (pps
    ppx_rapper
