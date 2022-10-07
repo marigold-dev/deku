@@ -160,15 +160,15 @@ end
 
 module Get_chain_info : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = { consensus : string } [@@deriving yojson_of]
+  type response = { consensus : string; is_sync : bool } [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "info" /? nil)
   let route = Routes.(path @--> ())
 
   let handler ~path:_ ~state =
-    let Api_state.{ consensus_address; _ } = state in
-    Ok { consensus = Deku_tezos.Address.to_string consensus_address }
+    let Api_state.{ consensus_address; is_sync; _ } = state in
+    Ok { consensus = Deku_tezos.Address.to_string consensus_address; is_sync }
 end
 
 module Helpers_operation_message : HANDLERS = struct

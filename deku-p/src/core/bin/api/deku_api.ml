@@ -25,6 +25,7 @@ let apply_block ~env ~folder ~state ~block =
       state.protocol
   in
   state.protocol <- protocol;
+  state.is_sync <- true;
   Api_state.Storage.write ~env ~folder state
 
 let on_accepted_block ~env ~folder ~state ~block =

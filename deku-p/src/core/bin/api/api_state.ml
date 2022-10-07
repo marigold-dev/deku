@@ -12,13 +12,22 @@ type api_state = {
   network : Network_manager.t;
   identity : Identity.t;
   mutable protocol : Protocol.t;
+  mutable is_sync : bool;
 }
 
 type t = api_state
 
 let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
     =
-  { consensus_address; current_block; indexer; identity; network; protocol }
+  {
+    consensus_address;
+    current_block;
+    indexer;
+    network;
+    identity;
+    protocol;
+    is_sync = false;
+  }
 
 module Storage = struct
   type t = { current_block : Block.t; protocol : Protocol.t }
@@ -35,6 +44,7 @@ module Storage = struct
       identity = _;
       network = _;
       protocol;
+      is_sync = _;
     } =
       state
     in
