@@ -411,5 +411,7 @@ export class DekuToolkit {
     }
 }
 
+export { Proof } from './core/proof';
 export { fromBeaconSigner, fromCustomSigner, fromMemorySigner } from './utils/signers';
-export { Proof };
+
+
