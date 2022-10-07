@@ -1,21 +1,21 @@
-import { DekuSigner } from './utils/signers';
-import joinPath from "../utils/paths";
 import { TezosToolkit } from '@taquito/taquito';
 import Consensus from './contracts/consensus';
 import Discovery from './contracts/discovery';
-import { endpoints, get, makeEndpoints, post } from "./network";
-import { Level as LevelType } from "./core/level";
-import { Block as BlockType } from "./core/block";
-import Nonce, { Nonce as NonceType } from "./core/nonce";
 import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
-import Operation, {Operation as OperationType} from "./core/operation";
+import { Block as BlockType } from "./core/block";
+import { KeyHash as KeyHashType } from './core/key-hash';
+import { Level as LevelType } from "./core/level";
+import Nonce, { Nonce as NonceType } from "./core/nonce";
+import Operation, { Operation as OperationType } from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
+import { Proof } from './core/proof';
+import TicketID from './core/ticket-id';
+import { endpoints, get, makeEndpoints, post } from "./network";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
-import { KeyHash as KeyHashType } from './core/key-hash';
-import { Proof } from './core/proof';
-import TicketID, { TicketID as TicketIDType } from './core/ticket-id';
+import { DekuSigner } from './utils/signers';
+import urlJoin from "./utils/urlJoin";
 
 /* FIXME: reintroduce discovery when the API supports it */
 
@@ -77,13 +77,13 @@ export class DekuToolkit {
 
 
     private async initializeStream(dekuRpc: string) {
-        const streamUri = joinPath(dekuRpc, "/api/v1/chain/blocks/monitor");
+        const streamUri = urlJoin(dekuRpc, "/api/v1/chain/blocks/monitor");
         const response = await fetch(streamUri);
         const body = response.body;
         if (!body) return null;
         const reader = body.getReader();
         // eslint-disable-next-line no-constant-condition
-        while(true) {
+        while (true) {
             const { value, done } = await reader.read();
             if (done) break;
             const decoder = new TextDecoder("utf-8");
@@ -219,8 +219,8 @@ export class DekuToolkit {
         return block
     }
 
-    async getBalance(address: string, {ticketer, data}:{ticketer: string, data: string}): Promise<number> {
-        const ticket_id = TicketID.createTicketID(ticketer, data.startsWith("0x")?data:"0x"+data);
+    async getBalance(address: string, { ticketer, data }: { ticketer: string, data: string }): Promise<number> {
+        const ticket_id = TicketID.createTicketID(ticketer, data.startsWith("0x") ? data : "0x" + data);
         const balance = await get(this.endpoints["GET_BALANCE"](address, ticket_id));
         return balance
     }
@@ -276,8 +276,8 @@ export class DekuToolkit {
      * @param data other half of the ticket id
      * @returns an operation hash of the transfer
      */
-    async transferTo(receiver: AddressType, amount: AmountType, ticketer: string, data:string, options?: OptOptions): Promise<OperationHashType> {
-        const {source, level, nonce} = await this.parseOperationOptions(options);
+    async transferTo(receiver: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
+        const { source, level, nonce } = await this.parseOperationOptions(options);
         // Create the transaction
         const transaction = Operation.createTransaction(
             level,
@@ -300,8 +300,8 @@ export class DekuToolkit {
      * @param data other half of the ticket id
      * @returns an operation hash of the withdraw
      */
-    async withdrawTo(owner: AddressType, amount: AmountType, ticketer: string, data:string, options?: OptOptions): Promise<OperationHashType> {
-        const {source, level, nonce} = await this.parseOperationOptions(options);
+    async withdrawTo(owner: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
+        const { source, level, nonce } = await this.parseOperationOptions(options);
         // Create the transaction
         const withdraw = Operation.createWithdraw(
             level,
@@ -321,8 +321,8 @@ export class DekuToolkit {
      * @param options {level, nonce} optional options
      * @returns the hash the submitted operation
      */
-    async submitVmOperation(payload: string, options?:OptOptions): Promise<OperationHashType> {
-        const {source, level, nonce} = await this.parseOperationOptions(options);
+    async submitVmOperation(payload: string, options?: OptOptions): Promise<OperationHashType> {
+        const { source, level, nonce } = await this.parseOperationOptions(options);
         const vmOperation = Operation.createVmOperation(level, nonce, source, payload);
         return this.submitOperation(vmOperation);
     }
@@ -411,7 +411,5 @@ export class DekuToolkit {
     }
 }
 
-export { fromBeaconSigner } from './utils/signers';
-export { fromMemorySigner } from './utils/signers';
-export { fromCustomSigner } from './utils/signers';
-export { Proof} from './core/proof';
+export { fromBeaconSigner, fromCustomSigner, fromMemorySigner } from './utils/signers';
+export { Proof };
