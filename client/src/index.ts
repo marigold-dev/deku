@@ -9,13 +9,13 @@ import { Level as LevelType } from "./core/level";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
 import Operation, { Operation as OperationType } from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
-import { Proof } from './core/proof';
 import TicketID from './core/ticket-id';
 import { endpoints, get, makeEndpoints, post } from "./network";
 import { hashOperation } from './utils/hash';
 import JSONValue from './utils/json';
 import { DekuSigner } from './utils/signers';
 import urlJoin from "./utils/urlJoin";
+export type Proof = import('./core/proof').Proof;
 
 /* FIXME: reintroduce discovery when the API supports it */
 
@@ -411,7 +411,6 @@ export class DekuToolkit {
     }
 }
 
-export { Proof } from './core/proof';
 export { fromBeaconSigner, fromCustomSigner, fromMemorySigner } from './utils/signers';
 
 
