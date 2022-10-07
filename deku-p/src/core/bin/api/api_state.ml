@@ -54,12 +54,8 @@ module Storage = struct
     let file = Filename.concat folder file in
     match IO.file_exists file with
     | true ->
-        let state =
-          Eio_unix.run_in_systhread (fun () ->
-              let json = Yojson.Safe.from_file file in
-              t_of_yojson json)
-        in
-        Some state
+        let json = Yojson.Safe.from_file file in
+        Some (t_of_yojson json)
     | false -> None
 
   let write ~env ~folder state =
