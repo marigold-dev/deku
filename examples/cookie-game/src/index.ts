@@ -23,7 +23,7 @@ const transition = (tx: transaction) => {
     // operation => any
     const source = tx.source;
     const op: string = tx.operation;
-    const operation = JSON.parse(op);
+    const operation: operations = JSON.parse(op, parseReviver);
     const sourceValue = JSON.parse(get(source));
     let cookieBaker: cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
@@ -37,7 +37,7 @@ const transition = (tx: transaction) => {
         switch (operation.operation) {
             case actions.cookie: {
                 //update state
-                cookieBaker = addCookie(cookieBaker);
+                cookieBaker = addCookie(cookieBaker, operation.amount);
                 console.log("Successfully minted cookie");
                 saveState(source, cookieBaker);
                 break;
