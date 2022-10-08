@@ -15,6 +15,10 @@ const dekuSigner = fromMemorySigner(
   }).setTezosRpc("https://ghostnet.tezos.marigold.dev/");
   const data = `${Buffer.from("hello world").toString("hex")}`;
 
+  const consensus = await deku.consensus;
+  if (consensus !== undefined)
+    console.log("Consensus address is", await consensus.address());
+
   console.log("Getting the balance");
   const balance = await deku.getBalance(
     "tz1L7zaWD1aRYBTQvSdxEdc9KDzfwG4DydDu",

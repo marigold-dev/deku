@@ -3,7 +3,7 @@ import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
 import Proof, { Proof as ProofType } from "../core/proof";
 import { TicketID } from "../core/ticket-id";
-import joinPath from "../utils/paths";
+import urlJoin from "../utils/urlJoin";
 
 const VERSION = "/api/v1"
 
@@ -13,8 +13,12 @@ type endpoint<T> = {
     parse: (json: JSONValue) => T | null
 }
 
+/* FIXME: reintroduce discovery when the API supports it */
 export type endpoints = {
-    "GET_CHAIN_INFO": endpoint<{ consensus: string, discovery: string }>,
+    "GET_CHAIN_INFO": endpoint<{
+      consensus: string
+      //, discovery: string
+    }>,
     "GET_CURRENT_LEVEL": endpoint<LevelType>,
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => endpoint<BlockType>,
     "GET_BLOCK_BY_HASH": (hash: string) => endpoint<BlockType>,
@@ -27,18 +31,18 @@ export type endpoints = {
 
 export const makeEndpoints = (root: string): endpoints => ({
     "GET_CHAIN_INFO": {
-        uri: joinPath(root, `${VERSION}/chain/info`),
+        uri: urlJoin(root, `${VERSION}/chain/info`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const consensus = json.at("consensus").as_string();
-            const discovery = json.at("discovery").as_string();
+            // const discovery = json.at("discovery").as_string();
             if (consensus === null) return null;
-            if (discovery === null) return null;
-            return { consensus, discovery }
+            // if (discovery === null) return null;
+            return { consensus }
         }
     },
     "GET_CURRENT_LEVEL": {
-        uri: joinPath(root, `${VERSION}/chain/level`),
+        uri: urlJoin(root, `${VERSION}/chain/level`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const level_json = json.at("level");
@@ -46,39 +50,39 @@ export const makeEndpoints = (root: string): endpoints => ({
         }
     },
     "GET_BLOCK_BY_LEVEL": (level: LevelType) => ({
-        uri: joinPath(root, `${VERSION}/chain/blocks/${Level.toDTO(level)}`),
+        uri: urlJoin(root, `${VERSION}/chain/blocks/${Level.toDTO(level)}`),
         expectedStatus: 200,
         parse: Block.ofDTO
     }),
     "GET_BLOCK_BY_HASH": (blockHash: string) => ({
-        uri: joinPath(root, `${VERSION}/chain/blocks/${blockHash}`),
+        uri: urlJoin(root, `${VERSION}/chain/blocks/${blockHash}`),
         expectedStatus: 200,
         parse: Block.ofDTO
     }),
     "GET_GENESIS": {
-        uri: joinPath(root, `${VERSION}/chain/blocks/genesis`),
+        uri: urlJoin(root, `${VERSION}/chain/blocks/genesis`),
         expectedStatus: 200,
         parse: Block.ofDTO
     },
     "GET_CURRENT_BLOCK": {
-        uri: joinPath(root, `${VERSION}/chain/blocks/genesis`),
+        uri: urlJoin(root, `${VERSION}/chain/blocks/genesis`),
         expectedStatus: 200,
         parse: Block.ofDTO
     },
     "GET_BALANCE": (address: string, ticket_id: TicketID) => ({
-        uri: joinPath(root, `${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`),
+        uri: urlJoin(root, `${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
           return json.at("balance").as_int();
         }
     }),
     "GET_PROOF": (operation_hash: string) => ({
-        uri: joinPath(root, `${VERSION}/proof/${operation_hash}`),
+        uri: urlJoin(root, `${VERSION}/proof/${operation_hash}`),
         expectedStatus: 200,
         parse: Proof.ofDTO
     }),
     "OPERATIONS": {
-        uri: joinPath(root, `${VERSION}/operations`),
+        uri: urlJoin(root, `${VERSION}/operations`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
             const hash = json.at("hash").as_string();
