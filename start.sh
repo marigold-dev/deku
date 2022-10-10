@@ -21,6 +21,9 @@ export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
 
+# Starting only one API node
+ _build/install/default/bin/deku-api &
+
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
 
