@@ -9,9 +9,6 @@ type protocol =
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
       vm_state : External_vm_protocol.State.t;
-      receipts : Receipt.t Operation_hash.Map.t;
-          (** Receipts of the included operations; also contains withdrawal receipts, which are used to
-          generate withdrawal proofs. *)
     }
 
 and t = protocol [@@deriving yojson]
@@ -23,40 +20,21 @@ let initial =
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
       vm_state = External_vm_protocol.State.empty;
-      receipts = Operation_hash.Map.empty;
     }
 
 let initial_with_vm_state ~vm_state =
   let (Protocol
-        {
-          included_operations;
-          included_tezos_operations;
-          ledger;
-          receipts;
-          vm_state = _;
-        }) =
+        { included_operations; included_tezos_operations; ledger; vm_state = _ })
+      =
     initial
   in
-  Protocol
-    {
-      included_operations;
-      included_tezos_operations;
-      ledger;
-      receipts;
-      vm_state;
-    }
+  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
 
 let apply_operation ~current_level protocol operation :
     (t * Receipt.t option * exn option) option =
   let open Operation.Initial in
   let (Protocol
-        {
-          included_operations;
-          ledger;
-          included_tezos_operations;
-          vm_state;
-          receipts;
-        }) =
+        { included_operations; ledger; included_tezos_operations; vm_state }) =
     protocol
   in
   let (Initial_operation { hash; nonce = _; level; operation = content }) =
@@ -120,33 +98,16 @@ let apply_operation ~current_level protocol operation :
                   None )
             | Error error -> (ledger, None, vm_state, Some error))
       in
-      let receipts =
-        match receipt with
-        | Some receipt -> Operation_hash.Map.add hash receipt receipts
-        | None -> receipts
-      in
       Some
         ( Protocol
-            {
-              included_operations;
-              included_tezos_operations;
-              ledger;
-              receipts;
-              vm_state;
-            },
+            { included_operations; included_tezos_operations; ledger; vm_state },
           receipt,
           error )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
   let (Protocol
-        {
-          included_operations;
-          included_tezos_operations;
-          ledger;
-          receipts;
-          vm_state;
-        }) =
+        { included_operations; included_tezos_operations; ledger; vm_state }) =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
@@ -159,13 +120,7 @@ let apply_tezos_operation protocol tezos_operation =
       in
       let protocol =
         Protocol
-          {
-            included_operations;
-            included_tezos_operations;
-            ledger;
-            receipts;
-            vm_state;
-          }
+          { included_operations; included_tezos_operations; ledger; vm_state }
       in
       List.fold_left
         (fun protocol tezos_operation ->
@@ -176,7 +131,6 @@ let apply_tezos_operation protocol tezos_operation =
                       ledger;
                       included_operations;
                       included_tezos_operations;
-                      receipts;
                       vm_state;
                     }) =
                 protocol
@@ -191,7 +145,6 @@ let apply_tezos_operation protocol tezos_operation =
                   ledger;
                   included_operations;
                   included_tezos_operations;
-                  receipts;
                   vm_state;
                 })
         protocol operations
@@ -230,43 +183,13 @@ let apply_payload ~current_level ~payload protocol =
 
 let clean ~current_level protocol =
   let (Protocol
-        {
-          included_operations;
-          included_tezos_operations;
-          ledger;
-          receipts;
-          vm_state;
-        }) =
+        { included_operations; included_tezos_operations; ledger; vm_state }) =
     protocol
   in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol
-    {
-      included_operations;
-      included_tezos_operations;
-      ledger;
-      receipts;
-      vm_state;
-    }
-
-let find_withdraw_proof ~operation_hash protocol =
-  let (Protocol { receipts; ledger; _ }) = protocol in
-  match Operation_hash.Map.find_opt operation_hash receipts with
-  | None -> Error `Unknown_operation
-  | Some (Withdraw_receipt { operation = _; handle }) ->
-      let withdrawal_handles_hash =
-        Ledger.withdrawal_handles_root_hash ledger
-      in
-      Ok
-        ( handle,
-          Ledger.withdrawal_handles_find_proof handle ledger,
-          withdrawal_handles_hash )
-  | _ ->
-      (* FIXME? fragile *)
-      prerr_endline "Found a receipt that does not match";
-      Error `Unknown_operation
+  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
 
 let prepare ~parallel ~payload = parallel parse_operation payload
 

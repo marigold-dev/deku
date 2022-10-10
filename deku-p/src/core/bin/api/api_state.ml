@@ -14,6 +14,8 @@ type api_state = {
   mutable protocol : Protocol.t;
   mutable is_sync : bool;
   mutable receipts : Receipt.t Operation_hash.Map.t;
+      (** Receipts of the included operations; also contains withdrawal receipts, which are used to
+          generate withdrawal proofs. *)
 }
 
 type t = api_state
