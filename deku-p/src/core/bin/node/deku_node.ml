@@ -60,6 +60,7 @@ type params = {
   named_pipe_path : string;
       [@default "/run/deku/pipe"] [@env "DEKU_NAMED_PIPE_PATH"]
       (** Named pipe path to use for IPC with the VM *)
+  api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
 }
 [@@deriving cmdliner]
 
@@ -93,6 +94,7 @@ let main params style_renderer log_level =
     tezos_secret;
     tezos_consensus_address;
     named_pipe_path;
+    api_uri;
   } =
     params
   in
@@ -114,6 +116,16 @@ let main params style_renderer log_level =
         | _ -> failwith "FIXME: error message")
       validator_uris
   in
+  let api_uri =
+    match String.split_on_char ':' api_uri with
+    | [ api_host; api_port ] -> (api_host, int_of_string api_port)
+    | _ -> failwith "FIXME: wrong api uri"
+  in
+
+  let validator_uris =
+    if port = 4440 then api_uri :: validator_uris else validator_uris
+  in
+
   (* The VM must be started before the node because this call is blocking  *)
   Logs.info (fun m ->
       m "Starting IPC with external vm at path %s" named_pipe_path);
