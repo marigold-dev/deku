@@ -7,6 +7,7 @@ type error_kind = private
   | Invalid_operation_signature
   | Invalid_operation_source
   | Method_not_allowed
+  | Endpoint_not_found
 
 type error = private { kind : error_kind; msg : string }
 type t = error
@@ -19,6 +20,7 @@ val internal_error : string -> error
 val invalid_operation_signature : error
 val invalid_operation_source : error
 val method_not_allowed : string -> Piaf.Method.t -> error
+val endpoint_not_found : string -> error
 
 (* Utils *)
 val yojson_of_t : error -> Yojson.Safe.t

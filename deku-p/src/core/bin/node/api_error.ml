@@ -7,6 +7,7 @@ type error_kind =
   | Invalid_operation_signature
   | Invalid_operation_source
   | Method_not_allowed
+  | Endpoint_not_found
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -43,8 +44,14 @@ let method_not_allowed path allowed_meth =
   {
     kind = Method_not_allowed;
     msg =
-      Format.sprintf "The route [%s] only allows method %s" path
+      Format.sprintf "The route [%s] does not allow method %s" path
         (Piaf.Method.to_string allowed_meth);
+  }
+
+let endpoint_not_found path =
+  {
+    kind = Endpoint_not_found;
+    msg = Format.sprintf "The route [%s] has not been found" path;
   }
 
 module Repr = struct
@@ -61,6 +68,7 @@ module Repr = struct
       | Invalid_operation_signature -> "INVALID_OPERATION_SIGNATURE"
       | Invalid_operation_source -> "INVALID_OPERATION_SOURCE"
       | Method_not_allowed -> "METHOD_NOT_ALLOWED"
+      | Endpoint_not_found -> "ENDPOINT_NOT_FOUND"
     in
     { code; msg }
 end
@@ -77,3 +85,4 @@ let to_http_code { kind; _ } =
   | Invalid_operation_signature -> 400
   | Invalid_operation_source -> 400
   | Method_not_allowed -> 405
+  | Endpoint_not_found -> 404
