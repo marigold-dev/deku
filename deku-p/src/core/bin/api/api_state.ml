@@ -13,12 +13,13 @@ type api_state = {
   identity : Identity.t;
   mutable protocol : Protocol.t;
   mutable is_sync : bool;
+  mutable receipts : Receipt.t Operation_hash.Map.t;
 }
 
 type t = api_state
 
 let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
-    =
+    ~receipts =
   {
     consensus_address;
     current_block;
@@ -27,10 +28,15 @@ let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
     identity;
     protocol;
     is_sync = false;
+    receipts;
   }
 
 module Storage = struct
-  type t = { current_block : Block.t; protocol : Protocol.t }
+  type t = {
+    current_block : Block.t;
+    protocol : Protocol.t;
+    receipts : Receipt.t Operation_hash.Map.t;
+  }
   [@@deriving yojson]
 
   let temp = "deku_api.tmp.json"
@@ -45,10 +51,11 @@ module Storage = struct
       network = _;
       protocol;
       is_sync = _;
+      receipts;
     } =
       state
     in
-    { current_block; protocol }
+    { current_block; protocol; receipts }
 
   let read ~env:_ ~folder =
     let file = Filename.concat folder file in

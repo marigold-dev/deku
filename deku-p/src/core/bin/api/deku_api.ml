@@ -20,10 +20,26 @@ let apply_block ~env ~folder ~state ~block =
       (fun string -> string |> Yojson.Safe.from_string |> Operation.t_of_yojson)
       payload
   in
-  let protocol, _receipts, _ =
+  let protocol, receipts, _ =
     Protocol.apply ~current_level:level ~payload ~tezos_operations
       state.protocol
   in
+  let receipts =
+    List.fold_left
+      (fun receipts receipt ->
+        let open Receipt in
+        let hash =
+          match receipt with
+          | Ticket_transfer_receipt { operation; _ }
+          | Withdraw_receipt { operation; _ }
+          | Vm_transaction_receipt { operation; _ } ->
+              operation
+        in
+        Operation_hash.Map.add hash receipt receipts)
+      state.receipts receipts
+  in
+  state.receipts <- receipts;
+  (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
   state.is_sync <- true;
   Api_state.Storage.write ~env ~folder state
@@ -143,14 +159,17 @@ let main params =
         let vm_state = External_vm_client.get_initial_state () in
         let protocol = Protocol.initial_with_vm_state ~vm_state in
         let current_block = Genesis.block in
+        let receipts = Operation_hash.Map.empty in
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block
+          ~current_block ~receipts
     | Some state_data ->
-        let Api_state.Storage.{ protocol; current_block } = state_data in
+        let Api_state.Storage.{ protocol; current_block; receipts } =
+          state_data
+        in
         let (Protocol.Protocol { vm_state; _ }) = protocol in
         External_vm_client.set_initial_state vm_state;
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block
+          ~current_block ~receipts
   in
 
   Eio.Fiber.all
