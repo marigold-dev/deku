@@ -28,7 +28,7 @@ export DEKU_API_PORT=8080
 export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
 export DEKU_API_DOMAINS=8
 export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
-export DEKU_API_DATA_FOLDER="./chain/data/0/"
+export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 
 ## The api needs its own vm
 nix run ".#$vm" -- "$DEKU_API_VM" &
