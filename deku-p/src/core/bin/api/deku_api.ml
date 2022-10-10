@@ -8,8 +8,9 @@ open Api_state
 open Deku_protocol
 open Deku_consensus
 open Deku_external_vm
+open Deku_concepts
 
-let on_accepted_block ~state ~block =
+let apply_block ~env ~folder ~state ~block =
   state.current_block <- block;
   Indexer.save_block ~block state.indexer;
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
@@ -24,24 +25,38 @@ let on_accepted_block ~state ~block =
       state.protocol
   in
   state.protocol <- protocol;
-  ()
+  Api_state.Storage.write ~env ~folder state
 
-let listen_to_node ~net ~clock ~state =
-  let port = 5550 in
+let on_accepted_block ~env ~folder ~state ~block =
+  let (Block.Block { level = api_level; _ }) = state.current_block in
+  let (Block.Block { level; _ }) = block in
+  match Level.equal (Level.next api_level) level with
+  | true -> apply_block ~env ~folder ~state ~block
+  | false ->
+      (*This case should not happened thanks to on_connection*)
+      ()
+
+let on_connection ~connection state =
+  let (Block.Block { level = api_level; _ }) = state.current_block in
+  let (Request.Request { network; _ }) = Request.encode ~above:api_level in
+  let (Request.Network.Network_request { raw_header; raw_content }) = network in
+  Network_manager.send_request ~connection ~raw_header ~raw_content
+    state.network
+
+let on_message ~env ~folder ~raw_header ~raw_content state =
+  let header = Message.Header.decode ~raw_header in
+  let message = Message.decode ~expected:header ~raw_content in
+  let (Message.Message { header = _; content; network = _ }) = message in
+  match content with
+  | Message.Content.Content_accepted { block; votes = _ } ->
+      on_accepted_block ~env ~folder ~state ~block
+  | _ -> ()
+
+let listen_to_node ~net ~clock ~port ~state =
   let Api_state.{ network; _ } = state in
-  let on_connection ~connection:_ = () in
+  let on_connection ~connection = on_connection state ~connection in
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
-  let on_accepted_block ~block ~votes:_ = on_accepted_block ~state ~block in
-  let on_message ~raw_header ~raw_content =
-    let header = Message.Header.decode ~raw_header in
-    let message = Message.decode ~expected:header ~raw_content in
-    let (Message.Message { header = _; content; network = _ }) = message in
-    match content with
-    | Message.Content.Content_accepted { block; votes } ->
-        on_accepted_block ~block ~votes
-    | _ -> ()
-  in
-
+  let on_message ~raw_header:_ ~raw_content:_ = () in
   let () =
     Network_manager.listen ~net ~clock ~port ~on_connection ~on_request
       ~on_message network
@@ -75,9 +90,11 @@ type params = {
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
   node_uri : string; [@env "DEKU_API_NODE_URI"]
   port : int; [@env "DEKU_API_PORT"]
+  tcp_port : int; [@env "DEKU_API_TCP_PORT"] [@default 5550]
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
   named_pipe_path : string; [@env "DEKU_API_VM"]
+  data_folder : string; [@env "DEKU_API_DATA_FOLDER"]
 }
 [@@deriving cmdliner]
 
@@ -86,9 +103,11 @@ let main params =
     consensus_address;
     node_uri;
     port;
+    tcp_port;
     database_uri;
     domains;
     named_pipe_path;
+    data_folder;
   } =
     params
   in
@@ -115,13 +134,24 @@ let main params =
   let indexer = Indexer.make ~uri:database_uri ~config in
 
   External_vm_client.start_vm_ipc ~named_pipe_path;
-  let vm_state = External_vm_client.get_initial_state () in
-  let protocol = Protocol.initial_with_vm_state ~vm_state in
 
+  let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =
-    Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
+    match state with
+    | None ->
+        let vm_state = External_vm_client.get_initial_state () in
+        let protocol = Protocol.initial_with_vm_state ~vm_state in
+        let current_block = Genesis.block in
+        Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
+          ~current_block
+    | Some state_data ->
+        let Api_state.Storage.{ protocol; current_block } = state_data in
+        let (Protocol.Protocol { vm_state; _ }) = protocol in
+        External_vm_client.set_initial_state vm_state;
+        Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
+          ~current_block
   in
-  print_endline "api started";
+
   Eio.Fiber.all
     [
       (fun () ->
@@ -129,10 +159,10 @@ let main params =
           ~nodes:[ (node_host, node_port) ]
           ~on_connection:(fun ~connection:_ -> ())
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-          ~on_message:(fun ~raw_header:_ ~raw_content:_ -> ())
+          ~on_message:(on_message ~env ~folder:data_folder state)
           network);
       (fun () -> start_api ~env ~sw ~port ~state);
-      (fun () -> listen_to_node ~net ~clock ~state);
+      (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
     ]
 
 let () =
