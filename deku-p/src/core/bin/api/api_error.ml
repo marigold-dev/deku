@@ -1,3 +1,5 @@
+open Deku_protocol
+
 type error_kind =
   | Invalid_parameter
   | Missing_parameter
@@ -8,6 +10,8 @@ type error_kind =
   | Invalid_operation_source
   | Method_not_allowed
   | Endpoint_not_found
+  | Operation_not_found
+  | Operation_is_not_a_withdraw
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -54,6 +58,22 @@ let endpoint_not_found path =
     msg = Format.sprintf "The route [%s] has not been found" path;
   }
 
+let operation_not_found operation_hash =
+  {
+    kind = Operation_not_found;
+    msg =
+      Format.sprintf "The operation [%s] was not found, please wait some time."
+        (Operation_hash.to_b58 operation_hash);
+  }
+
+let operation_is_not_a_withdraw operation_hash =
+  {
+    kind = Operation_is_not_a_withdraw;
+    msg =
+      Format.sprintf "The operation [%s] is not a withdraw operation."
+        (Operation_hash.to_b58 operation_hash);
+  }
+
 module Repr = struct
   type t = { code : string; msg : string } [@@deriving yojson_of]
 
@@ -69,6 +89,8 @@ module Repr = struct
       | Invalid_operation_source -> "INVALID_OPERATION_SOURCE"
       | Method_not_allowed -> "METHOD_NOT_ALLOWED"
       | Endpoint_not_found -> "ENDPOINT_NOT_FOUND"
+      | Operation_not_found -> "OPERATION_NOT_FOUND"
+      | Operation_is_not_a_withdraw -> "OPERATION_IS_NOT_A_WITHDRAW"
     in
     { code; msg }
 end
@@ -86,3 +108,5 @@ let to_http_code { kind; _ } =
   | Invalid_operation_source -> 400
   | Method_not_allowed -> 405
   | Endpoint_not_found -> 404
+  | Operation_not_found -> 404
+  | Operation_is_not_a_withdraw -> 400
