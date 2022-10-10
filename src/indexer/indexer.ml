@@ -62,11 +62,12 @@ module Query = struct
           |sql}]
 
   let insert_message ~message ~timestamp pool =
-    let (Message.Network.Network_message { raw_header = hash; raw_fragments }) =
+    let (Message.Network.Network_message { raw_header = hash; raw_content }) =
       message
     in
-    let packet = String.concat ":" raw_fragments in
-    Caqti_eio.Pool.use (insert_message ~hash ~timestamp ~packet) pool
+    Caqti_eio.Pool.use
+      (insert_message ~hash ~timestamp ~packet:raw_content)
+      pool
     |> Promise.await
 
   let find_block_by_level =

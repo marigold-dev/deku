@@ -2,7 +2,7 @@ open Deku_concepts
 
 module Network : sig
   type network = private
-    | Network_request of { raw_header : string; raw_fragments : string list }
+    | Network_request of { raw_header : string; raw_content : string }
 
   type t = network
 end
@@ -16,4 +16,4 @@ exception Expected_hash_mismatch
 exception Invalid_message
 
 val encode : above:Level.t -> request
-val decode : expected:Request_hash.t -> raw_fragments:string list -> request
+val decode : expected:Request_hash.t -> raw_content:string -> request

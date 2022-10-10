@@ -20,7 +20,7 @@ type fragment =
   | Fragment_incoming_request of {
       connection : Connection_id.t;
       raw_header : string;
-      raw_fragments : string list;
+      raw_content : string;
     }
 
 type outcome =
@@ -58,10 +58,10 @@ let broadcast_message ~content =
   let fragment = Message_pool.encode ~content in
   Fragment_broadcast_message { fragment }
 
-let incoming_message ~raw_header ~raw_fragments gossip =
+let incoming_message ~raw_header ~raw_content gossip =
   let (Gossip { pending_request; message_pool }) = gossip in
   let message_pool, fragment =
-    Message_pool.decode ~raw_header ~raw_fragments message_pool
+    Message_pool.decode ~raw_header ~raw_content message_pool
   in
   let gossip = Gossip { pending_request; message_pool } in
   let fragment =
@@ -85,8 +85,8 @@ let send_request ~above gossip =
       let gossip = Gossip { pending_request; message_pool } in
       (gossip, Some network)
 
-let incoming_request ~connection ~raw_header ~raw_fragments =
-  Fragment_incoming_request { connection; raw_header; raw_fragments }
+let incoming_request ~connection ~raw_header ~raw_content =
+  Fragment_incoming_request { connection; raw_header; raw_content }
 
 let compute fragment =
   match fragment with
@@ -96,12 +96,12 @@ let compute fragment =
   | Fragment_send_message { connection; fragment } ->
       let outcome = Message_pool.compute fragment in
       Outcome_send_message { connection; outcome }
-  | Fragment_incoming_request { connection; raw_header; raw_fragments } -> (
+  | Fragment_incoming_request { connection; raw_header; raw_content } -> (
       match Request_hash.of_b58 raw_header with
       | Some expected -> (
           try
             let (Request { hash = _; above; network = _ }) =
-              Request.decode ~expected ~raw_fragments
+              Request.decode ~expected ~raw_content
             in
             Outcome_incoming_request { connection; above }
           with exn ->

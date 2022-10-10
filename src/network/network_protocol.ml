@@ -68,29 +68,46 @@ end
 let test () =
   Eio_main.run @@ fun env ->
   let net = Eio.Stdenv.net env in
-  let on_request ~send ~raw_header ~raw_fragments =
-    Format.eprintf "request.header: %s; fragments: %s\n%!" raw_header
-      (String.concat ":" raw_fragments);
-    send ~raw_header ~raw_fragments
+  let domains = Eio.Stdenv.domain_mgr env in
+  let on_request ~send ~raw_header ~raw_content =
+    let header, time =
+      match String.split_on_char ':' raw_header with
+      | [ header; time ] -> (header, time)
+      | _ -> assert false
+    in
+    let time = float_of_string time in
+    let delta = Unix.gettimeofday () -. time in
+    Format.eprintf "request.header: %s; latency: %.3f; fragments: %d;\n%!"
+      header delta
+      (String.length raw_content);
+    send ~raw_header ~raw_content
   in
-  let on_message ~raw_header ~raw_fragments =
-    Format.eprintf "message.header: %s; content: %s\n%!" raw_header
-      (String.concat ":" raw_fragments)
+  let on_message ~raw_header ~raw_content =
+    let header, time =
+      match String.split_on_char ':' raw_header with
+      | [ header; time ] -> (header, time)
+      | _ -> assert false
+    in
+    let time = float_of_string time in
+    let delta = Unix.gettimeofday () -. time in
+    Format.eprintf "message.header: %s; latency: %.3f; content: %d\n%!" header
+      delta
+      (String.length raw_content)
   in
 
   let host = "localhost" in
-  let port = 1234 in
+  let port = 1235 in
   let handler connection =
-    let send ~raw_header ~raw_fragments =
-      let message = Network_message.message ~raw_header ~raw_fragments in
+    let send ~raw_header ~raw_content =
+      let message = Network_message.message ~raw_header ~raw_content in
       Connection.write connection message
     in
     let on_message message =
       match message with
-      | Network_message.Message { raw_header; raw_fragments } ->
-          on_message ~raw_header ~raw_fragments
-      | Network_message.Request { raw_header; raw_fragments } ->
-          on_request ~send ~raw_header ~raw_fragments
+      | Network_message.Message { raw_header; raw_content } ->
+          on_message ~raw_header ~raw_content
+      | Network_message.Request { raw_header; raw_content } ->
+          on_request ~send ~raw_header ~raw_content
     in
     let rec loop () =
       let message = Connection.read connection in
@@ -105,20 +122,27 @@ let test () =
   in
   let client () =
     Client.connect ~net ~host ~port @@ fun connection ->
+    let raw_content = String.make (100 * 1024 * 1024) 'a' in
     let rec loop_write counter =
-      Eio.Fiber.both
-        (fun () ->
-          let raw_header = Format.sprintf "rh%d" counter in
-          let raw_fragments = [ Format.sprintf "rc%d" counter ] in
-          let message = Network_message.request ~raw_header ~raw_fragments in
-          Connection.write connection message)
-        (fun () ->
-          let raw_header = Format.sprintf "sh%d" counter in
-          let raw_fragments = [ Format.sprintf "sc%d" counter ] in
-          let message = Network_message.message ~raw_header ~raw_fragments in
-          Connection.write connection message);
+      let _request () =
+        let raw_header =
+          Format.sprintf "rh%d:%f" counter (Unix.gettimeofday ())
+        in
+        let message = Network_message.request ~raw_header ~raw_content in
+        Connection.write connection message
+      in
+      let message () =
+        let raw_header =
+          Format.sprintf "sh%d:%f" counter (Unix.gettimeofday ())
+        in
+        let message = Network_message.message ~raw_header ~raw_content in
+        Connection.write connection message
+      in
+      message ();
       loop_write (counter + 1)
     in
     Eio.Fiber.both (fun () -> handler connection) (fun () -> loop_write 0)
   in
-  Eio.Fiber.both (fun () -> server ()) (fun () -> client ())
+  Eio.Fiber.both
+    (fun () -> Eio.Domain_manager.run domains server)
+    (fun () -> Eio.Domain_manager.run domains client)

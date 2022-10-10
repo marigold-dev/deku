@@ -16,7 +16,7 @@ val encode : content:Message.Content.t -> fragment
 
 val decode :
   raw_header:string ->
-  raw_fragments:string list ->
+  raw_content:string ->
   message_pool ->
   message_pool * fragment option
 

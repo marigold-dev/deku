@@ -1,0 +1,3 @@
+(executable
+ (name deku_network_benchmark)
+ (libraries deku_network))

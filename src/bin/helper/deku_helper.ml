@@ -10,9 +10,9 @@ let post_directly_to_node ~env ~operation =
   let net = Eio.Stdenv.net env in
   let content = Message.Content.operation operation in
   let (Message { network; _ }) = Message.encode ~content in
-  let (Network_message { raw_header; raw_fragments }) = network in
+  let (Network_message { raw_header; raw_content }) = network in
   let open Deku_network in
-  let message = Network_message.message ~raw_header ~raw_fragments in
+  let message = Network_message.message ~raw_header ~raw_content in
   Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
   Network_protocol.Connection.write connection message
 
