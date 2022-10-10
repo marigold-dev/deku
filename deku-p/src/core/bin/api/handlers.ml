@@ -96,36 +96,35 @@ module Get_level : NO_BODY_HANDLERS = struct
     Ok { level }
 end
 
-(* module Get_proof : NO_BODY_HANDLERS = struct
-     open Deku_protocol.Ledger
+module Get_proof : NO_BODY_HANDLERS = struct
+  open Deku_protocol.Ledger
 
-     type path = Operation_hash.t
+  type path = Operation_hash.t
 
-     type response = {
-       withdrawal_handles_hash : Withdrawal_handle.hash;
-       handle : Withdrawal_handle.t;
-       proof : withdraw_proof;
-     }
-     [@@deriving yojson_of]
+  type response = {
+    withdrawal_handles_hash : Withdrawal_handle.hash;
+    handle : Withdrawal_handle.t;
+    proof : withdraw_proof;
+  }
+  [@@deriving yojson_of]
 
-     let meth = `GET
+  let meth = `GET
 
-     let path =
-       let open Path in
-       Routes.(version / s "proof" / Operation_hash.parser /? nil)
+  let path =
+    Routes.(version / s "proof" / Api_path.Operation_hash.parser /? nil)
 
-     let route = Routes.(path @--> fun operation_hash -> operation_hash)
+  let route = Routes.(path @--> fun hash -> hash)
 
-     let handler ~path:operation_hash ~state:_ =
-       let { chain = Chain { protocol; _ }; _ } = node in
-       let withdraw_proof =
-         Protocol.find_withdraw_proof ~operation_hash protocol
-       in
-       match withdraw_proof with
-       | Error _ -> Error (Api_error.invalid_parameter "Proof not found")
-       | Ok (handle, proof, withdrawal_handles_hash) ->
-           Ok { withdrawal_handles_hash; handle; proof }
-   end *)
+  let handler ~path:operation_hash ~state =
+    let withdraw_proof = Api_state.find_withdraw_proof ~operation_hash state in
+    match withdraw_proof with
+    | Error `Unknown_operation ->
+        Error (Api_error.operation_not_found operation_hash)
+    | Error `Not_a_withdraw ->
+        Error (Api_error.operation_is_not_a_withdraw operation_hash)
+    | Ok (handle, proof, withdrawal_handles_hash) ->
+        Ok { withdrawal_handles_hash; handle; proof }
+end
 
 module Get_balance : NO_BODY_HANDLERS = struct
   open Api_path
