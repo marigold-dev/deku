@@ -60,31 +60,8 @@ type params = {
   named_pipe_path : string;
       [@default "/run/deku/pipe"] [@env "DEKU_NAMED_PIPE_PATH"]
       (** Named pipe path to use for IPC with the VM *)
-  api_enabled : bool; [@default false] [@env "DEKU_API_ENABLED"]
-  api_port : int; [@default 8080] [@env "DEKU_API_PORT"]
 }
 [@@deriving cmdliner]
-
-let start_api ~identity ~env ~sw ~node ~indexer ~port ~tezos_consensus_address
-    ~node_port ~enabled =
-  match enabled with
-  | false -> ()
-  | true ->
-      let api_constants =
-        Handlers.Api_constants.make ~identity
-          ~consensus_address:tezos_consensus_address ~node_port
-      in
-      let request_handler =
-        Deku_api.make_routes ~env node indexer api_constants
-      in
-      Logs.info (fun m -> m "Enabling RPC on port %d" port);
-      let config = Piaf.Server.Config.create port in
-      let server = Piaf.Server.create ~config request_handler in
-      let _command =
-        Piaf.Server.Command.start ~bind_to_address:Eio.Net.Ipaddr.V4.any ~sw env
-          server
-      in
-      ()
 
 let setup_log ?style_renderer ?log_level () =
   Fmt_tty.setup_std_outputs ?style_renderer ();
@@ -116,8 +93,6 @@ let main params style_renderer log_level =
     tezos_secret;
     tezos_consensus_address;
     named_pipe_path;
-    api_enabled;
-    api_port;
   } =
     params
   in
@@ -166,11 +141,6 @@ let main params style_renderer log_level =
   let node =
     Node.make ~identity ~default_block_size ~dump ~chain ~indexer:(Some indexer)
       ~notify_api
-  in
-
-  let () =
-    start_api ~identity ~env ~sw ~node ~indexer ~port:api_port
-      ~tezos_consensus_address ~node_port:port ~enabled:api_enabled
   in
 
   let (Chain { consensus; _ }) = chain in
