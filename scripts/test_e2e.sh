@@ -61,8 +61,15 @@ local-setup() {
   dune build
   export DEKU_TEZOS_RPC_NODE="http://localhost:20000"
   export DEKU_TEST_MODE=
+  # API related 
   export DEKU_API_PORT=8080
   export DEKU_API_NODE="http://localhost:$DEKU_API_PORT"
+  export DEKU_API_NODE_URI="127.0.0.1:4440"
+  export DEKU_API_PORT=8080
+  export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
+  export DEKU_API_DOMAINS=8
+  export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
+  export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 
   message "Starting the nodes"
 
@@ -80,8 +87,19 @@ local-setup() {
   export DEKU_VALIDATOR_URIS="127.0.0.1:4440,127.0.0.1:4441,127.0.0.1:4442,127.0.0.1:4443"
   export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
   export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  export DEKU_DUMMYT_TICKET="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  export DEKU_API_PORT=8080
+  export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
   export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+
+
+
+  message "Starting the API"
+  nix run '.#decookies-vm' -- "$DEKU_API_VM" &
+  sleep 2
+  ./_build/install/default/bin/deku-api &
+  sleep 3
 
   for N in 0 1 2 3; do
     source "./networks/flextesa/node_${N}_env"
@@ -106,8 +124,7 @@ local-setup() {
       #awk -v n=$N '{ print "node " n ": " $0}' &
     sleep 0.1
   done
-
-  sleep 3
+  message "Local setup: DONE"
 }
 
 run-test() {
@@ -148,7 +165,7 @@ run-test() {
 
   dune exec deku-p/src/core/tezos_interop/tests/transaction_test.exe "$ticket_data" $tz_addr2 $secret1
 
-  sleep 3
+  sleep 12
 
   message Proof of withdraw 1
   proof1_1=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash1)
@@ -156,12 +173,12 @@ run-test() {
   message Withdraw 2
   op_hash2="$(dune exec deku-p/src/core/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
 
-  sleep 2
+  sleep 12
 
   message Withdraw 3
   op_hash3="$(dune exec deku-p/src/core/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
 
-  sleep 15 # FIXME check how long we have to wait
+  sleep 30 # FIXME check how long we have to wait
 
   message Proof of withdraw 3
   proof3_1=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash3)

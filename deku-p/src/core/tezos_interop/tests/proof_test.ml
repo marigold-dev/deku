@@ -15,43 +15,43 @@ type api_response = {
 
 let main operation_hash verbose host =
   Eio_main.run @@ fun env ->
-  Eio.Switch.run (fun sw ->
-      let body = Operation_hash.to_b58 operation_hash in
-      let url = Uri.with_path host ("api/v1/proof/" ^ body) in
-      let response = Net.get ~sw ~env url in
-      let code = Net.code_of_response response in
-      let body = Net.body_of_response response in
-      if verbose then Printf.eprintf "[%d]    %s\n%!" code body;
-      let body = body |> Yojson.Safe.from_string in
-      let {
-        handle = { id; owner; ticket_id; amount; hash = _handle_hash };
-        proof;
-        withdrawal_handles_hash;
-      } =
-        api_response_of_yojson body
-      in
-      let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
-      let (Ticket_id { ticketer; data }) = ticket_id in
-      Format.printf
-        {|(Pair (Pair %S
+  Eio.Switch.run @@ fun sw ->
+  let body = Operation_hash.to_b58 operation_hash in
+  let url = Uri.with_path host ("api/v1/proof/" ^ body) in
+  let response = Net.get ~sw ~env url in
+  let code = Net.code_of_response response in
+  let body = Net.body_of_response response in
+  if verbose then Printf.eprintf "[%d]    %s\n%!" code body;
+  let body = body |> Yojson.Safe.from_string in
+  let {
+    handle = { id; owner; ticket_id; amount; hash = _handle_hash };
+    proof;
+    withdrawal_handles_hash;
+  } =
+    api_response_of_yojson body
+  in
+  let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
+  let (Ticket_id { ticketer; data }) = ticket_id in
+  Format.printf
+    {|(Pair (Pair %S
       (Pair (Pair %s 0x%s) %d %S)
       %S)
       0x%s
       { %s })|}
-        "burn_callback"
-        (Deku_concepts.Amount.show amount)
-        (to_hex data) id
-        (Deku_tezos.Contract_hash.to_b58 ticketer)
-        (Deku_tezos.Address.to_string owner)
-        (BLAKE2b.to_hex withdrawal_handles_hash)
-        (List.map
-           (fun (left, right) ->
-             Format.sprintf "        Pair 0x%s\n             0x%s"
-               (BLAKE2b.to_hex left) (BLAKE2b.to_hex right))
-           proof
-        |> String.concat " ;\n" |> String.trim);
-      print_endline "";
-      exit 0)
+    "burn_callback"
+    (Deku_concepts.Amount.show amount)
+    (to_hex data) id
+    (Deku_tezos.Contract_hash.to_b58 ticketer)
+    (Deku_tezos.Address.to_string owner)
+    (BLAKE2b.to_hex withdrawal_handles_hash)
+    (List.map
+       (fun (left, right) ->
+         Format.sprintf "        Pair 0x%s\n             0x%s"
+           (BLAKE2b.to_hex left) (BLAKE2b.to_hex right))
+       proof
+    |> String.concat " ;\n" |> String.trim);
+  print_endline "";
+  exit 0
 
 open Cmdliner
 
