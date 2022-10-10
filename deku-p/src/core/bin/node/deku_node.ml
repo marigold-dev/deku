@@ -71,11 +71,11 @@ let start_api ~identity ~env ~sw ~node ~indexer ~port ~tezos_consensus_address
   | false -> ()
   | true ->
       let api_constants =
-        Handlers.Api_constants.make ~consensus_address:tezos_consensus_address
-          ~node_port
+        Handlers.Api_constants.make ~identity
+          ~consensus_address:tezos_consensus_address ~node_port
       in
       let request_handler =
-        Deku_api.make_routes ~identity ~env node indexer api_constants
+        Deku_api.make_routes ~env node indexer api_constants
       in
       Logs.info (fun m -> m "Enabling RPC on port %d" port);
       let config = Piaf.Server.Config.create port in
