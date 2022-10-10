@@ -533,7 +533,7 @@ let test () =
     let (Block { hash = current_block; level = current_level; _ }) = above in
     let level = Level.next current_level in
     let previous = current_block in
-    let payload = [] in
+    let payload = Payload.Payload [] in
     let tezos_operations = [] in
     let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     Block.produce ~identity ~level ~previous ~payload ~tezos_operations

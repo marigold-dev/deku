@@ -21,18 +21,24 @@ open Deku_concepts
     FIXME: This could be automated according to https://tezos-dev.slack.com/archives/CFX0B8Q3X/p1659802632591539?thread_ts=1659800515.479659&cid=CFX0B8Q3X
 *)
 
+(* #use "./src/tezos_interop/consensus.mligo";;
+   Crypto.blake2b (Bytes.pack ({ block_level = (1 : int);
+     block_payload_hash = (0x8e98623696f7ff9fef924c78ff4dfdd770faf7707712fc4d18d7e23fb326f9ea : blake2b);
+     state_hash = (0xfa301e3ff218de7844b21dd7364a444243f1772f6eba158a4a3a911b59da7d8c : blake2b);
+     handles_hash = (0xb55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203: blake2b) } : block_hash_structure));;
+*)
 (* This  *)
 let expected_block_structure_hash =
-  "dc39b713ece41b56d5015774851fa1eaf21b969a0f8e992101fac5506d800043"
+  "587f8441803a794d1473c434bfe5e8f69043f82869bdd67c4981e5c1db46b18a"
 
 let expected_block_hash =
-  "7faf2f5cb239c4c262d815a97736423b2e4cbd496f39817bb3afbd968d985868"
+  "7d35e6316a4a4b44df414fcebb54504cefd11767c5127dc94693a23feb2c43e9"
 
 let test_deku_block_hashing () =
   let level = Level.zero |> Level.next in
   let block_payload_hash =
     BLAKE2b.of_hex
-      "3af24b06c0eb96185f4da96bfb188cecc764877ce78b4b39db98b781635e55d2"
+      "8e98623696f7ff9fef924c78ff4dfdd770faf7707712fc4d18d7e23fb326f9ea"
     |> Option.get
   in
   let state_root_hash =
@@ -140,7 +146,7 @@ let test_block_signing () =
     |> Verified_signature.signature |> Signature.to_b58
   in
   let expected_signature =
-    "edsigtncqNYtCjL5e88QvK6SEUvbniGv9PRCGw3nybE1kv8sWHQgyWwcEDgJwohLAhc6uMB5YAkcznbK4zGUSjC4ipuVnkFA3tC"
+    "edsigtyeEgGH9XxFV6AU9ybWGEfS8D6anwDWcHEhFdG65CXzLT41H4Y6VsUwZ9tTs92pxnreBKotccFs9bsiw4Cwm74Xv1qVMfT"
   in
   Alcotest.(
     check string "Deku block signing is Tezos compatible" expected_signature

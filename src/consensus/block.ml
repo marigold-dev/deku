@@ -14,7 +14,7 @@ type block =
       level : Level.t;
       (* TODO: nonce *)
       previous : Block_hash.t;
-      payload : string list;
+      payload : string;
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
@@ -59,19 +59,7 @@ module Repr = struct
 
     let hash ~author ~level ~previous ~withdrawal_handles_hash ~payload
         ~tezos_operations =
-      let payload_size = List.length payload in
-      let chunk_size =
-        max (payload_size / Deku_constants.max_payload_chunks) 1
-      in
-      let chunks = List.chunks_of ~length:chunk_size payload in
-      let chunks =
-        Parallel.map_p
-          (fun chunk ->
-            let chunk = List.map BLAKE2b.hash chunk in
-            BLAKE2b.all chunk)
-          chunks
-      in
-      let payload = BLAKE2b.all chunks in
+      let payload = BLAKE2b.hash payload in
       let json =
         yojson_of_payload_hash
           {
@@ -128,13 +116,13 @@ module Repr = struct
       }
     in
     let json = yojson_of_header header in
-    Yojson.Safe.to_string json :: payload
+    [ Yojson.Safe.to_string json; payload ]
 
   let decode fragments =
     let json, payload =
       match fragments with
-      | json :: payload -> (json, payload)
-      | [] -> raise Failed_to_decode
+      | [ json; payload ] -> (json, payload)
+      | _ -> raise Failed_to_decode
     in
     let json = Yojson.Safe.from_string json in
     let header = header_of_yojson json in
@@ -193,11 +181,13 @@ let decode = Repr.decode
 
 let produce ~identity ~level ~previous ~payload ~tezos_operations
     ~withdrawal_handles_hash =
+  let payload = Payload.encode ~payload in
   let author = Identity.key_hash identity in
   let payload_hash, block_hash =
     Repr.hash ~author ~level ~previous ~payload ~tezos_operations
       ~withdrawal_handles_hash
   in
+  Format.eprintf "hash: %s\n%!" (BLAKE2b.to_hex payload_hash);
   let key = Identity.key identity in
   let signature =
     let hash = Block_hash.to_blake2b block_hash in

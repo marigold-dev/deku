@@ -240,15 +240,17 @@ let block_decode () =
   let (_ : Block.t) = Block.decode fragments in
   ()
 
-let prepare () =
+let prepare_and_decode () =
   let items = 100_000 in
   let prepare () =
     let (Block.Block { payload; _ }) = block ~default_block_size:items in
+
     payload
   in
   let parallel = Parallel.filter_map_p in
   (* 100k/s on 8 domains *)
-  bench "prepare" ~items ~domains ~prepare @@ fun payload ->
+  bench "prepare_and_decode" ~items ~domains ~prepare @@ fun payload ->
+  let (Payload payload) = Payload.decode ~payload in
   let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
   ()
 
@@ -259,7 +261,7 @@ let benches =
     block_of_string;
     block_encode;
     block_decode;
-    prepare;
+    prepare_and_decode;
   ]
 
 let () = List.iter (fun bench -> bench ()) benches

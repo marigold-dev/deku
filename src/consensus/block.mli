@@ -14,7 +14,7 @@ type block = private
       (* TODO: why does it contain a level? *)
       level : Level.t;
       previous : Block_hash.t;
-      payload : string list;
+      payload : string;
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
@@ -25,7 +25,7 @@ val produce :
   identity:Identity.t ->
   level:Level.t ->
   previous:Block_hash.t ->
-  payload:string list ->
+  payload:Payload.t ->
   tezos_operations:Tezos_operation.t list ->
   withdrawal_handles_hash:BLAKE2b.t ->
   block

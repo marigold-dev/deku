@@ -18,7 +18,7 @@ let block =
       ~block_payload_hash:(BLAKE2b.hash "mayushi")
       ~state_root_hash:(BLAKE2b.hash "desu") ~withdrawal_handles_hash
   in
-  let payload = [] in
+  let payload = Payload.Payload [] in
   let tezos_operations = [] in
   Block.produce ~identity ~level ~previous ~payload ~tezos_operations
     ~withdrawal_handles_hash

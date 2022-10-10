@@ -96,9 +96,10 @@ let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
       (fun (_hash, operation) -> operation)
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
+  let payload = Payload.Payload operations in
   let block =
-    Block.produce ~identity ~level ~previous ~payload:operations
-      ~withdrawal_handles_hash ~tezos_operations
+    Block.produce ~identity ~level ~previous ~payload ~withdrawal_handles_hash
+      ~tezos_operations
   in
   Logs.info (fun m -> m "Producing %a" Block.pp block);
   block

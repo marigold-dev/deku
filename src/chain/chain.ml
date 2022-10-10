@@ -400,7 +400,10 @@ let compute ~identity ~default_block_size fragment =
         Format.printf "applying(%.3f): %a\n%!" (Unix.gettimeofday ()) Level.pp
           level
       in
-      let payload = Protocol.prepare ~parallel:Parallel.filter_map_p ~payload in
+      let payload =
+        let (Payload payload) = Payload.decode ~payload in
+        Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
+      in
       (* let () = Format.printf "prepared(%.3f)\n%!" (Unix.gettimeofday ()) in *)
       let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload protocol ~tezos_operations
@@ -475,7 +478,7 @@ let test () =
     in
     let level = Level.next current_level in
     let previous = current_block in
-    let payload = [] in
+    let payload = Payload.Payload [] in
     let tezos_operations = [] in
     let withdrawal_handles_hash = BLAKE2b.hash "tuturu" in
     let block =
