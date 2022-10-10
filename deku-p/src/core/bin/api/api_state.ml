@@ -31,6 +31,24 @@ let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
     receipts;
   }
 
+let find_withdraw_proof ~operation_hash state =
+  let receipts = state.receipts in
+  let (Protocol { ledger; _ }) = state.protocol in
+  match Operation_hash.Map.find_opt operation_hash receipts with
+  | None -> Error `Unknown_operation
+  | Some (Withdraw_receipt { operation = _; handle }) ->
+      let withdrawal_handles_hash =
+        Ledger.withdrawal_handles_root_hash ledger
+      in
+      Ok
+        ( handle,
+          Ledger.withdrawal_handles_find_proof handle ledger,
+          withdrawal_handles_hash )
+  | _ ->
+      (* FIXME? fragile *)
+      prerr_endline "Found a receipt that does not match";
+      Error `Not_a_withdraw
+
 module Storage = struct
   type t = {
     current_block : Block.t;
