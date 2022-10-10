@@ -1,0 +1,19 @@
+(executable
+ (name deku_api)
+ (public_name deku-api)
+ (libraries
+  deku_chain
+  deku_network
+  deku_indexer
+  deku_tezos
+  deku_tezos_interop
+  deku_storage
+  deku_external_vm
+  cmdliner
+  logs
+  logs.fmt
+  fmt.tty
+  piaf
+  routes)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))

@@ -1,0 +1,72 @@
+open Deku_concepts
+open Deku_consensus
+open Deku_stdlib
+
+module Level_or_hash = struct
+  type t = Level of Level.t | Hash of Block_hash.t
+
+  let parser path =
+    let serialize data =
+      match data with
+      | Level level -> Level.show level
+      | Hash hash -> Block_hash.to_b58 hash
+    in
+    let parse string =
+      let parse_level string =
+        try
+          string |> Z.of_string |> N.of_z |> Option.map Level.of_n
+          |> Option.map (fun level -> Level level)
+        with _ -> None
+      in
+      let parse_hash string =
+        string |> Block_hash.of_b58 |> Option.map (fun hash -> Hash hash)
+      in
+      match (parse_level string, parse_hash string) with
+      | None, None -> None
+      | Some level, _ -> Some level
+      | _, Some hash -> Some hash
+    in
+    Routes.custom ~serialize ~parse ~label:":level-or-hash" path
+end
+
+module Operation_hash = struct
+  open Deku_protocol
+  type t = Operation_hash.t
+
+  let parser path =
+    let serialize hash = Operation_hash.to_b58 hash in
+    let parse string = Operation_hash.of_b58 string in
+    Routes.custom ~serialize ~parse ~label:":operation-hash" path
+end
+
+module Address = struct
+  open Deku_protocol
+  type t = Address
+
+  let parser path =
+    let serialize address = Address.to_b58 address in
+    let parse string = Address.of_b58 string in
+    Routes.custom ~serialize ~parse ~label:":address" path
+end
+
+module Ticketer = struct
+  type t = Deku_tezos.Contract_hash.t
+
+  let parser path =
+    let serialize ticketer = Deku_tezos.Contract_hash.to_b58 ticketer in
+    let parse string = Deku_tezos.Contract_hash.of_b58 string in
+    Routes.custom ~serialize ~parse ~label:":ticketer" path
+end
+
+module Data = struct
+  type t = bytes
+
+  let parser path =
+    let serialize data =
+      data |> Bytes.to_string |> Hex.of_string |> Hex.show
+    in
+    let parse string =
+      Hex.to_string (`Hex string) |> Bytes.of_string |> Option.some
+    in
+    Routes.custom ~serialize ~parse ~label:":data" path
+end
