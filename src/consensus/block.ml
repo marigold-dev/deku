@@ -187,7 +187,6 @@ let produce ~identity ~level ~previous ~payload ~tezos_operations
     Repr.hash ~author ~level ~previous ~payload ~tezos_operations
       ~withdrawal_handles_hash
   in
-  Format.eprintf "hash: %s\n%!" (BLAKE2b.to_hex payload_hash);
   let key = Identity.key identity in
   let signature =
     let hash = Block_hash.to_blake2b block_hash in
