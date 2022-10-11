@@ -24,10 +24,12 @@ module Secret = struct
   let to_raw secret =
     Bigstring.to_string (Libsecp256k1.Key.to_bytes context secret)
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = secret
 
+    let name = "Secp256k1.Secret_key"
     let prefix = Prefix.secp256k1_secret_key
+    let size = Libsecp256k1.Key.secret_bytes
     let to_raw = to_raw
 
     let of_raw string =
@@ -61,29 +63,16 @@ module Key = struct
   let of_secret secret = Libsecp256k1.Key.neuterize_exn context secret
   let to_raw key = Bigstring.to_string (Libsecp256k1.Key.to_bytes context key)
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = key
 
+    let name = "Secp256k1.Public_key"
     let prefix = Prefix.secp256k1_public_key
+    let size = Libsecp256k1.Key.compressed_pk_bytes
     let to_raw = to_raw
 
     let of_raw string =
       Libsecp256k1.Key.read_pk context (Bigstring.of_string string)
-      |> Result.to_option
-  end)
-
-  (*TODO: clean this*)
-  include With_encoding (struct
-    type nonrec t = t
-
-    let name = "Secp256k1.Public_key"
-    let size = Libsecp256k1.Key.compressed_pk_bytes
-    let prefix = Prefix.secp256k1_public_key
-    let to_raw = to_raw
-
-    let of_raw string =
-      string |> Bigstring.of_string
-      |> Libsecp256k1.Key.read_pk context
       |> Result.to_option
   end)
 
@@ -108,16 +97,9 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     let name = "Secp256k1.Public_key_hash"
     let prefix = Prefix.secp256k1_public_key_hash
-  end)
-
-  include With_yojson_of_b58 (struct
-    type t = key_hash
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
   end)
 end
 
@@ -134,10 +116,12 @@ module Signature = struct
   let size = Sign.plain_bytes
   let zero = of_raw (String.make size '\x00') |> Option.get
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = signature
 
+    let name = "Secp256k1.Secret"
     let prefix = Prefix.secp256k1_signature
+    let size = size
 
     let to_raw signature =
       Bigstring.to_string (Sign.to_bytes ~der:false context signature)

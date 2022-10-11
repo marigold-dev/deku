@@ -6,6 +6,7 @@ module type S = sig
     (* repr *)
     val of_b58 : string -> secret option
     val to_b58 : secret -> string
+    val encoding : secret Data_encoding.t
 
     (* utils *)
     val generate : unit -> secret
@@ -52,6 +53,7 @@ module type S = sig
     (* repr *)
     val of_b58 : string -> signature option
     val to_b58 : signature -> string
+    val encoding : signature Data_encoding.t
 
     (* utils *)
     val zero : signature

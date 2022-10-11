@@ -52,13 +52,16 @@ end) : sig
   val yojson_of_t : P.t -> [> `String of string ]
 end
 
-module With_b58_and_yojson (P : sig
+module With_b58_and_encoding_and_yojson (P : sig
   type t
 
+  val name : string
   val prefix : Prefix.t
+  val size : int
   val to_raw : t -> string
   val of_raw : string -> t option
 end) : sig
+  val encoding : P.t Data_encoding.t
   val of_b58 : string -> P.t option
   val to_b58 : P.t -> string
   val t_of_yojson : [> `String of string ] -> P.t

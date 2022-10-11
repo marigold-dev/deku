@@ -12,10 +12,12 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = secret
 
+    let name = "Ed25519.Secret_key"
     let prefix = Prefix.ed25519_seed
+    let size = 32
     let to_raw secret = Cstruct.to_string (priv_to_cstruct secret)
 
     let of_raw string =
@@ -48,26 +50,16 @@ module Key = struct
   let of_secret secret = pub_of_priv secret
   let to_raw key = Cstruct.to_string (pub_to_cstruct key)
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = key
 
+    let name = "Ed25519.Public_key"
     let prefix = Prefix.ed25519_public_key
+    let size = 32
     let to_raw = to_raw
 
     let of_raw string =
       pub_of_cstruct (Cstruct.of_string string) |> Result.to_option
-  end)
-
-  include With_encoding (struct
-    type nonrec t = t
-
-    let name = "Ed25519.Public_key"
-    let size = 32
-    let prefix = Prefix.ed25519_public_key
-    let to_raw t = Cstruct.to_string (Ed25519.pub_to_cstruct t)
-
-    let of_raw string =
-      Ed25519.pub_of_cstruct (Cstruct.of_string string) |> Result.to_option
   end)
 
   let cmdliner_converter =
@@ -91,16 +83,9 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58_and_encoding (struct
+  include With_b58_and_encoding_and_yojson (struct
     let name = "Ed25519.Public_key_hash"
     let prefix = Prefix.ed25519_public_key_hash
-  end)
-
-  include With_yojson_of_b58 (struct
-    type t = key_hash
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
   end)
 end
 
@@ -113,10 +98,12 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include With_b58_and_yojson (struct
+  include With_b58_and_encoding_and_yojson (struct
     type t = signature
 
+    let name = "Ed25519.Signature"
     let prefix = Prefix.ed25519_signature
+    let size = size
     let to_raw signature = signature
 
     let of_raw string =

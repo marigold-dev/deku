@@ -42,24 +42,6 @@ struct
   let yojson_of_t t = `String (to_b58 t)
 end
 
-module With_b58_and_yojson (P : sig
-  type t
-
-  val prefix : string
-  val to_raw : t -> string
-  val of_raw : string -> t option
-end) =
-struct
-  include With_b58 (P)
-
-  include With_yojson_of_b58 (struct
-    type t = P.t
-
-    let of_b58 = of_b58
-    let to_b58 = to_b58
-  end)
-end
-
 (* TODO: this is dumb *)
 let rec decode_variant l string =
   match l with
@@ -107,4 +89,26 @@ struct
       ~raw_encoding:
         (let open Data_encoding in
         conv to_raw of_raw_exn (Fixed.string size))
+end
+
+module With_b58_and_encoding_and_yojson (P : sig
+  type t
+
+  val name : string
+  val prefix : string
+  val size : int
+  val to_raw : t -> string
+  val of_raw : string -> t option
+end) =
+struct
+  include With_b58 (P)
+
+  include With_yojson_of_b58 (struct
+    type t = P.t
+
+    let of_b58 = of_b58
+    let to_b58 = to_b58
+  end)
+
+  include With_encoding (P)
 end

@@ -11,14 +11,13 @@ let () =
 
 module Withdrawal_handle = struct
   module Withdrawal_handle_hash = struct
+    open BLAKE2b
+
     type t = BLAKE2b.t [@@deriving show]
 
-    include Deku_repr.With_b58_and_yojson (struct
-      type nonrec t = t
-
+    include With_b58_and_encoding_and_yojson (struct
+      let name = "Ledger.Withdrawal_handle_hash"
       let prefix = Deku_repr.Prefix.deku_withdrawal_hash
-      let to_raw = BLAKE2b.to_raw
-      let of_raw = BLAKE2b.of_raw
     end)
   end
 
