@@ -8,10 +8,9 @@ type t =
 
 let to_string = function
   | Implicit key_hash -> Key_hash.to_b58 key_hash
-  | Originated { contract; entrypoint = None } ->
-      Contract_hash.to_string contract
+  | Originated { contract; entrypoint = None } -> Contract_hash.to_b58 contract
   | Originated { contract; entrypoint = Some entrypoint } ->
-      Contract_hash.to_string contract ^ "%" ^ entrypoint
+      Contract_hash.to_b58 contract ^ "%" ^ entrypoint
 
 let of_string =
   let implicit string =
@@ -27,7 +26,7 @@ let of_string =
           Some (contract, Some entrypoint)
       | _ -> None
     in
-    let%some contract = Contract_hash.of_string contract in
+    let%some contract = Contract_hash.of_b58 contract in
     Some (Originated { contract; entrypoint })
   in
   Deku_repr.decode_variant [ implicit; originated ]
@@ -70,8 +69,7 @@ let encoding =
             Originated { contract; entrypoint = Some entrypoint })
       (tup2 contract_encoding Variable.string)
   in
-  Encoding_helpers.make_encoding ~name ~title ~to_string ~of_string
-    ~raw_encoding
+  Deku_repr.make_encoding ~name ~title ~to_string ~of_string ~raw_encoding
 
 let cmdliner_converter =
   let of_string s =

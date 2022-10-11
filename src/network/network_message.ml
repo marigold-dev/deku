@@ -71,6 +71,7 @@ end = struct
   let message buf message =
     let payload = Binary.to_string_exn encoding message in
     let size = String.length payload in
+    pause buf;
     int32 buf size;
     string buf payload;
     flush buf

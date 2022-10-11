@@ -71,8 +71,7 @@ let encoding =
              (fun x -> P256 x);
          ]
   in
-  Encoding_helpers.make_encoding ~name ~title ~to_string:to_b58
-    ~of_string:of_b58 ~raw_encoding
+  make_encoding ~name ~title ~to_string:to_b58 ~of_string:of_b58 ~raw_encoding
 
 let cmdliner_converter =
   let of_string s =

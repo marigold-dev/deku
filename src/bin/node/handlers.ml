@@ -204,7 +204,7 @@ module Get_balance = struct
            ~none:(Api_error.invalid_parameter "could not parse address")
     in
     let%ok ticketer =
-      ticketer |> Deku_tezos.Contract_hash.of_string
+      ticketer |> Deku_tezos.Contract_hash.of_b58
       |> Option.to_result
            ~none:(Api_error.invalid_parameter "could not parse ticketer")
     in

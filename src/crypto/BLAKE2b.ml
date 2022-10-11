@@ -42,7 +42,7 @@ struct
   end
 
   module With_b58 (P : sig
-    val prefix : string
+    val prefix : Prefix.t
   end) =
   With_b58 (struct
     open P

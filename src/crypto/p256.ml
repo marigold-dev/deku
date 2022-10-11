@@ -60,20 +60,18 @@ module Key = struct
       pub_of_cstruct (Cstruct.of_string string) |> Result.to_option
   end)
 
-  module Encoding = Encoding_helpers.Make_b58 (struct
+  include With_encoding (struct
     type nonrec t = t
 
     let name = "P256.Public_key"
     let title = "P256 public key"
     let size = 33
-    let prefix = Base58.Prefix.p256_public_key
+    let prefix = Prefix.p256_public_key
     let to_raw t = Cstruct.to_string (pub_to_cstruct ~compress:true t)
 
     let of_raw string =
       pub_of_cstruct (Cstruct.of_string string) |> Result.to_option
   end)
-
-  let encoding = Encoding.encoding
 
   let cmdliner_converter =
     let of_string s =
@@ -106,18 +104,16 @@ module Key_hash = struct
     let to_b58 = to_b58
   end)
 
-  module Encoding = Encoding_helpers.Make_b58 (struct
+  include With_encoding (struct
     type nonrec t = t
 
     let name = "P256.Public_key_hash"
     let title = "An P256 public key hash"
     let size = BLAKE2b.BLAKE2b_160.digest_size
-    let prefix = Base58.Prefix.p256_public_key_hash
+    let prefix = Prefix.p256_public_key_hash
     let to_raw = BLAKE2b.BLAKE2b_160.to_raw
     let of_raw = BLAKE2b.BLAKE2b_160.of_raw
   end)
-
-  let encoding = Encoding.encoding
 end
 
 module Signature = struct

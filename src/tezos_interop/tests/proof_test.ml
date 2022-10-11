@@ -41,7 +41,7 @@ let main operation_hash verbose host =
         "burn_callback"
         (Deku_concepts.Amount.show amount)
         (to_hex data) id
-        (Deku_tezos.Contract_hash.to_string ticketer)
+        (Deku_tezos.Contract_hash.to_b58 ticketer)
         (Deku_tezos.Address.to_string owner)
         (BLAKE2b.to_hex withdrawal_handles_hash)
         (List.map

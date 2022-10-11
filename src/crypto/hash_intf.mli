@@ -1,4 +1,5 @@
 open Deku_stdlib
+open Deku_repr
 
 module type Alg = sig
   type secret
@@ -35,7 +36,7 @@ module type S = sig
   end
 
   module With_b58 (_ : sig
-    val prefix : string
+    val prefix : Prefix.t
   end) : sig
     val of_b58 : string -> hash option
     val to_b58 : hash -> string

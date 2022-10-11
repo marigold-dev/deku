@@ -16,7 +16,7 @@ let bob =
 
 let ticket_id =
   let address =
-    Deku_tezos.Contract_hash.of_string "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
+    Deku_tezos.Contract_hash.of_b58 "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
     |> Option.get
   in
   let data = Bytes.of_string "" in
