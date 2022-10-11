@@ -9,6 +9,7 @@ type t = signature [@@deriving eq, ord, yojson, show]
 (* repr *)
 val of_b58 : string -> signature option
 val to_b58 : signature -> string
+val key_encoding : (Key.t * signature) Data_encoding.t
 
 (* utils *)
 val zero : signature
