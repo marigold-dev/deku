@@ -91,14 +91,15 @@ let parse_operation output =
   let transactions = List.filter_map parse_transaction transactions in
   Some { hash; transactions }
 
-let start ~sw ~rpc_node ~secret ~consensus_contract ~on_operation =
+let start ~sw ~rpc_node ~secret ~consensus_contract ~on_operation ~preferred_fee
+    =
   let on_transactions ~transactions =
     match parse_operation transactions with
     | Some operation -> on_operation operation
     | None -> ()
   in
   Tezos_bridge.spawn ~sw ~rpc_node ~secret ~destination:consensus_contract
-    ~on_transactions
+    ~on_transactions ~preferred_fee
 
 let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
     ~withdrawal_handles_hash ~validators ~signatures =

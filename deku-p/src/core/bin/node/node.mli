@@ -16,6 +16,7 @@ type node = private {
   mutable chain : Chain.t;
   mutable cancel : unit -> unit;
   notify_api : Block.t -> unit;
+  preferred_fee : int option;
 }
 
 type t = node
@@ -27,6 +28,7 @@ val make :
   chain:Chain.t ->
   indexer:Indexer.t option ->
   notify_api:(Block.t -> unit) ->
+  preferred_fee:int option ->
   node
 
 val start :

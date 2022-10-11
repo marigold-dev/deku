@@ -30,6 +30,7 @@ val spawn :
   secret:Secret.t ->
   destination:Address.t ->
   on_transactions:(transactions:Listen_transaction.t -> unit) ->
+  preferred_fee:int option ->
   bridge
 
 val inject_transaction :

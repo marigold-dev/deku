@@ -20,6 +20,7 @@ type node = {
   mutable chain : Chain.t;
   mutable cancel : unit -> unit;
   notify_api : Block.t -> unit;
+  preferred_fee : int option;  (** Forces the fee used when committing *)
 }
 
 type t = node
@@ -120,7 +121,8 @@ let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
   let fragment = Chain.request ~connection ~raw_header ~raw_content in
   handle_chain_fragment ~sw ~env ~fragment node
 
-let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
+let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api
+    ~preferred_fee =
   let network = Network_manager.make ~identity in
   let tezos_interop = None in
   let cancel () = () in
@@ -134,6 +136,7 @@ let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
     chain;
     cancel;
     notify_api;
+    preferred_fee;
   }
 
 (* TODO: declare this function elsewhere ? *)
@@ -189,6 +192,7 @@ let start ~sw ~env ~port ~nodes ~tezos node =
         Tezos_interop.start ~sw ~rpc_node ~secret ~consensus_contract
           ~on_operation:(fun operation ->
             handle_tezos_operation ~sw ~env ~operation node)
+          ~preferred_fee:node.preferred_fee
       in
       node.tezos_interop <- Some interop
   | None -> ());
@@ -243,6 +247,7 @@ let test () =
     let node =
       make ~identity ~default_block_size:100_000 ~dump ~chain ~indexer:None
         ~notify_api:(fun _ -> ())
+        ~preferred_fee:None
     in
     start ~sw ~env ~port ~nodes ~tezos:None node
   in
