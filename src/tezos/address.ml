@@ -52,7 +52,6 @@ let contract_encoding =
 let encoding =
   let open Data_encoding in
   let name = "address" in
-  let title = "An contract address optionally followed by an entrypoint." in
   let raw_encoding =
     conv
       (fun t ->
@@ -69,7 +68,7 @@ let encoding =
             Originated { contract; entrypoint = Some entrypoint })
       (tup2 contract_encoding Variable.string)
   in
-  Deku_repr.make_encoding ~name ~title ~to_string ~of_string ~raw_encoding
+  Deku_repr.make_encoding ~name ~to_string ~of_string ~raw_encoding
 
 let cmdliner_converter =
   let of_string s =

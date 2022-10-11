@@ -69,7 +69,6 @@ val decode_variant : (string -> 'a option) list -> string -> 'a option
 
 val make_encoding :
   name:string ->
-  title:string ->
   to_string:('a -> string) ->
   of_string:(string -> 'a option) ->
   raw_encoding:'a Data_encoding.t ->
@@ -79,7 +78,6 @@ module With_encoding (P : sig
   type t
 
   val name : string
-  val title : string
   val prefix : Prefix.t
   val size : int
   val to_raw : t -> string

@@ -62,7 +62,6 @@ module Key = struct
     type nonrec t = t
 
     let name = "Ed25519.Public_key"
-    let title = "Ed25519 public key"
     let size = 32
     let prefix = Prefix.ed25519_public_key
     let to_raw t = Cstruct.to_string (Ed25519.pub_to_cstruct t)
@@ -92,7 +91,8 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58 (struct
+  include With_b58_and_encoding (struct
+    let name = "Ed25519.Public_key_hash"
     let prefix = Prefix.ed25519_public_key_hash
   end)
 
@@ -101,17 +101,6 @@ module Key_hash = struct
 
     let of_b58 = of_b58
     let to_b58 = to_b58
-  end)
-
-  include With_encoding (struct
-    type nonrec t = t
-
-    let name = "Ed25519.Public_key_hash"
-    let title = "An Ed25519 public key hash"
-    let size = BLAKE2b.BLAKE2b_160.digest_size
-    let prefix = Prefix.ed25519_public_key_hash
-    let to_raw = BLAKE2b.BLAKE2b_160.to_raw
-    let of_raw = BLAKE2b.BLAKE2b_160.of_raw
   end)
 end
 

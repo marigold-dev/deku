@@ -41,18 +41,31 @@ struct
       Alg.verify key signature (to_raw_string hash)
   end
 
-  module With_b58 (P : sig
+  module With_b58_and_encoding (P : sig
+    val name : string
     val prefix : Prefix.t
   end) =
-  With_b58 (struct
+  struct
     open P
 
-    type t = hash
+    include With_b58 (struct
+      type t = hash
 
-    let prefix = prefix
-    let to_raw = to_raw
-    let of_raw = of_raw
-  end)
+      let prefix = prefix
+      let to_raw = to_raw
+      let of_raw = of_raw
+    end)
+
+    include With_encoding (struct
+      type t = hash
+
+      let name = name
+      let prefix = prefix
+      let size = digest_size
+      let to_raw = to_raw
+      let of_raw = of_raw
+    end)
+  end
 
   (* TODO: expose this exception *)
   exception Not_a_hash

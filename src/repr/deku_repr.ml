@@ -74,21 +74,18 @@ module Base58 = Base58
 let unexpected_data ~name =
   Format.kasprintf invalid_arg "Unexpected data (%s)" name
 
-let make_encoding ~name ~title ~to_string ~of_string ~raw_encoding =
+let make_encoding ~name ~to_string ~of_string ~raw_encoding =
   let open Data_encoding in
   let of_string_exn string =
     match of_string string with Some t -> t | None -> unexpected_data ~name
   in
   let json_encoding = conv to_string (Json.wrap_error of_string_exn) string in
-  splitted
-    ~binary:(obj1 (req name raw_encoding))
-    ~json:(def name ~title:(title ^ " (Base58Check-encoded)") json_encoding)
+  splitted ~binary:(obj1 (req name raw_encoding)) ~json:(def name json_encoding)
 
 module With_encoding (H : sig
   type t
 
   val name : string
-  val title : string
   val prefix : string
   val size : int
   val to_raw : t -> string
@@ -106,7 +103,7 @@ struct
     match of_raw string with Some t -> t | None -> unexpected_data ~name
 
   let encoding =
-    make_encoding ~name ~title ~to_string ~of_string
+    make_encoding ~name ~to_string ~of_string
       ~raw_encoding:
         (let open Data_encoding in
         conv to_raw of_raw_exn (Fixed.string size))

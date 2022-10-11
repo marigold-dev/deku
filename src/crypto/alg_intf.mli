@@ -39,15 +39,10 @@ module type S = sig
     (* repr *)
     val of_b58 : string -> key_hash option
     val to_b58 : key_hash -> string
+    val encoding : key_hash Data_encoding.t
 
     (* operations *)
     val of_key : Key.t -> key_hash
-
-    (* We need this to parse the key hashes
-       returned by Taquito. We eventually want to
-       move this stuff to its own library or something.
-       FIXME: can we get rid of this? *)
-    val encoding : key_hash Data_encoding.t
   end
 
   module Signature : sig

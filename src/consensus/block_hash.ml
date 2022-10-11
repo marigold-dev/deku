@@ -8,7 +8,8 @@ and t = block_hash [@@deriving eq, ord]
 let of_blake2b hash = hash
 let to_blake2b operation_hash = operation_hash
 
-include With_b58 (struct
+include With_b58_and_encoding (struct
+  let name = "Deku_consensus.Block_hash"
   let prefix = Prefix.deku_block_hash
 end)
 

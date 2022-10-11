@@ -1,24 +1,18 @@
 open Deku_crypto
 open Deku_repr
 open BLAKE2b
+open BLAKE2b_160
 
 type t = BLAKE2b_160.t [@@deriving eq, ord, show]
 
-include With_encoding (struct
-  type nonrec t = t
-
+include With_b58_and_encoding (struct
   let name = "Contract_hash"
-  let title = "A contract ID"
-  let size = BLAKE2b_160.digest_size
   let prefix = Deku_repr.Prefix.contract_hash
-  let to_raw = BLAKE2b_160.to_raw
-  let of_raw = BLAKE2b_160.of_raw
 end)
 
-include With_b58_and_yojson (struct
+include With_yojson_of_b58 (struct
   type nonrec t = t
 
-  let prefix = Deku_repr.Prefix.contract_hash
-  let to_raw = BLAKE2b_160.to_raw
-  let of_raw = BLAKE2b_160.of_raw
+  let of_b58 = of_b58
+  let to_b58 = to_b58
 end)

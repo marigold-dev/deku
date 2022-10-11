@@ -7,7 +7,8 @@ and t = operation_hash [@@deriving eq, ord]
 
 let to_blake2b operation_hash = operation_hash
 
-include With_b58 (struct
+include With_b58_and_encoding (struct
+  let name = "Deku_protocol.Operation_hash"
   let prefix = Prefix.deku_operation_hash
 end)
 

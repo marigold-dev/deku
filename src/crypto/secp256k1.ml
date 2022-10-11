@@ -77,7 +77,6 @@ module Key = struct
     type nonrec t = t
 
     let name = "Secp256k1.Public_key"
-    let title = "A Secp256k1 public key"
     let size = Libsecp256k1.Key.compressed_pk_bytes
     let prefix = Prefix.secp256k1_public_key
     let to_raw = to_raw
@@ -109,7 +108,8 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58 (struct
+  include With_b58_and_encoding (struct
+    let name = "Secp256k1.Public_key_hash"
     let prefix = Prefix.secp256k1_public_key_hash
   end)
 
@@ -118,17 +118,6 @@ module Key_hash = struct
 
     let of_b58 = of_b58
     let to_b58 = to_b58
-  end)
-
-  include With_encoding (struct
-    type nonrec t = t
-
-    let name = "Secp256k1.Public_key_hash"
-    let title = "A Secp256k1 public key hash"
-    let size = BLAKE2b.BLAKE2b_160.digest_size
-    let prefix = Prefix.secp256k1_public_key_hash
-    let to_raw = BLAKE2b.BLAKE2b_160.to_raw
-    let of_raw = BLAKE2b.BLAKE2b_160.of_raw
   end)
 end
 
