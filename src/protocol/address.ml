@@ -9,6 +9,7 @@ let of_key_hash key_hash = key_hash
 let to_key_hash address = address
 let of_b58 = of_b58
 let to_b58 = to_b58
+let encoding = encoding
 
 module Map = Deku_stdlib.Map.Make (Key_hash)
 

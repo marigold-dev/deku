@@ -5,8 +5,13 @@ type t = level [@@deriving show, eq, ord, yojson]
 
 val zero : level
 val next : level -> level
+
+(* repr *)
 val of_n : N.t -> level
 val to_n : level -> N.t
+val encoding : level Data_encoding.t
+
+(* operations *)
 val ( > ) : level -> level -> bool
 
 module Map : Map.S with type key = level

@@ -9,6 +9,7 @@ let zero = zero
 let next x = x + one
 let of_n n = n
 let to_n n = n
+let encoding = encoding
 let ( > ) = ( > )
 
 module Map = Map

@@ -9,6 +9,7 @@ val one : nat
 (* repr *)
 val of_z : Z.t -> nat option
 val to_z : nat -> Z.t
+val encoding : nat Data_encoding.t
 
 (* operations *)
 val ( + ) : nat -> nat -> nat

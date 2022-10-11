@@ -9,6 +9,7 @@ val of_key_hash : Key_hash.t -> address
 val to_key_hash : address -> Key_hash.t
 val of_b58 : string -> address option
 val to_b58 : address -> string
+val encoding : address Data_encoding.t
 
 (* TODO: where this is used? *)
 module Map : Map.S with type key = address

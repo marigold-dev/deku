@@ -8,6 +8,7 @@ type t = operation_hash [@@deriving eq, ord, yojson, show]
 val to_blake2b : operation_hash -> BLAKE2b.t
 val of_b58 : string -> operation_hash option
 val to_b58 : operation_hash -> string
+val encoding : operation_hash Data_encoding.t
 
 (* operations *)
 val hash : string -> operation_hash
