@@ -139,7 +139,9 @@ module Server = struct
     Eio.Switch.run @@ fun sw ->
     let interface = Eio.Net.Ipaddr.V4.any in
     let address = `Tcp (interface, port) in
-    let socket = Eio.Net.listen ~reuse_addr:true ~backlog ~sw net address in
+    let socket =
+      Eio.Net.listen ~reuse_addr:true ~reuse_port:true ~backlog ~sw net address
+    in
     let rec loop () =
       Eio.Net.accept_fork ~sw socket ~on_error (fun stream _sockaddr ->
           Connection.of_stream ~identity stream k);
