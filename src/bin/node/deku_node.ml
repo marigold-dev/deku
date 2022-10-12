@@ -62,8 +62,8 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let start_api ~env ~sw ~node ~indexer ~port ~tezos_consensus_address ~node_port
-    ~enabled =
+let start_api ~identity ~env ~sw ~node ~indexer ~port ~tezos_consensus_address
+    ~node_port ~enabled =
   match enabled with
   | false -> ()
   | true ->
@@ -72,7 +72,7 @@ let start_api ~env ~sw ~node ~indexer ~port ~tezos_consensus_address ~node_port
           ~node_port
       in
       let request_handler =
-        Deku_api.make_routes ~env node indexer api_constants
+        Deku_api.make_routes ~identity ~env node indexer api_constants
       in
       let config = Piaf.Server.Config.create port in
       let server = Piaf.Server.create ~config request_handler in
@@ -145,8 +145,8 @@ let main params =
   in
 
   let () =
-    start_api ~env ~sw ~node ~indexer ~port:api_port ~tezos_consensus_address
-      ~node_port:port ~enabled:api_enabled
+    start_api ~identity ~env ~sw ~node ~indexer ~port:api_port
+      ~tezos_consensus_address ~node_port:port ~enabled:api_enabled
   in
 
   let (Chain { consensus; _ }) = chain in

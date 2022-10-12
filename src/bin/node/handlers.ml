@@ -352,7 +352,7 @@ module Post_operation = struct
   let input_from_request request =
     Handler_utils.input_of_body ~of_yojson:input_of_yojson request
 
-  let handle ~env ~node:_ ~indexer:_ ~constants operation =
+  let handle ~identity ~env ~node:_ ~indexer:_ ~constants operation =
     let Api_constants.{ node_address = host; node_port = port; _ } =
       constants
     in
@@ -364,17 +364,17 @@ module Post_operation = struct
     let open Deku_network in
     let (Network_message { raw_header; raw_content }) = network in
     let message = Network_message.message ~raw_header ~raw_content in
-    ( Network_protocol.Client.connect ~net ~host ~port @@ fun connection ->
-      Network_protocol.Connection.write connection message );
+    ( Network_protocol.Client.connect ~identity ~net ~host ~port
+    @@ fun connection -> Network_protocol.Connection.write connection message );
 
     let (Operation.Operation { hash = operation_hash; _ }) = operation in
     { hash = operation_hash } |> yojson_of_response |> Result.ok
 
-  let path ~env ~node ~indexer ~constants =
+  let path ~identity ~env ~node ~indexer ~constants =
     let handler request =
       Result.bind
         (input_from_request request)
-        (handle ~env ~node ~indexer ~constants)
+        (handle ~identity ~env ~node ~indexer ~constants)
     in
     Routes.(
       (s "api" / s "v1" / s "operations" /? nil) @--> check_method meth handler)

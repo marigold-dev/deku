@@ -1,18 +1,24 @@
+open Deku_crypto
+open Deku_concepts
 open Deku_gossip
 open Network_protocol
 
 type network = {
+  identity : Identity.t;
   mutable connection_id : Connection_id.t;
   (* TODO: Hashtbl would do a great job here *)
   mutable connections : (Network_message.message -> unit) Connection_id.Map.t;
+  mutable connected_to : (Network_message.message -> unit) Key_hash.Map.t;
 }
 
 type t = network
 
-let make () =
+let make ~identity =
   {
+    identity;
     connection_id = Connection_id.initial;
     connections = Connection_id.Map.empty;
+    connected_to = Key_hash.Map.empty;
   }
 
 let create_connection network =
@@ -20,9 +26,11 @@ let create_connection network =
   network.connection_id <- Connection_id.next connection_id;
   connection_id
 
-let set_connection ~connection_id ~write network =
+let set_connection ~connection_id ~owner ~write network =
+  let key_hash = Key_hash.of_key owner in
   network.connections <-
-    Connection_id.Map.add connection_id write network.connections
+    Connection_id.Map.add connection_id write network.connections;
+  network.connected_to <- Key_hash.Map.add key_hash write network.connected_to
 
 let close_connection ~connection_id network =
   network.connections <-
@@ -46,7 +54,8 @@ let with_connection ~on_connection ~on_request ~on_message network k =
       on_message message;
       loop ()
     in
-    set_connection ~connection_id ~write network;
+    let owner = Connection.owner connection in
+    set_connection ~connection_id ~owner ~write network;
     on_connection ~connection:connection_id;
     loop ()
   in
@@ -59,33 +68,36 @@ let with_connection ~on_connection ~on_request ~on_message network k =
 
 let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
     network =
-  let rec reconnect_loop ~net ~clock ~host ~port handler =
-    try Network_protocol.Client.connect ~net ~host ~port handler
+  let rec reconnect_loop ~identity ~net ~clock ~host ~port handler =
+    try Network_protocol.Client.connect ~identity ~net ~host ~port handler
     with exn ->
       Format.eprintf "reconnect(%s:%d): %s\n%!" host port
         (Printexc.to_string exn);
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
-      reconnect_loop ~net ~clock ~host ~port handler
+      reconnect_loop ~identity ~net ~clock ~host ~port handler
   in
+  let identity = network.identity in
   with_connection ~on_connection ~on_request ~on_message network
-  @@ fun handler -> reconnect_loop ~net ~clock ~host ~port handler
+  @@ fun handler -> reconnect_loop ~identity ~net ~clock ~host ~port handler
 
 let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
   let on_error exn =
     Format.eprintf "listen.connection: %s\n%!" (Printexc.to_string exn)
   in
-  let rec relisten ~net ~clock ~port ~on_error handler =
-    try Network_protocol.Server.listen ~net ~port ~on_error handler
+  let rec relisten ~identity ~net ~clock ~port ~on_error handler =
+    try Network_protocol.Server.listen ~identity ~net ~port ~on_error handler
     with exn ->
       Format.eprintf "relisten: %s\n%!" (Printexc.to_string exn);
       Eio.Time.sleep clock Deku_constants.listen_timeout;
-      relisten ~net ~clock ~port ~on_error handler
+      relisten ~identity ~net ~clock ~port ~on_error handler
   in
+
   let handler connection =
     with_connection ~on_connection ~on_request ~on_message network
     @@ fun handler -> handler connection
   in
-  relisten ~net ~clock ~port ~on_error handler
+  let identity = network.identity in
+  relisten ~identity ~net ~clock ~port ~on_error handler
 
 let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
   Eio.Fiber.List.iter
@@ -104,9 +116,10 @@ let send ~message ~write =
   with exn -> Format.eprintf "write.error: %s\n%!" (Printexc.to_string exn)
 
 let broadcast message network =
-  Connection_id.Map.iter
+  Format.eprintf "sending: %d\n%!" (Key_hash.Map.cardinal network.connected_to);
+  Key_hash.Map.iter
     (fun _connection write -> send ~message ~write)
-    network.connections
+    network.connected_to
 
 let request ~raw_header ~raw_content network =
   let request = Network_message.request ~raw_header ~raw_content in
@@ -135,14 +148,22 @@ let send ~connection ~raw_header ~raw_content network =
       ()
 
 let test () =
+  let open Deku_crypto in
+  let open Deku_concepts in
   Eio_main.run @@ fun env ->
   let nodes = [ ("localhost", 1234); ("localhost", 1235) ] in
+  let identity () =
+    let secret = Ed25519.Secret.generate () in
+    let secret = Secret.Ed25519 secret in
+    Identity.make secret
+  in
 
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
 
   let start ~port : unit =
-    let network = make () in
+    let identity = identity () in
+    let network = make ~identity in
     let on_connection ~connection:_ = Format.eprintf "connected\n%!" in
     let on_request ~connection ~raw_header ~raw_content =
       Format.eprintf "request(%s:%.3f): %d\n%!" raw_header

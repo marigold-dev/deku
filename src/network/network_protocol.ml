@@ -1,5 +1,8 @@
+open Deku_crypto
+
 let () = assert (Sys.word_size = 64)
 
+exception Invalid_handshake
 exception Invalid_message_size
 
 let max_size = 128 * 1024 * 1024
@@ -49,25 +52,57 @@ end
 
 module Connection = struct
   type connection =
-    | Connection of { read_buf : Eio.Buf_read.t; write_buf : Eio.Buf_write.t }
+    | Connection of {
+        owner : Key.t;
+        read_buf : Eio.Buf_read.t;
+        write_buf : Eio.Buf_write.t;
+      }
 
   type t = connection
 
-  let of_stream stream k =
+  module Handshake = struct
+    module Challenge = Make_read_and_write (Network_handshake.Challenge)
+    module Response = Make_read_and_write (Network_handshake.Response)
+  end
+
+  module Message = Make_read_and_write (Network_message)
+
+  let of_stream ~identity stream k =
     Eio.Buf_write.with_flow ~initial_size:max_size stream @@ fun write_buf ->
     let read_buf =
       Eio.Buf_read.of_flow ~initial_size:max_size ~max_size stream
     in
-    k (Connection { read_buf; write_buf })
 
-  module Message = Make_read_and_write (Network_message)
+    (* handshake *)
+    let sent_challenge = Network_handshake.Challenge.generate () in
+    Handshake.Challenge.write write_buf sent_challenge;
+
+    let recv_challenge = Handshake.Challenge.read read_buf in
+    let sent_response =
+      Network_handshake.Response.answer ~identity recv_challenge
+    in
+    Handshake.Response.write write_buf sent_response;
+
+    let recv_response = Handshake.Response.read read_buf in
+    (match
+       Network_handshake.Response.verify ~challenge:sent_challenge recv_response
+     with
+    | true -> ()
+    | false -> raise Invalid_handshake);
+
+    let owner = Network_handshake.Response.key recv_response in
+    k (Connection { owner; read_buf; write_buf })
+
+  let owner connection =
+    let (Connection { owner; read_buf = _; write_buf = _ }) = connection in
+    owner
 
   let read connection =
-    let (Connection { read_buf; write_buf = _ }) = connection in
+    let (Connection { owner = _; read_buf; write_buf = _ }) = connection in
     Message.read read_buf
 
   let write connection message =
-    let (Connection { read_buf = _; write_buf }) = connection in
+    let (Connection { owner = _; read_buf = _; write_buf }) = connection in
     Message.write write_buf message
 end
 
@@ -89,32 +124,38 @@ module Client = struct
     (* TODO: is choosing the first okay? *)
     match address with address :: _ -> address | [] -> raise Invalid_host
 
-  let connect ~net ~host ~port k =
+  let connect ~identity ~net ~host ~port k =
     Eio.Switch.run @@ fun sw ->
     let address = get_first_addrinfo_ipv4 ~net ~host ~port in
     let stream = Eio.Net.connect ~sw net address in
-    Connection.of_stream stream k
+    Connection.of_stream ~identity stream k
 end
 
 module Server = struct
   (* TODO: I just wrote this number down, have no idea if it makes sense, magic *)
   let backlog = 1024
 
-  let listen ~net ~port ~on_error k =
+  let listen ~identity ~net ~port ~on_error k =
     Eio.Switch.run @@ fun sw ->
     let interface = Eio.Net.Ipaddr.V4.any in
     let address = `Tcp (interface, port) in
     let socket = Eio.Net.listen ~backlog ~sw net address in
     let rec loop () =
       Eio.Net.accept_fork ~sw socket ~on_error (fun stream _sockaddr ->
-          Connection.of_stream stream k);
+          Connection.of_stream ~identity stream k);
       loop ()
     in
     loop ()
 end
 
 let test () =
+  let open Deku_concepts in
   Eio_main.run @@ fun env ->
+  let identity =
+    let secret = Ed25519.Secret.generate () in
+    let secret = Secret.Ed25519 secret in
+    Identity.make secret
+  in
   let net = Eio.Stdenv.net env in
   let domains = Eio.Stdenv.domain_mgr env in
   let on_request ~send ~raw_header ~raw_content =
@@ -166,10 +207,11 @@ let test () =
   in
 
   let server () =
-    Server.listen ~net ~port ~on_error:Deku_constants.async_on_error handler
+    Server.listen ~identity ~net ~port ~on_error:Deku_constants.async_on_error
+      handler
   in
   let client () =
-    Client.connect ~net ~host ~port @@ fun connection ->
+    Client.connect ~identity ~net ~host ~port @@ fun connection ->
     let raw_content = String.make (100 * 1024 * 1024) 'a' in
     let rec loop_write counter =
       let _request () =

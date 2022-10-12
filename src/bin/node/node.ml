@@ -121,7 +121,7 @@ let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
   handle_chain_fragment ~sw ~env ~fragment node
 
 let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
-  let network = Network_manager.make () in
+  let network = Network_manager.make ~identity in
   let tezos_interop = None in
   let cancel () = () in
   {
@@ -258,7 +258,7 @@ let test () =
   let bootstrap () =
     Eio.Switch.run @@ fun sw ->
     let identity, _ = List.nth identities 0 in
-    let network = Network_manager.make () in
+    let network = Network_manager.make ~identity in
     Eio.Time.sleep clock 0.2;
     let () =
       Eio.Fiber.fork ~sw @@ fun () ->
