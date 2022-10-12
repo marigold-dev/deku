@@ -4,14 +4,10 @@ type message = private
 
 type t = message
 
-val max_size : int
-
 (* constructors *)
 val message : raw_header:string -> raw_content:string -> message
 val request : raw_header:string -> raw_content:string -> message
 
-(* communication *)
-exception Invalid_message_size
+(* repr *)
 
-val read : Eio.Buf_read.t -> message
-val write : Eio.Buf_write.t -> message -> unit
+val encoding : message Data_encoding.t

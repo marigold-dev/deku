@@ -1,5 +1,52 @@
 let () = assert (Sys.word_size = 64)
 
+exception Invalid_message_size
+
+let max_size = 128 * 1024 * 1024
+
+module Make_read_and_write (T : sig
+  type t
+
+  val encoding : t Data_encoding.t
+end) =
+struct
+  open Data_encoding
+
+  let encoding = check_size max_size T.encoding
+
+  let read =
+    let open Eio.Buf_read in
+    let int32_size = 4 (* 4 bytes *) in
+    let int32 buf =
+      let size = take int32_size buf in
+      let size = String.get_int32_le size 0 in
+      let size = Int32.to_int size in
+      size
+    in
+    let size buf ~max =
+      let size = int32 buf in
+      match size < 0 || size > max with
+      | true -> raise Invalid_message_size
+      | false -> size
+    in
+    fun buf ->
+      let size = size ~max:max_size buf in
+      let content = take size buf in
+      Data_encoding.Binary.of_string_exn encoding content
+
+  let write =
+    let open Eio.Buf_write in
+    let int32 buf size = LE.uint32 buf (Int32.of_int size) in
+
+    fun buf t ->
+      let payload = Binary.to_string_exn encoding t in
+      let size = String.length payload in
+      pause buf;
+      int32 buf size;
+      string buf payload;
+      flush buf
+end
+
 module Connection = struct
   type connection =
     | Connection of { read_buf : Eio.Buf_read.t; write_buf : Eio.Buf_write.t }
@@ -7,20 +54,21 @@ module Connection = struct
   type t = connection
 
   let of_stream stream k =
-    let max_size = Network_message.max_size in
     Eio.Buf_write.with_flow ~initial_size:max_size stream @@ fun write_buf ->
     let read_buf =
       Eio.Buf_read.of_flow ~initial_size:max_size ~max_size stream
     in
     k (Connection { read_buf; write_buf })
 
+  module Message = Make_read_and_write (Network_message)
+
   let read connection =
     let (Connection { read_buf; write_buf = _ }) = connection in
-    Network_message.read read_buf
+    Message.read read_buf
 
   let write connection message =
     let (Connection { read_buf = _; write_buf }) = connection in
-    Network_message.write write_buf message
+    Message.write write_buf message
 end
 
 module Client = struct
