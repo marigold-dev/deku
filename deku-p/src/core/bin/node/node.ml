@@ -19,7 +19,6 @@ type node = {
   mutable tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable cancel : unit -> unit;
-  notify_api : Block.t -> unit;
 }
 
 type t = node
@@ -45,7 +44,6 @@ and handle_chain_action ~sw ~env ~action node =
       Network_manager.request ~raw_header ~raw_content node.network
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block } -> (
-      node.notify_api block;
       match node.indexer with
       | Some indexer -> Indexer.async_save_block ~sw ~block indexer
       | None -> ())
@@ -120,7 +118,7 @@ let on_network_request ~sw ~env ~connection ~raw_header ~raw_content node =
   let fragment = Chain.request ~connection ~raw_header ~raw_content in
   handle_chain_fragment ~sw ~env ~fragment node
 
-let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
+let make ~identity ~default_block_size ~dump ~chain ~indexer =
   let network = Network_manager.make ~identity in
   let tezos_interop = None in
   let cancel () = () in
@@ -133,7 +131,6 @@ let make ~identity ~default_block_size ~dump ~chain ~indexer ~notify_api =
     tezos_interop;
     chain;
     cancel;
-    notify_api;
   }
 
 (* TODO: declare this function elsewhere ? *)
@@ -242,7 +239,6 @@ let test () =
     let dump _chain = () in
     let node =
       make ~identity ~default_block_size:100_000 ~dump ~chain ~indexer:None
-        ~notify_api:(fun _ -> ())
     in
     start ~sw ~env ~port ~nodes ~tezos:None node
   in

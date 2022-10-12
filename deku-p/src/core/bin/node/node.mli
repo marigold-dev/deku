@@ -4,7 +4,6 @@ open Deku_chain
 open Deku_network
 open Deku_indexer
 open Deku_tezos_interop
-open Deku_consensus
 
 type node = private {
   identity : Identity.t;
@@ -15,7 +14,6 @@ type node = private {
   mutable tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable cancel : unit -> unit;
-  notify_api : Block.t -> unit;
 }
 
 type t = node
@@ -26,7 +24,6 @@ val make :
   dump:(Chain.t -> unit) ->
   chain:Chain.t ->
   indexer:Indexer.t option ->
-  notify_api:(Block.t -> unit) ->
   node
 
 val start :

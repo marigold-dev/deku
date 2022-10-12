@@ -137,10 +137,8 @@ let main params style_renderer log_level =
         Chain.make ~validators ~vm_state
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
-  let notify_api _ = () in
   let node =
     Node.make ~identity ~default_block_size ~dump ~chain ~indexer:(Some indexer)
-      ~notify_api
   in
 
   let (Chain { consensus; _ }) = chain in
