@@ -49,7 +49,7 @@ module Zero_ops = struct
     let amount = Amount.of_n N.zero in
     let ticket_id = default_ticket_id in
     Operation.ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id
-      ~amount ~chain_id:Deku_tezos.Address.empty
+      ~amount ~chain_id:Deku_tezos.Address.dummy
 
   let payload_of_operations operations =
     (* TODO: this likely should not be here *)

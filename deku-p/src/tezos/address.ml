@@ -80,8 +80,4 @@ let cmdliner_converter =
   let to_string fmt t = Format.fprintf fmt "%s" (to_string t) in
   (of_string, to_string)
 
-let empty =
-  let open Deku_concepts in
-  Implicit
-    (Identity.key_hash @@ Identity.make
-    @@ Secret.Ed25519 (Ed25519.Secret.generate ()))
+let dummy = Option.get @@ of_string "tz1Yigc57GHQixFwDEVzj5N1znSCU3aq15td"

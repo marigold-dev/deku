@@ -25,7 +25,7 @@ let initial =
       ledger = Ledger.initial;
       vm_state = External_vm_protocol.State.empty;
       receipts = Operation_hash.Map.empty;
-      chain_id = Deku_tezos.Address.empty;
+      chain_id = Deku_tezos.Address.dummy;
     }
 
 let initial_with_vm_state ~vm_state =
@@ -271,7 +271,7 @@ let clean ~current_level protocol =
       ledger;
       receipts;
       vm_state;
-      chain_id
+      chain_id;
     }
 
 let find_withdraw_proof ~operation_hash protocol =

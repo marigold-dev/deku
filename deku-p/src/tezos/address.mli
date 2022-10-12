@@ -15,5 +15,5 @@ val of_string : string -> t option
 val cmdliner_converter :
   (string -> [> `Ok of t | `Error of string ]) * (Format.formatter -> t -> unit)
 
-  (* Helpers, for testing only *)
-val empty : t
+(* Helpers, for testing only *)
+val dummy : t

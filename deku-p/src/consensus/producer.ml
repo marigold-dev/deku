@@ -17,7 +17,7 @@ and t = producer [@@deriving yojson]
 let empty =
   let operations = Operation_hash.Map.empty in
   let tezos_operations = Tezos_operation_hash.Map.empty in
-  let chain_id = Deku_tezos.Address.empty in
+  let chain_id = Deku_tezos.Address.dummy in
   Producer { operations; tezos_operations; chain_id }
 
 let serialize_operation_to_payload operation =

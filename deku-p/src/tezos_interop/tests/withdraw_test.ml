@@ -22,7 +22,7 @@ let main ticket_id tezos_owner secret verbose host =
     Deku_protocol.Operation.withdraw ~identity ~level ~nonce ~tezos_owner
       ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
-      ~chain_id:Deku_tezos.Address.empty
+      ~chain_id:Deku_tezos.Address.dummy
   in
   let json = Deku_protocol.Operation.yojson_of_t transaction in
   let () =

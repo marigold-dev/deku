@@ -238,7 +238,7 @@ let test () =
   let start ~sw ~identity ~port =
     let chain =
       Chain.make ~validators ~vm_state:External_vm_protocol.State.empty
-        ~chain_id:Deku_tezos.Address.empty
+        ~chain_id:Deku_tezos.Address.dummy
     in
     let dump _chain = () in
     let node =

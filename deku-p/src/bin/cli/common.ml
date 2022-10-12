@@ -26,6 +26,9 @@ module Api = struct
   (* response from the API *)
   type level_response = { level : Level.t } [@@deriving of_yojson]
 
+  type chain_id_response = { chain_id : Deku_tezos.Address.t }
+  [@@deriving of_yojson]
+
   let current_level ~sw ~env ~api_uri =
     let level_uri = Uri.with_path api_uri "/api/v1/chain/level" in
     let response = Piaf.Client.Oneshot.get ~sw env level_uri in
@@ -41,6 +44,22 @@ module Api = struct
     in
     let { level } = level_response_of_yojson body in
     level
+
+  let chain_info ~sw ~env ~api_uri =
+    let chain_info_uri = Uri.with_path api_uri "/api/v1/chain/info" in
+    let response = Piaf.Client.Oneshot.get ~sw env chain_info_uri in
+    let body =
+      match response with
+      | Error _ -> failwith "cannot connect to the API"
+      | Ok res -> res.body
+    in
+    let body =
+      match Piaf.Body.to_string body with
+      | Error _ -> failwith "cannot parse the chain id response from the API"
+      | Ok body -> body |> Yojson.Safe.from_string
+    in
+    let { chain_id } = chain_id_response_of_yojson body in
+    chain_id
 
   let submit_operation ~sw ~env ~operation ~api_uri =
     let node = Uri.with_path api_uri "/api/v1/operations" in

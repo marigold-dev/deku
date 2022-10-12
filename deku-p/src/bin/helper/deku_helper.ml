@@ -75,7 +75,7 @@ let main ~env ~sw:_ =
 
   let transaction =
     Operation.vm_transaction ~level ~nonce ~content ~identity
-      ~chain_id:Deku_tezos.Address.empty
+      ~chain_id:Deku_tezos.Address.dummy
   in
   print_newline ();
   let _ = post_directly_to_node ~identity ~env ~operation:transaction in

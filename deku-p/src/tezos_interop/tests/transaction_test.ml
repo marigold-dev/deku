@@ -20,7 +20,7 @@ let main ticket_id receiver secret verbose host =
   let operation =
     Operation.ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
-      ~chain_id:Deku_tezos.Address.empty
+      ~chain_id:Deku_tezos.Address.dummy
   in
   let url = Uri.with_path host "api/v1/operations" in
   let json = Deku_protocol.Operation.yojson_of_t operation in

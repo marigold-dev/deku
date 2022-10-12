@@ -71,6 +71,7 @@ module Repr = struct
     nonce : Nonce.t;
     source : Address.t;
     content : operation_content;
+    (* FIXME: Remove this to make chain operation smaller *)
     chain_id : Deku_tezos.Address.t;
   }
 
