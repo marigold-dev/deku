@@ -1,0 +1,4 @@
+{
+  "description": "cookie-clicker game on jsligo",
+  "dependencies": { "math-lib-core": "^1.0.1" }
+}

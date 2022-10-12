@@ -1,0 +1,4 @@
+#!/bin/sh
+export ESY__NODE_BIN_PATH="/Users/gauthier/Documents/workspace/deku/examples/cookie-WASM/_esy/default/bin"
+exec "/opt/homebrew/Cellar/node/18.9.0/bin/node" -r "/Users/gauthier/Documents/workspace/deku/examples/cookie-WASM/_esy/default/pnp.js" "$@"
+              
