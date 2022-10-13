@@ -13,6 +13,12 @@ type params = {
 }
 [@@deriving cmdliner]
 
+let log message =
+  Format.printf "[";
+  Format.printf "\027[38;5;6m%s\027[0m" "deku-cli";
+  Format.printf "] ";
+  Format.printf "%s\n%!" message
+
 (* Submits a parametric operation to the chain*)
 let main { wallet; named_pipe_path; content; vm } =
   Eio_main.run @@ fun env ->
@@ -25,6 +31,7 @@ let main { wallet; named_pipe_path; content; vm } =
   let (Operation.Operation { hash; _ }) = operation in
   let operation_raw_hash = Operation_hash.to_blake2b hash in
 
+  log (Format.sprintf "Starting VM process '%s'" vm);
   let prog, args =
     match String.split_on_char ' ' vm with
     | prog :: args ->
@@ -32,13 +39,12 @@ let main { wallet; named_pipe_path; content; vm } =
     | [] -> failwith "invalid vm parameter"
   in
   let args = args @ [ named_pipe_path ] |> Array.of_list in
-  (* TODO: see if fifo exist
-     let named_pipe_path = "/tmp/deku_named_pipe_" ^ suffix in
-  *)
   let _pid = Unix.create_process prog args Unix.stdin Unix.stdout Unix.stderr in
   let () = External_vm_client.start_vm_ipc ~named_pipe_path in
+  log "Retrieving initial state from VM";
   let state = External_vm_client.get_initial_state () in
   let source = Identity.key_hash identity in
+  log "Applying transaction";
   let state =
     External_vm_client.apply_vm_operation_exn ~state ~source ~tickets:[]
       (Some (operation_raw_hash, content))
@@ -46,7 +52,9 @@ let main { wallet; named_pipe_path; content; vm } =
   let json = External_vm_protocol.State.yojson_of_t state in
   External_vm_client.close_vm_ipc ();
   (* FIXME: better formatting? *)
-  print_endline (Yojson.Safe.pretty_to_string json)
+  log
+    (Format.sprintf "Transaction complete. Final VM state: %s"
+       (Yojson.Safe.pretty_to_string json))
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in
