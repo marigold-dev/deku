@@ -254,6 +254,33 @@ let prepare_and_decode () =
   let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
   ()
 
+let verify () =
+  let items = 100_000 in
+
+  let prepare () =
+    let identity =
+      let secret = Ed25519.Secret.generate () in
+      let secret = Secret.Ed25519 secret in
+      Identity.make secret
+    in
+    let key = Identity.key identity in
+    let items =
+      Parallel.init_p items (fun n ->
+          let string = string_of_int n in
+          let hash = BLAKE2b.hash string in
+          let sign = Identity.sign ~hash identity in
+          (hash, sign))
+    in
+    (key, items)
+  in
+  bench "verify" ~items ~domains ~prepare @@ fun (key, items) ->
+  let _units : unit list =
+    Parallel.map_p
+      (fun (hash, sign) -> assert (Signature.verify key sign hash))
+      items
+  in
+  ()
+
 let benches =
   [
     produce;
@@ -262,6 +289,7 @@ let benches =
     block_encode;
     block_decode;
     prepare_and_decode;
+    verify;
   ]
 
 let () = List.iter (fun bench -> bench ()) benches
