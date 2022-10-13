@@ -49,10 +49,14 @@
             inherit system dream2nix-lib nix-filter nodejs;
           };
 
-          deku = { static }: pkgs.callPackage ./nix {
-            inherit nodejs npmPackages static;
-            doCheck = true;
-          };
+          deku = { static }:
+            let
+              callPackage = if static then pkgs.pkgsCross.musl64.callPackage else pkgs.callPackage;
+            in
+            callPackage ./nix {
+              inherit nodejs npmPackages static;
+              doCheck = true;
+            };
 
           cookie-game = pkgs.callPackage ./nix/cookie-game.nix {
             inherit dream2nix-lib nix-filter nodejs;
