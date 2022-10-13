@@ -49,8 +49,8 @@
             inherit system dream2nix-lib nix-filter nodejs;
           };
 
-          deku = pkgs.callPackage ./nix {
-            inherit nodejs npmPackages;
+          deku = { static }: pkgs.callPackage ./nix {
+            inherit nodejs npmPackages static;
             doCheck = true;
           };
 
@@ -59,13 +59,17 @@
           };
 
           ligo = pkgs.callPackage ./nix/ligo.nix { };
+          docker = pkgs.callPackage ./nix/docker.nix { deku = deku { static = false; }; };
         in
         rec {
-          packages = { default = deku; inherit cookie-game; };
+          packages = {
+            inherit cookie-game docker;
+            default = deku { static = true; };
+          };
           apps = {
             node = {
               type = "app";
-              program = "${deku}/bin/deku-node";
+              program = "${self.packages.${system}.deku}/bin/deku-node";
             };
             cli = {
               type = "app";
@@ -73,15 +77,15 @@
             };
             bootstrap = {
               type = "app";
-              program = "${deku}/bin/deku-bootstrap";
+              program = "${self.packages.${system}.deku}/bin/deku-bootstrap";
             };
             benchmark = {
               type = "app";
-              program = "${deku}/bin/deku-benchmark";
+              program = "${self.packages.${system}.deku}/bin/deku-benchmark";
             };
             generate-identity = {
               type = "app";
-              program = "${deku}/bin/deku-generate-identity";
+              program = "${self.packages.${system}.deku}/bin/deku-generate-identity";
             };
             cookie-game =
               let script = pkgs.writeScriptBin "cookie-game" ''
@@ -96,7 +100,7 @@
               };
             wasm-vm =
               let script = pkgs.writeScriptBin "wasm-vm" ''
-                  RUST_LOG=info ${wasm-vm.packages."${system}".vm_library}/bin/vm_library "$@"
+                RUST_LOG=info ${wasm-vm.packages."${system}".vm_library}/bin/vm_library "$@"
               '';
               in
               {
@@ -104,7 +108,11 @@
                 program = "${script}/bin/wasm-vm";
               };
           };
-          devShells.default = import ./nix/shell.nix { inherit pkgs deku ligo; deploy-rs = deploy-rs.packages.${system}.default; };
+          devShells.default = import ./nix/shell.nix {
+            inherit pkgs ligo;
+            deku = deku { static = false; };
+            deploy-rs = deploy-rs.packages.${system}.default;
+          };
         }) // {
       nixosModules = {
         deku-node = import ./nix/service.nix { deku-packages = self.packages; inherit wasm-vm; };
