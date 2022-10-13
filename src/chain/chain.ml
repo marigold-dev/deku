@@ -390,19 +390,16 @@ let compute ~identity ~default_block_size fragment =
         Producer.produce ~identity ~default_block_size ~above
           ~withdrawal_handles_hash producer
       in
-      (* let () = Format.printf "produce(%.3f)\n%!" (Unix.gettimeofday ()) in *)
       Outcome_produce { block }
   | Fragment_apply { protocol; votes; block } ->
       let (Block { level; payload; tezos_operations; _ }) = block in
-      let () =
-        Format.printf "applying(%.3f): %a\n%!" (Unix.gettimeofday ()) Level.pp
-          level
-      in
+      Logs.info (fun m ->
+          m "Applying level %a at time %.3f" Level.pp level
+            (Unix.gettimeofday ()));
       let payload =
         let (Payload payload) = Payload.decode ~payload in
         Protocol.prepare ~parallel:Parallel.filter_map_p ~payload
       in
-      (* let () = Format.printf "prepared(%.3f)\n%!" (Unix.gettimeofday ()) in *)
       let protocol, receipts, errors =
         Protocol.apply ~current_level:level ~payload protocol ~tezos_operations
       in
