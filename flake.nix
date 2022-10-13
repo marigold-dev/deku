@@ -66,11 +66,13 @@
           docker = pkgs.callPackage ./nix/docker.nix { deku = deku { static = false; }; };
         in
         rec {
-          packages = rec {
-            inherit cookie-game docker;
-            default = deku { static = true; };
-            deku = default;
-          };
+          packages =
+            let deku_static = deku { static = true; }; in
+            {
+              inherit cookie-game docker;
+              default = deku_static;
+              deku = deku_static;
+            };
           apps = {
             node = {
               type = "app";
