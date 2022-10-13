@@ -1,4 +1,4 @@
-{ pkgs, doCheck ? true, nodejs, npmPackages }:
+{ pkgs, doCheck ? true, nodejs, npmPackages, static ? false, removeReferencesTo }:
 
 let inherit (pkgs) lib stdenv ocamlPackages; in
 with ocamlPackages; buildDunePackage rec {
@@ -22,7 +22,18 @@ with ocamlPackages; buildDunePackage rec {
     files = [ "dune-project" "deku.opam" ];
   };
 
-  nativeBuildInputs = [ nodejs ] ++ npmPackages;
+
+  # This is the same as standard dune build but with static support
+  buildPhase = ''
+    echo NODE_PATH
+    echo $NODE_PATH
+    runHook preBuild
+    echo "running ${if static then "static" else "release"} build"
+    dune build -p ${pname} --profile=${if static then "static" else "release"}
+    runHook postBuild
+  '';
+
+  nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages;
 
   propagatedBuildInputs = [
     tezos-micheline
@@ -52,6 +63,25 @@ with ocamlPackages; buildDunePackage rec {
   ++ checkInputs;
 
   checkInputs = [ alcotest ];
+
+  # Remove every directory which could have links to other store paths.
+  # This makes the result much smaller
+  isLibrary = false;
+  postFixup = ''
+    rm -rf $out/lib $out/share/doc
+    remove-references-to \
+      -t ${ocamlPackages.ocaml} \
+      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
+  '' + (if static then ''
+    # If we're building statically linked binaries everything should be possible to remove
+    remove-references-to \
+      -t ${pkgs.gmp} \
+      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
+    remove-references-to \
+      -t ${pkgs.libffi} \
+      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
+  '' else
+    "");
 
   meta.mainProgram = "deku-node";
 }
