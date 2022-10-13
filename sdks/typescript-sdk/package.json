@@ -1,7 +1,7 @@
 {
-  "name": "deku-sdk",
+  "name": "@marigold-dev/deku-p-sdk",
   "main": "lib/interop.js",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "scripts": {
     "build": "tsc src/interop.ts --lib es6 --outDir lib/",
     "dev": "tsc --project . -w --outDir lib/",
