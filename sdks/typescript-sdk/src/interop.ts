@@ -1,6 +1,13 @@
 import * as fs from "fs";
 import * as child_process from "child_process";
 
+
+const DEBUG_LOGGING = Boolean(process.env.DEKU_VM_DEBUG_LOGGING);
+
+const log = (...message) => {
+    if (DEBUG_LOGGING) console.log('[\x1b[32m%s\x1b[0m] %s', 'deku-vm', ...message);
+}
+
 let machineToChain: number | undefined;
 let chainToMachine: number | undefined;
 let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
@@ -10,12 +17,12 @@ let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
  * @returns {void}
  */
 const init_fifo = () => {
-    const fifo_path = process.argv[2];
+    const fifo_path = process.argv[2] ?? "/run/deku/pipe";
 
-    console.log(`fifo path: ${fifo_path}`);
-    console.log("opening read");
+    log(`fifo path: ${fifo_path}`);
+    log("opening read");
     machineToChain = fs.openSync(`${fifo_path}_read`, "a");
-    console.log("opening write");
+    log("opening write");
     chainToMachine = fs.openSync(`${fifo_path}_write`, "r");
 };
 
@@ -29,7 +36,7 @@ const init_state = (initial_state) => {
     switch (message[0]) {
         case "Get_Initial_State": {
             const initial_message = Object.keys(initial_state)
-                .map(key => ({ key, value: JSON.stringify(initial_state[key]) }));
+                .map(key => ({ key, value: initial_state[key] }));
             const init_message = `["Init", ${JSON.stringify(initial_message)}]`;
             write(Buffer.from(init_message));
             return initial_state;
@@ -87,11 +94,8 @@ const set = (key: string, value: string) => {
  * @param key the key the value
  * @returns th stored value
  */
-const get = (key: string): Buffer | undefined => {
-    const value = state[key];
-    return value === undefined
-        ? Buffer.from(JSON.stringify(null))
-        : Buffer.from(JSON.stringify(value))
+const get = (key: string): string | null => {
+    return state[key] ?? JSON.stringify(null);
 }
 
 // Json received from the chain
@@ -104,6 +108,8 @@ interface transaction {
     tickets: any // FIXME: proper type signature for tickets
 }
 
+type Nullable<A> = A|null|undefined|void
+
 /**
  * The main function
  * @param initial_state the initial state of your vm
@@ -111,11 +117,11 @@ interface transaction {
  */
 const main = (
     initial_state: { [key: string]: any }, // TODO: add a better type for JSON values
-    state_transition: (transaction: transaction) => string
+    state_transition: (transaction: transaction) => Nullable<string>
 ) => {
     init_fifo();
     state = init_state(initial_state);
-    console.log("vm started");
+    log("vm started");
 
     for (; ;) {
         const raw = read().toString();
@@ -123,21 +129,23 @@ const main = (
         if (message === "close") {
           break;
         }
-        console.log("Parsed message:", message);
-        let error = "";
+        // FIXME: this and every other log in here should be on some kind opt-in "debug logging" mode
+        log("Parsed message:", message);
+        let error : Nullable<string> = "";
         if (message[0] !== "Noop_transaction") {
             const transaction = message[1];
             try {
                 error = state_transition(transaction);
-            } catch (error) {
-                error = "Unhandle exception from the VM."
+            } catch (vm_err) {
+                console.error(vm_err);
+                error = "Unhandled exception from the VM."
             }
         } else {
-            console.log("Received noop operation");
+            log("Received noop operation");
         }
         const end_message = error ? `["Error", "${error}"]` : '["Stop"]';
         write(Buffer.from(end_message));
     }
 };
 
-export { main, get, set };
+export { main, get, set, transaction };
