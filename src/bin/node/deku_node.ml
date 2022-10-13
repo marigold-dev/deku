@@ -33,14 +33,16 @@ type params = {
   domains : int; [@env "DEKU_DOMAINS"] [@default 8]
   secret : Ed25519.Secret.t; [@env "DEKU_SECRET"]
       (** The base58-encoded secret used as the Deku-node's identity. *)
-  data_folder : string; [@env "DEKU_DATA_FOLDER"]
+  data_folder : string; [@env "DEKU_DATA_FOLDER"] [@default "/var/lib/deku"]
       (** Folder path where node's state is stored. *)
   validators : Key_hash.t list; [@env "DEKU_VALIDATORS"]
       (** A comma separeted list of the key hashes of all validators in the network. *)
   validator_uris : string list; [@env "DEKU_VALIDATOR_URIS"]
       (** A comma-separated list of the validator URI's used to join the network. *)
   port : int; [@default 4440] [@env "DEKU_PORT"]  (** The port to listen on. *)
-  database_uri : Uri.t; [@env "DEKU_DATABASE_URI"]
+  database_uri : Uri.t;
+      [@env "DEKU_DATABASE_URI"]
+      [@default Uri.of_string "sqlite3:/var/lib/deku/db.sqlite"]
       (** A URI-encoded path to a SQLite database. Will be created it if it doesn't exist already. *)
   save_blocks : bool; [@env "DEKU_DEBUG_SAVE_BLOCKS"] [@default true]
       (** Configures the debug indexer to save blocks. Defaults to true. *)
@@ -55,9 +57,10 @@ type params = {
   tezos_consensus_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
-  named_pipe_path : string; [@default "deku_vm"]
+  named_pipe_path : string;
+      [@default "/run/deku/pipe"] [@env "DEKU_NAMED_PIPE_PATH"]
       (** Named pipe path to use for IPC with the VM *)
-  api_enabled : bool; [@env "DEKU_API_ENABLED"]
+  api_enabled : bool; [@default false] [@env "DEKU_API_ENABLED"]
   api_port : int; [@default 8080] [@env "DEKU_API_PORT"]
 }
 [@@deriving cmdliner]
@@ -74,9 +77,13 @@ let start_api ~identity ~env ~sw ~node ~indexer ~port ~tezos_consensus_address
       let request_handler =
         Deku_api.make_routes ~identity ~env node indexer api_constants
       in
+      Logs.info (fun m -> m "Enabling RPC on port %d" port);
       let config = Piaf.Server.Config.create port in
       let server = Piaf.Server.create ~config request_handler in
-      let _command = Piaf.Server.Command.start ~sw env server in
+      let _command =
+        Piaf.Server.Command.start ~bind_to_address:Eio.Net.Ipaddr.V4.any ~sw env
+          server
+      in
       ()
 
 let main params =
@@ -118,6 +125,8 @@ let main params =
       validator_uris
   in
   (* The VM must be started before the node because this call is blocking  *)
+  Logs.info (fun m ->
+      m "Starting IPC with external vm at path %s" named_pipe_path);
   let () = External_vm_client.start_vm_ipc ~named_pipe_path in
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->

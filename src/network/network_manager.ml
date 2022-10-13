@@ -71,8 +71,9 @@ let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
   let rec reconnect_loop ~identity ~net ~clock ~host ~port handler =
     try Network_protocol.Client.connect ~identity ~net ~host ~port handler
     with exn ->
-      Format.eprintf "reconnect(%s:%d): %s\n%!" host port
-        (Printexc.to_string exn);
+      (* FIXME: is this properly a debug log? Or should it be warning? *)
+      Logs.debug (fun m ->
+          m "reconnect(%s:%d): %s\n%!" host port (Printexc.to_string exn));
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
       reconnect_loop ~identity ~net ~clock ~host ~port handler
   in
