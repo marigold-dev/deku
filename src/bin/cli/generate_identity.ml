@@ -2,7 +2,7 @@ open Deku_crypto
 open Cmdliner
 open Common
 
-type params = { output : string [@post 0] [@default ""] [@docv "output"] }
+type params = { output : string [@pos 0] [@default ""] [@docv "output"] }
 [@@deriving cmdliner]
 
 let main { output } =
