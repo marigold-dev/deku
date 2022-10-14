@@ -67,11 +67,11 @@
         in
         rec {
           packages =
-            let deku_static = deku { static = true; }; in
+            let deku_native = deku { static = false; }; in
             {
               inherit cookie-game docker;
-              default = deku_static;
-              deku = deku_static;
+              default = deku_native;
+              deku = deku_native;
             };
           apps = {
             node = {
