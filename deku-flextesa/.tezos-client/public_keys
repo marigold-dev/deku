@@ -1,0 +1,15 @@
+[ { "name": "bob",
+    "value":
+      { "locator":
+          "unencrypted:edpkurPsQ8eUApnLUJ9ZPDvu98E8VNj4KtJa1aZr16Cr5ow5VHKnz4",
+        "key": "edpkurPsQ8eUApnLUJ9ZPDvu98E8VNj4KtJa1aZr16Cr5ow5VHKnz4" } },
+  { "name": "myWallet",
+    "value":
+      { "locator":
+          "unencrypted:edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn",
+        "key": "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn" } },
+  { "name": "alice",
+    "value":
+      { "locator":
+          "unencrypted:edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn",
+        "key": "edpkvGfYw3LyB1UcCahKQk4rF2tvbMUk8GFiTuMjL75uGXrpvKXhjn" } } ]
