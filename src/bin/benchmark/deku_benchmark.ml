@@ -144,9 +144,8 @@ end
        average
    end *)
 
-let _alpha =
-  Eio_main.run @@ fun env ->
-  Parallel.Pool.run ~env ~domains @@ fun () -> Zero_ops.run
+let _alpha () =
+  Eio_main.run @@ fun env -> Parallel.Pool.run ~env ~domains Zero_ops.run
 (* let pi = Parallel.Pool.run pool Block_production.run
    let total = alpha +. pi
    let () = Format.printf "alpha + pi: %3f\n%!" total *)
