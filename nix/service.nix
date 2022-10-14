@@ -51,7 +51,7 @@ in
             StateDirectory = "deku";
             RuntimeDirectory = "deku";
             RuntimeDirectoryPreserve = "yes";
-            MemoryMax = "55G";
+            MemoryMax = "155G";
 
             # Basic Hardening
             # NoNewPrivileges = "yes";
