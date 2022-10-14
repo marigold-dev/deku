@@ -175,9 +175,7 @@ let bench f =
   let t2 = Unix.gettimeofday () in
   t2 -. t1
 
-let bench msg ~items ~domains ~prepare run =
-  Eio_main.run @@ fun env ->
-  Parallel.Pool.run ~env ~domains @@ fun () ->
+let bench msg ~items ~prepare run =
   let runs = 10 in
   let value = prepare () in
   let results =
@@ -196,7 +194,7 @@ let produce () =
   let items = 1_000_000 in
   let prepare () = () in
   (* 6kk/s on 8 domains *)
-  bench "produce" ~items ~domains ~prepare @@ fun () ->
+  bench "produce" ~items ~prepare @@ fun () ->
   let (_ : Block.t) = block ~default_block_size:items in
   ()
 
@@ -204,7 +202,7 @@ let string_of_block () =
   let items = 1_000_000 in
   let prepare () = block ~default_block_size:items in
   (* 1kk/s on 8 domains *)
-  bench "string_of_block" ~items ~domains ~prepare @@ fun block ->
+  bench "string_of_block" ~items ~prepare @@ fun block ->
   let json = Block.yojson_of_t block in
   let (_ : string) = Yojson.Safe.to_string json in
   ()
@@ -217,7 +215,7 @@ let block_of_string () =
     Yojson.Safe.to_string json
   in
   (* 500k/s on 8 domains *)
-  bench "block_of_string" ~items ~domains ~prepare @@ fun string ->
+  bench "block_of_string" ~items ~prepare @@ fun string ->
   let json = Yojson.Safe.from_string string in
   let (_ : Block.t) = Block.t_of_yojson json in
   ()
@@ -226,7 +224,7 @@ let block_encode () =
   let items = 1_000_000 in
   let prepare () = block ~default_block_size:items in
   (* 1kk/s on 8 domains *)
-  bench "block_encode" ~items ~domains ~prepare @@ fun block ->
+  bench "block_encode" ~items ~prepare @@ fun block ->
   let (_ : string list) = Block.encode block in
   ()
 
@@ -237,7 +235,7 @@ let block_decode () =
     Block.encode block
   in
   (* 500k/s on 8 domains *)
-  bench "block_decode" ~items ~domains ~prepare @@ fun fragments ->
+  bench "block_decode" ~items ~prepare @@ fun fragments ->
   let (_ : Block.t) = Block.decode fragments in
   ()
 
@@ -250,14 +248,13 @@ let prepare_and_decode () =
   in
   let parallel = Parallel.filter_map_p in
   (* 100k/s on 8 domains *)
-  bench "prepare_and_decode" ~items ~domains ~prepare @@ fun payload ->
+  bench "prepare_and_decode" ~items ~prepare @@ fun payload ->
   let (Payload payload) = Payload.decode ~payload in
   let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
   ()
 
 let verify () =
   let items = 100_000 in
-
   let prepare () =
     let identity =
       let secret = Ed25519.Secret.generate () in
@@ -274,7 +271,7 @@ let verify () =
     in
     (key, items)
   in
-  bench "verify" ~items ~domains ~prepare @@ fun (key, items) ->
+  bench "verify" ~items ~prepare @@ fun (key, items) ->
   let _units : unit list =
     Parallel.map_p
       (fun (hash, sign) -> assert (Signature.verify key sign hash))
@@ -293,4 +290,7 @@ let benches =
     verify;
   ]
 
-let () = List.iter (fun bench -> bench ()) benches
+let () =
+  Eio_main.run @@ fun env ->
+  Parallel.Pool.run ~env ~domains @@ fun () ->
+  List.iter (fun bench -> bench ()) benches
