@@ -9,6 +9,7 @@ let domains =
   | None -> 16
 
 let () = Format.printf "Using %d domains\n%!" domains
+let () = print_endline "sanity check"
 
 module Util = struct
   let benchmark ~runs f =
