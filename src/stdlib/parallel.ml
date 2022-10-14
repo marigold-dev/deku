@@ -31,9 +31,7 @@ module Pool = struct
     let spawn () =
       Eio.Domain_manager.run domain_mgr (fun () -> domain_loop pending)
     in
-    let create_domains =
-      List.init domains (fun _n () -> Eio.Domain_manager.run domain_mgr spawn)
-    in
+    let create_domains = List.init domains (fun _n -> spawn) in
     (* TODO: maybe this should be fork daemon? *)
     ( Eio.Fiber.fork_daemon ~sw @@ fun () ->
       Eio.Fiber.all create_domains;
