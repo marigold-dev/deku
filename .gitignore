@@ -11,3 +11,4 @@ examples/cookie-game/lib
 *-node-*-deku_state_*.tar.gz
 tezos_js_bridge.bundle.js
 chain/data
+.pre-commit-config.yaml

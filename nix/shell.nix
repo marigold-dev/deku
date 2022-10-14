@@ -1,8 +1,12 @@
-{ pkgs, deku, ligo, deploy-rs }:
+{ pkgs, deku, ligo, deploy-rs, shellHook }:
 
-with pkgs; with ocamlPackages; mkShell {
+with pkgs;
+with ocamlPackages;
+mkShell {
   shellHook = ''
-      export PATH="$(pwd)/_build/install/default/bin:$PATH"
+    export PATH="$(pwd)/_build/install/default/bin:$PATH"
+    echo "https://api.dashboard.marigold.dev/api/objectives" > .git/hooks/.config
+    ${shellHook}
   '';
   inputsFrom = [ deku ];
   packages = [
