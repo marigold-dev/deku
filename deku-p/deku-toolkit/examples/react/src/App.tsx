@@ -4,8 +4,9 @@ import logo from "./logo.png";
 import {
   DekuToolkit,
   fromMemorySigner,
-} from "@marigold-dev/deku-toolkit";
+} from "deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
+import { JSONType } from "../../../lib/utils/json";
 
 const containerStyle: CSS.Properties = {
   textAlign: "center",
@@ -21,7 +22,7 @@ const dekuSigner = fromMemorySigner(
 
 const deku = new DekuToolkit({ dekuRpc: "http://localhost:8080", dekuSigner })
   .setTezosRpc("http://localhost:20000")
-  .onBlock((block) => {
+  .onBlock((block: any) => {
     console.log("The client received a block");
     console.log(block);
   });
@@ -31,9 +32,10 @@ const App = () => {
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
-    discovery: string;
+    // discovery: string;
   } | null>(null);
 
+  const [vmState, setVmState] = useState<JSONType>(null);
   const [isActive, setIsActive] = useState(false);
   const setActive = () => setIsActive(true);
 
@@ -97,6 +99,18 @@ const App = () => {
     findBlockExample().then(console.log).catch(console.error);
   }, []);
 
+  /*
+* Example to retrieve vm state from the chain
+*/
+  const getVmStateExample = async () => {
+    const state = await deku.getVmState();
+    return state;
+  };
+
+  useEffect(() => {
+    getVmStateExample().then(setVmState).catch(console.error);
+  }, []);
+
   /**
    * How to make a transfer
    */
@@ -157,9 +171,10 @@ const App = () => {
     <div style={containerStyle}>
       <img src={logo} alt="deku logo" />
       {info && <div>Consensus : {info.consensus} </div>}
-      {info && <div>Discovery : {info.discovery} </div>}
+      {/* {info && <div>Discovery : {info.discovery} </div>} */}
       <div>Level : {level} </div>
       <div>Balance : {balance}</div>
+      <div>State : {JSON.stringify(vmState)}</div>
 
       <>
         <input
@@ -186,6 +201,10 @@ const App = () => {
         <button
           onClick={() => withdrawExample()}
           children="Withdraw (to same address as the ticketer)"
+        />
+        <button
+          onClick={() => getVmStateExample()}
+          children="VM State"
         />
       </>
     </div>

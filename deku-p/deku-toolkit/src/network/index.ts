@@ -27,6 +27,7 @@ export type endpoints = {
     "GET_BALANCE": (address: string, ticket_id: TicketID) => endpoint<number>,
     "GET_PROOF": (operation_hash: string) => endpoint<ProofType>
     "OPERATIONS": endpoint<string>,
+    "GET_VM_STATE": endpoint<JSONType>
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -87,6 +88,14 @@ export const makeEndpoints = (root: string): endpoints => ({
         parse: (json: JSONValue) => {
             const hash = json.at("hash").as_string();
             return hash;
+        }
+    },
+    "GET_VM_STATE": {
+        uri: urlJoin(root, `${VERSION}/state/unix`),
+        expectedStatus: 200,
+        parse: (json: JSONValue) => {
+            const state = json.as_json();
+            return state;
         }
     },
 })
