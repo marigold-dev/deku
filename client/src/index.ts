@@ -412,5 +412,5 @@ export class DekuToolkit {
 }
 
 export { fromBeaconSigner, fromCustomSigner, fromTaquitoSigner } from './utils/signers';
-
+export { AddressType, AmountType, OperationHashType };
 
