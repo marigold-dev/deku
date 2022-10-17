@@ -11,13 +11,12 @@ module Chain = struct
     | true ->
         let chain =
           Eio_unix.run_in_systhread (fun () ->
-              Eio.Switch.run @@ fun _sw ->
               let json = Yojson.Safe.from_file file in
               Chain.t_of_yojson json)
         in
         Some chain
     | false -> None
-
+  
   let write ~env ~folder chain =
     Eio_unix.run_in_systhread (fun () ->
         let temp = Filename.concat folder temp in
