@@ -2,7 +2,7 @@ import { Key } from "../core/key";
 import { KeyHash } from "../core/key-hash";
 import Operation, { Operation as OperationType, SignedOperation } from "../core/operation";
 
-interface MemorySigner {
+interface TaquitoSigner {
     sign: (payload: string) => Promise<{ prefixSig: string }>
     publicKey: () => Promise<Key>
     publicKeyHash: () => Promise<KeyHash>
@@ -14,7 +14,7 @@ interface BeaconSigner {
 }
 
 interface CustomSigner {
-    sign: (payload:string) => Promise<string>
+    sign: (payload: string) => Promise<string>
     publicKey: () => Promise<Key>,
     publicKeyHash: () => Promise<KeyHash>
 }
@@ -41,7 +41,7 @@ export abstract class DekuSigner {
  * @param signer a memory signer instanciante by "InMemorySigner"
  * @returns a deku signer
  */
-export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
+export const fromTaquitoSigner = (signer: TaquitoSigner): DekuSigner => {
     class MemorySigner extends DekuSigner {
         sign = async (payload: string) => {
             const payloadHex = Buffer.from(payload).toString("hex");
