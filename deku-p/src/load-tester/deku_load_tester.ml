@@ -39,6 +39,28 @@ let post_to_api ~sw ~env ~api_url operation =
                (Piaf.Status.to_string status)))
   | Error err -> Error (Piaf.Error.to_string err)
 
+type level_response = { level : Level.t } [@@deriving of_yojson]
+
+let level ~sw ~env ~api_url =
+  let level_uri = Uri.with_path api_url "/api/v1/chain/level" in
+  let result = Piaf.Client.Oneshot.get ~sw env level_uri in
+  match result with
+  | Ok Piaf.Response.{ status; body; _ } -> (
+      match Piaf.Status.is_successful status with
+      | true -> (
+          let result = Piaf.Body.to_string body in
+          match result with
+          | Ok string ->
+              let json = Yojson.Safe.from_string string in
+              let { level } = level_response_of_yojson json in
+              Ok level
+          | Error err -> Error (Piaf.Error.to_string err))
+      | false ->
+          Error
+            (Format.sprintf "receive code response: %s"
+               (Piaf.Status.to_string status)))
+  | Error err -> Error (Piaf.Error.to_string err)
+
 type params = {
   domains : int; [@default 8]
   api_url : Uri.t; [@default Uri.of_string "http://localhost:8080"]
@@ -58,7 +80,14 @@ let main params =
     Stdlib.Random.State.bits64 rng
     |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get |> Nonce.of_n
   in
-  let level = Level.zero in
+  let level = level ~sw ~env ~api_url in
+  let level =
+    match level with
+    | Ok level -> level
+    | Error str ->
+        print_endline str;
+        exit 1
+  in
   let operation = Signed.noop ~identity ~level ~nonce in
   let res = post_to_api ~sw ~env ~api_url operation in
   match res with
