@@ -1,6 +1,13 @@
+open Tezos_error_monad.Error_monad
+
 let value = Alcotest.of_pp Tunac.Values.V.pp
 
-let error = Alcotest.of_pp (fun _fmt _t -> ())
+let error :
+    [< `Unexpected_error
+    | `Parsing_error of tztrace
+    | `Prim_parsing_error of Tunac.Michelson_primitives.error ]
+    Alcotest.testable =
+  Alcotest.of_pp (fun _fmt _t -> ())
 
 let integers () =
   Alcotest.(check @@ result value error)

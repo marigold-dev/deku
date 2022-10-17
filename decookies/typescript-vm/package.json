@@ -27,7 +27,6 @@
     ]
   },
   "dependencies": {
-    "deku-sdk": "file:../../sdks/typescript-sdk",
     "typescript": "^4.7.4"
   },
   "devDependencies": {

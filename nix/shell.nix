@@ -1,10 +1,7 @@
-{ pkgs, deku, ligo, deploy-rs }:
+{ pkgs, deku, ligo, tuna, vm_library, deploy-rs }:
 
 with pkgs; with ocamlPackages; mkShell {
-  shellHook = ''
-      export PATH="$(pwd)/_build/install/default/bin:$PATH"
-  '';
-  inputsFrom = [ deku ];
+  inputsFrom = [ deku tuna vm_library ];
   packages = [
     # Formatters
     nixfmt

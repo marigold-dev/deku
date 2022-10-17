@@ -5,9 +5,8 @@
 let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
-      root = ../.;
-      # FIXME: get this working
-      include = [ "./decookies/cookie-game" "./sdks/typescript-sdk" ];
+      root = ../../deku-p;
+      include = [ "./sdks/typescript-sdk" ];
     };
 
     settings =
@@ -15,4 +14,4 @@ let
   });
 in
 
-outputs.packages.cookie-game
+outputs.packages.default

@@ -4,7 +4,7 @@ with super; {
   # TODO: this is clearly not right, I should be overriding only 4_14
   ocaml-ng = ocaml-ng // (with ocaml-ng; {
     ocamlPackages_5_00 = ocamlPackages_5_00.overrideScope'
-      (_: super: {
+      (oself: super: {
         dune-rpc = super.dune-rpc.overrideAttrs (_: {
           src = fetchFromGitHub {
             owner = "ocaml";
@@ -66,6 +66,29 @@ with super; {
             sha256 = "sha256-Q7ZWcCIiA0K+m8DvnXBhQlVKFmMly1D+Fz+hmLhE2WU=";
           };
         });
+
+        caqti-eio = oself.buildDunePackage {
+          pname = "caqti-eio";
+          version = "n/a";
+          src = builtins.fetchurl {
+            url = https://github.com/anmonteiro/caqti-eio/archive/c709dad.tar.gz;
+            sha256 = "0mmjms378akcs7lifpz3s82hw7g6sdxbsyqlb0yrry7as29rccsz";
+          };
+          propagatedBuildInputs = with oself; [ eio eio_main caqti ];
+        };
+
+        wasm = oself.buildDunePackage {
+          pname = "wasm";
+          inherit (super.wasm) version src;
+
+          postPatch = ''
+            touch wasm.opam
+
+            substituteInPlace "interpreter/dune" --replace \
+              "(name wasm)" \
+              "(name wasm) (public_name wasm)"
+          '';
+        };
       });
   });
 }

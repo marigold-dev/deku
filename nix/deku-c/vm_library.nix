@@ -11,7 +11,7 @@ rustPlatform.buildRustPackage rec {
   version = "1.0.0";
 
   src = with nix-filter.lib; filter {
-    root = ../.;
+    root = ../../deku-c/wasm-vm;
     include = [
       "crates"
       "Cargo.lock"
