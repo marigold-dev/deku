@@ -31,7 +31,6 @@ const App = () => {
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
-    discovery: string;
   } | null>(null);
 
   const [isActive, setIsActive] = useState(false);
@@ -157,7 +156,6 @@ const App = () => {
     <div style={containerStyle}>
       <img src={logo} alt="deku logo" />
       {info && <div>Consensus : {info.consensus} </div>}
-      {info && <div>Discovery : {info.discovery} </div>}
       <div>Level : {level} </div>
       <div>Balance : {balance}</div>
 
