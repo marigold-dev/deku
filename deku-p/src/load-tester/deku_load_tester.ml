@@ -30,7 +30,13 @@ let post_to_api ~sw ~env ~api_url operation =
   let body = Piaf.Body.of_string json in
   let post_result = Piaf.Client.Oneshot.post ~body ~sw env submit_op_uri in
   match post_result with
-  | Ok _ -> Ok ()
+  | Ok Piaf.Response.{ status; _ } -> (
+      match Piaf.Status.is_successful status with
+      | true -> Ok ()
+      | false ->
+          Error
+            (Format.sprintf "receive code response: %s"
+               (Piaf.Status.to_string status)))
   | Error err -> Error (Piaf.Error.to_string err)
 
 type params = {
