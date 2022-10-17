@@ -6,7 +6,6 @@ import {
   fromMemorySigner,
 } from "deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
-import { JSONType } from "../../../lib/utils/json";
 
 const containerStyle: CSS.Properties = {
   textAlign: "center",
@@ -35,7 +34,7 @@ const App = () => {
     // discovery: string;
   } | null>(null);
 
-  const [vmState, setVmState] = useState<JSONType>(null);
+  const [vmState, setVmState] = useState<any>(null);
   const [isActive, setIsActive] = useState(false);
   const setActive = () => setIsActive(true);
 
@@ -203,7 +202,7 @@ const App = () => {
           children="Withdraw (to same address as the ticketer)"
         />
         <button
-          onClick={() => getVmStateExample()}
+          onClick={() => getVmStateExample().then(setVmState).catch(console.error)}
           children="VM State"
         />
       </>
