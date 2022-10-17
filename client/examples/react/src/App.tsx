@@ -3,7 +3,7 @@ import CSS from "csstype";
 import logo from "./logo.png";
 import {
   DekuToolkit,
-  fromMemorySigner,
+  fromTaquitoSigner,
 } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 
@@ -15,7 +15,7 @@ const containerStyle: CSS.Properties = {
 
 // const client = new DAppClient({ name: 'Deku' });
 // const dekuSigner = fromBeaconSigner(client);
-const dekuSigner = fromMemorySigner(
+const dekuSigner = fromTaquitoSigner(
   new InMemorySigner("edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq")
 );
 
