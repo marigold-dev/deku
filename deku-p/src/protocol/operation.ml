@@ -85,7 +85,7 @@ module Repr = struct
   let hash operation =
     let json = yojson_of_operation operation in
     let json = Yojson.Safe.to_string json in
-    Operation_hash.hash ("0x80" ^ json)
+    Operation_hash.hash ("\x80" ^ json)
 
   let t_of_yojson json =
     let { key; signature; operation } =
