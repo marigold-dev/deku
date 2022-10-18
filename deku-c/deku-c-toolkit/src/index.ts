@@ -1,4 +1,5 @@
 import { DekuToolkit } from "@marigold-dev/deku-toolkit"
+import { Contract } from "./contract";
 import { DekuSigner } from "@marigold-dev/deku-toolkit/lib/utils/signers";
 import { createOperation } from "./utils";
 
@@ -22,4 +23,12 @@ export class DekuCClient {
         return hash;
     }
 
+    /**
+     * Returns the contract associated to the given address 
+     * @param contractAddress address of the contract / the hash of the origination operation
+     * @returns the contract associated to the given contract address
+     */
+    contract(contractAddress: string): Contract {
+        return new Contract({ deku: this.deku, ligoRpc: this.ligoRpc, contractAddress })
+    }
 }
