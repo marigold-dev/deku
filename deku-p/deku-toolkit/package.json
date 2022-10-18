@@ -8,7 +8,7 @@
   "scripts": {
     "start": "rollup -c rollup.config.ts -w",
     "build": "tsc --project . --module commonjs && rollup -c rollup.config.ts && eslint .",
-    "dev": "tsc --project . -w",
+    "dev": "tsc --project . -w --module commonjs",
     "lint": "eslint .",
     "ship": "npm run build && npm run lint",
     "prettier-format": "prettier 'src/**/*.ts' --write"
