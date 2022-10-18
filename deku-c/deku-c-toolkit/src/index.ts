@@ -21,7 +21,7 @@ const createOperation = async (ligoRpc, { kind, code, initialStorage }) => {
     }
 }
 
-class Contract {
+export class Contract {
     private deku: DekuToolkit;
     private address: string;
     private ligoRpc: string;
@@ -34,7 +34,7 @@ class Contract {
 }
 
 
-class DekuCClient {
+export class DekuCClient {
     private deku: DekuToolkit;
     private ligoRpc: string;
 
