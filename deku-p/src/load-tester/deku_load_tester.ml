@@ -58,21 +58,18 @@ type params = {
   domains : int; [@default 8]
   api_url : Uri.t; [@default Uri.of_string "http://localhost:8080"]
   secret : Ed25519.Secret.t; [@default Ed25519.Secret.generate ()]
+  n : int; [@default 1]
 }
 [@@deriving cmdliner]
 
 let main params =
-  let { domains; api_url; secret } = params in
+  let { domains; api_url; secret; n } = params in
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   let open Operation in
   Parallel.Pool.run ~env ~domains @@ fun () ->
   let identity = Identity.make (Secret.Ed25519 secret) in
-  let nonce =
-    let rng = Stdlib.Random.State.make_self_init () in
-    Stdlib.Random.State.bits64 rng
-    |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get |> Nonce.of_n
-  in
+  let rng = Stdlib.Random.State.make_self_init () in
   let level = level ~sw ~env ~api_url in
   let level =
     match level with
@@ -81,21 +78,31 @@ let main params =
         print_endline str;
         exit 1
   in
-  let operation = Signed.noop ~identity ~level ~nonce in
-  let res = post_to_api ~sw ~env ~api_url operation in
-  let (Signed.Signed_operation
-        { initial = Initial.Initial_operation { hash; _ }; _ }) =
-    operation
-  in
-  print_endline (Operation_hash.to_b58 hash);
 
-  match res with
-  | Error err ->
-      print_endline err;
-      exit 1
-  | Ok _ ->
-      print_endline "success";
-      exit 0
+  let operations =
+    Parallel.init_p n (fun _ ->
+        let nonce =
+          Stdlib.Random.State.bits64 rng
+          |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get |> Nonce.of_n
+        in
+        Signed.noop ~identity ~level ~nonce)
+  in
+
+  let result = List.map (post_to_api ~sw ~env ~api_url) operations in
+
+  let _ =
+    Parallel.map_p
+      (fun result ->
+        match result with
+        | Error reason -> print_endline reason
+        | Ok json ->
+            print_endline
+              (Yojson.Safe.Util.member "hash" json
+              |> Yojson.Safe.Util.to_string_option
+              |> Option.value ~default:"bad response"))
+      result
+  in
+  exit 0
 
 let () =
   let info = Cmdliner.Cmd.info "deku-load-tester" in
