@@ -74,7 +74,7 @@ services:
   flextesa:
     container_name: deku_flextesa
     restart: always
-    image: oxheadalpha/flextesa:20220715
+    image: ghcr.io/marigold-dev/deku-fextesa:latest
     command: kathmandubox start
     environment:
       - block_time=4

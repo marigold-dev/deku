@@ -124,7 +124,7 @@ let no_cache_middleware handler req =
 
    let on_block block = Lwt.async (fun () -> on_block block)
 *)
-let make_routes ~env node indexer constants =
+let make_routes ~identity ~env node indexer constants =
   cors_middleware @@ no_cache_middleware
   @@ fun Piaf.Server.Handler.{ request : Piaf.Request.t; _ } ->
   let router =
@@ -137,7 +137,7 @@ let make_routes ~env node indexer constants =
         Get_block_by_level_or_hash.path ~node ~indexer ~constants;
         Helpers_operation_message.path ~node ~indexer ~constants;
         Helpers_hash_operation.path ~node ~indexer ~constants;
-        Post_operation.path ~env ~node ~indexer ~constants;
+        Post_operation.path ~identity ~env ~node ~indexer ~constants;
         Get_balance.path ~node ~indexer ~constants;
         Get_proof.path ~node ~indexer ~constants;
         Get_vm_state.path ~node ~indexer ~constants;

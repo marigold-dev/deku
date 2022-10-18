@@ -75,7 +75,7 @@ let main ~env ~sw:_ =
 
   let transaction = Operation.vm_transaction ~level ~nonce ~content ~identity in
   print_newline ();
-  let _ = post_directly_to_node ~env ~operation:transaction in
+  let _ = post_directly_to_node ~identity ~env ~operation:transaction in
   ()
 
 let () =

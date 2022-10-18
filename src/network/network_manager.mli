@@ -1,9 +1,10 @@
+open Deku_concepts
 open Deku_gossip
 
 type network
 type t = network
 
-val make : unit -> network
+val make : identity:Identity.t -> network
 
 val listen :
   net:Eio.Net.t ->

@@ -131,7 +131,7 @@ let async_save_block ~sw ~block (Indexer { pool; config }) =
           match result with
           | Ok () ->
               let (Block.Block { level; _ }) = block in
-              Logs.info (fun m ->
+              Logs.debug (fun m ->
                   m "database/sqlite: block at level %a saved" Level.pp level)
           | Error err ->
               (* TODO: how do we want to handle this? *)

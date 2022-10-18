@@ -37,13 +37,46 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
-let zero = Ed25519 Ed25519.Signature.zero
-
 let size =
   assert (
     Ed25519.Signature.size = Secp256k1.Signature.size
     && Secp256k1.Signature.size = P256.Signature.size);
   Ed25519.Signature.size
+
+let key_encoding =
+  let open Data_encoding in
+  let to_pair (key, signature) =
+    let signature =
+      match signature with
+      | Ed25519 signature ->
+          Binary.to_string_exn Ed25519.Signature.encoding signature
+      | Secp256k1 signature ->
+          Binary.to_string_exn Secp256k1.Signature.encoding signature
+      | P256 signature -> Binary.to_string_exn P256.Signature.encoding signature
+    in
+    (key, signature)
+  in
+  let of_pair (key, signature) =
+    match key with
+    | Key.Ed25519 _ ->
+        let signature =
+          Binary.of_string_exn Ed25519.Signature.encoding signature
+        in
+        (key, Ed25519 signature)
+    | Key.Secp256k1 _ ->
+        let signature =
+          Binary.of_string_exn Secp256k1.Signature.encoding signature
+        in
+        (key, Secp256k1 signature)
+    | Key.P256 _ ->
+        let signature =
+          Binary.of_string_exn P256.Signature.encoding signature
+        in
+        (key, P256 signature)
+  in
+  conv to_pair of_pair (tup2 Key.encoding (Fixed.string size))
+
+let zero = Ed25519 Ed25519.Signature.zero
 
 let sign secret hash =
   match secret with

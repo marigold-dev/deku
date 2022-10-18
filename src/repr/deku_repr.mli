@@ -22,6 +22,7 @@ module Prefix : sig
   val deku_contract_hash : prefix
   val deku_block_hash : prefix
   val deku_operation_hash : prefix
+  val deku_handshake_challenge_hash : prefix
   val deku_message_hash : prefix
   val deku_request_hash : prefix
   val deku_withdrawal_hash : prefix
