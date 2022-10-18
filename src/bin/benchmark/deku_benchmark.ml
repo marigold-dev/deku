@@ -278,16 +278,112 @@ let verify () =
   in
   ()
 
-let benches =
+let ledger_balance () =
+  let items = 100_000 in
+  let address () =
+    let secret = Ed25519.Secret.generate () in
+    let secret = Secret.Ed25519 secret in
+    let identity = Identity.make secret in
+    Address.of_key_hash (Identity.key_hash identity)
+  in
+  let prepare () =
+    let items =
+      Parallel.init_p items (fun n ->
+          let sender = address () in
+          let amount =
+            let z = Z.of_int n in
+            let n = Option.get (N.of_z z) in
+            Amount.of_n n
+          in
+          let ticket_id =
+            let ticketer =
+              let open Deku_tezos in
+              Option.get
+                (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
+            in
+            Ticket_id.make ticketer (Bytes.make 0 '\000')
+          in
+          (sender, amount, ticket_id))
+    in
+    let ledger =
+      List.fold_left
+        (fun ledger (sender, amount, ticket_id) ->
+          Ledger.deposit sender amount ticket_id ledger)
+        Ledger.initial items
+    in
+    (ledger, items)
+  in
+  bench "ledger_balance" ~items ~prepare @@ fun (ledger, items) ->
+  let (_ : unit) =
+    List.iter
+      (fun (sender, amount, ticket_id) ->
+        let balance = Ledger.balance sender ticket_id ledger in
+        (* TODO: this is a >= because of rng collision *)
+        assert (balance >= amount))
+      items
+  in
+  ()
+
+let ledger_transfer () =
+  let items = 100_000 in
+  let address () =
+    let secret = Ed25519.Secret.generate () in
+    let secret = Secret.Ed25519 secret in
+    let identity = Identity.make secret in
+    Address.of_key_hash (Identity.key_hash identity)
+  in
+  let prepare () =
+    let items =
+      Parallel.init_p items (fun n ->
+          let sender = address () in
+          let receiver = address () in
+          let amount =
+            let z = Z.of_int n in
+            let n = Option.get (N.of_z z) in
+            Amount.of_n n
+          in
+          let ticket_id =
+            let ticketer =
+              let open Deku_tezos in
+              Option.get
+                (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
+            in
+            Ticket_id.make ticketer (Bytes.make 0 '\000')
+          in
+          (sender, receiver, amount, ticket_id))
+    in
+    let ledger =
+      List.fold_left
+        (fun ledger (sender, _receiver, amount, ticket_id) ->
+          Ledger.deposit sender amount ticket_id ledger)
+        Ledger.initial items
+    in
+    (ledger, items)
+  in
+  bench "ledger_transfer" ~items ~prepare @@ fun (ledger, items) ->
+  let (_ : Ledger.t) =
+    List.fold_left
+      (fun ledger (sender, receiver, amount, ticket_id) ->
+        Result.get_ok
+          (Ledger.transfer ~sender ~receiver ~amount ~ticket_id ledger))
+      ledger items
+  in
+  ()
+
+let _benches =
   [
     produce;
-    string_of_block;
-    block_of_string;
     block_encode;
     block_decode;
     prepare_and_decode;
     verify;
+    ledger_balance;
+    ledger_transfer;
+    string_of_block;
+    block_of_string;
   ]
+
+let benches = [ ledger_balance ]
 
 let () =
   Eio_main.run @@ fun env ->
