@@ -37,7 +37,7 @@ let get_body response =
           | Ok string -> Ok (Yojson.Safe.from_string string)
           | Error err -> Error (Piaf.Error.to_string err)))
 
-let post_to_api ~sw ~env ~api_url operation =
+let send_operation ~sw ~env ~api_url operation =
   let submit_op_uri = Uri.with_path api_url "/api/v1/operations" in
   let repr = Signed_operation.of_signed operation in
   let json = Signed_operation.yojson_of_t repr |> Yojson.Safe.to_string in
@@ -88,7 +88,7 @@ let main params =
         Signed.noop ~identity ~level ~nonce)
   in
 
-  let result = List.map (post_to_api ~sw ~env ~api_url) operations in
+  let result = List.map (send_operation ~sw ~env ~api_url) operations in
 
   let _ =
     Parallel.map_p
