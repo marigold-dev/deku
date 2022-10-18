@@ -31,6 +31,20 @@ export class Contract {
         this.address = contractAddress;
         this.ligoRpc = ligoRpc;
     }
+
+    async invoke(): Promise<string> {
+        console.log("contract invocation");
+        return "hash of the invoke operation"
+    }
+
+    async getState(): Promise<any> {
+        console.log("contract state");
+        return "the state of the contract, any because I don't want to parse it."
+    }
+
+    async onNewState(): Promise<void> {
+        console.log("subscribe: not yet implemented");
+    }
 }
 
 
