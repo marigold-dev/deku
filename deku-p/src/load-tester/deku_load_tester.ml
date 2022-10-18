@@ -37,12 +37,10 @@ let get_body response =
           | Ok string -> Ok (Yojson.Safe.from_string string)
           | Error err -> Error (Piaf.Error.to_string err)))
 
-let send_operation ~sw ~env ~api_url operation =
-  let submit_op_uri = Uri.with_path api_url "/api/v1/operations" in
-  let repr = Signed_operation.of_signed operation in
-  let json = Signed_operation.yojson_of_t repr |> Yojson.Safe.to_string in
-  let body = Piaf.Body.of_string json in
-  let response = Piaf.Client.Oneshot.post ~body ~sw env submit_op_uri in
+let send_operation ~env ~api_url operation_json =
+  Eio.Switch.run @@ fun sw ->
+  let body = Piaf.Body.of_string operation_json in
+  let response = Piaf.Client.Oneshot.post ~body ~sw env api_url in
   get_body response
 
 type level_response = { level : Level.t } [@@deriving of_yojson]
@@ -85,10 +83,19 @@ let main params =
           Stdlib.Random.State.bits64 rng
           |> Int64.abs |> Z.of_int64 |> N.of_z |> Option.get |> Nonce.of_n
         in
-        Signed.noop ~identity ~level ~nonce)
+        let operation = Signed.noop ~identity ~level ~nonce in
+        Signed_operation.of_signed operation
+        |> Signed_operation.yojson_of_t |> Yojson.Safe.to_string)
   in
 
-  let result = List.map (send_operation ~sw ~env ~api_url) operations in
+  let api_url = Uri.with_path api_url "/api/v1/operations" in
+
+  print_endline "sending operations";
+  let start = Unix.gettimeofday () in
+  let result = Parallel.map_p (send_operation ~env ~api_url) operations in
+  let stop = Unix.gettimeofday () in
+
+  print_endline @@ Format.sprintf "time: %fs" (stop -. start);
 
   let _ =
     Parallel.map_p
