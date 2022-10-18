@@ -21,6 +21,19 @@ const createOperation = async (ligoRpc, { kind, code, initialStorage }) => {
     }
 }
 
+class Contract {
+    private deku: DekuToolkit;
+    private address: string;
+    private ligoRpc: string;
+
+    constructor({ deku, ligoRpc, contractAddress }) {
+        this.deku = deku;
+        this.address = contractAddress;
+        this.ligoRpc = ligoRpc;
+    }
+}
+
+
 class DekuCClient {
     private deku: DekuToolkit;
     private ligoRpc: string;
@@ -41,4 +54,12 @@ class DekuCClient {
         return hash;
     }
 
+    /**
+     * Returns the contract associated to the given address 
+     * @param contractAddress address of the contract / the hash of the origination operation
+     * @returns the contract associated to the given contract address
+     */
+    contract(contractAddress: string): Contract {
+        return new Contract({ deku: this.deku, ligoRpc: this.ligoRpc, contractAddress })
+    }
 }
