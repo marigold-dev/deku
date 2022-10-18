@@ -90,6 +90,9 @@ let main params =
   in
   let operation = Signed.noop ~identity ~level ~nonce in
   let res = post_to_api ~sw ~env ~api_url operation in
+  let (Operation.Operation { hash; _ }) = operation in
+  print_endline (Operation_hash.to_b58 hash);
+
   match res with
   | Error err ->
       print_endline err;
