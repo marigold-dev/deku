@@ -7,11 +7,13 @@
     "deku-p/deku-toolkit/examples/react",
     "deku-p/examples/increment-ts",
     "deku-p/sdks/typescript-sdk",
-    "examples/tutorial"
+    "examples/tutorial",
+    "deku-c/deku-c-toolkit"
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
     "start:deku-toolkit:react": "yarn --cwd deku-p/deku-toolkit/examples/react start",
-    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test"
+    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test",
+    "build:deku-c-toolkit": "yarn --cwd deku-c/deku-c-toolkit build"
   }
 }
