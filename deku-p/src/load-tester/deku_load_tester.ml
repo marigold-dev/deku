@@ -23,43 +23,36 @@ module Signed_operation = struct
     Operation.Signed.make_with_signature ~key ~signature ~initial
 end
 
+let get_body response =
+  match response with
+  | Error err -> Error (Piaf.Error.to_string err)
+  | Ok Piaf.Response.{ status; body; _ } -> (
+      match Piaf.Status.is_successful status with
+      | false ->
+          Error
+            (Format.sprintf "receive code response: %s"
+               (Piaf.Status.to_string status))
+      | true -> (
+          match Piaf.Body.to_string body with
+          | Ok string -> Ok (Yojson.Safe.from_string string)
+          | Error err -> Error (Piaf.Error.to_string err)))
+
 let post_to_api ~sw ~env ~api_url operation =
   let submit_op_uri = Uri.with_path api_url "/api/v1/operations" in
   let repr = Signed_operation.of_signed operation in
   let json = Signed_operation.yojson_of_t repr |> Yojson.Safe.to_string in
   let body = Piaf.Body.of_string json in
-  let post_result = Piaf.Client.Oneshot.post ~body ~sw env submit_op_uri in
-  match post_result with
-  | Ok Piaf.Response.{ status; _ } -> (
-      match Piaf.Status.is_successful status with
-      | true -> Ok ()
-      | false ->
-          Error
-            (Format.sprintf "receive code response: %s"
-               (Piaf.Status.to_string status)))
-  | Error err -> Error (Piaf.Error.to_string err)
+  let response = Piaf.Client.Oneshot.post ~body ~sw env submit_op_uri in
+  get_body response
 
 type level_response = { level : Level.t } [@@deriving of_yojson]
 
 let level ~sw ~env ~api_url =
   let level_uri = Uri.with_path api_url "/api/v1/chain/level" in
-  let result = Piaf.Client.Oneshot.get ~sw env level_uri in
-  match result with
-  | Ok Piaf.Response.{ status; body; _ } -> (
-      match Piaf.Status.is_successful status with
-      | true -> (
-          let result = Piaf.Body.to_string body in
-          match result with
-          | Ok string ->
-              let json = Yojson.Safe.from_string string in
-              let { level } = level_response_of_yojson json in
-              Ok level
-          | Error err -> Error (Piaf.Error.to_string err))
-      | false ->
-          Error
-            (Format.sprintf "receive code response: %s"
-               (Piaf.Status.to_string status)))
-  | Error err -> Error (Piaf.Error.to_string err)
+  let response = Piaf.Client.Oneshot.get ~sw env level_uri in
+  get_body response
+  |> Result.map level_response_of_yojson
+  |> Result.map (fun { level } -> level)
 
 type params = {
   domains : int; [@default 8]
@@ -90,7 +83,10 @@ let main params =
   in
   let operation = Signed.noop ~identity ~level ~nonce in
   let res = post_to_api ~sw ~env ~api_url operation in
-  let (Operation.Operation { hash; _ }) = operation in
+  let (Signed.Signed_operation
+        { initial = Initial.Initial_operation { hash; _ }; _ }) =
+    operation
+  in
   print_endline (Operation_hash.to_b58 hash);
 
   match res with
