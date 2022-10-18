@@ -36,33 +36,26 @@ Let's write a simple counter, accepting the commands `Increment`, `Decrement`,
 
 
 FIXME: not sure if this tutorial works since I switched to the jsLigo 52.
+FIXME: this code was tested and updated for ligo 0.5
 We should check.
 
 ```js
 type storage = int;
 
 type parameter =
-  {kind: "Increment", amount: int}|
-  {kind: "Decrement", amount: int}|
-  {kind: "Reset"};
+  | ["Increment", int]
+  | ["Decrement", int]
+  | ["Reset"];
 
 type return_ = [list<operation>, storage];
 
-const main =  (action: parameter, store: storage): return_ => {
-
-  const noop = (list([]) as list<operation>);
-
-  switch(action.kind) {
-    case "Increment":
-      return [noop, (store + action.amount)]
-
-    case "Decrement":
-      return [noop, (store - action.amount)]
-
-    case "Reset":
-       return [noop, 0]
-  }
-};
+const main = (action: parameter, store: storage): return_ => {
+  let storage = match(action, {
+    Increment: n => store + n,
+    Decrement: n => store - n,
+    Reset: () => 0
+  });
+  return [list([]), storage]};
 ```
 
 Refer to the [Ligo documentation](https://ligolang.org/docs/intro/introduction)
@@ -116,31 +109,33 @@ signing interactions with Deku chain. Taquito provides options for using a varie
 of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
 
 ```js
-import { DekuCClient } from "@marigold-dev/deku-toolkit"
+import {fromMemorySigner} from "@marigold-dev/deku-toolkit"
+import { DekuCClient } from "@marigold-dev/deku-c"
 import { InMemorySigner } from "@taquito/signer"
 
 const signer = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
 );
+const dekuSigner = fromMemorySigner(signer);
 
 const dekuC = new DekuCClient({
-  signer,
   dekuRPC: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
-  tezosRPC: "https://ghostnet.tezos.marigold.dev/",
   ligoRPC: "https://ligo.ghostnet.marigold.dev"
+  signer: dekuSigner,
 });
 ```
 
 With a connection to Deku-C established, we're ready to deploy our contract!
 Try running the example.
 
+TODO: create an example with wasm code directly
+
 ```js live noInline
 const params = {
-  initialStorage: ["Int", 42],
-  code: incrementWASMCode,
-  // including the LIGO source code is optional, but simplifies contract interactions
-  source: { kind: "JsLIGO", code: incrementLigoCode }
-};
+  kind: "jsligo",
+  code: incrementLigoCode,
+  storage: 42
+}
 
 println(`Deploying contract with initial storage ${JSON.stringify(params.initialStorage)}...`);
 
