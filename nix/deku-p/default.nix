@@ -36,10 +36,6 @@
           type = "app";
           program = "${deku}/bin/deku-node";
         };
-        bootstrap = {
-          type = "app";
-          program = "${deku}/bin/deku-bootstrap";
-        };
         benchmark = {
           type = "app";
           program = "${deku}/bin/deku-benchmark";
