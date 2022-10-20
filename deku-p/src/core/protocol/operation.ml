@@ -92,7 +92,8 @@ module Initial = struct
     let binary =
       Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
     in
-    Operation_hash.hash binary
+    let binary = ("\x80" ^ binary) in
+    Operation_hash.hash binary 
 
   let make ~nonce ~level ~operation =
     let hash = hash ~nonce ~level ~operation in

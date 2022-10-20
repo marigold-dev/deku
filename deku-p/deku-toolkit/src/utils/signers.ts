@@ -53,7 +53,8 @@ export abstract class DekuSigner {
 export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
   class MemorySigner extends DekuSigner {
     sign = async (payload: string) => {
-      const signature = await signer.sign(payload);
+      const payloadHex = "80" + Buffer.from(payload).toString("hex");
+      const signature = await signer.sign(payloadHex);
       return signature.prefixSig;
     };
     publicKey = () => signer.publicKey();
@@ -70,7 +71,8 @@ export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
 export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
   class BeaconSigner extends DekuSigner {
     sign = async (payload: string) => {
-      const sig = await signer.requestSignPayload({ payload });
+      const payloadHex = "80" + Buffer.from(payload).toString("hex");
+      const sig = await signer.requestSignPayload({ payload: payloadHex });
       if (!sig) {
         return Promise.reject({
           type: "SIGNER_ERROR",
