@@ -5,6 +5,7 @@ type ticket_id = private
 and t = ticket_id [@@deriving eq, ord, yojson]
 
 val make : Deku_tezos.Contract_hash.t -> bytes -> t
+val encoding : ticket_id Data_encoding.t
 
 val from_tezos_ticket :
   Deku_tezos.Ticket_id.t -> (t, [> `Ticket_from_implicit ]) result

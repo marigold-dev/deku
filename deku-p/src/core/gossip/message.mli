@@ -19,14 +19,14 @@ module Content : sig
   type content = private
     | Content_block of Block.t
     | Content_vote of { level : Level.t; vote : Verified_signature.t }
-    | Content_operation of Operation.t
+    | Content_operation of Operation.Signed.t
     | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
   type t = content [@@deriving show, yojson]
 
   val block : Block.t -> content
   val vote : level:Level.t -> vote:Verified_signature.t -> content
-  val operation : Operation.t -> content
+  val operation : Operation.Signed.t -> content
   val accepted : block:Block.t -> votes:Verified_signature.t list -> content
 end
 

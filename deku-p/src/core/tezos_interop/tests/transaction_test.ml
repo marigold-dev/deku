@@ -18,16 +18,19 @@ let main ticket_id receiver secret verbose host =
   let identity = Identity.make secret in
   let nonce = Nonce.of_n (Obj.magic level) in
   let operation =
-    Operation.ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id
+    Operation.Signed.ticket_transfer ~identity ~level ~nonce ~receiver
+      ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let url = Uri.with_path host "api/v1/operations" in
-  let json = Deku_protocol.Operation.yojson_of_t operation in
+  let json = Deku_protocol.Operation.Signed.yojson_of_t operation in
   Printf.eprintf "%s\n%!" (Yojson.Safe.to_string json);
   let response = Net.post ~sw ~env json url in
   let code = Net.code_of_response response in
   Printf.eprintf "%d\n%!" code;
-  let (Operation.Operation { hash; _ }) = operation in
+  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
+    operation
+  in
   let hash = Operation_hash.to_blake2b hash in
   Printf.printf "operation.hash: %s\n%!" (BLAKE2b.to_hex hash)
 

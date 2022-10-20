@@ -27,8 +27,12 @@ let main { wallet; named_pipe_path; content; vm } =
   let identity = Identity.make secret in
   let nonce = Utils.make_rnd_nonce () in
   let level = Level.zero in
-  let operation = Operation.vm_transaction ~level ~nonce ~content ~identity in
-  let (Operation.Operation { hash; _ }) = operation in
+  let operation =
+    Operation.Signed.vm_transaction ~level ~nonce ~content ~identity
+  in
+  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
+    operation
+  in
   let operation_raw_hash = Operation_hash.to_blake2b hash in
 
   log (Format.sprintf "Starting VM process '%s'" vm);

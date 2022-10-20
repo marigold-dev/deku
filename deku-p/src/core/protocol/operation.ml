@@ -5,221 +5,203 @@ open Deku_concepts
 exception Invalid_signature
 exception Invalid_source
 
-type operation_content =
+type operation =
   | Operation_ticket_transfer of {
+      sender : Address.t;
       receiver : Address.t;
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
   | Operation_vm_transaction of {
+      sender : Address.t;
       operation : string;
-      tickets : (Ticket_id.t * int64) list; [@opaque]
+      tickets : (Ticket_id.t * int64) list;
     }
-  | Operation_noop
   | Operation_withdraw of {
+      sender : Address.t;
       owner : Deku_tezos.Address.t;
-      amount : Amount.t;
       ticket_id : Ticket_id.t;
+      amount : Amount.t;
     }
+  | Operation_noop of { sender : Address.t }
 
-and operation =
-  | Operation of {
-      (* TODO: I don't like that operation carries signature *)
-      key : Key.t;
-      (* TODO: should we use verified signatures here and elsewhere? *)
-      signature : Signature.t; [@opaque]
-      hash : Operation_hash.t;
-      level : Level.t;
-      nonce : Nonce.t;
-      source : Address.t;
-      content : operation_content;
-    }
+and t = operation [@@deriving show]
 
-and t = operation [@@deriving yojson, show]
+let encoding =
+  (* TODO: bench Data_encoding.union vs Data_encoding.matching*)
+  let open Data_encoding in
+  union ~tag_size:`Uint8
+    [
+      case ~title:"ticket_transfer" (Tag 0)
+        (tup4 Address.encoding Address.encoding Ticket_id.encoding
+           Amount.encoding)
+        (fun operation ->
+          match operation with
+          | Operation_ticket_transfer { sender; receiver; ticket_id; amount } ->
+              Some (sender, receiver, ticket_id, amount)
+          | _ -> None)
+        (fun (sender, receiver, ticket_id, amount) ->
+          Operation_ticket_transfer { sender; receiver; ticket_id; amount });
+      case ~title:"vm_transaction" (Tag 1)
+        (tup3 Address.encoding string (list (tup2 Ticket_id.encoding int64)))
+        (fun operation ->
+          match operation with
+          | Operation_vm_transaction { sender; operation; tickets } ->
+              Some (sender, operation, tickets)
+          | _ -> None)
+        (fun (sender, operation, tickets) ->
+          Operation_vm_transaction { sender; operation; tickets });
+      case ~title:"withdraw" (Tag 2)
+        (tup4 Address.encoding Ticket_id.encoding Amount.encoding
+           Deku_tezos.Address.encoding)
+        (fun operation ->
+          match operation with
+          | Operation_withdraw { sender; owner; ticket_id; amount } ->
+              Some (sender, ticket_id, amount, owner)
+          | _ -> None)
+        (fun (sender, ticket_id, amount, owner) ->
+          Operation_withdraw { sender; owner; ticket_id; amount });
+      case ~title:"noop" (Tag 3) Address.encoding
+        (fun operation ->
+          match operation with
+          | Operation_noop { sender } -> Some sender
+          | _ -> None)
+        (fun sender -> Operation_noop { sender });
+    ]
 
-let equal a b =
-  let (Operation { hash = a; _ }) = a in
-  let (Operation { hash = b; _ }) = b in
-  Operation_hash.equal a b
-
-let compare a b =
-  let (Operation { hash = a; _ }) = a in
-  let (Operation { hash = b; _ }) = b in
-  Operation_hash.compare a b
-
-module Repr = struct
-  type operation_content =
-    | Ticket_transfer of {
-        receiver : Address.t;
-        ticket_id : Ticket_id.ticket_id;
-        amount : Amount.t;
+module Initial = struct
+  type initial_operation =
+    | Initial_operation of {
+        hash : Operation_hash.t;
+        nonce : Nonce.t;
+        level : Level.t;
+        operation : operation;
       }
-    | Vm_transaction of {
-        operation : string;
-        tickets : (Ticket_id.t * int64) list;
-      }
-    | Noop
-    | Tezos_withdraw of {
-        owner : Deku_tezos.Address.t;
-        ticket_id : Ticket_id.ticket_id;
-        amount : Amount.t;
-      }
 
-  and operation = {
-    level : Level.t;
-    nonce : Nonce.t;
-    source : Address.t;
-    content : operation_content;
-  }
+  and t = initial_operation [@@deriving show]
 
-  and operation_with_signature = {
-    key : Key.t;
-    signature : Signature.t;
-    operation : operation;
-  }
-  [@@deriving yojson]
+  let hash_encoding = Data_encoding.tup3 Nonce.encoding Level.encoding encoding
 
-  let hash operation =
-    let json = yojson_of_operation operation in
-    let json = Yojson.Safe.to_string json in
-    Operation_hash.hash json
-
-  let t_of_yojson json =
-    let { key; signature; operation } =
-      operation_with_signature_of_yojson json
+  let hash ~nonce ~level ~operation =
+    let binary =
+      Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
     in
-    let { level; nonce; source; content } = operation in
-    let content =
-      match content with
-      | Ticket_transfer { receiver; ticket_id; amount } ->
-          Operation_ticket_transfer { receiver; ticket_id; amount }
-      | Vm_transaction { operation; tickets } ->
-          Operation_vm_transaction { operation; tickets }
-      | Noop -> Operation_noop
-      | Tezos_withdraw { owner; ticket_id; amount } ->
-          Operation_withdraw { owner; ticket_id; amount }
-    in
-    (* TODO: serializing after deserializing *)
-    let hash = hash operation in
+    Operation_hash.hash binary
 
-    (match
-       let source = Address.to_key_hash source in
-       Key_hash.(equal source (of_key key))
-     with
-    | true -> ()
-    | false -> raise Invalid_source);
-    (match
-       let hash = Operation_hash.to_blake2b hash in
-       Signature.verify key signature hash
-     with
-    | true -> ()
-    | false -> raise Invalid_signature);
-    Operation { key; signature; hash; level; nonce; source; content }
+  let make ~nonce ~level ~operation =
+    let hash = hash ~nonce ~level ~operation in
+    Initial_operation { hash; nonce; level; operation }
 
-  let yojson_of_t operation =
-    let (Operation { key; signature; hash = _; level; nonce; source; content })
-        =
-      operation
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun (Initial_operation { hash = _; nonce; level; operation }) ->
+        (nonce, level, operation))
+      (fun (nonce, level, operation) ->
+        let hash = hash ~nonce ~level ~operation in
+        Initial_operation { hash; nonce; level; operation })
+      hash_encoding
+
+  let includable_operation_window = Deku_constants.includable_operation_window
+
+  let last_includable_level operation =
+    let (Initial_operation { level = operation_level; _ }) = operation in
+    let operation_level = Level.to_n operation_level in
+    Level.of_n N.(operation_level + includable_operation_window)
+
+  (* TODO: This seems like a weird place to put this function *)
+  let is_in_includable_window ~current_level ~operation_level =
+    let last_includable_block =
+      let operation_level = Level.to_n operation_level in
+      Level.of_n N.(operation_level + includable_operation_window)
     in
-    let content =
-      match content with
-      | Operation_ticket_transfer { receiver; ticket_id; amount } ->
-          Ticket_transfer { receiver; ticket_id; amount }
-      | Operation_vm_transaction
-          { operation : string; tickets : (Ticket_id.t * int64) list } ->
-          Vm_transaction { operation; tickets }
-      | Operation_noop -> Noop
-      | Operation_withdraw { owner; amount; ticket_id } ->
-          Tezos_withdraw { owner; amount; ticket_id }
-    in
-    let operation = { level; nonce; source; content } in
-    yojson_of_operation_with_signature { key; signature; operation }
+    (* limits for how many blocks we need to hold the operations *)
+    Level.(last_includable_block > current_level)
 end
 
-let t_of_yojson = Repr.t_of_yojson
-let yojson_of_t = Repr.yojson_of_t
+module Signed = struct
+  type signed_operation =
+    | Signed_operation of {
+        key : Key.t;
+        signature : Signature.t;
+        initial : Initial.t;
+      }
 
-let ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id ~amount =
-  let source = Address.of_key_hash (Identity.key_hash identity) in
-  let hash =
-    let open Repr in
-    let content = Ticket_transfer { receiver; ticket_id; amount } in
-    let operation = { level; nonce; source; content } in
-    hash operation
-  in
-  let key = Identity.key identity in
-  let signature =
-    let hash = Operation_hash.to_blake2b hash in
-    Identity.sign ~hash identity
-  in
-  let content = Operation_ticket_transfer { receiver; ticket_id; amount } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  and t = signed_operation [@@deriving show]
 
-let noop ~identity ~level ~nonce =
-  let source = Address.of_key_hash (Identity.key_hash identity) in
-  let hash =
-    let open Repr in
-    let content = Noop in
-    let source = Address.of_key_hash (Identity.key_hash identity) in
-    let operation = { level; nonce; source; content } in
-    hash operation
-  in
-  let key = Identity.key identity in
-  let signature =
-    let hash = Operation_hash.to_blake2b hash in
-    Identity.sign ~hash identity
-  in
+  let make ~identity ~initial =
+    let key = Identity.key identity in
+    let signature =
+      let open Initial in
+      let (Initial_operation { hash; _ }) = initial in
+      let hash = Operation_hash.to_blake2b hash in
+      Identity.sign ~hash identity
+    in
+    Signed_operation { key; signature; initial }
 
-  Operation
-    { key; signature; hash; level; nonce; source; content = Operation_noop }
+  let encoding =
+    let open Data_encoding in
+    conv_with_guard
+      (fun (Signed_operation { key; signature; initial }) ->
+        ((key, signature), initial))
+      (fun ((key, signature), initial) ->
+        let (Initial_operation { hash; nonce = _; level = _; operation }) =
+          initial
+        in
+        let sender =
+          match operation with
+          | Operation_ticket_transfer { sender; _ } -> sender
+          | Operation_vm_transaction { sender; _ } -> sender
+          | Operation_withdraw { sender; _ } -> sender
+          | Operation_noop { sender } -> sender
+        in
+        let sender = Address.to_key_hash sender in
+        let hash = Operation_hash.to_blake2b hash in
+        match
+          Key_hash.(equal (of_key key) sender)
+          && Signature.verify key signature hash
+        with
+        | true -> Ok (Signed_operation { key; signature; initial })
+        | false -> Error "Invalid operation signature")
+      (tup2 Signature.key_encoding Initial.encoding)
 
-let last_includable_level operation =
-  let open Level in
-  let open Deku_constants in
-  let (Operation { level = operation_level; _ }) = operation in
-  let operation_level = to_n operation_level in
-  of_n N.(operation_level + includable_operation_window)
+  let t_of_yojson json =
+    let json = Yojson.Safe.to_string json in
+    let json = Result.get_ok (Data_encoding.Json.from_string json) in
+    Data_encoding.Json.destruct encoding json
 
-(* TODO: This seems like a weird place to put this function *)
-let is_in_includable_window ~current_level ~operation_level =
-  let open Level in
-  let open Deku_constants in
-  let last_includable_block =
-    let operation_level = to_n operation_level in
-    of_n N.(operation_level + includable_operation_window)
-  in
-  (* limits for how many blocks we need to hold the operations *)
-  last_includable_block > current_level
+  let yojson_of_t signed =
+    let json = Data_encoding.Json.construct encoding signed in
+    let json = Data_encoding.Json.to_string json in
+    Yojson.Safe.from_string json
 
-let withdraw ~identity ~level ~nonce ~tezos_owner ~ticket_id ~amount =
-  let source = Address.of_key_hash (Identity.key_hash identity) in
-  let hash =
-    let open Repr in
-    let content = Tezos_withdraw { owner = tezos_owner; ticket_id; amount } in
-    let operation = { level; nonce; source; content } in
-    hash operation
-  in
-  let signature =
-    let hash = Operation_hash.to_blake2b hash in
-    Identity.sign ~hash identity
-  in
-  let key = Identity.key identity in
-  let content = Operation_withdraw { owner = tezos_owner; ticket_id; amount } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  let ticket_transfer ~identity ~nonce ~level ~receiver ~ticket_id ~amount =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation =
+      Operation_ticket_transfer { sender; receiver; ticket_id; amount }
+    in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
 
-let vm_transaction ~level ~nonce ~content ~identity =
-  let operation = content in
-  let key = Identity.key identity in
-  let source = Identity.key_hash identity |> Address.of_key_hash in
-  let hash =
-    let open Repr in
-    let content = Vm_transaction { operation; tickets = [] } in
-    let operation = { level; nonce; source; content } in
-    hash operation
-  in
-  let signature =
-    let hash = Operation_hash.to_blake2b hash in
-    Identity.sign ~hash identity
-  in
-  let content = Operation_vm_transaction { operation; tickets = [] } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  let noop ~identity ~nonce ~level =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation = Operation_noop { sender } in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let withdraw ~identity ~nonce ~level ~tezos_owner ~ticket_id ~amount =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation =
+      Operation_withdraw { sender; owner = tezos_owner; ticket_id; amount }
+    in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let vm_transaction ~nonce ~level ~content ~identity =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation =
+      Operation_vm_transaction { sender; operation = content; tickets = [] }
+    in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+end
