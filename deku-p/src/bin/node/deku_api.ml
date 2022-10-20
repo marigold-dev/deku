@@ -132,6 +132,7 @@ let make_routes ~identity ~env node indexer constants =
       [
         Get_genesis.path ~node ~indexer ~constants;
         Get_head.path ~node ~indexer ~constants;
+        Get_stats.path ~node ~indexer ~constants;
         Get_level.path ~node ~indexer ~constants;
         Get_chain_info.path ~node ~indexer ~constants;
         Get_block_by_level_or_hash.path ~node ~indexer ~constants;

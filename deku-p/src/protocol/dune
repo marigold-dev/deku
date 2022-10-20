@@ -6,7 +6,8 @@
   deku_constants
   tezos-micheline
   deku_external_vm
-  deku_tezos)
+  deku_tezos
+  deku_metrics)
  (preprocess
   (pps
    ppx_let_binding

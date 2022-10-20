@@ -58,6 +58,22 @@ module Get_genesis = struct
       @--> check_method meth handler)
 end
 
+module Get_stats = struct
+  type response = { latency : float; tps : float } [@@deriving yojson_of]
+
+  let meth = `GET
+
+  let handle ~node:_ ~indexer:_indexer ~constants:_ () =
+    let Deku_metrics.{ latency; tps } = Deku_metrics.get_statistics () in
+    Ok ({ latency; tps } |> yojson_of_response)
+
+  let path ~node ~indexer ~constants =
+    let handler _ = handle ~node ~indexer ~constants () in
+    Routes.(
+      (s "api" / s "v1" / s "chain" / s "stats" /? nil)
+      @--> check_method meth handler)
+end
+
 module Get_head = struct
   type response = Block.t [@@deriving yojson_of]
 

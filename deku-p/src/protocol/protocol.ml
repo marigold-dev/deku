@@ -277,4 +277,5 @@ let apply ~current_level ~payload ~tezos_operations protocol =
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)
   let protocol = apply_tezos_operations tezos_operations protocol in
+  Deku_metrics.set_latest_tx_count (List.length payload);
   (protocol, receipts, errors)

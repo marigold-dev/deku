@@ -9,6 +9,7 @@
   deku_tezos_interop
   deku_storage
   deku_external_vm
+  deku_metrics
   cmdliner
   logs
   logs.fmt
