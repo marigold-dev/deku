@@ -88,27 +88,27 @@ let main params =
         |> Signed_operation.yojson_of_t |> Yojson.Safe.to_string)
   in
 
-  let api_url = Uri.with_path api_url "/api/v1/operations" in
+  let api_url = Uri.with_path api_url "/api/v1/echo" in
 
   print_endline "sending operations";
   let start = Unix.gettimeofday () in
-  let result = Parallel.map_p (send_operation ~env ~api_url) operations in
+  let _result = Parallel.map_p (send_operation ~env ~api_url) operations in
   let stop = Unix.gettimeofday () in
 
   print_endline @@ Format.sprintf "time: %fs" (stop -. start);
 
-  let _ =
-    Parallel.map_p
-      (fun result ->
-        match result with
-        | Error reason -> print_endline reason
-        | Ok json ->
-            print_endline
-              (Yojson.Safe.Util.member "hash" json
-              |> Yojson.Safe.Util.to_string_option
-              |> Option.value ~default:"bad response"))
-      result
-  in
+  (* let _ =
+       Parallel.map_p
+         (fun result ->
+           match result with
+           | Error reason -> print_endline reason
+           | Ok json ->
+               print_endline
+                 (Yojson.Safe.Util.member "hash" json
+                 |> Yojson.Safe.Util.to_string_option
+                 |> Option.value ~default:"bad response"))
+         result
+     in *)
   exit 0
 
 let () =
