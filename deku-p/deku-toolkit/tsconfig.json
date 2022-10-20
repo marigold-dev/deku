@@ -1,20 +1,12 @@
 {
-  "include": [
-    "src/index.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
-  ],
+  "include": ["src/index.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"],
   "compilerOptions": {
     "outDir": "lib",
     "moduleResolution": "node",
     "target": "es6",
     "module": "es2015",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "strict": true,
     "sourceMap": true,
     "declaration": true,

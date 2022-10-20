@@ -1,7 +1,4 @@
-import {
-  DekuToolkit,
-  fromMemorySigner,
-} from "@marigold-dev/deku-toolkit";
+import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 
 const dekuSigner = fromMemorySigner(

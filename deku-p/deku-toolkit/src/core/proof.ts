@@ -1,42 +1,51 @@
-import { Address } from "./address"
-import { fromB58Hash } from '../utils/hash';
-import JSONValue from "../utils/json"
+import { Address } from "./address";
+import { fromB58Hash } from "../utils/hash";
+import JSONValue from "../utils/json";
 // import { TicketID } from "./ticket-id" TBD
 
 export type Proof = {
-  withdrawal_handles_hash: string, // FIXME? should we define a type for each hash
+  withdrawal_handles_hash: string; // FIXME? should we define a type for each hash
   handle: {
-    id: number, // bleh
-    owner: Address,
+    id: number; // bleh
+    owner: Address;
     ticket_id: {
-      ticketer: string,
-      data: string
-    },
-    hash: string,
-    amount : string
+      ticketer: string;
+      data: string;
+    };
+    hash: string;
+    amount: string;
   };
-  proof: string[]
-}
+  proof: string[];
+};
 
 const ofDTO = (json: JSONValue): Proof | null => {
   console.log(json.as_json());
-  const withdrawal_handles_hash = json.at("withdrawal_handles_hash").as_string();
+  const withdrawal_handles_hash = json
+    .at("withdrawal_handles_hash")
+    .as_string();
   const handle = json.at("handle");
   const proof = json.at("proof").as_array();
 
   if (proof === null) return null;
-  const proof2 = proof.flatMap((x: JSONValue) => {
-    const y = x.as_array();
-    if (y === null) { throw "nope" }
+  const proof2 = proof
+    .flatMap((x: JSONValue) => {
+      const y = x.as_array();
+      if (y === null) {
+        throw "nope";
+      }
 
-    return [y];
-  }).flat();
+      return [y];
+    })
+    .flat();
   console.log(proof2);
   const proof3 = proof2.flatMap((x: JSONValue) => {
-      const y = x.as_string();
+    const y = x.as_string();
 
-      if (y === null) { console.log(y); throw "Nope" }
-      return [fromB58Hash(y)];
+    if (y === null) {
+      console.log(y);
+      throw "Nope";
+    }
+    return [fromB58Hash(y)];
   });
 
   const id = handle.at("id").as_int();
@@ -49,7 +58,6 @@ const ofDTO = (json: JSONValue): Proof | null => {
   const data = ticket_id[1].at("data").as_string();
   const hash = handle.at("hash").as_string();
   const amount = handle.at("amount").as_string();
-
 
   if (withdrawal_handles_hash === null) return null;
   console.log("a");
@@ -78,15 +86,15 @@ const ofDTO = (json: JSONValue): Proof | null => {
       owner: address,
       ticket_id: {
         ticketer,
-        data
+        data,
       },
       hash,
-      amount
+      amount,
     },
-    proof: proof3
+    proof: proof3,
   };
-}
+};
 
 export default {
-  ofDTO
-}
+  ofDTO,
+};

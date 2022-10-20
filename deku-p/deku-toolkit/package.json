@@ -10,7 +10,8 @@
     "build": "tsc --project . --module commonjs && rollup -c rollup.config.ts && eslint .",
     "dev": "tsc --project . -w",
     "lint": "eslint .",
-    "ship": "npm run build && npm run lint"
+    "ship": "npm run build && npm run lint",
+    "prettier-format": "prettier 'src/**/*.ts' --write"
   },
   "files": [
     "lib/",
