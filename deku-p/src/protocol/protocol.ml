@@ -271,8 +271,6 @@ let find_withdraw_proof ~operation_hash protocol =
 let prepare ~parallel ~payload = parallel parse_operation payload
 
 let apply ~current_level ~payload ~tezos_operations protocol =
-  (* FIXME: This is a temporary hack until we understand what's happening in
-     the betanet. *)
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
   in
