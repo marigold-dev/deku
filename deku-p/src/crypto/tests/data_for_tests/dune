@@ -1,0 +1,10 @@
+(library
+ (name tezos_crypto_data ))
+
+; Use this if you want to regenerate the data in Tezos
+; (executable
+;  (name data_gen)
+;  (libraries tezos_crypto)
+;  (preprocess
+;   (pps ppx_deriving_yojson)))
+

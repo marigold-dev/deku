@@ -1,0 +1,651 @@
+open Tezos_crypto
+
+type _p256_id = {
+  public_key_hash : P256.Public_key_hash.t;
+  public_key : P256.Public_key.t;
+  secret_key : P256.Secret_key.t;
+}
+
+type _secp256k1_id = {
+  public_key_hash : Secp256k1.Public_key_hash.t;
+  public_key : Secp256k1.Public_key.t;
+  secret_key : Secp256k1.Secret_key.t;
+}
+
+type _ed25519_id = {
+  public_key_hash : Ed25519.Public_key_hash.t;
+  public_key : Ed25519.Public_key.t;
+  secret_key : Ed25519.Secret_key.t;
+}
+
+let index = Atomic.make 0
+
+let get_incr () =
+  Atomic.incr index ;
+  Atomic.get index
+
+let _p256_print () =
+  let open P256 in
+  let a, b, c = generate_key () in
+  Format.printf
+    "let e%d = {public_key_hash = Public_key_hash.of_b58check_exn \"%s\";\n\
+    \    public_key = Public_key.of_b58check_exn \"%s\";\n\
+    \    secret_key = Secret_key.of_b58check_exn \"%s\";}\n\
+     %!"
+    (get_incr ())
+    (Public_key_hash.to_b58check a)
+    (Public_key.to_b58check b)
+    (Secret_key.to_b58check c)
+
+let _secp_print () =
+  let open Secp256k1 in
+  let a, b, c = generate_key () in
+  Format.printf
+    "let e%d = {public_key_hash = Public_key_hash.of_b58check_exn \"%s\";\n\
+    \    public_key = Public_key.of_b58check_exn \"%s\";\n\
+    \    secret_key = Secret_key.of_b58check_exn \"%s\";}\n\
+     %!"
+    (get_incr ())
+    (Public_key_hash.to_b58check a)
+    (Public_key.to_b58check b)
+    (Secret_key.to_b58check c)
+
+let _ed25519_print () =
+  let open Ed25519 in
+  let a, b, c = generate_key () in
+  Format.printf
+    "let e%d = {public_key_hash = Public_key_hash.of_b58check_exn \"%s\";\n\
+    \    public_key = Public_key.of_b58check_exn \"%s\";\n\
+    \    secret_key = Secret_key.of_b58check_exn \"%s\";}\n\
+     %!"
+    (get_incr ())
+    (Public_key_hash.to_b58check a)
+    (Public_key.to_b58check b)
+    (Secret_key.to_b58check c)
+
+let spc () = Format.eprintf "\n%!"
+(*
+   let () =
+     p256_print () ;
+     spc () ;
+     p256_print () ;
+     spc () ;
+     p256_print () ;
+     spc () ;
+     p256_print () ;
+     spc () ;
+     p256_print ()
+
+   let _ = Atomic.set index 0
+
+   let () =
+     secp_print () ;
+     spc () ;
+     secp_print () ;
+     spc () ;
+     secp_print () ;
+     spc () ;
+     secp_print () ;
+     spc () ;
+     secp_print ()
+
+   let _ = Atomic.set index 0
+
+   let () =
+     ed25519_print () ;
+     spc () ;
+     ed25519_print () ;
+     spc () ;
+     ed25519_print () ;
+     spc () ;
+     ed25519_print () ;
+     spc () ;
+     ed25519_print () *)
+
+module Data_gen (Crypto : sig
+  include S.SIGNATURE with type watermark = Bytes.t
+
+  include S.RAW_DATA with type t := t
+
+  type id = {
+    public_key_hash : Public_key_hash.t;
+    public_key : Public_key.t;
+    secret_key : Secret_key.t;
+  }
+
+  val ids : id list
+end) =
+struct
+  open Crypto
+
+  let print_encoding encoding =
+    let encoding : bytes = Obj.magic encoding in
+    Format.printf "[\n%!" ;
+    Bytes.iter (fun char -> Format.printf "%d;\n%!" (Char.code char)) encoding ;
+    Format.printf "]\n%!"
+
+  module Skt_key = struct
+    let secret_keys = List.map (fun id -> id.secret_key) ids
+
+    let public_keys =
+      List.map (fun sk -> Secret_key.to_public_key sk) secret_keys
+
+    let compare_secret_keys = List.sort Secret_key.compare secret_keys
+
+    let equality_secret_keys =
+      List.for_all (fun sk -> Secret_key.equal sk sk) secret_keys
+
+    (* These*)
+    (* Encoding sent to standard output*)
+  end
+
+  module Ky = struct
+    (* These *)
+    let public_keys = List.map (fun id -> id.public_key) ids
+
+    let compare_public_keys =
+      List.sort Public_key.compare (List.map (fun id -> id.public_key) ids)
+
+    let equality_public_keys =
+      List.for_all (fun pk -> Public_key.equal pk pk) public_keys
+  end
+
+  module Ky_hash = struct
+    let key_hashes = List.map (fun id -> id.public_key_hash) ids
+
+    let compare_key_hash =
+      List.sort
+        Public_key_hash.compare
+        (List.map (fun id -> id.public_key_hash) ids)
+
+    let equality_key_hash =
+      List.for_all (fun kh -> Public_key_hash.equal kh kh) key_hashes
+  end
+
+  module Sig = struct
+    let secret_keys = List.map (fun id -> id.secret_key) ids
+
+    let public_keys = List.map (fun id -> id.public_key) ids
+
+    let to_hash = [["1"]; ["2"]; ["3"]; ["4"]; ["5"]]
+
+    let to_sign =
+      List.map
+        (fun string -> Blake2B.hash_string string |> Blake2B.to_bytes)
+        to_hash
+
+    let signatures =
+      List.map
+        (fun sk -> List.map (fun hash -> (sign sk hash, hash)) to_sign)
+        secret_keys
+
+    let signatures_to_b58 =
+      List.map
+        (fun sig_list ->
+          List.map
+            (fun (signature, hash) -> (to_b58check signature, hash))
+            sig_list)
+        signatures
+
+    let b58_to_signatures =
+      List.map
+        (fun sig_list ->
+          List.map (fun (b58, hash) -> (of_b58check_exn b58, hash)) sig_list)
+        signatures_to_b58
+
+    let verified_normal =
+      let check_sig pk signatures =
+        List.map (fun (signature, hash) -> check pk signature hash) signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys
+        signatures
+
+    let verified_after_conversion =
+      let check_sig pk signatures =
+        List.map (fun (signature, hash) -> check pk signature hash) signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys
+        b58_to_signatures
+
+    let all_verified_normal =
+      List.flatten verified_normal |> List.for_all Fun.id
+
+    let all_verified_post_conversion =
+      List.flatten verified_after_conversion |> List.for_all Fun.id
+
+    let compare_signatures =
+      List.sort
+        compare
+        (List.map (fun (signature, _) -> signature) (List.flatten signatures))
+
+    let equality_signatures =
+      List.for_all
+        (fun (signature, _) -> equal signature signature)
+        (List.flatten signatures)
+
+    let zero = to_b58check zero
+
+    let size = Signature.size
+  end
+
+  module Print_secret_key = struct
+    let print_public_keys () =
+      Format.printf "let public_keys = [\n%!" ;
+      List.iter
+        (fun pk -> Format.printf "\"%s\";\n%!" (Public_key.to_b58check pk))
+        Skt_key.public_keys ;
+      Format.printf "]\n%!"
+
+    let print_compare_secret_keys () =
+      Format.printf "let compared_secret_keys = [\n%!" ;
+      List.iter
+        (fun sk -> Format.printf "\"%s\"\n%!;" (Secret_key.to_b58check sk))
+        Skt_key.compare_secret_keys ;
+      Format.printf "]\n%!"
+
+    let print_equality_secret_keys () =
+      Format.printf
+        "let equality_secret_keys = %b\n%!"
+        Skt_key.equality_secret_keys
+
+    let print_encoding () =
+      Format.printf "let secret_key_encoding = " ;
+      print_encoding Secret_key.encoding
+  end
+
+  module Print_key = struct
+    let print_compare_public_keys () =
+      Format.printf "let compared_public_keys = [\n%!" ;
+      List.iter
+        (fun sk -> Format.printf "\"%s\"\n%!;" (Public_key.to_b58check sk))
+        Ky.compare_public_keys ;
+      Format.printf "]\n%!"
+
+    let print_equality_public_keys () =
+      Format.printf "let equality_public_keys = %b\n%!" Ky.equality_public_keys
+
+    let print_encoding () =
+      Format.printf "let public_key_encoding = " ;
+      print_encoding Public_key.encoding
+  end
+
+  module Print_key_hash = struct
+    let print_compare_key_hash () =
+      Format.printf "let compared_key_hashes = [\n%!" ;
+      List.iter
+        (fun sk -> Format.printf "\"%s\"\n%!;" (Public_key_hash.to_b58check sk))
+        Ky_hash.compare_key_hash ;
+      Format.printf "]\n%!"
+
+    let print_equality_key_hash () =
+      Format.printf "let equality_key_hash = %b\n%!" Ky_hash.equality_key_hash
+
+    let print_encoding () =
+      Format.printf "let public_key_hash_encoding = " ;
+      print_encoding Public_key_hash.encoding
+  end
+
+  module Print_signatures = struct
+    let helper_print_signatures signature =
+      let signature = to_bytes signature in
+      let string_list =
+        Bytes.fold_left
+          (fun acc char -> (Char.code char |> Int.to_string) :: acc)
+          []
+          signature
+      in
+      String.concat "" string_list
+
+    let print_signatures () =
+      Format.printf "let signatures = \n%!" ;
+      let out =
+        List.map
+          (fun sig_list ->
+            List.map (fun (sg, _) -> helper_print_signatures sg) sig_list)
+          Sig.signatures
+      in
+      let out = String.concat "" (List.flatten out) in
+      Format.printf "\"%s\"\n%!" out
+
+    let print_verified_normal () =
+      Format.printf "let verified_normal_signatures = [\n%!" ;
+      List.iter
+        (fun sig_list ->
+          Format.printf "[\n%!" ;
+          List.iter (Format.printf "%b;\n%!") sig_list ;
+          Format.printf "];\n%!")
+        Sig.verified_normal ;
+      Format.printf "]\n%!"
+
+    let print_verified_after_conversion () =
+      Format.printf "let verified_after_conversion = [\n%!" ;
+      List.iter
+        (fun sig_list ->
+          Format.printf "[\n%!" ;
+          List.iter (Format.printf "%b;\n%!") sig_list ;
+          Format.printf "];\n%!")
+        Sig.verified_after_conversion ;
+      Format.printf "]\n%!"
+
+    let print_all_verified_normal () =
+      Format.printf "let all_verified_normal = %b\n%!" Sig.all_verified_normal
+
+    let print_all_verified_post_conversion () =
+      Format.printf
+        "let all_verified_post_conversion = %b\n%!"
+        Sig.all_verified_post_conversion
+
+    let print_compare_signatures () =
+      Format.printf "let compare_signatures = \n%!" ;
+      let out = List.map helper_print_signatures Sig.compare_signatures in
+      Format.printf "\"%s\"\n%!" (String.concat "" out)
+
+    let print_equality_signatures () =
+      Format.printf "let equality_signatures = %b\n%!" Sig.equality_signatures
+
+    let print_encoding () =
+      Format.printf "let signature_encoding = " ;
+      print_encoding Signature.encoding
+
+    let print_zero () = Format.printf "let zero = \"%s\"\n%!" Sig.zero
+
+    let print_size () = Format.printf "let size = %d" Sig.size
+  end
+
+  let print_all_the_data () =
+    let print_secret_key () =
+      let open Print_secret_key in
+      print_public_keys () ;
+      spc () ;
+      print_compare_secret_keys () ;
+      spc () ;
+      print_equality_secret_keys () ;
+      spc () ;
+      print_encoding ()
+    in
+    let print_key () =
+      let open Print_key in
+      print_compare_public_keys () ;
+      spc () ;
+      print_equality_public_keys () ;
+      spc () ;
+      print_encoding ()
+    in
+    let print_key_hash () =
+      let open Print_key_hash in
+      print_compare_key_hash () ;
+      spc () ;
+      print_equality_key_hash () ;
+      spc () ;
+      print_encoding ()
+    in
+    let print_signatures () =
+      let open Print_signatures in
+      print_signatures () ;
+      spc () ;
+      print_verified_normal () ;
+      spc () ;
+      print_verified_after_conversion () ;
+      spc () ;
+      print_all_verified_normal () ;
+      spc () ;
+      print_all_verified_post_conversion () ;
+      spc () ;
+      print_compare_signatures () ;
+      spc () ;
+      print_equality_signatures () ;
+      spc () ;
+      print_encoding () ;
+      spc () ;
+      print_zero () ;
+      spc () ;
+      print_size ()
+    in
+    print_secret_key () ;
+    spc () ;
+    print_key () ;
+    spc () ;
+    print_key_hash () ;
+    spc () ;
+    print_signatures ()
+end
+
+module Ed = struct
+  include Ed25519
+
+  type id = {
+    public_key_hash : Public_key_hash.t;
+    public_key : Public_key.t;
+    secret_key : Secret_key.t;
+  }
+
+  let e1 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz1NS9mkwQxD2jgH8kiGVPD33VmLXVVe3wug";
+      public_key =
+        Public_key.of_b58check_exn
+          "edpktgopG88M5eE8M6N1ZtHbYzDCXRnGXk9vhNrLnYp9CA6aVyMRXa";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "edsk2kvYWbhbdg6CsgwkZ3svMR76zSJyWUGmpWrRgDRJGJDxZ7aiK3";
+    }
+
+  let e2 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz1iijagWhWfmG3Cmx7oJ62EkQByPG2foNBU";
+      public_key =
+        Public_key.of_b58check_exn
+          "edpkvLs7dfWXcdx62iEW5wpYfn8yKPuj446BCRhEbevMMbSSE9G1Yn";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "edsk4MXvxxHjZKJuW6Rgr1C6tkt6Mwx39o9Tpowco7JjncmSfNb2GF";
+    }
+
+  let e3 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz1LMf9NoTATvLJ7EQjYDzy7XZZ9KHjei5jH";
+      public_key =
+        Public_key.of_b58check_exn
+          "edpkvGJ8FdbDSrACkSEzWD1veGeoBQgCTKyX4SVvBc1TBRwcWrbRDQ";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "edsk48oQs2NkiDDNmGfiNnt3NQzL34Cy3tvy9YRCB3RBFXVkkoWnha";
+    }
+
+  let e4 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz1aBiQ188pozN9JuSvwUPpkZoajCG6AT7XX";
+      public_key =
+        Public_key.of_b58check_exn
+          "edpkvK2woY7vgguhuTZQDVM1hCjbVrEB2dhGVejvgQxHEoGgYqJNuD";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "edsk44dngys12G6hnRf1VJVTVRcxJWF3nxpPLgKtVJpLzS56eRnYrJ";
+    }
+
+  let e5 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz1UDkGwdCYTyZMG1wwMWMfmbiRtagvP3kXg";
+      public_key =
+        Public_key.of_b58check_exn
+          "edpkutzyeRZkzmcGxQZr7gXTH7Cf7ygDsrn5LSZ2bffHpCeTACB4su";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "edsk41Sr6vNDRPenQMNBs11huD26wYMeuJqjFsnC7mNaidVEWuJyh8";
+    }
+
+  let ids = [e1; e2; e3; e4; e5]
+end
+
+module P256 = struct
+  include P256
+
+  type id = {
+    public_key_hash : Public_key_hash.t;
+    public_key : Public_key.t;
+    secret_key : Secret_key.t;
+  }
+
+  let e1 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz3ZSxVFnspq8zrCrwapz3vhS3C2r5AcwhGP";
+      public_key =
+        Public_key.of_b58check_exn
+          "p2pk65Eitn1NWYLMbjHXr2r2QnwymzXbJFhexPbQJh9JRxvBRfAcg7M";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "p2sk3Yz7dRf98r3p5sWvHeePXxMkS2GfqKw5gbbiRhGV4hjm98pFbr";
+    }
+
+  let e2 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz3QMagZcmf7q7ZPdPNERzYZUiQJo5GqNKWc";
+      public_key =
+        Public_key.of_b58check_exn
+          "p2pk67Av4JsfXGZSy7cfxcmUhUbWmDnueVBwbhh3j2MFGJsaPsWXb6K";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "p2sk2ns4gJXgagooB8Lv1viRCNCJpgR14XdAtB7W9fZKyJgZ4S5war";
+    }
+
+  let e3 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz3h3WZZmP36iNBDGiCQ9dQmn9BkgqFAGvW3";
+      public_key =
+        Public_key.of_b58check_exn
+          "p2pk67P7sMyjfisQYabUQ32ReqVZiGQAL7cUf3T64uenzbZe3sX98Vv";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "p2sk2Zr1MdRSRUPTeuhfTNPcN1CaBCYRSR3E6hUT7J4EXcu2SvRaz6";
+    }
+
+  let e4 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz3Rw7iTkdLQSYQwM3rjiQFi7LCvVffUnSmg";
+      public_key =
+        Public_key.of_b58check_exn
+          "p2pk655at6WhyuVZ9KppEM4nS2WF19sGrCsyZjgj5rj8vYyLViDbTzw";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "p2sk37eEg4q6L43MSDX9dp5Ayr8jsAezyDMqBC1RYukxDtDRZgEvZg";
+    }
+
+  let e5 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz3YfEAXNdKtaXLiS3xvRhDYfjSEV3Nayoiv";
+      public_key =
+        Public_key.of_b58check_exn
+          "p2pk66t9riXzFJKqp565EcEi2d2mgTFEcdTGRTipzKmnzLTkSAFdLEC";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "p2sk2MwJ9zbbkmkQpC8miutcCGocHickKGHa25miYwAwp69fr5QPtj";
+    }
+
+  let ids = [e1; e2; e3; e4; e5]
+end
+
+module Secp = struct
+  include Secp256k1
+
+  type id = {
+    public_key_hash : Public_key_hash.t;
+    public_key : Public_key.t;
+    secret_key : Secret_key.t;
+  }
+
+  let e1 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz2MCLjfo24PijEnWWLTG3L5X6cKsL4FMMFd";
+      public_key =
+        Public_key.of_b58check_exn
+          "sppk7aoiwa8LsmirV6iwDT6ydGj4A2HmfGzyFoXRcdbGnxaYKMojyYd";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "spsk21hkXPEpB2BHPzKfKyFSQqvjuHL5Bm1PmEsC9DM36Z4gabBC91";
+    }
+
+  let e2 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz2AUeqfA3SgecBbzawXsi5NaQe6zPL7GMCN";
+      public_key =
+        Public_key.of_b58check_exn
+          "sppk7bcqU3U2BFaPmE6VRgGTp4eXas3xXKspBfyHvievVHw3WyrzmW5";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "spsk32ncVgGj9vPo4FudHmsisS94YTCQ48ZUUcXVTiEG7iHZhbvHMw";
+    }
+
+  let e3 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz2WTi8HqBNcibDAeJm5x9zGWHmLWzpzHYsr";
+      public_key =
+        Public_key.of_b58check_exn
+          "sppk7aonkstb3wAKqr1AtbRmYtFVZbxKS9d5hUrmzzHpApsydgSb5dR";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "spsk2UMRo7EFn1e9scHqwP7rfxe5sfwSxNmPakYJEaFZBiuj2AMcnb";
+    }
+
+  let e4 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz2UNsCxm4cZi4gXNHPe5PpnVU5kxhStm1m2";
+      public_key =
+        Public_key.of_b58check_exn
+          "sppk7cGSR9WKo7gYAprJ6PN4f1F2xb8eATq7jQcfwv3dmZkDhLxKzCF";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "spsk1eGubSryPjBVfSSgfXsro4GTppR5yP4ma625x8p5LqGrDyJAi8";
+    }
+
+  let e5 =
+    {
+      public_key_hash =
+        Public_key_hash.of_b58check_exn "tz2DipnwoxeZJqsh7PXvhF92K3wmvtTSDYM5";
+      public_key =
+        Public_key.of_b58check_exn
+          "sppk7ZKArUrVK1pGdk3cbufByJ8isj36ReHxu1tW4ijm7yn1kamPwBb";
+      secret_key =
+        Secret_key.of_b58check_exn
+          "spsk2BhnytB9pZrgzismfLt1DNyxKUzjrqmMGvfLr4EeS1z5QGEGj2";
+    }
+
+  let ids = [e1; e2; e3; e4; e5]
+end
+
+module Ed_gen = Data_gen (struct
+  include Ed
+end)
+
+module P256_gen = Data_gen (struct
+  include P256
+end)
+
+module Secp_gen = Data_gen (struct
+  include Secp
+end)
+
+let () =
+  Format.printf "(* Ed25519 data *)" ;
+  Ed_gen.print_all_the_data () ;
+  Format.printf "(* p256 data *)" ;
+  P256_gen.print_all_the_data () ;
+  Format.printf "(* secp data *)" ;
+  Secp_gen.print_all_the_data ()
