@@ -1,19 +1,28 @@
 #!/usr/bin/env bash
 
-echo "WARNING: USING HARDCODED BLOCKSIZE OF 10000. IS THIS CORRECT?"
-block_size=10000
+db_path=${1:-./flextesa_chain/data/0/database.db}
 
-first=$(sqlite3 ./flextesa_chain/data/0/database.db 'select timestamp from blocks' | head -n 1)
-last=$(sqlite3 ./flextesa_chain/data/0/database.db 'select timestamp from blocks' | tail -n 1)
+echo "Reading database $db_path"
+block_size=${2:-10000}
+
+echo "WARNING: USING BLOCKSIZE OF $block_size. IS THIS CORRECT?"
+
+blocks=${3:-10}
+echo "Sampling last $blocks blocks"
+
+timestamps=$(sqlite3 "$db_path" "SELECT timestamp FROM blocks ORDER BY level DESC LIMIT $blocks")
+
+last=$(echo "$timestamps" | head -n 1)
+first=$(echo "$timestamps" | tail -n 1)
 
 duration=$(echo "$last - $first" | bc -l)
-
-blocks=$(sqlite3 ./flextesa_chain/data/0/database.db 'select timestamp from blocks' | wc -l)
 
 transactions=$(echo "$blocks * $block_size" | bc -l)
 
 tps=$(echo "$transactions / $duration" | bc -l)
 
+latency=$(echo "$duration / $blocks" | bc -l)
+
 echo "transactions: $transactions"
-echo "duration: $duration"
+echo "latency: $latency seconds"
 echo "tps: $tps"
