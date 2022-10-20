@@ -10,8 +10,8 @@
     apps = {
       decookie-vm =
         let script = pkgs.writeScriptBin "decookie-vm" ''
-          export NODE_PATH="${self'.decookie-vm}/lib/node_modules/cookie-game/node_modules"
-          ${nodejs}/bin/node ${self'.decookie-vm}/lib/node_modules/cookie-game/lib/src/index.js "$@"
+          export NODE_PATH="${self'.packages.decookie-vm}/lib/node_modules/cookie-game/node_modules"
+          ${nodejs}/bin/node ${self'.packages.decookie-vm}/lib/node_modules/cookie-game/lib/src/index.js "$@"
         '';
         in
         {

@@ -3,17 +3,12 @@
   "main": "lib/interop.js",
   "version": "0.1.0",
   "scripts": {
-    "build": "tsc src/interop.ts --lib es6 --outDir lib/",
+    "build": "tsc",
     "dev": "tsc --project . -w --outDir lib/",
-    "lint": "eslint --ext .ts src/"
+    "test": "tsc -p ./test && node ./test/lib/test/test.js"
   },
   "devDependencies": {
     "@types/node": "^17.0.29",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "@typescript-eslint/parser": "^5.21.0",
-    "eslint": "^8.14.0"
-  },
-  "peerDependencies": {
     "typescript": "^4.6.3"
   }
 }
