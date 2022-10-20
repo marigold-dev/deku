@@ -144,7 +144,7 @@ let main params =
         chain
     | None ->
         let vm_state = External_vm_client.get_initial_state () in
-        Chain.make ~validators ~vm_state
+        Chain.make ~validators ~vm_state ~chain_id:tezos_consensus_address
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let notify_api _ = () in

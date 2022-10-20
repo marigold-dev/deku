@@ -32,7 +32,7 @@ let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
   let operation =
     Operation.ticket_transfer ~identity:alice ~level ~nonce
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
-      ~ticket_id ~amount
+      ~ticket_id ~amount ~chain_id:Deku_tezos.Address.empty
   in
   let operation_str =
     operation |> Operation.yojson_of_t |> Yojson.Safe.to_string

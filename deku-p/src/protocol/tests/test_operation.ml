@@ -27,7 +27,7 @@ let test_serde_transaction () =
     Operation.ticket_transfer ~identity:alice ~level:Level.zero
       ~nonce:(Nonce.of_n N.one)
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
-      ~ticket_id ~amount:Amount.zero
+      ~ticket_id ~amount:Amount.zero ~chain_id:Deku_tezos.Address.empty
   in
   let transaction_str () =
     transaction |> Operation.yojson_of_t |> Operation.t_of_yojson |> fun _ -> ()

@@ -9,6 +9,7 @@ type producer =
       (* TODO: should this be a set instead of map since
          we never do random access? *)
       tezos_operations : Tezos_operation.t Tezos_operation_hash.Map.t;
+      chain_id : Deku_tezos.Address.t;
     }
 
 and t = producer [@@deriving yojson]
@@ -16,7 +17,8 @@ and t = producer [@@deriving yojson]
 let empty =
   let operations = Operation_hash.Map.empty in
   let tezos_operations = Tezos_operation_hash.Map.empty in
-  Producer { operations; tezos_operations }
+  let chain_id = Deku_tezos.Address.empty in
+  Producer { operations; tezos_operations; chain_id }
 
 let serialize_operation_to_payload operation =
   let json = Operation.yojson_of_t operation in
@@ -25,24 +27,25 @@ let serialize_operation_to_payload operation =
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
-  let (Producer { operations; tezos_operations }) = producer in
+  let (Producer { operations; tezos_operations; chain_id }) = producer in
   let operations =
     let (Operation.Operation { hash; _ }) = operation in
     let operation = serialize_operation_to_payload operation in
     Operation_hash.Map.add hash operation operations
   in
-  Producer { operations; tezos_operations }
+  Producer { operations; tezos_operations; chain_id }
 
 let incoming_tezos_operation ~tezos_operation producer =
-  let (Producer { operations; tezos_operations }) = producer in
+  let (Producer { operations; tezos_operations; chain_id }) = producer in
   let tezos_operations =
     let Tezos_operation.{ hash; _ } = tezos_operation in
     Tezos_operation_hash.Map.add hash tezos_operation tezos_operations
   in
-  Producer { operations; tezos_operations }
+  Producer { operations; tezos_operations; chain_id }
 
 let clean ~receipts ~tezos_operations producer =
-  let (Producer { operations; tezos_operations = old_tezos_operations }) =
+  let (Producer
+        { operations; tezos_operations = old_tezos_operations; chain_id }) =
     producer
   in
   let operations =
@@ -62,10 +65,12 @@ let clean ~receipts ~tezos_operations producer =
           tezos_operations)
       old_tezos_operations tezos_operations
   in
-  Producer { operations; tezos_operations }
+  Producer { operations; tezos_operations; chain_id }
 
-let fill_with_noop ~identity ~level ~default_block_size operations =
-  let noop = Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) in
+let fill_with_noop ~identity ~level ~chain_id ~default_block_size operations =
+  let noop =
+    Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) ~chain_id
+  in
   let noop = serialize_operation_to_payload noop in
   let rec fill counter operations =
     match counter <= 0 with
@@ -79,7 +84,7 @@ let fill_with_noop ~identity ~level ~default_block_size operations =
 let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer =
   let open Block in
-  let (Producer { operations; tezos_operations }) = producer in
+  let (Producer { operations; tezos_operations; chain_id }) = producer in
   let (Block { hash = current_block; level = current_level; _ }) = above in
   let previous = current_block in
   let level = Level.next current_level in
@@ -89,7 +94,7 @@ let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
       (Operation_hash.Map.bindings operations)
   in
   let operations =
-    fill_with_noop ~identity ~level ~default_block_size operations
+    fill_with_noop ~identity ~level ~chain_id ~default_block_size operations
   in
   let tezos_operations =
     List.map

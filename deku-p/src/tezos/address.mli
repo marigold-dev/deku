@@ -5,6 +5,7 @@ type t =
   | Originated of { contract : Contract_hash.t; entrypoint : string option }
 [@@deriving eq, ord, yojson, show]
 
+
 (* TODO: explain why this encoding? TLDR fixed size and no entrypoint  *)
 val contract_encoding : t Data_encoding.t
 val encoding : t Data_encoding.t
@@ -13,3 +14,6 @@ val of_string : string -> t option
 
 val cmdliner_converter :
   (string -> [> `Ok of t | `Error of string ]) * (Format.formatter -> t -> unit)
+
+  (* Helpers, for testing only *)
+val empty : t

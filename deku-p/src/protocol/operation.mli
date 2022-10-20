@@ -30,6 +30,7 @@ type operation = private
       nonce : Nonce.t;
       source : Address.t;
       content : operation_content;
+      chain_id : Deku_tezos.Address.t;
     }
 
 type t = operation [@@deriving eq, ord, yojson, show]
@@ -41,9 +42,16 @@ val ticket_transfer :
   receiver:Address.t ->
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
+  chain_id:Deku_tezos.Address.t ->
   operation
 
-val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
+val noop :
+  identity:Identity.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  chain_id:Deku_tezos.Address.t ->
+  operation
+
 val last_includable_level : operation -> Level.t
 
 val is_in_includable_window :
@@ -56,6 +64,7 @@ val withdraw :
   tezos_owner:Deku_tezos.Address.t ->
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
+  chain_id:Deku_tezos.Address.t ->
   operation
 
 val vm_transaction :
@@ -63,4 +72,5 @@ val vm_transaction :
   nonce:Nonce.t ->
   content:string ->
   identity:Identity.t ->
+  chain_id:Deku_tezos.Address.t ->
   operation

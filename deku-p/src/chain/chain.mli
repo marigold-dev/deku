@@ -13,6 +13,7 @@ type chain = private
       producer : Producer.t;
       oldest_trusted : Level.t;
       trusted : Message.Network.t Level.Map.t;
+      chain_id : Deku_tezos.Address.t;
     }
 
 type t = chain [@@deriving yojson]
@@ -41,7 +42,10 @@ type action = private
 [@@deriving show]
 
 val make :
-  validators:Key_hash.t list -> vm_state:External_vm_protocol.State.t -> chain
+  validators:Key_hash.t list ->
+  vm_state:External_vm_protocol.State.t ->
+  chain_id:Deku_tezos.Address.t ->
+  chain
 
 val incoming :
   raw_header:string -> raw_content:string -> chain -> chain * fragment option

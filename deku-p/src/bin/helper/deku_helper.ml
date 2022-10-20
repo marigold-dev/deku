@@ -73,7 +73,10 @@ let main ~env ~sw:_ =
     |}
   in
 
-  let transaction = Operation.vm_transaction ~level ~nonce ~content ~identity in
+  let transaction =
+    Operation.vm_transaction ~level ~nonce ~content ~identity
+      ~chain_id:Deku_tezos.Address.empty
+  in
   print_newline ();
   let _ = post_directly_to_node ~identity ~env ~operation:transaction in
   ()

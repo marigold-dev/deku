@@ -13,6 +13,7 @@ type chain =
       producer : Producer.t;
       oldest_trusted : Level.t;
       trusted : Message.Network.t Level.Map.t;
+      chain_id : Deku_tezos.Address.t;
     }
 
 and t = chain [@@deriving yojson]
@@ -78,7 +79,7 @@ let drop ~until by_level =
   | Some (level, _by_hash) -> drop ~level ~until by_level
   | None -> by_level
 
-let make ~validators ~vm_state =
+let make ~validators ~vm_state ~chain_id =
   let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial_with_vm_state ~vm_state in
@@ -86,7 +87,8 @@ let make ~validators ~vm_state =
   let producer = Producer.empty in
   let oldest_trusted = Level.zero in
   let trusted = Level.Map.empty in
-  Chain { gossip; protocol; consensus; producer; oldest_trusted; trusted }
+  Chain
+    { gossip; protocol; consensus; producer; oldest_trusted; trusted; chain_id }
 
 let commit ~current_level ~block ~votes ~validators =
   let Block.(Block { payload_hash; _ }) = block in
@@ -466,6 +468,9 @@ let test () =
 
   let chain =
     make ~validators ~vm_state:Deku_external_vm.External_vm_protocol.State.empty
+      ~chain_id:
+        (Option.get @@ Deku_tezos.Address.of_string @@ BLAKE2b.to_raw
+       @@ BLAKE2b.hash "tuturu")
   in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =

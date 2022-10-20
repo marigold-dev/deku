@@ -33,6 +33,7 @@ and operation =
       nonce : Nonce.t;
       source : Address.t;
       content : operation_content;
+      chain_id : Deku_tezos.Address.t;
     }
 
 and t = operation [@@deriving yojson, show]
@@ -70,6 +71,7 @@ module Repr = struct
     nonce : Nonce.t;
     source : Address.t;
     content : operation_content;
+    chain_id : Deku_tezos.Address.t;
   }
 
   and operation_with_signature = {
@@ -88,7 +90,7 @@ module Repr = struct
     let { key; signature; operation } =
       operation_with_signature_of_yojson json
     in
-    let { level; nonce; source; content } = operation in
+    let { level; nonce; source; content; chain_id } = operation in
     let content =
       match content with
       | Ticket_transfer { receiver; ticket_id; amount } ->
@@ -114,10 +116,11 @@ module Repr = struct
      with
     | true -> ()
     | false -> raise Invalid_signature);
-    Operation { key; signature; hash; level; nonce; source; content }
+    Operation { key; signature; hash; level; nonce; source; content; chain_id }
 
   let yojson_of_t operation =
-    let (Operation { key; signature; hash = _; level; nonce; source; content })
+    let (Operation
+          { key; signature; hash = _; level; nonce; source; content; chain_id })
         =
       operation
     in
@@ -132,19 +135,20 @@ module Repr = struct
       | Operation_withdraw { owner; amount; ticket_id } ->
           Tezos_withdraw { owner; amount; ticket_id }
     in
-    let operation = { level; nonce; source; content } in
+    let operation = { level; nonce; source; content; chain_id } in
     yojson_of_operation_with_signature { key; signature; operation }
 end
 
 let t_of_yojson = Repr.t_of_yojson
 let yojson_of_t = Repr.yojson_of_t
 
-let ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id ~amount =
+let ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id ~amount
+    ~chain_id =
   let source = Address.of_key_hash (Identity.key_hash identity) in
   let hash =
     let open Repr in
     let content = Ticket_transfer { receiver; ticket_id; amount } in
-    let operation = { level; nonce; source; content } in
+    let operation = { level; nonce; source; content; chain_id } in
     hash operation
   in
   let key = Identity.key identity in
@@ -153,15 +157,15 @@ let ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id ~amount =
     Identity.sign ~hash identity
   in
   let content = Operation_ticket_transfer { receiver; ticket_id; amount } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  Operation { key; signature; hash; level; nonce; source; content; chain_id }
 
-let noop ~identity ~level ~nonce =
+let noop ~identity ~level ~nonce ~chain_id =
   let source = Address.of_key_hash (Identity.key_hash identity) in
   let hash =
     let open Repr in
     let content = Noop in
     let source = Address.of_key_hash (Identity.key_hash identity) in
-    let operation = { level; nonce; source; content } in
+    let operation = { level; nonce; source; content; chain_id } in
     hash operation
   in
   let key = Identity.key identity in
@@ -171,7 +175,16 @@ let noop ~identity ~level ~nonce =
   in
 
   Operation
-    { key; signature; hash; level; nonce; source; content = Operation_noop }
+    {
+      key;
+      signature;
+      hash;
+      level;
+      nonce;
+      source;
+      content = Operation_noop;
+      chain_id;
+    }
 
 let last_includable_level operation =
   let open Level in
@@ -191,12 +204,12 @@ let is_in_includable_window ~current_level ~operation_level =
   (* limits for how many blocks we need to hold the operations *)
   last_includable_block > current_level
 
-let withdraw ~identity ~level ~nonce ~tezos_owner ~ticket_id ~amount =
+let withdraw ~identity ~level ~nonce ~tezos_owner ~ticket_id ~amount ~chain_id =
   let source = Address.of_key_hash (Identity.key_hash identity) in
   let hash =
     let open Repr in
     let content = Tezos_withdraw { owner = tezos_owner; ticket_id; amount } in
-    let operation = { level; nonce; source; content } in
+    let operation = { level; nonce; source; content; chain_id } in
     hash operation
   in
   let signature =
@@ -205,16 +218,16 @@ let withdraw ~identity ~level ~nonce ~tezos_owner ~ticket_id ~amount =
   in
   let key = Identity.key identity in
   let content = Operation_withdraw { owner = tezos_owner; ticket_id; amount } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  Operation { key; signature; hash; level; nonce; source; content; chain_id }
 
-let vm_transaction ~level ~nonce ~content ~identity =
+let vm_transaction ~level ~nonce ~content ~identity ~chain_id =
   let operation = content in
   let key = Identity.key identity in
   let source = Identity.key_hash identity |> Address.of_key_hash in
   let hash =
     let open Repr in
     let content = Vm_transaction { operation; tickets = [] } in
-    let operation = { level; nonce; source; content } in
+    let operation = { level; nonce; source; content; chain_id } in
     hash operation
   in
   let signature =
@@ -222,4 +235,4 @@ let vm_transaction ~level ~nonce ~content ~identity =
     Identity.sign ~hash identity
   in
   let content = Operation_vm_transaction { operation; tickets = [] } in
-  Operation { key; signature; hash; level; nonce; source; content }
+  Operation { key; signature; hash; level; nonce; source; content; chain_id }

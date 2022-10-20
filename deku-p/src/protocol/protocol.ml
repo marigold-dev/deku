@@ -12,6 +12,7 @@ type protocol =
       receipts : Receipt.t Operation_hash.Map.t;
           (** Receipts of the included operations; also contains withdrawal receipts, which are used to
           generate withdrawal proofs. *)
+      chain_id : Deku_tezos.Address.t;
     }
 
 and t = protocol [@@deriving yojson]
@@ -24,6 +25,7 @@ let initial =
       ledger = Ledger.initial;
       vm_state = External_vm_protocol.State.empty;
       receipts = Operation_hash.Map.empty;
+      chain_id = Deku_tezos.Address.empty;
     }
 
 let initial_with_vm_state ~vm_state =
@@ -34,6 +36,7 @@ let initial_with_vm_state ~vm_state =
           ledger;
           receipts;
           vm_state = _;
+          chain_id;
         }) =
     initial
   in
@@ -44,6 +47,7 @@ let initial_with_vm_state ~vm_state =
       ledger;
       receipts;
       vm_state;
+      chain_id;
     }
 
 let apply_operation ~current_level protocol operation :
@@ -56,17 +60,28 @@ let apply_operation ~current_level protocol operation :
           included_tezos_operations;
           vm_state;
           receipts;
+          chain_id = protocol_id;
         }) =
     protocol
   in
   let (Operation
-        { key = _; signature = _; hash; level; nonce = _; source; content }) =
+        {
+          key = _;
+          signature = _;
+          hash;
+          level;
+          nonce = _;
+          source;
+          content;
+          chain_id;
+        }) =
     operation
   in
   match
     (* TODO: check code through different lane *)
     (not (Included_operation_set.mem operation included_operations))
     && Operation.is_in_includable_window ~current_level ~operation_level:level
+    && Deku_tezos.Address.equal chain_id protocol_id
   with
   | true ->
       (* TODO: check that incorrect operations are removed from the pool *)
@@ -136,6 +151,7 @@ let apply_operation ~current_level protocol operation :
               ledger;
               receipts;
               vm_state;
+              chain_id;
             },
           receipt,
           error )
@@ -149,6 +165,7 @@ let apply_tezos_operation protocol tezos_operation =
           ledger;
           receipts;
           vm_state;
+          chain_id;
         }) =
     protocol
   in
@@ -168,6 +185,7 @@ let apply_tezos_operation protocol tezos_operation =
             ledger;
             receipts;
             vm_state;
+            chain_id;
           }
       in
       List.fold_left
@@ -181,6 +199,7 @@ let apply_tezos_operation protocol tezos_operation =
                       included_tezos_operations;
                       receipts;
                       vm_state;
+                      chain_id;
                     }) =
                 protocol
               in
@@ -196,6 +215,7 @@ let apply_tezos_operation protocol tezos_operation =
                   included_tezos_operations;
                   receipts;
                   vm_state;
+                  chain_id;
                 })
         protocol operations
   | false -> protocol
@@ -237,6 +257,7 @@ let clean ~current_level protocol =
           ledger;
           receipts;
           vm_state;
+          chain_id;
         }) =
     protocol
   in
@@ -250,6 +271,7 @@ let clean ~current_level protocol =
       ledger;
       receipts;
       vm_state;
+      chain_id
     }
 
 let find_withdraw_proof ~operation_hash protocol =

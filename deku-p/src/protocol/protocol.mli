@@ -10,6 +10,7 @@ type protocol = private
       ledger : Ledger.t;
       vm_state : External_vm_protocol.State.t;
       receipts : Receipt.t Operation_hash.Map.t;
+      chain_id : Deku_tezos.Address.t;
     }
 
 type t = protocol [@@deriving yojson]
