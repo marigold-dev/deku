@@ -1,7 +1,5 @@
 module rec V : sig
-  type union =
-    | Left of t
-    | Right of t
+  type union = Left of t | Right of t
 
   and t =
     | Int of Z.t

@@ -1,4 +1,4 @@
 (executable
  (name dekuc_cli)
  (public_name dekuc-cli)
- (libraries ))
+ (libraries))

@@ -1,9 +1,7 @@
 open Helpers
 
 module rec V : sig
-  type union =
-    | Left of t
-    | Right of t
+  type union = Left of t | Right of t
 
   and t =
     | Int of Z.t
@@ -21,9 +19,7 @@ module rec V : sig
 
   val pp : Format.formatter -> t -> unit
 end = struct
-  type union =
-    | Left of t
-    | Right of t
+  type union = Left of t | Right of t
 
   and t =
     | Int of Z.t
@@ -46,8 +42,8 @@ end = struct
         | [] -> pp_print_string fmt "}"
         | [ elt ] -> fprintf fmt "%a }" f elt
         | elt :: elts ->
-          fprintf fmt "%a; " f elt;
-          aux elts
+            fprintf fmt "%a; " f elt;
+            aux elts
       in
       pp_print_string fmt "}";
       aux lst
@@ -65,18 +61,18 @@ end = struct
     | Option (Some value) -> fprintf fmt "(Some %a)" pp value
     | Unit -> pp_print_string fmt "Unit"
     | Map m ->
-      print_list
-        (fun fmt (key, value) -> fprintf fmt "Elt %a %a" pp key pp value)
-        (List.of_seq (Map.to_seq m))
+        print_list
+          (fun fmt (key, value) -> fprintf fmt "Elt %a %a" pp key pp value)
+          (List.of_seq (Map.to_seq m))
     | Bytes b ->
-      let map = "01234567890abcdef" in
-      pp_print_string fmt "0x";
-      Bytes.iter
-        (fun c ->
-          let c = Char.code c in
-          pp_print_char fmt map.[c lsr 4];
-          pp_print_char fmt map.[c land 0xf])
-        b
+        let map = "01234567890abcdef" in
+        pp_print_string fmt "0x";
+        Bytes.iter
+          (fun c ->
+            let c = Char.code c in
+            pp_print_char fmt map.[c lsr 4];
+            pp_print_char fmt map.[c land 0xf])
+          b
     | Set s -> print_list pp (List.of_seq (Set.to_seq s))
 end
 
@@ -87,5 +83,3 @@ and Set : (Helpers.Set.S_with_yojson with type elt = V.t) =
   Helpers.Set.Make_with_yojson (V)
 
 include V
-
-
