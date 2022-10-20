@@ -1,5 +1,5 @@
 // @ts-ignore
-import { main, get, set, transaction } from "deku-sdk"
+import { main, get, set, transaction } from "@marigold-dev/deku-p-sdk"
 import { cookieBaker } from "./types"
 import {
     addCookie, addCursor,

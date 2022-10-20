@@ -1,0 +1,11 @@
+{
+    "private": true,
+    "workspaces": [
+      "decookies/typescript-vm",
+      "deku-p/deku-toolkit",
+      "deku-p/deku-toolkit/examples/nodejs",
+      "deku-p/deku-toolkit/examples/react",
+      "deku-p/examples/increment-ts",
+      "deku-p/sdks/typescript-sdk"
+    ]
+}

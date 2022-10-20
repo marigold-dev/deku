@@ -1,3 +1,7 @@
+# This file is specifically for the Deku Tezos bridge
+# It's only used internally in the Deku node and not
+# part of our client-facing code. Hence it's separate
+# from the npm workspace in ../../package.json
 { system, dream2nix-lib, nix-filter, nodejs }:
 
 let

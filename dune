@@ -1,4 +1,4 @@
-(data_only_dirs chain)
+(data_only_dirs chain node_modules)
 
 (env
  (static

@@ -15,11 +15,6 @@
         inherit (inputs) nix-filter;
       };
 
-      typescript-sdk = pkgs.callPackage ./typescript-sdk.nix {
-        inherit nodejs dream2nix-lib;
-        inherit (inputs) nix-filter;
-      };
-
       deku = pkgs.callPackage ./deku.nix {
         inherit nodejs npmPackages;
         inherit (inputs) nix-filter;
@@ -30,7 +25,7 @@
     in
 
     {
-      packages = { default = deku; inherit deku typescript-sdk; };
+      packages = { default = deku; inherit deku; };
       apps = {
         node = {
           type = "app";

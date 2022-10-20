@@ -5,9 +5,6 @@ database.db
 database.db-journal
 result
 chain*.json
-examples/cookie-game/lib
-# DON'T REMOVE THIS until you fix the nix build
-# sdks/typescript-sdk/lib
 *-node-*-deku_state_*.tar.gz
 tezos_js_bridge.bundle.js
 flextesa_chain/data

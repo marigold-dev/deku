@@ -5,7 +5,7 @@ with lib;
 let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
-  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookie-vm}/lib/node_modules/cookie-game/lib/src/index.js";
+  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${builtins.trace (builtins.attrNames deku-packages.x86_64-linux) deku-packages.${config.nixpkgs.system}.decookie-vm}/lib/node_modules/decookie-vm/lib/src/index.js";
   wasmVM = "${deku-packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
 in
 {

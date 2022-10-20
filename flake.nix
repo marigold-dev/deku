@@ -28,7 +28,7 @@
   outputs = { self, nixpkgs, flake-parts, nix-filter, dream2nix, tezos, deploy-rs, ligo, ...}:
     flake-parts.lib.mkFlake { inherit self; } {
       imports = [
-        ./nix/decookie
+        ./nix/js-packages.nix
         ./nix/deku-c
         ./nix/deku-p
       ];

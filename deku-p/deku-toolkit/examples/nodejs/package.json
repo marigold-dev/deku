@@ -11,9 +11,10 @@
     "author": "",
     "license": "MIT",
     "dependencies": {
-        "@marigold-dev/deku-toolkit": "file:../../",
+        "@marigold-dev/deku-toolkit": "0.1.8",
         "@taquito/signer": "^14.0.0",
         "@taquito/taquito": "^14.0.0",
+        "@types/node": "^18.11.3",
         "axios": "^0.27.2",
         "dotenv": "^16.0.2"
     },

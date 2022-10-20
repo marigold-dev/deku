@@ -2,7 +2,7 @@
 
 You are now able to modify your state from the outside world, let's do this with the HTTP APIs!
 
-You can go further, and create an application using your state. For a complex example, you can have a look at [decookies](https://github.com/marigold-dev/decookies), which is a basic front UI using [cookie-game](../../examples/cookie-game/index.ts) state.
+You can go further, and create an application using your state. For a complex example, you can have a look at [decookies](https://github.com/marigold-dev/decookies), which is a basic front UI using [decookie-vm](../../examples/decookie-vm/index.ts) state.
 
 Your outside application will have to interact with the Deku VM. To do so, I will explain the different steps.
 

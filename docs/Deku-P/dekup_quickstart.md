@@ -38,7 +38,7 @@ Let's make a VM that maintains a global counter that can incremented and
 decremented. Create a file called `vm.js` and add the following:
 
 ```js
-const { main, get, set } = require("deku-sdk");
+const { main, get, set } = require("@marigold-dev/deku-p-sdk");
 
 const transition = (tx) => {
     // Parse the operation data

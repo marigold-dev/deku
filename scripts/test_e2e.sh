@@ -91,7 +91,7 @@ local-setup() {
     test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
     # Starts the VM
-    node examples/cookie-game/lib/src/index.js "./flextesa_chain/data/$N/pipe" &
+    nix run '.#decookie-vm' -- "./flextesa_chain/data/$N/pipe" &
     #awk -v n=$N '{ print "vm " n ": " $0}' &
 
     sleep 2
