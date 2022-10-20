@@ -48,14 +48,14 @@ module Zero_ops = struct
     let nonce = Nonce.of_n N.zero in
     let amount = Amount.of_n N.zero in
     let ticket_id = default_ticket_id in
-    Operation.ticket_transfer ~identity ~level ~nonce ~receiver ~ticket_id
-      ~amount
+    Operation.Signed.ticket_transfer ~identity ~level ~nonce ~receiver
+      ~ticket_id ~amount
 
   let payload_of_operations operations =
     (* TODO: this likely should not be here *)
     List.map
       (fun operation ->
-        let json = Operation.yojson_of_t operation in
+        let json = Operation.Signed.yojson_of_t operation in
         Yojson.Safe.to_string json)
       operations
 
@@ -196,28 +196,6 @@ let produce () =
   let (_ : Block.t) = block ~default_block_size:items in
   ()
 
-let string_of_block () =
-  let items = 1_000_000 in
-  let prepare () = block ~default_block_size:items in
-  (* 1kk/s on 8 domains *)
-  bench "string_of_block" ~items ~prepare @@ fun block ->
-  let json = Block.yojson_of_t block in
-  let (_ : string) = Yojson.Safe.to_string json in
-  ()
-
-let block_of_string () =
-  let items = 1_000_000 in
-  let prepare () =
-    let block = block ~default_block_size:items in
-    let json = Block.yojson_of_t block in
-    Yojson.Safe.to_string json
-  in
-  (* 500k/s on 8 domains *)
-  bench "block_of_string" ~items ~prepare @@ fun string ->
-  let json = Yojson.Safe.from_string string in
-  let (_ : Block.t) = Block.t_of_yojson json in
-  ()
-
 let block_encode () =
   let items = 1_000_000 in
   let prepare () = block ~default_block_size:items in
@@ -248,7 +226,7 @@ let prepare_and_decode () =
   (* 100k/s on 8 domains *)
   bench "prepare_and_decode" ~items ~prepare @@ fun payload ->
   let (Payload payload) = Payload.decode ~payload in
-  let (_ : Operation.t list) = Protocol.prepare ~parallel ~payload in
+  let (_ : Operation.Initial.t list) = Protocol.prepare ~parallel ~payload in
   ()
 
 let verify () =
@@ -369,7 +347,7 @@ let ledger_transfer () =
   in
   ()
 
-let _benches =
+let benches =
   [
     produce;
     block_encode;
@@ -378,11 +356,7 @@ let _benches =
     verify;
     ledger_balance;
     ledger_transfer;
-    string_of_block;
-    block_of_string;
   ]
-
-let benches = [ ledger_balance ]
 
 let () =
   Eio_main.run @@ fun env ->

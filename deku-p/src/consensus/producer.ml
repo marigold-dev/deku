@@ -19,15 +19,17 @@ let empty =
   Producer { operations; tezos_operations }
 
 let serialize_operation_to_payload operation =
-  let json = Operation.yojson_of_t operation in
-  Yojson.Safe.to_string json
+  Data_encoding.Binary.to_string_exn Operation.Signed.encoding operation
 
 (* TODO: both for produce and incoming_operations
    only add operations if they can be applied *)
 let incoming_operation ~operation producer =
   let (Producer { operations; tezos_operations }) = producer in
   let operations =
-    let (Operation.Operation { hash; _ }) = operation in
+    let (Operation.Signed.Signed_operation
+          { initial = Initial_operation { hash; _ }; _ }) =
+      operation
+    in
     let operation = serialize_operation_to_payload operation in
     Operation_hash.Map.add hash operation operations
   in
@@ -65,7 +67,9 @@ let clean ~receipts ~tezos_operations producer =
   Producer { operations; tezos_operations }
 
 let fill_with_noop ~identity ~level ~default_block_size operations =
-  let noop = Operation.noop ~identity ~level ~nonce:(Nonce.of_n N.zero) in
+  let noop =
+    Operation.Signed.noop ~identity ~level ~nonce:(Nonce.of_n N.zero)
+  in
   let noop = serialize_operation_to_payload noop in
   let rec fill counter operations =
     match counter <= 0 with

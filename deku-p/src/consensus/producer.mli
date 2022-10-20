@@ -5,7 +5,7 @@ type producer
 type t = producer [@@deriving yojson]
 
 val empty : producer
-val incoming_operation : operation:Operation.t -> producer -> producer
+val incoming_operation : operation:Operation.Signed.t -> producer -> producer
 
 val incoming_tezos_operation :
   tezos_operation:Tezos_operation.t -> producer -> producer

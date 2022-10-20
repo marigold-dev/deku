@@ -18,7 +18,7 @@ let post_directly_to_node ~env ~operation =
 
 let post_to_api ~sw ~env ~operation =
   let node = "http://localhost:8080/api/v1/operations" |> Uri.of_string in
-  let json = Operation.yojson_of_t operation |> Yojson.Safe.to_string in
+  let json = Operation.Signed.yojson_of_t operation |> Yojson.Safe.to_string in
   let body = Piaf.Body.of_string json in
   let post_result = Piaf.Client.Oneshot.post ~body ~sw env node in
   match post_result with
@@ -73,7 +73,9 @@ let main ~env ~sw:_ =
     |}
   in
 
-  let transaction = Operation.vm_transaction ~level ~nonce ~content ~identity in
+  let transaction =
+    Operation.Signed.vm_transaction ~level ~nonce ~content ~identity
+  in
   print_newline ();
   let _ = post_directly_to_node ~identity ~env ~operation:transaction in
   ()
