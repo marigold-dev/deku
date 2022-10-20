@@ -15,8 +15,12 @@ type protocol = private
 
 type t = protocol [@@deriving yojson]
 
-val initial : protocol
-val initial_with_vm_state : vm_state:External_vm_protocol.State.t -> protocol
+val initial : chain_id:Deku_tezos.Address.t -> protocol
+
+val initial_with_vm_state :
+  vm_state:External_vm_protocol.State.t ->
+  chain_id:Deku_tezos.Address.t ->
+  protocol
 
 val prepare :
   parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->

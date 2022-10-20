@@ -70,7 +70,7 @@ let test_apply_one_operation () =
   let protocol, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload:[ op_str ] in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   Alcotest.(check bool)
     "operation is included" true
@@ -89,7 +89,7 @@ let test_many_operations () =
   let protocol, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   Alcotest.(check bool)
     "all operations have receipts and vice versa" true
@@ -101,7 +101,7 @@ let test_duplicated_operation_same_level () =
   let _, receipts, _errors =
     let payload = Protocol.prepare ~parallel ~payload:[ op_str; op_str ] in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   let[@warning "-8"] (Receipt.Ticket_transfer_receipt { operation }) =
     List.hd receipts
@@ -126,7 +126,7 @@ let test_duplicated_operation_different_level () =
     let payload = Protocol.prepare ~parallel ~payload in
     let protocol, _, _errors =
       Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-        Protocol.initial
+        (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
     in
     Protocol.apply ~current_level:(Level.next Level.zero) ~payload
       ~tezos_operations:[] protocol
@@ -141,7 +141,7 @@ let test_duplicated_operation_after_includable_window () =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   (* TODO: should we have an integrity check in Protocol.apply that checks
      that the block being applied is a valid next block? *)
@@ -167,7 +167,7 @@ let test_invalid_string () =
     let payload = [ wrong_op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
@@ -208,7 +208,7 @@ let test_invalid_signature () =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
@@ -252,7 +252,7 @@ let test_valid_signature_but_different_key () =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
@@ -262,7 +262,7 @@ let test_receipt_implied_included_operations () =
     let payload = [ op_str ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-      Protocol.initial
+      (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
   in
   let (Protocol.Protocol { included_operations; _ }) = protocol in
   let is_included = Included_operation_set.mem op included_operations in
@@ -276,7 +276,7 @@ let test_included_operation_clean_after_window () =
     let payload = Protocol.prepare ~parallel ~payload in
     let protocol, _receipts, _errors =
       Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
-        Protocol.initial
+        (Protocol.initial ~chain_id:Deku_tezos.Address.dummy)
     in
 
     Protocol.apply
@@ -291,7 +291,7 @@ let amount = Alcotest.testable Amount.pp Amount.equal
 
 let test_cannot_create_amount_ex_nihilo () =
   let _, op_str, _ = make_operation ~amount:32 () in
-  let protocol = Protocol.initial in
+  let protocol = Protocol.initial ~chain_id:Deku_tezos.Address.dummy in
   let (Protocol.Protocol { ledger; _ }) = protocol in
   let bob_previous_balance =
     ledger

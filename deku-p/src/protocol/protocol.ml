@@ -17,7 +17,7 @@ type protocol =
 
 and t = protocol [@@deriving yojson]
 
-let initial =
+let initial ~chain_id =
   Protocol
     {
       included_operations = Included_operation_set.empty;
@@ -25,10 +25,10 @@ let initial =
       ledger = Ledger.initial;
       vm_state = External_vm_protocol.State.empty;
       receipts = Operation_hash.Map.empty;
-      chain_id = Deku_tezos.Address.dummy;
+      chain_id;
     }
 
-let initial_with_vm_state ~vm_state =
+let initial_with_vm_state ~vm_state ~chain_id =
   let (Protocol
         {
           included_operations;
@@ -38,7 +38,7 @@ let initial_with_vm_state ~vm_state =
           vm_state = _;
           chain_id;
         }) =
-    initial
+    initial ~chain_id
   in
   Protocol
     {

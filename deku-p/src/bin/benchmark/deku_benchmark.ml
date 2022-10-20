@@ -83,7 +83,7 @@ module Zero_ops = struct
     average
 
   let run () =
-    let protocol = Protocol.initial in
+    let protocol = Protocol.initial ~chain_id:Deku_tezos.Address.dummy in
     let level = Level.zero in
     let payload = big_payload ~size:50000 ~level in
     perform ~runs:10 ~protocol ~level ~payload
