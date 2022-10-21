@@ -25,3 +25,8 @@ To develop and deploy a WASM smart contract to Deku-C, head over to the [Tuna co
 To develop DApps and client-side applications for Deku networks, see [the client library](https://github.com/marigold-dev/deku/tree/main/client) and the [the OpenAPI schema](https://github.com/marigold-dev/deku/blob/main/docs/api.json). You can fork the [Deku-C DApp template](https://github.com/marigold-dev/deku-c-dapp-template) to get started developing DApps Deku-C.
 
 To get started developing your own Deku network, you can fork the [Deku template](https://github.com/marigold-dev/deku-template).
+
+
+<!---
+Vive la france
+-->
