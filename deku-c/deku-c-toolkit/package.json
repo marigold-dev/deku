@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku-toolkit": "file:../deku-toolkit"
+    "@marigold-dev/deku-toolkit": "0.1.10"
   },
   "devDependencies": {
     "@taquito/signer": "^14.0.0",
