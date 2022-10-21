@@ -1,4 +1,4 @@
-{ self, inputs, ...}:
+{ self, inputs, ... }:
 
 {
   flake = {
@@ -7,9 +7,17 @@
     };
   };
 
-  perSystem = {
-    config, self', inputs', system, pkgs, dream2nix-lib, nodejs,...
-  }: let
+  perSystem =
+    { config
+    , self'
+    , inputs'
+    , system
+    , pkgs
+    , dream2nix-lib
+    , nodejs
+    , ...
+    }:
+    let
       npmPackages = import ./npm.nix {
         inherit system dream2nix-lib nodejs;
         inherit (inputs) nix-filter;
@@ -22,10 +30,12 @@
       };
 
       ligo = inputs.ligo.packages.${system}.ligoLight;
+
+      docker = pkgs.callPackage ./docker.nix { inherit deku; };
     in
 
     {
-      packages = { default = deku; inherit deku; };
+      packages = { default = deku; inherit deku docker; };
       apps = {
         node = {
           type = "app";
@@ -40,5 +50,5 @@
           program = "${deku}/bin/deku-generate-identity";
         };
       };
-  };
+    };
 }

@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as child_process from "child_process";
+import path = require("path");
 
 
 const DEBUG_LOGGING = Boolean(process.env.DEKU_VM_DEBUG_LOGGING);
@@ -18,6 +19,11 @@ let state: { [key: string]: any } = {}; // TODO: add a better type to JSON
  */
 const init_fifo = () => {
     const fifo_path = process.argv[2] ?? "/run/deku/pipe";
+
+    const dir = path.dirname(fifo_path);
+    child_process.execSync(`mkdir -p ${dir}`);
+    child_process.execSync(`test -e ${fifo_path}_read || mkfifo ${fifo_path}_read`);
+    child_process.execSync(`test -e ${fifo_path}_write || mkfifo ${fifo_path}_write`);
 
     log(`fifo path: ${fifo_path}`);
     log("opening read");

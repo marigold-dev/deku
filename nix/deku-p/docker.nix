@@ -9,14 +9,14 @@ let
     finalImageTag = "lts-slim";
     finalImageName = "node";
   };
-  script = pkgs.writeScriptBin "deku-node" ''
+  script = pkgs.writeScriptBin "deku-node"
+  ''
+    #!/usr/bin/env bash
     mkdir -p /var/lib/deku
     mkdir -p /run/deku
-    mkfifo /run/deku/pipe_read
-    mkfifo /run/deku/pipe_write
-    echo "hello world"
-    ls ${deku}/bin
-    sleep 1000000
+    test -e /run/deku/pipe_read || mkfifo /run/deku/pipe_read
+    test -e /run/deku/pipe_write || mkfifo /run/deku/pipe_write
+    ${deku}/bin/deku-node
   '';
 in
 pkgs.dockerTools.buildImage {
@@ -28,7 +28,7 @@ pkgs.dockerTools.buildImage {
   copyToRoot = pkgs.buildEnv {
     name = "image-root";
     pathsToLink = [ "/app" "/bin" "/var/lib/deku" ];
-    paths = [ script pkgs.bash ];
+    paths = [ script pkgs.bash pkgs.curl ];
   };
   config = {
     author = "marigold.dev";

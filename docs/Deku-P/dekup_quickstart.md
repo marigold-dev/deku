@@ -10,7 +10,7 @@ You'll learn how to:
 - Deploy a Deku-P network locally using Docker
 - Interact with the network via the `deku-cli`
 
-## Installing the Tool
+## Installing the Tools
 
 For this example you'll need the following tools installed:
 - [NodeJS](https://nodejs.org/en/download/) and npm.
@@ -81,30 +81,86 @@ During development we can use the `deku-cli` to test our VM.
 
 First we'll need to create an identity for the user that will run the transaction:
 ```bash
-deku-cli generate-identity ./wallet.json
+deku-cli generate-identity --output ./wallet.json
 ```
 
 Next, we can run a mock transaction against our vm. In this case we'll submit an
 `Increment` operation:
 
 ```bash
-deku-cli submit-transaction ./wallet.json '["Increment", 3]' 'node ./vm.js'
+deku-cli mock-transaction ./wallet.json '["Increment", 3]' 'node ./vm.js'
 ```
 
-### Packaging the VM
+### Packaging Your Sidechain
 
-To simplify running the chain locally, we'll package our VM with Docker.
+To simplify running the chain locally, we'll package our sidechain with Docker.
 
-Create a file called `Dockerfile` and add the following:
+First create a file called ./start.sh:
+```bash
+#!/usr/bin/env bash
+
+# A list of of the tz1 public key hashes for each validator in this network
+# (derived from their secret keys)
+export DEKU_VALIDATORS=tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw
+export DEKU_VALIDATOR_URIS=localhost:4440,localhost:4441,localhost:4442,localhost:4443
+
+export DEKU_TEZOS_RPC_NODE=http://flextesa:20000
+
+# The secret key of a Tezos with which to post updates to Tezos. In Flextesa networks
+# this wallet is pre-seeded with funds.
+export DEKU_TEZOS_SECRET=edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
+
+# The address of the bridge contract deployed to the deku-flextesa Tezos network.
+export DEKU_TEZOS_CONSENSUS_ADDRESS=KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY
+
+# During local development, it is sometimes useful to use smaller block sizes
+# and to artificially throttle the block rate so as to not consume all the CPU's resources.
+export DEKU_DEFAULT_BLOCK_SIZE=5000
+
+# Enable Debug logging for the NodeJS SDK
+export DEKU_VM_DEBUG_LOGGING=true
+
+# Wait for Flextesa to start
+sleep 5
+
+# Start the deku-node in the background with the path
+# to the pipe for communicating with the VM
+deku-node --named-pipe-path /run/deku/pipe &
+
+node ./vm.js /run/deku/pipe
+```
+
+Make ./start.sh executable:
+```
+chmod +x ./start.sh
+```
+
+Next, create a file called `Dockerfile` and add the following:
 ```dockerfile
+# We'll use the official nodejs
+# image as our base, but you should be able
+# to use any image.
 FROM node
+
+# Copy the deku-node and it's required system libraries
+# into your image.
+COPY --from=ghcr.io/marigold-dev/deku:latest /nix /nix/
+COPY --from=ghcr.io/marigold-dev/deku:latest /bin/deku-node /bin
+
+WORKDIR /app
+
+# Build your Deku VM
+COPY package.json /app
+RUN npm install
 COPY ./vm.js .
-CMD node ./vm.js
+COPY ./start.sh .
+CMD /app/start.sh
+
 ```
 
-Build and tag the image as `my-vm`:
+Build and tag the image as `my-sidechain`:
 ```
-docker build . -t my-vm
+docker build . -t my-sidechain
 ```
 
 ## Building a Network with Docker Compose
@@ -117,14 +173,6 @@ Copy this into a file called `docker-compose.yml`:
 
 ```yaml
 version: "3.6"
-volumes:
-  # Each Deku node communicates with its own instance of our VM
-  # via Unix named pipes. These volumes allow the docker processes
-  # to both access the same pipes.
-  node-0:
-  node-1:
-  node-2:
-  node-3:
 services:
   # We run a full Tezos sandbox network using Flextesa (https://tezos.gitlab.io/flextesa/).
   # The deku-flextesa image has already been pre-populated with a Deku bridge contract
@@ -132,129 +180,45 @@ services:
   flextesa:
     container_name: deku_flextesa
     # FIXME: publish this image somewhere
-    image: ghcr.io/marigold-dev/deku-flextesa:latest
+    image: ghcr.io/marigold-dev/deku-fextesa:latest
     command: kathmandubox start
     environment:
       - block_time=4
       - flextesa_node_cors_origin=*
     ports:
       - 127.0.0.1:20000:20000
-    expose:
-      - 20000/tcp
   deku-node-0:
     container_name: deku-node-0
-    image: ghcr.io/marigold-dev/deku:latest
-    volumes:
-      - node-0:/run/deku
-    ports:
-      # Deku exposes an RPC on port 8080 by default. We'll expose that
-      # port on a single node to allow our frontend to communicate with
-      # the network.
-      - 0.0.0.0:8080:8080
-    expose:
-      - 8080/tcp
-      # By default Deku gossip is exchanged via TCP on port 4440.
-      - 4440/tcp
+    image: my-sidechain
     environment:
       # A b58-encoded Ed25519 secret used to sign blocks
       - DEKU_SECRET=edsk4UWkJqpZrAm26qvJE8uY9ZFGFqQiFuBcDyEPASXeHxuD68WvvF
-      # A list of of the tz1 public key hashes for each validator in this network
-      # (derived from their secret keys)
-      - DEKU_VALIDATORS=tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw
-      - DEKU_VALIDATOR_URIS=deku-node-1:4440,deku-node-2:4440,deku-node-3:4440,deku-node-3:4440
-      - DEKU_TEZOS_RPC_NODE=http://flextesa:20000
-      # The secret key of a Tezos with which to post updates to Tezos. In Flextesa networks
-      # this wallet is pre-seeded with funds.
-      - DEKU_TEZOS_SECRET=edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
-      # The address of the bridge contract deployed to the deku-flextesa Tezos network.
-      - DEKU_TEZOS_CONSENSUS_ADDRESS=KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY
-      - DEKU_API_ENABLE=true
-      # During local development, it is sometimes useful to use smaller block sizes
-      # and to artificially throttle the block rate so as to not consume all the CPU's resources.
-      - DEKU_DEFAULT_BLOCK_SIZE=1000
-      - DEKU_MINIMUM_BLOCK_LATENCY=0.5
-  deku-vm-0:
-    image: my-vm
-    container_name: deku-vm-0
-    environment:
-      - DEKU_VM_DEBUG_LOGGING=true
-    volumes:
-      # We connect our vm to the node via the docker volume 'node-0'.
-      - node-0:/run/deku
-  # The rest of the config is similar for each of the three other nodes.
+      - DEKU_PORT=4440
+      # We'll enable the API for a single node on port 8080
+      - DEKU_API_ENABLED=true
+      - DEKU_API_PORT=8080
+    network_mode: "host"
   deku-node-1:
     container_name: deku-node-1
-    image: ghcr.io/marigold-dev/deku:latest
-    volumes:
-      - node-1:/run/deku
-    expose:
-      - 4440/tcp 
+    image: my-sidechain
     environment:
-      # Node specific config
       - DEKU_SECRET=edsk2mbL2Z7bAmRnuYbmsRe8Yu9rgAq1h993SDxoZncmqyMHDECyBa
-      # Common config
-      - DEKU_VALIDATORS=tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw
-      - DEKU_VALIDATOR_URIS=deku-node-1:4440,deku-node-2:4440,deku-node-3:4440,deku-node-3:4440
-      - DEKU_TEZOS_RPC_NODE=http://flextesa:20000
-      - DEKU_TEZOS_SECRET=edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
-      - DEKU_TEZOS_CONSENSUS_ADDRESS=KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY
-      - DEKU_API_ENABLE=true
-      - DEKU_DEFAULT_BLOCK_SIZE=1000
-      - DEKU_MINIMUM_BLOCK_LATENCY=0.5
-  deku-vm-1:
-    image: my-vm
-    container_name: deku-vm-1
-    volumes:
-      - node-1:/run/deku
+      - DEKU_PORT=4441
+    network_mode: "host" 
   deku-node-2:
     container_name: deku-node-2
-    image: ghcr.io/marigold-dev/deku:latest
-    volumes:
-      - node-2:/run/deku
-    expose:
-      - 4440/tcp 
+    image: my-sidechain
     environment:
-      # Node specific config
       - DEKU_SECRET=edsk3dx8ZfcaBXsuLsk8fawS1qxjHbZtEoEdpAwxhsjmYTQhoEUxFk
-      # Common config
-      - DEKU_VALIDATORS=tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw
-      - DEKU_VALIDATOR_URIS=deku-node-1:4440,deku-node-2:4440,deku-node-3:4440,deku-node-3:4440
-      - DEKU_TEZOS_RPC_NODE=http://flextesa:20000
-      - DEKU_TEZOS_SECRET=edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
-      - DEKU_TEZOS_CONSENSUS_ADDRESS=KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY
-      - DEKU_API_ENABLE=true
-      - DEKU_DEFAULT_BLOCK_SIZE=1000
-      - DEKU_MINIMUM_BLOCK_LATENCY=0.5
-  deku-vm-2:
-    image: my-vm
-    container_name: deku-vm-2
-    volumes:
-      - node-2:/run/deku   
+      - DEKU_PORT=4442
+    network_mode: "host"  
   deku-node-3:
     container_name: deku-node-3
-    image: ghcr.io/marigold-dev/deku:latest
-    volumes:
-      - node-2:/run/deku
-    expose:
-      - 4440/tcp 
+    image: my-sidechain
     environment:
-      # Node specific config
       - DEKU_SECRET=edsk3MwFfcGp5FsZgrX8FGiBiDutX2kfAuPzU6VdZpKYLyDRVPb879
-      # Common config
-      - DEKU_VALIDATORS=tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw
-      - DEKU_VALIDATOR_URIS=deku-node-1:4440,deku-node-2:4440,deku-node-3:4440,deku-node-3:4440
-      - DEKU_TEZOS_RPC_NODE=http://flextesa:20000
-      - DEKU_TEZOS_SECRET=edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq
-      - DEKU_TEZOS_CONSENSUS_ADDRESS=KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY
-      - DEKU_API_ENABLE=true
-      - DEKU_DEFAULT_BLOCK_SIZE=1000
-      - DEKU_MINIMUM_BLOCK_LATENCY=0.5
-  deku-vm-3:
-    image: my-vm
-    container_name: deku-vm-3
-    volumes:
-      - node-3:/run/deku   
-
+      - DEKU_PORT=4443
+    network_mode: "host"  
 ```
 
 You can now run your chain with `docker compose`:
@@ -262,17 +226,28 @@ You can now run your chain with `docker compose`:
 docker compose up
 ```
 
+:::caution
+Shutting down the chain quickly during development can cause the chain 
+to hard-fork and get stuck. Use `docker compose up --force-recreate` until
+[this is fixed](https://github.com/marigold-dev/deku/issues/911)
+:::
+
 ## Interacting with the Chain
 
-We can confirm the chain is working by submitting a transaction using
-the wallet we created earlier:
-
+We can submit transactions with deku-cli using the wallet we created earlier:
 ```bash
 deku-cli submit-transaction --api-uri http://localhost:8080 ./wallet.json '["Increment", 3]'
 ```
 
-For writing browser-based DApp frontends, check out the [frontend tutorial](./frontend_tutorial.md) that builds
-on this guide, or see our more detailed [examples](https://github.com/marigold-dev/deku/tree/main/examples).
+Once the operation is included, you can verify the result by querying the `counter` key of
+blockchain state via the REST API:
+```bash
+curl http://localhost:8080/api/v1/state/unix/counter
+```
+
+For more about writing browser-based DApp frontends, check out the [frontend tutorial](./frontend_tutorial.md) that builds
+on this guide, or our blockchain game [Decookies](https://github.com/marigold-dev/deku/tree/main/decookies)
+for an end-to-end example.
 
 ## Next Steps
 

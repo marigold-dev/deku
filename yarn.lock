@@ -1662,6 +1662,15 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
+"@marigold-dev/deku-toolkit@0.1.8":
+  version "0.1.8"
+  resolved "https://registry.yarnpkg.com/@marigold-dev/deku-toolkit/-/deku-toolkit-0.1.8.tgz#e7329318fb4068f8e7280636c2364f996d4c5205"
+  integrity sha512-h5ZBQ4eeJeKSMIKDxn0sItdhMaoYeKEQCV+dv7cf80D9OXSAdVvdzClbVs/tTWOqFYDmjgtJfi3sr+vle17hzA==
+  dependencies:
+    "@taquito/taquito" "^13.0.1"
+    blakejs "^1.2.1"
+    bs58check "^2.1.2"
+
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@mrmlnc/readdir-enhanced/-/readdir-enhanced-2.2.1.tgz#524af240d1a360527b730475ecfa1344aa540dde"
