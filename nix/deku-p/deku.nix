@@ -1,8 +1,17 @@
-{ pkgs, doCheck ? true, nodejs, npmPackages, static ? false, removeReferencesTo, nix-filter }:
+{ pkgs, doCheck ? true, nodejs, npmPackages, static ? false, nix-filter }:
 
-let inherit (pkgs) lib stdenv ocamlPackages; in
-with ocamlPackages; buildDunePackage rec {
-  pname = "deku";
+let
+  inherit (pkgs) lib stdenv ocamlPackages;
+  libpg_query = pkgs.libpg_query.overrideAttrs (s: {
+    dontDisableStatic = static;
+
+    nativeBuildInputs = s.nativeBuildInputs ++ [ pkgs.musl ];
+  });
+in
+
+
+with ocamlPackages; stdenv.mkDerivation rec {
+  name = "deku";
 
   version = "0.0.0-dev";
 
@@ -10,11 +19,11 @@ with ocamlPackages; buildDunePackage rec {
     root = ../..;
     include = [
       "deku.opam"
-      "deku-p/src"
+      "dune"
       "dune-project"
+      "deku-p/src"
     ];
   };
-
 
   # This is the same as standard dune build but with static support
   buildPhase = ''
@@ -22,13 +31,36 @@ with ocamlPackages; buildDunePackage rec {
     echo $NODE_PATH
     runHook preBuild
     echo "running ${if static then "static" else "release"} build"
-    dune build -p ${pname} --profile=${if static then "static" else "release"}
+    dune build --profile=${if static then "static" else "release"} ./deku-p/src/cli/deku_cli.exe
+    # dune build --profile=${if static then "static" else "release"} ./deku-p/src/core/bin/node/deku_node.exe
+    # dune build --profile=${if static then "static" else "release"} ./deku-p/src/core/bin/benchmark/deku_benchmark.exe
+    # dune build --profile=${if static then "static" else "release"} ./deku-p/src/generate_identity/deku_generate_identity.exe
+    # dune build --profile=${if static then "static" else "release"} ./deku-p/src/helper/deku_helper.exe
+    # dune build --profile=${if static then "static" else "release"} ./deku-p/src/vm_protocol_tester/deku_vm_protocol_tester.exe
     runHook postBuild
   '';
 
-  nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages;
+  installPhase = ''
+    runHook preInstall
+    mkdir -p $out/bin
+    cp _build/default/deku-p/src/cli/deku_cli.exe $out/bin/deku-cli
+    # cp _build/default/deku-p/src/core/bin/node/deku_node.exe $out/bin/deku-node
+    # cp _build/default/deku-p/src/core/bin/benchmark/deku_benchmark.exe $out/bin/deku-benchmark
+    # cp _build/default/deku-p/src/generate_identity/deku_generate_identity.exe $out/bin/deku-generate-identity
+    # cp _build/default/deku-p/src/helper/deku_helper.exe $out/bin/deku-helper
+    # cp _build/default/deku-p/src/vm_protocol_tester/deku_vm_protocol_tester.exe $out/bin/deku-vm-protocol-tester
+    runHook postInstall
+  '';
 
-  propagatedBuildInputs = [
+  checkPhase = ''
+    runHook preInstall
+    dune build --profile=${if static then "static" else "release"} -p ${name} @runtest
+    runHook postInstall
+  '';
+
+  nativeBuildInputs = [ nodejs dune ocaml findlib ] ++ npmPackages;
+
+  buildInputs = [
     tezos-micheline
     ppx_deriving
     ppx_yojson_conv
@@ -57,25 +89,6 @@ with ocamlPackages; buildDunePackage rec {
   ++ checkInputs;
 
   checkInputs = [ alcotest ];
-
-  # Remove every directory which could have links to other store paths.
-  # This makes the result much smaller
-  isLibrary = false;
-  postFixup = ''
-    rm -rf $out/lib $out/share/doc
-    remove-references-to \
-      -t ${ocamlPackages.ocaml} \
-      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
-  '' + (if static then ''
-    # If we're building statically linked binaries everything should be possible to remove
-    remove-references-to \
-      -t ${pkgs.gmp} \
-      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
-    remove-references-to \
-      -t ${pkgs.libffi} \
-      $out/bin/{deku-benchmark,deku-generate-identity,deku-helper,deku-node}
-  '' else
-    "");
 
   meta.mainProgram = "deku-node";
 }
