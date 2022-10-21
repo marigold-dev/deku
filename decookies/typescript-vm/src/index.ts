@@ -24,13 +24,13 @@ const transition = (tx: transaction) => {
     const source = tx.source;
     const op: string = tx.operation;
     const operation: operations = JSON.parse(op, parseReviver);
-    const sourceValue = JSON.parse(get(source));
+    const sourceValue = JSON.parse(get(source), parseReviver);
     let cookieBaker: cookieBaker;
     if (sourceValue === undefined || sourceValue === null) {
         cookieBaker = createEmptyCookieBaker();
     }
     else {
-        cookieBaker = JSON.parse(sourceValue, parseReviver)
+        cookieBaker = sourceValue;
         cookieBaker = initCookieBaker(cookieBaker);
     }
     if (operation.type === operationType.mint) {
