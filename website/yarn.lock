@@ -3231,8 +3231,8 @@
     npmlog "^6.0.2"
     write-file-atomic "^4.0.1"
 
-"@marigold-dev/deku-toolkit@file:../client":
-  version "0.1.6"
+"@marigold-dev/deku-toolkit@file:../deku-p/deku-toolkit":
+  version "0.1.9"
   dependencies:
     "@taquito/taquito" "^13.0.1"
     blakejs "^1.2.1"
