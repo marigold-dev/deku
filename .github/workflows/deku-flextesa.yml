@@ -1,11 +1,11 @@
-name: Publish deku-fextesa docker image  
+name: Publish deku-flextesa docker image  
 
 on:
   push:
     branches:
       - "main"
     paths:
-      - "deku-fextesa/**"
+      - "deku-flextesa/**"
   workflow_dispatch:
 
 jobs:
@@ -25,15 +25,15 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push deku-fextesa
+      - name: Build and push deku-flextesa
         id: docker_build_deku_flextesa
         uses: docker/build-push-action@v2
         with:
-          context: ./deku-fextesa
+          context: ./deku-flextesa
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/marigold-dev/deku-fextesa:${{ github.sha }}
-            ghcr.io/marigold-dev/deku-fextesa:latest
+            ghcr.io/marigold-dev/deku-flextesa:${{ github.sha }}
+            ghcr.io/marigold-dev/deku-flextesa:latest
