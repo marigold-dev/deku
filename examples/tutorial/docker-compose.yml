@@ -14,7 +14,7 @@ services:
   flextesa:
     container_name: deku_flextesa
     # FIXME: publish this image somewhere
-    image: deku_with_felipe
+    image: ghcr.io/marigold-dev/deku-fextesa:latest
     command: kathmandubox start
     environment:
       - block_time=4
