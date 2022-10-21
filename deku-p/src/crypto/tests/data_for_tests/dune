@@ -1,5 +1,5 @@
-(library
- (name tezos_crypto_data ))
+; (library
+;  (name data))
 
 ; Use this if you want to regenerate the data in Tezos
 ; (executable
@@ -7,4 +7,3 @@
 ;  (libraries tezos_crypto)
 ;  (preprocess
 ;   (pps ppx_deriving_yojson)))
-
