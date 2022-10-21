@@ -7,7 +7,7 @@
 let
   outputs = (dream2nix-lib.makeOutputs {
     source = nix-filter.lib.filter {
-      root = ../../deku-p/src/tezos_interop;
+      root = ../../deku-p/src/core/tezos_interop;
       include = [ "package-lock.json" "package.json" "tezos_js_bridge.js" "webpack.config.json" ];
     };
 
