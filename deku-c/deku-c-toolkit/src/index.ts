@@ -21,6 +21,37 @@ const createOperation = async (ligoRpc, { kind, code, initialStorage }) => {
     }
 }
 
+
+const parseContractState = json => {
+    const type = json[0];
+    switch (type) {
+        case "Int":
+            const value = json[1];
+            return Number.parseInt(value);
+        case "String": {
+            const value = json[1];
+            return value;
+        }
+        case "Map": {
+            const mapValues = json[1];
+            return mapValues.reduce((acc, entry) => {
+                const key = parseContractState(entry[0]);
+                const value = parseContractState(entry[0]);
+                return { [key]: value, ...acc }
+            }, {});
+        }
+        case "Pair": {
+            const first = json[1];
+            const second = json[2];
+            return [parseContractState(first), parseContractState(second)];
+        }
+        default:
+            console.error(`type ${type} is not yet implemented`);
+            return null;
+    }
+}
+
+
 export class Contract {
     private deku: DekuToolkit;
     private address: string;
@@ -37,9 +68,31 @@ export class Contract {
         return "hash of the invoke operation"
     }
 
-    async getState(): Promise<any> {
-        console.log("contract state");
-        return "the state of the contract, any because I don't want to parse it."
+    /**
+     * Returns the state of the contract
+     * Parses it to a readable javascript object
+     * @returns javascript object
+     */
+    async getState(): Promise<any | null> {
+        const state = await this.deku.getVmState();
+        if (state === null) return null;
+        const string = state[this.address];
+        // FIXME: parse the string to json then extract the field storage, then creates a Buffer and convert it to string before continuing
+        const slashRemoved = string.replaceAll("\\\"", '"');
+        const firstSlashRemoved = slashRemoved.slice(1);
+        const lastSlashRemoved = slashRemoved.slice(0, firstSlashRemoved - 1);
+        const json = JSON.parse(lastSlashRemoved);
+        return json;
+    }
+
+    /**
+     * Returns the state of the contract as a string
+     * @returns a string representing the state of the contract
+     */
+    async getRawState(): Promise<string | null> {
+        const state = await this.deku.getVmState();
+        if (state === null) return null;
+        return state[this.address];
     }
 
     async onNewState(): Promise<void> {
