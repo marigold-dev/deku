@@ -24,7 +24,7 @@ module Content = struct
   type content =
     | Content_block of Block.t
     | Content_vote of { level : Level.t; vote : Verified_signature.t }
-    | Content_operation of Operation.Signed.t
+    | Content_operation of Operation.t
     | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
   and t = content [@@deriving show, yojson]
@@ -42,9 +42,7 @@ module Content = struct
         let (Block { level; _ }) = block in
         level
     | Content_vote { level; vote = _ } -> level
-    | Content_operation operation ->
-        let (Signed_operation { initial; _ }) = operation in
-        Operation.Initial.last_includable_level initial
+    | Content_operation operation -> Operation.last_includable_level operation
 end
 
 module Network = struct

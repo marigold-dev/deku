@@ -48,7 +48,7 @@ let initial_with_vm_state ~vm_state =
 
 let apply_operation ~current_level protocol operation :
     (t * Receipt.t option * exn option) option =
-  let open Operation.Initial in
+  let open Operation in
   let (Protocol
         {
           included_operations;
@@ -59,13 +59,14 @@ let apply_operation ~current_level protocol operation :
         }) =
     protocol
   in
-  let (Initial_operation { hash; nonce = _; level; operation = content }) =
+  let (Operation
+        { key = _; signature = _; hash; level; nonce = _; source; content }) =
     operation
   in
   match
     (* TODO: check code through different lane *)
     (not (Included_operation_set.mem operation included_operations))
-    && is_in_includable_window ~current_level ~operation_level:level
+    && Operation.is_in_includable_window ~current_level ~operation_level:level
   with
   | true ->
       (* TODO: check that incorrect operations are removed from the pool *)
@@ -74,14 +75,15 @@ let apply_operation ~current_level protocol operation :
       in
       let ledger, receipt, vm_state, error =
         match content with
-        | Operation_ticket_transfer { sender; receiver; ticket_id; amount } -> (
+        | Operation_ticket_transfer { receiver; ticket_id; amount } -> (
+            let sender = source in
             let receipt = Ticket_transfer_receipt { operation = hash } in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
             | Ok ledger -> (ledger, Some receipt, vm_state, None)
             | Error error -> (ledger, Some receipt, vm_state, Some error))
-        | Operation_vm_transaction { sender; operation; tickets } -> (
+        | Operation_vm_transaction { operation; tickets } -> (
             let tickets =
               List.map
                 (fun (ticket, amount) ->
@@ -91,7 +93,7 @@ let apply_operation ~current_level protocol operation :
             let receipt = Vm_transaction_receipt { operation = hash } in
             match
               External_vm_client.apply_vm_operation_exn ~state:vm_state
-                ~source:(Address.to_key_hash sender)
+                ~source:(Address.to_key_hash source)
                 ~tickets
                 (Some (Operation_hash.to_blake2b hash, operation))
             with
@@ -101,14 +103,15 @@ let apply_operation ~current_level protocol operation :
                   Some receipt,
                   vm_state,
                   Some (External_vm_client.Vm_execution_error error) ))
-        | Operation_noop { sender } ->
+        | Operation_noop ->
             let vm_state =
               External_vm_client.apply_vm_operation_exn ~state:vm_state
-                ~source:(Address.to_key_hash sender)
+                ~source:(Address.to_key_hash source)
                 ~tickets:[] None
             in
             (ledger, None, vm_state, None)
-        | Operation_withdraw { sender; owner; amount; ticket_id } -> (
+        | Operation_withdraw { owner; amount; ticket_id } -> (
+            let sender = source in
             match
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id
                 ledger
@@ -202,10 +205,8 @@ let apply_tezos_operations tezos_operations protocol =
 
 let parse_operation operation =
   match
-    let (Signed_operation { key = _; signature = _; initial }) =
-      Data_encoding.Binary.of_string_exn Operation.Signed.encoding operation
-    in
-    initial
+    let json = Yojson.Safe.from_string operation in
+    Operation.t_of_yojson json
   with
   | operation -> Some operation
   | exception _exn -> (* TODO: print exception *) None

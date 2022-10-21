@@ -297,7 +297,7 @@ module Helpers_operation_message = struct
   let meth = `POST
 
   let input_from_request request =
-    Handler_utils.input_of_body ~of_yojson:Operation.Signed.t_of_yojson request
+    Handler_utils.input_of_body ~of_yojson:Operation.t_of_yojson request
 
   let handle ~node:_ ~indexer:_ ~constants:_ operation =
     let content = Message.Content.operation operation in
@@ -360,7 +360,7 @@ end
 
 (* Parse the operation and send it to the chain *)
 module Post_operation = struct
-  type input = Operation.Signed.t [@@deriving of_yojson]
+  type input = Operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
   let meth = `POST
@@ -383,10 +383,7 @@ module Post_operation = struct
     ( Network_protocol.Client.connect ~identity ~net ~host ~port
     @@ fun connection -> Network_protocol.Connection.write connection message );
 
-    let (Signed_operation
-          { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
-      operation
-    in
+    let (Operation.Operation { hash = operation_hash; _ }) = operation in
     { hash = operation_hash } |> yojson_of_response |> Result.ok
 
   let path ~identity ~env ~node ~indexer ~constants =

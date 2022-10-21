@@ -24,16 +24,13 @@ let ticket_id =
 
 let test_serde_transaction () =
   let transaction =
-    Operation.Signed.ticket_transfer ~identity:alice ~level:Level.zero
+    Operation.ticket_transfer ~identity:alice ~level:Level.zero
       ~nonce:(Nonce.of_n N.one)
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
       ~ticket_id ~amount:Amount.zero
   in
   let transaction_str () =
-    transaction
-    |> Data_encoding.Binary.to_string_exn Operation.Signed.encoding
-    |> Data_encoding.Binary.of_string_exn Operation.Signed.encoding
-    |> fun _ -> ()
+    transaction |> Operation.yojson_of_t |> Operation.t_of_yojson |> fun _ -> ()
   in
   Alcotest.(check unit) "to and from yojson" () (transaction_str ())
 

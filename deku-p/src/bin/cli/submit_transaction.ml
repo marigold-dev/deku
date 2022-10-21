@@ -20,12 +20,8 @@ let main { wallet; api_uri; content } =
   let identity = Identity.make secret in
   let nonce = Utils.make_rnd_nonce () in
   let level = Api.current_level ~sw ~env ~api_uri in
-  let operation =
-    Operation.Signed.vm_transaction ~level ~nonce ~content ~identity
-  in
-  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
-    operation
-  in
+  let operation = Operation.vm_transaction ~level ~nonce ~content ~identity in
+  let (Operation.Operation { hash; _ }) = operation in
   let () = Api.submit_operation ~sw ~env ~operation ~api_uri in
   print_endline (Operation_hash.to_b58 hash);
   exit 0

@@ -30,16 +30,14 @@ let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
   let nonce = Nonce.of_n (N.of_z (Z.of_int nonce) |> Option.get) in
   let amount = Amount.of_n (N.of_z (Z.of_int amount) |> Option.get) in
   let operation =
-    Operation.Signed.ticket_transfer ~identity:alice ~level ~nonce
+    Operation.ticket_transfer ~identity:alice ~level ~nonce
       ~receiver:(Address.of_key_hash (Identity.key_hash bob))
       ~ticket_id ~amount
   in
   let operation_str =
-    Data_encoding.Binary.to_string_exn Operation.Signed.encoding operation
+    operation |> Operation.yojson_of_t |> Yojson.Safe.to_string
   in
-  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
-    operation
-  in
+  let (Operation.Operation { hash; _ }) = operation in
   (operation, operation_str, hash)
 
 (* The parallel function given to the Protocol.apply *)
@@ -47,20 +45,13 @@ let parallel = List.filter_map
 
 let assert_all_were_applied_with_receipts ~operations ~protocol ~receipts =
   let (Protocol.Protocol { included_operations; _ }) = protocol in
-  let operations =
-    List.map
-      (fun (Operation.Signed.Signed_operation { initial; _ }) -> initial)
-      operations
-  in
   let all_ops_are_included =
     operations
     |> List.for_all (fun op ->
            Included_operation_set.mem op included_operations)
   in
   let op_hashes =
-    List.map
-      (fun (Operation.Initial.Initial_operation { hash; _ }) -> hash)
-      operations
+    List.map (fun (Operation.Operation { hash; _ }) -> hash) operations
     |> List.sort Operation_hash.compare
   in
   let[@warning "-8"] op_hashes_from_receipts =
@@ -274,7 +265,6 @@ let test_receipt_implied_included_operations () =
       Protocol.initial
   in
   let (Protocol.Protocol { included_operations; _ }) = protocol in
-  let (Signed_operation { initial = op; _ }) = op in
   let is_included = Included_operation_set.mem op included_operations in
   Alcotest.(check bool) "the operation is included" true is_included;
   Alcotest.(check bool) "there only one receipt" true (List.length receipts = 1)
@@ -294,7 +284,6 @@ let test_included_operation_clean_after_window () =
       ~payload:[] ~tezos_operations:[] protocol
   in
   let (Protocol.Protocol { included_operations; _ }) = protocol in
-  let (Signed_operation { initial = op; _ }) = op in
   let is_included = Included_operation_set.mem op included_operations in
   Alcotest.(check bool) "included operations should be empty" false is_included
 

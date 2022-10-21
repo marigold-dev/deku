@@ -19,24 +19,22 @@ let main ticket_id tezos_owner secret verbose host =
   let nonce = Nonce.of_n (Obj.magic level) in
   let url = Uri.with_path host "api/v1/operations" in
   let transaction =
-    Deku_protocol.Operation.Signed.withdraw ~identity ~level ~nonce ~tezos_owner
+    Deku_protocol.Operation.withdraw ~identity ~level ~nonce ~tezos_owner
       ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
-  let json = Deku_protocol.Operation.Signed.yojson_of_t transaction in
+  let json = Deku_protocol.Operation.yojson_of_t transaction in
   let () =
     let response = Net.post ~sw ~env json url in
     let status = Net.code_of_response response in
     Printf.eprintf "%i\n%!" status
   in
-  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
-    transaction
-  in
+  let (Operation.Operation { hash; _ }) = transaction in
   let hash = Operation_hash.yojson_of_t hash |> Yojson.Safe.to_string in
   Printf.printf "operation.hash: %s\n%!" hash;
   if verbose then (
     Printf.eprintf "operation code: %s\n%!"
-      (Operation.Signed.yojson_of_t transaction |> Yojson.Safe.to_string);
+      (Operation.yojson_of_t transaction |> Yojson.Safe.to_string);
     prerr_endline "operation broadcasted")
 (*  we can't test that the withdraws succeeded at this point *)
 

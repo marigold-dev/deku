@@ -1,5 +1,5 @@
 open Deku_concepts
-open Operation.Initial
+open Operation
 
 (* TODO: idea here is that because of that we don't need to hold the
     full operation on the protocol only it's hash temporarily*)
@@ -9,11 +9,11 @@ and t = included_operation_set [@@deriving yojson]
 let empty = Operation_hash.Map.empty
 
 let add operation t =
-  let (Initial_operation { hash; level; _ }) = operation in
+  let (Operation { hash; level; _ }) = operation in
   Operation_hash.Map.add hash level t
 
 let mem operation t =
-  let (Initial_operation { hash; _ }) = operation in
+  let (Operation { hash; _ }) = operation in
   Operation_hash.Map.mem hash t
 
 let drop ~current_level t =

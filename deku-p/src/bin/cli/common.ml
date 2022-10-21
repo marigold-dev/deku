@@ -44,9 +44,7 @@ module Api = struct
 
   let submit_operation ~sw ~env ~operation ~api_uri =
     let node = Uri.with_path api_uri "/api/v1/operations" in
-    let json =
-      Operation.Signed.yojson_of_t operation |> Yojson.Safe.to_string
-    in
+    let json = Operation.yojson_of_t operation |> Yojson.Safe.to_string in
     let body = Piaf.Body.of_string json in
     let post_result = Piaf.Client.Oneshot.post ~body ~sw env node in
     match post_result with

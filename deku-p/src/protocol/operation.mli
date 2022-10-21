@@ -4,83 +4,63 @@ open Deku_concepts
 exception Invalid_signature
 exception Invalid_source
 
-type operation = private
+type operation_content = private
   | Operation_ticket_transfer of {
-      sender : Address.t;
       receiver : Address.t;
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
   | Operation_vm_transaction of {
-      sender : Address.t;
       operation : string;
       tickets : (Ticket_id.t * int64) list;
     }
+  | Operation_noop
   | Operation_withdraw of {
-      sender : Address.t;
       owner : Deku_tezos.Address.t;
-      ticket_id : Ticket_id.t;
       amount : Amount.t;
+      ticket_id : Ticket_id.t;
     }
-  | Operation_noop of { sender : Address.t }
 
-type t = operation [@@deriving show]
+type operation = private
+  | Operation of {
+      key : Key.t;
+      signature : Signature.t;
+      hash : Operation_hash.t;
+      level : Level.t;
+      nonce : Nonce.t;
+      source : Address.t;
+      content : operation_content;
+    }
 
-module Initial : sig
-  type initial_operation = private
-    | Initial_operation of {
-        hash : Operation_hash.t;
-        nonce : Nonce.t;
-        level : Level.t;
-        operation : operation;
-      }
+type t = operation [@@deriving eq, ord, yojson, show]
 
-  type t = initial_operation [@@deriving show]
+val ticket_transfer :
+  identity:Identity.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  receiver:Address.t ->
+  ticket_id:Ticket_id.t ->
+  amount:Amount.t ->
+  operation
 
-  (* helpers *)
-  val last_includable_level : initial_operation -> Level.t
+val noop : identity:Identity.t -> level:Level.t -> nonce:Nonce.t -> operation
+val last_includable_level : operation -> Level.t
 
-  val is_in_includable_window :
-    current_level:Level.t -> operation_level:Level.t -> bool
-end
+val is_in_includable_window :
+  current_level:Level.t -> operation_level:Level.t -> bool
 
-module Signed : sig
-  type signed_operation = private
-    | Signed_operation of {
-        key : Key.t;
-        signature : Signature.t;
-        initial : Initial.t;
-      }
+val withdraw :
+  identity:Identity.t ->
+  level:Level.t ->
+  nonce:Nonce.t ->
+  tezos_owner:Deku_tezos.Address.t ->
+  ticket_id:Ticket_id.t ->
+  amount:Amount.t ->
+  operation
 
-  type t = signed_operation [@@deriving show, yojson]
-
-  val encoding : signed_operation Data_encoding.t
-
-  val ticket_transfer :
-    identity:Identity.t ->
-    nonce:Nonce.t ->
-    level:Level.t ->
-    receiver:Address.t ->
-    ticket_id:Ticket_id.t ->
-    amount:Amount.t ->
-    signed_operation
-
-  val withdraw :
-    identity:Identity.t ->
-    nonce:Nonce.t ->
-    level:Level.t ->
-    tezos_owner:Deku_tezos.Address.t ->
-    ticket_id:Ticket_id.t ->
-    amount:Amount.t ->
-    signed_operation
-
-  val vm_transaction :
-    nonce:Nonce.t ->
-    level:Level.t ->
-    content:string ->
-    identity:Identity.t ->
-    signed_operation
-
-  val noop :
-    identity:Identity.t -> nonce:Nonce.t -> level:Level.t -> signed_operation
-end
+val vm_transaction :
+  level:Level.t ->
+  nonce:Nonce.t ->
+  content:string ->
+  identity:Identity.t ->
+  operation

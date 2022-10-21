@@ -18,12 +18,9 @@ val initial : protocol
 val initial_with_vm_state : vm_state:External_vm_protocol.State.t -> protocol
 
 val prepare :
-  parallel:
-    ((string -> Operation.Initial.t option) ->
-    string list ->
-    Operation.Initial.t list) ->
+  parallel:((string -> Operation.t option) -> string list -> Operation.t list) ->
   payload:string list ->
-  Operation.Initial.t list
+  Operation.t list
 
 val find_withdraw_proof :
   operation_hash:Operation_hash.t ->
@@ -34,7 +31,7 @@ val find_withdraw_proof :
 
 val apply :
   current_level:Level.t ->
-  payload:Operation.Initial.t list ->
+  payload:Operation.t list ->
   tezos_operations:Tezos_operation.t list ->
   protocol ->
   protocol * Receipt.t list * exn list

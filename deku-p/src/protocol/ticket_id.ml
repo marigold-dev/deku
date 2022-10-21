@@ -4,13 +4,6 @@ type ticket_id =
 
 and t = ticket_id [@@deriving eq, ord]
 
-let encoding =
-  let open Data_encoding in
-  conv
-    (fun (Ticket_id { ticketer; data }) -> (ticketer, data))
-    (fun (ticketer, data) -> Ticket_id { ticketer; data })
-    (tup2 Deku_tezos.Contract_hash.encoding bytes)
-
 let ticket_id_of_yojson json =
   match json with
   | `List
