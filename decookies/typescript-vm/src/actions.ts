@@ -45,6 +45,6 @@ export function isTransfer(operation: actions | transfer | eat): operation is tr
     return ((operation as transfer).to !== undefined && (operation as transfer).amount !== undefined);
 }
 
-export function isBurn(operation: actions | transfer | eat): operation is eat {
+export function isEaten(operation: actions | transfer | eat): operation is eat {
     return (operation as eat).amount !== undefined;
 }

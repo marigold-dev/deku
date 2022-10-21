@@ -12,7 +12,7 @@ import { OperationHash as OperationHashType } from "./core/operation-hash";
 import TicketID from './core/ticket-id';
 import { endpoints, get, makeEndpoints, post } from "./network";
 import { hashOperation } from './utils/hash';
-import JSONValue from './utils/json';
+import JSONValue, { JSONType } from './utils/json';
 import { DekuSigner } from './utils/signers';
 import urlJoin from "./utils/urlJoin";
 export type Proof = import('./core/proof').Proof;
@@ -228,6 +228,11 @@ export class DekuToolkit {
     async getProof(operation_hash: string): Promise<Proof> {
         const proof = await get(this.endpoints["GET_PROOF"](operation_hash));
         return proof
+    }
+
+    async getVmState(): Promise<JSONType> {
+        const state = await get(this.endpoints["GET_VM_STATE"]);
+        return state
     }
 
     /**
