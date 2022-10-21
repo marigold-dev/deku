@@ -12,7 +12,10 @@
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
+    "build:deku-c-toolkit": "yarn --cwd deku-c/deku-c-toolkit build",
+    "build:example-deku-c": "yarn tsc deku-c/deku-c-toolkit/examples/index.ts",
     "start:deku-toolkit:react": "yarn --cwd deku-p/deku-toolkit/examples/react start",
-    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test"
+    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test",
+    "run:example-deku-c": "node deku-c/deku-c-toolkit/examples/index.js"
   }
 }
