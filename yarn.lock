@@ -1631,7 +1631,6 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-<<<<<<< HEAD
 "@marigold-dev/deku-toolkit@0.1.9":
   version "0.1.9"
   resolved "https://registry.yarnpkg.com/@marigold-dev/deku-toolkit/-/deku-toolkit-0.1.9.tgz#dc2017e1cdd15cad19718056960b410c59c09f45"
@@ -1643,12 +1642,6 @@
 
 "@marigold-dev/deku-toolkit@file:deku-p/deku-toolkit":
   version "0.1.10"
-=======
-"@marigold-dev/deku-toolkit@0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@marigold-dev/deku-toolkit/-/deku-toolkit-0.1.8.tgz#e7329318fb4068f8e7280636c2364f996d4c5205"
-  integrity sha512-h5ZBQ4eeJeKSMIKDxn0sItdhMaoYeKEQCV+dv7cf80D9OXSAdVvdzClbVs/tTWOqFYDmjgtJfi3sr+vle17hzA==
->>>>>>> 515dc1f7 (settings/multi-repo: add some scripts)
   dependencies:
     "@taquito/taquito" "^13.0.1"
     blakejs "^1.2.1"

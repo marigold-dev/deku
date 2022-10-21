@@ -22,7 +22,7 @@ const dekuSigner = fromMemorySigner(
 const deku = new DekuToolkit({ dekuRpc: "http://0.0.0.0:8080", dekuSigner })
   .setTezosRpc("http://localhost:20000");
 
-const App: () => JSX.Element = () => {
+const App = (): JSX.Element => {
   const [level, setLevel] = useState(0);
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
