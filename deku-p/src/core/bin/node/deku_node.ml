@@ -86,7 +86,21 @@ let start_api ~identity ~env ~sw ~node ~indexer ~port ~tezos_consensus_address
       in
       ()
 
-let main params =
+let setup_log ?style_renderer ?log_level () =
+  Fmt_tty.setup_std_outputs ?style_renderer ();
+  Logs.set_level log_level;
+  Logs.set_reporter (Logs_fmt.reporter ());
+  (* disable all non-deku logs *)
+  List.iter
+    (fun src ->
+      let src_name = Logs.Src.name src in
+      if
+        (not (String.starts_with ~prefix:"deku" src_name))
+        && not (String.equal src_name "application")
+      then Logs.Src.set_level src (Some Logs.Error))
+    (Logs.Src.list ())
+
+let main params style_renderer log_level =
   let {
     domains;
     secret;
@@ -107,6 +121,7 @@ let main params =
   } =
     params
   in
+  setup_log ?log_level ();
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
@@ -166,23 +181,7 @@ let main params =
   in
   Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
 
-let setup_log ?style_renderer ?level () =
-  Fmt_tty.setup_std_outputs ?style_renderer ();
-  Logs.set_level level;
-  Logs.set_reporter (Logs_fmt.reporter ());
-  (* disable all non-deku logs *)
-  List.iter
-    (fun src ->
-      let src_name = Logs.Src.name src in
-      if
-        (not (String.starts_with ~prefix:"deku" src_name))
-        && not (String.equal src_name "application")
-      then Logs.Src.set_level src (Some Logs.Error))
-    (Logs.Src.list ())
-
 let main () =
-  setup_log ~level:Logs.Debug ();
-
   Sys.set_signal Sys.sigpipe
     (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"));
 
@@ -192,7 +191,17 @@ let main () =
 
   Logs.info (fun m -> m "Starting node");
   let info = Cmdliner.Cmd.info Sys.argv.(0) in
-  let term = Cmdliner.Term.(const main $ params_cmdliner_term ()) in
+  let term =
+    Cmdliner.Term.(
+      const main $ params_cmdliner_term ()
+      $ Fmt_cli.style_renderer ~env:(Cmdliner.Cmd.Env.info "DEKU_LOG_COLORS") ()
+      $ Logs_cli.level
+          ~env:
+            (Cmdliner.Cmd.Env.info
+               "DEKU_LOG_VERBOSITY"
+               (* TODO: consolidate and document environment options *))
+          ())
+  in
   let cmd = Cmdliner.Cmd.v info term in
   exit (Cmdliner.Cmd.eval ~catch:true cmd)
 

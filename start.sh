@@ -19,6 +19,7 @@ export DEKU_TEZOS_CONSENSUS_ADDRESS="KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY"
 export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
 export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
+export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
 
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
