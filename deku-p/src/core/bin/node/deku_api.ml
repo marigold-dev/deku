@@ -142,6 +142,7 @@ let make_routes ~identity ~env node indexer constants =
         Get_balance.path ~node ~indexer ~constants;
         Get_proof.path ~node ~indexer ~constants;
         Get_vm_state.path ~node ~indexer ~constants;
+        Get_vm_state_key.path ~node ~indexer ~constants;
         (* ws_block_monitor; *)
       ]
   in

@@ -413,3 +413,22 @@ module Get_vm_state = struct
       (s "api" / s "v1" / s "state" / s "unix" /? nil)
       @--> check_method meth handler)
 end
+
+module Get_vm_state_key = struct
+  type response = string option [@@deriving yojson_of]
+
+  let meth = `GET
+
+  let handle ~node ~indexer:_ ~constants:_ key () =
+    let { chain; _ } = node in
+    let (Chain.Chain { protocol; _ }) = chain in
+    let (Protocol.Protocol { vm_state; _ }) = protocol in
+    External_vm_protocol.State.get key vm_state
+    |> yojson_of_response |> Result.ok
+
+  let path ~node ~indexer ~constants =
+    let handler key _request = handle ~node ~indexer ~constants key () in
+    Routes.(
+      (s "api" / s "v1" / s "state" / s "unix" / str /? nil) @--> fun str ->
+      check_method meth (handler str))
+end
