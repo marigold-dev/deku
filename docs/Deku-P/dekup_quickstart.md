@@ -15,7 +15,12 @@ You'll learn how to:
 For this example you'll need the following tools installed:
 - [NodeJS](https://nodejs.org/en/download/) and npm.
 - [Docker](https://docs.docker.com/engine/install/) and Docker Compose (ships with Docker in recent versions, check the [installation guide](https://docs.docker.com/compose/install/) for more info)
-- The `deku-cli` (see footnote[^1]).
+- The `deku-cli` (see footnote for OSX[^1]):
+  ```bash
+  wget https://github.com/marigold-dev/deku/releases/download/v0.1.0/deku-cli
+  chmod +x ./deku-cli
+  cp ./deku-cli /usr/bin
+  ```
 
 ## Our First VM
 
@@ -261,4 +266,4 @@ In the following articles, we'll deep dive Deku's architecture, operational char
 and deployment best practices. We'll also cover some tips and tricks for a smooth
 development experience when writing Deku-P applications.
 
-[^1]: For now `deku-cli` must be built from source (see the [README](https://github.com/marigold-dev/deku#building-from-source)).
+[^1]: If you're on OSX, for now `deku-cli` must be built from source (see the [README](https://github.com/marigold-dev/deku#building-from-source)).
