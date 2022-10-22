@@ -21,3 +21,8 @@ jobs:
         run: nix --log-format raw -L build '.#deku'
       - name: Build static
         run: nix --log-format raw -L build '.#deku-static'
+      - name: Upload static artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: deku-cli
+          path: ./result/bin/deku-cli
