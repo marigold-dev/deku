@@ -22,6 +22,8 @@
       flake-parts.follows = "flake-parts";
     };
     deploy-rs.url = "github:serokell/deploy-rs";
+
+    camlboy.url = "github:d4hines/CAMLBOY/nix-packaging";
   };
 
   outputs = {
@@ -33,6 +35,7 @@
     tezos,
     deploy-rs,
     ligo,
+    camlboy,
     ...
   }:
     flake-parts.lib.mkFlake {inherit self;} {
@@ -60,6 +63,7 @@
               extraOverlays = [
                 tezos.overlays.default
                 (import ./nix/overlay.nix)
+                (camlboy.overlays.default)
                 (final: prev: {
                   ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
                 })
