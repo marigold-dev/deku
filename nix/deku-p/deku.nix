@@ -10,11 +10,19 @@ with ocamlPackages; buildDunePackage rec {
     root = ../..;
     include = [
       "deku.opam"
+      "dune"
       "deku-p/src"
       "dune-project"
     ];
+    exclude =
+      # TODO: We haven't figured out static linking for libpg_query. Hence,
+      # right now we can't build the node when building staticaly
+      if static then [
+        "deku-p/src/core/bin/node"
+        "deku-p/src/core/indexer"
+      ] else [ ]
+    ;
   };
-
 
   # This is the same as standard dune build but with static support
   buildPhase = ''
@@ -27,6 +35,12 @@ with ocamlPackages; buildDunePackage rec {
   '';
 
   nativeBuildInputs = [ nodejs removeReferencesTo ] ++ npmPackages;
+
+  checkPhase = ''
+    runHook preInstall
+    dune build -p ${pname} --profile=${if static then "static" else "release"} @runtest
+    runHook postInstall
+  '';
 
   propagatedBuildInputs = [
     tezos-micheline
