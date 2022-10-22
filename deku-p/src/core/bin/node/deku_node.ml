@@ -121,7 +121,7 @@ let main params style_renderer log_level =
   } =
     params
   in
-  setup_log ?log_level ();
+  setup_log ?style_renderer ?log_level ();
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
