@@ -47,6 +47,23 @@
         "type": "github"
       }
     },
+    "all-cabal-json": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1665552503,
+        "narHash": "sha256-r14RmRSwzv5c+bWKUDaze6pXM7nOsiz1H8nvFHJvufc=",
+        "owner": "nix-community",
+        "repo": "all-cabal-json",
+        "rev": "d7c0434eebffb305071404edcf9d5cd99703878e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "hackage",
+        "repo": "all-cabal-json",
+        "type": "github"
+      }
+    },
     "crane": {
       "flake": false,
       "locked": {
@@ -86,11 +103,11 @@
     "devshell": {
       "flake": false,
       "locked": {
-        "lastModified": 1653917170,
-        "narHash": "sha256-FyxOnEE/V4PNEcMU62ikY4FfYPo349MOhMM97HS0XEo=",
+        "lastModified": 1663445644,
+        "narHash": "sha256-+xVlcK60x7VY1vRJbNUEAHi17ZuoQxAIH4S4iUFUGBA=",
         "owner": "numtide",
         "repo": "devshell",
-        "rev": "fc7a3e3adde9bbcab68af6d1e3c6eb738e296a92",
+        "rev": "e3dc3e21594fe07bdb24bdf1c8657acaa4cb8f66",
         "type": "github"
       },
       "original": {
@@ -102,6 +119,7 @@
     "dream2nix": {
       "inputs": {
         "alejandra": "alejandra",
+        "all-cabal-json": "all-cabal-json",
         "crane": "crane",
         "devshell": "devshell",
         "flake-utils-pre-commit": "flake-utils-pre-commit",
@@ -114,11 +132,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1664882193,
-        "narHash": "sha256-uiAYOxN/M4dpaB6ieY3xOvOH6XgHP9NVXDTzSRa3pMc=",
+        "lastModified": 1666385696,
+        "narHash": "sha256-+I4+Nc4Rg1jNjnI3IGxXMyl/bIY2SufoM7x4WWV1qoM=",
         "owner": "nix-community",
         "repo": "dream2nix",
-        "rev": "785b76894263fd76a0e69955e4cd990b7b735bdf",
+        "rev": "421c623275dd9a8684ab3bfd6d78b9a1bba16923",
         "type": "github"
       },
       "original": {
@@ -211,16 +229,14 @@
     },
     "flake-parts": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
+        "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
-        "lastModified": 1664385320,
-        "narHash": "sha256-uSCHb9RUqHRjTpI8OzyaUuHckFnnxwZqlXEuo+yUpYQ=",
+        "lastModified": 1665512413,
+        "narHash": "sha256-IeuXVWD+VkmdVdC3d2i7mdEWhNSEvc2GUdui09zAGpE=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "45298bd207b26e1bcd030a0bb075aa2da29f8e30",
+        "rev": "08ce9a42392cf8c7fdabf7c51069381ba5455dc7",
         "type": "github"
       },
       "original": {
@@ -328,11 +344,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1664954935,
-        "narHash": "sha256-Zvu/gq7Vn1rUKopB/cPBi246xlKJWl1nKBOBiDvjxkU=",
+        "lastModified": 1666385520,
+        "narHash": "sha256-8CxheRKzn6EsGPb1lEN5sEQTid9Mu7CCXv6l81rRf/k=",
         "owner": "ligolang",
         "repo": "ligo",
-        "rev": "75d22acc51fc3cd8b6d6633b940e9345e1792589",
+        "rev": "88f20b57b9ff67df84763e4cf9c25d776b0bccbd",
         "type": "gitlab"
       },
       "original": {
@@ -402,6 +418,24 @@
         "type": "github"
       }
     },
+    "nixpkgs-lib": {
+      "locked": {
+        "dir": "lib",
+        "lastModified": 1665349835,
+        "narHash": "sha256-UK4urM3iN80UXQ7EaOappDzcisYIuEURFRoGQ/yPkug=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "34c5293a71ffdb2fe054eb5288adc1882c1eb0b1",
+        "type": "github"
+      },
+      "original": {
+        "dir": "lib",
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "inputs": {
         "flake-utils": [
@@ -461,11 +495,11 @@
         "nixpkgs": "nixpkgs_6"
       },
       "locked": {
-        "lastModified": 1664345928,
-        "narHash": "sha256-bDhzw7pkOfih4JQqFYFu6NF42exa5/NhexCOGXus5zU=",
+        "lastModified": 1666367900,
+        "narHash": "sha256-//6mUOaLaXfRrr4R+/bD/sKujAKcJ1oGs/uypgr+0ns=",
         "owner": "nix-ocaml",
         "repo": "nix-overlays",
-        "rev": "912b3fbb161d693d968d8047498971f01c1dc440",
+        "rev": "13c2b1372d10d257b1b30cea7bfc0a2af317d572",
         "type": "github"
       },
       "original": {
@@ -476,17 +510,17 @@
     },
     "nixpkgs_6": {
       "locked": {
-        "lastModified": 1664859869,
-        "narHash": "sha256-OPM2eN7Ja8iZVJMhHH+dTB4v2fn7FLX38rSLLHvyWj0=",
+        "lastModified": 1666333455,
+        "narHash": "sha256-oHXIeLB/sPWxKNcSdV1DQi1ddNVoJ17T1yDiMMeygL4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "490a05c4a82236a86e1e1a4822f714c972e8c4f0",
+        "rev": "93e0ac196106dce51878469c9a763c6233af5c57",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "490a05c4a82236a86e1e1a4822f714c972e8c4f0",
+        "rev": "93e0ac196106dce51878469c9a763c6233af5c57",
         "type": "github"
       }
     },
@@ -590,11 +624,11 @@
         "tezos_trunk": "tezos_trunk"
       },
       "locked": {
-        "lastModified": 1661320767,
-        "narHash": "sha256-C6UzXSqmCfn1cl0bvPFM8JYbr57gsfH48oXGquCmyAk=",
+        "lastModified": 1666034281,
+        "narHash": "sha256-l6cQLvxdn/0oey0sb/Z6H45VUOc4ircG3UCckBvlXXI=",
         "owner": "marigold-dev",
         "repo": "tezos-nix",
-        "rev": "1baf235d76ef45d915c25ea9569bcebd523f9882",
+        "rev": "7ae62c648880b55a2900e2f923d1334b7014fe18",
         "type": "github"
       },
       "original": {
@@ -606,16 +640,16 @@
     "tezos_release": {
       "flake": false,
       "locked": {
-        "lastModified": 1659347743,
-        "narHash": "sha256-kc0Q+2crcj0P4iWJBpOzD6ww3kDExmujyIUSJj+iEH8=",
+        "lastModified": 1664977956,
+        "narHash": "sha256-H/ZQRIukMlGxF1cCe4A2tYB3nteBpjcqRI+aDmsmGgg=",
         "owner": "tezos",
         "repo": "tezos",
-        "rev": "4ca331940db0b62ab98ad14d7c032db292879805",
+        "rev": "073ae295ea293693f35cfe6613f2b1bb1fefb3aa",
         "type": "gitlab"
       },
       "original": {
         "owner": "tezos",
-        "ref": "v14.0",
+        "ref": "v14.1",
         "repo": "tezos",
         "type": "gitlab"
       }
@@ -623,11 +657,11 @@
     "tezos_trunk": {
       "flake": false,
       "locked": {
-        "lastModified": 1660903049,
-        "narHash": "sha256-HuKOhg2YnAcYRMDCD1B9CRF1MeYdVnNPr1ny/FyFP3U=",
+        "lastModified": 1665996621,
+        "narHash": "sha256-nYg2gVRcuC/ogPWXAVErR+HDsxwXIbnHkkik9AkoYIM=",
         "owner": "tezos",
         "repo": "tezos",
-        "rev": "67068eb5418f2a6e75e0e1cfd47b2bdea89d66b2",
+        "rev": "52d97a7da45a467cb722b494eebcc562aff75525",
         "type": "gitlab"
       },
       "original": {
