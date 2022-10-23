@@ -40,6 +40,7 @@ module Inject_transaction = struct
     destination : string;
     entrypoint : string;
     payload : Yojson.Safe.t;
+    preferred_fee : string;
   }
   [@@deriving yojson]
 
@@ -97,6 +98,7 @@ type bridge =
         entrypoint:string ->
         payload:Deku_stdlib.Yojson.Safe.t ->
         Inject_transaction.t option;
+      preferred_fee : int option;
     }
 
 type t = bridge
@@ -119,7 +121,10 @@ let listen_transaction ~bridge process =
   Js_process.listen process request ~on_message
 
 let inject_transaction ~bridge ~entrypoint ~payload process =
-  let (Bridge { rpc_node; secret; destination; _ }) = bridge in
+  let (Bridge { rpc_node; secret; destination; preferred_fee; _ }) = bridge in
+  let preferred_fee =
+    Option.map string_of_int preferred_fee |> Option.value ~default:""
+  in
   let input =
     Inject_transaction.
       {
@@ -129,13 +134,14 @@ let inject_transaction ~bridge ~entrypoint ~payload process =
         destination = Address.to_string destination;
         entrypoint;
         payload;
+        preferred_fee;
       }
   in
   let input = Inject_transaction.yojson_of_request input in
   let response = Js_process.request process input in
   Inject_transaction.t_of_yojson response
 
-let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
+let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions ~preferred_fee =
   let dummy_inject_transaction ~entrypoint:_ ~payload:_ = None in
   let inject_transaction_ref = ref dummy_inject_transaction in
   let bridge =
@@ -148,7 +154,14 @@ let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
         None
     in
     Bridge
-      { rpc_node; secret; destination; on_transactions; inject_transaction }
+      {
+        rpc_node;
+        secret;
+        destination;
+        on_transactions;
+        inject_transaction;
+        preferred_fee;
+      }
   in
   let rec respawn () =
     try

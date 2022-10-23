@@ -62,6 +62,8 @@ type params = {
       (** Named pipe path to use for IPC with the VM *)
   api_enabled : bool; [@default false] [@env "DEKU_API_ENABLED"]
   api_port : int; [@default 8080] [@env "DEKU_API_PORT"]
+  preferred_fee : int option; [@env "DEKU_TEZOS_PREFERRED_FEE"]
+      (** Sets the fee of commit transactions on Tezos, in mutez. *)
 }
 [@@deriving cmdliner]
 
@@ -118,6 +120,7 @@ let main params style_renderer log_level =
     named_pipe_path;
     api_enabled;
     api_port;
+    preferred_fee;
   } =
     params
   in
@@ -165,7 +168,7 @@ let main params style_renderer log_level =
   let notify_api _ = () in
   let node =
     Node.make ~identity ~default_block_size ~dump ~chain ~indexer:(Some indexer)
-      ~notify_api
+      ~notify_api ~preferred_fee
   in
 
   let () =

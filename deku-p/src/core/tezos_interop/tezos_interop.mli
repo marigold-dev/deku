@@ -21,6 +21,7 @@ val start :
   secret:Secret.t ->
   consensus_contract:Address.t ->
   on_operation:(operation -> unit) ->
+  preferred_fee:int option ->
   t
 
 val commit_state_hash :

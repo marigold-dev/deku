@@ -21,7 +21,7 @@ const { inspect } = require("util");
  * @property {"storage"} kind
  * @property {string} rpc_node
  * @property {string} destination
- * 
+ *
  * @typedef BigMapMultipleKeysRequest
  * @type {object}
  * @property {"storage"} kind
@@ -37,7 +37,7 @@ const { inspect } = require("util");
 
  * @typedef RequestContent
  * @type {TransactionRequest | StorageRequest | ListenTransaction}
- 
+
  * @typedef Request
  * @type {object}
  * @property {number} id
@@ -65,7 +65,7 @@ const { inspect } = require("util");
 
  * @typedef Operation
  * @type {object}
- 
+
  * @typedef TransactionMessage
  * @type {object}
  * @property {"success"} status
@@ -150,7 +150,8 @@ const config = {
 
 /** @param {TransactionRequest} content */
 const onTransactionRequest = async (id, content) => {
-  const { rpc_node, secret, destination, entrypoint, payload } = content;
+  const { rpc_node, secret, destination, entrypoint, payload, preferred_fee } =
+    content;
 
   const args = Object.entries(payload)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -160,7 +161,12 @@ const onTransactionRequest = async (id, content) => {
   Tezos.setProvider({ signer, config });
 
   const contract = await Tezos.contract.at(destination);
-  const operation = await contract.methods[entrypoint](...args).send();
+
+  let operation;
+  if (preferred_fee !== "") {
+    const fee = parseInt(preferred_fee);
+    operation = await contract.methods[entrypoint](...args).send({ fee });
+  } else operation = await contract.methods[entrypoint](...args).send();
   await operation.confirmation(confirmation);
 
   const status = operation.status;

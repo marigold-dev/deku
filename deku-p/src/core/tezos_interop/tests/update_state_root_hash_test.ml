@@ -24,6 +24,7 @@ let main consensus_contract =
         Format.printf "👍 State root update successful. Operation hash: %s\n%!"
           (Tezos_operation_hash.to_b58 hash);
         exit 0)
+      ~preferred_fee:None
   in
 
   let (Block.Block { payload_hash; level; _ }) = Fixme_name.some_block in
