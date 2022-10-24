@@ -26,3 +26,32 @@ jobs:
         with:
           name: deku-cli
           path: ./result/bin/deku-cli
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=date::$(date +%Y-%m-%d)"
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - name: "Build docker image"
+        run: nix build .#docker
+      - name: "Load docker image"
+        run: docker load < ./result
+      - name: "Re-tag image"
+        run: |
+          docker image tag ghcr.io/marigold-dev/deku:latest ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+          docker image tag ghcr.io/marigold-dev/deku:latest ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: "Push image"
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        run: |
+          docker image push ghcr.io/marigold-dev/deku:latest
+          docker image push ghcr.io/marigold-dev/deku:${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
+      - name: "Push image for PR"
+        # Run this if the PR has the "docker" label
+        if: contains(github.event.pull_request.labels.*.name, 'docker')
+        run: |
+          docker image push ghcr.io/marigold-dev/deku:pr-${{ github.event.number }}-${{ steps.vars.outputs.date }}-${{ steps.vars.outputs.sha_short }}
