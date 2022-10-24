@@ -10,6 +10,7 @@ module Result : sig
 
   module Infix : sig
     val ( >>= ) : ('a, 'b) t -> ('a -> ('c, 'b) t) -> ('c, 'b) t
+
     val ( >>| ) : ('a, 'b) t -> ('a -> 'c) -> ('c, 'b) t
   end
 
@@ -21,11 +22,13 @@ module Option : sig
 
   module Let_syntax : sig
     val ( let* ) : 'a t -> ('a -> 'b t) -> 'b t
+
     val ( let+ ) : 'a t -> ('a -> 'b) -> 'b t
   end
 
   module Infix : sig
     val ( >>= ) : 'a t -> ('a -> 'b t) -> 'b t
+
     val ( >>| ) : 'a t -> ('a -> 'b) -> 'b t
   end
 end
@@ -36,6 +39,7 @@ module Z : sig
   end
 
   val yojson_of_t : t -> Yojson.Safe.t
+
   val t_of_yojson : Yojson.Safe.t -> t
 end
 
@@ -46,6 +50,7 @@ module Map : sig
     include Map.S
 
     val yojson_of_t : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+
     val t_of_yojson : (Yojson.Safe.t -> 'a) -> Yojson.Safe.t -> 'a t
   end
 
@@ -57,6 +62,7 @@ module Map : sig
     include Map.S with type key = K.t
 
     val yojson_of_t : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
+
     val t_of_yojson : (Yojson.Safe.t -> 'a) -> Yojson.Safe.t -> 'a t
   end
 end
@@ -68,6 +74,7 @@ module Set : sig
     include Set.S
 
     val yojson_of_t : t -> Yojson.Safe.t
+
     val t_of_yojson : Yojson.Safe.t -> t
   end
 
@@ -77,6 +84,7 @@ module Set : sig
     include Set.S with type elt = K.t
 
     val yojson_of_t : t -> Yojson.Safe.t
+
     val t_of_yojson : Yojson.Safe.t -> t
   end
 end

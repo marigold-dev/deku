@@ -1,7 +1,7 @@
 use crate::managed::value::Value;
 
 pub struct ExecutionResult {
-    pub new_storage: Value,
-    pub ops: Value,
+    pub new_storage: Box<Value>,
+    pub ops: Box<Value>,
     pub remaining_gas: u64,
 }

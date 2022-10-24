@@ -3,9 +3,10 @@ use serde::{de::Visitor, ser::SerializeTuple, Deserialize, Serialize};
 
 use crate::{
     contract_address::ContractAddress,
-    managed::value::Value,
+    managed::value::FromOcamlV,
     outgoing::{Init, SetOwned},
     path::Path,
+    state::LigoCode,
     ticket_table::TicketId,
 };
 
@@ -14,13 +15,14 @@ use crate::{
 pub enum Operation {
     Originate {
         module_: String,
-        constants: Vec<(u32, Value)>,
-        initial_storage: Value,
+        constants: Vec<(u32, FromOcamlV)>,
+        initial_storage: FromOcamlV,
         entrypoints: Option<FnvHashMap<String, Vec<Path>>>,
+        source: Option<LigoCode>,
     },
     Invoke {
         address: ContractAddress,
-        argument: Value,
+        argument: FromOcamlV,
         #[serde(default = "def")]
         gas_limit: u64,
     },
@@ -55,7 +57,7 @@ struct ClientVisitor;
 impl<'de> Visitor<'de> for ClientVisitor {
     type Value = ClientMessage;
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("Expected a valid Value")
+        formatter.write_str("Expected a valid clientMessage")
     }
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
     where
@@ -74,7 +76,7 @@ impl<'de> Visitor<'de> for ClientVisitor {
                     elem.map_or_else(
                         || {
                             Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
+                                serde::de::Unexpected::Str("unexpected sequence, set"),
                                 &"value",
                             ))
                         },
@@ -86,7 +88,7 @@ impl<'de> Visitor<'de> for ClientVisitor {
                     elem.map_or_else(
                         || {
                             Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
+                                serde::de::Unexpected::Str("unexpected sequence, give tickets"),
                                 &"value",
                             ))
                         },
@@ -100,7 +102,7 @@ impl<'de> Visitor<'de> for ClientVisitor {
                     elem.map_or_else(
                         || {
                             Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
+                                serde::de::Unexpected::Str("unexpected sequence, transaction"),
                                 &"value",
                             ))
                         },
@@ -112,7 +114,7 @@ impl<'de> Visitor<'de> for ClientVisitor {
                     elem.map_or_else(
                         || {
                             Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
+                                serde::de::Unexpected::Str("unexpected sequence, get"),
                                 &"value",
                             ))
                         },
@@ -124,15 +126,17 @@ impl<'de> Visitor<'de> for ClientVisitor {
                     elem.map_or_else(
                         || {
                             Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
+                                serde::de::Unexpected::Str(
+                                    "unexpected sequence, set initial state",
+                                ),
                                 &"value",
                             ))
                         },
                         |x| Ok(ClientMessage::SetInitialState(x)),
                     )
                 }
-                _ => Err(serde::de::Error::invalid_type(
-                    serde::de::Unexpected::Str("unexpected sequence"),
+                x => Err(serde::de::Error::invalid_type(
+                    serde::de::Unexpected::Str("unexpected sequence, dont know what to do"),
                     &x,
                 )),
             },
@@ -174,7 +178,7 @@ impl Serialize for ClientMessage {
             ClientMessage::GetInitialState => serializer.serialize_str("Get_Iinitial_State"),
             ClientMessage::GiveTickets(s) => {
                 let mut seq = serializer.serialize_tuple(2)?;
-                seq.serialize_element("Give_tickets")?;
+                seq.serialize_element("Give_Tickets")?;
                 seq.serialize_element(s)?;
                 seq.end()
             }

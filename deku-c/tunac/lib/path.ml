@@ -1,4 +1,6 @@
-type path = Left | Right
+type path =
+  | Left
+  | Right
 
 let yojson_of_path = function
   | Left -> `String "Left"
@@ -17,9 +19,9 @@ type t = path list M.t
 
 let t_of_yojson : Yojson.Safe.t -> t = function
   | `Assoc l ->
-      List.to_seq l
-      |> Seq.map (fun (k, v) -> (k, [%of_yojson: path list] v))
-      |> M.of_seq
+    List.to_seq l
+    |> Seq.map (fun (k, v) -> (k, [%of_yojson: path list] v))
+    |> M.of_seq
   | _ -> failwith "FIXME: what to do here?"
 
 let yojson_of_t map =

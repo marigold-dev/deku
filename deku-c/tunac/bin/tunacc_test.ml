@@ -13,7 +13,7 @@ let compile_contract filename =
   print_endline @@ Yojson.Safe.pretty_to_string @@ Tunac.Output.yojson_of_t out
 
 let compile_value code =
-  let value = code |> Tunac.Compiler.compile_value |> Result.get_ok in
+  let _, value = code |> Tunac.Compiler.compile_value |> Result.get_ok in
   let out = value |> Tunac.Values.yojson_of_t |> Yojson.Safe.pretty_to_string in
   print_endline out
 

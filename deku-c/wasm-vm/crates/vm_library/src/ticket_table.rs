@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use thiserror::Error;
 
-use crate::arena::{INVERSETICKETS, TICKETS};
 #[derive(Error, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Error {
@@ -52,7 +51,7 @@ fn return_true() -> bool {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Ticket {
     pub ticket_id: TicketId,
-    amount: Amount,
+    pub amount: Amount,
     #[serde(skip_deserializing, default = "return_true")]
     live: bool,
 }
@@ -136,6 +135,18 @@ impl TicketTable {
             },
         )
     }
+    pub fn extract(&mut self, handle: &Handle) -> Result<Ticket> {
+        self.table.get_mut(*handle).map_or_else(
+            || Err(Error::TicketDoesntExist),
+            |ticket| {
+                if !ticket.live {
+                    return Err(Error::TicketDoesntExist);
+                }
+                assert_not_dead(ticket)?;
+                Result::Ok(ticket.clone())
+            },
+        )
+    }
 
     pub fn mint_ticket(&mut self, sender: Address, amount: Amount, data: String) -> Handle {
         let ticket_id = TicketId::new(sender, data);
@@ -183,24 +194,15 @@ impl TicketTable {
         }
     }
 
-    pub fn finalize(&self) {
-        let ticket_table = unsafe { &mut TICKETS };
-        ticket_table.clear();
-        self.table.iter().enumerate().for_each(|(handle, ticket)| {
-            if ticket.live {
-                ticket_table.insert(handle, ticket.clone());
-            }
-        });
-    }
-    pub fn populate(&mut self, tickets: &[Ticket]) {
-        let ticket_table = unsafe { &mut INVERSETICKETS };
-        self.table.clear();
-        ticket_table.clear();
-        tickets.iter().enumerate().for_each(|(handle, ticket)| {
-            self.merge(ticket.clone());
-            ticket_table.insert(ticket.clone(), handle);
-        });
-    }
+    // pub fn finalize(&self) {
+    //     let ticket_table = unsafe { &mut TICKETS };
+    //     ticket_table.clear();
+    //     self.table.iter().enumerate().for_each(|(handle, ticket)| {
+    //         if ticket.live {
+    //             ticket_table.insert(handle, ticket.clone());
+    //         }
+    //     });
+    // }
 }
 
 #[cfg(test)]
@@ -255,23 +257,23 @@ mod tests {
         )
     }
 
-    #[test]
-    fn finalize_excludes_dead_tickets() {
-        let mut ticket_table = TicketTable {
-            counter: 0,
-            table: vec![],
-        };
-        let h1 = ticket_table.mint_ticket(SENDER.to_owned(), 3, "".to_owned());
-        let h2 = ticket_table.mint_ticket(SENDER.to_owned(), 6, "".to_owned());
-        let h3 = ticket_table.join_tickets((&h1, &h2)).unwrap();
+    // #[test] // TODO: FIXME
+    // fn finalize_excludes_dead_tickets() {
+    //     let mut ticket_table = TicketTable {
+    //         counter: 0,
+    //         table: vec![],
+    //     };
+    //     let h1 = ticket_table.mint_ticket(SENDER.to_owned(), 3, "".to_owned());
+    //     let h2 = ticket_table.mint_ticket(SENDER.to_owned(), 6, "".to_owned());
+    //     let h3 = ticket_table.join_tickets((&h1, &h2)).unwrap();
 
-        let h4 = ticket_table.mint_ticket(SENDER.to_owned(), 12, "1".to_owned());
-        let (h5, h6) = ticket_table.split_ticket(&h4, (4, 8)).unwrap();
-        ticket_table.finalize();
-        let final_handles = unsafe { &mut TICKETS };
-        assert_eq!(
-            final_handles.keys().cloned().collect::<Vec<usize>>(),
-            vec![h3, h5, h6]
-        )
-    }
+    //     let h4 = ticket_table.mint_ticket(SENDER.to_owned(), 12, "1".to_owned());
+    //     let (h5, h6) = ticket_table.split_ticket(&h4, (4, 8)).unwrap();
+    //     ticket_table.finalize();
+    //     let final_handles = unsafe { &mut TICKETS };
+    //     assert_eq!(
+    //         final_handles.keys().cloned().collect::<Vec<usize>>(),
+    //         vec![h3, h5, h6]
+    //     )
+    // }
 }

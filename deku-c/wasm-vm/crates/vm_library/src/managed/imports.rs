@@ -2,7 +2,7 @@ use std::ops::{Add, BitOr, BitXor, Mul, Neg, Sub};
 
 use im_rc::{OrdSet, Vector};
 use rug::Integer;
-use slotmap::{DefaultKey, Key, KeyData};
+use slotmap::{DefaultKey, KeyData};
 use wasmer::{Exports, Function, ImportObject, Store};
 
 use super::value::*;
@@ -132,8 +132,8 @@ pub fn not(env: &Context, value: Value) -> VMResult<i64> {
 }
 pub fn pair(env: &Context, value1: Value, value2: Value) -> VMResult<i64> {
     env.update_gas(300)?;
-    let fst = env.bump_raw(value1);
-    let snd = env.bump_raw(value2);
+    let fst = Box::from(value1);
+    let snd = Box::from(value2);
     let res = Value::Pair { fst, snd };
     let key = env.bump(res);
     conversions::to_i64(key)
@@ -142,8 +142,8 @@ pub fn unpair(env: &Context, value: Value) -> VMResult<()> {
     env.update_gas(300)?;
     match value {
         Value::Pair { fst, snd } => {
-            let fst = conversions::to_i64(fst.data().as_ffi())?;
-            let snd = conversions::to_i64(snd.data().as_ffi())?;
+            let fst = conversions::to_i64(env.bump(*fst))?;
+            let snd = conversions::to_i64(env.bump(*snd))?;
             env.push_value(snd)?;
             env.push_value(fst)?;
 
@@ -159,7 +159,7 @@ pub fn unpair(env: &Context, value: Value) -> VMResult<()> {
 pub fn car(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
     match value {
-        Value::Pair { fst, snd: _ } => conversions::to_i64(fst.data().as_ffi()),
+        Value::Pair { fst, snd: _ } => conversions::to_i64(env.bump(*fst)),
         _ => Err(FFIError::ExternError {
             value: (value),
             msg: "type mismatch, expected Pair".to_owned(),
@@ -170,7 +170,7 @@ pub fn car(env: &Context, value: Value) -> VMResult<i64> {
 pub fn cdr(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
     match value {
-        Value::Pair { fst: _, snd } => conversions::to_i64(snd.data().as_ffi()),
+        Value::Pair { fst: _, snd } => conversions::to_i64(env.bump(*snd)),
         _ => Err(FFIError::ExternError {
             value: (value),
             msg: "type mismatch, expected Pair".to_owned(),
@@ -297,10 +297,10 @@ pub fn ediv(env: &Context, value1: Value, value2: Value) -> VMResult<i64> {
                 let (quot, rem) = (x).div_rem_euc(y);
                 let fst = Value::Int(quot);
                 let snd = Value::Int(rem);
-                let fst = env.bump_raw(fst);
-                let snd = env.bump_raw(snd);
+                let fst = Box::from(fst);
+                let snd = Box::from(snd);
                 let pair = Value::Pair { fst, snd };
-                let pair = env.bump_raw(pair);
+                let pair = Box::from(pair);
                 let key = env.bump(Value::Option(Some(pair)));
                 conversions::to_i64(key)
             }
@@ -382,12 +382,12 @@ pub fn is_left(env: &Context, value: Value) -> VMResult<i32> {
     env.update_gas(300)?;
     match value {
         Value::Union(Union::Left(l)) => {
-            let key = conversions::to_i64(l.data().as_ffi())?;
+            let key = conversions::to_i64(env.bump(*l))?;
             env.push_value(key)?;
             Ok(1)
         }
         Value::Union(Union::Right(l)) => {
-            let key = conversions::to_i64(l.data().as_ffi())?;
+            let key = conversions::to_i64(env.bump(*l))?;
             env.push_value(key)?;
             Ok(0)
         }
@@ -426,7 +426,7 @@ pub fn if_none(env: &Context, value: Value) -> VMResult<i32> {
         Value::Option(x) => (x).map_or_else(
             || Ok(1),
             |v| {
-                let key = conversions::to_i64(v.data().as_ffi())?;
+                let key = conversions::to_i64(env.bump(*v))?;
                 env.push_value(key)?;
                 Ok(0)
             },
@@ -477,10 +477,9 @@ pub fn if_cons(env: &Context, value: Value) -> VMResult<i32> {
 }
 pub fn is_nat(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
-    match value {
-        Value::Int(x) if x >= Integer::ZERO => {
-            let bumped = env.bump(Value::Int(x));
-            let opt = Value::Option(Some(DefaultKey::from(KeyData::from_ffi(bumped))));
+    match &value {
+        Value::Int(x) if x >= &Integer::ZERO => {
+            let opt = Value::Option(Some(Box::from(value)));
             let bumped = env.bump(opt);
             let key = conversions::to_i64(bumped)?;
             Ok(key)
@@ -727,24 +726,22 @@ pub fn closure(env: &Context, value1: i32) -> VMResult<i64> {
 }
 pub fn some(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
-    let bumped = env.bump(value);
-    let opt = Value::Option(Some(DefaultKey::from(KeyData::from_ffi(bumped))));
+    let opt = Value::Option(Some(Box::from(value)));
     let bumped = env.bump(opt);
     let key = conversions::to_i64(bumped)?;
     Ok(key)
 }
 pub fn left(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
-    let bumped = env.bump(value);
-    let opt = Value::Union(Union::Left(DefaultKey::from(KeyData::from_ffi(bumped))));
+    let opt = Value::Union(Union::Left(Box::from(value)));
     let bumped = env.bump(opt);
     let key = conversions::to_i64(bumped)?;
     Ok(key)
 }
 pub fn right(env: &Context, value: Value) -> VMResult<i64> {
     env.update_gas(300)?;
-    let bumped = env.bump(value);
-    let opt = Value::Union(Union::Right(DefaultKey::from(KeyData::from_ffi(bumped))));
+    let bumped = Box::from(value);
+    let opt = Value::Union(Union::Right(bumped));
     let bumped = env.bump(opt);
     let key = conversions::to_i64(bumped)?;
     Ok(key)
@@ -766,21 +763,21 @@ pub fn get_n(env: &Context, idx: u32, value: Value) -> VMResult<i64> {
         }
         match (loop_idx, current) {
             (1, Value::Pair { fst, snd: _ }) => {
-                current = env.get(fst)?;
+                current = *fst;
                 break;
             }
             (2, Value::Pair { fst: _, snd }) => {
-                current = env.get(snd)?;
+                current = *snd;
                 break;
             }
             (_, Value::Pair { fst: _, snd }) => {
-                current = env.get(snd)?;
+                current = *snd;
                 loop_idx = loop_idx.saturating_sub(2);
             }
             (_, value) => {
                 return Err(FFIError::ExternError {
                     value: (value),
-                    msg: "type mismatch, expected Pair".to_owned(),
+                    msg: "type mismatch, expected Pair, get_n".to_owned(),
                 }
                 .into())
             }
@@ -816,7 +813,7 @@ pub fn map_get(env: &Context, value1: Value, value2: Value) -> VMResult<i64> {
     match value2 {
         Value::Map(x) => {
             let res = x.get(&value1);
-            let bumped = res.map(|res| env.bump_raw(res.clone()));
+            let bumped = res.map(|res| Box::from(res.clone()));
             let bumped = env.bump(Value::Option(bumped));
             conversions::to_i64(bumped)
         }
@@ -837,7 +834,7 @@ pub fn update(env: &Context, key: Value, value: Value, map: Value) -> VMResult<i
                     map.remove(&key);
                 }
                 Some(x) => {
-                    let x = env.get(x)?;
+                    let x = *x;
                     map.insert(key, x);
                 }
             }
@@ -875,12 +872,12 @@ pub fn get_and_update(env: &Context, key: Value, value: Value, map: Value) -> VM
                     retur = map.remove(&key);
                 }
                 Some(x) => {
-                    let x = env.get(x)?;
+                    let x = *x;
                     map.insert(key, x);
                 }
             }
             let bumped = env.bump(Value::Map(map));
-            let bumped2 = retur.map(|x| env.bump_raw(x));
+            let bumped2 = retur.map(Box::from);
             let bumped2 = env.bump(Value::Option(bumped2));
             env.push_value(bumped as i64)?;
             env.push_value(bumped2 as i64)?;
@@ -1315,7 +1312,7 @@ fn ticket(env: &Context, payload: Value, amount: Value) -> VMResult<i64> {
                     let string = String::from_utf8_lossy(&x);
                     let handle =
                         table.mint_ticket(nil.clone(), y.to_usize_wrapping(), string.to_string());
-                    Ok(Value::Ticket(handle))
+                    Ok(Value::RuntimeTicket(handle))
                 })?;
                 Ok(env.bump(handle) as i64)
             } else {
@@ -1331,8 +1328,8 @@ fn ticket(env: &Context, payload: Value, amount: Value) -> VMResult<i64> {
 }
 fn join_tickets(env: &Context, payload: Value) -> VMResult<i64> {
     if let Value::Pair { fst, snd } = payload {
-        match (env.get(fst)?, env.get(snd)?) {
-            (Value::Ticket(x), Value::Ticket(y)) => {
+        match (*fst, *snd) {
+            (Value::RuntimeTicket(x), Value::RuntimeTicket(y)) => {
                 let handle = env.with_table(|table| {
                     table
                         .join_tickets((&x, &y))
@@ -1341,8 +1338,8 @@ fn join_tickets(env: &Context, payload: Value) -> VMResult<i64> {
                 handle.map_or_else(
                     |_| Ok(env.bump(Value::Option(None)) as i64),
                     |ok| {
-                        let ticket = Value::Ticket(ok);
-                        let value = Value::Option(Some(env.bump_raw(ticket)));
+                        let ticket = Value::RuntimeTicket(ok);
+                        let value = Value::Option(Some(Box::from(ticket)));
                         Ok(env.bump(value) as i64)
                     },
                 )
@@ -1358,8 +1355,8 @@ fn join_tickets(env: &Context, payload: Value) -> VMResult<i64> {
     }
 }
 fn split_ticket(env: &Context, payload: Value, nat: Value) -> VMResult<i64> {
-    if let (Value::Pair { fst, snd }, Value::Ticket(x)) = (nat, payload) {
-        match (env.get(fst)?, env.get(snd)?) {
+    if let (Value::Pair { fst, snd }, Value::RuntimeTicket(x)) = (nat, payload) {
+        match (*fst, *snd) {
             (Value::Int(x1), Value::Int(x2)) => {
                 let handle = env.with_table(|table| {
                     table
@@ -1369,8 +1366,8 @@ fn split_ticket(env: &Context, payload: Value, nat: Value) -> VMResult<i64> {
                 handle.map_or_else(
                     |_| Ok(env.bump(Value::Option(None)) as i64),
                     |(h1, h2)| {
-                        let ticket1 = env.bump_raw(Value::Ticket(h1));
-                        let ticket2 = env.bump_raw(Value::Ticket(h2));
+                        let ticket1 = Box::from(Value::RuntimeTicket(h1));
+                        let ticket2 = Box::from(Value::RuntimeTicket(h2));
 
                         let value = Value::Pair {
                             fst: ticket1,
@@ -1392,27 +1389,27 @@ fn split_ticket(env: &Context, payload: Value, nat: Value) -> VMResult<i64> {
 }
 fn read_ticket(env: &Context, payload: Value) -> VMResult<()> {
     match payload {
-        Value::Ticket(x) => {
+        Value::RuntimeTicket(x) => {
             let (ticket_id, amount, handle) =
                 env.with_table(|table| Ok(table.read_ticket(&x)))??;
             let address = ticket_id.ticketer;
             let value = ticket_id.data;
             let amount = amount;
-            let address = env.bump_raw(Value::String(address));
-            let value = env.bump_raw(Value::Bytes(value.as_bytes().to_vec()));
-            let amount = env.bump_raw(Value::Int(amount.into()));
+            let address = Box::from(Value::String(address));
+            let value = Box::from(Value::Bytes(value.as_bytes().to_vec()));
+            let amount = Box::from(Value::Int(amount.into()));
             let p1 = Value::Pair {
                 fst: value,
                 snd: amount,
             };
-            let p1 = env.bump_raw(p1);
+            let p1 = Box::from(p1);
             let p1 = Value::Pair {
                 fst: address,
                 snd: p1,
             };
             let p1 = env.bump(p1);
 
-            env.push_value(env.bump(Value::Ticket(handle)) as i64)?;
+            env.push_value(env.bump(Value::RuntimeTicket(handle)) as i64)?;
             env.push_value(p1 as i64)?;
 
             Ok(())
@@ -1528,8 +1525,8 @@ fn transfer_tokens(env: &Context, v1: Value, v2: Value, v3: Value) -> VMResult<i
         if x != Integer::ZERO {
             return Err(VmError::RuntimeErr("illegal argument".to_owned()));
         }
-        let fst = env.bump_raw(v1);
-        let snd = env.bump_raw(v3);
+        let fst = Box::from(v1);
+        let snd = Box::from(v3);
         let pair = Value::Pair { fst, snd };
         let bumped = env.bump(pair);
         conversions::to_i64(bumped)
@@ -1582,13 +1579,13 @@ fn map(env: &Context, v: Value, idx: i32) -> VMResult<i64> {
         }
         Value::Map(x) => {
             let new: VMResult<OrdSet<Value>> = x
-                .iter()
+                .into_iter()
                 .map(|(k, v)| {
-                    let k = k.clone();
-                    let v = v.clone();
+                    let k = k;
+                    let v = v;
 
-                    let k = env.bump_raw(k);
-                    let v = env.bump_raw(v);
+                    let k = Box::from(k);
+                    let v = Box::from(v);
                     let pair = Value::Pair { fst: k, snd: v };
                     let bumped = env.bump(pair);
                     let res = env.call(bumped as i64, idx)?;
@@ -1607,11 +1604,17 @@ fn map(env: &Context, v: Value, idx: i32) -> VMResult<i64> {
     }
 }
 fn exec(env: &Context, v: Value, lam: Value) -> VMResult<i64> {
+    let v = &v;
     if let Value::Closure { opt_arg, call } = lam {
-        let bumped = env.bump_raw(v);
         opt_arg.map_or_else(
-            || env.call(bumped.data().as_ffi() as i64, call),
+            || {
+                let bumped = Box::from(v.clone());
+
+                env.call(env.bump(*bumped) as i64, call)
+            },
             |x| {
+                let bumped = Box::from(v.clone());
+
                 let p = Value::Pair {
                     fst: bumped,
                     snd: x,
@@ -1630,10 +1633,12 @@ fn exec(env: &Context, v: Value, lam: Value) -> VMResult<i64> {
 }
 
 fn apply(env: &Context, v: Value, lam: Value) -> VMResult<i64> {
-    let bumped = env.bump_raw(v);
+    let v = &v;
     if let Value::Closure { opt_arg, call } = lam {
         opt_arg.map_or_else(
             || {
+                let bumped = Box::from(v.clone());
+
                 let p = Value::Closure {
                     opt_arg: Some(bumped),
                     call,
@@ -1642,12 +1647,14 @@ fn apply(env: &Context, v: Value, lam: Value) -> VMResult<i64> {
                 Ok(p as i64)
             },
             |x| {
+                let bumped = Box::from(v.clone());
+
                 let res = Value::Pair {
                     fst: bumped,
                     snd: x,
                 };
                 let p = Value::Closure {
-                    opt_arg: Some(env.bump_raw(res)),
+                    opt_arg: Some(Box::from(res)),
                     call,
                 };
                 let p = env.bump(p);
@@ -1674,13 +1681,14 @@ fn iter(env: &Context, v: Value, idx: i32) -> VMResult<()> {
             let bumped = env.bump(reff);
             env.call_unit(bumped as i64, idx)
         }),
-        Value::Map(x) => x.iter().try_for_each(|(k, v)| {
-            let k = k.clone();
-            let v = v.clone();
+        Value::Map(x) => x.into_iter().try_for_each(|(k, v)| {
+            let k = k;
+            let v = v;
 
-            let k = env.bump_raw(k);
-            let v = env.bump_raw(v);
-            let pair = Value::Pair { fst: k, snd: v };
+            let pair = Value::Pair {
+                fst: Box::from(k),
+                snd: Box::from(v),
+            };
             let bumped = env.bump(pair);
             env.call_unit(bumped as i64, idx)
         }),
@@ -1716,8 +1724,7 @@ fn contract(c: &Context, v: i64) -> VMResult<i64> {
     let v = DefaultKey::from(KeyData::from_ffi(v as u64));
     let v = c.get(v)?;
 
-    let bumped = c.bump_raw(v);
-    let opt = Value::Option(Some(bumped));
+    let opt = Value::Option(Some(Box::from(v)));
     let bumped = c.bump(opt);
 
     let conved = conversions::to_i64(bumped)?;

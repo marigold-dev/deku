@@ -1,10 +1,11 @@
+use std::{cell::RefCell, rc::Rc};
+
 use vm_library::{
-    arena::ARENA,
     execution_result::ExecutionResult,
     instance::invoke_managed,
     managed::value::{Union, Value},
     path::Path,
-    ticket_table::Ticket,
+    ticket_table::TicketTable,
 };
 
 mod common;
@@ -18,16 +19,21 @@ fn increment() {
   "#.to_string();
     let arg = Value::Int(5.into());
     let storage = Value::Int(0.into());
-    let arena = unsafe { &mut ARENA };
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Right(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(new_storage, Value::Int(5.into()))
+    assert_eq!(*new_storage, Value::Int(5.into()))
 }
 
 #[test]
@@ -38,16 +44,21 @@ fn decrement() {
       }"#.to_string();
     let arg = Value::Int(3.into());
     let storage = Value::Int(5.into());
-    let arena = unsafe { &mut ARENA };
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(new_storage, Value::Int(2.into()))
+    assert_eq!(*new_storage, Value::Int(2.into()))
 }
 
 #[test]
@@ -58,14 +69,19 @@ fn reset() {
       }"#.to_string();
     let arg = Value::Unit;
     let storage = Value::Int(5.into());
-    let arena = unsafe { &mut ARENA };
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Right(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(new_storage, Value::Int(0.into()))
+    assert_eq!(*new_storage, Value::Int(0.into()))
 }
 #[test]
 fn decrement_with_path() {
@@ -81,9 +97,15 @@ fn decrement_with_path() {
     let arg = Value::Int(3.into());
     let storage = Value::Int(5.into());
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
     let path = Some(vec![Path::Left, Path::Left]);
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &path);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage,
+        &path,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(new_storage, Value::Int(2.into()))
+    assert_eq!(*new_storage, Value::Int(2.into()))
 }

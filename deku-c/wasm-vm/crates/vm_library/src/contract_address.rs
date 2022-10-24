@@ -12,7 +12,7 @@ fn checksum(mut s: Vec<u8>) -> Vec<u8> {
 
 fn encode(s: &[u8]) -> String {
     let mut prefix = vec![1, 146, 6];
-    prefix.append(&mut s.to_vec());
+    prefix.extend_from_slice(s);
     bs58::encode(checksum(prefix))
         .with_alphabet(bs58::Alphabet::BITCOIN)
         .into_string()

@@ -78,8 +78,7 @@ impl IO {
         let msg = serde_json::to_string(msg).expect("Failed to write to pipe");
 
         self.writer.write_all(&usize::to_ne_bytes(msg.len()))?;
-        self.writer.write_all(msg.as_bytes())?;
-        self.writer.flush()
+        self.writer.write_all(msg.as_bytes())
     }
 }
 #[cfg(test)]

@@ -1,5 +1,5 @@
 use crate::{
-    arena::{ARENA, TICKETABLE},
+    arena::ARENA,
     errors::{vm::VmError, VMResult},
     managed::value::Value,
     ticket_table::TicketTable,
@@ -10,6 +10,7 @@ use wasmer::{HostEnvInitError, Instance, WasmerEnv};
 use wasmer_middlewares::metering::{get_remaining_points, set_remaining_points, MeteringPoints};
 
 pub struct Context {
+    pub table: Rc<RefCell<TicketTable>>,
     pub inner: Rc<RefCell<Inner>>,
 }
 
@@ -24,6 +25,7 @@ pub struct Inner {
 impl Clone for Context {
     fn clone(&self) -> Self {
         Context {
+            table: Rc::clone(&self.table),
             inner: Rc::clone(&self.inner),
         }
     }
@@ -155,7 +157,6 @@ impl Context {
             .map_or_else(|| Err(VmError::RuntimeErr("Value doesnt exist".into())), Ok)
     }
     pub fn with_table<A>(&self, f: impl FnOnce(&mut TicketTable) -> VMResult<A>) -> VMResult<A> {
-        let t = unsafe { &mut TICKETABLE };
-        f(t)
+        f(&mut self.table.as_ref().borrow_mut())
     }
 }
