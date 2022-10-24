@@ -37,7 +37,8 @@ let main ticket_id tezos_owner secret verbose host =
   if verbose then (
     Printf.eprintf "operation code: %s\n%!"
       (Operation.Signed.yojson_of_t transaction |> Yojson.Safe.to_string);
-    prerr_endline "operation broadcasted")
+    prerr_endline "operation broadcasted");
+  exit 0
 (*  we can't test that the withdraws succeeded at this point *)
 
 open Cmdliner
