@@ -54,7 +54,7 @@ then
   storage_path=${1:-./networks/flextesa}
 
   deploy_contract "consensus" \
-      "./deku-p/src/tezos_interop/consensus.mligo" \
+      "./deku-p/src/core/tezos_interop/consensus.mligo" \
       "$(cat "$storage_path/consensus_storage.mligo")"
 
   deploy_contract "dummy_ticket" \
