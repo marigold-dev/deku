@@ -98,7 +98,7 @@ local-setup() {
 
     # Starts the Node
     _build/install/default/bin/deku-node \
-      --default-block-size=1000 \
+      --default-block-size=10000 \
       --port "444$N" \
       --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
       --named-pipe-path "./flextesa_chain/data/$N/pipe" \
