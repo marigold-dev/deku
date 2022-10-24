@@ -97,7 +97,7 @@ module Get_level : NO_BODY_HANDLERS = struct
 end
 
 module Get_proof : NO_BODY_HANDLERS = struct
-  open Deku_protocol.Ledger
+  open Deku_ledger.Ledger
 
   type path = Operation_hash.t
 
@@ -130,8 +130,8 @@ module Get_balance : NO_BODY_HANDLERS = struct
   open Api_path
 
   type path = {
-    address : Deku_protocol.Address.t;
-    ticket_id : Deku_protocol.Ticket_id.t;
+    address : Deku_ledger.Address.t;
+    ticket_id : Deku_ledger.Ticket_id.t;
   }
 
   type response = { balance : int } [@@deriving yojson_of]
@@ -146,13 +146,13 @@ module Get_balance : NO_BODY_HANDLERS = struct
   let route =
     Routes.(
       path @--> fun address ticketer data ->
-      { address; ticket_id = Deku_protocol.Ticket_id.make ticketer data })
+      { address; ticket_id = Deku_ledger.Ticket_id.make ticketer data })
 
   let handler ~path ~state =
     let { address; ticket_id } = path in
     let Api_state.{ protocol; _ } = state in
     let (Protocol { ledger; _ }) = protocol in
-    let amount = Deku_protocol.Ledger.balance address ticket_id ledger in
+    let amount = Deku_ledger.Ledger.balance address ticket_id ledger in
     let amount = Amount.to_n amount |> N.to_z |> Z.to_int in
     Ok { balance = amount }
 end
@@ -192,6 +192,7 @@ end
 
 module Helpers_hash_operation : HANDLERS = struct
   open Deku_protocol
+  open Deku_ledger
 
   type path = unit
 

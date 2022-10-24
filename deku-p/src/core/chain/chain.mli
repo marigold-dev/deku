@@ -36,7 +36,7 @@ type action = private
       state_root_hash : BLAKE2b.t;
       signatures : (Key.t * Signature.t) option list;
       validators : Key_hash.t list;
-      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
+      withdrawal_handles_hash : Deku_ledger.Ledger.Withdrawal_handle.hash;
     }
 [@@deriving show]
 

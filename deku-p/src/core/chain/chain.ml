@@ -60,7 +60,7 @@ type action =
       state_root_hash : BLAKE2b.t;
       signatures : (Key.t * Signature.t) option list;
       validators : Key_hash.t list;
-      withdrawal_handles_hash : Deku_protocol.Ledger.Withdrawal_handle.hash;
+      withdrawal_handles_hash : Deku_ledger.Ledger.Withdrawal_handle.hash;
     }
 [@@deriving show]
 
@@ -128,7 +128,7 @@ let apply_consensus_action chain consensus_action =
       let (Chain { protocol; producer; _ }) = chain in
       let (Protocol { ledger; _ }) = protocol in
       let withdrawal_handles_hash =
-        Ledger.withdrawal_handles_root_hash ledger
+        Deku_ledger.Ledger.withdrawal_handles_root_hash ledger
       in
       let fragment =
         Fragment_produce { producer; above; withdrawal_handles_hash }

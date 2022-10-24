@@ -1,6 +1,7 @@
 open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
+open Deku_ledger
 
 exception Invalid_signature
 exception Invalid_source
@@ -15,7 +16,7 @@ type operation =
   | Operation_vm_transaction of {
       sender : Address.t;
       operation : string;
-      tickets : (Ticket_id.t * int64) list;
+      tickets : (Ticket_id.t * N.t) list; [@opaque]
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -33,8 +34,11 @@ let encoding =
   union ~tag_size:`Uint8
     [
       case ~title:"ticket_transfer" (Tag 0)
-        (tup4 Address.encoding Address.encoding Ticket_id.encoding
-           Amount.encoding)
+        (Data_encoding.dynamic_size
+           (tup4
+              (Data_encoding.dynamic_size Address.encoding)
+              (Data_encoding.dynamic_size Address.encoding)
+              Ticket_id.encoding Amount.encoding))
         (fun operation ->
           match operation with
           | Operation_ticket_transfer { sender; receiver; ticket_id; amount } ->
@@ -43,7 +47,10 @@ let encoding =
         (fun (sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
       case ~title:"vm_transaction" (Tag 1)
-        (tup3 Address.encoding string (list (tup2 Ticket_id.encoding int64)))
+        (tup3
+           (Data_encoding.dynamic_size Address.encoding)
+           string
+           (list (tup2 Ticket_id.encoding N.encoding)))
         (fun operation ->
           match operation with
           | Operation_vm_transaction { sender; operation; tickets } ->
@@ -52,8 +59,9 @@ let encoding =
         (fun (sender, operation, tickets) ->
           Operation_vm_transaction { sender; operation; tickets });
       case ~title:"withdraw" (Tag 2)
-        (tup4 Address.encoding Ticket_id.encoding Amount.encoding
-           Deku_tezos.Address.encoding)
+        (tup4
+           (Data_encoding.dynamic_size Address.encoding)
+           Ticket_id.encoding Amount.encoding Deku_tezos.Address.encoding)
         (fun operation ->
           match operation with
           | Operation_withdraw { sender; owner; ticket_id; amount } ->
@@ -158,7 +166,7 @@ module Signed = struct
         let sender = Address.to_key_hash sender in
         let hash = Operation_hash.to_blake2b hash in
         match
-          Key_hash.(equal (of_key key) sender)
+          Option.equal Key_hash.equal (Some (Key_hash.of_key key)) sender
           && Signature.verify key signature hash
         with
         | true -> Ok (Signed_operation { key; signature; initial })

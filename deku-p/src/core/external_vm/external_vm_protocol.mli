@@ -1,5 +1,5 @@
 open Deku_crypto
-open Deku_tezos
+open Deku_stdlib
 
 module State : sig
   type t [@@deriving yojson]
@@ -15,7 +15,8 @@ type transaction = {
   operation_raw_hash : string;
   source : Key_hash.t;
   operation : string;
-  tickets : (Ticket_id.t * int64) list;
+  tickets : (Deku_ledger.Ticket_id.t * N.t) list;
+  level : Deku_concepts.Level.t;
 }
 [@@deriving yojson]
 
@@ -24,7 +25,7 @@ type vm_client_message =
   | Noop_transaction
   | Set of set
   | Get_Initial_State
-  | Give_Tickets of (Ticket_id.t * int64) list
+  | Give_Tickets of (Deku_ledger.Ticket_id.t * N.t) list
   | Set_Initial_State of State.t
   | Get of string
 [@@deriving yojson]
@@ -33,10 +34,10 @@ type vm_server_message =
   | Init of set list
   | Stop
   | Set of set
-  | Take_tickets of string
+  | Take_tickets of Deku_ledger.Address.t
   | Deposit_tickets of {
-      address : string;
-      tickets : (Ticket_id.t * int64) list;
+      address : Deku_ledger.Address.t;
+      tickets : (Deku_ledger.Ticket_id.t * N.t) list;
     }
   | Error of string
 [@@deriving yojson]

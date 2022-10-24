@@ -2,6 +2,7 @@ open Deku_protocol
 open Deku_concepts
 open Deku_crypto
 open Deku_stdlib
+open Deku_ledger
 
 let alice_secret =
   Secret.of_b58 "edsk3EYk77QNx9HM4YDh5rv5nzBL68z2YGtBUGXhkw3rMhB2eCNvHf"
@@ -20,7 +21,7 @@ let ticket_id =
     |> Option.get
   in
   let data = Bytes.of_string "" in
-  Ticket_id.make address data
+  Ticket_id.make (Tezos address) data
 
 let test_serde_transaction () =
   let transaction =

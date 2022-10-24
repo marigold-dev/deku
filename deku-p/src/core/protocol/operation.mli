@@ -1,5 +1,7 @@
 open Deku_crypto
 open Deku_concepts
+open Deku_ledger
+open Deku_stdlib
 
 exception Invalid_signature
 exception Invalid_source
@@ -14,7 +16,7 @@ type operation = private
   | Operation_vm_transaction of {
       sender : Address.t;
       operation : string;
-      tickets : (Ticket_id.t * int64) list;
+      tickets : (Ticket_id.t * N.t) list;
     }
   | Operation_withdraw of {
       sender : Address.t;

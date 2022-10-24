@@ -14,11 +14,11 @@ let tezos_address =
 
 let deku_address =
   let parser string =
-    string |> Deku_protocol.Address.of_b58
+    string |> Deku_ledger.Address.of_b58
     |> Option.to_result ~none:(`Msg "Cannot parse the given address")
   in
   let printer ppf address =
-    Format.fprintf ppf "%s" (address |> Deku_protocol.Address.to_b58)
+    Format.fprintf ppf "%s" (address |> Deku_ledger.Address.to_b58)
   in
   conv (parser, printer)
 
@@ -38,10 +38,10 @@ let ticket_id =
     | `Cannot_parse -> `Msg "Expected a ticket id"
   in
   let parser string =
-    Deku_protocol.Ticket_id.of_string string |> Result.map_error string_of_error
+    Deku_ledger.Ticket_id.of_string string |> Result.map_error string_of_error
   in
   let printer ppf address =
-    Format.fprintf ppf "%s" (address |> Deku_protocol.Ticket_id.to_string)
+    Format.fprintf ppf "%s" (address |> Deku_ledger.Ticket_id.to_string)
   in
   conv (parser, printer)
 

@@ -1,4 +1,5 @@
 open Deku_crypto
+open Deku_stdlib
 open External_vm_protocol
 
 exception Vm_lifecycle_error of string
@@ -46,7 +47,12 @@ let set_initial_state state =
          state"
   | Some vm -> vm.send (Set_Initial_State state)
 
-let apply_vm_operation_exn ~state ~source ~tickets operation =
+type ledger_api =
+  < take_tickets : Deku_ledger.Address.t -> (Deku_ledger.Ticket_id.t * N.t) list
+  ; deposit : Deku_ledger.Address.t -> Deku_ledger.Ticket_id.t * N.t -> unit >
+
+let apply_vm_operation_exn ~state ~ledger_api ~level ~source ~tickets operation
+    =
   match !vm with
   | Some vm ->
       (* TODO: this is a dumb way to do things. We should have a better protocol than JSON. *)
@@ -55,7 +61,8 @@ let apply_vm_operation_exn ~state ~source ~tickets operation =
       | Some (operation_hash, operation) ->
           let operation_raw_hash = BLAKE2b.BLAKE2b_256.to_hex operation_hash in
           vm.send
-            (Transaction { source; operation; tickets; operation_raw_hash }));
+            (Transaction
+               { source; operation; tickets; operation_raw_hash; level }));
 
       let finished = ref false in
       let state = ref state in
@@ -68,9 +75,14 @@ let apply_vm_operation_exn ~state ~source ~tickets operation =
                   initialized")
         | Stop -> finished := true
         | Set { key; value } -> state := State.set key value !state
-        | Take_tickets _ | Deposit_tickets _ ->
-            Logs.warn (fun m ->
-                m "FIXME: implement take tickets and deposit tickets")
+        | Deposit_tickets { tickets; address } ->
+            List.iter
+              (fun (ticket, amount) ->
+                ledger_api#deposit address (ticket, amount))
+              tickets
+        | Take_tickets address ->
+            let tickets = ledger_api#take_tickets address in
+            vm.send (Give_Tickets tickets)
         | Error message -> raise (Vm_execution_error message)
       done;
       !state

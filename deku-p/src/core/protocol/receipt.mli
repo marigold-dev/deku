@@ -1,3 +1,5 @@
+open Deku_ledger
+
 type receipt =
   | Ticket_transfer_receipt of { operation : Operation_hash.t }
   | Withdraw_receipt of {

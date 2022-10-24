@@ -46,17 +46,36 @@ module Address = struct
   type t = Address
 
   let parser path =
+    let open Deku_ledger in
     let serialize address = Address.to_b58 address in
     let parse string = Address.of_b58 string in
     Routes.custom ~serialize ~parse ~label:":address" path
 end
 
 module Ticketer = struct
-  type t = Deku_tezos.Contract_hash.t
+  type t = Deku_ledger.Ticket_id.ticketer
+
+  open Deku_ledger.Ticket_id
 
   let parser path =
-    let serialize ticketer = Deku_tezos.Contract_hash.to_b58 ticketer in
-    let parse string = Deku_tezos.Contract_hash.of_b58 string in
+    let serialize ticket_id =
+      match ticket_id with
+      | Tezos contract_hash -> Deku_tezos.Contract_hash.to_b58 contract_hash
+      | Deku contract_address ->
+          Deku_ledger.Contract_address.to_b58 contract_address
+    in
+    let parse ticketer =
+      Deku_repr.decode_variant
+        [
+          (fun x ->
+            Deku_tezos.Contract_hash.of_b58 x
+            |> Option.map (fun x -> Deku_ledger.Ticket_id.Tezos x));
+          (fun x ->
+            Deku_ledger.Contract_address.of_b58 x
+            |> Option.map (fun x -> Deku_ledger.Ticket_id.Deku x));
+        ]
+        ticketer
+    in
     Routes.custom ~serialize ~parse ~label:":ticketer" path
 end
 

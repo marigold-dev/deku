@@ -2,6 +2,7 @@ open Deku_crypto
 open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
+open Deku_ledger
 
 let domains =
   match Sys.getenv_opt "DEKU_DOMAINS" with
@@ -31,7 +32,7 @@ module Zero_ops = struct
       |> Option.get
     in
     let data = Bytes.of_string "" in
-    Ticket_id.make address data
+    Ticket_id.make (Tezos address) data
 
   let generate () =
     let secret = Ed25519.Secret.generate () in
@@ -278,7 +279,8 @@ let ledger_balance () =
               Option.get
                 (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
             in
-            Ticket_id.make ticketer (Bytes.make 0 '\000')
+            Ticket_id.make (Deku_ledger.Ticket_id.Tezos ticketer)
+              (Bytes.make 0 '\000')
           in
           (sender, amount, ticket_id))
     in
@@ -325,7 +327,7 @@ let ledger_transfer () =
               Option.get
                 (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
             in
-            Ticket_id.make ticketer (Bytes.make 0 '\000')
+            Ticket_id.make (Tezos ticketer) (Bytes.make 0 '\000')
           in
           (sender, receiver, amount, ticket_id))
     in

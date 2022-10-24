@@ -50,7 +50,13 @@ let main { wallet; named_pipe_path; content; vm } =
   let source = Identity.key_hash identity in
   log "Applying transaction";
   let state =
-    External_vm_client.apply_vm_operation_exn ~state ~source ~tickets:[]
+    External_vm_client.apply_vm_operation_exn ~level
+      ~ledger_api:
+        (object
+           method take_tickets _ = assert false
+           method deposit _ _ = assert false
+        end)
+      ~state ~source ~tickets:[]
       (Some (operation_raw_hash, content))
   in
   let json = External_vm_protocol.State.yojson_of_t state in

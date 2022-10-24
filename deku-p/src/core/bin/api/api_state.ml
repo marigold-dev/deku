@@ -39,6 +39,7 @@ let find_withdraw_proof ~operation_hash state =
   match Operation_hash.Map.find_opt operation_hash receipts with
   | None -> Error `Unknown_operation
   | Some (Withdraw_receipt { operation = _; handle }) ->
+      let open Deku_ledger in
       let withdrawal_handles_hash =
         Ledger.withdrawal_handles_root_hash ledger
       in

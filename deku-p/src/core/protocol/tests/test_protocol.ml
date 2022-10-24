@@ -3,6 +3,7 @@ open Deku_crypto
 open Deku_stdlib
 open Deku_protocol
 open Deku_constants
+open Deku_ledger
 
 let alice_secret =
   Secret.of_b58 "edsk3EYk77QNx9HM4YDh5rv5nzBL68z2YGtBUGXhkw3rMhB2eCNvHf"
@@ -22,7 +23,7 @@ let ticket_id =
     |> Option.get
   in
   let data = Bytes.of_string "" in
-  Ticket_id.make address data
+  Ticket_id.make (Tezos address) data
 
 (* helper to create in an easy way an operation that transfer n token from alice to bob *)
 let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =

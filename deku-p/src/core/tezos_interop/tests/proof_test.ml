@@ -5,6 +5,7 @@
 open Deku_protocol
 open Deku_crypto
 open Common
+open Deku_ledger
 
 type api_response = {
   withdrawal_handles_hash : Ledger.Withdrawal_handle.hash;
@@ -31,7 +32,10 @@ let main operation_hash verbose host =
     api_response_of_yojson body
   in
   let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
-  let (Ticket_id { ticketer; data }) = ticket_id in
+  (* FIXME: we should remove -8 in the future. *)
+  let[@warning "-8"] (Ticket_id.Ticket_id { ticketer = Tezos ticketer; data }) =
+    ticket_id
+  in
   Format.printf
     {|(Pair (Pair %S
       (Pair (Pair %s 0x%s) %d %S)

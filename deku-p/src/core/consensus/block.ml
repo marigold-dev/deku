@@ -2,6 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_protocol
+open Deku_ledger
 
 type block =
   | Block of {

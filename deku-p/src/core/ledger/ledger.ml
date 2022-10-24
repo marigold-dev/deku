@@ -35,7 +35,10 @@ module Withdrawal_handle = struct
   let equal handle1 handle2 = BLAKE2b.equal handle1.hash handle2.hash
 
   let hash ~id ~owner ~amount ~ticket_id =
-    let (Ticket_id.Ticket_id { ticketer; data }) = ticket_id in
+    let[@warning "-8"] (Ticket_id.Ticket_id { ticketer = Tezos ticketer; data })
+        =
+      ticket_id
+    in
     let ticketer =
       Deku_tezos.Address.Originated { contract = ticketer; entrypoint = None }
     in
@@ -105,6 +108,12 @@ let transfer ~sender ~receiver ~amount ~ticket_id
 
 let withdraw ~sender ~destination ~amount ~ticket_id t =
   let (Ledger { table; withdrawal_handles }) = t in
+  let%ok ticket_id =
+    match ticket_id with
+    | Ticket_id.Ticket_id { ticketer = Deku _; data = _ } ->
+        Error Insufficient_funds
+    | Ticket_id.Ticket_id { ticketer = Tezos _; data = _ } -> Ok ticket_id
+  in
   let%ok table =
     Ticket_table.withdraw ~sender ~amount ~ticket_id table
     |> Result.map_error (function _ -> Insufficient_funds)

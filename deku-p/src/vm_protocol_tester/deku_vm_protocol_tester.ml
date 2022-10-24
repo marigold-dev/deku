@@ -34,6 +34,12 @@ let main { named_pipe_path; content = _ } =
   print_endline "Submitting a transaction";
   let state =
     External_vm_client.apply_vm_operation_exn ~state
+      ~level:Deku_concepts.Level.zero
+      ~ledger_api:
+        (object
+           method take_tickets _ = assert false
+           method deposit _ _ = assert false
+        end)
       ~source:(Identity.key_hash identity)
       ~tickets:[]
       (Some (operation_raw_hash, content))
@@ -61,6 +67,12 @@ let main { named_pipe_path; content = _ } =
   print_endline "Submitting a transaction";
   let state =
     External_vm_client.apply_vm_operation_exn ~state
+      ~level:Deku_concepts.Level.zero
+      ~ledger_api:
+        (object
+           method take_tickets _ = assert false
+           method deposit _ _ = assert false
+        end)
       ~source:(Identity.key_hash identity)
       ~tickets:[]
       (Some (operation_raw_hash, content))
