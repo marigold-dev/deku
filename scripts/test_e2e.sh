@@ -124,7 +124,7 @@ run-test() {
 
   ticket_data="Pair \"$DUMMY_TICKET_ADDRESS\" 0x"
 
-  sleep 10
+  sleep 20
 
   # We do 3 withdraws:
   # Withdraw 1 proof should not change (except for the tree)
@@ -142,35 +142,35 @@ run-test() {
   fi
 
   message Withdraw 1
-  op_hash1="$(dune exec src/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret1 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')"
+  op_hash1="$(dune exec deku-p/src/core/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret1 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')"
 
   message Transfer to $tz_addr2
 
-  dune exec src/tezos_interop/tests/transaction_test.exe "$ticket_data" $tz_addr2 $secret1
+  dune exec deku-p/src/core/tezos_interop/tests/transaction_test.exe "$ticket_data" $tz_addr2 $secret1
 
   sleep 3
 
   message Proof of withdraw 1
-  proof1_1=$(dune exec src/tezos_interop/tests/proof_test.exe $op_hash1)
+  proof1_1=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash1)
 
   message Withdraw 2
-  op_hash2="$(dune exec src/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
+  op_hash2="$(dune exec deku-p/src/core/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
 
   sleep 2
 
   message Withdraw 3
-  op_hash3="$(dune exec src/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
+  op_hash3="$(dune exec deku-p/src/core/tezos_interop/tests/withdraw_test.exe "$ticket_data" $DUMMY_TICKET_ADDRESS $secret2 | sed -n 's/operation.hash: "\(Do[[:alnum:]]*\)"/\1/p')" || exit 1
 
   sleep 15 # FIXME check how long we have to wait
 
   message Proof of withdraw 3
-  proof3_1=$(dune exec src/tezos_interop/tests/proof_test.exe $op_hash3)
+  proof3_1=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash3)
 
   message Proof of withdraw 2
-  proof2_1=$(dune exec src/tezos_interop/tests/proof_test.exe $op_hash2)
+  proof2_1=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash2)
 
   message Proof of withdraw 1, again
-  proof1_2=$(dune exec src/tezos_interop/tests/proof_test.exe $op_hash1)
+  proof1_2=$(dune exec deku-p/src/core/tezos_interop/tests/proof_test.exe $op_hash1)
 
   sleep 30
 
