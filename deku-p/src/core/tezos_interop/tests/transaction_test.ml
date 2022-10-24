@@ -29,7 +29,8 @@ let main ticket_id receiver secret verbose host =
   Printf.eprintf "%d\n%!" code;
   let (Operation.Operation { hash; _ }) = operation in
   let hash = Operation_hash.to_blake2b hash in
-  Printf.printf "operation.hash: %s\n%!" (BLAKE2b.to_hex hash)
+  Printf.printf "operation.hash: %s\n%!" (BLAKE2b.to_hex hash);
+  exit 0
 
 open Cmdliner
 

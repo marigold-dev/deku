@@ -50,7 +50,8 @@ let main operation_hash verbose host =
                (BLAKE2b.to_hex left) (BLAKE2b.to_hex right))
            proof
         |> String.concat " ;\n" |> String.trim);
-      print_endline "")
+      print_endline "";
+      exit 0)
 
 open Cmdliner
 
