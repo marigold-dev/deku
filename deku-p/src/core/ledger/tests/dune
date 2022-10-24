@@ -1,0 +1,10 @@
+(executable
+ (name deku_ledger_tests)
+ (libraries deku_ledger alcotest))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./deku_ledger_tests.exe))
+ (action
+  (run %{exe})))
