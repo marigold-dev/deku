@@ -44,7 +44,7 @@
     in
 
     {
-      packages = { default = deku; inherit deku deku-static; };
+      packages = { default = deku; inherit deku deku-static docker; };
       apps = {
         node = {
           type = "app";
