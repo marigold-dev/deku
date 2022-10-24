@@ -95,6 +95,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.with_body (module Helpers_hash_operation)
        |> Server.with_body (module Post_operation)
        |> Server.without_body (module Get_vm_state)
+       |> Server.without_body (module Get_vm_state_key)
        |> Server.make_handler ~state)
   in
   let config = Piaf.Server.Config.create port in

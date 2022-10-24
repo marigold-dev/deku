@@ -264,3 +264,17 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
     let (Protocol.Protocol { vm_state; _ }) = protocol in
     Ok vm_state
 end
+
+module Get_vm_state_key : NO_BODY_HANDLERS = struct
+  type path = string
+  type response = string option [@@deriving yojson_of]
+
+  let meth = `GET
+  let path = Routes.(version / s "state" / s "unix" / str /? nil)
+  let route = Routes.(path @--> fun key -> key)
+
+  let handler ~path:key ~state =
+    let Api_state.{ protocol; _ } = state in
+    let (Protocol.Protocol { vm_state; _ }) = protocol in
+    External_vm_protocol.State.get key vm_state |> Result.ok
+end
