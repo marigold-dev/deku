@@ -18,12 +18,12 @@ using_flextesa() {
   fi
 }
 
-tezos_client() {
+octez_client() {
   if using_flextesa
   then
-    docker exec -t deku_flextesa tezos-client "$@"
+    docker exec -t deku_flextesa octez-client "$@"
   else
-    nix run github:marigold-dev/tezos-nix#tezos-client -- "$@"
+    nix run github:marigold-dev/tezos-nix#octez-client -- "$@"
   fi
 }
 

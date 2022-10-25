@@ -1,2 +1,0 @@
-{ "base_dir": "/root/.tezos-client", "endpoint": "http://localhost:20000",
-  "web_port": 8080, "confirmations": 0 }

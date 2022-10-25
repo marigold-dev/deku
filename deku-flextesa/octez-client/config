@@ -1,0 +1,2 @@
+{ "base_dir": "/root/.octez-client", "endpoint": "http://localhost:20000",
+  "web_port": 8080, "confirmations": 0 }
