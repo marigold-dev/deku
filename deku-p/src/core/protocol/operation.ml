@@ -25,7 +25,7 @@ type operation =
     }
   | Operation_noop of { sender : Address.t }
 
-and t = operation [@@deriving show]
+and t = operation [@@deriving show, yojson]
 
 let encoding =
   (* TODO: bench Data_encoding.union vs Data_encoding.matching*)
