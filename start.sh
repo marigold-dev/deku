@@ -22,7 +22,6 @@ export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
 
 # Starting only one API node
-export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
 export DEKU_API_NODE_URI="127.0.0.1:4440"
 export DEKU_API_PORT=8080
 export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
