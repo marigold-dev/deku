@@ -295,3 +295,27 @@ module Get_stats : NO_BODY_HANDLERS = struct
     let Deku_metrics.{ latency; tps } = Deku_metrics.get_statistics () in
     Ok { latency; tps }
 end
+
+module Get_hexa_to_signed : HANDLERS = struct
+  type path = unit
+
+  type body = { nonce : Nonce.t; level : Level.t; operation : Operation.t }
+  [@@deriving of_yojson]
+
+  type response = { bytes : string } [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "encode-operation" /? nil)
+  let route = Routes.(path @--> ())
+
+  let hash_encoding =
+    Data_encoding.tup3 Nonce.encoding Level.encoding Operation.encoding
+
+  let handler ~path:_ ~body ~state:_ =
+    let { nonce; level; operation } = body in
+    let binary =
+      Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
+    in
+    let bytes = binary |> Hex.of_string |> Hex.show in
+    Ok { bytes }
+end
