@@ -117,7 +117,8 @@ let send ~message ~write =
   with exn -> Format.eprintf "write.error: %s\n%!" (Printexc.to_string exn)
 
 let broadcast message network =
-  Format.eprintf "sending: %d\n%!" (Key_hash.Map.cardinal network.connected_to);
+  Logs.debug (fun m ->
+      m "sending: %d\n%!" (Key_hash.Map.cardinal network.connected_to));
   Key_hash.Map.iter
     (fun _connection write -> send ~message ~write)
     network.connected_to
