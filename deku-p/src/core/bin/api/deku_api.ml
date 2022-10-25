@@ -17,7 +17,12 @@ let apply_block ~env ~folder ~state ~block =
   let (Payload.Payload payload) = Payload.decode ~payload in
   let payload =
     Parallel.map_p
-      (fun string -> string |> Yojson.Safe.from_string |> Operation.t_of_yojson)
+      (fun string ->
+        let operation =
+          string |> Data_encoding.Binary.of_string_exn Operation.Signed.encoding
+        in
+        let (Operation.Signed.Signed_operation { initial; _ }) = operation in
+        initial)
       payload
   in
   let protocol, receipts, _ =
