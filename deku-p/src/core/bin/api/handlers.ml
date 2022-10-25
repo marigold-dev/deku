@@ -282,7 +282,7 @@ module Get_vm_state_key : NO_BODY_HANDLERS = struct
     External_vm_protocol.State.get key vm_state |> Result.ok
 end
 
-module Get_stats = struct
+module Get_stats : NO_BODY_HANDLERS = struct
   type path = unit
   type response = { latency : float; tps : float } [@@deriving yojson_of]
 
