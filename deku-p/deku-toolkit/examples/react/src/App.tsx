@@ -19,14 +19,15 @@ const dekuSigner = fromMemorySigner(
   new InMemorySigner("edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq")
 );
 
-const deku = new DekuToolkit({ dekuRpc: "http://localhost:8080", dekuSigner })
-  .setTezosRpc("http://localhost:20000")
+const deku = new DekuToolkit({ dekuRpc: "http://0.0.0.0:8080", dekuSigner })
+  .setTezosRpc("http://localhost:20000");
 
 const App: () => JSX.Element = () => {
   const [level, setLevel] = useState(0);
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
+    isSync: boolean;
   } | null>(null);
 
   const [vmState, setVmState] = useState<unknown>(null);
@@ -159,6 +160,7 @@ const App: () => JSX.Element = () => {
       <img src={logo} alt="deku logo" />
       {info && <div>Consensus : {info.consensus} </div>}
       {/* {info && <div>Discovery : {info.discovery} </div>} */}
+      {info && <div>Is sync : {info.isSync.toString()} </div>}
       <div>Level : {level} </div>
       <div>Balance : {balance}</div>
       <div>State : {JSON.stringify(vmState)}</div>
