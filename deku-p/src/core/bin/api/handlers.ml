@@ -61,6 +61,7 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
 
   type path = Level_or_hash.t
   type response = Yojson.Safe.t [@@deriving yojson_of]
+  (*TODO: should returns a Repr.Block.t *)
 
   let meth = `GET
 
