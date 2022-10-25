@@ -15,8 +15,12 @@ message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
 export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
 export DEKU_VALIDATOR_URIS="127.0.0.1:4440,127.0.0.1:4441,127.0.0.1:4442,127.0.0.1:4443"
 export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
-export DEKU_TEZOS_CONSENSUS_ADDRESS="KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY"
-export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
+# export DEKU_TEZOS_CONSENSUS_ADDRESS="KT1LHcxdRTgyFp1TdrgodVekLFkQwzFnTJcY"
+export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+
+# export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
+export DEKU_DUMMYT_TICKET="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+
 export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
@@ -49,7 +53,7 @@ for N in 0 1 2 3; do
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=10000 \
+    --default-block-size=100000 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --named-pipe-path "./flextesa_chain/data/$N/pipe" \

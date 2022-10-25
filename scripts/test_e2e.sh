@@ -93,8 +93,6 @@ local-setup() {
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
   export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 
-
-
   message "Starting the API"
   nix run '.#decookies-vm' -- "$DEKU_API_VM" &
   sleep 2
