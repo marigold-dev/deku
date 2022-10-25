@@ -174,7 +174,7 @@ module Helpers_operation_message : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Operation.t [@@deriving of_yojson]
+  type body = Operation.Signed.t [@@deriving of_yojson]
 
   type response = { hash : Message_hash.t; content : Message.Content.t }
   [@@deriving yojson_of]
@@ -228,7 +228,7 @@ module Post_operation : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Operation.t [@@deriving of_yojson]
+  type body = Operation.Signed.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
   let meth = `POST
@@ -246,7 +246,10 @@ module Post_operation : HANDLERS = struct
           }) =
       Message.encode ~content
     in
-    let (Operation.Operation { hash = operation_hash; _ }) = operation in
+    let (Signed_operation
+          { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
+      operation
+    in
     Network_manager.broadcast ~raw_header ~raw_content network;
     Ok { hash = operation_hash }
 end
