@@ -35,12 +35,12 @@ end
 
 module Get_genesis : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "genesis" /? nil)
   let route = Routes.(path @--> ())
-  let handler ~path:_ ~state:_ = Ok Genesis.block
+  let handler ~path:_ ~state:_ = Ok (Genesis.block |> Repr.Block.of_block)
 end
 
 module Get_head : NO_BODY_HANDLERS = struct
