@@ -228,30 +228,34 @@ module Post_operation : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Operation.Signed.t [@@deriving of_yojson]
+  type body = Repr.Signed_operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
   let meth = `POST
   let path = Routes.(version / s "operations" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~path:_ ~body:operation ~state =
+  let handler ~path:_ ~body ~state =
     let Api_state.{ network; _ } = state in
-    let content = Message.Content.operation operation in
-    let (Message
-          {
-            header = _;
-            content = _;
-            network = Network_message { raw_header; raw_content };
-          }) =
-      Message.encode ~content
-    in
-    let (Signed_operation
-          { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
-      operation
-    in
-    Network_manager.broadcast ~raw_header ~raw_content network;
-    Ok { hash = operation_hash }
+    let operation = Repr.Signed_operation.to_signed body in
+    match operation with
+    | None -> Error Api_error.invalid_operation_signature
+    | Some operation ->
+        let content = Message.Content.operation operation in
+        let (Message
+              {
+                header = _;
+                content = _;
+                network = Network_message { raw_header; raw_content };
+              }) =
+          Message.encode ~content
+        in
+        let (Signed_operation
+              { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
+          operation
+        in
+        Network_manager.broadcast ~raw_header ~raw_content network;
+        Ok { hash = operation_hash }
 end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
