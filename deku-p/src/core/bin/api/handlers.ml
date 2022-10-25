@@ -45,7 +45,7 @@ end
 
 module Get_head : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "head" /? nil)
@@ -53,7 +53,7 @@ module Get_head : NO_BODY_HANDLERS = struct
 
   let handler ~path:_ ~state =
     let Api_state.{ current_block; _ } = state in
-    Ok current_block
+    Ok (current_block |> Repr.Block.of_block)
 end
 
 module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
