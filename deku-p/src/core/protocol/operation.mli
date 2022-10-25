@@ -26,7 +26,9 @@ type operation = private
     }
   | Operation_noop of { sender : Address.t }
 
-type t = operation [@@deriving show]
+type t = operation [@@deriving show, yojson]
+
+val encoding : t Data_encoding.t
 
 module Initial : sig
   type initial_operation = private
