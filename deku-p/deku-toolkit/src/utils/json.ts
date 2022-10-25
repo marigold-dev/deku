@@ -62,4 +62,10 @@ export default class JSONValue {
     as_json(): JSONType {
         return this._json
     }
+
+    as_bool(): boolean | null {
+        if (this._json === null) return null;
+        if (typeof this._json !== "boolean") return null
+        return this._json
+    }
 }
