@@ -86,7 +86,7 @@ module Initial = struct
         operation : operation;
       }
 
-  and t = initial_operation [@@deriving show]
+  and t = initial_operation [@@deriving show, yojson]
 
   let hash_encoding = Data_encoding.tup3 Nonce.encoding Level.encoding encoding
 
@@ -182,6 +182,12 @@ module Signed = struct
     let json = Data_encoding.Json.construct encoding signed in
     let json = Data_encoding.Json.to_string json in
     Yojson.Safe.from_string json
+
+  let make_with_signature ~key ~signature ~initial =
+    let (Initial.Initial_operation { hash; _ }) = initial in
+    match Signature.verify key signature (Operation_hash.to_blake2b hash) with
+    | false -> None
+    | true -> Some (Signed_operation { key; signature; initial })
 
   let ticket_transfer ~identity ~nonce ~level ~receiver ~ticket_id ~amount =
     let sender = Address.of_key_hash (Identity.key_hash identity) in
