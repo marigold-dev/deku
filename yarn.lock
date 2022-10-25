@@ -1631,8 +1631,17 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@marigold-dev/deku-toolkit@file:deku-p/deku-toolkit":
+"@marigold-dev/deku-toolkit@0.1.9":
   version "0.1.9"
+  resolved "https://registry.yarnpkg.com/@marigold-dev/deku-toolkit/-/deku-toolkit-0.1.9.tgz#dc2017e1cdd15cad19718056960b410c59c09f45"
+  integrity sha512-EpTh2o73+bqOqFIYSo3T+5SdqA2rzGrwQRfahXGAM2NQK7tWJS1SpO0+qidRhXLtR9ckKpAvTxRbHn6o1/wj2Q==
+  dependencies:
+    "@taquito/taquito" "^13.0.1"
+    blakejs "^1.2.1"
+    bs58check "^2.1.2"
+
+"@marigold-dev/deku-toolkit@file:deku-p/deku-toolkit":
+  version "0.1.10"
   dependencies:
     "@taquito/taquito" "^13.0.1"
     blakejs "^1.2.1"
