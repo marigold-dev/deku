@@ -4,7 +4,7 @@ import logo from "./logo.png";
 import {
   DekuToolkit,
   fromMemorySigner,
-} from "deku-toolkit";
+} from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 
 const containerStyle: CSS.Properties = {
