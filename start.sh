@@ -49,7 +49,7 @@ for N in 0 1 2 3; do
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=10000 \
+    --default-block-size=100000 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --named-pipe-path "./flextesa_chain/data/$N/pipe" \
