@@ -1,0 +1,4 @@
+{
+  "description": "decookies in jsligo for deku-c",
+  "dependencies": { "math-lib-core": "^1.0.1" }
+}

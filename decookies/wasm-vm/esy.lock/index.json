@@ -1,0 +1,33 @@
+{
+  "checksum": "34c461a84f8d9552f1b64b8e9b8f7233",
+  "root": "wasm-vm@link-dev:./package.json",
+  "node": {
+    "wasm-vm@link-dev:./package.json": {
+      "id": "wasm-vm@link-dev:./package.json",
+      "name": "wasm-vm",
+      "version": "link-dev:./package.json",
+      "source": {
+        "type": "link-dev",
+        "path": ".",
+        "manifest": "package.json"
+      },
+      "overrides": [],
+      "dependencies": [ "math-lib-core@1.0.1@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "math-lib-core@1.0.1@d41d8cd9": {
+      "id": "math-lib-core@1.0.1@d41d8cd9",
+      "name": "math-lib-core",
+      "version": "1.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://beta.packages.ligolang.org/-/api/math-lib-core/-/math-lib-core-1.0.1.tgz#sha1:21cea6fe9e924dad8023195554e4de48a6262a9a"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    }
+  }
+}
