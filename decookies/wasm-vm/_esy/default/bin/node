@@ -1,0 +1,4 @@
+#!/bin/sh
+export ESY__NODE_BIN_PATH="/Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/_esy/default/bin"
+exec "/nix/store/4ykq0lpvmskdlhrvz1j3kwslgc6c7pnv-nodejs-16.17.1/bin/node" -r "/Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/_esy/default/pnp.js" "$@"
+              
