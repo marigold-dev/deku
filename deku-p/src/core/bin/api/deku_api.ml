@@ -103,6 +103,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.without_body (module Get_vm_state_key)
        |> Server.without_body (module Get_stats)
        |> Server.with_body (module Get_hexa_to_signed)
+       |> Server.without_body (module Get_receipt)
        |> Server.make_handler ~state)
   in
   let config = Piaf.Server.Config.create port in
