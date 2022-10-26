@@ -317,8 +317,8 @@ export class DekuToolkit {
     return this.submitOperation(noopOperation);
   }
 
-  async wait(perationHash: OperationHashType): Promise<LevelType> {
-    console.log(perationHash);
+  async wait(operationHash: OperationHashType): Promise<LevelType> {
+    console.log(operationHash);
     throw "Feature not yet implemented";
   }
 }
