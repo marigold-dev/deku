@@ -56,8 +56,19 @@ const withdrawToDTO = (withdraw: OperationWithdraw) => {
   }]
 }
 
-type OperationContent = OperationTicketTransfer | OperationVmTransaction | OperationWithdraw
-type OperationType = "TicketTransfer" | "VmTransaction" | "Withdraw";
+type OperationNoop = {
+  sender: KeyHashType
+}
+
+const noopToDTO = (noop: OperationNoop) => {
+  const { sender } = noop;
+  return ["Operation_noop", {
+    sender: ["Implicit", sender]
+  }];
+}
+
+type OperationContent = OperationTicketTransfer | OperationVmTransaction | OperationWithdraw | OperationNoop
+type OperationType = "TicketTransfer" | "VmTransaction" | "Withdraw" | "Noop";
 
 // named initial in deku
 export type Operation = {
@@ -122,6 +133,20 @@ const createWithdraw = async (encodeOperation: encodeOperation, level: LevelType
   }
 }
 
+const createNoop = async (encodeOperation: encodeOperation, level: LevelType, nonce: NonceType, sender: KeyHashType): Promise<Operation> => {
+  const operation = { sender };
+  const bytes = await encodeOperation(nonce, level, noopToDTO(operation));
+  const hash = hashOperation(bytes);
+  return {
+    bytes,
+    hash,
+    nonce,
+    level,
+    type: "Noop",
+    operation
+  }
+}
+
 type DTO = ["Initial_operation", {
   hash: string,
   nonce: string,
@@ -153,6 +178,13 @@ const toDTO = (operation: Operation): DTO => {
         level: Level.toDTO(level),
         operation: withdrawToDTO(content as OperationWithdraw)
       }];
+    case "Noop":
+      return ["Initial_operation", {
+        hash: hash,
+        nonce: Nonce.toDTO(nonce),
+        level: Level.toDTO(level),
+        operation: noopToDTO(content as OperationNoop)
+      }];
   }
 }
 
@@ -160,5 +192,6 @@ export default {
   createTransaction,
   createVmOperation,
   createWithdraw,
+  createNoop,
   toDTO,
 }
