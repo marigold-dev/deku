@@ -12,6 +12,7 @@ type error_kind = private
   | Endpoint_not_found
   | Operation_not_found
   | Operation_is_not_a_withdraw
+  | Receipt_not_found
 
 type error = private { kind : error_kind; msg : string }
 type t = error
@@ -27,6 +28,7 @@ val method_not_allowed : string -> Piaf.Method.t -> error
 val endpoint_not_found : string -> error
 val operation_not_found : Operation_hash.t -> error
 val operation_is_not_a_withdraw : Operation_hash.t -> error
+val receipt_not_found: Operation_hash.t -> error
 
 (* Utils *)
 val yojson_of_t : error -> Yojson.Safe.t
