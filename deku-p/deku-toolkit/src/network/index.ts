@@ -78,7 +78,7 @@ export const makeEndpoints = (root: string): endpoints => ({
         uri: urlJoin(root, `${VERSION}/balance/${address}/${ticket_id.ticketer}/${ticket_id.data}`),
         expectedStatus: 200,
         parse: (json: JSONValue) => {
-          return json.at("balance").as_int();
+            return json.at("balance").as_int();
         }
     }),
     "GET_PROOF": (operation_hash: string) => ({
@@ -135,12 +135,11 @@ export const get = async <T>(endpoint: endpoint<T>): Promise<T> => {
     return parse(endpoint, status, json);
 }
 
-export const post = async <T>(endpoint: endpoint<T>, content: JSONType): Promise<T> => {
+export const post = async <T>(endpoint: endpoint<T>, content: unknown): Promise<T> => {
     const uri = endpoint.uri;
     const body = JSON.stringify(content);
     const response = await fetch(uri, { method: "POST", body });
     const status = response.status;
     const json: JSONType = await response.json();
     return parse(endpoint, status, json);
-
 }

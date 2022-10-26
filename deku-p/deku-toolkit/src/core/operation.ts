@@ -1,175 +1,158 @@
 import Amount, { Amount as AmountType } from "./amount"
 import { KeyHash as KeyHashType } from "./key-hash"
-import { Key as KeyType } from "./key"
 import Level, { Level as LevelType } from "./level"
 import Nonce, { Nonce as NonceType } from "./nonce"
-import JSONValue, { JSONType } from "../utils/json"
-import { TicketID } from "./ticket-id"
+import { JSONType } from "../utils/json"
+import { OperationHash as OperationHashType } from "./operation-hash";
+import { hashOperation } from "../utils/hash"
 
-type TransactionContent = {
+type OperationTicketTransfer = {
+    sender: KeyHashType,
     receiver: KeyHashType,
-    ticket_id: [string, TicketID],
-    amount: AmountType,
-}
-
-type VmOperationContent = {
-    payload: string
-}
-
-type WithdrawContent = {
-    owner: KeyHashType,
-    ticket_id: [string, TicketID],
+    ticketId: { ticketer: string, data: string },
     amount: AmountType
 }
 
-type GenericOperation<T, C> = {
-    level: LevelType,
+const ticketTransferToDTO = (transfer: OperationTicketTransfer) => {
+    const { sender, receiver, ticketId: { ticketer, data }, amount } = transfer;
+    return ["Operation_ticket_transfer", {
+        sender,
+        receiver,
+        ticket_id: ["Ticket_id", { ticketer, data }],
+        amount: Amount.toDTO(amount)
+    }];
+}
+
+type OperationVmTransaction = {
+    sender: KeyHashType,
+    operation: string,
+}
+
+const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
+    const { sender, operation } = vmTransaction;
+    return [
+        "Operation_vm_transaction", {
+            sender,
+            operation,
+            tickets: []
+        }
+    ]
+}
+
+type OperationWithdraw = {
+    sender: KeyHashType,
+    owner: KeyHashType, // "tezos type",
+    amount: AmountType
+    ticketId: { ticketer: string, data: string },
+}
+
+const withdrawToDTO = (withdraw: OperationWithdraw) => {
+    const { sender, owner, ticketId: { ticketer, data }, amount } = withdraw;
+    return ["Operation_withdraw", {
+        sender,
+        owner: ["Implicit", owner],
+        ticket_id: ["Ticket_id", { ticketer, data }],
+        amount: Amount.toDTO(amount)
+    }]
+}
+
+type OperationContent = OperationTicketTransfer | OperationVmTransaction | OperationWithdraw
+type OperationType = "TicketTransfer" | "VmTransaction" | "Withdraw";
+
+// named initial in deku
+export type Operation = {
+    bytes: Buffer, // Should not be there
+    hash: OperationHashType,
     nonce: NonceType,
-    source: KeyHashType,
-    type: T,
-    content: C
+    level: LevelType,
+    type: OperationType,
+    operation: OperationContent
 }
 
-type Transaction = GenericOperation<"Transaction", TransactionContent>
-type VmOperation = GenericOperation<"Vm", VmOperationContent>
-type Withdraw = GenericOperation<"Withdraw", WithdrawContent>
+type encodeOperation = (nonce: NonceType, level: LevelType, operation: JSONType) => Promise<Buffer>
 
-export type Operation = Transaction | VmOperation | Withdraw
-export type SignedOperation = {
-    key: KeyType,
-    signature: string,
-    operation: Operation
-}
-
-const createTransaction = (level: LevelType, nonce: NonceType, source: KeyHashType, receiver: KeyHashType, amount: AmountType, ticketer: string, data: string): Transaction => {
-  const a : Transaction = {
-        level,
-        nonce,
-        source,
-        type: "Transaction",
-        content: {
-            receiver,
-            ticket_id: ["Ticket_id", {
-              ticketer: ticketer,
-              data
-            }],
-            amount
-        }
-    }
-  return a;
-}
-
-const createVmOperation = (level: LevelType, nonce: NonceType, source: KeyHashType, payload: string): Operation => {
+const createTransaction = async (encodeOperation: encodeOperation, level: LevelType, nonce: NonceType, sender: KeyHashType, receiver: KeyHashType, amount: AmountType, ticketer: string, data: string): Promise<Operation> => {
+    const operation = {
+        sender, receiver, ticketId: { ticketer, data }, amount
+    };
+    const bytes = await encodeOperation(nonce, level, ticketTransferToDTO(operation));
+    const hash = hashOperation(bytes);
     return {
-        level,
+        bytes,
+        hash,
         nonce,
-        source,
-        type: "Vm",
-        content: {
-            payload
-        }
+        level,
+        type: "TicketTransfer",
+        operation
     }
 }
 
-const createWithdraw = (level: LevelType, nonce: NonceType, source: KeyHashType, owner: KeyHashType, amount: AmountType, ticketer: string, data: string): Withdraw => {
-    const a : Withdraw = {
-        level,
+const createVmOperation = async (encodeOperation: encodeOperation, level: LevelType, nonce: NonceType, sender: KeyHashType, payload: string): Promise<Operation> => {
+    const operation = {
+        sender, operation: payload, tickets: []
+    }
+    const bytes = await encodeOperation(nonce, level, vmTransactionToDTO(operation));
+    const hash = hashOperation(bytes);
+    return {
+        bytes,
+        hash,
         nonce,
-        source,
-        type: "Withdraw",
-        content: {
+        level,
+        type: "VmTransaction",
+        operation
+    }
+}
+
+const createWithdraw = async (encodeOperation: encodeOperation, level: LevelType, nonce: NonceType, sender: KeyHashType, owner: KeyHashType, amount: AmountType, ticketer: string, data: string): Promise<Operation> => {
+    const operation = {
+        sender,
             owner,
-            ticket_id: ["Ticket_id", {
-              ticketer: ticketer,
-              data
-            }],
+        ticketId: { ticketer, data },
             amount
         }
-    }
-  return a;
-}
-
-const toDTO = (operation: Operation): JSONValue => {
-    const { level, nonce, source, type, content} = operation;
-    switch (type) {
-        case "Transaction": {
-            const { receiver, amount, ticket_id } = content;
-            const dto = {
-                level: Level.toDTO(level),
-                nonce: Nonce.toDTO(nonce),
-                source: source,
-                content: ["Ticket_transfer", { receiver, ticket_id, amount: Amount.toDTO(amount) }]
-            }
-            return JSONValue.of(dto);
-        }
-        case "Withdraw": {
-            const { owner, amount, ticket_id } = content;
-            const dto = {
-                level: Level.toDTO(level),
-                nonce: Nonce.toDTO(nonce),
-                source: source,
-                content: ["Tezos_withdraw", { owner: ["Implicit", owner], ticket_id, amount: Amount.toDTO(amount) }]
-            }
-            return JSONValue.of(dto);
-        }
-        case "Vm": {
-            const {payload} = content;
-            const dto = {
-                level: Level.toDTO(level),
-                nonce: Nonce.toDTO(nonce),
-                source: source,
-                content: ["Vm_transaction", {operation:payload, tickets:[]}]
-            }
-            return JSONValue.of(dto);
-        }
-    }
-}
-
-const signedToDTO = (signedOperation: SignedOperation): JSONType => {
-    const { key, signature, operation } = signedOperation;
-    const op = toDTO(operation).as_json();
+    const bytes = await encodeOperation(nonce, level, withdrawToDTO(operation));
+    const hash = hashOperation(bytes);
     return {
-        key,
-        signature,
-        operation: op
+        bytes,
+        hash,
+        nonce,
+        level,
+        type: "Withdraw",
+        operation
     }
 }
 
-// FIXME to update with ticket ids and withdraws
-const ofDTO = (json: JSONValue): Operation | null => {
-    const level_json = json.at("level");
-    const nonce_json = json.at("nonce");
-    const source = json.at("source").as_string();
-    const content_array = json.at("content").as_array();
+type DTO = ["Initial_operation", {
+    hash: string,
+    nonce: string,
+    level: string,
+    operation: JSONType
+}]
 
-    if (content_array === null || source === null) return null
-
-    const [type_str, payload] = content_array;
-    const type = type_str.as_string();
-    if (type === null) return null;
-
-    const level = Level.ofDTO(level_json);
-    if(level === null) return null;
-
-    const nonce = Nonce.ofDTO(nonce_json);
-    if(nonce === null) return null;
-
+const toDTO = (operation: Operation): DTO => {
+    const { hash, nonce, level, type, operation: content } = operation;
     switch (type) {
-        case "Transaction": {
-            const amount_json = payload.at("amount");
-            const receiver_str = payload.at("receiver").as_string();
-            if (receiver_str === null) return null;
-            const amount = Amount.ofDTO(amount_json);
-            if (amount === null) return null;
-            return createTransaction(level, nonce, source, receiver_str, amount, "error", "error");
-        }
-        case "Vm_transaction": {
-            const operation = payload.at("operation").as_string();
-            if(operation === null) return null;
-            return createVmOperation(level, nonce, source, operation);
-        }
-        default:
-            return null
+        case "TicketTransfer":
+            return ["Initial_operation", {
+                hash: hash,
+                nonce: Nonce.toDTO(nonce),
+                level: Level.toDTO(level),
+                operation: ticketTransferToDTO(content as OperationTicketTransfer)
+            }];
+        case "VmTransaction":
+            return ["Initial_operation", {
+                hash: hash,
+                nonce: Nonce.toDTO(nonce),
+                level: Level.toDTO(level),
+                operation: vmTransactionToDTO(content as OperationVmTransaction)
+            }];
+        case "Withdraw":
+            return ["Initial_operation", {
+                hash: hash,
+                nonce: Nonce.toDTO(nonce),
+                level: Level.toDTO(level),
+                operation: withdrawToDTO(content as OperationWithdraw)
+            }];
     }
 }
 
@@ -178,6 +161,4 @@ export default {
     createVmOperation,
     createWithdraw,
     toDTO,
-    ofDTO,
-    signedToDTO
 }

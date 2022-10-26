@@ -1,6 +1,4 @@
 import { OperationHash as OperationHashType } from "../core/operation-hash";
-import Operation, { Operation as OperationType } from "../core/operation";
-import JSONValue from "./json";
 import * as blake from 'blakejs';
 import * as bs58check from 'bs58check';
 
@@ -14,9 +12,8 @@ const PREFIX = {
  * @param prefix the prefix of your hash
  * @returns
  */
-const toB58Hash = (prefix: Uint8Array) => (payload: JSONValue) => {
-    const payloadStr = JSON.stringify(payload.as_json());
-    const blakeHash = blake.blake2b(payloadStr, undefined, 32);
+const toB58Hash = (prefix: Uint8Array, bytes: Buffer) => {
+    const blakeHash = blake.blake2b(bytes, undefined, 32);
     const tmp = new Uint8Array(prefix.length + blakeHash.length);
     tmp.set(prefix);
     tmp.set(blakeHash, prefix.length);
@@ -24,15 +21,14 @@ const toB58Hash = (prefix: Uint8Array) => (payload: JSONValue) => {
     return b58;
 }
 
+// TODO: Where is it used ? 
 export const fromB58Hash = (x: string): string => {
     const y = bs58check.decode(x);
     const tmp = new Uint8Array(y.buffer).slice(0, 32 + 2);
     return "0x" + Buffer.from(tmp.slice(2)).toString("hex");
 }
 
-const createOperationHash = toB58Hash(PREFIX.Do);
-
-export const hashOperation = (operation: OperationType): OperationHashType => {
-    const json = Operation.toDTO(operation);
-    return createOperationHash(json);
+// TODO: Find a way to replace the buffer
+export const hashOperation = (bytes: Buffer): OperationHashType => {
+    return toB58Hash(PREFIX.Do, bytes);
 }

@@ -5,9 +5,10 @@ import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
 import { Block as BlockType } from "./core/block";
 import { KeyHash as KeyHashType } from './core/key-hash';
-import { Level as LevelType } from "./core/level";
+import Level, { Level as LevelType } from "./core/level";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
-import Operation, { Operation as OperationType } from "./core/operation";
+import { Operation as OperationType } from "./core/operation";
+import Operation from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
 import TicketID from './core/ticket-id';
 import { endpoints, get, makeEndpoints, post } from "./network";
@@ -189,17 +190,25 @@ export class DekuToolkit {
         }
     }
 
+    /** Helper to encode operation to binary, so that core/operations stay pure 
+     * TODO: find a way to not use the API 
+    */
+    private async encodeOperation(nonce: NonceType, level: NonceType, operation: unknown): Promise<Buffer> {
+        const body = {
+            nonce: Nonce.toDTO(nonce),
+            level: Level.toDTO(level),
+            operation
+        };
+        return post(this.endpoints["ENCODE_OPERATION"], body);
+    }
+
     private async submitOperation(operation: OperationType): Promise<OperationHashType> {
         // Retrieve the deku signer
         const dekuSigner = this.assertTzWallet();
-
         // Sign the transaction
         const signedOperation = await dekuSigner.signOperation(operation);
-
         // Send the operation
-        const body = Operation.signedToDTO(signedOperation);
-        const hash = await post(this.endpoints["OPERATIONS"], body);
-        console.info("operation submitted");
+        const hash = await post(this.endpoints["OPERATIONS"], signedOperation);
         return hash
     }
 
@@ -215,7 +224,8 @@ export class DekuToolkit {
     async transferTo(receiver: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
         const { source, level, nonce } = await this.parseOperationOptions(options);
         // Create the transaction
-        const transaction = Operation.createTransaction(
+        const transaction = await Operation.createTransaction(
+            this.encodeOperation.bind(this),
             level,
             nonce,
             source,
@@ -238,8 +248,9 @@ export class DekuToolkit {
      */
     async withdrawTo(owner: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
         const { source, level, nonce } = await this.parseOperationOptions(options);
-        // Create the transaction
-        const withdraw = Operation.createWithdraw(
+        // Create the withdraw
+        const withdraw = await Operation.createWithdraw(
+            this.encodeOperation.bind(this),
             level,
             nonce,
             source,
@@ -259,7 +270,8 @@ export class DekuToolkit {
      */
     async submitVmOperation(payload: string, options?: OptOptions): Promise<OperationHashType> {
         const { source, level, nonce } = await this.parseOperationOptions(options);
-        const vmOperation = Operation.createVmOperation(level, nonce, source, payload);
+        // Create the vm transaction
+        const vmOperation = await Operation.createVmOperation(this.encodeOperation.bind(this), level, nonce, source, payload);
         return this.submitOperation(vmOperation);
     }
 
