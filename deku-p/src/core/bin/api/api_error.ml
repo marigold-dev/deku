@@ -12,6 +12,7 @@ type error_kind =
   | Endpoint_not_found
   | Operation_not_found
   | Operation_is_not_a_withdraw
+  | Receipt_not_found
 
 type error = { kind : error_kind; msg : string }
 type t = error
@@ -74,6 +75,12 @@ let operation_is_not_a_withdraw operation_hash =
         (Operation_hash.to_b58 operation_hash);
   }
 
+let receipt_not_found operation_hash = 
+  {
+    kind = Receipt_not_found;
+    msg = Format.sprintf "The receipt of the operation [%s] is not found, maybe your operation is not yet included" (Operation_hash.to_b58 operation_hash)
+  }
+
 module Repr = struct
   type t = { code : string; msg : string } [@@deriving yojson_of]
 
@@ -91,6 +98,7 @@ module Repr = struct
       | Endpoint_not_found -> "ENDPOINT_NOT_FOUND"
       | Operation_not_found -> "OPERATION_NOT_FOUND"
       | Operation_is_not_a_withdraw -> "OPERATION_IS_NOT_A_WITHDRAW"
+      | Receipt_not_found -> "RECEIPT_NOT_FOUND"
     in
     { code; msg }
 end
@@ -110,3 +118,4 @@ let to_http_code { kind; _ } =
   | Endpoint_not_found -> 404
   | Operation_not_found -> 404
   | Operation_is_not_a_withdraw -> 400
+  | Receipt_not_found -> 404
