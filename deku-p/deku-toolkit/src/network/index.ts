@@ -32,7 +32,7 @@ export type endpoints = {
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
-  GET_CHAIN_INFO: {
+  "GET_CHAIN_INFO": {
     uri: urlJoin(root, `${VERSION}/chain/info`),
     expectedStatus: 200,
     parse: (json: JSONValue) => {
@@ -42,6 +42,7 @@ export const makeEndpoints = (root: string): endpoints => ({
       // if (discovery === null) return null;
       const isSync = json.at("is_sync").as_bool();
       if (isSync === null) return null;
+
       return { consensus, isSync }
     }
   },
@@ -138,14 +139,11 @@ export const get = async <T>(endpoint: endpoint<T>): Promise<T> => {
   return parse(endpoint, status, json);
 };
 
-export const post = async <T>(
-  endpoint: endpoint<T>,
-  content: JSONType
-): Promise<T> => {
+export const post = async <T>(endpoint: endpoint<T>, content: unknown): Promise<T> => {
   const uri = endpoint.uri;
   const body = JSON.stringify(content);
   const response = await fetch(uri, { method: "POST", body });
   const status = response.status;
   const json: JSONType = await response.json();
   return parse(endpoint, status, json);
-};
+}

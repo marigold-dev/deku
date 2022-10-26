@@ -4,10 +4,11 @@ import Discovery from "./contracts/discovery";
 import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
 import { Block as BlockType } from "./core/block";
-import { KeyHash as KeyHashType } from "./core/key-hash";
-import { Level as LevelType } from "./core/level";
+import { KeyHash as KeyHashType } from './core/key-hash';
+import Level, { Level as LevelType } from "./core/level";
 import Nonce, { Nonce as NonceType } from "./core/nonce";
-import Operation, { Operation as OperationType } from "./core/operation";
+import { Operation as OperationType } from "./core/operation";
+import Operation from "./core/operation";
 import { OperationHash as OperationHashType } from "./core/operation-hash";
 import TicketID from "./core/ticket-id";
 import { endpoints, get, makeEndpoints, post } from "./network";
@@ -232,6 +233,20 @@ export class DekuToolkit {
     };
   }
 
+
+
+  /** Helper to encode operation to binary, so that core/operations stay pure
+   * TODO: find a way to not use the API
+  */
+  private async encodeOperation(nonce: NonceType, level: NonceType, operation: unknown): Promise<Buffer> {
+    const body = {
+      nonce: Nonce.toDTO(nonce),
+      level: Level.toDTO(level),
+      operation
+    };
+    return post(this.endpoints["ENCODE_OPERATION"], body);
+  }
+
   /**
    * Transfer some ticket to someone
    * @param receiver the address of the ticket receiver
@@ -241,16 +256,11 @@ export class DekuToolkit {
    * @param data other half of the ticket id
    * @returns an operation hash of the transfer
    */
-  async transferTo(
-    receiver: AddressType,
-    amount: AmountType,
-    ticketer: string,
-    data: string,
-    options?: OptOptions
-  ): Promise<OperationHashType> {
+  async transferTo(receiver: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
     // Create the transaction
-    const transaction = Operation.createTransaction(
+    const transaction = await Operation.createTransaction(
+      this.encodeOperation.bind(this),
       level,
       nonce,
       source,
@@ -271,16 +281,11 @@ export class DekuToolkit {
    * @param data other half of the ticket id
    * @returns an operation hash of the withdraw
    */
-  async withdrawTo(
-    owner: AddressType,
-    amount: AmountType,
-    ticketer: string,
-    data: string,
-    options?: OptOptions
-  ): Promise<OperationHashType> {
+  async withdrawTo(owner: AddressType, amount: AmountType, ticketer: string, data: string, options?: OptOptions): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
-    // Create the transaction
-    const withdraw = Operation.createWithdraw(
+    // Create the withdraw
+    const withdraw = await Operation.createWithdraw(
+      this.encodeOperation.bind(this),
       level,
       nonce,
       source,
@@ -298,22 +303,15 @@ export class DekuToolkit {
    * @param options {level, nonce} optional options
    * @returns the hash the submitted operation
    */
-  async submitVmOperation(
-    payload: string,
-    options?: OptOptions
-  ): Promise<OperationHashType> {
+  async submitVmOperation(payload: string, options?: OptOptions): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
-    const vmOperation = Operation.createVmOperation(
-      level,
-      nonce,
-      source,
-      payload
-    );
+    // Create the vm transaction
+    const vmOperation = await Operation.createVmOperation(this.encodeOperation.bind(this), level, nonce, source, payload);
     return this.submitOperation(vmOperation);
   }
 
-  async wait(_operationHash: OperationHashType): Promise<LevelType> {
-    console.log(_operationHash);
+  async wait(OperationHash: OperationHashType): Promise<LevelType> {
+    console.log(OperationHash);
     throw "Feature not yet implemented";
   }
 }
