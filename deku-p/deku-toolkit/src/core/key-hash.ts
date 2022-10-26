@@ -1,1 +1,1 @@
-export type KeyHash = string
+export type KeyHash = string;

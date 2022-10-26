@@ -10,7 +10,8 @@
     "build": "tsc --project . --module commonjs && rollup -c rollup.config.ts && eslint .",
     "dev": "tsc --project . -w",
     "lint": "eslint .",
-    "ship": "npm run build && npm run lint"
+    "ship": "npm run build && npm run lint",
+    "prettier-format": "prettier 'src/**/*.ts' --write"
   },
   "files": [
     "lib/",
@@ -24,6 +25,7 @@
     "@types/node": "^18.7.13",
     "@typescript-eslint/eslint-plugin": "^5.35.1",
     "@typescript-eslint/parser": "^5.35.1",
+    "@tzstamp/helpers": "^0.3.4",
     "eslint": "^8.23.0",
     "rollup": "^2.79.1",
     "rollup-plugin-json": "^4.0.0",

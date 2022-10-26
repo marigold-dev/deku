@@ -1,15 +1,15 @@
 export type TicketID = {
-  ticketer: string,
-  data: string
-}
+  ticketer: string;
+  data: string;
+};
 
-const createTicketID = (ticketer: string, data: string) : TicketID => {
+const createTicketID = (ticketer: string, data: string): TicketID => {
   return {
     ticketer,
-    data
-  }
-}
+    data,
+  };
+};
 
 export default {
-  createTicketID
-}
+  createTicketID,
+};

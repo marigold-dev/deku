@@ -21,12 +21,13 @@ const dekuSigner = fromMemorySigner(
 
 const deku = new DekuToolkit({ dekuRpc: "http://localhost:8080", dekuSigner })
   .setTezosRpc("http://localhost:20000")
+  /* eslint-disable */
   .onBlock((block: any) => {
     console.log("The client received a block");
     console.log(block);
   });
 
-const App = () => {
+const App: () => JSX.Element = () => {
   const [level, setLevel] = useState(0);
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
