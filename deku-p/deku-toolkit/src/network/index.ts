@@ -27,7 +27,8 @@ export type endpoints = {
     "GET_BALANCE": (address: string, ticket_id: TicketID) => endpoint<number>,
     "GET_PROOF": (operation_hash: string) => endpoint<ProofType>
     "OPERATIONS": endpoint<string>,
-    "GET_VM_STATE": endpoint<JSONType>
+    "GET_VM_STATE": endpoint<JSONType>,
+    "ENCODE_OPERATION": endpoint<Buffer>
 }
 
 export const makeEndpoints = (root: string): endpoints => ({
@@ -101,6 +102,15 @@ export const makeEndpoints = (root: string): endpoints => ({
             return state;
         }
     },
+    "ENCODE_OPERATION": {
+        uri: urlJoin(root, `${VERSION}/helpers/encode-operation`),
+        expectedStatus: 200,
+        parse: (json: JSONValue) => {
+            const bytes = json.at("bytes").as_string();
+            if (bytes === null) return null;
+            return Buffer.from(bytes, "hex");
+        }
+    }
 })
 
 const parse = async <T>(endpoint: endpoint<T>, status: number, json: JSONType): Promise<T> => {
