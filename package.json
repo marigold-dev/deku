@@ -1,12 +1,17 @@
 {
-    "private": true,
-    "workspaces": [
-      "decookies/typescript-vm",
-      "deku-p/deku-toolkit",
-      "deku-p/deku-toolkit/examples/nodejs",
-      "deku-p/deku-toolkit/examples/react",
-      "deku-p/examples/increment-ts",
-      "deku-p/sdks/typescript-sdk",
-      "examples/tutorial"
-    ]
+  "private": true,
+  "workspaces": [
+    "decookies/typescript-vm",
+    "deku-p/deku-toolkit",
+    "deku-p/deku-toolkit/examples/nodejs",
+    "deku-p/deku-toolkit/examples/react",
+    "deku-p/examples/increment-ts",
+    "deku-p/sdks/typescript-sdk",
+    "examples/tutorial"
+  ],
+  "scripts": {
+    "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
+    "start:deku-toolkit:react": "yarn --cwd deku-p/deku-toolkit/examples/react start",
+    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test"
+  }
 }
