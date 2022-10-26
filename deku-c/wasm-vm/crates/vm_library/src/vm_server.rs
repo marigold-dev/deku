@@ -1,24 +1,24 @@
-use serde::{de::Visitor, ser::SerializeTuple, Deserialize, Serialize};
+use serde::{ser::SerializeTuple, Serialize};
 
 use crate::{
-    outgoing::{InitVec, SetOwned},
+    outgoing::{InitVec, SetBorrowed},
     ticket_table::TicketId,
 };
-#[derive(Serialize, Deserialize)]
-pub struct TicketDeposit {
-    pub address: String,
-    pub tickets: Vec<(TicketId, usize)>,
+#[derive(Serialize, Debug)]
+pub struct TicketDeposit<'a> {
+    pub address: &'a str,
+    pub tickets: &'a [(TicketId, usize)],
 }
-
-pub enum ServerMessage {
+#[derive(Debug)]
+pub enum ServerMessage<'a> {
     Init(InitVec),
     Stop,
-    Set(SetOwned),
-    TakeTickets(String),
-    DepositTickets(TicketDeposit),
+    Set(SetBorrowed<'a>),
+    TakeTickets(&'a str),
+    DepositTickets(TicketDeposit<'a>),
     Error(String),
 }
-impl Serialize for ServerMessage {
+impl<'a> Serialize for ServerMessage<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -60,101 +60,6 @@ impl Serialize for ServerMessage {
                 seq.end()
             }
         }
-    }
-}
-struct ServerVisitor;
-impl<'de> Visitor<'de> for ServerVisitor {
-    type Value = ServerMessage;
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("Expected a valid Value")
-    }
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        seq.next_element::<&str>()?.map_or_else(
-            || {
-                Err(serde::de::Error::invalid_type(
-                    serde::de::Unexpected::Str("unexpected sequence"),
-                    &"value",
-                ))
-            },
-            |x| match x {
-                "Init" => {
-                    let elem = seq.next_element::<InitVec>()?;
-                    elem.map_or_else(
-                        || {
-                            Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
-                                &"value",
-                            ))
-                        },
-                        |x| Ok(ServerMessage::Init(x)),
-                    )
-                }
-                "Set" => {
-                    let elem = seq.next_element::<SetOwned>()?;
-                    elem.map_or_else(
-                        || {
-                            Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
-                                &"value",
-                            ))
-                        },
-                        |x| Ok(ServerMessage::Set(x)),
-                    )
-                }
-                "Error" => {
-                    let elem = seq.next_element::<String>()?;
-                    elem.map_or_else(
-                        || {
-                            Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
-                                &"value",
-                            ))
-                        },
-                        |x| Ok(ServerMessage::Error(x)),
-                    )
-                }
-                "Take_tickets" => {
-                    let elem = seq.next_element::<String>()?;
-                    elem.map_or_else(
-                        || {
-                            Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
-                                &"value",
-                            ))
-                        },
-                        |x| Ok(ServerMessage::TakeTickets(x)),
-                    )
-                }
-                "Deposit_tickets" => {
-                    let elem = seq.next_element::<TicketDeposit>()?;
-                    elem.map_or_else(
-                        || {
-                            Err(serde::de::Error::invalid_type(
-                                serde::de::Unexpected::Str("unexpected sequence"),
-                                &"value",
-                            ))
-                        },
-                        |x| Ok(ServerMessage::DepositTickets(x)),
-                    )
-                }
-                "Stop" => Ok(ServerMessage::Stop),
-                _ => Err(serde::de::Error::invalid_type(
-                    serde::de::Unexpected::Str("unexpected sequence"),
-                    &"value",
-                )),
-            },
-        )
-    }
-}
-impl<'de> Deserialize<'de> for ServerMessage {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_tuple(2, ServerVisitor)
     }
 }
 

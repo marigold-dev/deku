@@ -1,6 +1,7 @@
 (library
  (name tunac)
- (libraries tezos-micheline data-encoding zarith wasm)
+ (public_name tunac)
+ (libraries core tezos-micheline data-encoding zarith wasm)
  (modules_without_implementation interface)
  (preprocess
   (pps ppx_deriving.ord ppx_deriving.show ppx_deriving.eq ppx_yojson_conv)))

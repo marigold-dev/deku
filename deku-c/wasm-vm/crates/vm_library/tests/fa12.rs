@@ -1,9 +1,10 @@
+use std::{cell::RefCell, rc::Rc};
+
 use vm_library::{
-    arena::ARENA,
     execution_result::ExecutionResult,
     instance::invoke_managed,
-    managed::value::{Union, Value},
-    ticket_table::Ticket,
+    managed::value::{FromOcamlV, Union, Value},
+    ticket_table::TicketTable,
 };
 
 mod common;
@@ -21,116 +22,109 @@ const PAYLOAD: &str = r#"{
 fn get_balance() {
     let payload = PAYLOAD.to_string();
 
-    let arena = unsafe { &mut ARENA };
-    let storage:Value = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
-    let arg :Value = serde_json::from_str(r#"["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["String","KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK"]]"#).unwrap();
-    let bump = arena.insert(arg);
+    let storage:FromOcamlV = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
+    let arg :FromOcamlV = serde_json::from_str(r#"["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["String","KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK"]]"#).unwrap();
+    let bump = Box::from(arg.0);
     let arg = Value::Union(Union::Left(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Right(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init =
-        common::create_incoming_managed(&module, &deser, &tickets, arg, storage.clone(), &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage.clone().0,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult {
         new_storage, ops, ..
     } = invoke_managed(init).unwrap();
-
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&storage).unwrap()
-    );
-    let fst = arena.insert(Value::Int(100.into()));
-    let snd = arena.insert(Value::String(
+    assert_eq!(*new_storage, storage.0);
+    let fst = Box::from(Value::Int(100.into()));
+    let snd = Box::from(Value::String(
         "KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK".to_string(),
     ));
 
     let pair = Value::Pair { fst, snd };
-    assert_eq!(
-        serde_json::to_string(&ops).unwrap(),
-        serde_json::to_string(&Value::List(im_rc::vector![pair], None)).unwrap()
-    );
+    assert_eq!(*ops, Value::List(im_rc::vector![pair], None));
 }
 
 #[test]
 fn get_total_supply() {
     let payload = PAYLOAD.to_string();
 
-    let arena = unsafe { &mut ARENA };
-    let storage:Value = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
-    let arg: Value = serde_json::from_str(
+    let storage:FromOcamlV = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
+    let arg: FromOcamlV = serde_json::from_str(
         r#"["Pair",["Unit"],["String","KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK"]]"#,
     )
     .unwrap();
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg.0);
     let arg = Value::Union(Union::Right(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Right(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init =
-        common::create_incoming_managed(&module, &deser, &tickets, arg, storage.clone(), &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage.clone().0,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult {
         new_storage, ops, ..
     } = invoke_managed(init).unwrap();
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&storage).unwrap()
-    );
 
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&storage).unwrap()
-    );
-    let fst = arena.insert(Value::Int(100.into()));
-    let snd = arena.insert(Value::String(
+    assert_eq!(*new_storage, storage.0);
+
+    let fst = Box::from(Value::Int(100.into()));
+    let snd = Box::from(Value::String(
         "KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK".to_string(),
     ));
 
     let pair = Value::Pair { fst, snd };
-    assert_eq!(
-        serde_json::to_string(&ops).unwrap(),
-        serde_json::to_string(&Value::List(im_rc::vector![pair], None)).unwrap()
-    );
+    assert_eq!(*ops, Value::List(im_rc::vector![pair], None));
 }
 
 #[test]
 fn approve() {
     let payload = PAYLOAD.to_string();
 
-    let arena = unsafe { &mut ARENA };
-    let storage:Value = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
-    let desired_storage:Value = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]],[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Int","5"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
-    let arg: Value = serde_json::from_str(
+    let storage: FromOcamlV = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
+    let desired_storage:FromOcamlV = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]],[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Int","5"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
+    let arg: FromOcamlV = serde_json::from_str(
         r#"["Pair",["String", "tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Int","5"]]"#,
     )
     .unwrap();
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg.0);
     let arg = Value::Union(Union::Left(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &None);
-    let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&desired_storage).unwrap()
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage.0,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
     );
+    let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
+    assert_eq!(*new_storage, desired_storage.0);
 }
 
 #[test]
 fn transfer() {
     let payload = PAYLOAD.to_string();
 
-    let arena = unsafe { &mut ARENA };
-    let storage:Value = serde_json::from_str(r#"[
+    let storage:FromOcamlV = serde_json::from_str(r#"[
         "Pair",
             ["Map",
                 [
@@ -145,7 +139,7 @@ fn transfer() {
                 ]
             ],
             ["Int","100"]]"#).unwrap();
-    let desired_storage:Value = serde_json::from_str(r#"[
+    let desired_storage:FromOcamlV = serde_json::from_str(r#"[
         "Pair",
             ["Map",
                 [
@@ -160,46 +154,50 @@ fn transfer() {
                 ]
             ],
             ["Int","100"]]"#).unwrap();
-    let arg = serde_json::from_str(r#"["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["String","tz2AcXz8WUu51YYdE5Rsnosxd1hkhW9tG7pd"],["Int","5"]]]"#).unwrap();
-    let bump = arena.insert(arg);
+    let arg: FromOcamlV = serde_json::from_str(r#"["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["String","tz2AcXz8WUu51YYdE5Rsnosxd1hkhW9tG7pd"],["Int","5"]]]"#).unwrap();
+    let bump = Box::from(arg.0);
     let arg = Value::Union(Union::Right(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init = common::create_incoming_managed(&module, &deser, &tickets, arg, storage, &None);
-    let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&desired_storage).unwrap()
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage.0,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
     );
+    let ExecutionResult { new_storage, .. } = invoke_managed(init).unwrap();
+    assert_eq!(*new_storage, desired_storage.0);
 }
 
 #[test]
 fn get_allowance() {
     let payload = PAYLOAD.to_string();
 
-    let arena = unsafe { &mut ARENA };
-    let storage:Value = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
-    let arg = serde_json::from_str(r#"["Pair",["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"]],["String","KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK"]]"#).unwrap();
-    let bump = arena.insert(arg);
+    let storage:FromOcamlV = serde_json::from_str(r#"["Pair",["Map",[[["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["Pair",["Map",[[["String","tz1RAwmGfeTzkpQjY8LV1GsiU2oGS6nhqS93"],["Int","10"]]]],["Int","100"]]]]],["Int","100"]]"#).unwrap();
+    let arg:FromOcamlV = serde_json::from_str(r#"["Pair",["Pair",["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"],["String","tz1gvF4cD2dDtqitL3ZTraggSR1Mju2BKFEM"]],["String","KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK"]]"#).unwrap();
+    let bump = Box::from(arg.0);
     let arg = Value::Union(Union::Right(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
-    let bump = arena.insert(arg);
+    let bump = Box::from(arg);
     let arg = Value::Union(Union::Left(bump));
     let (deser, module) = common::deser(payload);
-    let tickets: Vec<Ticket> = vec![];
-    let init =
-        common::create_incoming_managed(&module, &deser, &tickets, arg, storage.clone(), &None);
+    let init = common::create_incoming_managed(
+        &module,
+        &deser,
+        arg,
+        storage.clone().0,
+        &None,
+        Rc::new(RefCell::new(TicketTable::default())),
+    );
     let ExecutionResult {
         new_storage, ops, ..
     } = invoke_managed(init).unwrap();
-    assert_eq!(
-        serde_json::to_string(&new_storage).unwrap(),
-        serde_json::to_string(&storage).unwrap()
-    );
+    assert_eq!(*new_storage, storage.0);
 
-    let fst = arena.insert(Value::Int(0.into()));
-    let snd = arena.insert(Value::String(
+    let fst = Box::from(Value::Int(0.into()));
+    let snd = Box::from(Value::String(
         "KT1WiBZHtvv3EczaN628DkNob4cayHzTEDNK".to_string(),
     ));
 

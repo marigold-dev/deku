@@ -6,5 +6,5 @@ fn main() {
     env_logger::init();
     let mut args: Vec<String> = std::env::args().collect();
     let io = IO::new(args.remove(1));
-    run_loop(io);
+    std::panic::catch_unwind(|| run_loop(io));
 }

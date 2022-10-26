@@ -20,6 +20,7 @@ pub fn invoke_managed(t: InvokeManaged) -> VMResult<ExecutionResult> {
     let arena = unsafe { &mut ARENA };
     let module = t.mod_;
     let env = Context {
+        table: t.table,
         inner: Rc::new(RefCell::new(Inner {
             instance: None,
             pusher: None,
@@ -71,21 +72,21 @@ pub fn invoke_managed(t: InvokeManaged) -> VMResult<ExecutionResult> {
             let res = path
                 .iter()
                 .rev()
-                .fold(arena.insert(t.arg), |acc, path| match path {
+                .fold(Box::from(t.arg), |acc, path| match path {
                     Path::Left => {
                         let l = Value::Union(Union::Left(acc));
-                        arena.insert(l)
+                        Box::from(l)
                     }
                     Path::Right => {
                         let l = Value::Union(Union::Right(acc));
-                        arena.insert(l)
+                        Box::from(l)
                     }
                 });
             res
         }
-        None => arena.insert(t.arg),
+        None => Box::from(t.arg),
     };
-    let snd = arena.insert(t.initial_storage);
+    let snd = t.initial_storage;
     let arg = Value::Pair { fst, snd };
     let arg = arena.insert(arg).data().as_ffi();
 
@@ -97,7 +98,7 @@ pub fn invoke_managed(t: InvokeManaged) -> VMResult<ExecutionResult> {
     let result: VMResult<i64> = caller.call(arg as i64).map_err(Into::into);
     let result = result?;
     let key = DefaultKey::from(KeyData::from_ffi(result as u64));
-    let value = arena.get(key);
+    let value = arena.remove(key);
 
     value.map_or_else(
         || {
@@ -107,8 +108,8 @@ pub fn invoke_managed(t: InvokeManaged) -> VMResult<ExecutionResult> {
         },
         |ok| match ok {
             Value::Pair { fst, snd } => {
-                let value = env.get(*snd)?;
-                let ops = env.get(*fst)?;
+                let value = snd;
+                let ops = fst;
                 Ok(ExecutionResult {
                     new_storage: value,
                     ops,
