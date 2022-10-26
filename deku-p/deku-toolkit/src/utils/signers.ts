@@ -1,9 +1,7 @@
 import { Key } from "../core/key";
 import { KeyHash } from "../core/key-hash";
-import Operation, {
-  Operation as OperationType,
-  SignedOperation,
-} from "../core/operation";
+import Operation, { Operation as OperationType } from "../core/operation";
+import { JSONType } from "../utils/json";
 
 interface MemorySigner {
   sign: (payload: string) => Promise<{ prefixSig: string }>;
@@ -23,9 +21,9 @@ interface BeaconSigner {
 }
 
 interface CustomSigner {
-  sign: (payload: string) => Promise<string>;
-  publicKey: () => Promise<Key>;
-  publicKeyHash: () => Promise<KeyHash>;
+  sign: (payload: string) => Promise<string>
+  publicKey: () => Promise<Key>,
+  publicKeyHash: () => Promise<KeyHash>
 }
 
 export abstract class DekuSigner {
@@ -33,15 +31,17 @@ export abstract class DekuSigner {
   abstract publicKey: () => Promise<Key>;
   abstract publicKeyHash: () => Promise<KeyHash>;
 
-  async signOperation(operation: OperationType): Promise<SignedOperation> {
-    const jsonOperation = Operation.toDTO(operation);
-    const signature = await this.sign(JSON.stringify(jsonOperation.as_json()));
+  async signOperation(operation: OperationType): Promise<JSONType> {
+    const bytes = operation.bytes;
+    const signature = await this.sign(bytes.toString("hex"));
+
     const key = await this.publicKey();
+    const dto = Operation.toDTO(operation);
     return {
       key,
       signature,
-      operation,
-    };
+      initial: dto
+    }
   }
 }
 
@@ -53,15 +53,14 @@ export abstract class DekuSigner {
 export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
   class MemorySigner extends DekuSigner {
     sign = async (payload: string) => {
-      const payloadHex = Buffer.from(payload).toString("hex");
-      const signature = await signer.sign(payloadHex);
+      const signature = await signer.sign(payload);
       return signature.prefixSig;
-    };
+    }
     publicKey = () => signer.publicKey();
     publicKeyHash = () => signer.publicKeyHash();
   }
-  return new MemorySigner();
-};
+  return new MemorySigner()
+}
 
 /**
  * Converts a beacon signer to a deku signer
@@ -71,39 +70,29 @@ export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
 export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
   class BeaconSigner extends DekuSigner {
     sign = async (payload: string) => {
-      const payloadHex = Buffer.from(payload).toString("hex");
-      const sig = await signer.requestSignPayload({ payload: payloadHex });
+      const sig = await signer.requestSignPayload({ payload });
       if (!sig) {
-        return Promise.reject({
-          type: "SIGNER_ERROR",
-          msg: "cannot sign payload",
-        });
+        return Promise.reject({ type: "SIGNER_ERROR", msg: "cannot sign payload" });
       }
       return sig.signature;
-    };
+    }
     publicKey = async () => {
       const account = await signer.getActiveAccount();
       if (!account) {
-        return Promise.reject({
-          type: "SIGNER_ERROR",
-          msg: "Your account is not active",
-        });
+        return Promise.reject({ type: "SIGNER_ERROR", msg: "Your account is not active" });
       }
       return account.publicKey;
-    };
+    }
     publicKeyHash = async () => {
       const account = await signer.getActiveAccount();
       if (!account) {
-        return Promise.reject({
-          type: "SIGNER_ERROR",
-          msg: "Your account is not active",
-        });
+        return Promise.reject({ type: "SIGNER_ERROR", msg: "Your account is not active" });
       }
       return account.address;
-    };
+    }
   }
-  return new BeaconSigner();
-};
+  return new BeaconSigner()
+}
 
 export const fromCustomSigner = (signer: CustomSigner): DekuSigner => {
   class CustomSigner extends DekuSigner {
