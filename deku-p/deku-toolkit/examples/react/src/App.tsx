@@ -33,39 +33,39 @@ const App: () => JSX.Element = () => {
   const [vmState, setVmState] = useState<unknown>(null);
 
   // Get the current level of the chain
-  useEffect(() => {
-    const id = setInterval(() => {
-      deku.level().then(setLevel).catch(console.error);
-    }, 1000);
-    return () => {
-      clearInterval(id);
-    };
-  }, []);
+  // useEffect(() => {
+  //   const id = setInterval(() => {
+  //     deku.level().then(setLevel).catch(console.error);
+  //   }, 1000);
+  //   return () => {
+  //     clearInterval(id);
+  //   };
+  // }, []);
 
   // Get Alice's current balance
-  useEffect(() => {
-    const id = setInterval(() => {
-      const ticketer = document.getElementById(
-        "textfield1"
-      ) as HTMLInputElement;
-      if (ticketer === null) return null;
-      const ticketer_value = ticketer.value;
-      const data = document.getElementById("textfield2") as HTMLInputElement;
-      if (data === null) return null;
-      const data_value = data.value;
+  // useEffect(() => {
+  //   const id = setInterval(() => {
+  //     const ticketer = document.getElementById(
+  //       "textfield1"
+  //     ) as HTMLInputElement;
+  //     if (ticketer === null) return null;
+  //     const ticketer_value = ticketer.value;
+  //     const data = document.getElementById("textfield2") as HTMLInputElement;
+  //     if (data === null) return null;
+  //     const data_value = data.value;
 
-      deku
-        .getBalance("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb", {
-          ticketer: ticketer_value,
-          data: data_value,
-        })
-        .then(setBalance)
-        .catch(console.error);
-    }, 1000);
-    return () => {
-      clearInterval(id);
-    };
-  }, []);
+  //     deku
+  //       .getBalance("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb", {
+  //         ticketer: ticketer_value,
+  //         data: data_value,
+  //       })
+  //       .then(setBalance)
+  //       .catch(console.error);
+  //   }, 1000);
+  //   return () => {
+  //     clearInterval(id);
+  //   };
+  // }, []);
 
   /*
    * Example to retrieve information from the chain
@@ -135,8 +135,10 @@ const App: () => JSX.Element = () => {
     if (data === null) return null;
     const data_value = data.value;
 
+    const sender = await dekuSigner.publicKeyHash();
+
     const operationHash = await deku.withdrawTo(
-      ticketer_value,
+      sender,
       10,
       ticketer_value,
       data_value
@@ -152,7 +154,18 @@ const App: () => JSX.Element = () => {
 
   useEffect(() => {
     console.log("making a transfer");
-    transferExample().catch(console.error);
+    transferExample()
+      .catch(console.error);
+  }, []);
+
+  const noopExample = async () => {
+    const hash = await deku.submitNoopOperation({ nonce: 0 });
+    console.log(`Noop operation submitted: ${hash}`);
+  }
+
+  useEffect(() => {
+    noopExample()
+      .catch(console.error);
   }, []);
 
   return (
