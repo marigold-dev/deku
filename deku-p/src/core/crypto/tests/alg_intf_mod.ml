@@ -210,6 +210,12 @@ struct
       in
       String.concat "" string_list
 
+    let to_sign () = 
+      let to_sign = List.map BLAKE2b.to_raw Signature_data.to_sign |> String.concat ""
+    |> String.map (fun char -> (Char.code char |> Int.to_string).[0])
+    in 
+      Alcotest.(check' string) ~msg:"presigned hashes are equal" ~expected:Tezos_data.to_sign ~actual:to_sign
+
     let signatures () =
       let signatures =
         let out =
