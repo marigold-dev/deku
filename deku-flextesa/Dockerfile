@@ -1,4 +1,4 @@
-FROM oxheadalpha/flextesa:20221025-rc
+FROM oxheadalpha/flextesa:20221026
 
 # To prevent flextesa from wiping the initial state
 # on startup, we've also added the --keep-root option to
