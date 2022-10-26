@@ -21,22 +21,15 @@ const dekuSigner = fromMemorySigner(
 
 const deku = new DekuToolkit({ dekuRpc: "http://localhost:8080", dekuSigner })
   .setTezosRpc("http://localhost:20000")
-  .onBlock((block: any) => {
-    console.log("The client received a block");
-    console.log(block);
-  });
 
 const App = () => {
   const [level, setLevel] = useState(0);
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
-    // discovery: string;
   } | null>(null);
 
   const [vmState, setVmState] = useState<any>(null);
-  const [isActive, setIsActive] = useState(false);
-  const setActive = () => setIsActive(true);
 
   // Get the current level of the chain
   useEffect(() => {
@@ -128,8 +121,8 @@ const App = () => {
       ticketer_value,
       data_value
     );
-    const blockLevel = await deku.wait(operationHash, { maxAge: 5 });
-    console.log(`User operation applied on block : ${blockLevel}`);
+    // const blockLevel = await deku.wait(operationHash, { maxAge: 5 });
+    // console.log(`User operation applied on block : ${blockLevel}`);
   };
 
   const withdrawExample = async () => {
@@ -158,13 +151,7 @@ const App = () => {
   useEffect(() => {
     console.log("making a transfer");
     transferExample().catch(console.error);
-  }, [isActive]);
-
-  // useEffect(() => {
-  //   client.requestPermissions()
-  //     .then(setActive)
-  //     .catch(console.error);
-  // }, []);
+  }, []);
 
   return (
     <div style={containerStyle}>
