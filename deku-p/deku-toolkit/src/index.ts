@@ -310,6 +310,18 @@ export class DekuToolkit {
     return this.submitOperation(vmOperation);
   }
 
+  /**
+   * Submits a noop operation to the vm
+   * @param options {level, nonce} optional options
+   * @returns the hash of the submitted operation
+   */
+  async submitNoopOperation(options?: OptOptions): Promise<OperationHashType> {
+    const { source, level, nonce } = await this.parseOperationOptions(options);
+    // Create the noop operation
+    const noopOperation = await Operation.createNoop(this.encodeOperation.bind(this), level, nonce, source);
+    return this.submitOperation(noopOperation);
+  }
+
   async wait(operationHash: OperationHashType): Promise<LevelType> {
     console.log(operationHash);
     throw "Feature not yet implemented"; // TODO: implement this feature
