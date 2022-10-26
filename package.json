@@ -8,5 +8,9 @@
       "deku-p/examples/increment-ts",
       "deku-p/sdks/typescript-sdk",
       "examples/tutorial"
-    ]
+    ],
+    "scripts": {
+      "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
+      "start:deku-toolkit:react": "yarn --cwd deku-p/deku-toolkit/examples/react start"
+    }
 }
