@@ -25,13 +25,13 @@
     rust-overlay.inputs = {
       nixpkgs.follows = "nixpkgs";
     };
-    alien_ffi.url = "github:d4hines/alien_ffi";
+    alien_ffi.url = "github:zfxlabs/alien_ffi";
     alien_ffi.inputs.rust-overlay.follows = "rust-overlay";
     alien_ffi.inputs.nixpkgs.follows = "nixpkgs";
     alien_ffi.inputs.flake-utils.follows = "rust-overlay/flake-utils";
 
     ocaml-dalek = {
-      url = "github:d4hines/ocaml-dalek";
+      url = "github:zfxlabs/ocaml-dalek";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.alien_ffi.follows = "alien_ffi";
     };
