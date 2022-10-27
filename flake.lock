@@ -63,15 +63,15 @@
       "locked": {
         "lastModified": 1666875532,
         "narHash": "sha256-Oh08FSKdj2kpHNYkKTmqNJM+sFUl8dteShrRL6WiTqA=",
-        "ref": "refs/heads/main",
+        "owner": "d4hines",
+        "repo": "alien_ffi",
         "rev": "47303edd3c40829c8b6f951f7f9f0a355fed2fe8",
-        "revCount": 13,
-        "type": "git",
-        "url": "file:///home/d4hines/repos/alien_ffi"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/d4hines/repos/alien_ffi"
+        "owner": "d4hines",
+        "repo": "alien_ffi",
+        "type": "github"
       }
     },
     "all-cabal-json": {
@@ -615,15 +615,15 @@
       "locked": {
         "lastModified": 1666874816,
         "narHash": "sha256-YBGPD074/AIXBSvg9SpU2Rm1xq5doQHpsq2kY0P9yG4=",
-        "ref": "refs/heads/main",
+        "owner": "d4hines",
+        "repo": "ocaml-dalek",
         "rev": "e1f6fe3eff474a7f1512413d9f2033bebd7c7c39",
-        "revCount": 18,
-        "type": "git",
-        "url": "file:///home/d4hines/repos/ocaml-dalek"
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/d4hines/repos/ocaml-dalek"
+        "owner": "d4hines",
+        "repo": "ocaml-dalek",
+        "type": "github"
       }
     },
     "poetry2nix": {
