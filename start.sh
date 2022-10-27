@@ -37,6 +37,8 @@ export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 nix run ".#$vm" -- "$DEKU_API_VM" &
 _build/install/default/bin/deku-api &
 
+sleep 3
+
 for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
 
