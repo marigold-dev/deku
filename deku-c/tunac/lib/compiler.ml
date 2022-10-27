@@ -24,7 +24,7 @@ let compile_constant ~ctx value =
   | _ -> (
       match
         List.find_map
-          (fun (k, x) -> if Values.equal x value then Some k else None)
+          (fun (k, x) -> if x = value then Some k else None)
           ctx.constants
       with
       | None ->
@@ -302,19 +302,22 @@ and compile_lambda ~ctx ~unit name body =
   ctx.lambdas <- (id, name, lambda) :: ctx.lambdas;
   id
 
+open Ocaml_wasm_vm
+
 let rec compile_entry ~state ~path =
   let open Helpers.Option.Let_syntax in
   function
   | Prim (_, T_or, [ (Prim _ as left); (Prim _ as right) ], _) ->
-      let* state = compile_entry ~state ~path:(Path.Left :: path) left in
-      let* state = compile_entry ~state ~path:(Path.Right :: path) right in
+      let* state = compile_entry ~state ~path:(Entrypoints.Left :: path) left in
+      let* state =
+        compile_entry ~state ~path:(Entrypoints.Right :: path) right
+      in
       Some state
-  | Prim (_, _, _, annot) ->
-      Some (Path.M.add (List.hd annot) (List.rev path) state)
+  | Prim (_, _, _, annot) -> Some ((List.hd annot, List.rev path) :: state)
   | _ -> assert false
 
 let check_entrypoints = function
-  | Prim (_, T_or, _, _) -> Some (Path.M.empty, [])
+  | Prim (_, T_or, _, _) -> Some ([], [])
   | _ -> None
 
 let get_entrypoints =
@@ -416,7 +419,7 @@ let rec compile_value ~tickets parsed :
         | [] -> Ok []
       in
       let* elements = aux elements in
-      Ok (Values.List elements)
+      Ok (Values.List (elements, Other))
   | Prim (_, I_EMPTY_MAP, _, _) -> Ok (Map Map.empty)
   | Prim (_, I_EMPTY_SET, _, _) -> Ok (Set Set.empty)
   | Prim (_, T_ticket, [ fst ], _) ->
@@ -426,8 +429,27 @@ let rec compile_value ~tickets parsed :
                              Pair (Values.Bytes data, Values.Int amount) )) =
         result
       in
-      tickets := ({ ticketer; data }, amount) :: !tickets;
-      Ok (Ticket { ticket_id = { ticketer; data }; amount })
+      let ticketer =
+        Deku_repr.decode_variant
+          [
+            (fun x ->
+              Deku_ledger.Contract_address.of_b58 x
+              |> Option.map (fun x -> Deku_ledger.Ticket_id.Deku x));
+            (fun x ->
+              Deku_tezos.Contract_hash.of_b58 x
+              |> Option.map (fun x -> Deku_ledger.Ticket_id.Tezos x));
+          ]
+          ticketer
+        |> Option.get
+      in
+      let amount =
+        Deku_stdlib.N.of_z amount
+        |> Option.map (fun x -> Deku_concepts.Amount.of_n x)
+        |> Option.get
+      in
+      tickets := (Deku_ledger.Ticket_id.make ticketer data, amount) :: !tickets;
+      Ok
+        (Ticket { ticket_id = Deku_ledger.Ticket_id.make ticketer data; amount })
   | Prim (_, prim, _, _) ->
       print_endline (Michelson_primitives.string_of_prim prim);
       Error `Unexpected_error

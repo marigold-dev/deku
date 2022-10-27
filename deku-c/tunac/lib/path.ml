@@ -33,3 +33,5 @@ let yojson_of_t map =
            (k, v_json))
   in
   `Assoc assoc
+
+let empty = M.empty
