@@ -200,17 +200,17 @@ const main =
         force_access(player as address, cookieBakers);
       let recipient = 
         force_access(ope.recipient as address, cookieBakers);
-      let cookiesToTransfer = ope.amount;
+      let cookiesToTransfer = ope.amount as nat;
       let senderCookies = 
-        sender.cookies - (cookiesToTransfer as nat);
+        sender.cookies - cookiesToTransfer;
       let recipientCookies = 
-        recipient.cookies + (cookiesToTransfer as nat);
+        recipient.cookies + cookiesToTransfer;
       let cookieBakers = 
         Map.update(player as address, Some
           ({...sender, cookies: abs(senderCookies)}), cookieBakers);
-      // let cookieBakers = 
-      //   Map.update(recipient as address, Some
-      //     ({...recipient, cookies: abs(recipientCookies)}), cookieBakers);
+      let cookieBakers = 
+        Map.update(ope.recipient as address, Some
+          ({...recipient, cookies: recipientCookies}), cookieBakers);
       return cookieBakers}})]};
 
 const init_storage: storage = Map.empty;
