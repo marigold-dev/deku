@@ -1,7 +1,6 @@
 open Deku_concepts
 open Deku_tezos
 open Deku_external_vm
-open Deku_crypto
 open Deku_ledger
 
 type protocol = private
