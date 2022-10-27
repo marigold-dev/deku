@@ -18,6 +18,7 @@ with ocamlPackages; buildDunePackage rec {
       # TODO: We haven't figured out static linking for libpg_query. Hence,
       # right now we can't build the node when building staticaly
       if static then [
+        "deku-p/src/core/bin/api"
         "deku-p/src/core/bin/node"
         "deku-p/src/core/indexer"
       ] else [ ]
