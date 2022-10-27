@@ -17,6 +17,18 @@ type chain =
 
 and t = chain [@@deriving yojson]
 
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Chain
+           { gossip; protocol; consensus; producer; oldest_trusted; trusted }) ->
+      (gossip, protocol, consensus, producer, oldest_trusted, trusted))
+    (fun (gossip, protocol, consensus, producer, oldest_trusted, trusted) ->
+      Chain { gossip; protocol; consensus; producer; oldest_trusted; trusted })
+    (tup6 Gossip.encoding Protocol.encoding Consensus.encoding Producer.encoding
+       Level.encoding
+       (Level.Map.encoding Message.Network.encoding))
+
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
   | Fragment_produce of {
