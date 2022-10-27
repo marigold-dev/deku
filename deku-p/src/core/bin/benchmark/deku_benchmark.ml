@@ -259,39 +259,70 @@ let verify () =
   in
   ()
 
+let verify_dalek () =
+  let items = 100_000 in
+  let prepare () =
+    let keypair = Keypair.generate () in
+    let public = Keypair.public keypair in
+    let items =
+      List.init items (fun n ->
+          let string = string_of_int n in
+          let message =
+            BLAKE2b.hash string |> BLAKE2b.to_raw |> Bigstring.of_string
+          in
+          let signature = Keypair.sign keypair message in
+          (message, signature)
+        )
+    in
+    (public, items)
+  in
+  with_opaques (fun () ->
+      bench "verify_dalek" ~items ~prepare @@ fun (public, items) ->
+        let _units : unit list =
+          Parallel.map_p
+            (fun (message, signature) ->
+              assert (PublicKey.verify public message signature)
+            ) items
+        in
+        ()
+    )
+
 let verify_dalek_batch () =
   let batches = 100 in
   let batch_size = 1000 in
   let items = batches * batch_size in
-  let prepare () =
+  let prepare arena =
     let keypair = Keypair.generate () in
     let public = Keypair.public keypair in
     let batches =
       List.init batches (fun batch_num ->
           let batch = Batch.allocate () in
-          let _ =
+          let batches =
             List.init batch_size (fun i ->
                 let string = string_of_int (batch_num * i) in
                 let message =
                   BLAKE2b.hash string |> BLAKE2b.to_raw |> Bigstring.of_string
                 in
-                Batch.push_message batch message;
+                let message = Message.allocate arena message in
                 let signature = Keypair.sign keypair message in
+                Batch.push_message batch message;
                 Batch.push_signature batch signature;
                 Batch.push_public_key batch public;
-                ())
+              )
           in
           batch)
     in
     batches
   in
-  bench "verify" ~items ~prepare @@ fun batches ->
-  let _units : unit list =
-    List.map
-      (fun batch -> with_opaques (fun () -> assert (verify_batch batch)))
-      batches
-  in
-  ()
+  with_full (fun arena ->
+      bench "verify_dalek_batch" ~items ~prepare:(fun () -> prepare arena) @@ fun batches ->
+        let _units : unit list =
+          Parallel.map_p
+            (fun batch -> assert (verify_batch batch))
+            batches
+        in
+        ()
+    )
 
 let ledger_balance () =
   let items = 100_000 in
@@ -392,10 +423,11 @@ let benches =
        block_encode;
        block_decode;
        prepare_and_decode;*)
-    (* verify; *)
-    verify_dalek_batch
+    verify;
+    verify_dalek;
+    verify_dalek_batch;
     (* ledger_balance;
-       ledger_transfer; *);
+       ledger_transfer; *)
   ]
 
 let () =
