@@ -1,0 +1,10 @@
+(executable
+ (name wasm_vm_tests)
+ (libraries ocaml_wasm_vm alcotest))
+
+(rule
+ (alias runtest)
+ (deps
+  (:exe ./wasm_vm_tests.exe))
+ (action
+  (run %{exe})))

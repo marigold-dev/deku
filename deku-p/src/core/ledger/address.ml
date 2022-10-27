@@ -10,12 +10,12 @@ and t = address [@@deriving eq, ord, show]
 let of_key_hash key_hash = Implicit key_hash
 let to_key_hash = function Implicit x -> Some x | Originated _ -> None
 
-let of_contract_address contract_address =
-  Originated { address = contract_address; entrypoint = None }
+let of_contract_address (addr, entrypoint) =
+  Originated { address = addr; entrypoint }
 
 let to_contract_address = function
   | Implicit _ -> None
-  | Originated x -> Some x.address
+  | Originated x -> Some (x.address, x.entrypoint)
 
 let of_b58 x =
   let implicit string =
