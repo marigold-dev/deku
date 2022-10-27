@@ -1,5 +1,4 @@
 #import "math-lib-core/math.mligo" "Math"
-
 type cookieBaker =
   {
     cookies: nat,
@@ -12,20 +11,23 @@ type cookieBaker =
     grandmaCost: nat,
     farmCost: nat,
     mineCost: nat,
-    factoryCost: nat
+    factoryCost: nat,
+    eatenCookies: nat
   };
 
-const newCookieBaker: cookieBaker = {cookies: 0 as nat,
-    cursors: 0 as nat,
-    grandmas: 0 as nat,
-    farms: 0 as nat,
-    mines: 0 as nat,
-    factories: 0 as nat,
-    cursorCost: 0 as nat,
-    grandmaCost: 0 as nat,
-    farmCost: 0 as nat,
-    mineCost: 0 as nat,
-    factoryCost: 0 as nat}
+const newCookieBaker: cookieBaker = 
+  {cookies: 0 as nat,
+   cursors: 0 as nat,
+   grandmas: 0 as nat,
+   farms: 0 as nat,
+   mines: 0 as nat,
+   factories: 0 as nat,
+   cursorCost: 0 as nat,
+   grandmaCost: 0 as nat,
+   farmCost: 0 as nat,
+   mineCost: 0 as nat,
+   factoryCost: 0 as nat,
+   eatenCookies: 0 as nat};
 
 const initialCursorCost: nat = 15 as nat;
 
@@ -37,7 +39,7 @@ const initialMineCost: nat = 12000 as nat;
 
 const initialFactoryCost: nat = 130000 as nat;
 
-type storage = map<address,cookieBaker>;
+type storage = map<address, cookieBaker>;
 
 type actions =
   | ["Cookie"]
@@ -50,7 +52,12 @@ type actions =
 type operationType = | ["Mint"] | ["Transfer"] | ["Eat"];
 
 type parameter =
-  {operationType, operation: actions, amount: nat};
+  {
+    operationType,
+    operation: actions,
+    amount: nat,
+    recipient: address
+  };
 
 type return_ =
 
@@ -63,118 +70,147 @@ const calculateCost =
     Cursor: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.cursors);
      const first: nat = initialCursorCost * firstOperation;
-     const second: nat = first / ((cookieBaker.cursors as nat) * (100 as nat));
+     const second: nat = 
+       first / ((cookieBaker.cursors as nat) * (100 as nat));
      return second},
     Grandma: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.grandmas);
      const first: nat = initialGrandmaCost * firstOperation;
-     const second: nat = first / ((cookieBaker.cursors as nat) * (100 as nat));
+     const second: nat = 
+       first / ((cookieBaker.cursors as nat) * (100 as nat));
      return second},
     Farm: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.farms);
      const first: nat = initialFarmCost * firstOperation;
-     const second: nat = first / ((cookieBaker.farms as nat) * (100 as nat));
+     const second: nat = 
+       first / ((cookieBaker.farms as nat) * (100 as nat));
      return second},
     Mine: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.mines);
      const first: nat = initialMineCost * firstOperation;
-     const second: nat = first / ((cookieBaker.mines as nat) * (100 as nat));
+     const second: nat = 
+       first / ((cookieBaker.mines as nat) * (100 as nat));
      return second},
     Factory: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.factories);
      const first: nat = initialFactoryCost * firstOperation;
-     const second: nat = first / ((cookieBaker.factories as nat) * (100 as nat));
+     const second: nat = 
+       first / ((cookieBaker.factories as nat) * (100 as nat));
      return second}})};
 
-const force_access = (key: address, cookieBakers: storage) => {
-  return match(Map.find_opt (key, cookieBakers), {
-   Some: cookieBaker => cookieBaker,
-   None: () => newCookieBaker
-  });
-};
+const force_access = 
+  (key: address, cookieBakers: storage) => {return match(Map.
+   find_opt(key, cookieBakers), {Some: cookieBaker => 
+      cookieBaker,
+    None: () => newCookieBaker})};
 
 const main = 
   ([ope, cookieBakers]: 
     [parameter,
-     storage]): return_ => {
-      const player = Tezos.get_source();
-      return [list([]),
-    match(ope.operation, {Cookie: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  let cookies = cookieBaker.cookies + (1 as nat);
-  let cookieBakers = 
-    Map.update(player as address, Some
-      ({...cookieBaker, cookies: cookies}), cookieBakers);
-  return cookieBakers},
- Cursor: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  if(cookieBaker.cookies >= cookieBaker.cursorCost) {let cursors = 
-     cookieBaker.cursors + (1 as nat);
-   let cookies = 
-     abs(cookieBaker.cookies - cookieBaker.cursorCost);
-   let cursorCost = calculateCost(ope, cookieBaker);
-   let cookieBakers = 
-     Map.update(player as address, Some
-       ({...cookieBaker,
-        cookies: cookies,
-        cursors: cursors,
-        cursorCost: cursorCost}), cookieBakers);
-   return cookieBakers} else {return cookieBakers}},
- Grandma: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  if(cookieBaker.cookies >= cookieBaker.grandmaCost) {let grandmas = 
-     cookieBaker.grandmas + (1 as nat);
-   let cookies = 
-     abs(cookieBaker.cookies - cookieBaker.grandmaCost);
-   let grandmaCost = calculateCost(ope, cookieBaker);
-   let cookieBakers = 
-     Map.update(player as address, Some
-       ({...cookieBaker,
-        cookies: cookies,
-        grandmas: grandmas,
-        grandmaCost: grandmaCost}), cookieBakers);
-   return cookieBakers} else {return cookieBakers}},
- Farm: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  if(cookieBaker.cookies >= cookieBaker.farmCost) {let farms = 
-     cookieBaker.farms + (1 as nat);
-   let cookies = 
-     abs(cookieBaker.cookies - cookieBaker.farmCost);
-   let farmCost = calculateCost(ope, cookieBaker);
-   let cookieBakers = 
-     Map.update(player as address, Some
-       ({...cookieBaker,
-        cookies: cookies,
-        farms: farms,
-        farmCost: farmCost}), cookieBakers);
-   return cookieBakers} else {return cookieBakers}},
- Mine: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  if(cookieBaker.cookies >= cookieBaker.mineCost) {let mines = 
-     cookieBaker.mines + (1 as nat);
-   let cookies = 
-     abs(cookieBaker.cookies - cookieBaker.mineCost);
-   let mineCost = calculateCost(ope, cookieBaker);
-   let cookieBakers = 
-     Map.update(player as address, Some
-       ({...cookieBaker,
-        cookies: cookies,
-        mines: mines,
-        mineCost: mineCost}), cookieBakers);
-   return cookieBakers} else {return cookieBakers}},
- Factory: () => {let cookieBaker: cookieBaker = 
-    force_access(player as address, cookieBakers);
-  if(cookieBaker.cookies >= cookieBaker.factoryCost) {let factories = 
-     cookieBaker.factories + (1 as nat);
-   let cookies = 
-     abs(cookieBaker.cookies - cookieBaker.factoryCost);
-   let factoryCost = calculateCost(ope, cookieBaker);
-   let cookieBakers = 
-     Map.update(player as address, Some
-       ({...cookieBaker,
-        cookies: cookies,
-        factories: factories,
-        factoryCost: factoryCost}), cookieBakers);
-   return cookieBakers} else {return cookieBakers}}})]};
+     storage]): return_ => {const player = 
+     Tezos.get_source();
+   return [list([]),
+    match(ope.operationType, {Mint: () => 
+       match(ope.operation, {Cookie: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         let cookies = cookieBaker.cookies + (1 as nat);
+         let cookieBakers = 
+           Map.update(player as address, Some
+             ({...cookieBaker, cookies: cookies}), cookieBakers);
+         return cookieBakers},
+        Cursor: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         if(cookieBaker.cookies >= cookieBaker.cursorCost) {let cursors = 
+            cookieBaker.cursors + (1 as nat);
+          let cookies = 
+            abs(cookieBaker.cookies - cookieBaker.cursorCost);
+          let cursorCost = calculateCost(ope, cookieBaker);
+          let cookieBakers = 
+            Map.update(player as address, Some
+              ({...cookieBaker,
+               cookies: cookies,
+               cursors: cursors,
+               cursorCost: cursorCost}), cookieBakers);
+          return cookieBakers} else {return cookieBakers}},
+        Grandma: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         if(cookieBaker.cookies >= cookieBaker.grandmaCost) {let grandmas = 
+            cookieBaker.grandmas + (1 as nat);
+          let cookies = 
+            abs(cookieBaker.cookies - cookieBaker.grandmaCost);
+          let grandmaCost = calculateCost(ope, cookieBaker);
+          let cookieBakers = 
+            Map.update(player as address, Some
+              ({...cookieBaker,
+               cookies: cookies,
+               grandmas: grandmas,
+               grandmaCost: grandmaCost}), cookieBakers);
+          return cookieBakers} else {return cookieBakers}},
+        Farm: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         if(cookieBaker.cookies >= cookieBaker.farmCost) {let farms = 
+            cookieBaker.farms + (1 as nat);
+          let cookies = 
+            abs(cookieBaker.cookies - cookieBaker.farmCost);
+          let farmCost = calculateCost(ope, cookieBaker);
+          let cookieBakers = 
+            Map.update(player as address, Some
+              ({...cookieBaker,
+               cookies: cookies,
+               farms: farms,
+               farmCost: farmCost}), cookieBakers);
+          return cookieBakers} else {return cookieBakers}},
+        Mine: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         if(cookieBaker.cookies >= cookieBaker.mineCost) {let mines = 
+            cookieBaker.mines + (1 as nat);
+          let cookies = 
+            abs(cookieBaker.cookies - cookieBaker.mineCost);
+          let mineCost = calculateCost(ope, cookieBaker);
+          let cookieBakers = 
+            Map.update(player as address, Some
+              ({...cookieBaker,
+               cookies: cookies,
+               mines: mines,
+               mineCost: mineCost}), cookieBakers);
+          return cookieBakers} else {return cookieBakers}},
+        Factory: () => {let cookieBaker: cookieBaker = 
+           force_access(player as address, cookieBakers);
+         if(cookieBaker.cookies >= cookieBaker.factoryCost) {let factories = 
+            cookieBaker.factories + (1 as nat);
+          let cookies = 
+            abs(cookieBaker.cookies - cookieBaker.factoryCost);
+          let factoryCost = calculateCost(ope, cookieBaker);
+          let cookieBakers = 
+            Map.update(player as address, Some
+              ({...cookieBaker,
+               cookies: cookies,
+               factories: factories,
+               factoryCost: factoryCost}), cookieBakers);
+          return cookieBakers} else {return cookieBakers}}}),
+     Eat: () => {let cookieBaker: cookieBaker = 
+        force_access(player as address, cookieBakers);
+      let eatenCookies = 
+        cookieBaker.eatenCookies + (1 as nat);
+      let cookieBakers = 
+        Map.update(player as address, Some
+          ({...cookieBaker, eatenCookies: eatenCookies}), cookieBakers);
+      return cookieBakers},
+     Transfer: () => {let sender: cookieBaker = 
+        force_access(player as address, cookieBakers);
+      let recipient = 
+        force_access(ope.recipient as address, cookieBakers);
+      let cookiesToTransfer = ope.amount;
+      let senderCookies = 
+        sender.cookies - (cookiesToTransfer as nat);
+      let recipientCookies = 
+        recipient.cookies + (cookiesToTransfer as nat);
+      let cookieBakers = 
+        Map.update(player as address, Some
+          ({...sender, cookies: abs(senderCookies)}), cookieBakers);
+      // let cookieBakers = 
+      //   Map.update(recipient as address, Some
+      //     ({...recipient, cookies: abs(recipientCookies)}), cookieBakers);
+      return cookieBakers}})]};
 
-const init_storage:storage = Map.empty;
+const init_storage: storage = Map.empty;
