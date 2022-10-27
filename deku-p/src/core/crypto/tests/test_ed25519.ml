@@ -77,4 +77,11 @@ end
 
 module Tests = Alg_intf_tests.Test_gen (Crypto) (Tezos_test_data.Ed25519_data)
 
-let run () = Tests.run ()
+let run () =
+  let open Alcotest in
+  let open Tests in
+  run "Ed25519 tezos data tests" ~and_exit:false
+    [
+      ( "Secret key",
+        [ test_case "public_keys" `Quick Test_secret_key_data.public_keys ] );
+    ]

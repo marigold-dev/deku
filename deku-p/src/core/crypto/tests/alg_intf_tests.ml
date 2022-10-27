@@ -9,9 +9,8 @@ module Test_gen (Crypto : sig
 
   val ids : id list
 end)
-(Tezos_data : Tezos_test_data.Tezos_data) : sig
-  val run : unit -> unit
-end = struct
+(Tezos_data : Tezos_test_data.Tezos_data)  
+ = struct
   open Crypto
 
   module Secret_key_data = struct
@@ -29,5 +28,4 @@ end = struct
         ~actual:public_keys
   end
 
-  let run () = Test_secret_key_data.public_keys ()
 end
