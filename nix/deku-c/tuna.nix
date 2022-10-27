@@ -2,17 +2,9 @@
   nix-filter,
   lib,
   buildDunePackage,
-  zarith,
-  ppx_deriving,
-  ppx_yojson_conv,
-  yojson,
-  wasm,
-  data-encoding,
   tezos-micheline,
-  core,
-  core_unix,
-  ppx_jane,
   alcotest,
+  binaryen,
 }:
 buildDunePackage rec {
   pname = "deku";
@@ -29,19 +21,12 @@ buildDunePackage rec {
     };
 
   propagatedBuildInputs = [
-    zarith
-    ppx_deriving
-    ppx_yojson_conv
-    data-encoding
-    wasm
     tezos-micheline
+    binaryen
   ];
 
   buildInputs = [
-    yojson
-    core
-    core_unix
-    ppx_jane
+    binaryen
   ];
 
   checkInputs = [
