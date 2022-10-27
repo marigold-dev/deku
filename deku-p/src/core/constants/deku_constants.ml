@@ -16,7 +16,9 @@ let clean_gossip_time =
   (* let minutes = 0.2 in *)
   60.0 (* seconds *) *. minutes
 
-let async_on_error exn = Format.eprintf "async: %s\n%!" (Printexc.to_string exn)
+let async_on_error exn =
+  Logs.err (fun m -> m "async: %s\n%!" (Printexc.to_string exn))
+
 let genesis_time = 0.0
 let trusted_cycle = Option.get (N.of_z (Z.of_int 600))
 let max_payload_chunks = 32

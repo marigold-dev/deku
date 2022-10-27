@@ -559,7 +559,7 @@ let test () =
               incoming_vote ~current ~level ~vote consensus
           | Consensus_apply { block; votes = _ } -> (
               let (Block { level; _ }) = block in
-              Format.eprintf "%a\n%!" Level.pp level;
+              Logs.info (fun m -> m "%a\n%!" Level.pp level);
               match finished ~identity ~current ~block consensus with
               | Ok (consensus, actions) -> (consensus, actions)
               | Error `No_pending_block -> failwith "no pending block"

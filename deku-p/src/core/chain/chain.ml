@@ -185,8 +185,8 @@ let incoming_block ~identity ~current ~block chain =
 let incoming_vote ~current ~level ~vote chain =
   (* let () =
        let key_hash = Verified_signature.key_hash vote in
-       Format.eprintf "incoming.vote(%.3f): %s\n%!" (Unix.gettimeofday ())
-         (Deku_crypto.Key_hash.to_b58 key_hash)
+       Logs.info (fun m -> m "incoming.vote(%.3f): %s\n%!" (Unix.gettimeofday ())
+         (Deku_crypto.Key_hash.to_b58 key_hash))
      in *)
   let (Chain ({ consensus; _ } as chain)) = chain in
   let consensus, actions =
@@ -216,7 +216,7 @@ let incoming_message ~identity ~current ~content chain =
   | Content_accepted { block; votes } ->
       let (Block { level; _ }) = block in
       let chain, actions = incoming_block ~identity ~current ~block chain in
-      Format.eprintf "accepted: %a\n%!" Level.pp level;
+      Logs.info (fun m -> m "accepted: %a\n%!" Level.pp level);
       List.fold_left
         (fun (chain, actions) vote ->
           let chain, additional = incoming_vote ~current ~level ~vote chain in
@@ -340,10 +340,10 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       in
       (chain, actions)
   | Error `No_pending_block ->
-      Format.eprintf "chain: no pending block\n%!";
+      Logs.warn (fun m -> m "chain: no pending block\n%!");
       (Chain chain, [])
   | Error `Wrong_pending_block ->
-      Format.eprintf "chain: wrong pending block\n%!";
+      Logs.warn (fun m -> m "chain: wrong pending block\n%!");
       (Chain chain, [])
 
 let apply_store_outcome ~level ~network chain =
@@ -532,7 +532,7 @@ let test () =
                 apply ~identity ~current ~outcome chain
             | Chain_save_block _ -> (chain, [])
             | Chain_commit _ ->
-                Printf.eprintf "FIXME: commit not implemented in Chain.test";
+                Printf.eprintf "FIXME: commit not implemented in Chain.test\n%!";
                 (chain, [])
           in
           (chain, actions @ additional_actions))

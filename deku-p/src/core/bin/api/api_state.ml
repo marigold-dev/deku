@@ -49,7 +49,7 @@ let find_withdraw_proof ~operation_hash state =
           withdrawal_handles_hash )
   | _ ->
       (* FIXME? fragile *)
-      prerr_endline "Found a receipt that does not match";
+      Logs.err (fun m -> m "Found a receipt that does not match");
       Error `Not_a_withdraw
 
 module Storage = struct

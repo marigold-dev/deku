@@ -17,7 +17,7 @@ let make_dump_loop ~sw ~env ~folder =
     let chain = Eio.Promise.await promise in
     (try Storage.Chain.write ~env ~folder chain
      with exn ->
-       Format.eprintf "storage.failure: %s\n%!" (Printexc.to_string exn));
+       Logs.err (fun m -> m "storage.failure: %s\n%!" (Printexc.to_string exn)));
     loop ()
   in
   let dump chain =
@@ -155,7 +155,7 @@ let main params style_renderer log_level =
 
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
-  Format.eprintf "Chain started at level: %a\n%!" Level.pp level;
+  Logs.info (fun m -> m "Chain started at level: %a\n%!" Level.pp level);
   let tezos =
     (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
   in
@@ -163,7 +163,7 @@ let main params style_renderer log_level =
 
 let main () =
   Sys.set_signal Sys.sigpipe
-    (Sys.Signal_handle (fun _ -> Format.eprintf "SIGPIPE\n%!"));
+    (Sys.Signal_handle (fun _ -> Logs.err (fun m -> m "SIGPIPE\n%!")));
 
   let control = Gc.get () in
   let control = { control with minor_heap_size = 2048; space_overhead = 60 } in
