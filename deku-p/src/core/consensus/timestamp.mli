@@ -2,6 +2,7 @@
 type timestamp
 type t = timestamp [@@deriving show, yojson]
 
+val encoding : timestamp Data_encoding.t
 val genesis : timestamp
 val of_float : float -> timestamp
 

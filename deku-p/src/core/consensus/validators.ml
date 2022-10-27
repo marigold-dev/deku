@@ -46,3 +46,7 @@ let skip ~after ~skip validators =
     | false -> index
   in
   List.nth validators index
+
+let encodings =
+  let open Data_encoding in
+  conv to_key_hash_list of_key_hash_list (list Key_hash.encoding)

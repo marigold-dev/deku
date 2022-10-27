@@ -6,6 +6,7 @@ type block_pool = private
 
 type t = block_pool [@@deriving yojson]
 
+val encoding : block_pool Data_encoding.t
 val empty : block_pool
 val append_block : block:Block.t -> block_pool -> block_pool
 

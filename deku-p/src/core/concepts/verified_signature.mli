@@ -6,6 +6,7 @@ exception Invalid_signature
 type verified_signature
 type t = verified_signature [@@deriving eq, ord, yojson]
 
+val encoding : verified_signature Data_encoding.t
 val sign : BLAKE2b.t -> Identity.t -> verified_signature
 val verify : BLAKE2b.t -> Key.t -> Signature.t -> verified_signature option
 val key : verified_signature -> Key.t

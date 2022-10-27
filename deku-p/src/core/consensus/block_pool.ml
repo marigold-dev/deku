@@ -91,8 +91,7 @@ type repr = {
 }
 [@@deriving yojson]
 
-let t_of_yojson json : block_pool =
-  let { blocks; votes } = repr_of_yojson json in
+let of_repr { blocks; votes } =
   let pool =
     List.fold_left (fun pool block -> append_block ~block pool) empty blocks
   in
@@ -100,8 +99,7 @@ let t_of_yojson json : block_pool =
     (fun pool (level, vote) -> append_vote ~level ~vote pool)
     pool votes
 
-let yojson_of_t pool =
-  let (Pool by_level) = pool in
+let to_repr (Pool by_level) =
   let blocks =
     Level.Map.fold
       (fun _level by_hash blocks ->
@@ -122,5 +120,24 @@ let yojson_of_t pool =
           by_hash list)
       by_level []
   in
-  let repr = { blocks; votes } in
+  { blocks; votes }
+
+let repr_encoding =
+  let open Data_encoding in
+  conv
+    (fun { blocks; votes } -> (blocks, votes))
+    (fun (blocks, votes) -> { blocks; votes })
+    (tup2 (list Block.encoding)
+       (list (tup2 Level.encoding Verified_signature.encoding)))
+
+let encoding =
+  let open Data_encoding in
+  conv to_repr of_repr repr_encoding
+
+let t_of_yojson json : block_pool =
+  let repr = repr_of_yojson json in
+  of_repr repr
+
+let yojson_of_t pool =
+  let repr = to_repr pool in
   yojson_of_repr repr

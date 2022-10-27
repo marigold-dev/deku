@@ -5,6 +5,7 @@ type validators
 type t = validators [@@deriving yojson]
 
 (* repr *)
+val encodings : validators Data_encoding.t
 val of_key_hash_list : Key_hash.t list -> validators
 val to_key_hash_list : validators -> Key_hash.t list
 
