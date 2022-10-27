@@ -1,14 +1,15 @@
-{ deku-packages }: { config, pkgs, lib, ... }:
-
-with lib;
-
-let
+{deku-packages}: {
+  config,
+  pkgs,
+  lib,
+  ...
+}:
+with lib; let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
   cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookies-vm}/lib/node_modules/decookies-vm/lib/src/index.js";
   wasmVM = "${deku-packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
-in
-{
+in {
   options.services.deku-node = {
     enable = mkEnableOption "deku node";
     port = mkOption {
@@ -40,9 +41,9 @@ in
       services = {
         deku-node = {
           description = "Deku node";
-          after = [ "network.target" ];
-          wantedBy = [ "multi-user.target" ];
-          path = [ pkgs.nodejs-16_x ];
+          after = ["network.target"];
+          wantedBy = ["multi-user.target"];
+          path = [pkgs.nodejs-16_x];
           environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
@@ -75,20 +76,21 @@ in
 
         deku-vm = {
           description = "Deku VM";
-          after = [ "network.target" ];
-          wantedBy = [ "multi-user.target" ];
-          before = [ "deku-node.service" ];
-          path = [ pkgs.nodejs-16_x ];
+          after = ["network.target"];
+          wantedBy = ["multi-user.target"];
+          before = ["deku-node.service"];
+          path = [pkgs.nodejs-16_x];
           environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
-            ExecStart = (let
-              command = if cfg.vmType == "wasm" then
-                wasmVM
-              else
-                cookieVM;
-              in
-              "${command} /run/deku/pipe");
+            ExecStart = (
+              let
+                command =
+                  if cfg.vmType == "wasm"
+                  then wasmVM
+                  else cookieVM;
+              in "${command} /run/deku/pipe"
+            );
             Restart = "on-failure";
             StateDirectory = "deku";
             RuntimeDirectory = "deku";
@@ -118,9 +120,9 @@ in
       sockets = {
         deku-vm = {
           description = "Sockets to communicate between Deku and VM";
-          unitConfig = { RequiresMountsFor = "/run/deku"; };
-          socketConfig = { ListenFIFO = [ "/run/deku/pipe_read" "/run/deku/pipe_write" ]; };
-          before = [ "deku-node.service" "deku-vm.service" ];
+          unitConfig = {RequiresMountsFor = "/run/deku";};
+          socketConfig = {ListenFIFO = ["/run/deku/pipe_read" "/run/deku/pipe_write"];};
+          before = ["deku-node.service" "deku-vm.service"];
         };
       };
     };

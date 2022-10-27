@@ -5,19 +5,19 @@
   m4,
   gmp,
 }:
-
 rustPlatform.buildRustPackage rec {
   pname = "vm_library";
   version = "1.0.0";
 
-  src = with nix-filter.lib; filter {
-    root = ../../deku-c/wasm-vm;
-    include = [
-      "crates"
-      "Cargo.lock"
-      "Cargo.toml"
-    ];
-  };
+  src = with nix-filter.lib;
+    filter {
+      root = ../../deku-c/wasm-vm;
+      include = [
+        "crates"
+        "Cargo.lock"
+        "Cargo.toml"
+      ];
+    };
 
   cargoSha256 = "sha256-9UsWv5aKzqskfYXL/SclKCKtw/1XG2C7fI0oCGJR5sA=";
 

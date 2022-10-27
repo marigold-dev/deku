@@ -1,31 +1,39 @@
-{ pkgs, deku, ligo, tuna, vm_library, deploy-rs }:
+{
+  pkgs,
+  deku,
+  ligo,
+  tuna,
+  vm_library,
+  deploy-rs,
+}:
+with pkgs;
+with ocamlPackages;
+  mkShell {
+    inputsFrom = [deku tuna vm_library];
+    packages = [
+      # Formatters
+      nixfmt
+      ocamlformat
 
-with pkgs; with ocamlPackages; mkShell {
-  inputsFrom = [ deku tuna vm_library ];
-  packages = [
-    # Formatters
-    nixfmt
-    ocamlformat
+      # Typescript for decookie
+      nodePackages.typescript
 
-    # Typescript for decookie
-    nodePackages.typescript
+      # Tezos tooling
+      ligo
 
-    # Tezos tooling
-    ligo
+      # OCaml developer tooling
+      ocaml
+      dune_3
+      ocaml-lsp
+      ocamlformat-rpc
+      utop
 
-    # OCaml developer tooling
-    ocaml
-    dune_3
-    ocaml-lsp
-    ocamlformat-rpc
-    utop
+      # deployment
+      deploy-rs
 
-    # deployment
-    deploy-rs
-
-    # helpful tooling
-    bc
-    sqlite
-    termdbms
-  ];
-}
+      # helpful tooling
+      bc
+      sqlite
+      termdbms
+    ];
+  }

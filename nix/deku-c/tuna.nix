@@ -9,8 +9,8 @@
   wasm,
   data-encoding,
   tezos-micheline,
-  core, 
-  core_unix, 
+  core,
+  core_unix,
   ppx_jane,
   alcotest,
 }:
@@ -18,14 +18,15 @@ buildDunePackage rec {
   pname = "deku";
   version = "1.0.0";
 
-  src = with nix-filter.lib; filter {
-    root = ../..;
-    include = [
-      "deku.opam"
-      "deku-c/tunac"
-      "dune-project"
-    ];
-  };
+  src = with nix-filter.lib;
+    filter {
+      root = ../..;
+      include = [
+        "deku.opam"
+        "deku-c/tunac"
+        "dune-project"
+      ];
+    };
 
   propagatedBuildInputs = [
     zarith
@@ -38,9 +39,9 @@ buildDunePackage rec {
 
   buildInputs = [
     yojson
-   core
-  core_unix
-  ppx_jane
+    core
+    core_unix
+    ppx_jane
   ];
 
   checkInputs = [
