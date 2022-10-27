@@ -23,6 +23,8 @@ module Withdrawal_handle = struct
 
   type hash = Withdrawal_handle_hash.t [@@deriving yojson, show]
 
+  let hash_encoding = Withdrawal_handle_hash.encoding
+
   type t = {
     hash : Withdrawal_handle_hash.t;
     id : int;

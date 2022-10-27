@@ -21,24 +21,24 @@ open Deku_concepts
     FIXME: This could be automated according to https://tezos-dev.slack.com/archives/CFX0B8Q3X/p1659802632591539?thread_ts=1659800515.479659&cid=CFX0B8Q3X
 *)
 
-(* #use "./src/tezos_interop/consensus.mligo";;
+(* #use "./tezos_interop/consensus.mligo";;
    Crypto.blake2b (Bytes.pack ({ block_level = (1 : int);
-     block_payload_hash = (0x8e98623696f7ff9fef924c78ff4dfdd770faf7707712fc4d18d7e23fb326f9ea : blake2b);
+     block_payload_hash = (0x4a2c38a9250b8ec39555285334b159d8e388f22de9903d14f26ed7f761d9958a : blake2b);
      state_hash = (0xfa301e3ff218de7844b21dd7364a444243f1772f6eba158a4a3a911b59da7d8c : blake2b);
      handles_hash = (0xb55ce6d1804e12b112c9795f18b81d2ec7ff33047e67a05e0c8603c5e49c3203: blake2b) } : block_hash_structure));;
 *)
 (* This  *)
 let expected_block_structure_hash =
-  "587f8441803a794d1473c434bfe5e8f69043f82869bdd67c4981e5c1db46b18a"
+  "dc2cc90c1a017c0f3fe3580999a87da33aef0b8588e84ea924e1c415e67a9f90"
 
 let expected_block_hash =
-  "7d35e6316a4a4b44df414fcebb54504cefd11767c5127dc94693a23feb2c43e9"
+  "d10de93e1c8ad5de98854b239063cfb86c0e778116e6d912dd7b2ec31051ac35"
 
 let test_deku_block_hashing () =
   let level = Level.zero |> Level.next in
   let block_payload_hash =
     BLAKE2b.of_hex
-      "8e98623696f7ff9fef924c78ff4dfdd770faf7707712fc4d18d7e23fb326f9ea"
+      "4a2c38a9250b8ec39555285334b159d8e388f22de9903d14f26ed7f761d9958a"
     |> Option.get
   in
   let state_root_hash =
@@ -96,7 +96,7 @@ let test_basic_signing () =
     "edsigtwmU8KFJf61hs2N5oSnFKzEDo83pHZJrTALN6Xy8dV9py5punbX3fmN4RezZhn1V2rUbh3Ej5oiCSxakiLhQsDeA6pJ7oX"
   in
   Alcotest.(
-    check string "Deku signing is Tezos compatible" expected_signature signature)
+    check string "Deku signing is Tezos compatible" signature expected_signature)
 
 let test_signing_a_hash () =
   (* I checked that this works with ligo repl:
@@ -146,7 +146,7 @@ let test_block_signing () =
     |> Verified_signature.signature |> Signature.to_b58
   in
   let expected_signature =
-    "edsigtyeEgGH9XxFV6AU9ybWGEfS8D6anwDWcHEhFdG65CXzLT41H4Y6VsUwZ9tTs92pxnreBKotccFs9bsiw4Cwm74Xv1qVMfT"
+    "edsigtkogBJTUK3YraKuyJPJytgidR7XuwhHk2xn3kpeddheUHq5uSfaYHswXPgNk3EkR334b39dcToYja5HseS7MECWes7hS3r"
   in
   Alcotest.(
     check string "Deku block signing is Tezos compatible" expected_signature

@@ -17,3 +17,4 @@ type tezos_operation = {
 type t = tezos_operation [@@deriving yojson]
 
 val make : Tezos_operation_hash.t -> internal_operation list -> t
+val encoding : tezos_operation Data_encoding.t

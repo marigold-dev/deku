@@ -197,23 +197,25 @@ let produce () =
   let (_ : Block.t) = block ~default_block_size:items in
   ()
 
-let block_encode () =
+let produce_and_serialize () =
   let items = 1_000_000 in
-  let prepare () = block ~default_block_size:items in
-  (* 1kk/s on 8 domains *)
-  bench "block_encode" ~items ~prepare @@ fun block ->
-  let (_ : string list) = Block.encode block in
+  let prepare () = () in
+  bench "produce_and_serialize" ~items ~prepare @@ fun () ->
+  let block = block ~default_block_size:items in
+  let (_ : string) = Data_encoding.Binary.to_string_exn Block.encoding block in
   ()
 
-let block_decode () =
+let produce_and_serialize_and_parse () =
   let items = 1_000_000 in
-  let prepare () =
-    let block = block ~default_block_size:items in
-    Block.encode block
+  let prepare () = () in
+  bench "produce_and_serialize_and_parse" ~items ~prepare @@ fun () ->
+  let block = block ~default_block_size:items in
+  let (binary : string) =
+    Data_encoding.Binary.to_string_exn Block.encoding block
   in
-  (* 500k/s on 8 domains *)
-  bench "block_decode" ~items ~prepare @@ fun fragments ->
-  let (_ : Block.t) = Block.decode fragments in
+  let (_ : Block.t) =
+    Data_encoding.Binary.of_string_exn Block.encoding binary
+  in
   ()
 
 let prepare_and_decode () =
@@ -352,8 +354,8 @@ let ledger_transfer () =
 let benches =
   [
     produce;
-    block_encode;
-    block_decode;
+    produce_and_serialize;
+    produce_and_serialize_and_parse;
     prepare_and_decode;
     verify;
     ledger_balance;
