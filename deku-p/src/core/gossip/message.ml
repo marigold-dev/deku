@@ -31,6 +31,29 @@ module Content = struct
 
   exception Invalid_content
 
+  let encoding =
+    let open Data_encoding in
+    union
+      [
+        case ~title:"Content_block" (Tag 0) Block.encoding
+          (function Content_block block -> Some block | _ -> None)
+          (fun block -> Content_block block);
+        case ~title:"Content_vote" (Tag 1)
+          (tup2 Level.encoding Verified_signature.encoding)
+          (function
+            | Content_vote { level; vote } -> Some (level, vote) | _ -> None)
+          (fun (level, vote) -> Content_vote { level; vote });
+        case ~title:"Content_operation" (Tag 2) Operation.Signed.encoding
+          (function Content_operation operation -> Some operation | _ -> None)
+          (fun operation -> Content_operation operation);
+        case ~title:"Content_accepted" (Tag 3)
+          (tup2 Block.encoding (list Verified_signature.encoding))
+          (function
+            | Content_accepted { block; votes } -> Some (block, votes)
+            | _ -> None)
+          (fun (block, votes) -> Content_accepted { block; votes });
+      ]
+
   let block block = Content_block block
   let vote ~level ~vote = Content_vote { level; vote }
   let operation operation = Content_operation operation
@@ -55,6 +78,15 @@ module Network = struct
 
   let make ~raw_header ~raw_content =
     Network_message { raw_header; raw_content }
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun (Network_message { raw_header; raw_content }) ->
+        (raw_header, raw_content))
+      (fun (raw_header, raw_content) ->
+        Network_message { raw_header; raw_content })
+      (tup2 string string)
 end
 
 type message =
@@ -64,30 +96,32 @@ type t = message
 
 exception Expected_header_mismatch
 
-let hash ~json_content =
-  (* guarantees canonical representation *)
-  let raw_content = Yojson.Safe.to_string json_content in
-  let hash = Message_hash.hash raw_content in
-  (hash, raw_content)
-
 let header ~hash ~content =
   let level = Content.last_relevant_level content in
   let header = Header.make ~hash ~level in
   let raw_header = Header.encode header in
   (header, raw_header)
 
+let hash ~content =
+  (* guarantees canonical representation *)
+  let raw_content =
+    Data_encoding.Binary.to_string_exn Content.encoding content
+  in
+  let hash = Message_hash.hash raw_content in
+  (hash, raw_content)
+
 let encode ~content =
-  let json_content = Content.yojson_of_t content in
-  let hash, raw_content = hash ~json_content in
+  let hash, raw_content = hash ~content in
   let header, raw_header = header ~hash ~content in
   let network = Network.make ~raw_header ~raw_content in
   Message { header; content; network }
 
 let decode ~expected ~raw_content =
   (* TODO: why not use encode here? To avoid reserializing again *)
-  let json_content = Yojson.Safe.from_string raw_content in
-  let hash, raw_content = hash ~json_content in
-  let content = Content.t_of_yojson json_content in
+  let content =
+    Data_encoding.Binary.of_string_exn Content.encoding raw_content
+  in
+  let hash, raw_content = hash ~content in
   let header, raw_header = header ~hash ~content in
   let network = Network.make ~raw_header ~raw_content in
   (match Header.equal expected header with

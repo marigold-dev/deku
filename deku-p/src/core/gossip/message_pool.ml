@@ -15,6 +15,32 @@ type message_pool =
 
 and t = message_pool [@@deriving yojson]
 
+let message_state_encoding =
+  let open Data_encoding in
+  union
+    [
+      case ~title:"Accepted" (Tag 0) unit
+        (function Accepted -> Some () | _ -> None)
+        (fun () -> Accepted);
+      case ~title:"Pending" (Tag 1) (list string)
+        (function Pending { queue } -> Some queue | _ -> None)
+        (fun queue -> Pending { queue });
+      case ~title:"Unknown" (Tag 2) unit
+        (function Unknown -> Some () | _ -> None)
+        (fun () -> Unknown);
+      case ~title:"Late" (Tag 3) unit
+        (function Late -> Some () | _ -> None)
+        (fun () -> Late);
+    ]
+
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Message_pool { current; by_level }) -> (current, by_level))
+    (fun (current, by_level) -> Message_pool { current; by_level })
+    (tup2 Level.encoding
+       (Level.Map.encoding (Message_hash.Map.encoding message_state_encoding)))
+
 type fragment =
   | Fragment_encode of { content : Message.Content.t }
   | Fragment_decode of { expected : Message.Header.t; raw_content : string }
