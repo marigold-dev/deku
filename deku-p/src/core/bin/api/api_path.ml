@@ -41,8 +41,6 @@ module Operation_hash = struct
 end
 
 module Address = struct
-  open Deku_protocol
-
   type t = Address
 
   let parser path =

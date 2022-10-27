@@ -1,7 +1,5 @@
 let value = Alcotest.of_pp Tunac.Values.V.pp
-
-let error = Alcotest.of_pp (fun _fmt _t -> ())
-
+let error = assert false
 let compile x = Tunac.Compiler.compile_value x |> Result.map snd
 
 let integers () =
