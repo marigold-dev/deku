@@ -6,33 +6,12 @@ function load(exports, addr, cell) {
     return exports.memory[addr / 4 + cell]
 }
 
-function store(exports, addr, cell, value) {
-    exports.memory[addr / 4 + cell] = value
-}
-
-function alloc(heap, words) {
-    const addr = heap.value
-    heap.value = addr + words * 4
-    return addr
-}
-
 function car(exports, list) {
     return load(exports, list, 0)
 }
 
 function cdr(exports, list) {
     return load(exports, list, 1)
-}
-
-function create_pair(exports, fst, snd) {
-    const addr = alloc(exports.heap, 2)
-    store(exports, addr, 0, fst)
-    store(exports, addr, 1, snd)
-    return addr
-}
-
-function push(exports, value) {
-    exports.stack.value = create_pair(exports, value, exports.stack.value)
 }
 
 function stack_n(exports, n) {
@@ -50,43 +29,27 @@ function stack_n(exports, n) {
     }
 }
 
-function stack_top(exports) {
-    return load(exports, exports.stack.value, 0)
-}
-
-function intToBuffer(int) {
-    return Buffer.from(new Uint32Array([ int ]).buffer)
-}
-
-function encodeValue(value) {
+function michelsonValueToString(value) {
     if (value.int !== undefined) {
-        return intToBuffer(value.int)
+        return value.int.toString()
     }
 
     if (value.prim) {
-        switch (value.prim) {
-            case 'Unit':
-                return intToBuffer(0)
-            case 'Pair':
-                return Buffer.concat([
-                    encodeValue(value.args[0]),
-                    encodeValue(value.args[1])
-                ])
-            case 'Left':
-                return Buffer.concat([
-                    intToBuffer(1),
-                    encodeValue(value.args[0])
-                ])
-            case 'Right':
-                return Buffer.concat([
-                    intToBuffer(0),
-                    encodeValue(value.args[0])
-                ])
-        }
+        return '(' + value.prim +
+            ' ' + value.annots.join(' ') + ' ' +
+            value.args.map(michelsonValueToString).join(' ') + ')'
     }
+}
 
-    console.log(value)
-    assert(false)
+function encodeValue(value) {
+    return new Promise((resolve, reject) => {
+        const process = child_process.exec('./compile.exe value', (err, stdout) => {
+            if (err) return reject(err)
+            resolve(Buffer.from(stdout))
+        })
+
+        process.stdin.end(michelsonValueToString(value))
+    })
 }
 
 function inspect_all(exports) {
@@ -113,7 +76,7 @@ function inspect_all(exports) {
 }
 
 function compileMichelsonCode(code) {
-    const p = child_process.exec('./compile.exe')
+    const p = child_process.exec('./compile.exe contract')
 
     p.stdin.end(code)
     p.stderr.pipe(process.stderr)
@@ -136,7 +99,7 @@ async function wasmModuleOfMichelson(code) {
 async function eval(code, parameter, storage) {
     const module = await wasmModuleOfMichelson(code)
 
-    const parameterBuffer = encodeValue({
+    const parameterBuffer = await encodeValue({
         prim: 'Pair',
         args: [ parameter, storage ],
         annots: []
@@ -181,13 +144,7 @@ async function eval(code, parameter, storage) {
         stack: instance.exports.stack
     }
 
-    // parameter = encodeValue(exports, parameter)
-    // storage = encodeValue(exports, storage)
-    // push(exports, create_pair(exports, parameter, storage))
-
-    // inspect_all(exports)
     instance.exports.main()
-    // inspect_all(exports)
 
     return { storage: storageBuffer, exports }
 }

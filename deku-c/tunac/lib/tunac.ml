@@ -16,5 +16,4 @@ let compile_contract contract =
   let ir, env = IR_of_michelson.compile_contract contract in
   Wasm_of_ir.compile_ir ~env ir
 
-let compile_value _node =
-  Bytes.empty
+let compile_value = Serialize.compile_value

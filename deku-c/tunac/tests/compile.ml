@@ -19,8 +19,12 @@ let save_module wasm_mod =
   close_out output
 
 let _ =
-  let wasm_mod = Tunac.compile_contract contract in
-  Binaryen.Module.print wasm_mod;
-  save_module wasm_mod
-
-  
+  match Sys.argv.(1) with
+  | "contract" ->
+    let wasm_mod = Tunac.compile_contract contract in
+    Binaryen.Module.print wasm_mod;
+    save_module wasm_mod
+  | "value" ->
+    let value = Tunac.compile_value contract in
+    print_bytes value
+  | _ -> assert false
