@@ -21,11 +21,25 @@
       nixpkgs.follows = "nixpkgs";
       flake-parts.follows = "flake-parts";
     };
+    rust-overlay.url = github:oxalica/rust-overlay;
+    rust-overlay.inputs = {
+      nixpkgs.follows = "nixpkgs";
+    };
+    alien_ffi.url = "/home/d4hines/repos/alien_ffi";
+    alien_ffi.inputs.rust-overlay.follows = "rust-overlay";
+    alien_ffi.inputs.nixpkgs.follows = "nixpkgs";
+    alien_ffi.inputs.flake-utils.follows = "rust-overlay/flake-utils";
+
+    ocaml-dalek = {
+      url = "/home/d4hines/repos/ocaml-dalek";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.alien_ffi.follows = "alien_ffi";
+    };
 
     deploy-rs.url = "github:serokell/deploy-rs";
   };
 
-  outputs = { self, nixpkgs, flake-parts, nix-filter, dream2nix, tezos, deploy-rs, ligo, ...}:
+  outputs = { self, nixpkgs, flake-parts, nix-filter, dream2nix, tezos, deploy-rs, ligo, ocaml-dalek, ... }:
     flake-parts.lib.mkFlake { inherit self; } {
       imports = [
         ./nix/js-packages.nix
@@ -37,7 +51,7 @@
         "aarch64-darwin"
         "x86_64-darwin"
       ];
-      perSystem = { config, system, self', pkgs, ...}: 
+      perSystem = { config, system, self', pkgs, ... }:
         {
           config = {
             _module.args = {
@@ -46,9 +60,18 @@
                 extraOverlays = [
                   tezos.overlays.default
                   (import ./nix/overlay.nix)
-                  (final: prev: {
-                    ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
-                  })
+                  (final: prev:
+                    let
+                      libdalek_rs-pkg = ocaml-dalek.packages."${system}".libdalek_rs;
+                      ocaml-dalek-pkg = ocaml-dalek.packages."${system}".ocaml-dalek prev.ocaml-ng.ocamlPackages_5_00;
+                      all = prev.symlinkJoin {
+                        name = "all";
+                        paths = [ ocaml-dalek-pkg libdalek_rs-pkg ];
+                      };
+                    in
+                    {
+                      ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00 // { ocaml-dalek = all; };
+                    })
                 ];
               });
               nodejs = pkgs.nodejs-16_x;
@@ -79,5 +102,5 @@
 
         checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
       };
-  };
+    };
 }

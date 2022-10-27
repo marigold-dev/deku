@@ -1,4 +1,4 @@
 (executable
  (name deku_benchmark)
  (public_name deku-benchmark)
- (libraries deku_protocol deku_consensus))
+ (libraries deku_protocol deku_consensus ocaml_dalek))
