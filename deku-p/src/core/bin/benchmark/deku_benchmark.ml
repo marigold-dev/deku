@@ -3,6 +3,9 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_protocol
 open Deku_ledger
+open Ocaml_dalek.Binding
+open Alien_ffi.Interface
+open Alien_ffi.Bench
 
 let domains =
   match Sys.getenv_opt "DEKU_DOMAINS" with
@@ -256,6 +259,40 @@ let verify () =
   in
   ()
 
+let verify_dalek_batch () =
+  let batches = 100 in
+  let batch_size = 1000 in
+  let items = batches * batch_size in
+  let prepare () =
+    let keypair = Keypair.generate () in
+    let public = Keypair.public keypair in
+    let batches =
+      List.init batches (fun batch_num ->
+          let batch = Batch.allocate () in
+          let _ =
+            List.init batch_size (fun i ->
+                let string = string_of_int (batch_num * i) in
+                let message =
+                  BLAKE2b.hash string |> BLAKE2b.to_raw |> Bigstring.of_string
+                in
+                Batch.push_message batch message;
+                let signature = Keypair.sign keypair message in
+                Batch.push_signature batch signature;
+                Batch.push_public_key batch public;
+                ())
+          in
+          batch)
+    in
+    batches
+  in
+  bench "verify" ~items ~prepare @@ fun batches ->
+  let _units : unit list =
+    List.map
+      (fun batch -> with_opaques (fun () -> assert (verify_batch batch)))
+      batches
+  in
+  ()
+
 let ledger_balance () =
   let items = 100_000 in
   let address () =
@@ -351,13 +388,14 @@ let ledger_transfer () =
 
 let benches =
   [
-    produce;
-    block_encode;
-    block_decode;
-    prepare_and_decode;
-    verify;
-    ledger_balance;
-    ledger_transfer;
+    (* produce;
+       block_encode;
+       block_decode;
+       prepare_and_decode;*)
+    (* verify; *)
+    verify_dalek_batch
+    (* ledger_balance;
+       ledger_transfer; *);
   ]
 
 let () =
