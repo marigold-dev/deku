@@ -21,3 +21,5 @@ let drop ~current_level t =
     (fun _hash operation_level ->
       is_in_includable_window ~current_level ~operation_level)
     t
+
+let encoding = Operation_hash.Map.encoding Level.encoding

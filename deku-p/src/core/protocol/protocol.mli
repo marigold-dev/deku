@@ -12,6 +12,7 @@ type protocol = private
 
 type t = protocol [@@deriving yojson]
 
+val encoding : protocol Data_encoding.t
 val initial : protocol
 val initial_with_vm_state : vm_state:Ocaml_wasm_vm.State.t -> protocol
 
