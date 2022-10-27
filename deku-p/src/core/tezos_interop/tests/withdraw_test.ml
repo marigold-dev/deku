@@ -23,9 +23,8 @@ let main ticket_id tezos_owner secret verbose host =
       ~ticket_id
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
-  let json = Deku_protocol.Operation.Signed.yojson_of_t transaction in
   let () =
-    let response = Net.post ~sw ~env json url in
+    let response = Net.post_operation ~sw ~env transaction url in
     let status = Net.code_of_response response in
     Printf.eprintf "%i\n%!" status
   in

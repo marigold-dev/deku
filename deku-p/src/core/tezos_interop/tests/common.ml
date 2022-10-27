@@ -109,8 +109,32 @@ let host =
   value & opt uri default & info [ "api-node" ] ~doc ~docv ~env
 
 (* Helpers to post/get json on the network*)
+
+module Operation_dto = struct
+  open Deku_crypto
+  open Deku_protocol
+
+  type t = {
+    key : Key.t;
+    signature : Signature.t;
+    initial : Operation.Initial.t;
+  }
+  [@@deriving yojson]
+
+  let of_signed signed =
+    let (Operation.Signed.Signed_operation { key; signature; initial }) =
+      signed
+    in
+    { key; signature; initial }
+
+  let to_signed repr =
+    let { key; signature; initial } = repr in
+    Operation.Signed.make_with_signature ~key ~signature ~initial
+end
+
 module Net = struct
-  let post ~sw ~env json uri =
+  let post_operation ~sw ~env operation uri =
+    let json = Operation_dto.of_signed operation |> Operation_dto.yojson_of_t in
     let body = Yojson.Safe.to_string json in
     let body = Piaf.Body.of_string body in
     match Piaf.Client.Oneshot.post ~body env uri ~sw with
@@ -136,3 +160,5 @@ module Net = struct
     | `Assoc [ ("level", level) ] -> Level.t_of_yojson level
     | _ -> failwith "Wrong body received from level endpoint"
 end
+
+(* *)

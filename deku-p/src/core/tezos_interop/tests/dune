@@ -1,7 +1,9 @@
 (library
  (name common)
  (modules common)
- (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts piaf))
+ (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts piaf)
+ (preprocess
+  (pps ppx_yojson_conv)))
 
 (executable
  (name update_state_root_hash_test)

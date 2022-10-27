@@ -25,7 +25,7 @@ let main ticket_id receiver secret verbose host =
   let url = Uri.with_path host "api/v1/operations" in
   let json = Deku_protocol.Operation.Signed.yojson_of_t operation in
   Printf.eprintf "%s\n%!" (Yojson.Safe.to_string json);
-  let response = Net.post ~sw ~env json url in
+  let response = Net.post_operation ~sw ~env operation url in
   let code = Net.code_of_response response in
   Printf.eprintf "%d\n%!" code;
   let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
