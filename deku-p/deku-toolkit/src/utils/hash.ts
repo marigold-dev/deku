@@ -1,7 +1,6 @@
 import { OperationHash as OperationHashType } from "../core/operation-hash";
 import * as blake from "blakejs";
 import * as bs58check from "bs58check";
-import { Base58 } from "@tzstamp/helpers";
 
 const PREFIX = {
   Do: new Uint8Array([86, 124]),
@@ -24,9 +23,8 @@ const toB58Hash = (prefix: Uint8Array, bytes: Buffer) => {
 
 // TODO: Where is it used ? 
 export const fromB58Hash = (x: string): string => {
-  const y = Base58.decode(x);
-  const tmp = new Uint8Array(y.buffer).slice(0, 32 + 2);
-  return "0x" + Buffer.from(tmp.slice(2)).toString("hex");
+  console.log(x);
+  return "coucou"
 };
 
 // TODO: Find a way to replace the buffer
