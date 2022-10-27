@@ -10,6 +10,8 @@ module Withdrawal_handle : sig
 
   type hash = Withdrawal_handle_hash.t [@@deriving yojson, show]
 
+  val hash_encoding : hash Data_encoding.t
+
   type t = {
     hash : Withdrawal_handle_hash.t;
     id : int;

@@ -35,3 +35,10 @@ let of_string string =
   in
   let%some ticketer = Address.of_string ticketer in
   Some { ticketer; data }
+
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun { ticketer; data } -> (data, ticketer))
+    (fun (data, ticketer) -> { ticketer; data })
+    (dynamic_size (tup2 bytes Address.encoding))
