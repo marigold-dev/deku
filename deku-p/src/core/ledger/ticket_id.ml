@@ -1,7 +1,7 @@
 type ticketer =
   | Tezos of Deku_tezos.Contract_hash.t
   | Deku of Contract_address.t
-[@@deriving eq, ord, show]
+[@@deriving ord, show]
 
 let ticketer_encoding =
   let tezos_tag = 0 in

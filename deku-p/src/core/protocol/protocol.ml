@@ -112,6 +112,7 @@ let apply_operation ~current_level protocol operation :
               with
               | vm_state, ledger -> Some (ledger, Some receipt, vm_state, None)
               | exception External_vm_client.Vm_execution_error error ->
+                  let () = failwith error in
                   Some
                     ( ledger,
                       Some receipt,

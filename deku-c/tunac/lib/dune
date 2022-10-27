@@ -1,6 +1,14 @@
 (library
  (name tunac)
- (libraries core tezos-micheline data-encoding zarith wasm)
+ (libraries
+  core
+  tezos-micheline
+  data-encoding
+  zarith
+  wasm
+  ocaml_wasm_vm
+  deku_concepts
+  deku_ledger)
  (modules_without_implementation interface)
  (preprocess
   (pps ppx_deriving.ord ppx_deriving.show ppx_deriving.eq ppx_yojson_conv)))

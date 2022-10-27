@@ -1,7 +1,7 @@
 type ticketer =
   | Tezos of Deku_tezos.Contract_hash.t
   | Deku of Contract_address.t
-[@@deriving eq, ord, show]
+[@@deriving ord, show]
 
 type ticket_id = private Ticket_id of { ticketer : ticketer; data : bytes }
 and t = ticket_id [@@deriving ord, yojson, show]
