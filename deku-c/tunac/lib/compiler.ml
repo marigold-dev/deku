@@ -420,7 +420,6 @@ let rec compile_value ~tickets parsed :
       in
       let* elements = aux elements in
       Ok (Values.List (elements, Other))
-  | Prim (_, T_map, [ (Seq (_, _) as elems) ], _) -> compile_map ~tickets elems
   | Prim (_, I_EMPTY_MAP, _, _) -> Ok (Map Map.empty)
   | Prim (_, I_EMPTY_SET, _, _) -> Ok (Set Set.empty)
   | Prim (_, T_ticket, [ fst ], _) ->
