@@ -1,5 +1,12 @@
+open Deku_stdlib
 open Deku_crypto
-module String_map = Map.Make (String)
+
+module String_map = Map.Make (struct
+  type t = string [@@deriving yojson]
+
+  let compare = String.compare
+  let encoding = Data_encoding.string
+end)
 
 module State = struct
   type t = string String_map.t
@@ -8,6 +15,8 @@ module State = struct
   let set = String_map.add
   let empty = String_map.empty
   (* let equal = Storage.equal Yojson.Safe.equal *)
+
+  let encoding = String_map.encoding Data_encoding.string
 
   let yojson_of_t map =
     let assoc =

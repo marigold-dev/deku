@@ -5,6 +5,7 @@ module Address_map : Map.S with type key = Address.t
 
 type t = private Amount.t Ticket_map.t Address_map.t [@@deriving yojson]
 
+val encoding : t Data_encoding.t
 val empty : t
 val balance : sender:Address.t -> ticket_id:Ticket_id.t -> t -> Amount.t option
 

@@ -13,6 +13,19 @@ type protocol =
 
 and t = protocol [@@deriving yojson]
 
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Protocol
+           { included_operations; included_tezos_operations; ledger; vm_state }) ->
+      (included_operations, included_tezos_operations, ledger, vm_state))
+    (fun (included_operations, included_tezos_operations, ledger, vm_state) ->
+      Protocol
+        { included_operations; included_tezos_operations; ledger; vm_state })
+    (tup4 Included_operation_set.encoding
+       Deku_tezos.Tezos_operation_hash.Set.encoding Ledger.encoding
+       External_vm_protocol.State.encoding)
+
 let initial =
   Protocol
     {

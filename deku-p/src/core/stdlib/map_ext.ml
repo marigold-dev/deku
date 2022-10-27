@@ -21,7 +21,7 @@ module Make (Ord : OrderedType) = struct
 
   let encoding (type a) (a_encoding : a Data_encoding.t) =
     let open Data_encoding in
-    conv bindings of_list (list (tup2 Ord.encoding a_encoding))
+    conv bindings of_list (list (tup2 (dynamic_size Ord.encoding) a_encoding))
 
   let t_of_yojson (type a) (a_of_yojson : _ -> a) json =
     let list = [%of_yojson: (Ord.t * a) list] json in

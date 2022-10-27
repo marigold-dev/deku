@@ -6,6 +6,7 @@ module Tickets = struct
 
   type t = Amount.t Ticket_map.t [@@deriving yojson]
 
+  let encodings = Ticket_map.encoding Amount.encoding
   let get_balance ~ticket_id t = Ticket_map.find_opt ticket_id t
   let to_seq map = Ticket_map.to_seq map
   let of_seq seq = Ticket_map.of_seq seq
@@ -60,6 +61,7 @@ module Address_map = Map.Make (Address)
 
 type t = Tickets.t Address_map.t [@@deriving yojson]
 
+let encoding = Address_map.encoding Tickets.encodings
 let empty = Address_map.empty
 
 let balance ~sender ~ticket_id t =

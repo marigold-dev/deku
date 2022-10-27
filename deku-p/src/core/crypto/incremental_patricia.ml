@@ -1,6 +1,7 @@
 module Make (V : sig
   type t [@@deriving yojson]
 
+  val encoding : t Data_encoding.t
   val hash : t -> BLAKE2b.t
 end) =
 struct
@@ -69,4 +70,28 @@ struct
 
   let empty = { top_bit = 0; tree = Empty; last_key = -1 }
   let hash t = hash_of_t t.tree
+
+  (* TODO: ensure this function preserves ordering *)
+  let rec elements acc tree =
+    match tree with
+    | Empty -> acc
+    | Leaf { value; hash = _ } -> value :: acc
+    | Node { left; hash = _; right } ->
+        let acc = elements acc right in
+        elements acc left
+
+  let elements t =
+    let { tree; _ } = t in
+    elements [] tree
+
+  let of_list l =
+    List.fold_left
+      (fun map value ->
+        let map, _value = add (fun _ -> value) map in
+        map)
+      empty l
+
+  let encoding =
+    let open Data_encoding in
+    conv elements of_list (list V.encoding)
 end

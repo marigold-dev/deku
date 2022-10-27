@@ -12,3 +12,5 @@ val mem : Operation.Initial.t -> included_operation_set -> bool
 
 val drop :
   current_level:Level.t -> included_operation_set -> included_operation_set
+
+val encoding : included_operation_set Data_encoding.t

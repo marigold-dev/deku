@@ -4,6 +4,7 @@ open Deku_stdlib
 module State : sig
   type t [@@deriving yojson]
 
+  val encoding : t Data_encoding.t
   val get : string -> t -> string option
   val set : string -> string -> t -> t
   val empty : t

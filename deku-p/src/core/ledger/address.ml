@@ -90,8 +90,10 @@ let encoding =
     ~raw_encoding
 
 module Map = Deku_stdlib.Map.Make (struct
-  type t = address [@@deriving ord, yojson]
+  type t = address [@@deriving ord]
 
+  let t_of_yojson = t_of_yojson
+  let yojson_of_t = yojson_of_t
   let encoding = encoding
 end)
 

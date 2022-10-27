@@ -35,7 +35,7 @@ let header_encoding =
   let open Data_encoding in
   tup5 Key_hash.encoding Level.encoding Block_hash.encoding
     (list Tezos_operation.encoding)
-    Ledger.Withdrawal_handle.hash_encoding
+    Ledger.Withdrawal_handle.Withdrawal_handle_hash.encoding
 
 let hash ~author ~level ~previous ~tezos_operations ~withdrawal_handles_hash
     ~payload =
