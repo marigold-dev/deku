@@ -13,6 +13,17 @@ type producer =
 
 and t = producer [@@deriving yojson]
 
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Producer { operations; tezos_operations }) ->
+      (operations, tezos_operations))
+    (fun (operations, tezos_operations) ->
+      Producer { operations; tezos_operations })
+    (tup2
+       (Operation_hash.Map.encoding string)
+       (Tezos_operation_hash.Map.encoding Tezos_operation.encoding))
+
 let empty =
   let operations = Operation_hash.Map.empty in
   let tezos_operations = Tezos_operation_hash.Map.empty in

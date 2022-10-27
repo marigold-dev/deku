@@ -4,6 +4,7 @@ open Deku_protocol
 type producer
 type t = producer [@@deriving yojson]
 
+val encoding : producer Data_encoding.t
 val empty : producer
 val incoming_operation : operation:Operation.Signed.t -> producer -> producer
 

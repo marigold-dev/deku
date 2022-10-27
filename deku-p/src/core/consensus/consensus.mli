@@ -28,6 +28,7 @@ type consensus = private
 
 type t = consensus [@@deriving yojson]
 
+val encoding : consensus Data_encoding.t
 val make : validators:Validators.t -> consensus
 
 (* updates *)
