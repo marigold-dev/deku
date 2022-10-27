@@ -4,6 +4,9 @@ sidebar_position: 2
 
 import { ComponentCodeBlock } from "@theme/ComponentCodeBlock";
 
+Under construction!
+
+<!-- >
 # Quick-start with Deku-C
 
 In this 15-minute tutorial, we'll create our first DApp to Deku-C.
@@ -221,3 +224,5 @@ contract's address and try it out!
   render(<MyFirstDApp/>)
 `}>
 </ComponentCodeBlock>
+
+</!-->
