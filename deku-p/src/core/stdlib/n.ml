@@ -25,4 +25,6 @@ let ( > ) a b = Z.gt a b
 
 module Map = Map_ext.Make (struct
   type t = nat [@@deriving ord, yojson]
+
+  let encoding = encoding
 end)

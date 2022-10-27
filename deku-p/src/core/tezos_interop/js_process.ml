@@ -17,6 +17,8 @@ end = struct
 
   module Map = Map.Make (struct
     type t = int [@@deriving ord, yojson]
+
+    let encoding = Data_encoding.int31
   end)
 end
 

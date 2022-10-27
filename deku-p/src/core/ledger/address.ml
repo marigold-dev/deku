@@ -90,11 +90,11 @@ let encoding =
     ~raw_encoding
 
 module Map = Deku_stdlib.Map.Make (struct
-  type nonrec t = t
+  type t = address [@@deriving ord]
 
-  let compare = compare_address
   let t_of_yojson = t_of_yojson
   let yojson_of_t = yojson_of_t
+  let encoding = encoding
 end)
 
 let cmdliner_converter =

@@ -44,8 +44,8 @@ module type S = sig
     val t_of_yojson : [> `String of string ] -> hash
     val yojson_of_t : hash -> [> `String of string ]
     val encoding : hash Data_encoding.t
-  end
 
-  module Set : Set.S with type elt = hash
-  module Map : Map.S with type key = hash
+    module Set : Set.S with type elt = hash
+    module Map : Map.S with type key = hash
+  end
 end

@@ -163,4 +163,5 @@ module Set = Set.Make (struct
   let compare = compare
   let t_of_yojson = t_of_yojson
   let yojson_of_t = yojson_of_t
+  let encoding = encoding
 end)
