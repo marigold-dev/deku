@@ -17,6 +17,7 @@ type action = private
   | Gossip_incoming_request of { connection : Connection_id.t; above : Level.t }
   | Gossip_fragment of { fragment : fragment }
 
+val encoding : gossip Data_encoding.t
 val initial : gossip
 val broadcast_message : content:Message.Content.t -> fragment
 
