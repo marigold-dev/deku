@@ -16,6 +16,7 @@ struct
   module Secret_key_data = struct
     let secret_keys = List.map (fun id -> id.secret_key) ids
     let public_keys = List.map (fun sk -> Key.of_secret sk) secret_keys
+    let compared_secret_keys = List.sort Secret.compare secret_keys
   end
 
   module Test_secret_key_data = struct
@@ -26,5 +27,15 @@ struct
       Alcotest.(check' (list string))
         ~msg:"public keys are equal" ~expected:Tezos_data.public_keys
         ~actual:public_keys
+
+    let compare () =
+      let compared_secret_keys =
+        List.map
+          (fun sk -> Secret.to_b58 sk)
+          Secret_key_data.compared_secret_keys
+      in
+      Alcotest.(check' (list string))
+        ~msg:"secret key comparison works"
+        ~expected:Tezos_data.compared_secret_keys ~actual:compared_secret_keys
   end
 end
