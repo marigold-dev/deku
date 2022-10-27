@@ -45,32 +45,33 @@ struct
     val name : string
     val prefix : Prefix.t
   end) =
-  With_b58_and_encoding_and_yojson (struct
-    include P
+  struct
+    include With_b58_and_encoding_and_yojson (struct
+      include P
 
-    type t = hash
+      type t = hash
 
-    let size = digest_size
-    let to_raw = to_raw
-    let of_raw = of_raw
-  end)
+      let size = digest_size
+      let to_raw = to_raw
+      let of_raw = of_raw
+    end)
 
-  (* TODO: expose this exception *)
-  exception Not_a_hash
+    module Set = Set.Make (struct
+      type t = hash [@@deriving ord]
 
-  let hash_of_yojson json =
-    let string = [%of_yojson: string] json in
-    match of_hex string with Some hash -> hash | None -> raise Not_a_hash
+      let encoding = encoding
+      let t_of_yojson = t_of_yojson
+      let yojson_of_t = yojson_of_t
+    end)
 
-  let yojson_of_hash hash = [%yojson_of: string] (to_hex hash)
+    module Map = Map.Make (struct
+      type t = hash [@@deriving ord]
 
-  module Set = Set.Make (struct
-    type t = hash [@@deriving ord, yojson]
-  end)
-
-  module Map = Map.Make (struct
-    type t = hash [@@deriving ord, yojson]
-  end)
+      let encoding = encoding
+      let t_of_yojson = t_of_yojson
+      let yojson_of_t = yojson_of_t
+    end)
+  end
 end
 
 module Size_160 = struct
