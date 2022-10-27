@@ -83,5 +83,8 @@ let run () =
   run "Ed25519 tezos data tests" ~and_exit:false
     [
       ( "Secret key",
-        [ test_case "public_keys" `Quick Test_secret_key_data.public_keys ] );
+        [
+          test_case "public keys" `Quick Test_secret_key_data.public_keys;
+          test_case "compare" `Quick Test_secret_key_data.compare;
+        ] );
     ]
