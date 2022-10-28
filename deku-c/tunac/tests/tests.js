@@ -39,6 +39,10 @@ function michelsonValueToString(value) {
             ' ' + value.annots.join(' ') + ' ' +
             value.args.map(michelsonValueToString).join(' ') + ')'
     }
+
+    if (Array.isArray(value)) {
+        return '{ ' + value.map(michelsonValueToString).join('; ') + ' }'
+    }
 }
 
 function encodeValue(value) {
@@ -76,17 +80,18 @@ function inspect_all(exports) {
 }
 
 function compileMichelsonCode(code) {
-    const p = child_process.exec('./compile.exe contract')
+    return new Promise((resolve, reject) => {
+        const p = child_process.exec(
+            './compile.exe contract --debug --output mod.wasm',
+            (err) => {
+                if (err) return reject(err)
+                resolve()
+            }
+        )
 
-    p.stdin.end(code)
-    p.stderr.pipe(process.stderr)
-
-    return new Promise((resolve, _) => {
-        let buf = ''
-        p.stdout.on('data', chunk => buf += chunk)
-        p.stdout.on('end', () => {
-            resolve(Buffer.from(buf)) 
-        })
+        p.stdin.end(code)
+        p.stderr.pipe(process.stderr)
+        p.stdout.pipe(process.stdout)
     })
 }
 
@@ -106,6 +111,7 @@ async function eval(code, parameter, storage) {
     })
 
     let storageBuffer
+    let failure = null
 
     const imports = {
         env: {
@@ -128,6 +134,9 @@ async function eval(code, parameter, storage) {
                 }
 
                 return 0
+            },
+            failwith(arg) {
+                failure = arg
             }
         }
     }
@@ -146,7 +155,7 @@ async function eval(code, parameter, storage) {
 
     instance.exports.main()
 
-    return { storage: storageBuffer, exports }
+    return { storage: storageBuffer, exports, failure }
 }
 
 function assertStorage(res, value) {
@@ -260,6 +269,62 @@ async function main() {
     assert(stack_n(res.exports, 0) == 7)
     assert(stack_n(res.exports, 1) == 5)
     assert(stack_n(res.exports, 2) == 4)
+
+
+    // try {
+    //     await eval(`
+    //         { parameter unit;
+    //         storage int;
+    //         code { PUSH int 42; FAILWITH }
+    //     `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    //     assert(false)
+    // } catch (e) {
+    //     console.log(e)
+    // }
+
+    res = await eval(`
+        { parameter bool; storage int; code { CAR; IF { PUSH int 42 } { PUSH int 50 }; NIL operation; PAIR } }
+    `, { prim: 'True', args: [], annots: [] }, { int: 42 })
+    assertStorage(res, '2a000000')
+
+    res = await eval(`
+        { parameter bool; storage int; code { CAR; IF { PUSH int 42 } { PUSH int 50 }; NIL operation; PAIR } }
+    `, { prim: 'False', args: [], annots: [] }, { int: 42 })
+    assertStorage(res, '32000000')
+
+    res = await eval(`
+        { parameter (list int); storage int; code { CAR; IF_CONS { SWAP; DROP } { PUSH int 50 }; NIL operation; PAIR } }
+    `, [ { int: 42 } ], { int: 42 })
+    assertStorage(res, '2a000000')
+
+    res = await eval(`
+        { parameter (list int); storage int; code { CAR; IF_CONS { } { PUSH int 50 }; NIL operation; PAIR } }
+    `, [], { int: 42 })
+    assertStorage(res, '32000000')
+
+    res = await eval(`
+        { parameter (option int); storage int; code { CAR; IF_NONE { PUSH int 50 } { }; NIL operation; PAIR } }
+    `, { prim: 'Some', args: [ { int: 42 } ], annots: [] }, { int: 42 })
+    assertStorage(res, '2a000000')
+
+    res = await eval(`
+        { parameter (option int); storage int; code { CAR; IF_NONE { PUSH int 50 } { }; NIL operation; PAIR } }
+    `, { prim: 'None', args: [], annots: [] }, { int: 42 })
+    assertStorage(res, '32000000')
+
+    res = await eval(`
+        { parameter (list int) ;
+          storage int ;
+          code { CAR ; PUSH int 0 ; SWAP ; ITER { ADD } ; NIL operation ; PAIR } }
+    `, [], { int: 42 })
+    assertStorage(res, '00000000')
+
+    res = await eval(`
+        { parameter (list int) ;
+          storage int ;
+          code { CAR ; PUSH int 0 ; SWAP ; ITER { ADD } ; NIL operation ; PAIR } }
+    `, [ { int: 1 }, { int: 2 }, { int: 3 }, { int: 4 }, { int: 5 } ], { int: 42 })
+    assertStorage(res, '0f000000')
 }
 
 main()

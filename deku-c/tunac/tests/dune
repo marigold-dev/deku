@@ -1,6 +1,6 @@
 (executable
  (name compile)
- (libraries tunac))
+ (libraries tunac cmdliner))
 
 (rule
  (alias runtest)
