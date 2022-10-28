@@ -1,5 +1,5 @@
 import { DekuToolkit } from "@marigold-dev/deku-toolkit"
-import { Contract } from "./contract";
+import { Contract, JSONType } from "./contract";
 import { DekuSigner } from "@marigold-dev/deku-toolkit/lib/utils/signers";
 import { createOperation, operationHashToContractAddress } from "./utils";
 
@@ -19,7 +19,7 @@ export class DekuCClient {
      * @param <{kind, code, storage}> the kind can be "jsligo", the code in the associated kind and its intialStorage 
      * @returns the address of the contract
      */
-    async originateContract({ kind, code, initialStorage }: { kind: "jsligo", code: string, initialStorage: object }): Promise<{ operation: string, address: string }> {
+    async originateContract({ kind, code, initialStorage }: { kind: "jsligo", code: string, initialStorage: JSONType }): Promise<{ operation: string, address: string }> {
         const operation = await createOperation(this.ligoRpc, { kind, code, initialStorage });
         const hash = await this.deku.submitVmOperation(JSON.stringify(operation));
         const address = await operationHashToContractAddress(this.dekuRpc, hash);
@@ -36,3 +36,5 @@ export class DekuCClient {
         return new Contract({ deku: this.deku, contractAddress })
     }
 }
+
+export { Contract }

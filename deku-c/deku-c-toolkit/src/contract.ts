@@ -45,10 +45,12 @@ const parseContractState = (json: JSONType): JSONType => {
 export class Contract {
     private deku: DekuToolkit;
     private address: string;
+    private fetchInterval: NodeJS.Timer | null;
 
     constructor({ deku, contractAddress }: { deku: DekuToolkit, contractAddress: string }) {
         this.deku = deku;
         this.address = contractAddress;
+        this.fetchInterval = null;
     }
 
     /**
@@ -92,5 +94,23 @@ export class Contract {
         const json = JSON.parse(slashRemoved);
         if (json["LigoContract"] === null) throw "Only Ligo contract are supported" // TODO: support others
         return json["LigoContract"]["storage"];
+    }
+
+    async onNewState(callback: (state: JSONType) => void): Promise<void> {
+        // pull strategy
+        let previous: JSONType = null;
+        if (this.fetchInterval) clearInterval(this.fetchInterval);
+        this.fetchInterval = setInterval(() => {
+            this.getState()
+                .then(state => {
+                    const previousState = JSON.stringify(previous);
+                    const nextState = JSON.stringify(state);
+                    if (nextState === previousState) return null
+                    callback(state);
+                    previous = state;
+                    return null;
+                })
+                .catch(console.error);
+        }, 2000);
     }
 }

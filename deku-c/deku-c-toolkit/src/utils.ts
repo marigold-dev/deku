@@ -1,10 +1,12 @@
-export const createOperation = async (ligoRpc: string, { kind, code, initialStorage }: { kind: "jsligo", code: string, initialStorage: object }) => {
+import { JSONType } from "./contract";
+
+export const createOperation = async (ligoRpc: string, { kind, code, initialStorage }: { kind: "jsligo", code: string, initialStorage: JSONType }) => {
     switch (kind) {
         case "jsligo": {
             const body = {
                 lang: "jsligo",
                 source: code,
-                storage: initialStorage.toString(),
+                storage: initialStorage + "",
             }
             const options = {
                 method: 'POST',
