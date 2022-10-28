@@ -21,14 +21,14 @@ use crate::{
 };
 struct ExecutionState {
     pub state: State,
-    pub to_revert: Vec<(String, Option<Value>)>,
+    pub to_revert: Vec<(String, Option<FromOcamlV>)>,
     pub io: IO,
     pub ticket_table: Rc<RefCell<TicketTable>>,
 }
 pub fn run_loop(io: IO) {
     let state = State::default();
     let table = TicketTable::default();
-    let to_revert: Vec<(String, Option<Value>)> = Vec::with_capacity(100);
+    let to_revert: Vec<(String, Option<FromOcamlV>)> = Vec::with_capacity(100);
     let mut context = ExecutionState {
         state,
         to_revert,
@@ -184,7 +184,7 @@ fn handle_originate(
     let contract_type = ContractType::LigoContract(LigoContractState {
         self_: addr.clone(),
         originated_by,
-        storage: Box::from(initial_storage),
+        storage: Box::from(FromOcamlV(initial_storage)),
         module: Some(Box::from(module)),
         serialized_module: serialized,
         constants,
@@ -228,6 +228,7 @@ fn handle_invoke(
                 contract
                     .storage()
                     .clone()
+                    .0
                     .to_runtime_ticket(&mut context.ticket_table.as_ref().borrow_mut()),
             );
             let mut contract = contract;
@@ -280,10 +281,11 @@ fn handle_invoke(
                 }) => {
                     gas_limit = remaining_gas;
                     let mut to_return = vec![];
-                    let serialized_storage = Box::from(new_storage.from_runtime_ticket(
-                        &mut context.ticket_table.as_ref().borrow_mut(),
-                        &mut to_return,
-                    )?);
+                    let serialized_storage =
+                        Box::from(FromOcamlV(new_storage.from_runtime_ticket(
+                            &mut context.ticket_table.as_ref().borrow_mut(),
+                            &mut to_return,
+                        )?));
                     {
                         let address = contract_addr_to_string(&address);
                         context

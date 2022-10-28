@@ -106,7 +106,7 @@ impl<'de> Visitor<'de> for ServerVisitor {
                 }
                 "Set" => {
                     let _elem = seq.next_element::<SetOwned>()?;
-                    Ok(ServerMessage::Init(InitVec(vec![])))
+                    Ok(ServerMessage::Set(_elem.unwrap()))
                 }
                 "Error" => {
                     let elem = seq.next_element::<String>()?;
@@ -282,8 +282,8 @@ pub fn originate(operation: String) -> impl FnMut(&mut IO) {
         loop {
             match io.read() {
                 ServerMessage::DepositTickets(_) => continue,
-                ServerMessage::Set(SetOwned { key: _, value: _ }) => {
-                    continue;
+                ServerMessage::Set(x) => {
+                    dbg!(x);
                 }
                 ServerMessage::Stop => break,
                 ServerMessage::Error(_) => {
@@ -312,7 +312,9 @@ pub fn invoke(operation: String) -> impl FnMut(&mut IO) {
         loop {
             match io.read() {
                 ServerMessage::DepositTickets(_) => continue,
-                ServerMessage::Set(SetOwned { key: _, value: _ }) => (),
+                ServerMessage::Set(x) => {
+                    dbg!(x);
+                }
                 ServerMessage::Stop => break,
                 ServerMessage::Error(_) => {
                     todo!()

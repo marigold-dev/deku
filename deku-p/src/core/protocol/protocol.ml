@@ -64,18 +64,20 @@ let apply_operation ~current_level protocol operation :
             let receipt = Receipt.Vm_transaction_receipt { operation = hash } in
             let result () =
               let%some ledger =
-                Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
-                    let tickets =
-                      List.map
-                        (fun (x, y) -> (x, Deku_concepts.Amount.of_n y))
-                        tickets
-                    in
-                    let%some _, table =
-                      Ticket_table.take_tickets ~sender ~ticket_ids:tickets
-                        (get_table ())
-                      |> Result.to_option
-                    in
-                    Some (set_table table))
+                if tickets = [] then Some ledger
+                else
+                  Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
+                      let tickets =
+                        List.map
+                          (fun (x, y) -> (x, Deku_concepts.Amount.of_n y))
+                          tickets
+                      in
+                      let%some _, table =
+                        Ticket_table.take_tickets ~sender ~ticket_ids:tickets
+                          (get_table ())
+                        |> Result.to_option
+                      in
+                      Some (set_table table))
               in
               let ledger_state =
                 object

@@ -19,8 +19,7 @@ pub struct LigoCode {
 pub struct LigoContractState {
     pub self_: ContractAddress,
     pub originated_by: String,
-    #[serde(serialize_with = "json_ser", deserialize_with = "json_deser")]
-    pub storage: Box<Value>,
+    pub storage: Box<FromOcamlV>,
     #[serde(with = "serde_bytes")]
     pub serialized_module: Vec<u8>,
     pub constants: Vec<(u32, Value)>,
@@ -52,7 +51,7 @@ pub enum ContractType {
     LigoContract(LigoContractState),
 }
 impl ContractType {
-    pub fn set_storage(&mut self, s: Box<Value>) {
+    pub fn set_storage(&mut self, s: Box<FromOcamlV>) {
         match self {
             Self::LigoContract(l) => l.storage = s,
         }
@@ -72,7 +71,7 @@ impl ContractType {
             Self::LigoContract(l) => &l.entrypoints,
         }
     }
-    pub fn storage(&self) -> &Value {
+    pub fn storage(&self) -> &FromOcamlV {
         match self {
             Self::LigoContract(l) => &l.storage,
         }
@@ -118,7 +117,7 @@ impl State {
     pub fn set(&mut self, key: String, value: ContractType) -> Option<ContractType> {
         self.table.insert(key, value)
     }
-    pub fn reset(&mut self, key: String, value: Option<Value>) {
+    pub fn reset(&mut self, key: String, value: Option<FromOcamlV>) {
         if value.is_none() {
             self.table.remove(&key);
             return;
