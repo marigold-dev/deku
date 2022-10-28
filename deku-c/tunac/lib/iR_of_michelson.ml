@@ -3,6 +3,24 @@ open Micheline
 open Michelson_v1_primitives
 open IR
 
+type node = (int, Michelson_v1_primitives.prim) Micheline.node
+
+type error =
+  | Invalid_contract_format
+  | Unsupported_instruction of node
+  | Unsupported_parameter_type of node
+  | Unsupported_storage_type of node
+
+exception Compilation_error of error
+
+type function_ =
+  { body : statement
+  ; locals : int }
+
+type contract =
+  { main : function_
+  ; lambdas : (int * function_) list }
+
 module Env = struct
   module Set = Set.Make(Int)
 
@@ -16,11 +34,8 @@ module Env = struct
     let rec aux reg =
       if Set.mem reg t.allocated then
         aux (reg + 1)
-      else if reg > t.max then (
-        t.max <- reg;
-        t.allocated <- Set.add reg t.allocated;
-        reg
-      ) else (
+      else (
+        t.max <- Int.max reg t.max;
         t.allocated <- Set.add reg t.allocated;
         reg
       )
@@ -483,14 +498,15 @@ let rec compile_instruction ~env instr =
               ; Cstore (1, Cvar pair, Cvar argument)
               ; Cassign (lambda, Data.cdr (Cvar lambda))
               ; Cassign (argument, Cvar pair) ])
-        ; Cassign (-1, Cop (Capply "exec", [ Cvar lambda; Cvar argument ])) ]
+        ; compile_push ~env (Cvar argument)
+        ; Cassign (-1, Cop (Capply "exec", [ Cvar lambda ])) ]
     in
     Env.free_local env argument;
     Env.free_local env lambda;
     Env.free_local env pair;
     block
 
-  | _ -> assert false
+  | instr -> raise (Compilation_error (Unsupported_instruction instr))
 
 let rec compile_value_decoder ~env typ var ptr =
   match typ with
@@ -552,7 +568,7 @@ let rec compile_value_decoder ~env typ var ptr =
             ; Cstore (1, Cvar var, Cvar value) ],
           Cassign (var, Cvar value)) ]
 
-  | _ -> assert false
+  | typ -> raise (Compilation_error (Unsupported_parameter_type typ))
 
 let compile_value_encoder ~env:_ typ ptr size value =
   match typ with
@@ -562,7 +578,7 @@ let compile_value_encoder ~env:_ typ ptr size value =
       ; Cstore (0, Cvar ptr, Cvar value)
       ; Cassign (size, Cconst_i32 4l) ]
 
-  | _ -> assert false
+  | typ -> raise (Compilation_error (Unsupported_storage_type typ))
 
 let compile_contract contract =
   let env = Env.make () in
@@ -604,5 +620,19 @@ let compile_contract contract =
       block
     in
 
-    Cblock (param_block :: List.map (compile_instruction ~env) code @ store_block), env
-  | _ -> assert false
+    let main =
+      { body = Cblock (param_block :: List.map (compile_instruction ~env) code @ store_block)
+      ; locals = Env.max env + 1 }
+    in
+    let lambdas =
+      !lambdas
+      |> List.rev
+      |> List.mapi (fun idx (body, env) -> (idx, { body; locals = Env.max env + 1 }))
+    in
+    { main; lambdas }
+
+  | _ -> raise (Compilation_error Invalid_contract_format)
+
+let compile_contract contract =
+  try Ok (compile_contract contract)
+  with Compilation_error err -> Error err

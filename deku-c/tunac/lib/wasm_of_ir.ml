@@ -13,7 +13,6 @@ let rec compile_expression wasm_mod expr =
   | Cconst_i32 value -> Expression.Const.make wasm_mod (Literal.int32 value)
   | Cop (op, params) -> compile_operation wasm_mod op params
 
-
 and compile_operation wasm_mod op params =
   match op, params with
   | Capply name, params -> Expression.Call.make wasm_mod name (List.map (compile_expression wasm_mod) params) Type.int32
@@ -38,21 +37,43 @@ and compile_operation wasm_mod op params =
       ; Expression.Local_get.make wasm_mod 0 Type.int32 ]
   | Cwasm wasm_operation, params -> compile_wasm_operation wasm_mod wasm_operation params
 
-  | _ -> assert false
+  | _ -> failwith "Invalid operation format, check operation arguments."
 
 and compile_wasm_operation wasm_mod operation params =
+  let op2 op x y =
+    Expression.Binary.make wasm_mod op
+      (compile_expression wasm_mod x)
+      (compile_expression wasm_mod y)
+  in
+  let op1 op x =
+    Expression.Unary.make wasm_mod op (compile_expression wasm_mod x)
+  in
   match operation, params with
-  | Wasm_add, [ a; b ] ->
-    Expression.Binary.make wasm_mod Op.add_int32
-      (compile_expression wasm_mod a)
-      (compile_expression wasm_mod b)
+  | Wasm_add, [ a; b ] -> op2 Op.add_int32 a b
+  | Wasm_sub, [ a; b ] -> op2 Op.sub_int32 a b
+  | Wasm_mul, [ a; b ] -> op2 Op.mul_int32 a b
+  | Wasm_div, [ a; b ] -> op2 Op.div_s_int32 a b
+  | Wasm_rem, [ a; b ] -> op2 Op.rem_s_int32 a b
+  | Wasm_and, [ a; b ] -> op2 Op.and_int32 a b
+  | Wasm_or,  [ a; b ] -> op2 Op.or_int32 a b
+  | Wasm_xor, [ a; b ] -> op2 Op.xor_int32 a b
+  | Wasm_eq, [ a; b ] -> op2 Op.eq_int32 a b
+  | Wasm_ne, [ a; b ] -> op2 Op.ne_int32 a b
+  | Wasm_lt, [ a; b ] -> op2 Op.lt_s_int32 a b
+  | Wasm_gt, [ a; b ] -> op2 Op.gt_s_int32 a b
+  | Wasm_le, [ a; b ] -> op2 Op.le_s_int32 a b
+  | Wasm_ge, [ a; b ] -> op2 Op.ge_s_int32 a b
+  | Wasm_shl, [ a; b ] -> op2 Op.shl_int32 a b
+  | Wasm_shr, [ a; b ] -> op2 Op.shr_s_int32 a b
+  | Wasm_rotl, [ a; b ] -> op2 Op.rot_l_int32 a b
+  | Wasm_rotr, [ a; b ] -> op2 Op.rot_r_int32 a b
 
-  | Wasm_sub, [ a; b ] ->
-    Expression.Binary.make wasm_mod Op.sub_int32
-      (compile_expression wasm_mod a)
-      (compile_expression wasm_mod b)
+  | Wasm_clz, [ a ] -> op1 Op.clz_int32 a
+  | Wasm_ctz, [ a ] -> op1 Op.ctz_int32 a
+  | Wasm_popcnt, [ a ] -> op1 Op.popcnt_int32 a
+  | Wasm_eqz, [ a ] -> op1 Op.eq_z_int32 a
 
-  | _ -> assert false
+  | _ -> failwith "Invalid WASM operation"
 
 let loop_stack = ref []
 
@@ -107,16 +128,47 @@ let rec compile_statement wasm_mod statement =
     (* WASM break on loops works more like a continue than a break *)
     Expression.Break.make wasm_mod (List.hd !loop_stack) (Expression.Null.make ()) (Expression.Null.make ())
 
-let compile_ir ~optimize ~debug ~shared_memory ~env ast =
+let add_function wasm_mod name fn =
+  let IR_of_michelson.{ body; locals } = fn in
+  let locals = Array.make locals Type.int32 in
+  let expr = compile_statement wasm_mod body in
+  ignore @@ Function.add_function wasm_mod name Type.none Type.none locals expr;
+  ignore @@ Export.add_function_export wasm_mod name name
+
+let compile_exec_function wasm_mod lambdas =
+  let rec aux lambdas =
+    match lambdas with
+    | (idx, _) :: lambdas ->
+      Expression.If.make wasm_mod
+        (Expression.Binary.make wasm_mod Op.eq_int32
+          (Expression.Local_get.make wasm_mod 0 Type.int32)
+          (Expression.Const.make wasm_mod (Literal.int32 (Int32.of_int idx))))
+        (Expression.Call.make wasm_mod (Printf.sprintf "lambda_%d" idx) [] Type.none)
+        (aux lambdas)
+    | [] -> Expression.Nop.make wasm_mod
+  in
+  let body = aux lambdas in
+  ignore @@
+    Function.add_function wasm_mod "exec"
+      Type.(create [| int32 |])
+      Type.none
+      [||]
+      body
+
+let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   let wasm_mod = Module.create () in
   
-  let locals = Array.make (IR_of_michelson.Env.max env + 1) Type.int32 in
-  let expr = compile_statement wasm_mod ast in
+  let IR_of_michelson.{ main; lambdas } = contract in
+  add_function wasm_mod "main" main;
 
-  ignore @@
-    Function.add_function wasm_mod "main" Type.none Type.none locals expr;
-  ignore @@
-    Export.add_function_export wasm_mod "main" "main";
+  if lambdas <> [] then
+    begin
+      List.iter
+        (fun (idx, fn) ->
+          add_function wasm_mod (Printf.sprintf "lambda_%d" idx) fn)
+        lambdas;
+      compile_exec_function wasm_mod lambdas;
+    end;
 
   ignore @@
     Global.add_global wasm_mod "stack" Type.int32 true
@@ -139,7 +191,8 @@ let compile_ir ~optimize ~debug ~shared_memory ~env ast =
   Import.add_function_import wasm_mod "save_storage" "env" "save_storage" Type.(create [| int32; int32 |]) Type.int32;
   Import.add_function_import wasm_mod "failwith" "env" "failwith" Type.int32 Type.none;
 
-  Memory.set_memory wasm_mod 1 10 "memory" [] shared_memory;
+  let (initial, max) = memory in
+  Memory.set_memory wasm_mod initial max "memory" [] shared_memory;
 
   (* if Module.validate wasm_mod <> 0 then
     failwith "Generated module is invalid"; *)

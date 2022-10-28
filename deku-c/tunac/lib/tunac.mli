@@ -6,7 +6,8 @@ type contract = node
 type config =
   { debug : bool
   ; shared_memory : bool
-  ; optimize : bool }
+  ; optimize : bool
+  ; memory : int * int  }
 
 val parse : string -> contract
 
