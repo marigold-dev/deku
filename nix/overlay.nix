@@ -61,6 +61,9 @@ with super; {
           tezos-micheline = super.tezos-micheline.overrideAttrs (_: {
             doCheck = false;
           });
+          tezos-crypto = super.tezos-crypto.overrideAttrs (_: {
+            patches = [./deku-p/patches/tezos-crypto.patch];
+          });
           routes = super.routes.overrideAttrs (_: {
             src = fetchFromGitHub {
               owner = "anuragsoni";

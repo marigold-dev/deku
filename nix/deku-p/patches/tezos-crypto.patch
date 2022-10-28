@@ -1,0 +1,13 @@
+diff --git a/src/lib_crypto/helpers.ml b/src/lib_crypto/helpers.ml
+index b85712639c..56ff6b7261 100644
+--- a/src/lib_crypto/helpers.ml
++++ b/src/lib_crypto/helpers.ml
+@@ -215,6 +215,8 @@ struct
+       let hash = H.seeded_hash
+ 
+       let equal = H.equal
++
++      let seeded_hash = H.seeded_hash
+     end)
+ 
+     let encoding arg_encoding =

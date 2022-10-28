@@ -69,6 +69,7 @@ in
       propagatedBuildInputs =
         [
           tezos-micheline
+          tezos-crypto
           ppx_deriving
           ppx_yojson_conv
           zarith
