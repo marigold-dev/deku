@@ -1,13 +1,12 @@
-(* This script will generate all the data used in the Alg_intf tests 
+(* This script will generate all the data used in the Alg_intf tests
 
-Build in a project with tezos-crypto with the following dune file:
-(executable
- (name data_gen)
- (libraries tezos_crypto)
- (preprocess
-  (pps)))
-
- *)
+   Build in a project with tezos-crypto with the following dune file:
+   (executable
+    (name data_gen)
+    (libraries tezos_crypto)
+    (preprocess
+     (pps)))
+*)
 
 open Tezos_crypto
 
@@ -86,6 +85,5 @@ struct
         (fun sk -> Format.printf "\"%s\"\n%!;" (Secret_key.to_b58check sk))
         Skt_key.compare_secret_keys;
       Format.printf "]\n%!"
-
   end
 end
