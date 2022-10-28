@@ -3,13 +3,11 @@ module Result = struct
 
   module Let_syntax = struct
     let ( let* ) a f = Result.bind a f
-
     let ( let+ ) a f = Result.map f a
   end
 
   module Infix = struct
     let ( >>= ) a f = Result.bind a f
-
     let ( >>| ) a f = Result.map f a
   end
 
@@ -21,13 +19,11 @@ module Option = struct
 
   module Let_syntax = struct
     let ( let* ) a f = Option.bind a f
-
     let ( let+ ) a f = Option.map f a
   end
 
   module Infix = struct
     let ( >>= ) a f = Option.bind a f
-
     let ( >>| ) a f = Option.map f a
   end
 end
@@ -49,7 +45,6 @@ module Map = struct
     include Map.S
 
     val yojson_of_t : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
-
     val t_of_yojson : (Yojson.Safe.t -> 'a) -> Yojson.Safe.t -> 'a t
   end
 
@@ -66,12 +61,12 @@ module Map = struct
     let t_of_yojson f (json : Yojson.Safe.t) =
       match json with
       | `List l ->
-        List.map
-          (function
-            | `List [ k; v ] -> (K.t_of_yojson k, f v)
-            | _ -> failwith "invalid arg")
-          l
-        |> List.to_seq |> of_seq
+          List.map
+            (function
+              | `List [ k; v ] -> (K.t_of_yojson k, f v)
+              | _ -> failwith "invalid arg")
+            l
+          |> List.to_seq |> of_seq
       | _ -> failwith "invalid arg"
   end
 end
@@ -83,7 +78,6 @@ module Set = struct
     include Set.S
 
     val yojson_of_t : t -> Yojson.Safe.t
-
     val t_of_yojson : Yojson.Safe.t -> t
   end
 

@@ -15,86 +15,87 @@ let import_list =
   let func type_ name =
     Printf.sprintf "(import \"env\" \"%s\" (func $%s %s))" name name type_
   in
-  [ func ref_unit "dup_host"
-  ; func ref_ref__ref "pair"
-  ; func ref__ "unpair"
-  ; func ref_ref__ref "z_add"
-  ; func ref_ref__ref "z_sub"
-  ; func ref_ref__ref "z_mul"
-  ; func ref__ref "neg"
-  ; func ref_ref__ref "lsl"
-  ; func ref_ref__ref "concat"
-  ; func ref_ref__ref "lsr"
-  ; func ref_ref__ref "compare"
-  ; func ref__ref "car"
-  ; func ref__ref "cdr"
-  ; func ref__ref "some" (* ; func const "now" *)
-  ; func const "nil"
-  ; func const "true"
-  ; func const "false"
-  ; func const "none"
-  ; func const "unit"
-  ; func const "zero"
-  ; func const "empty_map"
-  ; func const "empty_set"
-  ; func const "empty_big_map"
-  ; func const "sender"
-  ; func const "source"
-  ; func ref_ref__ref "map_get"
-  ; func ref_ref__ref "mem"
-  ; func ref_ref_ref__ref "update"
-  ; func ref_i32__unit "iter"
-  ; func ref_i32__ref "map"
-  ; func ref__i32 "if_left"
-  ; func ref__i32 "if_none"
-  ; func ref__i32 "if_cons"
-  ; func ref__ref "isnat"
-  ; func ref__ref "not"
-  ; func ref_ref__ref "or"
-  ; func ref_ref__ref "and"
-  ; func ref_ref__ref "xor"
-  ; func ref__i32 "deref_bool"
-  ; func ref__ref "neq"
-  ; func ref__ "failwith"
-  ; func i32_ref__ref "get_n"
-  ; func ref_ref__ref "exec"
-  ; func ref_ref__ref "apply"
-  ; func i32__ref "const"
-  ; func ref__ref "abs"
-  ; func ref__ref "eq"
-  ; func ref__ref "gt"
-  ; func ref__ref "lt"
-  ; func i32__ref "closure"
-  ; func ref__ref "left"
-  ; func ref__ref "right"
-  ; func ref_ref__ref "cons"
-  ; func ref_ref_ref__ref "transfer_tokens"
-  ; func ref__ref "address"
-  ; func ref__ref "contract"
-  ; func const "self"
-  ; func const "self_address"
-  ; func ref_ref_ref__ "get_and_update"
-  ; func ref__ "read_ticket"
-  ; func ref_ref__ref "ticket"
-  ; func ref__ref "join_tickets"
-  ; func ref_ref__ref "split_ticket"
-  ; func const "amount"
-  ; func const "balance" (* ; func const "level" *)
-  ; func ref_ref__ref "ediv"
-  ; func ref__ref "ge"
-  ; func ref__ref "le"
-  ; func ref__ref "size"
-  ; func ref__ref "int"
-  ; func ref__ref "implicit_account"
-  ; func ref__ref "blake2b"
-  ; func ref__ref "pack"
-  ; func ref__ref "unpack"
+  [
+    func ref_unit "dup_host";
+    func ref_ref__ref "pair";
+    func ref__ "unpair";
+    func ref_ref__ref "z_add";
+    func ref_ref__ref "z_sub";
+    func ref_ref__ref "z_mul";
+    func ref__ref "neg";
+    func ref_ref__ref "lsl";
+    func ref_ref__ref "concat";
+    func ref_ref__ref "lsr";
+    func ref_ref__ref "compare";
+    func ref__ref "car";
+    func ref__ref "cdr";
+    func ref__ref "some" (* ; func const "now" *);
+    func const "nil";
+    func const "true";
+    func const "false";
+    func const "none";
+    func const "unit";
+    func const "zero";
+    func const "empty_map";
+    func const "empty_set";
+    func const "empty_big_map";
+    func const "sender";
+    func const "source";
+    func ref_ref__ref "map_get";
+    func ref_ref__ref "mem";
+    func ref_ref_ref__ref "update";
+    func ref_i32__unit "iter";
+    func ref_i32__ref "map";
+    func ref__i32 "if_left";
+    func ref__i32 "if_none";
+    func ref__i32 "if_cons";
+    func ref__ref "isnat";
+    func ref__ref "not";
+    func ref_ref__ref "or";
+    func ref_ref__ref "and";
+    func ref_ref__ref "xor";
+    func ref__i32 "deref_bool";
+    func ref__ref "neq";
+    func ref__ "failwith";
+    func i32_ref__ref "get_n";
+    func ref_ref__ref "exec";
+    func ref_ref__ref "apply";
+    func i32__ref "const";
+    func ref__ref "abs";
+    func ref__ref "eq";
+    func ref__ref "gt";
+    func ref__ref "lt";
+    func i32__ref "closure";
+    func ref__ref "left";
+    func ref__ref "right";
+    func ref_ref__ref "cons";
+    func ref_ref_ref__ref "transfer_tokens";
+    func ref__ref "address";
+    func ref__ref "contract";
+    func const "self";
+    func const "self_address";
+    func ref_ref_ref__ "get_and_update";
+    func ref__ "read_ticket";
+    func ref_ref__ref "ticket";
+    func ref__ref "join_tickets";
+    func ref_ref__ref "split_ticket";
+    func const "amount";
+    func const "balance" (* ; func const "level" *);
+    func ref_ref__ref "ediv";
+    func ref__ref "ge";
+    func ref__ref "le";
+    func ref__ref "size";
+    func ref__ref "int";
+    func ref__ref "implicit_account";
+    func ref__ref "blake2b";
+    func ref__ref "pack";
+    func ref__ref "unpack"
     (* ; func ref_ref_ref__ref "check_signature" *)
-    (* ; func ref__ref "hash_key" *)
-  ; func ref__ref "keccak" (* ; func ref__ref "pairing_check" *)
-  ; func ref__ref "sha256"
-  ; func ref__ref "sha3"
-  ; func ref__ref "sha512"
+    (* ; func ref__ref "hash_key" *);
+    func ref__ref "keccak" (* ; func ref__ref "pairing_check" *);
+    func ref__ref "sha256";
+    func ref__ref "sha3";
+    func ref__ref "sha512";
   ]
   |> String.concat "\n"
 

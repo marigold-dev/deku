@@ -330,13 +330,16 @@ module Get_receipt : NO_BODY_HANDLERS = struct
   type response = Receipt.t [@@deriving yojson]
 
   let meth = `GET
-  let path = Routes.(version / s "operations" / Api_path.Operation_hash.parser /? nil)
+
+  let path =
+    Routes.(version / s "operations" / Api_path.Operation_hash.parser /? nil)
+
   let route = Routes.(path @--> fun hash -> hash)
 
-  let handler ~path:operation_hash ~state = 
-    let Api_state.{receipts; _} = state in
+  let handler ~path:operation_hash ~state =
+    let Api_state.{ receipts; _ } = state in
     let receipt = Operation_hash.Map.find_opt operation_hash receipts in
     match receipt with
-      | Some receipt -> Ok receipt
-      | None -> Error (Api_error.receipt_not_found operation_hash)
+    | Some receipt -> Ok receipt
+    | None -> Error (Api_error.receipt_not_found operation_hash)
 end
