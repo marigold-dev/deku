@@ -21,7 +21,7 @@ usage () {
     cat >&2 <<EOF
 This script provides a Flextesa “mini-net” sandbox with predefined
 parameters useful for tutorials and basic exploration with
-wallet software like \`tezos-client\`. This one uses the $default_protocol
+wallet software like \`octez-client\`. This one uses the $default_protocol
 protocol.
 
 usage: $0 <command>
@@ -97,11 +97,11 @@ EOF
 }
 
 all_commands="$all_commands
-* initclient : Setup the local tezos-client."
+* initclient : Setup the local octez-client."
 initclient () {
-    tezos-client --endpoint http://localhost:20000 config update
-    tezos-client --protocol Psithaca2MLR import secret key alice "$(echo $alice | cut -d, -f 4)" --force
-    tezos-client --protocol Psithaca2MLR import secret key bob "$(echo $bob | cut -d, -f 4)" --force
+    octez-client --endpoint http://localhost:20000 config update
+    octez-client --protocol Psithaca2MLR import secret key alice "$(echo $alice | cut -d, -f 4)" --force
+    octez-client --protocol Psithaca2MLR import secret key bob "$(echo $bob | cut -d, -f 4)" --force
 }
 
 if [ "$1" = "" ] || [ "$1" = "help" ] || [ "$1" = "--help" ] || [ "$1" = "-h" ] ; then

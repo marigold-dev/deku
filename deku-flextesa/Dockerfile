@@ -1,4 +1,4 @@
-FROM oxheadalpha/flextesa:20220715
+FROM oxheadalpha/flextesa:20221026
 
 # To prevent flextesa from wiping the initial state
 # on startup, we've also added the --keep-root option to
@@ -10,4 +10,4 @@ COPY ./kathmandubox /usr/bin/kathmandubox
 # See contract storage in ../networks/flextesa
 COPY ./deku_flextesa_state.tar /tmp/deku_flextesa_state.tar
 RUN tar -xvf /tmp/deku_flextesa_state.tar -C /tmp
-COPY .tezos-client /root
+COPY .octez-client /root

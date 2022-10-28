@@ -21,7 +21,7 @@ tezos-withdraw() {
   handle_hash=$(handle_hash "$1")
   proof=$(proof "$1")
 
-  if ! tezos_output="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE transfer 0 from bob to dummy_ticket \
+  if ! tezos_output="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE transfer 0 from bob to dummy_ticket \
     --entrypoint withdraw_from_deku \
     --arg "Pair (Pair \"$DEKU_TEZOS_CONSENSUS_ADDRESS\" (Pair (Pair (Pair 10 0x) \
         (Pair $id \"$DUMMY_TICKET_ADDRESS\")) \"$DUMMY_TICKET_ADDRESS\")) (Pair $handle_hash $proof)" \
@@ -54,7 +54,7 @@ public-setup() {
       "./dummy_ticket.mligo" \
       "()"
       "bob"
-  export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  export DUMMY_TICKET_ADDRESS="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 }
 
 local-setup() {
@@ -86,12 +86,12 @@ local-setup() {
   export DEKU_VALIDATORS="tz1fpf9DffkGAnzT6UKMDoS4hZjNmoEKhGsK,tz1PYdVbnLwiqKo3fLFXTKxw6K7BhpddQPh8,tz1Pv4viWq7ye4R6cr9SKR3tXiZGvpK34SKi,tz1cXKCCxLwYCHDSrx9hfD5Qmbs4W8w2UKDw"
   export DEKU_VALIDATOR_URIS="127.0.0.1:4440,127.0.0.1:4441,127.0.0.1:4442,127.0.0.1:4443"
   export DEKU_TEZOS_SECRET="edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq"
-  export DEKU_TEZOS_CONSENSUS_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
-  export DEKU_DUMMYT_TICKET="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  export DEKU_TEZOS_CONSENSUS_ADDRESS="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract consensus | grep KT1 | tr -d '\r')"
+  export DEKU_DUMMYT_TICKET="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
   export DEKU_API_PORT=8080
   export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
-  export DUMMY_TICKET_ADDRESS="$(tezos_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  export DUMMY_TICKET_ADDRESS="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
 
 
 
@@ -135,7 +135,7 @@ run-test() {
 
   message "Doing the deposit"
 
-  tezos_client --endpoint $DEKU_TEZOS_RPC_NODE transfer 0 from bob to $DUMMY_TICKET_ADDRESS \
+  octez_client --endpoint $DEKU_TEZOS_RPC_NODE transfer 0 from bob to $DUMMY_TICKET_ADDRESS \
     --entrypoint mint_to_deku --arg "Pair (Pair \"$DEKU_TEZOS_CONSENSUS_ADDRESS\" \"$tz_addr1\") (Pair 100 0x)" \
     --burn-cap 2
 
