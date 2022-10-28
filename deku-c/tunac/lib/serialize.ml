@@ -35,7 +35,7 @@ let rec compile_value node =
     let len = Int32.of_int (List.length lst) in
     Bytes.(cat
       (int32_to_bytes len)
-      (concat empty (List.map compile_value lst)))
+      (concat empty (List.(map compile_value (rev lst)))))
 
   | String (_, s) ->
     let len = Int32.of_int (String.length s) in
