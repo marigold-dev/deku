@@ -5,7 +5,7 @@ type address =
   | Implicit of Key_hash.t
   | Originated of { address : Contract_address.t; entrypoint : string option }
 
-and t = address [@@deriving eq, ord, yojson, show]
+and t = address [@@deriving eq, ord, show]
 
 let of_key_hash key_hash = Implicit key_hash
 let to_key_hash = function Implicit x -> Some x | Originated _ -> None
@@ -41,6 +41,16 @@ let to_b58 = function
   | Originated { address; entrypoint = None } -> Contract_address.to_b58 address
   | Originated { address; entrypoint = Some entrypoint } ->
       Contract_address.to_b58 address ^ "%" ^ entrypoint
+
+let t_of_yojson x =
+  match x with
+  | `String x -> (
+      match of_b58 x with
+      | Some x -> x
+      | None -> Yojson.json_error "wrong format")
+  | _ -> Yojson.json_error "wrong format"
+
+let yojson_of_t x = `String (to_b58 x)
 
 let contract_encoding =
   let open Data_encoding in
