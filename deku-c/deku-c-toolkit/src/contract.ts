@@ -52,6 +52,23 @@ export class Contract {
     }
 
     /**
+     * Invoke a deku-c smart contrat
+     * @param parameter the parameter of the contract
+     * @returns the hash of the operation
+     */
+    async invoke(parameter: any): Promise<string> {
+        const invoke = {
+            "type_": "Invoke",
+            "content": {
+                "address": this.address, // TODO: how to handle entrypoints ?
+                "argument": parameter
+            }
+        }
+        const hash = await this.deku.submitVmOperation(JSON.stringify(invoke));
+        return hash;
+    }
+
+    /**
      * Returns the state of the contract
      * Parses it to a readable javascript object
      * @returns javascript object
