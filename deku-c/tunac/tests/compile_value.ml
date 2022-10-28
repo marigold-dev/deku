@@ -1,5 +1,12 @@
 let value = Alcotest.of_pp Tunac.Values.V.pp
-let error = assert false
+
+let error :
+    [ `Parsing_error of Tezos_error_monad.Error_monad.tztrace
+    | `Prim_parsing_error of Tunac.Parser.MPrim.error
+    | `Unexpected_error ]
+    Alcotest.testable =
+  Alcotest.of_pp (fun _fmt _t -> ())
+
 let compile x = Tunac.Compiler.compile_value x |> Result.map snd
 
 let integers () =
