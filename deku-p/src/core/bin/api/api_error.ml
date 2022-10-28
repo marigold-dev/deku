@@ -75,10 +75,14 @@ let operation_is_not_a_withdraw operation_hash =
         (Operation_hash.to_b58 operation_hash);
   }
 
-let receipt_not_found operation_hash = 
+let receipt_not_found operation_hash =
   {
     kind = Receipt_not_found;
-    msg = Format.sprintf "The receipt of the operation [%s] is not found, maybe your operation is not yet included" (Operation_hash.to_b58 operation_hash)
+    msg =
+      Format.sprintf
+        "The receipt of the operation [%s] is not found, maybe your operation \
+         is not yet included"
+        (Operation_hash.to_b58 operation_hash);
   }
 
 module Repr = struct
