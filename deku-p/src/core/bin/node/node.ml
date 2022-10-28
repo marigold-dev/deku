@@ -3,7 +3,7 @@ open Deku_consensus
 open Deku_chain
 open Deku_network
 open Deku_gossip
-open Deku_indexer
+open Deku_block_storage
 open Deku_tezos_interop
 open Deku_concepts
 open Deku_protocol
@@ -14,7 +14,7 @@ type node = {
   dump : Chain.t -> unit;
   network : Network_manager.t;
   (* TODO: there is a better way to do this but this is the quick and lazy way. *)
-  indexer : Indexer.t option;
+  indexer : Block_storage.t option;
   (*  TODO: there is a better way to do this but this is the quick and lazy way.  *)
   mutable tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
@@ -45,7 +45,7 @@ and handle_chain_action ~sw ~env ~action node =
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
   | Chain_save_block { block } -> (
       match node.indexer with
-      | Some indexer -> Indexer.async_save_block ~sw ~block indexer
+      | Some indexer -> Block_storage.async_save_block ~sw ~block indexer
       | None -> ())
   | Chain_commit
       {

@@ -1,5 +1,5 @@
 open Deku_consensus
-open Deku_indexer
+open Deku_block_storage
 open Deku_stdlib
 open Deku_concepts
 open Deku_gossip
@@ -75,8 +75,8 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
     let open Level_or_hash in
     let block =
       match path with
-      | Level level -> Indexer.find_block_by_level ~level indexer
-      | Hash block_hash -> Indexer.find_block_by_hash ~block_hash indexer
+      | Level level -> Block_storage.find_block_by_level ~level indexer
+      | Hash block_hash -> Block_storage.find_block_by_hash ~block_hash indexer
     in
     match block with
     | Some block -> Ok block

@@ -1,5 +1,5 @@
 (library
- (name deku_indexer)
+ (name deku_block_storage)
  (libraries
   caqti
   caqti-eio

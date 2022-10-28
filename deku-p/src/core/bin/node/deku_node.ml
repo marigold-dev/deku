@@ -1,7 +1,7 @@
 open Deku_stdlib
 open Deku_concepts
 open Deku_crypto
-open Deku_indexer
+open Deku_block_storage
 open Deku_storage
 open Deku_chain
 open Deku_external_vm
@@ -105,8 +105,8 @@ let main params style_renderer log_level =
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
   let indexer =
-    Indexer.make ~uri:database_uri
-      ~config:Indexer.{ save_blocks; save_messages }
+    Block_storage.make ~uri:database_uri
+      ~config:Block_storage.{ save_blocks; save_messages }
   in
   let validator_uris =
     List.map

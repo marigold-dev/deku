@@ -31,7 +31,7 @@ in
             then [
               "deku-p/src/core/bin/api"
               "deku-p/src/core/bin/node"
-              "deku-p/src/core/indexer"
+              "deku-p/src/core/block_storage"
             ]
             else [];
         };

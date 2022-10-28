@@ -2,7 +2,7 @@ open Deku_stdlib
 open Deku_concepts
 open Deku_chain
 open Deku_network
-open Deku_indexer
+open Deku_block_storage
 open Deku_tezos_interop
 
 type node = private {
@@ -10,7 +10,7 @@ type node = private {
   default_block_size : int;
   dump : Chain.t -> unit;
   network : Network_manager.t;
-  indexer : Indexer.t option;
+  indexer : Block_storage.t option;
   mutable tezos_interop : Tezos_interop.t option;
   mutable chain : Chain.t;
   mutable cancel : unit -> unit;
@@ -23,7 +23,7 @@ val make :
   default_block_size:int ->
   dump:(Chain.t -> unit) ->
   chain:Chain.t ->
-  indexer:Indexer.t option ->
+  indexer:Block_storage.t option ->
   node
 
 val start :

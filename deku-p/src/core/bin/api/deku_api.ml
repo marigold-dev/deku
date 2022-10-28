@@ -1,6 +1,6 @@
 open Deku_stdlib
 open Handlers
-open Deku_indexer
+open Deku_block_storage
 open Api_middlewares
 open Deku_network
 open Deku_gossip
@@ -12,7 +12,7 @@ open Deku_concepts
 
 let apply_block ~env ~folder ~state ~block =
   state.current_block <- block;
-  Indexer.save_block ~block state.indexer;
+  Block_storage.save_block ~block state.indexer;
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
   let (Payload.Payload payload) = Payload.decode ~payload in
   let payload =
@@ -157,8 +157,8 @@ let main params =
   in
 
   let network = Network_manager.make ~identity in
-  let config = Indexer.{ save_blocks = true; save_messages = true } in
-  let indexer = Indexer.make ~uri:database_uri ~config in
+  let config = Block_storage.{ save_blocks = true; save_messages = true } in
+  let indexer = Block_storage.make ~uri:database_uri ~config in
 
   External_vm_client.start_vm_ipc ~named_pipe_path;
 

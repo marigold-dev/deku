@@ -6,7 +6,7 @@ open Deku_gossip
 type config = { save_messages : bool; save_blocks : bool }
 
 type indexer =
-  | Indexer of {
+  | Block_storage of {
       pool : (Caqti_eio.connection, Caqti_error.t) Caqti_eio.Pool.t;
       config : config;
     }
@@ -115,10 +115,10 @@ let make_database ~uri =
 let make ~uri ~config =
   let () = make_database ~uri in
   match Caqti_eio.connect_pool uri with
-  | Ok pool -> Indexer { pool; config }
+  | Ok pool -> Block_storage { pool; config }
   | Error err -> failwith (Caqti_error.show err)
 
-let async_save_block ~sw ~block (Indexer { pool; config }) =
+let async_save_block ~sw ~block (Block_storage { pool; config }) =
   let open Deku_consensus in
   let on_error exn =
     Logs.err (fun m ->
@@ -139,7 +139,7 @@ let async_save_block ~sw ~block (Indexer { pool; config }) =
               raise (Caqti_error.Exn err))
   | false -> ()
 
-let save_block ~block (Indexer { pool; config }) =
+let save_block ~block (Block_storage { pool; config }) =
   match config.save_blocks with
   | true ->
       let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
@@ -148,7 +148,7 @@ let save_block ~block (Indexer { pool; config }) =
   | false -> ()
 
 (* TODO: use this function *)
-let _save_message ~sw ~message (Indexer { pool; config }) =
+let _save_message ~sw ~message (Block_storage { pool; config }) =
   let on_error exn =
     Logs.err (fun m ->
         m "database/sqlite: exception %s" (Printexc.to_string exn))
@@ -165,7 +165,7 @@ let _save_message ~sw ~message (Indexer { pool; config }) =
               raise (Caqti_error.Exn err))
   | false -> ()
 
-let find_block_by_level ~level (Indexer { pool; config = _ }) =
+let find_block_by_level ~level (Block_storage { pool; config = _ }) =
   let result = Query.find_block_by_level ~level pool in
   match result with
   | Ok block -> block
@@ -173,6 +173,6 @@ let find_block_by_level ~level (Indexer { pool; config = _ }) =
       Caqti_error.show err |> print_endline;
       None
 
-let find_block_by_hash ~block_hash (Indexer { pool; config = _ }) =
+let find_block_by_hash ~block_hash (Block_storage { pool; config = _ }) =
   let result = Query.find_block_by_hash ~hash:block_hash pool in
   match result with Ok res -> res | Error _ -> None

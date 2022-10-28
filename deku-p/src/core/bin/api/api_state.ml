@@ -1,5 +1,5 @@
 open Deku_consensus
-open Deku_indexer
+open Deku_block_storage
 open Deku_network
 open Deku_concepts
 open Deku_protocol
@@ -8,7 +8,7 @@ open Deku_stdlib
 type api_state = {
   consensus_address : Deku_tezos.Address.t;
   mutable current_block : Block.t;
-  indexer : Indexer.t;
+  indexer : Block_storage.t;
   network : Network_manager.t;
   identity : Identity.t;
   mutable protocol : Protocol.t;
