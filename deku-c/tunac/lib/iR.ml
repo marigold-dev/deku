@@ -1,4 +1,3 @@
-
 type var = int
 [@@deriving show]
 
@@ -42,7 +41,7 @@ type expression =
   | Cvar of var
   | Cglobal of global
   | Cop of operation * expression list
-  [@@deriving show]
+[@@deriving show]
   
 type statement =
   | Cassign of var * expression
@@ -52,4 +51,27 @@ type statement =
   | Ccontinue
   | Cblock of statement list
   | Cstore of int * expression * expression
+  | Cfailwith of expression
 [@@deriving show]
+
+module Data = struct
+  let alloc size = Cop (Calloc size, [])
+
+  let cons var hd tl =
+    Cblock
+      [ Cassign (var, alloc 2)
+      ; Cstore (0, Cvar var, hd)
+      ; Cstore (1, Cvar var, tl) ]
+
+  let car expr = Cop (Cload 0, [ expr ])
+
+  let cdr expr = Cop (Cload 1, [ expr ])
+
+  let add a b = Cop (Cwasm Wasm_add, [ a; b ])
+
+  let sub a b = Cop (Cwasm Wasm_sub, [ a; b ])
+
+  let inc x = add x (Cconst_i32 1l)
+
+  let dec x = sub x (Cconst_i32 1l)
+end

@@ -31,27 +31,16 @@ module Env = struct
     t.allocated <- Set.remove local t.allocated
 
 end
-
-let list_cons var hd tl =
-  Cblock
-   [ Cassign (var, Cop (Calloc 2, []))
-   ; Cstore (0, Cvar var, hd)
-   ; Cstore (1, Cvar var, tl) ]
-
-let compile_car expr = Cop (Cload 0, [ expr ])
-
-let compile_cdr expr = Cop (Cload 1, [ expr ])
-
 let compile_pop var =
   Cblock
-    [ Cassign (var, compile_car (Cglobal "stack"))
-    ; Cglobal_assign ("stack", compile_cdr (Cglobal "stack")) ]
+    [ Cassign (var, Data.car (Cglobal "stack"))
+    ; Cglobal_assign ("stack", Data.cdr (Cglobal "stack")) ]
 
 let compile_push ~env expr =
   let cell = Env.alloc_local env in
   let block =
     Cblock
-      [ list_cons cell expr (Cglobal "stack")
+      [ Data.cons cell expr (Cglobal "stack")
       ; Cglobal_assign ("stack", Cvar cell) ]
   in
   Env.free_local env cell;
@@ -62,7 +51,7 @@ let compile_pair ~env =
   let item = Env.alloc_local env in
   let block =
     Cblock
-      [ Cassign (cell, Cop (Calloc 2, []))
+      [ Cassign (cell, Data.alloc 2)
       ; compile_pop item
       ; Cstore (0, Cvar cell, Cvar item)
       ; compile_pop item
@@ -83,16 +72,16 @@ let compile_dig ~env n =
       ; Cassign (node, Cglobal "stack")
       ; Cwhile (Cvar counter,
           Cblock
-            [ Cassign (counter, Cop (Cwasm Wasm_sub, [ Cvar counter; Cconst_i32 1l ]))
-            ; Cassign (node, compile_cdr (Cvar node)) ]) ]
+            [ Cassign (counter, Data.dec (Cvar counter))
+            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
   in
   Env.free_local env counter;
   let a = Env.alloc_local env in
   let block =
     Cblock
       [ loop
-      ; Cassign (a, compile_cdr (Cvar node))
-      ; Cstore (1, Cvar node, compile_cdr (Cvar a))
+      ; Cassign (a, Data.cdr (Cvar node))
+      ; Cstore (1, Cvar node, Data.cdr (Cvar a))
       ; Cstore (1, Cvar a, Cglobal "stack")
       ; Cglobal_assign ("stack", Cvar a) ]
   in
@@ -107,11 +96,11 @@ let compile_dug ~env n =
   let inner_loop =
     Cblock
       [ Cassign (counter, Cconst_i32 n)
-      ; Cassign (node, compile_cdr (Cglobal "stack"))
+      ; Cassign (node, Data.cdr (Cglobal "stack"))
       ; Cwhile (Cvar counter,
           Cblock
-            [ Cassign (counter, Cop (Cwasm Wasm_sub, [ Cvar counter; Cconst_i32 1l ]))
-            ; Cassign (node, compile_cdr (Cvar node)) ]) ]
+            [ Cassign (counter, Data.dec (Cvar counter))
+            ; Cassign (node, Data.cdr (Cvar node)) ]) ]
   in
   Env.free_local env counter;
   let head = Env.alloc_local env in
@@ -119,8 +108,8 @@ let compile_dug ~env n =
     Cblock
       [ inner_loop
       ; Cassign (head, Cglobal "stack")
-      ; Cglobal_assign ("stack", compile_cdr (Cvar head))
-      ; Cstore (1, Cvar head, compile_cdr (Cvar node))
+      ; Cglobal_assign ("stack", Data.cdr (Cvar head))
+      ; Cstore (1, Cvar head, Data.cdr (Cvar node))
       ; Cstore (1, Cvar node, Cvar head) ]
   in
   Env.free_local env node;
@@ -136,8 +125,8 @@ let compile_drop ~env n =
       ; Cassign (node, Cglobal "stack")
       ; Cwhile (Cvar counter,
          Cblock
-          [ Cassign (counter, Cop (Cwasm Wasm_sub, [ Cvar counter; Cconst_i32 1l ]))
-          ; Cassign (node, compile_cdr (Cvar node)) ] ) ]
+          [ Cassign (counter, Data.dec (Cvar counter))
+          ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
   in
   Env.free_local env counter;
   let block =
@@ -158,14 +147,14 @@ let compile_dup ~env n =
       ; Cassign (node, Cglobal "stack")
       ; Cwhile (Cvar counter
           , Cblock
-             [ Cassign (counter, Cop (Cwasm Wasm_sub, [ Cvar counter; Cconst_i32 1l ]))
-             ; Cassign (node, compile_cdr (Cvar node)) ] ) ]
+             [ Cassign (counter, Data.dec (Cvar counter))
+             ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
   in
   Env.free_local env counter;
   let block =
     Cblock
       [ inner_loop
-      ; compile_push ~env (compile_car (Cvar node)) ]
+      ; compile_push ~env (Data.car (Cvar node)) ]
   in
   Env.free_local env node;
   block
@@ -180,8 +169,8 @@ let compile_dip ~env n block =
       ; Cassign (node, Cglobal "stack")
       ; Cwhile (Cvar counter
           , Cblock
-              [ Cassign (counter, Cop (Cwasm Wasm_sub, [ Cvar counter; Cconst_i32 1l ]))
-              ; Cassign (node, compile_cdr (Cvar node)) ] ) ]
+              [ Cassign (counter, Data.dec (Cvar counter))
+              ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
   in
   Env.free_local env counter;
 
@@ -193,7 +182,7 @@ let compile_dip ~env n block =
       ; Cstore (1, Cvar pair, Cvar node)
       ; Cglobal_assign ("dip_stack", Cop (Cwasm Wasm_add, [ Cglobal "dip_stack"; Cconst_i32 4l ]))
       ; Cstore (0, Cglobal "dip_stack", Cvar pair)
-      ; Cglobal_assign ("stack", compile_cdr (Cvar node)) ]
+      ; Cglobal_assign ("stack", Data.cdr (Cvar node)) ]
   in
   Env.free_local env pair;
   Env.free_local env node;
@@ -203,12 +192,14 @@ let compile_dip ~env n block =
   let restore_stack =
     Cblock
       [ Cassign (pair, Cop (Cload 0, [ Cglobal "dip_stack" ]))
-      ; Cstore (1, compile_cdr (Cvar pair), Cglobal "stack")
-      ; Cglobal_assign ("stack", compile_car (Cvar pair)) 
+      ; Cstore (1, Data.cdr (Cvar pair), Cglobal "stack")
+      ; Cglobal_assign ("stack", Data.car (Cvar pair)) 
       ; Cglobal_assign ("dip_stack", Cop (Cwasm Wasm_sub, [ Cglobal "dip_stack"; Cconst_i32 4l ] )) ]
   in
 
   Cblock [ inner_loop; save_stack_block; block; restore_stack ]
+
+let lambdas = ref []
 
 let rec compile_instruction ~env instr =
   match instr with
@@ -216,7 +207,7 @@ let rec compile_instruction ~env instr =
     let top = Env.alloc_local env in
     let block =
       Cblock [ compile_pop top
-             ; compile_push ~env (compile_car (Cvar top)) ]
+             ; compile_push ~env (Data.car (Cvar top)) ]
     in
     Env.free_local env top;
     block
@@ -225,7 +216,7 @@ let rec compile_instruction ~env instr =
     let top = Env.alloc_local env in
     let block =
       Cblock [ compile_pop top
-             ; compile_push ~env (compile_cdr (Cvar top)) ]
+             ; compile_push ~env (Data.cdr (Cvar top)) ]
     in
     Env.free_local env top;
     block
@@ -234,8 +225,8 @@ let rec compile_instruction ~env instr =
     let top = Env.alloc_local env in
     let block =
       Cblock [ compile_pop top
-             ; compile_push ~env (compile_cdr (Cvar top))
-             ; compile_push ~env (compile_car (Cvar top)) ]
+             ; compile_push ~env (Data.cdr (Cvar top))
+             ; compile_push ~env (Data.car (Cvar top)) ]
     in
     Env.free_local env top;
     block
@@ -271,6 +262,22 @@ let rec compile_instruction ~env instr =
   | Prim (_, I_PAIR, _, _) ->
     compile_pair ~env
 
+  | Prim (_, I_SOME, _, _) ->
+    (* TODO: I actually think that optionals may have only one cell allocated *)
+    let p = Env.alloc_local env in
+    let value = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; Cassign (value, Data.alloc 2)
+        ; Cstore (0, Cvar value, Cconst_i32 1l)
+        ; Cstore (1, Cvar value, Cvar p)
+        ; compile_push ~env (Cvar value) ]
+    in
+    Env.free_local env p;
+    Env.free_local env value;
+    block
+
   | Prim (_, I_IF_LEFT, [ Seq (_, left_branch); Seq (_, right_branch) ], _) ->
     let p = Env.alloc_local env in
     let block =
@@ -283,6 +290,51 @@ let rec compile_instruction ~env instr =
     in
     Env.free_local env p;
     block
+
+  | Prim (_, I_IF, [ Seq (_, branch_if); Seq (_, branch_else) ], _) ->
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; Cifthenelse
+           (Cvar p
+           , Cblock (List.map (compile_instruction ~env) branch_if)
+           , Cblock (List.map (compile_instruction ~env) branch_else)) ]
+    in
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_IF_CONS, [ Seq (_, branch_cons); Seq (_, branch_nil) ], _) ->
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; Cifthenelse
+            (Cvar p
+            , Cblock
+                ([ compile_push ~env (Data.cdr (Cvar p))
+                 ; compile_push ~env (Data.car (Cvar p)) ]
+                  @ List.map (compile_instruction ~env) branch_cons)
+            , Cblock (List.map (compile_instruction ~env) branch_nil)) ]
+    in
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_IF_NONE, [ Seq (_, branch_none); Seq (_, branch_some) ], _) ->
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; Cifthenelse
+            (Cvar p
+            , Cblock
+                (compile_push ~env (Data.cdr (Cvar p))
+                 :: List.map (compile_instruction ~env) branch_some)
+            , Cblock (List.map (compile_instruction ~env) branch_none)) ]
+    in
+    Env.free_local env p;
+    block
+
 
   | Prim (_, I_SWAP, _, _) ->
     let fst = Env.alloc_local env in
@@ -297,7 +349,7 @@ let rec compile_instruction ~env instr =
     Env.free_local env snd;
     block
 
-  | Prim (_, I_PUSH, [ Prim (_, T_int, _, _); Int (_, z) ], _) ->
+  | Prim (_, I_PUSH, [ _; Int (_, z) ], _) ->
     let value = Z.to_int32 z in
     compile_push ~env (Cconst_i32 value)
 
@@ -331,10 +383,118 @@ let rec compile_instruction ~env instr =
   | Prim (_, I_DIP, [ Seq (_, instr) ], _) ->
     compile_dip ~env 1l (Cblock (List.map (compile_instruction ~env) instr))
 
+  | Prim (_, I_FAILWITH, _, _) ->
+    let param = Env.alloc_local env in
+    Cblock [ compile_pop param; Cfailwith (Cvar param) ]
+
+  | Prim (_, I_ITER, [ Seq (_, body) ], _) ->
+    let iter = Env.alloc_local env in
+    let iter_body = Cblock (List.map (compile_instruction ~env) body) in
+    let block =
+      Cblock
+        [ compile_pop iter
+        ; Cwhile (Cvar iter,
+            Cblock
+              [ compile_push ~env (Data.car (Cvar iter))
+              ; iter_body
+              ; Cassign (iter, (Data.cdr (Cvar iter))) ]) ]
+    in
+    Env.free_local env iter;
+    block
+
+  | Prim (_, I_LOOP, [ Seq (_, body) ], _) ->
+    (* TODO: Test it *)
+    let p = Env.alloc_local env in
+    let body = Cblock (List.map (compile_instruction ~env) body) in
+    let block =
+      Cblock
+       [ Cassign (p, Cconst_i32 1l) 
+       ; Cwhile (Cconst_i32 1l,
+          Cblock
+            [ compile_pop p
+            ; body ]) ]
+    in
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_LOOP_LEFT, [ Seq (_, body) ], _) ->
+    (* TODO: Test it *)
+    let p = Env.alloc_local env in
+    let body = Cblock (List.map (compile_instruction ~env) body) in
+    Cblock
+      [ Cassign (p, Cconst_i32 1l)
+      ; Cwhile (Cvar p,
+         Cblock
+          [ compile_pop p
+          ; compile_push ~env (Data.cdr (Cvar p))
+          ; Cifthenelse
+              (Cop (Cload 0, [ Cvar p ])
+              , Cblock [ body ]
+              , Cblock []) ])
+          ; Cassign (p, Data.car (Cvar p)) ]
+
+  | Prim (_, I_LAMBDA, [ _; _; Seq (_, body) ], _) ->
+    let lenv = Env.make () in
+    let body = Cblock (List.map (compile_instruction ~env:lenv) body) in
+    let lambda_n = Int32.of_int (List.length !lambdas) in
+    lambdas := (body, env) :: !lambdas;
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (p, Data.alloc 2)
+        ; Cstore (0, Cvar p, Cconst_i32 0l)
+        ; Cstore (1, Cvar p, Cconst_i32 lambda_n)
+        ; compile_push ~env (Cvar p) ]
+    in
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_APPLY, _, _) ->
+    let top = Env.alloc_local env in
+    let value = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (value, Data.alloc 3)
+        ; Cstore (0, Cvar value, Cconst_i32 1l)        
+        ; compile_pop top
+        ; Cstore (2, Cvar value, Cvar top)
+        ; compile_pop top
+        ; Cstore (1, Cvar value, Cvar top) ]
+    in
+    Env.free_local env value;
+    Env.free_local env top;
+    block
+
+  | Prim (_, I_EXEC, _, _) ->
+    (* Layout:
+        0x0 <lambda index>
+        0x1 <lambda pointer> <argument> *)
+    let argument = Env.alloc_local env in
+    let lambda = Env.alloc_local env in
+    let pair = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop argument
+        ; compile_pop lambda
+        ; Cwhile (Data.car (Cvar lambda),
+            Cblock
+              [ Cassign (pair, Data.alloc 2)
+              ; Cstore (0, Cvar pair, Cop (Cload 2, [ Cvar lambda ]))
+              ; Cstore (1, Cvar pair, Cvar argument)
+              ; Cassign (lambda, Data.cdr (Cvar lambda))
+              ; Cassign (argument, Cvar pair) ])
+        ; Cassign (-1, Cop (Capply "exec", [ Cvar lambda; Cvar argument ])) ]
+    in
+    Env.free_local env argument;
+    Env.free_local env lambda;
+    Env.free_local env pair;
+    block
+
   | _ -> assert false
 
 let rec compile_value_decoder ~env typ var ptr =
   match typ with
+  | Prim (_, T_bool, _, _)
   | Prim (_, T_nat, _, _)
   | Prim (_, T_int, _, _)
   | Prim (_, T_unit, _, _) ->
@@ -356,6 +516,41 @@ let rec compile_value_decoder ~env typ var ptr =
     in
     Env.free_local env wrapped_value;
     block
+
+  | Prim (_, T_list, [ typ ], _) ->
+    let counter = Env.alloc_local env in
+    let value = Env.alloc_local env in
+    let tmp = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (var, Cconst_i32 0l)
+        ; Cassign (counter, Cop (Cload 0, [ Cvar ptr ]))
+        ; Cassign (ptr, Cop (Cwasm Wasm_add, [ Cvar ptr; Cconst_i32 4l ]))
+        ; Cwhile (Cvar counter,
+            Cblock
+             [ compile_value_decoder ~env typ value ptr
+             (* TODO: I'm not sure if I need this tmp local *)
+             ; Data.cons tmp (Cvar value) (Cvar var)
+             ; Cassign (var, Cvar tmp)
+             ; Cassign (counter, Data.dec (Cvar counter)) ]) ]
+    in
+    Env.free_local env counter;
+    Env.free_local env value;
+    Env.free_local env tmp;
+    block
+
+  | Prim (_, T_option, [ typ ], _) ->
+    let value = Env.alloc_local env in
+    Cblock
+      [ Cassign (value, Cop (Cload 0, [ Cvar ptr ]))
+      ; Cassign (ptr, Cop (Cwasm Wasm_add, [ Cvar ptr; Cconst_i32 4l ]))
+      ; Cifthenelse (Cvar value,
+          Cblock
+            [ Cassign (var, Data.alloc 2)
+            ; Cstore (0, Cvar var, Cvar value)
+            ; compile_value_decoder ~env typ value ptr
+            ; Cstore (1, Cvar var, Cvar value) ],
+          Cassign (var, Cvar value)) ]
 
   | _ -> assert false
 
@@ -399,7 +594,7 @@ let compile_contract contract =
       let size = Env.alloc_local env in
       let value = Env.alloc_local env in
       let block =
-        [ Cassign (value, compile_cdr (compile_car (Cglobal "stack")))
+        [ Cassign (value, Data.cdr (Data.car (Cglobal "stack")))
         ; compile_value_encoder ~env storage_type ptr size value
         ; Cassign (value, Cop (Capply "save_storage", [ Cvar ptr; Cvar size ])) ]
       in
