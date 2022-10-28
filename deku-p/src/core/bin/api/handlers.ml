@@ -35,17 +35,17 @@ end
 
 module Get_genesis : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "genesis" /? nil)
   let route = Routes.(path @--> ())
-  let handler ~path:_ ~state:_ = Ok Genesis.block
+  let handler ~path:_ ~state:_ = Ok (Genesis.block |> Repr.Block.of_block)
 end
 
 module Get_head : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "head" /? nil)
@@ -53,7 +53,7 @@ module Get_head : NO_BODY_HANDLERS = struct
 
   let handler ~path:_ ~state =
     let Api_state.{ current_block; _ } = state in
-    Ok current_block
+    Ok (current_block |> Repr.Block.of_block)
 end
 
 module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
@@ -61,6 +61,7 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
 
   type path = Level_or_hash.t
   type response = Yojson.Safe.t [@@deriving yojson_of]
+  (*TODO: should returns a Repr.Block.t *)
 
   let meth = `GET
 
@@ -229,30 +230,34 @@ module Post_operation : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Operation.Signed.t [@@deriving of_yojson]
+  type body = Repr.Signed_operation.t [@@deriving of_yojson]
   type response = { hash : Operation_hash.t } [@@deriving yojson_of]
 
   let meth = `POST
   let path = Routes.(version / s "operations" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~path:_ ~body:operation ~state =
+  let handler ~path:_ ~body ~state =
     let Api_state.{ network; _ } = state in
-    let content = Message.Content.operation operation in
-    let (Message
-          {
-            header = _;
-            content = _;
-            network = Network_message { raw_header; raw_content };
-          }) =
-      Message.encode ~content
-    in
-    let (Signed_operation
-          { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
-      operation
-    in
-    Network_manager.broadcast ~raw_header ~raw_content network;
-    Ok { hash = operation_hash }
+    let operation = Repr.Signed_operation.to_signed body in
+    match operation with
+    | None -> Error Api_error.invalid_operation_signature
+    | Some operation ->
+        let content = Message.Content.operation operation in
+        let (Message
+              {
+                header = _;
+                content = _;
+                network = Network_message { raw_header; raw_content };
+              }) =
+          Message.encode ~content
+        in
+        let (Signed_operation
+              { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
+          operation
+        in
+        Network_manager.broadcast ~raw_header ~raw_content network;
+        Ok { hash = operation_hash }
 end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
@@ -283,7 +288,7 @@ module Get_vm_state_key : NO_BODY_HANDLERS = struct
     External_vm_protocol.State.get key vm_state |> Result.ok
 end
 
-module Get_stats = struct
+module Get_stats : NO_BODY_HANDLERS = struct
   type path = unit
   type response = { latency : float; tps : float } [@@deriving yojson_of]
 
@@ -294,4 +299,28 @@ module Get_stats = struct
   let handler ~path:_ ~state:_ =
     let Deku_metrics.{ latency; tps } = Deku_metrics.get_statistics () in
     Ok { latency; tps }
+end
+
+module Get_hexa_to_signed : HANDLERS = struct
+  type path = unit
+
+  type body = { nonce : Nonce.t; level : Level.t; operation : Operation.t }
+  [@@deriving of_yojson]
+
+  type response = { bytes : string } [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "encode-operation" /? nil)
+  let route = Routes.(path @--> ())
+
+  let hash_encoding =
+    Data_encoding.tup3 Nonce.encoding Level.encoding Operation.encoding
+
+  let handler ~path:_ ~body ~state:_ =
+    let { nonce; level; operation } = body in
+    let binary =
+      Data_encoding.Binary.to_string_exn hash_encoding (nonce, level, operation)
+    in
+    let bytes = binary |> Hex.of_string |> Hex.show in
+    Ok { bytes }
 end
