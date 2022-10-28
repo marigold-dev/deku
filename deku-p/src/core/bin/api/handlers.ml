@@ -343,3 +343,20 @@ module Get_receipt : NO_BODY_HANDLERS = struct
     | Some receipt -> Ok receipt
     | None -> Error (Api_error.receipt_not_found operation_hash)
 end
+
+module Compute_contract_hash : HANDLERS = struct
+  type path = unit
+  type body = { hash : Operation_hash.t } [@@deriving of_yojson]
+
+  type response = { address : Deku_ledger.Contract_address.t }
+  [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "compute-contract-hash" /? nil)
+  let route = Routes.(path @--> ())
+
+  let handler ~path:() ~body:{ hash } ~state:_ =
+    let blake2b = Operation_hash.to_blake2b hash in
+    let address = Deku_ledger.Contract_address.of_user_operation_hash blake2b in
+    Ok { address }
+end
