@@ -1,13 +1,19 @@
 {
-  "name": "deku-c",
+  "name": "@marigold-dev/deku-c-toolkit",
   "version": "1.0.0",
   "description": "Deku typescript client to interact with deku-c",
-  "main": "src/index.js",
+  "main": "lib/src/index.js",
+  "types": "lib/src/index.d.ts",
+  "module": "lib/src/index.es6.js",
   "scripts": {
-    "build": "tsc --project .",
+    "build": "tsc --project . --module commonjs && rollup -c rollup.config.ts",
     "build:test": "yarn run build && tsc --lib es2021,dom examples/index.ts"
   },
-  "author": "",
+  "files": [
+    "lib/",
+    "package.json"
+  ],
+  "author": "contact@marigold.dev",
   "license": "ISC",
   "dependencies": {
     "@marigold-dev/deku-toolkit": "0.1.10"
