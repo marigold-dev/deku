@@ -98,11 +98,16 @@ let rec compile_statement wasm_mod statement =
     loop_stack := List.tl !loop_stack;
     loop
 
+  | Cfailwith param ->
+    Expression.Block.make wasm_mod (gensym "failwith")
+      [ Expression.Call.make wasm_mod "failwith" [ compile_expression wasm_mod param ] Type.none
+      ; Expression.Unreachable.make wasm_mod ]
+
   | Ccontinue ->
     (* WASM break on loops works more like a continue than a break *)
     Expression.Break.make wasm_mod (List.hd !loop_stack) (Expression.Null.make ()) (Expression.Null.make ())
 
-let compile_ir ~env ast =
+let compile_ir ~optimize ~debug ~shared_memory ~env ast =
   let wasm_mod = Module.create () in
   
   let locals = Array.make (IR_of_michelson.Env.max env + 1) Type.int32 in
@@ -115,26 +120,31 @@ let compile_ir ~env ast =
 
   ignore @@
     Global.add_global wasm_mod "stack" Type.int32 true
-      (Expression.Const.make wasm_mod (Literal.int32 0l));
-  ignore @@ Export.add_global_export wasm_mod "stack" "stack";
-
+      (Expression.Const.make wasm_mod (Literal.int32 0l));  
   ignore @@
     Global.add_global wasm_mod "heap_top" Type.int32 true
       (Expression.Const.make wasm_mod (Literal.int32 512l));
-  ignore @@
-    Export.add_global_export wasm_mod "heap_top" "heap_top";
 
   ignore @@
     Global.add_global wasm_mod "dip_stack" Type.int32 true
       (Expression.Const.make wasm_mod (Literal.int32 256l));
 
+  if debug then begin
+    ignore @@ Export.add_global_export wasm_mod "stack" "stack";
+    ignore @@ Export.add_global_export wasm_mod "heap_top" "heap_top";
+  end;
+
   Import.add_function_import wasm_mod "parameter_size" "env" "parameter_size" Type.none Type.int32;
   Import.add_function_import wasm_mod "parameter_load" "env" "parameter_load" Type.int32 Type.int32;
   Import.add_function_import wasm_mod "save_storage" "env" "save_storage" Type.(create [| int32; int32 |]) Type.int32;
+  Import.add_function_import wasm_mod "failwith" "env" "failwith" Type.int32 Type.none;
 
-  Memory.set_memory wasm_mod 1 10 "memory" [] true;
+  Memory.set_memory wasm_mod 1 10 "memory" [] shared_memory;
 
-  if Module.validate wasm_mod <> 0 then
-    failwith "Generated module is invalid";
+  (* if Module.validate wasm_mod <> 0 then
+    failwith "Generated module is invalid"; *)
+
+  if optimize then
+    Module.optimize wasm_mod;
 
   wasm_mod
