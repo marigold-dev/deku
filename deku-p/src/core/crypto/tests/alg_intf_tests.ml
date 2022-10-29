@@ -9,8 +9,8 @@ module Test_gen (Crypto : sig
 
   val ids : id list
 end)
-(Tezos_data : Tezos_test_data.Tezos_data)  
- = struct
+(Tezos_data : Tezos_test_data.Tezos_data) =
+struct
   open Crypto
 
   module Secret_key_data = struct
@@ -27,5 +27,4 @@ end)
         ~msg:"public keys are equal" ~expected:Tezos_data.public_keys
         ~actual:public_keys
   end
-
 end
