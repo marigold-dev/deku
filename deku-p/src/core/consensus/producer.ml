@@ -51,7 +51,7 @@ let clean ~receipts ~tezos_operations producer =
     List.fold_left
       (fun operations receipt ->
         match receipt with
-        | Receipt.Ticket_transfer_receipt { operation = hash }
+        | Receipt.Ticket_transfer_receipt { operation = hash; _ }
         | Receipt.Vm_transaction_receipt { operation = hash }
         | Receipt.Withdraw_receipt { operation = hash; _ } ->
             Operation_hash.Map.remove hash operations)
