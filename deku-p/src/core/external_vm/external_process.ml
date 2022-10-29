@@ -30,7 +30,7 @@ let () =
 (* intentional, any exception in this file should kill the node *)
 let raise exn =
   (* TODO: https://github.com/marigold-dev/deku/issues/502 *)
-  Logs.err (fun m -> m "external_vm failure: %s\n%!" (Printexc.to_string exn));
+  Logs.err (fun m -> m "external_vm failure: %s" (Printexc.to_string exn));
   exit 1
 
 let read_all fd lengtht =
