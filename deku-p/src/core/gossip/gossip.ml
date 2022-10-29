@@ -145,11 +145,11 @@ let apply ~outcome gossip =
       (gossip, Some (Gossip_incoming_request { connection; above }))
   | Outcome_incoming_request_header_error { connection } ->
       Logs.warn (fun m ->
-          m "request.header.%a: error\n%!" Connection_id.pp connection);
+          m "request.header.%a: error" Connection_id.pp connection);
       (gossip, None)
   | Outcome_incoming_request_content_error { connection; exn } ->
       Logs.warn (fun m ->
-          m "request.content.%a: %s\n%!" Connection_id.pp connection
+          m "request.content.%a: %s" Connection_id.pp connection
             (Printexc.to_string exn));
       (gossip, None)
 

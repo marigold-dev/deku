@@ -144,7 +144,7 @@ let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
       with exn ->
         (* TODO: this should probably be a result. Currently if
            the None case is just ignored. *)
-        Logs.err (fun m -> m "inject: %s\n%!" (Printexc.to_string exn));
+        Logs.err (fun m -> m "inject: %s" (Printexc.to_string exn));
         None
     in
     Bridge
@@ -160,7 +160,7 @@ let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
       inject_transaction_ref := inject_transaction;
       listen_transaction ~bridge process
     with exn ->
-      Logs.err (fun m -> m "spawn: %s\n%!" (Printexc.to_string exn));
+      Logs.err (fun m -> m "spawn: %s" (Printexc.to_string exn));
       respawn ()
   in
   let () = Eio.Fiber.fork ~sw @@ fun () -> respawn () in

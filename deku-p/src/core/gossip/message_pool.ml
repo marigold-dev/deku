@@ -90,7 +90,7 @@ let decode ~raw_header ~raw_content pool =
         (pool, Some fragment)
     | Late -> (pool, None)
   with exn ->
-    Logs.warn (fun m -> m "message.header: %s\n%!" (Printexc.to_string exn));
+    Logs.warn (fun m -> m "message.header: %s" (Printexc.to_string exn));
     (pool, None)
 
 let compute fragment =
@@ -117,7 +117,7 @@ let apply ~outcome pool =
           (pool, Some message)
       | Accepted | Late -> (pool, None))
   | Outcome_error { expected; exn } -> (
-      Logs.warn (fun m -> m "outcome.error: %s\n%!" (Printexc.to_string exn));
+      Logs.warn (fun m -> m "outcome.error: %s" (Printexc.to_string exn));
       let (Message_header { hash; level }) = expected in
       match state ~hash ~level pool with
       | Pending { queue } -> (
