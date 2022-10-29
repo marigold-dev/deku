@@ -73,7 +73,7 @@ let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
     with exn ->
       (* FIXME: is this properly a debug log? Or should it be warning? *)
       Logs.debug (fun m ->
-          m "reconnect(%s:%d): %s\n%!" host port (Printexc.to_string exn));
+          m "reconnect(%s:%d): %s" host port (Printexc.to_string exn));
       Eio.Time.sleep clock Deku_constants.reconnect_timeout;
       reconnect_loop ~identity ~net ~clock ~host ~port handler
   in
@@ -83,12 +83,12 @@ let connect ~net ~clock ~host ~port ~on_connection ~on_request ~on_message
 
 let listen ~net ~clock ~port ~on_connection ~on_request ~on_message network =
   let on_error exn =
-    Logs.warn (fun m -> m "listen.connection: %s\n%!" (Printexc.to_string exn))
+    Logs.warn (fun m -> m "listen.connection: %s" (Printexc.to_string exn))
   in
   let rec relisten ~identity ~net ~clock ~port ~on_error handler =
     try Network_protocol.Server.listen ~identity ~net ~port ~on_error handler
     with exn ->
-      Logs.warn (fun m -> m "relisten: %s\n%!" (Printexc.to_string exn));
+      Logs.warn (fun m -> m "relisten: %s" (Printexc.to_string exn));
       Eio.Time.sleep clock Deku_constants.listen_timeout;
       relisten ~identity ~net ~clock ~port ~on_error handler
   in
@@ -108,14 +108,14 @@ let connect ~net ~clock ~nodes ~on_connection ~on_request ~on_message network =
           network
       with exn ->
         Logs.warn (fun m ->
-            m "connect(%s:%d): %s\n%!" host port (Printexc.to_string exn)))
+            m "connect(%s:%d): %s" host port (Printexc.to_string exn)))
     nodes
 
 let send ~message ~write =
   (* write always includes a fork *)
   try write message
   with exn ->
-    Logs.warn (fun m -> m "write.error: %s\n%!" (Printexc.to_string exn))
+    Logs.warn (fun m -> m "write.error: %s" (Printexc.to_string exn))
 
 let broadcast message network =
   Key_hash.Map.iter
@@ -165,16 +165,16 @@ let test () =
   let start ~port : unit =
     let identity = identity () in
     let network = make ~identity in
-    let on_connection ~connection:_ = Logs.debug (fun m -> m "connected\n%!") in
+    let on_connection ~connection:_ = Logs.debug (fun m -> m "connected") in
     let on_request ~connection ~raw_header ~raw_content =
       Logs.debug (fun m ->
-          m "request(%s:%.3f): %d\n%!" raw_header (Unix.gettimeofday ())
+          m "request(%s:%.3f): %d" raw_header (Unix.gettimeofday ())
             (String.length raw_content));
       send ~connection ~raw_header ~raw_content network
     in
     let on_message ~raw_header ~raw_content =
       Logs.debug (fun m ->
-          m "message(%s:%.3f): %d\n%!" raw_header (Unix.gettimeofday ())
+          m "message(%s:%.3f): %d" raw_header (Unix.gettimeofday ())
             (String.length raw_content))
     in
     let raw_content = String.make 2_000_000 'a' in

@@ -173,7 +173,7 @@ let start ~sw ~env ~port ~nodes ~tezos node =
       node.network
   in
   let on_message ~raw_header ~raw_content =
-    (* Logs.info (fun m -> m "incoming(%.3f): %s\n%!" (Unix.gettimeofday ()) raw_header;) *)
+    (* Logs.info (fun m -> m "incoming(%.3f): %s" (Unix.gettimeofday ()) raw_header;) *)
     on_network_message ~sw ~env ~raw_header ~raw_content node
   in
   let on_request ~connection ~raw_header ~raw_content =

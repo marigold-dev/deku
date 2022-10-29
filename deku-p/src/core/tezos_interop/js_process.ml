@@ -111,7 +111,7 @@ let make ~write = { pending = Pending.empty; write }
 let spawn ~file k =
   let prog = "node" in
   let args = [| prog; file |] in
-  Logs.info (fun m -> m "js_process.spawn: prog: %s, file: %s\n%!" prog file);
+  Logs.info (fun m -> m "js_process.spawn: prog: %s, file: %s" prog file);
   IO.spawn ~prog ~args @@ Protocol.handler
   @@ fun ~read ~write ->
   let process = make ~write in

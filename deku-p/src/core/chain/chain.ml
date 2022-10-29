@@ -185,7 +185,7 @@ let incoming_block ~identity ~current ~block chain =
 let incoming_vote ~current ~level ~vote chain =
   (* let () =
        let key_hash = Verified_signature.key_hash vote in
-       Logs.info (fun m -> m "incoming.vote(%.3f): %s\n%!" (Unix.gettimeofday ())
+       Logs.info (fun m -> m "incoming.vote(%.3f): %s" (Unix.gettimeofday ())
          (Deku_crypto.Key_hash.to_b58 key_hash))
      in *)
   let (Chain ({ consensus; _ } as chain)) = chain in
@@ -216,7 +216,7 @@ let incoming_message ~identity ~current ~content chain =
   | Content_accepted { block; votes } ->
       let (Block { level; _ }) = block in
       let chain, actions = incoming_block ~identity ~current ~block chain in
-      Logs.info (fun m -> m "accepted: %a\n%!" Level.pp level);
+      Logs.info (fun m -> m "accepted: %a" Level.pp level);
       List.fold_left
         (fun (chain, actions) vote ->
           let chain, additional = incoming_vote ~current ~level ~vote chain in
@@ -340,10 +340,10 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       in
       (chain, actions)
   | Error `No_pending_block ->
-      Logs.warn (fun m -> m "chain: no pending block\n%!");
+      Logs.warn (fun m -> m "chain: no pending block");
       (Chain chain, [])
   | Error `Wrong_pending_block ->
-      Logs.warn (fun m -> m "chain: wrong pending block\n%!");
+      Logs.warn (fun m -> m "chain: wrong pending block");
       (Chain chain, [])
 
 let apply_store_outcome ~level ~network chain =
