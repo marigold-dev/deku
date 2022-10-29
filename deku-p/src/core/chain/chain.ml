@@ -360,7 +360,14 @@ let apply_store_outcome ~level ~network chain =
     (* TODO: this is a workaround *)
     match level_int mod trusted_cycle_int = 0 && level_int <> 0 with
     | true ->
-        let trusted = drop ~until:oldest_trusted trusted in
+        (* drop previous cycle *)
+        let until =
+          ((level_int / trusted_cycle_int) - 1) * trusted_cycle_int
+          |> Z.of_int |> N.of_z
+          |> Option.value ~default:N.zero
+          |> Level.of_n
+        in
+        let trusted = drop ~until trusted in
         let oldest_trusted = N.(level_n + trusted_cycle) in
         let oldest_trusted = Level.of_n oldest_trusted in
         (oldest_trusted, trusted)
