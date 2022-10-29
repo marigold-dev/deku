@@ -30,7 +30,7 @@ export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
 export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 
 ## The api needs its own vm
-nix run ".#$vm" -- "$DEKU_API_VM" &
+# nix run ".#$vm" -- "$DEKU_API_VM" &
 _build/install/default/bin/deku-api &
 
 sleep 3
@@ -41,11 +41,11 @@ for N in 0 1 2 3; do
   mkdir -p ./flextesa_chain/data/$N
 
   # Creates the FIFO
-  test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
-  test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
+  # test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
+  # test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
   # Starts the VM
-  nix run ".#$vm" -- "./flextesa_chain/data/$N/pipe" &
+  # nix run ".#$vm" -- "./flextesa_chain/data/$N/pipe" &
 
   sleep 0.4
 
