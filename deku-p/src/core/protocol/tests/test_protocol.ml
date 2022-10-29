@@ -113,7 +113,7 @@ let test_duplicated_operation_same_level () =
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
   in
-  let[@warning "-8"] (Receipt.Ticket_transfer_receipt { operation }) =
+  let[@warning "-8"] (Receipt.Ticket_transfer_receipt { operation; _ }) =
     List.hd receipts
   in
   Alcotest.(check bool)

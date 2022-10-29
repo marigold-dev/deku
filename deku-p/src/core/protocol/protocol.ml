@@ -53,7 +53,10 @@ let apply_operation ~current_level protocol operation :
       let ledger, receipt, vm_state, error =
         match content with
         | Operation_ticket_transfer { sender; receiver; ticket_id; amount } -> (
-            let receipt = Ticket_transfer_receipt { operation = hash } in
+            let receipt =
+              Ticket_transfer_receipt
+                { operation = hash; sender; receiver; ticket_id; amount }
+            in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
@@ -111,7 +114,15 @@ let apply_operation ~current_level protocol operation :
             with
             | Ok (ledger, handle) ->
                 ( ledger,
-                  Some (Withdraw_receipt { handle; operation = hash }),
+                  Some
+                    (Withdraw_receipt
+                       {
+                         handle;
+                         operation = hash;
+                         account = sender;
+                         amount;
+                         ticket_id;
+                       }),
                   vm_state,
                   None )
             | Error error -> (ledger, None, vm_state, Some error))

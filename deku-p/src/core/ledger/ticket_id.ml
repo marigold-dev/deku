@@ -30,7 +30,7 @@ let ticketer_encoding =
     ]
 
 type ticket_id = Ticket_id of { ticketer : ticketer; data : bytes }
-[@@deriving ord, show]
+[@@deriving eq, ord, show]
 
 and t = ticket_id [@@deriving eq, ord, show]
 
