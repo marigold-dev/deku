@@ -3,6 +3,9 @@ type ticketer =
   | Deku of Contract_address.t
 [@@deriving ord, show]
 
+val ticketer_to_string : ticketer -> string
+val ticketer_of_string : string -> ticketer option
+
 type ticket_id = private Ticket_id of { ticketer : ticketer; data : bytes }
 and t = ticket_id [@@deriving eq, ord, yojson, show]
 

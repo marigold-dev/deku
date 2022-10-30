@@ -3,6 +3,22 @@ type ticketer =
   | Deku of Contract_address.t
 [@@deriving ord, show]
 
+let ticketer_to_string ticketer =
+  match ticketer with
+  | Tezos contract_hash -> Deku_tezos.Contract_hash.to_b58 contract_hash
+  | Deku contract_address -> Contract_address.to_b58 contract_address
+
+let ticketer_of_string str =
+  let tezos str =
+    Deku_tezos.Contract_hash.of_b58 str
+    |> Option.map (fun contract_hash -> Tezos contract_hash)
+  in
+  let deku str =
+    Contract_address.of_b58 str
+    |> Option.map (fun contract_hash -> Deku contract_hash)
+  in
+  Deku_repr.decode_variant [ tezos; deku ] str
+
 let ticketer_encoding =
   let tezos_tag = 0 in
   let deku_tag = 1 in
