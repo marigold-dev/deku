@@ -71,6 +71,7 @@ let init =
 let upsert_account_balance_query =
   let open Types in
   (* TODO: this will fail with large ticket amounts because int64 *)
+  (* TODO: add the ON CONFLICT clause *)
   [%rapper
     execute
       {sql|

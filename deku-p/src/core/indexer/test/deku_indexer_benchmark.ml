@@ -72,7 +72,6 @@ let operations =
     identities
 
 let main () =
-  Eio_main.run @@ fun _env ->
   (* Run a local postgres, e.g:
      docker run --rm -P -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD="1234" --name deku-postgres postgres *)
   let indexer =
@@ -97,5 +96,4 @@ let main () =
     ((Float.of_int @@ List.length operations) /. delta)
 
 let () =
-  Eio_main.run @@ fun env ->
-  Parallel.Pool.run ~env ~domains @@ fun () -> main ()
+  Eio_main.run @@ fun _env -> main ()
