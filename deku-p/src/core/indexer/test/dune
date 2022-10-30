@@ -1,0 +1,4 @@
+(executable
+ (name deku_indexer_benchmark)
+ (public_name deku-indexer-benchmark)
+ (libraries deku_stdlib deku_indexer deku_crypto caqti-driver-postgresql))

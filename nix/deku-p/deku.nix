@@ -32,6 +32,7 @@ in
               "deku-p/src/core/bin/api"
               "deku-p/src/core/bin/node"
               "deku-p/src/core/block_storage"
+              "deku-c/indexer"
             ]
             else [];
         };
@@ -84,6 +85,7 @@ in
           data-encoding
           caqti
           caqti-driver-sqlite3
+          caqti-driver-postgresql
           ppx_deriving_cmdliner
           dream
           caqti-eio

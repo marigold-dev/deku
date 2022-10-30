@@ -1,0 +1,17 @@
+(library
+ (name deku_indexer)
+ (libraries
+  deku_consensus
+  deku_ledger
+  deku_concepts
+  ppx_rapper_eio
+  caqti
+  caqti-eio)
+ (modules_without_implementation etl_intf)
+ (preprocess
+  (pps
+   ppx_rapper
+   ppx_let_binding
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
