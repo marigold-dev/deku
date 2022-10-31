@@ -52,26 +52,19 @@ const incrementLigoCode = `
 type storage = int;
 
 type parameter =
-  {kind: "Increment", amount: int}|
-  {kind: "Decrement", amount: int}|
-  {kind: "Reset"};
+  | ["Increment", int]
+  | ["Decrement", int]
+  | ["Reset"];
 
-type return_ = [list<operation>, storage];
+type return_ = [list<operation>,storage];
 
-const main =  (action: parameter, store: storage): return_ => {
-
-  const noop = (list([]) as list<operation>);
-
-  switch(action.kind) {
-    case "Increment":
-      return [noop, (store + action.amount)]
-
-    case "Decrement":
-      return [noop, (store - action.amount)]
-
-    case "Reset":
-       return [noop, 0]
-  }
+const main = (action: parameter, store: storage): return_ => {
+  let storage = match(action, {
+    Increment: n => store + n,
+    Decrement: n => store - n,
+    Reset: () => 0
+  });
+  return [list([]), storage]
 };
 `;
 
