@@ -98,5 +98,9 @@ let run () =
           test_case "compare" `Quick Test_key_hash_data.compare;
           test_case "equality" `Quick Test_key_hash_data.equality;
         ] );
-      ("Signatures", [ test_case "to_sign" `Quick Test_signature_data.to_sign ]);
+      ( "Signatures",
+        [
+          test_case "to sign" `Quick Test_signature_data.to_sign;
+          test_case "signatures" `Quick Test_signature_data.signatures;
+        ] );
     ]
