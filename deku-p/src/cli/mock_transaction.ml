@@ -1,3 +1,5 @@
+(* We've dropped support for the External_vm currently.
+TODO: uncomment this when we add it back *)
 (* open Deku_concepts
    open Deku_protocol
    open Deku_stdlib
