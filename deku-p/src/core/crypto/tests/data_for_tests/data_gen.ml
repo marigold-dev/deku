@@ -74,6 +74,14 @@ struct
       List.for_all (fun sk -> Secret_key.equal sk sk) secret_keys
   end
 
+  module Ky_hash = struct
+    let key_hashes = List.map (fun id -> id.public_key_hash) ids
+
+    let compare_key_hashes =
+      List.sort Public_key_hash.compare
+        (List.map (fun id -> id.public_key_hash) ids)
+  end
+
   module Print_secret_key = struct
     let print_public_keys () =
       Format.printf "let public_keys = [\n%!";
@@ -92,5 +100,16 @@ struct
     let print_equality_secret_keys () =
       Format.printf "let equality_secret_keys = %b\n%!"
         Skt_key.equality_secret_keys
+  end
+
+  module Print_key_hash = struct
+    (* TODO: print_key_hashes *)
+
+    let print_compare_key_hash () =
+      Format.printf "let compared_key_hashes = [\n%!";
+      List.iter
+        (fun sk -> Format.printf "\"%s\"\n%!;" (Public_key_hash.to_b58check sk))
+        Ky_hash.compare_key_hashes;
+      Format.printf "]\n%!"
   end
 end

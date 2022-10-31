@@ -2,6 +2,7 @@ module type Tezos_data = sig
   val public_keys : string list
   val compared_secret_keys : string list
   val equality_secret_keys : bool
+  val compared_key_hashes : string list
 end
 
 module Ed25519_data : Tezos_data = struct
@@ -24,4 +25,13 @@ module Ed25519_data : Tezos_data = struct
     ]
 
   let equality_secret_keys = true
+
+  let compared_key_hashes =
+    [
+      "tz1LMf9NoTATvLJ7EQjYDzy7XZZ9KHjei5jH";
+      "tz1NS9mkwQxD2jgH8kiGVPD33VmLXVVe3wug";
+      "tz1UDkGwdCYTyZMG1wwMWMfmbiRtagvP3kXg";
+      "tz1aBiQ188pozN9JuSvwUPpkZoajCG6AT7XX";
+      "tz1iijagWhWfmG3Cmx7oJ62EkQByPG2foNBU";
+    ]
 end
