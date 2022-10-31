@@ -146,7 +146,7 @@ in {
                 if cfg.vmType == "wasm"
                 then wasmVM
                 else cookieVM;
-            in "${command} /run/deku/api_pipe"
+            in "${command} /run/deku/api_vm_pipe"
           );
           Restart = "on-failure";
           StateDirectory = "deku_api";
