@@ -55,9 +55,6 @@ type params = {
   tezos_consensus_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
-  named_pipe_path : string;
-      [@default "/run/deku/pipe"] [@env "DEKU_NAMED_PIPE_PATH"]
-      (** Named pipe path to use for IPC with the VM *)
   api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
 }
 [@@deriving cmdliner]
@@ -91,7 +88,6 @@ let main params style_renderer log_level =
     tezos_rpc_node;
     tezos_secret;
     tezos_consensus_address;
-    named_pipe_path;
     api_uri;
   } =
     params
