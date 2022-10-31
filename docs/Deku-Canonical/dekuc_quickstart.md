@@ -4,10 +4,9 @@ sidebar_position: 2
 
 import { ComponentCodeBlock } from "@theme/ComponentCodeBlock";
 
-Under construction!
-
-<!-- >
 # Quick-start with Deku-C
+
+> Under construction!
 
 In this 15-minute tutorial, we'll create our first DApp to Deku-C.
 
@@ -15,8 +14,8 @@ You'll learn how to:
 
 - Write a simple smart contract in [Ligo](https://ligolang.org/).
 - Compile and deploy it to Deku-C
-- Interact with the contract via `deku-toolkit` npm package
-- Create a DApp using React and the Deku-C client
+- Interact with the contract via [deku-c-toolkit](https://www.npmjs.com/package/@marigold-dev/deku-c-toolkit) npm package
+- Create a DApp using React
 
 ## Installing the Tools
 
@@ -38,33 +37,27 @@ Let's write a simple counter, accepting the commands `Increment`, `Decrement`,
 `Reset`.
 
 
-FIXME: not sure if this tutorial works since I switched to the jsLigo 52.
-We should check.
+<!-- FIXME: not sure if this tutorial works since I switched to the jsLigo 52. -->
+<!-- FIXME: tested with ligo 0.50 -->
+<!-- TODO: test with ligo 0.54.1 -->
 
 ```js
 type storage = int;
 
 type parameter =
-  {kind: "Increment", amount: int}|
-  {kind: "Decrement", amount: int}|
-  {kind: "Reset"};
+  | ["Increment", int]
+  | ["Decrement", int]
+  | ["Reset"];
 
-type return_ = [list<operation>, storage];
+type return_ = [list<operation>,storage];
 
-const main =  (action: parameter, store: storage): return_ => {
-
-  const noop = (list([]) as list<operation>);
-
-  switch(action.kind) {
-    case "Increment":
-      return [noop, (store + action.amount)]
-
-    case "Decrement":
-      return [noop, (store - action.amount)]
-
-    case "Reset":
-       return [noop, 0]
-  }
+const main = (action: parameter, store: storage): return_ => {
+  let storage = match(action, {
+    Increment: n => store + n,
+    Decrement: n => store - n,
+    Reset: () => 0
+  });
+  return [list([]), storage]
 };
 ```
 
@@ -113,24 +106,25 @@ WebAssembly:
 
 ## Deploying Our Contract
 
-We can originate our contract using the Deku Toolkit, a Javascript package for
-interacting with The toolkit depends on [Taquito](https://tezostaquito.io/) for
+We can originate our contract using the Deku C Toolkit, a Typescript package for
+interacting with deku canonical. The toolkit depends on [Taquito](https://tezostaquito.io/) for
 signing interactions with Deku chain. Taquito provides options for using a variety
 of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
 
 ```js
-import { DekuCClient } from "@marigold-dev/deku-toolkit"
+import { DekuCClient } from "@marigold-dev/deku-c-toolkit"
+import { fromMemorySigner } from "@marigold-dev/deku-toolkit"
 import { InMemorySigner } from "@taquito/signer"
 
-const signer = new InMemorySigner(
+const memory = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
 );
+const signer = fromMemorySigner(memory);
 
 const dekuC = new DekuCClient({
+  dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
+  ligoRpc: "https://ligo.ghostnet.marigold.dev"
   signer,
-  dekuRPC: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
-  tezosRPC: "https://ghostnet.tezos.marigold.dev/",
-  ligoRPC: "https://ligo.ghostnet.marigold.dev"
 });
 ```
 
@@ -139,17 +133,18 @@ Try running the example.
 
 ```js live noInline
 const params = {
-  initialStorage: ["Int", 42],
-  code: incrementWASMCode,
-  // including the LIGO source code is optional, but simplifies contract interactions
-  source: { kind: "JsLIGO", code: incrementLigoCode }
+  kind: "jsligo",
+  initialStorage: 1,
+  // The deku-c client will compile your jsligo code for you
+  code: incrementLigoCode,
 };
 
 println(`Deploying contract with initial storage ${JSON.stringify(params.initialStorage)}...`);
-
-dekuC.originateContract(params).then(contractAddress => {
-  println(`Deployment successful! New contract address: ${contractAddress}`);
-});
+dekuC.originateContract(params)
+  .then(({operation, address}) => {
+    println(`Operation successful! Operation hash: ${operation}`);
+    println(`Deployment successful! New contract address: ${address}`);
+  });
 ```
 <br/>
 
@@ -163,28 +158,23 @@ deploy contracts to Deku-C directly from your browser with the [LIGO Playground]
 Once deployed, we can query and subscribe to our contract's state with the Deku-C client.
 
 ```js
-const myContract = dekuC.contract(window.myContractAddress)
+const myContract = dekuC.contract(window.myContractAddress);
 
 const currentState = await myContract.getState();
 
-myContract.subscribe(({invocation, newState}) => ...)
+myContract.subscribe((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newtate)}`));
 ```
 
 We can also invoke the contract like so:
 
 ```js
-// ...
-await myContract.invoke("JsLIGO", "Increment(3)"))
-
-// or
-
-myContract.invoke("Raw", ["Union", [ "Left", [ "Union", [ "Left", [ "Int", "3" ] ] ] ])
+myContract.invoke(["Union", [ "Left", [ "Union", [ "Left", [ "Int", "3" ] ] ] ])
 ```
 
 :::info
-You can determine the raw contract parameters using the Ligo compiler:
+You can determine the contract parameters using the Ligo compiler:
 ```
-ligo compile parameters ./increment.jsligo 'Increment (2)'  --wasm
+ligo compile parameter ./increment.jsligo 'Increment (2)'  --wasm
 ```
 :::
 
@@ -201,28 +191,26 @@ contract's address and try it out!
   const MyFirstDApp = () => {
     const contractAddress = "DK1..."; // 👈 Replace with your contract address
     const myContract = dekuC.contract(contractAddress);
-    const [counter, setCounter] = useState(null);
+    const [counter, setCounter] = useState(1); // The initial value can be your initial state
     const [delta, setDelta] = useState(1);
     const handleInputChange = (event) => setDelta(event.target.value);
     const handleIncrement = () => myContract.invoke("Increment", int(delta));
     const handleDecrement = () => myContract.invoke("Decrement", int(delta));
     const handleReset = () => myContract.invoke("Reset");
     useEffect(() => {
-      myContract.subscribe(({newState}) => setCounter(newState));
-    });
-    return <div>
-      <h3>Connected to contract: {contractAddress}</h3>
-      <p>
-        <p><b>Current Counter State: {counter}</b></p>
-        <button onClick={handleIncrement}>-</button>
-        <input value={delta} onChange={handleInputChange}/>
-        <button onClick={handleDecrement}>+</button>
-      </p>
-      <button onClick={handleReset}>Reset</button>
-    </div>
+      myContract.onNewState(newState => setCounter(newState));
+    }, []);
+    return (
+      <div>
+        <h3>Connected to contract: {contractAddress}</h3>
+        <b><p>Current Counter State: {counter}</p></b>
+        <p><input value={delta} onChange={handleInputChange}/></p>
+        <button onClick={handleDecrement}>Increment</button>
+        <button onClick={handleIncrement}>Decrement</button>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+    );
   };
   render(<MyFirstDApp/>)
 `}>
 </ComponentCodeBlock>
-
-</!-->

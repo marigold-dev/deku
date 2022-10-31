@@ -66,13 +66,13 @@ export class Contract {
    */
   async invoke(parameter: any): Promise<string> {
     const invoke = {
-      type_: "Invoke",
-      content: {
-        address: this.address, // TODO: how to handle entrypoints ?
-        argument: parameter,
-      },
+      operation: JSON.stringify({
+        address: this.address,
+        argument: parameter
+      }),
+      tickets: []
     };
-    const hash = await this.deku.submitVmOperation(JSON.stringify(invoke));
+    const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }
 
@@ -99,8 +99,7 @@ export class Contract {
     if (state === null || state === undefined) return null;
     const slashRemoved = state.replaceAll('\\"', '"');
     const json = JSON.parse(slashRemoved);
-    if (json["LigoContract"] === null) throw "Only Ligo contract are supported"; // TODO: support others
-    return json["LigoContract"]["storage"];
+    return json["state"];
   }
 
   async onNewState(callback: (state: JSONType) => void): Promise<void> {

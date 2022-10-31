@@ -2,6 +2,7 @@ import { JSONType } from "./contract";
 
 export const createOperation = async (
   ligoRpc: string,
+  dekuRpc: string,
   {
     kind,
     code,
@@ -10,18 +11,21 @@ export const createOperation = async (
 ) => {
   switch (kind) {
     case "jsligo": {
-      const body = {
-        lang: "jsligo",
-        source: code,
-        storage: initialStorage + "",
-      };
       const options = {
         method: "POST",
-        body: JSON.stringify(body),
+        body: JSON.stringify({ lang: "jsligo", source: code }),
       };
       const result = await fetch(ligoRpc + "/api/v1/ligo/originate", options);
-      const orignate = await result.json();
-      return orignate;
+      const { code: source } = await result.json();
+      const dekuOptions = {
+        method: "POST",
+        body: JSON.stringify({
+          source,
+          storage: initialStorage + ""
+        })
+      };
+      const dekuRes = await fetch(dekuRpc + "/api/v1/helpers/compile-contract", dekuOptions)
+      return dekuRes.json();
     }
     default:
       throw "Not yet supported";

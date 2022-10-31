@@ -72,6 +72,7 @@ const getState = async (contract: Contract): Promise<unknown> => {
 // Wait 10 seconds
 // Decrement the counter by 3
 const test = async () => {
+  // const address = "DK1SheQfNGZ2QY5QWdAEF6KDXBAJTjBJBirh";
   const { address } = await originate();
   const contract: Contract = getContract(address);
 

@@ -1,6 +1,6 @@
 {
   "name": "@marigold-dev/deku-c-toolkit",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Deku typescript client to interact with deku-c",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
@@ -16,7 +16,7 @@
   "author": "contact@marigold.dev",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku-toolkit": "0.1.10"
+    "@marigold-dev/deku-toolkit": "0.1.11"
   },
   "devDependencies": {
     "@taquito/signer": "^14.0.0",
