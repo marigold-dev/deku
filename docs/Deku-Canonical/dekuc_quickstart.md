@@ -14,7 +14,7 @@ You'll learn how to:
 
 - Write a simple smart contract in [Ligo](https://ligolang.org/).
 - Compile and deploy it to Deku-C
-- Interact with the contract via `deku-toolkit` npm package
+- Interact with the contract via [deku-c-toolkit](https://www.npmjs.com/package/@marigold-dev/deku-c-toolkit) npm package
 - Create a DApp using React and the Deku-C client
 
 ## Installing the Tools
