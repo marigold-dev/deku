@@ -115,43 +115,43 @@ in {
             # LockPersonality = "yes";
           };
         };
-      };
-      deku-api = {
-        description = "Deku api";
-        after = ["network.target"];
-        wantedBy = ["multi-user.target"];
-        path = [pkgs.nodejs-16_x];
-        environment = cfg.environment;
-        serviceConfig = {
-          Type = "simple";
-          ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
-          Restart = "on-failure";
-          StateDirectory = "deku_api";
-          RuntimeDirectory = "deku_api";
-          RuntimeDirectoryPreserve = "yes";
+        deku-api = {
+          description = "Deku api";
+          after = ["network.target"];
+          wantedBy = ["multi-user.target"];
+          path = [pkgs.nodejs-16_x];
+          environment = cfg.environment;
+          serviceConfig = {
+            Type = "simple";
+            ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
+            Restart = "on-failure";
+            StateDirectory = "deku_api";
+            RuntimeDirectory = "deku_api";
+            RuntimeDirectoryPreserve = "yes";
+          };
         };
-      };
-      deku-api-vm = {
-        description = "Deku API VM";
-        after = ["network.target"];
-        wantedBy = ["multi-user.target"];
-        before = ["deku-api.service"];
-        path = [pkgs.nodejs-16_x];
-        environment = cfg.environment;
-        serviceConfig = {
-          Type = "simple";
-          ExecStart = (
-            let
-              command =
-                if cfg.vmType == "wasm"
-                then wasmVM
-                else cookieVM;
-            in "${command} /run/deku/api_vm_pipe"
-          );
-          Restart = "on-failure";
-          StateDirectory = "deku_api";
-          RuntimeDirectory = "deku_api";
-          RuntimeDirectoryPreserve = "yes";
+        deku-api-vm = {
+          description = "Deku API VM";
+          after = ["network.target"];
+          wantedBy = ["multi-user.target"];
+          before = ["deku-api.service"];
+          path = [pkgs.nodejs-16_x];
+          environment = cfg.environment;
+          serviceConfig = {
+            Type = "simple";
+            ExecStart = (
+              let
+                command =
+                  if cfg.vmType == "wasm"
+                  then wasmVM
+                  else cookieVM;
+              in "${command} /run/deku/api_vm_pipe"
+            );
+            Restart = "on-failure";
+            StateDirectory = "deku_api";
+            RuntimeDirectory = "deku_api";
+            RuntimeDirectoryPreserve = "yes";
+          };
         };
       };
       sockets = {
