@@ -82,6 +82,7 @@ let global (inst : module_inst) x = lookup "global" inst.globals x
 let elem (inst : module_inst) x = lookup "element segment" inst.elems x
 let data (inst : module_inst) x = lookup "data segment" inst.datas x
 let local (frame : frame) x = lookup "local" frame.locals x
+let inst frame = frame.inst
 
 let any_ref inst x i at =
   try Table.load (table inst x) i
@@ -142,6 +143,7 @@ let elem_oob frame x i n =
 
 let rec step (c : config) : config =
   let { frame; code = vs, es; _ } = c in
+  Instance.burn_gas (inst frame) 100L;
   let e = List.hd es in
   let vs', es' =
     match (e.it, vs) with
@@ -615,7 +617,7 @@ let rec step (c : config) : config =
             in
             (vs', [ Frame (n2, frame', ([], instr')) @@ e.at ])
         | Func.HostFunc (t, f) -> (
-            try (List.rev (f (List.rev args)) @ vs', [])
+            try (List.rev (f (ref (inst frame)) (List.rev args)) @ vs', [])
             with Crash (_, msg) -> Crash.error e.at msg))
   in
   { c with code = (vs', es' @ List.tl es) }
@@ -629,13 +631,25 @@ let rec eval (c : config) : value stack =
 (* Functions & Constants *)
 
 let invoke (func : func_inst) (vs : value list) : value list =
-  let at = match func with Func.AstFunc (_, _, f) -> f.at | _ -> no_region in
+  let at =
+    match func with Func.AstFunc (_, inst, f) -> f.at | _ -> no_region
+  in
+  let gas =
+    match func with
+    | Func.AstFunc (_, inst, _) -> Instance.get_gas_limit !inst
+    | _ -> Int64.max_int
+  in
   let (FuncType (ins, out)) = Func.type_of func in
   if List.length vs <> List.length ins then
     Crash.error at "wrong number of arguments";
   if not (List.for_all2 (fun v -> ( = ) (type_of_value v)) vs ins) then
     Crash.error at "wrong types of arguments";
-  let c = config empty_module_inst (List.rev vs) [ Invoke func @@ at ] in
+  let c =
+    config
+      { empty_module_inst with gas_limit = gas }
+      (List.rev vs)
+      [ Invoke func @@ at ]
+  in
   try List.rev (eval c)
   with Stack_overflow -> Exhaustion.error at "call stack exhausted"
 
@@ -683,23 +697,84 @@ let create_data (inst : module_inst) (seg : data_segment) : data_inst =
   let { dinit; _ } = seg.it in
   ref dinit
 
-let add_import (m : module_) (ext : extern) (im : import) (inst : module_inst) :
-    module_inst =
-  if not (match_extern_type (extern_type_of ext) (import_type m im)) then
-    Link.error im.at
-      ("incompatible import type for " ^ "\""
-      ^ Utf8.encode im.it.module_name
-      ^ "\" " ^ "\""
-      ^ Utf8.encode im.it.item_name
-      ^ "\": " ^ "expected "
-      ^ Types.string_of_extern_type (import_type m im)
-      ^ ", got "
-      ^ Types.string_of_extern_type (extern_type_of ext));
-  match ext with
-  | ExternFunc func -> { inst with funcs = func :: inst.funcs }
-  | ExternTable tab -> { inst with tables = tab :: inst.tables }
-  | ExternMemory mem -> { inst with memories = mem :: inst.memories }
-  | ExternGlobal glob -> { inst with globals = glob :: inst.globals }
+module State = struct
+  module Indexed = Map.Make (Int)
+
+  type _ kind =
+    | Table : table_inst -> table_inst kind
+    | Func : func_inst -> func_inst kind
+    | Memory : memory_inst -> memory_inst kind
+    | Global : global_inst -> global_inst kind
+
+  type t = {
+    mutable funcs : func_inst Indexed.t;
+    mutable tables : table_inst Indexed.t;
+    mutable memories : memory_inst Indexed.t;
+    mutable globals : global_inst Indexed.t;
+  }
+
+  let empty =
+    {
+      funcs = Indexed.empty;
+      tables = Indexed.empty;
+      memories = Indexed.empty;
+      globals = Indexed.empty;
+    }
+
+  let add (type a) (t : t) idx (kind : a kind) =
+    match kind with
+    | Table x -> t.tables <- Indexed.add idx x t.tables
+    | Func x -> t.funcs <- Indexed.add idx x t.funcs
+    | Memory x -> t.memories <- Indexed.add idx x t.memories
+    | Global x -> t.globals <- Indexed.add idx x t.globals
+
+  let finalize ({ tables; memories; funcs; globals } : t) =
+    let final x = Indexed.to_seq x |> Seq.map snd |> List.of_seq in
+    (final tables, final memories, final funcs, final globals)
+end
+
+module Name_map = Map.Make (Utf8)
+
+let add_imports (m : module_) (exts : (Utf8.t * extern) list) (im : import list)
+    (inst : module_inst) : module_inst =
+  let named_map =
+    Name_map.of_seq
+      (List.to_seq im
+      |> Seq.mapi (fun idx ({ it = x; at = _ } as y) -> (x.item_name, (y, idx)))
+      )
+  in
+  let state = State.empty in
+  let () =
+    List.iter
+      (fun (ext_name, ext) ->
+        let item = Name_map.find_opt ext_name named_map in
+        let im, idx =
+          match item with
+          | Some x -> x
+          | None ->
+              Link.error Source.no_region
+                (Format.sprintf "Redundant host function provided: %s\n"
+                   (Utf8.encode ext_name))
+        in
+        if not (match_extern_type (extern_type_of ext) (import_type m im)) then
+          Link.error im.at
+            ("incompatible import type for " ^ "\""
+            ^ Utf8.encode im.it.module_name
+            ^ "\" " ^ "\""
+            ^ Utf8.encode im.it.item_name
+            ^ "\": " ^ "expected "
+            ^ Types.string_of_extern_type (import_type m im)
+            ^ ", got "
+            ^ Types.string_of_extern_type (extern_type_of ext));
+        match ext with
+        | ExternFunc func -> State.add state idx (State.Func func)
+        | ExternTable tab -> State.add state idx (State.Table tab)
+        | ExternMemory mem -> State.add state idx (State.Memory mem)
+        | ExternGlobal glob -> State.add state idx (State.Global glob))
+      exts
+  in
+  let tables, memories, funcs, globals = State.finalize state in
+  { inst with funcs; globals; memories; tables }
 
 let init_func (inst : module_inst) (func : func_inst) =
   match func with
@@ -739,7 +814,8 @@ let run_data i data =
 
 let run_start start = [ Call start.it.sfunc @@ start.at ]
 
-let init (m : module_) (exts : extern list) : module_inst =
+let init (m : module_) (exts : (Utf8.t * extern) list) ~gas_limit : module_inst
+    =
   let {
     imports;
     tables;
@@ -754,12 +830,13 @@ let init (m : module_) (exts : extern list) : module_inst =
   } =
     m.it
   in
-  if List.length exts <> List.length imports then
-    Link.error m.at "wrong number of imports provided for initialisation";
+  (* if List.length exts <> List.length imports then
+     Link.error m.at "wrong number of imports provided for initialisation"; *)
   let inst0 =
     {
-      (List.fold_right2 (add_import m) exts imports empty_module_inst) with
+      (add_imports m exts imports empty_module_inst) with
       types = List.map (fun type_ -> type_.it) types;
+      gas_limit;
     }
   in
   let fs = List.map (create_func inst0) funcs in

@@ -1,45 +1,62 @@
-type codepoint = int
-type unicode = codepoint list
+type codepoint = Uchar.t [@@deriving equal, compare]
+type t = String.t [@@deriving equal, compare]
 
 exception Utf8
 
-let con n = 0x80 lor (n land 0x3f)
+let encode x = x
 
-let rec encode ns = Lib.String.implode (List.map Char.chr (encode' ns))
+module Deser = struct
+  type t = { s : string; len : int; mutable i : int }
 
-and encode' = function
-  | [] -> []
-  | n :: ns when n < 0 -> raise Utf8
-  | n :: ns when n < 0x80 -> n :: encode' ns
-  | n :: ns when n < 0x800 -> (0xc0 lor (n lsr 6)) :: con n :: encode' ns
-  | n :: ns when n < 0x10000 ->
-      (0xe0 lor (n lsr 12)) :: con (n lsr 6) :: con n :: encode' ns
-  | n :: ns when n < 0x110000 ->
-      (0xf0 lor (n lsr 18))
-      :: con (n lsr 12)
-      :: con (n lsr 6)
-      :: con n :: encode' ns
-  | _ -> raise Utf8
+  let make ?(idx = 0) (s : string) : t = { s; i = idx; len = String.length s }
+end
 
-let con b = if b land 0xc0 = 0x80 then b land 0x3f else raise Utf8
+let next_ (type a) (st : Deser.t) ~(yield : codepoint -> a) ~(stop : unit -> a)
+    () : a =
+  let open Deser in
+  let malformed st = raise Utf8 in
+  let read_multi ?(overlong = 0) n_bytes acc =
+    let rec aux j acc =
+      let c = Char.code st.s.[st.i + j] in
+      if c lsr 6 <> 0b10 then malformed st;
+      if j = 1 && overlong <> 0 && c land 0b111111 < overlong then malformed st;
+      let next = (acc lsl 6) lor (c land 0b111111) in
+      if j = n_bytes then
+        if Uchar.is_valid next then (
+          st.i <- st.i + j + 1;
+          yield (Uchar.of_int next))
+        else malformed st
+      else aux (j + 1) next
+    in
+    assert (n_bytes >= 1);
+    if st.i + n_bytes < st.len then aux 1 acc else malformed st
+  in
+  if st.i >= st.len then stop ()
+  else
+    let c = st.s.[st.i] in
 
-let code min n =
-  if n < min || (0xd800 <= n && n < 0xe000) || n >= 0x110000 then raise Utf8
-  else n
+    match c with
+    | '\000' .. '\127' ->
+        st.i <- 1 + st.i;
+        yield (Uchar.of_char c)
+    | '\194' .. '\223' -> read_multi 1 (Char.code c land 0b11111)
+    | '\225' .. '\239' -> read_multi 2 (Char.code c land 0b1111)
+    | '\241' .. '\244' -> read_multi 3 (Char.code c land 0b111)
+    | '\224' -> read_multi ~overlong:0b00100000 2 (Char.code c land 0b1111)
+    | '\240' -> read_multi ~overlong:0b00010000 3 (Char.code c land 0b111)
+    | '\128' .. '\193' | '\245' .. '\255' -> malformed st
 
-let rec decode s = decode' (List.map Char.code (Lib.String.explode s))
+let validate_exn (s : string) : bool =
+  let exception Stop in
+  try
+    let st = Deser.make s in
+    while true do
+      next_ st ~yield:(fun _ -> ()) ~stop:(fun () -> raise Stop) ()
+    done;
+    assert false
+  with
+  | Utf8 -> raise Utf8
+  | Failure _ -> raise Utf8
+  | Stop -> true
 
-and decode' = function
-  | [] -> []
-  | b1 :: bs when b1 < 0x80 -> code 0x0 b1 :: decode' bs
-  | b1 :: bs when b1 < 0xc0 -> raise Utf8
-  | b1 :: b2 :: bs when b1 < 0xe0 ->
-      code 0x80 (((b1 land 0x1f) lsl 6) + con b2) :: decode' bs
-  | b1 :: b2 :: b3 :: bs when b1 < 0xf0 ->
-      code 0x800 (((b1 land 0x0f) lsl 12) + (con b2 lsl 6) + con b3)
-      :: decode' bs
-  | b1 :: b2 :: b3 :: b4 :: bs when b1 < 0xf8 ->
-      code 0x10000
-        (((b1 land 0x07) lsl 18) + (con b2 lsl 12) + (con b3 lsl 6) + con b4)
-      :: decode' bs
-  | _ -> raise Utf8
+let decode s = if validate_exn s then s else raise Utf8
