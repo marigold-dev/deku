@@ -36,8 +36,9 @@ let string s =
       | 'u' ->
         let j = !i + 2 in
         i := String.index_from s j '}';
-        let n = int_of_string ("0x" ^ String.sub s j (!i - j)) in
-        let bs = Utf8.encode [n] in
+        let n = ("0x" ^ String.sub s j (!i - j)) in
+        let () = Utf8.decode n |> ignore in
+        let bs = n in
         Buffer.add_substring b bs 0 (String.length bs - 1);
         bs.[String.length bs - 1]
       | h ->

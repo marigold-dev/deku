@@ -1,4 +1,7 @@
 open Types
+module Out_of_gas = Error.Make ()
+
+exception Out_of_gas = Out_of_gas.Error
 
 type module_inst = {
   types : func_type list;
@@ -9,6 +12,7 @@ type module_inst = {
   exports : export_inst list;
   elems : elem_inst list;
   datas : data_inst list;
+  mutable gas_limit : I64.t;
 }
 
 and func_inst = module_inst ref Func.t
@@ -59,7 +63,16 @@ let empty_module_inst =
     exports = [];
     elems = [];
     datas = [];
+    gas_limit = I64.zero;
   }
+
+let[@inline always] burn_gas t amount =
+  if I64.(gt_u t.gas_limit amount) then
+    t.gas_limit <- Int64.(sub t.gas_limit amount)
+  else raise (Out_of_gas (Source.no_region, "out of gas"))
+
+let set_gas_limit t limit = t.gas_limit <- limit
+let get_gas_limit t = t.gas_limit
 
 let extern_type_of = function
   | ExternFunc func -> ExternFuncType (Func.type_of func)

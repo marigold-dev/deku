@@ -31,7 +31,7 @@ let print_value v =
   Printf.printf "%s : %s\n" (Values.string_of_value v)
     (Types.string_of_value_type (Values.type_of_value v))
 
-let print (FuncType (_, out)) vs =
+let print (FuncType (_, out)) _ vs =
   List.iter print_value vs;
   flush_all ();
   List.map default_value out

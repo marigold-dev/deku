@@ -19,10 +19,10 @@ let add_char buf = function
   | c when '\x20' <= c && c < '\x7f' -> Buffer.add_char buf c
   | c -> add_hex_char buf c
 
-let add_unicode_char buf = function
-  | (0x09 | 0x0a) as uc -> add_char buf (Char.chr uc)
-  | uc when 0x20 <= uc && uc < 0x7f -> add_char buf (Char.chr uc)
-  | uc -> Printf.bprintf buf "\\u{%02x}" uc
+(* let add_unicode_char buf = function
+   | (0x09 | 0x0a) as uc -> add_char buf (Char.chr uc)
+   | uc when 0x20 <= uc && uc < 0x7f -> add_char buf (Char.chr uc)
+   | uc -> Printf.bprintf buf "\\u{%02x}" uc *)
 
 let string_with iter add_char s =
   let buf = Buffer.create 256 in
@@ -33,7 +33,7 @@ let string_with iter add_char s =
 
 let bytes = string_with String.iter add_hex_char
 let string = string_with String.iter add_char
-let name = string_with List.iter add_unicode_char
+let name = Utf8.encode
 let list_of_opt = function None -> [] | Some x -> [ x ]
 let list f xs = List.map f xs
 let listi f xs = List.mapi f xs
