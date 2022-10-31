@@ -158,28 +158,23 @@ deploy contracts to Deku-C directly from your browser with the [LIGO Playground]
 Once deployed, we can query and subscribe to our contract's state with the Deku-C client.
 
 ```js
-const myContract = dekuC.contract(window.myContractAddress)
+const myContract = dekuC.contract(window.myContractAddress);
 
 const currentState = await myContract.getState();
 
-myContract.subscribe(({invocation, newState}) => ...)
+myContract.subscribe((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newtate)}`));
 ```
 
 We can also invoke the contract like so:
 
 ```js
-// ...
-await myContract.invoke("JsLIGO", "Increment(3)"))
-
-// or
-
-myContract.invoke("Raw", ["Union", [ "Left", [ "Union", [ "Left", [ "Int", "3" ] ] ] ])
+myContract.invoke(["Union", [ "Left", [ "Union", [ "Left", [ "Int", "3" ] ] ] ])
 ```
 
 :::info
-You can determine the raw contract parameters using the Ligo compiler:
+You can determine the contract parameters using the Ligo compiler:
 ```
-ligo compile parameters ./increment.jsligo 'Increment (2)'  --wasm
+ligo compile parameter ./increment.jsligo 'Increment (2)'  --wasm
 ```
 :::
 
