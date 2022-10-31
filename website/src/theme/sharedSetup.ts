@@ -1,53 +1,29 @@
-import { InMemorySigner } from "@taquito/signer";
+import { InMemorySigner } from "@taquito/signer"
+import { DekuCClient } from "@marigold-dev/deku-c-toolkit";
+import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
 
-// FIXME:
-// import { DekuCClient } from "@marigold-dev/deku-toolkit";
-class DekuCClient {
-  constructor(params) {
-    console.log("dekuc params", params);
-  }
-  originateContract({ initialStorage, code }) {
-    console.log("deploying with", initialStorage, code);
-    return new Promise((res) =>
-      setTimeout(() => res("DK1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"), 3000)
-    );
-  }
-  contract(contractAddress: string): any {
-    return {
-      invoke: (...params) => console.log("invoked params", params),
-      subscribe: (...params) => console.log("subscribe params", params),
-    };
-  }
-}
-
-const typeUtilities = {
-  // adt's
-  pair: (a, b) => ["Pair", a, b],
-  some: (a) => ["Option", "Some", a],
-  none: () => ["Option", "None"],
-  map: (map) => ["Map", ...Object.entries(map)],
-  set: (...set) => ["Set", ...set],
-  list: (...list) => ["List", ...list],
-  // not sure how to handle union types
-  // left: ...
-  // right: ...
-
-  // basic types, but maybe we can interpret these automatically
-  // nbd if we can't for now
-  unit: () => ["Unit"],
-  int: (n) => ["Int", n],
-  bool: (b) => ["Bool", b ? "True" : "False"],
-};
-
-const signer = new InMemorySigner(
+const memory = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
 );
 
+const signer = fromMemorySigner(memory);
+
+// More convenient for dev/testing
+// TODO: remove this when ligoRpc and dekuRpc are reployed
+
+const isLocalhost = window.location.hostname === "localhost";
+const dekuRpc = isLocalhost ? "http://0.0.0.0:8080" : "https://deku-canonical-vm0.deku-v1.marigold.dev";
+const ligoRpc = isLocalhost ? "http://0.0.0.0:9090" : "https://ghostnet.tezos.marigold.dev"
+
+console.log(dekuRpc);
+console.log(ligoRpc);
+
 const dekuC = new DekuCClient({
+  dekuRpc,
+  ligoRpc,
   signer,
-  dekuRPC: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
-  tezosRPC: "https://ghostnet.tezos.marigold.dev/",
 });
+
 const incrementLigoCode = `
 type storage = int;
 
@@ -308,5 +284,4 @@ export default {
   incrementLigoCode,
   incrementWASMCode,
   dekuC,
-  typeUtilities,
 };
