@@ -1,7 +1,7 @@
-type codepoint = Uchar.t
-type t [@@deriving equal, compare]
+type codepoint = int
+type unicode = codepoint list
 
 exception Utf8
 
-val decode : string -> t (* raises Utf8 *)
-val encode : t -> string (* raises Utf8 *)
+val decode : string -> unicode (* raises Utf8 *)
+val encode : unicode -> string (* raises Utf8 *)

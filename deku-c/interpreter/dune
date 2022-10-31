@@ -7,10 +7,7 @@
  ; We also need to exclude the 'wasm' module as it overlaps with the library
  ; name.
  ; 'smallint' is a separate test module.
- (modules :standard \ main wasm smallint)
- (libraries deku_stdlib)
- (preprocess
-  (pps ppx_jane)))
+ (modules :standard \ main wasm smallint))
 
 (executable
  (name main)
@@ -42,3 +39,14 @@
  (_
   (flags
    (-w +a-4-27-42-44-45-70 -warn-error +a-3))))
+
+(rule
+ (alias runtest)
+ (deps
+  ./main.exe
+  ./smallint.exe
+  (source_tree ../test))
+ (action
+  (progn
+   (run ../test/core/run.py --wasm ./main.exe)
+   (run ./smallint.exe))))
