@@ -106,24 +106,25 @@ WebAssembly:
 
 ## Deploying Our Contract
 
-We can originate our contract using the Deku Toolkit, a Javascript package for
-interacting with The toolkit depends on [Taquito](https://tezostaquito.io/) for
+We can originate our contract using the Deku C Toolkit, a Typescript package for
+interacting with deku canonical. The toolkit depends on [Taquito](https://tezostaquito.io/) for
 signing interactions with Deku chain. Taquito provides options for using a variety
 of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
 
 ```js
-import { DekuCClient } from "@marigold-dev/deku-toolkit"
+import { DekuCClient } from "@marigold-dev/deku-c-toolkit"
+import { fromMemorySigner } from "@marigold-dev/deku-toolkit"
 import { InMemorySigner } from "@taquito/signer"
 
-const signer = new InMemorySigner(
+const memory = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
 );
+const signer = fromMemorySigner(memory);
 
 const dekuC = new DekuCClient({
+  dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
+  ligoRpc: "https://ligo.ghostnet.marigold.dev"
   signer,
-  dekuRPC: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
-  tezosRPC: "https://ghostnet.tezos.marigold.dev/",
-  ligoRPC: "https://ligo.ghostnet.marigold.dev"
 });
 ```
 
@@ -132,17 +133,18 @@ Try running the example.
 
 ```js live noInline
 const params = {
-  initialStorage: ["Int", 42],
-  code: incrementWASMCode,
-  // including the LIGO source code is optional, but simplifies contract interactions
-  source: { kind: "JsLIGO", code: incrementLigoCode }
+  kind: "jsligo",
+  initialStorage: 1,
+  // The deku-c client will compile your jsligo code for you
+  code: incrementLigoCode,
 };
 
 println(`Deploying contract with initial storage ${JSON.stringify(params.initialStorage)}...`);
-
-dekuC.originateContract(params).then(contractAddress => {
-  println(`Deployment successful! New contract address: ${contractAddress}`);
-});
+dekuC.originateContract(params)
+  .then(({operation, address}) => {
+    println(`Operation successful! Operation hash: ${operation}`);
+    println(`Deployment successful! New contract address: ${address}`);
+  });
 ```
 <br/>
 
