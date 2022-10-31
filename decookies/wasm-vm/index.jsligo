@@ -84,7 +84,7 @@ type operationType = | ["Mint"] | ["Transfer"] | ["Eat"];
 type parameter =
   {
     operationType,
-    operation: actions,
+    operation: option<actions>,
     amount: nat,
     recipient: option<address>
   };
@@ -95,7 +95,7 @@ type return_ =
    storage];
 
 const calculateCost = 
-  (ope: parameter, cookieBaker: cookieBaker): nat => {match(ope.operation, {Cookie: () => {return (0
+  (ope: actions, cookieBaker: cookieBaker): nat => {match(ope, {Cookie: () => {return (0
        as nat)},
     Cursor: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.cursors);
@@ -162,7 +162,8 @@ const main =
      Tezos.get_source();
    return [list([]),
     match(ope.operationType, {Mint: () => 
-       match(ope.operation, {Cookie: () => {let cookieBaker: cookieBaker = 
+       {let operation = Option.unopt_with_error(ope.operation, "Operation is mandatory for minting");
+       match(operation, {Cookie: () => {let cookieBaker: cookieBaker = 
            force_access(player as address, cookieBakers);
          let cookies = cookieBaker.cookies + (1 as nat);
          let cookieBakers = 
@@ -175,7 +176,7 @@ const main =
             cookieBaker.cursors + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.cursorCost);
-          let cursorCost = calculateCost(ope, cookieBaker);
+          let cursorCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -191,7 +192,7 @@ const main =
             cookieBaker.grandmas + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.grandmaCost);
-          let grandmaCost = calculateCost(ope, cookieBaker);
+          let grandmaCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -207,7 +208,7 @@ const main =
             cookieBaker.farms + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.farmCost);
-          let farmCost = calculateCost(ope, cookieBaker);
+          let farmCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -223,7 +224,7 @@ const main =
             cookieBaker.mines + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.mineCost);
-          let mineCost = calculateCost(ope, cookieBaker);
+          let mineCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -239,7 +240,7 @@ const main =
             cookieBaker.factories + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.factoryCost);
-          let factoryCost = calculateCost(ope, cookieBaker);
+          let factoryCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -255,7 +256,7 @@ const main =
             cookieBaker.banks + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.bankCost);
-          let bankCost = calculateCost(ope, cookieBaker);
+          let bankCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -271,7 +272,7 @@ const main =
             cookieBaker.temples + (1 as nat);
           let cookies = 
             abs(cookieBaker.cookies - cookieBaker.templeCost);
-          let templeCost = calculateCost(ope, cookieBaker);
+          let templeCost = calculateCost(operation, cookieBaker);
           let passiveCPS = calculateCPS(cookieBaker);
           let cookieBakers = 
             Map.update(player as address, Some
@@ -280,7 +281,7 @@ const main =
                temples: temples,
                templeCost: templeCost,
                passiveCPS: passiveCPS}), cookieBakers);
-          return cookieBakers} else {return cookieBakers}}}),
+          return cookieBakers} else {return cookieBakers}}})},
      Eat: () => {let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
       let eatenCookies = 
