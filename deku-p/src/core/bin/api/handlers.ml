@@ -261,7 +261,7 @@ end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Ocaml_wasm_vm.State.t [@@deriving yojson_of]
+  type response = Yojson.Safe.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "state" / s "unix" /? nil)
@@ -270,7 +270,7 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
   let handler ~path:_ ~state =
     let Api_state.{ protocol; _ } = state in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ok vm_state
+    Ocaml_wasm_vm.State.to_json_api vm_state |> Result.ok
 end
 
 module Get_vm_state_key : NO_BODY_HANDLERS = struct
@@ -366,4 +366,38 @@ module Compute_contract_hash : HANDLERS = struct
     let blake2b = Operation_hash.to_blake2b hash in
     let address = Deku_ledger.Contract_address.of_user_operation_hash blake2b in
     Ok { address }
+end
+
+module Helper_compile_origination : HANDLERS = struct
+  open Ocaml_wasm_vm
+
+  type path = unit
+  type body = { source : string; storage : string } [@@deriving of_yojson]
+  type response = Operation_payload.t [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "compile-contract" /? nil)
+  let route = Routes.(path @--> ())
+
+  let handler ~path:() ~body:{ source; storage } ~state:_ =
+    let tickets, init = Tunac.Compiler.compile_value storage |> Result.get_ok in
+    let inputs = source in
+    let wat, constants, entrypoints =
+      inputs |> Tunac.Compiler.compile |> Result.get_ok
+    in
+    let out = Tunac.Output.make wat constants |> Result.get_ok in
+    let entrypoints = entrypoints |> Option.value ~default:[] in
+    Operation_payload.
+      {
+        tickets;
+        operation =
+          Operation.Originate
+            {
+              module_ = out.module_;
+              entrypoints = Entrypoints.of_assoc entrypoints;
+              constants;
+              initial_storage = init;
+            };
+      }
+    |> Result.ok
 end

@@ -1641,7 +1641,7 @@
     bs58check "^2.1.2"
 
 "@marigold-dev/deku-toolkit@file:deku-p/deku-toolkit":
-  version "0.1.10"
+  version "0.1.11"
   dependencies:
     "@taquito/taquito" "^13.0.1"
     blakejs "^1.2.1"

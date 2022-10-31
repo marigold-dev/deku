@@ -316,7 +316,7 @@ export class DekuToolkit {
    * @returns the hash the submitted operation
    */
   async submitVmOperation(
-    payload: string,
+    payload: unknown,
     options?: OptOptions
   ): Promise<OperationHashType> {
     const { source, level, nonce } = await this.parseOperationOptions(options);
