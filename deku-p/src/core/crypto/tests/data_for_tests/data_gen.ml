@@ -108,6 +108,11 @@ struct
       List.map
         (fun string -> Blake2B.hash_bytes string |> Blake2B.to_bytes)
         (List.map (fun bytes -> [ bytes ]) byte_data)
+
+    let signatures =
+      List.map
+        (fun sk -> List.map (fun hash -> (sign sk hash, hash)) byte_data)
+        secret_keys
   end
 
   module Print_secret_key = struct
@@ -179,5 +184,16 @@ struct
         |> String.map (fun char -> (Char.code char |> Int.to_string).[0])
       in
       Format.printf "let to_sign = \"%s\"\n%!" to_sign
+
+    let print_signatures () =
+      Format.printf "let signatures = \n%!";
+      let out =
+        List.map
+          (fun sig_list ->
+            List.map (fun (sg, _) -> helper_print_signatures sg) sig_list)
+          Sig.signatures
+      in
+      let out = String.concat "" (List.flatten out) in
+      Format.printf "\"%s\"\n%!" out
   end
 end
