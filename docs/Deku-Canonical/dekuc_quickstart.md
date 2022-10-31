@@ -191,25 +191,25 @@ contract's address and try it out!
   const MyFirstDApp = () => {
     const contractAddress = "DK1..."; // 👈 Replace with your contract address
     const myContract = dekuC.contract(contractAddress);
-    const [counter, setCounter] = useState(null);
+    const [counter, setCounter] = useState(1); // The initial value can be your initial state
     const [delta, setDelta] = useState(1);
     const handleInputChange = (event) => setDelta(event.target.value);
     const handleIncrement = () => myContract.invoke("Increment", int(delta));
     const handleDecrement = () => myContract.invoke("Decrement", int(delta));
     const handleReset = () => myContract.invoke("Reset");
     useEffect(() => {
-      myContract.subscribe(({newState}) => setCounter(newState));
-    });
-    return <div>
-      <h3>Connected to contract: {contractAddress}</h3>
-      <p>
-        <p><b>Current Counter State: {counter}</b></p>
-        <button onClick={handleIncrement}>-</button>
-        <input value={delta} onChange={handleInputChange}/>
-        <button onClick={handleDecrement}>+</button>
-      </p>
-      <button onClick={handleReset}>Reset</button>
-    </div>
+      myContract.onNewState(newState => setCounter(newState));
+    }, []);
+    return (
+      <div>
+        <h3>Connected to contract: {contractAddress}</h3>
+        <b><p>Current Counter State: {counter}</p></b>
+        <p><input value={delta} onChange={handleInputChange}/></p>
+        <button onClick={handleDecrement}>Increment</button>
+        <button onClick={handleIncrement}>Decrement</button>
+        <button onClick={handleReset}>Reset</button>
+      </div>
+    );
   };
   render(<MyFirstDApp/>)
 `}>
