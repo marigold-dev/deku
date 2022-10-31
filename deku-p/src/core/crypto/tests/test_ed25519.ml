@@ -88,6 +88,7 @@ let run () =
           test_case "compare" `Quick Test_secret_key_data.compare;
           test_case "equality" `Quick Test_secret_key_data.equality;
         ] );
+      ("Public key", [ test_case "compared" `Quick Test_key_data.compare ]);
       ( "Key hash",
         [
           test_case "compare" `Quick Test_key_hash_data.compare;

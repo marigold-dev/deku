@@ -22,6 +22,11 @@ struct
       List.for_all (fun sk -> Secret.equal sk sk) secret_keys
   end
 
+  module Key_data = struct
+    let public_keys = List.map (fun id -> id.public_key) ids
+    let compared_public_keys = List.sort Key.compare public_keys
+  end
+
   module Key_hash_data = struct
     let key_hashes = List.map (fun id -> id.public_key_hash) ids
     let compared_key_hashes = List.sort Key_hash.compare key_hashes
@@ -54,6 +59,16 @@ struct
         ~msg:"secret key equality works"
         ~expected:Tezos_data.equality_secret_keys
         ~actual:Secret_key_data.equality_secret_keys
+  end
+
+  module Test_key_data = struct
+    let compare () =
+      let compared_public_keys =
+        List.map (fun pk -> Key.to_b58 pk) Key_data.compared_public_keys
+      in
+      Alcotest.(check' (list string))
+        ~msg:"public key comparison works"
+        ~expected:Tezos_data.compared_public_keys ~actual:compared_public_keys
   end
 
   module Test_key_hash_data = struct
