@@ -27,7 +27,7 @@ const parseContractState = (json: JSONType): JSONType => {
             return mapValues.reduce((acc: { [key: string]: JSONType }, entry) => {
                 if (!Array.isArray(entry)) return acc;
                 const key = parseContractState(entry[0]) as string; // It should always be a string
-                const value = parseContractState(entry[0]);
+                const value = parseContractState(entry[1]);
                 return { [key]: value, ...acc }
             }, {});
         }
