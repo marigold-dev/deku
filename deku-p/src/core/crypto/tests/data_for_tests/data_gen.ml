@@ -70,6 +70,9 @@ struct
       List.map (fun sk -> Secret_key.to_public_key sk) secret_keys
 
     let compare_secret_keys = List.sort Secret_key.compare secret_keys
+
+    let equality_secret_keys =
+      List.for_all (fun sk -> Secret_key.equal sk sk) secret_keys
   end
 
   module Print_secret_key = struct
@@ -87,5 +90,8 @@ struct
         Skt_key.compare_secret_keys;
       Format.printf "]\n%!"
 
+    let print_equality_secret_keys () =
+      Format.printf "let equality_secret_keys = %b\n%!"
+        Skt_key.equality_secret_keys
   end
 end
