@@ -4,7 +4,7 @@
                    (or (or (unit %bank) (unit %cookie)) (or (unit %cursor) (unit %factory)))
                    (or (or (unit %farm) (unit %grandma)) (or (unit %mine) (unit %temple)))))
           (or %operationType (or (unit %eat) (unit %mint)) (unit %transfer))
-          (address %recipient)) ;
+          (option %recipient address)) ;
   storage
     (map address
          (pair (pair (pair (pair (pair (nat %bankCost) (nat %banks)) (nat %cookies) (nat %cursorCost))
@@ -47,7 +47,7 @@
            (pair (lambda (pair nat nat) nat)
                  (pair (pair (pair nat (or (or (or unit unit) (or unit unit)) (or (or unit unit) (or unit unit))))
                              (or (or unit unit) unit)
-                             address)
+                             (option address))
                        (pair (pair (pair (pair nat nat) nat nat) (pair nat nat) nat nat)
                              (pair (pair nat nat) nat nat)
                              (pair nat nat)
@@ -1595,19 +1595,21 @@
              DUP 5 ;
              SWAP ;
              EXEC ;
-             DUP 4 ;
-             DUP 4 ;
+             DUP 3 ;
              CDR ;
              CDR ;
+             IF_NONE { PUSH string "There is not recipient" ; FAILWITH } {} ;
+             DUP 5 ;
+             DUP 2 ;
              PAIR ;
-             DIG 5 ;
+             DIG 6 ;
              SWAP ;
              EXEC ;
-             DUP 4 ;
+             DIG 4 ;
              CAR ;
              CAR ;
              DUP ;
-             DUP 4 ;
+             DUP 5 ;
              CAR ;
              CAR ;
              CAR ;
@@ -1623,7 +1625,7 @@
              CAR ;
              ADD ;
              DIG 6 ;
-             DIG 4 ;
+             DIG 5 ;
              DUP ;
              CDR ;
              DUP 2 ;
@@ -1652,7 +1654,7 @@
              PAIR ;
              PAIR ;
              SOME ;
-             DIG 4 ;
+             DIG 5 ;
              UPDATE ;
              DIG 2 ;
              DUP ;
@@ -1683,8 +1685,6 @@
              PAIR ;
              SOME ;
              DIG 2 ;
-             CDR ;
-             CDR ;
              UPDATE } ;
          NIL operation ;
          PAIR } }
