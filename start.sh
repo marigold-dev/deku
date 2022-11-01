@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+trap "trap - SIGTERM && kill -- -$$" SIGTERM EXIT
+trap 'kill $(jobs -p)' SIGINT
+
+if [ $(basename "$0") == start.sh ]
+then
+  dir=$(dirname $0)
+else # The script is being sourced
+  dir=.
+fi
+
+source $dir/scripts/common.sh
 
 vm=${1:-"wasm-vm"}
-
-dune build || exit 1
-
-dir=$(dirname $0)
-source $dir/scripts/common.sh
 
 export DEKU_TEZOS_RPC_NODE=${DEKU_TEZOS_RPC_NODE:-http://localhost:20000}
 message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
@@ -29,13 +34,9 @@ export DEKU_API_DOMAINS=8
 export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
 export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
 
-## The api needs its own vm
-# nix run ".#$vm" -- "$DEKU_API_VM" &
-_build/install/default/bin/deku-api &
+start_node() {
+  N="$1"
 
-sleep 3
-
-for N in 0 1 2 3; do
   source "./networks/flextesa/node_${N}_env"
 
   mkdir -p ./flextesa_chain/data/$N
@@ -54,9 +55,21 @@ for N in 0 1 2 3; do
     --default-block-size=10000 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
-    --named-pipe-path "./flextesa_chain/data/$N/pipe" \
-    --data-folder "./flextesa_chain/data/$N" &
+    --data-folder "./flextesa_chain/data/$N" \
+    --color=always 2> >(awk "\$0 !~ /WARNING/ { print \"$N: \" \$0 }" >&2) &
   sleep 0.1
-done
+}
 
+if [ $(basename "$0") == start.sh ]
+then
+  dune build || exit 1
+
+  ## The api needs its own vm
+  #  nix run ".#$vm" -- "$DEKU_API_VM" &
+  _build/install/default/bin/deku-api &
+
+  for N in 0 1 2 3; do
+    start_node $N
+  done
+fi
 wait
