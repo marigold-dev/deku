@@ -1,13 +1,9 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "outDir": "lib"
-        /* List of folders to include type definitions from. */
-    },
-    "include": [
-        "src/interop.ts",
-    ],
-    "exclude": [
-        "node_modules",
-    ]
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "lib"
+    /* List of folders to include type definitions from. */
+  },
+  "include": ["src/interop.ts"],
+  "exclude": ["node_modules"]
 }

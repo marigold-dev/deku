@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import CSS from "csstype";
 import logo from "./logo.png";
-import {
-  DekuToolkit,
-  fromMemorySigner,
-} from "@marigold-dev/deku-toolkit";
+import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 
 const containerStyle: CSS.Properties = {
@@ -19,8 +16,10 @@ const dekuSigner = fromMemorySigner(
   new InMemorySigner("edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq")
 );
 
-const deku = new DekuToolkit({ dekuRpc: "http://0.0.0.0:8080", dekuSigner })
-  .setTezosRpc("http://localhost:20000");
+const deku = new DekuToolkit({
+  dekuRpc: "http://0.0.0.0:8080",
+  dekuSigner,
+}).setTezosRpc("http://localhost:20000");
 
 const App: () => JSX.Element = () => {
   const [level, setLevel] = useState(0);
@@ -93,8 +92,8 @@ const App: () => JSX.Element = () => {
   }, []);
 
   /*
-* Example to retrieve vm state from the chain
-*/
+   * Example to retrieve vm state from the chain
+   */
   const getVmStateExample = async () => {
     const state = await deku.getVmState();
     return state;
@@ -154,18 +153,16 @@ const App: () => JSX.Element = () => {
 
   useEffect(() => {
     console.log("making a transfer");
-    transferExample()
-      .catch(console.error);
+    transferExample().catch(console.error);
   }, []);
 
   const noopExample = async () => {
     const hash = await deku.submitNoopOperation({ nonce: 0 });
     console.log(`Noop operation submitted: ${hash}`);
-  }
+  };
 
   useEffect(() => {
-    noopExample()
-      .catch(console.error);
+    noopExample().catch(console.error);
   }, []);
 
   return (
@@ -205,7 +202,9 @@ const App: () => JSX.Element = () => {
           children="Withdraw (to same address as the ticketer)"
         />
         <button
-          onClick={() => getVmStateExample().then(setVmState).catch(console.error)}
+          onClick={() =>
+            getVmStateExample().then(setVmState).catch(console.error)
+          }
           children="VM State"
         />
       </>

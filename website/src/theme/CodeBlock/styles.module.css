@@ -9,7 +9,7 @@
   caret-color: #2e2e2e;
 }
 
-[data-theme='dark'] .codeBlock {
+[data-theme="dark"] .codeBlock {
   background-color: #2e2e2e !important;
   caret-color: #f9f9f9;
 }

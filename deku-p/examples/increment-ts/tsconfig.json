@@ -1,20 +1,18 @@
 {
-    "compilerOptions": {
-      "target": "es5", 
-      "module": "commonjs", 
-      "rootDir": ".",
-      "strictPropertyInitialization": true,
-      "noImplicitThis": true,
-      "noImplicitReturns": true,
-      "strictNullChecks": true,
-      //"noUnusedLocals":true,
-      "noUnusedParameters": true,
-      "noFallthroughCasesInSwitch": true,
-      "noImplicitAny": true,
-      "strictBindCallApply": true,
-    },
-    "files": ["index.ts"],
-    "exclude": [
-      "node_modules"
-    ]
-  }
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "rootDir": ".",
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "strictNullChecks": true,
+    //"noUnusedLocals":true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true
+  },
+  "files": ["index.ts"],
+  "exclude": ["node_modules"]
+}
