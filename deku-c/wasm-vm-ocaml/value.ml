@@ -125,22 +125,25 @@ let encoding =
     union ~tag_size:`Uint8
       [
         case ~title:"Some" (Tag 13)
-          (tup2 string (dynamic_size a))
-          (function Some x -> Some ("Some", x) | _ -> None)
+          (tup2 (constant "Some") (dynamic_size a))
+          (function Some x -> Some ((), x) | _ -> None)
           (fun (_, x) -> Some x);
-        case ~title:"None" (Tag 14) (tup2 string unit)
-          (function None -> Some ("None", ()) | _ -> None)
+        case ~title:"None" (Tag 14)
+          (tup2 (constant "None") unit)
+          (function None -> Some ((), ()) | _ -> None)
           (fun (_, _) -> None);
       ]
   in
   let union_encoder a =
     union ~tag_size:`Uint8
       [
-        case ~title:"Left" (Tag 15) (tup2 string a)
-          (function Left x -> Some ("Left", x) | _ -> None)
+        case ~title:"Left" (Tag 15)
+          (tup2 (constant "Left") a)
+          (function Left x -> Some ((), x) | _ -> None)
           (fun (_, x) -> Left x);
-        case ~title:"Right" (Tag 16) (tup2 string a)
-          (function Right x -> Some ("Right", x) | _ -> None)
+        case ~title:"Right" (Tag 16)
+          (tup2 (constant "Right") a)
+          (function Right x -> Some ((), x) | _ -> None)
           (fun (_, x) -> Right x);
       ]
   in

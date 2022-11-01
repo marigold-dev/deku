@@ -3,7 +3,6 @@ open Deku_concepts
 open Deku_protocol
 open Deku_consensus
 open Deku_gossip
-open Deku_external_vm
 
 type chain = private
   | Chain of {
@@ -40,8 +39,7 @@ type action = private
     }
 [@@deriving show]
 
-val make :
-  validators:Key_hash.t list -> vm_state:External_vm_protocol.State.t -> chain
+val make : validators:Key_hash.t list -> vm_state:Ocaml_wasm_vm.State.t -> chain
 
 val incoming :
   raw_header:string -> raw_content:string -> chain -> chain * fragment option

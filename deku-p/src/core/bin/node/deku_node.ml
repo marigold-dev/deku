@@ -4,8 +4,6 @@ open Deku_crypto
 open Deku_block_storage
 open Deku_storage
 open Deku_chain
-open Deku_external_vm
-open Deku_protocol
 
 let make_dump_loop ~sw ~env ~folder =
   let resolver_ref = Atomic.make None in
@@ -57,9 +55,6 @@ type params = {
   tezos_consensus_address : Deku_tezos.Address.t;
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
-  named_pipe_path : string;
-      [@default "/run/deku/pipe"] [@env "DEKU_NAMED_PIPE_PATH"]
-      (** Named pipe path to use for IPC with the VM *)
   api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
 }
 [@@deriving cmdliner]
@@ -93,7 +88,6 @@ let main params style_renderer log_level =
     tezos_rpc_node;
     tezos_secret;
     tezos_consensus_address;
-    named_pipe_path;
     api_uri;
   } =
     params
@@ -126,10 +120,9 @@ let main params style_renderer log_level =
     if port = 4440 then api_uri :: validator_uris else validator_uris
   in
 
-  (* The VM must be started before the node because this call is blocking  *)
+  (* The VM must be started before the node because this call is blocking 
   Logs.info (fun m ->
-      m "Starting IPC with external vm at path %s" named_pipe_path);
-  let () = External_vm_client.start_vm_ipc ~named_pipe_path in
+      m "Starting IPC with external vm at path %s" named_pipe_path); *)
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
@@ -139,13 +132,9 @@ let main params style_renderer log_level =
   Logs.info (fun m -> m "Loaded chain from disk");
   let chain =
     match chain with
-    | Some chain ->
-        let (Chain { protocol; _ }) = chain in
-        let (Protocol.Protocol { vm_state; _ }) = protocol in
-        External_vm_client.set_initial_state vm_state;
-        chain
+    | Some chain -> chain
     | None ->
-        let vm_state = External_vm_client.get_initial_state () in
+        let vm_state = Ocaml_wasm_vm.State.empty in
         Chain.make ~validators ~vm_state
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in

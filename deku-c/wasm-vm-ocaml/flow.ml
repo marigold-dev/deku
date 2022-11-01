@@ -74,6 +74,7 @@ let apply raw_operation_hash state table tickets op =
         in
         match entrypoint with
         | None -> argument
+        | Some x when x = "" -> argument
         | Some x ->
             let path =
               match Entrypoints.get_path entrypoints x with

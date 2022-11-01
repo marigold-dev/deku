@@ -207,7 +207,6 @@ let test () =
   Parallel.Pool.run ~env ~domains:16 @@ fun () ->
   let open Deku_concepts in
   let open Deku_crypto in
-  let open Deku_external_vm in
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
   let domains = Eio.Stdenv.domain_mgr env in
@@ -233,9 +232,7 @@ let test () =
   in
 
   let start ~sw ~identity ~port =
-    let chain =
-      Chain.make ~validators ~vm_state:External_vm_protocol.State.empty
-    in
+    let chain = Chain.make ~validators ~vm_state:Ocaml_wasm_vm.State.empty in
     let dump _chain = () in
     let node =
       make ~identity ~default_block_size:100_000 ~dump ~chain ~indexer:None

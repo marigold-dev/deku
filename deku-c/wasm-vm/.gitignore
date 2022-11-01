@@ -1,8 +1,0 @@
-_build/
-*.install
-.merlin
-_opam/
-.vscode/
-/target
-**/target/**
-result
