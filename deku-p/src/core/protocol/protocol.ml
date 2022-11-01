@@ -1,6 +1,5 @@
 open Receipt
 open Deku_ledger
-open Deku_external_vm
 module Tezos_operation_hash = Deku_tezos.Tezos_operation_hash
 open Deku_stdlib
 
@@ -9,7 +8,7 @@ type protocol =
       included_operations : Included_operation_set.t;
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
-      vm_state : External_vm_protocol.State.t;
+      vm_state : Ocaml_wasm_vm.State.t;
     }
 
 and t = protocol [@@deriving yojson]
@@ -20,7 +19,7 @@ let initial =
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
-      vm_state = External_vm_protocol.State.empty;
+      vm_state = Ocaml_wasm_vm.State.empty;
     }
 
 let initial_with_vm_state ~vm_state =
@@ -60,18 +59,14 @@ let apply_operation ~current_level protocol operation :
             with
             | Ok ledger -> (ledger, Some receipt, vm_state, None)
             | Error error -> (ledger, Some receipt, vm_state, Some error))
-        | Operation_vm_transaction { sender; operation; tickets } -> (
+        | Operation_vm_transaction { sender; operation } -> (
             let receipt = Receipt.Vm_transaction_receipt { operation = hash } in
             let result () =
               let%some ledger =
-                if tickets = [] then Some ledger
+                if operation.tickets = [] then Some ledger
                 else
                   Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
-                      let tickets =
-                        List.map
-                          (fun (x, y) -> (x, Deku_concepts.Amount.of_n y))
-                          tickets
-                      in
+                      let tickets = operation.tickets in
                       let%some _, table =
                         Ticket_table.take_tickets ~sender ~ticket_ids:tickets
                           (get_table ())
@@ -79,70 +74,36 @@ let apply_operation ~current_level protocol operation :
                       in
                       Some (set_table table))
               in
-              let ledger_state =
-                object
-                  val mutable ledger_state = ledger
-                  method get_ledger = ledger_state
-
-                  method take_tickets address =
-                    Ledger.with_ticket_table ledger
-                      (fun ~get_table ~set_table ->
-                        let tickets, table =
-                          Ticket_table.take_all_tickets (get_table ())
-                            ~sender:address
-                        in
-                        ledger_state <- set_table table;
-                        List.map
-                          (fun (ticket_id, amount) ->
-                            (ticket_id, Deku_concepts.Amount.to_n amount))
-                          (List.of_seq tickets))
-
-                  method deposit addr (ticket_id, amount) =
-                    let amount = Deku_concepts.Amount.of_n amount in
-                    ledger_state <- Ledger.deposit addr amount ticket_id ledger
-                end
-              in
-              let%some source = Address.to_key_hash sender in
+              let source = sender in
               let receipt = Vm_transaction_receipt { operation = hash } in
               match
-                ( External_vm_client.apply_vm_operation_exn ~state:vm_state
-                    ~level ~source ~tickets ~ledger_api:ledger_state
-                    (Some (Operation_hash.to_blake2b hash, operation)),
-                  ledger_state#get_ledger )
+                Ocaml_wasm_vm.(
+                  Env.execute
+                    (Env.make ~state:vm_state ~ledger ~sender ~source)
+                    ~operation:operation.operation
+                    ~tickets:
+                      (List.map
+                         (fun (k, v) -> (k, Deku_concepts.Amount.to_n v))
+                         operation.tickets)
+                    ~operation_hash:(Operation_hash.to_blake2b hash)
+                  |> Env.finalize)
               with
-              | vm_state, ledger -> Some (ledger, Some receipt, vm_state, None)
-              | exception External_vm_client.Vm_execution_error error ->
-                  let () = failwith error in
-                  Some
-                    ( ledger,
-                      Some receipt,
-                      vm_state,
-                      Some (External_vm_client.Vm_execution_error error) )
+              | Ok (vm_state, ledger) ->
+                  Some (ledger, Some receipt, vm_state, None)
+              | Error _ -> None
             in
             match result () with
-            | Some result -> result
+            | Some result ->
+                let get (_, _, state, _) = state in
+                assert (get result <> vm_state);
+                result
             | None ->
                 ( ledger,
                   Some receipt,
                   vm_state,
                   Some (Failure "Error while executing external vm transaction")
                 ))
-        | Operation_noop { sender } -> (
-            match Address.to_key_hash sender with
-            | Some source ->
-                let vm_state =
-                  External_vm_client.apply_vm_operation_exn
-                    ~ledger_api:
-                      (object
-                         method take_tickets _ = assert false
-                         method deposit _ _ = assert false
-                      end)
-                    ~level ~state:vm_state ~source ~tickets:[] None
-                in
-                (ledger, None, vm_state, None)
-            | None ->
-                (* This case should not be possible unless a node is byzantine. *)
-                (ledger, None, vm_state, None))
+        | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id

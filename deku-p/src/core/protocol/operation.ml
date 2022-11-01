@@ -15,8 +15,7 @@ type operation =
     }
   | Operation_vm_transaction of {
       sender : Address.t;
-      operation : string;
-      tickets : (Ticket_id.t * N.t) list; [@opaque]
+      operation : Ocaml_wasm_vm.Operation.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -47,17 +46,16 @@ let encoding =
         (fun (sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
       case ~title:"vm_transaction" (Tag 1)
-        (tup3
+        (tup2
            (Data_encoding.dynamic_size Address.encoding)
-           string
-           (list (tup2 Ticket_id.encoding N.encoding)))
+           Ocaml_wasm_vm.Operation.encoding)
         (fun operation ->
           match operation with
-          | Operation_vm_transaction { sender; operation; tickets } ->
-              Some (sender, operation, tickets)
+          | Operation_vm_transaction { sender; operation } ->
+              Some (sender, operation)
           | _ -> None)
-        (fun (sender, operation, tickets) ->
-          Operation_vm_transaction { sender; operation; tickets });
+        (fun (sender, operation) ->
+          Operation_vm_transaction { sender; operation });
       case ~title:"withdraw" (Tag 2)
         (tup4
            (Data_encoding.dynamic_size Address.encoding)
@@ -213,9 +211,7 @@ module Signed = struct
 
   let vm_transaction ~nonce ~level ~content ~identity =
     let sender = Address.of_key_hash (Identity.key_hash identity) in
-    let operation =
-      Operation_vm_transaction { sender; operation = content; tickets = [] }
-    in
+    let operation = Operation_vm_transaction { sender; operation = content } in
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 end

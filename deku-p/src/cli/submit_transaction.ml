@@ -20,8 +20,10 @@ let main { wallet; api_uri; content } =
   let identity = Identity.make secret in
   let nonce = Utils.make_rnd_nonce () in
   let level = Api.current_level ~sw ~env ~api_uri in
+  let operation = Yojson.Safe.from_string content in
+  let operation = Ocaml_wasm_vm.Operation.t_of_yojson operation in
   let operation =
-    Operation.Signed.vm_transaction ~level ~nonce ~content ~identity
+    Operation.Signed.vm_transaction ~level ~nonce ~content:operation ~identity
   in
   let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
     operation

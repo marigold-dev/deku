@@ -1,7 +1,6 @@
 open Deku_crypto
 open Deku_concepts
 open Deku_ledger
-open Deku_stdlib
 
 exception Invalid_signature
 exception Invalid_source
@@ -15,8 +14,7 @@ type operation = private
     }
   | Operation_vm_transaction of {
       sender : Address.t;
-      operation : string;
-      tickets : (Ticket_id.t * N.t) list;
+      operation : Ocaml_wasm_vm.Operation.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -87,7 +85,7 @@ module Signed : sig
   val vm_transaction :
     nonce:Nonce.t ->
     level:Level.t ->
-    content:string ->
+    content:Ocaml_wasm_vm.Operation.t ->
     identity:Identity.t ->
     signed_operation
 
