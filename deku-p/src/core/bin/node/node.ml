@@ -29,6 +29,22 @@ let write_chain ~chain node =
   node.dump chain;
   node.chain <- chain
 
+let send_blocks ~sw ~connection ~above node =
+  match node.indexer with
+  | Some indexer ->
+      Eio.Fiber.fork ~sw @@ fun () ->
+      let rec send_while level =
+        match Block_storage.find_block_and_votes_by_level ~level indexer with
+        | Some network ->
+            let (Network_message { raw_header; raw_content }) = network in
+            Network_manager.send ~connection ~raw_header ~raw_content
+              node.network;
+            send_while (Level.next level)
+        | None -> ()
+      in
+      send_while above
+  | None -> ()
+
 let rec handle_chain_actions ~sw ~env ~actions node =
   List.iter (fun action -> handle_chain_action ~sw ~env ~action node) actions
 
@@ -43,10 +59,20 @@ and handle_chain_action ~sw ~env ~action node =
   | Chain_send_request { raw_header; raw_content } ->
       Network_manager.request ~raw_header ~raw_content node.network
   | Chain_fragment { fragment } -> handle_chain_fragment ~sw ~env ~fragment node
-  | Chain_save_block { block } -> (
+  | Chain_save_block { block; network } -> (
+      let on_error exn =
+        Logs.err (fun m ->
+            m "database/sqlite: exception %s" (Printexc.to_string exn))
+      in
       match node.indexer with
-      | Some indexer -> Block_storage.async_save_block ~sw ~block indexer
+      | Some indexer ->
+          Eio.Fiber.fork_sub ~sw ~on_error @@ fun _sw ->
+          let (Block { level; _ }) = block in
+          Block_storage.save_block_and_votes ~level ~network indexer;
+          Block_storage.save_block ~block indexer
       | None -> ())
+  | Chain_send_blocks { connection; above } ->
+      send_blocks ~sw ~connection ~above node
   | Chain_commit
       {
         current_level;

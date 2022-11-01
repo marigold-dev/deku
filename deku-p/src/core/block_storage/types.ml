@@ -1,6 +1,7 @@
 open Deku_stdlib
 open Deku_concepts
 open Deku_consensus
+open Deku_gossip
 
 module Level : Rapper.CUSTOM with type t = Level.t = struct
   type t = Level.t
@@ -56,6 +57,34 @@ module Block : Rapper.CUSTOM with type t = Yojson.Safe.t = struct
         Error
           (Format.sprintf "cannot decode block from the database: %s"
              (Printexc.to_string exn))
+    in
+    Caqti_type.(custom ~encode ~decode string)
+end
+
+module Message : Rapper.CUSTOM with type t = Message.Network.t = struct
+  type t = Message.Network.t
+
+  let t =
+    let encode network =
+      match Data_encoding.Binary.to_string Message.Network.encoding network with
+      | Ok binary -> Ok (Ezgzip.compress binary)
+      | Error error ->
+          Error
+            (Format.asprintf "write error: %a"
+               Data_encoding.Binary.pp_write_error error)
+    in
+    let decode compressed =
+      match Ezgzip.decompress compressed with
+      | Ok binary -> (
+          match
+            Data_encoding.Binary.of_string Message.Network.encoding binary
+          with
+          | Ok network -> Ok network
+          | Error error ->
+              Error
+                (Format.asprintf "%a" Data_encoding.Binary.pp_read_error error))
+      | Error (`Gzip error) ->
+          Error (Format.asprintf "%a" Ezgzip.pp_error error)
     in
     Caqti_type.(custom ~encode ~decode string)
 end

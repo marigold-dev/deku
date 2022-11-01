@@ -11,8 +11,6 @@ type chain =
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      oldest_trusted : Level.t;
-      trusted : Message.Network.t Level.Map.t;
     }
 
 and t = chain [@@deriving yojson]
@@ -20,14 +18,11 @@ and t = chain [@@deriving yojson]
 let encoding =
   let open Data_encoding in
   conv
-    (fun (Chain
-           { gossip; protocol; consensus; producer; oldest_trusted; trusted }) ->
-      (gossip, protocol, consensus, producer, oldest_trusted, trusted))
-    (fun (gossip, protocol, consensus, producer, oldest_trusted, trusted) ->
-      Chain { gossip; protocol; consensus; producer; oldest_trusted; trusted })
-    (tup6 Gossip.encoding Protocol.encoding Consensus.encoding Producer.encoding
-       Level.encoding
-       (Level.Map.encoding Message.Network.encoding))
+    (fun (Chain { gossip; protocol; consensus; producer }) ->
+      (gossip, protocol, consensus, producer))
+    (fun (gossip, protocol, consensus, producer) ->
+      Chain { gossip; protocol; consensus; producer })
+    (tup4 Gossip.encoding Protocol.encoding Consensus.encoding Producer.encoding)
 
 type fragment =
   | Fragment_gossip of { fragment : Gossip.fragment }
@@ -53,7 +48,7 @@ type outcome =
       protocol : Protocol.t;
       receipts : Receipt.t list;
     }
-  | Outcome_store of { level : Level.t; network : Message.Network.t }
+  | Outcome_store of { block : Block.t; network : Message.Network.t }
 
 type action =
   | Chain_timeout of { until : Timestamp.t }
@@ -65,7 +60,11 @@ type action =
     }
   | Chain_send_request of { raw_header : string; raw_content : string }
   | Chain_fragment of { fragment : fragment [@opaque] }
-  | Chain_save_block of { block : Block.t }
+  | Chain_save_block of {
+      block : Block.t;
+      network : Message.Network.t; [@opaque]
+    }
+  | Chain_send_blocks of { connection : Connection_id.t; above : Level.t }
   | Chain_commit of {
       current_level : Level.t;
       payload_hash : BLAKE2b.t;
@@ -76,29 +75,13 @@ type action =
     }
 [@@deriving show]
 
-(* helpers *)
-let rec drop ~level ~until by_level =
-  match Level.(until > level) with
-  | true ->
-      let by_level = Level.Map.remove level by_level in
-      let level = Level.next level in
-      drop ~level ~until by_level
-  | false -> Level.Map.remove until by_level
-
-let drop ~until by_level =
-  match Level.Map.min_binding_opt by_level with
-  | Some (level, _by_hash) -> drop ~level ~until by_level
-  | None -> by_level
-
 let make ~validators ~vm_state =
   let gossip = Gossip.initial in
   let validators = Validators.of_key_hash_list validators in
   let protocol = Protocol.initial_with_vm_state ~vm_state in
   let consensus = Consensus.make ~validators in
   let producer = Producer.empty in
-  let oldest_trusted = Level.zero in
-  let trusted = Level.Map.empty in
-  Chain { gossip; protocol; consensus; producer; oldest_trusted; trusted }
+  Chain { gossip; protocol; consensus; producer }
 
 let commit ~current_level ~block ~votes ~validators =
   let Block.(Block { payload_hash; _ }) = block in
@@ -237,24 +220,8 @@ let incoming_message ~identity ~current ~content chain =
         (chain, actions) votes
 
 let incoming_request ~connection ~above chain =
-  let (Chain { trusted; _ }) = chain in
-  let rev_messages =
-    Level.Map.fold
-      (fun level message messages ->
-        match Level.(level > above) with
-        | true -> message :: messages
-        | false -> messages)
-      trusted []
-  in
-  let actions =
-    List.rev_map
-      (fun network ->
-        let open Message.Network in
-        let (Network_message { raw_header; raw_content }) = network in
-        Chain_send_message { connection; raw_header; raw_content })
-      rev_messages
-  in
-  (chain, actions)
+  let action = Chain_send_blocks { connection; above } in
+  (chain, [ action ])
 
 let apply_gossip_action ~identity ~current ~gossip_action chain =
   match gossip_action with
@@ -340,7 +307,6 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
 
       (* TODO: only the producer should commit on Tezos *)
       let chain, actions = apply_consensus_actions chain actions in
-      let actions = Chain_save_block { block } :: actions in
       let actions =
         let level = Level.to_n current_level |> N.to_z |> Z.to_int in
         let self = Identity.key_hash identity in
@@ -358,38 +324,14 @@ let apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
       Logs.warn (fun m -> m "chain: wrong pending block");
       (Chain chain, [])
 
-let apply_store_outcome ~level ~network chain =
-  let (Chain ({ gossip; oldest_trusted; trusted; _ } as chain)) = chain in
+let apply_store_outcome ~block ~network chain =
+  let (Chain ({ gossip; _ } as chain)) = chain in
   (* TODO: detect if already trusted? *)
   (* TODO: is this the right place? *)
+  let (Block.Block { level; _ }) = block in
   let gossip = Gossip.close ~until:level gossip in
-  let trusted = Level.Map.add level network trusted in
-  let oldest_trusted, trusted =
-    let open Deku_constants in
-    let level_n = Level.to_n level in
-    let level_int = Z.to_int (N.to_z level_n) in
-    let trusted_cycle_int = Z.to_int (N.to_z trusted_cycle) in
-    (* TODO: this is a workaround *)
-    match level_int mod trusted_cycle_int = 0 && level_int <> 0 with
-    | true ->
-        (* drop previous cycle *)
-        let until =
-          ((level_int / trusted_cycle_int) - 1) * trusted_cycle_int
-          |> Z.of_int |> N.of_z
-          |> Option.value ~default:N.zero
-          |> Level.of_n
-        in
-        let trusted = drop ~until trusted in
-        let oldest_trusted = N.(level_n + trusted_cycle) in
-        let oldest_trusted = Level.of_n oldest_trusted in
-        (oldest_trusted, trusted)
-    | false -> (oldest_trusted, trusted)
-  in
-  let broadcast =
-    let (Network_message { raw_header; raw_content }) = network in
-    Chain_broadcast { raw_header; raw_content }
-  in
-  (Chain { chain with gossip; oldest_trusted; trusted }, [ broadcast ])
+  let save_block = Chain_save_block { block; network } in
+  (Chain { chain with gossip }, [ save_block ])
 
 let apply ~identity ~current ~outcome chain =
   match outcome with
@@ -399,8 +341,8 @@ let apply ~identity ~current ~outcome chain =
   | Outcome_apply { block; votes; protocol; receipts } ->
       apply_protocol_apply ~identity ~current ~block ~votes ~protocol ~receipts
         chain
-  | Outcome_store { level; network } ->
-      apply_store_outcome ~level ~network chain
+  | Outcome_store { block; network } ->
+      apply_store_outcome ~block ~network chain
 
 let compute ~identity ~default_block_size fragment =
   (* TODO: identity parameter here not ideal *)
@@ -450,13 +392,12 @@ let compute ~identity ~default_block_size fragment =
   | Fragment_store { block; votes } ->
       (* TODO: problem here is that only the initial 2/3 of votes
          is stored, ideally we should hold more votes *)
-      let (Block { level; _ }) = block in
       let votes = Verified_signature.Set.elements votes in
       let content = Message.Content.accepted ~block ~votes in
       let (Message { header = _; content = _; network }) =
         Message.encode ~content
       in
-      Outcome_store { level; network }
+      Outcome_store { block; network }
 
 let reload ~current chain =
   let chain, actions =
@@ -547,6 +488,7 @@ let test () =
                       compute ~identity ~default_block_size:100_000 fragment)
                 in
                 apply ~identity ~current ~outcome chain
+            | Chain_send_blocks _ -> (chain, [])
             | Chain_save_block _ -> (chain, [])
             | Chain_commit _ ->
                 Printf.eprintf "FIXME: commit not implemented in Chain.test\n%!";
