@@ -88,14 +88,9 @@ let apply_operation ~current_level protocol operation :
                     ~operation_hash:(Operation_hash.to_blake2b hash)
                   |> Env.finalize)
               with
-              | vm_state, ledger -> Some (ledger, Some receipt, vm_state, None)
-              | exception External_vm_client.Vm_execution_error error ->
-                  let () = failwith error in
-                  Some
-                    ( ledger,
-                      Some receipt,
-                      vm_state,
-                      Some (External_vm_client.Vm_execution_error error) )
+              | Ok (vm_state, ledger) ->
+                  Some (ledger, Some receipt, vm_state, None)
+              | Error _ -> None
             in
             match result () with
             | Some result ->

@@ -59,3 +59,7 @@ let encoding =
        (req "originated_by" (dynamic_size Address.encoding))
        (req "entrypoints" Entrypoints.encoding)
        (req "constants" (array (tup2 int16 Value.encoding))))
+
+let yojson_of_t t =
+  `String
+    (Data_encoding.Json.construct encoding t |> Data_encoding.Json.to_string)

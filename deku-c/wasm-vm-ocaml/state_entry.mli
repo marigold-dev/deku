@@ -10,7 +10,7 @@ type t =
       module_ : Wasm.Ast.module_';
     }
       -> t
-[@@deriving show, ord]
+[@@deriving show, ord, yojson_of]
 
 val make :
   entrypoints:Entrypoints.t ->
