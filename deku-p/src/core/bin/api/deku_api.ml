@@ -155,8 +155,7 @@ let main params =
   in
 
   let network = Network_manager.make ~identity in
-  let config = Block_storage.{ save_blocks = true; save_messages = true } in
-  let indexer = Block_storage.make ~uri:database_uri ~config in
+  let indexer = Block_storage.make ~uri:database_uri in
 
   let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =
