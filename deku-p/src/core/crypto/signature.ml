@@ -49,10 +49,10 @@ let key_encoding =
     let signature =
       match signature with
       | Ed25519 signature ->
-          Binary.to_string_exn Ed25519.Signature.encoding signature
+          Binary.to_bytes_exn Ed25519.Signature.encoding signature
       | Secp256k1 signature ->
-          Binary.to_string_exn Secp256k1.Signature.encoding signature
-      | P256 signature -> Binary.to_string_exn P256.Signature.encoding signature
+          Binary.to_bytes_exn Secp256k1.Signature.encoding signature
+      | P256 signature -> Binary.to_bytes_exn P256.Signature.encoding signature
     in
     (key, signature)
   in
@@ -60,21 +60,19 @@ let key_encoding =
     match key with
     | Key.Ed25519 _ ->
         let signature =
-          Binary.of_string_exn Ed25519.Signature.encoding signature
+          Binary.of_bytes_exn Ed25519.Signature.encoding signature
         in
         (key, Ed25519 signature)
     | Key.Secp256k1 _ ->
         let signature =
-          Binary.of_string_exn Secp256k1.Signature.encoding signature
+          Binary.of_bytes_exn Secp256k1.Signature.encoding signature
         in
         (key, Secp256k1 signature)
     | Key.P256 _ ->
-        let signature =
-          Binary.of_string_exn P256.Signature.encoding signature
-        in
+        let signature = Binary.of_bytes_exn P256.Signature.encoding signature in
         (key, P256 signature)
   in
-  conv to_pair of_pair (tup2 Key.encoding (Fixed.string size))
+  conv to_pair of_pair (tup2 Key.encoding (Fixed.bytes size))
 
 let zero = Ed25519 Ed25519.Signature.zero
 
