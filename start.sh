@@ -12,7 +12,7 @@ fi
 
 source $dir/scripts/common.sh
 
-vm=${1:-"wasm-vm"}
+# vm=${1:-"wasm-vm"}
 
 export DEKU_TEZOS_RPC_NODE=${DEKU_TEZOS_RPC_NODE:-http://localhost:20000}
 message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
@@ -42,11 +42,11 @@ start_node() {
   mkdir -p ./flextesa_chain/data/$N
 
   # Creates the FIFO
-  test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
-  test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
+  # test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
+  # test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
   # Starts the VM
-  nix run ".#$vm" -- "./flextesa_chain/data/$N/pipe" &
+  # nix run ".#$vm" -- "./flextesa_chain/data/$N/pipe" &
 
   sleep 0.4
 
@@ -55,7 +55,6 @@ start_node() {
     --default-block-size=10000 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
-    --named-pipe-path "./flextesa_chain/data/$N/pipe" \
     --data-folder "./flextesa_chain/data/$N" \
     --color=always 2> >(awk "\$0 !~ /WARNING/ { print \"$N: \" \$0 }" >&2) &
   sleep 0.1
@@ -66,7 +65,6 @@ then
   dune build || exit 1
 
   ## The api needs its own vm
-  nix run ".#$vm" -- "$DEKU_API_VM" &
   _build/install/default/bin/deku-api &
 
   for N in 0 1 2 3; do

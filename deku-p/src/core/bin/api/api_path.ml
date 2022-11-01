@@ -50,6 +50,18 @@ module Address = struct
     Routes.custom ~serialize ~parse ~label:":address" path
 end
 
+module Contract_address = struct
+  open Deku_ledger
+
+  type t = Contract_address.t
+
+  let parser path =
+    let open Deku_ledger in
+    let serialize address = Contract_address.to_b58 address in
+    let parse string = Contract_address.of_b58 string in
+    Routes.custom ~serialize ~parse ~label:":contract_address" path
+end
+
 module Ticketer = struct
   type t = Deku_ledger.Ticket_id.ticketer
 

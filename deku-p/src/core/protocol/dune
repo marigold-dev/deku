@@ -8,7 +8,8 @@
   deku_external_vm
   deku_tezos
   deku_ledger
-  deku_metrics)
+  deku_metrics
+  ocaml_wasm_vm)
  (preprocess
   (pps
    ppx_let_binding

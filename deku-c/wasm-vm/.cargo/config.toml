@@ -1,6 +1,0 @@
-
-[build]
-rustflags = ["-C", "target-cpu=native"]
-
-[env]
-RUST_TEST_THREADS = "1"

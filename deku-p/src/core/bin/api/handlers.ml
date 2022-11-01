@@ -3,7 +3,6 @@ open Deku_block_storage
 open Deku_stdlib
 open Deku_concepts
 open Deku_gossip
-open Deku_external_vm
 open Deku_network
 open Deku_protocol
 
@@ -262,7 +261,7 @@ end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = External_vm_protocol.State.t [@@deriving yojson_of]
+  type response = Ocaml_wasm_vm.State.t [@@deriving yojson_of]
 
   let meth = `GET
   let path = Routes.(version / s "state" / s "unix" /? nil)
@@ -275,17 +274,25 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
 end
 
 module Get_vm_state_key : NO_BODY_HANDLERS = struct
-  type path = string
-  type response = string option [@@deriving yojson_of]
+  open Deku_ledger
+
+  type path = Contract_address.t
+  type response = Ocaml_wasm_vm.State_entry.t option [@@deriving yojson_of]
 
   let meth = `GET
-  let path = Routes.(version / s "state" / s "unix" / str /? nil)
+
+  let path =
+    Routes.(
+      version / s "state" / s "unix" / Api_path.Contract_address.parser /? nil)
+
   let route = Routes.(path @--> fun key -> key)
 
   let handler ~path:key ~state =
     let Api_state.{ protocol; _ } = state in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    External_vm_protocol.State.get key vm_state |> Result.ok
+    Ok
+      (try Some (Ocaml_wasm_vm.State.fetch_contract vm_state key)
+       with _ -> None)
 end
 
 module Get_stats : NO_BODY_HANDLERS = struct

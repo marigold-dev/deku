@@ -7,7 +7,6 @@ open Deku_gossip
 open Api_state
 open Deku_protocol
 open Deku_consensus
-open Deku_external_vm
 open Deku_concepts
 
 let apply_block ~env ~folder ~state ~block =
@@ -120,7 +119,6 @@ type params = {
   tcp_port : int; [@env "DEKU_API_TCP_PORT"] [@default 5550]
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
-  named_pipe_path : string; [@env "DEKU_API_VM"]
   data_folder : string; [@env "DEKU_API_DATA_FOLDER"]
 }
 [@@deriving cmdliner]
@@ -133,7 +131,6 @@ let main params =
     tcp_port;
     database_uri;
     domains;
-    named_pipe_path;
     data_folder;
   } =
     params
@@ -160,13 +157,11 @@ let main params =
   let config = Block_storage.{ save_blocks = true; save_messages = true } in
   let indexer = Block_storage.make ~uri:database_uri ~config in
 
-  External_vm_client.start_vm_ipc ~named_pipe_path;
-
   let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =
     match state with
     | None ->
-        let vm_state = External_vm_client.get_initial_state () in
+        let vm_state = Ocaml_wasm_vm.State.empty in
         let protocol = Protocol.initial_with_vm_state ~vm_state in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in
@@ -176,8 +171,6 @@ let main params =
         let Api_state.Storage.{ protocol; current_block; receipts } =
           state_data
         in
-        let (Protocol.Protocol { vm_state; _ }) = protocol in
-        External_vm_client.set_initial_state vm_state;
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
           ~current_block ~receipts
   in
