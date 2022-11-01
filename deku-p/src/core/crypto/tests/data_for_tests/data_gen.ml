@@ -147,6 +147,11 @@ struct
     let compare_signatures =
       List.sort compare
         (List.map (fun (signature, _) -> signature) (List.flatten signatures))
+
+    let equality_signatures =
+      List.for_all
+        (fun (signature, _) -> equal signature signature)
+        (List.flatten signatures)
   end
 
   module Print_secret_key = struct
@@ -254,5 +259,8 @@ struct
       Format.printf "let compare_signatures = \n%!";
       let out = List.map helper_print_signatures Sig.compare_signatures in
       Format.printf "\"%s\"\n%!" (String.concat "" out)
+
+    let print_equality_signatures () =
+      Format.printf "let equality_signatures = %b\n%!" Sig.equality_signatures
   end
 end
