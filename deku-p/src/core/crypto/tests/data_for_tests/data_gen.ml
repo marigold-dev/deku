@@ -114,6 +114,20 @@ struct
         (fun sk -> List.map (fun hash -> (sign sk hash, hash)) byte_data)
         secret_keys
 
+    let signatures_to_b58 =
+      List.map
+        (fun sig_list ->
+          List.map
+            (fun (signature, hash) -> (to_b58check signature, hash))
+            sig_list)
+        signatures
+
+    let b58_to_signatures =
+      List.map
+        (fun sig_list ->
+          List.map (fun (b58, hash) -> (of_b58check_exn b58, hash)) sig_list)
+        signatures_to_b58
+
     let verified_normal =
       let check_sig pk signatures =
         List.map (fun (signature, hash) -> check pk signature hash) signatures
@@ -121,6 +135,14 @@ struct
       List.map2
         (fun key signatures -> check_sig key signatures)
         public_keys signatures
+
+    let verified_after_conversion =
+      let check_sig pk signatures =
+        List.map (fun (signature, hash) -> check pk signature hash) signatures
+      in
+      List.map2
+        (fun key signatures -> check_sig key signatures)
+        public_keys b58_to_signatures
   end
 
   module Print_secret_key = struct
@@ -212,6 +234,16 @@ struct
           List.iter (Format.printf "%b;\n%!") sig_list;
           Format.printf "];\n%!")
         Sig.verified_normal;
+      Format.printf "]\n%!"
+
+    let print_verified_after_conversion () =
+      Format.printf "let verified_after_conversion = [\n%!";
+      List.iter
+        (fun sig_list ->
+          Format.printf "[\n%!";
+          List.iter (Format.printf "%b;\n%!") sig_list;
+          Format.printf "];\n%!")
+        Sig.verified_after_conversion;
       Format.printf "]\n%!"
   end
 end
