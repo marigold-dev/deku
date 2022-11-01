@@ -104,5 +104,7 @@ let run () =
           test_case "signatures" `Quick Test_signature_data.signatures;
           test_case "verified normal signatures" `Quick
             Test_signature_data.verified_normal_signatures;
+          test_case "verified after conversion signatures" `Quick
+            Test_signature_data.verified_after_conversion;
         ] );
     ]
