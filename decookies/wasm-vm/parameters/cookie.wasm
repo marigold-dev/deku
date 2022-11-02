@@ -1,0 +1,29 @@
+{
+  "type_": "Invoke",
+  "tickets": [],
+  "content": {
+    "address": "address",
+    "argument": [
+      "Pair",
+      [
+        "Pair",
+        [ "Int", "1" ],
+        [
+          "Option",
+          [
+            "Union",
+            [
+              "Left",
+              [ "Union", [ "Left", [ "Union", [ "Right", [ "Unit" ] ] ] ] ]
+            ]
+          ]
+        ]
+      ],
+      [
+        "Pair",
+        [ "Union", [ "Left", [ "Union", [ "Right", [ "Unit" ] ] ] ] ],
+        [ "Option", null ]
+      ]
+    ]
+  }
+}

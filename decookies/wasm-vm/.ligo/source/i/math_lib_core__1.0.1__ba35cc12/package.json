@@ -1,0 +1,26 @@
+{
+    "name": "math-lib-core",
+    "version": "1.0.1",
+    "description": "A math basic library for LIGO",
+    "directories": {
+      "test": "test"
+    },
+    "main": "math.mligo",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ligolang/math-lib-cameligo.git",
+      "directory": "core"
+    },
+    "keywords": [
+      "tezos",
+      "ligo",
+      "math"
+    ],
+    "author": "ligoLANG <https://ligolang.org/>",
+    "license": "MIT",
+    "bugs": {
+      "url": "https://github.com/ligolang/math-lib-cameligo/issues"
+    },
+    "homepage": "https://github.com/ligolang/math-lib-cameligo#readme"
+  }
+  
