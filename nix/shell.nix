@@ -3,13 +3,12 @@
   deku,
   ligo,
   tuna,
-  vm_library,
   deploy-rs,
 }:
 with pkgs;
 with ocamlPackages;
   mkShell {
-    inputsFrom = [deku tuna vm_library];
+    inputsFrom = [deku tuna];
     packages = [
       # Formatters
       nixfmt
