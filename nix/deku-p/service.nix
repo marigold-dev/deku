@@ -42,11 +42,15 @@ in {
         deku-node = {
           description = "Deku node";
           after = ["network.target"];
+          requires = ["deku-vm.service"];
           wantedBy = ["multi-user.target"];
           path = [pkgs.nodejs-16_x];
           environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
+            # TODO : remove it when the bug will be fixed
+            # if before is not sufficient waiting seconds to be sure the deku-api has been started before. if no the API will not work
+            ExecStartPre="/run/current-system/sw/bin/sleep 5";
             ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node --named-pipe-path /run/deku/pipe";
             Restart = "on-failure";
             StateDirectory = "deku";
@@ -118,7 +122,11 @@ in {
         deku-api = {
           description = "Deku api";
           after = ["network.target"];
-          wantedBy = ["multi-user.target"];
+          requires = ["deku-api-vm.service"];
+          # TODO : remove it when the bug will be fixed
+          # Used to ensure this process start before deku-node
+          before = ["deku-node.service"];
+          wantedBy = ["multi-user.target" "deku-node.service"];
           path = [pkgs.nodejs-16_x];
           environment = cfg.environment;
           serviceConfig = {
