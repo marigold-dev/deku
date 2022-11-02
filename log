@@ -1,0 +1,739 @@
+[35m[1m**************************    Using Tezos RPC Node: http://localhost:20000    ********************************[0m
+warning: Git tree '/home/d4hines/repos/deku' is dirty
+warning: Git tree '/home/d4hines/repos/deku' is dirty
+warning: Using saved setting for 'extra-substituters = https://anmonteiro.nix-cache.workers.dev' from ~/.local/share/nix/trusted-settings.json.
+warning: Using saved setting for 'extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=' from ~/.local/share/nix/trusted-settings.json.
+warning: ignoring untrusted substituter 'https://anmonteiro.nix-cache.workers.dev'
+warning: Using saved setting for 'extra-substituters = https://anmonteiro.nix-cache.workers.dev' from ~/.local/share/nix/trusted-settings.json.
+warning: Using saved setting for 'extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=' from ~/.local/share/nix/trusted-settings.json.
+warning: ignoring untrusted substituter 'https://anmonteiro.nix-cache.workers.dev'
+warning: input 'flake-parts' has an override for a non-existent input 'nixpkgs'
+warning: input 'flake-parts' has an override for a non-existent input 'nixpkgs'
+warning: Git tree '/home/d4hines/repos/deku' is dirty
+warning: Using saved setting for 'extra-substituters = https://anmonteiro.nix-cache.workers.dev' from ~/.local/share/nix/trusted-settings.json.
+warning: Using saved setting for 'extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=' from ~/.local/share/nix/trusted-settings.json.
+warning: ignoring untrusted substituter 'https://anmonteiro.nix-cache.workers.dev'
+warning: input 'flake-parts' has an override for a non-existent input 'nixpkgs'
+warning: Git tree '/home/d4hines/repos/deku' is dirty
+warning: Using saved setting for 'extra-substituters = https://anmonteiro.nix-cache.workers.dev' from ~/.local/share/nix/trusted-settings.json.
+warning: Using saved setting for 'extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=' from ~/.local/share/nix/trusted-settings.json.
+warning: ignoring untrusted substituter 'https://anmonteiro.nix-cache.workers.dev'
+warning: input 'flake-parts' has an override for a non-existent input 'nixpkgs'
+warning: Git tree '/home/d4hines/repos/deku' is dirty
+warning: Using saved setting for 'extra-substituters = https://anmonteiro.nix-cache.workers.dev' from ~/.local/share/nix/trusted-settings.json.
+warning: Using saved setting for 'extra-trusted-public-keys = ocaml.nix-cache.com-1:/xI2h2+56rwFfKyyFVbkJSeGqSIYMC/Je+7XXqGKDIY=' from ~/.local/share/nix/trusted-settings.json.
+warning: ignoring untrusted substituter 'https://anmonteiro.nix-cache.workers.dev'
+warning: input 'flake-parts' has an override for a non-existent input 'nixpkgs'
+Operation received
+Operation received
+1: (node:1054641) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+1: (Use `node --trace-deprecation ...` to show where the warning was created)
+1: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918])
+1: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3EqpKJdQQKMEStGh3t2zvoiwSHASdBHCwNKPfa3AoJuZGw9ufx, level: 7919])
+1: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920])
+1: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921])
+1: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db44C4p5tagUGNiRhG4JfnUj3Uv1XKZzzAAQsEAM7ZrG7wanuhVL, level: 7922])
+1: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3samy8m7nBx2SZHMnFL4L39jARkdZsz3NVe3oCmgS2pwkmN2EE, level: 7923])
+1: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db3samy8m7nBx2SZHMnFL4L39jARkdZsz3NVe3oCmgS2pwkmN2EE, level: 7923];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924])
+1: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+1: con0: (node:1054619) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+0: (Use `node --trace-deprecation ...` to show where the warning was created)
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918])
+0: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3EqpKJdQQKMEStGh3t2zvoiwSHASdBHCwNKPfa3AoJuZGw9ufx, level: 7919])
+0: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920])
+0: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921])
+0: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db44C4p5tagUGNiRhG4JfnUj3Uv1XKZzzAAQsEAM7ZrG7wanuhVL, level: 7922])
+0: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3samy8m7nBx2SZHMnFL4L39jARkdZsz3NVe3oCmgS2pwkmN2EE, level: 7923])
+0: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924])
+0: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925])
+0: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+0: content: 3: (node:1054684) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+3: (Use `node --trace-deprecation ...` to show where the warning was created)
+3: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918])
+3: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3EqpKJdQQKMEStGh3t2zvoiwSHASdBHCwNKPfa3AoJuZGw9ufx, level: 7919])
+3: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920])
+3: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921])
+3: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db44C4p5tagUGNiRhG4JfnUj3Uv1XKZzzAAQsEAM7ZrG7wanuhVL, level: 7922])
+3: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3samy8m7nBx2SZHMnFL4L39jARkdZsz3NVe3oCmgS2pwkmN2EE, level: 7923])
+3: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924])
+3: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925])
+3: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+3: content: 2: (node:1054663) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2: (Use `node --trace-deprecation ...` to show where the warning was created)
+2: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3ApCqTiPjoPcgQWxFV5M1W6Dbovbhd3YKsjteqbxuyaKRi1CzG, level: 7918])
+2: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7918; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3EqpKJdQQKMEStGh3t2zvoiwSHASdBHCwNKPfa3AoJuZGw9ufx, level: 7919])
+2: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7919; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920])
+2: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7920; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2mTbtXxZy46RFzEy9Aw2ETKsxSd3SrELUBKE4C1F699DgHhSwY, level: 7920];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2WhqwspcWyUN7AJFgj6LRrGZ5J1epdnAetGUZJhMUwQA3hY8EU, level: 7921])
+2: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7921; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db44C4p5tagUGNiRhG4JfnUj3Uv1XKZzzAAQsEAM7ZrG7wanuhVL, level: 7922])
+2: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7922; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3samy8m7nBx2SZHMnFL4L39jARkdZsz3NVe3oCmgS2pwkmN2EE, level: 7923])
+2: content: Message.Content.Content_vote {level = 7923; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db4FRtfNzKdQMvCwyK7RpCANqNPcpXxLvW4GPaVAQWEahXBfdu8Z, level: 7924])
+2: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7924; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925])
+2: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db4FYP7KmKnFpMessage.Content.Content_vote {level = 7926; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db4FYP7KmKnFpvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926])
+3: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3KavknAYuwhEZhZU6Naq72Usfih8AD2JCjxRr7nkNDWDNNNgkY, level: 7927])
+3: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db3KavknAYuwhEZhZU6Naq72Usfih8AD2JCjxRr7nkNDWDNNNgkY, level: 7927];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928])
+3: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2gqcXSCGzTFXLBrDgjNov8JnmMVQTiwgrpcHqS7kMqqHVV39Pu, level: 7929])
+3: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930])
+3: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3dWFMZyS25WiYCL1xTYCvKM1upeJLQHqMHPQBnoo1RFuZZxiwQ, level: 7931])
+3: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db3dWFMZyS25WiYCL1xTYCvKM1upeJLQHqMHPQBnoo1RFuZZxiwQ, level: 7931];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3kc2ax52m53zZPdPgZCmS1KqeDB4cJtJV5rzKKBYS3yQGUGicQ, level: 7932])
+3: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933])
+3: conttent: (Message.Content.Content_block
+1:             Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925])
+1: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7925; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db3xX1YeMx9gTp1bzXgYRMV8uJbFjvX68UXPKsSWcu9Fzdsx1esa, level: 7925];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db4FYP7KmKnFpvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926])
+1: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3KavknAYuwhEZhZU6Naq72Usfih8AD2JCjxRr7nkNDWDNNNgkY, level: 7927])
+1: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928])
+1: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2gqcXSCGzTFXLBrDgjNov8JnmMVQTiwgrpcHqS7kMqqHVV39Pu, level: 7929])
+1: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930])
+1: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3dWFMZyS25WiYCL1xTYCvKM1upeJLQHqMHPQBnoo1RFuZZxiwQ, level: 7931])
+1: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3kc2ax52m53zZPdPgZCmS1KqeDB4cJtJV5rzKKBYS3yQGUGicQ, level: 7932])
+1: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933])
+1: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:        (Message.Content.Content_block
+0:             Block [hash: Db4FYP7KmKnFpvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926])
+0: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db4FYP7KmKnFpvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db4FYP7KmKnFpvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3KavknAYuwhEZhZU6Naq72Usfih8AD2JCjxRr7nkNDWDNNNgkY, level: 7927])
+0: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928])
+0: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2gqcXSCGzTFXLBrDgjNov8JnmMVQTiwgrpcHqS7kMqqHVV39Pu, level: 7929])
+0: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930])
+0: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3dWFMZyS25WiYCL1xTYCvKM1upeJLQHqMHPQBnoo1RFuZZxiwQ, level: 7931])
+0: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3kc2ax52m53zZPdPgZCmS1KqeDB4cJtJV5rzKKBYS3yQGUGicQ, level: 7932])
+0: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933])
+0: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2WsKSjPLzaEPFQzh2RcaGumaJhdB98Ky5yoHUumadxZsfH99mC, level: 7934])
+0: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+0: content: MvPKYFFJuH59pM53PUaAhNuhMo27m1AsU12bL2th, level: 7926])
+2: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7926; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3KavknAYuwhEZhZU6Naq72Usfih8AD2JCjxRr7nkNDWDNNNgkY, level: 7927])
+2: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7927; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db32iDYGMkRLgRdhfUvfmG1d2YUd75zHsDaoDWRPdVmtYPKNoMhj, level: 7928])
+2: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7928; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2gqcXSCGzTFXLBrDgjNov8JnmMVQTiwgrpcHqS7kMqqHVV39Pu, level: 7929])
+2: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7929; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2gqcXSCGzTFXLBrDgjNov8JnmMVQTiwgrpcHqS7kMqqHVV39Pu, level: 7929];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930])
+2: content: Message.Content.Content_vote {level = 7930; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2ouHffXJUz93ARTaoZt5AdA3M8qHNJwKhTpqp8WrStGXCMQXkV, level: 7930];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3dWFMZyS25WiYCL1xTYCvKM1upeJLQHqMHPQBnoo1RFuZZxiwQ, level: 7931])
+2: content: Message.Content.Content_vote {level = 7931; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3kc2ax52m53zZPdPgZCmS1KqeDB4cJtJV5rzKKBYS3yQGUGicQ, level: 7932])
+2: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7932; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933])
+2: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2WsKSjPLzaEPFQzh2RcaGumaJhdB98Ky5yoHUumadxZsfH99mC, level: 7934])
+2: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2WsKSjPLzaEPFQzh2RcaGumaJhdB98Ky5yoHUumadxZsfH99mC, level: 7934];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2YAF77WPvJ8nent: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7933; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2WsKSjPLzaEPFQzh2RcaGumaJhdB98Ky5yoHUumadxZsfH99mC, level: 7934])
+3: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2YAF77WPvJ8nTTKpbinuYnDT5bmWo6KpDjgcmpVQU8mXzZVisA, level: 7935])
+3: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db4DrK9mjrXdZQSYPh8uRSzXuphHpUpgvGuzezvujrLTQxypMZvQ, level: 7936])
+3: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2xwpbueNcC1zV2wGX6RJAUdAHhBEPBrCntCPTNEtjRUekFSDrL, level: 7937])
+3: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db44zswKdYFXMhXQXdxTJtdTTBvXiPxqoauSkR9DRPEtntbvRkHy, level: 7938])
+3: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939])
+3: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940])
+3: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+3: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+3: content: (Message.Content.Content_block
+3:             Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941])
+3: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+3: content: Message.Content.Content_accepted {
+3:            block =
+3:            Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941];
+3:            votes = [<opaque>; <opaque>; <opaque>]}
+3: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+3TTKpbinuYnDT5bmWo6KpDjgcmpVQU8mXzZVisA, level: 7935])
+2: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db4DrK9mjrXdZQSYPh8uRSzXuphHpUpgvGuzezvujrLTQxypMZvQ, level: 7936])
+2: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2xwpbueNcC1zV2wGX6RJAUdAHhBEPBrCntCPTNEtjRUekFSDrL, level: 7937])
+2: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2xwpbueNcC1zV2wGX6RJAUdAHhBEPBrCntCPTNEtjRUekFSDrL, level: 7937];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db44zswKdYFXMhXQXdxTJtdTTBvXiPxqoauSkR9DRPEtntbvRkHy, level: 7938])
+2: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db44zswKdYFXMhXQXdxTJtdTTBvXiPxqoauSkR9DRPEtntbvRkHy, level: 7938];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939])
+2: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940])
+2: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+2: content: Message.Content.Content_accepted {
+2:            block =
+2:            Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940];
+2:            votes = [<opaque>; <opaque>; <opaque>]}
+2: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941])
+2: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+2: content: (Message.Content.Content_block
+2:             Block [hash: Db3YjhAXwSMwqmcaVqFeWCVo2zNYWUtUfChyJN8Teg3jRciix4Pg, level: 7942])
+2: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+2: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+2: cont    Block [hash: Db31fcAfiKdy9uSBZXGvHngzTbeK5WWBotwLKGiU4JK2VVjewsFm, level: 7933];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2WsKSjPLzaEPFQzh2RcaGumaJhdB98Ky5yoHUumadxZsfH99mC, level: 7934])
+1: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2YAF77WPvJ8nTTKpbinuYnDT5bmWo6KpDjgcmpVQU8mXzZVisA, level: 7935])
+1: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db4DrK9mjrXdZQSYPh8uRSzXuphHpUpgvGuzezvujrLTQxypMZvQ, level: 7936])
+1: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2xwpbueNcC1zV2wGX6RJAUdAHhBEPBrCntCPTNEtjRUekFSDrL, level: 7937])
+1: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db44zswKdYFXMhXQXdxTJtdTTBvXiPxqoauSkR9DRPEtntbvRkHy, level: 7938])
+1: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939])
+1: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940])
+1: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941])
+1: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+1: content: Message.Content.Content_accepted {
+1:            block =
+1:            Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941];
+1:            votes = [<opaque>; <opaque>; <opaque>]}
+1: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+1: content: (Message.Content.Content_block
+1:             Block [hash: Db3YjhAXwSMwqmcaVqFeWCVo2zNYWUtUfChyJN8Teg3jRciix4Pg, level: 7942])
+1: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+1: content: Message.Content.Content_vote {level = 7943; vote = <opaque>}
+1: conessage.Content.Content_vote {level = 7934; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7934; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2YAF77WPvJ8nTTKpbinuYnDT5bmWo6KpDjgcmpVQU8mXzZVisA, level: 7935])
+0: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7935; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db4DrK9mjrXdZQSYPh8uRSzXuphHpUpgvGuzezvujrLTQxypMZvQ, level: 7936])
+0: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7936; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2xwpbueNcC1zV2wGX6RJAUdAHhBEPBrCntCPTNEtjRUekFSDrL, level: 7937])
+0: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7937; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db44zswKdYFXMhXQXdxTJtdTTBvXiPxqoauSkR9DRPEtntbvRkHy, level: 7938])
+0: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7938; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3sJMPr99brdFWQzgWTYfAkxb1FbhpPBhyC4CaHb5iUQTbrt4Tp, level: 7939])
+0: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7939; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db2wu2sJiZEdzw2Uce3754S64r6LkE88F23unBP5GNcSGQJL26Cr, level: 7940])
+0: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7940; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941])
+0: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7941; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db37vuWfiwYcxDtiCcbMrgtTkG8AZzRNx1m963G3bBhhySDjo6Ky, level: 7941];
+0:            votes = [<opaque>; <opaque>; <opaque>]}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3YjhAXwSMwqmcaVqFeWCVo2zNYWUtUfChyJN8Teg3jRciix4Pg, level: 7942])
+0: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7942; vote = <opaque>}
+0: content: (Message.Content.Content_block
+0:             Block [hash: Db3Bf8gLgYPeSSZQ2Vi9sAqjqBPCR12aNnNcNVBPb5ZMSCEwEL71, level: 7943])
+0: content: Message.Content.Content_vote {level = 7943; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7943; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7943; vote = <opaque>}
+0: content: Message.Content.Content_vote {level = 7943; vote = <opaque>}
+0: content: Message.Content.Content_accepted {
+0:            block =
+0:            Block [hash: Db3Bf8gLgYPeSSZQ2Vi9sAqjqBPCR12aNnNcNVBPb5ZMSCEwEL71, level: 7

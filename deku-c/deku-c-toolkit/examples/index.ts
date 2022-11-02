@@ -81,8 +81,11 @@ const test = async () => {
   });
 
   await sleep(10000);
-  const param = ["Union", ["Left", ["Union", ["Left", ["Int", "3"]]]]];
-  contract.invoke(param);
+  
+  console.log(await getState(contract));
+  // const param = ["Union", ["Left", ["Union", ["Left", ["Int", "3"]]]]];
+  // console.log("invoking contract");
+  // contract.invoke(param);
 };
 
 test().catch((err) => {

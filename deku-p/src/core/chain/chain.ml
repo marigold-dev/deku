@@ -196,7 +196,7 @@ let incoming_vote ~current ~level ~vote chain =
   apply_consensus_actions chain actions
 
 let incoming_operation ~operation chain =
-  Logs.info (fun m -> m "Incoming operation: %a" Operation.Signed.pp operation);
+  Format.eprintf "Incoming operation: %a\n%!" Operation.Signed.pp operation;
   let (Chain ({ producer; _ } as chain)) = chain in
   let producer = Producer.incoming_operation ~operation producer in
   let chain = Chain { chain with producer } in

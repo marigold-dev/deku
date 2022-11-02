@@ -255,6 +255,7 @@ module Post_operation : HANDLERS = struct
               { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
           operation
         in
+        Format.eprintf "Operation received\n%!";
         Network_manager.broadcast ~raw_header ~raw_content network;
         Ok { hash = operation_hash }
 end

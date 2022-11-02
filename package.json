@@ -8,7 +8,9 @@
     "deku-p/examples/increment-ts",
     "deku-p/sdks/typescript-sdk",
     "examples/tutorial",
-    "deku-c/deku-c-toolkit"
+    "deku-c/deku-c-toolkit",
+    "deku-c/deku-c-toolkit/examples",
+    "website"
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",

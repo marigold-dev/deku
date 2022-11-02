@@ -74,7 +74,9 @@ let apply_vm_operation_exn ~state ~ledger_api ~level ~source ~tickets operation
                  "External VM protocol violated: received Init after already \
                   initialized")
         | Stop -> finished := true
-        | Set { key; value } -> state := State.set key value !state
+        | Set { key; value } ->
+            Logs.warn (fun m -> m "Setting key %s to value: %s" key value);
+            state := State.set key value !state
         | Deposit_tickets { tickets; address } ->
             List.iter
               (fun (ticket, amount) ->

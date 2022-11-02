@@ -108,7 +108,11 @@ let apply ~outcome pool =
   (* TODO: be resilient to double apply *)
   match outcome with
   | Outcome_message { message } -> (
-      let (Message { header; _ }) = message in
+      let (Message { header; content; _ }) = message in
+      (match content with
+      | Message.Content.Content_operation _ ->
+          Format.eprintf "content: %a\n%!" Message.Content.pp content
+      | _ -> ());
       let (Message_header { hash; level }) = header in
       match state ~hash ~level pool with
       | Pending _ | Unknown ->
