@@ -80,7 +80,6 @@
               else pkgs.hello;
             deku = self'.packages.deku;
             tuna = self'.packages.tuna;
-            vm_library = self'.packages.vm_library;
             deploy-rs = deploy-rs.packages.${system}.default;
           };
         };
