@@ -7,8 +7,7 @@
 with lib; let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
-  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookies-vm}/lib/node_modules/decookies-vm/lib/src/index.js";
-  wasmVM = "${deku-packages."${config.nixpkgs.system}".vm_library}/bin/vm_library";
+  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookies-vm}/lib/node_modules/decookies-vm/lib/src/index.js"
 in {
   options.services.deku-node = {
     enable = mkEnableOption "deku node";
@@ -87,7 +86,7 @@ in {
               let
                 command =
                   if cfg.vmType == "wasm"
-                  then wasmVM
+                  then cookieVm
                   else cookieVM;
               in "${command} /run/deku/pipe"
             );
