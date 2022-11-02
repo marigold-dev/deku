@@ -52,7 +52,7 @@ let find_withdraw_proof ~operation_hash state =
       Logs.err (fun m -> m "Found a receipt that does not match");
       Error `Not_a_withdraw
 
-module Storage = struct
+module Api_storage = struct
   type t = {
     current_block : Block.t;
     protocol : Protocol.t;
@@ -96,4 +96,27 @@ module Storage = struct
     let temp = Eio.Path.(fs / folder / temp) in
     let file = Eio.Path.(fs / folder / file) in
     Eio.Path.rename temp file
+
+  let write_storage ~folder storage =
+    Eio_unix.run_in_systhread (fun () ->
+        let file = Filename.concat folder file in
+        let json = yojson_of_t storage in
+        Yojson.Safe.to_file file json)
+
+  let of_chain ~chain =
+    let (Deku_chain.Chain.Chain
+          {
+            gossip = _;
+            protocol;
+            consensus;
+            producer = _;
+            oldest_trusted = _;
+            trusted = _;
+          }) =
+      chain
+    in
+    let _ = chain in
+    let receipts = Operation_hash.Map.empty in
+    let current_block = Consensus.trusted_block consensus in
+    { current_block; protocol; receipts }
 end

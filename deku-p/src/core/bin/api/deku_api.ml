@@ -46,7 +46,7 @@ let apply_block ~env ~folder ~state ~block =
   (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
   state.is_sync <- true;
-  Api_state.Storage.write ~env ~folder state
+  Api_storage.write ~env ~folder state
 
 let on_accepted_block ~env ~folder ~state ~block =
   let (Block.Block { level = api_level; _ }) = state.current_block in
@@ -158,7 +158,7 @@ let main params =
   let config = Block_storage.{ save_blocks = true; save_messages = true } in
   let indexer = Block_storage.make ~uri:database_uri ~config in
 
-  let state = Api_state.Storage.read ~env ~folder:data_folder in
+  let state = Api_storage.read ~env ~folder:data_folder in
   let state =
     match state with
     | None ->
@@ -169,9 +169,7 @@ let main params =
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
           ~current_block ~receipts
     | Some state_data ->
-        let Api_state.Storage.{ protocol; current_block; receipts } =
-          state_data
-        in
+        let Api_storage.{ protocol; current_block; receipts } = state_data in
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
           ~current_block ~receipts
   in
@@ -189,9 +187,38 @@ let main params =
       (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
     ]
 
+type init_from_chain_params = { node_folder : string; out_folder : string }
+[@@deriving cmdliner]
+
+(* Convert a chain.json to a json storage api *)
+let init_from_chain params =
+  Eio_main.run @@ fun env ->
+  let { node_folder; out_folder } = params in
+  let open Deku_storage in
+  let storage = Storage.Chain.read ~env ~folder:node_folder in
+  let chain =
+    match storage with
+    | None -> failwith "manage this case"
+    | Some storage -> storage
+  in
+  let storage = Api_storage.of_chain ~chain in
+  let () = Api_storage.write_storage ~folder:out_folder storage in
+  ()
+
 let () =
   let open Cmdliner in
-  let info = Cmd.info "deku-api" in
-  let term = Term.(const main $ params_cmdliner_term ()) in
-  let cmd = Cmd.v info term in
+  let main_info = Cmd.info "main" in
+  let main_term = Term.(const main $ params_cmdliner_term ()) in
+  let main_cmd = Cmd.v main_info main_term in
+
+  let init_info = Cmd.info "init" in
+  let init_term =
+    Term.(const init_from_chain $ init_from_chain_params_cmdliner_term ())
+  in
+  let init_cmd = Cmd.v init_info init_term in
+
+  let cmd =
+    Cmd.group (Cmd.info "deku-api") ~default:main_term [ main_cmd; init_cmd ]
+  in
+
   exit (Cmd.eval ~catch:true cmd)
