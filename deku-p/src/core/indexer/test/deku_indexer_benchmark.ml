@@ -95,5 +95,4 @@ let main () =
   Format.printf "TPS: %3f\n%!"
     ((Float.of_int @@ List.length operations) /. delta)
 
-let () =
-  Eio_main.run @@ fun _env -> main ()
+let () = Eio_main.run @@ fun _env -> main ()
