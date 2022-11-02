@@ -1,0 +1,18 @@
+;; dune exec tunacc_test_operation -- invoke 'address' '(Pair (Pair 1 None) (Right Unit) (Some "recipient"))'
+
+{
+  "type_": "Invoke",
+  "tickets": [],
+  "content": {
+    "address": "address",
+    "argument": [
+      "Pair",
+      [ "Pair", [ "Int", "1" ], [ "Option", null ] ],
+      [
+        "Pair",
+        [ "Union", [ "Right", [ "Unit" ] ] ],
+        [ "Option", [ "String", "recipient" ] ]
+      ]
+    ]
+  }
+}
