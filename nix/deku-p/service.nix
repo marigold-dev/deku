@@ -7,7 +7,7 @@
 with lib; let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
-  environment = builtins.mapAttrs (_: value: builtins.toString value) cfg.environment;
+  cookieVM = "${pkgs.nodejs-16_x}/bin/node ${deku-packages.${config.nixpkgs.system}.decookies-vm}/lib/node_modules/decookies-vm/lib/src/index.js"
 in {
   options.services.deku-node = {
     enable = mkEnableOption "deku node";
@@ -66,20 +66,99 @@ in {
             # LockPersonality = "yes";
           };
         };
-        deku-api = {
-          description = "Deku api";
+
+        deku-vm = {
+          description = "Deku VM";
           after = ["network.target"];
           wantedBy = ["multi-user.target"];
+          before = ["deku-node.service"];
           path = [pkgs.nodejs-16_x];
-          inherit environment;
+          environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
-            ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
+            ExecStart = (
+              let
+                command =
+                  if cfg.vmType == "wasm"
+                  then cookieVm
+                  else cookieVM;
+              in "${command} /run/deku/pipe"
+            );
             Restart = "on-failure";
-            StateDirectory = "deku_api";
-            RuntimeDirectory = "deku_api";
+            StateDirectory = "deku";
+            RuntimeDirectory = "deku";
             RuntimeDirectoryPreserve = "yes";
+
+            # Basic Hardening
+            # NoNewPrivileges = "yes";
+            # PrivateTmp = "yes";
+            # PrivateDevices = "yes";
+            # DevicePolicy = "closed";
+            # DynamicUser = "true";
+            # ProtectSystem = "strict";
+            # ProtectHome = "read-only";
+            # ProtectControlGroups = "yes";
+            # ProtectKernelModules = "yes";
+            # ProtectKernelTunables = "yes";
+            # RestrictAddressFamilies = "AF_UNIX AF_INET AF_INET6 AF_NETLINK";
+            # RestrictNamespaces = "yes";
+            # RestrictRealtime = "yes";
+            # RestrictSUIDSGID = "yes";
+            # MemoryDenyWriteExecute = "no";
+            # LockPersonality = "yes";
           };
+        };
+      };
+      deku-api = {
+        description = "Deku api";
+        after = ["network.target"];
+        wantedBy = ["multi-user.target"];
+        path = [pkgs.nodejs-16_x];
+        environment = cfg.environment;
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
+          Restart = "on-failure";
+          StateDirectory = "deku_api";
+          RuntimeDirectory = "deku_api";
+          RuntimeDirectoryPreserve = "yes";
+        };
+      };
+      deku-api-vm = {
+        description = "Deku API VM";
+        after = ["network.target"];
+        wantedBy = ["multi-user.target"];
+        before = ["deku-api.service"];
+        path = [pkgs.nodejs-16_x];
+        environment = cfg.environment;
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = (
+            let
+              command =
+                if cfg.vmType == "wasm"
+                then wasmVM
+                else cookieVM;
+            in "${command} /run/deku/api_pipe"
+          );
+          Restart = "on-failure";
+          StateDirectory = "deku_api";
+          RuntimeDirectory = "deku_api";
+          RuntimeDirectoryPreserve = "yes";
+        };
+      };
+      sockets = {
+        deku-vm = {
+          description = "Sockets to communicate between Deku and VM";
+          unitConfig = {RequiresMountsFor = "/run/deku";};
+          socketConfig = {ListenFIFO = ["/run/deku/pipe_read" "/run/deku/pipe_write"];};
+          before = ["deku-node.service" "deku-vm.service"];
+        };
+        deku-api-vm = {
+          description = "Sockets to communicate between Deku API and VM";
+          unitConfig = {RequiresMountsFor = "/run/deku";};
+          socketConfig = {ListenFIFO = ["/run/deku/api_vm_pipe_read" "/run/deku/api_vm_pipe_write"];};
+          before = ["deku-api.service" "deku-api-vm.service"];
         };
       };
     };
