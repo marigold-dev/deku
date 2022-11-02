@@ -101,6 +101,8 @@ let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
       (Tezos_operation_hash.Map.bindings tezos_operations)
   in
   let payload = Payload.Payload operations in
+  (* Sleep 1 for now to avoid  *)
+  Unix.sleep 1;
   let block =
     Block.produce ~identity ~level ~previous ~payload ~withdrawal_handles_hash
       ~tezos_operations
