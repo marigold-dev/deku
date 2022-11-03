@@ -7,6 +7,7 @@
 with lib; let
   cfg = config.services.deku-node;
   listToString = lib.strings.concatStringsSep ",";
+  environment = builtins.mapAttrs (_: value: builtins.toString value) cfg.environment;
 in {
   options.services.deku-node = {
     enable = mkEnableOption "deku node";
@@ -23,7 +24,7 @@ in {
     # FIXME: we should probably create real config options here but for now
     # I don't want to maintain the same options in many places.
     environment = mkOption {
-      type = types.attrsOf types.str;
+      type = types.attrsOf (types.oneOf [types.bool types.str types.int]);
       description = lib.mdDoc "Environment variables passed to the Deku node";
     };
   };
@@ -36,7 +37,7 @@ in {
           after = ["network.target"];
           wantedBy = ["multi-user.target"];
           path = [pkgs.nodejs-16_x];
-          environment = cfg.environment;
+          inherit environment;
           serviceConfig = {
             Type = "simple";
             ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-node";
@@ -70,7 +71,7 @@ in {
           after = ["network.target"];
           wantedBy = ["multi-user.target"];
           path = [pkgs.nodejs-16_x];
-          environment = cfg.environment;
+          inherit environment;
           serviceConfig = {
             Type = "simple";
             ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
@@ -81,7 +82,7 @@ in {
           };
         };
       };
-        };
+    };
     networking.firewall = mkIf cfg.openFirewall {
       allowedTCPPorts = [
         cfg.port
