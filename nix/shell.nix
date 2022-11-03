@@ -34,5 +34,8 @@ with ocamlPackages;
       bc
       sqlite
       termdbms
+
+      # api benchmarks
+      wrk
     ];
   }
