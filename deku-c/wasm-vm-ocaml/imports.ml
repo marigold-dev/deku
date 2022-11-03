@@ -9,6 +9,8 @@ end
 
 exception Type_error
 
+(* let ppt (t, _) = print_endline @@ Format.sprintf "Error occurs here: %d\n" t *)
+
 module Vec = struct
   module Table = Hashtbl.Make (struct
     type t = Int64.t
@@ -26,11 +28,6 @@ module Vec = struct
     Table.replace t.contents counter item;
     t.counter <- Int64.(add counter 1L);
     counter
-
-  (* let get t idx =
-     match Table.find_opt t.contents idx with
-     | Some x -> x
-     | None -> raise Type_error *)
 
   let get_and_remove t idx =
     let value = Table.find_opt t.contents idx in
@@ -172,7 +169,7 @@ let compare_v =
            let y = Vec.get_and_remove vec y in
            let result = Value.equal x y in
            wasm_i64 (Int64.of_int @@ Bool.to_int result)
-       | _ -> raise Type_error ) *)
+       | _ ->  raise Type_error ) *)
 
 let mem =
   let typ = [ i64; i64 ] -%> [ i64 ] in
@@ -484,16 +481,16 @@ let iter_ =
   let matcher idx = function
     | List (x, _) ->
         List.iter
-          (fun x -> call_indirect_unit idx (wasm_i64 @@ Vec.alloc vec x))
+          (fun x -> call_indirect_unit () idx (wasm_i64 @@ Vec.alloc vec x))
           x
     | Map x ->
         Map.iter
           (fun k v ->
-            call_indirect_unit idx (wasm_i64 @@ Vec.alloc vec (Pair (k, v))))
+            call_indirect_unit () idx (wasm_i64 @@ Vec.alloc vec (Pair (k, v))))
           x
     | Set x ->
         Set.iter
-          (fun x -> call_indirect_unit idx (wasm_i64 @@ Vec.alloc vec x))
+          (fun x -> call_indirect_unit () idx (wasm_i64 @@ Vec.alloc vec x))
           x
     | _ -> raise Type_error
   in
@@ -515,7 +512,7 @@ let map_ =
         let res =
           List.map
             (fun x ->
-              call_indirect idx (wasm_i64 @@ Vec.alloc vec x)
+              call_indirect () idx (wasm_i64 @@ Vec.alloc vec x)
               |> Vec.get_and_remove vec)
             x
         in
@@ -527,7 +524,7 @@ let map_ =
           (Map.to_seq x
           |> Seq.map (fun (k, v) ->
                  let result =
-                   call_indirect idx (wasm_i64 @@ Vec.alloc vec (Pair (k, v)))
+                   call_indirect () idx (wasm_i64 @@ Vec.alloc vec (Pair (k, v)))
                    |> Vec.get_and_remove vec
                  in
                  match result with
@@ -538,7 +535,7 @@ let map_ =
         Set
           (Set.map
              (fun x ->
-               call_indirect idx (wasm_i64 @@ Vec.alloc vec x)
+               call_indirect () idx (wasm_i64 @@ Vec.alloc vec x)
                |> Vec.get_and_remove vec)
              x)
     | _ -> raise Type_error
@@ -601,9 +598,9 @@ let exec =
   let matcher v = function
     | Closure { opt_arg; call } -> (
         match opt_arg with
-        | None -> call_indirect call (wasm_i64 @@ Vec.alloc vec v)
-        | Some x -> call_indirect call (wasm_i64 @@ Vec.alloc vec (Pair (v, x)))
-        )
+        | None -> call_indirect () call (wasm_i64 @@ Vec.alloc vec v)
+        | Some x ->
+            call_indirect () call (wasm_i64 @@ Vec.alloc vec (Pair (v, x))))
     | _ -> raise Type_error
   in
   let typ = [ i64; i64 ] -%> [ i64 ] in
@@ -615,7 +612,7 @@ let exec =
       | Wasm.Values.[ Num (I64 x); Num (I64 y) ] ->
           let x = Vec.get_and_remove vec x in
           let y = Vec.get_and_remove vec y in
-          wasm_i64 @@ matcher y x
+          wasm_i64 @@ matcher x y
       | _ -> raise Type_error )
 
 let and_ =
