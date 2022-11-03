@@ -5,11 +5,17 @@ type indexer =
 
 type t = indexer
 
+let etl_modules = ref []
+let register_etl etl = etl_modules := etl :: !etl_modules
+
 let make_database ~uri =
-  let init =
-    Caqti_eio.with_connection uri (Account_balances.init ()) |> Promise.await
-  in
-  match init with Ok _ -> () | Error err -> failwith (Caqti_error.show err)
+  List.iter
+    (fun (module Etl : Etl_intf.S) ->
+      let init = Caqti_eio.with_connection uri (Etl.init ()) |> Promise.await in
+      match init with
+      | Ok _ -> ()
+      | Error err -> failwith (Caqti_error.show err))
+    !etl_modules
 
 let make ~uri =
   let () = make_database ~uri in
@@ -22,4 +28,4 @@ let on_block ~state ~operations ~receipts (Indexer { pool }) =
   List.iter
     (fun (module Etl : Etl_intf.S) ->
       Etl.on_block ~state ~operations ~receipts pool)
-    [ (module Account_balances) ]
+    !etl_modules

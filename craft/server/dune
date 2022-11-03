@@ -1,0 +1,12 @@
+(executable
+ (name craft_server)
+ (public_name craft-server)
+ (libraries deku_stdlib deku_crypto deku_gossip deku_indexer ppx_rapper_eio)
+ (preprocess
+  (pps
+   ppx_rapper
+   ppx_let_binding
+   ppx_deriving.show
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_yojson_conv)))
