@@ -187,7 +187,7 @@ let main params =
       (fun () ->
         Network_manager.connect ~net ~clock
           ~nodes:[ (node_host, node_port) ]
-          ~on_connection:(fun ~connection:_ -> ())
+          ~on_connection:(on_connection state)
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
           ~on_message:(on_message ~env ~folder:data_folder state)
           network);
