@@ -181,11 +181,9 @@ module Signed = struct
     let json = Data_encoding.Json.to_string json in
     Yojson.Safe.from_string json
 
+  (* does not performs signature check, it's only used by the API*)
   let make_with_signature ~key ~signature ~initial =
-    let (Initial.Initial_operation { hash; _ }) = initial in
-    match Signature.verify key signature (Operation_hash.to_blake2b hash) with
-    | false -> None
-    | true -> Some (Signed_operation { key; signature; initial })
+    Signed_operation { key; signature; initial }
 
   let ticket_transfer ~identity ~nonce ~level ~receiver ~ticket_id ~amount =
     let sender = Address.of_key_hash (Identity.key_hash identity) in

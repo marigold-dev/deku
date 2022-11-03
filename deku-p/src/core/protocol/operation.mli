@@ -59,10 +59,7 @@ module Signed : sig
   val encoding : signed_operation Data_encoding.t
 
   val make_with_signature :
-    key:Key.t ->
-    signature:Signature.t ->
-    initial:Initial.t ->
-    signed_operation option
+    key:Key.t -> signature:Signature.t -> initial:Initial.t -> signed_operation
 
   val ticket_transfer :
     identity:Identity.t ->

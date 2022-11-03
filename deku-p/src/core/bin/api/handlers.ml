@@ -239,24 +239,21 @@ module Post_operation : HANDLERS = struct
   let handler ~path:_ ~body ~state =
     let Api_state.{ network; _ } = state in
     let operation = Repr.Signed_operation.to_signed body in
-    match operation with
-    | None -> Error Api_error.invalid_operation_signature
-    | Some operation ->
-        let content = Message.Content.operation operation in
-        let (Message
-              {
-                header = _;
-                content = _;
-                network = Network_message { raw_header; raw_content };
-              }) =
-          Message.encode ~content
-        in
-        let (Signed_operation
-              { initial = Initial_operation { hash = operation_hash; _ }; _ }) =
-          operation
-        in
-        Network_manager.broadcast ~raw_header ~raw_content network;
-        Ok { hash = operation_hash }
+    let (Operation.Signed.Signed_operation
+          { initial = Operation.Initial.Initial_operation { hash; _ }; _ }) =
+      operation
+    in
+    let content = Message.Content.operation operation in
+    let (Message
+          {
+            header = _;
+            content = _;
+            network = Network_message { raw_header; raw_content };
+          }) =
+      Message.encode ~content
+    in
+    Network_manager.broadcast ~raw_header ~raw_content network;
+    Ok { hash }
 end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
@@ -366,4 +363,27 @@ module Compute_contract_hash : HANDLERS = struct
     let blake2b = Operation_hash.to_blake2b hash in
     let address = Deku_ledger.Contract_address.of_user_operation_hash blake2b in
     Ok { address }
+end
+
+module Simulate_post_operation : HANDLERS = struct
+  open Deku_protocol
+
+  type path = unit
+  type body = Repr.Signed_operation.t [@@deriving of_yojson]
+  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "simulate" / s "operations" /? nil)
+  let route = Routes.(path @--> ())
+
+  let handler ~path:_ ~body ~state:_ =
+    let Repr.Signed_operation.{ key; signature; initial } = body in
+    let (Operation.Initial.Initial_operation { hash; _ }) = initial in
+
+    match
+      Deku_crypto.Signature.verify key signature
+        (Operation_hash.to_blake2b hash)
+    with
+    | false -> Error Api_error.invalid_operation_signature
+    | true -> Ok { hash }
 end
