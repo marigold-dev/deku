@@ -1,8 +1,8 @@
 { parameter
     (pair (pair (nat %amount)
-                (or %operation
-                   (or (or (unit %bank) (unit %cookie)) (or (unit %cursor) (unit %factory)))
-                   (or (or (unit %farm) (unit %grandma)) (or (unit %mine) (unit %temple)))))
+                (option %operation
+                   (or (or (or (unit %bank) (unit %cookie)) (or (unit %cursor) (unit %factory)))
+                       (or (or (unit %farm) (unit %grandma)) (or (unit %mine) (unit %temple))))))
           (or %operationType (or (unit %eat) (unit %mint)) (unit %transfer))
           (option %recipient address)) ;
   storage
@@ -45,9 +45,7 @@
                       LEFT nat } } } ;
          LAMBDA
            (pair (lambda (pair nat nat) nat)
-                 (pair (pair (pair nat (or (or (or unit unit) (or unit unit)) (or (or unit unit) (or unit unit))))
-                             (or (or unit unit) unit)
-                             (option address))
+                 (pair (or (or (or unit unit) (or unit unit)) (or (or unit unit) (or unit unit)))
                        (pair (pair (pair (pair nat nat) nat nat) (pair nat nat) nat nat)
                              (pair (pair nat nat) nat nat)
                              (pair nat nat)
@@ -58,8 +56,6 @@
            { UNPAIR ;
              SWAP ;
              UNPAIR ;
-             CAR ;
-             CDR ;
              IF_LEFT
                { IF_LEFT
                    { IF_LEFT
@@ -412,15 +408,17 @@
                  DIG 2 ;
                  UPDATE }
                { DROP ;
-                 DUP 2 ;
+                 SWAP ;
                  CAR ;
                  CDR ;
+                 IF_NONE { PUSH string "Operation is mandatory for minting" ; FAILWITH } {} ;
+                 DUP ;
                  IF_LEFT
                    { IF_LEFT
                        { IF_LEFT
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -462,7 +460,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -581,7 +579,7 @@
                                   DIG 2 ;
                                   UPDATE }
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } }
-                           { DIG 2 ;
+                           { SWAP ;
                              DIG 5 ;
                              DIG 6 ;
                              DROP 4 ;
@@ -633,7 +631,7 @@
                        { IF_LEFT
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -675,7 +673,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -796,7 +794,7 @@
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } }
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -838,7 +836,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -961,7 +959,7 @@
                        { IF_LEFT
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -1003,7 +1001,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -1124,7 +1122,7 @@
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } }
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -1166,7 +1164,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -1288,7 +1286,7 @@
                        { IF_LEFT
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -1330,7 +1328,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
@@ -1451,7 +1449,7 @@
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } }
                            { DROP ;
                              DUP 3 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              PAIR ;
                              DIG 4 ;
                              SWAP ;
@@ -1489,7 +1487,7 @@
                                   SUB ;
                                   ABS ;
                                   DUP 3 ;
-                                  DIG 5 ;
+                                  DIG 4 ;
                                   PAIR ;
                                   DIG 7 ;
                                   SWAP ;
