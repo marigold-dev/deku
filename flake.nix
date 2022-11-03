@@ -80,7 +80,6 @@
             deku = self'.packages.deku;
             tuna = self'.packages.tuna;
             deploy-rs = deploy-rs.packages.${system}.default;
-
           };
         };
       };
