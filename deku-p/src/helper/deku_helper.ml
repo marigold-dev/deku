@@ -90,9 +90,12 @@ let main ~env ~sw:_ =
       (Deku_protocol.Operation_hash.to_blake2b hash)
     |> Deku_ledger.Contract_address.to_b58
   in
-  print_newline ();
-  print_endline ("Address: " ^ address ^ "\n");
-  print_newline ();
+  (match operation.operation with
+  | Call _ ->
+      print_newline ();
+      print_endline ("Address: " ^ address ^ "\n");
+      print_newline ()
+  | _ -> ());
   let _ = post_directly_to_node ~identity ~env ~operation:op in
   ()
 
