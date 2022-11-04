@@ -36,12 +36,12 @@ export class DekuCClient {
     code: string;
     initialStorage: JSONType;
   }): Promise<{ operation: string; address: string }> {
-    const operation = await createOperation(this.ligoRpc, {
+    const operation = await createOperation(this.ligoRpc, this.dekuRpc, {
       kind,
       code,
       initialStorage,
     });
-    const hash = await this.deku.submitVmOperation(JSON.stringify(operation));
+    const hash = await this.deku.submitVmOperation(operation);
     const address = await operationHashToContractAddress(this.dekuRpc, hash);
 
     return { operation: hash, address };

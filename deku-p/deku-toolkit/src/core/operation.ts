@@ -33,7 +33,7 @@ const ticketTransferToDTO = (transfer: OperationTicketTransfer) => {
 
 type OperationVmTransaction = {
   sender: KeyHashType;
-  operation: string;
+  operation: unknown;
 };
 
 const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
@@ -42,8 +42,8 @@ const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
     "Operation_vm_transaction",
     {
       sender,
-      operation,
-      tickets: [],
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
+      operation: operation as any // The toolkit does not know what is inside the payload, because deku is parametric, so it makes sense to type this as any 
     },
   ];
 };
@@ -147,12 +147,11 @@ const createVmOperation = async (
   level: LevelType,
   nonce: NonceType,
   sender: KeyHashType,
-  payload: string
+  payload: unknown
 ): Promise<Operation> => {
   const operation = {
     sender,
-    operation: payload,
-    tickets: [],
+    operation: payload
   };
   const bytes = await encodeOperation(
     nonce,
