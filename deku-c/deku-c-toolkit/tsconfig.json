@@ -1,34 +1,25 @@
 {
-    "include": [
-        "src/index.ts",
-        "examples/index.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "**/*.spec.ts"
-    ],
-    "compilerOptions": {
-        "outDir": "lib",
-        "moduleResolution": "node",
-        "target": "es6",
-        "module": "es2015",
-        "lib": [
-            "es2021",
-            "dom"
-        ],
-        "strict": true,
-        "sourceMap": true,
-        "declaration": true,
-        "allowSyntheticDefaultImports": true,
-        "noUnusedParameters": true,
-        "noImplicitAny": true,
-        "downlevelIteration": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitReturns": true,
-        "noPropertyAccessFromIndexSignature": true,
-        "forceConsistentCasingInFileNames": true,
-        "noImplicitOverride": true
-    }
+  "include": ["src/index.ts", "examples/index.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"],
+  "compilerOptions": {
+    "outDir": "lib",
+    "moduleResolution": "node",
+    "target": "es6",
+    "module": "es2015",
+    "lib": ["es2021", "dom"],
+    "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true
+  }
 }

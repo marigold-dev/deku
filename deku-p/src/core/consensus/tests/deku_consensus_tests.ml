@@ -1,2 +1,1 @@
-let () =
-  Test_consensus.run ()
+let () = Test_consensus.run ()

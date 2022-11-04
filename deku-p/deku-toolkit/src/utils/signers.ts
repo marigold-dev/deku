@@ -21,9 +21,9 @@ interface BeaconSigner {
 }
 
 interface CustomSigner {
-  sign: (payload: string) => Promise<string>
-  publicKey: () => Promise<Key>,
-  publicKeyHash: () => Promise<KeyHash>
+  sign: (payload: string) => Promise<string>;
+  publicKey: () => Promise<Key>;
+  publicKeyHash: () => Promise<KeyHash>;
 }
 
 export abstract class DekuSigner {
@@ -40,8 +40,8 @@ export abstract class DekuSigner {
     return {
       key,
       signature,
-      initial: dto
-    }
+      initial: dto,
+    };
   }
 }
 
@@ -55,12 +55,12 @@ export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
     sign = async (payload: string) => {
       const signature = await signer.sign(payload);
       return signature.prefixSig;
-    }
+    };
     publicKey = () => signer.publicKey();
     publicKeyHash = () => signer.publicKeyHash();
   }
-  return new MemorySigner()
-}
+  return new MemorySigner();
+};
 
 /**
  * Converts a beacon signer to a deku signer
@@ -72,27 +72,36 @@ export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
     sign = async (payload: string) => {
       const sig = await signer.requestSignPayload({ payload });
       if (!sig) {
-        return Promise.reject({ type: "SIGNER_ERROR", msg: "cannot sign payload" });
+        return Promise.reject({
+          type: "SIGNER_ERROR",
+          msg: "cannot sign payload",
+        });
       }
       return sig.signature;
-    }
+    };
     publicKey = async () => {
       const account = await signer.getActiveAccount();
       if (!account) {
-        return Promise.reject({ type: "SIGNER_ERROR", msg: "Your account is not active" });
+        return Promise.reject({
+          type: "SIGNER_ERROR",
+          msg: "Your account is not active",
+        });
       }
       return account.publicKey;
-    }
+    };
     publicKeyHash = async () => {
       const account = await signer.getActiveAccount();
       if (!account) {
-        return Promise.reject({ type: "SIGNER_ERROR", msg: "Your account is not active" });
+        return Promise.reject({
+          type: "SIGNER_ERROR",
+          msg: "Your account is not active",
+        });
       }
       return account.address;
-    }
+    };
   }
-  return new BeaconSigner()
-}
+  return new BeaconSigner();
+};
 
 export const fromCustomSigner = (signer: CustomSigner): DekuSigner => {
   class CustomSigner extends DekuSigner {

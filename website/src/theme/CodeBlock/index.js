@@ -4,24 +4,24 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
-import { BeaconWallet } from '@taquito/beacon-wallet';
-import Playground from '@theme/Playground';
-import classnames from 'classnames';
-import Clipboard from 'clipboard';
-import rangeParser from 'parse-numeric-range';
-import Highlight, { defaultProps } from 'prism-react-renderer';
-import defaultTheme from 'prism-react-renderer/themes/palenight';
-import React, { useEffect, useRef, useState } from 'react';
-import styles from './styles.module.css';
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { BeaconWallet } from "@taquito/beacon-wallet";
+import Playground from "@theme/Playground";
+import classnames from "classnames";
+import Clipboard from "clipboard";
+import rangeParser from "parse-numeric-range";
+import Highlight, { defaultProps } from "prism-react-renderer";
+import defaultTheme from "prism-react-renderer/themes/palenight";
+import React, { useEffect, useRef, useState } from "react";
+import styles from "./styles.module.css";
 import SharedSetup from "../sharedSetup";
 
-let wallet; 
-if (typeof window !== 'undefined') {
+let wallet;
+if (typeof window !== "undefined") {
   // solve localStorage is not defined Error when building server
   // can use localStorage on the browser, not on the server
-  wallet = new BeaconWallet({ name:"exampleWallet" });
-} 
+  wallet = new BeaconWallet({ name: "exampleWallet" });
+}
 
 const highlightLinesRangeRegex = /{([\d,-]+)}/;
 
@@ -44,7 +44,9 @@ export default ({
 
   if (metastring && highlightLinesRangeRegex.test(metastring)) {
     const highlightLinesRange = metastring.match(highlightLinesRangeRegex)[1];
-    highlightLines = rangeParser.parse(highlightLinesRange).filter(n => n > 0);
+    highlightLines = rangeParser
+      .parse(highlightLinesRange)
+      .filter((n) => n > 0);
   }
 
   useEffect(() => {
@@ -70,14 +72,14 @@ export default ({
         scope={{ ...React, ...SharedSetup }}
         code={children.trim()}
         theme={prism.theme || defaultTheme}
-        transformCode={code => code.replace(/import .*/g, '')}
+        transformCode={(code) => code.replace(/import .*/g, "")}
         {...props}
       />
     );
   }
 
   let language =
-    languageClassName && languageClassName.replace(/language-/, '');
+    languageClassName && languageClassName.replace(/language-/, "");
 
   if (!language && prism.defaultLanguage) {
     language = prism.defaultLanguage;
@@ -95,13 +97,15 @@ export default ({
       {...defaultProps}
       theme={prism.theme || defaultTheme}
       code={children.trim()}
-      language={language}>
+      language={language}
+    >
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
         <div className={styles.codeBlockWrapper}>
           <pre
             ref={target}
             className={classnames(className, styles.codeBlock)}
-            style={style}>
+            style={style}
+          >
             {tokens.map((line, i) => {
               const lineProps = getLineProps({ line, key: i });
 
@@ -123,8 +127,9 @@ export default ({
             type="button"
             aria-label="Copy code to clipboard"
             className={styles.copyButton}
-            onClick={handleCopyCode}>
-            {showCopied ? 'Copied' : 'Copy'}
+            onClick={handleCopyCode}
+          >
+            {showCopied ? "Copied" : "Copy"}
           </button>
         </div>
       )}

@@ -30,18 +30,18 @@ services:
     environment:
       - DEKU_SECRET=edsk2mbL2Z7bAmRnuYbmsRe8Yu9rgAq1h993SDxoZncmqyMHDECyBa
       - DEKU_PORT=4441
-    network_mode: "host" 
+    network_mode: "host"
   deku-node-2:
     container_name: deku-node-2
     image: my-sidechain
     environment:
       - DEKU_SECRET=edsk3dx8ZfcaBXsuLsk8fawS1qxjHbZtEoEdpAwxhsjmYTQhoEUxFk
       - DEKU_PORT=4442
-    network_mode: "host"  
+    network_mode: "host"
   deku-node-3:
     container_name: deku-node-3
     image: my-sidechain
     environment:
       - DEKU_SECRET=edsk3MwFfcGp5FsZgrX8FGiBiDutX2kfAuPzU6VdZpKYLyDRVPb879
       - DEKU_PORT=4443
-    network_mode: "host"  
+    network_mode: "host"

@@ -25,7 +25,9 @@ const MyFirstDApp = () => {
   const handleIncrement = () => deku.tx(JSON.stringify(["Increment", delta]));
   const handleDecrement = () => deku.tx(JSON.stringify(["Decrement", delta]));
   useEffect(() => {
-    deku.subscribeToKey("counter", (counterState) => setCounter(JSON.parse(counterState)));
+    deku.subscribeToKey("counter", (counterState) =>
+      setCounter(JSON.parse(counterState))
+    );
   });
   return (
     <div>

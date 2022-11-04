@@ -20,9 +20,9 @@ const toB58Hash = (prefix: Uint8Array, bytes: Buffer) => {
   tmp.set(blakeHash, prefix.length);
   const b58 = bs58check.encode(Buffer.from(tmp));
   return b58;
-}
+};
 
-// TODO: Where is it used ? 
+// TODO: Where is it used ?
 export const fromB58Hash = (x: string): string => {
   const y = Base58.decode(x);
   const tmp = new Uint8Array(y.buffer).slice(0, 32 + 2);
@@ -32,4 +32,4 @@ export const fromB58Hash = (x: string): string => {
 // TODO: Find a way to replace the buffer
 export const hashOperation = (bytes: Buffer): OperationHashType => {
   return toB58Hash(PREFIX.Do, bytes);
-}
+};

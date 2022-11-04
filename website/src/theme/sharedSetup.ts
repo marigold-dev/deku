@@ -1,27 +1,31 @@
-import { InMemorySigner } from "@taquito/signer"
+import { InMemorySigner } from "@taquito/signer";
 
 // FIXME:
 // import { DekuCClient } from "@marigold-dev/deku-toolkit";
 class DekuCClient {
-    constructor(params){
-        console.log("dekuc params", params);
-    }
-   originateContract({initialStorage, code}) {
-        console.log("deploying with", initialStorage, code);
-        return new Promise(res => setTimeout(() => res("DK1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"), 3000));
-   }
-   contract(contractAddress: string): any {
-    return {invoke: (...params) => console.log("invoked params", params), subscribe: (...params) => console.log("subscribe params", params)}
-   }
+  constructor(params) {
+    console.log("dekuc params", params);
+  }
+  originateContract({ initialStorage, code }) {
+    console.log("deploying with", initialStorage, code);
+    return new Promise((res) =>
+      setTimeout(() => res("DK1LiabSxPyVUmVZCqHneCFLJrqQcLHkmX9d"), 3000)
+    );
+  }
+  contract(contractAddress: string): any {
+    return {
+      invoke: (...params) => console.log("invoked params", params),
+      subscribe: (...params) => console.log("subscribe params", params),
+    };
+  }
 }
-
 
 const typeUtilities = {
   // adt's
-  pair: (a,b) => ["Pair", a, b],
+  pair: (a, b) => ["Pair", a, b],
   some: (a) => ["Option", "Some", a],
   none: () => ["Option", "None"],
-  map: (map) => ["Map", ...Object.entries(map)], 
+  map: (map) => ["Map", ...Object.entries(map)],
   set: (...set) => ["Set", ...set],
   list: (...list) => ["List", ...list],
   // not sure how to handle union types
@@ -33,7 +37,7 @@ const typeUtilities = {
   unit: () => ["Unit"],
   int: (n) => ["Int", n],
   bool: (b) => ["Bool", b ? "True" : "False"],
-}
+};
 
 const signer = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
@@ -306,10 +310,10 @@ const incrementWASMCode = `
       (export "call_callback_unit" (func $call_callback_unit))
       )
     `;
-    
+
 export default {
   incrementLigoCode,
   incrementWASMCode,
   dekuC,
-  typeUtilities
-}
+  typeUtilities,
+};
