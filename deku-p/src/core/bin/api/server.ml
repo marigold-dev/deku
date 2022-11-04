@@ -33,11 +33,9 @@ let with_body (module Handler : HANDLERS) server =
         let body =
           try
             Yojson.Safe.from_string body |> Handler.body_of_yojson |> Result.ok
-          with exn ->
-            Error
-              (Api_error.invalid_body
-                 (Format.sprintf "cannot parse the body %s"
-                    (Printexc.to_string exn)))
+          with
+          | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, _) | exn ->
+            Error (Api_error.invalid_body (Printexc.to_string exn))
         in
         match body with
         | Error err -> error_to_response err
