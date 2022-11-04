@@ -58,13 +58,14 @@ let decookie_test =
           ~operation:decookie_originate
       in
       let state = Result.get_ok x in
-      let (State_entry.Entry { storage = _; _ }) =
+      let (State_entry.Entry { storage; _ }) =
         State.fetch_contract state.state
           Deku_ledger.(
             Contract_address.of_user_operation_hash
               (Deku_crypto.BLAKE2b.hash "tutturu"))
       in
-      (check bool) "Originate" true ("" = "");
+      (check bool) "Originate decookies contract" true
+        (storage = Value.Map Value.Map.empty);
       let x =
         Env.execute
           ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
@@ -80,11 +81,62 @@ let decookie_test =
           ~operation:decookie_invoke
       in
       let state = Result.get_ok x in
-      let (State_entry.Entry { storage = _; _ }) =
-        State.fetch_contract state.state
-          Deku_ledger.(
-            Contract_address.of_user_operation_hash
-              (Deku_crypto.BLAKE2b.hash "tutturu"))
-      in
-      (check bool) "Invoke" true ("" = "");
+      (let (State_entry.Entry { storage; _ }) =
+         State.fetch_contract state.state
+           Deku_ledger.(
+             Contract_address.of_user_operation_hash
+               (Deku_crypto.BLAKE2b.hash "tutturu"))
+       in
+       let json =
+         Data_encoding.Json.from_string
+           {|
+              [ "Map",
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ] ] ] ] ] ] ],
+                          [ "Int", "0" ] 
+                          ] 
+                        ] 
+                    ] 
+                ] 
+              ]
+            |}
+       in
+       let json = Result.get_ok json in
+       let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
+       let modifiedState =
+         match rawExpectedState with
+         | Value.Map t ->
+             let v =
+               Value.Map.find
+                 (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") t
+             in
+             let v =
+               Value.Map.add
+                 (Value.String
+                    (Base.String.substr_replace_all ~pattern:"\"" ~with_:""
+                       (Yojson.Safe.pretty_to_string
+                       @@ Env.Address.yojson_of_t addr)))
+                 v t
+             in
+             Value.Map.remove
+               (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") v
+         | _ -> failwith "unreachable!"
+       in
+       let expectedState = Value.Map modifiedState in
+       (check bool) "Invoking Cookie minting" true (storage = expectedState));
       ())
