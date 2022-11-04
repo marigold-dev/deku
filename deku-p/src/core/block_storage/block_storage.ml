@@ -43,6 +43,7 @@ module Query = struct
         (hash, level, timestamp, block) 
         VALUES
         (%Block_hash{block_hash}, %Level{level}, %Timestamp{timestamp}, %Block{block})    
+        ON CONFLICT DO NOTHING
         |sql}]
 
   let insert_block ~block ~timestamp pool =
