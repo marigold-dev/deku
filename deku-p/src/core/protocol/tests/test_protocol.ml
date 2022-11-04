@@ -341,6 +341,66 @@ let test_cannot_create_amount_ex_nihilo () =
   Alcotest.(check amount)
     "balance of bob has not changed" alice_previous_balance alice_balance
 
+let test_noop_operation_no_exceptions () =
+  let nonce = Nonce.of_n N.one in
+  let level = Level.of_n N.one in
+  let noop = Operation.Signed.noop ~identity:bob ~nonce ~level in
+  let (Operation.Signed.Signed_operation { initial; _ }) = noop in
+  let payload = [ initial ] in
+
+  let _, _, exn =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[]
+      Protocol.initial
+  in
+  Alcotest.(check int)
+    "noop operation should not produce exceptions" 0 (List.length exn)
+
+(*
+   TODO: I think it can be a source a bug
+      What if a user submit a noop operations ?
+       - The operation is added to the mempool
+       - And will never be removed ?
+       - If the memory pool is full of noop operations, is it still possible to submit operations
+*)
+let test_noop_operation_empty_receipts () =
+  let nonce = Nonce.of_n N.one in
+  let level = Level.of_n N.one in
+  let noop = Operation.Signed.noop ~identity:bob ~nonce ~level in
+  let (Operation.Signed.Signed_operation { initial; _ }) = noop in
+  let payload = [ initial ] in
+
+  let _, receipts, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[]
+      Protocol.initial
+  in
+  Alcotest.(check int)
+    "noop operation should not produce exceptions" 0 (List.length receipts)
+
+let test_noop_operation_does_nothing () =
+  let nonce = Nonce.of_n N.one in
+  let level = Level.of_n N.one in
+  let noop = Operation.Signed.noop ~identity:bob ~nonce ~level in
+  let (Operation.Signed.Signed_operation { initial; _ }) = noop in
+  let payload = [ initial ] in
+  let (Protocol.Protocol
+        { ledger = initial_ledger; vm_state = initial_vm_state; _ }) =
+    Protocol.initial
+  in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[]
+      Protocol.initial
+  in
+  let (Protocol.Protocol { ledger = next_ledger; vm_state = next_vm_state; _ })
+      =
+    protocol
+  in
+  Alcotest.(check bool)
+    "noop operation should not change the ledger" true
+    (initial_ledger = next_ledger);
+  Alcotest.(check bool)
+    "noop operation should not change the vm state" true
+    (initial_vm_state = next_vm_state)
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -368,5 +428,14 @@ let run () =
         [
           test_case "balance does not change, when not enough amount" `Quick
             test_cannot_create_amount_ex_nihilo;
+        ] );
+      ( "noop operation",
+        [
+          test_case "noop operation should not create exceptions" `Quick
+            test_noop_operation_no_exceptions;
+          test_case "noop operation should not create receipts" `Quick
+            test_noop_operation_empty_receipts;
+          test_case "noop operation should not update the protocol" `Quick
+            test_noop_operation_does_nothing;
         ] );
     ]
