@@ -21,6 +21,12 @@ let apply_block ~env ~folder ~state ~block =
           string |> Data_encoding.Binary.of_string_exn Operation.Signed.encoding
         in
         let (Operation.Signed.Signed_operation { initial; _ }) = operation in
+        (match initial with
+        | Operation.Initial.Initial_operation { operation; _ } -> (
+            match operation with
+            | Operation_vm_transaction _ ->
+                Format.printf "Operation %a\n%!" Operation.Initial.pp initial
+            | _ -> ()));
         initial)
       payload
   in

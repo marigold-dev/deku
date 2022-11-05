@@ -137,18 +137,19 @@ let main params style_renderer log_level =
         let vm_state = Ocaml_wasm_vm.State.empty in
         Chain.make ~validators ~vm_state
   in
-  let dump = make_dump_loop ~sw ~env ~folder:data_folder in
+  (* let dump = make_dump_loop ~sw ~env ~folder:data_folder in *)
+  let dump _chain = () in
   let node =
-    Node.make ~identity ~default_block_size ~dump ~chain ~indexer:(Some indexer)
+    Node.make ~identity ~default_block_size ~dump ~chain ~indexer:None
   in
 
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
   Logs.info (fun m -> m "Chain started at level: %a" Level.pp level);
-  let tezos =
-    (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
-  in
-  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
+  (* let tezos =
+       (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
+     in *)
+  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:None node
 
 let main () =
   Sys.set_signal Sys.sigpipe

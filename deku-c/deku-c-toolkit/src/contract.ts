@@ -1,4 +1,5 @@
 import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import {} from "lodash";
 
 export type JSONType =
   | string
@@ -111,10 +112,11 @@ export class Contract {
         .then((state) => {
           const previousState = JSON.stringify(previous);
           const nextState = JSON.stringify(state);
-          if (nextState === previousState) return null;
-          callback(state);
-          previous = state;
-          return null;
+          if(nextState != previousState) {
+            console.log("state diff. New: ", state, "old", previous);
+            previous = state;
+            callback(state);
+          }
         })
         .catch(console.error);
     }, 2000);

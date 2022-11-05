@@ -16,10 +16,12 @@
   "author": "contact@marigold.dev",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku-toolkit": "0.1.11"
+    "@marigold-dev/deku-toolkit": "0.1.11",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@taquito/signer": "^14.0.0",
+    "@types/lodash": "^4.14.188",
     "typescript": "^4.8.4"
   }
 }

@@ -15,6 +15,8 @@ const isLocalhost = window.location.hostname === "localhost";
 const dekuRpc = isLocalhost ? "http://0.0.0.0:8080" : "https://deku-canonical-vm0.deku-v1.marigold.dev";
 const ligoRpc = isLocalhost ? "http://0.0.0.0:9090" : "https://ghostnet.tezos.marigold.dev"
 
+console.log(ligoRpc);
+
 const dekuC = new DekuCClient({
   dekuRpc,
   ligoRpc,
