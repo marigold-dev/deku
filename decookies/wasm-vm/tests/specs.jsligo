@@ -1,4 +1,4 @@
-#include "index.jsligo"
+#include "../src/index.jsligo"
 const _test_initial_storage_is_empty_map = 
   (): bool => {let _ = 
      Test.log(["START: Executing _test_initial_storage_is_empty_map"]);

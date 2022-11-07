@@ -1,0 +1,28 @@
+
+const initialCursorCost: nat = 15 as nat;
+
+const initialGrandmaCost: nat = 100 as nat;
+
+const initialFarmCost: nat = 1100 as nat;
+
+const initialMineCost: nat = 12000 as nat;
+
+const initialFactoryCost: nat = 130000 as nat;
+
+const initialBankCost: nat = 130000 as nat;
+
+const initialTempleCost: nat = 20000000 as nat;
+
+const cursorCPS: nat = 1 as nat;
+
+const grandmaCPS: nat = 3 as nat;
+
+const farmCPS: nat = 8 as nat;
+
+const mineCPS: nat = 47 as nat;
+
+const factoryCPS: nat = 260 as nat;
+
+const bankCPS: nat = 1400 as nat;
+
+const templeCPS: nat = 7800 as nat;
