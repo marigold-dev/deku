@@ -2,6 +2,7 @@ open Deku_crypto
 open Deku_concepts
 
 exception Insufficient_funds
+exception Withdraw_zero_ticket
 
 module Withdrawal_handle : sig
   module Withdrawal_handle_hash : sig

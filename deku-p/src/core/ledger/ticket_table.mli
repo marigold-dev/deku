@@ -24,7 +24,7 @@ val withdraw :
   ticket_id:Ticket_id.t ->
   amount:Amount.t ->
   t ->
-  (t, [> `Insufficient_funds ]) result
+  (t, [> `Insufficient_funds | `Withdraw_zero_ticket ]) result
 
 val take_tickets :
   sender:Address.t ->

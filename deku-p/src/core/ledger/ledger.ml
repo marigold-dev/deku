@@ -3,10 +3,12 @@ open Deku_concepts
 open Deku_stdlib
 
 exception Insufficient_funds
+exception Withdraw_zero_ticket
 
 let () =
   Printexc.register_printer (function
     | Insufficient_funds -> Some "Ledger error: insufficient funds"
+    | Withdraw_zero_ticket -> Some "Ledger error: cannot withdraw 0 tickets"
     | _ -> None)
 
 module Withdrawal_handle = struct
@@ -116,7 +118,10 @@ let withdraw ~sender ~destination ~amount ~ticket_id t =
   in
   let%ok table =
     Ticket_table.withdraw ~sender ~amount ~ticket_id table
-    |> Result.map_error (function _ -> Insufficient_funds)
+    |> Result.map_error (function error ->
+           (match error with
+           | `Withdraw_zero_ticket -> Withdraw_zero_ticket
+           | `Insufficient_funds -> Insufficient_funds))
   in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add
