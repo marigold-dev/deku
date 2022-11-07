@@ -32,6 +32,7 @@ let import_list =
     func ref__ref "some" (* ; func const "now" *);
     func const "nil";
     func const "true";
+    func ref_i32__unit "unpair_n";
     func const "false";
     func const "none";
     func const "unit";

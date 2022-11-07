@@ -35,7 +35,22 @@ let compile_constant ~ctx value =
 
 let rec compile_instruction ~ctx instruction =
   match instruction with
-  | Prim (_, I_UNPAIR, _, _) -> "(call $unpair (call $pop)) ;; implicit return"
+  | Prim (_, I_UNPAIR, [], _) -> "(call $unpair (call $pop)) ;; implicit return"
+  | Prim (_, I_UNPAIR, [ Int (_, x) ], _) ->
+      Format.sprintf
+        "(call $unpair_n  (call $pop) (i32.const %ld)) ;; implicit return"
+        (Z.to_int32 x)
+  | Prim (_, I_PAIR, [ Int (_, x) ], _) ->
+      let rec go acc = function
+        | 0 -> acc
+        | n ->
+            go
+              (acc
+             ^ "(call $swap) (call $push (call $pair (call $pop) (call $pop)))"
+              )
+              (n - 1)
+      in
+      go "" (Z.to_int x - 1)
   | Prim (_, I_PAIR, _, _) ->
       "(call $push (call $pair (call $pop) (call $pop)))"
   | Prim (_, I_ADD, _, _) ->
@@ -57,7 +72,7 @@ let rec compile_instruction ~ctx instruction =
   | Prim (_, I_EXEC, _, _) ->
       "(call $push (call $exec (call $pop) (call $pop)))"
   | Prim (_, I_APPLY, _, _) ->
-      "(call $push (call $apply (call $pop) (call $pop)))"
+      "(call $push (call $apply  (call $pop) (call $pop)))"
   | Prim (_, I_FAILWITH, _, _) -> "(call $failwith (call $pop)) unreachable"
   | Prim (_, I_GE, _, _) -> "(call $push (call $ge (call $pop)))"
   | Prim (_, I_GT, _, _) -> "(call $push (call $gt (call $pop)))"
@@ -149,9 +164,12 @@ let rec compile_instruction ~ctx instruction =
       | 0l -> ""
       | 1l -> Printf.sprintf "(call $swap)"
       | n -> Printf.sprintf "(call $dig (i32.const %ld))" n)
-  | Prim (_, I_DUG, [ Int (_, n) ], _) ->
+  | Prim (_, I_DUG, [ Int (_, n) ], _) -> (
       let n = Z.to_int32 n in
-      Printf.sprintf "(call $dug (i32.const %ld))" n
+      match n with
+      | 0l -> ""
+      | 1l -> Printf.sprintf "(call $swap)"
+      | n -> Printf.sprintf "(call $dug (i32.const %ld))" n)
   | Prim (_, I_DUP, [ Int (_, n) ], _) ->
       let n = Z.to_int32 n in
       Printf.sprintf "(call $dup (i32.const %ld))" (Int32.sub n 1l)
@@ -421,6 +439,7 @@ let rec compile_value ~tickets parsed :
       let* elements = aux elements in
       Ok (Values.List (elements, Other))
   | Prim (_, T_map, [ (Seq (_, _) as elems) ], _) -> compile_map ~tickets elems
+  | Prim (_, I_MAP, [ (Seq (_, _) as elems) ], _) -> compile_map ~tickets elems
   | Prim (_, I_EMPTY_MAP, _, _) -> Ok (Map Map.empty)
   | Prim (_, I_EMPTY_SET, _, _) -> Ok (Set Set.empty)
   | Prim (_, T_ticket, [ fst ], _) ->
