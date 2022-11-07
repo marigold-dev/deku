@@ -1,6 +1,24 @@
 import { JSONType } from "./contract";
 
-export const createOperation = async (
+export const originateTz = async (
+  dekuRpc: string,
+  { code, initialStorage }: { code: string; initialStorage: JSONType }
+) => {
+  const dekuOptions = {
+    method: "POST",
+    body: JSON.stringify({
+      source: code,
+      storage: initialStorage + "",
+    }),
+  };
+  const dekuRes = await fetch(
+    dekuRpc + "/api/v1/helpers/compile-contract",
+    dekuOptions
+  );
+  return dekuRes.json();
+};
+
+export const originateLigo = async (
   ligoRpc: string,
   dekuRpc: string,
   {
@@ -17,15 +35,54 @@ export const createOperation = async (
       };
       const result = await fetch(ligoRpc + "/api/v1/ligo/originate", options);
       const { code: source } = await result.json();
-      const dekuOptions = {
+      return originateTz(dekuRpc, { code: source, initialStorage });
+    }
+    default:
+      throw "Not yet supported";
+  }
+};
+
+export const compileExpression = async (
+  dekuRpc: string,
+  { expression, address }: { expression: string; address: string }
+) => {
+  const dekuOptions = {
+    method: "POST",
+    body: JSON.stringify({
+      address,
+      expression,
+    }),
+  };
+  const dekuRes = await fetch(
+    dekuRpc + "/api/v1/helpers/compile-expression",
+    dekuOptions
+  );
+  return dekuRes.json();
+};
+
+export const compileLigoExpression = async (
+  ligoRpc: string,
+  dekuRpc: string,
+  {
+    kind,
+    code,
+    ligoExpression,
+    address,
+  }: { kind: string; code: string; ligoExpression: string; address: string }
+) => {
+  switch (kind) {
+    case "jsligo": {
+      const options = {
         method: "POST",
         body: JSON.stringify({
-          source,
-          storage: initialStorage + ""
-        })
+          lang: "jsligo",
+          source: code,
+          expression: ligoExpression,
+        }),
       };
-      const dekuRes = await fetch(dekuRpc + "/api/v1/helpers/compile-contract", dekuOptions)
-      return dekuRes.json();
+      const result = await fetch(ligoRpc + "/api/v1/ligo/expression", options);
+      const { expression } = await result.json();
+      return compileExpression(dekuRpc, { expression, address });
     }
     default:
       throw "Not yet supported";
@@ -45,3 +102,7 @@ export const operationHashToContractAddress = async (
   if (response.ok) return json.address;
   throw json;
 };
+
+export function isDefined<T>(val: T | undefined | null): val is T {
+  return val !== undefined && val !== null;
+}
