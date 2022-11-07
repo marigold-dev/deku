@@ -116,6 +116,14 @@ let commit ~current_level ~block ~votes ~validators =
       withdrawal_handles_hash;
     }
 
+(* TODO: move this to a transparently configurable thing in Cmdliner in Deku_node *)
+let minimum_block_latency =
+  match Sys.getenv_opt "DEKU_MINIMUM_LATENCY" with
+  | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
+  | None -> 0.0
+
+(* |> Option.value ~default 0 *)
+
 (* after gossip *)
 let apply_consensus_action chain consensus_action =
   let open Consensus in
@@ -133,6 +141,9 @@ let apply_consensus_action chain consensus_action =
       let fragment =
         Fragment_produce { producer; above; withdrawal_handles_hash }
       in
+      (match minimum_block_latency with
+      | 0. -> ()
+      | minimum_block_latency -> Unix.sleepf minimum_block_latency);
       (chain, [ Chain_fragment { fragment } ])
   | Consensus_vote { level; vote } ->
       let content = Message.Content.vote ~level ~vote in
