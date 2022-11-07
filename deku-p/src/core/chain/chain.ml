@@ -118,7 +118,7 @@ let commit ~current_level ~block ~votes ~validators =
 
 (* TODO: move this to a transparently configurable thing in Cmdliner in Deku_node *)
 let minimum_block_latency =
-  match Sys.getenv_opt "DEKU_MINIMUM_LATENCY" with
+  match Sys.getenv_opt "DEKU_MINIMUM_BLOCK_LATENCY" with
   | Some x -> Option.value ~default:0.0 (Float.of_string_opt x)
   | None -> 0.0
 
