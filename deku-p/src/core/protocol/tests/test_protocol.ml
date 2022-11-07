@@ -19,6 +19,9 @@ let bob_secret =
 let bob = Identity.make bob_secret
 let bob_addr = Address.of_key_hash (Identity.key_hash bob)
 
+let bob_tezos =
+  bob_addr |> Address.to_b58 |> Deku_tezos.Address.of_string |> Option.get
+
 let ticket_id =
   let address =
     Deku_tezos.Contract_hash.of_b58 "KT1JQ5JQB4P1c8U8ACxfnodtZ4phDVMSDzgi"
@@ -578,6 +581,93 @@ let test_ticket_transfer_all_tickets () =
   Alcotest.(check amount') "balance should be 0 for bob" Amount.zero bob_balance;
   Alcotest.(check amount') "balance should be 2 for alice" amount alice_balance
 
+(* Withdraw tests *)
+
+let withdraw ~level ~sender ~tezos_owner ~amount =
+  let nonce = Nonce.of_n N.one in
+  let transfer =
+    Operation.Signed.withdraw ~identity:sender ~nonce ~level ~tezos_owner
+      ~ticket_id ~amount
+  in
+  let (Operation.Signed.Signed_operation { initial; _ }) = transfer in
+  initial
+
+let test_withdraw_undefined_ticket () =
+  let level = Level.zero in
+  let amount = Amount.one in
+  let payload =
+    [ withdraw ~level ~sender:bob ~tezos_owner:bob_tezos ~amount ]
+  in
+  let protocol = Protocol.initial in
+  let _, _, exns =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  Alcotest.(check int) "exception should be raised" 1 (List.length exns)
+
+let test_withdraw_zero_ticket () =
+  let level = Level.zero in
+  let amount = Amount.zero in
+  let payload =
+    [ withdraw ~level ~sender:bob ~tezos_owner:bob_tezos ~amount ]
+  in
+  let ledger = Ledger.initial |> Ledger.deposit bob_addr amount ticket_id in
+  let protocol = protocol_with_ledger ~ledger in
+  let _, _, exns =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  Alcotest.(check int) "exception should be raised" 1 (List.length exns)
+
+let test_withdraw_too_many_tickets () =
+  let level = Level.zero in
+  let amount = 32 |> Z.of_int |> N.of_z |> Option.get |> Amount.of_n in
+  let payload =
+    [ withdraw ~level ~sender:bob ~tezos_owner:bob_tezos ~amount ]
+  in
+  let ledger = Ledger.initial |> Ledger.deposit bob_addr Amount.one ticket_id in
+  let protocol = protocol_with_ledger ~ledger in
+  let _, _, exns =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  Alcotest.(check int) "exception should be raised" 1 (List.length exns)
+
+let test_withdraw_all_tickets () =
+  let level = Level.zero in
+  let amount = 32 |> Z.of_int |> N.of_z |> Option.get |> Amount.of_n in
+  let payload =
+    [ withdraw ~level ~sender:bob ~tezos_owner:bob_tezos ~amount ]
+  in
+  let ledger = Ledger.initial |> Ledger.deposit bob_addr amount ticket_id in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  Alcotest.(check amount') "bob should have 0 tickets" Amount.zero bob_balance
+
+let test_withdraw_one_ticket () =
+  let level = Level.zero in
+  let amount = Amount.one in
+  let payload =
+    [ withdraw ~level ~sender:bob ~tezos_owner:bob_tezos ~amount ]
+  in
+  let ledger =
+    let amount = 32 |> Z.of_int |> N.of_z |> Option.get |> Amount.of_n in
+    Ledger.initial |> Ledger.deposit bob_addr amount ticket_id
+  in
+  let bob_initial_balance = Ledger.balance bob_addr ticket_id ledger in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let exepected_bob_balance =
+    Amount.(bob_initial_balance - amount) |> Option.get
+  in
+  Alcotest.(check amount')
+    "bob should have 0 tickets" exepected_bob_balance bob_balance
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -637,5 +727,17 @@ let run () =
           test_case
             "After transfering all his tickets bob should have 0 tickets" `Quick
             test_ticket_transfer_all_tickets;
+        ] );
+      ( "ticket withdraw",
+        [
+          test_case "cannot withdraw undefined tickets" `Quick
+            test_withdraw_undefined_ticket;
+          test_case "cannot withdraw zero ticket" `Quick
+            test_withdraw_zero_ticket;
+          test_case "cannot withdraw more than balance" `Quick
+            test_withdraw_too_many_tickets;
+          test_case "can withdraw all tickets" `Quick test_withdraw_all_tickets;
+          test_case "can withdraw only one ticket" `Quick
+            test_withdraw_one_ticket;
         ] );
     ]
