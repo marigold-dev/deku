@@ -33,9 +33,18 @@ let with_body (module Handler : HANDLERS) server =
         let body =
           try
             Yojson.Safe.from_string body |> Handler.body_of_yojson |> Result.ok
-          with
-          | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, _) | exn ->
-            Error (Api_error.invalid_body (Printexc.to_string exn))
+          with exn ->
+            let err_message =
+              match exn with
+              | Data_encoding.Json.Cannot_destruct (_, exn) ->
+                  (Format.asprintf "%a" (fun fmt ->
+                       Data_encoding.Json.print_error fmt))
+                    exn
+              | Ppx_yojson_conv_lib.Yojson_conv.Of_yojson_error (exn, _) | exn
+                ->
+                  Printexc.to_string exn
+            in
+            Error (Api_error.invalid_body err_message)
         in
         match body with
         | Error err -> error_to_response err
