@@ -1,4 +1,8 @@
 #include "../src/index.jsligo"
+#include "cursorspecs.jsligo"
+#include "grandmaspecs.jsligo"
+#include "farmspecs.jsligo"
+#include "minespecs.jsligo"
 const _test_initial_storage_is_empty_map = 
   (): bool => {let _ = 
      Test.log(["START: Executing _test_initial_storage_is_empty_map"]);
@@ -54,48 +58,3 @@ const _test_mint_cookie =
    return (actualStorage == expectedStorage)};
 
 const test_mint_cookie = _test_mint_cookie();
-
-const _test_mint_cursor = 
-  (): bool => {let _ = 
-     Test.log(["START: Executing _test_mint_cursor"]);
-   let initial_storage: storage = Map.empty;
-   let [taddr, _, _] = 
-     Test.originate(main, initial_storage, 0 as tez);
-   let contr = Test.to_contract(taddr);
-   let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Cookie()) as option<actions>,
-       amount: 15 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
-   let _ = 
-     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
-       operation: Some (Cursor()) as option<actions>,
-       amount: 1 as nat,
-       recipient: None() as option<address>}), 1 as mutez);
-   let expectedStorage: storage = 
-     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
-      as address, Some
-       ({bankCost: initialBankCost,
-        banks: 0 as nat,
-        cookies: 0 as nat,
-        cursorCost: 17 as nat,
-        cursors: 1 as nat,
-        eatenCookies: 0 as nat,
-        factories: 0 as nat,
-        factoryCost: initialFactoryCost,
-        farmCost: initialFarmCost,
-        farms: 0 as nat,
-        grandmaCost: initialGrandmaCost,
-        grandmas: 0 as nat,
-        mineCost: initialMineCost,
-        mines: 0 as nat,
-        passiveCPS: 1 as nat,
-        templeCost: initialTempleCost,
-        temples: 0 as nat}), initial_storage);
-   let actualStorage = Test.get_storage(taddr);
-   let _ = Test.log(["actual   storage: ", actualStorage]);
-   let _ = Test.log(["expected storage: ", expectedStorage]);
-   let _ = Test.log(["END: Executing _test_mint_cursor"]);
-   return (actualStorage == expectedStorage)};
-
-const test_mint_cursor = _test_mint_cursor();

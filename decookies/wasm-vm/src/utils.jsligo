@@ -31,7 +31,7 @@ const calculateCost =
        Math.power(115 as nat, cookieBaker.grandmas);
      const first: nat = initialGrandmaCost * firstOperation;
      const second: nat = 
-       first / ((cookieBaker.cursors as nat) * (100 as nat));
+       first / ((cookieBaker.grandmas as nat) * (100 as nat));
      return second},
     Farm: () => {let firstOperation = 
        Math.power(115 as nat, cookieBaker.farms);
