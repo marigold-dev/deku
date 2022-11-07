@@ -10,12 +10,14 @@ let alice_secret =
   |> Option.get
 
 let alice = Identity.make alice_secret
+let alice_addr = Address.of_key_hash (Identity.key_hash alice)
 
 let bob_secret =
   Secret.of_b58 "edsk4Qejwxwj7JD93B45gvhYHVfMzNjkBWRQDaYkdt5JcUWLT4VDkh"
   |> Option.get
 
 let bob = Identity.make bob_secret
+let bob_addr = Address.of_key_hash (Identity.key_hash bob)
 
 let ticket_id =
   let address =
@@ -24,6 +26,8 @@ let ticket_id =
   in
   let data = Bytes.of_string "" in
   Ticket_id.make (Tezos address) data
+
+let amount' = Alcotest.testable Amount.pp Amount.equal
 
 (* helper to create in an easy way an operation that transfer n token from alice to bob *)
 let make_operation ?(nonce = 1) ?(level = 0) ?(amount = 0) () =
@@ -401,6 +405,179 @@ let test_noop_operation_does_nothing () =
     "noop operation should not change the vm state" true
     (initial_vm_state = next_vm_state)
 
+(* Maybe those tests are redundant with Ledger related test *)
+let ticket_id =
+  let ticketer =
+    Ticket_id.Tezos
+      (Deku_tezos.Contract_hash.of_b58 "KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
+      |> Option.get)
+  in
+  let data = Bytes.of_string "hello" in
+  Ticket_id.make ticketer data
+
+let transfer ~level ~sender ~receiver ~amount =
+  let nonce = Nonce.of_n N.one in
+  let transfer =
+    Operation.Signed.ticket_transfer ~identity:sender ~nonce ~level ~receiver
+      ~ticket_id ~amount
+  in
+  let (Operation.Signed.Signed_operation { initial; _ }) = transfer in
+  initial
+
+let test_ticket_transfer_undefined_ticket_exn () =
+  let amount = Amount.of_n N.zero in
+  let level = Level.of_n N.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let protocol = Protocol.initial in
+  let _, _, exns =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  Alcotest.(check int)
+    "transfering undefined token should returns exception" 1 (List.length exns)
+
+let test_ticket_transfer_undefined_ticket () =
+  let amount = Amount.of_n N.zero in
+  let level = Level.of_n N.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let protocol = Protocol.initial in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger = next_ledger; _ }) = protocol in
+  Alcotest.(check bool)
+    "transfering undefined token should not affect the ledger" true
+    (ledger = next_ledger)
+
+let test_ticket_transfer_undefined_ticket_receipt () =
+  let amount = Amount.of_n N.zero in
+  let level = Level.of_n N.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let protocol = Protocol.initial in
+  let _, receipts, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  Alcotest.(check int)
+    "transfering undefined token should return a receipt" 1
+    (List.length receipts)
+
+let protocol_with_ledger ~ledger =
+  let ledger = Ledger.yojson_of_t ledger in
+  let assoc =
+    match Protocol.yojson_of_t Protocol.initial with
+    | `Variant (_, Some assoc) -> assoc
+    | `List [ _; assoc ] -> assoc
+    | _ -> failwith "yojson error"
+  in
+  let assoc =
+    assoc |> Yojson.Safe.Util.to_assoc
+    |> List.map (fun (key, value) ->
+           match (key, value) with
+           | "ledger", _ -> ("ledger", ledger)
+           | key, value -> (key, value))
+  in
+  `List [ `String "Protocol"; `Assoc assoc ] |> Protocol.t_of_yojson
+
+let test_ticket_transfer_zero_ticket () =
+  let amount = Amount.of_n N.zero in
+  let level = Level.of_n N.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let ledger =
+    Ledger.initial |> Ledger.deposit bob_addr (Amount.of_n N.one) ticket_id
+  in
+  let initial_bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  Alcotest.(check amount')
+    "balance should not change" initial_bob_balance bob_balance
+
+let test_ticket_transfer_to_self () =
+  let level = Level.of_n N.one in
+  let amount = Amount.of_n N.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:bob_addr ~amount ] in
+  let ledger =
+    Ledger.initial |> Ledger.deposit bob_addr (Amount.of_n N.one) ticket_id
+  in
+  let initial_bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  Alcotest.(check amount')
+    "balance should not change" initial_bob_balance bob_balance
+
+let test_ticket_transfer_too_many_tickets () =
+  let level = Level.of_n N.one in
+  let amount = Amount.of_n (N.of_z (Z.of_int 32) |> Option.get) in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let ledger =
+    Ledger.initial |> Ledger.deposit bob_addr (Amount.of_n N.one) ticket_id
+  in
+  let initial_bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let initial_alice_balance = Ledger.balance alice_addr ticket_id ledger in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let alice_balance = Ledger.balance alice_addr ticket_id ledger in
+  Alcotest.(check amount')
+    "balance of bob should not change" initial_bob_balance bob_balance;
+  Alcotest.(check amount')
+    "balance of alice &should not change" initial_alice_balance alice_balance
+
+let test_ticket_transfer_tickets () =
+  let level = Level.zero in
+  let amount = Amount.one in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let ledger =
+    let two = Z.of_int 2 |> N.of_z |> Option.get |> Amount.of_n in
+    Ledger.initial |> Ledger.deposit bob_addr two ticket_id
+  in
+  let initial_bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let initial_alice_balance = Ledger.balance alice_addr ticket_id ledger in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let alice_balance = Ledger.balance alice_addr ticket_id ledger in
+
+  let exepected_bob_balance =
+    Amount.(initial_bob_balance - amount) |> Option.get
+  in
+  let exepected_alice_balance = Amount.(initial_alice_balance + amount) in
+
+  Alcotest.(check amount')
+    "balance should have descreased by 1 for bob" exepected_bob_balance
+    bob_balance;
+  Alcotest.(check amount')
+    "balance should have increased by 1 for alice" exepected_alice_balance
+    alice_balance
+
+let test_ticket_transfer_all_tickets () =
+  let level = Level.zero in
+  let amount = Z.of_int 2 |> N.of_z |> Option.get |> Amount.of_n in
+  let payload = [ transfer ~level ~sender:bob ~receiver:alice_addr ~amount ] in
+  let ledger = Ledger.initial |> Ledger.deposit bob_addr amount ticket_id in
+  let protocol = protocol_with_ledger ~ledger in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload ~tezos_operations:[] protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  let alice_balance = Ledger.balance alice_addr ticket_id ledger in
+  Alcotest.(check amount') "balance should be 0 for bob" Amount.zero bob_balance;
+  Alcotest.(check amount') "balance should be 2 for alice" amount alice_balance
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -437,5 +614,28 @@ let run () =
             test_noop_operation_empty_receipts;
           test_case "noop operation should not update the protocol" `Quick
             test_noop_operation_does_nothing;
+        ] );
+      ( "ticket transfer",
+        [
+          test_case "cannot transfer undefined ticket" `Quick
+            test_ticket_transfer_undefined_ticket_exn;
+          test_case "undefined ticket transfer does not change the ledger"
+            `Quick test_ticket_transfer_undefined_ticket;
+          test_case "undefined ticket transfer returns a receipt " `Quick
+            test_ticket_transfer_undefined_ticket_receipt;
+          test_case "transfering 0 tickets have the same behaviour" `Quick
+            test_ticket_transfer_zero_ticket;
+          test_case "transfering tickets to self should change nothing" `Quick
+            test_ticket_transfer_to_self;
+          test_case
+            "transfering tickets too many tickets should not change the balance"
+            `Quick test_ticket_transfer_too_many_tickets;
+          test_case
+            "transfer ticket should decrease properly the balance of the \
+             sender, and increase the balance of the receiver"
+            `Quick test_ticket_transfer_tickets;
+          test_case
+            "After transfering all his tickets bob should have 0 tickets" `Quick
+            test_ticket_transfer_all_tickets;
         ] );
     ]
