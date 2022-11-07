@@ -43,7 +43,7 @@ const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
     {
       sender,
       /* eslint-disable  @typescript-eslint/no-explicit-any */
-      operation: operation as any // The toolkit does not know what is inside the payload, because deku is parametric, so it makes sense to type this as any 
+      operation: operation as any, // The toolkit does not know what is inside the payload, because deku is parametric, so it makes sense to type this as any
     },
   ];
 };
@@ -151,7 +151,7 @@ const createVmOperation = async (
 ): Promise<Operation> => {
   const operation = {
     sender,
-    operation: payload
+    operation: payload,
   };
   const bytes = await encodeOperation(
     nonce,

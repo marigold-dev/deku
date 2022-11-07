@@ -401,3 +401,31 @@ module Helper_compile_origination : HANDLERS = struct
       }
     |> Result.ok
 end
+
+module Helper_compile_invocation : HANDLERS = struct
+  open Ocaml_wasm_vm
+
+  type path = unit
+  type body = { address : string; expression : string } [@@deriving of_yojson]
+  type response = Operation_payload.t [@@deriving yojson_of]
+
+  let meth = `POST
+  let path = Routes.(version / s "helpers" / s "compile-expression" /? nil)
+  let route = Routes.(path @--> ())
+
+  let handler ~path:() ~body:{ address; expression } ~state:_ =
+    let tickets, init =
+      Tunac.Compiler.compile_value expression |> Result.get_ok
+    in
+    Operation_payload.
+      {
+        tickets;
+        operation =
+          Operation.Call
+            {
+              address = Deku_ledger.Address.of_b58 address |> Option.get;
+              argument = init;
+            };
+      }
+    |> Result.ok
+end
