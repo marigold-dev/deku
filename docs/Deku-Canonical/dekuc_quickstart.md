@@ -6,8 +6,6 @@ import { ComponentCodeBlock } from "@theme/ComponentCodeBlock";
 
 # Quick-start with Deku-C
 
-> Under construction!
-
 In this 15-minute tutorial, we'll create our first DApp to Deku-C.
 
 You'll learn how to:
@@ -36,10 +34,6 @@ You can also deploy contracts to Deku-C from the command line - see the
 Let's write a simple counter, accepting the commands `Increment`, `Decrement`,
 `Reset`.
 
-
-<!-- FIXME: not sure if this tutorial works since I switched to the jsLigo 52. -->
-<!-- FIXME: tested with ligo 0.50 -->
-<!-- TODO: test with ligo 0.54.1 -->
 
 ```js
 type storage = int;
@@ -149,68 +143,37 @@ dekuC.originateContract(params)
 <br/>
 
 :::tip
-In addition to using `deku-toolkikt` and/or command-line tools, you can also develop and
-deploy contracts to Deku-C directly from your browser with the [LIGO Playground](https://ide.ligolang.org/)!
+In addition to using `deku-toolkit` and/or command-line tools, you can also develop Deku-C contract
+directly from your browser with the [LIGO Playground](https://ide.ligolang.org/)!
 :::
 
 ## Interacting with our Contract
 
-Once deployed, we can query and subscribe to our contract's state with the Deku-C client.
+Once deployed, we can use the Deku-C client to query and subscribe to our contract's state,
+as well as invoke operations. In the live editor below, we've hard-coded the address of a contract
+on Deku-C, but you can replace it with the DK1 address of the contract you deployed above.
 
-```js
-const myContract = dekuC.contract(window.myContractAddress);
+<!-- TODO: what happens when there are errors -->
 
-const currentState = await myContract.getState();
+```js live noInline
+const myContract = dekuC.contract("DK1..."); // 👈 Replace with your contract address
 
-myContract.subscribe((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newtate)}`));
+println("Getting contract state...")
+myContract.getState()
+  .then(state => println(`Current state is ${JSON.stringify(state)}`))
+  .then(() => {
+    // subscribe to changes
+    myContract.onNewState((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newState)}`));
+
+    // Calling the Increment endpoint with parameter 3
+    myContract.invoke(["Union", ["Left", ["Union", ["Right", ["Int", "3" ]]]]])
+  });
 ```
 
-We can also invoke the contract like so:
+:::tip
 
-```js
-myContract.invoke(["Union", [ "Left", [ "Union", [ "Left", [ "Int", "3" ] ] ] ])
+You can determine an invocation payload with the Ligo compiler:
 ```
-
-:::info
-You can determine the contract parameters using the Ligo compiler:
-```
-ligo compile parameter ./increment.jsligo 'Increment (2)'  --wasm
+ligo compile parameter ./increment.jsligo 'Increment (2)'
 ```
 :::
-
-## Putting It All Together in a DApp
-
-With all the parts assembled, we can write our first DApp.
-
-Below is a simple react component providing a user interface to increment
-contract that you can edit live. Replace `contractAddress` with your newly deployed
-contract's address and try it out!
-
-
-<ComponentCodeBlock code={`
-  const MyFirstDApp = () => {
-    const contractAddress = "DK1..."; // 👈 Replace with your contract address
-    const myContract = dekuC.contract(contractAddress);
-    const [counter, setCounter] = useState(1); // The initial value can be your initial state
-    const [delta, setDelta] = useState(1);
-    const handleInputChange = (event) => setDelta(event.target.value);
-    const handleIncrement = () => myContract.invoke("Increment", int(delta));
-    const handleDecrement = () => myContract.invoke("Decrement", int(delta));
-    const handleReset = () => myContract.invoke("Reset");
-    useEffect(() => {
-      myContract.onNewState(newState => setCounter(newState));
-    }, []);
-    return (
-      <div>
-        <h3>Connected to contract: {contractAddress}</h3>
-        <b><p>Current Counter State: {counter}</p></b>
-        <p><input value={delta} onChange={handleInputChange}/></p>
-        <button onClick={handleDecrement}>Increment</button>
-        <button onClick={handleIncrement}>Decrement</button>
-        <button onClick={handleReset}>Reset</button>
-      </div>
-    );
-  };
-  render(<MyFirstDApp/>)
-`}>
-</ComponentCodeBlock>
