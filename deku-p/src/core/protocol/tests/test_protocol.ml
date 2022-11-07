@@ -668,6 +668,48 @@ let test_withdraw_one_ticket () =
   Alcotest.(check amount')
     "bob should have 0 tickets" exepected_bob_balance bob_balance
 
+(* Deposit tests *)
+let deposit ~destination ~amount =
+  let destination = Address.to_key_hash destination |> Option.get in
+  let operation =
+    Tezos_operation.Deposit
+      {
+        destination;
+        amount;
+        ticket = Ticket_id.to_tezos_ticket ticket_id |> Option.get;
+      }
+  in
+  let hash =
+    Deku_tezos.Tezos_operation_hash.of_b58
+      "ootmGcYJUiuuBir5MLnxKBYiGcdrHZoBp413obKQgUw6fNcLXd5"
+    |> Option.get
+  in
+  Tezos_operation.{ hash; operations = [ operation ] }
+
+let test_deposit_zero_ticket () =
+  let level = Level.zero in
+  let amount = Amount.zero in
+  let tezos_operations = [ deposit ~destination:bob_addr ~amount ] in
+  let protocol = Protocol.initial in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload:[] ~tezos_operations protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  Alcotest.(check amount') "balance should not change" Amount.zero bob_balance
+
+let test_deposit_tickets () =
+  let level = Level.zero in
+  let amount = Amount.one in
+  let tezos_operations = [ deposit ~destination:bob_addr ~amount ] in
+  let protocol = Protocol.initial in
+  let protocol, _, _ =
+    Protocol.apply ~current_level:level ~payload:[] ~tezos_operations protocol
+  in
+  let (Protocol.Protocol { ledger; _ }) = protocol in
+  let bob_balance = Ledger.balance bob_addr ticket_id ledger in
+  Alcotest.(check amount') "balance should be updated" amount bob_balance
+
 let run () =
   let open Alcotest in
   run "Protocol" ~and_exit:false
@@ -739,5 +781,12 @@ let run () =
           test_case "can withdraw all tickets" `Quick test_withdraw_all_tickets;
           test_case "can withdraw only one ticket" `Quick
             test_withdraw_one_ticket;
+        ] );
+      ( "ticket deposit",
+        [
+          test_case "deposits 0 tickets does not affect the ledger" `Quick
+            test_deposit_zero_ticket;
+          test_case "deposits tickets update correctly the balance" `Quick
+            test_deposit_tickets;
         ] );
     ]
