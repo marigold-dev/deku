@@ -69,9 +69,9 @@ in {
         deku-api = {
           description = "Deku api";
           after = ["network.target"];
-          wantedBy = ["multi-user.target"];
+          wantedBy = ["multi-user.target" "deku-node.service"];
           path = [pkgs.nodejs-16_x];
-          inherit environment;
+          environment = cfg.environment;
           serviceConfig = {
             Type = "simple";
             ExecStart = "${deku-packages.${config.nixpkgs.system}.default}/bin/deku-api";
