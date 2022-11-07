@@ -408,7 +408,7 @@
                  DIG 2 ;
                  UPDATE }
                { DROP ;
-                 SWAP ;
+                 DUP 2 ;
                  CAR ;
                  CDR ;
                  IF_NONE { PUSH string "Operation is mandatory for minting" ; FAILWITH } {} ;
@@ -416,7 +416,8 @@
                  IF_LEFT
                    { IF_LEFT
                        { IF_LEFT
-                           { DROP ;
+                           { DIG 3 ;
+                             DROP 2 ;
                              DUP 3 ;
                              DUP 3 ;
                              PAIR ;
@@ -580,16 +581,18 @@
                                   UPDATE }
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } }
                            { SWAP ;
-                             DIG 5 ;
                              DIG 6 ;
+                             DIG 7 ;
                              DROP 4 ;
-                             DUP 2 ;
+                             DUP 3 ;
                              DUP 2 ;
                              PAIR ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
-                             PUSH nat 1 ;
+                             DIG 2 ;
+                             CAR ;
+                             CAR ;
                              DUP 2 ;
                              CAR ;
                              CAR ;
@@ -628,7 +631,9 @@
                              SOME ;
                              DIG 2 ;
                              UPDATE } }
-                       { IF_LEFT
+                       { DIG 3 ;
+                         DROP ;
+                         IF_LEFT
                            { DROP ;
                              DUP 3 ;
                              DUP 3 ;
@@ -955,7 +960,9 @@
                                   DIG 2 ;
                                   UPDATE }
                                 { SWAP ; DIG 2 ; DIG 4 ; DIG 5 ; DROP 5 } } } }
-                   { IF_LEFT
+                   { DIG 3 ;
+                     DROP ;
+                     IF_LEFT
                        { IF_LEFT
                            { DROP ;
                              DUP 3 ;

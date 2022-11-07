@@ -165,7 +165,7 @@ const main =
         Option.unopt_with_error(ope.operation, "Operation is mandatory for minting");
       match(operation, {Cookie: () => {let cookieBaker: cookieBaker = 
           force_access(player as address, cookieBakers);
-        let cookies = cookieBaker.cookies + (1 as nat);
+        let cookies = cookieBaker.cookies + (ope.amount as nat);
         let cookieBakers = 
           Map.update(player as address, Some
             ({...cookieBaker, cookies: cookies}), cookieBakers);
