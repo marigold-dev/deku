@@ -48,7 +48,7 @@
          PUSH nat 1100 ;
          PUSH nat 12000 ;
          PUSH nat 130000 ;
-         PUSH nat 130000 ;
+         PUSH nat 1400000 ;
          PUSH nat 20000000 ;
          LAMBDA
            (pair (pair nat nat nat nat nat nat nat (lambda (pair nat nat) nat))
@@ -325,17 +325,33 @@
              CDR ;
              MUL ;
              PUSH nat 260 ;
-             DIG 5 ;
+             DUP 6 ;
              CAR ;
              CAR ;
              CDR ;
              CDR ;
              CAR ;
              MUL ;
+             PUSH nat 1400 ;
+             DUP 7 ;
+             CAR ;
+             CAR ;
+             CAR ;
+             CAR ;
+             CDR ;
+             MUL ;
+             PUSH nat 7800 ;
+             DIG 7 ;
+             CDR ;
+             MUL ;
              SWAP ;
              DIG 2 ;
              DIG 3 ;
              DIG 4 ;
+             DIG 5 ;
+             DIG 6 ;
+             ADD ;
+             ADD ;
              ADD ;
              ADD ;
              ADD ;
