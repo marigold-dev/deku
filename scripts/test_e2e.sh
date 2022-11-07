@@ -96,8 +96,6 @@ local-setup() {
 
 
   message "Starting the API"
-  nix run '.#decookies-vm' -- "$DEKU_API_VM" &
-  sleep 2
   ./_build/install/default/bin/deku-api &
   sleep 3
 
@@ -108,10 +106,6 @@ local-setup() {
     test -p "./flextesa_chain/data/$N/pipe_write" || mkfifo "./flextesa_chain/data/$N/pipe_write"
     test -p "./flextesa_chain/data/$N/pipe_read" || mkfifo "./flextesa_chain/data/$N/pipe_read"
 
-    # Starts the VM
-    nix run '.#decookies-vm' -- "./flextesa_chain/data/$N/pipe" &
-    #awk -v n=$N '{ print "vm " n ": " $0}' &
-
     sleep 2
 
     # Starts the Node
@@ -119,7 +113,6 @@ local-setup() {
       --default-block-size=10000 \
       --port "444$N" \
       --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
-      --named-pipe-path "./flextesa_chain/data/$N/pipe" \
       --data-folder "./flextesa_chain/data/$N" &
       #awk -v n=$N '{ print "node " n ": " $0}' &
     sleep 0.1
