@@ -3,6 +3,9 @@
 #include "grandmaspecs.jsligo"
 #include "farmspecs.jsligo"
 #include "minespecs.jsligo"
+#include "factoryspecs.jsligo"
+#include "bankspecs.jsligo"
+#include "templespecs.jsligo"
 const _test_initial_storage_is_empty_map = 
   (): bool => {let _ = 
      Test.log(["START: Executing _test_initial_storage_is_empty_map"]);

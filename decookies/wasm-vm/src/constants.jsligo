@@ -9,7 +9,7 @@ const initialMineCost: nat = 12000 as nat;
 
 const initialFactoryCost: nat = 130000 as nat;
 
-const initialBankCost: nat = 130000 as nat;
+const initialBankCost: nat = 1400000 as nat;
 
 const initialTempleCost: nat = 20000000 as nat;
 

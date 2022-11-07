@@ -71,7 +71,9 @@ const calculateCPS =
    let farm = cookieBaker.farms * farmCPS;
    let mine = cookieBaker.mines * mineCPS;
    let factory = cookieBaker.factories * factoryCPS;
-   return cursor + grandma + farm + mine + factory};
+   let bank = cookieBaker.banks * bankCPS;
+   let temple = cookieBaker.temples * templeCPS;
+   return cursor + grandma + farm + mine + factory + bank + temple};
 
 const force_access = 
   (key: address, cookieBakers: storage) => {return match(Map.
