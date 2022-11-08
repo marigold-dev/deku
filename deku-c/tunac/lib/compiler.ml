@@ -41,16 +41,8 @@ let rec compile_instruction ~ctx instruction =
         "(call $unpair_n  (call $pop) (i32.const %ld)) ;; implicit return"
         (Z.to_int32 x)
   | Prim (_, I_PAIR, [ Int (_, x) ], _) ->
-      let rec go acc = function
-        | 0 -> acc
-        | n ->
-            go
-              (acc
-             ^ "(call $swap) (call $push (call $pair (call $pop) (call $pop)))"
-              )
-              (n - 1)
-      in
-      go "" (Z.to_int x - 1)
+      Format.sprintf "(call $push (call $pair_n (i32.const %ld)))"
+        (Z.to_int32 x)
   | Prim (_, I_PAIR, _, _) ->
       "(call $push (call $pair (call $pop) (call $pop)))"
   | Prim (_, I_ADD, _, _) ->
@@ -223,8 +215,10 @@ let rec compile_instruction ~ctx instruction =
         body |> List.map (compile_instruction ~ctx) |> String.concat "\n"
       in
       let loop_name = gen_symbol ~ctx "$loop_left" in
-      Printf.sprintf "(loop %s (call $if_left (call $pop)) br_if %s %s)"
-        loop_name loop_name body
+      Printf.sprintf
+        "(loop %s (call $if_left (call $pop)) (if (then %s (call $is_left \
+         (call $pop)) br_if %s) (else)))"
+        loop_name body loop_name
   | Prim (_, I_ITER, [ Seq (_, body) ], _) ->
       let name = gen_symbol ~ctx "$iter_lambda" in
       let lambda = compile_lambda ~ctx ~unit:true name body in

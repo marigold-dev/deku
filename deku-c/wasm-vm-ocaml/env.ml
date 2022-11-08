@@ -20,6 +20,7 @@ let rec execute t ~operation_hash ~tickets ~operation =
   let open Effects in
   let call_indirect = ref (fun _ _ -> assert false) in
   let call_indirect_unit = ref (fun _ _ -> assert false) in
+  let pop = ref (fun _ -> assert false) in
   let push = ref (fun _ -> assert false) in
   let constants = ref [||] in
   let%ok self =
@@ -98,6 +99,10 @@ let rec execute t ~operation_hash ~tickets ~operation =
                     Some
                       (fun (k : (a, _) continuation) ->
                         continue k (!push x : unit))
+                | Pop ->
+                    Some
+                      (fun (k : (a, _) continuation) ->
+                        continue k (!pop () : int64))
                 | Indirect_call ->
                     Some
                       (fun (k : (a, _) continuation) ->
@@ -166,6 +171,15 @@ let rec execute t ~operation_hash ~tickets ~operation =
                            |> Result.get_ok
                          in
                          ignore @@ Wasm.Eval.invoke func [ arg ]);
+                    (pop :=
+                       fun _ ->
+                         let func =
+                           Externs.(extract_func instance Externs.pop)
+                           |> Result.get_ok
+                         in
+                         match Wasm.Eval.invoke func [] with
+                         | Wasm.Values.[ Num (I64 x) ] -> x
+                         | _ -> failwith "bad indirect call in contract");
                     Some (fun (k : (a, _) continuation) -> continue k ())
                 | _ -> None);
           }

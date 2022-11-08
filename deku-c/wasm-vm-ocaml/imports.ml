@@ -52,6 +52,8 @@ open FuncType
 open Effects
 open Value
 
+let vec = Vec.empty
+
 module Syntax = struct
   let ( %-< ) a f = f a
 
@@ -99,8 +101,6 @@ end
 let to_utf8 s = Wasm.Utf8.decode s
 
 open Syntax
-
-let vec = Vec.empty
 
 let reset () =
   Vec.Table.clear vec.contents;
@@ -470,7 +470,7 @@ let eq =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(equal zero x) then Bool 1 else Bool 0 in
+          let result = if Z.(equal x zero) then Bool 1 else Bool 0 in
           let result = Vec.alloc vec result in
           wasm_i64 result
       | _ ->
@@ -534,7 +534,7 @@ let le =
       match args with
       | Wasm.Values.[ Num (I64 x) ] ->
           let x = Vec.get_and_remove vec x %-< int in
-          let result = if Z.(leq x zero) then Bool 1 else Bool 1 in
+          let result = if Z.(leq x zero) then Bool 1 else Bool 0 in
           let result = Vec.alloc vec result in
           wasm_i64 result
       | _ ->
@@ -673,59 +673,6 @@ let xor_ =
           ppt (__LINE_OF__ ());
           raise Type_error )
 
-let apply =
-  let matcher v = function
-    | Closure { opt_arg; call } -> (
-        match opt_arg with
-        | [] -> wasm_i64 @@ Vec.alloc vec @@ Closure { opt_arg = [ v ]; call }
-        | rest ->
-            wasm_i64 @@ Vec.alloc vec @@ Closure { opt_arg = v :: rest; call })
-    | _ ->
-        ppt (__LINE_OF__ ());
-        raise Type_error
-  in
-  let typ = [ i64; i64 ] -%> [ i64 ] in
-  ( to_utf8 "apply",
-    typ,
-    fun inst args ->
-      Wasm.Instance.burn_gas !inst 100L;
-      match args with
-      | Wasm.Values.[ Num (I64 x); Num (I64 y) ] ->
-          let x = Vec.get_and_remove vec x in
-          let y = Vec.get_and_remove vec y in
-          matcher x y
-      | _ ->
-          ppt (__LINE_OF__ ());
-          raise Type_error )
-
-let exec =
-  let matcher v = function
-    | Closure { opt_arg; call } -> (
-        match opt_arg with
-        | [] -> call_indirect () call (wasm_i64 @@ Vec.alloc vec v)
-        | rest ->
-            let arg = List.fold_left (fun acc x -> Pair (x, acc)) v rest in
-            let arg = Vec.alloc vec arg in
-            let res = call_indirect () call (wasm_i64 arg) in
-            res)
-    | _ ->
-        ppt (__LINE_OF__ ());
-        raise Type_error
-  in
-  let typ = [ i64; i64 ] -%> [ i64 ] in
-  ( to_utf8 "exec",
-    typ,
-    fun inst args ->
-      Wasm.Instance.burn_gas !inst 100L;
-      match args with
-      | Wasm.Values.[ Num (I64 x); Num (I64 y) ] ->
-          let x = Vec.get_and_remove vec x in
-          let y = Vec.get_and_remove vec y in
-          wasm_i64 @@ matcher x y
-      | _ ->
-          ppt (__LINE_OF__ ());
-          raise Type_error )
-
 let and_ =
   let and_ = function
     | Bool x, Bool y -> Bool (x land y)
@@ -811,14 +758,99 @@ let unpair_n =
       | Wasm.Values.[ Num (I64 x); Num (I32 y) ] ->
           let fst = Vec.get_and_remove vec x in
           let rec go = function
-            | 0, x -> push_to_stack @@ wasm_i64' @@ Vec.alloc vec x
+            | 1, y -> push_to_stack @@ wasm_i64' (Vec.alloc vec y)
             | n, Pair (x, y) ->
-                let () = go (n - 1, y) in
-                push_to_stack @@ wasm_i64' @@ Vec.alloc vec x
-            | _ -> raise Type_error
+                go (n - 1, y);
+                push_to_stack @@ wasm_i64' (Vec.alloc vec x)
+            | _ ->
+                ppt (__LINE_OF__ ());
+                raise Type_error
           in
-          go (Int32.to_int y - 1, fst);
+          go (Int32.to_int y, fst);
           []
+      | _ ->
+          ppt (__LINE_OF__ ());
+          raise Type_error )
+
+let apply =
+  let matcher v = function
+    | Closure { opt_arg; call } -> (
+        match opt_arg with
+        | [] -> wasm_i64 @@ Vec.alloc vec @@ Closure { opt_arg = [ v ]; call }
+        | rest ->
+            wasm_i64 @@ Vec.alloc vec @@ Closure { opt_arg = v :: rest; call })
+    | _ ->
+        ppt (__LINE_OF__ ());
+        raise Type_error
+  in
+  let typ = [ i64; i64 ] -%> [ i64 ] in
+  ( to_utf8 "apply",
+    typ,
+    fun inst args ->
+      Wasm.Instance.burn_gas !inst 100L;
+      match args with
+      | Wasm.Values.[ Num (I64 x); Num (I64 y) ] ->
+          let x = Vec.get_and_remove vec x in
+          let y = Vec.get_and_remove vec y in
+          matcher x y
+      | _ ->
+          ppt (__LINE_OF__ ());
+          raise Type_error )
+
+let exec =
+  let matcher v = function
+    | Closure { opt_arg; call } -> (
+        match opt_arg with
+        | [] -> call_indirect () call (wasm_i64 @@ Vec.alloc vec v)
+        | [ rest ] ->
+            let res =
+              call_indirect () call (wasm_i64 (Vec.alloc vec @@ Pair (rest, v)))
+            in
+            res
+        | _ ->
+            ppt (__LINE_OF__ ());
+            raise Type_error)
+    | _ ->
+        ppt (__LINE_OF__ ());
+        raise Type_error
+  in
+  let typ = [ i64; i64 ] -%> [ i64 ] in
+  ( to_utf8 "exec",
+    typ,
+    fun inst args ->
+      Wasm.Instance.burn_gas !inst 100L;
+      match args with
+      | Wasm.Values.[ Num (I64 x); Num (I64 y) ] ->
+          let x = Vec.get_and_remove vec x in
+          let y = Vec.get_and_remove vec y in
+          wasm_i64 @@ matcher x y
+      | _ ->
+          ppt (__LINE_OF__ ());
+          raise Type_error )
+
+let pair_n =
+  let typ = [ i32 ] -%> [ i64 ] in
+  ( to_utf8 "pair_n",
+    typ,
+    fun inst args ->
+      Wasm.Instance.burn_gas !inst 100L;
+      match args with
+      | Wasm.Values.[ Num (I32 y) ] ->
+          let rec go acc = function
+            | 0 -> acc
+            | n -> go ((pop () |> Vec.get_and_remove vec) :: acc) (n - 1)
+          in
+          let paired = go [] (Int32.to_int y) |> List.rev in
+          let rec example = function
+            | [] ->
+                ppt (__LINE_OF__ ());
+                raise Type_error
+            | x :: [] -> x
+            | x :: rest -> Pair (x, example rest)
+          in
+          let result = example paired in
+          let result = Vec.alloc vec result in
+          wasm_i64 result
       | _ ->
           ppt (__LINE_OF__ ());
           raise Type_error )
@@ -1035,7 +1067,7 @@ let concat_ =
           ppt (__LINE_OF__ ());
           raise Type_error )
 
-let is_left =
+let if_left =
   let typ = [ i64 ] -%> [ i32 ] in
   ( to_utf8 "if_left",
     typ,
@@ -1047,6 +1079,27 @@ let is_left =
           match un with
           | Left x ->
               push_to_stack @@ wasm_i64' (Vec.alloc vec x);
+              wasm_i32 1l
+          | Right x ->
+              push_to_stack @@ wasm_i64' (Vec.alloc vec x);
+              wasm_i32 0l)
+      | _ ->
+          ppt (__LINE_OF__ ());
+          raise Type_error )
+
+let is_left =
+  let typ = [ i64 ] -%> [ i32 ] in
+  ( to_utf8 "is_left",
+    typ,
+    fun inst args ->
+      Wasm.Instance.burn_gas !inst 100L;
+      match args with
+      | Wasm.Values.[ Num (I64 x) ] -> (
+          let un = Vec.Table.find vec.contents x %-< union in
+
+          match un with
+          | Left _ ->
+              push_to_stack @@ wasm_i64' x;
               wasm_i32 1l
           | Right x ->
               push_to_stack @@ wasm_i64' (Vec.alloc vec x);
@@ -1675,6 +1728,7 @@ let imports =
       and_;
       iter_;
       map_;
+      if_left;
       le;
       or_;
       xor_;
@@ -1703,6 +1757,7 @@ let imports =
       some;
       lt;
       unpair_n;
+      pair_n;
     ]
 
 let imports () =

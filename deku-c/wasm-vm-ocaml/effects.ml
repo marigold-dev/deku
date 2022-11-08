@@ -17,6 +17,7 @@ type _ Effect.t +=
   | Mint_ticket : Ticket_id.t * N.t -> int Effect.t
   | Set_constants : (int * Value.t) array -> unit Effect.t
   | Set_instance : Wasm.Instance.module_inst -> unit Effect.t
+  | Pop : int64 Effect.t
 
 let deposit_tickets (t, v) = Effect.perform (Deposit_tickets (t, v))
 let take_tickets t = Effect.perform (Take_tickets t)
@@ -33,3 +34,4 @@ let join_tickets t t2 = Effect.perform (Join_ticket (t, t2))
 let mint_ticket t amount = Effect.perform (Mint_ticket (t, amount))
 let set_instance x = Effect.perform (Set_instance x)
 let set_constants x = Effect.perform (Set_constants x)
+let pop () = Effect.perform Pop

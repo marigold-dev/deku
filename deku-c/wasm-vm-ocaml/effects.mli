@@ -17,6 +17,7 @@ type _ Effect.t +=
   | Mint_ticket : Ticket_id.t * N.t -> int Effect.t
   | Set_constants : (int * Value.t) array -> unit Effect.t
   | Set_instance : Wasm.Instance.module_inst -> unit Effect.t
+  | Pop : int64 Effect.t
 
 val deposit_tickets : Address.t * (Ticket_id.t * N.t) list -> unit
 val take_tickets : Address.address -> (Ticket_id.t * N.t) list
@@ -33,3 +34,4 @@ val split_ticket : int -> N.t * N.t -> (int * int) option
 val mint_ticket : Ticket_id.t -> N.t -> int
 val set_constants : (int * Value.t) array -> unit
 val set_instance : Wasm.Instance.module_inst -> unit
+val pop : unit -> int64
