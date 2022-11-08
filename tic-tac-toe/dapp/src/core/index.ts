@@ -40,5 +40,6 @@ export const parseState = (state: any) => {
 }
 
 export const play = (cellId: CellId) => {
-    return ["Int", cellId + ""];
+    // return ["Int", cellId + ""];
+    return ["Union", ["Right", ["Int", cellId + ""]]]
 } 

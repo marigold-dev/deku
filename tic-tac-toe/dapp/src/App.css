@@ -45,3 +45,47 @@ button {
   cursor: pointer;
   user-select: none;
 }
+
+#connect-wallet {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin: 24px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  background-color: rgb(116, 119, 187);
+  color: #f1f1f1;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  z-index:1000;
+}
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+  opacity: 0;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  transition: opacity 0.1s;
+  transform: translateY(100%);
+  margin: 8px;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+  opacity: 1;
+}

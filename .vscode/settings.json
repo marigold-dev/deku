@@ -1,0 +1,6 @@
+{
+    "ocaml.sandbox": {
+        "kind": "custom",
+        "template": "cd /home/pilou/marigold/deku && nix develop -c $prog $args"
+    }
+}
