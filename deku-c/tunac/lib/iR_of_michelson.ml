@@ -269,10 +269,179 @@ let rec compile_instruction ~env instr =
     Env.free_local env x;
     Env.free_local env y;
     block
-  
 
+  | Prim (_, I_MUL, _, _) ->
+    let x = Env.alloc_local env in
+    let y = Env.alloc_local env in
+    let block =
+      Cblock [ compile_pop x
+              ; compile_pop y
+              ; compile_push ~env (Cop (Cwasm Wasm_mul, [ Cvar x; Cvar y ])) ]
+    in
+    Env.free_local env x;
+    Env.free_local env y;
+    block
+
+  | Prim (_, I_NEG, _, _) ->
+    let x = Env.alloc_local env in
+    let block =
+      Cblock [ compile_pop x
+              ; compile_push ~env (Cop (Cwasm Wasm_sub, [ Cconst_i32 0l; Cvar x ])) ]
+    in
+    Env.free_local env x;
+    block
+
+  | Prim (_, I_EQ, _, _) ->
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; compile_push ~env (Cop (Cwasm Wasm_sub, [ Cconst_i32 0l; Cop (Cwasm Wasm_eqz, [ Cvar p ]) ])) ]
+    in
+    Env.free_local env p;
+    block  
+
+  | Prim (_, I_ABS, _, _) ->
+    let p = Env.alloc_local env in
+    let q = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; Cassign (q, Cop (Cwasm Wasm_shr, [ Cvar p; Cconst_i32 31l ]))
+        ; compile_push ~env (Cop (Cwasm Wasm_xor, [ Cop (Cwasm Wasm_add, [ Cvar p; Cvar q ]); Cvar q ])) ]
+    in
+    Env.free_local env p;
+    Env.free_local env q;
+    block
+
+  | Prim (_, I_EDIV, _, _) ->
+    let x = Env.alloc_local env in
+    let y = Env.alloc_local env in
+    let r = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop x
+        ; compile_pop y
+        ; Cifthenelse
+            (Cvar y
+            , Cblock
+                [ Cassign (r, Data.alloc 2)
+                ; Cstore (0, Cvar r, Cop (Cwasm Wasm_div, [ Cvar x; Cvar y ]))
+                ; Cstore (1, Cvar r, Cop (Cwasm Wasm_rem, [ Cvar x; Cvar y ]))
+                ; Cassign (x, Data.alloc 2)
+                ; Cstore (0, Cvar x, Cconst_i32 1l)
+                ; Cstore (1, Cvar x, Cvar r) ]
+            , Cassign (x, Cconst_i32 0l))
+        ; compile_push ~env (Cvar x) ]
+    in
+    Env.free_local env x;
+    Env.free_local env y;
+    Env.free_local env r;
+    block
+
+  (* Missing arithmetic instruction: COMPARE, GE, GT, INT, ISNAT, LE, LSL, LSR, LT, NEQ *)
+  
+  | Prim (_, I_AND, _, _) ->
+    let p = Env.alloc_local env in
+    let q = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; compile_pop q
+        ; compile_push ~env (Cop (Cwasm Wasm_and, [ Cvar p; Cvar q ])) ]
+    in
+    Env.free_local env p;
+    Env.free_local env q;
+    block
+
+  | Prim (_, I_NOT, _, _) ->
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; compile_push ~env (Cop (Cwasm Wasm_xor, [ Cvar p; Cconst_i32 0xffffffffl ]))]
+    in
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_OR, _, _) ->
+    let p = Env.alloc_local env in
+    let q = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; compile_pop q
+        ; compile_push ~env (Cop (Cwasm Wasm_or, [ Cvar p; Cvar q ])) ]
+    in
+    Env.free_local env p;
+    Env.free_local env q;
+    block
+
+  | Prim (_, I_XOR, _, _) ->
+    let p = Env.alloc_local env in
+    let q = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop p
+        ; compile_pop q
+        ; compile_push ~env (Cop (Cwasm Wasm_xor, [ Cvar p; Cvar q ])) ]
+    in
+    Env.free_local env p;
+    Env.free_local env q;
+    block
+
+  | Prim (_, I_UNIT, _, _)
+  | Prim (_, I_NONE, _, _)
   | Prim (_, I_NIL, _, _) ->
     compile_push ~env (Cconst_i32 0l)
+
+  | Prim (_, I_CONS, _, _) ->
+    let value = Env.alloc_local env in
+    let list = Env.alloc_local env in
+    let new_list = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop value
+        ; compile_pop list
+        ; Cassign (new_list, Data.alloc 2)
+        ; Cstore (0, Cvar new_list, Cvar value)
+        ; Cstore (1, Cvar new_list, Cvar list)
+        ; compile_push ~env (Cvar new_list) ]
+    in
+    Env.free_local env value;
+    Env.free_local env list;
+    Env.free_local env new_list;
+    block
+
+  | Prim (_, I_LEFT, _, _) ->
+    let value = Env.alloc_local env in
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop value
+        ; Cassign (p, Data.alloc 2)
+        ; Cstore (0, Cvar p, Cconst_i32 1l)
+        ; Cstore (1, Cvar p, Cvar value)
+        ; compile_push ~env (Cvar p) ]
+    in
+    Env.free_local env value;
+    Env.free_local env p;
+    block
+
+  | Prim (_, I_RIGHT, _, _) ->
+    let value = Env.alloc_local env in
+    let p = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop value
+        ; Cassign (p, Data.alloc 2)
+        ; Cstore (0, Cvar p, Cconst_i32 0l)
+        ; Cstore (1, Cvar p, Cvar value)
+        ; compile_push ~env (Cvar p) ]
+    in
+    Env.free_local env value;
+    Env.free_local env p;
+    block
 
   | Prim (_, I_PAIR, _, _) ->
     compile_pair ~env
@@ -349,7 +518,6 @@ let rec compile_instruction ~env instr =
     in
     Env.free_local env p;
     block
-
 
   | Prim (_, I_SWAP, _, _) ->
     let fst = Env.alloc_local env in
