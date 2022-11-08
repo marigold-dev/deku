@@ -99,6 +99,30 @@ export class Contract {
   }
 
   /**
+   * Returns the data of the contract as a wasm-vm object
+   * @returns an object
+   */
+  async getRawInfos(): Promise<{ [x: string]: JSONType } | null> {
+    const response: { [key: string]: string } =
+      (await this.deku.getVmState()) as { [key: string]: string };
+    if (response === null) return null;
+    const state = response[this.address];
+    if (state === null || state === undefined) return null;
+    const slashRemoved = state.replaceAll('\\"', '"');
+    return JSON.parse(slashRemoved);
+  }
+
+  /**
+   * Returns the state of the contract as a wasm-vm state object
+   * @returns an object representing the state of the contract
+   */
+  async getRawState(): Promise<JSONType | null> {
+    const json = await this.getRawInfos();
+    if (json === null) return null;
+    return json["state"];
+  }
+
+  /**
    * Returns the state of the contract
    * Parses it to a readable javascript object
    * @returns javascript object
@@ -110,18 +134,13 @@ export class Contract {
   }
 
   /**
-   * Returns the state of the contract as a wasm-vm state object
-   * @returns an object representing the state of the contract
+   * Returns the entrypoints of the contract
+   * @returns javascript object
    */
-  async getRawState(): Promise<JSONType | null> {
-    const response: { [key: string]: string } =
-      (await this.deku.getVmState()) as { [key: string]: string };
-    if (response === null) return null;
-    const state = response[this.address];
-    if (state === null || state === undefined) return null;
-    const slashRemoved = state.replaceAll('\\"', '"');
-    const json = JSON.parse(slashRemoved);
-    return json["state"];
+  async getEntrypoints(): Promise<JSONType | null> {
+    const json = await this.getRawInfos();
+    if (json === null) return null;
+    return json["entrypoints"];
   }
 
   async onNewState(callback: (state: JSONType) => void): Promise<void> {
