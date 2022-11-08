@@ -387,6 +387,7 @@ module Helper_compile_origination : HANDLERS = struct
     in
     let out = Tunac.Output.make wat constants |> Result.get_ok in
     let entrypoints = entrypoints |> Option.value ~default:[] in
+    print_endline @@ Format.sprintf "entrypoints: %i" (List.length entrypoints);
     Operation_payload.
       {
         tickets;
