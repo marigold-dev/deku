@@ -58,6 +58,7 @@
             pkgs = nixpkgs.makePkgs {
               inherit system;
               extraOverlays = [
+                tezos.overlays.default
                 (final: prev: {
                   ocaml-ng =
                     prev.ocaml-ng
@@ -76,7 +77,6 @@
                     };
                 })
                 (import ./nix/overlay.nix)
-                tezos.overlays.default
                 (final: prev: {
                   ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;
                 })
