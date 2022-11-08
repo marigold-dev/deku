@@ -1,19 +1,30 @@
-type storage = {game: list<string>};
+type cell = ["Cross"] | ["Circle"] | ["Empty"]
+
+type gameState = 
+  | ["PlayerTurn", address]
+  | ["Winner", address]
+
+type storage = {
+  game: list<cell>,
+  players: {
+    player1: address,
+    player2: address
+  },
+  gameState: gameState
+};
 
 const empty: storage = {
   game: list([
-    "cross",
-    "empty",
-    "circle",
-
-    "empty",
-    "empty",
-    "empty",
-
-    "empty",
-    "empty",
-    "empty"
-])};
+    Cross(), Empty(), Circle(), 
+    Empty(), Empty(), Empty(), 
+    Empty(), Empty(), Empty()
+  ]),
+  players: {
+    player1: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address, // The two players are the same
+    player2: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address,
+  },
+  gameState: PlayerTurn("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address)
+};
 
 type return_ =
 

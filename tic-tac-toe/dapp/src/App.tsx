@@ -13,24 +13,36 @@ const signer = fromMemorySigner(tezosSigner);
 const deku = new DekuCClient({ dekuRpc, ligoRpc, signer });
 
 const jsligo = `
-type storage = {game: list<string>};
+type cell = ["Cross"] | ["Circle"] | ["Empty"]
+
+type gameState = 
+  | ["PlayerTurn", address]
+  | ["Winner", address]
+
+type storage = {
+  game: list<cell>,
+  players: {
+    player1: address,
+    player2: address
+  },
+  gameState: gameState
+};
 
 const empty: storage = {
   game: list([
-    "cross",
-    "empty",
-    "circle",
-
-    "empty",
-    "empty",
-    "empty",
-
-    "empty",
-    "empty",
-    "empty"
-])};
+    Cross(), Empty(), Circle(), 
+    Empty(), Empty(), Empty(), 
+    Empty(), Empty(), Empty()
+  ]),
+  players: {
+    player1: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address, // The two players are the same
+    player2: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address,
+  },
+  gameState: PlayerTurn("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address)
+};
 
 type return_ =
+
   [list<operation>,
    storage];
 
@@ -39,9 +51,10 @@ const main =
     storage]};
 `;
 
-const initialStorage: any = '{ "cross" ; "empty" ; "circle" ; "empty" ; "empty" ; "empty" ; "empty" ; "empty" ; "empty" }'
+const initialStorage: any = '(Pair (Pair { Left (Right Unit) ; Right Unit ; Left (Left Unit) ; Right Unit ; Right Unit ; Right Unit ; Right Unit ; Right Unit ; Right Unit } (Left "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb")) "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb")'
 
-const address = "DK1DhzAPHiR6oQc1oYthYAdUmMLB9Z7z1C5x"
+const address = "DK1MYaA26NdjDT9eNWnKvd2LXye1vhPFyxDm"
+
 
 const Cell = ({ id, state, onClick }: { id: number, state: string, onClick: ({ id, state }: { id: number, state: string }) => void }) => {
   const character = state === "cross"
@@ -53,9 +66,48 @@ const Cell = ({ id, state, onClick }: { id: number, state: string, onClick: ({ i
     <div className="cell" onClick={() => onClick({ id, state })}>{character}</div>);
 }
 
+type CellType = "Cross" | "Circle" | "Empty"
+interface GameState {
+  type: "PlayerTurn" | "Winner",
+  payload: string
+}
+
+interface State {
+  game: Array<CellType>,
+  players: {
+    player1: string,
+    player2: string,
+  },
+  gameState: {
+    type: "PlayerTurn" | "Winner",
+    payload: string
+  }
+}
+
+const stateParser = (state: any): State => {
+  const game: Array<CellType> = state[0][0].map((cell: any) => {
+    if (cell && cell.left && cell.left.right === null) return "Cross";
+    else if (cell && cell.right === null) return "Empty";
+    else return "Circle"
+  });
+  const players = {
+    player1: state[1][0],
+    player2: state[1][1],
+  }
+  const gameState: GameState = state[0][1].left
+    ? { type: "PlayerTurn", payload: state[0][1].left }
+    : { type: "Winner", payload: state[0][1].right }
+  return {
+    game,
+    players,
+    gameState
+  };
+}
+
+
+
 const App = () => {
   const [state, setState] = useState(null);
-  console.log(state);
   const game: Array<string> = state || []; // Should be a list
 
   const originate = () => {
@@ -71,8 +123,10 @@ const App = () => {
 
   useEffect(() => {
     const contract = deku.contract(address);
+    console.log("hello");
     contract.getState()
-      .then(setState)
+      .then(stateParser)
+      .then(console.log)
       .catch(console.error);
   }, [])
 
