@@ -55,6 +55,9 @@ const parseContractState = (json: JSONType): JSONType => {
         }
       }
     }
+    case "Unit": {
+      return null
+    }
     default:
       console.error(`type ${type} is not yet implemented`);
       return null;
