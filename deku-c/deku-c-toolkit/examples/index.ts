@@ -10,7 +10,7 @@ const dekuSigner = fromMemorySigner(signer);
 const dekuC = new DekuCClient({
   dekuRpc: "http://0.0.0.0:8080",
   ligoRpc: "http://0.0.0.0:9090",
-  signer: dekuSigner,
+  dekuSigner,
 });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -30,7 +30,7 @@ const originate = async () => {
         [list<operation>,
         storage];
 
-        const main = 
+        const main =
         (action: parameter, store: storage): return_ => {
             let storage = match(action, {
                 Increment: n => store + n,

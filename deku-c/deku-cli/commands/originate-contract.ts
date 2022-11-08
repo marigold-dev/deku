@@ -7,11 +7,11 @@ import { originate, read } from "../core/contract";
 
 async function main(apiUri, ligoUri, walletPath, contractPath, initialStorage) {
   const wallet = load(walletPath);
-  const signer = fromMemorySigner(new InMemorySigner(wallet.priv_key));
+  const dekuSigner = fromMemorySigner(new InMemorySigner(wallet.priv_key));
   const deku = new DekuCClient({
     dekuRpc: apiUri,
     ligoRpc: ligoUri,
-    signer: signer,
+    dekuSigner,
   });
 
   const contract = read(contractPath);

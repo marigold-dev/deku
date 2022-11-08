@@ -21,10 +21,13 @@ export const createOperation = async (
         method: "POST",
         body: JSON.stringify({
           source,
-          storage: initialStorage + ""
-        })
+          storage: initialStorage + "",
+        }),
       };
-      const dekuRes = await fetch(dekuRpc + "/api/v1/helpers/compile-contract", dekuOptions)
+      const dekuRes = await fetch(
+        dekuRpc + "/api/v1/helpers/compile-contract",
+        dekuOptions
+      );
       return dekuRes.json();
     }
     default:
@@ -45,3 +48,7 @@ export const operationHashToContractAddress = async (
   if (response.ok) return json.address;
   throw json;
 };
+
+export function isDefined<T>(val: T | undefined | null): val is T {
+  return val !== undefined && val !== null;
+}

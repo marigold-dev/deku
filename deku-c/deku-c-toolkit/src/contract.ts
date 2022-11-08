@@ -90,9 +90,9 @@ export class Contract {
     const invoke = {
       operation: JSON.stringify({
         address: this.address,
-        argument: parameter
+        argument: parameter,
       }),
-      tickets: []
+      tickets: [],
     };
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
