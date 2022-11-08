@@ -41,6 +41,20 @@ const parseContractState = (json: JSONType): JSONType => {
       const first = json[1] as Array<JSONType>;
       return first.map(json => parseContractState(json))
     }
+    case "Union": {
+      const first = json[1] as Array<JSONType>;
+      const type = first[0] as string;
+      const value = first[1] as JSONType;
+      switch (type) {
+        case "Right":
+          return { right: parseContractState(value) }
+        case "Left":
+          return { left: parseContractState(value) }
+        default: {
+          return null; // TODO: remove this default case which is not possible
+        }
+      }
+    }
     default:
       console.error(`type ${type} is not yet implemented`);
       return null;
