@@ -152,6 +152,8 @@ struct
       List.for_all
         (fun (signature, _) -> equal signature signature)
         (List.flatten signatures)
+
+    let zero = to_b58check zero
   end
 
   module Print_secret_key = struct
@@ -262,5 +264,7 @@ struct
 
     let print_equality_signatures () =
       Format.printf "let equality_signatures = %b\n%!" Sig.equality_signatures
+
+    let print_zero () = Format.printf "let size = %s\n%!" Sig.zero
   end
 end
