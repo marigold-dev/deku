@@ -44,13 +44,7 @@ with super; {
               fetchSubmodules = true;
             };
           });
-          ringo = super.ringo.overrideAttrs (_: {
-            src = builtins.fetchurl {
-              url =
-                https://gitlab.com/nomadic-labs/ringo/-/archive/5514a34ccafdea498e4b018fb141217c1bf43da9/ringo-5514a34ccafdea498e4b018fb141217c1bf43da9.tar.gz;
-              sha256 = "1qadbvmqirn1scc4r4lwzqs4rrwmp1vnzhczy9pipfnf9bb9c0j7";
-            };
-          });
+
           tezos-stdlib = super.tezos-stdlib.overrideAttrs (_: {
             postPatch = ''
               substituteInPlace "src/lib_stdlib/hash_queue.mli" --replace \
@@ -94,6 +88,64 @@ with super; {
                 "(name wasm)" \
                 "(name wasm) (public_name wasm)"
             '';
+          };
+
+          ligo-simple-utils = oself.buildDunePackage rec {
+            pname = "simple-utils";
+            inherit (self.ligo) version;
+            src = "${self.ligo.src}/vendors/ligo-utils/simple-utils";
+
+            propagatedBuildInputs = with oself; [
+              base
+              core
+              yojson
+              ppx_deriving
+              ppx_deriving_yojson
+              ppx_hash
+            ];
+          };
+
+          proto-alpha-utils = oself.buildDunePackage rec {
+            pname = "proto-alpha-utils";
+            inherit (self.ligo) version;
+            src = "${self.ligo.src}/vendors/ligo-utils/proto-alpha-utils";
+
+            propagatedBuildInputs = with oself; [
+              base
+              bigstring
+              calendar
+              cohttp-lwt-unix
+              cstruct
+              ezjsonm
+              hex
+              hidapi
+              ipaddr
+              macaddr
+              irmin
+              js_of_ocaml
+              lwt
+              lwt_log
+              mtime
+              ocplib-endian
+              ocp-ocamlres
+              re
+              rresult
+              stdio
+              uri
+              uutf
+              zarith
+              ocplib-json-typed
+              ocplib-json-typed-bson
+              tezos-crypto
+              tezos-error-monad
+              tezos-stdlib-unix
+              tezos-protocol-environment
+              tezos-011-PtHangz2.protocol
+              tezos-011-PtHangz2.client
+              # tezos-memory-proto-alpha
+              ligo-simple-utils
+              # tezos-utils
+            ];
           };
         });
     });

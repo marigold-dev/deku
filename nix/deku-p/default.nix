@@ -46,6 +46,7 @@
     packages = {
       default = deku;
       inherit deku deku-static docker;
+      ligo-utils = pkgs.ocamlPackages.proto-alpha-utils;
     };
     apps = {
       node = {
