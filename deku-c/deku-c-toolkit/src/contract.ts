@@ -32,8 +32,9 @@ const parseContractState = (json: JSONType): JSONType => {
       }, {});
     }
     case "Pair": {
-      const first = json[1] as JSONType;
-      const second = json[2] as JSONType;
+      const value = json[1] as Array<JSONType>;
+      const first = value[0] as JSONType;
+      const second = value[1] as JSONType;
       return [parseContractState(first), parseContractState(second)];
     }
     case "List": {
