@@ -1,0 +1,25 @@
+type storage = {game: list<string>};
+
+const empty: storage = {
+  game: list([
+    "cross",
+    "empty",
+    "circle",
+
+    "empty",
+    "empty",
+    "empty",
+
+    "empty",
+    "empty",
+    "empty"
+])};
+
+type return_ =
+
+  [list<operation>,
+   storage];
+
+const main = 
+  (_action: unit, storage: storage): return_ => {return [list([]),
+    storage]};
