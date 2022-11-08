@@ -38,3 +38,7 @@ export const parseState = (state: any) => {
         gameState
     };
 }
+
+export const play = (cellId: CellId) => {
+    return ["Int", cellId + ""];
+} 
