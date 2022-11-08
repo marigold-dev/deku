@@ -36,6 +36,10 @@ const parseContractState = (json: JSONType): JSONType => {
       const second = json[2] as JSONType;
       return [parseContractState(first), parseContractState(second)];
     }
+    case "List": {
+      const first = json[1] as Array<JSONType>;
+      return first.map(json => parseContractState(json))
+    }
     default:
       console.error(`type ${type} is not yet implemented`);
       return null;
