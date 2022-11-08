@@ -1,0 +1,91 @@
+
+const _test_eat_cookie = 
+  (): bool => {let _ = 
+     Test.log(["START: Executing _test_eat_cookie"]);
+   let initial_storage: storage = Map.empty;
+   let [taddr, _, _] = 
+     Test.originate(main, initial_storage, 0 as tez);
+   let contr = Test.to_contract(taddr);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
+       operation: Some (Cookie()) as option<actions>,
+       amount: 200 as nat,
+       recipient: None() as option<address>}), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, ({operationType: Eat(),
+       operation: None() as option<actions>,
+       amount: 100 as nat,
+       recipient: None() as option<address>}), 1 as mutez);
+   let expectedStorage: storage = 
+     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+      as address, Some
+       ({bankCost: initialBankCost,
+        banks: 0 as nat,
+        cookies: 100 as nat,
+        cursorCost: initialCursorCost,
+        cursors: 0 as nat,
+        eatenCookies: 100 as nat,
+        factories: 0 as nat,
+        factoryCost: initialFactoryCost,
+        farmCost: initialFarmCost,
+        farms: 0 as nat,
+        grandmaCost: initialGrandmaCost,
+        grandmas: 0 as nat,
+        mineCost: initialMineCost,
+        mines: 0 as nat,
+        passiveCPS: 0 as nat,
+        templeCost: initialTempleCost,
+        temples: 0 as nat}), initial_storage);
+   let actualStorage = Test.get_storage(taddr);
+   let _ = Test.log(["actual   storage: ", actualStorage]);
+   let _ = Test.log(["expected storage: ", expectedStorage]);
+   let _ = Test.log(["END: Executing _test_eat_cookie"]);
+   return (actualStorage == expectedStorage)};
+
+const _test_cannot_eat_cookie = 
+  (): bool => {let _ = 
+     Test.log(["START: Executing _test_cannot_eat_cookie"]);
+   let initial_storage: storage = Map.empty;
+   let [taddr, _, _] = 
+     Test.originate(main, initial_storage, 0 as tez);
+   let contr = Test.to_contract(taddr);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, ({operationType: Mint(),
+       operation: Some (Cookie()) as option<actions>,
+       amount: 1 as nat,
+       recipient: None() as option<address>}), 1 as mutez);
+   let _ = 
+     Test.transfer_to_contract_exn(contr, ({operationType: Eat(),
+       operation: None() as option<actions>,
+       amount: 2 as nat,
+       recipient: None() as option<address>}), 1 as mutez);
+   let expectedStorage: storage = 
+     Map.update("tz1TDZG4vFoA2xutZMYauUnS4HVucnAGQSpZ"
+      as address, Some
+       ({bankCost: initialBankCost,
+        banks: 0 as nat,
+        cookies: 1 as nat,
+        cursorCost: initialCursorCost,
+        cursors: 0 as nat,
+        eatenCookies: 0 as nat,
+        factories: 0 as nat,
+        factoryCost: initialFactoryCost,
+        farmCost: initialFarmCost,
+        farms: 0 as nat,
+        grandmaCost: initialGrandmaCost,
+        grandmas: 0 as nat,
+        mineCost: initialMineCost,
+        mines: 0 as nat,
+        passiveCPS: 0 as nat,
+        templeCost: initialTempleCost,
+        temples: 0 as nat}), initial_storage);
+   let actualStorage = Test.get_storage(taddr);
+   let _ = Test.log(["actual   storage: ", actualStorage]);
+   let _ = Test.log(["expected storage: ", expectedStorage]);
+   let _ = 
+     Test.log(["END: Executing _test_cannot_eat_cookie"]);
+   return (actualStorage == expectedStorage)};
+
+const test_eat_cookie = _test_eat_cookie();
+
+const test_cannot_eat_cookie = _test_cannot_eat_cookie();

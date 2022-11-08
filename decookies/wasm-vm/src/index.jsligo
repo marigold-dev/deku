@@ -160,12 +160,16 @@ const main =
          return cookieBakers} else {return cookieBakers}}})},
      Eat: () => {let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
-      let eatenCookies = 
-        cookieBaker.eatenCookies + (1 as nat);
-      let cookieBakers = 
-        Map.update(player as address, Some
-          ({...cookieBaker, eatenCookies: eatenCookies}), cookieBakers);
-      return cookieBakers},
+      if(cookieBaker.cookies >= ope.amount) {let eatenCookies = 
+         cookieBaker.eatenCookies + (ope.amount as nat);
+       let cookies = 
+         abs(cookieBaker.cookies - (ope.amount as nat));
+       let cookieBakers = 
+         Map.update(player as address, Some
+           ({...cookieBaker,
+            cookies: cookies,
+            eatenCookies: eatenCookies}), cookieBakers);
+       return cookieBakers} else {return cookieBakers}},
      Transfer: () => {let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
       let rawRecipient = 

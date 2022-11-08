@@ -6,6 +6,7 @@
 #include "factoryspecs.jsligo"
 #include "bankspecs.jsligo"
 #include "templespecs.jsligo"
+#include "eatspecs.jsligo"
 const _test_initial_storage_is_empty_map = 
   (): bool => {let _ = 
      Test.log(["START: Executing _test_initial_storage_is_empty_map"]);
