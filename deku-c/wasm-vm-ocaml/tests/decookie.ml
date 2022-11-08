@@ -40,7 +40,7 @@ let decookie_invoke_mint_fifteen_cookies =
 
 let decookie_invoke_mint_cursor =
   let str =
-    {|  {"operation":"{ \"address\": \"DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Int\", \"10\" ],\n            [ \"Option\",\n              [ \"Some\",\n                [ \"Union\",\n                  [ \"Left\",\n                    [ \"Union\",\n                      [ \"Right\", [ \"Union\", [ \"Left\", [ \"Unit\" ] ] ] ] ] ] ] ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}|}
+    {|  {"operation":"{ \"address\": \"DK1NmndDdhkWdWpX7NMArqEjjnWR3xLfM4Kf\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Int\", \"1\" ],\n            [ \"Option\",\n              [ \"Some\",\n                [ \"Union\",\n                  [ \"Left\",\n                    [ \"Union\",\n                      [ \"Right\", [ \"Union\", [ \"Left\", [ \"Unit\" ] ] ] ] ] ] ] ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}|}
   in
   let res =
     Ocaml_wasm_vm.Operation_payload.t_of_yojson @@ Yojson.Safe.from_string str
