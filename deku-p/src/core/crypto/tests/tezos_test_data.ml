@@ -13,6 +13,7 @@ module type Tezos_data = sig
   val compare_signatures : string
   val equality_signatures : bool
   val zero : string
+  val size : int
 end
 
 module Ed25519_data : Tezos_data = struct
@@ -89,4 +90,6 @@ module Ed25519_data : Tezos_data = struct
 
   let zero =
     "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q"
+
+  let size = 64
 end

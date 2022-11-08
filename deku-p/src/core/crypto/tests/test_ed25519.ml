@@ -108,5 +108,6 @@ let run () =
             Test_signature_data.verified_after_conversion;
           test_case "compare" `Quick Test_signature_data.compare;
           test_case "equality" `Quick Test_signature_data.equality;
+          test_case "zero" `Quick Test_signature_data.zero;
         ] );
     ]
