@@ -1,0 +1,46 @@
+.App {
+  width: 100vw;
+  height: 100vh;
+  background-color: #282c34;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+button {
+  height: 3rem;
+  width: 9rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-bottom: 42px;
+}
+
+#game {
+  width: 600px;
+  height: 600px;
+  margin: 0 auto;
+  color: #fff;
+  border-radius: 10px;
+
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  row-gap: 8px;
+  column-gap: 8px;
+
+  font-size: 2rem;
+}
+
+/* rgb(116, 119, 187) */
+/* rgba(114, 116, 185, 67) */
+.cell {
+  border: 6px solid transparent;
+  background-color: rgb(116, 119, 187);
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer
+}
