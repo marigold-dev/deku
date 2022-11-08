@@ -172,18 +172,19 @@ const main =
        return cookieBakers} else {return cookieBakers}},
      Transfer: () => {let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
-      let rawRecipient = 
-        Option.unopt_with_error(ope.recipient, "There is not recipient");
-      let recipient = 
-        force_access(rawRecipient as address, cookieBakers);
-      let cookiesToTransfer = ope.amount as nat;
-      let senderCookies = sender.cookies - cookiesToTransfer;
-      let recipientCookies = 
-        recipient.cookies + cookiesToTransfer;
-      let cookieBakers = 
-        Map.update(player as address, Some
-          ({...sender, cookies: abs(senderCookies)}), cookieBakers);
-      let cookieBakers = 
-        Map.update(rawRecipient as address, Some
-          ({...recipient, cookies: recipientCookies}), cookieBakers);
-      return cookieBakers}})]};
+      if(sender.cookies >= ope.amount) {let rawRecipient = 
+         Option.unopt_with_error(ope.recipient, "There is not recipient");
+       let recipient = 
+         force_access(rawRecipient as address, cookieBakers);
+       let cookiesToTransfer = ope.amount as nat;
+       let senderCookies = 
+         sender.cookies - cookiesToTransfer;
+       let recipientCookies = 
+         recipient.cookies + cookiesToTransfer;
+       let cookieBakers = 
+         Map.update(player as address, Some
+           ({...sender, cookies: abs(senderCookies)}), cookieBakers);
+       let cookieBakers = 
+         Map.update(rawRecipient as address, Some
+           ({...recipient, cookies: recipientCookies}), cookieBakers);
+       return cookieBakers} else {return cookieBakers}}})]};
