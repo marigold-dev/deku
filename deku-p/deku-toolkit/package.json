@@ -1,6 +1,6 @@
 {
   "name": "@marigold-dev/deku-toolkit",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "toolkit to interact with deku",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -20,7 +20,6 @@
   "author": "contact@marigold.dev",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^4.7.4",
     "@types/bs58check": "^2.1.0",
     "@types/node": "^18.7.13",
     "@typescript-eslint/eslint-plugin": "^5.35.1",
@@ -29,11 +28,12 @@
     "rollup": "^2.79.1",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
-    "rollup-plugin-typescript2": "^0.34.0"
+    "rollup-plugin-typescript2": "^0.34.0",
+    "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@tzstamp/helpers": "^0.3.4",
     "@taquito/taquito": "^13.0.1",
+    "@tzstamp/helpers": "^0.3.4",
     "blakejs": "^1.2.1",
     "bs58check": "^2.1.2"
   }
