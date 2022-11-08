@@ -52,7 +52,7 @@ let new_address () =
 
 let () =
   let open Alcotest in
-  run "Wasm-vm" ~and_exit:false
+  run "Wasm-vm" ~and_exit:false ~verbose:true
     [
       ( "Basic Vm tests",
         [
