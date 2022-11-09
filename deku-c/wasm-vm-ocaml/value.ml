@@ -19,7 +19,7 @@ module rec V : sig
     | Option of t option
     | Unit
     | Map of t Map.t
-    | Closure of { opt_arg : t option; call : Int32.t }
+    | Closure of { opt_arg : t list; call : Int32.t }
     | Ticket of { ticket_id : Ticket_id.t; amount : Amount.t }
     | Ticket_handle of int
     | Set of Set.t
@@ -45,19 +45,19 @@ end = struct
     | Map of t Map.t
         [@printer
           fun fmt x ->
-            Format.fprintf fmt "%a"
+            Format.fprintf fmt "Map %a"
               (fun fmt x ->
                 Format.pp_print_list
                   (fun fmt (x, y) -> Format.fprintf fmt "%a %a" pp x pp y)
                   fmt x)
               (Map.bindings x)]
-    | Closure of { opt_arg : t option; call : Int32.t }
+    | Closure of { opt_arg : t list; call : Int32.t }
     | Ticket of { ticket_id : Ticket_id.t; amount : Amount.t }
     | Ticket_handle of int
     | Set of Set.t
         [@printer
           fun fmt x ->
-            Format.fprintf fmt "%a"
+            Format.fprintf fmt "Set %a"
               (fun fmt x -> Format.pp_print_list pp fmt x)
               (List.of_seq @@ Set.to_seq x)]
   [@@deriving ord, show]

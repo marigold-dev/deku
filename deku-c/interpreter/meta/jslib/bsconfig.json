@@ -1,4 +1,6 @@
 {
   "name": "wasm",
-  "sources": [{ "dir": "src" }]
+  "sources": [
+    {"dir": "src"},
+  ]
 }

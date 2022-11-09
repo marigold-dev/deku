@@ -270,7 +270,7 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
   let handler ~path:_ ~state =
     let Api_state.{ protocol; _ } = state in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ocaml_wasm_vm.State.to_json_api vm_state |> Result.ok
+    Ocaml_wasm_vm.State.yojson_of_t vm_state |> Result.ok
 end
 
 module Get_vm_state_key : NO_BODY_HANDLERS = struct
