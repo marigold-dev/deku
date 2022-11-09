@@ -134,31 +134,31 @@ let decookie_test =
        let json =
          Data_encoding.Json.from_string
            {|
-                 [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1" ], [ "Int", "20000000" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "15" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
-               |}
+              [ "Map",
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1" ], [ "Int", "20000000" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "15" ] ] ] ] ] ] ] ] ],
+                          [ "Int", "0" ]
+                          ]
+                        ]
+                    ]
+                ]
+              ]
+            |}
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
@@ -207,31 +207,31 @@ let decookie_test =
        let json =
          Data_encoding.Json.from_string
            {|
-                 [ "Map",
-                     [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
-                         [ "Pair",
-                           [ [ "Pair",
-                               [ [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "16" ], [ "Int", "20000000" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
-                                 [ "Pair",
-                                   [ [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
-                                     [ "Pair",
-                                       [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                         [ "Pair", [ [ "Int", "0" ], [ "Int", "15" ] ] ] ] ] ] ] ] ],
-                             [ "Int", "0" ]
-                             ]
-                           ]
-                       ]
-                   ]
-                 ]
-               |}
+              [ "Map",
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "16" ], [ "Int", "20000000" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "15" ] ] ] ] ] ] ] ] ],
+                          [ "Int", "0" ]
+                          ]
+                        ]
+                    ]
+                ]
+              ]
+            |}
        in
        let json = Result.get_ok json in
        let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
@@ -288,18 +288,18 @@ let decookie_test =
                         [ [ "Pair",
                             [ [ "Pair",
                                 [ [ "Pair",
-                                    [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
-                                      [ "Pair", [ [ "Int", "15" ], [ "Int", "20000000" ] ] ] ] ],
+                                    [ [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1" ], [ "Int", "17" ] ] ] ] ],
                                   [ "Pair",
-                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
-                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
+                                    [ [ "Pair", [ [ "Int", "1" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "130000" ] ] ] ] ] ] ],
                               [ "Pair",
                                 [ [ "Pair",
-                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
-                                      [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
+                                    [ [ "Pair", [ [ "Int", "1100" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ] ] ],
                                   [ "Pair",
                                     [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
-                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "15" ] ] ] ] ] ] ] ] ],
+                                      [ "Pair", [ [ "Int", "1" ], [ "Int", "20000000" ] ] ] ] ] ] ] ] ],
                           [ "Int", "0" ] 
                           ] 
                         ] 
@@ -333,4 +333,77 @@ let decookie_test =
        let expectedState = Value.Map modifiedState in
        (* Printf.printf "EXPECTED: %s%!\n" (Value.show expectedState); *)
        (check storage_testable) "Invoking Cursor minting" expectedState storage);
+       let x =
+        Env.execute
+          ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
+          ~tickets:[]
+          Env.
+            {
+              source = addr;
+              sender = addr;
+              ledger = Deku_ledger.Ledger.initial;
+              state = state.state;
+              ticket_table = Ticket_table.init [];
+            }
+          ~operation:decookie_invoke_mint_cookie
+      in
+      let state = Result.get_ok x in
+      (let (State_entry.Entry { storage; _ }) =
+         State.fetch_contract state.state
+           Deku_ledger.(
+             Contract_address.of_user_operation_hash
+               (Deku_crypto.BLAKE2b.hash "tutturu"))
+       in
+       let json =
+         Data_encoding.Json.from_string
+           {|
+              [ "Map",
+                  [ [ [ "String", "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw" ],
+                      [ "Pair",
+                        [ [ "Pair",
+                            [ [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "100" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "2" ], [ "Int", "20000000" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "0" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "0" ], [ "Int", "1100" ] ] ] ] ] ] ],
+                              [ "Pair",
+                                [ [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "130000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1400000" ], [ "Int", "0" ] ] ] ] ],
+                                  [ "Pair",
+                                    [ [ "Pair", [ [ "Int", "12000" ], [ "Int", "0" ] ] ],
+                                      [ "Pair", [ [ "Int", "1" ], [ "Int", "17" ] ] ] ] ] ] ] ] ],
+                          [ "Int", "0" ]
+                          ]
+                        ]
+                    ]
+                ]
+              ]
+            |}
+       in
+       let json = Result.get_ok json in
+       let rawExpectedState = Data_encoding.Json.destruct Value.encoding json in
+       let modifiedState =
+         match rawExpectedState with
+         | Value.Map t ->
+             let v =
+               Value.Map.find
+                 (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") t
+             in
+             let v =
+               Value.Map.add
+                 (Value.String
+                    (Base.String.substr_replace_all ~pattern:"\"" ~with_:""
+                       (Yojson.Safe.pretty_to_string
+                       @@ Env.Address.yojson_of_t addr)))
+                 v t
+             in
+             Value.Map.remove
+               (Value.String "tz1QzQLQcoCfjjcHR5w9bCEXLyQMtYhmFLzw") v
+         | _ -> failwith "unreachable!"
+       in
+       let _expectedState = Value.Map modifiedState in
+       (check storage_testable) "Invoking Cookie minting after cursor" storage storage);
       ())
