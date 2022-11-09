@@ -120,9 +120,9 @@ let main params style_renderer log_level =
     if port = 4440 then api_uri :: validator_uris else validator_uris
   in
 
-  (* The VM must be started before the node because this call is blocking
-     Logs.info (fun m ->
-         m "Starting IPC with external vm at path %s" named_pipe_path); *)
+  (* The VM must be started before the node because this call is blocking 
+  Logs.info (fun m ->
+      m "Starting IPC with external vm at path %s" named_pipe_path); *)
   let identity = Identity.make (Secret.Ed25519 secret) in
   Logs.info (fun m ->
       m "Running as validator %s" (Identity.key_hash identity |> Key_hash.to_b58));
