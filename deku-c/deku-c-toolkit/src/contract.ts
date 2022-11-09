@@ -32,9 +32,31 @@ const parseContractState = (json: JSONType): JSONType => {
       }, {});
     }
     case "Pair": {
-      const first = json[1] as JSONType;
-      const second = json[2] as JSONType;
+      const value = json[1] as Array<JSONType>;
+      const first = value[0] as JSONType;
+      const second = value[1] as JSONType;
       return [parseContractState(first), parseContractState(second)];
+    }
+    case "List": {
+      const first = json[1] as Array<JSONType>;
+      return first.map(json => parseContractState(json))
+    }
+    case "Union": {
+      const first = json[1] as Array<JSONType>;
+      const type = first[0] as string;
+      const value = first[1] as JSONType;
+      switch (type) {
+        case "Right":
+          return { right: parseContractState(value) }
+        case "Left":
+          return { left: parseContractState(value) }
+        default: {
+          return null; // TODO: remove this default case which is not possible
+        }
+      }
+    }
+    case "Unit": {
+      return null
     }
     default:
       console.error(`type ${type} is not yet implemented`);
