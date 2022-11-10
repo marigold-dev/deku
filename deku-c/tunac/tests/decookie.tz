@@ -559,6 +559,11 @@
                     { DROP 3 } }
                { DROP ;
                  DUP 2 ;
+                 PAIR ;
+                 DIG 4 ;
+                 SWAP ;
+                 EXEC ;
+                 DUP 3 ;
                  CAR ;
                  CDR ;
                  IF_NONE { PUSH string "Operation is mandatory for minting" ; FAILWITH } {} ;
@@ -1867,3 +1872,4 @@
                 { SWAP ; DIG 2 ; DIG 4 ; DROP 4 } } ;
          NIL operation ;
          PAIR } }
+
