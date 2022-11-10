@@ -71,9 +71,29 @@ const other = (player: address, storage: storage): address => {
   return storage.players.player1
 }
 
+const isDone = (game: game): bool => 
+  game[0] != Empty() && game[1] != Empty() && game[2] != Empty() && 
+  game[3] != Empty() && game[4] != Empty() && game[5] != Empty() &&
+  game[6] != Empty() && game[7] != Empty() && game[8] != Empty()
+  
+const isWon = (game: game): bool =>
+  (
+  (game[0] == game[1] && game[1] == game[2] && game[0] != Empty()) || 
+  (game[3] == game[4] && game[4] == game[5] && game[3] != Empty()) || 
+  (game[6] == game[7] && game[7] == game[8] && game[6] != Empty()) || 
+  
+  (game[0] == game[4] && game[4] == game[8] && game[0] != Empty()) || 
+  (game[2] == game[4] && game[4] == game[6] && game[2] != Empty()) ||
+
+  (game[0] == game[3] && game[3] == game[6] && game[0] != Empty()) ||
+  (game[1] == game[4] && game[4] == game[5] && game[1] != Empty()) ||
+  (game[2] == game[5] && game[5] == game[8] && game[2] != Empty())
+  )
+
+
 const play = (player: address, cellId: nat, storage:storage): storage => {
   const {game, players, gameState} = storage;
-  let current_player = match(storage.gameState, {
+  let current_player = match(gameState, {
     PlayerTurn: player => player,
     Winner: _ => failwith("Game is ended")
   });
@@ -83,6 +103,9 @@ const play = (player: address, cellId: nat, storage:storage): storage => {
   const game = updateCell(cellId, value, game);
 
   let nextGameState = PlayerTurn(other(player, storage));
+  if(isWon(game)) {
+    nextGameState = Winner(player);
+  }
 
   return {game, players, gameState:nextGameState}
 }
