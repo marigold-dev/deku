@@ -331,7 +331,12 @@ let apply_store_outcome ~block ~network chain =
   let (Block.Block { level; _ }) = block in
   let gossip = Gossip.close ~until:level gossip in
   let save_block = Chain_save_block { block; network } in
-  (Chain { chain with gossip }, [ save_block ])
+  (* Accepted blocks need to be broadcast to the API *)
+  let broadcast =
+    let (Network_message { raw_header; raw_content }) = network in
+    Chain_broadcast { raw_header; raw_content }
+  in
+  (Chain { chain with gossip }, [ save_block; broadcast ])
 
 let apply ~identity ~current ~outcome chain =
   match outcome with
