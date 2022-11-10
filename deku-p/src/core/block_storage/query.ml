@@ -113,7 +113,7 @@ let find_block_and_votes_by_level =
   [%rapper
     get_opt
       {sql|
-        SELECT @Message{network}
+        SELECT @Message{message}
         FROM block_and_votes
         WHERE level = %Level{level}
       |sql}]
