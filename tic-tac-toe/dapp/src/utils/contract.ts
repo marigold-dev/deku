@@ -1,3 +1,4 @@
+const contract = `
 type cell = ["Cross"] | ["Circle"] | ["Empty"]
 
 type gameState = 
@@ -87,3 +88,7 @@ const main = (parameter: parameter, storage: storage): return_ => {
     }));
     return [operations, storage]
 }
+
+`;
+
+export default contract;

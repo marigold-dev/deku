@@ -69,4 +69,7 @@ export const parseState = (state: any) => {
 export const play = (cellId: CellId) => {
     // return ["Int", cellId + ""];
     return ["Union", ["Right", ["Int", cellId + ""]]]
-} 
+}
+export const makeInitStorage = (player1: string, player2: string) => {
+    return `(Pair(Pair(Pair(Pair(Pair(Pair(Left(Right Unit))(Right Unit))(Left(Left Unit))(Right Unit))(Pair(Right Unit)(Right Unit))(Right Unit)(Right Unit))(Right Unit))(Left "${player1}")) "${player1}" "${player2}")`;
+}
