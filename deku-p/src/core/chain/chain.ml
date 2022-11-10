@@ -475,7 +475,7 @@ let test () =
     [ key_hash ]
   in
 
-  let chain = make ~validators ~vm_state:Ocaml_wasm_vm.State.empty in
+  let chain = make ~validators ~vm_state:Deku_gameboy.empty in
   let block =
     let (Block { hash = current_block; level = current_level; _ }) =
       Genesis.block

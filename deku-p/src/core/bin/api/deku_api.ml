@@ -9,6 +9,8 @@ open Deku_protocol
 open Deku_consensus
 open Deku_concepts
 
+let render_frame = Deku_renderer.init ()
+
 let apply_block ~env ~folder ~state ~block =
   state.current_block <- block;
   Block_storage.save_block ~block state.indexer;
@@ -32,14 +34,14 @@ let apply_block ~env ~folder ~state ~block =
     List.fold_left
       (fun receipts receipt ->
         let open Receipt in
-        let hash =
-          match receipt with
-          | Ticket_transfer_receipt { operation; _ }
-          | Withdraw_receipt { operation; _ }
-          | Vm_transaction_receipt { operation; _ } ->
-              operation
-        in
-        Operation_hash.Map.add hash receipt receipts)
+        match receipt with
+        | Ticket_transfer_receipt { operation; _ }
+        | Withdraw_receipt { operation; _ }
+        | Vm_transaction_receipt { operation; _ } ->
+            Operation_hash.Map.add operation receipt receipts
+        | Gameboy_receipt { data } ->
+            let () = render_frame data in
+            receipts)
       state.receipts receipts
   in
   state.receipts <- receipts;
@@ -98,8 +100,8 @@ let start_api ~env ~sw ~port ~state =
        |> Server.with_body (module Helpers_operation_message)
        |> Server.with_body (module Helpers_hash_operation)
        |> Server.with_body (module Post_operation)
-       |> Server.without_body (module Get_vm_state)
-       |> Server.without_body (module Get_vm_state_key)
+       (* |> Server.without_body (module Get_vm_state) *)
+       (* |> Server.without_body (module Get_vm_state_key) *)
        |> Server.without_body (module Get_stats)
        |> Server.with_body (module Get_hexa_to_signed)
        |> Server.without_body (module Get_receipt)
@@ -121,6 +123,7 @@ type params = {
   database_uri : Uri.t; [@env "DEKU_API_DATABASE_URI"]
   domains : int; [@default 8] [@env "DEKU_API_DOMAINS"]
   data_folder : string; [@env "DEKU_API_DATA_FOLDER"]
+  rom_path : string; [@env "DEKU_GAMEBOY_ROM_PATH"]
 }
 [@@deriving cmdliner]
 
@@ -133,6 +136,7 @@ let main params =
     database_uri;
     domains;
     data_folder;
+    rom_path;
   } =
     params
   in
@@ -162,7 +166,7 @@ let main params =
   let state =
     match state with
     | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
+        let vm_state = Deku_gameboy.init ~rom_path in
         let protocol = Protocol.initial_with_vm_state ~vm_state in
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in

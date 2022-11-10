@@ -259,41 +259,41 @@ module Post_operation : HANDLERS = struct
         Ok { hash = operation_hash }
 end
 
-module Get_vm_state : NO_BODY_HANDLERS = struct
-  type path = unit
-  type response = Yojson.Safe.t [@@deriving yojson_of]
+(* module Get_vm_state : NO_BODY_HANDLERS = struct
+     type path = unit
+     type response = Yojson.Safe.t [@@deriving yojson_of]
 
-  let meth = `GET
-  let path = Routes.(version / s "state" / s "unix" /? nil)
-  let route = Routes.(path @--> ())
+     let meth = `GET
+     let path = Routes.(version / s "state" / s "unix" /? nil)
+     let route = Routes.(path @--> ())
 
-  let handler ~path:_ ~state =
-    let Api_state.{ protocol; _ } = state in
-    let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ocaml_wasm_vm.State.to_json_api vm_state |> Result.ok
-end
+     let handler ~path:_ ~state =
+       let Api_state.{ protocol; _ } = state in
+       let (Protocol.Protocol { vm_state; _ }) = protocol in
+       Ocaml_wasm_vm.State.to_json_api vm_state |> Result.ok
+   end
 
-module Get_vm_state_key : NO_BODY_HANDLERS = struct
-  open Deku_ledger
+   module Get_vm_state_key : NO_BODY_HANDLERS = struct
+     open Deku_ledger
 
-  type path = Contract_address.t
-  type response = Ocaml_wasm_vm.State_entry.t option [@@deriving yojson_of]
+     type path = Contract_address.t
+     type response = Ocaml_wasm_vm.State_entry.t option [@@deriving yojson_of]
 
-  let meth = `GET
+     let meth = `GET
 
-  let path =
-    Routes.(
-      version / s "state" / s "unix" / Api_path.Contract_address.parser /? nil)
+     let path =
+       Routes.(
+         version / s "state" / s "unix" / Api_path.Contract_address.parser /? nil)
 
-  let route = Routes.(path @--> fun key -> key)
+     let route = Routes.(path @--> fun key -> key)
 
-  let handler ~path:key ~state =
-    let Api_state.{ protocol; _ } = state in
-    let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ok
-      (try Some (Ocaml_wasm_vm.State.fetch_contract vm_state key)
-       with _ -> None)
-end
+     let handler ~path:key ~state =
+       let Api_state.{ protocol; _ } = state in
+       let (Protocol.Protocol { vm_state; _ }) = protocol in
+       Ok
+         (try Some (Ocaml_wasm_vm.State.fetch_contract vm_state key)
+          with _ -> None)
+   end *)
 
 module Get_stats : NO_BODY_HANDLERS = struct
   type path = unit

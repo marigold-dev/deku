@@ -39,7 +39,7 @@ type action = private
     }
 [@@deriving show]
 
-val make : validators:Key_hash.t list -> vm_state:Ocaml_wasm_vm.State.t -> chain
+val make : validators:Key_hash.t list -> vm_state:Deku_gameboy.t -> chain
 
 val incoming :
   raw_header:string -> raw_content:string -> chain -> chain * fragment option

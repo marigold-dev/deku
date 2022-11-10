@@ -56,6 +56,7 @@ type params = {
       [@env "DEKU_TEZOS_CONSENSUS_ADDRESS"]
       (** The address of the consensus contract on Tezos.  *)
   api_uri : string; [@env "DEKU_API_URI"] [@default "127.0.0.1:5550"]
+  rom_path : string; [@env "DEKU_GAMEBOY_ROM_PATH"]
 }
 [@@deriving cmdliner]
 
@@ -92,6 +93,7 @@ let main params style_renderer log_level =
     tezos_secret;
     tezos_consensus_address;
     api_uri;
+    rom_path;
   } =
     params
   in
@@ -137,7 +139,7 @@ let main params style_renderer log_level =
     match chain with
     | Some chain -> chain
     | None ->
-        let vm_state = Ocaml_wasm_vm.State.empty in
+        let vm_state = Deku_gameboy.init ~rom_path in
         Chain.make ~validators ~vm_state
   in
   let dump = make_dump_loop ~sw ~env ~folder:data_folder in
@@ -148,10 +150,11 @@ let main params style_renderer log_level =
   let (Chain { consensus; _ }) = chain in
   let (Block { level; _ }) = Deku_consensus.Consensus.trusted_block consensus in
   Logs.info (fun m -> m "Chain started at level: %a" Level.pp level);
-  let tezos =
-    (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
-  in
-  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
+  ignore (tezos_consensus_address, tezos_rpc_node, tezos_secret);
+  (* let _tezos =
+       (tezos_rpc_node, Secret.Ed25519 tezos_secret, tezos_consensus_address)
+     in *)
+  Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:None node
 
 let main () =
   Sys.set_signal Sys.sigpipe

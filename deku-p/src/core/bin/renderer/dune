@@ -1,0 +1,16 @@
+(library
+ (name deku_renderer)
+ (libraries
+  deku_gameboy
+  deku_external_vm
+  cmdliner
+  logs
+  logs.fmt
+  fmt.tty
+  fmt.cli
+  logs.cli
+  piaf
+  routes
+  tsdl)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))

@@ -8,7 +8,7 @@ type protocol =
       included_operations : Included_operation_set.t;
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
-      vm_state : Ocaml_wasm_vm.State.t;
+      vm_state : Deku_gameboy.t;
     }
 
 and t = protocol [@@deriving yojson]
@@ -19,7 +19,7 @@ let initial =
       included_operations = Included_operation_set.empty;
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
-      vm_state = Ocaml_wasm_vm.State.empty;
+      vm_state = Deku_gameboy.empty;
     }
 
 let initial_with_vm_state ~vm_state =
@@ -59,50 +59,8 @@ let apply_operation ~current_level protocol operation :
             with
             | Ok ledger -> (ledger, Some receipt, vm_state, None)
             | Error error -> (ledger, Some receipt, vm_state, Some error))
-        | Operation_vm_transaction { sender; operation } -> (
-            let receipt = Receipt.Vm_transaction_receipt { operation = hash } in
-            let result () =
-              let%some ledger =
-                if operation.tickets = [] then Some ledger
-                else
-                  Ledger.with_ticket_table ledger (fun ~get_table ~set_table ->
-                      let tickets = operation.tickets in
-                      let%some _, table =
-                        Ticket_table.take_tickets ~sender ~ticket_ids:tickets
-                          (get_table ())
-                        |> Result.to_option
-                      in
-                      Some (set_table table))
-              in
-              let source = sender in
-              let receipt = Vm_transaction_receipt { operation = hash } in
-              match
-                Ocaml_wasm_vm.(
-                  Env.execute
-                    (Env.make ~state:vm_state ~ledger ~sender ~source)
-                    ~operation:operation.operation
-                    ~tickets:
-                      (List.map
-                         (fun (k, v) -> (k, Deku_concepts.Amount.to_n v))
-                         operation.tickets)
-                    ~operation_hash:(Operation_hash.to_blake2b hash)
-                  |> Env.finalize)
-              with
-              | Ok (vm_state, ledger) ->
-                  Some (ledger, Some receipt, vm_state, None)
-              | Error _ -> None
-            in
-            match result () with
-            | Some result ->
-                let get (_, _, state, _) = state in
-                assert (get result <> vm_state);
-                result
-            | None ->
-                ( ledger,
-                  Some receipt,
-                  vm_state,
-                  Some (Failure "Error while executing external vm transaction")
-                ))
+        | Operation_vm_transaction { sender = _; operation = _ } ->
+            (ledger, None, vm_state, None)
         | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
@@ -211,10 +169,25 @@ let clean ~current_level protocol =
 
 let prepare ~parallel ~payload = parallel parse_operation payload
 
+let advance_gameboy vm_state =
+  let () = Unix.sleepf 0.10 in
+  let _ =
+    List.init 4 (fun _ ->
+        let _ = Deku_gameboy.advance vm_state in
+        ())
+  in
+  let data = Deku_gameboy.advance vm_state in
+  [ Gameboy_receipt { data } ]
+
 let apply ~current_level ~payload ~tezos_operations protocol =
+  let gameboy_receipts =
+    let (Protocol { vm_state; _ }) = protocol in
+    advance_gameboy vm_state
+  in
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
   in
+  let receipts = gameboy_receipts @ receipts in
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)
   let protocol = apply_tezos_operations tezos_operations protocol in
