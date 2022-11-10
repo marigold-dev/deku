@@ -1,4 +1,4 @@
-(data_only_dirs chain node_modules)
+(data_only_dirs flextesa_chain node_modules)
 
 (env
  (static
