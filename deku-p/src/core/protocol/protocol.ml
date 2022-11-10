@@ -24,7 +24,7 @@ let encoding =
         { included_operations; included_tezos_operations; ledger; vm_state })
     (tup4 Included_operation_set.encoding
        Deku_tezos.Tezos_operation_hash.Set.encoding Ledger.encoding
-       External_vm_protocol.State.encoding)
+       Ocaml_wasm_vm.State.encoding)
 
 let initial =
   Protocol
