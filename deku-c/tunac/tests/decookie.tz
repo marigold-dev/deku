@@ -1872,4 +1872,3 @@
                 { SWAP ; DIG 2 ; DIG 4 ; DROP 4 } } ;
          NIL operation ;
          PAIR } }
-
