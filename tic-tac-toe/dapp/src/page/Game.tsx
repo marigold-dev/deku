@@ -156,10 +156,6 @@ const Game = () => {
         const secrets = [
             "edsk4Jex4ueokTLnc7xnkdXBZPfo1MQNeNPeDEmbjo7Wk2DSdVwjJD",
             "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq",
-            "edsk3YNMxLkRoJpquqeHahPbsWnnR6618trBpFmqT8Wan9aN73zAoN",
-            "edsk448GAnMZRHbWcMhALP2HbNWqVp9saMuGaWpLaU4Do4WjUisnbm",
-            "edsk4B31FxfZUQ9CztF1EtZx8kWKxDYmjFo7Vvb1abR36virwKLDCY",
-            "edsk2hnMx3fq2PVGScQJRbVi4ACfFNW4dWhYbzrvCugbBQGezcXfV3",
         ];
         const secret = secrets[Math.floor(Math.random() * secrets.length)];
         const tezosSigner = new InMemorySigner(secret);

@@ -65,6 +65,11 @@ const getSymbol = (player: address, storage: storage): cell => {
   else return Circle()
 }
 
+const other = (player: address, storage: storage): address => {
+  if(player == storage.players.player1) return storage.players.player2;
+  return storage.players.player1
+}
+
 const play = (player: address, cellId: nat, storage:storage): storage => {
   const {game, players, gameState} = storage;
   let current_player = match(storage.gameState, {
@@ -75,11 +80,14 @@ const play = (player: address, cellId: nat, storage:storage): storage => {
   if(cellId > (8 as nat)) {return failwith("Wrong cellId")};
   const value = getSymbol(player, storage);
   const game = updateCell(cellId, value, game);
-  return {game, players, gameState}
+
+  let nextGameState = PlayerTurn(other(player, storage));
+
+  return {game, players, gameState:nextGameState}
 }
 
 const main = (parameter: parameter, storage: storage): return_ => {
-    let player = "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address;
+    let player = Tezos.get_sender () as address;
     let operations: list<operation> = list([]);
     let storage = (match (parameter, {
       Play: cellId => play (player, cellId, storage),
