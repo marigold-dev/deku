@@ -4,9 +4,8 @@ open Ocaml_wasm_vm
 
 let read_file name =
   let f = open_in name in
-  let buf = Bytes.create 100000 in
-  let size = input f buf 0 100000 in
-  Bytes.to_string @@ Bytes.sub buf 0 size
+  let buf = In_channel.input_all f in
+  buf
 
 let originate contract init =
   let tickets, init = Tunac.Compiler.compile_value init |> Result.get_ok in

@@ -7,6 +7,7 @@
 
 (executable
  (name tunacc_test_operation)
+ (public_name tunacc_test_operation)
  (libraries tunac yojson core core_unix core_unix.command_unix wasm)
  (modules tunacc_test_operation)
  (preprocess
