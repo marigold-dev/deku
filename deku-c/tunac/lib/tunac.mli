@@ -1,5 +1,5 @@
 
-type node = (int, Michelson_v1_primitives.prim) Tezos_micheline.Micheline.node
+type node = (int, string) Tezos_micheline.Micheline.node
 
 type contract = node
 
@@ -11,6 +11,6 @@ type config =
 
 val parse : string -> contract
 
-val compile_contract : config:config -> contract -> Binaryen.Module.t
+val compile_contract : config:config -> contract -> (Binaryen.Module.t, string) Lwt_result.t
 
 val compile_value : node -> bytes

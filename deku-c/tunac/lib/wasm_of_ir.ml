@@ -14,9 +14,18 @@ let rec compile_expression wasm_mod expr =
   | Cop (op, params) -> compile_operation wasm_mod op params
 
 and compile_operation wasm_mod op params =
+  let compile_load cell typ ptr =
+    (* TODO: How know if its signed or not? *)
+    match typ with
+    | I8 -> Expression.Load.make wasm_mod 1 (cell * 4) 0 Type.int32 ptr
+    | U8 -> Expression.Load.make wasm_mod 1 (cell * 4) 0 Type.int32 ptr
+    | I32 -> Expression.Load.make wasm_mod 4 (cell * 4) 0 Type.int32 ptr
+    | U32 -> Expression.Load.make wasm_mod 4 (cell * 4) 0 Type.int32 ptr
+  in
+
   match op, params with
   | Capply name, params -> Expression.Call.make wasm_mod name (List.map (compile_expression wasm_mod) params) Type.int32
-  | Cload cell, [ ptr ] -> Expression.Load.make wasm_mod 4 (cell * 4) 0 Type.int32 (compile_expression wasm_mod ptr)
+  | Cload (cell, typ), [ ptr ] -> compile_load cell typ (compile_expression wasm_mod ptr)
   | Calloc size, params ->
     let final_size =
       match size, params with
@@ -35,11 +44,11 @@ and compile_operation wasm_mod op params =
             (Expression.Global_get.make wasm_mod "heap_top" Type.int32)
             final_size)
       ; Expression.Local_get.make wasm_mod 0 Type.int32 ]
-  | Cwasm wasm_operation, params -> compile_wasm_operation wasm_mod wasm_operation params
+  | Cwasm (wasm_operation, typ), params -> compile_wasm_operation wasm_mod typ wasm_operation params
 
   | _ -> failwith "Invalid operation format, check operation arguments."
 
-and compile_wasm_operation wasm_mod operation params =
+and compile_wasm_operation wasm_mod typ operation params =
   let op2 op x y =
     Expression.Binary.make wasm_mod op
       (compile_expression wasm_mod x)
@@ -48,30 +57,37 @@ and compile_wasm_operation wasm_mod operation params =
   let op1 op x =
     Expression.Unary.make wasm_mod op (compile_expression wasm_mod x)
   in
-  match operation, params with
-  | Wasm_add, [ a; b ] -> op2 Op.add_int32 a b
-  | Wasm_sub, [ a; b ] -> op2 Op.sub_int32 a b
-  | Wasm_mul, [ a; b ] -> op2 Op.mul_int32 a b
-  | Wasm_div, [ a; b ] -> op2 Op.div_s_int32 a b
-  | Wasm_rem, [ a; b ] -> op2 Op.rem_s_int32 a b
-  | Wasm_and, [ a; b ] -> op2 Op.and_int32 a b
-  | Wasm_or,  [ a; b ] -> op2 Op.or_int32 a b
-  | Wasm_xor, [ a; b ] -> op2 Op.xor_int32 a b
-  | Wasm_eq, [ a; b ] -> op2 Op.eq_int32 a b
-  | Wasm_ne, [ a; b ] -> op2 Op.ne_int32 a b
-  | Wasm_lt, [ a; b ] -> op2 Op.lt_s_int32 a b
-  | Wasm_gt, [ a; b ] -> op2 Op.gt_s_int32 a b
-  | Wasm_le, [ a; b ] -> op2 Op.le_s_int32 a b
-  | Wasm_ge, [ a; b ] -> op2 Op.ge_s_int32 a b
-  | Wasm_shl, [ a; b ] -> op2 Op.shl_int32 a b
-  | Wasm_shr, [ a; b ] -> op2 Op.shr_s_int32 a b
-  | Wasm_rotl, [ a; b ] -> op2 Op.rot_l_int32 a b
-  | Wasm_rotr, [ a; b ] -> op2 Op.rot_r_int32 a b
+  match operation, typ, params with
+  | Wasm_add, _, [ a; b ] -> op2 Op.add_int32 a b
+  | Wasm_sub, _, [ a; b ] -> op2 Op.sub_int32 a b
+  | Wasm_mul, _, [ a; b ] -> op2 Op.mul_int32 a b
+  | Wasm_div, (I32 | I8), [ a; b ] -> op2 Op.div_s_int32 a b
+  | Wasm_div, (U32 | U8), [ a; b ] -> op2 Op.div_u_int32 a b
+  | Wasm_rem, (I32 | I8), [ a; b ] -> op2 Op.rem_s_int32 a b
+  | Wasm_rem, (U32 | U8), [ a; b ] -> op2 Op.rem_u_int32 a b
+  | Wasm_and, _, [ a; b ] -> op2 Op.and_int32 a b
+  | Wasm_or, _, [ a; b ] -> op2 Op.or_int32 a b
+  | Wasm_xor, _, [ a; b ] -> op2 Op.xor_int32 a b
+  | Wasm_eq, _, [ a; b ] -> op2 Op.eq_int32 a b
+  | Wasm_ne, _, [ a; b ] -> op2 Op.ne_int32 a b
+  | Wasm_lt, (I32 | I8), [ a; b ] -> op2 Op.lt_s_int32 a b
+  | Wasm_lt, (U32 | U8), [ a; b ] -> op2 Op.lt_u_int32 a b
+  | Wasm_gt, (I32 | I8), [ a; b ] -> op2 Op.gt_s_int32 a b
+  | Wasm_gt, (U32 | U8), [ a; b ] -> op2 Op.gt_u_int32 a b
+  | Wasm_le, (I32 | I8), [ a; b ] -> op2 Op.le_s_int32 a b
+  | Wasm_le, (U32 | U8), [ a; b ] -> op2 Op.le_u_int32 a b
+  | Wasm_ge, (I32 | I8), [ a; b ] -> op2 Op.ge_s_int32 a b
+  | Wasm_ge, (U32 | U8), [ a; b ] -> op2 Op.ge_u_int32 a b
+  | Wasm_shl, _, [ a; b ] -> op2 Op.shl_int32 a b
+  | Wasm_shr, (I32 | I8), [ a; b ] -> op2 Op.shr_s_int32 a b
+  | Wasm_shr, (U32 | U8), [ a; b ] -> op2 Op.shr_u_int32 a b
+  | Wasm_rotl, _, [ a; b ] -> op2 Op.rot_l_int32 a b
+  | Wasm_rotr, _, [ a; b ] -> op2 Op.rot_r_int32 a b
 
-  | Wasm_clz, [ a ] -> op1 Op.clz_int32 a
-  | Wasm_ctz, [ a ] -> op1 Op.ctz_int32 a
-  | Wasm_popcnt, [ a ] -> op1 Op.popcnt_int32 a
-  | Wasm_eqz, [ a ] -> op1 Op.eq_z_int32 a
+  | Wasm_clz, _, [ a ] -> op1 Op.clz_int32 a
+  | Wasm_ctz, _, [ a ] -> op1 Op.ctz_int32 a
+  | Wasm_popcnt, _, [ a ] -> op1 Op.popcnt_int32 a
+  | Wasm_eqz, _, [ a ] -> op1 Op.eq_z_int32 a
 
   | _ -> failwith "Invalid WASM operation"
 
@@ -158,7 +174,7 @@ let compile_exec_function wasm_mod lambdas =
 let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   let wasm_mod = Module.create () in
   
-  let IR_of_michelson.{ main; lambdas } = contract in
+  let IR_of_michelson.{ main; lambdas; static_data } = contract in
   add_function wasm_mod "main" main;
 
   if lambdas <> [] then
@@ -192,7 +208,8 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   Import.add_function_import wasm_mod "failwith" "env" "failwith" Type.int32 Type.none;
 
   let (initial, max) = memory in
-  Memory.set_memory wasm_mod initial max "memory" [] shared_memory;
+  let segments = [ Memory.{ data = static_data; kind = Passive; size = Bytes.length static_data } ] in
+  Memory.set_memory wasm_mod initial max "memory" segments shared_memory;
 
   (* if Module.validate wasm_mod <> 0 then
     failwith "Generated module is invalid"; *)

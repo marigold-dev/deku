@@ -379,25 +379,8 @@ module Helper_compile_origination : HANDLERS = struct
   let path = Routes.(version / s "helpers" / s "compile-contract" /? nil)
   let route = Routes.(path @--> ())
 
-  let handler ~path:() ~body:{ source; storage } ~state:_ =
-    let tickets, init = Tunac.Compiler.compile_value storage |> Result.get_ok in
-    let inputs = source in
-    let wat, constants, entrypoints =
-      inputs |> Tunac.Compiler.compile |> Result.get_ok
-    in
-    let out = Tunac.Output.make wat constants |> Result.get_ok in
-    let entrypoints = entrypoints |> Option.value ~default:[] in
-    Operation_payload.
-      {
-        tickets;
-        operation =
-          Operation.Originate
-            {
-              module_ = out.module_;
-              entrypoints = Entrypoints.of_assoc entrypoints;
-              constants;
-              initial_storage = init;
-            };
-      }
-    |> Result.ok
+  let handler ~path:() ~body:{ source = _; storage = _ } ~state:_ =
+    (* TODO: Rebuild it *)
+    assert false
+
 end

@@ -1,6 +1,6 @@
 open Tezos_micheline
 open Micheline
-open Michelson_v1_primitives
+(* open Michelson_v1_primitives *)
 
 let int32_to_bytes n =
   let buffer = Bytes.create 4 in
@@ -12,23 +12,23 @@ let rec compile_value node =
   | Int (_, n) ->
     int32_to_bytes (Z.to_int32 n)
   
-  | Prim (_, D_Elt, args, _)
-  | Prim (_, D_Pair, args, _) ->
+  | Prim (_, "Elt", args, _)
+  | Prim (_, "Pair", args, _) ->
     Bytes.concat Bytes.empty (List.map compile_value args)
 
-  | Prim (_, D_Some, [ arg ], _)
-  | Prim (_, D_Left, [ arg ], _) ->
+  | Prim (_, "Some", [ arg ], _)
+  | Prim (_, "Left", [ arg ], _) ->
     Bytes.(cat (int32_to_bytes 1l) (compile_value arg))
 
-  | Prim (_, D_Right, [ arg ], _) ->
+  | Prim (_, "Right", [ arg ], _) ->
     Bytes.(cat (int32_to_bytes 0l) (compile_value arg))
 
-  | Prim (_, D_None, _, _)
-  | Prim (_, D_False, [], [])
-  | Prim (_, D_Unit, [], _) ->
+  | Prim (_, "None", _, _)
+  | Prim (_, "False", [], [])
+  | Prim (_, "Unit", [], _) ->
     int32_to_bytes 0l
 
-  | Prim (_, D_True, [], []) ->
+  | Prim (_, "True", [], []) ->
     int32_to_bytes 0xffffffffl
 
   | Seq (_, lst) ->

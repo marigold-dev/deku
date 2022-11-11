@@ -21,11 +21,15 @@ let save_module wasm_mod filename =
 open Cmdliner
 
 let compile_contract print debug optimize shared_memory output memory =
+  let open Lwt_result.Syntax in
   let config = Tunac.{ debug; shared_memory; optimize; memory } in
-  let wasm_mod = Tunac.compile_contract ~config contract in
+  let+ wasm_mod = Tunac.compile_contract ~config contract in
   if print then
     Binaryen.Module.print wasm_mod;
   save_module wasm_mod output
+
+let compile_contract print debug optimize shared_memory output memory =
+  Result.get_ok @@ Lwt_main.run @@ compile_contract print debug optimize shared_memory output memory
 
 let compile_value () =
   let value = Tunac.compile_value contract in

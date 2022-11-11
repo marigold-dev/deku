@@ -29,11 +29,18 @@ type wasm_operation =
   | Wasm_ge
 [@@deriving show]
 
+type wasm_type =
+  | I8
+  | U8
+  | I32
+  | U32
+[@@deriving show]
+
 type operation =
   | Capply of string
-  | Cload of int
+  | Cload of int * wasm_type
   | Calloc of int
-  | Cwasm of wasm_operation
+  | Cwasm of wasm_operation * wasm_type
 [@@deriving show]
 
 type expression =
@@ -63,13 +70,13 @@ module Data = struct
       ; Cstore (0, Cvar var, hd)
       ; Cstore (1, Cvar var, tl) ]
 
-  let car expr = Cop (Cload 0, [ expr ])
+  let car ?(typ = I32) expr = Cop (Cload (0, typ), [ expr ])
 
-  let cdr expr = Cop (Cload 1, [ expr ])
+  let cdr ?(typ = I32) expr = Cop (Cload (1, typ), [ expr ])
 
-  let add a b = Cop (Cwasm Wasm_add, [ a; b ])
+  let add ?(typ = I32) a b = Cop (Cwasm (Wasm_add, typ), [ a; b ])
 
-  let sub a b = Cop (Cwasm Wasm_sub, [ a; b ])
+  let sub ?(typ = I32) a b = Cop (Cwasm (Wasm_sub, typ), [ a; b ])
 
   let inc x = add x (Cconst_i32 1l)
 
