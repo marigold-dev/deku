@@ -5,6 +5,7 @@
   tezos-micheline,
   alcotest,
   binaryen,
+  proto-alpha-utils,
 }:
 buildDunePackage rec {
   pname = "deku";
@@ -23,6 +24,7 @@ buildDunePackage rec {
   propagatedBuildInputs = [
     tezos-micheline
     binaryen
+    proto-alpha-utils
   ];
 
   buildInputs = [

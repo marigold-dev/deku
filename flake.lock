@@ -344,11 +344,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1666385520,
-        "narHash": "sha256-8CxheRKzn6EsGPb1lEN5sEQTid9Mu7CCXv6l81rRf/k=",
+        "lastModified": 1667918602,
+        "narHash": "sha256-xuaLYdpSQhb6MbLm+n18BfBvremnriumpgtew2KfyJE=",
         "owner": "ligolang",
         "repo": "ligo",
-        "rev": "88f20b57b9ff67df84763e4cf9c25d776b0bccbd",
+        "rev": "0875c3efbd093e8571d6dfe8e6a5dab167e38734",
         "type": "gitlab"
       },
       "original": {
@@ -624,11 +624,11 @@
         "tezos_trunk": "tezos_trunk"
       },
       "locked": {
-        "lastModified": 1666034281,
-        "narHash": "sha256-l6cQLvxdn/0oey0sb/Z6H45VUOc4ircG3UCckBvlXXI=",
+        "lastModified": 1667990127,
+        "narHash": "sha256-bI7GaRS43aU3Fvuj8UOUKaxrS9H+x+kyLYTEfQ7n95o=",
         "owner": "marigold-dev",
         "repo": "tezos-nix",
-        "rev": "7ae62c648880b55a2900e2f923d1334b7014fe18",
+        "rev": "3f08e555f1f4e879e69345ab639b850d8d4995eb",
         "type": "github"
       },
       "original": {
@@ -640,28 +640,28 @@
     "tezos_release": {
       "flake": false,
       "locked": {
-        "lastModified": 1664977956,
-        "narHash": "sha256-H/ZQRIukMlGxF1cCe4A2tYB3nteBpjcqRI+aDmsmGgg=",
-        "owner": "tezos",
+        "lastModified": 1668205438,
+        "narHash": "sha256-g2RICpo7SOo+tCETMBha7D59pWEJ4WL6iDM32pAlqTk=",
+        "owner": "renatoalencar",
         "repo": "tezos",
-        "rev": "073ae295ea293693f35cfe6613f2b1bb1fefb3aa",
-        "type": "gitlab"
+        "rev": "ee48822e91d8d71b5d4e390061facb02dbb4affe",
+        "type": "github"
       },
       "original": {
-        "owner": "tezos",
-        "ref": "v14.1",
+        "owner": "renatoalencar",
         "repo": "tezos",
-        "type": "gitlab"
+        "rev": "ee48822e91d8d71b5d4e390061facb02dbb4affe",
+        "type": "github"
       }
     },
     "tezos_trunk": {
       "flake": false,
       "locked": {
-        "lastModified": 1665996621,
-        "narHash": "sha256-nYg2gVRcuC/ogPWXAVErR+HDsxwXIbnHkkik9AkoYIM=",
+        "lastModified": 1667824574,
+        "narHash": "sha256-7ub0OCki0aaPQSvGBmv8DPoFTqvJDNEoSAywPbhJft8=",
         "owner": "tezos",
         "repo": "tezos",
-        "rev": "52d97a7da45a467cb722b494eebcc562aff75525",
+        "rev": "4a3cd1b1c8ad44445192475fdde5073ebae2ccde",
         "type": "gitlab"
       },
       "original": {

@@ -20,6 +20,7 @@
     tezos.inputs = {
       nixpkgs.follows = "nixpkgs";
       flake-parts.follows = "flake-parts";
+      tezos_release.url = "github:renatoalencar/tezos/ee48822e91d8d71b5d4e390061facb02dbb4affe";
     };
     deploy-rs.url = "github:serokell/deploy-rs";
   };
@@ -59,23 +60,6 @@
               inherit system;
               extraOverlays = [
                 tezos.overlays.default
-                (final: prev: {
-                  ocaml-ng =
-                    prev.ocaml-ng
-                    // {
-                      ocamlPackages_5_00 =
-                        prev.ocaml-ng.ocamlPackages_5_00.overrideScope'
-                        (oself: osuper: {
-                          ringo = osuper.ringo.overrideAttrs (_: {
-                            src = builtins.fetchurl {
-                              url =
-                                https://gitlab.com/nomadic-labs/ringo/-/archive/5514a34ccafdea498e4b018fb141217c1bf43da9/ringo-5514a34ccafdea498e4b018fb141217c1bf43da9.tar.gz;
-                              sha256 = "1qadbvmqirn1scc4r4lwzqs4rrwmp1vnzhczy9pipfnf9bb9c0j7";
-                            };
-                          });
-                        });
-                    };
-                })
                 (import ./nix/overlay.nix)
                 (final: prev: {
                   ocamlPackages = prev.ocaml-ng.ocamlPackages_5_00;

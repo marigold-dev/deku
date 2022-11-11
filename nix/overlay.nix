@@ -45,19 +45,68 @@ with super; {
             };
           });
 
-          tezos-stdlib = super.tezos-stdlib.overrideAttrs (_: {
-            postPatch = ''
-              substituteInPlace "src/lib_stdlib/hash_queue.mli" --replace \
-                "val filter : t -> (K.t -> V.t -> bool) -> unit" \
-                ""
-            '';
+          ringo = oself.buildDunePackage rec {
+            pname = "ringo";
+            version = "1.0.0";
+
+            src = fetchFromGitLab {
+              owner = "nomadic-labs";
+              repo = "ringo";
+              rev = "v${version}";
+              sha256 = "9HW3M27BxrEPbF8cMHwzP8FmJduUInpQQAE2672LOuU=";
+            };
+          };
+
+          aches = oself.buildDunePackage rec {
+            pname = "aches";
+            inherit (super.ringo) src version;
+            propagatedBuildInputs = [super.ringo];
+          };
+
+          aches-lwt = oself.buildDunePackage rec {
+            pname = "aches-lwt";
+            inherit (super.ringo) src version;
+
+            propagatedBuildInputs = [
+              super.aches
+              lwt
+            ];
+          };
+
+          resto = super.resto.overrideAttrs (_: rec {
+            version = "1.0";
+            src = fetchFromGitLab {
+              owner = "nomadic-labs";
+              repo = "resto";
+              rev = "v${version}";
+              sha256 = "sha256-DIm7fmISsCgRDi4p3NsUk7Cvs/dHpIKMdAOVdYLX2mc=";
+            };
           });
+
+          tezos-proxy = super.tezos-proxy.overrideAttrs (self: {
+            propagatedBuildInputs = with super; with lib.lists;
+              [aches aches-lwt] ++ (remove ringo-lwt (remove ringo self.propagatedBuildInputs));
+          });
+
+          tezos-store = super.tezos-store.overrideAttrs (self: {
+            propagatedBuildInputs = with super; with lib.lists;
+              [aches aches-lwt] ++ (remove ringo-lwt (remove ringo self.propagatedBuildInputs));
+          });
+
+          tezos-stdlib = super.tezos-stdlib.overrideAttrs (self: {
+            propagatedBuildInputs = with super; with lib.lists;
+              [aches] ++ (remove ringo-lwt (remove ringo self.propagatedBuildInputs));
+          });
+
+          tezos-protocol-environment = super.tezos-protocol-environment.overrideAttrs (self: {
+            propagatedBuildInputs = with super; with lib.lists;
+              [aches aches-lwt] ++ (remove ringo-lwt (remove ringo self.propagatedBuildInputs));
+          });
+
           tezos-micheline = super.tezos-micheline.overrideAttrs (_: {
             doCheck = false;
           });
-          tezos-crypto = super.tezos-crypto.overrideAttrs (_: {
-            patches = [./deku-p/patches/tezos-crypto.patch];
-          });
+
           routes = super.routes.overrideAttrs (_: {
             src = fetchFromGitHub {
               owner = "anuragsoni";
@@ -105,6 +154,33 @@ with super; {
             ];
           };
 
+          ligo-tezos-utils = oself.buildDunePackage rec {
+            pname = "tezos-utils";
+            inherit (self.ligo) version;
+            src = "${self.ligo.src}/vendors/ligo-utils/tezos-utils";
+
+            propagatedBuildInputs = with oself; [
+              tezos-error-monad
+              tezos-stdlib-unix
+              tezos-micheline
+              tezos-base
+              data-encoding
+              ligo-simple-utils
+              base
+            ];
+          };
+
+          ligo-memory-proto-alpha = oself.buildDunePackage rec {
+            pname = "tezos-memory-proto-alpha";
+            inherit (self.ligo) version;
+            src = "${self.ligo.src}/vendors/ligo-utils/memory-proto-alpha";
+
+            propagatedBuildInputs = with oself; [
+              tezos-protocol-environment
+              tezos-014-PtKathma.protocol
+            ];
+          };
+
           proto-alpha-utils = oself.buildDunePackage rec {
             pname = "proto-alpha-utils";
             inherit (self.ligo) version;
@@ -139,12 +215,10 @@ with super; {
               tezos-crypto
               tezos-error-monad
               tezos-stdlib-unix
-              tezos-protocol-environment
-              tezos-011-PtHangz2.protocol
-              tezos-011-PtHangz2.client
-              # tezos-memory-proto-alpha
+              tezos-014-PtKathma.client
+              ligo-memory-proto-alpha
               ligo-simple-utils
-              # tezos-utils
+              ligo-tezos-utils
             ];
           };
         });
