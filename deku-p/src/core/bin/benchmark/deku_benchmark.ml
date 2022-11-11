@@ -67,7 +67,7 @@ let produce writer () =
 
     let items = 1_000_000
     let name = "produce"
-    let item_message = Format.sprintf "%d on %d" items domains
+    let item_message = Format.sprintf "%d" items
     let prepare () = ()
     (* 6kk/s on 8 domains *)
 
@@ -84,7 +84,7 @@ let block_encode writer () =
     let name = "block_encode"
     let items = 1_000_000
     let prepare () = block ~default_block_size:items
-    let item_message = Format.sprintf "%d on %d domains" items domains
+    let item_message = Format.sprintf "%d" items
 
     let run block =
       let (_ : string list) = Block.encode block in
@@ -98,9 +98,7 @@ let block_decode writer () =
 
     let name = "block_decode"
     let items = 1_000_000
-
-    let item_message =
-      Format.sprintf "block size of %d on %d domains" items domains
+    let item_message = Format.sprintf "block size of %d" items
 
     let prepare () =
       let block = block ~default_block_size:items in
@@ -116,11 +114,9 @@ let prepare_and_decode writer () =
   let module Bench = struct
     type t = string
 
-    let name = "prepare and decode"
+    let name = "prepare_and_decode"
     let items = 100_000
-
-    let item_message =
-      Format.sprintf "block size of %d on %d domains" items domains
+    let item_message = Format.sprintf "block size of %d" items
 
     let prepare () =
       let (Block.Block { payload; _ }) = block ~default_block_size:items in
@@ -144,7 +140,7 @@ let verify writer () =
 
     let name = "verify"
     let items = 100_000
-    let item_message = Format.sprintf "%d tickets on %d domains" items domains
+    let item_message = Format.sprintf "%d tickets" items
 
     let prepare () =
       let identity =
@@ -180,7 +176,7 @@ let ledger_balance writer () =
 
     let name = "ledger_balance"
     let items = 100_000
-    let item_message = Format.sprintf "%d tickets on %d domains" items domains
+    let item_message = Format.sprintf "%d tickets" items
 
     let address () =
       let secret = Ed25519.Secret.generate () in
@@ -241,7 +237,7 @@ let ledger_transfer writer () =
 
     let name = "ledger_transfer"
     let items = 100_000
-    let item_message = Format.sprintf "%d transfers on %d domains" items domains
+    let item_message = Format.sprintf "%d transfers" items
 
     let address () =
       let secret = Ed25519.Secret.generate () in
