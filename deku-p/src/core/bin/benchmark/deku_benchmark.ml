@@ -102,7 +102,7 @@ module Verify : BENCH = struct
 
   let name = "verify"
   let items = 100_000
-  let item_message = Format.sprintf "%d tickets" items
+  let item_message = Format.sprintf "%d signatures" items
 
   let prepare () =
     let identity =
