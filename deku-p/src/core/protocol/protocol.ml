@@ -61,6 +61,11 @@ let apply_operation ~current_level protocol operation :
             | Error error -> (ledger, Some receipt, vm_state, Some error))
         | Operation_vm_transaction { sender = _; operation = _ } ->
             (ledger, None, vm_state, None)
+        | Operation_gameboy_input { sender = _; input } ->
+            Format.printf "Got gameboy intput: %a\n%!" Deku_gameboy.Joypad.pp
+              input;
+            Deku_gameboy.send_input input vm_state;
+            (ledger, None, vm_state, None)
         | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
@@ -170,7 +175,7 @@ let clean ~current_level protocol =
 let prepare ~parallel ~payload = parallel parse_operation payload
 
 let advance_gameboy vm_state =
-  let () = Unix.sleepf 0.10 in
+  let () = Unix.sleepf 0.05 in
   let _ =
     List.init 4 (fun _ ->
         let _ = Deku_gameboy.advance vm_state in

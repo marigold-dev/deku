@@ -10,3 +10,24 @@ val show : t -> string
 val empty : t
 val init : rom_path:string -> t
 val advance : t -> frame_buffer
+
+module Joypad : sig
+  type t = Camlboy_lib.Joypad.key =
+    | Down
+    | Up
+    | Left
+    | Right
+    | Start
+    | Select
+    | B
+    | A
+  [@@deriving show, yojson]
+
+  val cmdliner_converter :
+    (string -> [> `Ok of t | `Error of string ])
+    * (Format.formatter -> t -> unit)
+
+  val encoding : t Data_encoding.t
+end
+
+val send_input : Joypad.t -> t -> unit

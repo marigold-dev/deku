@@ -11,4 +11,4 @@
   fmt.tty
   piaf)
  (preprocess
-  (pps ppx_yojson_conv ppx_let_binding)))
+  (pps ppx_yojson_conv ppx_let_binding ppx_deriving_cmdliner)))

@@ -1,6 +1,6 @@
 (library
  (name deku_gameboy)
- (libraries camlboy yojson unix)
+ (libraries camlboy yojson unix data-encoding)
  (preprocess
   (pps
    ppx_let_binding

@@ -16,6 +16,10 @@ type operation = private
       sender : Address.t;
       operation : Ocaml_wasm_vm.Operation_payload.t;
     }
+  | Operation_gameboy_input of {
+      sender : Address.t;
+      input : Deku_gameboy.Joypad.t;
+    }
   | Operation_withdraw of {
       sender : Address.t;
       owner : Deku_tezos.Address.t;
@@ -91,4 +95,11 @@ module Signed : sig
 
   val noop :
     identity:Identity.t -> nonce:Nonce.t -> level:Level.t -> signed_operation
+
+  val joypad_input :
+    nonce:Nonce.t ->
+    level:Level.t ->
+    input:Deku_gameboy.Joypad.t ->
+    identity:Identity.t ->
+    signed_operation
 end

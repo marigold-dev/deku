@@ -2,7 +2,6 @@ open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_ledger
-
 exception Invalid_signature
 exception Invalid_source
 
@@ -16,6 +15,10 @@ type operation =
   | Operation_vm_transaction of {
       sender : Address.t;
       operation : Ocaml_wasm_vm.Operation_payload.t;
+    }
+  | Operation_gameboy_input of {
+      sender : Address.t;
+      input : Deku_gameboy.Joypad.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -56,7 +59,16 @@ let encoding =
           | _ -> None)
         (fun (sender, operation) ->
           Operation_vm_transaction { sender; operation });
-      case ~title:"withdraw" (Tag 2)
+      case ~title:"gameboy_input" (Tag 2)
+        (tup2
+           (Data_encoding.dynamic_size Address.encoding)
+           Deku_gameboy.Joypad.encoding)
+        (fun operation ->
+          match operation with
+          | Operation_gameboy_input { sender; input } -> Some (sender, input)
+          | _ -> None)
+        (fun (sender, input) -> Operation_gameboy_input { sender; input });
+      case ~title:"withdraw" (Tag 3)
         (tup4
            (Data_encoding.dynamic_size Address.encoding)
            Ticket_id.encoding Amount.encoding Deku_tezos.Address.encoding)
@@ -67,7 +79,7 @@ let encoding =
           | _ -> None)
         (fun (sender, ticket_id, amount, owner) ->
           Operation_withdraw { sender; owner; ticket_id; amount });
-      case ~title:"noop" (Tag 3) Address.encoding
+      case ~title:"noop" (Tag 4) Address.encoding
         (fun operation ->
           match operation with
           | Operation_noop { sender } -> Some sender
@@ -160,6 +172,7 @@ module Signed = struct
           | Operation_vm_transaction { sender; _ } -> sender
           | Operation_withdraw { sender; _ } -> sender
           | Operation_noop { sender } -> sender
+          | Operation_gameboy_input { sender; _ } -> sender
         in
         let sender = Address.to_key_hash sender in
         let hash = Operation_hash.to_blake2b hash in
@@ -212,6 +225,12 @@ module Signed = struct
   let vm_transaction ~nonce ~level ~content ~identity =
     let sender = Address.of_key_hash (Identity.key_hash identity) in
     let operation = Operation_vm_transaction { sender; operation = content } in
+    let initial = Initial.make ~nonce ~level ~operation in
+    make ~identity ~initial
+
+  let joypad_input ~nonce ~level ~input ~identity =
+    let sender = Address.of_key_hash (Identity.key_hash identity) in
+    let operation = Operation_gameboy_input { sender; input } in
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 end
