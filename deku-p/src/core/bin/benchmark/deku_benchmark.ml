@@ -222,12 +222,19 @@ let produce () =
   bench (module Bench)
 
 let block_encode () =
-  let items = 1_000_000 in
-  let prepare () = block ~default_block_size:items in
-  (* 1kk/s on 8 domains *)
-  bench "block_encode" ~prepare @@ fun block ->
-  let (_ : string list) = Block.encode block in
-  ()
+  let module Bench = struct
+    type t = Block.block
+
+    let name = "block_encode"
+    let items = 1_000_000
+    let prepare () = block ~default_block_size:items
+    let item_message = Format.sprintf "%d on %d domains" items domains
+
+    let run block =
+      let (_ : string list) = Block.encode block in
+      ()
+  end in
+  bench (module Bench)
 
 let block_decode () =
   let items = 1_000_000 in
