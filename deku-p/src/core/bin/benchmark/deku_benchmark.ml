@@ -175,9 +175,9 @@ let bench f =
   t2 -. t1
 
 let formatter ~name ~item_message ~data =
-  Format.sprintf "%s with %s: %.3f\n%!" name item_message data
+  Format.sprintf "%s with %s: %.3f\n" name item_message data
 
-let writer ~data = Format.printf "%s" data
+let writer ~data = Format.eprintf "%s%!" data
 
 let bench ~name ~item_message ~prepare run (formatter, writer) =
   let runs = 10 in
