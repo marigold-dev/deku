@@ -257,18 +257,30 @@ let block_decode () =
   bench (module Bench)
 
 let prepare_and_decode () =
-  let items = 100_000 in
-  let prepare () =
-    let (Block.Block { payload; _ }) = block ~default_block_size:items in
+  let module Bench = struct
+    type t = string
 
-    payload
-  in
-  let parallel = Parallel.filter_map_p in
-  (* 100k/s on 8 domains *)
-  bench "prepare_and_decode" ~prepare @@ fun payload ->
-  let (Payload payload) = Payload.decode ~payload in
-  let (_ : Operation.Initial.t list) = Protocol.prepare ~parallel ~payload in
-  ()
+    let name = "prepare and decode"
+    let items = 100_000
+
+    let item_message =
+      Format.sprintf "block size of %d on %d domains" items domains
+
+    let prepare () =
+      let (Block.Block { payload; _ }) = block ~default_block_size:items in
+      payload
+
+    let parallel = Parallel.filter_map_p
+
+    (* 100k/s on 8 domains *)
+    let run payload =
+      let (Payload payload) = Payload.decode ~payload in
+      let (_ : Operation.Initial.t list) =
+        Protocol.prepare ~parallel ~payload
+      in
+      ()
+  end in
+  bench (module Bench)
 
 let verify () =
   let items = 100_000 in
