@@ -34,5 +34,3 @@ val start :
   tezos:(Uri.t * Deku_crypto.Secret.secret * Deku_tezos.Address.t) option ->
   node ->
   unit
-
-val test : unit -> unit

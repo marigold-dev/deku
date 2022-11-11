@@ -1,6 +1,6 @@
-(executable
- (name deku_node)
- (public_name deku-node)
+(library
+ (name node)
+ (modules node)
  (libraries
   deku_chain
   deku_network
@@ -19,5 +19,21 @@
   logs.threaded
   piaf
   routes)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+
+(executable
+ (name deku_node)
+ (public_name deku-node)
+ (modules deku_node)
+ (libraries node)
+ (preprocess
+  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+
+(executable
+ (name test_node)
+ (public_name test-node)
+ (modules test_node)
+ (libraries node)
  (preprocess
   (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
