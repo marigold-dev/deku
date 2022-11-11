@@ -237,15 +237,24 @@ let block_encode () =
   bench (module Bench)
 
 let block_decode () =
-  let items = 1_000_000 in
-  let prepare () =
-    let block = block ~default_block_size:items in
-    Block.encode block
-  in
-  (* 500k/s on 8 domains *)
-  bench "block_decode" ~prepare @@ fun fragments ->
-  let (_ : Block.t) = Block.decode fragments in
-  ()
+  let module Bench = struct
+    type t = string list
+
+    let name = "block_decode"
+    let items = 1_000_000
+
+    let item_message =
+      Format.sprintf "block size of %d on %d domains" items domains
+
+    let prepare () =
+      let block = block ~default_block_size:items in
+      Block.encode block
+
+    let run fragments =
+      let (_ : Block.t) = Block.decode fragments in
+      ()
+  end in
+  bench (module Bench)
 
 let prepare_and_decode () =
   let items = 100_000 in
