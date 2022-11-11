@@ -174,14 +174,35 @@ let bench f =
   let t2 = Unix.gettimeofday () in
   t2 -. t1
 
-let bench msg ~prepare run =
+let formatter ~name ~item_message ~data =
+  Format.sprintf "%s with %s: %.3f\n%!" name item_message data
+
+let writer ~data = Format.printf data
+
+let bench ~name ~item_message ~prepare run (formatter, writer) =
   let runs = 10 in
   let value = prepare () in
   let _ =
-    List.init runs (fun n ->
+    List.init runs (fun _ ->
         let time = bench (fun () -> run value) in
-        Format.eprintf "%s(%d): %.3f\n%!" msg n time;
-        time) in 
+        let data = formatter ~name ~item_message ~data:time in
+        writer ~data)
+  in
+  ()
+
+module type Bench = sig
+  type t
+
+  val name : string
+  val item_message : string
+  val items : int
+  val prepare : unit -> t
+  val run : t -> unit
+end
+
+let bench (module Bench : Bench) writer =
+  let open Bench in
+  let _ = bench ~name ~item_message ~prepare run writer in
   ()
 let produce () =
   let items = 1_000_000 in
