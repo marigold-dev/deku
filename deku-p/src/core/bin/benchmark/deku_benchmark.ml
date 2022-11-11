@@ -174,26 +174,20 @@ let bench f =
   let t2 = Unix.gettimeofday () in
   t2 -. t1
 
-let bench msg ~items ~prepare run =
+let bench msg ~prepare run =
   let runs = 10 in
   let value = prepare () in
-  let results =
+  let _ =
     List.init runs (fun n ->
         let time = bench (fun () -> run value) in
         Format.eprintf "%s(%d): %.3f\n%!" msg n time;
-        time)
-  in
-  let total = List.fold_left (fun acc time -> acc +. time) 0.0 results in
-  let average = total /. Int.to_float runs in
-  let per_second = Int.to_float items /. average in
-  Format.eprintf "%s: %.3f\n%!" msg average;
-  Format.eprintf "%s: %.3f/s\n%!" msg per_second
-
+        time) in 
+  ()
 let produce () =
   let items = 1_000_000 in
   let prepare () = () in
   (* 6kk/s on 8 domains *)
-  bench "produce" ~items ~prepare @@ fun () ->
+  bench "produce"  ~prepare @@ fun () ->
   let (_ : Block.t) = block ~default_block_size:items in
   ()
 
@@ -201,7 +195,7 @@ let block_encode () =
   let items = 1_000_000 in
   let prepare () = block ~default_block_size:items in
   (* 1kk/s on 8 domains *)
-  bench "block_encode" ~items ~prepare @@ fun block ->
+  bench "block_encode" ~prepare @@ fun block ->
   let (_ : string list) = Block.encode block in
   ()
 
@@ -212,7 +206,7 @@ let block_decode () =
     Block.encode block
   in
   (* 500k/s on 8 domains *)
-  bench "block_decode" ~items ~prepare @@ fun fragments ->
+  bench "block_decode"  ~prepare @@ fun fragments ->
   let (_ : Block.t) = Block.decode fragments in
   ()
 
@@ -225,7 +219,7 @@ let prepare_and_decode () =
   in
   let parallel = Parallel.filter_map_p in
   (* 100k/s on 8 domains *)
-  bench "prepare_and_decode" ~items ~prepare @@ fun payload ->
+  bench "prepare_and_decode"  ~prepare @@ fun payload ->
   let (Payload payload) = Payload.decode ~payload in
   let (_ : Operation.Initial.t list) = Protocol.prepare ~parallel ~payload in
   ()
@@ -248,7 +242,7 @@ let verify () =
     in
     (key, items)
   in
-  bench "verify" ~items ~prepare @@ fun (key, items) ->
+  bench "verify" ~prepare @@ fun (key, items) ->
   let _units : unit list =
     Parallel.map_p
       (fun (hash, sign) -> assert (Signature.verify key sign hash))
@@ -292,7 +286,7 @@ let ledger_balance () =
     in
     (ledger, items)
   in
-  bench "ledger_balance" ~items ~prepare @@ fun (ledger, items) ->
+  bench "ledger_balance" ~prepare @@ fun (ledger, items) ->
   let (_ : unit) =
     List.iter
       (fun (sender, amount, ticket_id) ->
@@ -339,7 +333,7 @@ let ledger_transfer () =
     in
     (ledger, items)
   in
-  bench "ledger_transfer" ~items ~prepare @@ fun (ledger, items) ->
+  bench "ledger_transfer" ~prepare @@ fun (ledger, items) ->
   let (_ : Ledger.t) =
     List.fold_left
       (fun ledger (sender, receiver, amount, ticket_id) ->
