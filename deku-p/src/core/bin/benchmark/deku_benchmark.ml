@@ -283,30 +283,38 @@ let prepare_and_decode () =
   bench (module Bench)
 
 let verify () =
-  let items = 100_000 in
-  let prepare () =
-    let identity =
-      let secret = Ed25519.Secret.generate () in
-      let secret = Secret.Ed25519 secret in
-      Identity.make secret
-    in
-    let key = Identity.key identity in
-    let items =
-      Parallel.init_p items (fun n ->
-          let string = string_of_int n in
-          let hash = BLAKE2b.hash string in
-          let sign = Identity.sign ~hash identity in
-          (hash, sign))
-    in
-    (key, items)
-  in
-  bench "verify" ~prepare @@ fun (key, items) ->
-  let _units : unit list =
-    Parallel.map_p
-      (fun (hash, sign) -> assert (Signature.verify key sign hash))
-      items
-  in
-  ()
+  let module Bench = struct
+    type t = Key.key * (BLAKE2b.t * Signature.signature) list
+
+    let name = "verify"
+    let items = 100_000
+    let item_message = Format.sprintf "%d tickets on %d domains" items domains
+
+    let prepare () =
+      let identity =
+        let secret = Ed25519.Secret.generate () in
+        let secret = Secret.Ed25519 secret in
+        Identity.make secret
+      in
+      let key = Identity.key identity in
+      let items =
+        Parallel.init_p items (fun n ->
+            let string = string_of_int n in
+            let hash = BLAKE2b.hash string in
+            let sign = Identity.sign ~hash identity in
+            (hash, sign))
+      in
+      (key, items)
+
+    let run (key, items) =
+      let _units : unit list =
+        Parallel.map_p
+          (fun (hash, sign) -> assert (Signature.verify key sign hash))
+          items
+      in
+      ()
+  end in
+  bench (module Bench)
 
 let ledger_balance () =
   let items = 100_000 in
