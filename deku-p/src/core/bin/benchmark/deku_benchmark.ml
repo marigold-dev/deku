@@ -177,7 +177,7 @@ let bench f =
 let formatter ~name ~item_message ~data =
   Format.sprintf "%s with %s: %.3f\n%!" name item_message data
 
-let writer ~data = Format.printf data
+let writer ~data = Format.printf "%s" data
 
 let bench ~name ~item_message ~prepare run (formatter, writer) =
   let runs = 10 in
@@ -205,7 +205,7 @@ let bench (module Bench : Bench) writer =
   let _ = bench ~name ~item_message ~prepare run writer in
   ()
 
-let produce () =
+let produce writer () =
   let module Bench : Bench = struct
     type t = unit
 
@@ -219,9 +219,9 @@ let produce () =
       let (_ : Block.t) = block ~default_block_size:items in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let block_encode () =
+let block_encode writer () =
   let module Bench = struct
     type t = Block.block
 
@@ -234,9 +234,9 @@ let block_encode () =
       let (_ : string list) = Block.encode block in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let block_decode () =
+let block_decode writer () =
   let module Bench = struct
     type t = string list
 
@@ -254,9 +254,9 @@ let block_decode () =
       let (_ : Block.t) = Block.decode fragments in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let prepare_and_decode () =
+let prepare_and_decode writer () =
   let module Bench = struct
     type t = string
 
@@ -280,9 +280,9 @@ let prepare_and_decode () =
       in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let verify () =
+let verify writer () =
   let module Bench = struct
     type t = Key.key * (BLAKE2b.t * Signature.signature) list
 
@@ -314,9 +314,9 @@ let verify () =
       in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let ledger_balance () =
+let ledger_balance writer () =
   let module Bench = struct
     type t =
       Ledger.ledger
@@ -371,9 +371,9 @@ let ledger_balance () =
       in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
 
-let ledger_transfer () =
+let ledger_transfer writer () =
   let module Bench = struct
     type t =
       Ledger.ledger
@@ -431,7 +431,8 @@ let ledger_transfer () =
       in
       ()
   end in
-  bench (module Bench)
+  bench (module Bench) writer
+
 let benches =
   [
     produce;
@@ -446,4 +447,4 @@ let benches =
 let () =
   Eio_main.run @@ fun env ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
-  List.iter (fun bench -> bench ()) benches
+  List.iter (fun bench -> bench (formatter, writer) ()) benches
