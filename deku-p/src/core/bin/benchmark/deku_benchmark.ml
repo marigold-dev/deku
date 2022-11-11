@@ -204,13 +204,22 @@ let bench (module Bench : Bench) writer =
   let open Bench in
   let _ = bench ~name ~item_message ~prepare run writer in
   ()
+
 let produce () =
-  let items = 1_000_000 in
-  let prepare () = () in
-  (* 6kk/s on 8 domains *)
-  bench "produce"  ~prepare @@ fun () ->
-  let (_ : Block.t) = block ~default_block_size:items in
-  ()
+  let module Bench : Bench = struct
+    type t = unit
+
+    let items = 1_000_000
+    let name = "produce"
+    let item_message = Format.sprintf "%d on %d" items domains
+    let prepare () = ()
+    (* 6kk/s on 8 domains *)
+
+    let run () =
+      let (_ : Block.t) = block ~default_block_size:items in
+      ()
+  end in
+  bench (module Bench)
 
 let block_encode () =
   let items = 1_000_000 in
@@ -227,7 +236,7 @@ let block_decode () =
     Block.encode block
   in
   (* 500k/s on 8 domains *)
-  bench "block_decode"  ~prepare @@ fun fragments ->
+  bench "block_decode" ~prepare @@ fun fragments ->
   let (_ : Block.t) = Block.decode fragments in
   ()
 
@@ -240,7 +249,7 @@ let prepare_and_decode () =
   in
   let parallel = Parallel.filter_map_p in
   (* 100k/s on 8 domains *)
-  bench "prepare_and_decode"  ~prepare @@ fun payload ->
+  bench "prepare_and_decode" ~prepare @@ fun payload ->
   let (Payload payload) = Payload.decode ~payload in
   let (_ : Operation.Initial.t list) = Protocol.prepare ~parallel ~payload in
   ()
