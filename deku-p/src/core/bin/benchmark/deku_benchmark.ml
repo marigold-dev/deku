@@ -317,51 +317,61 @@ let verify () =
   bench (module Bench)
 
 let ledger_balance () =
-  let items = 100_000 in
-  let address () =
-    let secret = Ed25519.Secret.generate () in
-    let secret = Secret.Ed25519 secret in
-    let identity = Identity.make secret in
-    Address.of_key_hash (Identity.key_hash identity)
-  in
-  let prepare () =
-    let items =
-      Parallel.init_p items (fun n ->
-          let sender = address () in
-          let amount =
-            let z = Z.of_int n in
-            let n = Option.get (N.of_z z) in
-            Amount.of_n n
-          in
-          let ticket_id =
-            let ticketer =
-              let open Deku_tezos in
-              Option.get
-                (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
+  let module Bench = struct
+    type t =
+      Ledger.ledger
+      * (Address.address * Amount.amount * Ticket_id.ticket_id) list
+
+    let name = "ledger_balance"
+    let items = 100_000
+    let item_message = Format.sprintf "%d tickets on %d domains" items domains
+
+    let address () =
+      let secret = Ed25519.Secret.generate () in
+      let secret = Secret.Ed25519 secret in
+      let identity = Identity.make secret in
+      Address.of_key_hash (Identity.key_hash identity)
+
+    let prepare () =
+      let items =
+        Parallel.init_p items (fun n ->
+            let sender = address () in
+            let amount =
+              let z = Z.of_int n in
+              let n = Option.get (N.of_z z) in
+              Amount.of_n n
             in
-            Ticket_id.make (Deku_ledger.Ticket_id.Tezos ticketer)
-              (Bytes.make 0 '\000')
-          in
-          (sender, amount, ticket_id))
-    in
-    let ledger =
-      List.fold_left
-        (fun ledger (sender, amount, ticket_id) ->
-          Ledger.deposit sender amount ticket_id ledger)
-        Ledger.initial items
-    in
-    (ledger, items)
-  in
-  bench "ledger_balance" ~prepare @@ fun (ledger, items) ->
-  let (_ : unit) =
-    List.iter
-      (fun (sender, amount, ticket_id) ->
-        let balance = Ledger.balance sender ticket_id ledger in
-        (* TODO: this is a >= because of rng collision *)
-        assert (balance >= amount))
-      items
-  in
-  ()
+            let ticket_id =
+              let ticketer =
+                let open Deku_tezos in
+                Option.get
+                  (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
+              in
+              Ticket_id.make (Deku_ledger.Ticket_id.Tezos ticketer)
+                (Bytes.make 0 '\000')
+            in
+            (sender, amount, ticket_id))
+      in
+      let ledger =
+        List.fold_left
+          (fun ledger (sender, amount, ticket_id) ->
+            Ledger.deposit sender amount ticket_id ledger)
+          Ledger.initial items
+      in
+      (ledger, items)
+
+    let run (ledger, items) =
+      let (_ : unit) =
+        List.iter
+          (fun (sender, amount, ticket_id) ->
+            let balance = Ledger.balance sender ticket_id ledger in
+            (* TODO: this is a >= because of rng collision *)
+            assert (balance >= amount))
+          items
+      in
+      ()
+  end in
+  bench (module Bench)
 
 let ledger_transfer () =
   let items = 100_000 in
