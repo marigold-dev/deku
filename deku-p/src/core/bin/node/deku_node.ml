@@ -60,6 +60,9 @@ type params = {
 [@@deriving cmdliner]
 
 let setup_log ?style_renderer ?log_level () =
+  (* Without this call, Logs is not thread safe, and causes crashes inside Eio
+     when debug logging is enabled. *)
+  Logs_threaded.enable ();
   Fmt_tty.setup_std_outputs ?style_renderer ();
   Logs.set_level log_level;
   Logs.set_reporter (Logs_fmt.reporter ());

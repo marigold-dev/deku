@@ -16,6 +16,7 @@
   fmt.tty
   fmt.cli
   logs.cli
+  logs.threaded
   piaf
   routes)
  (preprocess
