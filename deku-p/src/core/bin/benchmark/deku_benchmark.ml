@@ -374,51 +374,64 @@ let ledger_balance () =
   bench (module Bench)
 
 let ledger_transfer () =
-  let items = 100_000 in
-  let address () =
-    let secret = Ed25519.Secret.generate () in
-    let secret = Secret.Ed25519 secret in
-    let identity = Identity.make secret in
-    Address.of_key_hash (Identity.key_hash identity)
-  in
-  let prepare () =
-    let items =
-      Parallel.init_p items (fun n ->
-          let sender = address () in
-          let receiver = address () in
-          let amount =
-            let z = Z.of_int n in
-            let n = Option.get (N.of_z z) in
-            Amount.of_n n
-          in
-          let ticket_id =
-            let ticketer =
-              let open Deku_tezos in
-              Option.get
-                (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
-            in
-            Ticket_id.make (Tezos ticketer) (Bytes.make 0 '\000')
-          in
-          (sender, receiver, amount, ticket_id))
-    in
-    let ledger =
-      List.fold_left
-        (fun ledger (sender, _receiver, amount, ticket_id) ->
-          Ledger.deposit sender amount ticket_id ledger)
-        Ledger.initial items
-    in
-    (ledger, items)
-  in
-  bench "ledger_transfer" ~prepare @@ fun (ledger, items) ->
-  let (_ : Ledger.t) =
-    List.fold_left
-      (fun ledger (sender, receiver, amount, ticket_id) ->
-        Result.get_ok
-          (Ledger.transfer ~sender ~receiver ~amount ~ticket_id ledger))
-      ledger items
-  in
-  ()
+  let module Bench = struct
+    type t =
+      Ledger.ledger
+      * (Address.address
+        * Address.address
+        * Amount.amount
+        * Ticket_id.ticket_id)
+        list
 
+    let name = "ledger_transfer"
+    let items = 100_000
+    let item_message = Format.sprintf "%d transfers on %d domains" items domains
+
+    let address () =
+      let secret = Ed25519.Secret.generate () in
+      let secret = Secret.Ed25519 secret in
+      let identity = Identity.make secret in
+      Address.of_key_hash (Identity.key_hash identity)
+
+    let prepare () =
+      let items =
+        Parallel.init_p items (fun n ->
+            let sender = address () in
+            let receiver = address () in
+            let amount =
+              let z = Z.of_int n in
+              let n = Option.get (N.of_z z) in
+              Amount.of_n n
+            in
+            let ticket_id =
+              let ticketer =
+                let open Deku_tezos in
+                Option.get
+                  (Contract_hash.of_b58 "KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")
+              in
+              Ticket_id.make (Tezos ticketer) (Bytes.make 0 '\000')
+            in
+            (sender, receiver, amount, ticket_id))
+      in
+      let ledger =
+        List.fold_left
+          (fun ledger (sender, _receiver, amount, ticket_id) ->
+            Ledger.deposit sender amount ticket_id ledger)
+          Ledger.initial items
+      in
+      (ledger, items)
+
+    let run (ledger, items) =
+      let (_ : Ledger.t) =
+        List.fold_left
+          (fun ledger (sender, receiver, amount, ticket_id) ->
+            Result.get_ok
+              (Ledger.transfer ~sender ~receiver ~amount ~ticket_id ledger))
+          ledger items
+      in
+      ()
+  end in
+  bench (module Bench)
 let benches =
   [
     produce;
