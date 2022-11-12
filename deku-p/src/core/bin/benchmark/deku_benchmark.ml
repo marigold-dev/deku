@@ -288,6 +288,12 @@ let write_to_file ~data ~file =
 
 let write_to_terminal ~data = Format.eprintf "%s%!" data
 
+type params = {
+  domains : int; [@env "DEKU_DOMAINS"]
+  csv : bool; [@env "CSV"] [@default false]
+}
+[@@deriving cmdliner]
+
 let () =
   Eio_main.run @@ fun env ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
