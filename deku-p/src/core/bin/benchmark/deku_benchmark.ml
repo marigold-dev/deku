@@ -273,15 +273,26 @@ let benches : (module BENCH) list =
     (module Ledger_transfer);
   ]
 
-let formatter ~name ~item_message ~data =
+let format_to_print ~name ~item_message ~data =
   Format.sprintf "%s with %s: %.3f\n" name item_message data
 
-let writer ~data = Format.eprintf "%s%!" data
+let format_to_csv ~name ~item_message ~data =
+  Format.sprintf "%s, %s, %f\n" name item_message data
+
+let write_to_file ~data ~file =
+  let ( / ) = Eio.Path.( / ) in
+  let run dir =
+    Eio.Path.save ~append:true ~create:(`If_missing 0o600) (dir / file) data
+  in
+  Eio_main.run @@ fun env -> run (Eio.Stdenv.cwd env)
+
+let write_to_terminal ~data = Format.eprintf "%s%!" data
 
 let () =
   Eio_main.run @@ fun env ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
   List.iter
     (fun (module Bench : BENCH) ->
-      run_benchmark ~formatter ~writer (module Bench))
+      run_benchmark ~formatter:format_to_print ~writer:write_to_terminal
+        (module Bench))
     benches
