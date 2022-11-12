@@ -1,0 +1,70 @@
+produce, 1000000, 0.489075
+produce, 1000000, 0.463113
+produce, 1000000, 0.426734
+produce, 1000000, 0.488561
+produce, 1000000, 0.448277
+produce, 1000000, 0.460129
+produce, 1000000, 0.426426
+produce, 1000000, 0.444680
+produce, 1000000, 0.422274
+produce, 1000000, 0.436234
+block_encode, 1000000, 0.000045
+block_encode, 1000000, 0.000043
+block_encode, 1000000, 0.000037
+block_encode, 1000000, 0.000039
+block_encode, 1000000, 0.000031
+block_encode, 1000000, 0.000031
+block_encode, 1000000, 0.000031
+block_encode, 1000000, 0.000031
+block_encode, 1000000, 0.000033
+block_encode, 1000000, 0.000044
+block_decode, block size of 1000000, 0.193122
+block_decode, block size of 1000000, 0.192905
+block_decode, block size of 1000000, 0.193416
+block_decode, block size of 1000000, 0.192503
+block_decode, block size of 1000000, 0.192653
+block_decode, block size of 1000000, 0.191022
+block_decode, block size of 1000000, 0.191685
+block_decode, block size of 1000000, 0.191748
+block_decode, block size of 1000000, 0.191508
+block_decode, block size of 1000000, 0.194050
+prepare_and_decode, block size of 100000, 1.812805
+prepare_and_decode, block size of 100000, 1.702442
+prepare_and_decode, block size of 100000, 1.725662
+prepare_and_decode, block size of 100000, 1.732406
+prepare_and_decode, block size of 100000, 1.706324
+prepare_and_decode, block size of 100000, 1.752510
+prepare_and_decode, block size of 100000, 1.730076
+prepare_and_decode, block size of 100000, 1.802644
+prepare_and_decode, block size of 100000, 1.720345
+prepare_and_decode, block size of 100000, 1.832585
+verify, 100000 signatures, 1.599236
+verify, 100000 signatures, 1.622227
+verify, 100000 signatures, 1.803199
+verify, 100000 signatures, 1.925799
+verify, 100000 signatures, 1.910682
+verify, 100000 signatures, 1.959703
+verify, 100000 signatures, 1.772356
+verify, 100000 signatures, 1.890414
+verify, 100000 signatures, 1.592744
+verify, 100000 signatures, 1.611708
+ledger_balance, 100000 tickets, 0.145488
+ledger_balance, 100000 tickets, 0.149181
+ledger_balance, 100000 tickets, 0.151074
+ledger_balance, 100000 tickets, 0.152356
+ledger_balance, 100000 tickets, 0.151291
+ledger_balance, 100000 tickets, 0.149115
+ledger_balance, 100000 tickets, 0.149675
+ledger_balance, 100000 tickets, 0.150904
+ledger_balance, 100000 tickets, 0.147847
+ledger_balance, 100000 tickets, 0.152313
+ledger_transfer, 100000 transfers, 0.826237
+ledger_transfer, 100000 transfers, 0.831228
+ledger_transfer, 100000 transfers, 0.776813
+ledger_transfer, 100000 transfers, 0.780298
+ledger_transfer, 100000 transfers, 0.819399
+ledger_transfer, 100000 transfers, 0.857281
+ledger_transfer, 100000 transfers, 0.786971
+ledger_transfer, 100000 transfers, 0.787611
+ledger_transfer, 100000 transfers, 0.786068
+ledger_transfer, 100000 transfers, 0.805902

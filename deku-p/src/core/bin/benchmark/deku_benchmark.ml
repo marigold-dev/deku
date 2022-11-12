@@ -258,7 +258,7 @@ let run_benchmark ~formatter ~writer (module Bench : BENCH) =
     List.init runs (fun _ ->
         let time = bench (fun () -> run value) in
         let data = formatter ~name ~item_message ~data:time in
-        writer ~data)
+        writer ~data ~file:"output.csv")
   in
   ()
 
