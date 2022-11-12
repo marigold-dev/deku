@@ -310,3 +310,10 @@ let main params =
     (fun (module Bench : BENCH) ->
       run_benchmark ~formatter ~writer (module Bench))
     benches
+
+let () =
+  let open Cmdliner in
+  let info = Cmd.info "deku-benchmark" in
+  let term = Term.(const main $ params_cmdliner_term ()) in
+  let cmd = Cmd.v info term in
+  exit (Cmd.eval ~catch:false cmd)
