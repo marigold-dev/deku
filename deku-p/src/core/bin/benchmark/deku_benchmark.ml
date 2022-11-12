@@ -286,7 +286,9 @@ let write_to_file ~data ~file =
   in
   Eio_main.run @@ fun env -> run (Eio.Stdenv.cwd env)
 
-let write_to_terminal ~data = Format.eprintf "%s%!" data
+let write_to_terminal ~data ~file =
+  let _ = file in
+  Format.eprintf "%s%!" data
 
 type params = {
   domains : int; [@env "DEKU_DOMAINS"]
@@ -294,11 +296,17 @@ type params = {
 }
 [@@deriving cmdliner]
 
-let () =
+let main params =
+  let { domains; csv } = params in
+  let formatter, writer =
+    match csv with
+    | true -> (format_to_csv, write_to_file)
+    | false -> (format_to_print, write_to_terminal)
+  in
+
   Eio_main.run @@ fun env ->
   Parallel.Pool.run ~env ~domains @@ fun () ->
   List.iter
     (fun (module Bench : BENCH) ->
-      run_benchmark ~formatter:format_to_print ~writer:write_to_terminal
-        (module Bench))
+      run_benchmark ~formatter ~writer (module Bench))
     benches
