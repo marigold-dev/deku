@@ -1,6 +1,6 @@
 import { JSONType } from "./contract";
 
-export const createOperation = async (
+export const originateContract = async (
   ligoRpc: string,
   dekuRpc: string,
   {
@@ -26,6 +26,46 @@ export const createOperation = async (
       };
       const dekuRes = await fetch(
         dekuRpc + "/api/v1/helpers/compile-contract",
+        dekuOptions
+      );
+      return dekuRes.json();
+    }
+    default:
+      throw "Not yet supported";
+  }
+};
+
+export const prepareInvoke = async (
+  ligoRpc: string,
+  dekuRpc: string,
+  {
+    kind,
+    code,
+    ligoExpression,
+    address,
+  }: { kind: string; code: string; ligoExpression: string; address: string }
+) => {
+  switch (kind) {
+    case "jsligo": {
+      const options = {
+        method: "POST",
+        body: JSON.stringify({
+          lang: "jsligo",
+          source: code,
+          expression: ligoExpression,
+        }),
+      };
+      const result = await fetch(ligoRpc + "/api/v1/ligo/expression", options);
+      const { expression } = await result.json();
+      const dekuOptions = {
+        method: "POST",
+        body: JSON.stringify({
+          address,
+          expression,
+        }),
+      };
+      const dekuRes = await fetch(
+        dekuRpc + "/api/v1/helpers/compile-expression",
         dekuOptions
       );
       return dekuRes.json();

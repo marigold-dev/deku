@@ -83,7 +83,7 @@ const test = async () => {
 
   await sleep(10000);
   const param = ["Union", ["Left", ["Union", ["Left", ["Int", "3"]]]]];
-  contract.invoke(param);
+  contract.invokeRaw(param);
 };
 
 test().catch((err) => {

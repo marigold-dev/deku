@@ -1,4 +1,5 @@
 import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import { prepareInvoke } from "./utils";
 
 export type JSONType =
   | string
@@ -39,7 +40,7 @@ const parseContractState = (json: JSONType): JSONType => {
     }
     case "List": {
       const first = json[1] as Array<JSONType>;
-      return first.map(json => parseContractState(json))
+      return first.map((json) => parseContractState(json));
     }
     case "Union": {
       const first = json[1] as Array<JSONType>;
@@ -47,16 +48,16 @@ const parseContractState = (json: JSONType): JSONType => {
       const value = first[1] as JSONType;
       switch (type) {
         case "Right":
-          return { right: parseContractState(value) }
+          return { right: parseContractState(value) };
         case "Left":
-          return { left: parseContractState(value) }
+          return { left: parseContractState(value) };
         default: {
           return null; // TODO: remove this default case which is not possible
         }
       }
     }
     case "Unit": {
-      return null
+      return null;
     }
     default:
       console.error(`type ${type} is not yet implemented`);
@@ -82,11 +83,11 @@ export class Contract {
   }
 
   /**
-   * Invoke a deku-c smart contrat
-   * @param parameter the parameter of the contract
+   * Invoke a deku-c smart contrat with a tunac-provided expression
+   * @param parameter the parameter of the contract as provided by tunac
    * @returns the hash of the operation
    */
-  async invoke(parameter: any): Promise<string> {
+  async invokeRaw(parameter: any): Promise<string> {
     const invoke = {
       operation: JSON.stringify({
         address: this.address,
@@ -94,6 +95,29 @@ export class Contract {
       }),
       tickets: [],
     };
+    const hash = await this.deku.submitVmOperation(invoke);
+    return hash;
+  }
+
+  /**
+   * Compiles a Ligo argument and invokes a deku-c smart contract
+   * @param parameter the parameter of the contract, in Ligo // FIXME lang
+   * @returns the hash of the operation
+   */
+  async invokeWithLigo(
+    code: string,
+    expression: string,
+    ligoRpc: string,
+    dekuRpc: string
+  ): Promise<string> {
+    // FIXME the need for the two RPCs stinks (also they're strings)
+    const parameter = {
+      kind: "jsligo",
+      code,
+      ligoExpression: expression,
+      address: this.address,
+    };
+    const invoke = await prepareInvoke(ligoRpc, dekuRpc, parameter);
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }

@@ -2,7 +2,7 @@ import { DekuToolkit } from "@marigold-dev/deku-toolkit";
 import { Contract, JSONType } from "./contract";
 import { DekuSigner } from "@marigold-dev/deku-toolkit/lib/utils/signers";
 import {
-  createOperation,
+  originateContract,
   operationHashToContractAddress,
   isDefined,
 } from "./utils";
@@ -60,7 +60,7 @@ export class DekuCClient {
     const ligoRpc = this.assertHasLigoRpc();
     this.assertHasSigner();
 
-    const operation = await createOperation(ligoRpc, this.dekuRpc, {
+    const operation = await originateContract(ligoRpc, this.dekuRpc, {
       kind,
       code,
       initialStorage,

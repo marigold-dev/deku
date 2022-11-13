@@ -105,6 +105,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.without_body (module Get_receipt)
        |> Server.with_body (module Compute_contract_hash)
        |> Server.with_body (module Helper_compile_origination)
+       |> Server.with_body (module Helper_compile_invocation)
        |> Server.make_handler ~state)
   in
   let config = Piaf.Server.Config.create port in
