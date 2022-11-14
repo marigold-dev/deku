@@ -55,6 +55,19 @@ const parseContractState = (json: JSONType): JSONType => {
         }
       }
     }
+    case "Option": {
+      const first = json[1] as Array<JSONType>;
+      const type = first[0] as string;
+      const value = first[1] as JSONType;
+      switch (type) {
+        case "None":
+          return { none: true }
+        case "Some":
+          return { none: false, some: parseContractState(value) }
+        default:
+          return null; // TODO: remove this default case which is not possible
+      }
+    }
     case "Unit": {
       return null
     }
