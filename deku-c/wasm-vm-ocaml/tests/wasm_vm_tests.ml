@@ -301,7 +301,7 @@ let () =
                     Contract_address.of_user_operation_hash
                       (Deku_crypto.BLAKE2b.hash "tutturu"))
               in
-              Alcotest.(check value')
+              Alcotest.(check (neg value'))
                 "storage should have change" initial_storage storage);
         ] );
     ]
