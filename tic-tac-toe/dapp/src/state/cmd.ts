@@ -8,6 +8,7 @@ import { makeJoinPayload, makePlayPayload, parseState } from "../core";
 import contract from "../utils/contract";
 import { wait } from "../utils";
 import { Action } from "./reducer";
+import { DEKU_RPC, IS_DEV, LIGO_RPC } from "../config";
 
 // Just for dev purposes
 const connectInMemory = async () => {
@@ -39,12 +40,10 @@ const connectBeaconWallet = async () => {
 }
 
 export const connectCmd = (next: Action) => {
-    const connect = connectInMemory // Change this when deploying
+    const connect = IS_DEV ? connectInMemory : connectBeaconWallet;
     return Cmd.run(connect, {
         successActionCreator: ({ signer, address }) => {
-            const dekuRpc = "http://localhost:8080"; // TODO: change this url 
-            const ligoRpc = "http://localhost:9090"; // TODO: change this url
-            const deku = new DekuCClient({ dekuRpc, ligoRpc, signer });
+            const deku = new DekuCClient({ dekuRpc: DEKU_RPC, ligoRpc: LIGO_RPC, signer });
             return { type: "CONNECTED", payload: { deku, address }, next }
         },
         failActionCreator: () => ({ type: "DISCONNECT" }),
@@ -57,9 +56,7 @@ export const createGameCmd = (deku: DekuCClient, player: string) => {
 
     const createGame = async () => {
         const { operation, address } = await deku.originateContract({ kind: "jsligo", code: contract, initialStorage });
-        await wait("http://localhost:8080", operation); // TODO: inject this in createGameCmd signature
-        // await new Promise(resolve => setTimeout(resolve, 3000));
-        // return {address : "dev address", operation}
+        await wait(DEKU_RPC, operation);
         return { address, operation };
     }
 
