@@ -32,6 +32,7 @@ const Game = () => {
         if (contract && address) {
             contract.onNewState(state => {
                 const parsed = parseState(state, address);
+                console.log(parsed);
                 dispatch({ type: "FETCH_GAME_SUCCESS", payload: parsed })
             });
             return () => {

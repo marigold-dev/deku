@@ -6,12 +6,14 @@ type gameState =
 
 type game = [cell, cell, cell, cell, cell, cell, cell, cell, cell];
 
+type players = {
+  player1: address,
+  player2: option<address>
+}
+
 type storage = {
   game: game,
-  players: {
-    player1: address,
-    player2: address
-  },
+  players: players,
   gameState: gameState
 };
 
@@ -31,13 +33,13 @@ const mapi : (fct:(i: nat, elt: cell) => cell , ls: game) => game = (f,ls) => {
 
 const empty: storage = {
   game: [
-    Cross(), Empty(), Circle(), 
+    Empty(), Empty(), Empty(), 
     Empty(), Empty(), Empty(), 
     Empty(), Empty(), Empty()
   ],
   players: {
     player1: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address, // The two players are the same
-    player2: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address,
+    player2: None(),
   },
   gameState: PlayerTurn("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address)
 };
@@ -66,8 +68,13 @@ const getSymbol = (player: address, storage: storage): cell => {
 }
 
 const other = (player: address, storage: storage): address => {
-  if(player == storage.players.player1) return storage.players.player2;
-  return storage.players.player1
+  return match(storage.players.player2, {
+    None: () => failwith("Player2 is not defined"),
+    Some: player2 =>  {
+      if(player == storage.players.player1) return player2;
+      return storage.players.player1
+    }
+  })
 }
 
 const isDone = (game: game): bool => 
@@ -85,7 +92,7 @@ const isWon = (game: game): bool =>
   (game[2] == game[4] && game[4] == game[6] && game[2] != Empty()) ||
 
   (game[0] == game[3] && game[3] == game[6] && game[0] != Empty()) ||
-  (game[1] == game[4] && game[4] == game[5] && game[1] != Empty()) ||
+  (game[1] == game[4] && game[4] == game[7] && game[1] != Empty()) ||
   (game[2] == game[5] && game[5] == game[8] && game[2] != Empty())
   )
 
@@ -109,12 +116,23 @@ const play = (player: address, cellId: nat, storage:storage): storage => {
   return {game, players, gameState:nextGameState}
 }
 
+const join = (player: address, storage: storage): storage => {
+    const {game, players, gameState} = storage;
+    return match(players.player2, {
+      Some: _player2 => failwith("Player2 has already joined the game"),
+      None: () => {
+        const nextPlayers:players = {player1: players.player1, player2: Some(player)};
+        return {game, players: nextPlayers, gameState};
+      }
+    });
+}
+
 const main = (parameter: parameter, storage: storage): return_ => {
     let player = Tezos.get_sender () as address;
     let operations: list<operation> = list([]);
     let storage = (match (parameter, {
       Play: cellId => play (player, cellId, storage),
-      Join: () => failwith("Join is not yet implemented")
+      Join: () => join(player, storage)
     }));
     return [operations, storage]
 }

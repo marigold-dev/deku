@@ -5,6 +5,7 @@ export type Cell = "Cross" | "Circle" | "Empty"
 export type CellId = number;
 
 export type step =
+    | { type: "WAITING_OPPONENT_TO_JOIN" }
     | { type: "YOUR_TURN" }
     | { type: "OPPONENT_TURN" }
     | { type: "WON" }
@@ -19,6 +20,10 @@ export interface State {
 
 // Parse the state retrieved from the deku-c-toolkit 
 export const parseState = (state: any, currentPlayer: string) => {
+    console.log("state");
+    console.log(state);
+
+
     const cell1 = state[0][0][0][0][0][0];
     const cell2 = state[0][0][0][0][0][1];
     const cell3 = state[0][0][0][0][1][0];
@@ -55,14 +60,12 @@ export const parseState = (state: any, currentPlayer: string) => {
             : { type: "LOST" }
 
     const player1 = state[1][0]
-    const player2 = state[1][1];
-
-    const opponent = player1 === currentPlayer ? player2 : player1;
-
+    const player2IsNone = state[1][1].none;
+    const opponent = player1 === currentPlayer && state[1][1].some ? state[1][1].some : player1;
     return {
         board,
         opponent,
-        step
+        step: player2IsNone ? { type: "WAITING_OPPONENT_TO_JOIN" } : step,
     };
 }
 
@@ -70,6 +73,11 @@ export const makePlayPayload = (cellId: CellId) => {
     // return ["Int", cellId + ""];
     return ["Union", ["Right", ["Int", cellId + ""]]]
 }
+
 export const makeInitStorage = (player1: string, player2: string) => {
     return `(Pair(Pair(Pair(Pair(Pair(Pair(Left(Right Unit))(Right Unit))(Left(Left Unit))(Right Unit))(Pair(Right Unit)(Right Unit))(Right Unit)(Right Unit))(Right Unit))(Left "${player1}")) "${player1}" "${player2}")`;
+}
+
+export const makeJoinPayload = () => {
+    return ["Union", ["Left", ["Unit"]]]
 }

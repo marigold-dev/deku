@@ -4,15 +4,24 @@ import { fromBeaconSigner } from "@marigold-dev/deku-toolkit";
 import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 import { Cmd } from "redux-loop";
-import { makePlayPayload, parseState } from "../core";
+import { makeJoinPayload, makePlayPayload, parseState } from "../core";
 import contract from "../utils/contract";
 import { wait } from "../utils";
 import { Action } from "./reducer";
 
+// Just for dev purposes
 const connectInMemory = async () => {
     const secrets = [
-        "edsk4Jex4ueokTLnc7xnkdXBZPfo1MQNeNPeDEmbjo7Wk2DSdVwjJD",
-        "edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq",
+        "edsk4WVyqJ112qJREwC5TERn2AmmmNMyVhwWyaLgHosC48UFV6EnMG",
+        "edsk4JaFU4PZ7vpp1kDyeE578zwJv2XpBP7QqhSQEw3mFS3rmBP5nJ",
+        "edsk36FhrZwFVKpkdmouNmcwkAJ9XgSnE5TFHA7MqnmZ93iczDhQLK",
+        "edsk3Vjga1rxDHC9Bns7EN4CWkpaYoHwnHBPJMdERPtytxcx7A78PG",
+        "edsk3tP2tJieBNsRTqaq8edcfekPxALp3W5F2Ef4tLecqf6XG66m5F",
+        "edsk4Jkbb34LLESFeXdeNdwKhuaVarxT8QwRzerf5V9oqbjrjGAzNx",
+        "edsk37WmmUhP2g5AN9Jz5FWgcspMyYbsqzrGW7bgUXMRrEd4M9aTaG",
+        "edsk44pF6zGm8qV4YShrABDZDq5jrGydwrWmMiEwJWsJEarMSwCmB4",
+        "edsk3MG557SuyCMyyjBa6n9MeZsLGRkHnXPpJedu8UrbUoEFh5q64K",
+        "edsk33pagYM8CfcD2gokyE7RWD5bjcRAqdoYjLDuMohg5yT9r6UfYY",
     ];
     const secret = secrets[Math.floor(Math.random() * secrets.length)];
     const tezosSigner = new InMemorySigner(secret);
@@ -44,7 +53,7 @@ export const connectCmd = (next: Action) => {
 
 export const createGameCmd = (deku: DekuCClient, player: string) => {
     const initialStorage =
-        `(Pair(Pair(Pair(Pair(Pair(Pair(Left(Right Unit))(Right Unit))(Left(Left Unit))(Right Unit))(Pair(Right Unit)(Right Unit))(Right Unit)(Right Unit))(Right Unit))(Left "${player}")) "${player}" "${player}")`;
+        `(Pair (Pair (Pair (Pair (Pair (Pair (Right Unit) (Right Unit)) (Right Unit) (Right Unit))(Pair (Right Unit) (Right Unit))(Right Unit) (Right Unit)) (Right Unit)) (Left "${player}")) "${player}" None)`;
 
     const createGame = async () => {
         const { operation, address } = await deku.originateContract({ kind: "jsligo", code: contract, initialStorage });
@@ -85,7 +94,10 @@ export const playCmd = (contract: Contract, id: number) => {
 }
 
 export const joinCmd = (contract: Contract, address: string) => {
-    const join = () => Promise.resolve();
+    const join = () => {
+        const joinPayload = makeJoinPayload();
+        return contract.invoke(joinPayload);
+    };
     return Cmd.run(join, {
         successActionCreator: () => ({ type: "JOIN_SUCCESS", payload: { address } }),
         failActionCreator: () => ({ type: "JOIN_FAILURE" }),
