@@ -4,22 +4,21 @@ export type Cell = "Cross" | "Circle" | "Empty"
 
 export type CellId = number;
 
-export type GameState = {
-    type: "PlayerTurn" | "Winner",
-    payload: Address
-}
+export type step =
+    | { type: "YOUR_TURN" }
+    | { type: "OPPONENT_TURN" }
+    | { type: "WON" }
+    | { type: "LOST" }
+    | { type: "DRAW" }
 
 export interface State {
-    game: Array<Cell>
-    players: {
-        player1: Address,
-        player2: Address
-    },
-    gameState: GameState
+    board: Array<Cell>
+    opponent: Address,
+    step: step,
 }
 
 // Parse the state retrieved from the deku-c-toolkit 
-export const parseState = (state: any) => {
+export const parseState = (state: any, currentPlayer: string) => {
     const cell1 = state[0][0][0][0][0][0];
     const cell2 = state[0][0][0][0][0][1];
     const cell3 = state[0][0][0][0][1][0];
@@ -31,7 +30,7 @@ export const parseState = (state: any) => {
     const cell8 = state[0][0][0][1][1][1];
     const cell9 = state[0][0][1]
 
-    const game = [
+    const board = [
         cell1,
         cell2,
         cell3,
@@ -47,26 +46,27 @@ export const parseState = (state: any) => {
         else return "Circle"
     })
 
-    const gameState: GameState = state[0][1].left
-        ? { type: "PlayerTurn", payload: state[0][1].left }
-        : { type: "Winner", payload: state[0][1].right }
+    const step = state[0][1].left
+        ? state[0][1].left === currentPlayer
+            ? { type: "YOUR_TURN" }
+            : { type: "OPPONENT_TURN" }
+        : state[0][1].right === currentPlayer
+            ? { type: "WON" }
+            : { type: "LOST" }
 
     const player1 = state[1][0]
     const player2 = state[1][1];
 
-    const players = {
-        player1,
-        player2
-    }
+    const opponent = player1 === currentPlayer ? player2 : player1;
 
     return {
-        game,
-        players,
-        gameState
+        board,
+        opponent,
+        step
     };
 }
 
-export const play = (cellId: CellId) => {
+export const makePlayPayload = (cellId: CellId) => {
     // return ["Int", cellId + ""];
     return ["Union", ["Right", ["Int", cellId + ""]]]
 }

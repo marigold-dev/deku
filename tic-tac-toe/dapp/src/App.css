@@ -1,22 +1,44 @@
-.App {
+#app {
   width: 100vw;
   height: 100vh;
   background-color: #282c34;
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-direction: column;
 }
 
-button {
-  height: 3rem;
-  width: 9rem;
-  font-size: 1.2rem;
-  cursor: pointer;
-  margin-bottom: 42px;
+#menu {
+  width: 100%;
+  height: 64px;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  padding-left: 8px;
+  padding-right: 8px;
+  box-sizing: border-box;
+}
+
+#inner {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+#not-connected {
+  color: white;
+  font-size: 1.8rem;
 }
 
 #game {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#board {
   width: 600px;
   height: 600px;
   margin: 0 auto;
@@ -29,6 +51,18 @@ button {
   column-gap: 8px;
 
   font-size: 2rem;
+}
+
+#opponent {
+  margin-top: 12px;
+  color: white;
+  font-size: 1.1rem;
+}
+
+#info {
+  margin-bottom: 12px;
+  color: white;
+  font-size: 1.2rem;
 }
 
 /* rgb(116, 119, 187) */
@@ -46,50 +80,36 @@ button {
   user-select: none;
 }
 
-
-#connect-wallet {
-  font-size: 1.5rem;
-  margin: 24px;
-  padding: 12px;
+#connect {
+  font-size: 1.2rem;
   border-radius: 12px;
   cursor: pointer;
   background-color: rgb(116, 119, 187);
   color: #f1f1f1;
   font-weight: bold;
+  z-index: 1000;
+  height: 48px;
+  border: none;
+  padding-left: 8px;
+  padding-right: 8px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
-}
-
-#connected-wallet {
-  position: absolute;
-  right: 0;
-  top: 0;
-  margin: 24px;
-  padding: 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  background-color: rgb(116, 119, 187);
-  color: #f1f1f1;
-  font-weight: bold;
-  display: flex;
   justify-content: center;
-  z-index: 1000;
+  position: relative;
 }
 
 /* Tooltip container */
 .tooltip {
-  position: relative;
   display: inline-block;
   border-bottom: 1px dotted black;
-  /* If you want dots under the hoverable text */
 }
 
 /* Tooltip text */
 .tooltip .tooltiptext {
+  position: absolute;
+  top: 24px;
+  font-size: 1rem;
   opacity: 0;
-  width: 120px;
   background-color: black;
   color: #fff;
   text-align: center;
@@ -99,7 +119,8 @@ button {
   position: absolute;
   transition: opacity 0.1s;
   transform: translateY(100%);
-  margin: 8px;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 /* Show the tooltip text when you mouse over the tooltip container */
@@ -107,39 +128,14 @@ button {
   opacity: 1;
 }
 
-#start-game {
-  font-size: 1.5rem;
-  margin: 24px;
-  padding: 12px;
-  border-radius: 12px;
-  color: #f1f1f1;
+#url {
+  color: black;
+  background-color: #f1f1f1;
+  padding: 8px;
+  border-radius: 8px;
   font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-#link {
-  background-color: #f1f1f1;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-#state {
-  background-color: #f1f1f1;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-}
-
-.start-disable {
-  background-color: grey;
-  cursor: default;
-}
-
-.start-enable {
-  background-color: rgb(116, 119, 187);
+  margin-top: 48px;
   cursor: pointer;
+  width: 100%;
+  text-align: center;
 }

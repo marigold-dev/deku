@@ -8,7 +8,7 @@ const Connected = ({ address, disconnect }: ConnectedProperty) => {
         address
             ? `${address.slice(0, 5)}...${address.slice(address.length - 5, address.length)}`
             : undefined;
-    return <div id="connected-wallet" className="tooltip" onClick={disconnect}>
+    return <div id="connect" className="tooltip" onClick={disconnect}>
         <div className="tooltiptext">Disconnect</div>
         {`Connected as ${formatedAddress}`}
     </div>

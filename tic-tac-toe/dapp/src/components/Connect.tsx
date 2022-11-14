@@ -4,7 +4,7 @@ interface ConnectWalletProperty {
 
 
 const Connect = ({ connect }: ConnectWalletProperty) => {
-    return <div id="connect-wallet" onClick={connect}>Connect Wallet</div>
+    return <button id="connect" onClick={connect}>Connect Wallet</button>
 }
 
 export default Connect;
