@@ -28,7 +28,7 @@ const Board = ({ game, play, address }: BoardProperty) => {
         <div id="game">
             <div id="info">{info}</div>
             <div id="board">
-                {game.board.map((state, i) => <Cell id={i} key={i} state={state} onClick={play} />)}
+                {game.board.map((state, i) => <Cell id={i} key={i} state={state} onClick={play} step={step} />)}
             </div>
             {step.type === "WAITING_OPPONENT_TO_JOIN" ? <React.Fragment /> : <div id="opponent">Your opponent is <b>{opponent}</b></div>}
             <Url address={address} />

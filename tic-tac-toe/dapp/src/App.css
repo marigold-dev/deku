@@ -76,14 +76,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   user-select: none;
 }
 
 #connect {
   font-size: 1.2rem;
   border-radius: 12px;
-  cursor: pointer;
   background-color: rgb(116, 119, 187);
   color: #f1f1f1;
   font-weight: bold;
@@ -140,5 +138,8 @@
   border-radius: 8px;
   font-weight: bold;
   text-align: center;
+}
+
+.clickable {
   cursor: pointer;
 }
