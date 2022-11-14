@@ -4,7 +4,7 @@ type CreateGameProperty = {
 
 const CreateGame = ({ createGame }: CreateGameProperty) => {
     return (
-        <div onClick={createGame}>Create a game</div>
+        <div className="button" onClick={createGame}>Create a game</div>
     );
 }
 

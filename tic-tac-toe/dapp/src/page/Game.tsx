@@ -6,6 +6,7 @@ import { State as GameState } from "../state/reducer";
 import CreateGame from "../components/CreateGame";
 import { Contract } from "@marigold-dev/deku-c-toolkit";
 import { parseState } from "../core";
+import Joining from "../components/Joining";
 
 const Game = () => {
     const dispatch = useDispatch();
@@ -51,7 +52,7 @@ const Game = () => {
         {step === "INIT"
             ? <CreateGame createGame={createGame} />
             : step === "CREATING_GAME"
-                ? <div>Joining the game</div>
+                ? <Joining />
                 : step === "PLAYING"
                     ? <Board game={game} play={play} address={gameAddress} />
                     : <React.Fragment />

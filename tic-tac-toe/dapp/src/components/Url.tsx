@@ -22,7 +22,7 @@ const Url = ({ address }: UrlType) => {
     }
 
     return (
-        <div id="url" onClick={copy}>
+        <div id="url" className="button" onClick={copy}>
             {isCopied
                 ? "Copied !"
                 : url

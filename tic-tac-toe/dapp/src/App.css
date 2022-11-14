@@ -129,13 +129,16 @@
 }
 
 #url {
+  margin-top: 48px;
+  width: 100%;
+}
+
+.button {
   color: black;
-  background-color: #f1f1f1;
+  background-color: white;
   padding: 8px;
   border-radius: 8px;
   font-weight: bold;
-  margin-top: 48px;
-  cursor: pointer;
-  width: 100%;
   text-align: center;
+  cursor: pointer;
 }
