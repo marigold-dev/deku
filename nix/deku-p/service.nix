@@ -70,6 +70,7 @@ in {
           description = "Deku api";
           after = ["network.target"];
           wantedBy = ["multi-user.target" "deku-node.service"];
+          requires = ["deku-node.service"];
           path = [pkgs.nodejs-16_x];
           environment = cfg.environment;
           serviceConfig = {
