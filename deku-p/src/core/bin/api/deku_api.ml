@@ -141,6 +141,7 @@ let main params =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   let net = Eio.Stdenv.net env in
   let clock = Eio.Stdenv.clock env in
+  let domains = Eio.Stdenv.domain_mgr env in
   let node_host, node_port =
     match String.split_on_char ':' node_uri with
     | [ node_host; node_port ] -> (node_host, node_port |> int_of_string)
@@ -155,7 +156,10 @@ let main params =
   in
 
   let network = Network_manager.make ~identity in
-  let indexer = Block_storage.make ~uri:database_uri in
+  let indexer =
+    let worker = Parallel.Worker.make ~domains ~sw in
+    Block_storage.make ~worker ~uri:database_uri
+  in
 
   let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =

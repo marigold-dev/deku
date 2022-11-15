@@ -46,6 +46,36 @@ module Pool = struct
     | None -> failwith "Not running Parallel.Pool.run"
 end
 
+module Worker = struct
+  type worker = (unit -> unit) Eio.Stream.t
+  type t = worker
+
+  let rec loop ~sw stream =
+    (* TODO: this may leak workers *)
+    let task = Eio.Stream.take stream in
+    Eio.Fiber.fork ~sw task;
+    loop ~sw stream
+
+  let make ~domains ~sw =
+    let stream = Eio.Stream.create 0 in
+    let spawn () =
+      Eio.Domain_manager.run domains (fun () ->
+          Eio.Switch.run @@ fun sw -> loop ~sw stream)
+    in
+    Eio.Fiber.fork ~sw spawn;
+    stream
+
+  let schedule worker task =
+    let promise, resolver = Eio.Promise.create () in
+    let task () =
+      match task () with
+      | value -> Eio.Promise.resolve_ok resolver value
+      | exception exn -> Eio.Promise.resolve_error resolver exn
+    in
+    Eio.Stream.add worker task;
+    Eio.Promise.await_exn promise
+end
+
 let map_p f l =
   let Pool.({ domains; pending = _ } as pool) = Pool.get () in
   let length = List.length l in
