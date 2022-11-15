@@ -353,6 +353,82 @@ async function main() {
           code { DROP ; PUSH int 42 ; PUSH int 10 ; COMPARE ; NIL operation ; PAIR } }
     `, { prim: 'Unit', args: [], annots: [] }, { int: 42 })
     assertStorage(res, 'ffffffff')
+
+    res = await eval(`
+        { parameter unit;
+          storage int;
+          code {
+            DROP;
+            EMPTY_MAP int int;
+            PUSH int 33;
+            SOME;
+            PUSH int 42;
+            UPDATE;
+            PUSH int 42;
+            GET;
+            IF_NONE { PUSH int 0 } { };
+            NIL operation;
+            PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assertStorage(res, '21000000')
+
+    res = await eval(`
+        { parameter unit;
+          storage int;
+          code {
+            DROP;
+            EMPTY_MAP int int;
+            PUSH int 42;
+            GET;
+            IF_NONE { PUSH int 50 } { };
+            NIL operation;
+            PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assertStorage(res, '32000000')
+
+    res = await eval(`
+        { parameter unit;
+          storage int;
+          code {
+            DROP;
+            EMPTY_MAP int int;
+            PUSH int 33;
+            SOME;
+            PUSH int 42;
+            UPDATE;
+            PUSH int 50;
+            SOME;
+            PUSH int 43;
+            UPDATE;
+            PUSH int 42;
+            GET;
+            IF_NONE { PUSH int 0 } { };
+            NIL operation;
+            PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assertStorage(res, '21000000')
+
+    res = await eval(`
+        { parameter unit;
+          storage int;
+          code {
+            DROP;
+            EMPTY_MAP int int;
+            PUSH int 33;
+            SOME;
+            PUSH int 42;
+            UPDATE;
+            PUSH int 50;
+            SOME;
+            PUSH int 43;
+            UPDATE;
+            PUSH int 43;
+            GET;
+            IF_NONE { PUSH int 0 } { };
+            NIL operation;
+            PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assertStorage(res, '32000000')
 }
 
 main()

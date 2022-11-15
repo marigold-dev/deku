@@ -146,7 +146,7 @@ let rec compile_statement wasm_mod statement =
 
 let add_function wasm_mod name fn =
   let IR_of_michelson.{ body; locals } = fn in
-  let locals = Array.make locals Type.int32 in
+  let locals = Array.make (locals + 1) Type.int32 in
   let expr = compile_statement wasm_mod body in
   ignore @@ Function.add_function wasm_mod name Type.none Type.none locals expr;
   ignore @@ Export.add_function_export wasm_mod name name

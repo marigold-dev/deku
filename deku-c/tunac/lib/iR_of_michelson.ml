@@ -276,23 +276,22 @@ let compile_map_get env key_type map key value =
   let compare = Env.alloc_local env in
   let block =
     Cblock
-      [ Cwhile
+      [ Cassign (value, Cconst_i32 0l)
+      ; Cwhile
           (Cvar map
           , Cblock
-              [ compile_compare env (Cvar key) (Data.car (Data.car (Cvar map))) compare key_type ])
+              [ compile_compare env (Cvar key) (Data.car (Data.car (Cvar map))) compare key_type
               ; Cifthenelse
                   (Cop (Cwasm (Wasm_eqz, I32), [ Cvar compare ])
                   , Cblock
-                      [ Cassign (value, Cop (Calloc 2, []))
-                      ; Cstore (0, Cvar value, Cconst_i32 1l)
-                      ; Cstore (1, Cvar value, Data.cdr (Data.car (Cvar map)))
+                      [ Cassign (value, Data.cdr (Data.car (Cvar map)))
                       ; Cassign (map, Cconst_i32 0l) ]
-                  , Cassign (value, Cconst_i32 0l)) ]
+                  , Cassign (map, Data.cdr (Cvar map))) ]) ]
   in
   Env.free_local env compare;
   block
 
-let compile_update env map key value =
+let compile_update_map env map key value =
   let head = Env.alloc_local env in
   let entry = Env.alloc_local env in
   let block =
@@ -906,6 +905,23 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
         ; compile_pop map
         ; compile_map_get env Int_t map key value
         ; compile_push ~env (Cvar value) ]
+    in
+    Env.free_local env map;
+    Env.free_local env key;
+    Env.free_local env value;
+    Cblock [ block; compile_instruction env k ]
+
+  | IMap_update (_, k) ->
+    let map = Env.alloc_local env in
+    let key = Env.alloc_local env in
+    let value = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop key
+        ; compile_pop value
+        ; compile_pop map
+        ; compile_update_map env map key value
+        ; compile_push ~env (Cvar map) ]
     in
     Env.free_local env map;
     Env.free_local env key;
