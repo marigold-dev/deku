@@ -42,10 +42,6 @@ type params = {
       [@env "DEKU_DATABASE_URI"]
       [@default Uri.of_string "sqlite3:/var/lib/deku/db.sqlite"]
       (** A URI-encoded path to a SQLite database. Will be created it if it doesn't exist already. *)
-  save_blocks : bool; [@env "DEKU_DEBUG_SAVE_BLOCKS"] [@default true]
-      (** Configures the debug indexer to save blocks. Defaults to true. *)
-  save_messages : bool; [@env "DEKU_DEBUG_SAVE_MESSAGES"] [@default true]
-      (** Configures the debug indexer to save consensus messages. Defaults to true. *)
   default_block_size : int; [@env "DEKU_DEFAULT_BLOCK_SIZE"] [@default 50_000]
       (** The threshold below which blocks are filled with no-op transactions. *)
   tezos_rpc_node : Uri.t; [@env "DEKU_TEZOS_RPC_NODE"]
@@ -85,8 +81,6 @@ let main params style_renderer log_level =
     validator_uris;
     port;
     database_uri;
-    save_blocks;
-    save_messages;
     default_block_size;
     tezos_rpc_node;
     tezos_secret;
@@ -101,10 +95,7 @@ let main params style_renderer log_level =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
-  let indexer =
-    Block_storage.make ~uri:database_uri
-      ~config:Block_storage.{ save_blocks; save_messages }
-  in
+  let indexer = Block_storage.make ~uri:database_uri in
   let validator_uris =
     List.map
       (fun s ->

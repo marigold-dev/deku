@@ -10,8 +10,6 @@ type chain = private
       protocol : Protocol.t;
       consensus : Consensus.t;
       producer : Producer.t;
-      oldest_trusted : Level.t;
-      trusted : Message.Network.t Level.Map.t;
     }
 
 type t = chain [@@deriving yojson]
@@ -31,7 +29,8 @@ type action = private
     }
   | Chain_send_request of { raw_header : string; raw_content : string }
   | Chain_fragment of { fragment : fragment }
-  | Chain_save_block of { block : Block.t }
+  | Chain_save_block of { block : Block.t; network : Message.Network.t }
+  | Chain_send_blocks of { connection : Connection_id.t; above : Level.t }
   | Chain_commit of {
       current_level : Level.t;
       payload_hash : BLAKE2b.t;
