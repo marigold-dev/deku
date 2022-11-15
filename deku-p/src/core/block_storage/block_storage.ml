@@ -1,7 +1,8 @@
 open Eio
+open Deku_stdlib
 open Deku_consensus
 
-type storage = Storage of { pool : Query.pool }
+type storage = Storage of { worker : Parallel.Worker.t; pool : Query.pool }
 type t = storage
 
 let or_fail p =
@@ -24,34 +25,39 @@ let prepare_database ~uri =
   await_or_fail (Query.create_packets_table () connection);
   await_or_fail (Query.create_block_and_votes_table () connection)
 
-let make ~uri =
+let make ~worker ~uri =
+  Parallel.Worker.schedule worker @@ fun () ->
   let () = prepare_database ~uri in
   let pool = or_fail (Caqti_eio.connect_pool uri) in
-  Storage { pool }
+  Storage { worker; pool }
+
+let with_pool storage f =
+  let (Storage { worker; pool }) = storage in
+  Parallel.Worker.schedule worker @@ fun () -> f pool
 
 let save_block ~block storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
   await_or_fail (Query.insert_block ~block ~timestamp pool)
 
 let save_block_and_votes ~level ~network storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
   await_or_fail (Query.insert_block_and_votes ~level ~network ~timestamp pool)
 
 let save_message ~message storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   let timestamp = Unix.gettimeofday () |> Timestamp.of_float in
   await_or_fail (Query.insert_message ~message ~timestamp pool)
 
 let find_block_by_level ~level storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   await_or_fail (Query.find_block_by_level ~level pool)
 
 let find_block_by_hash ~block_hash storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   await_or_fail (Query.find_block_by_hash ~hash:block_hash pool)
 
 let find_block_and_votes_by_level ~level storage =
-  let (Storage { pool }) = storage in
+  with_pool storage @@ fun pool ->
   await_or_fail (Query.find_block_and_votes_by_level ~level pool)

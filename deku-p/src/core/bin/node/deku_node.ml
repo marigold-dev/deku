@@ -95,7 +95,11 @@ let main params style_renderer log_level =
   Parallel.Pool.run ~env ~domains @@ fun () ->
   Logs.info (fun m -> m "Using %d domains" domains);
   Logs.info (fun m -> m "Default block size: %d" default_block_size);
-  let indexer = Block_storage.make ~uri:database_uri in
+  let indexer =
+    let domains = Eio.Stdenv.domain_mgr env in
+    let worker = Parallel.Worker.make ~domains ~sw in
+    Block_storage.make ~worker ~uri:database_uri
+  in
   let validator_uris =
     List.map
       (fun s ->

@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_concepts
 open Deku_consensus
 open Deku_gossip
@@ -5,7 +6,7 @@ open Deku_gossip
 type storage
 type t = storage
 
-val make : uri:Uri.t -> storage
+val make : worker:Parallel.Worker.t -> uri:Uri.t -> storage
 val save_block : block:Block.t -> storage -> unit
 
 val save_block_and_votes :
