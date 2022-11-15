@@ -50,12 +50,17 @@ module Repr = struct
     signed_hash : string;
   }
   [@@deriving yojson]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; signed_hash } -> ((key, signature), signed_hash))
+      (fun ((key, signature), signed_hash) -> { key; signature; signed_hash })
+      (tup2 Signature.key_encoding string)
 end
 
-let t_of_yojson json =
-  let Repr.{ key; signature; signed_hash } =
-    Repr.verified_signature_of_yojson json
-  in
+let of_repr repr =
+  let Repr.{ key; signature; signed_hash } = repr in
   match BLAKE2b.of_hex signed_hash with
   | Some hash -> (
       match verify hash key signature with
@@ -63,12 +68,21 @@ let t_of_yojson json =
       | None -> raise Invalid_signature)
   | None -> raise Invalid_hash
 
-let yojson_of_t signature =
+let to_repr signature =
   let (Verified_signature { key; key_hash = _; signature; signed_hash }) =
     signature
   in
   let signed_hash = BLAKE2b.to_hex signed_hash in
-  Repr.yojson_of_verified_signature { key; signature; signed_hash }
+  Repr.{ key; signature; signed_hash }
+
+let encoding =
+  let open Data_encoding in
+  conv to_repr of_repr Repr.encoding
+
+let t_of_yojson json = of_repr (Repr.verified_signature_of_yojson json)
+
+let yojson_of_t signature =
+  Repr.yojson_of_verified_signature (to_repr signature)
 
 module Set = Set.Make (struct
   type t = verified_signature

@@ -11,6 +11,13 @@ type gossip =
 
 and t = gossip [@@deriving yojson]
 
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Gossip { pending_request = _; message_pool }) -> message_pool)
+    (fun message_pool -> Gossip { pending_request = false; message_pool })
+    Message_pool.encoding
+
 type fragment =
   | Fragment_broadcast_message of { fragment : Message_pool.fragment }
   | Fragment_send_message of {

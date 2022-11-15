@@ -43,6 +43,55 @@ and consensus =
 
 and t = consensus [@@deriving yojson]
 
+let state_encoding =
+  let open Data_encoding in
+  union
+    [
+      case ~title:"Propose" (Tag 0) Block.encoding
+        (function Propose { finalized } -> Some finalized | _ -> None)
+        (fun finalized -> Propose { finalized });
+      case ~title:"Vote" (Tag 1) Block.encoding
+        (function Vote { finalized } -> Some finalized | _ -> None)
+        (fun finalized -> Vote { finalized });
+      case ~title:"Apply" (Tag 2) Block.encoding
+        (function Apply { pending } -> Some pending | _ -> None)
+        (fun pending -> Apply { pending });
+      case ~title:"Pending_missing" (Tag 3)
+        (tup2 Block.encoding Level.encoding)
+        (function
+          | Pending_missing { finalized; accepted } -> Some (finalized, accepted)
+          | _ -> None)
+        (fun (finalized, accepted) -> Pending_missing { finalized; accepted });
+      case ~title:"Pending_apply" (Tag 4)
+        (tup2 Block.encoding Level.encoding)
+        (function
+          | Pending_apply { pending; accepted } -> Some (pending, accepted)
+          | _ -> None)
+        (fun (pending, accepted) -> Pending_apply { pending; accepted });
+      case ~title:"Corrupted_stuck" (Tag 5)
+        (tup2 Block.encoding Block.encoding)
+        (function
+          | Corrupted_stuck { finalized; clash } -> Some (finalized, clash)
+          | _ -> None)
+        (fun (finalized, clash) -> Corrupted_stuck { finalized; clash });
+      case ~title:"Corrupted_apply" (Tag 6)
+        (tup2 Block.encoding Block.encoding)
+        (function
+          | Corrupted_apply { pending; clash } -> Some (pending, clash)
+          | _ -> None)
+        (fun (pending, clash) -> Corrupted_apply { pending; clash });
+    ]
+
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Consensus { validators; block_pool; state; accepted_at }) ->
+      (validators, block_pool, state, accepted_at))
+    (fun (validators, block_pool, state, accepted_at) ->
+      Consensus { validators; block_pool; state; accepted_at })
+    (tup4 Validators.encodings Block_pool.encoding state_encoding
+       Timestamp.encoding)
+
 let make ~validators =
   let block_pool = Block_pool.empty in
   let state = Propose { finalized = Genesis.block } in

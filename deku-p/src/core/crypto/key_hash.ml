@@ -44,14 +44,6 @@ include With_yojson_of_b58 (struct
   let to_b58 = to_b58
 end)
 
-module Map = Map.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
-end)
-
-module Set = Set.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
-end)
-
 let encoding =
   let open Data_encoding in
   let name = "Signature.Public_key_hash" in
@@ -70,6 +62,18 @@ let encoding =
       ]
   in
   make_encoding ~name ~to_string:to_b58 ~of_string:of_b58 ~raw_encoding
+
+module Map = Map.Make (struct
+  type t = key_hash [@@deriving ord, yojson]
+
+  let encoding = encoding
+end)
+
+module Set = Set.Make (struct
+  type t = key_hash [@@deriving ord, yojson]
+
+  let encoding = encoding
+end)
 
 let cmdliner_converter =
   let of_string s =

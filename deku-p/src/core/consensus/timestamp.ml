@@ -3,6 +3,7 @@ open Float
 type timestamp = float
 and t = timestamp [@@deriving show, yojson]
 
+let encoding = Data_encoding.float
 let block_timeout = Deku_constants.block_timeout
 let genesis = Deku_constants.genesis_time
 let of_float float = float

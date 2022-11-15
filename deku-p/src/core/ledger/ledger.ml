@@ -45,10 +45,23 @@ module Withdrawal_handle = struct
     Deku_tezos.Deku.Consensus.hash_withdrawal_handle ~id:(Z.of_int id) ~owner
       ~amount:(N.to_z (Amount.to_n amount))
       ~ticketer ~data
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun handle ->
+        let { hash = _; id; owner; amount; ticket_id } = handle in
+        (id, ticket_id, amount, owner))
+      (fun (id, ticket_id, amount, owner) ->
+        let hash = hash ~id ~owner ~amount ~ticket_id in
+        { hash; id; owner; amount; ticket_id })
+      (dynamic_size
+         (tup4 int31 Ticket_id.encoding Amount.encoding
+            Deku_tezos.Address.encoding))
 end
 
 module Withdrawal_handle_tree = Incremental_patricia.Make (struct
-  type t = Withdrawal_handle.t [@@deriving yojson]
+  include Withdrawal_handle
 
   let hash t = t.Withdrawal_handle.hash
 end)
@@ -76,6 +89,13 @@ type ledger =
 and t = ledger
 
 type withdrawal_handle = Withdrawal_handle.t [@@deriving yojson]
+
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun (Ledger { table; withdrawal_handles }) -> (table, withdrawal_handles))
+    (fun (table, withdrawal_handles) -> Ledger { table; withdrawal_handles })
+    (tup2 Ticket_table.encoding Withdrawal_handle_tree.encoding)
 
 let initial =
   Ledger

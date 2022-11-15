@@ -6,6 +6,8 @@ exception Insufficient_funds
 module Withdrawal_handle : sig
   module Withdrawal_handle_hash : sig
     type t = BLAKE2b.t [@@deriving yojson]
+
+    val encoding : t Data_encoding.t
   end
 
   type hash = Withdrawal_handle_hash.t [@@deriving yojson, show]
@@ -46,6 +48,8 @@ type ledger = private
     }
 
 type t = ledger [@@deriving yojson]
+
+val encoding : ledger Data_encoding.t
 
 val with_ticket_table :
   t ->

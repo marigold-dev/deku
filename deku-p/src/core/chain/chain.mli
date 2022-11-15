@@ -15,6 +15,9 @@ type chain = private
     }
 
 type t = chain [@@deriving yojson]
+
+val encoding : chain Data_encoding.t
+
 type fragment
 type outcome
 
