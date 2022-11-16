@@ -338,9 +338,20 @@ const parseError = (err) => {
     }
     return undefined;
   };
+  const parseFailure = (err) => {
+    const id = "failure";
+    if (err && err.body && err.body.includes && err.body.includes(id)) {
+      return [
+        "Several_operations",
+        "Only one manager operation per manager per block allowed ",
+      ];
+    }
+    return undefined;
+  };
   return (
     parseInsufficientBalance(err) ||
-    parseErrorFromSmartContract(err) || ["Unknown", inspect(err)]
+    parseErrorFromSmartContract(err) ||
+    parseFailure(err) || ["Unknown", inspect(err)]
   );
 };
 

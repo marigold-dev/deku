@@ -47,6 +47,7 @@ module Inject_transaction = struct
     | Insufficient_balance of string
     | Unknown of string
     | Consensus_contract of string
+    | Several_operations of string
   [@@deriving of_yojson]
 
   type t =

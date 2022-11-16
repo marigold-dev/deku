@@ -16,6 +16,7 @@ module Inject_transaction : sig
     | Insufficient_balance of string
     | Unknown of string
     | Consensus_contract of string
+    | Several_operations of string
 
   type t =
     | Applied of { hash : string }
