@@ -43,6 +43,9 @@ module Inject_transaction = struct
   }
   [@@deriving yojson]
 
+  type error = Insufficient_balance of string | Unknown of string
+  [@@deriving of_yojson]
+
   type t =
     | Applied of { hash : string }
     (* TODO: in which cases the hash will not be present? *)
@@ -50,7 +53,7 @@ module Inject_transaction = struct
     | Skipped of { hash : string option }
     | Backtracked of { hash : string option }
     | Unknown of { hash : string option }
-    | Error of { error : string }
+    | Error of { error : error }
 
   let t_of_yojson json =
     let module T = struct
@@ -63,7 +66,7 @@ module Inject_transaction = struct
       type maybe_hash = { hash : string option }
       [@@deriving of_yojson] [@@yojson.allow_extra_fields]
 
-      type error = { error : string }
+      type err = { error : error }
       [@@deriving of_yojson] [@@yojson.allow_extra_fields]
     end in
     let other make =
@@ -81,7 +84,7 @@ module Inject_transaction = struct
     | "backtracked" -> other (fun hash -> Backtracked { hash })
     | "unknown" -> other (fun hash -> Unknown { hash })
     | "error" ->
-        let T.{ error } = T.error_of_yojson json in
+        let T.{ error } = T.err_of_yojson json in
         Error { error }
     | _ -> failwith "invalid status"
 end

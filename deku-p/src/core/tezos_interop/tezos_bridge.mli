@@ -12,13 +12,15 @@ end
 
 (* response *)
 module Inject_transaction : sig
+  type error = Insufficient_balance of string | Unknown of string
+
   type t =
     | Applied of { hash : string }
     | Failed of { hash : string option }
     | Skipped of { hash : string option }
     | Backtracked of { hash : string option }
     | Unknown of { hash : string option }
-    | Error of { error : string }
+    | Error of { error : error }
 end
 
 type bridge

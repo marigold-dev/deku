@@ -313,12 +313,26 @@ const onRequest = (id, content) => {
   }
 };
 
+const parseError = (err) => {
+  const parseInsufficientBalance = (err) => {
+    const id = "implicit.empty_implicit_contract";
+    if (err && err.body && err.body.includes && err.body.includes(id)) {
+      const address = JSON.parse(err?.body).find((err) =>
+        err.id.includes(id)
+      ).implicit;
+      return ["Insufficient_balance", address];
+    }
+    return undefined;
+  };
+  return parseInsufficientBalance(err) || ["Unknown", inspect(err)];
+};
+
 read((request) => {
   const { id, content } = request;
   onRequest(id, content)
     .catch((err) => {
       const status = "error";
-      const error = inspect(err);
+      const error = parseError(err);
       respond(id, { status, error });
     })
     .catch(failure);
