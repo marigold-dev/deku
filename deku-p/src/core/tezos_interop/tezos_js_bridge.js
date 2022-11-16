@@ -313,12 +313,54 @@ const onRequest = (id, content) => {
   }
 };
 
+const parseError = (err) => {
+  const parseInsufficientBalance = (err) => {
+    const id = "implicit.empty_implicit_contract";
+    if (err && err.body && err.body.includes && err.body.includes(id)) {
+      const address = JSON.parse(err?.body).find((err) =>
+        err.id.includes(id)
+      ).implicit;
+      return ["Insufficient_balance", address];
+    }
+    return undefined;
+  };
+  const parseErrorFromSmartContract = (err) => {
+    const id = "script_rejected";
+    if (
+      err &&
+      err.errors &&
+      err.errors.find &&
+      err.errors.find((error) => error.id.includes(id))
+    ) {
+      const error = err.errors.find((error) => error.id.includes(id)).with
+        .string;
+      return ["Consensus_contract", error];
+    }
+    return undefined;
+  };
+  const parseFailure = (err) => {
+    const id = "failure";
+    if (err && err.body && err.body.includes && err.body.includes(id)) {
+      return [
+        "Several_operations",
+        "Only one manager operation per manager per block allowed ",
+      ];
+    }
+    return undefined;
+  };
+  return (
+    parseInsufficientBalance(err) ||
+    parseErrorFromSmartContract(err) ||
+    parseFailure(err) || ["Unknown", inspect(err)]
+  );
+};
+
 read((request) => {
   const { id, content } = request;
   onRequest(id, content)
     .catch((err) => {
       const status = "error";
-      const error = inspect(err);
+      const error = parseError(err);
       respond(id, { status, error });
     })
     .catch(failure);
