@@ -18,7 +18,7 @@ deploy_contract() {
 
     echo "Originating $1 contract"
     sleep 2
-    octez_client \
+    octez-client \
         --wait 1 \
         --endpoint "$DEKU_TEZOS_RPC_NODE" originate contract "$1" \
         transferring 0 from $wallet \
@@ -44,9 +44,9 @@ then
   message "Using Tezos RPC Node: $DEKU_TEZOS_RPC_NODE"
 
   message "Configuring Tezos client"
-  octez_client --endpoint "$DEKU_TEZOS_RPC_NODE" bootstrapped
-  octez_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
-  octez_client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key bob "unencrypted:$SECRET_KEY2" --force
+  octez-client --endpoint "$DEKU_TEZOS_RPC_NODE" bootstrapped
+  octez-client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key myWallet "unencrypted:$SECRET_KEY" --force
+  octez-client --endpoint "$DEKU_TEZOS_RPC_NODE" import secret key bob "unencrypted:$SECRET_KEY2" --force
 
   # [deploy_contract name source_file initial_storage] compiles the Ligo code in [source_file],
   # the [initial_storage] expression and originates the contract as myWallet on Tezos.
