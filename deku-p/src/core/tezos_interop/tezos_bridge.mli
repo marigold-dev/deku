@@ -12,7 +12,10 @@ end
 
 (* response *)
 module Inject_transaction : sig
-  type error = Insufficient_balance of string | Unknown of string
+  type error =
+    | Insufficient_balance of string
+    | Unknown of string
+    | Consensus_contract of string
 
   type t =
     | Applied of { hash : string }

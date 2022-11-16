@@ -324,7 +324,24 @@ const parseError = (err) => {
     }
     return undefined;
   };
-  return parseInsufficientBalance(err) || ["Unknown", inspect(err)];
+  const parseErrorFromSmartContract = (err) => {
+    const id = "script_rejected";
+    if (
+      err &&
+      err.errors &&
+      err.errors.find &&
+      err.errors.find((error) => error.id.includes(id))
+    ) {
+      const error = err.errors.find((error) => error.id.includes(id)).with
+        .string;
+      return ["Consensus_contract", error];
+    }
+    return undefined;
+  };
+  return (
+    parseInsufficientBalance(err) ||
+    parseErrorFromSmartContract(err) || ["Unknown", inspect(err)]
+  );
 };
 
 read((request) => {

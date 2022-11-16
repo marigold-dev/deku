@@ -43,7 +43,10 @@ module Inject_transaction = struct
   }
   [@@deriving yojson]
 
-  type error = Insufficient_balance of string | Unknown of string
+  type error =
+    | Insufficient_balance of string
+    | Unknown of string
+    | Consensus_contract of string
   [@@deriving of_yojson]
 
   type t =

@@ -164,7 +164,9 @@ let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
       | Unknown err ->
           Logs.err (fun m -> m "Received error from Tezos Bridge: %s" err)
       | Insufficient_balance address ->
-          Logs.err (fun m -> m "Insufficient tez balance for %s" address))
+          Logs.err (fun m -> m "Insufficient tez balance for %s" address)
+      | Consensus_contract error ->
+          Logs.err (fun m -> m "Consensus smart contract error: %s" error))
   | None ->
       (* TODO: I think we can improve the types of this - maybe result would be better? *)
       Logs.warn (fun m ->
