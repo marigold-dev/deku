@@ -159,7 +159,7 @@ const main =
          return cookieBakers} else {return cookieBakers}}})},
      Eat: () => {let cookieBaker: cookieBaker = 
         force_access(player as address, cookieBakers);
-      if(cookieBaker.cookies >= ope.amount) {let eatenCookies = 
+      if(cookieBaker.cookies >= ope.amount && (ope.amount as nat) > (0 as nat)) {let eatenCookies = 
          cookieBaker.eatenCookies + (ope.amount as nat);
        let cookies = 
          abs(cookieBaker.cookies - (ope.amount as nat));
@@ -171,7 +171,7 @@ const main =
        return cookieBakers} else {return cookieBakers}},
      Transfer: () => {let sender: cookieBaker = 
         force_access(player as address, cookieBakers);
-      if(sender.cookies >= ope.amount) {let rawRecipient = 
+      if(sender.cookies >= ope.amount && (ope.amount as nat) > (0 as nat)) {let rawRecipient = 
          Option.unopt_with_error(ope.recipient, "There is not recipient");
        let recipient = 
          force_access(rawRecipient as address, cookieBakers);
