@@ -159,8 +159,17 @@ let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
       Logs.warn (fun m -> m "Tezos operation was backtracked")
   | Some (Unknown _) ->
       Logs.warn (fun m -> m "Unknown result of Tezos operation")
-  | Some (Error { error }) ->
-      Logs.warn (fun m -> m "Received error from Tezos Bridge: %s" error)
+  | Some (Error { error }) -> (
+      match error with
+      | Unknown err ->
+          Logs.err (fun m -> m "Received error from Tezos Bridge: %s" err)
+      | Insufficient_balance address ->
+          Logs.err (fun m -> m "Insufficient tez balance for %s" address)
+      | Consensus_contract error ->
+          Logs.err (fun m -> m "Consensus smart contract error: %s" error)
+      | Several_operations error ->
+          Logs.warn (fun m ->
+              m "Submitting several operations in the same block: %s" error))
   | None ->
       (* TODO: I think we can improve the types of this - maybe result would be better? *)
       Logs.warn (fun m ->
