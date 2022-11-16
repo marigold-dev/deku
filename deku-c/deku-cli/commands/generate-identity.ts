@@ -10,8 +10,14 @@ export default function make(command: Commander.Command) {
     .option("-o, --output <path>", "JSON wallet output")
     .action((args) => {
       generate(args.output === undefined).then((wallet) => {
-        if (args.output !== undefined) {
-          save(wallet, args.output);
+        try {
+          if (args.output !== undefined) {
+            save(wallet, args.output);
+          }
+        } catch (e) {
+          console.error("An error occurred:");
+          console.error(e.message);
+          process.exit(1);
         }
       });
     });

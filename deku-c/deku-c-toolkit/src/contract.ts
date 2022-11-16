@@ -62,9 +62,9 @@ const parseContractState = (json: JSONType): JSONType => {
       const value = first[1] as JSONType;
       switch (type) {
         case "None":
-          return { none: true }
+          return { none: true };
         case "Some":
-          return { none: false, some: parseContractState(value) }
+          return { none: false, some: parseContractState(value) };
         default:
           return null; // TODO: remove this default case which is not possible
       }
@@ -127,8 +127,7 @@ export class Contract {
   async invokeLigo(
     code: string,
     expression: string,
-    ligoRpc: string,
-    dekuRpc: string
+    ligoRpc: string
   ): Promise<string> {
     // FIXME the need for the two RPCs stinks (also they're strings)
     const parameter = {
@@ -137,7 +136,11 @@ export class Contract {
       ligoExpression: expression,
       address: this.address,
     };
-    const invoke = await compileLigoExpression(ligoRpc, dekuRpc, parameter);
+    const invoke = await compileLigoExpression(
+      ligoRpc,
+      this.deku.dekuRpc,
+      parameter
+    );
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }

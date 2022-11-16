@@ -2,17 +2,20 @@
   "name": "deku-cli",
   "version": "0.0.1",
   "description": "CLI client for Deku-C blockchain",
-  "main": "index.js",
+  "bin": {
+    "deku-cli": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc index.ts",
+    "build": "tsc --outDir dist index.ts",
     "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku-c-toolkit": "file:../deku-c-toolkit",
-    "@marigold-dev/deku-toolkit": "file:../../deku-p/deku-toolkit",
+    "@marigold-dev/deku-c-toolkit": "^0.1.4",
+    "@marigold-dev/deku-toolkit": "^0.1.12",
     "@noble/ed25519": "^1.7.1",
     "@taquito/signer": "^14.0.0",
     "commander": "^9.4.1",
