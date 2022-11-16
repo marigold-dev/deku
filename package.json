@@ -9,6 +9,7 @@
     "deku-p/sdks/typescript-sdk",
     "examples/tutorial",
     "deku-c/deku-c-toolkit",
+    "deku-c/deku-cli",
     "website"
   ],
   "scripts": {

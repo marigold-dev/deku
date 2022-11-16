@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import * as Commander from "commander";
 import {
   make_generate_identity,
