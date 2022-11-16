@@ -1,3 +1,3 @@
-# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/index.jsligo "{operationType: Mint(), operation: Some(Grandma()) as option<actions>, amount: 1 as nat, recipient: None() as option<address> }" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
+# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/src/index.jsligo "{operationType: Mint(), operation: Some(Grandma()) as option<actions>, amount: 1 as nat, recipient: None() as option<address> }" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
 
 (Pair (Pair 1 (Some (Right (Left (Right Unit))))) (Left (Right Unit)) None)
