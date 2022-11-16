@@ -1,6 +1,6 @@
 {
   "name": "@marigold-dev/deku-c-toolkit",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Deku typescript client to interact with deku-c",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
