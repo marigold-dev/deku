@@ -16,7 +16,7 @@
   "author": "contact@marigold.dev",
   "license": "ISC",
   "dependencies": {
-    "@marigold-dev/deku-toolkit": "0.1.11"
+    "@marigold-dev/deku-toolkit": "0.1.12"
   },
   "devDependencies": {
     "@taquito/signer": "^14.0.0",

@@ -1,0 +1,5 @@
+*.js
+*.sw?
+*.tz
+*.jsligo
+wallet*.json
