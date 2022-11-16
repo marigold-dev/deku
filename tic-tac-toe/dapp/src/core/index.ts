@@ -20,10 +20,6 @@ export interface State {
 
 // Parse the state retrieved from the deku-c-toolkit 
 export const parseState = (state: any, currentPlayer: string) => {
-    console.log("state");
-    console.log(state);
-
-
     const cell1 = state[0][0][0][0][0][0];
     const cell2 = state[0][0][0][0][0][1];
     const cell3 = state[0][0][0][0][1][0];
