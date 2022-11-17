@@ -9,9 +9,15 @@ open Deku_protocol
 open Deku_consensus
 open Deku_concepts
 
-let apply_block ~env ~folder ~state ~block =
+let save_block ~sw ~indexer ~block =
+  let on_error err = print_endline (Printexc.to_string err) in
+  (* TODO: better logging *)
+  Eio.Fiber.fork_sub ~sw ~on_error @@ fun _sw ->
+  Block_storage.save_block ~block indexer
+
+let apply_block ~env ~sw ~folder ~state ~block =
   state.current_block <- block;
-  Block_storage.save_block ~block state.indexer;
+  save_block ~sw ~indexer:state.indexer ~block;
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
   let (Payload.Payload payload) = Payload.decode ~payload in
   let payload =
@@ -48,11 +54,11 @@ let apply_block ~env ~folder ~state ~block =
   state.is_sync <- true;
   Api_state.Storage.write ~env ~folder state
 
-let on_accepted_block ~env ~folder ~state ~block =
+let on_accepted_block ~env ~sw ~folder ~state ~block =
   let (Block.Block { level = api_level; _ }) = state.current_block in
   let (Block.Block { level; _ }) = block in
   match Level.equal (Level.next api_level) level with
-  | true -> apply_block ~env ~folder ~state ~block
+  | true -> apply_block ~env ~sw ~folder ~state ~block
   | false ->
       (*This case should not happened thanks to on_connection*)
       ()
@@ -64,13 +70,13 @@ let on_connection ~connection state =
   Network_manager.send_request ~connection ~raw_header ~raw_content
     state.network
 
-let on_message ~env ~folder ~raw_header ~raw_content state =
+let on_message ~env ~sw ~folder ~raw_header ~raw_content state =
   let header = Message.Header.decode ~raw_header in
   let message = Message.decode ~expected:header ~raw_content in
   let (Message.Message { header = _; content; network = _ }) = message in
   match content with
   | Message.Content.Content_accepted { block; votes = _ } ->
-      on_accepted_block ~env ~folder ~state ~block
+      on_accepted_block ~env ~sw ~folder ~state ~block
   | _ -> ()
 
 let listen_to_node ~net ~clock ~port ~state =
@@ -186,7 +192,7 @@ let main params =
           ~nodes:[ (node_host, node_port) ]
           ~on_connection:(on_connection state)
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-          ~on_message:(on_message ~env ~folder:data_folder state)
+          ~on_message:(on_message ~env ~sw ~folder:data_folder state)
           network);
       (fun () -> start_api ~env ~sw ~port ~state);
       (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
