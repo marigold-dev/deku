@@ -5,13 +5,6 @@ open Deku_ledger
 open Deku_crypto
 open Deku_consensus
 
-let domains =
-  match Sys.getenv_opt "DEKU_DOMAINS" with
-  | Some domains -> int_of_string domains
-  | None -> 16
-
-let () = Format.printf "Using %d domains\n%!" domains
-
 let identity =
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
@@ -291,7 +284,7 @@ let write_to_terminal ~data ~file =
   Format.eprintf "%s%!" data
 
 type params = {
-  domains : int; [@env "DEKU_DOMAINS"]
+  domains : int; [@env "DEKU_DOMAINS"] [@default 16]
   csv : bool; [@env "CSV"] [@default false]
 }
 [@@deriving cmdliner]
