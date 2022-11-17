@@ -243,19 +243,23 @@ let bench f =
   let t2 = Unix.gettimeofday () in
   t2 -. t1
 
-let run_benchmark ~formatter
-    ~(writer :
-       data:string -> file:string -> ?create:Eio.Fs.create -> unit -> unit)
-    (module Bench : BENCH) =
+let log_item ~name ~item_message ~data =
+  Format.printf "%s, %s, %f\n%!" name item_message data
+
+let run_benchmark (module Bench : BENCH) =
   let open Bench in
   let runs = 10 in
   let value = prepare () in
-  let _ =
+  let data =
     List.init runs (fun _ ->
         let time = bench (fun () -> run value) in
-        let data = formatter ~name ~item_message ~data:time in
-        writer ~data ~file:"output.csv" ())
+        log_item ~name ~item_message ~data:time;
+        time)
   in
+  let total = List.fold_left (fun acc time -> acc +. time) 0.0 data in
+  let average = total /. Int.to_float runs in
+  let per_second = Int.to_float items /. average in
+  Format.eprintf "%s: %.3f/s\n%!" name per_second;
   ()
 
 let benches : (module BENCH) list =
@@ -269,45 +273,15 @@ let benches : (module BENCH) list =
     (module Ledger_transfer);
   ]
 
-let format_to_print ~name ~item_message ~data =
-  Format.sprintf "%s %s: %.3f\n" name item_message data
-
-let format_to_csv ~name ~item_message ~data =
-  Format.sprintf "%s, %s, %f\n" name item_message data
-
-let write_to_file ~data ~file ?(create = `If_missing 0o600) () =
-  let ( / ) = Eio.Path.( / ) in
-  let run dir = Eio.Path.save ~append:true ~create (dir / file) data in
-  Eio_main.run @@ fun env -> run (Eio.Stdenv.cwd env)
-
-let write_to_terminal ~data ~file ?(create = `If_missing 0o600) () =
-  let _ = create in
-  let _ = file in
-  Format.eprintf "%s%!" data
-
-type params = {
-  domains : int; [@env "DEKU_DOMAINS"] [@default 16]
-  csv : bool; [@env "CSV"] [@default false]
-}
+type params = { domains : int [@env "DEKU_DOMAINS"] [@default 16] }
 [@@deriving cmdliner]
 
 let main params =
-  let { domains; csv } = params in
-  let formatter, writer =
-    match csv with
-    | true -> (format_to_csv, write_to_file)
-    | false -> (format_to_print, write_to_terminal)
-  in
-
+  let { domains } = params in
   Eio_main.run @@ fun env ->
-  Format.printf "\n%!";
-  writer ~data:"benchmark, items, duration\n" ~file:"output.csv"
-    ~create:(`Or_truncate 0o600) ();
+  Format.printf "benchmark, items, duration\n%!";
   Parallel.Pool.run ~env ~domains @@ fun () ->
-  List.iter
-    (fun (module Bench : BENCH) ->
-      run_benchmark ~formatter ~writer (module Bench))
-    benches
+  List.iter (fun (module Bench : BENCH) -> run_benchmark (module Bench)) benches
 
 let () =
   let open Cmdliner in
