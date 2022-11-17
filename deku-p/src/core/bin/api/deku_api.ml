@@ -9,13 +9,38 @@ open Deku_protocol
 open Deku_consensus
 open Deku_concepts
 
+let make_dump_loop ~sw ~env ~data_folder =
+  let resolver_ref = Atomic.make None in
+  let domains = Eio.Stdenv.domain_mgr env in
+
+  let rec loop () : unit =
+    let promise, resolver = Eio.Promise.create () in
+    Atomic.set resolver_ref (Some resolver);
+    let current_block, protocol, receipts = Eio.Promise.await promise in
+    (try
+       Api_state.Storage.write ~env ~data_folder ~current_block ~protocol
+         ~receipts
+     with exn ->
+       Logs.err (fun m -> m "api.storage.failure: %s" (Printexc.to_string exn)));
+    loop ()
+  in
+  let dump ~current_block ~protocol ~receipts =
+    match Atomic.exchange resolver_ref None with
+    | Some resolver ->
+        Eio.Promise.resolve resolver (current_block, protocol, receipts)
+    | None -> ()
+  in
+  ( Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error @@ fun _sw ->
+    Eio.Domain_manager.run domains (fun () -> loop ()) );
+  dump
+
 let save_block ~sw ~indexer ~block =
   let on_error err = print_endline (Printexc.to_string err) in
   (* TODO: better logging *)
   Eio.Fiber.fork_sub ~sw ~on_error @@ fun _sw ->
   Block_storage.save_block ~block indexer
 
-let apply_block ~env ~sw ~folder ~state ~block =
+let apply_block ~sw ~state ~block =
   state.current_block <- block;
   save_block ~sw ~indexer:state.indexer ~block;
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
@@ -52,13 +77,13 @@ let apply_block ~env ~sw ~folder ~state ~block =
   (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
   state.is_sync <- true;
-  Api_state.Storage.write ~env ~folder state
+  state.dump ~current_block:block ~protocol ~receipts
 
-let on_accepted_block ~env ~sw ~folder ~state ~block =
+let on_accepted_block ~sw ~state ~block =
   let (Block.Block { level = api_level; _ }) = state.current_block in
   let (Block.Block { level; _ }) = block in
   match Level.equal (Level.next api_level) level with
-  | true -> apply_block ~env ~sw ~folder ~state ~block
+  | true -> apply_block ~sw ~state ~block
   | false ->
       (*This case should not happened thanks to on_connection*)
       ()
@@ -70,13 +95,13 @@ let on_connection ~connection state =
   Network_manager.send_request ~connection ~raw_header ~raw_content
     state.network
 
-let on_message ~env ~sw ~folder ~raw_header ~raw_content state =
+let on_message ~sw ~raw_header ~raw_content state =
   let header = Message.Header.decode ~raw_header in
   let message = Message.decode ~expected:header ~raw_content in
   let (Message.Message { header = _; content; network = _ }) = message in
   match content with
   | Message.Content.Content_accepted { block; votes = _ } ->
-      on_accepted_block ~env ~sw ~folder ~state ~block
+      on_accepted_block ~sw ~state ~block
   | _ -> ()
 
 let listen_to_node ~net ~clock ~port ~state =
@@ -167,6 +192,8 @@ let main params =
     Block_storage.make ~worker ~uri:database_uri
   in
 
+  let dump = make_dump_loop ~sw ~env ~data_folder in
+
   let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =
     match state with
@@ -176,13 +203,13 @@ let main params =
         let current_block = Genesis.block in
         let receipts = Operation_hash.Map.empty in
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block ~receipts
+          ~current_block ~receipts ~dump
     | Some state_data ->
         let Api_state.Storage.{ protocol; current_block; receipts } =
           state_data
         in
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block ~receipts
+          ~current_block ~receipts ~dump
   in
 
   Eio.Fiber.all
@@ -192,8 +219,7 @@ let main params =
           ~nodes:[ (node_host, node_port) ]
           ~on_connection:(on_connection state)
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-          ~on_message:(on_message ~env ~sw ~folder:data_folder state)
-          network);
+          ~on_message:(on_message ~sw state) network);
       (fun () -> start_api ~env ~sw ~port ~state);
       (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
     ]
