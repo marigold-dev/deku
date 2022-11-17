@@ -46,7 +46,7 @@ module Prepare_and_decode : BENCH = struct
 
   let name = "prepare_and_decode"
   let items = 100_000
-  let item_message = Format.sprintf "block size of %d" items
+  let item_message = Format.sprintf "%d" items
 
   let prepare () =
     let (Block.Block { payload; _ }) = block ~default_block_size:items in
@@ -101,7 +101,7 @@ module Verify : BENCH = struct
 
   let name = "verify"
   let items = 100_000
-  let item_message = Format.sprintf "%d signatures" items
+  let item_message = Format.sprintf "%d" items
 
   let prepare () =
     let identity =
@@ -134,7 +134,7 @@ module Ledger_balance = struct
 
   let name = "ledger_balance"
   let items = 100_000
-  let item_message = Format.sprintf "%d tickets" items
+  let item_message = Format.sprintf "%d" items
 
   let address () =
     let secret = Ed25519.Secret.generate () in
@@ -190,7 +190,7 @@ module Ledger_transfer : BENCH = struct
 
   let name = "ledger_transfer"
   let items = 100_000
-  let item_message = Format.sprintf "%d transfers" items
+  let item_message = Format.sprintf "%d" items
 
   let address () =
     let secret = Ed25519.Secret.generate () in
@@ -243,7 +243,10 @@ let bench f =
   let t2 = Unix.gettimeofday () in
   t2 -. t1
 
-let run_benchmark ~formatter ~writer (module Bench : BENCH) =
+let run_benchmark ~formatter
+    ~(writer :
+       data:string -> file:string -> ?create:Eio.Fs.create -> unit -> unit)
+    (module Bench : BENCH) =
   let open Bench in
   let runs = 10 in
   let value = prepare () in
@@ -251,7 +254,7 @@ let run_benchmark ~formatter ~writer (module Bench : BENCH) =
     List.init runs (fun _ ->
         let time = bench (fun () -> run value) in
         let data = formatter ~name ~item_message ~data:time in
-        writer ~data ~file:"output.csv")
+        writer ~data ~file:"output.csv" ())
   in
   ()
 
@@ -267,19 +270,18 @@ let benches : (module BENCH) list =
   ]
 
 let format_to_print ~name ~item_message ~data =
-  Format.sprintf "%s with %s: %.3f\n" name item_message data
+  Format.sprintf "%s %s: %.3f\n" name item_message data
 
 let format_to_csv ~name ~item_message ~data =
   Format.sprintf "%s, %s, %f\n" name item_message data
 
-let write_to_file ~data ~file =
+let write_to_file ~data ~file ?(create = `If_missing 0o600) () =
   let ( / ) = Eio.Path.( / ) in
-  let run dir =
-    Eio.Path.save ~append:true ~create:(`If_missing 0o600) (dir / file) data
-  in
+  let run dir = Eio.Path.save ~append:true ~create (dir / file) data in
   Eio_main.run @@ fun env -> run (Eio.Stdenv.cwd env)
 
-let write_to_terminal ~data ~file =
+let write_to_terminal ~data ~file ?(create = `If_missing 0o600) () =
+  let _ = create in
   let _ = file in
   Format.eprintf "%s%!" data
 
@@ -298,6 +300,9 @@ let main params =
   in
 
   Eio_main.run @@ fun env ->
+  Format.printf "\n%!";
+  writer ~data:"benchmark, items, duration\n" ~file:"output.csv"
+    ~create:(`Or_truncate 0o600) ();
   Parallel.Pool.run ~env ~domains @@ fun () ->
   List.iter
     (fun (module Bench : BENCH) ->
