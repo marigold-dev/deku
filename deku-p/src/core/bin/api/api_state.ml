@@ -58,7 +58,7 @@ let find_withdraw_proof ~operation_hash state =
       Logs.err (fun m -> m "Found a receipt that does not match");
       Error `Not_a_withdraw
 
-module Storage = struct
+module Api_storage = struct
   type t = {
     current_block : Block.t;
     protocol : Protocol.t;
@@ -109,4 +109,14 @@ module Storage = struct
     let binary = Data_encoding.Binary.to_string_exn encoding state in
     Eio.Path.save ~create:(`Or_truncate 0o6444) temp binary;
     Eio.Path.rename temp file
+
+  let of_chain ~chain =
+    let (Deku_chain.Chain.Chain
+          { gossip = _; protocol; consensus; producer = _ }) =
+      chain
+    in
+    let _ = chain in
+    let receipts = Operation_hash.Map.empty in
+    let current_block = Consensus.trusted_block consensus in
+    { current_block; protocol; receipts }
 end
