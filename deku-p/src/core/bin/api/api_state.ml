@@ -63,6 +63,16 @@ module Storage = struct
   let temp = "deku_api.tmp.json"
   let file = "deku_api.json"
 
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { current_block; protocol; receipts } ->
+        (current_block, protocol, receipts))
+      (fun (current_block, protocol, receipts) ->
+        { current_block; protocol; receipts })
+      (tup3 Block.encoding Protocol.encoding
+         (Operation_hash.Map.encoding Receipt.encoding))
+
   let state_to_storage state =
     let {
       consensus_address = _;
@@ -78,22 +88,34 @@ module Storage = struct
     in
     { current_block; protocol; receipts }
 
-  let read ~env:_ ~folder =
+  let read ~env ~folder =
     let file = Filename.concat folder file in
     match IO.file_exists file with
-    | true ->
-        let json = Yojson.Safe.from_file file in
-        Some (t_of_yojson json)
     | false -> None
+    | true ->
+        let fs = Eio.Stdenv.fs env in
+        let file = Eio.Path.(fs / file) in
+        Eio.Path.with_open_in file @@ fun source ->
+        let buf = Cstruct.create 4096 in
+        let rec decoding_loop status =
+          let open Data_encoding.Binary in
+          match status with
+          | Success { result; _ } -> result
+          | Await feed ->
+              let size = Eio.Flow.read source buf in
+              let status = feed (Cstruct.to_bytes ~len:size buf) in
+              decoding_loop status
+          | Error err -> raise (Read_error err)
+        in
+        let chain = decoding_loop (Data_encoding.Binary.read_stream encoding) in
+        Some chain
 
   let write ~env ~folder state =
-    Eio_unix.run_in_systhread (fun () ->
-        let temp = Filename.concat folder temp in
-        let state = state_to_storage state in
-        let json = yojson_of_t state in
-        Yojson.Safe.to_file temp json);
     let fs = Eio.Stdenv.fs env in
-    let temp = Eio.Path.(fs / folder / temp) in
     let file = Eio.Path.(fs / folder / file) in
+    let temp = Eio.Path.(fs / folder / temp) in
+    let state = state_to_storage state in
+    let binary = Data_encoding.Binary.to_string_exn encoding state in
+    Eio.Path.save ~create:(`Or_truncate 0o6444) temp binary;
     Eio.Path.rename temp file
 end

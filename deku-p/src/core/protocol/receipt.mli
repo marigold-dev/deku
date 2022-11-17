@@ -9,3 +9,5 @@ type receipt =
   | Vm_transaction_receipt of { operation : Operation_hash.t }
 
 type t = receipt [@@deriving eq, yojson]
+
+val encoding : receipt Data_encoding.t

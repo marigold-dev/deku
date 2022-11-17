@@ -20,6 +20,8 @@ module Withdrawal_handle : sig
     ticket_id : Ticket_id.t;
   }
   [@@deriving yojson, eq]
+
+  val encoding : t Data_encoding.t
 end
 
 module Withdrawal_handle_tree : sig
