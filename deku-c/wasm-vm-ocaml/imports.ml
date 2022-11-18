@@ -294,7 +294,7 @@ let transfer_tokens =
           let x = Vec.get_and_remove vec k in
           let _ = Vec.get_and_remove vec value in
           let y = Vec.get_and_remove vec data in
-          let result = matcher (x, y) in
+          let result = matcher (y, x) in
           wasm_i64 (Vec.alloc vec result)
       | _ ->
           ppt (__LINE_OF__ ());

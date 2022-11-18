@@ -58,7 +58,7 @@ module Vec = struct
     let counter = t.counter in
     Table.replace t.content counter content;
     t.counter <- counter + 1;
-    t.counter
+    counter
 
   let init initial_values =
     let table = Table.create 200 in
