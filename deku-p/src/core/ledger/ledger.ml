@@ -35,16 +35,24 @@ module Withdrawal_handle = struct
   let equal handle1 handle2 = BLAKE2b.equal handle1.hash handle2.hash
 
   let hash ~id ~owner ~amount ~ticket_id =
-    let[@warning "-8"] (Ticket_id.Ticket_id { ticketer = Tezos ticketer; data })
+    let[@warning "-8"] (Ticket_id.Ticket_id { ticketer ; data })
         =
       ticket_id
     in
-    let ticketer =
-      Deku_tezos.Address.Originated { contract = ticketer; entrypoint = None }
-    in
-    Deku_tezos.Deku.Consensus.hash_withdrawal_handle ~id:(Z.of_int id) ~owner
-      ~amount:(N.to_z (Amount.to_n amount))
-      ~ticketer ~data
+    match ticketer with
+      | Tezos tz_ticketer ->
+        let ticketer =
+          Deku_tezos.Address.Originated { contract = tz_ticketer; entrypoint = None }
+        in
+        Deku_tezos.Deku.Consensus.hash_withdrawal_handle ~id:(Z.of_int id) ~owner
+          ~amount:(N.to_z (Amount.to_n amount))
+          ~ticketer ~data
+      | Deku deku_ticketer ->
+        let ticketer =
+          Contract_address.to_b58 deku_ticketer in
+        Deku_tezos.Deku.Consensus.hash_withdrawal_handle_deku ~id:(Z.of_int id) ~owner
+          ~amount:(N.to_z (Amount.to_n amount))
+          ~ticketer ~data
 
   let encoding =
     let open Data_encoding in
@@ -131,13 +139,15 @@ let withdraw ~sender ~destination ~amount ~ticket_id t =
   let%ok ticket_id =
     match ticket_id with
     | Ticket_id.Ticket_id { ticketer = Deku _; data = _ } ->
-        Error Insufficient_funds
+        let () = Printf.eprintf "DEKU TICKET\n%!" in Ok ticket_id
     | Ticket_id.Ticket_id { ticketer = Tezos _; data = _ } -> Ok ticket_id
   in
+  let () = Printf.eprintf "WITHDRAW 1\n%!" in
   let%ok table =
     Ticket_table.withdraw ~sender ~amount ~ticket_id table
     |> Result.map_error (function _ -> Insufficient_funds)
   in
+  let () = Printf.eprintf "WITHDRAW 2\n%!" in
   let withdrawal_handles, handle =
     Withdrawal_handle_tree.add
       (fun id ->
@@ -147,6 +157,7 @@ let withdraw ~sender ~destination ~amount ~ticket_id t =
         { id; hash; owner = destination; amount; ticket_id })
       withdrawal_handles
   in
+  let () = Printf.eprintf "WITHDRAW 3\n%!" in
   let t = Ledger { table; withdrawal_handles } in
   Ok (t, handle)
 

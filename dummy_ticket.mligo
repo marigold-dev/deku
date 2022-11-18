@@ -9,14 +9,28 @@ type vault_ticket = bytes ticket
 type vault_deposit = { ticket : vault_ticket; address : key_hash }
 
 type vault_handle_id = nat
-type vault_handle_structure = {
-  id : vault_handle_id;
-  owner : address;
-  amount : nat;
-  ticketer : address;
-  (* TODO: probably data_hash *)
-  data : bytes;
-}
+(* TODO: make me shorter *)
+type vault_handle_structure = 
+  | Tezos of {
+              (* having the id is really important to change the hash,
+                otherwise people would be able to craft handles using old proofs *)
+              id: vault_handle_id;
+              owner: address;
+              amount: nat;
+              ticketer: address;
+              (* TODO: probably data_hash *)
+              data: bytes;
+            }
+  | Deku of {
+              (* having the id is really important to change the hash,
+                otherwise people would be able to craft handles using old proofs *)
+              id: vault_handle_id;
+              owner: address;
+              amount: nat;
+              ticketer: string;
+              (* TODO: probably data_hash *)
+              data: bytes;
+            }
 type vault_handle_proof = (blake2b * blake2b) list
 type vault_withdraw = {
   handles_hash : blake2b;

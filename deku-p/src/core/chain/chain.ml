@@ -142,6 +142,8 @@ let apply_consensus_action chain consensus_action =
            Format.printf "trusted(%.3f): %a\n%!" (Unix.gettimeofday ()) Level.pp
              level
          in *)
+      let r = Stdlib.Random.float 2. +. 1. in
+      let () = Unix.sleepf r in
       let apply = Fragment_apply { block; votes; protocol } in
       let apply = Chain_fragment { fragment = apply } in
       let store = Fragment_store { block; votes } in

@@ -119,12 +119,12 @@ let apply_operation ~current_level protocol operation :
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id
                 ledger
             with
-            | Ok (ledger, handle) ->
+            | Ok (ledger, handle) -> let () = Printf.eprintf "OK OP WITHDRAW\n%!" in
                 ( ledger,
                   Some (Withdraw_receipt { handle; operation = hash }),
                   vm_state,
                   None )
-            | Error error -> (ledger, None, vm_state, Some error))
+            | Error error -> let () = Printf.eprintf "KO OP WITHDRAW\n%!" in  (ledger, None, vm_state, Some error))
       in
       Some
         ( Protocol
@@ -194,6 +194,12 @@ let parse_operation operation =
 let apply_payload ~current_level ~payload protocol =
   List.fold_left
     (fun (protocol, rev_receipts, errors) operation ->
+      let () = 
+        match operation with
+        | Operation.Initial.Initial_operation d -> 
+          match d.operation with
+          | Operation.Operation_withdraw _ -> Printf.eprintf "WITHDRAW TROUVÉ\n"
+          | _ -> () in
       match apply_operation ~current_level protocol operation with
       | Some (protocol, receipt, error) ->
           let rev_receipts =
@@ -222,9 +228,12 @@ let clean ~current_level protocol =
 let prepare ~parallel ~payload = parallel parse_operation payload
 
 let apply ~current_level ~payload ~tezos_operations protocol =
+  let () = Printf.eprintf "NOMBRE DELEMENT DANS PAYLOAD %s \n%!" (string_of_int (List.length payload)) in
+  let () = Printf.eprintf "NOMBRE DELEMENT DANS TEZOS %s \n%!" (string_of_int (List.length tezos_operations)) in
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
   in
+  let () = Printf.eprintf "NOMBRE DELEMENT DANS RECEIPT %s \n%!" (string_of_int (List.length receipts)) in
   let protocol = clean ~current_level protocol in
   (* TODO: how to clean the set of tezos operations in memory? *)
   let protocol = apply_tezos_operations tezos_operations protocol in

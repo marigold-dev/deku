@@ -26,4 +26,10 @@ module Consensus = struct
       (pair (pair (nat amount) (bytes data)) (pair (nat id) (address owner)))
       (address ticketer)
     |> hash_packed_data
+
+  let hash_withdrawal_handle_deku ~id ~owner ~amount ~ticketer ~data =
+    pair
+      (pair (pair (nat amount) (bytes data)) (pair (nat id) (address owner)))
+      (string_ ticketer)
+    |> hash_packed_data
 end

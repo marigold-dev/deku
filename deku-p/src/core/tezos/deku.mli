@@ -20,4 +20,12 @@ module Consensus : sig
     ticketer:Address.t ->
     data:bytes ->
     BLAKE2b.t
+  
+    val hash_withdrawal_handle_deku :
+    id:Z.t ->
+    owner:Address.t ->
+    amount:Z.t ->
+    ticketer:string->
+    data:bytes ->
+    BLAKE2b.t
 end

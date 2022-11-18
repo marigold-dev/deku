@@ -3,6 +3,7 @@ open Deku_crypto
 type t
 
 val int : Z.t -> t
+val string_ : string -> t
 val nat : Z.t -> t
 val bytes : bytes -> t
 val pair : t -> t -> t

@@ -14,6 +14,8 @@ type api_response = {
 }
 [@@deriving of_yojson]
 
+
+
 let main operation_hash verbose host =
   Eio_main.run @@ fun env ->
   Eio.Switch.run @@ fun sw ->
@@ -33,8 +35,12 @@ let main operation_hash verbose host =
   in
   let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
   (* FIXME: we should remove -8 in the future. *)
-  let[@warning "-8"] (Ticket_id.Ticket_id { ticketer = Tezos ticketer; data }) =
+  let[@warning "-8"] (Ticket_id.Ticket_id { ticketer = ticketer; data }) =
     ticket_id
+  in
+  let ticketer = match ticketer with
+    | Tezos t -> Deku_tezos.Contract_hash.to_b58 t
+    | Deku t -> Contract_address.to_b58 t
   in
   Format.printf
     {|(Pair (Pair %S
@@ -45,7 +51,7 @@ let main operation_hash verbose host =
     "burn_callback"
     (Deku_concepts.Amount.show amount)
     (to_hex data) id
-    (Deku_tezos.Contract_hash.to_b58 ticketer)
+    ticketer
     (Deku_tezos.Address.to_string owner)
     (BLAKE2b.to_hex withdrawal_handles_hash)
     (List.map

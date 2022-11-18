@@ -6,6 +6,7 @@ open Michelson_v1_primitives
 type t = (canonical_location, prim) node
 
 let int n = Int (-1, n)
+let string_ s = String (-1, s)
 let nat n = Int (-1, n)
 let bytes b = Bytes (-1, b)
 let pair l r = Prim (-1, D_Pair, [ l; r ], [])
