@@ -207,7 +207,20 @@ let incoming_vote ~current ~level ~vote chain =
   apply_consensus_actions chain actions
 
 let incoming_operation ~operation chain =
-  Logs.info (fun m -> m "Incoming operation: %a" Operation.Signed.pp operation);
+  let () =
+    let open Operation in
+    let (Signed.Signed_operation
+          { initial = Initial.Initial_operation { operation; _ }; _ }) =
+      operation
+    in
+    match operation with
+    | Operation_ticket_transfer _ ->
+        Logs.info (fun m -> m "Incoming ticket transfer")
+    | Operation_vm_transaction _ ->
+        Logs.info (fun m -> m "Incoming vm transaction")
+    | Operation_withdraw _ -> Logs.info (fun m -> m "Incoming vm withdraw")
+    | Operation_noop _ -> Logs.info (fun m -> m "Incoming noop")
+  in
   let (Chain ({ producer; _ } as chain)) = chain in
   let producer = Producer.incoming_operation ~operation producer in
   let chain = Chain { chain with producer } in
