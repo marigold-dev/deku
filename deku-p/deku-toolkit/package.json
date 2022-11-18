@@ -32,7 +32,6 @@
     "rollup-plugin-typescript2": "^0.34.0"
   },
   "dependencies": {
-    "@tzstamp/helpers": "^0.3.4",
     "@taquito/taquito": "^13.0.1",
     "blakejs": "^1.2.1",
     "bs58check": "^2.1.2"

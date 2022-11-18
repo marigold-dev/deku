@@ -26,7 +26,6 @@ const App: () => JSX.Element = () => {
   const [balance, setBalance] = useState(0);
   const [info, setInfo] = useState<{
     consensus: string;
-    isSync: boolean;
   } | null>(null);
 
   const [vmState, setVmState] = useState<unknown>(null);
@@ -91,17 +90,6 @@ const App: () => JSX.Element = () => {
     findBlockExample().then(console.log).catch(console.error);
   }, []);
 
-  /*
-   * Example to retrieve vm state from the chain
-   */
-  const getVmStateExample = async () => {
-    const state = await deku.getVmState();
-    return state;
-  };
-
-  useEffect(() => {
-    getVmStateExample().then(setVmState).catch(console.error);
-  }, []);
 
   /**
    * How to make a transfer
@@ -156,21 +144,10 @@ const App: () => JSX.Element = () => {
     transferExample().catch(console.error);
   }, []);
 
-  const noopExample = async () => {
-    const hash = await deku.submitNoopOperation({ nonce: 0 });
-    console.log(`Noop operation submitted: ${hash}`);
-  };
-
-  useEffect(() => {
-    noopExample().catch(console.error);
-  }, []);
-
   return (
     <div style={containerStyle}>
       <img src={logo} alt="deku logo" />
       {info && <div>Consensus : {info.consensus} </div>}
-      {/* {info && <div>Discovery : {info.discovery} </div>} */}
-      {info && <div>Is sync : {info.isSync.toString()} </div>}
       <div>Level : {level} </div>
       <div>Balance : {balance}</div>
       <div>State : {JSON.stringify(vmState)}</div>
@@ -200,12 +177,6 @@ const App: () => JSX.Element = () => {
         <button
           onClick={() => withdrawExample()}
           children="Withdraw (to same address as the ticketer)"
-        />
-        <button
-          onClick={() =>
-            getVmStateExample().then(setVmState).catch(console.error)
-          }
-          children="VM State"
         />
       </>
     </div>
