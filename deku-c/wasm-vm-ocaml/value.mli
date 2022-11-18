@@ -21,7 +21,7 @@ module rec V : sig
     | Ticket of { ticket_id : Ticket_id.t; amount : Amount.t }
     | Ticket_handle of int
     | Set of Set.t
-  [@@deriving ord, show]
+  [@@deriving ord, eq, show]
 
   val pp_michelson : Format.formatter -> t -> unit
 end
