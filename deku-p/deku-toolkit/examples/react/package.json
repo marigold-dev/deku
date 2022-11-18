@@ -28,7 +28,8 @@
   },
   "scripts": {
     "start": "set port=9090 && react-scripts start",
-    "build": "react-scripts build "
+    "build": "react-scripts build",
+    "eject": "react-scripts eject"
   },
   "browserslist": {
     "production": [

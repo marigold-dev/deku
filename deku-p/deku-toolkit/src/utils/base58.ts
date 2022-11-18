@@ -1,16 +1,16 @@
-import { Sha256 } from "./sha256.ts";
-import { compare, concat } from "./bytes.ts";
+import { Sha256 } from "./sha256";
+import { compare, concat } from "./bytes";
 
 const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 /** Mismatched prefix error */
 export class PrefixError extends Error {
-  name = "PrefixError";
+  override name = "PrefixError";
 }
 
 /** Mismatched checksum error */
 export class ChecksumError extends Error {
-  name = "ChecksumError";
+  override name = "ChecksumError";
 }
 
 /**

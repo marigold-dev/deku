@@ -4,7 +4,7 @@
   "compilerOptions": {
     "outDir": "lib",
     "moduleResolution": "node",
-    "target": "es6",
+    "target": "ES2022",
     "module": "es2015",
     "lib": ["es2021", "dom"],
     "strict": true,
