@@ -9,7 +9,8 @@
     "deku-p/sdks/typescript-sdk",
     "examples/tutorial",
     "deku-c/deku-c-toolkit",
-    "website"
+    "website",
+    "tic-tac-toe/dapp"
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
