@@ -95,6 +95,7 @@ let fill_with_noop ~identity ~level ~default_block_size operations =
 
 let produce ~identity ~default_block_size ~above ~withdrawal_handles_hash
     producer =
+  let () = Unix.sleep 1 in
   let open Block in
   let (Producer { operations; tezos_operations }) = producer in
   let (Block { hash = current_block; level = current_level; _ }) = above in

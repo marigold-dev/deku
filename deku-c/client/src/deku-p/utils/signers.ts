@@ -53,6 +53,7 @@ export abstract class DekuSigner {
 export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
   class MemorySigner extends DekuSigner {
     sign = async (payload: string) => {
+      console.log("fromMemorySigner", payload);
       const signature = await signer.sign(payload);
       return signature.prefixSig;
     };
@@ -70,6 +71,7 @@ export const fromMemorySigner = (signer: MemorySigner): DekuSigner => {
 export const fromBeaconSigner = (signer: BeaconSigner): DekuSigner => {
   class BeaconSigner extends DekuSigner {
     sign = async (payload: string) => {
+      console.log("fromBeaconSigner", payload);
       const sig = await signer.requestSignPayload({ payload });
       if (!sig) {
         return Promise.reject({
