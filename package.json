@@ -7,7 +7,8 @@
     "examples/tutorial",
     "deku-c/deku-c-toolkit",
     "website",
-    "tic-tac-toe/dapp"
+    "tic-tac-toe/dapp",
+    "my-deku-app/dapp"
   ],
   "scripts": {
     "build:client": "yarn --cwd deku-c/client build",
