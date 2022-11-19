@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@airgap/beacon-sdk": "^3.3.0",
-    "@marigold-dev/deku-c-toolkit": "0.1.3",
+    "@marigold-dev/deku-c-toolkit": "0.1.4",
     "@marigold-dev/deku-toolkit": "0.1.12",
     "@taquito/signer": "14.0.0",
     "@testing-library/jest-dom": "^5.16.5",
