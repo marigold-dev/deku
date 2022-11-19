@@ -1,42 +1,227 @@
-let _ =
-  {|{
-  "module_": "\u0000asm\u0001\u0000\u0000\u0000\u0001À��\u0000\r`\u0001~\u0001~`\u0001~\u0000`\u0002~~\u0001~`\u0000\u0001~`\u0003~~~\u0001~`\u0002~\u007f\u0000`\u0002~\u007f\u0001~`\u0001~\u0001\u007f`\u0002\u007f~\u0001~`\u0001\u007f\u0001~`\u0003~~~\u0000`\u0001\u007f\u0000`\u0000\u0000\u0002����\u0000N\u0003env\bdup_host\u0000\u0001\u0003env\u0004pair\u0000\u0002\u0003env\u0006unpair\u0000\u0001\u0003env\u0005z_add\u0000\u0002\u0003env\u0005z_sub\u0000\u0002\u0003env\u0005z_mul\u0000\u0002\u0003env\u0003neg\u0000\u0000\u0003env\u0003lsl\u0000\u0002\u0003env\u0006concat\u0000\u0002\u0003env\u0003lsr\u0000\u0002\u0003env\u0007compare\u0000\u0002\u0003env\u0003car\u0000\u0000\u0003env\u0003cdr\u0000\u0000\u0003env\u0004some\u0000\u0000\u0003env\u0003nil\u0000\u0003\u0003env\u0004true\u0000\u0003\u0003env\u0005false\u0000\u0003\u0003env\u0004none\u0000\u0003\u0003env\u0004unit\u0000\u0003\u0003env\u0004zero\u0000\u0003\u0003env\tempty_map\u0000\u0003\u0003env\tempty_set\u0000\u0003\u0003env\rempty_big_map\u0000\u0003\u0003env\u0006sender\u0000\u0003\u0003env\u0006source\u0000\u0003\u0003env\u0007map_get\u0000\u0002\u0003env\u0003mem\u0000\u0002\u0003env\u0006update\u0000\u0004\u0003env\u0004iter\u0000\u0005\u0003env\u0003map\u0000\u0006\u0003env\u0007if_left\u0000\u0007\u0003env\u0007if_none\u0000\u0007\u0003env\u0007if_cons\u0000\u0007\u0003env\u0005isnat\u0000\u0000\u0003env\u0003not\u0000\u0000\u0003env\u0002or\u0000\u0002\u0003env\u0003and\u0000\u0002\u0003env\u0003xor\u0000\u0002\u0003env\nderef_bool\u0000\u0007\u0003env\u0003neq\u0000\u0000\u0003env\bfailwith\u0000\u0001\u0003env\u0005get_n\u0000\b\u0003env\u0004exec\u0000\u0002\u0003env\u0005apply\u0000\u0002\u0003env\u0005const\u0000\t\u0003env\u0003abs\u0000\u0000\u0003env\u0002eq\u0000\u0000\u0003env\u0002gt\u0000\u0000\u0003env\u0002lt\u0000\u0000\u0003env\u0007closure\u0000\t\u0003env\u0004left\u0000\u0000\u0003env\u0005right\u0000\u0000\u0003env\u0004cons\u0000\u0002\u0003env\u000ftransfer_tokens\u0000\u0004\u0003env\u0007address\u0000\u0000\u0003env\bcontract\u0000\u0000\u0003env\u0004self\u0000\u0003\u0003env\fself_address\u0000\u0003\u0003env\u000eget_and_update\u0000\n\u0003env\u000bread_ticket\u0000\u0001\u0003env\u0006ticket\u0000\u0002\u0003env\fjoin_tickets\u0000\u0000\u0003env\fsplit_ticket\u0000\u0002\u0003env\u0006amount\u0000\u0003\u0003env\u0007balance\u0000\u0003\u0003env\u0004ediv\u0000\u0002\u0003env\u0002ge\u0000\u0000\u0003env\u0002le\u0000\u0000\u0003env\u0004size\u0000\u0000\u0003env\u0003int\u0000\u0000\u0003env\u0010implicit_account\u0000\u0000\u0003env\u0007blake2b\u0000\u0000\u0003env\u0004pack\u0000\u0000\u0003env\u0006unpack\u0000\u0000\u0003env\u0006keccak\u0000\u0000\u0003env\u0006sha256\u0000\u0000\u0003env\u0004sha3\u0000\u0000\u0003env\u0006sha512\u0000\u0000\u0003����\u0000\f\u0006\u0005\u000b\u000b\u000b\f\u000b\u000b\u0003\u0001\u000b\u0000\u0004����\u0000\u0001p\u0001\u0000\u0000\u0005����\u0000\u0001\u0000\u0004\u0006����\u0000\u0004\u007f\u0000A\u0000\u000b\u007f\u0001A�\u001f\u000b\u007f\u0001A�\u0007\u000b\u007f\u0000A��\u0002\u000b\u0007ŀ��\u0000\u0006\u0004push\u0000W\u0003pop\u0000W\u0004main\u0000Y\bclosures\u0001\u0000\rcall_callback\u0000N\u0012call_callback_unit\u0000O\t����\u0000\u0001\u0000A\u0000\u000b\u0000\n����\u0000\f����\u0000\u0000 \u0000 \u0001\u0011\u0000\u0000\u000b����\u0000\u0000 \u0000 \u0001\u0011\u0001\u0000\u000bĀ��\u0000\u0001\u0003\u007fA\u0000!\u0001#\u0001!\u0002#\u0002 \u0000k\"\u0003$\u0002\u0003@A\b#\u0003 \u0003 \u0001jjlA\b \u0002 \u0001jl)\u0003\u00007\u0003\u0000 \u0001A\u0001j\"\u0001 \u0000G\r\u0000\u000b \u0002 \u0000j$\u0001\u000bĀ��\u0000\u0001\u0003\u007f#\u0001 \u0000k\"\u0002$\u0001#\u0002!\u0003A\u0000!\u0001\u0003@A\b \u0002 \u0001jl#\u0003A\b \u0003 \u0001jlj)\u0003\u00007\u0003\u0000 \u0001A\u0001j\"\u0001 \u0000G\r\u0000\u000b \u0003 \u0000j$\u0002\u000b����\u0000\u0000A\b#\u0001 \u0000jl)\u0003\u0000\u0010\u0000\u000b����\u0000\u0001\u0002~\u0010V!\u0000\u0010V!\u0001 \u0000\u0010W \u0001\u0010W\u000bˀ��\u0000\u0002\u0003\u007f\u0001~#\u0001 \u0000j!\u0003#\u0001\"\u0001\"\u0002A\bl)\u0003\u0000!\u0004\u0003@A\b \u0001l \u0002A\u0001j\"\u0002A\bl)\u0003\u00007\u0003\u0000 \u0001A\u0001j!\u0001 \u0001 \u0003I\r\u0000\u000bA\b \u0003l \u00047\u0003\u0000\u000b��\u0000\u0002\u0002\u007f\u0001~A\b#\u0001 \u0000j\"\u0001l)\u0003\u0000!\u0003\u0003@A\b \u0001l!\u0002 \u0002A\b \u0001A\u0001k\"\u0001l)\u0003\u00007\u0003\u0000#\u0001 \u0001I\r\u0000\u000bA\b \u0001l \u00037\u0003\u0000\u000b����\u0000\u0001\u0001\u007fA\b#\u0001\"\u0000l)\u0003\u0000 \u0000A\u0001j$\u0001\u000b����\u0000\u0001\u0001\u007fA\b#\u0001A\u0001k\"\u0001l \u00007\u0003\u0000 \u0001$\u0001\u000b����\u0000\u0000#\u0001 \u0000j$\u0001\u000bĀ��\u0000\u0001\u0001~ \u0000\u0010W\u0010V\u0010\u0002\u0010V\u0010\u001e\u0004@\u0010V\u0010\u001e\u0004@\u0010S\u0010V\u0010V\u0010\u0004\u0010W\u0005\u0010V\u0010V\u0010\u0003\u0010W\u000b\u0005A\u0002\u0010X\u0010\u0013\u0010W\u000b\u0010\u000e\u0010W\u0010V\u0010V\u0010\u0001\u0010W\u0010V\u000b",
-  "constants": [],
-  "initial_storage": [ "Int", "5" ],
-  "entrypoints": {
-    "%decrement": [ "Left", "Left" ],
-    "%increment": [ "Left", "Right" ],
-    "%reset": [ "Right" ]
-  }
-}|}
+let value' =
+  Alcotest.testable Ocaml_wasm_vm.Value.pp (fun a b ->
+      Ocaml_wasm_vm.Value.compare a b = 0)
+
+let initial_storage =
+  let json =
+    Data_encoding.Json.from_string
+      {|
+      [
+        "Pair",
+        [
+            [
+                "Pair",
+                [
+                    [
+                        "Pair",
+                        [
+                            [
+                                "Pair",
+                                [
+                                    [
+                                        "Pair",
+                                        [
+                                            [
+                                                "Pair",
+                                                [
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Left",
+                                                            [
+                                                                "Union",
+                                                                [
+                                                                    "Right",
+                                                                    [
+                                                                        "Unit"
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ],
+                                            [
+                                                "Pair",
+                                                [
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Left",
+                                                            [
+                                                                "Union",
+                                                                [
+                                                                    "Left",
+                                                                    [
+                                                                        "Unit"
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    [
+                                        "Pair",
+                                        [
+                                            [
+                                                "Pair",
+                                                [
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ],
+                                            [
+                                                "Pair",
+                                                [
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        "Union",
+                                                        [
+                                                            "Right",
+                                                            [
+                                                                "Unit"
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            [
+                                "Union",
+                                [
+                                    "Right",
+                                    [
+                                        "Unit"
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        "Union",
+                        [
+                            "Left",
+                            [
+                                "String",
+                                "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            [
+                "Pair",
+                [
+                    [
+                        "String",
+                        "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+                    ],
+                    [
+                        "String",
+                        "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb"
+                    ]
+                ]
+            ]
+        ]
+    ]
+  |}
+  in
+  json |> Result.get_ok
+  |> Data_encoding.Json.destruct Ocaml_wasm_vm.Value.encoding
 
 let originate =
   let open Ocaml_wasm_vm in
+  let open Value in
   let module_ =
-    "0061736d0100000001c3808080000d60017e017e60017e0060027e7e017e6000017e60037e7e7e017e60027e7f0060027e7f017e60017e017f60027f7e017e60017f017e60037e7e7e0060017f0060000002e0878080004e03656e76086475705f686f7374000103656e760470616972000203656e7606756e70616972000103656e76057a5f616464000203656e76057a5f737562000203656e76057a5f6d756c000203656e76036e6567000003656e76036c736c000203656e7606636f6e636174000203656e76036c7372000203656e7607636f6d70617265000203656e7603636172000003656e7603636472000003656e7604736f6d65000003656e76036e696c000303656e760474727565000303656e760566616c7365000303656e76046e6f6e65000303656e7604756e6974000303656e76047a65726f000303656e7609656d7074795f6d6170000303656e7609656d7074795f736574000303656e760d656d7074795f6269675f6d6170000303656e760673656e646572000303656e7606736f75726365000303656e76076d61705f676574000203656e76036d656d000203656e7606757064617465000403656e760469746572000503656e76036d6170000603656e760769665f6c656674000703656e760769665f6e6f6e65000703656e760769665f636f6e73000703656e760569736e6174000003656e76036e6f74000003656e76026f72000203656e7603616e64000203656e7603786f72000203656e760a64657265665f626f6f6c000703656e76036e6571000003656e76086661696c77697468000103656e76056765745f6e000803656e760465786563000203656e76056170706c79000203656e7605636f6e7374000903656e7603616273000003656e76026571000003656e76026774000003656e76026c74000003656e7607636c6f73757265000903656e76046c656674000003656e76057269676874000003656e7604636f6e73000203656e760f7472616e736665725f746f6b656e73000403656e760761646472657373000003656e7608636f6e7472616374000003656e760473656c66000303656e760c73656c665f61646472657373000303656e760e6765745f616e645f757064617465000a03656e760b726561645f7469636b6574000103656e76067469636b6574000203656e760c6a6f696e5f7469636b657473000003656e760c73706c69745f7469636b6574000203656e7606616d6f756e74000303656e760762616c616e6365000303656e760465646976000203656e76026765000003656e76026c65000003656e760473697a65000003656e7603696e74000003656e7610696d706c696369745f6163636f756e74000003656e7607626c616b653262000003656e76047061636b000003656e7606756e7061636b000003656e76066b656363616b000003656e7606736861323536000003656e760473686133000003656e76067368613531320000038d808080000c06050b0b0b0c0b0b03010b000485808080000170010000058380808000010004069980808000047f0041000b7f0141a01f0b7f0141e8070b7f00418080020b07c580808000060470757368005703706f700057046d61696e005908636c6f737572657301000d63616c6c5f63616c6c6261636b004e1263616c6c5f63616c6c6261636b5f756e6974004f098680808000010041000b000a80848080000c898080800000200020011100000b898080800000200020011101000bc48080800001037f4100210123012102230220006b22032402034041082303200320016a6a6c4108200220016a6c290300370300200141016a22012000470d000b200220006a24010bc48080800001037f230120006b22022401230221034100210103404108200220016a6c23034108200320016a6c6a290300370300200141016a22012000470d000b200320006a24020b8f80808000004108230120006a6c29030010000b948080800001027e105621001056210120001057200110570bcb8080800002037f017e230120006a210323012201220241086c29030021040340410820016c200241016a220241086c290300370300200141016a210120012003490d000b410820036c20043703000bc28080800002027f017e4108230120006a22016c29030021030340410820016c210220024108200141016b22016c29030037030023012001490d000b410820016c20033703000b958080800001017f4108230122006c290300200041016a24010b978080800001017f4108230141016b22016c2000370300200124010b898080800000230120006a24010bc48080800001017e20001057105610021056101e04401056101e0440105310561056100410570510561056100310570b0541021058101310570b100e1057105610561001105710560b"
+    "0061736d0100000001c3808080000d60017e017e60017e0060017e017f60027e7e017e60017f017e6000017e60027e7f0060037e7e7e017e60027e7f017e60027f7e017e60037e7e7e0060017f00600000028a888080005103656e760769735f6c656674000203656e76086475705f686f7374000103656e760470616972000303656e7606706169725f6e000403656e7606756e70616972000103656e76057a5f616464000303656e76057a5f737562000303656e76057a5f6d756c000303656e76036e6567000003656e76036c736c000303656e7606636f6e636174000303656e76036c7372000303656e7607636f6d70617265000303656e7603636172000003656e7603636472000003656e7604736f6d65000003656e76036e696c000503656e760474727565000503656e7608756e706169725f6e000603656e760566616c7365000503656e76046e6f6e65000503656e7604756e6974000503656e76047a65726f000503656e7609656d7074795f6d6170000503656e7609656d7074795f736574000503656e760d656d7074795f6269675f6d6170000503656e760673656e646572000503656e7606736f75726365000503656e76076d61705f676574000303656e76036d656d000303656e7606757064617465000703656e760469746572000603656e76036d6170000803656e760769665f6c656674000203656e760769665f6e6f6e65000203656e760769665f636f6e73000203656e760569736e6174000003656e76036e6f74000003656e76026f72000303656e7603616e64000303656e7603786f72000303656e760a64657265665f626f6f6c000203656e76036e6571000003656e76086661696c77697468000103656e76056765745f6e000903656e760465786563000303656e76056170706c79000303656e7605636f6e7374000403656e7603616273000003656e76026571000003656e76026774000003656e76026c74000003656e7607636c6f73757265000403656e76046c656674000003656e76057269676874000003656e7604636f6e73000303656e760f7472616e736665725f746f6b656e73000703656e760761646472657373000003656e7608636f6e7472616374000003656e760473656c66000503656e760c73656c665f61646472657373000503656e760e6765745f616e645f757064617465000a03656e760b726561645f7469636b6574000103656e76067469636b6574000303656e760c6a6f696e5f7469636b657473000003656e760c73706c69745f7469636b6574000303656e7606616d6f756e74000503656e760762616c616e6365000503656e760465646976000303656e76026765000003656e76026c65000003656e760473697a65000003656e7603696e74000003656e7610696d706c696369745f6163636f756e74000003656e7607626c616b653262000003656e76047061636b000003656e7606756e7061636b000003656e76066b656363616b000003656e7606736861323536000003656e760473686133000003656e76067368613531320000038e808080000d08060b0b0b0c0b0b05010b00000485808080000170010101058380808000010004069980808000047f0041000b7f0141a01f0b7f0141e8070b7f00418080020b07c580808000060470757368005a03706f700059046d61696e005d08636c6f737572657301000d63616c6c5f63616c6c6261636b00511263616c6c5f63616c6c6261636b5f756e69740052098780808000010041000b015c0aa58b8080000d898080800000200020011100000b898080800000200020011101000bc48080800001037f4100210123012102230220006b22032402034041082303200320016a6a6c4108200220016a6c290300370300200141016a22012000470d000b200220006a24010bc48080800001037f230120006b22022401230221034100210103404108200220016a6c23034108200320016a6c6a290300370300200141016a22012000470d000b200320006a24020b8f80808000004108230120006a6c29030010010b948080800001027e10592100105921012000105a2001105a0bcb8080800002037f017e230120006a210323012201220241086c29030021040340410820016c200241016a220241086c290300370300200141016a210120012003490d000b410820036c20043703000bc28080800002027f017e4108230120006a22016c29030021030340410820016c210220024108200141016b22016c29030037030023012001490d000b410820016c20033703000b958080800001017f4108230122006c290300200041016a24010b978080800001017f4108230141016b22016c2000370300200124010b898080800000230120006a24010bbc8180800001017e2000105a1059100410594103101241031058105910044103105810591059100c105a1059102a105a1059102904401056410210584102105b051059102104401056410210584102105b1059102104404101105b4106102f105a1059102b00054101105b4107102f105a1059102b000b054101105b10561059100e105a1059100d105a105610591059100c105a10591031105a1059102904401015105a10591036105a051015105a10591035105a0b10591035105a0b0b10590ba88680800001017e2000105a105910041059102104404102105b4100102f105a1059102b00054101102f105a410210551059100410591004410510551059100d105a1059100e105a105910210440054101105b4102102f105a1059102b000b41041055105610591059100c105a1059102a105a1059102904404106105b4103102f105a1059102b00054104102f105a4105105510591059100c105a10591032105a1059102904404106105b4105102f105a1059102b000541001034105a41061055410610554106105541031003105a10591059102e105a4104105841051058410610584103105b410110551059100e105a4104102f105a105910591002105a41011055105610591059102d105a410210551059100d105a1059100e105a1059100e105a1059100e105a4108102f105a105910591002105a41021055105610591059102d105a410310551059100d105a1059100e105a1059100e105a1059100d105a4109102f105a105910591002105a41031055105610591059102d105a105910591002105a410310551059100d105a1059100e105a1059100d105a1059100e105a410a102f105a105910591002105a41031055105610591059102d105a410410551059100d105a1059100e105a1059100d105a1059100d105a410b102f105a105910591002105a41041055105610591059102d105a105910591002105a105910591002105a410310551059100d105a1059100d105a1059100e105a1059100e105a410c102f105a105910591002105a41031055105610591059102d105a410410551059100d105a1059100d105a1059100e105a1059100d105a410d102f105a105910591002105a41041055105610591059102d105a105910591002105a410410551059100d105a1059100d105a1059100d105a1059100e105a410e102f105a105910591002105a41041055105610591059102d105a410510581059100d105a1059100d105a1059100d105a1059100d105a1016105a105910591002105a41051058105610591059102d105a105910591002105a105910591002105a105910591002105a105910591002105a105910591002105a105910591002105a0b0b0b1010105a105910591002105a10590b"
   in
   let json =
     Data_encoding.Json.from_string
-      {|{
-    "%decrement": [ "Left", "Left" ],
-    "%increment": [ "Left", "Right" ],
-    "%reset": [ "Right" ]
-  }|}
+      {|{ 
+        "%join": [ "Left" ], 
+        "%play": [ "Right" ] 
+        } 
+      |}
   in
-
-  let json = Result.get_ok json in
+  let json = json |> Result.get_ok in
   let entrypoints = Data_encoding.Json.destruct Entrypoints.encoding json in
-  Operation.Originate
-    {
-      initial_storage = Int Z.zero;
-      module_;
-      entrypoints;
-      constants = [| (0, Int Z.zero) |];
-    }
+  let constants =
+    [|
+      (0, String "Join is not yet implemented");
+      (1, String "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb");
+      (2, String "Game is ended");
+      (3, String "Not your turn");
+      (4, Int (Z.of_int 8));
+      (5, String "Wrong cellId");
+      (6, String "Already set: circle");
+      (7, String "Already set: cross");
+      (8, Int (Z.of_int 7));
+      (9, Int (Z.of_int 6));
+      (10, Int (Z.of_int 5));
+      (11, Int (Z.of_int 4));
+      (12, Int (Z.of_int 3));
+      (13, Int (Z.of_int 2));
+      (14, Int (Z.of_int 1));
+    |]
+  in
+  Operation.Originate { initial_storage; module_; entrypoints; constants }
 
 let invoke =
   let open Ocaml_wasm_vm in
   let open Deku_ledger in
+  let argument =
+    {|["Union", ["Right", ["Int", "3"]]]|} |> Data_encoding.Json.from_string
+    |> Result.get_ok
+    |> Data_encoding.Json.destruct Ocaml_wasm_vm.Value.encoding
+  in
   let res =
     Operation.Call
       {
@@ -45,7 +230,7 @@ let invoke =
             ( Contract_address.of_user_operation_hash
                 (Deku_crypto.BLAKE2b.hash "tutturu"),
               None );
-        argument = Union (Left (Union (Right (Int (Z.of_int 5)))));
+        argument;
       }
   in
   res
@@ -61,18 +246,17 @@ let new_address () =
 
 let () =
   let open Alcotest in
-  run "Wasm-vm" ~and_exit:false
+  run "Wasm-vm" ~and_exit:false ~verbose:true
     [
       ( "Basic Vm tests",
         [
-          test_case "Originate/Invoke increment" `Quick (fun () ->
-              let open Alcotest in
+          test_case "Originate" `Quick (fun () ->
               let open Ocaml_wasm_vm in
               let addr = new_address () in
               let x =
                 Env.execute
                   ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
-                  ~tickets:[]
+                  ~tickets:[] ~operation:originate
                   Env.
                     {
                       source = addr;
@@ -81,20 +265,24 @@ let () =
                       state = State.empty;
                       ticket_table = Ticket_table.init [];
                     }
-                  ~operation:originate
               in
+              print_endline "origination...";
               let state = Result.get_ok x in
+              print_endline "origination success";
               let (State_entry.Entry { storage; _ }) =
                 State.fetch_contract state.state
                   Deku_ledger.(
                     Contract_address.of_user_operation_hash
                       (Deku_crypto.BLAKE2b.hash "tutturu"))
               in
-              (check bool) "Invoke" true (storage = Int Z.zero);
+              Alcotest.(check value')
+                "storage should be equal" initial_storage storage;
+
+              (********)
               let x =
                 Env.execute
                   ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
-                  ~tickets:[]
+                  ~tickets:[] ~operation:invoke
                   Env.
                     {
                       source = addr;
@@ -103,16 +291,71 @@ let () =
                       state = state.state;
                       ticket_table = Ticket_table.init [];
                     }
-                  ~operation:invoke
               in
+              let _ = Result.map_error (fun error -> print_endline error) x in
               let state = Result.get_ok x in
+              print_endline "invokation is success";
               let (State_entry.Entry { storage; _ }) =
                 State.fetch_contract state.state
                   Deku_ledger.(
                     Contract_address.of_user_operation_hash
                       (Deku_crypto.BLAKE2b.hash "tutturu"))
               in
-              (check bool) "example" true (storage = Int (Z.of_int 5));
-              ());
+              Alcotest.(check (neg value'))
+                "storage should have change" initial_storage storage);
         ] );
     ]
+
+(*
+           test_case "Originate/Invoke increment" `Quick (fun () ->
+               let open Alcotest in
+               let open Ocaml_wasm_vm in
+               let addr = new_address () in
+               let x =
+                 Env.execute
+                   ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
+                   ~tickets:[]
+                   Env.
+                     {
+                       source = addr;
+                       sender = addr;
+                       ledger = Deku_ledger.Ledger.initial;
+                       state = State.empty;
+                       ticket_table = Ticket_table.init [];
+                     }
+                   ~operation:originate
+               in
+               let state = Result.get_ok x in
+               let (State_entry.Entry { storage; _ }) =
+                 State.fetch_contract state.state
+                   Deku_ledger.(
+                     Contract_address.of_user_operation_hash
+                       (Deku_crypto.BLAKE2b.hash "tutturu"))
+               in
+               (check bool) "Invoke" true (storage = Int Z.zero);
+               let x =
+                 Env.execute
+                   ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
+                   ~tickets:[]
+                   Env.
+                     {
+                       source = addr;
+                       sender = addr;
+                       ledger = Deku_ledger.Ledger.initial;
+                       state = state.state;
+                       ticket_table = Ticket_table.init [];
+                     }
+                   ~operation:invoke
+               in
+               let state = Result.get_ok x in
+               let (State_entry.Entry { storage; _ }) =
+                 State.fetch_contract state.state
+                   Deku_ledger.(
+                     Contract_address.of_user_operation_hash
+                       (Deku_crypto.BLAKE2b.hash "tutturu"))
+               in
+               (check bool) "example" true (storage = Int (Z.of_int 5));
+               ());
+               ] );
+               ]
+*)

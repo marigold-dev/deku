@@ -16,8 +16,10 @@ let import_list =
     Printf.sprintf "(import \"env\" \"%s\" (func $%s %s))" name name type_
   in
   [
+    func ref__i32 "is_left";
     func ref_unit "dup_host";
     func ref_ref__ref "pair";
+    func i32__ref "pair_n";
     func ref__ "unpair";
     func ref_ref__ref "z_add";
     func ref_ref__ref "z_sub";
@@ -32,6 +34,7 @@ let import_list =
     func ref__ref "some" (* ; func const "now" *);
     func const "nil";
     func const "true";
+    func ref_i32__unit "unpair_n";
     func const "false";
     func const "none";
     func const "unit";
@@ -249,7 +252,7 @@ let base t =
     (call $pop))
 
   (export "push" (func $push))
-  (export "pop" (func $push))
+  (export "pop" (func $pop))
   (export "main" (func $main))
   (export "closures" (table $closures))
   (export "call_callback" (func $call_callback))

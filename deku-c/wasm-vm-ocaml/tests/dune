@@ -1,5 +1,6 @@
 (executable
  (name wasm_vm_tests)
+ (modules wasm_vm_tests decookie)
  (libraries ocaml_wasm_vm alcotest))
 
 (rule

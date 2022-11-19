@@ -20,6 +20,7 @@ let rec execute t ~operation_hash ~tickets ~operation =
   let open Effects in
   let call_indirect = ref (fun _ _ -> assert false) in
   let call_indirect_unit = ref (fun _ _ -> assert false) in
+  let pop = ref (fun _ -> assert false) in
   let push = ref (fun _ -> assert false) in
   let constants = ref [||] in
   let%ok self =
@@ -95,14 +96,21 @@ let rec execute t ~operation_hash ~tickets ~operation =
                 | Source_address ->
                     Some (fun (k : (a, _) continuation) -> continue k t.source)
                 | Push_to_contract_stack x ->
-                    let () = !push x in
-                    Some (fun (k : (a, _) continuation) -> continue k ())
-                | Indirect_call (idx, value) ->
-                    let result : int64 = !call_indirect idx value in
-                    Some (fun (k : (a, _) continuation) -> continue k result)
-                | Indirect_call_unit (idx, value) ->
-                    let () = !call_indirect_unit idx value in
-                    Some (fun (k : (a, _) continuation) -> continue k ())
+                    Some
+                      (fun (k : (a, _) continuation) ->
+                        continue k (!push x : unit))
+                | Pop ->
+                    Some
+                      (fun (k : (a, _) continuation) ->
+                        continue k (!pop () : int64))
+                | Indirect_call ->
+                    Some
+                      (fun (k : (a, _) continuation) ->
+                        continue k !call_indirect)
+                | Indirect_call_unit ->
+                    Some
+                      (fun (k : (a, _) continuation) ->
+                        continue k !call_indirect_unit)
                 | Get_constant const ->
                     let res : Value.t =
                       Array.get !constants (Int64.to_int const) |> snd
@@ -140,7 +148,7 @@ let rec execute t ~operation_hash ~tickets ~operation =
                          in
                          match
                            Wasm.Eval.invoke func
-                             (Wasm.Values.(Num (I32 idx)) :: arg)
+                             (arg @ [ Wasm.Values.(Num (I32 idx)) ])
                          with
                          | Wasm.Values.[ Num (I64 x) ] -> x
                          | _ -> failwith "bad indirect call in contract");
@@ -153,7 +161,7 @@ let rec execute t ~operation_hash ~tickets ~operation =
                          in
                          let _ =
                            Wasm.Eval.invoke func
-                             (Wasm.Values.(Num (I32 idx)) :: arg)
+                             (arg @ [ Wasm.Values.(Num (I32 idx)) ])
                          in
                          ());
                     (push :=
@@ -163,16 +171,28 @@ let rec execute t ~operation_hash ~tickets ~operation =
                            |> Result.get_ok
                          in
                          ignore @@ Wasm.Eval.invoke func [ arg ]);
+                    (pop :=
+                       fun _ ->
+                         let func =
+                           Externs.(extract_func instance Externs.pop)
+                           |> Result.get_ok
+                         in
+                         match Wasm.Eval.invoke func [] with
+                         | Wasm.Values.[ Num (I64 x) ] -> x
+                         | _ -> failwith "bad indirect call in contract");
                     Some (fun (k : (a, _) continuation) -> continue k ())
                 | _ -> None);
           }
     with
     | Failure s -> Error ("unexpected failure. Failure " ^ s)
-    | Wasm.Eval.Crash (_, s)
-    | Wasm.Eval.Exhaustion (_, s)
-    | Wasm.Eval.Link (_, s)
+    | Wasm.Eval.Crash (_, s) ->
+        Error ("Crash: Invalid contract supplied to the vm: " ^ s)
+    | Wasm.Eval.Exhaustion (_, s) ->
+        Error ("Exhaustion: Invalid contract supplied to the vm: " ^ s)
+    | Wasm.Eval.Link (_, s) ->
+        Error ("Link: Invalid contract supplied to the vm: " ^ s)
     | Wasm.Eval.Trap (_, s) ->
-        Error ("Invalid contract supplied to the vm: " ^ s)
+        Error ("Trap: Invalid contract supplied to the vm: " ^ s)
     | Ticket_table.Table err ->
         Error
           (Format.sprintf "Ticket table Error: %s"
