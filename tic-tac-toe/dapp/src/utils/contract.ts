@@ -1,0 +1,142 @@
+const contract = `
+type cell = ["Cross"] | ["Circle"] | ["Empty"]
+
+type gameState = 
+  | ["PlayerTurn", address]
+  | ["Winner", address]
+
+type game = [cell, cell, cell, cell, cell, cell, cell, cell, cell];
+
+type players = {
+  player1: address,
+  player2: option<address>
+}
+
+type storage = {
+  game: game,
+  players: players,
+  gameState: gameState
+};
+
+const mapi : (fct:(i: nat, elt: cell) => cell , ls: game) => game = (f,ls) => {
+  return [
+    f(0 as nat, ls[0]),
+    f(1 as nat, ls[1]),
+    f(2 as nat, ls[2]),
+    f(3 as nat, ls[3]),
+    f(4 as nat, ls[4]),
+    f(5 as nat, ls[5]),
+    f(6 as nat, ls[6]),
+    f(7 as nat, ls[7]),
+    f(8 as nat, ls[8])
+  ]
+}
+
+const empty: storage = {
+  game: [
+    Empty(), Empty(), Empty(), 
+    Empty(), Empty(), Empty(), 
+    Empty(), Empty(), Empty()
+  ],
+  players: {
+    player1: "tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address, // The two players are the same
+    player2: None(),
+  },
+  gameState: PlayerTurn("tz1VSUr8wwNhLAzempoch5d6hLRiTh8Cjcjb" as address)
+};
+
+type parameter =
+  | ["Play", nat]
+  | ["Join"]
+
+type return_ = [list<operation>, storage];
+
+const updateCell = (cellId: nat, value:cell, game: game) => {
+  let apply = (index:nat, elt: cell) => {
+    if(cellId != index) return elt
+    return match(elt, {
+      Cross: () => failwith("Already set: cross"),
+      Circle: () => failwith("Already set: circle"),
+      Empty: () => value
+    })
+  };
+  return mapi(apply, game)
+}
+
+const getSymbol = (player: address, storage: storage): cell => {
+  if(player == storage.players.player1) return Cross()
+  else return Circle()
+}
+
+const other = (player: address, storage: storage): address => {
+  return match(storage.players.player2, {
+    None: () => failwith("Player2 is not defined"),
+    Some: player2 =>  {
+      if(player == storage.players.player1) return player2;
+      return storage.players.player1
+    }
+  })
+}
+
+const isDone = (game: game): bool => 
+  game[0] != Empty() && game[1] != Empty() && game[2] != Empty() && 
+  game[3] != Empty() && game[4] != Empty() && game[5] != Empty() &&
+  game[6] != Empty() && game[7] != Empty() && game[8] != Empty()
+  
+const isWon = (game: game): bool =>
+  (
+  (game[0] == game[1] && game[1] == game[2] && game[0] != Empty()) || 
+  (game[3] == game[4] && game[4] == game[5] && game[3] != Empty()) || 
+  (game[6] == game[7] && game[7] == game[8] && game[6] != Empty()) || 
+  
+  (game[0] == game[4] && game[4] == game[8] && game[0] != Empty()) || 
+  (game[2] == game[4] && game[4] == game[6] && game[2] != Empty()) ||
+
+  (game[0] == game[3] && game[3] == game[6] && game[0] != Empty()) ||
+  (game[1] == game[4] && game[4] == game[7] && game[1] != Empty()) ||
+  (game[2] == game[5] && game[5] == game[8] && game[2] != Empty())
+  )
+
+
+const play = (player: address, cellId: nat, storage:storage): storage => {
+  const {game, players, gameState} = storage;
+  let current_player = match(gameState, {
+    PlayerTurn: player => player,
+    Winner: _ => failwith("Game is ended")
+  });
+  if(current_player != player) {return failwith("Not your turn")};
+  if(cellId > (8 as nat)) {return failwith("Wrong cellId")};
+  const value = getSymbol(player, storage);
+  const game = updateCell(cellId, value, game);
+
+  let nextGameState = PlayerTurn(other(player, storage));
+  if(isWon(game)) {
+    nextGameState = Winner(player);
+  }
+
+  return {game, players, gameState:nextGameState}
+}
+
+const join = (player: address, storage: storage): storage => {
+    const {game, players, gameState} = storage;
+    return match(players.player2, {
+      Some: _player2 => failwith("Player2 has already joined the game"),
+      None: () => {
+        const nextPlayers:players = {player1: players.player1, player2: Some(player)};
+        return {game, players: nextPlayers, gameState};
+      }
+    });
+}
+
+const main = (parameter: parameter, storage: storage): return_ => {
+    let player = Tezos.get_sender () as address;
+    let operations: list<operation> = list([]);
+    let storage = (match (parameter, {
+      Play: cellId => play (player, cellId, storage),
+      Join: () => join(player, storage)
+    }));
+    return [operations, storage]
+}
+`;
+
+export default contract;

@@ -4,13 +4,10 @@
     "decookies/typescript-vm",
     "deku-p/deku-toolkit",
     "deku-p/sdks/typescript-sdk",
-    "deku-c/client",
-    "deku-c/deku-cli",
-    "examples/deku-c-nodejs",
-    "examples/deku-p-nodejs",
-    "examples/deku-p-react",
-    "examples/number-go-up",
-    "website"
+    "examples/tutorial",
+    "deku-c/deku-c-toolkit",
+    "website",
+    "tic-tac-toe/dapp"
   ],
   "scripts": {
     "build:client": "yarn --cwd deku-c/client build",
