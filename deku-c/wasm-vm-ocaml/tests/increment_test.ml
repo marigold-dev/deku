@@ -1,3 +1,15 @@
+open Deku_ledger
+open Deku_crypto
+
+(* Code for the following smart contract
+   { parameter (or (or (int %decrement) (int %increment)) (unit %reset)) ;
+     storage int ;
+     code { UNPAIR ;
+     IF_LEFT { IF_LEFT { SWAP ; SUB } { ADD } } { DROP 2 ; PUSH int 0 } ;
+     NIL operation ;
+     PAIR } }
+*)
+
 let originate =
   let open Ocaml_wasm_vm in
   let module_ =
@@ -11,7 +23,6 @@ let originate =
     "%reset": [ "Right" ]
   }|}
   in
-
   let json = Result.get_ok json in
   let entrypoints = Data_encoding.Json.destruct Entrypoints.encoding json in
   Operation.Originate
@@ -22,23 +33,16 @@ let originate =
       constants = [| (0, Int Z.zero) |];
     }
 
+let operation_hash = BLAKE2b.hash "tutturu"
+let contract_address = Contract_address.of_user_operation_hash operation_hash
+
 let invoke =
   let open Ocaml_wasm_vm in
-  let open Deku_ledger in
   let argument = Value.(Union (Left (Union (Right (Int (Z.of_int 5)))))) in
   Operation.Call
-    {
-      address =
-        Address.of_contract_address
-          ( Contract_address.of_user_operation_hash
-              (Deku_crypto.BLAKE2b.hash "tutturu"),
-            None );
-      argument = argument;
-    }
+    { address = Address.of_contract_address (contract_address, None); argument }
 
 let new_address () =
-  let open Deku_crypto in
-  let open Deku_ledger in
   let secret = Ed25519.Secret.generate () in
   let secret = Secret.Ed25519 secret in
   let key = Key.of_secret secret in
@@ -50,14 +54,12 @@ let test () =
   let open Ocaml_wasm_vm in
   let addr = new_address () in
   let x =
-    Env.execute
-      ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
-      ~tickets:[]
+    Env.execute ~operation_hash ~tickets:[]
       Env.
         {
           source = addr;
           sender = addr;
-          ledger = Deku_ledger.Ledger.initial;
+          ledger = Ledger.initial;
           state = State.empty;
           ticket_table = Ticket_table.init [];
         }
@@ -65,21 +67,16 @@ let test () =
   in
   let state = Result.get_ok x in
   let (State_entry.Entry { storage; _ }) =
-    State.fetch_contract state.state
-      Deku_ledger.(
-        Contract_address.of_user_operation_hash
-          (Deku_crypto.BLAKE2b.hash "tutturu"))
+    State.fetch_contract state.state contract_address
   in
   (check bool) "Originate" true (Value.equal storage (Int Z.zero));
   let x =
-    Env.execute
-      ~operation_hash:(Deku_crypto.BLAKE2b.hash "tutturu")
-      ~tickets:[]
+    Env.execute ~operation_hash ~tickets:[]
       Env.
         {
           source = addr;
           sender = addr;
-          ledger = Deku_ledger.Ledger.initial;
+          ledger = Ledger.initial;
           state = state.state;
           ticket_table = Ticket_table.init [];
         }
@@ -87,11 +84,7 @@ let test () =
   in
   let state = Result.get_ok x in
   let (State_entry.Entry { storage; _ }) =
-    State.fetch_contract state.state
-      Deku_ledger.(
-        Contract_address.of_user_operation_hash
-          (Deku_crypto.BLAKE2b.hash "tutturu"))
+    State.fetch_contract state.state contract_address
   in
   (check bool) "Invoke increment 5" true (storage = Int (Z.of_int 5));
   ()
-
