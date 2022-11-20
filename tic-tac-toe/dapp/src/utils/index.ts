@@ -7,7 +7,7 @@
  * @return the operation hash
  */
 export const wait = async (dekuRpc:string, operation:string, tries=10) : Promise<string> => {
-    const aux = (tries:number): Promise<string> => {
+   const aux = (tries:number): Promise<string> => {
       return fetch(`${dekuRpc}/api/v1/operations/${operation}`)
         .then(res => {
             if(res.ok) return operation;
