@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "os-browserify": "^0.3.0",
-    "stream-browserify": "^3.0.0"
+    "stream-browserify": "^3.0.0",
+    "@marigold-dev/deku-cli": "0.0.1"
   }
 }

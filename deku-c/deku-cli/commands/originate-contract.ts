@@ -1,10 +1,9 @@
-import { fromMemorySigner } from "@marigold-dev/deku";
+import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
-import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { Contract, DekuCClient } from "@marigold-dev/deku-c-toolkit";
 import * as Commander from "commander";
 import { load } from "../core/wallet";
 import { originate, read } from "../core/contract";
-import * as default_ from "./default-parameters";
 
 async function main(apiUri, ligoUri, walletPath, contractPath, initialStorage) {
   const wallet = load(walletPath);
@@ -15,40 +14,27 @@ async function main(apiUri, ligoUri, walletPath, contractPath, initialStorage) {
     dekuSigner,
   });
 
-  try {
-    const contract = read(contractPath);
-    const { operation, address } = await originate(
-      contract,
-      initialStorage,
-      deku
-    );
-    console.log("operation hash:", operation);
-    console.log("Contract originated at address", address);
-  } catch (e) {
-    console.error("An error occurred:");
-    console.error(e.message);
-    process.exit(1);
-  }
+  const contract = read(contractPath);
+  const { operation, address } = await originate(
+    contract,
+    initialStorage,
+    deku
+  );
+  console.log("operation hash:", operation);
+  console.log("Contract originated at address", address);
+  deku
 }
 
 export default function make(command: Commander.Command) {
   const subcommand = command.command("originate");
 
   subcommand
+    .argument("<api_uri>", "URI of the Deku API to use")
+    .argument("<ligo_uri>", "URI of the Deku API to use")
     .argument("<wallet>", "wallet to use")
     .argument("<contract_path>", "path to the contract")
     .argument("<initial_storage>", "initial storage")
-    .option(
-      "--endpoint <endpoint>",
-      `URI of the deku API to use (default ${default_.api})`
-    )
-    .option(
-      "--ligo-endpoint <ligo_uri>",
-      `URI of the Ligo RPC API to use (default ${default_.ligoApi})`
-    )
-    .action((walletPath, contractPath, initialStorage, options) => {
-      const apiUri = options.endpoint ?? default_.api;
-      const ligoUri = options.ligoApi ?? default_.ligoApi;
+    .action((apiUri, ligoUri, walletPath, contractPath, initialStorage) => {
       main(apiUri, ligoUri, walletPath, contractPath, initialStorage);
     });
   return command;

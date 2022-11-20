@@ -1,5 +1,3 @@
-// FIXME: copied from deku-p/deku-cli
-
 import * as Commander from "commander";
 import { generate, save } from "../core/wallet";
 

@@ -1,5 +1,3 @@
-// FIXME: copied from deku-p/deku-cli
-
 import * as fs from "fs";
 import * as ed from "@noble/ed25519";
 import { InMemorySigner } from "@taquito/signer";
@@ -36,7 +34,11 @@ export function save(wallet: Wallet, path: string) {
   if (fs.existsSync(path)) {
     throw "File already exists";
   } else {
-    fs.writeFileSync(path, json);
+    fs.writeFile(path, json, function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
   }
 }
 

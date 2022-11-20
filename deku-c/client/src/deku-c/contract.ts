@@ -1,4 +1,4 @@
-import { DekuPClient } from "../deku-p/index";
+import { DekuToolkit } from "@marigold-dev/deku-toolkit";
 import { compileExpression, compileLigoExpression } from "./utils";
 
 export type JSONType =
@@ -127,7 +127,8 @@ export class Contract {
   async invokeLigo(
     code: string,
     expression: string,
-    ligoRpc: string
+    ligoRpc: string,
+    dekuRpc: string
   ): Promise<string> {
     // FIXME the need for the two RPCs stinks (also they're strings)
     const parameter = {
@@ -136,11 +137,7 @@ export class Contract {
       ligoExpression: expression,
       address: this.address,
     };
-    const invoke = await compileLigoExpression(
-      ligoRpc,
-      this.deku.dekuRpc,
-      parameter
-    );
+    const invoke = await compileLigoExpression(ligoRpc, dekuRpc, parameter);
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }

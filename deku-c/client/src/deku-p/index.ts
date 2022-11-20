@@ -43,6 +43,8 @@ export class DekuPClient {
 
   protected _dekuRpc: string;
 
+  private _dekuRpc: string;
+
   constructor(setting: Setting) {
     this._dekuRpc = setting.dekuRpc;
     this.endpoints = makeEndpoints(setting.dekuRpc);

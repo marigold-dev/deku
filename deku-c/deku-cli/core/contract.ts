@@ -1,4 +1,4 @@
-import { DekuCClient } from "@marigold-dev/deku";
+import { DekuCClient } from "@marigold-dev/deku-c-toolkit";
 import * as fs from "fs";
 
 type lang = "jsligo" | "tz" | "unknown";
