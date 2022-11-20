@@ -11,7 +11,8 @@
     "deku-c/deku-c-toolkit",
     "website",
     "tic-tac-toe/dapp",
-    "my-deku-app/dapp"
+    "my-deku-app/dapp",
+    "deku-c/deku-cli"
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",

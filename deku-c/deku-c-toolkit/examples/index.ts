@@ -10,7 +10,7 @@ const dekuSigner = fromMemorySigner(signer);
 const dekuC = new DekuCClient({
   dekuRpc: "http://0.0.0.0:8080",
   ligoRpc: "http://0.0.0.0:9090",
-  signer: dekuSigner,
+  dekuSigner,
 });
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -30,7 +30,7 @@ const originate = async () => {
         [list<operation>,
         storage];
 
-        const main = 
+        const main =
         (action: parameter, store: storage): return_ => {
             let storage = match(action, {
                 Increment: n => store + n,
@@ -40,7 +40,7 @@ const originate = async () => {
             return [list([]), storage]};
     `;
 
-  const { operation, address } = await dekuC.originateContract({
+  const { operation, address } = await dekuC.originateLigo({
     kind: "jsligo",
     initialStorage: 1,
     code,
@@ -72,9 +72,9 @@ const getState = async (contract: Contract): Promise<unknown> => {
 // Wait 10 seconds
 // Decrement the counter by 3
 const test = async () => {
-  const address = "DK15kJePPsFVoLNCgyTTkzh14meowPVyzpCM";
+  // const address = "DK15kJePPsFVoLNCgyTTkzh14meowPVyzpCM";
   // const address = "DK1SheQfNGZ2QY5QWdAEF6KDXBAJTjBJBirh";
-  // const { address } = await originate();
+  const { address } = await originate();
   const contract: Contract = getContract(address);
 
   contract.onNewState((state) => {
@@ -84,7 +84,7 @@ const test = async () => {
 
   await sleep(10000);
   const param = ["Union", ["Left", ["Union", ["Left", ["Int", "3"]]]]];
-  contract.invoke(param);
+  contract.invokeRaw(param);
 };
 
 test().catch((err) => {

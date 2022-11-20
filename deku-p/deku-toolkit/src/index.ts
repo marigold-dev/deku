@@ -41,7 +41,10 @@ export class DekuToolkit {
   private _consensus: Consensus | undefined;
   private _discovery: Discovery | undefined;
 
+  private _dekuRpc: string;
+
   constructor(setting: Setting) {
+    this._dekuRpc = setting.dekuRpc;
     this.endpoints = makeEndpoints(setting.dekuRpc);
     this._dekuSigner = setting.dekuSigner;
   }
@@ -82,6 +85,10 @@ export class DekuToolkit {
     this._consensus = new Consensus(consensusContract);
     // this._discovery = new Discovery(discoveryContract);
     return this;
+  }
+
+  get dekuRpc(): string {
+    return this._dekuRpc;
   }
 
   /**
