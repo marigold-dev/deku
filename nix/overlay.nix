@@ -83,6 +83,31 @@ with super; {
             propagatedBuildInputs = with oself; [eio eio_main caqti];
           };
 
+          piaf = super.piaf.overrideAttrs (_: {
+            src = fetchFromGitHub {
+              owner = "anmonteiro";
+              repo = "piaf";
+              rev = "f973028df3c71ceea345d8116d7c5d200a680e52";
+              sha256 = "sha256-n11OP/RHXgr3GshN73f322g1n8MnHOL7S6ZSeIeZf6k=";
+              fetchSubmodules = true;
+            };
+            patches = [ ];
+            doCheck = false;
+            propagatedBuildInputs = with super; [
+              websocketaf
+              eio
+              eio_main
+              eio-ssl
+              httpaf-eio
+              h2-eio
+              ipaddr
+              magic-mime
+              multipart_form
+              sendfile
+              uri
+            ];
+          });
+
           wasm = oself.buildDunePackage {
             pname = "wasm";
             inherit (super.wasm) version src;

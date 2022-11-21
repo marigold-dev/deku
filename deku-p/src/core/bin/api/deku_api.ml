@@ -138,7 +138,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.with_body (module Helper_compile_origination)
        |> Server.make_handler ~state)
   in
-  let config = Piaf.Server.Config.create port in
+  let config = Piaf.Server.Config.create ~domains:8 ~buffer_size:0x1000 port in
   let server = Piaf.Server.create ~config request_handler in
   let _ = Piaf.Server.Command.start ~sw env server in
   ()

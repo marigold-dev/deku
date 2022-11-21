@@ -34,5 +34,6 @@ with ocamlPackages;
       bc
       sqlite
       termdbms
+      wrk
     ];
   }
