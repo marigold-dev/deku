@@ -152,6 +152,10 @@ export class Contract {
           return null;
         })
         .catch(console.error);
-    }, 2000);
+    }, 1000);
+  }
+
+  cancelOnNewState(): void {
+    if (this.fetchInterval) clearInterval(this.fetchInterval);
   }
 }
