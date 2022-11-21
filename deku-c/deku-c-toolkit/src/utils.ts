@@ -45,3 +45,26 @@ export const operationHashToContractAddress = async (
   if (response.ok) return json.address;
   throw json;
 };
+
+
+/**
+ * Helper to correctly parse BigInt
+ * @param _key unused
+ * @param value can be e BigInt
+ * @returns 
+ */
+export const parseReviver = (_key: any, value: any) => {
+  const regex = new RegExp("^[0-9]+bigint$");
+  if (typeof value === 'string' && regex.test(value)) {
+    return BigInt(value.slice(0, -6));
+  }
+  return value;
+}
+
+export const stringifyReplacer = (_key: any, value: any) => {
+  if (typeof value === 'bigint') {
+    return value.toString() + 'bigint';
+  } else {
+    return value;
+  }
+}

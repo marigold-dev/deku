@@ -1,8 +1,9 @@
 import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import { stringifyReplacer } from "./utils";
 
 export type JSONType =
   | string
-  | number
+  | bigint
   | boolean
   | { [x: string]: JSONType }
   | Array<JSONType>
@@ -15,7 +16,7 @@ const parseContractState = (json: JSONType): JSONType => {
   switch (type) {
     case "Int":
       const value = json[1] as string;
-      return Number.parseInt(value);
+      return BigInt(value);
     case "String": {
       const value = json[1] as string;
       return value;
@@ -144,8 +145,8 @@ export class Contract {
     this.fetchInterval = setInterval(() => {
       this.getState()
         .then((state) => {
-          const previousState = JSON.stringify(previous);
-          const nextState = JSON.stringify(state);
+          const previousState = JSON.stringify(previous, stringifyReplacer);
+          const nextState = JSON.stringify(state, stringifyReplacer);
           if (nextState === previousState) return null;
           callback(state);
           previous = state;
