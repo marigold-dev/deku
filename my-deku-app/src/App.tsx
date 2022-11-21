@@ -13,16 +13,22 @@ const connectBeaconWallet = async () => {
   return { signer, address };
 };
 
+type DisconnectedState = {
+  status: "Disconnected";
+  counterState?: number;
+};
+
 type ConnectedState = {
+  status: "Connected";
   contract: Contract;
   messageInFlight: boolean;
   counterState: number;
 };
 
-type AppState = "Disconnected" | ConnectedState;
+type AppState = DisconnectedState | ConnectedState;
 
 function checkButtonEnabled(state: AppState): state is ConnectedState {
-  if (state === "Disconnected") {
+  if (state.status === "Disconnected") {
     return false;
   } else {
     return !state.messageInFlight;
@@ -30,7 +36,7 @@ function checkButtonEnabled(state: AppState): state is ConnectedState {
 }
 
 function showConnectButton(state: AppState) {
-  if (state === "Disconnected") {
+  if (state.status === "Disconnected") {
     return true;
   } else {
     return false;
@@ -38,11 +44,21 @@ function showConnectButton(state: AppState) {
 }
 
 export const App = () => {
-  const [state, setState] = useState<AppState>("Disconnected");
+  const [state, setState] = useState<AppState>({ status: "Disconnected" });
+  useEffect(() => {
+    (async () => {
+      const result = await fetch(
+        "https://deku-canonical-vm0.deku-v1.marigold.dev/api/v1/state/unix"
+      );
+      const data = await result.json();
+      const storage = JSON.parse(data[contractAddr]);
+      const counterState = storage.state[1];
+      setState({ ...state, counterState });
+    })();
+  }, []);
 
   useEffect(() => {
-    // alert("hey the useEffect is firing");
-    if (state == "Disconnected") {
+    if (state.status == "Disconnected") {
       return;
     } else {
       state.contract.onNewState((counterState) =>
@@ -53,41 +69,40 @@ export const App = () => {
 
   const buttonEnabled = checkButtonEnabled(state);
   const connectButton = () => (
-    <button
-      className="button-30"
-      onClick={async () => {
-        try {
-          let { address, signer } = await connectBeaconWallet().then();
-          const dekuC = new DekuCClient({
-            dekuRpc: apiURL,
-            ligoRpc: "http://0.0.0.0:9090",
-            dekuSigner: signer,
-          });
+    <>
+      <button
+        className="button-30"
+        onClick={async () => {
+          try {
+            let { address, signer } = await connectBeaconWallet().then();
+            const dekuC = new DekuCClient({
+              dekuRpc: apiURL,
+              ligoRpc: "http://0.0.0.0:9090",
+              dekuSigner: signer,
+            });
 
-          let contract = dekuC.contract(contractAddr);
-          const counterState = await contract.getState();
-          setState({
-            contract,
-            messageInFlight: false,
-            counterState,
-          });
-        } catch (error) {
-          console.error("failed to connect with beacon: ", error);
-        }
-      }}
-    >
-      connect wallet
-    </button>
+            let contract = dekuC.contract(contractAddr);
+            const counterState = await contract.getState();
+            setState({
+              status: "Connected",
+              contract,
+              messageInFlight: false,
+              counterState,
+            });
+          } catch (error) {
+            console.error("failed to connect with beacon: ", error);
+          }
+        }}
+      >
+        connect wallet
+      </button>
+
+      <h2>(only works with AirGap and Temple Mobile for now)</h2>
+    </>
   );
-  const counterState = () => {
-    if (state === "Disconnected") {
-      return <></>;
-    } else {
-      return <h1>{state.counterState}</h1>;
-    }
-  };
   return (
     <div className="parent">
+      <h2>Press the button to watch the counter go up.</h2>
       {showConnectButton(state) && connectButton()}
       <button
         disabled={!buttonEnabled}
@@ -99,7 +114,7 @@ export const App = () => {
           }
         }}
       ></button>
-      {counterState()}
+      <p className="counter">{state.counterState}</p>
     </div>
   );
 };
