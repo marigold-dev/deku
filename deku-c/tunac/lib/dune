@@ -1,3 +1,4 @@
 (library
  (name tunac)
- (libraries tezos-micheline binaryen proto-alpha-utils))
+ (libraries tezos-micheline binaryen proto-alpha-utils)
+ (preprocess (pps ppx_deriving.show)))

@@ -161,15 +161,27 @@ let compile_exec_function wasm_mod lambdas =
           (Expression.Const.make wasm_mod (Literal.int32 (Int32.of_int idx))))
         (Expression.Call.make wasm_mod (Printf.sprintf "lambda_%d" idx) [] Type.none)
         (aux lambdas)
-    | [] -> Expression.Nop.make wasm_mod
+    | [] -> Expression.Unreachable.make wasm_mod
   in
   let body = aux lambdas in
   ignore @@
     Function.add_function wasm_mod "exec"
       Type.(create [| int32 |])
-      Type.none
+      Type.int32
       [||]
-      body
+      (Expression.Block.make wasm_mod "exec_func_body" [ body; Expression.Const.make wasm_mod (Literal.int32 0l) ])
+
+let compile_malloc wasm_mod =
+  let body =
+    Expression.Block.make wasm_mod "malloc_func_body"
+      [ Expression.Global_set.make wasm_mod "stack"
+          (Expression.Binary.make wasm_mod Op.add_int32
+            (Expression.Local_tee.make wasm_mod 1 (Expression.Global_get.make wasm_mod "heap_top" Type.int32) Type.int32)
+            (Expression.Local_get.make wasm_mod 0 Type.int32))
+      ; Expression.Local_get.make wasm_mod 1 Type.int32 ]
+  in
+  ignore @@
+    Function.add_function wasm_mod "malloc" Type.int32 Type.int32 [| Type.int32 |] body
 
 let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   let wasm_mod = Module.create () in
@@ -185,6 +197,9 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
         lambdas;
       compile_exec_function wasm_mod lambdas;
     end;
+
+  compile_malloc wasm_mod;
+  ignore @@ Export.add_function_export wasm_mod "malloc" "malloc";
 
   ignore @@
     Global.add_global wasm_mod "stack" Type.int32 true
@@ -207,8 +222,18 @@ let compile_ir ~memory ~optimize ~debug ~shared_memory contract =
   Import.add_function_import wasm_mod "save_storage" "env" "save_storage" Type.(create [| int32; int32 |]) Type.int32;
   Import.add_function_import wasm_mod "failwith" "env" "failwith" Type.int32 Type.none;
 
+  Import.add_function_import wasm_mod "sender" "env" "sender" Type.none Type.int32;
+  Import.add_function_import wasm_mod "amount" "env" "amount" Type.none Type.int32;
+  Import.add_function_import wasm_mod "transfer_tokens" "env" "transfer_tokens" Type.(create [| int32; int32; int32|]) Type.int32;
+
+  Import.add_function_import wasm_mod "lookup_address" "env" "lookup_address" Type.int32 Type.int32;
+  Import.add_function_import wasm_mod "reverse_lookup_address" "env" "reverse_lookup_address" Type.int32 Type.int32;
+
   let (initial, max) = memory in
-  let segments = [ Memory.{ data = static_data; kind = Passive; size = Bytes.length static_data } ] in
+  let segments =
+    [ Memory.{ data = static_data
+             ; kind = Active { offset = Expression.Const.make wasm_mod (Literal.int32 0l) }
+             ; size = Bytes.length static_data } ] in
   Memory.set_memory wasm_mod initial max "memory" segments shared_memory;
 
   (* if Module.validate wasm_mod <> 0 then

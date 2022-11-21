@@ -309,6 +309,19 @@ let compile_update_map env map key value =
   block
 
 let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> statement = fun env instr ->
+  let int_operation typ op =
+    let x = Env.alloc_local env in
+    let y = Env.alloc_local env in
+    let block =
+      Cblock [ compile_pop x
+             ; compile_pop y
+             ; compile_push ~env (Cop (Cwasm (op, typ), [ Cvar x; Cvar y ])) ]
+    in
+    Env.free_local env x;
+    Env.free_local env x;
+    block
+  in
+
   match instr with
   | ICar (_, k) ->
     let top = Env.alloc_local env in
@@ -338,47 +351,35 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     Env.free_local env top;
     Cblock [ block; compile_instruction env k ]
 
+  | IAdd_tez (_, k) ->
+    let block = int_operation I32 Wasm_add in
+    Cblock [ block; compile_instruction env k ]
+
+  | ISub_tez (_, k) ->
+    let block = int_operation I32 Wasm_sub in
+    Cblock [ block; compile_instruction env k ]
+
+  | IAdd_nat (_, k) ->
+    let block = int_operation U32 Wasm_add in
+    Cblock [ block; compile_instruction env k ]
+
   | IAdd_int (_, k) ->
-    let x = Env.alloc_local env in
-    let y = Env.alloc_local env in
-    let block =
-      Cblock [ compile_pop x
-             ; compile_pop y
-             ; compile_push ~env (Cop (Cwasm (Wasm_add, I32), [ Cvar x; Cvar y ])) ]
-    in
-    Env.free_local env x;
-    Env.free_local env x;
+    let block = int_operation I32 Wasm_add in
     Cblock [ block; compile_instruction env k ]
 
   | ISub_int (_, k) ->
-    let x = Env.alloc_local env in
-    let y = Env.alloc_local env in
-    let block =
-      Cblock [ compile_pop x
-             ; compile_pop y
-             ; compile_push ~env (Cop (Cwasm (Wasm_sub, I32), [ Cvar x; Cvar y ])) ]
-    in
-    Env.free_local env x;
-    Env.free_local env y;
+    let block = int_operation I32 Wasm_sub in
     Cblock [ block; compile_instruction env k ]
 
   | IMul_int (_, k) ->
-    let x = Env.alloc_local env in
-    let y = Env.alloc_local env in
-    let block =
-      Cblock [ compile_pop x
-              ; compile_pop y
-              ; compile_push ~env (Cop (Cwasm (Wasm_mul, I32), [ Cvar x; Cvar y ])) ]
-    in
-    Env.free_local env x;
-    Env.free_local env y;
+    let block = int_operation I32 Wasm_mul in
     Cblock [ block; compile_instruction env k ]
 
   | INeg (_, k) ->
     let x = Env.alloc_local env in
     let block =
       Cblock [ compile_pop x
-              ; compile_push ~env (Cop (Cwasm (Wasm_sub, I32), [ Cconst_i32 0l; Cvar x ])) ]
+             ; compile_push ~env (Cop (Cwasm (Wasm_sub, I32), [ Cconst_i32 0l; Cvar x ])) ]
     in
     Env.free_local env x;
     Cblock [ block; compile_instruction env k ]
@@ -497,13 +498,16 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     Cblock [ block; compile_instruction env k ]
 
   | IConst (_, Unit_t, (), k) ->
-    Cblock [ compile_push ~env (Cconst_i32 0l); compile_instruction env k ]
+    let p = compile_push ~env (Cconst_i32 0l) in
+    Cblock [ p; compile_instruction env k ]
 
   | ICons_none (_, _, k) ->
-    Cblock [ compile_push ~env (Cconst_i32 0l); compile_instruction env k ]
+    let p = compile_push ~env (Cconst_i32 0l) in
+    Cblock [ p; compile_instruction env k ]
 
   | INil (_, _, k) ->
-    Cblock [ compile_push ~env (Cconst_i32 0l); compile_instruction env k ]
+    let statement = compile_push ~env (Cconst_i32 0l) in
+    Cblock [ statement; compile_instruction env k ]
 
   | ICons_list (_, k) ->
     let value = Env.alloc_local env in
@@ -555,7 +559,8 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
 
   | ICons_pair (_, k) ->
     (* TODO: Support IComb *)
-    Cblock [ compile_pair ~env; compile_instruction env k ]
+    let statement = compile_pair ~env in
+    Cblock [ statement; compile_instruction env k ]
 
   | ICons_some (_, k) ->
     (* TODO: I actually think that optionals may have only one cell allocated *)
@@ -647,45 +652,74 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
 
   | IConst (_, Int_t, z, k) ->
     let value = Int64.to_int32 @@ Option.get @@ Script_int.to_int64 z in
-    Cblock [ compile_push ~env (Cconst_i32 value); compile_instruction env k ]
+    let statement = compile_push ~env (Cconst_i32 value) in
+    Cblock [ statement; compile_instruction env k ]
+
+  | IConst (_, Nat_t, z, k) ->
+    let value = Int64.to_int32 @@ Option.get @@ Script_int.to_int64 z in
+    let statement = compile_push ~env (Cconst_i32 value) in
+    Cblock [ statement; compile_instruction env k ]
+
+  | IConst (_, Mutez_t, tz, k) ->
+    let value = Int64.to_int32 @@ Alpha_context.Tez.to_mutez tz in
+    let statement = compile_push ~env (Cconst_i32 value) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IConst (_, String_t, v, k) ->
     let addr = Int32.of_int @@ Bytes.length !static_data in
     (* C strings will do it for now *)
-    static_data := Bytes.cat !static_data (Bytes.of_string @@ Script_string.to_string v ^ "\000");
-    Cblock [ compile_push ~env (Cconst_i32 addr); compile_instruction env k ]
+    let len =
+      let b = Bytes.create 4 in
+      Bytes.set_int32_le b 0 (Int32.of_int (Script_string.length v));
+      b
+    in
+    static_data :=
+      Bytes.(cat !static_data (cat len (of_string @@ Script_string.to_string v ^ "\000")));
+    let statement = compile_push ~env (Cconst_i32 addr) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IEmpty_map (_, _, _, k) ->
-    Cblock [ compile_push ~env (Cconst_i32 0l); compile_instruction env k ]
+    let statement = compile_push ~env (Cconst_i32 0l) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IEmpty_set (_, _, k) ->
-    Cblock [ compile_push ~env (Cconst_i32 0l); compile_instruction env k ]
+    let statement = compile_push ~env (Cconst_i32 0l) in
+    Cblock [ statement; compile_instruction env k ]
   
   | IDig (_, n, _, k) ->
-    Cblock [ compile_dig ~env (Int32.of_int n); compile_instruction env k ]
+    let statement = compile_dig ~env (Int32.of_int n) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDug (_, n, _, k) ->
-    Cblock [ compile_dug ~env (Int32.of_int n); compile_instruction env k ]
+    let statement = compile_dug ~env (Int32.of_int n) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDrop (_, k) ->
-    Cblock [ compile_drop ~env 1l; compile_instruction env k ]
+    let statement = compile_drop ~env 1l in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDropn (_, n, _, k) ->
-    Cblock [ compile_drop ~env (Int32.of_int n); compile_instruction env k ]
+    let statement = compile_drop ~env (Int32.of_int n) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDup (_, k) ->
-    Cblock [ compile_dup ~env 1l; compile_instruction env k ]
+    let statement = compile_dup ~env 1l in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDup_n (_, n, _, k) ->
-    Cblock [ compile_dup ~env (Int32.of_int n); compile_instruction env k ]
+    let statement = compile_dup ~env (Int32.of_int n) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IDipn (_, n, _, b, k) ->
     let block = compile_instruction env b in
     if n = 0 then block
-    else Cblock [ compile_dip ~env (Int32.of_int n) block; compile_instruction env k ]
+    else
+      let statement = compile_dip ~env (Int32.of_int n) block in
+      Cblock [ statement; compile_instruction env k ]
 
   | IDip (_, b, _, k) ->
-    Cblock [ compile_dip ~env 1l (compile_instruction env b); compile_instruction env k ]
+    let statement = compile_dip ~env 1l (compile_instruction env b) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IFailwith (_, _) ->
     let param = Env.alloc_local env in
@@ -745,7 +779,7 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let lenv = Env.make () in
     let body = compile_instruction lenv body in
     let lambda_n = Int32.of_int (List.length !lambdas) in
-    lambdas := (body, env) :: !lambdas;
+    lambdas := (body, lenv) :: !lambdas;
     let p = Env.alloc_local env in
     let block =
       Cblock
@@ -792,7 +826,9 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
               ; Cassign (lambda, Data.cdr (Cvar lambda))
               ; Cassign (argument, Cvar pair) ])
         ; compile_push ~env (Cvar argument)
-        ; Cassign (-1, Cop (Capply "exec", [ Cvar lambda ])) ]
+        ; Cassign (lambda, Data.cdr (Cvar lambda))
+        ; (* Just ignore the result *)
+          Cassign (argument, Cop (Capply "exec", [ Cvar lambda ])) ]
     in
     Env.free_local env argument;
     Env.free_local env lambda;
@@ -872,12 +908,14 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     Cblock [ block; compile_instruction env k ]
 
   | ISender (_, k) ->
-    Cblock [ compile_push ~env (Cop (Capply "sender", [])); compile_instruction env k ]
+    let statement = compile_push ~env (Cop (Capply "sender", [])) in
+    Cblock [ statement; compile_instruction env k ]
 
   | IAmount (_, k) ->
-    Cblock [ compile_push ~env (Cop (Capply "amount", [])); compile_instruction env k ]
+    let statement = compile_push ~env (Cop (Capply "amount", [])) in
+    Cblock [ statement; compile_instruction env k ]
 
-  | ITicket (_, typ, k) ->
+  | ITicket (_, _typ, k) ->
     let content = Env.alloc_local env in
     let amount = Env.alloc_local env in
     let ptr = Env.alloc_local env in
@@ -885,7 +923,7 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let block =
       Cblock
         [ compile_pop content
-        ; compile_value_encoder env typ ptr size content
+          (* TODO encode ticket content *)
         ; compile_pop amount
         ; compile_push ~env (Cop (Capply "ticket", [ Cvar content; Cvar amount ])) ]
     in
@@ -899,12 +937,14 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let map = Env.alloc_local env in
     let key = Env.alloc_local env in
     let value = Env.alloc_local env in
+    let map_get = compile_map_get env Int_t map key value in
+    let push = compile_push ~env (Cvar value) in
     let block =
       Cblock
         [ compile_pop key
         ; compile_pop map
-        ; compile_map_get env Int_t map key value
-        ; compile_push ~env (Cvar value) ]
+        ; map_get
+        ; push ]
     in
     Env.free_local env map;
     Env.free_local env key;
@@ -915,17 +955,35 @@ let rec compile_instruction: type a b c d. Env.t -> (a, b, c, d) kinstr -> state
     let map = Env.alloc_local env in
     let key = Env.alloc_local env in
     let value = Env.alloc_local env in
+    let update = compile_update_map env map key value in
+    let push = compile_push ~env (Cvar map) in
     let block =
       Cblock
         [ compile_pop key
         ; compile_pop value
         ; compile_pop map
-        ; compile_update_map env map key value
-        ; compile_push ~env (Cvar map) ]
+        ; update
+        ; push ]
     in
     Env.free_local env map;
     Env.free_local env key;
     Env.free_local env value;
+    Cblock [ block; compile_instruction env k ]
+
+  | ITransfer_tokens (_, k) ->
+    let arg = Env.alloc_local env in
+    let amount = Env.alloc_local env in
+    let contract = Env.alloc_local env in
+    let block =
+      Cblock
+        [ compile_pop arg
+        ; compile_pop amount
+        ; compile_pop contract
+        ; compile_push ~env (Cop (Capply "transfer_tokens", [ Cvar arg; Cvar amount; Cvar contract ])) ]
+    in
+    Env.free_local env arg;
+    Env.free_local env amount;
+    Env.free_local env contract;
     Cblock [ block; compile_instruction env k ]
 
   | IHalt _ -> Cblock []
@@ -939,11 +997,44 @@ and compile_value_decoder: type a b. Env.t -> (a, b) ty -> int -> int -> stateme
       ; Cassign (ptr, Cop (Cwasm (Wasm_add, I32), [ Cvar ptr; Cconst_i32 4l ])) ]
   in
 
+  let decode_list f =
+    let counter = Env.alloc_local env in
+    let value = Env.alloc_local env in
+    let tmp = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (var, Cconst_i32 0l)
+        ; Cassign (counter, Cop (Cload (0, I32), [ Cvar ptr ]))
+        ; Cassign (ptr, Cop (Cwasm (Wasm_add, I32), [ Cvar ptr; Cconst_i32 4l ]))
+        ; Cwhile (Cvar counter,
+            Cblock
+             [ f value ptr
+             (* TODO: I'm not sure if I need this tmp local *)
+             ; Data.cons tmp (Cvar value) (Cvar var)
+             ; Cassign (var, Cvar tmp)
+             ; Cassign (counter, Data.dec (Cvar counter)) ]) ]
+    in
+    Env.free_local env counter;
+    Env.free_local env value;
+    Env.free_local env tmp;
+    block
+  in
+
   match typ with
   | Bool_t -> decode_i32 ()
   | Nat_t -> decode_i32 ()
   | Int_t -> decode_i32 ()
   | Unit_t -> decode_i32 ()
+
+  (* Let's assume contract and address are ints for now,
+     they should eventually be used as strings but converted
+     to integers using a contact list. *)
+  | Address_t ->
+    Cblock
+      [ Cassign (var, Cop (Capply "lookup_address", [ Cvar ptr ]))
+      ; Cassign (ptr, Data.add (Cvar ptr) (Data.add (Cconst_i32 4l) (Data.car (Cvar ptr)))) ]
+
+  | Contract_t (_, _) -> decode_i32 ()
 
   | Union_t (left, right, _, _) ->
     let wrapped_value = Env.alloc_local env in
@@ -961,50 +1052,329 @@ and compile_value_decoder: type a b. Env.t -> (a, b) ty -> int -> int -> stateme
     block
 
   | List_t (typ, _) ->
-    let counter = Env.alloc_local env in
-    let value = Env.alloc_local env in
-    let tmp = Env.alloc_local env in
-    let block =
-      Cblock
-        [ Cassign (var, Cconst_i32 0l)
-        ; Cassign (counter, Cop (Cload (0, I32), [ Cvar ptr ]))
-        ; Cassign (ptr, Cop (Cwasm (Wasm_add, I32), [ Cvar ptr; Cconst_i32 4l ]))
-        ; Cwhile (Cvar counter,
-            Cblock
-             [ compile_value_decoder env typ value ptr
-             (* TODO: I'm not sure if I need this tmp local *)
-             ; Data.cons tmp (Cvar value) (Cvar var)
-             ; Cassign (var, Cvar tmp)
-             ; Cassign (counter, Data.dec (Cvar counter)) ]) ]
-    in
-    Env.free_local env counter;
-    Env.free_local env value;
-    Env.free_local env tmp;
-    block
+    decode_list (fun value ptr -> compile_value_decoder env typ value ptr)
+
+  | Map_t (key_type, value_type, _) ->
+    decode_list
+      (fun value ptr ->
+        let tmp = Env.alloc_local env in
+        let opt = Env.alloc_local env in
+        let block =
+          Cblock
+            [ Cassign (tmp, Data.alloc 2)
+            ; compile_value_decoder env key_type value ptr
+            ; Cstore (0, Cvar tmp, Cvar value)
+            ; compile_value_decoder env value_type value ptr
+            ; Cassign (opt, Data.alloc 2)
+            ; Cstore (0, Cvar opt, Cconst_i32 1l)
+            ; Cstore (1, Cvar opt, Cvar value)
+            ; Cstore (1, Cvar tmp, Cvar opt)
+            ; Cassign (value, Cvar tmp) ]
+        in
+        Env.free_local env tmp;
+        Env.free_local env opt;
+        block)
 
   | Option_t (typ, _, _) ->
     let value = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (value, Cop (Cload (0, I32), [ Cvar ptr ]))
+        ; Cassign (ptr, Cop (Cwasm (Wasm_add, I32), [ Cvar ptr; Cconst_i32 4l ]))
+        ; Cifthenelse (Cvar value,
+            Cblock
+              [ Cassign (var, Data.alloc 2)
+              ; Cstore (0, Cvar var, Cvar value)
+              ; compile_value_decoder env typ value ptr
+              ; Cstore (1, Cvar var, Cvar value) ],
+            Cassign (var, Cvar value)) ]
+    in
+    Env.free_local env value;
+    block
+
+  | Pair_t (a, b, _, _) ->
+    let value = Env.alloc_local env in
+    let block =
+      Cblock
+        [ Cassign (var, Data.alloc 2)
+        ; compile_value_decoder env a value ptr
+        ; Cstore (0, Cvar var, Cvar value)
+        ; compile_value_decoder env b value ptr
+        ; Cstore (1, Cvar var, Cvar value) ]
+    in
+    Env.free_local env value;
+    block
+
+  | String_t ->
     Cblock
-      [ Cassign (value, Cop (Cload (0, I32), [ Cvar ptr ]))
-      ; Cassign (ptr, Cop (Cwasm (Wasm_add, I32), [ Cvar ptr; Cconst_i32 4l ]))
-      ; Cifthenelse (Cvar value,
-          Cblock
-            [ Cassign (var, Data.alloc 2)
-            ; Cstore (0, Cvar var, Cvar value)
-            ; compile_value_decoder env typ value ptr
-            ; Cstore (1, Cvar var, Cvar value) ],
-          Cassign (var, Cvar value)) ]
+      [ Cassign (var, Cvar ptr)
+      ; Cassign (ptr, Data.add (Cvar ptr) (Data.add (Cconst_i32 4l) (Data.car (Cvar ptr)))) ]
 
   | _typ -> raise (Compilation_error (Unsupported_parameter_type))
 
-and compile_value_encoder: type a b. Env.t -> (a, b) ty -> int -> int -> int -> statement = fun _ typ ptr size value ->
+let rec value_size: type a b. Env.t -> (a, b) ty -> expression -> int -> statement = fun env typ value size ->
+  let i32 size = Cassign (size, Cconst_i32 4l) in
+  let byte_seq size = Cassign (size, Data.add (Cconst_i32 4l) (Data.car value)) in
   match typ with
-  | Int_t ->
-    Cblock
-      [ Cassign (ptr, Cop (Calloc 1, []))
-      ; Cstore (0, Cvar ptr, Cvar value)
-      ; Cassign (size, Cconst_i32 4l) ]
+  | Int_t -> i32 size
+  | Nat_t -> i32 size 
+  | Unit_t -> i32 size
+  | Mutez_t -> i32 size
+  | Timestamp_t -> i32 size
+  | Bool_t -> i32 size
+  | Operation_t -> i32 size
+  | Signature_t -> byte_seq size
+  | String_t -> byte_seq size
+  | Bytes_t -> byte_seq size
+  | Key_hash_t -> byte_seq size
+  | Key_t -> byte_seq size
+  | Address_t ->
+    let t = Env.alloc_local env in
+    Cblock 
+      [ Cassign (t, Cop (Capply "reverse_lookup_address", [ value ]))
+      ; value_size env String_t (Cvar t) size ]
 
+  | Tx_rollup_l2_address_t -> byte_seq size
+  | Chain_id_t -> byte_seq size
+  | Bls12_381_fr_t -> byte_seq size
+  | Bls12_381_g1_t -> byte_seq size
+  | Bls12_381_g2_t -> byte_seq size
+  | Chest_key_t -> byte_seq size
+  | Chest_t -> byte_seq size (* ?? *)
+
+  | Pair_t (a, b, _, _) ->
+    let tmp = Env.alloc_local env in
+    Cblock
+      [ value_size env a (Data.car value) size
+      ; value_size env b (Data.cdr value) tmp
+      ; Cassign (size, Data.add (Cvar size) (Cvar tmp)) ]
+
+  | Union_t (left, right, _, _) ->
+    Cblock
+      [ Cifthenelse
+          (Data.car value
+          , value_size env left (Data.cdr value) size
+          , value_size env right (Data.cdr value) size)
+      ; Cassign (size, Data.add (Cvar size) (Cconst_i32 4l)) ]
+
+  | Option_t (typ, _, _) ->
+    Cifthenelse
+      (value
+      , Cblock
+          [ value_size env typ (Data.cdr value) size
+          ; Cassign (size, Data.add (Cvar size) (Cconst_i32 4l)) ]
+      , i32 size)
+
+  | List_t (typ, _) ->
+    let node = Env.alloc_local env in
+    let tmp = Env.alloc_local env in
+    Cblock
+      [ Cassign (size, Cconst_i32 4l)
+      ; Cassign (node, value)
+      ; Cwhile
+          (Cvar node
+          , Cblock
+              [ value_size env typ (Cvar node) tmp
+              ; Cassign (size, Data.add (Cvar size) (Cvar tmp))
+              ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+
+  | Set_t (typ, _) ->
+    let node = Env.alloc_local env in
+    let tmp = Env.alloc_local env in
+    Cblock
+      [ Cassign (size, Cconst_i32 0l)
+      ; Cassign (node, value)
+      ; Cwhile
+          (Cvar node
+          , Cblock
+              [ value_size env typ (Cvar node) tmp
+              ; Cassign (size, Data.add (Cvar size) (Cvar tmp))
+              ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+
+  | Map_t (key_type, value_type, _) ->
+    let node = Env.alloc_local env in
+    let tmp = Env.alloc_local env in
+    Cblock
+      [ Cassign (size, Cconst_i32 4l)
+      ; Cassign (node, value)
+      ; Cwhile
+          (Cvar node
+          , Cblock
+              [ Cifthenelse
+                  (Data.cdr (Data.car (Cvar node))
+                  , Cblock
+                      [ value_size env key_type (Data.car (Data.car (Cvar node))) tmp
+                      ; Cassign (size, Data.add (Cvar size) (Cvar tmp))
+                      ; value_size env value_type (Data.cdr (Data.cdr (Data.car (Cvar node)))) tmp
+                      ; Cassign (size, Data.add (Cvar size) (Cvar tmp)) ]
+                    , Cblock [])
+              ; Cassign (node, Data.cdr (Cvar node)) ]) ]
+
+  | Ticket_t _ -> i32 size
+
+  | Sapling_transaction_t _ -> failwith "Cannot be serialized"
+  | Sapling_transaction_deprecated_t _ -> failwith "Cannot be serialized"
+  | Sapling_state_t _ -> failwith "Cannot be serialized"
+  | Contract_t _ -> failwith "Cannot be serialized"
+  | Big_map_t _ -> failwith "Cannot be serialized"
+  | Lambda_t _ -> failwith "Lambdas cannot be serialized" 
+  | Never_t -> failwith "Cannot serialize never"
+
+and compile_value_encoder: type a b. bool -> Env.t -> (a, b) ty -> int -> int -> int -> statement = fun alloc env typ ptr size value ->
+  let encode_i32 () =
+    Cblock
+    [ if alloc then Cassign (ptr, Cop (Calloc 1, [])) else Cblock []
+    ; Cstore (0, Cvar ptr, Cvar value)
+    ; Cassign (size, Cconst_i32 4l) ]
+  in
+
+  let encode_bytestream typ value =
+    let size_statement = value_size env typ (Cvar value) size in
+    let counter = Env.alloc_local env in
+    let block =
+      Cblock
+        [ size_statement
+        ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+        ; Cassign (counter, Cconst_i32 0l)
+        ; Cwhile
+            (Cop (Cwasm (Wasm_lt, I32), [ Cvar counter; Cvar size ])
+            , Cblock
+                [ Cstore (0, Data.add (Cvar ptr) (Cvar counter), Data.car (Data.add (Cvar value) (Cvar counter)))
+                ; Cassign (counter, Data.inc (Cvar counter)) ]) ]
+    in
+    Env.free_local env counter;
+    block
+  in
+
+  match typ with
+  | Int_t -> encode_i32 ()
+  | Nat_t -> encode_i32 ()
+  | Unit_t -> encode_i32 ()
+  | Mutez_t -> encode_i32 ()
+  | Timestamp_t -> encode_i32 ()
+  | Bool_t -> encode_i32 ()
+  | Operation_t -> encode_i32 ()
+
+  | Signature_t -> encode_bytestream typ value
+  | String_t -> encode_bytestream typ value
+  | Bytes_t -> encode_bytestream typ value
+  | Key_hash_t -> encode_bytestream typ value
+  | Key_t -> encode_bytestream typ value
+  | Address_t ->
+    let value' = Env.alloc_local env in
+    Cblock
+      [ Cassign (value', Cop (Capply "reverse_lookup_address", [ Cvar value ]))
+      ; encode_bytestream String_t value' ]
+
+  | Tx_rollup_l2_address_t -> encode_bytestream typ value
+  | Chain_id_t -> encode_bytestream typ value
+  | Bls12_381_fr_t -> encode_bytestream typ value
+  | Bls12_381_g1_t -> encode_bytestream typ value
+  | Bls12_381_g2_t -> encode_bytestream typ value
+  | Chest_key_t -> encode_bytestream typ value
+  | Chest_t -> encode_bytestream typ value
+
+  | Pair_t (a, b, _, _) ->
+    let value' = Env.alloc_local env in
+    let size' = Env.alloc_local env in
+    let ptr' = Env.alloc_local env in
+    let block =
+      Cblock
+      [ value_size env typ (Cvar value) size
+      ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+      ; Cassign (value', Data.car (Cvar value))
+      ; compile_value_encoder false env a ptr size' value'
+      ; Cassign (value', Data.cdr (Cvar value))
+      ; Cassign (ptr', Data.add (Cvar ptr) (Cvar size'))
+      ; compile_value_encoder false env b ptr' size' value' ]
+      in
+    Env.free_local env value';
+    Env.free_local env size';
+    Env.free_local env ptr';
+    block
+    
+  | Union_t (left, right, _, _) ->
+    let ptr' = Env.alloc_local env in
+    let size' = Env.alloc_local env in
+    let value' = Env.alloc_local env in
+    Cblock
+      [ value_size env typ (Cvar value) size
+      ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+      ; Cassign (ptr', Data.add (Cvar ptr) (Cconst_i32 4l))
+      ; Cassign (value', Data.cdr (Cvar value))
+      ; Cifthenelse
+          (Data.car (Cvar value)
+          , Cblock
+          [ Cstore (0, Cvar ptr, Cconst_i32 1l)
+          ; compile_value_encoder false env left ptr' size' value' ]
+          , Cblock
+          [ Cstore (0, Cvar ptr, Cconst_i32 0l) ])
+          ; compile_value_encoder false env right ptr' size' value' ]
+
+  | List_t (item_typ, _) ->
+    let node = Env.alloc_local env in
+    let ptr' = Env.alloc_local env in
+    let size' = Env.alloc_local env in
+    let value' = Env.alloc_local env in
+    Cblock
+      [ value_size env typ (Cvar value) size
+      ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+      ; Cassign (node, Cvar value)
+      ; Cassign (ptr', Data.add (Cvar ptr) (Cconst_i32 4l))
+      ; Cstore (0, Cvar ptr, Cconst_i32 0l)
+      ; Cwhile
+          (Cvar node
+          , Cblock
+              [ Cassign (value', Data.car (Cvar node))
+              ; compile_value_encoder false env item_typ ptr' size' value'
+              ; Cassign (ptr', Data.add (Cvar ptr') (Cvar size'))
+              ; Cstore (0, Cvar ptr, Data.inc (Data.car (Cvar ptr)))
+              ; Cassign (node, Data.cdr (Cvar node)) ])]
+
+  | Option_t (typ', _, _) ->
+    let ptr' = Env.alloc_local env in
+    let size' = Env.alloc_local env in
+    let value' = Env.alloc_local env in
+    Cblock
+      [ value_size env typ (Cvar value) size
+      ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+      ; Cifthenelse
+          (Cvar value
+          , Cblock
+              [ Cstore (0, Cvar ptr, Cconst_i32 1l)
+              ; Cassign (ptr', Data.add (Cvar ptr) (Cconst_i32 4l))
+              ; Cassign (value', Data.cdr (Cvar value))
+              ; compile_value_encoder false env typ' ptr' size' value' ]
+          , Cstore (0, Cvar ptr, Cconst_i32 0l)) ]
+      
+  (* TODO *)
+  | Map_t (key_type, value_type, _) ->
+    let node = Env.alloc_local env in
+    let ptr' = Env.alloc_local env in
+    let size' = Env.alloc_local env in
+    let value' = Env.alloc_local env in
+    Cblock
+      [ value_size env typ (Cvar value) size
+      ; if alloc then Cassign (ptr, Cop (Calloc 0, [ Cvar size ])) else Cblock []
+      ; Cstore (0, Cvar ptr, Cconst_i32 0l)
+      ; Cassign (node, Cvar value)
+      ; Cassign (ptr', Data.add (Cvar ptr) (Cconst_i32 4l))
+      ; Cwhile
+          (Cvar node
+          , Cblock
+              [ Cifthenelse
+                  (Data.cdr (Data.car (Cvar node))
+                  , Cblock
+                      [ Cassign (value', Data.car (Data.car (Cvar node)))
+                      ; compile_value_encoder false env key_type ptr' size' value'
+                      ; Cassign (ptr', Data.add (Cvar ptr') (Cvar size'))
+                      ; Cassign (value', Data.cdr (Data.cdr (Data.car (Cvar node))))
+                      ; compile_value_encoder false env value_type ptr' size' value'
+                      ; Cassign (ptr', Data.add (Cvar ptr') (Cvar size'))
+                      ; Cstore (0, Cvar ptr, Data.inc (Data.car (Cvar ptr))) ]
+                  , Cblock [])
+              ; Cassign (node, Data.cdr (Cvar node)) ] ) ]
+      
   | _typ -> raise (Compilation_error Unsupported_storage_type)
 
 let compile_contract contract =
@@ -1037,7 +1407,7 @@ let compile_contract contract =
     let value = Env.alloc_local env in
     let block =
       [ Cassign (value, Data.cdr (Data.car (Cglobal "stack")))
-      ; compile_value_encoder env storage_type ptr size value
+      ; compile_value_encoder true env storage_type ptr size value
       ; Cassign (value, Cop (Capply "save_storage", [ Cvar ptr; Cvar size ])) ]
     in
     Env.free_local env ptr;
@@ -1047,8 +1417,8 @@ let compile_contract contract =
   in
 
   let main =
-    { body = Cblock (param_block :: compile_instruction env code :: store_block)
-    ; locals = Env.max env + 1 }
+    let body = Cblock (param_block :: compile_instruction env code :: store_block) in
+    { body ; locals = env.max + 1 }
   in
   let lambdas =
     !lambdas

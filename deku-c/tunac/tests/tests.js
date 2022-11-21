@@ -34,6 +34,10 @@ function michelsonValueToString(value) {
         return value.int.toString()
     }
 
+    if (value.string !== undefined) {
+        return '"' + value.string + '"'
+    }
+
     if (value.prim) {
         return '(' + value.prim +
             ' ' + value.annots.join(' ') + ' ' +
@@ -49,10 +53,11 @@ function encodeValue(value) {
     return new Promise((resolve, reject) => {
         const process = child_process.exec('./compile.exe value', (err, stdout) => {
             if (err) return reject(err)
-            resolve(Buffer.from(stdout))
+            resolve(Buffer.from(stdout, 'binary'))
         })
 
         process.stdin.end(michelsonValueToString(value))
+        process.stderr.pipe(global.process.stderr)
     })
 }
 
@@ -101,17 +106,28 @@ async function wasmModuleOfMichelson(code) {
     return WebAssembly.compile(wasm)
 }
 
-async function eval(code, parameter, storage) {
+async function eval(code, parameter, storage, context = {}) {
     const module = await wasmModuleOfMichelson(code)
+
+    console.log((await encodeValue(storage)).toString('hex'))
 
     const parameterBuffer = await encodeValue({
         prim: 'Pair',
         args: [ parameter, storage ],
         annots: []
     })
+    // console.log(parameterBuffer.toString('hex'))
 
     let storageBuffer
     let failure = null
+    let addressCounter = 0
+    const contactBook = {}
+    const addrLookup = {}
+
+    if (context.sender !== undefined) {
+        contactBook[addressCounter] = context.sender
+        contactBook[context.sender] = addressCounter++
+    }
 
     const imports = {
         env: {
@@ -137,6 +153,58 @@ async function eval(code, parameter, storage) {
             },
             failwith(arg) {
                 failure = arg
+            },
+            sender() {
+                return 0
+            },
+            amount() {
+                return 33
+            },
+            transfer_tokens(arg, amount, contract) {
+                return 0
+            },
+            lookup_address(addr) {
+                const size = bytes[addr] | bytes[addr + 1] << 8 | bytes[addr + 2] << 16 | bytes[addr + 3] << 24
+                const buffer = Buffer.alloc(size)
+
+                for (let i = 0; i < size; i++) {
+                    buffer[i] = bytes[addr + i + 4]
+                }
+
+                const address = buffer.toString()
+
+                if (contactBook[address] !== undefined) {
+                    return contactBook[address]
+                }
+
+                contactBook[address] = addressCounter
+                contactBook[addressCounter] = address
+
+                addrLookup[addressCounter] = addr
+
+                // console.log(address, addressCounter, addr)
+
+                return addressCounter++
+            },
+            reverse_lookup_address(descriptor) {
+                if (addrLookup[descriptor] === undefined) {
+                    const address = Buffer.from(contactBook[descriptor])
+                    const ptr = instance.exports.malloc(address.length + 4)
+
+                    bytes[ptr] = address.length & 0xff
+                    bytes[ptr + 1] = (address.length >> 8) & 0xff
+                    bytes[ptr + 2] = (address.length >> 16) & 0xff
+                    bytes[ptr + 3] = (address.length >> 24) & 0xff
+                    
+
+                    for (let i = 0; i < address.length; i++) {
+                        bytes[ptr + 4 + i] = address[i]
+                    }
+
+                    addrLookup[descriptor] = ptr
+                }
+
+                return addrLookup[descriptor]
             }
         }
     }
@@ -153,7 +221,16 @@ async function eval(code, parameter, storage) {
         stack: instance.exports.stack
     }
 
-    instance.exports.main()
+    try {
+        instance.exports.main()
+    } catch (e) {
+        if (failure === null) {
+            throw e
+        } else {
+            let message = Buffer.from(bytes.slice(failure + 4, failure + 4 + words[failure / 4])).toString()
+            console.log('Failure: ', message)
+        }
+    }
 
     return { storage: storageBuffer, exports, failure }
 }
@@ -194,14 +271,29 @@ async function main() {
     `, { prim: 'Right', args: [ { prim: 'Unit', args: [], annots: [] } ], annots: [] }, { int: 42 })
     assertStorage(res, '00000000')
 
-    // res = await eval(`
-    //     { parameter unit;
-    //       storage int;
-    //       code { PUSH int 1; PUSH int 2; PUSH int 3; PUSH int 4; PUSH int 5; DIG 2 } }
-    // `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
-    // // inspect_all(res.exports)
-    // assert(stack_n(res.exports, 0) === 3)
-    // assert(stack_n(res.exports, 2) === 4)
+    res = await eval(`
+        { parameter unit;
+          storage unit;
+          code { PUSH int 4; PUSH int 3; PUSH int 4; DIG 2; COMPARE; NEQ; IF { PUSH string "Not equal"; FAILWITH } { };
+                 DROP 2; UNIT; NIL operation; PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assert.equal(res.failure, null)
+
+    res = await eval(`
+        { parameter unit;
+          storage unit;
+          code { PUSH int 4; DUP; COMPARE; NEQ; IF { PUSH string "Not equal"; FAILWITH } { };
+                 DROP; UNIT; NIL operation; PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assert.equal(res.failure, null)
+
+    res = await eval(`
+        { parameter unit;
+          storage unit;
+          code { PUSH int 4; PUSH int 3; PUSH int 4; DUP 3; COMPARE; NEQ; IF { PUSH string "Not equal"; FAILWITH } { };
+                 DROP 3; UNIT; NIL operation; PAIR } }
+    `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    assert.equal(res.failure, null)
 
     // res = await eval(`
     //     { parameter unit;
@@ -429,6 +521,176 @@ async function main() {
             PAIR } }
     `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
     assertStorage(res, '32000000')
+
+    // res = await eval(`
+    //     { parameter unit;
+    //       storage (or int string);
+    //       code {
+    //         DROP;
+    //         PUSH string "Hello world";
+    //         RIGHT int;
+    //         NIL operation;
+    //         PAIR } }
+    // `, { prim: 'Unit', args: [], annots: [] }, { int: 0 })
+    // assertStorage(res, '')
+
+    res = await eval(`
+        { parameter (map int string);
+          storage (map int string);
+          code {
+            CAR;
+            PUSH string "Hello world" ;
+            SOME;
+            PUSH int 1;
+            UPDATE;            
+            NIL operation;
+            PAIR } }
+    `, [  { prim: 'Elt', args: [ { int: 3 }, { string: 'Fuba' } ], annots: [] } ], [  { prim: 'Elt', args: [ { int: 3 }, { string: 'Fuba' } ], annots: [] } ])
+    // assertStorage(res, '')
+
+    res = await eval(
+        `
+            { parameter address;
+              storage (map address (pair (map address nat) nat));
+              code {
+                DROP;
+                EMPTY_MAP address (pair (map address nat) nat);
+                NIL operation;
+                PAIR } }
+        `,
+        { string: 'tz1LaN1QJGrmPcuAfLvncTLJ3iRzphHpjugu' },
+        [
+            {
+                prim: 'Elt',
+                args: [
+                    { string: 'tz1LaN1QJGrmPcuAfLvncTLJ3iRzphHpjugu' },
+                    {
+                        prim: 'Pair',
+                        args: [
+                            [],
+                            { int: 1000000000 }
+                        ],
+                        annots: []
+                    }
+                ],
+                annots: []
+            }
+        ]
+    )
+    assertStorage(res, '00000000')
 }
 
 main()
+
+function left(value) {
+    return { prim: 'Left', args: [ value ], annots: [] }
+}
+
+function right(value) {
+    return { prim: 'Right', args: [ value ], annots: [] }
+}
+
+function pair(...args) {
+    return { prim: 'Pair', args, annots: [] }
+}
+
+function string(string) {
+    return { string }
+}
+
+function int(int) {
+    return { int }
+}
+
+function elt(key, value) {
+    return { prim: 'Elt', args: [ key, value ], annots: [] }
+}
+
+const unit = { prim: 'Unit', args: [], annots: [] }
+
+async function test_fa12() {
+    const contract = fs.readFileSync('fa12.tz')
+    function run(parameter, storage) {
+        // console.log(JSON.stringify(storage, undefined, 2))
+        return eval(
+            contract,
+            parameter,
+            storage,
+            {
+                sender: 'tz1aSNVC5oNxYtQcEdUQuGx9DW7gkBzM3Ct3'
+            }
+        )
+    }
+
+    // Interface:
+    //
+    // parameter
+    // (or (or (or (pair %approve (address %spender) (nat %value))
+    //             (pair %getAllowance (pair (address %owner) (address %spender)) (contract nat)))
+    //         (or (pair %getBalance (address %owner) (contract nat))
+    //             (pair %getTotalSupply unit (contract nat))))
+    //     (pair %transfer (address %from) (address %to) (nat %value))) ;
+    // storage
+    //     (pair (map %ledger address (pair (map %allowances address nat) (nat %balance)))
+    //         (nat %totalSupply)) ;
+
+    function approve(address, value) {
+        return left(left(left(pair(string(address), int(value)))))
+    }
+
+    function getAllowance(owner, spender, callback) {
+        return left(left(right(pair(pair(string(owner), string(spender)), string(callback)))))
+    }
+
+    function getBalance(owner, callback) {
+        return left(right(left(pair(string(owner), string(callback)))))
+    }
+
+    function getTotalSupply(callback) {
+        return left(right(right(pair(unit, string(callback)))))
+    }
+
+    function transfer(from, to, value) {
+        return right(pair(string(from), string(to), int(value)))
+    }
+
+    function storage({ ledger, totalSupply }) {
+        const ledger_ = []
+
+        for (let owner in ledger) {
+            let allowances = []
+
+            for (let addr in ledger[owner].allowances) {
+                allowances.push(elt(string(addr), ledger[owner].allowances[addr]))
+            }
+
+            ledger_.push(elt(
+                string(owner),
+                pair(
+                    allowances,
+                    int(ledger[owner].balance)
+                )
+            ))
+        }
+
+        return pair(ledger_, int(totalSupply))
+    }
+
+    const res = await run(
+        transfer('tz1aSNVC5oNxYtQcEdUQuGx9DW7gkBzM3Ct3', 'tz1edHdUromXCjoZ2kU9uVSEjwu7EC9ypHgn', 1000),
+        storage({
+            ledger: {
+                'tz1aSNVC5oNxYtQcEdUQuGx9DW7gkBzM3Ct3': {
+                    allowances: {
+                        'tz1edHdUromXCjoZ2kU9uVSEjwu7EC9ypHgn': 0
+                    },
+                    balance: 1_000_000_000
+                }
+            },
+            totalSupply: 1_000_000_000
+        })
+    )
+    // assertStorage(res, '')
+}
+
+test_fa12()

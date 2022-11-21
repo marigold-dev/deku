@@ -5,4 +5,4 @@
 (rule
  (alias runtest)
  (action (run node tests.js))
- (deps tests.js compile.exe))
+ (deps fa12.tz tests.js compile.exe))
