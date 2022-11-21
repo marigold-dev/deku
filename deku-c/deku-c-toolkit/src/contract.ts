@@ -95,7 +95,7 @@ export class Contract {
   }
 
   /**
-   * Invoke a deku-c smart contrat
+   * Invoke a Deku-C smart contrat
    * @param parameter the parameter of the contract
    * @returns the hash of the operation
    */
@@ -113,8 +113,8 @@ export class Contract {
 
   /**
    * Returns the state of the contract
-   * Parses it to a readable javascript object
-   * @returns javascript object
+   * Parses it to a readable Javascript object
+   * @returns Javascript object
    */
   async getState(): Promise<any | null> {
     const state = await this.getRawState();
@@ -123,7 +123,7 @@ export class Contract {
   }
 
   /**
-   * Returns the state of the contract as a wasm-vm state object
+   * Returns the state of the contract as a WASM-VM state object
    * @returns an object representing the state of the contract
    */
   async getRawState(): Promise<JSONType | null> {
@@ -137,6 +137,11 @@ export class Contract {
     return json["state"];
   }
 
+  /**
+   * Fetch the WASM-VM state of the contract each second
+   * Returns it as an object if there is at least one difference
+   * @returns an object representing the state of the contract
+   */
   async onNewState(callback: (state: JSONType) => void): Promise<void> {
     // pull strategy
     let previous: JSONType = null;
@@ -155,6 +160,11 @@ export class Contract {
     }, 1000);
   }
 
+  /**
+   * Cancel the interval to fetch the new state each second
+   * Can be useful to disconnect your user from your application
+   * @returns an object representing the state of the contract
+   */
   cancelOnNewState(): void {
     if (this.fetchInterval) clearInterval(this.fetchInterval);
   }
