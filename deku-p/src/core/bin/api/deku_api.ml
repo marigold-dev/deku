@@ -54,6 +54,7 @@ let on_accepted_block ~env ~folder ~state ~block =
   match Level.equal (Level.next api_level) level with
   | true -> apply_block ~env ~folder ~state ~block
   | false ->
+      state.is_sync <- false;
       (*This case should not happened thanks to on_connection*)
       ()
 
@@ -73,11 +74,10 @@ let on_message ~env ~folder ~raw_header ~raw_content state =
       on_accepted_block ~env ~folder ~state ~block
   | _ -> ()
 
-let listen_to_node ~net ~clock ~port ~state =
+let listen_to_node ~net ~clock ~port ~state ~on_message =
   let Api_state.{ network; _ } = state in
   let on_connection ~connection = on_connection state ~connection in
   let on_request ~connection:_ ~raw_header:_ ~raw_content:_ = () in
-  let on_message ~raw_header:_ ~raw_content:_ = () in
   let () =
     Network_manager.listen ~net ~clock ~port ~on_connection ~on_request
       ~on_message network
@@ -176,6 +176,8 @@ let main params =
           ~current_block ~receipts
   in
 
+  let on_message = on_message ~env ~folder:data_folder state in
+
   Eio.Fiber.all
     [
       (fun () ->
@@ -183,10 +185,9 @@ let main params =
           ~nodes:[ (node_host, node_port) ]
           ~on_connection:(on_connection state)
           ~on_request:(fun ~connection:_ ~raw_header:_ ~raw_content:_ -> ())
-          ~on_message:(on_message ~env ~folder:data_folder state)
-          network);
+          ~on_message network);
       (fun () -> start_api ~env ~sw ~port ~state);
-      (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state);
+      (fun () -> listen_to_node ~net ~clock ~port:tcp_port ~state ~on_message);
     ]
 
 let () =
