@@ -1,12 +1,12 @@
 open Deku_stdlib
 open Deku_concepts
 
-type typ = Bytes | String | Other [@@deriving ord, show]
+type typ = Bytes | String | Other [@@deriving ord, eq, show]
 
 module rec V : sig
   open Deku_ledger
 
-  type union = Left of t | Right of t
+  type union = Left of t | Right of t [@@deriving ord, eq, show]
 
   and t =
     | Int of Z.t
@@ -19,17 +19,17 @@ module rec V : sig
     | Option of t option
     | Unit
     | Map of t Map.t
-    | Closure of { opt_arg : t option; call : Int32.t }
+    | Closure of { opt_arg : t list; call : Int32.t }
     | Ticket of { ticket_id : Ticket_id.t; amount : Amount.t }
     | Ticket_handle of int
     | Set of Set.t
-  [@@deriving ord, show]
+  [@@deriving ord, eq, show]
 
   val pp_michelson : Format.formatter -> t -> unit
 end = struct
   open Deku_ledger
 
-  type union = Left of t | Right of t
+  type union = Left of t | Right of t [@@deriving ord, eq, show]
 
   and t =
     | Int of Z.t
@@ -45,22 +45,22 @@ end = struct
     | Map of t Map.t
         [@printer
           fun fmt x ->
-            Format.fprintf fmt "%a"
+            Format.fprintf fmt "Map %a"
               (fun fmt x ->
                 Format.pp_print_list
                   (fun fmt (x, y) -> Format.fprintf fmt "%a %a" pp x pp y)
                   fmt x)
               (Map.bindings x)]
-    | Closure of { opt_arg : t option; call : Int32.t }
+    | Closure of { opt_arg : t list; call : Int32.t }
     | Ticket of { ticket_id : Ticket_id.t; amount : Amount.t }
     | Ticket_handle of int
     | Set of Set.t
         [@printer
           fun fmt x ->
-            Format.fprintf fmt "%a"
+            Format.fprintf fmt "Set %a"
               (fun fmt x -> Format.pp_print_list pp fmt x)
               (List.of_seq @@ Set.to_seq x)]
-  [@@deriving ord, show]
+  [@@deriving eq, ord, show]
 
   let rec pp_michelson fmt t =
     let open Format in
