@@ -106,10 +106,7 @@ let apply_operation ~current_level protocol operation :
               | Error _ -> None
             in
             match result () with
-            | Some result ->
-                let get (_, _, state, _) = state in
-                assert (get result <> vm_state);
-                result
+            | Some result -> result
             | None ->
                 ( ledger,
                   Some receipt,

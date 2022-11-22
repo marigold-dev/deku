@@ -1,0 +1,50 @@
+
+type cookieBaker =
+  {
+    passiveCPS: nat,
+    cookies: nat,
+    cursors: nat,
+    grandmas: nat,
+    farms: nat,
+    mines: nat,
+    factories: nat,
+    banks: nat,
+    temples: nat,
+    cursorCost: nat,
+    grandmaCost: nat,
+    farmCost: nat,
+    mineCost: nat,
+    factoryCost: nat,
+    bankCost: nat,
+    templeCost: nat,
+    eatenCookies: nat
+  };
+
+type storage = map<address, cookieBaker>;
+
+type actions =
+  | ["Cookie"]
+  | ["Cursor"]
+  | ["Grandma"]
+  | ["Farm"]
+  | ["Mine"]
+  | ["Factory"]
+  | ["Bank"]
+  | ["Temple"];
+
+type operationType = | ["Mint"] | ["Transfer"] | ["Eat"];
+
+type parameter =
+  {
+    operationType,
+    operation: option<actions>,
+    amount: nat,
+    recipient: option<address>
+  };
+
+type return_ =
+
+  [list<operation>,
+   storage];
+
+const init_storage: storage = Map.empty;
