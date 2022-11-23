@@ -1,5 +1,5 @@
 {
-  "name": "deku-cli",
+  "name": "@marigold-dev/deku-cli",
   "version": "0.0.1",
   "description": "CLI client for Deku-C blockchain",
   "bin": {
