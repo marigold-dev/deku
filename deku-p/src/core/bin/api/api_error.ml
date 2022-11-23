@@ -109,6 +109,10 @@ end
 
 let yojson_of_t error = Repr.t_of_error error |> Repr.yojson_of_t
 
+let string_of_error error =
+  let Repr.{ code; _ } = Repr.t_of_error error in
+  String.capitalize_ascii code
+
 let to_http_code { kind; _ } =
   match kind with
   | Invalid_parameter -> 400

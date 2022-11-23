@@ -22,6 +22,7 @@ export DEKU_DEFAULT_BLOCK_SIZE=5000
 export DEKU_VM_DEBUG_LOGGING=true
 # Set the verbosity of the Deku node
 export DEKU_LOG_VERBOSITY=info
+export DEKU_API_LOG_VERBOSITY=info
 
 # Wait for Flextesa to start
 sleep 5

@@ -154,6 +154,7 @@ let main params style_renderer log_level =
   Node.start ~sw ~env ~port ~nodes:validator_uris ~tezos:(Some tezos) node
 
 let main () =
+  let open Cmdliner in
   Sys.set_signal Sys.sigpipe
     (Sys.Signal_handle (fun _ -> Logs.err (fun m -> m "SIGPIPE")));
 
@@ -162,20 +163,20 @@ let main () =
   Gc.set control;
 
   Logs.info (fun m -> m "Starting node");
-  let info = Cmdliner.Cmd.info Sys.argv.(0) in
+  let info = Cmd.info Sys.argv.(0) in
   let term =
-    Cmdliner.Term.(
+    Term.(
       const main $ params_cmdliner_term ()
-      $ Fmt_cli.style_renderer ~env:(Cmdliner.Cmd.Env.info "DEKU_LOG_COLORS") ()
+      $ Fmt_cli.style_renderer ~env:(Cmd.Env.info "DEKU_LOG_COLORS") ()
       $ Logs_cli.level
           ~env:
-            (Cmdliner.Cmd.Env.info
+            (Cmd.Env.info
                "DEKU_LOG_VERBOSITY"
                (* TODO: consolidate and document environment options *))
           ())
   in
-  let cmd = Cmdliner.Cmd.v info term in
-  exit (Cmdliner.Cmd.eval ~catch:true cmd)
+  let cmd = Cmd.v info term in
+  exit (Cmd.eval ~catch:true cmd)
 
 (*
    let _ = main

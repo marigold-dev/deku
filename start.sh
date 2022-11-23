@@ -25,6 +25,7 @@ export DEKU_DUMMYT_TICKET="KT1Us9LZaG8F6cskmMg1hB2FPRwakWkegkPi"
 export DEKU_API_PORT=8080
 export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
 export DEKU_LOG_VERBOSITY=${DEKU_LOG_VERBOSITY:-info}
+export DEKU_API_LOG_VERBOSITY=${DEKU_API_LOG_VERBOSITY:-info}
 
 # Starting only one API node
 export DEKU_API_NODE_URI="127.0.0.1:4440"
@@ -56,7 +57,7 @@ start_node() {
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --data-folder "./flextesa_chain/data/$N" \
-    --color=always 2> >(awk "\$0 !~ /WARNING/ { print \"$N: \" \$0 }" >&2) &
+    --color=always 2> >(awk "{ print \"$N: \" \$0 }" >&2) &
   sleep 0.1
 }
 
@@ -65,7 +66,7 @@ then
   dune build || exit 1
 
   ## The api needs its own vm
-  _build/install/default/bin/deku-api &
+  _build/install/default/bin/deku-api 2> >(awk "{ print \"A: \" \$0 }" >&2) &
 
   for N in 0 1 2 3; do
     start_node $N
