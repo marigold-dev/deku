@@ -21,6 +21,14 @@ let error_to_response error =
   let body = Api_error.yojson_of_t error in
   json_to_response ~status body
 
+let handle_error error route =
+  let code = Api_error.to_http_code error in
+  let str = Api_error.string_of_error error in
+  if code >= 500 then
+    Logs.err (fun m -> m "%s: %s" str (Routes.string_of_route route))
+  else Logs.warn (fun m -> m "%s: %s" str (Routes.string_of_route route));
+  error_to_response error
+
 let add_route route meth server =
   match meth with
   | `GET -> { server with get = Routes.add_route route server.get }
@@ -47,11 +55,11 @@ let with_body (module Handler : HANDLERS) server =
             Error (Api_error.invalid_body err_message)
         in
         match body with
-        | Error err -> error_to_response err
+        | Error err -> handle_error err Handler.route
         | Ok body -> (
             let response = Handler.handler ~path ~body ~state in
             match response with
-            | Error error -> error_to_response error
+            | Error error -> handle_error error Handler.route
             | Ok response ->
                 let body = Handler.yojson_of_response response in
                 json_to_response ~status:`OK body))
@@ -65,7 +73,7 @@ let without_body (module Handler : NO_BODY_HANDLERS) server =
       (fun path ~state ~body:_ ->
         let response = Handler.handler ~path ~state in
         match response with
-        | Error error -> error_to_response error
+        | Error error -> handle_error error Handler.route
         | Ok response ->
             let body = Handler.yojson_of_response response in
             json_to_response ~status:`OK body)
@@ -80,7 +88,10 @@ let make_handler ~state server request =
   let body = request.body |> Piaf.Body.to_string in
   match body with
   | Error err ->
-      Api_error.invalid_body (Piaf.Error.to_string err) |> error_to_response
+      let error = Api_error.invalid_body (Piaf.Error.to_string err) in
+      let str = Api_error.string_of_error error in
+      Logs.warn (fun m -> m "%s: %s" str error.msg);
+      error_to_response error
   | Ok body -> (
       let matched_route =
         match meth with
@@ -93,5 +104,10 @@ let make_handler ~state server request =
       | Ok (Routes.MatchWithTrailingSlash handler) ->
           handler ~state ~body
       | Ok Routes.NoMatch ->
-          Api_error.endpoint_not_found target |> error_to_response
-      | Error error -> error |> error_to_response)
+          let error = Api_error.endpoint_not_found target in
+          let str = Api_error.string_of_error error in
+          Logs.warn (fun m -> m "%s: %s" str request.target);
+          error_to_response error
+      | Error error ->
+          Logs.warn (fun m -> m "Matching error: %s" error.msg);
+          error_to_response error)

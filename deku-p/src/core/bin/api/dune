@@ -12,11 +12,18 @@
   cmdliner
   logs
   logs.fmt
+  logs.cli
+  logs.threaded
   fmt.tty
+  fmt.cli
   piaf
   routes
   ppx_yojson_conv
   ocaml_wasm_vm
   tunac)
  (preprocess
-  (pps ppx_let_binding ppx_deriving_cmdliner ppx_yojson_conv)))
+  (pps
+   ppx_let_binding
+   ppx_deriving_cmdliner
+   ppx_yojson_conv
+   ppx_deriving.show)))
