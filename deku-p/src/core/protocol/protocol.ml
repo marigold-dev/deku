@@ -73,7 +73,31 @@ let apply_operation ~current_level protocol operation :
             | Ok ledger -> (ledger, Some receipt, vm_state, None)
             | Error error -> (ledger, Some receipt, vm_state, Some error))
         | Operation_vm_transaction { sender; operation } -> (
-            let receipt = Receipt.Vm_transaction_receipt { operation = hash } in
+            let open Deku_ledger in
+            let receipt =
+              match operation.operation with
+              | View { address; _ } ->
+                  Receipt.Vm_transaction_receipt
+                    { operation = hash; contract_address = address }
+              | Originate _ ->
+                  (* TODO: wrap this in a function exposed from the VM *)
+                  let contract_address =
+                    Contract_address.of_user_operation_hash
+                    @@ Operation_hash.to_blake2b hash
+                  in
+                  Receipt.Vm_origination_receipt
+                    { operation = hash; contract_address }
+              | Call { address; _ } -> (
+                  match Deku_ledger.Address.to_contract_address address with
+                  | Some (contract_address, _) ->
+                      Receipt.Vm_origination_receipt
+                        { operation = hash; contract_address }
+                  | None ->
+                      (* TODO: in the future we should return a Vm_trnasaction_error here *)
+                      failwith
+                        (Format.sprintf "Invalid contract address '%s'"
+                           (Address.to_b58 address)))
+            in
             let result () =
               let%some ledger =
                 if operation.tickets = [] then Some ledger
@@ -88,7 +112,6 @@ let apply_operation ~current_level protocol operation :
                       Some (set_table table))
               in
               let source = sender in
-              let receipt = Vm_transaction_receipt { operation = hash } in
               match
                 Ocaml_wasm_vm.(
                   Env.execute

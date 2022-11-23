@@ -63,7 +63,9 @@ let clean ~receipts ~tezos_operations producer =
       (fun operations receipt ->
         match receipt with
         | Receipt.Ticket_transfer_receipt { operation = hash }
-        | Receipt.Vm_transaction_receipt { operation = hash }
+        | Receipt.Vm_origination_receipt { operation = hash; _ }
+        | Receipt.Vm_transaction_receipt { operation = hash; _ }
+        | Receipt.Vm_transaction_error { operation = hash; _ }
         | Receipt.Withdraw_receipt { operation = hash; _ } ->
             Operation_hash.Map.remove hash operations)
       operations receipts
