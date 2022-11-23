@@ -48,3 +48,5 @@ val store_vec : memory -> address -> offset -> vec -> unit
 val load_vec_packed :
   pack_size -> vec_extension -> memory -> address -> offset -> vec_type -> vec
 (* raises Type, Bounds *)
+
+val reset : t -> unit

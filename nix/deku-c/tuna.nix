@@ -13,6 +13,8 @@
   core_unix,
   ppx_jane,
   alcotest,
+  ppx_cstruct,
+  core_bench,
 }:
 buildDunePackage rec {
   pname = "deku";
@@ -35,6 +37,8 @@ buildDunePackage rec {
     data-encoding
     wasm
     tezos-micheline
+    ppx_cstruct
+    core_bench
   ];
 
   buildInputs = [
@@ -42,6 +46,8 @@ buildDunePackage rec {
     core
     core_unix
     ppx_jane
+    ppx_cstruct
+    core_bench
   ];
 
   checkInputs = [

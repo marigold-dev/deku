@@ -139,6 +139,8 @@ let store_num_packed sz mem a o n =
   in
   storen mem a o w x
 
+let reset mem = Array1.fill mem.content 0
+
 let load_vec mem a o t =
   match t with
   | V128Type ->
