@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
-    "start:deku-toolkit:react": "yarn --cwd deku-p/deku-toolkit/examples/react start",
+    "start:deku-toolkit:react": "yarn --cwd examples/deku-p-react start",
     "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test",
     "build:deku-c-toolkit": "yarn --cwd deku-c/deku-c-toolkit build"
   }
