@@ -4090,14 +4090,6 @@
     blakejs "^1.2.1"
     bs58check "^2.1.2"
 
-"@marigold-dev/deku-toolkit@file:deku-p/deku-toolkit":
-  version "0.1.12"
-  dependencies:
-    "@taquito/taquito" "^13.0.1"
-    "@tzstamp/helpers" "^0.3.4"
-    blakejs "^1.2.1"
-    bs58check "^2.1.2"
-
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
   resolved "https://registry.yarnpkg.com/@mdx-js/mdx/-/mdx-1.6.22.tgz#8a723157bf90e78f17dc0f27995398e6c731f1ba"
@@ -20785,7 +20777,7 @@ ts-jest@^28.0.5, ts-jest@^28.0.7:
 
 ts-node@^10.9.1:
   version "10.9.1"
-  resolved "https://registry.npmjs.org/ts-node/-/ts-node-10.9.1.tgz"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
   integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
   dependencies:
     "@cspotcode/source-map-support" "^0.8.0"
