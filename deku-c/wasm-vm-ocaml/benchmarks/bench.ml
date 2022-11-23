@@ -77,7 +77,7 @@ let factorial2 =
 
 type _ num = Int32 : int32 num | Int64 : int64 num
 type numeric = Numd : 'a num * 'a -> numeric
-type by_ref = Ref : 'a ref -> by_ref
+type by_ref = Ref : 'a ref -> by_ref [@@unboxed]
 type binop = Plus | Minus | Mul | Le_s
 type value = Num of numeric | Ref' of by_ref
 
@@ -88,37 +88,36 @@ type runtime_state = {
 }
 
 and (_, _) retval =
-  | Int32 : (runtime_state, numeric) retval
+  | Int : (runtime_state, numeric) retval
   | Ref : (runtime_state, by_ref) retval
   | Value : (runtime_state, value) retval
 
 and return =
   | Return : 'a. (runtime_state, 'a) retval * (runtime_state -> 'a) -> return
 
-type compile_state = { stack : return list }
+type compile_state = { stack : return list } [@@unboxed]
 
-let apply_binaryOp op (Numd (witness, n1) : numeric)
+let[@inline always] apply_binaryOp op (Numd (witness, n1) : numeric)
     (Numd (witness2, n2) : numeric) : numeric =
   match (witness, witness2) with
   | Int32, Int32 ->
       let op =
         match op with
-        | Plus -> Int32.add
-        | Minus -> Int32.sub
-        | Mul -> Int32.mul
-        | Le_s -> fun x y -> if Core.Int32.( <= ) x y = true then 1l else 0l
+        | Plus -> Int32.add n1 n2
+        | Minus -> Int32.sub n1 n2
+        | Mul -> Int32.mul n1 n2
+        | Le_s -> if Core.Int32.( <= ) n1 n2 = true then 1l else 0l
       in
-      Numd (Int32, op n1 n2)
+      Numd (Int32, op)
   | Int64, Int64 ->
       let op =
         match op with
-        | Plus -> Int64.add
-        | Minus -> Int64.sub
-        | Mul -> Int64.mul
+        | Plus -> Int64.add n1 n2
+        | Minus -> Int64.sub n1 n2
+        | Mul -> Int64.mul n1 n2
         | _ -> assert false
       in
-
-      Numd (Int64, op n1 n2)
+      Numd (Int64, op)
   | _ -> failwith "type mismatch"
 
 let[@inline always] get_2 = function
@@ -157,7 +156,9 @@ let compile (modu : Wasm.Ast.module_) =
         apply_binaryOp op b a
     | _ -> assert false
   in
-
+  let[@inline always] [@warning "-8"] eqq (Numd (Int32, x)) (Numd (Int32, y)) =
+    Int32.equal x y
+  in
   let[@warning "-8"] rec go state instrs =
     match instrs with
     | Return :: [] -> List.hd state.stack
@@ -168,13 +169,13 @@ let compile (modu : Wasm.Ast.module_) =
         in
         let stack_top ctx =
           match (witness1, witness2) with
-          | Int32, Int32 ->
+          | Int, Int ->
               let x = f1 ctx in
               let y = f2 ctx in
               match_bop x y op
           | Ref, Ref -> failwith "Todo"
         in
-        let rest = go { stack = Return (Int32, stack_top) :: rest } xs in
+        let rest = go { stack = Return (Int, stack_top) :: rest } xs in
         rest
     | Compare op :: xs ->
         let Return (witness1, f1), Return (witness2, f2), rest =
@@ -182,12 +183,12 @@ let compile (modu : Wasm.Ast.module_) =
         in
         let stack_top ctx =
           match (witness1, witness2) with
-          | Int32, Int32 ->
+          | Int, Int ->
               let x = f1 ctx in
               let y = f2 ctx in
               match_relop x y op
         in
-        let rest = go { stack = Return (Int32, stack_top) :: rest } xs in
+        let rest = go { stack = Return (Int, stack_top) :: rest } xs in
         rest
     | LocalGet id :: xs ->
         let id = Int32.to_int id.Source.it in
@@ -208,10 +209,10 @@ let compile (modu : Wasm.Ast.module_) =
               Core.Uniform_array.set_with_caml_modify ctx.locals id (hd ctx)
         in
         Return
-          ( Int32,
+          ( Int,
             fun ctx ->
               res hd rest ctx;
-              match rest with Return (Int32, rest) -> rest ctx )
+              match rest with Return (Int, rest) -> rest ctx )
     | [] -> List.hd state.stack
     | If (_, true_, false_) :: xs ->
         let cond = List.hd state.stack in
@@ -224,30 +225,30 @@ let compile (modu : Wasm.Ast.module_) =
         in
         let conditional (Return (w1, x) : return) ctx =
           match w1 with
-          | Int32 ->
+          | Int ->
               let endd = x ctx in
               let true_ = Numd (Int32, 1l) in
-              if endd = true_ then true else false
+              if eqq endd true_ then true else false
         in
         go
           {
             stack =
               Return
-                ( Int32,
+                ( Int,
                   fun ctx ->
                     if conditional cond ctx then
-                      match then_ with Return (Int32, x) -> x ctx
-                    else match else_ with Return (Int32, x) -> x ctx )
+                      match then_ with Return (Int, x) -> x ctx
+                    else match else_ with Return (Int, x) -> x ctx )
               :: stack;
           }
           xs
     | Const { it = I32 x; at = _ } :: xs ->
         go
-          { stack = Return (Int32, fun ctx -> Numd (Int32, x)) :: state.stack }
+          { stack = Return (Int, fun ctx -> Numd (Int32, x)) :: state.stack }
           xs
     | Const { it = I64 x; at = _ } :: xs ->
         go
-          { stack = Return (Int32, fun ctx -> Numd (Int64, x)) :: state.stack }
+          { stack = Return (Int, fun ctx -> Numd (Int64, x)) :: state.stack }
           xs
     | Call id :: xs ->
         let callback (ctx : runtime_state) =
@@ -258,14 +259,13 @@ let compile (modu : Wasm.Ast.module_) =
           let ret = Core.Uniform_array.get ctx.functions 0 in
           (ret, { ctx with locals = loc })
         in
-        let result ctx = callback ctx in
         go
           {
             stack =
               Return
-                ( Int32,
+                ( Int,
                   fun ctx ->
-                    let Return (Int32, r), arg = result ctx in
+                    let Return (Int, r), arg = callback ctx in
                     r arg )
               :: List.tl state.stack;
           }
