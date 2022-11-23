@@ -3,11 +3,12 @@
   "workspaces": [
     "decookies/typescript-vm",
     "deku-p/deku-toolkit",
-    "deku-p/deku-toolkit/examples/nodejs",
-    "deku-p/deku-toolkit/examples/react",
     "deku-p/sdks/typescript-sdk",
     "deku-c/deku-c-toolkit",
     "deku-c/deku-cli",
+    "examples/deku-c-nodejs",
+    "examples/deku-p-nodejs",
+    "examples/deku-p-react",
     "website"
   ],
   "scripts": {
