@@ -6,7 +6,6 @@
     "deku-p/deku-toolkit/examples/nodejs",
     "deku-p/deku-toolkit/examples/react",
     "deku-p/sdks/typescript-sdk",
-    "examples/tutorial",
     "deku-c/deku-c-toolkit",
     "deku-c/deku-cli",
     "website"
