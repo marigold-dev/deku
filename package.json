@@ -9,6 +9,7 @@
     "examples/deku-c-nodejs",
     "examples/deku-p-nodejs",
     "examples/deku-p-react",
+    "examples/number-go-up",
     "website"
   ],
   "scripts": {
