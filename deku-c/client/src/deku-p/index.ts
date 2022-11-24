@@ -34,7 +34,7 @@ type OperationInfo = {
   level: LevelType;
 };
 
-export class DekuToolkit {
+export class DekuPClient {
   private endpoints: endpoints;
   private _dekuSigner: DekuSigner | undefined;
 
@@ -54,7 +54,7 @@ export class DekuToolkit {
    * @param wallet the wallet you want to use
    * @returns deku toolkit
    */
-  setDekuSigner(signer: DekuSigner): DekuToolkit {
+  setDekuSigner(signer: DekuSigner): DekuPClient {
     this._dekuSigner = signer;
     return this;
   }
@@ -75,7 +75,7 @@ export class DekuToolkit {
    * @param rpc the url of the tezos rpc,
    * @returns
    */
-  setTezosRpc(rpc: string): DekuToolkit {
+  setTezosRpc(rpc: string): DekuPClient {
     const tezos = new TezosToolkit(rpc);
     // get the consensus and discovery address
     const uri = this.endpoints["GET_CHAIN_INFO"];

@@ -1,5 +1,5 @@
 export {
-  DekuToolkit,
+  DekuPClient,
   fromBeaconSigner,
   fromCustomSigner,
   fromMemorySigner,
