@@ -41,17 +41,14 @@ module Timestamp : Rapper.CUSTOM with type t = Timestamp.t = struct
     Caqti_type.(custom ~encode ~decode float)
 end
 
-module Block : Rapper.CUSTOM with type t = Yojson.Safe.t = struct
-  type t = Yojson.Safe.t
+module Block : Rapper.CUSTOM with type t = string = struct
+  type t = string
 
   let t =
-    let encode block =
-      block |> Yojson.Safe.to_string |> Ezgzip.compress |> Result.ok
-    in
+    let encode block = block |> Ezgzip.compress |> Result.ok in
     let decode json =
       try
         json |> Ezgzip.decompress
-        |> Result.map Yojson.Safe.from_string
         |> Result.map_error (fun _err -> "cannot decompress block")
       with exn ->
         Error

@@ -1,3 +1,4 @@
+open Deku_stdlib
 open Deku_consensus
 open Deku_gossip
 
@@ -70,7 +71,10 @@ let insert_message =
 
 let insert_block ~block ~timestamp pool =
   let (Block.Block { hash = block_hash; level; _ }) = block in
-  let block = Block.yojson_of_t block in
+  let block =
+    Parallel.parallel @@ fun () ->
+    Data_encoding.Binary.to_string_exn Block.encoding block
+  in
   Caqti_eio.Pool.use (insert_block ~block_hash ~level ~block ~timestamp) pool
 
 let insert_block_and_votes ~level ~network ~timestamp pool =
@@ -106,7 +110,7 @@ let find_block_by_hash =
         |sql}]
 
 let find_block_by_hash ~hash pool =
-  Caqti_eio.Pool.use (find_block_by_hash ~hash) pool
+  Caqti_eio.Pool.use (fun pool -> find_block_by_hash ~hash pool) pool
 
 let find_block_and_votes_by_level =
   let open Types in

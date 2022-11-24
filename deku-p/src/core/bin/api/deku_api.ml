@@ -35,7 +35,9 @@ let make_dump_loop ~sw ~env ~data_folder =
   dump
 
 let save_block ~sw ~indexer ~block =
-  let on_error err = print_endline (Printexc.to_string err) in
+  let on_error err =
+    Format.eprintf "save_block.error: %s\n%!" (Printexc.to_string err)
+  in
   (* TODO: better logging *)
   Eio.Fiber.fork_sub ~sw ~on_error @@ fun _sw ->
   Block_storage.save_block ~block indexer
