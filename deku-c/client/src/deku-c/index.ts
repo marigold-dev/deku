@@ -1,5 +1,5 @@
 import { DekuPClient } from "../deku-p";
-import { Contract, JSONType } from "./contract";
+import { Contract, JSONType, ligo_kind } from "./contract";
 import { DekuSigner } from "../deku-p/utils/signers";
 import {
   originateLigo,
@@ -38,7 +38,7 @@ export class DekuCClient extends DekuPClient {
 
   /**
    * Originate a contract on deku-c from a Ligo source code
-   * @param <{kind, code, storage}> the kind can be "jsligo", the code in the associated kind and its intialStorage
+   * @param <{kind, code, storage}> the kind can be "jsligo" or "mligo", the code in the associated kind and its intialStorage
    * @returns the address of the contract
    */
   async originateLigo({
@@ -46,7 +46,7 @@ export class DekuCClient extends DekuPClient {
     code,
     initialStorage,
   }: {
-    kind: "jsligo";
+    kind: ligo_kind;
     code: string;
     initialStorage: JSONType;
   }): Promise<{ operation: string; address: string }> {
