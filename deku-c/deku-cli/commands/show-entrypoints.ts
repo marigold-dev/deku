@@ -1,4 +1,4 @@
-import { Contract, DekuCClient } from "@marigold-dev/deku-c-toolkit";
+import { Contract, DekuCClient } from "@marigold-dev/deku";
 import * as Commander from "commander";
 import * as default_ from "./default-parameters";
 

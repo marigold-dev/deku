@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import CSS from "csstype";
 import logo from "./logo.png";
-import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
+import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 
 const containerStyle: CSS.Properties = {

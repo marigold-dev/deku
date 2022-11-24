@@ -1,5 +1,5 @@
-import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
-import { Contract, DekuCClient } from "@marigold-dev/deku-c-toolkit";
+import { fromMemorySigner } from "@marigold-dev/deku";
+import { Contract, DekuCClient } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 
 // setup

@@ -1,4 +1,4 @@
-import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import { DekuToolkit } from "../deku-p/index";
 import { compileExpression, compileLigoExpression } from "./utils";
 
 export type JSONType =

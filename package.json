@@ -4,7 +4,7 @@
     "decookies/typescript-vm",
     "deku-p/deku-toolkit",
     "deku-p/sdks/typescript-sdk",
-    "deku-c/deku-c-toolkit",
+    "deku-c/client",
     "deku-c/deku-cli",
     "examples/deku-c-nodejs",
     "examples/deku-p-nodejs",
@@ -13,9 +13,7 @@
     "website"
   ],
   "scripts": {
-    "build:deku-toolkit": "yarn --cwd deku-p/deku-toolkit build",
-    "start:deku-toolkit:react": "yarn --cwd examples/deku-p-react start",
-    "test:deku-toolkit": "yarn --cwd deku-p/deku-toolkit test",
-    "build:deku-c-toolkit": "yarn --cwd deku-c/deku-c-toolkit build"
+    "build:client": "yarn --cwd deku-c/client build",
+    "start:deku-p-react": "yarn --cwd examples/deku-p-react start"
   }
 }
