@@ -34,6 +34,8 @@ export DEKU_API_DATABASE_URI="sqlite3:/tmp/api_database.db"
 export DEKU_API_DOMAINS=8
 export DEKU_API_VM="./flextesa_chain/data/0/api_vm_pipe"
 export DEKU_API_DATA_FOLDER="./flextesa_chain/data/0/"
+export DEKU_MINIMUM_BLOCK_LATENCY=1
+
 
 start_node() {
   N="$1"
@@ -53,7 +55,7 @@ start_node() {
 
   # Starts the Node
   _build/install/default/bin/deku-node \
-    --default-block-size=10000 \
+    --default-block-size=1000 \
     --port "444$N" \
     --database-uri "sqlite3:./flextesa_chain/data/$N/database.db" \
     --data-folder "./flextesa_chain/data/$N" \

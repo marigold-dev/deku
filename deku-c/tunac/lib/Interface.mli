@@ -1,5 +1,5 @@
 module Error : sig
-  type t = [ `Out_of_gas | `Type_error ] [@@deriving show, yojson]
+  type t = [ `Out_of_gas | `Type_error ] [@@deriving show]
 end
 
 module rec Value : sig
@@ -16,15 +16,15 @@ module rec Value : sig
     | Unit
     | Map of t Map.t
     | Set of Set.t
-  [@@deriving ord, eq, yojson, show]
+  [@@deriving ord, eq, show]
 end
 
-and Map : (Helpers.Map.S_with_yojson with type key = Value.t)
-and Set : (Helpers.Set.S_with_yojson with type elt = Value.t)
+and Map : (Helpers.Map.S with type key = Value.t)
+and Set : (Helpers.Set.S with type elt = Value.t)
 
 module Ticket : sig
   type t = { ticketer : string; owner : string; data : bytes; amount : Z.t }
-  [@@deriving eq, yojson, show]
+  [@@deriving eq, show]
 end
 
 module InvocationPayload : sig
@@ -38,7 +38,7 @@ module InvocationPayload : sig
     self_addr : string;
     gas_limit : int64;
   }
-  [@@deriving eq, yojson, show]
+  [@@deriving eq, show]
 end
 
 module InvocationResult : sig
@@ -48,7 +48,7 @@ module InvocationResult : sig
     contract_tickets : Ticket.t list;
     remaining_gas : int64;
   }
-  [@@deriving eq, yojson, show]
+  [@@deriving eq, show]
 end
 
 module Vm : sig

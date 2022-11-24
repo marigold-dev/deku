@@ -1,9 +1,7 @@
 (library
  (name common)
  (modules common)
- (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts piaf)
- (preprocess
-  (pps ppx_yojson_conv)))
+ (libraries deku_protocol cmdliner deku_stdlib deku_tezos deku_concepts piaf))
 
 (executable
  (name update_state_root_hash_test)
@@ -46,16 +44,10 @@
   deku_network
   deku_protocol
   deku_stdlib
-  yojson
   common
   cmdliner)
  (preprocess
-  (pps
-   ppx_let_binding
-   ppx_deriving.show
-   ppx_deriving.eq
-   ppx_deriving.ord
-   ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
 
 (executable
  (name proof_test)
@@ -66,16 +58,10 @@
   deku_chain
   deku_network
   deku_protocol
-  yojson
   common
   cmdliner)
  (preprocess
-  (pps
-   ppx_let_binding
-   ppx_deriving.show
-   ppx_deriving.eq
-   ppx_deriving.ord
-   ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
 
 (executable
  (name transaction_test)
@@ -86,16 +72,10 @@
   deku_chain
   deku_network
   deku_protocol
-  yojson
   common
   cmdliner)
  (preprocess
-  (pps
-   ppx_let_binding
-   ppx_deriving.show
-   ppx_deriving.eq
-   ppx_deriving.ord
-   ppx_yojson_conv)))
+  (pps ppx_let_binding ppx_deriving.show ppx_deriving.eq ppx_deriving.ord)))
 
 (library
  (name fixme_name)

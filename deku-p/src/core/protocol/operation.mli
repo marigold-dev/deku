@@ -24,7 +24,7 @@ type operation = private
     }
   | Operation_noop of { sender : Address.t }
 
-type t = operation [@@deriving show, yojson]
+type t = operation [@@deriving show]
 
 val encoding : t Data_encoding.t
 
@@ -37,7 +37,9 @@ module Initial : sig
         operation : operation;
       }
 
-  type t = initial_operation [@@deriving show, yojson]
+  type t = initial_operation [@@deriving show]
+
+  val encoding : t Data_encoding.t
 
   (* helpers *)
   val last_includable_level : initial_operation -> Level.t
@@ -54,7 +56,7 @@ module Signed : sig
         initial : Initial.t;
       }
 
-  type t = signed_operation [@@deriving show, yojson]
+  type t = signed_operation [@@deriving show]
 
   val encoding : signed_operation Data_encoding.t
 

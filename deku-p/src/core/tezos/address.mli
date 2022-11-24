@@ -3,7 +3,7 @@ open Deku_crypto
 type t =
   | Implicit of Key_hash.t
   | Originated of { contract : Contract_hash.t; entrypoint : string option }
-[@@deriving eq, ord, yojson, show]
+[@@deriving eq, ord, show]
 
 (* TODO: explain why this encoding? TLDR fixed size and no entrypoint  *)
 val contract_encoding : t Data_encoding.t

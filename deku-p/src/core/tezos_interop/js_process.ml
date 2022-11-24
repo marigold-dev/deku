@@ -2,29 +2,40 @@ open Deku_stdlib
 
 module Id : sig
   type id
-  type t = id [@@deriving yojson]
+  type t = id
 
   val initial : t
   val next : t -> t
+  val encoding : t Data_encoding.t
 
   module Map : Map.S with type key = t
 end = struct
   type id = int
-  and t = id [@@deriving yojson]
+  and t = id
 
   let initial = 0
   let next t = t + 1
+  let encoding = Data_encoding.int31
 
   module Map = Map.Make (struct
-    type t = int [@@deriving ord, yojson]
+    type t = int [@@deriving ord]
 
     let encoding = Data_encoding.int31
   end)
 end
 
 module Message = struct
-  type message = { id : Id.t; content : Yojson.Safe.t }
-  and t = message [@@deriving yojson]
+  type message = { id : Id.t; content : Data_encoding.Json.t }
+  and t = message
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { id; content } -> (id, content))
+      (fun (id, content) -> { id; content })
+      (obj2
+         (req "id" (dynamic_size Id.encoding))
+         (req "content" Data_encoding.Json.encoding))
 end
 
 module Pending : sig
@@ -34,9 +45,9 @@ module Pending : sig
   type t = pending
 
   val empty : pending
-  val listen : (Yojson.Safe.t -> unit) -> pending -> pending * Id.t
-  val request : (Yojson.Safe.t -> unit) -> pending -> pending * Id.t
-  val incoming : Id.t -> Yojson.Safe.t -> pending -> pending
+  val listen : (Data_encoding.Json.t -> unit) -> pending -> pending * Id.t
+  val request : (Data_encoding.Json.t -> unit) -> pending -> pending * Id.t
+  val incoming : Id.t -> Data_encoding.Json.t -> pending -> pending
 end = struct
   exception Unknown_id of Id.t
 
@@ -45,7 +56,7 @@ end = struct
   type pending =
     | Pending of {
         next_id : Id.t;
-        resolvers : (kind * (Yojson.Safe.t -> unit)) Id.Map.t;
+        resolvers : (kind * (Data_encoding.Json.t -> unit)) Id.Map.t;
       }
 
   type t = pending
@@ -87,13 +98,14 @@ end = struct
 
   let message_line buf =
     let line = Eio.Buf_read.line buf in
-    let json = Yojson.Safe.from_string line in
-    Message.message_of_yojson json
+    let json = Data_encoding.Json.from_string line in
+    let json = match json with Ok json -> json | _ -> failwith "" in
+    Data_encoding.Json.destruct Message.encoding json
 
   let write_message_line buf message =
     (* TODO: check max size *)
-    let json = Message.yojson_of_t message in
-    let line = Yojson.Safe.to_string json in
+    let json = Data_encoding.Json.construct Message.encoding message in
+    let line = Data_encoding.Json.to_string json in
     Eio.Buf_write.string buf line;
     Eio.Buf_write.char buf '\n'
 

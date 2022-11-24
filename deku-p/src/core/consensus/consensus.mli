@@ -26,7 +26,7 @@ type consensus = private
       accepted_at : Timestamp.t;
     }
 
-type t = consensus [@@deriving yojson]
+type t = consensus
 
 val encoding : consensus Data_encoding.t
 val make : validators:Validators.t -> consensus

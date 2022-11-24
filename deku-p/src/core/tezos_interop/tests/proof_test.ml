@@ -12,7 +12,20 @@ type api_response = {
   handle : Ledger.Withdrawal_handle.t;
   proof : Ledger.withdraw_proof;
 }
-[@@deriving of_yojson]
+
+let encoding =
+  let open Data_encoding in
+  let open Deku_ledger.Ledger in
+  conv
+    (fun { withdrawal_handles_hash; handle; proof } ->
+      (withdrawal_handles_hash, handle, proof))
+    (fun (withdrawal_handles_hash, handle, proof) ->
+      { withdrawal_handles_hash; handle; proof })
+    (obj3
+       (req "withdrawal_handles_hash"
+          Withdrawal_handle.Withdrawal_handle_hash.encoding)
+       (req "handle" Withdrawal_handle.encoding)
+       (req "proof" withdraw_proof_encoding))
 
 let main operation_hash verbose host =
   Eio_main.run @@ fun env ->
@@ -23,13 +36,17 @@ let main operation_hash verbose host =
   let code = Net.code_of_response response in
   let body = Net.body_of_response response in
   if verbose then Printf.eprintf "[%d]    %s\n%!" code body;
-  let body = body |> Yojson.Safe.from_string in
+  let body =
+    match body |> Data_encoding.Json.from_string with
+    | Ok body -> body
+    | Error _ -> failwith "cannot parse body"
+  in
   let {
     handle = { id; owner; ticket_id; amount; hash = _handle_hash };
     proof;
     withdrawal_handles_hash;
   } =
-    api_response_of_yojson body
+    Data_encoding.Json.destruct encoding body
   in
   let to_hex bytes = Hex.show (Hex.of_bytes bytes) in
   (* FIXME: we should remove -8 in the future. *)

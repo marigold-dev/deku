@@ -16,6 +16,6 @@ type receipt =
     }
   | Vm_transaction_error of { operation : Operation_hash.t; message : string }
 
-type t = receipt [@@deriving eq, yojson]
+type t = receipt [@@deriving eq]
 
 val encoding : receipt Data_encoding.t

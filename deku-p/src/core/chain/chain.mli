@@ -12,7 +12,7 @@ type chain = private
       producer : Producer.t;
     }
 
-type t = chain [@@deriving yojson]
+type t = chain
 
 val encoding : chain Data_encoding.t
 

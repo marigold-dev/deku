@@ -34,49 +34,34 @@ module Z : sig
   include module type of struct
     include Z
   end
-
-  val yojson_of_t : t -> Yojson.Safe.t
-  val t_of_yojson : Yojson.Safe.t -> t
 end
 
 module Map : sig
   include module type of Map
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Map.S
-
-    val yojson_of_t : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
-    val t_of_yojson : (Yojson.Safe.t -> 'a) -> Yojson.Safe.t -> 'a t
   end
 
-  module Make_with_yojson : functor
+  module Make : functor
     (K : sig
-       type t [@@deriving ord, yojson]
+       type t [@@deriving ord]
      end)
     -> sig
     include Map.S with type key = K.t
-
-    val yojson_of_t : ('a -> Yojson.Safe.t) -> 'a t -> Yojson.Safe.t
-    val t_of_yojson : (Yojson.Safe.t -> 'a) -> Yojson.Safe.t -> 'a t
   end
 end
 
 module Set : sig
   include module type of Set
 
-  module type S_with_yojson = sig
+  module type S = sig
     include Set.S
-
-    val yojson_of_t : t -> Yojson.Safe.t
-    val t_of_yojson : Yojson.Safe.t -> t
   end
 
-  module Make_with_yojson (K : sig
-    type t [@@deriving ord, yojson]
+  module Make (K : sig
+    type t [@@deriving ord]
   end) : sig
     include Set.S with type elt = K.t
-
-    val yojson_of_t : t -> Yojson.Safe.t
-    val t_of_yojson : Yojson.Safe.t -> t
   end
 end

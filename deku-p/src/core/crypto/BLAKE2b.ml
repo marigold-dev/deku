@@ -41,12 +41,12 @@ struct
       Alg.verify key signature (to_raw_string hash)
   end
 
-  module With_b58_and_encoding_and_yojson (P : sig
+  module With_b58_and_encoding (P : sig
     val name : string
     val prefix : Prefix.t
   end) =
   struct
-    include With_b58_and_encoding_and_yojson (struct
+    include With_b58_and_encoding (struct
       include P
 
       type t = hash
@@ -60,16 +60,12 @@ struct
       type t = hash [@@deriving ord]
 
       let encoding = encoding
-      let t_of_yojson = t_of_yojson
-      let yojson_of_t = yojson_of_t
     end)
 
     module Map = Map.Make (struct
       type t = hash [@@deriving ord]
 
       let encoding = encoding
-      let t_of_yojson = t_of_yojson
-      let yojson_of_t = yojson_of_t
     end)
   end
 end
@@ -86,14 +82,12 @@ module BLAKE2b_160 = Make (Size_160)
 module BLAKE2b_256 = Make (Size_256)
 include BLAKE2b_256
 
-let yojson_of_t t = `String (to_hex t)
-
-let t_of_yojson json =
-  (* TODO: Is this warning correct? *)
-  Logs.warn (fun m ->
-      m "error, an 'untyped' hash is circulating on the network");
-  let json_str = Yojson.Safe.Util.to_string json in
-  match json_str |> of_hex with
-  | Some t -> t
-  | None ->
-      failwith (Format.sprintf "cannot deserialize %s to blake2b" json_str)
+let encoding =
+  let open Data_encoding in
+  conv
+    (fun hash -> to_hex hash)
+    (fun hex ->
+      match of_hex hex with
+      | Some hash -> hash
+      | None -> failwith "impossible to decode")
+    string

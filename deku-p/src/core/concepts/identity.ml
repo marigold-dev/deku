@@ -21,11 +21,3 @@ let key_hash identity =
 let sign ~hash identity =
   let (Identity { secret; key = _; _ }) = identity in
   Signature.sign secret hash
-
-let t_of_yojson json =
-  let secret = Secret.t_of_yojson json in
-  make secret
-
-let yojson_of_t identity =
-  let (Identity { secret; _ }) = identity in
-  Secret.yojson_of_t secret

@@ -13,7 +13,7 @@ type chain =
       producer : Producer.t;
     }
 
-and t = chain [@@deriving yojson]
+and t = chain
 
 let encoding =
   let open Data_encoding in

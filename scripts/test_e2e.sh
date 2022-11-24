@@ -92,6 +92,7 @@ local-setup() {
   export DEKU_DEFAULT_BLOCK_SIZE=${DEKU_DEFAULT_BLOCK_SIZE:-10000}
   echo "consensus address $DEKU_TEZOS_CONSENSUS_ADDRESS"
   export DUMMY_TICKET_ADDRESS="$(octez_client --endpoint $DEKU_TEZOS_RPC_NODE show known contract dummy_ticket | grep KT1 | tr -d '\r')"
+  export DEKU_MINIMUM_BLOCK_LATENCY=1
 
 
 

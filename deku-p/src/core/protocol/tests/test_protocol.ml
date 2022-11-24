@@ -182,40 +182,28 @@ let test_invalid_string () =
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
 let test_invalid_signature () =
-  let operation =
-    `Assoc
-      [
-        ("level", Level.yojson_of_t Level.zero);
-        ("nonce", Nonce.yojson_of_t (Nonce.of_n N.one));
-        ( "source",
-          Address.yojson_of_t (Address.of_key_hash (Identity.key_hash alice)) );
-        ( "content",
-          `List
-            [
-              `String "Transaction";
-              `Assoc
-                [
-                  ( "receiver",
-                    Address.yojson_of_t
-                      (Address.of_key_hash (Identity.key_hash bob)) );
-                  ("amount", Amount.yojson_of_t Amount.zero);
-                ];
-            ] );
-      ]
+  let source =
+    alice |> Identity.key_hash |> Address.of_key_hash |> Address.to_b58
+  in
+  let key = alice |> Identity.key |> Key.to_b58 in
+  let nonce = Nonce.of_n N.one |> Nonce.show in
+  let level = Level.of_n N.one |> Level.show in
+  let operation = Format.sprintf {|{"sender": %s}|} source in
+  let initial =
+    Format.sprintf
+      {|
+    "nonce": %s,
+    "level": %s,
+    "operation": %s
+  |}
+      nonce level operation
   in
   let hash = BLAKE2b.hash "waku waku" in
-  let signature = Identity.sign ~hash alice in
-  let json =
-    `Assoc
-      [
-        ("key", Key.yojson_of_t (Identity.key alice));
-        ("signature", Signature.yojson_of_t signature);
-        ("operation", operation);
-      ]
-  in
-  let op_str = Yojson.Safe.to_string json in
-  let _, receipts, _errors =
-    let payload = [ op_str ] in
+  let signature = Identity.sign ~hash alice |> Signature.to_b58 in
+  let signed = Format.sprintf {|[[%s, %s ], %s]|} key signature initial in
+
+  let _, receipts, _ =
+    let payload = [ signed ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial
@@ -223,43 +211,31 @@ let test_invalid_signature () =
   Alcotest.(check bool) "shouldn't be included" true (List.length receipts = 0)
 
 let test_valid_signature_but_different_key () =
-  let operation =
-    `Assoc
-      [
-        ("level", Level.yojson_of_t Level.zero);
-        ("nonce", Nonce.yojson_of_t (Nonce.of_n N.one));
-        ( "source",
-          Address.yojson_of_t (Address.of_key_hash (Identity.key_hash alice)) );
-        ( "content",
-          `List
-            [
-              `String "Transaction";
-              `Assoc
-                [
-                  ( "receiver",
-                    Address.yojson_of_t
-                      (Address.of_key_hash (Identity.key_hash bob)) );
-                  ("amount", Amount.yojson_of_t Amount.zero);
-                ];
-            ] );
-      ]
+  let source =
+    alice |> Identity.key_hash |> Address.of_key_hash |> Address.to_b58
+  in
+  let key = alice |> Identity.key |> Key.to_b58 in
+  let nonce = Nonce.of_n N.one |> Nonce.show in
+  let level = Level.of_n N.one |> Level.show in
+  let operation = Format.sprintf {|{"sender": %s}|} source in
+  let initial =
+    Format.sprintf
+      {|
+    "nonce": %s,
+    "level": %s,
+    "operation": %s
+  |}
+      nonce level operation
   in
   let hash =
-    Yojson.Safe.to_string operation
-    |> Operation_hash.hash |> Operation_hash.to_blake2b
+    Operation_hash.of_b58 "Do3mBf9sFinaGeQCKExQZGM1rqeP5A4NrS6TWvmyqkycgBvkGpjm"
+    |> Option.get |> Operation_hash.to_blake2b
   in
-  let signature = Identity.sign ~hash alice in
-  let json =
-    `Assoc
-      [
-        ("key", Key.yojson_of_t (Identity.key bob));
-        ("signature", Signature.yojson_of_t signature);
-        ("operation", operation);
-      ]
-  in
-  let op_str = Yojson.Safe.to_string json in
-  let _, receipts, _errors =
-    let payload = [ op_str ] in
+  let signature = Identity.sign ~hash alice |> Signature.to_b58 in
+  let signed = Format.sprintf {|[[%s, %s ], %s]|} key signature initial in
+
+  let _, receipts, _ =
+    let payload = [ signed ] in
     let payload = Protocol.prepare ~parallel ~payload in
     Protocol.apply ~current_level:Level.zero ~payload ~tezos_operations:[]
       Protocol.initial

@@ -24,7 +24,7 @@ module Secret = struct
   let to_raw secret =
     Bigstring.to_string (Libsecp256k1.Key.to_bytes context secret)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = secret
 
     let name = "Secp256k1.Secret_key"
@@ -63,7 +63,7 @@ module Key = struct
   let of_secret secret = Libsecp256k1.Key.neuterize_exn context secret
   let to_raw key = Bigstring.to_string (Libsecp256k1.Key.to_bytes context key)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = key
 
     let name = "Secp256k1.Public_key"
@@ -97,7 +97,7 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     let name = "Secp256k1.Public_key_hash"
     let prefix = Prefix.secp256k1_public_key_hash
   end)
@@ -116,7 +116,7 @@ module Signature = struct
   let size = Sign.plain_bytes
   let zero = of_raw (String.make size '\x00') |> Option.get
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = signature
 
     let name = "Secp256k1.Secret"

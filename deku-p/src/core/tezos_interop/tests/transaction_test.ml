@@ -12,7 +12,7 @@ let main ticket_id receiver secret verbose host =
     let response = Net.get ~sw ~env url in
     let body = Net.body_of_response response in
     if verbose then prerr_endline body;
-    let level = Net.level_body_of_yojson body in
+    let level = Net.level_of_response body in
     Level.next (Level.next level)
   in
   let identity = Identity.make secret in
@@ -23,8 +23,11 @@ let main ticket_id receiver secret verbose host =
       ~amount:(Deku_concepts.Amount.of_n (Obj.magic 10))
   in
   let url = Uri.with_path host "api/v1/operations" in
-  let json = Deku_protocol.Operation.Signed.yojson_of_t operation in
-  Printf.eprintf "%s\n%!" (Yojson.Safe.to_string json);
+  let json =
+    Data_encoding.Json.construct Deku_protocol.Operation.Signed.encoding
+      operation
+  in
+  Printf.eprintf "%s\n%!" (Data_encoding.Json.to_string json);
   let response = Net.post_operation ~sw ~env operation url in
   let code = Net.code_of_response response in
   Printf.eprintf "%d\n%!" code;

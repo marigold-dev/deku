@@ -11,4 +11,4 @@
   logs.fmt
   fmt.tty)
  (preprocess
-  (pps ppx_yojson_conv ppx_deriving_cmdliner ppx_let_binding)))
+  (pps ppx_deriving_cmdliner ppx_let_binding)))

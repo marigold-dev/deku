@@ -7,6 +7,21 @@ type secret =
 
 and t = secret [@@deriving eq, ord]
 
+let secret_encoding =
+  let open Data_encoding in
+  union
+    [
+      case ~title:"Ed25519" (Tag 0) Ed25519.Secret.encoding
+        (function Ed25519 secret -> Some secret | _ -> None)
+        (fun secret -> Ed25519 secret);
+      case ~title:"Secp256k1" (Tag 1) Secp256k1.Secret.encoding
+        (function Secp256k1 secret -> Some secret | _ -> None)
+        (fun secret -> Secp256k1 secret);
+      case ~title:"P256" (Tag 2) P256.Secret.encoding
+        (function P256 secret -> Some secret | _ -> None)
+        (fun secret -> P256 secret);
+    ]
+
 let of_b58 =
   let ed25519 string =
     match Ed25519.Secret.of_b58 string with
@@ -30,10 +45,3 @@ let to_b58 secret =
   | Ed25519 secret -> Ed25519.Secret.to_b58 secret
   | Secp256k1 secret -> Secp256k1.Secret.to_b58 secret
   | P256 secret -> P256.Secret.to_b58 secret
-
-include With_yojson_of_b58 (struct
-  type t = secret
-
-  let of_b58 = of_b58
-  let to_b58 = to_b58
-end)

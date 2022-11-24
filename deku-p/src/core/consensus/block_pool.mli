@@ -4,7 +4,7 @@ type block_pool = private
   | Pool of
       (Block.t option * Verified_signature.Set.t) Block_hash.Map.t Level.Map.t
 
-type t = block_pool [@@deriving yojson]
+type t = block_pool
 
 val encoding : block_pool Data_encoding.t
 val empty : block_pool

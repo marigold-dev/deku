@@ -15,13 +15,13 @@ module Withdrawal_handle = struct
 
     type t = BLAKE2b.t [@@deriving show]
 
-    include With_b58_and_encoding_and_yojson (struct
+    include With_b58_and_encoding (struct
       let name = "Ledger.Withdrawal_handle_hash"
       let prefix = Deku_repr.Prefix.deku_withdrawal_hash
     end)
   end
 
-  type hash = Withdrawal_handle_hash.t [@@deriving yojson, show]
+  type hash = Withdrawal_handle_hash.t [@@deriving show]
 
   type t = {
     hash : Withdrawal_handle_hash.t;
@@ -30,7 +30,6 @@ module Withdrawal_handle = struct
     amount : Amount.t;
     ticket_id : Ticket_id.t;
   }
-  [@@deriving yojson]
 
   let equal handle1 handle2 = BLAKE2b.equal handle1.hash handle2.hash
 
@@ -67,7 +66,15 @@ module Withdrawal_handle_tree = Incremental_patricia.Make (struct
 end)
 
 type withdraw_proof = (Withdrawal_handle.hash * Withdrawal_handle.hash) list
-[@@deriving yojson]
+
+let withdraw_proof_encoding =
+  let open Data_encoding in
+  conv
+    (fun withdraw_proof -> withdraw_proof)
+    (fun withdraw_proof -> withdraw_proof)
+    (list
+       (tup2 Withdrawal_handle.Withdrawal_handle_hash.encoding
+          Withdrawal_handle.Withdrawal_handle_hash.encoding))
 
 module Proof_response = struct
   type t =
@@ -76,7 +83,6 @@ module Proof_response = struct
         handle : Withdrawal_handle.t;
         proof : withdraw_proof;
       }
-  [@@deriving yojson]
 end
 
 type ledger =
@@ -84,11 +90,10 @@ type ledger =
       table : Ticket_table.t;
       withdrawal_handles : Withdrawal_handle_tree.t;
     }
-[@@deriving yojson]
 
 and t = ledger
 
-type withdrawal_handle = Withdrawal_handle.t [@@deriving yojson]
+type withdrawal_handle = Withdrawal_handle.t
 
 let encoding =
   let open Data_encoding in

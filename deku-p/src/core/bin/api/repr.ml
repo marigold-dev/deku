@@ -9,7 +9,15 @@ module Signed_operation = struct
     signature : Signature.t;
     initial : Operation.Initial.t;
   }
-  [@@deriving yojson]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; initial } -> (key, signature, initial))
+      (fun (key, signature, initial) -> { key; signature; initial })
+      (obj3 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "initial" Operation.Initial.encoding))
 
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =
@@ -35,7 +43,6 @@ module Block = struct
     payload_hash : BLAKE2b.t;
     tezos_operations : Tezos_operation.t list;
   }
-  [@@deriving yojson]
 
   let of_block block =
     let (Block.Block
@@ -67,4 +74,62 @@ module Block = struct
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun {
+             key;
+             signature;
+             hash;
+             withdrawal_handles_hash;
+             author;
+             level;
+             previous;
+             payload;
+             payload_hash;
+             tezos_operations;
+           } ->
+        ( key,
+          signature,
+          hash,
+          withdrawal_handles_hash,
+          author,
+          level,
+          previous,
+          payload,
+          payload_hash,
+          tezos_operations ))
+      (fun ( key,
+             signature,
+             hash,
+             withdrawal_handles_hash,
+             author,
+             level,
+             previous,
+             payload,
+             payload_hash,
+             tezos_operations ) ->
+        {
+          key;
+          signature;
+          hash;
+          withdrawal_handles_hash;
+          author;
+          level;
+          previous;
+          payload;
+          payload_hash;
+          tezos_operations;
+        })
+      (obj10 (req "key" Key.encoding)
+         (req "signature" Signature.encoding)
+         (req "hash" Block_hash.encoding)
+         (req "withdrawal_handles_hash" BLAKE2b.encoding)
+         (req "author" Key_hash.encoding)
+         (req "level" Level.encoding)
+         (req "previous" Block_hash.encoding)
+         (req "payload" (list string))
+         (req "payload_hash" BLAKE2b.encoding)
+         (req "tezos_operations" (list Tezos_operation.encoding)))
 end

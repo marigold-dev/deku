@@ -73,7 +73,7 @@ let insert_block ~block ~timestamp pool =
   let (Block.Block { hash = block_hash; level; _ }) = block in
   let block =
     Parallel.parallel @@ fun () ->
-    Data_encoding.Binary.to_string_exn Block.encoding block
+    Data_encoding.Json.construct Block.encoding block
   in
   Caqti_eio.Pool.use (insert_block ~block_hash ~level ~block ~timestamp) pool
 

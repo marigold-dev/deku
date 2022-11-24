@@ -1,18 +1,13 @@
 open Z_ext
 
 type nat = Z_ext.t
-and t = nat [@@deriving eq, ord, yojson]
+and t = nat [@@deriving eq, ord]
 
 let show n = Format.asprintf "%a" pp_print n
 let pp = pp_print
 let check n = match n < zero with true -> None | false -> Some n
 
 exception Not_a_natural
-
-let t_of_yojson json =
-  match check (t_of_yojson json) with
-  | Some n -> n
-  | None -> raise Not_a_natural
 
 let zero = zero
 let one = one
@@ -24,7 +19,7 @@ let ( - ) a b = check (a - b)
 let ( > ) a b = Z.gt a b
 
 module Map = Map_ext.Make (struct
-  type t = nat [@@deriving ord, yojson]
+  type t = nat [@@deriving ord]
 
   let encoding = encoding
 end)

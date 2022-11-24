@@ -41,15 +41,21 @@ module Timestamp : Rapper.CUSTOM with type t = Timestamp.t = struct
     Caqti_type.(custom ~encode ~decode float)
 end
 
-module Block : Rapper.CUSTOM with type t = string = struct
-  type t = string
+module Block : Rapper.CUSTOM with type t = Data_encoding.Json.t = struct
+  type t = Data_encoding.Json.t
 
   let t =
-    let encode block = block |> Ezgzip.compress |> Result.ok in
+    let encode block =
+      block |> Data_encoding.Json.to_string |> Ezgzip.compress |> Result.ok
+    in
     let decode json =
       try
-        json |> Ezgzip.decompress
-        |> Result.map_error (fun _err -> "cannot decompress block")
+        let maybe_string =
+          json |> Ezgzip.decompress |> Result.map Data_encoding.Json.from_string
+        in
+        match maybe_string with
+        | Ok value -> value
+        | _ -> failwith "cannot decompress block"
       with exn ->
         Error
           (Format.sprintf "cannot decode block from the database: %s"

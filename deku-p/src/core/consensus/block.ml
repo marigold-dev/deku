@@ -110,16 +110,6 @@ let encoding =
       | false -> Error "Invalid_signature")
     (tup3 Signature.key_encoding header_encoding string)
 
-let t_of_yojson json =
-  let json = Yojson.Safe.to_string json in
-  let json = Result.get_ok (Data_encoding.Json.from_string json) in
-  Data_encoding.Json.destruct encoding json
-
-let yojson_of_t signed =
-  let json = Data_encoding.Json.construct encoding signed in
-  let json = Data_encoding.Json.to_string json in
-  Yojson.Safe.from_string json
-
 let produce ~identity ~level ~previous ~payload ~tezos_operations
     ~withdrawal_handles_hash =
   let payload = Payload.encode ~payload in
@@ -161,7 +151,5 @@ module Set = Set.Make (struct
   type t = block
 
   let compare = compare
-  let t_of_yojson = t_of_yojson
-  let yojson_of_t = yojson_of_t
   let encoding = encoding
 end)

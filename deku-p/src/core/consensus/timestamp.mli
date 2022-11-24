@@ -1,6 +1,6 @@
 (* TODO: probably should be under concepts *)
 type timestamp
-type t = timestamp [@@deriving show, yojson]
+type t = timestamp [@@deriving show]
 
 val encoding : timestamp Data_encoding.t
 val genesis : timestamp

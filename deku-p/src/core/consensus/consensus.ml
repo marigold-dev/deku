@@ -41,7 +41,7 @@ and consensus =
       accepted_at : Timestamp.t;
     }
 
-and t = consensus [@@deriving yojson]
+and t = consensus
 
 let state_encoding =
   let open Data_encoding in

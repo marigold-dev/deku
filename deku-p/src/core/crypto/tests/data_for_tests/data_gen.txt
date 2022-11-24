@@ -5,7 +5,7 @@ Build in a project with tezos-crypto with the following dune file:
  (name data_gen)
  (libraries tezos_crypto)
  (preprocess
-  (pps ppx_deriving_yojson)))
+  (pps)))
 
  *)
 

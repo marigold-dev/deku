@@ -12,7 +12,7 @@ module Secret = struct
 
   let compare a b = Cstruct.compare (priv_to_cstruct a) (priv_to_cstruct b)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = secret
 
     let name = "Ed25519.Secret_key"
@@ -50,7 +50,7 @@ module Key = struct
   let of_secret secret = pub_of_priv secret
   let to_raw key = Cstruct.to_string (pub_to_cstruct key)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = key
 
     let name = "Ed25519.Public_key"
@@ -83,7 +83,7 @@ module Key_hash = struct
   let compare = compare
   let of_key key = hash (Key.to_raw key)
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     let name = "Ed25519.Public_key_hash"
     let prefix = Prefix.ed25519_public_key_hash
   end)
@@ -98,7 +98,7 @@ module Signature = struct
   let size = 64
   let zero = String.make size '\x00'
 
-  include With_b58_and_encoding_and_yojson (struct
+  include With_b58_and_encoding (struct
     type t = signature
 
     let name = "Ed25519.Signature"

@@ -83,13 +83,11 @@ let close_level ~until pool =
   let by_level = drop ~until by_level in
   Pool by_level
 
-(* yojson *)
 (* TODO: not safe, doesn't check if signatures match validator *)
 type repr = {
   blocks : Block.t list;
   votes : (Level.t * Verified_signature.t) list;
 }
-[@@deriving yojson]
 
 let of_repr { blocks; votes } =
   let pool =
@@ -133,11 +131,3 @@ let repr_encoding =
 let encoding =
   let open Data_encoding in
   conv to_repr of_repr repr_encoding
-
-let t_of_yojson json : block_pool =
-  let repr = repr_of_yojson json in
-  of_repr repr
-
-let yojson_of_t pool =
-  let repr = to_repr pool in
-  yojson_of_repr repr

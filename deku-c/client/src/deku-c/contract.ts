@@ -102,10 +102,10 @@ export class Contract {
    */
   async invokeRaw(parameter: any): Promise<string> {
     const invoke = {
-      operation: JSON.stringify({
+      operation: {
         address: this.address,
         argument: parameter,
-      }),
+      },
       tickets: [],
     };
     const hash = await this.deku.submitVmOperation(invoke);
@@ -149,14 +149,13 @@ export class Contract {
    * Returns the data of the contract as a wasm-vm object
    * @returns an object
    */
-  async getRawInfos(): Promise<{ [x: string]: JSONType } | null> {
-    const response: { [key: string]: string } =
-      (await this.deku.getVmState()) as { [key: string]: string };
+  async getRawInfos(): Promise<{ [key: string]: JSONType } | null> {
+    const response: { [key: string]: JSONType } =
+      (await this.deku.getVmState()) as { [key: string]: JSONType };
     if (response === null) return null;
     const state = response[this.address];
-    if (state === null || state === undefined) return null;
-    const slashRemoved = state.replaceAll('\\"', '"');
-    return JSON.parse(slashRemoved);
+    if (state === null) return null;
+    return state as { [key: string]: JSONType };
   }
 
   /**

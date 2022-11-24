@@ -5,12 +5,12 @@ exception Insufficient_funds
 
 module Withdrawal_handle : sig
   module Withdrawal_handle_hash : sig
-    type t = BLAKE2b.t [@@deriving yojson]
+    type t = BLAKE2b.t
 
     val encoding : t Data_encoding.t
   end
 
-  type hash = Withdrawal_handle_hash.t [@@deriving yojson, show]
+  type hash = Withdrawal_handle_hash.t [@@deriving show]
 
   type t = {
     hash : Withdrawal_handle_hash.t;
@@ -19,7 +19,7 @@ module Withdrawal_handle : sig
     amount : Amount.t;
     ticket_id : Ticket_id.t;
   }
-  [@@deriving yojson, eq]
+  [@@deriving eq]
 
   val encoding : t Data_encoding.t
 end
@@ -29,7 +29,8 @@ module Withdrawal_handle_tree : sig
 end
 
 type withdraw_proof = (Withdrawal_handle.hash * Withdrawal_handle.hash) list
-[@@deriving yojson]
+
+val withdraw_proof_encoding : withdraw_proof Data_encoding.t
 
 module Proof_response : sig
   type t =
@@ -38,10 +39,9 @@ module Proof_response : sig
         handle : Withdrawal_handle.t;
         proof : withdraw_proof;
       }
-  [@@deriving yojson]
 end
 
-type withdrawal_handle = Withdrawal_handle.t [@@deriving yojson]
+type withdrawal_handle = Withdrawal_handle.t
 
 type ledger = private
   | Ledger of {
@@ -49,7 +49,7 @@ type ledger = private
       withdrawal_handles : Withdrawal_handle_tree.t;
     }
 
-type t = ledger [@@deriving yojson]
+type t = ledger
 
 val encoding : ledger Data_encoding.t
 

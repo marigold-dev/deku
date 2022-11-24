@@ -38,14 +38,11 @@ type OperationVmTransaction = {
 
 const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
   const { sender, operation } = vmTransaction;
-  return [
-    "Operation_vm_transaction",
-    {
-      sender,
-      /* eslint-disable  @typescript-eslint/no-explicit-any */
-      operation: operation as any, // The toolkit does not know what is inside the payload, because deku is parametric, so it makes sense to type this as any
-    },
-  ];
+  return {
+    sender,
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+    operation: operation as any, // The toolkit does not know what is inside the payload, because deku is parametric, so it makes sense to type this as any
+  };
 };
 
 type OperationWithdraw = {
@@ -216,59 +213,39 @@ const createNoop = async (
   };
 };
 
-type DTO = [
-  "Initial_operation",
-  {
-    hash: string;
-    nonce: string;
-    level: string;
-    operation: JSONType;
-  }
-];
+type DTO = {
+  nonce: string;
+  level: string;
+  operation: JSONType;
+};
 
 const toDTO = (operation: Operation): DTO => {
   const { hash, nonce, level, type, operation: content } = operation;
   switch (type) {
     case "TicketTransfer":
-      return [
-        "Initial_operation",
-        {
-          hash: hash,
-          nonce: Nonce.toDTO(nonce),
-          level: Level.toDTO(level),
-          operation: ticketTransferToDTO(content as OperationTicketTransfer),
-        },
-      ];
+      return {
+        nonce: Nonce.toDTO(nonce),
+        level: Level.toDTO(level),
+        operation: ticketTransferToDTO(content as OperationTicketTransfer),
+      };
     case "VmTransaction":
-      return [
-        "Initial_operation",
-        {
-          hash: hash,
-          nonce: Nonce.toDTO(nonce),
-          level: Level.toDTO(level),
-          operation: vmTransactionToDTO(content as OperationVmTransaction),
-        },
-      ];
+      return {
+        nonce: Nonce.toDTO(nonce),
+        level: Level.toDTO(level),
+        operation: vmTransactionToDTO(content as OperationVmTransaction),
+      };
     case "Withdraw":
-      return [
-        "Initial_operation",
-        {
-          hash: hash,
-          nonce: Nonce.toDTO(nonce),
-          level: Level.toDTO(level),
-          operation: withdrawToDTO(content as OperationWithdraw),
-        },
-      ];
+      return {
+        nonce: Nonce.toDTO(nonce),
+        level: Level.toDTO(level),
+        operation: withdrawToDTO(content as OperationWithdraw),
+      };
     case "Noop":
-      return [
-        "Initial_operation",
-        {
-          hash: hash,
-          nonce: Nonce.toDTO(nonce),
-          level: Level.toDTO(level),
-          operation: noopToDTO(content as OperationNoop),
-        },
-      ];
+      return {
+        nonce: Nonce.toDTO(nonce),
+        level: Level.toDTO(level),
+        operation: noopToDTO(content as OperationNoop),
+      };
   }
 };
 

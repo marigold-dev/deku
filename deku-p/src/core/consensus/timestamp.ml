@@ -1,7 +1,7 @@
 open Float
 
 type timestamp = float
-and t = timestamp [@@deriving show, yojson]
+and t = timestamp [@@deriving show]
 
 let encoding = Data_encoding.float
 let block_timeout = Deku_constants.block_timeout

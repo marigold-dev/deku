@@ -49,7 +49,6 @@ module Repr = struct
     signature : Signature.t;
     signed_hash : string;
   }
-  [@@deriving yojson]
 
   let encoding =
     let open Data_encoding in
@@ -78,11 +77,6 @@ let to_repr signature =
 let encoding =
   let open Data_encoding in
   conv to_repr of_repr Repr.encoding
-
-let t_of_yojson json = of_repr (Repr.verified_signature_of_yojson json)
-
-let yojson_of_t signature =
-  Repr.yojson_of_verified_signature (to_repr signature)
 
 module Set = Set.Make (struct
   type t = verified_signature

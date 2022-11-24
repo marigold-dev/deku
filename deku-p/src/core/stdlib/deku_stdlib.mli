@@ -11,15 +11,3 @@ module IO = Io
 
 module Parallel = Parallel
 module List = List_ext
-
-(* FIXME: not sure if this is the right thing to do.  *)
-module Yojson : sig
-  include module type of Yojson
-
-  module Safe : sig
-    include module type of Safe
-
-    val t_of_yojson : t -> t
-    val yojson_of_t : t -> t
-  end
-end

@@ -2,17 +2,29 @@ module Header = struct
   open Deku_concepts
 
   type header = Message_header of { hash : Message_hash.t; level : Level.t }
-  and t = header [@@deriving show, eq, yojson]
+  and t = header [@@deriving show, eq]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun (Message_header { hash; level }) ->
+        (Message_hash.to_blake2b hash, level))
+      (fun (hash, level) ->
+        let hash = Message_hash.of_blake2b hash in
+        Message_header { hash; level })
+      (tup2 Deku_crypto.BLAKE2b.encoding Level.encoding)
 
   let make ~hash ~level = Message_header { hash; level }
 
   let encode header =
-    let json = yojson_of_header header in
-    Yojson.Safe.to_string json
+    let json = Data_encoding.Json.construct encoding header in
+    Data_encoding.Json.to_string json
 
   let decode ~raw_header =
-    let json = Yojson.Safe.from_string raw_header in
-    header_of_yojson json
+    let json = Data_encoding.Json.from_string raw_header in
+    match json with
+    | Ok json -> Data_encoding.Json.destruct encoding json
+    | _ -> failwith "impossible to decode"
 end
 
 module Content = struct
@@ -27,7 +39,7 @@ module Content = struct
     | Content_operation of Operation.Signed.t
     | Content_accepted of { block : Block.t; votes : Verified_signature.t list }
 
-  and t = content [@@deriving show, yojson]
+  and t = content [@@deriving show]
 
   exception Invalid_content
 
@@ -74,7 +86,7 @@ module Network = struct
   type network_message =
     | Network_message of { raw_header : string; raw_content : string }
 
-  and t = network_message [@@deriving yojson]
+  and t = network_message
 
   let make ~raw_header ~raw_content =
     Network_message { raw_header; raw_content }

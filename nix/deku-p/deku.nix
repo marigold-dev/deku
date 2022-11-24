@@ -72,7 +72,6 @@ in
           tezos-micheline
           tezos-crypto
           ppx_deriving
-          ppx_yojson_conv
           zarith
           digestif
           mirage-crypto
