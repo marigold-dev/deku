@@ -10,6 +10,13 @@ export type JSONType =
   | Array<JSONType>
   | null;
 
+export enum LigoLanguages {
+  JSLIGO = "jsligo",
+  MLIGO = "mligo",
+}
+
+export type ligo_kind = `${LigoLanguages}`;
+
 const parseContractState = (json: JSONType): JSONType => {
   if (json === null) return null;
   if (!Array.isArray(json)) return null;
@@ -125,10 +132,10 @@ export class Contract {
    * @param parameter the parameter of the contract, in Ligo // FIXME lang
    * @returns the hash of the operation
    */
-  async invokeLigo(code: string, expression: string): Promise<string> {
+  async invokeLigo(kind: ligo_kind, code: string, expression: string): Promise<string> {
     // FIXME the need for the two RPCs stinks (also they're strings)
     const parameter = {
-      kind: "jsligo",
+      kind,
       code,
       ligoExpression: expression,
       address: this.address,
