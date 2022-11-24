@@ -14,6 +14,7 @@ type api_state = {
   mutable protocol : Protocol.t;
   mutable is_sync : bool;
   mutable receipts : Receipt.t Operation_hash.Map.t;
+  dump: current_block:Block.t -> protocol:Protocol.t -> receipts:(Receipt.t Operation_hash.Map.t) -> unit
       (** Receipts of the included operations; also contains withdrawal receipts, which are used to
           generate withdrawal proofs. *)
 }
@@ -21,7 +22,7 @@ type api_state = {
 type t = api_state
 
 let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
-    ~receipts =
+    ~receipts ~dump =
   {
     consensus_address;
     current_block;
@@ -31,6 +32,7 @@ let make ~consensus_address ~indexer ~network ~identity ~protocol ~current_block
     protocol;
     is_sync = false;
     receipts;
+    dump
   }
 
 let find_withdraw_proof ~operation_hash state =
@@ -63,21 +65,6 @@ module Storage = struct
   let temp = "deku_api.tmp.json"
   let file = "deku_api.json"
 
-  let state_to_storage state =
-    let {
-      consensus_address = _;
-      current_block;
-      indexer = _;
-      identity = _;
-      network = _;
-      protocol;
-      is_sync = _;
-      receipts;
-    } =
-      state
-    in
-    { current_block; protocol; receipts }
-
   let read ~env:_ ~folder =
     let file = Filename.concat folder file in
     match IO.file_exists file with
@@ -86,10 +73,10 @@ module Storage = struct
         Some (t_of_yojson json)
     | false -> None
 
-  let write ~env ~folder state =
+  let write ~env ~folder ~current_block ~protocol ~receipts =
     Eio_unix.run_in_systhread (fun () ->
         let temp = Filename.concat folder temp in
-        let state = state_to_storage state in
+        let state = {current_block; protocol; receipts} in
         let json = yojson_of_t state in
         Yojson.Safe.to_file temp json);
     let fs = Eio.Stdenv.fs env in

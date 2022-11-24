@@ -16,7 +16,31 @@ let save_block ~sw ~block ~indexer =
   Eio.Fiber.fork_sub ~sw ~on_error (fun _sw -> 
     Block_storage.save_block ~block indexer)
 
-let apply_block ~sw ~env ~folder ~state ~block =
+let make_dump_loop ~sw ~env ~folder =
+  let resolver_ref = Atomic.make None in
+  let domains = Eio.Stdenv.domain_mgr env in
+
+  let rec loop () : unit =
+    let promise, resolver = Eio.Promise.create () in
+    Atomic.set resolver_ref (Some resolver);
+    let (current_block, protocol, receipts) = Eio.Promise.await promise in
+   let (Block.Block { level; _ }) = current_block in
+    Logs.info (fun m -> m "Writing state for level %a" Level.pp level);
+    (try Api_state.Storage.write ~env ~folder ~current_block ~protocol ~receipts
+      with exn ->
+        Logs.err (fun m -> m "storage.failure: %s" (Printexc.to_string exn)));
+    loop ()
+  in
+  let dump ~current_block ~protocol ~receipts =
+    match Atomic.exchange resolver_ref None with
+    | Some resolver -> Eio.Promise.resolve resolver (current_block, protocol, receipts)
+    | None -> ()
+  in
+  ( Eio.Fiber.fork_sub ~sw ~on_error:Deku_constants.async_on_error @@ fun _sw ->
+    Eio.Domain_manager.run domains (fun () -> loop ()) );
+  dump 
+
+let apply_block ~sw ~state ~block =
   state.current_block <- block;
   let () = save_block ~sw ~block ~indexer:state.indexer in
   let (Block.Block { level; payload; tezos_operations; _ }) = block in
@@ -55,14 +79,13 @@ let apply_block ~sw ~env ~folder ~state ~block =
   (* TODO: how do we clear the list of receipts ?*)
   state.protocol <- protocol;
   state.is_sync <- true;
-  Api_state.Storage.write ~env ~folder state;
-  Logs.info (fun m -> m "Writing state for level %a" Level.pp level)
+  state.dump ~current_block:block ~protocol ~receipts
 
-let on_accepted_block ~sw ~env ~folder ~state ~block =
+let on_accepted_block ~sw ~state ~block =
   let (Block.Block { level = api_level; _ }) = state.current_block in
   let (Block.Block { level; _ }) = block in
   match Level.equal (Level.next api_level) level with
-  | true -> apply_block ~sw ~env ~folder ~state ~block
+  | true -> apply_block ~sw ~state ~block
   | false ->
       Logs.warn (fun m ->
           m "API desynchronized: state at level %a, block at level %a" Level.pp
@@ -80,13 +103,13 @@ let on_connection ~connection state =
   Network_manager.send_request ~connection ~raw_header ~raw_content
     state.network
 
-let on_message ~sw ~env ~folder ~raw_header ~raw_content state =
+let on_message ~sw ~raw_header ~raw_content state =
   let header = Message.Header.decode ~raw_header in
   let message = Message.decode ~expected:header ~raw_content in
   let (Message.Message { header = _; content; network = _ }) = message in
   match content with
   | Message.Content.Content_accepted { block; votes = _ } ->
-      on_accepted_block ~sw ~env ~folder ~state ~block
+      on_accepted_block ~sw  ~state ~block
   | _ -> ()
 
 let listen_to_node ~net ~clock ~port ~state ~on_message =
@@ -190,7 +213,7 @@ let main params style_renderer log_level =
   let network = Network_manager.make ~identity in
   let config = Block_storage.{ save_blocks = true; save_messages = true } in
   let indexer = Block_storage.make ~uri:database_uri ~config in
-
+  let dump = make_dump_loop ~sw ~env ~folder:data_folder in
   let state = Api_state.Storage.read ~env ~folder:data_folder in
   let state =
     match state with
@@ -203,7 +226,7 @@ let main params style_renderer log_level =
         Logs.info (fun m ->
             m "Starting API with a new state at level %a" Level.pp level);
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block ~receipts
+          ~current_block ~receipts ~dump
     | Some state_data ->
         let Api_state.Storage.{ protocol; current_block; receipts } =
           state_data
@@ -211,10 +234,11 @@ let main params style_renderer log_level =
         let (Block { level; _ }) = current_block in
         Logs.info (fun m -> m "Loading API state at level %a" Level.pp level);
         Api_state.make ~consensus_address ~indexer ~network ~identity ~protocol
-          ~current_block ~receipts
+          ~current_block ~receipts ~dump
   in
 
-  let on_message = on_message ~sw ~env ~folder:data_folder state in
+  let on_message = on_message ~sw state in
+
 
   Eio.Fiber.all
     [
