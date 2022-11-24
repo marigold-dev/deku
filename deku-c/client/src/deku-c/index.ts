@@ -14,20 +14,17 @@ export type Settings = {
   dekuSigner?: DekuSigner;
 };
 
-export class DekuCClient {
+export class DekuCClient extends DekuPClient {
   private deku: DekuPClient;
-  private _dekuSigner?: DekuSigner; // Only useful to know if the user gave a wallet
   private ligoRpc?: string;
-  private dekuRpc: string;
 
   constructor(settings: Settings) {
+    super(settings);
     this.ligoRpc = settings.ligoRpc;
-    this.dekuRpc = settings.dekuRpc;
     this.deku = new DekuPClient({
       dekuRpc: this.dekuRpc,
       dekuSigner: settings.dekuSigner,
     });
-    this._dekuSigner = settings.dekuSigner;
   }
 
   assertHasSigner(): DekuSigner {

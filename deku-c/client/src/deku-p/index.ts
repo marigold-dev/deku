@@ -35,13 +35,13 @@ type OperationInfo = {
 };
 
 export class DekuPClient {
-  private endpoints: endpoints;
-  private _dekuSigner: DekuSigner | undefined;
+  protected endpoints: endpoints;
+  protected _dekuSigner: DekuSigner | undefined;
 
-  private _consensus: Consensus | undefined;
-  private _discovery: Discovery | undefined;
+  protected _consensus: Consensus | undefined;
+  protected _discovery: Discovery | undefined;
 
-  private _dekuRpc: string;
+  protected _dekuRpc: string;
 
   constructor(setting: Setting) {
     this._dekuRpc = setting.dekuRpc;
