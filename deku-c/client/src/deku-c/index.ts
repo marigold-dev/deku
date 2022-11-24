@@ -1,6 +1,6 @@
-import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import { DekuToolkit } from "../deku-p";
 import { Contract, JSONType } from "./contract";
-import { DekuSigner } from "@marigold-dev/deku-toolkit/lib/utils/signers";
+import { DekuSigner } from "../deku-p/utils/signers";
 import {
   originateLigo,
   originateTz,

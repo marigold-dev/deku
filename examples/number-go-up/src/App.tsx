@@ -1,6 +1,6 @@
 import { DAppClient } from "@airgap/beacon-sdk";
-import { Contract, DekuCClient } from "@marigold-dev/deku-c-toolkit";
-import { fromBeaconSigner } from "@marigold-dev/deku-toolkit";
+import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { fromBeaconSigner } from "@marigold-dev/deku";
 import { useEffect, useState } from "react";
 const contractAddr = "DK1APjGycpfyE94s6MxGXUSaP7Qnznz7TrqX";
 const apiURL = "https://deku-canonical-vm0.deku-v1.marigold.dev";

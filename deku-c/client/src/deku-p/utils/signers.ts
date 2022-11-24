@@ -1,7 +1,7 @@
 import { Key } from "../core/key";
 import { KeyHash } from "../core/key-hash";
 import Operation, { Operation as OperationType } from "../core/operation";
-import { JSONType } from "../utils/json";
+import { JSONType } from "./json";
 
 interface MemorySigner {
   sign: (payload: string) => Promise<{ prefixSig: string }>;

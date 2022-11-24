@@ -1,6 +1,6 @@
-import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
+import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { Contract, DekuCClient } from "@marigold-dev/deku-c-toolkit";
+import { Contract, DekuCClient } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
 import { read } from "../core/contract";

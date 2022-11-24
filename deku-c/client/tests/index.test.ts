@@ -1,4 +1,4 @@
-import { fromB58Hash } from "../src/utils/hash";
+import { fromB58Hash } from "../src/deku-p/utils/hash";
 
 describe("can parse b58 encoded hash", () => {
   test("", () => {
