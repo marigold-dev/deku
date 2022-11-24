@@ -1,4 +1,4 @@
-import { DekuToolkit } from "../deku-p";
+import { DekuPClient } from "../deku-p";
 import { Contract, JSONType } from "./contract";
 import { DekuSigner } from "../deku-p/utils/signers";
 import {
@@ -15,7 +15,7 @@ export type Settings = {
 };
 
 export class DekuCClient {
-  private deku: DekuToolkit;
+  private deku: DekuPClient;
   private _dekuSigner?: DekuSigner; // Only useful to know if the user gave a wallet
   private ligoRpc?: string;
   private dekuRpc: string;
@@ -23,7 +23,7 @@ export class DekuCClient {
   constructor(settings: Settings) {
     this.ligoRpc = settings.ligoRpc;
     this.dekuRpc = settings.dekuRpc;
-    this.deku = new DekuToolkit({
+    this.deku = new DekuPClient({
       dekuRpc: this.dekuRpc,
       dekuSigner: settings.dekuSigner,
     });

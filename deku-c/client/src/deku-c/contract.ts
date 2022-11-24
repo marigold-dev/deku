@@ -1,4 +1,4 @@
-import { DekuToolkit } from "../deku-p/index";
+import { DekuPClient } from "../deku-p/index";
 import { compileExpression, compileLigoExpression } from "./utils";
 
 export type JSONType =
@@ -79,7 +79,7 @@ const parseContractState = (json: JSONType): JSONType => {
 };
 
 export class Contract {
-  private deku: DekuToolkit;
+  private deku: DekuPClient;
   private address: string;
   private fetchInterval: NodeJS.Timer | null;
 
@@ -87,7 +87,7 @@ export class Contract {
     deku,
     contractAddress,
   }: {
-    deku: DekuToolkit;
+    deku: DekuPClient;
     contractAddress: string;
   }) {
     this.deku = deku;
