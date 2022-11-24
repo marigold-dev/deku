@@ -119,7 +119,6 @@ module Operation_dto = struct
     signature : Signature.t;
     initial : Operation.Initial.t;
   }
-  [@@deriving yojson]
 
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =
@@ -130,12 +129,20 @@ module Operation_dto = struct
   let to_signed repr =
     let { key; signature; initial } = repr in
     Operation.Signed.make_with_signature ~key ~signature ~initial
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; initial } -> ((key, signature), initial))
+      (fun ((key, signature), initial) -> { key; signature; initial })
+      (tup2 Signature.key_encoding Operation.Initial.encoding)
 end
 
 module Net = struct
   let post_operation ~sw ~env operation uri =
-    let json = Operation_dto.of_signed operation |> Operation_dto.yojson_of_t in
-    let body = Yojson.Safe.to_string json in
+    let ope_dto = Operation_dto.of_signed operation in
+    let json = Data_encoding.Json.construct Operation_dto.encoding ope_dto in
+    let body = Data_encoding.Json.to_string json in
     let body = Piaf.Body.of_string body in
     match Piaf.Client.Oneshot.post ~body env uri ~sw with
     | Ok response -> response
@@ -156,8 +163,8 @@ module Net = struct
 
   let level_body_of_yojson json =
     let open Deku_concepts in
-    match Yojson.Safe.from_string json with
-    | `Assoc [ ("level", level) ] -> Level.t_of_yojson level
+    match Data_encoding.Json.from_string json with
+    | Ok level -> Data_encoding.Json.destruct Level.encoding level
     | _ -> failwith "Wrong body received from level endpoint"
 end
 

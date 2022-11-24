@@ -1,7 +1,7 @@
 open Deku_concepts
 
 type included_operation_set
-type t = included_operation_set [@@deriving yojson]
+type t = included_operation_set
 
 val empty : included_operation_set
 

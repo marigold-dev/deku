@@ -31,6 +31,6 @@ val operation_is_not_a_withdraw : Operation_hash.t -> error
 val receipt_not_found : Operation_hash.t -> error
 
 (* Utils *)
+val encoding : error -> Data_encoding.Json.t
 val string_of_error : error -> string
-val yojson_of_t : error -> Yojson.Safe.t
 val to_http_code : error -> int

@@ -4,7 +4,7 @@ open Deku_stdlib
 type t =
   | Implicit of Key_hash.t
   | Originated of { contract : Contract_hash.t; entrypoint : string option }
-[@@deriving eq, ord, yojson, show]
+[@@deriving eq, ord, show]
 
 let to_string = function
   | Implicit key_hash -> Key_hash.to_b58 key_hash

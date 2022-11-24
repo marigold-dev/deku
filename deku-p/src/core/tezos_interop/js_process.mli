@@ -6,6 +6,9 @@ type t = js_process
 val spawn : file:string -> (js_process -> unit) -> 'a
 
 val listen :
-  js_process -> Yojson.Safe.t -> on_message:(Yojson.Safe.t -> unit) -> unit
+  js_process ->
+  Data_encoding.Json.t ->
+  on_message:(Data_encoding.Json.t -> unit) ->
+  unit
 
-val request : js_process -> Yojson.Safe.t -> Yojson.Safe.t
+val request : js_process -> Data_encoding.Json.t -> Data_encoding.Json.t

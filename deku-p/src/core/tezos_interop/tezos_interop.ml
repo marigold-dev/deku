@@ -115,7 +115,49 @@ let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
       validators : string list;
       current_validator_keys : string option list;
     }
-    [@@deriving yojson]
+
+    let encoding =
+      let open Data_encoding in
+      conv
+        (fun {
+               block_level;
+               block_payload_hash;
+               signatures;
+               handles_hash;
+               state_hash;
+               validators;
+               current_validator_keys;
+             } ->
+          ( block_level,
+            block_payload_hash,
+            signatures,
+            handles_hash,
+            state_hash,
+            validators,
+            current_validator_keys ))
+        (fun ( block_level,
+               block_payload_hash,
+               signatures,
+               handles_hash,
+               state_hash,
+               validators,
+               current_validator_keys ) ->
+          {
+            block_level;
+            block_payload_hash;
+            signatures;
+            handles_hash;
+            state_hash;
+            validators;
+            current_validator_keys;
+          })
+        (obj7 (req "block_level" int64)
+           (req "block_payload_hash" BLAKE2b.encoding)
+           (req "signatures" (list (option string)))
+           (req "handles_hash" BLAKE2b.encoding)
+           (req "state_hash" BLAKE2b.encoding)
+           (req "validators" (list string))
+           (req "current_validator_keys" (list (option string))))
   end in
   let open Payload in
   let current_validator_keys, signatures =
@@ -145,7 +187,7 @@ let commit_state_hash interop ~block_level ~block_payload_hash ~state_hash
   (* TODO: check result *)
   let transaction : Tezos_bridge.Inject_transaction.t option =
     Tezos_bridge.inject_transaction interop ~entrypoint:"update_root_hash"
-      ~payload:(Payload.yojson_of_t payload)
+      ~payload:(Data_encoding.Json.construct Payload.encoding payload)
   in
 
   let open Tezos_bridge.Inject_transaction in

@@ -64,7 +64,6 @@ module Storage = struct
     protocol : Protocol.t;
     receipts : Receipt.t Operation_hash.Map.t;
   }
-  [@@deriving yojson]
 
   let temp = "deku_api.tmp.json"
   let file = "deku_api.json"

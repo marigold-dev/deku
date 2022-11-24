@@ -3,7 +3,7 @@
 (* TODO: some code is duplicated from tezos_interop/long_lived_js_process.ml *)
 
 exception Process_closed of Unix.process_status
-exception Failed_to_parse_json of string * Yojson.Safe.t
+exception Failed_to_parse_json of string * Data_encoding.Json.t
 
 (* enhance error messages *)
 let () =
@@ -21,8 +21,7 @@ let () =
     | Failed_to_parse_json (message, json) ->
         Some
           (asprintf "Failed_to_parse_json (%s, %a)" message
-             (Yojson.Safe.pretty_print ~std:false)
-             json)
+             Data_encoding.Json.pp json)
     | _ -> None
   in
   Printexc.register_printer printer
@@ -53,8 +52,8 @@ let write_all fd bytes_ =
     remaining := !remaining - wrote
   done
 
-let send_to_vm ~fd (message : Yojson.Safe.t) =
-  let message = Bytes.of_string (Yojson.Safe.to_string message) in
+let send_to_vm ~fd (message : Data_encoding.Json.t) =
+  let message = Bytes.of_string (Data_encoding.Json.to_string message) in
   let message_length = Bytes.create 8 in
   Bytes.set_int64_ne message_length 0 (Int64.of_int (Bytes.length message));
   let _ = Unix.write fd message_length 0 8 in
@@ -66,7 +65,9 @@ let read_from_vm ~fd =
   let _ = Unix.read fd message_length 0 8 in
   let message_length = Bytes.get_int64_ne message_length 0 |> Int64.to_int in
   let message = read_all fd message_length |> Bytes.to_string in
-  Yojson.Safe.from_string message
+  match Data_encoding.Json.from_string message with
+  | Ok message -> message
+  | _ -> failwith "impossible to parse mesage from VM"
 
 type ('a, 'b) t = {
   send : 'a -> unit;

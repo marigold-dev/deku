@@ -4,7 +4,9 @@ type signature =
   | Secp256k1 of Secp256k1.Signature.t
   | P256 of P256.Signature.t
 
-type t = signature [@@deriving eq, ord, yojson, show]
+type t = signature [@@deriving eq, ord, show]
+
+val encoding : t Data_encoding.t
 
 (* repr *)
 val of_b58 : string -> signature option

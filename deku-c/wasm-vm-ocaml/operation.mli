@@ -11,7 +11,7 @@ type t =
       entrypoints : Entrypoints.t;
       constants : (int * Value.t) array;
     }
-[@@deriving show, yojson]
+[@@deriving show]
 
 exception Not_an_operation
 

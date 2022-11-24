@@ -16,7 +16,7 @@ type receipt =
     }
   | Vm_transaction_error of { operation : Operation_hash.t; message : string }
 
-and t = receipt [@@deriving eq, yojson]
+and t = receipt [@@deriving eq]
 
 let encoding =
   let open Data_encoding in

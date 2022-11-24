@@ -25,7 +25,7 @@ type operation =
     }
   | Operation_noop of { sender : Address.t }
 
-and t = operation [@@deriving show, yojson]
+and t = operation [@@deriving show]
 
 let encoding =
   (* TODO: bench Data_encoding.union vs Data_encoding.matching*)
@@ -84,7 +84,7 @@ module Initial = struct
         operation : operation;
       }
 
-  and t = initial_operation [@@deriving show, yojson]
+  and t = initial_operation [@@deriving show]
 
   let hash_encoding = Data_encoding.tup3 Nonce.encoding Level.encoding encoding
 
@@ -170,16 +170,6 @@ module Signed = struct
         | true -> Ok (Signed_operation { key; signature; initial })
         | false -> Error "Invalid operation signature")
       (tup2 Signature.key_encoding Initial.encoding)
-
-  let t_of_yojson json =
-    let json = Yojson.Safe.to_string json in
-    let json = Result.get_ok (Data_encoding.Json.from_string json) in
-    Data_encoding.Json.destruct encoding json
-
-  let yojson_of_t signed =
-    let json = Data_encoding.Json.construct encoding signed in
-    let json = Data_encoding.Json.to_string json in
-    Yojson.Safe.from_string json
 
   let make_with_signature ~key ~signature ~initial =
     let (Initial.Initial_operation { hash; _ }) = initial in

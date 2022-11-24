@@ -31,11 +31,15 @@ let main ticket_id tezos_owner secret verbose host =
   let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
     transaction
   in
-  let hash = Operation_hash.yojson_of_t hash |> Yojson.Safe.to_string in
+  let hash =
+    Data_encoding.Json.construct Operation_hash.encoding hash
+    |> Data_encoding.Json.to_string
+  in
   Printf.printf "operation.hash: %s\n%!" hash;
   if verbose then (
     Printf.eprintf "operation code: %s\n%!"
-      (Operation.Signed.yojson_of_t transaction |> Yojson.Safe.to_string);
+      (Data_encoding.Json.construct Operation.Signed.encoding transaction
+      |> Data_encoding.Json.to_string);
     prerr_endline "operation broadcasted");
   exit 0
 (*  we can't test that the withdraws succeeded at this point *)

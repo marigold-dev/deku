@@ -1,7 +1,7 @@
 open Deku_stdlib
 
 type amount
-type t = amount [@@deriving show, eq, ord, yojson]
+type t = amount [@@deriving show, eq, ord]
 
 val zero : amount
 val one : amount

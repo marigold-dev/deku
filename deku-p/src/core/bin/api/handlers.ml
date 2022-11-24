@@ -10,9 +10,11 @@ let version p = Routes.(s "api" / s "v1") p
 
 module type HANDLERS = sig
   type path
-  type body [@@deriving of_yojson]
-  type response [@@deriving yojson_of]
+  type body
+  type response
 
+  val body_encoding : body Data_encoding.t
+  val response_encoding : response Data_encoding.t
   val meth : [> `GET | `POST ]
   val route : path Routes.route
 
@@ -25,8 +27,9 @@ end
 
 module type NO_BODY_HANDLERS = sig
   type path
-  type response [@@deriving yojson_of]
+  type response
 
+  val response_encoding : response Data_encoding.t
   val meth : [> `GET | `POST ]
   val route : path Routes.route
   val handler : path:path -> state:Api_state.t -> (response, Api_error.t) result
@@ -34,7 +37,11 @@ end
 
 module Get_genesis : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Repr.Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv (fun block -> block) (fun block -> block) (tup1 Repr.Block.encoding)
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "genesis" /? nil)
@@ -44,7 +51,11 @@ end
 
 module Get_head : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Repr.Block.t [@@deriving yojson_of]
+  type response = Repr.Block.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv (fun block -> block) (fun block -> block) (tup1 Repr.Block.encoding)
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "blocks" / s "head" /? nil)
@@ -59,7 +70,14 @@ module Get_block_by_level_or_hash : NO_BODY_HANDLERS = struct
   open Api_path
 
   type path = Level_or_hash.t
-  type response = Yojson.Safe.t [@@deriving yojson_of]
+  type response = Data_encoding.Json.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun block -> block)
+      (fun block -> block)
+      (tup1 Data_encoding.Json.encoding)
   (*TODO: should returns a Repr.Block.t *)
 
   let meth = `GET
@@ -84,7 +102,14 @@ end
 
 module Get_level : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = { level : Level.t } [@@deriving yojson_of]
+  type response = { level : Level.t }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { level } -> level)
+      (fun level -> { level })
+      (obj1 (req "level" Level.encoding))
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "level" /? nil)
@@ -106,7 +131,19 @@ module Get_proof : NO_BODY_HANDLERS = struct
     handle : Withdrawal_handle.t;
     proof : withdraw_proof;
   }
-  [@@deriving yojson_of]
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { withdrawal_handles_hash; handle; proof } ->
+        (withdrawal_handles_hash, handle, proof))
+      (fun (withdrawal_handles_hash, handle, proof) ->
+        { withdrawal_handles_hash; handle; proof })
+      (obj3
+         (req "withdrawal_handles_hash"
+            Withdrawal_handle.Withdrawal_handle_hash.encoding)
+         (req "handle" Withdrawal_handle.encoding)
+         (req "proof" withdraw_proof_encoding))
 
   let meth = `GET
 
@@ -134,7 +171,14 @@ module Get_balance : NO_BODY_HANDLERS = struct
     ticket_id : Deku_ledger.Ticket_id.t;
   }
 
-  type response = { balance : int } [@@deriving yojson_of]
+  type response = { balance : int }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { balance } -> balance)
+      (fun balance -> { balance })
+      (obj1 (req "balance" int8))
 
   let meth = `GET
 
@@ -159,7 +203,14 @@ end
 
 module Get_chain_info : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = { consensus : string; is_sync : bool } [@@deriving yojson_of]
+  type response = { consensus : string; is_sync : bool }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { consensus; is_sync } -> (consensus, is_sync))
+      (fun (consensus, is_sync) -> { consensus; is_sync })
+      (obj2 (req "consensus" string) (req "is_sync" bool))
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "info" /? nil)
@@ -174,10 +225,22 @@ module Helpers_operation_message : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Operation.Signed.t [@@deriving of_yojson]
+  type body = Operation.Signed.t
+
+  let body_encoding = Operation.Signed.encoding
 
   type response = { hash : Message_hash.t; content : Message.Content.t }
-  [@@deriving yojson_of]
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { hash; content } -> (Message_hash.to_blake2b hash, content))
+      (fun (hash, content) ->
+        let hash = Message_hash.of_blake2b hash in
+        { hash; content })
+      (obj2
+         (req "hash" Deku_crypto.BLAKE2b.encoding)
+         (req "content" Message.Content.encoding))
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "operation-messages" /? nil)
@@ -201,7 +264,21 @@ module Helpers_hash_operation : HANDLERS = struct
   type operation_content =
     | Transaction of { receiver : Address.t; amount : Amount.t }
     | Noop
-  [@@deriving yojson]
+
+  let operation_content_encoding =
+    let open Data_encoding in
+    union
+      [
+        case ~title:"Transaction" (Tag 0)
+          (tup2 (dynamic_size Address.encoding) Amount.encoding)
+          (function
+            | Transaction { receiver; amount } -> Some (receiver, amount)
+            | _ -> None)
+          (fun (receiver, amount) -> Transaction { receiver; amount });
+        case ~title:"Noop" (Tag 1) unit
+          (function Noop -> Some () | _ -> None)
+          (fun () -> Noop);
+      ]
 
   type body = {
     level : Level.t;
@@ -209,9 +286,26 @@ module Helpers_hash_operation : HANDLERS = struct
     source : Address.t;
     content : operation_content;
   }
-  [@@deriving yojson]
 
-  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { level; nonce; source; content } -> (level, nonce, source, content))
+      (fun (level, nonce, source, content) -> { level; nonce; source; content })
+      (obj4
+         (req "level" (dynamic_size Level.encoding))
+         (req "nonce" (dynamic_size Nonce.encoding))
+         (req "source" (dynamic_size Address.encoding))
+         (req "content" operation_content_encoding))
+
+  type response = { hash : Operation_hash.t }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { hash } -> hash)
+      (fun hash -> { hash })
+      (obj1 (req "hash" Operation_hash.encoding))
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "hash-operation" /? nil)
@@ -219,7 +313,9 @@ module Helpers_hash_operation : HANDLERS = struct
 
   let handler ~path:_ ~body:operation ~state:_ =
     let hash =
-      operation |> assert false |> Yojson.Safe.to_string |> Operation_hash.hash
+      operation
+      |> assert false
+      |> Data_encoding.Json.to_string |> Operation_hash.hash
     in
     Ok { hash }
 end
@@ -229,8 +325,23 @@ module Post_operation : HANDLERS = struct
   open Deku_protocol
 
   type path = unit
-  type body = Repr.Signed_operation.t [@@deriving of_yojson]
-  type response = { hash : Operation_hash.t } [@@deriving yojson_of]
+  type body = Repr.Signed_operation.t
+
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun signed_operation -> signed_operation)
+      (fun signed_operation -> signed_operation)
+      (tup1 Repr.Signed_operation.encoding)
+
+  type response = { hash : Operation_hash.t }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { hash } -> hash)
+      (fun hash -> { hash })
+      (obj1 (req "hash" Operation_hash.encoding))
 
   let meth = `POST
   let path = Routes.(version / s "operations" /? nil)
@@ -261,7 +372,11 @@ end
 
 module Get_vm_state : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = Yojson.Safe.t [@@deriving yojson_of]
+  type response = Data_encoding.Json.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv (fun json -> json) (fun json -> json) Data_encoding.Json.encoding
 
   let meth = `GET
   let path = Routes.(version / s "state" / s "unix" /? nil)
@@ -270,14 +385,22 @@ module Get_vm_state : NO_BODY_HANDLERS = struct
   let handler ~path:_ ~state =
     let Api_state.{ protocol; _ } = state in
     let (Protocol.Protocol { vm_state; _ }) = protocol in
-    Ocaml_wasm_vm.State.to_json_api vm_state |> Result.ok
+    Data_encoding.Json.construct Ocaml_wasm_vm.State.encoding vm_state
+    |> Result.ok
 end
 
 module Get_vm_state_key : NO_BODY_HANDLERS = struct
   open Deku_ledger
 
   type path = Contract_address.t
-  type response = Ocaml_wasm_vm.State_entry.t option [@@deriving yojson_of]
+  type response = Ocaml_wasm_vm.State_entry.t option
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun state_entry -> state_entry)
+      (fun state_entry -> state_entry)
+      (option Ocaml_wasm_vm.State_entry.encoding)
 
   let meth = `GET
 
@@ -297,7 +420,14 @@ end
 
 module Get_stats : NO_BODY_HANDLERS = struct
   type path = unit
-  type response = { latency : float; tps : float } [@@deriving yojson_of]
+  type response = { latency : float; tps : float }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { latency; tps } -> (latency, tps))
+      (fun (latency, tps) -> { latency; tps })
+      (obj2 (req "latency" float) (req "tps" float))
 
   let meth = `GET
   let path = Routes.(version / s "chain" / s "stats" /? nil)
@@ -310,11 +440,26 @@ end
 
 module Get_hexa_to_signed : HANDLERS = struct
   type path = unit
-
   type body = { nonce : Nonce.t; level : Level.t; operation : Operation.t }
-  [@@deriving of_yojson]
 
-  type response = { bytes : string } [@@deriving yojson_of]
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { nonce; level; operation } -> (nonce, level, operation))
+      (fun (nonce, level, operation) -> { nonce; level; operation })
+      (obj3
+         (req "nonce" Nonce.encoding)
+         (req "level" Level.encoding)
+         (req "operation" Operation.encoding))
+
+  type response = { bytes : string }
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { bytes } -> bytes)
+      (fun bytes -> { bytes })
+      (obj1 (req "bytes" string))
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "encode-operation" /? nil)
@@ -334,7 +479,11 @@ end
 
 module Get_receipt : NO_BODY_HANDLERS = struct
   type path = Operation_hash.t
-  type response = Receipt.t [@@deriving yojson]
+  type response = Receipt.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv (fun receipt -> receipt) (fun receipt -> receipt) Receipt.encoding
 
   let meth = `GET
 
@@ -353,10 +502,23 @@ end
 
 module Compute_contract_hash : HANDLERS = struct
   type path = unit
-  type body = { hash : Operation_hash.t } [@@deriving of_yojson]
+  type body = { hash : Operation_hash.t }
+
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { hash } -> hash)
+      (fun hash -> { hash })
+      (obj1 (req "hash" Operation_hash.encoding))
 
   type response = { address : Deku_ledger.Contract_address.t }
-  [@@deriving yojson_of]
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun { address } -> address)
+      (fun address -> { address })
+      (obj1 (req "address" Deku_ledger.Contract_address.encoding))
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "compute-contract-hash" /? nil)
@@ -372,8 +534,23 @@ module Helper_compile_origination : HANDLERS = struct
   open Ocaml_wasm_vm
 
   type path = unit
-  type body = { source : string; storage : string } [@@deriving of_yojson]
-  type response = Operation_payload.t [@@deriving yojson_of]
+  type body = { source : string; storage : string }
+
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { source; storage } -> (source, storage))
+      (fun (source, storage) -> { source; storage })
+      (obj2 (req "source" string) (req "storage" string))
+
+  type response = Operation_payload.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun operation_payload -> operation_payload)
+      (fun operation_payload -> operation_payload)
+      (tup1 Operation_payload.encoding)
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "compile-contract" /? nil)
@@ -406,8 +583,23 @@ module Helper_compile_invocation : HANDLERS = struct
   open Ocaml_wasm_vm
 
   type path = unit
-  type body = { address : string; expression : string } [@@deriving of_yojson]
-  type response = Operation_payload.t [@@deriving yojson_of]
+  type body = { address : string; expression : string }
+
+  let body_encoding =
+    let open Data_encoding in
+    conv
+      (fun { address; expression } -> (address, expression))
+      (fun (address, expression) -> { address; expression })
+      (obj2 (req "address" string) (req "expression" string))
+
+  type response = Operation_payload.t
+
+  let response_encoding =
+    let open Data_encoding in
+    conv
+      (fun operation_payload -> operation_payload)
+      (fun operation_payload -> operation_payload)
+      (tup1 Operation_payload.encoding)
 
   let meth = `POST
   let path = Routes.(version / s "helpers" / s "compile-expression" /? nil)

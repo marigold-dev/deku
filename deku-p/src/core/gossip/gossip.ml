@@ -9,7 +9,7 @@ type gossip =
       message_pool : Message_pool.t; [@opaque]
     }
 
-and t = gossip [@@deriving yojson]
+and t = gossip
 
 let encoding =
   let open Data_encoding in

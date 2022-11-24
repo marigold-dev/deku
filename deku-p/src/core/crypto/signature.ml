@@ -7,6 +7,21 @@ type signature =
 
 and t = signature [@@deriving eq, ord]
 
+let encoding =
+  let open Data_encoding in
+  union
+    [
+      case ~title:"Ed25519" (Tag 0) Ed25519.Signature.encoding
+        (function Ed25519 signature -> Some signature | _ -> None)
+        (fun signature -> Ed25519 signature);
+      case ~title:"Secp256k1" (Tag 1) Secp256k1.Signature.encoding
+        (function Secp256k1 signature -> Some signature | _ -> None)
+        (fun signature -> Secp256k1 signature);
+      case ~title:"P256" (Tag 2) P256.Signature.encoding
+        (function P256 signature -> Some signature | _ -> None)
+        (fun signature -> P256 signature);
+    ]
+
 let of_b58 =
   let ed25519 string =
     match Ed25519.Signature.of_b58 string with

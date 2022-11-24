@@ -19,7 +19,7 @@ type block = private
       payload : string;
     }
 
-type t = block [@@deriving eq, ord, yojson]
+type t = block [@@deriving eq, ord]
 
 val produce :
   identity:Identity.t ->

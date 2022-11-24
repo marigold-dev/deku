@@ -6,7 +6,7 @@ type key_hash =
   | Secp256k1 of Secp256k1.Key_hash.t
   | P256 of P256.Key_hash.t
 
-and t = key_hash [@@deriving eq, ord, yojson]
+and t = key_hash [@@deriving eq, ord]
 
 let of_b58 =
   let ed25519 string =
@@ -64,13 +64,13 @@ let encoding =
   make_encoding ~name ~to_string:to_b58 ~of_string:of_b58 ~raw_encoding
 
 module Map = Map.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
+  type t = key_hash [@@deriving ord]
 
   let encoding = encoding
 end)
 
 module Set = Set.Make (struct
-  type t = key_hash [@@deriving ord, yojson]
+  type t = key_hash [@@deriving ord]
 
   let encoding = encoding
 end)

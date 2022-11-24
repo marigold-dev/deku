@@ -3,7 +3,7 @@ open Deku_stdlib
 module Ticket_map : Map.S with type key = Ticket_id.t
 module Address_map : Map.S with type key = Address.t
 
-type t = private Amount.t Ticket_map.t Address_map.t [@@deriving yojson]
+type t = private Amount.t Ticket_map.t Address_map.t
 
 val encoding : t Data_encoding.t
 val empty : t

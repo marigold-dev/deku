@@ -1,7 +1,7 @@
 open Deku_crypto
 
 type validators = { set : Key_hash.Set.t; list : Key_hash.t list }
-and t = validators [@@deriving yojson]
+and t = validators
 
 let of_key_hash_list validators =
   match validators with

@@ -6,32 +6,66 @@ module Michelson = struct
   include Michelson
 
   type t = Michelson.t
-
-  let t_of_yojson json =
-    match Yojson.Safe.to_string json |> Data_encoding.Json.from_string with
-    | Ok json -> Data_encoding.Json.destruct Michelson.expr_encoding json
-    | Error err -> failwith err
-
-  let yojson_of_t t =
-    Data_encoding.Json.construct Michelson.expr_encoding t
-    |> Data_encoding.Json.to_string |> Yojson.Safe.from_string
 end
 
 module Listen_transaction = struct
-  type kind = Listen [@name "listen"] [@@deriving yojson]
+  type kind = Listen [@name "listen"]
+
+  let kind_encoding =
+    let open Data_encoding in
+    conv
+      (fun Listen -> [ "listen" ])
+      (fun message ->
+        match message with [ "listen" ] -> Listen | _ -> failwith "impossible")
+      (list string)
 
   type request = { kind : kind; rpc_node : string; destination : string }
-  [@@deriving yojson]
+
+  let request_encoding =
+    let open Data_encoding in
+    conv
+      (fun { kind; rpc_node; destination } -> (kind, rpc_node, destination))
+      (fun (kind, rpc_node, destination) -> { kind; rpc_node; destination })
+      (obj3
+         (req "kind" (dynamic_size kind_encoding))
+         (req "rpc_node" (dynamic_size string))
+         (req "destination" string))
 
   type transaction = { entrypoint : string; value : Michelson.t }
-  [@@deriving yojson]
+
+  let transaction_encoding =
+    let open Data_encoding in
+    conv
+      (fun { entrypoint; value } -> (entrypoint, value))
+      (fun (entrypoint, value) -> { entrypoint; value })
+      (obj2
+         (req "entrypoint" (dynamic_size string))
+         (req "value" (dynamic_size Michelson.expr_encoding)))
 
   type t = { hash : string; transactions : transaction list }
-  [@@deriving yojson]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { hash; transactions } -> (hash, transactions))
+      (fun (hash, transactions) -> { hash; transactions })
+      (obj2
+         (req "hash" (dynamic_size string))
+         (req "transactions" (list transaction_encoding)))
 end
 
 module Inject_transaction = struct
-  type kind = Transaction [@name "transaction"] [@@deriving yojson]
+  type kind = Transaction [@name "transaction"]
+
+  let kind_encoding =
+    let open Data_encoding in
+    conv
+      (fun Transaction -> [ "transaction" ])
+      (fun message ->
+        match message with
+        | [ "transaction" ] -> Transaction
+        | _ -> failwith "impossible")
+      (list string)
 
   type request = {
     kind : kind;
@@ -39,16 +73,47 @@ module Inject_transaction = struct
     secret : string;
     destination : string;
     entrypoint : string;
-    payload : Yojson.Safe.t;
+    payload : Data_encoding.Json.t;
   }
-  [@@deriving yojson]
+
+  let request_encoding =
+    let open Data_encoding in
+    conv
+      (fun { kind; rpc_node; secret; destination; entrypoint; payload } ->
+        (kind, rpc_node, secret, destination, entrypoint, payload))
+      (fun (kind, rpc_node, secret, destination, entrypoint, payload) ->
+        { kind; rpc_node; secret; destination; entrypoint; payload })
+      (obj6
+         (req "kind" (dynamic_size kind_encoding))
+         (req "rpc_node" (dynamic_size string))
+         (req "secret" (dynamic_size string))
+         (req "destination" (dynamic_size string))
+         (req "entrypoint" (dynamic_size string))
+         (req "payload" Data_encoding.Json.encoding))
 
   type error =
     | Insufficient_balance of string
     | Unknown of string
     | Consensus_contract of string
     | Several_operations of string
-  [@@deriving of_yojson]
+
+  let error_encoding =
+    let open Data_encoding in
+    union
+      [
+        case ~title:"Insufficient_balance" (Tag 0) string
+          (function Insufficient_balance error -> Some error | _ -> None)
+          (fun error -> Insufficient_balance error);
+        case ~title:"Unknown" (Tag 1) string
+          (function Unknown error -> Some error | _ -> None)
+          (fun error -> Unknown error);
+        case ~title:"Consensus_contract" (Tag 2) string
+          (function Consensus_contract error -> Some error | _ -> None)
+          (fun error -> Consensus_contract error);
+        case ~title:"Several_operations" (Tag 3) string
+          (function Several_operations error -> Some error | _ -> None)
+          (fun error -> Several_operations error);
+      ]
 
   type t =
     | Applied of { hash : string }
@@ -59,38 +124,29 @@ module Inject_transaction = struct
     | Unknown of { hash : string option }
     | Error of { error : error }
 
-  let t_of_yojson json =
-    let module T = struct
-      type t = { status : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type with_hash = { hash : string }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type maybe_hash = { hash : string option }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-
-      type err = { error : error }
-      [@@deriving of_yojson] [@@yojson.allow_extra_fields]
-    end in
-    let other make =
-      let T.{ hash } = T.maybe_hash_of_yojson json in
-      make hash
-    in
-
-    let T.{ status } = T.t_of_yojson json in
-    match status with
-    | "applied" ->
-        let (T.{ hash } : T.with_hash) = T.with_hash_of_yojson json in
-        Applied { hash }
-    | "failed" -> other (fun hash -> Failed { hash })
-    | "skipped" -> other (fun hash -> Skipped { hash })
-    | "backtracked" -> other (fun hash -> Backtracked { hash })
-    | "unknown" -> other (fun hash -> Unknown { hash })
-    | "error" ->
-        let T.{ error } = T.err_of_yojson json in
-        Error { error }
-    | _ -> failwith "invalid status"
+  let encoding =
+    let open Data_encoding in
+    union
+      [
+        case ~title:"Applied" (Tag 0) string
+          (function Applied { hash } -> Some hash | _ -> None)
+          (fun hash -> Applied { hash });
+        case ~title:"Failed" (Tag 1) (option string)
+          (function Failed { hash } -> Some hash | _ -> None)
+          (fun hash -> Failed { hash });
+        case ~title:"Skipped" (Tag 2) (option string)
+          (function Skipped { hash } -> Some hash | _ -> None)
+          (fun hash -> Skipped { hash });
+        case ~title:"Backtracked" (Tag 3) (option string)
+          (function Backtracked { hash } -> Some hash | _ -> None)
+          (fun hash -> Backtracked { hash });
+        case ~title:"Unknown" (Tag 4) (option string)
+          (function Unknown { hash } -> Some hash | _ -> None)
+          (fun hash -> Unknown { hash });
+        case ~title:"Error" (Tag 5) error_encoding
+          (function Error { error } -> Some error | _ -> None)
+          (fun error -> Error { error });
+      ]
 end
 
 type bridge =
@@ -102,7 +158,7 @@ type bridge =
       on_transactions : transactions:Listen_transaction.t -> unit;
       inject_transaction :
         entrypoint:string ->
-        payload:Deku_stdlib.Yojson.Safe.t ->
+        payload:Data_encoding.Json.t ->
         Inject_transaction.t option;
     }
 
@@ -118,9 +174,13 @@ let listen_transaction ~bridge process =
         destination = Address.to_string destination;
       }
   in
-  let request = Listen_transaction.yojson_of_request request in
+  let request =
+    Data_encoding.Json.construct Listen_transaction.request_encoding request
+  in
   let on_message message =
-    let transactions = Listen_transaction.t_of_yojson message in
+    let transactions =
+      Data_encoding.Json.destruct Listen_transaction.encoding message
+    in
     on_transactions ~transactions
   in
   Js_process.listen process request ~on_message
@@ -138,9 +198,12 @@ let inject_transaction ~bridge ~entrypoint ~payload process =
         payload;
       }
   in
-  let input = Inject_transaction.yojson_of_request input in
+  let input =
+    Data_encoding.Json.construct Inject_transaction.request_encoding input
+  in
   let response = Js_process.request process input in
-  Inject_transaction.t_of_yojson response
+  Data_encoding.Json.pp Format.err_formatter response;
+  Data_encoding.Json.destruct Inject_transaction.encoding response
 
 let spawn ~sw ~rpc_node ~secret ~destination ~on_transactions =
   let dummy_inject_transaction ~entrypoint:_ ~payload:_ = None in

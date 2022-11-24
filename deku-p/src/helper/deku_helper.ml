@@ -18,7 +18,10 @@ let post_directly_to_node ~env ~operation =
 
 let post_to_api ~sw ~env ~operation =
   let node = "http://localhost:8080/api/v1/operations" |> Uri.of_string in
-  let json = Operation.Signed.yojson_of_t operation |> Yojson.Safe.to_string in
+  let json =
+    Data_encoding.Json.construct Operation.Signed.encoding operation
+    |> Data_encoding.Json.to_string
+  in
   let body = Piaf.Body.of_string json in
   let post_result = Piaf.Client.Oneshot.post ~body ~sw env node in
   match post_result with
@@ -28,7 +31,7 @@ let post_to_api ~sw ~env ~operation =
 let make_identity secret =
   secret |> Secret.of_b58 |> Option.get |> Identity.make
 
-type level_response = { level : Level.t } [@@deriving of_yojson]
+type level_response = { level : Level.t }
 
 let make_level ~sw ~env () =
   let response =
@@ -46,9 +49,12 @@ let make_level ~sw ~env () =
     | Error _ -> failwith "cannot parse body"
     | Ok body -> body
   in
-  let yojson = Yojson.Safe.from_string body in
-  let { level } = level_response_of_yojson yojson in
-  level
+  let json = Data_encoding.Json.from_string body in
+  match json with
+  | Ok json ->
+      let level = Data_encoding.Json.destruct Level.encoding json in
+      level
+  | _ -> failwith "cannot decode level"
 
 let make_nonce () =
   let rng = Stdlib.Random.State.make_self_init () in
@@ -75,8 +81,14 @@ let main ~env ~sw:_ =
     {"operation":"{ \"address\": \"DK1AYirVcQa1sVtXFGhz9TddMbWw71WbBxx7\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Int\", \"1\" ],\n            [ \"Option\",\n              [ \"Some\",\n                [ \"Union\",\n                  [ \"Left\",\n                    [ \"Union\",\n                      [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ] ] ] ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}
     |}
   in
-  let operation = Yojson.Safe.from_string _content2 in
-  let operation = Ocaml_wasm_vm.Operation_payload.t_of_yojson operation in
+  let operation = Data_encoding.Json.from_string _content2 in
+  let operation =
+    match operation with
+    | Ok operation ->
+        Data_encoding.Json.destruct Ocaml_wasm_vm.Operation_payload.encoding
+          operation
+    | _ -> failwith "impossible to decode operation"
+  in
   print_endline (Ocaml_wasm_vm.Operation_payload.show operation);
 
   let (Deku_protocol.Operation.Signed.Signed_operation transaction as op) =

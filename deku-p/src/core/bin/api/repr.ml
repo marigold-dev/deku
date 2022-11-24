@@ -9,7 +9,13 @@ module Signed_operation = struct
     signature : Signature.t;
     initial : Operation.Initial.t;
   }
-  [@@deriving yojson]
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun { key; signature; initial } -> (key, signature, initial))
+      (fun (key, signature, initial) -> { key; signature; initial })
+      (tup3 Key.encoding Signature.encoding Operation.Initial.encoding)
 
   let of_signed signed =
     let (Operation.Signed.Signed_operation { key; signature; initial }) =
@@ -35,7 +41,6 @@ module Block = struct
     payload_hash : BLAKE2b.t;
     tezos_operations : Tezos_operation.t list;
   }
-  [@@deriving yojson]
 
   let of_block block =
     let (Block.Block
@@ -67,4 +72,56 @@ module Block = struct
       payload_hash : BLAKE2b.t;
       tezos_operations : Tezos_operation.t list;
     }
+
+  let encoding =
+    let open Data_encoding in
+    conv
+      (fun {
+             key;
+             signature;
+             hash;
+             withdrawal_handles_hash;
+             author;
+             level;
+             previous;
+             payload;
+             payload_hash;
+             tezos_operations;
+           } ->
+        ( key,
+          signature,
+          hash,
+          withdrawal_handles_hash,
+          author,
+          level,
+          previous,
+          payload,
+          payload_hash,
+          tezos_operations ))
+      (fun ( key,
+             signature,
+             hash,
+             withdrawal_handles_hash,
+             author,
+             level,
+             previous,
+             payload,
+             payload_hash,
+             tezos_operations ) ->
+        {
+          key;
+          signature;
+          hash;
+          withdrawal_handles_hash;
+          author;
+          level;
+          previous;
+          payload;
+          payload_hash;
+          tezos_operations;
+        })
+      (tup10 Key.encoding Signature.encoding Block_hash.encoding
+         BLAKE2b.encoding Key_hash.encoding Level.encoding Block_hash.encoding
+         (list string) BLAKE2b.encoding
+         (list Tezos_operation.encoding))
 end

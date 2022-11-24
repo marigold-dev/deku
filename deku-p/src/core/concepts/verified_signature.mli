@@ -4,7 +4,7 @@ exception Invalid_hash
 exception Invalid_signature
 
 type verified_signature
-type t = verified_signature [@@deriving eq, ord, yojson]
+type t = verified_signature [@@deriving eq, ord]
 
 val encoding : verified_signature Data_encoding.t
 val sign : BLAKE2b.t -> Identity.t -> verified_signature

@@ -3,7 +3,7 @@ open N
 
 (* TODO: should we prefix level in b58? *)
 type level = N.t
-and t = level [@@deriving show, eq, ord, yojson]
+and t = level [@@deriving show, eq, ord]
 
 let zero = zero
 let next x = x + one

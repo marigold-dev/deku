@@ -2,7 +2,7 @@ open Deku_concepts
 open Deku_protocol
 
 type producer
-type t = producer [@@deriving yojson]
+type t = producer
 
 val encoding : producer Data_encoding.t
 val empty : producer

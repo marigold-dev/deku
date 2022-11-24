@@ -15,10 +15,11 @@ val save_block_and_votes :
 val save_message : message:Message.Network.t -> storage -> unit
 
 (* TODO: optimize store and load Message.Network.t *)
-val find_block_by_level : level:Level.t -> storage -> Yojson.Safe.t option
+val find_block_by_level :
+  level:Level.t -> storage -> Data_encoding.Json.t option
 
 val find_block_by_hash :
-  block_hash:Block_hash.t -> storage -> Yojson.Safe.t option
+  block_hash:Block_hash.t -> storage -> Data_encoding.Json.t option
 
 val find_block_and_votes_by_level :
   level:Level.t -> storage -> Message.Network.t option

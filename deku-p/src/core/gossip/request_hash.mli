@@ -2,7 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 
 type request_hash
-type t = request_hash [@@deriving eq, ord, yojson, show]
+type t = request_hash [@@deriving eq, ord, show]
 
 (* repr *)
 val to_blake2b : request_hash -> BLAKE2b.t
