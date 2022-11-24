@@ -106,8 +106,8 @@ signing interactions with Deku chain. Taquito provides options for using a varie
 of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
 
 ```js
-import { DekuCClient } from "@marigold-dev/deku-c-toolkit"
-import { fromMemorySigner } from "@marigold-dev/deku-toolkit"
+import { DekuCClient } from "@marigold-dev/deku"
+import { fromMemorySigner } from "@marigold-dev/deku"
 import { InMemorySigner } from "@taquito/signer"
 
 const memory = new InMemorySigner(

@@ -1,6 +1,6 @@
 import { InMemorySigner } from "@taquito/signer"
-import { DekuCClient } from "@marigold-dev/deku-c-toolkit";
-import { fromMemorySigner } from "@marigold-dev/deku-toolkit";
+import { DekuCClient } from "@marigold-dev/deku";
+import { fromMemorySigner } from "@marigold-dev/deku";
 
 const memory = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"

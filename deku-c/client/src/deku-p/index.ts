@@ -1,6 +1,6 @@
 import { TezosToolkit } from "@taquito/taquito";
-import Consensus from "./contracts/consensus";
-import Discovery from "./contracts/discovery";
+import Consensus from "./tezos-contracts/consensus";
+import Discovery from "./tezos-contracts/discovery";
 import { Address as AddressType } from "./core/address";
 import { Amount as AmountType } from "./core/amount";
 import { Block as BlockType } from "./core/block";
