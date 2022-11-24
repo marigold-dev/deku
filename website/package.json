@@ -35,7 +35,6 @@
     "@taquito/michelson-encoder": "^14.0.0",
     "@taquito/remote-signer": "^14.0.0",
     "@taquito/rpc": "^14.0.0",
-    "@taquito/sapling": "^14.0.0",
     "@taquito/signer": "^14.0.0",
     "@taquito/taquito": "^14.0.0",
     "@taquito/tezbridge-wallet": "^14.0.0",

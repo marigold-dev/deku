@@ -81,6 +81,25 @@
             tuna = self'.packages.tuna;
             deploy-rs = deploy-rs.packages.${system}.default;
           };
+          checks = {
+            ensure_all_build = pkgs.symlinkJoin {
+              name = "all";
+              paths = with self';
+              with packages; [
+                packages."@marigold-dev/deku-c-toolkit"
+                packages."@marigold-dev/deku-p-sdk"
+                packages."@marigold-dev/deku-toolkit"
+                decookies-vm
+                deku
+                deku-static
+                deku-toolkit-nodejs-example
+                deku-toolkit-react-example
+                docker
+                tuna
+                website
+              ];
+            };
+          };
         };
       };
       flake = {

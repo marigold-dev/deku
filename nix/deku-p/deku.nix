@@ -88,6 +88,7 @@ in
           ppx_deriving_cmdliner
           dream
           eio
+          eio_main
           caqti-eio
           routes
           ppx_rapper
