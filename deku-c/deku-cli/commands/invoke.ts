@@ -3,7 +3,7 @@ import { InMemorySigner } from "@taquito/signer";
 import { Contract, DekuCClient } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
-import { read } from "../core/contract";
+import { read, isLigo } from "../core/contract";
 import * as default_ from "./default-parameters";
 
 function getContract(apiUri, walletPath, contractAddress, ligoUri?) {
@@ -50,10 +50,23 @@ async function invokeLigoMain(
   ligo
 ) {
   try {
-    const contract = getContract(apiUri, walletPath, contractAddress, ligoUri);
-    const code = read(contractPath).code;
+    const onChainContract = getContract(
+      apiUri,
+      walletPath,
+      contractAddress,
+      ligoUri
+    );
+    const contract = read(contractPath);
 
-    const hash = await contract.invokeLigo(code, ligo, ligoUri);
+    if (!isLigo(contract.lang)) {
+      throw Error("Bad language: please use Ligo as input");
+    }
+    const hash = await onChainContract.invokeLigo(
+      contract.lang,
+      contract.code,
+      ligo,
+      ligoUri
+    );
     console.log("Operation hash:", hash);
   } catch (e) {
     console.error("An error occurred:");

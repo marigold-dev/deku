@@ -1,7 +1,7 @@
 import { DekuCClient } from "@marigold-dev/deku";
 import * as fs from "fs";
 
-type lang = "jsligo" | "tz" | "unknown";
+type lang = "jsligo" | "mligo" | "tz" | "unknown";
 
 type contract = {
   code: string;
@@ -9,7 +9,12 @@ type contract = {
 };
 
 function validateLang(s: string): s is lang {
-  const languages = new Set<string>(["jsligo", "tz", "unknown"]);
+  const languages = new Set<string>(["jsligo", "mligo", "tz", "unknown"]);
+  return languages.has(s);
+}
+
+export function isLigo(s: string): s is "mligo" | "jsligo" {
+  const languages = new Set<string>(["jsligo", "mligo"]);
   return languages.has(s);
 }
 
