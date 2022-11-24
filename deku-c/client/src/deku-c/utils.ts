@@ -25,13 +25,14 @@ export const originateLigo = async (
     kind,
     code,
     initialStorage,
-  }: { kind: "jsligo"; code: string; initialStorage: JSONType }
+  }: { kind: "jsligo" | "mligo"; code: string; initialStorage: JSONType }
 ) => {
   switch (kind) {
+    case "mligo":
     case "jsligo": {
       const options = {
         method: "POST",
-        body: JSON.stringify({ lang: "jsligo", source: code }),
+        body: JSON.stringify({ lang: kind, source: code }),
       };
       const result = await fetch(ligoRpc + "/api/v1/ligo/originate", options);
       const { code: source } = await result.json();
@@ -68,14 +69,20 @@ export const compileLigoExpression = async (
     code,
     ligoExpression,
     address,
-  }: { kind: string; code: string; ligoExpression: string; address: string }
+  }: {
+    kind: "jsligo" | "mligo";
+    code: string;
+    ligoExpression: string;
+    address: string;
+  }
 ) => {
   switch (kind) {
+    case "mligo":
     case "jsligo": {
       const options = {
         method: "POST",
         body: JSON.stringify({
-          lang: "jsligo",
+          lang: kind,
           source: code,
           expression: ligoExpression,
         }),
