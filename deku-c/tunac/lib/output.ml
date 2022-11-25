@@ -15,7 +15,13 @@ let make module_ constants =
             constants;
           }
     | Encoded _ | Quoted _ -> Error `Invalid_module
-  with Wasm.Parse.Syntax (at, msg) | Wasm.Valid.Invalid (at, msg) ->
-    Format.eprintf "Module validation error at %d:%d - %d:%d: %s" at.left.line
-      at.left.column at.right.line at.right.column msg;
-    Error `Module_validation_error
+  with
+  | Wasm.Parse.Syntax (at, msg) ->
+      print_endline module_;
+      Format.eprintf "Module parsing error at %d:%d - %d:%d: %s" at.left.line
+        at.left.column at.right.line at.right.column msg;
+      Error `Module_validation_error
+  | Wasm.Valid.Invalid (at, msg) ->
+      Format.eprintf "Module validation error at %d:%d - %d:%d: %s" at.left.line
+        at.left.column at.right.line at.right.column msg;
+      Error `Module_validation_error
