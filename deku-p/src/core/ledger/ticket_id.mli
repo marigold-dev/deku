@@ -4,7 +4,7 @@ type ticketer =
 [@@deriving ord, show]
 
 type ticket_id = private Ticket_id of { ticketer : ticketer; data : bytes }
-and t = ticket_id [@@deriving ord, yojson, show]
+and t = ticket_id [@@deriving ord, yojson, show, eq]
 
 val make : ticketer -> bytes -> t
 val encoding : ticket_id Data_encoding.t
