@@ -1,0 +1,3 @@
+dune exec bin/tunacc_test_operation.exe invoke 'ADDRESS' '(Pair (Pair 1 (Some (Right (Left (Right Unit))))) (Left (Right Unit)) None)'
+
+{"operation":"{ \"address\": \"ADDRESS\",\n  \"argument\":\n    [ \"Pair\",\n      [ [ \"Pair\",\n          [ [ \"Int\", \"1\" ],\n            [ \"Option\",\n              [ \"Some\",\n                [ \"Union\",\n                  [ \"Right\",\n                    [ \"Union\",\n                      [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ] ] ] ] ] ] ],\n        [ \"Pair\",\n          [ [ \"Union\", [ \"Left\", [ \"Union\", [ \"Right\", [ \"Unit\" ] ] ] ] ],\n            [ \"Option\", [ \"None\", {} ] ] ] ] ] ] }","tickets":[]}
