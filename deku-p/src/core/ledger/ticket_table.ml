@@ -68,6 +68,12 @@ let balance ~sender ~ticket_id t =
   let%some map = Address_map.find_opt sender t in
   Tickets.get_balance ~ticket_id map
 
+let balances_all_tickets ~sender t =
+  let map =
+    Address_map.find_opt sender t |> Option.value ~default:Tickets.empty
+  in
+  Tickets.to_seq map
+
 let update_or_create ~amount ~ticket_id t =
   Option.fold
     ~some:(fun x -> Tickets.join ~amount ~ticket_id x)
@@ -113,8 +119,5 @@ let take_tickets ~sender ~ticket_ids
   Ok (ticket_ids, t)
 
 let take_all_tickets ~sender t =
-  let map =
-    Address_map.find_opt sender t |> Option.value ~default:Tickets.empty
-  in
-  let tickets = Tickets.to_seq map in
+  let tickets = balances_all_tickets ~sender t in
   (tickets, Address_map.remove sender t)

@@ -60,6 +60,7 @@ val with_ticket_table :
 
 val initial : t
 val balance : Address.t -> Ticket_id.t -> t -> Amount.t
+val balances : Address.t -> t -> (Ticket_id.t * Amount.t) Seq.t
 val deposit : Address.t -> Amount.t -> Ticket_id.t -> t -> t
 
 val transfer :

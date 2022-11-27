@@ -136,6 +136,7 @@ let start_api ~env ~sw ~port ~state =
        |> Server.without_body (module Get_level)
        |> Server.without_body (module Get_proof)
        |> Server.without_body (module Get_balance)
+       |> Server.without_body (module Get_balance_for_ticket)
        |> Server.without_body (module Get_chain_info)
        |> Server.with_body (module Helpers_operation_message)
        |> Server.with_body (module Helpers_hash_operation)

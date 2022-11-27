@@ -2,6 +2,7 @@ import JSONValue, { JSONType } from "../utils/json";
 import Level, { Level as LevelType } from "../core/level";
 import Block, { Block as BlockType } from "../core/block";
 import Proof, { Proof as ProofType } from "../core/proof";
+import Balances, { Balances as BalancesType } from "../core/balances";
 import { TicketID } from "../core/ticket-id";
 import urlJoin from "../utils/urlJoin";
 
@@ -25,6 +26,7 @@ export type endpoints = {
   GET_GENESIS: endpoint<BlockType>;
   GET_CURRENT_BLOCK: endpoint<BlockType>;
   GET_BALANCE: (address: string, ticket_id: TicketID) => endpoint<number>;
+  GET_BALANCES: (address: string) => endpoint<BalancesType>;
   GET_PROOF: (operation_hash: string) => endpoint<ProofType>;
   OPERATIONS: endpoint<string>;
   GET_VM_STATE: endpoint<JSONType>;
@@ -83,6 +85,11 @@ export const makeEndpoints = (root: string): endpoints => ({
     parse: (json: JSONValue) => {
       return json.at("balance").as_int();
     },
+  }),
+  GET_BALANCES: (address: string) => ({
+    uri: urlJoin(root, `${VERSION}/balance/${address}`),
+    expectedStatus: 200,
+    parse: Balances.ofDTO,
   }),
   GET_PROOF: (operation_hash: string) => ({
     uri: urlJoin(root, `${VERSION}/proof/${operation_hash}`),
