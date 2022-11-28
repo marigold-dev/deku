@@ -1,7 +1,7 @@
 open Deku_stdlib
 
-type tezos_operation_hash [@@deriving eq, ord, yojson]
-type t = tezos_operation_hash [@@deriving eq, ord, yojson]
+type tezos_operation_hash
+type t = tezos_operation_hash [@@deriving show, eq, ord]
 
 val of_b58 : string -> tezos_operation_hash option
 val to_b58 : tezos_operation_hash -> string
