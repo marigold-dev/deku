@@ -37,6 +37,8 @@ module type S = sig
     type key_hash
     type t = key_hash [@@deriving eq, ord, yojson]
 
+    val zero : key_hash
+
     (* repr *)
     val of_b58 : string -> key_hash option
     val to_b58 : key_hash -> string

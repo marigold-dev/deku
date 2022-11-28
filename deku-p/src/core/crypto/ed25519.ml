@@ -79,6 +79,7 @@ module Key_hash = struct
   type key_hash = BLAKE2b.BLAKE2b_160.t
   type t = key_hash
 
+  let zero = zero
   let equal = equal
   let compare = compare
   let of_key key = hash (Key.to_raw key)

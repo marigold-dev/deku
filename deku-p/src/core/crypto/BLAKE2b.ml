@@ -25,6 +25,7 @@ struct
     | false -> None
 
   let to_hex hash = to_hex hash
+  let zero = of_raw_string (String.make digest_size '\x00')
   let hash data = digest_string data
   let both a b = hash (to_raw_string a ^ to_raw_string b)
 

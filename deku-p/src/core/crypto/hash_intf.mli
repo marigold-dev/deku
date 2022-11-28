@@ -14,6 +14,7 @@ module type S = sig
   type hash
   type t = hash [@@deriving show, eq, ord]
 
+  val zero : hash
   val hash : string -> hash
 
   (* repr *)
