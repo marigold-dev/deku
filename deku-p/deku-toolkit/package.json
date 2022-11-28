@@ -1,6 +1,6 @@
 {
   "name": "@marigold-dev/deku-toolkit",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "toolkit to interact with deku",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
