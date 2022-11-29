@@ -10,6 +10,7 @@
   "dependencies": {
     "@marigold-dev/deku": "0.1.0",
     "@taquito/signer": "^14.1.0",
+    "@taquito/taquito": "^14.2.0",
     "commander": "^9.4.1"
   },
   "devDependencies": {
