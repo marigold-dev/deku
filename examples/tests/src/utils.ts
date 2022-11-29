@@ -23,6 +23,8 @@ export const wait = async (dekuRpc: string, operation, tries=10): Promise<void> 
     return wait(dekuRpc, operation, tries -1);
 }
 
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * Initial storage of the following contract
  */
