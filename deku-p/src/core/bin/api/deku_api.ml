@@ -67,8 +67,10 @@ let apply_block ~sw ~state ~block =
           match receipt with
           | Ticket_transfer_receipt { operation; _ }
           | Withdraw_receipt { operation; _ }
+          | Vm_origination_receipt { operation; _ }
           | Vm_transaction_receipt { operation; _ } ->
               operation
+          | Vm_transaction_error { operation; _ } -> operation
         in
         Operation_hash.Map.add hash receipt receipts)
       state.receipts receipts
