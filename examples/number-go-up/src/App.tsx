@@ -1,4 +1,4 @@
-import { DAppClient } from "@airgap/beacon-sdk";
+import { DAppClient, NetworkType } from "@airgap/beacon-sdk";
 import { Contract, DekuCClient } from "@marigold-dev/deku";
 import { fromBeaconSigner } from "@marigold-dev/deku";
 import { useEffect, useState } from "react";
@@ -6,8 +6,13 @@ const contractAddr = "DK1APjGycpfyE94s6MxGXUSaP7Qnznz7TrqX";
 const apiURL = "https://deku-canonical-vm0.deku-v1.marigold.dev";
 
 const connectBeaconWallet = async () => {
-  const dAppClient = new DAppClient({ name: "Number Go Up" });
-  await dAppClient.requestPermissions();
+  const dAppClient = new DAppClient({
+    name: "Number Go Up",
+    preferredNetwork: NetworkType.GHOSTNET,
+  });
+  await dAppClient.requestPermissions({
+    network: { type: NetworkType.GHOSTNET },
+  });
   const signer = fromBeaconSigner(dAppClient);
   const address = await signer.publicKeyHash();
   return { signer, address };
