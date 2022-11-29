@@ -2,7 +2,7 @@ import { DekuCClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { decrement, increment, initialStorage, reset, wait } from "./utils";
 
-const run = async (address, { secret, dekuRpc, ligoRpc }): Promise<string> => {
+const run = async ({ secret, dekuRpc, ligoRpc, address }): Promise<string> => {
   const signer = new InMemorySigner(secret);
   const dekuSigner = fromMemorySigner(signer);
   const deku = new DekuCClient({ dekuRpc, ligoRpc, dekuSigner });
