@@ -4422,15 +4422,6 @@
     npmlog "^6.0.2"
     write-file-atomic "^4.0.1"
 
-"@marigold-dev/deku-toolkit@0.1.11":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@marigold-dev/deku-toolkit/-/deku-toolkit-0.1.11.tgz#9766590de32787090598765c47a95fdc080462da"
-  integrity sha512-kVWZjDUSCwhHX2oWCdYqllMO/0GgOrResjitCSe+5uJJycABS2avni4YSsrbt7zUnCaU2ccEG59A/sLJs5Sv0A==
-  dependencies:
-    "@taquito/taquito" "^13.0.1"
-    blakejs "^1.2.1"
-    bs58check "^2.1.2"
-
 "@mdx-js/mdx@^1.6.22":
   version "1.6.22"
   resolved "https://registry.yarnpkg.com/@mdx-js/mdx/-/mdx-1.6.22.tgz#8a723157bf90e78f17dc0f27995398e6c731f1ba"
