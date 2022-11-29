@@ -10,6 +10,7 @@
     "examples/deku-p-nodejs",
     "examples/deku-p-react",
     "examples/number-go-up",
+    "examples/tests",
     "website"
   ],
   "scripts": {

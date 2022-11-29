@@ -1,0 +1,21 @@
+{
+  "name": "deku-tester",
+  "description": "Test several aspects of deku",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "bin": {
+    "deku-tester": "dist/index.js"
+  },
+  "dependencies": {
+    "@marigold-dev/deku": "0.1.0",
+    "@taquito/signer": "^14.1.0",
+    "commander": "^9.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.4"
+  },
+  "scripts": {
+    "build": "tsc --project ."
+  }
+}
