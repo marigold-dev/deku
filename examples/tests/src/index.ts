@@ -3,6 +3,7 @@ import { handleResult } from './utils';
 import Origination from "./origination";
 import Invokation from "./invokation";
 import MakingProgress from "./making-progress";
+import IsSync from "./is-sync";
 
 const program = new Command();
 
@@ -26,5 +27,12 @@ program.command("invokation")
 program.command("making-progress")
     .addOption(new Option('-d, --dekuRpc <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC"))
     .action(handleResult(MakingProgress.run));
+
+program.command("is-sync")
+    .addOption(new Option('-d0, --dekuRpc0 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_0"))
+    .addOption(new Option('-d1, --dekuRpc1 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_1"))
+    .addOption(new Option('-d2, --dekuRpc2 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_2"))
+    .addOption(new Option('-d3, --dekuRpc3 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_3"))
+    .action(handleResult(IsSync.run))
 
 program.parse()
