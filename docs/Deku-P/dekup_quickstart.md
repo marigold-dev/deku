@@ -260,7 +260,7 @@ blockchain state via the REST API:
 curl http://localhost:8080/api/v1/state/unix/counter
 ```
 
-For more about writing browser-based DApp frontends, check out the [frontend tutorial](./frontend_tutorial.md) that builds
+For more about writing browser-based DApp frontends, out [@marigold-dev/deku](https://www.npmjs.com/package/@marigold-dev/deku) package on npm.
 on this guide, or our blockchain game [Decookies](https://github.com/marigold-dev/deku/tree/main/decookies)
 for an end-to-end example.
 
