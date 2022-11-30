@@ -113,10 +113,9 @@ let expression_to_tz ~env () =
     let ligo_already_exists =
       try Some (Eio.Path.load ligo_path) |> Option.is_some with _ -> false
     in
-    if not (ligo_already_exists) then begin
-      try Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source
-      with _ -> ()
-    end;
+    (if not ligo_already_exists then
+     try Eio.Path.save ~create:(`Exclusive 0o600) ligo_path source
+     with _ -> ());
 
     let s = compile_parameter ~lang ~filename_ligo ~expression () in
 
@@ -137,4 +136,5 @@ let healthz () =
   let handler _ = Piaf.Response.create ~body:(Piaf.Body.of_string "ok") `OK in
   Routes.((s "health" /? nil) @--> handler)
 
-let router ~env () = Routes.one_of [ source_to_tz ~env (); healthz () ; expression_to_tz ~env () ]
+let router ~env () =
+  Routes.one_of [ source_to_tz ~env (); healthz (); expression_to_tz ~env () ]
