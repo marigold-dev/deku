@@ -1,6 +1,5 @@
 open Eio.Std
 open Piaf
-open Ligo_deku_rpc
 
 let request_handler ~env =
   let router = Router.router ~env () in
