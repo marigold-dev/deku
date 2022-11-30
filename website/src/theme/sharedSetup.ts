@@ -11,14 +11,13 @@ const signer = fromMemorySigner(memory);
 // More convenient for dev/testing
 // TODO: remove this when ligoRpc and dekuRpc are reployed
 
-const isLocalhost = window.location.hostname === "localhost";
-const dekuRpc = isLocalhost ? "http://0.0.0.0:8080" : "https://deku-canonical-vm0.deku-v1.marigold.dev";
-const ligoRpc = isLocalhost ? "http://0.0.0.0:9090" : "https://ghostnet.tezos.marigold.dev"
+const dekuRpc = "https://deku-canonical-vm0.deku-v1.marigold.dev";
+const ligoRpc = "http://localhost:9090";
 
 const dekuC = new DekuCClient({
   dekuRpc,
   ligoRpc,
-  signer,
+  dekuSigner: signer,
 });
 
 const incrementLigoCode = `

@@ -12,8 +12,7 @@ You'll learn how to:
 
 - Write a simple smart contract in [Ligo](https://ligolang.org/).
 - Compile and deploy it to Deku-C
-- Interact with the contract via [deku-c-toolkit](https://www.npmjs.com/package/@marigold-dev/deku-c-toolkit) npm package
-- Create a DApp using React
+- Interact with the contract via [`@marigold-dev/deku`](https://www.npmjs.com/package/@marigold-dev/deku)
 
 ## Installing the Tools
 
@@ -23,11 +22,16 @@ tools.
 However, to follow along on along on the command line and to start developing
 your own contracts, you'll need to install the LIGO compiler - check the
 [installation instructions](https://ligolang.org/docs/intro/installation) for your
-platform. This tutorial requires version 0.53 or higher.
+platform. This tutorial requires version 0.53.0 or higher.
 
 
-You can also deploy contracts to Deku-C from the command line - see the
-[Deku-C CLI Tutorial](./deku_c_cli.md) for more.
+You'll also need to install the Deku CLI:
+```bash
+npm install -g @marigold-dev/deku-cli
+```
+:::tip
+See the [Deku CLI Tutorial](./deku_c_cli.md) for more on using the CLI!
+:::
 
 ## Our First Smart Contract
 
@@ -59,50 +63,10 @@ Refer to the [Ligo documentation](https://ligolang.org/docs/intro/introduction)
 for more on developing with Ligo, and don't hesitate to
 [reach out](https://ligolang.org/contact)!
 
-## Compiling
-
-Before a Ligo contract can be deployed to Deku-C, it must first be compiled to WebAssembly.
-
-For example:
-
-```bash
-ligo compile contract ./increment.jsligo --wasm > increment.wat
-```
-In the case of our increment contract, this will produce the following
-WebAssembly:
-
-```wasm
- (module
-  (import "env" "dup_host" (func $dup_host (param i64 ) (result)))
-  (import "env" "pair" (func $pair (param i64 i64) (result i64)))
-  ;; ..
-  ;; lots more imports... truncated for brevity
-  ;; ...
-  (func $main (param $v1 i64) (result i64)
-    (local $1 i64)
-    (call $push (local.get $v1))
-    (call $unpair (call $pop)) ;; implicit return
-    (call $if_left (call $pop)) (if (then (call $if_left (call $pop)) (if (then (call $swap)
-    (call $push (call $z_sub (call $pop) (call $pop)))) (else (call $push (call $z_add (call $pop) (call $pop)))))) (else (call $drop (i32.const 2))
-    (call $push (call $zero)) (; 0 ;)))
-    (call $push (call $nil))
-    (call $push (call $pair (call $pop) (call $pop)))
-    (call $pop))
-
-  (export "push" (func $push))
-  (export "pop" (func $push))
-  (export "main" (func $main))
-  (export "closures" (table $closures))
-  (export "call_callback" (func $call_callback))
-  (export "call_callback_unit" (func $call_callback_unit))
-  ) 
-```
-
 ## Deploying Our Contract
 
-We can originate our contract using the Deku C Toolkit, a Typescript package for
-interacting with deku canonical. The toolkit depends on [Taquito](https://tezostaquito.io/) for
-signing interactions with Deku chain. Taquito provides options for using a variety
+We can originate our contract using `@marigold-dev/deku`, a Deku-C client written in Typescript package.
+The client depends on [Taquito](https://tezostaquito.io/) for signing interactions with Deku chain. Taquito provides options for using a variety
 of browser-based and hardware wallets, but for convenience we'll use the in-memory signer.
 
 ```js
@@ -113,12 +77,12 @@ import { InMemorySigner } from "@taquito/signer"
 const memory = new InMemorySigner(
   "edsk3ym86W81aL2gfZ25WuWQrisJM5Vu8cEayCR6BGsRNgfRWos8mR"
 );
-const signer = fromMemorySigner(memory);
+const dekuSigner = fromMemorySigner(memory);
 
 const dekuC = new DekuCClient({
   dekuRpc: "https://deku-canonical-vm0.deku-v1.marigold.dev/",
   ligoRpc: "https://ligo.ghostnet.marigold.dev"
-  signer,
+  dekuSigner,
 });
 ```
 
@@ -129,12 +93,12 @@ Try running the example.
 const params = {
   kind: "jsligo",
   initialStorage: 1,
-  // The deku-c client will compile your jsligo code for you
+  // The deku client will compile your jsligo code for you
   code: incrementLigoCode,
 };
 
 println(`Deploying contract with initial storage ${JSON.stringify(params.initialStorage)}...`);
-dekuC.originateContract(params)
+dekuC.originateLigo(params)
   .then(({operation, address}) => {
     println(`Operation successful! Operation hash: ${operation}`);
     println(`Deployment successful! New contract address: ${address}`);
@@ -156,7 +120,7 @@ on Deku-C, but you can replace it with the DK1 address of the contract you deplo
 <!-- TODO: what happens when there are errors -->
 
 ```js live noInline
-const myContract = dekuC.contract("DK1..."); // 👈 Replace with your contract address
+const myContract = dekuC.contract("DK14bVHNFE7QMQtQ8qdscz7w88RDsWoj7gqJ"); // 👈 Replace with your contract address
 
 println("Getting contract state...")
 myContract.getState()
@@ -166,7 +130,7 @@ myContract.getState()
     myContract.onNewState((newState) => println(`Contract state updated, next state is: ${JSON.stringify(newState)}`));
 
     // Calling the Increment endpoint with parameter 3
-    myContract.invoke(["Union", ["Left", ["Union", ["Right", ["Int", "3" ]]]]])
+    myContract.invokeRaw(["Union", ["Left", ["Union", ["Right", ["Int", "3" ]]]]])
   });
 ```
 
