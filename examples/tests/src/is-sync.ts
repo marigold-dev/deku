@@ -1,12 +1,9 @@
 import { DekuPClient } from "@marigold-dev/deku";
 
-const run = async ({ dekuRpc0, dekuRpc1, dekuRpc2, dekuRpc3 }) => {
-  const nodes = [
-    new DekuPClient({ dekuRpc: dekuRpc0 }),
-    new DekuPClient({ dekuRpc: dekuRpc1 }),
-    new DekuPClient({ dekuRpc: dekuRpc2 }),
-    new DekuPClient({ dekuRpc: dekuRpc3 }),
-  ];
+const run = async ({ allDekuRpc }) => {
+  const nodes = allDekuRpc.map(
+    (dekuRpc) => new DekuPClient({ dekuRpc: dekuRpc })
+  );
   // get the level for each node
   const levels = await Promise.all(nodes.map((node) => node.level()));
   // Get the mean level

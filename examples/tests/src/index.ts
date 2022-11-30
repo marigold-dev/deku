@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command, Option } from "commander";
 import { handleResult } from "./utils";
 import Origination from "./origination";
@@ -6,21 +8,23 @@ import MakingProgress from "./making-progress";
 import IsSync from "./is-sync";
 import Deposit from "./deposit";
 import Transfer from "./transfer";
+import Withdraw from "./withdraw";
+import ContractLevel from "./contract-level";
+import IsCommiting from "./is-commiting";
 import {
-  ALICE_SECRET,
-  BOB_SECRET,
-  DEKU_COUNTER_CONTRACT,
+  ALL_DEKU_RPC,
+  CANONICAL_CONTRACT_ADDRESS,
   DEKU_RPC,
-  DEKU_RPC_0,
-  DEKU_RPC_1,
-  DEKU_RPC_2,
-  DEKU_RPC_3,
-  DUMMY_TICKET_CONTRACT,
-  EMPTY_SECRET,
-  EVE_SECRET,
   LIGO_RPC,
+  SECRET,
+  TICKETER,
   TEZOS_RPC,
-} from "./defaults";
+  SECRET_1_WITH_TICKETS,
+  SECRET_2_WITH_TICKETS,
+  SECRET_WITH_TEZ,
+  BLOCKS,
+  TICKET_DATA,
+} from "./options";
 
 const program = new Command();
 
@@ -50,127 +54,88 @@ program
 
 program
   .command("origination")
-  .addOption(
-    new Option("-d, --dekuRpc <deku>")
-      .default(DEKU_RPC, DEKU_RPC)
-      .env("DEKU_RPC")
-  )
-  .addOption(
-    new Option("-l, --ligoRpc <ligo>")
-      .default(LIGO_RPC, LIGO_RPC)
-      .env("LIGO_RPC")
-  )
-  .addOption(
-    new Option("-s, --secret <secret>")
-      .default(EMPTY_SECRET, EMPTY_SECRET)
-      .env("DEKU_USER_SECRET")
-  )
+  .description("Will originate a counter contract on deku.")
+  .addOption(DEKU_RPC)
+  .addOption(LIGO_RPC)
+  .addOption(SECRET)
   .action(handleResult(Origination.run));
 
 program
   .command("invokation")
-  .addOption(
-    new Option("-d, --dekuRpc <deku>")
-      .default(DEKU_RPC, DEKU_RPC)
-      .env("DEKU_RPC")
+  .description(
+    "Will invoke all the entrypoints of the counter contract. The contract must have been originated"
   )
-  .addOption(
-    new Option("-l, --ligoRpc <ligo>")
-      .default(LIGO_RPC, LIGO_RPC)
-      .env("LIGO_RPC")
-  )
-  .addOption(
-    new Option("-s, --secret <secret>")
-      .default(EMPTY_SECRET, EMPTY_SECRET)
-      .env("DEKU_USER_SECRET")
-  )
-  .addOption(
-    new Option("-a, --address <address>")
-      .default(DEKU_COUNTER_CONTRACT, DEKU_COUNTER_CONTRACT)
-      .env("DEKU_COUNTER_CONTRACT")
-  )
+  .addOption(DEKU_RPC)
+  .addOption(LIGO_RPC)
+  .addOption(SECRET)
+  .addOption(CANONICAL_CONTRACT_ADDRESS)
   .action(handleResult(Invokation.run));
 
 program
   .command("making-progress")
-  .addOption(
-    new Option("-d, --dekuRpc <deku>")
-      .default(DEKU_RPC, DEKU_RPC)
-      .env("DEKU_RPC")
-  )
+  .description("Check if the node is making progress")
+  .addOption(DEKU_RPC)
   .action(handleResult(MakingProgress.run));
 
 program
   .command("is-sync")
-  .addOption(
-    new Option("-d0, --dekuRpc0 <deku>")
-      .default(DEKU_RPC_0, DEKU_RPC_0)
-      .env("DEKU_RPC_0")
+  .description(
+    "Check if the standard derivation of the node levels it not too high."
   )
-  .addOption(
-    new Option("-d1, --dekuRpc1 <deku>")
-      .default(DEKU_RPC_1, DEKU_RPC_1)
-      .env("DEKU_RPC_1")
-  )
-  .addOption(
-    new Option("-d2, --dekuRpc2 <deku>")
-      .default(DEKU_RPC_2, DEKU_RPC_2)
-      .env("DEKU_RPC_2")
-  )
-  .addOption(
-    new Option("-d3, --dekuRpc3 <deku>")
-      .default(DEKU_RPC_3, DEKU_RPC_3)
-      .env("DEKU_RPC_3")
-  )
+  .addOption(ALL_DEKU_RPC)
   .action(handleResult(IsSync.run));
 
 program
   .command("deposit")
-  .addOption(
-    new Option("-d, --dekuRpc <deku>")
-      .default(DEKU_RPC, DEKU_RPC)
-      .env("DEKU_RPC")
+  .description(
+    `Deposit 10 tickets on deku. So the secret needs to have some tez to pay the fees. The dummy ticket contract must have been originated on tezos`
   )
-  .addOption(
-    new Option("-s, --secret <secret>")
-      .default(EVE_SECRET, EVE_SECRET)
-      .env("USER_SECRET")
-  ) // Share secret between deku and tezos.
-  .addOption(
-    new Option("-t, --tezosRpc <secret>")
-      .default(TEZOS_RPC, TEZOS_RPC)
-      .env("TEZOS_RPC")
-  )
-  .addOption(
-    new Option("-c, --ticketer <ticketer>")
-      .default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT)
-      .env("DUMMY_TICKET_CONTRACT")
-  )
+  .addOption(DEKU_RPC)
+  .addOption(SECRET) // Share secret between deku and tezos.
+  .addOption(TEZOS_RPC)
+  .addOption(TICKETER)
+  .addOption(TICKET_DATA)
   .action(handleResult(Deposit.run));
-// TODO: withdraw, withdraw-proof, all(command which does everything)
 
 program
   .command("transfer")
-  .addOption(
-    new Option("-d, --dekuRpc <deku>")
-      .default(DEKU_RPC, DEKU_RPC)
-      .env("DEKU_RPC")
+  .description(
+    `Transfer 1 ticket from alice to bob, and bob to alice. One of the secret has to have at least one ticket.`
   )
-  .addOption(
-    new Option("-a, --alice-secret <aliceSecret>")
-      .default(ALICE_SECRET, ALICE_SECRET)
-      .env("ALICE_SECRET")
-  )
-  .addOption(
-    new Option("-b, --bobSecret <bobSecret>")
-      .default(BOB_SECRET, BOB_SECRET)
-      .env("BOB_SECRET")
-  )
-  .addOption(
-    new Option("-t, --ticketer <ticketer>")
-      .default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT)
-      .env("DUMMY_TICKET_CONTRACT")
-  )
+  .addOption(DEKU_RPC)
+  .addOption(SECRET_1_WITH_TICKETS)
+  .addOption(SECRET_2_WITH_TICKETS)
+  .addOption(TICKETER)
+  .addOption(TICKET_DATA)
   .action(handleResult(Transfer.run));
+
+program
+  .command("withdraw")
+  .description(
+    "Withdraw some tickets on tezos, the secret needs some tez to pay the fees. The dummy ticket contract must have been originated"
+  )
+  .addOption(DEKU_RPC)
+  .addOption(SECRET_WITH_TEZ)
+  .addOption(TICKETER)
+  .addOption(TEZOS_RPC)
+  .addOption(TICKET_DATA)
+  .action(handleResult(Withdraw.run));
+
+program
+  .command("contract-level")
+  .description(
+    "Check if the level of the consus smart contract has been updated in the last 5 minutes."
+  )
+  .addOption(DEKU_RPC)
+  .addOption(TEZOS_RPC)
+  .action(handleResult(ContractLevel.run));
+
+program
+  .command("is-commiting")
+  .description("Check if the chain is commiting on tezos")
+  .addOption(DEKU_RPC)
+  .addOption(TEZOS_RPC)
+  .addOption(BLOCKS)
+  .action(handleResult(IsCommiting.run));
 
 program.parse();

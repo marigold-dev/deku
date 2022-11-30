@@ -4988,6 +4988,14 @@
     "@taquito/taquito" "^14.0.0"
     libsodium-wrappers "0.7.9"
 
+"@taquito/http-utils@*", "@taquito/http-utils@^15.0.0":
+  version "15.0.0"
+  resolved "https://registry.yarnpkg.com/@taquito/http-utils/-/http-utils-15.0.0.tgz#b7fe912972394162705dd322605a52073670e2fb"
+  integrity sha512-caOofYWZzbxti1s1t3ObkRL4Ph8DpAWWY/staI1IiZJ/g/XX8FDtS71tE+IwBLXwH0kYqP0bNhTGPP04ebEHpQ==
+  dependencies:
+    "@vespaiach/axios-fetch-adapter" "^0.3.1"
+    axios "^0.26.0"
+
 "@taquito/http-utils@^13.0.1":
   version "13.0.1"
   resolved "https://registry.npmjs.org/@taquito/http-utils/-/http-utils-13.0.1.tgz"
@@ -5002,14 +5010,6 @@
   dependencies:
     axios "^0.26.0"
 
-"@taquito/http-utils@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/http-utils/-/http-utils-15.0.0.tgz#b7fe912972394162705dd322605a52073670e2fb"
-  integrity sha512-caOofYWZzbxti1s1t3ObkRL4Ph8DpAWWY/staI1IiZJ/g/XX8FDtS71tE+IwBLXwH0kYqP0bNhTGPP04ebEHpQ==
-  dependencies:
-    "@vespaiach/axios-fetch-adapter" "^0.3.1"
-    axios "^0.26.0"
-
 "@taquito/ledger-signer@^14.0.0":
   version "14.0.0"
   resolved "https://registry.npmjs.org/@taquito/ledger-signer/-/ledger-signer-14.0.0.tgz"
@@ -5020,6 +5020,14 @@
     "@taquito/taquito" "^14.0.0"
     "@taquito/utils" "^14.0.0"
     buffer "^6.0.3"
+
+"@taquito/local-forging@*", "@taquito/local-forging@^15.0.0":
+  version "15.0.0"
+  resolved "https://registry.yarnpkg.com/@taquito/local-forging/-/local-forging-15.0.0.tgz#d12084e4fb916e78124c181ef0b7e6181d53a678"
+  integrity sha512-8QLut19U03Tsm59RjrSZOlLZx5mglQjQFt5No1VzWfNsXv7mytmn8SlvqFxyt8hyTlm1RM1NdJJ1oO1h1A/BRQ==
+  dependencies:
+    "@taquito/utils" "^15.0.0"
+    bignumber.js "^9.1.0"
 
 "@taquito/local-forging@^13.0.1":
   version "13.0.1"
@@ -5037,13 +5045,10 @@
     "@taquito/utils" "^14.0.0"
     bignumber.js "^9.0.2"
 
-"@taquito/local-forging@^15.0.0":
+"@taquito/michel-codec@*", "@taquito/michel-codec@^15.0.0":
   version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/local-forging/-/local-forging-15.0.0.tgz#d12084e4fb916e78124c181ef0b7e6181d53a678"
-  integrity sha512-8QLut19U03Tsm59RjrSZOlLZx5mglQjQFt5No1VzWfNsXv7mytmn8SlvqFxyt8hyTlm1RM1NdJJ1oO1h1A/BRQ==
-  dependencies:
-    "@taquito/utils" "^15.0.0"
-    bignumber.js "^9.1.0"
+  resolved "https://registry.yarnpkg.com/@taquito/michel-codec/-/michel-codec-15.0.0.tgz#f05be1fa3811cbd2bfcb16ca2e84c602afae6824"
+  integrity sha512-pfnrXVSkGeeVNx7MYHTeu79iU4lGynym/7+8QbD/O28LWob8PUrwpt+jaAxsVDdNOYtKz+LO1E4FpC348tHO6Q==
 
 "@taquito/michel-codec@^13.0.1":
   version "13.0.1"
@@ -5055,10 +5060,15 @@
   resolved "https://registry.npmjs.org/@taquito/michel-codec/-/michel-codec-14.0.0.tgz"
   integrity sha512-ftnBvUVddlHBqvQbGPHEb26KrS4lIcaZ1eIpYJWiz+akb4Pcfyq7j/OEsDZbB7Pl2FP9hqu7ZygOF34zY6Lrtw==
 
-"@taquito/michel-codec@^15.0.0":
+"@taquito/michelson-encoder@*", "@taquito/michelson-encoder@^15.0.0":
   version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/michel-codec/-/michel-codec-15.0.0.tgz#f05be1fa3811cbd2bfcb16ca2e84c602afae6824"
-  integrity sha512-pfnrXVSkGeeVNx7MYHTeu79iU4lGynym/7+8QbD/O28LWob8PUrwpt+jaAxsVDdNOYtKz+LO1E4FpC348tHO6Q==
+  resolved "https://registry.yarnpkg.com/@taquito/michelson-encoder/-/michelson-encoder-15.0.0.tgz#8fc3492a22404ae8a8b1907a43bf10745e1b973b"
+  integrity sha512-TxmWCgZBuA7SrNPSN+xfeeovDGU5H5sXyXcgL3KwYfeILaWiWr1MbI9n8xV7ewJZSC9svor6/osz7Y04+TIpgw==
+  dependencies:
+    "@taquito/rpc" "^15.0.0"
+    "@taquito/utils" "^15.0.0"
+    bignumber.js "^9.1.0"
+    fast-json-stable-stringify "^2.1.0"
 
 "@taquito/michelson-encoder@^13.0.1":
   version "13.0.1"
@@ -5080,16 +5090,6 @@
     bignumber.js "^9.0.2"
     fast-json-stable-stringify "^2.1.0"
 
-"@taquito/michelson-encoder@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/michelson-encoder/-/michelson-encoder-15.0.0.tgz#8fc3492a22404ae8a8b1907a43bf10745e1b973b"
-  integrity sha512-TxmWCgZBuA7SrNPSN+xfeeovDGU5H5sXyXcgL3KwYfeILaWiWr1MbI9n8xV7ewJZSC9svor6/osz7Y04+TIpgw==
-  dependencies:
-    "@taquito/rpc" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
-    bignumber.js "^9.1.0"
-    fast-json-stable-stringify "^2.1.0"
-
 "@taquito/remote-signer@^14.0.0":
   version "14.0.0"
   resolved "https://registry.npmjs.org/@taquito/remote-signer/-/remote-signer-14.0.0.tgz"
@@ -5101,6 +5101,15 @@
     "@taquito/taquito" "^14.0.0"
     "@taquito/utils" "^14.0.0"
     typedarray-to-buffer "^4.0.0"
+
+"@taquito/rpc@*", "@taquito/rpc@^15.0.0":
+  version "15.0.0"
+  resolved "https://registry.yarnpkg.com/@taquito/rpc/-/rpc-15.0.0.tgz#096ac942be0d5d3bc5f7ad4f3dbe4b15dd1d1e12"
+  integrity sha512-z5oPSD2QDhLqU9scA4Pof2+DUaK9P3oDWeCqr6/JAOlt1DwDwYsHj84d4UVmpjP/DrTj4Sp1IyY7I9KpNNLlGQ==
+  dependencies:
+    "@taquito/http-utils" "^15.0.0"
+    "@taquito/utils" "^15.0.0"
+    bignumber.js "^9.1.0"
 
 "@taquito/rpc@^13.0.1":
   version "13.0.1"
@@ -5119,15 +5128,6 @@
     "@taquito/http-utils" "^14.0.0"
     "@taquito/utils" "^14.0.0"
     bignumber.js "^9.0.2"
-
-"@taquito/rpc@^15.0.0":
-  version "15.0.0"
-  resolved "https://registry.yarnpkg.com/@taquito/rpc/-/rpc-15.0.0.tgz#096ac942be0d5d3bc5f7ad4f3dbe4b15dd1d1e12"
-  integrity sha512-z5oPSD2QDhLqU9scA4Pof2+DUaK9P3oDWeCqr6/JAOlt1DwDwYsHj84d4UVmpjP/DrTj4Sp1IyY7I9KpNNLlGQ==
-  dependencies:
-    "@taquito/http-utils" "^15.0.0"
-    "@taquito/utils" "^15.0.0"
-    bignumber.js "^9.1.0"
 
 "@taquito/sapling@^14.0.0":
   version "14.0.0"
@@ -5233,6 +5233,20 @@
     "@taquito/rpc" "^14.0.0"
     "@taquito/utils" "^14.0.0"
     bignumber.js "^9.0.2"
+    rxjs "^6.6.3"
+
+"@taquito/taquito@^14.2.0":
+  version "14.2.0"
+  resolved "https://registry.yarnpkg.com/@taquito/taquito/-/taquito-14.2.0.tgz#5ce737663fdb06316798a32da416fedff3696800"
+  integrity sha512-JrAUtANIVr02TFI6N87Xnn+KfgDT8hTA6IBeRhGfQnZH8nL1LG6/6q7uHZTw6D4ddfnMvxjgA/916cxAFcskFA==
+  dependencies:
+    "@taquito/http-utils" "*"
+    "@taquito/local-forging" "*"
+    "@taquito/michel-codec" "*"
+    "@taquito/michelson-encoder" "*"
+    "@taquito/rpc" "*"
+    "@taquito/utils" "*"
+    bignumber.js "^9.1.0"
     rxjs "^6.6.3"
 
 "@taquito/tezbridge-wallet@^14.0.0":

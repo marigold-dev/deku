@@ -1,3 +1,5 @@
+import { Base58 } from "@tzstamp/helpers";
+
 /**
  * Exit the program when the promise raises an exception
  * @param promise
@@ -33,6 +35,17 @@ export const wait = async (
 };
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Transform a b58 string into bytes
+ * @param b58 the b58 repsentation of a blake2b string
+ * @returns the hexadecimal representation of the hash
+ */
+export const toBytes = (b58) => {
+  const y = Base58.decode(b58);
+  const tmp = new Uint8Array(y.buffer).slice(0, 32 + 2);
+  return Buffer.from(tmp.slice(2)).toString("hex");
+};
 
 /**
  * Initial storage of the following contract

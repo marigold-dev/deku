@@ -2,15 +2,20 @@ import { DekuPClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { wait } from "./utils";
 
-const run = async ({ dekuRpc, aliceSecret, bobSecret, ticketer }) => {
-  const data = "0x0505050505";
+const run = async ({
+  dekuRpc,
+  secret1WithTickets,
+  secret2WithTickets,
+  ticketer,
+  data,
+}) => {
   const ticketId = { ticketer, data };
   // Instanciate deku toolkit for Alice
-  const aliceSigner = fromMemorySigner(new InMemorySigner(aliceSecret));
+  const aliceSigner = fromMemorySigner(new InMemorySigner(secret1WithTickets));
   const aliceAddr = await aliceSigner.publicKeyHash();
   const dekuA = new DekuPClient({ dekuRpc, dekuSigner: aliceSigner });
   // Instanciate deku toolkit for Bob
-  const bobSigner = fromMemorySigner(new InMemorySigner(bobSecret));
+  const bobSigner = fromMemorySigner(new InMemorySigner(secret2WithTickets));
   const bobAddr = await bobSigner.publicKeyHash();
   const dekuB = new DekuPClient({ dekuRpc, dekuSigner: bobSigner });
   // Get the previous balance of Alice and Bob
@@ -33,8 +38,8 @@ const run = async ({ dekuRpc, aliceSecret, bobSecret, ticketer }) => {
     receiver.addr,
     1,
     ticketer,
-    "0505050505"
-  );
+    data.slice(2)
+  ); // TODO: "0x..." is not working in the toolkit
   await wait(dekuRpc, op);
   // Get the new balance of the sender and receiver
   const nextBalanceSender = await sender.deku.getBalance(sender.addr, ticketId);
