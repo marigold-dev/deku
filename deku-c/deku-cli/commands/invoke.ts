@@ -1,6 +1,6 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { Contract, DekuCClient } from "@marigold-dev/deku";
+import { Contract, DekuCClient, parseTicketAmount } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
 import { read, isLigo } from "../core/contract";
@@ -17,21 +17,28 @@ function getContract(apiUri, walletPath, contractAddress, ligoUri?) {
   return deku.contract(contractAddress);
 }
 
+function parseTicketAmounts(args: string[]) {
+  return args.map((str) => {
+    return parseTicketAmount(str);
+  });
+}
+
 async function invokeMain(
   apiUri,
   walletPath,
   contractAddress,
   parameter,
+  ticketAmounts,
   options
 ) {
   try {
     const contract = getContract(apiUri, walletPath, contractAddress);
     if (options.raw !== undefined) {
       const parameter_parsed = JSON.parse(parameter);
-      const hash = await contract.invokeRaw(parameter);
+      const hash = await contract.invokeRaw(parameter, ticketAmounts);
       console.log("Operation hash:", hash);
     } else {
-      const hash = await contract.invoke(parameter);
+      const hash = await contract.invoke(parameter, ticketAmounts);
       console.log("operation hash:", hash);
     }
   } catch (e) {
@@ -88,8 +95,19 @@ export default function make(command: Commander.Command) {
       `URI of the deku API to use (default ${default_.api})`
     )
     .action((walletPath, contractAddress, parameter, options) => {
+      const unparsedArguments = invoke.args.slice(3);
+      console.log("UNPARSED:", unparsedArguments);
       const apiUri = options.endpoint ?? default_.api;
-      invokeMain(apiUri, walletPath, contractAddress, parameter, options);
+      const tickets = parseTicketAmounts(unparsedArguments);
+
+      invokeMain(
+        apiUri,
+        walletPath,
+        contractAddress,
+        parameter,
+        tickets,
+        options
+      );
     });
 
   invokeLigo

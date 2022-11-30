@@ -9,7 +9,7 @@ import {
   make_show_balance,
 } from "./commands";
 
-process.removeAllListeners('warning');
+process.removeAllListeners("warning");
 
 const program = new Commander.Command();
 

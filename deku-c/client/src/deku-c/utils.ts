@@ -1,4 +1,5 @@
 import { JSONType } from "./contract";
+import Balances, { Balances as BalancesType } from "../deku-p/core/balances";
 import * as path from "path";
 
 export const originateTz = async (
@@ -35,7 +36,10 @@ export const originateLigo = async (
         method: "POST",
         body: JSON.stringify({ lang: kind, source: code }),
       };
-      const result = await fetch(path.join(ligoRpc, "/api/v1/ligo/originate"), options);
+      const result = await fetch(
+        path.join(ligoRpc, "/api/v1/ligo/originate"),
+        options
+      );
       const { code: source } = await result.json();
       return originateTz(dekuRpc, { code: source, initialStorage });
     }
@@ -88,7 +92,10 @@ export const compileLigoExpression = async (
           expression: ligoExpression,
         }),
       };
-      const result = await fetch(path.join(ligoRpc, "/api/v1/ligo/expression"), options);
+      const result = await fetch(
+        path.join(ligoRpc, "/api/v1/ligo/expression"),
+        options
+      );
       const { expression } = await result.json();
       return compileExpression(dekuRpc, { expression, address });
     }

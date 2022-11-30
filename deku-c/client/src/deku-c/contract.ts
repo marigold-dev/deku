@@ -1,5 +1,6 @@
 import { DekuCClient } from ".";
 import { DekuPClient } from "../deku-p/index";
+import Balances, { Balances as BalancesType } from "../deku-p/core/balances";
 import { compileExpression, compileLigoExpression } from "./utils";
 
 export type JSONType =
@@ -108,21 +109,25 @@ export class Contract {
    * @param parameter the parameter of the contract as provided by tunac
    * @returns the hash of the operation
    */
-  async invokeRaw(parameter: any): Promise<string> {
+  async invokeRaw(parameter: any, tickets?: BalancesType): Promise<string> {
+    if (tickets === undefined) tickets = [];
+
     const invoke = {
       operation: JSON.stringify({
         address: this.address,
         argument: parameter,
       }),
-      tickets: [],
+      tickets,
     };
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }
 
-  async invoke(expression: string): Promise<string> {
+  async invoke(expression: string, tickets?: BalancesType): Promise<string> {
+    if (!tickets) tickets = [];
     const parameter = { expression, address: this.address };
     const invoke = await compileExpression(this.deku.dekuRpc, parameter);
+    invoke.tickets = Balances.toDTO(tickets);
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }
@@ -132,7 +137,11 @@ export class Contract {
    * @param parameter the parameter of the contract, in Ligo // FIXME lang
    * @returns the hash of the operation
    */
-  async invokeLigo(kind: ligo_kind, code: string, expression: string): Promise<string> {
+  async invokeLigo(
+    kind: ligo_kind,
+    code: string,
+    expression: string
+  ): Promise<string> {
     // FIXME the need for the two RPCs stinks (also they're strings)
     const parameter = {
       kind,

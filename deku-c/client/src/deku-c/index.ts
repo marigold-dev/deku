@@ -17,7 +17,6 @@ export type Settings = {
 export class DekuCClient extends DekuPClient {
   readonly ligoRpc?: string;
 
-
   constructor(settings: Settings) {
     super(settings);
     this.ligoRpc = settings.ligoRpc;

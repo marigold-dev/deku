@@ -357,14 +357,14 @@ export class DekuPClient {
     return this.submitOperation(noopOperation);
   }
 
-  async wait(operationHash: OperationHashType): Promise<LevelType> {
-    console.log(operationHash);
+  async wait(_operationHash: OperationHashType): Promise<LevelType> {
     throw "Feature not yet implemented"; // TODO: implement this feature
   }
 }
 
-export const parseTicketID = TicketID.ofString;
+export const parseTicketID = TicketID.parseTicketID;
 export const makeTicketID = TicketID.createTicketID;
+export const parseTicketAmount = Balances.parseTicketAmount;
 // TODO export type too?
 
 export {
