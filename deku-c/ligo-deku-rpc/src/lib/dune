@@ -1,0 +1,3 @@
+(library
+ (name ligo_deku_rpc)
+ (libraries routes piaf yojson base64 mirage-crypto))
