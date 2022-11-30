@@ -3,6 +3,8 @@ import { DekuCClient } from ".";
 import { DekuPClient } from "../deku-p/index";
 import * as LigoRpc from "./ligoRpc";
 import { JSONType } from "./utils";
+import Balances, { Balances as BalancesType } from "../deku-p/core/balances";
+import { compileExpression, compileLigoExpression } from "./utils";
 
 const parseContractState = (json: JSONType): JSONType => {
   if (json === null) return null;
@@ -102,25 +104,29 @@ export class Contract {
    * @param parameter the parameter of the contract as provided by tunac
    * @returns the hash of the operation
    */
-  async invokeRaw(parameter: any): Promise<string> {
+  async invokeRaw(parameter: any, tickets?: BalancesType): Promise<string> {
+    if (tickets === undefined) tickets = [];
+
     const invoke = {
       operation: {
         address: this.address,
         argument: parameter,
       },
-      tickets: [],
+      tickets,
     };
     const hash = await this.deku.submitVmOperation(invoke);
     return hash;
   }
 
-  async invokeMichelson(expression: string): Promise<string> {
+  async invokeMichelson(expression: string, tickets?: BalancesType): Promise<string> {
+    if (!tickets) tickets = [];
     if (this.deku.ligoRpc) {
       const invoke = await LigoRpc.invoke(this.deku.ligoRpc, {
         kind: "michelson",
         expression,
         address: this.address,
       });
+      invoke.tickets = Balances.toDTO(tickets);
       const hash = await this.deku.submitVmOperation(invoke);
       return hash;
     } else {

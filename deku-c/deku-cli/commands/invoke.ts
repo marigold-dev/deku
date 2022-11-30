@@ -1,6 +1,6 @@
 import { fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
-import { DekuCClient, isLigo, DEKU_API_URL, LIGO_DEKU_RPC_URL } from "@marigold-dev/deku";
+import { Contract, DekuCClient, isLigo, DEKU_API_URL, LIGO_DEKU_RPC_URL, parseTicketAmount } from "@marigold-dev/deku";
 import { load } from "../core/wallet";
 import * as Commander from "commander";
 import { read } from "../core/contract";
@@ -23,21 +23,29 @@ function getContract(
   return deku.contract(contractAddress, code);
 }
 
+function parseTicketAmounts(args: string[]) {
+  return args.map((str) => {
+    return parseTicketAmount(str);
+  });
+}
+
 async function invokeMain(
   apiUri: string,
   ligoUri: string,
   walletPath: string,
   contractAddress: string,
   parameter: string,
+  ticketAmounts: any[],
   options: { raw?: boolean }
 ) {
   try {
     const contract = getContract(apiUri, walletPath, contractAddress, ligoUri);
     if (options.raw !== undefined) {
-      const hash = await contract.invokeRaw(parameter);
+      const parameter_parsed = JSON.parse(parameter);
+      const hash = await contract.invokeRaw(parameter, ticketAmounts);
       console.log("Operation hash:", hash);
     } else {
-      const hash = await contract.invokeMichelson(parameter);
+      const hash = await contract.invokeMichelson(parameter, ticketAmounts);
       console.log("operation hash:", hash);
     }
   } catch (e: any) {
@@ -94,6 +102,10 @@ export default function make(command: Commander.Command) {
       `URI of the ligo RPC API to use (default ${LIGO_DEKU_RPC_URL})`
     )
     .action((walletPath, contractAddress, parameter, options) => {
+      const unparsedArguments = invoke.args.slice(3);
+      console.log("UNPARSED:", unparsedArguments);
+      const tickets = parseTicketAmounts(unparsedArguments);
+
       const apiUri = options.endpoint ?? DEKU_API_URL;
       const ligoApiUri = options.ligoRpc ?? LIGO_DEKU_RPC_URL;
       invokeMain(
@@ -102,6 +114,7 @@ export default function make(command: Commander.Command) {
         walletPath,
         contractAddress,
         parameter,
+        tickets,
         options
       );
     });

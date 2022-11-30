@@ -1,3 +1,6 @@
+import Balances, { Balances as BalancesType } from "../deku-p/core/balances";
+import * as path from "path";
+
 export type JSONType =
   | string
   | number
@@ -93,6 +96,60 @@ export function urlJoin(...args: string[]) {
   const parts = Array.from(Array.isArray(args[0]) ? args[0] : args);
   return normalize(parts);
 }
+
+export const compileExpression = async (
+  dekuRpc: string,
+  { expression, address }: { expression: string; address: string }
+) => {
+  const dekuOptions = {
+    method: "POST",
+    body: JSON.stringify({
+      address,
+      expression,
+    }),
+  };
+  const dekuRes = await fetch(
+    path.join(dekuRpc, "/api/v1/helpers/compile-expression"),
+    dekuOptions
+  );
+  return dekuRes.json();
+};
+
+export const compileLigoExpression = async (
+  ligoRpc: string,
+  dekuRpc: string,
+  {
+    kind,
+    code,
+    ligoExpression,
+    address,
+  }: {
+    kind: "jsligo" | "mligo";
+    code: string;
+    ligoExpression: string;
+    address: string;
+  }
+) => {
+  switch (kind) {
+    case "mligo":
+    case "jsligo": {
+      const options = {
+        method: "POST",
+        body: JSON.stringify({
+          lang: kind,
+          source: code,
+          expression: ligoExpression,
+        }),
+      };
+      const result = await fetch(
+        path.join(ligoRpc, "/api/v1/ligo/expression"),
+        options
+      );
+      const { expression } = await result.json();
+      return compileExpression(dekuRpc, { expression, address });
+    }
+  }
+};
 
 export const operationHashToContractAddress = async (
   dekuRpc: string,
