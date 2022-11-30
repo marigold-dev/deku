@@ -2,7 +2,7 @@ import { DekuPClient } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { TezosToolkit } from "@taquito/taquito";
 
-const run = async (ticketer, {dekuRpc, secret, tezosRpc }) => {
+const run = async ({dekuRpc, secret, tezosRpc, ticketer }) => {
     const signer = new InMemorySigner(secret);
     const deku = new DekuPClient({dekuRpc});
     const tezos = new TezosToolkit(tezosRpc);

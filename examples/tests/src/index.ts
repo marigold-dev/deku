@@ -5,6 +5,7 @@ import Invokation from "./invokation";
 import MakingProgress from "./making-progress";
 import IsSync from "./is-sync";
 import Deposit from "./deposit";
+import { DEKU_COUNTER_CONTRACT, DEKU_RPC, DEKU_RPC_0, DEKU_RPC_1, DEKU_RPC_2, DEKU_RPC_3, DUMMY_TICKET_CONTRACT, EMPTY_SECRET, EVE_SECRET, LIGO_RPC, TEZOS_RPC } from './defaults';
 
 const program = new Command();
 
@@ -13,34 +14,35 @@ program
     .version('0.1.0')
 
 program.command("origination")
-    .addOption(new Option('-d, --dekuRpc <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC"))
-    .addOption(new Option('-l, --ligoRpc <ligo>').default('http://0.0.0.0:9090', 'http://0.0.0.0:9090').env("LIGO_RPC"))
-    .addOption(new Option('-s, --secret <secret>').default('edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq', 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq').env("DEKU_USER_SECRET"))
+    .addOption(new Option('-d, --dekuRpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
+    .addOption(new Option('-l, --ligoRpc <ligo>').default(LIGO_RPC, LIGO_RPC).env("LIGO_RPC"))
+    .addOption(new Option('-s, --secret <secret>').default(EMPTY_SECRET, EMPTY_SECRET).env("DEKU_USER_SECRET"))
     .action(handleResult(Origination.run));
 
 program.command("invokation")
-    .addOption(new Option('-d, --dekuRpc <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC"))
-    .addOption(new Option('-l, --ligoRpc <ligo>').default('http://0.0.0.0:9090', 'http://0.0.0.0:9090').env("LIGO_RPC"))
-    .addOption(new Option('-s, --secret <secret>').default('edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq', 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq').env("DEKU_USER_SECRET"))
-    .argument("<contract-address>", "address of the deku wasm contract")
+    .addOption(new Option('-d, --dekuRpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
+    .addOption(new Option('-l, --ligoRpc <ligo>').default(LIGO_RPC, LIGO_RPC).env("LIGO_RPC"))
+    .addOption(new Option('-s, --secret <secret>').default(EMPTY_SECRET, EMPTY_SECRET).env("DEKU_USER_SECRET"))
+    .addOption(new Option('-a, --address <address>').default(DEKU_COUNTER_CONTRACT, DEKU_COUNTER_CONTRACT).env("DEKU_COUNTER_CONTRACT"))
     .action(handleResult(Invokation.run));
 
 program.command("making-progress")
-    .addOption(new Option('-d, --dekuRpc <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC"))
+    .addOption(new Option('-d, --dekuRpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
     .action(handleResult(MakingProgress.run));
 
-program.command("is-sync")
-    .addOption(new Option('-d0, --dekuRpc0 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_0"))
-    .addOption(new Option('-d1, --dekuRpc1 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_1"))
-    .addOption(new Option('-d2, --dekuRpc2 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_2"))
-    .addOption(new Option('-d3, --dekuRpc3 <deku>').default('http://0.0.0.0:8080', 'http://0.0.0.0:8080').env("DEKU_RPC_3"))
+program.command("is-sync",)
+    .addOption(new Option('-d0, --dekuRpc0 <deku>').default(DEKU_RPC_0, DEKU_RPC_0).env("DEKU_RPC_0"))
+    .addOption(new Option('-d1, --dekuRpc1 <deku>').default(DEKU_RPC_1, DEKU_RPC_1).env("DEKU_RPC_1"))
+    .addOption(new Option('-d2, --dekuRpc2 <deku>').default(DEKU_RPC_2, DEKU_RPC_2).env("DEKU_RPC_2"))
+    .addOption(new Option('-d3, --dekuRpc3 <deku>').default(DEKU_RPC_3, DEKU_RPC_3).env("DEKU_RPC_3"))
     .action(handleResult(IsSync.run))
 
 program.command("deposit")
-    .addOption(new Option('-d, --dekuRpc <deku>').default('https://deku-canonical-vm0.deku-v1.marigold.dev', 'https://deku-canonical-vm0.deku-v1.marigold.dev').env("DEKU_RPC"))
-    .addOption(new Option('-s, --secret <secret>').default('edskRubBsVKzfE3rH7GXWb71UewQXDYd2ZDzW8818RWL9mQbRop4V8rJwcjmFRgMApJ1m7ygWPWEum4VtK2VxLokWu7iJAiDM9', 'edskRubBsVKzfE3rH7GXWb71UewQXDYd2ZDzW8818RWL9mQbRop4V8rJwcjmFRgMApJ1m7ygWPWEum4VtK2VxLokWu7iJAiDM9').env("USER_SECRET")) // Share secret between deku and tezos.
-    .addOption(new Option('-t, --tezosRpc <secret>').default('https://rpc.tzkt.io/ghostnet', 'https://rpc.tzkt.io/ghostnet').env("TEZOS_RPC"))
-    .argument("<dummy-ticket-address>", "address of the dummy ticket contract")
+    .addOption(new Option('-d, --dekuRpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
+    .addOption(new Option('-s, --secret <secret>').default(EVE_SECRET, EVE_SECRET).env("USER_SECRET")) // Share secret between deku and tezos.
+    .addOption(new Option('-t, --tezosRpc <secret>').default(TEZOS_RPC, TEZOS_RPC).env("TEZOS_RPC"))
+    .addOption(new Option('-c, --ticketer <ticketer>').default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT).env("DUMMY_TICKET_CONTRACT"))
     .action(handleResult(Deposit.run));
-    
+// TODO: transfer, withdraw, withdraw-proof, all(command which does everything)
+
 program.parse()
