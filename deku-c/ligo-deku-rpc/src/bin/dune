@@ -1,0 +1,4 @@
+(executable
+ (public_name ligo_deku_rpc)
+ (name main)
+ (libraries ligo_deku_rpc piaf logs logs.fmt fmt.tty routes))
