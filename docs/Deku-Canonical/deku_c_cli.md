@@ -110,3 +110,15 @@ where
 - `parameter` is the Michelson expression of the entrypoint and its argument
 
 The `parameter` can be provided by the Ligo compiler using the `ligo compile parameter` command.
+
+To invoke a contract with a Ligo expression directly, use the `invoke-ligo` command:
+
+```bash
+deku-cli wallet contract_address contract_path expression
+```
+
+where
+
+- `contract_path` is the path towards the contract source code, which is required to compile the
+  expression
+- `expression` is the Ligo expression to compile
