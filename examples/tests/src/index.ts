@@ -7,6 +7,7 @@ import IsSync from "./is-sync";
 import Deposit from "./deposit";
 import Transfer from './transfer';
 import Withdraw from './withdraw';
+import ContractLevel from './contract-level';
 import { ALICE_SECRET, BOB_SECRET, DEKU_COUNTER_CONTRACT, DEKU_RPC, DEKU_RPC_0, DEKU_RPC_1, DEKU_RPC_2, DEKU_RPC_3, DUMMY_TICKET_CONTRACT, EMPTY_SECRET, EVE_SECRET, LIGO_RPC, TEZOS_RPC } from './defaults';
 
 const program = new Command();
@@ -60,5 +61,10 @@ program.command("withdraw")
     .addOption(new Option('-t, --ticketer <ticketer>').default(DUMMY_TICKET_CONTRACT, DUMMY_TICKET_CONTRACT).env("DUMMY_TICKET_CONTRACT"))
     .addOption(new Option('-tz, --tezos-rpc <tezos-rpc>').default(TEZOS_RPC, TEZOS_RPC).env("TEZOS_RPC"))
     .action(handleResult(Withdraw.run));
+
+program.command("contract-level")
+    .addOption(new Option('-d, --deku-rpc <deku>').default(DEKU_RPC, DEKU_RPC).env("DEKU_RPC"))
+    .addOption(new Option('-tz, --tezos-rpc <tezos-rpc>').default(TEZOS_RPC, TEZOS_RPC).env("TEZOS_RPC"))
+    .action(handleResult(ContractLevel.run));
 
 program.parse()
