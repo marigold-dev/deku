@@ -8,7 +8,7 @@ export const TEZOS_RPC = 'https://rpc.tzkt.io/ghostnet';
 // This account does not have any tickets on deku
 export const EMPTY_SECRET = 'edsk3QoqBuvdamxouPhin7swCvkQNgq4jP5KZPbwWNnwdZpSpJiEbq';
 // Have some tez on tezos
-export const EVE_SECRET = 'edskRubBsVKzfE3rH7GXWb71UewQXDYd2ZDzW8818RWL9mQbRop4V8rJwcjmFRgMApJ1m7ygWPWEum4VtK2VxLokWu7iJAiDM9'
+export const EVE_SECRET = 'edskRubBsVKzfE3rH7GXWb71UewQXDYd2ZDzW8818RWL9mQbRop4V8rJwcjmFRgMApJ1m7ygWPWEum4VtK2VxLokWu7iJAiDM9';
 // Only have 10 tickets used for the transfer test
 export const BOB_SECRET = 'edsk3gHBUthmmz15K3v1AcQYw6bXv9XjARWXQV4yLJcUiHtR6MNLhG';
 // receive the 10 tickets from bob and send him back
