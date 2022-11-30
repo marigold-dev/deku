@@ -41,10 +41,10 @@ export class DekuPClient {
   protected _consensus: Consensus | undefined;
   protected _discovery: Discovery | undefined;
 
-  protected _dekuRpc: string;
+  readonly dekuRpc: string;
 
   constructor(setting: Setting) {
-    this._dekuRpc = setting.dekuRpc;
+    this.dekuRpc = setting.dekuRpc;
     this.endpoints = makeEndpoints(setting.dekuRpc);
     this._dekuSigner = setting.dekuSigner;
   }
@@ -85,10 +85,6 @@ export class DekuPClient {
     this._consensus = new Consensus(consensusContract);
     // this._discovery = new Discovery(discoveryContract);
     return this;
-  }
-
-  get dekuRpc(): string {
-    return this._dekuRpc;
   }
 
   /**
