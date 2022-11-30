@@ -1,4 +1,5 @@
 import { JSONType } from "./contract";
+import * as path from "path";
 
 export const originateTz = async (
   dekuRpc: string,
@@ -12,7 +13,7 @@ export const originateTz = async (
     }),
   };
   const dekuRes = await fetch(
-    dekuRpc + "/api/v1/helpers/compile-contract",
+    path.join(dekuRpc, "/api/v1/helpers/compile-contract"),
     dekuOptions
   );
   return dekuRes.json();
@@ -34,7 +35,7 @@ export const originateLigo = async (
         method: "POST",
         body: JSON.stringify({ lang: kind, source: code }),
       };
-      const result = await fetch(ligoRpc + "/api/v1/ligo/originate", options);
+      const result = await fetch(path.join(ligoRpc, "/api/v1/ligo/originate"), options);
       const { code: source } = await result.json();
       return originateTz(dekuRpc, { code: source, initialStorage });
     }
@@ -55,7 +56,7 @@ export const compileExpression = async (
     }),
   };
   const dekuRes = await fetch(
-    dekuRpc + "/api/v1/helpers/compile-expression",
+    path.join(dekuRpc, "/api/v1/helpers/compile-expression"),
     dekuOptions
   );
   return dekuRes.json();
@@ -87,7 +88,7 @@ export const compileLigoExpression = async (
           expression: ligoExpression,
         }),
       };
-      const result = await fetch(ligoRpc + "/api/v1/ligo/expression", options);
+      const result = await fetch(path.join(ligoRpc, "/api/v1/ligo/expression"), options);
       const { expression } = await result.json();
       return compileExpression(dekuRpc, { expression, address });
     }
@@ -102,7 +103,7 @@ export const operationHashToContractAddress = async (
 ): Promise<string> => {
   const body = { hash };
   const response = await fetch(
-    dekuRpc + "/api/v1/helpers/compute-contract-hash",
+    path.join(dekuRpc, "/api/v1/helpers/compute-contract-hash"),
     { method: "POST", body: JSON.stringify(body) }
   );
   const json = await response.json();
