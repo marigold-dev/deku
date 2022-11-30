@@ -22,15 +22,16 @@ let main { wallet; api_uri; content } =
   let level = Api.current_level ~sw ~env ~api_uri in
   let operation = Yojson.Safe.from_string content in
   let operation = Ocaml_wasm_vm.Operation_payload.t_of_yojson operation in
-  let operation =
-    Operation.Signed.vm_transaction ~level ~nonce ~content:operation ~identity
-  in
-  let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
-    operation
-  in
-  let () = Api.submit_operation ~sw ~env ~operation ~api_uri in
-  print_endline (Operation_hash.to_b58 hash);
-  exit 0
+  assert false
+(* let operation =
+     Operation.Signed. ~level ~nonce ~content:operation ~identity
+   in
+   let (Signed_operation { initial = Initial_operation { hash; _ }; _ }) =
+     operation
+   in
+   let () = Api.submit_operation ~sw ~env ~operation ~api_uri in
+   print_endline (Operation_hash.to_b58 hash);
+   exit 0 *)
 
 let cmd =
   let term = Term.(const main $ params_cmdliner_term ()) in

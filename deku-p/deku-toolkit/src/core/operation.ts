@@ -36,6 +36,7 @@ type OperationVmTransaction = {
   operation: unknown;
 };
 
+// FIXME: remove and add pokemon stuff
 const vmTransactionToDTO = (vmTransaction: OperationVmTransaction) => {
   const { sender, operation } = vmTransaction;
   return [

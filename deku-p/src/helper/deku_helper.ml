@@ -71,7 +71,7 @@ let main params =
     Identity.make secret
   in
   let level = make_level ~sw ~env () in
-  let nonce = Nonce.of_n (N.zero) in
+  let nonce = Nonce.of_n N.zero in
   let op = Operation.Signed.joypad_input ~level ~nonce ~input ~identity in
   let _ = post_to_api ~sw ~env ~operation:op in
   exit 0

@@ -37,9 +37,9 @@ let apply_block ~env ~folder ~state ~block =
         match receipt with
         | Ticket_transfer_receipt { operation; _ }
         | Withdraw_receipt { operation; _ }
-        | Vm_transaction_receipt { operation; _ } ->
+        | Register_twitch_handle { operation; _ } ->
             Operation_hash.Map.add operation receipt receipts
-        | Gameboy_receipt { data } ->
+        | Gameboy_frame_receipt { data } ->
             let () = render_frame data in
             receipts)
       state.receipts receipts

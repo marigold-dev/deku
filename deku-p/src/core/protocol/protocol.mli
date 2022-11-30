@@ -1,13 +1,15 @@
 open Deku_concepts
 open Deku_tezos
 open Deku_ledger
+open Deku_gameboy
 
 type protocol = private
   | Protocol of {
       included_operations : Included_operation_set.t;
-      included_tezos_operations : Tezos_operation_hash.Set.t;
+      included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
       vm_state : Deku_gameboy.t;
+      game : Game.t;
     }
 
 type t = protocol [@@deriving yojson]

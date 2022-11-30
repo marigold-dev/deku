@@ -21,7 +21,7 @@ module Joypad : sig
     | Select
     | B
     | A
-  [@@deriving show, yojson]
+  [@@deriving show, yojson, eq]
 
   val cmdliner_converter :
     (string -> [> `Ok of t | `Error of string ])

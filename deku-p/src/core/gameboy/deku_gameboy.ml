@@ -36,7 +36,7 @@ let rec advance t : frame_buffer =
 
 module Joypad = struct
   type t = Joypad.key = Down | Up | Left | Right | Start | Select | B | A
-  [@@deriving show, yojson]
+  [@@deriving show, yojson, ord, eq]
 
   let of_string = function
     | "Down" -> Down

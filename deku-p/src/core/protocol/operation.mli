@@ -5,20 +5,27 @@ open Deku_ledger
 exception Invalid_signature
 exception Invalid_source
 
-type operation = private
+type operation =
   | Operation_ticket_transfer of {
       sender : Address.t;
       receiver : Address.t;
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Operation_vm_transaction of {
+  | Operation_attest_twitch_handle of {
       sender : Address.t;
-      operation : Ocaml_wasm_vm.Operation_payload.t;
+      twitch_handle : string;
     }
-  | Operation_gameboy_input of {
+  | Operation_attest_deku_address of {
       sender : Address.t;
-      input : Deku_gameboy.Joypad.t;
+      deku_address : Address.t;
+      twitch_handle : string;
+    }
+  | Operation_vote of { sender : Address.t; vote : Game.Vote.t }
+  | Operation_delegated_vote of {
+      sender : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+      vote : Game.Vote.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -86,20 +93,13 @@ module Signed : sig
     amount:Amount.t ->
     signed_operation
 
-  val vm_transaction :
-    nonce:Nonce.t ->
-    level:Level.t ->
-    content:Ocaml_wasm_vm.Operation_payload.t ->
-    identity:Identity.t ->
-    signed_operation
-
   val noop :
     identity:Identity.t -> nonce:Nonce.t -> level:Level.t -> signed_operation
 
-  val joypad_input :
+  val game_vote :
     nonce:Nonce.t ->
     level:Level.t ->
-    input:Deku_gameboy.Joypad.t ->
+    vote:Game.Vote.t ->
     identity:Identity.t ->
     signed_operation
 end

@@ -1,3 +1,4 @@
+open Deku_concepts
 open Receipt
 open Deku_ledger
 module Tezos_operation_hash = Deku_tezos.Tezos_operation_hash
@@ -9,6 +10,7 @@ type protocol =
       included_tezos_operations : Deku_tezos.Tezos_operation_hash.Set.t;
       ledger : Ledger.t;
       vm_state : Deku_gameboy.t;
+      game : Game.t;
     }
 
 and t = protocol [@@deriving yojson]
@@ -20,21 +22,34 @@ let initial =
       included_tezos_operations = Deku_tezos.Tezos_operation_hash.Set.empty;
       ledger = Ledger.initial;
       vm_state = Deku_gameboy.empty;
+      game = Game.empty;
     }
 
 let initial_with_vm_state ~vm_state =
   let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state = _ })
-      =
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state = _;
+          game;
+        }) =
     initial
   in
-  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
+  Protocol
+    { included_operations; included_tezos_operations; ledger; vm_state; game }
 
 let apply_operation ~current_level protocol operation :
     (t * Receipt.t option * exn option) option =
   let open Operation.Initial in
   let (Protocol
-        { included_operations; ledger; included_tezos_operations; vm_state }) =
+        {
+          included_operations;
+          ledger;
+          included_tezos_operations;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let (Initial_operation { hash; nonce = _; level; operation = content }) =
@@ -50,23 +65,53 @@ let apply_operation ~current_level protocol operation :
       let included_operations =
         Included_operation_set.add operation included_operations
       in
-      let ledger, receipt, vm_state, error =
+      let ledger, receipt, game, error =
         match content with
         | Operation_ticket_transfer { sender; receiver; ticket_id; amount } -> (
             let receipt = Ticket_transfer_receipt { operation = hash } in
             match
               Ledger.transfer ~sender ~receiver ~ticket_id ~amount ledger
             with
-            | Ok ledger -> (ledger, Some receipt, vm_state, None)
-            | Error error -> (ledger, Some receipt, vm_state, Some error))
-        | Operation_vm_transaction { sender = _; operation = _ } ->
-            (ledger, None, vm_state, None)
-        | Operation_gameboy_input { sender = _; input } ->
-            Format.printf "Got gameboy intput: %a\n%!" Deku_gameboy.Joypad.pp
-              input;
-            Deku_gameboy.send_input input vm_state;
-            (ledger, None, vm_state, None)
-        | Operation_noop { sender = _ } -> (ledger, None, vm_state, None)
+            | Ok ledger -> (ledger, Some receipt, game, None)
+            | Error error -> (ledger, Some receipt, game, Some error))
+        | Operation_attest_twitch_handle { sender; twitch_handle } ->
+            let game = Game.attest_twitch_handle ~sender ~twitch_handle game in
+            ( ledger,
+              Some
+                (Receipt.Attest_twitch_handle
+                   { operation = hash; deku_address = sender; twitch_handle }),
+              game,
+              None )
+        | Operation_attest_deku_address { sender; deku_address; twitch_handle }
+          -> (
+            match
+              Game.attest_deku_address ~sender ~deku_address ~twitch_handle game
+            with
+            | Some game ->
+                ( ledger,
+                  Some
+                    (Receipt.Attest_deku_address
+                       { operation = hash; deku_address; twitch_handle }),
+                  game,
+                  None )
+            | None -> (ledger, None, game, None))
+        | Operation_vote { sender; vote } ->
+            let game = Game.vote ~sender ~vote game in
+            ( ledger,
+              Some (Receipt.Game_vote { operation = hash; sender; vote }),
+              game,
+              None )
+        | Operation_delegated_vote { sender; twitch_handle; vote } -> (
+            match Game.delegated_vote ~sender ~twitch_handle ~vote game with
+            | Some game ->
+                ( ledger,
+                  Some
+                    (Receipt.Delegated_game_vote
+                       { operation = hash; delegator = twitch_handle; vote }),
+                  game,
+                  None )
+            | None -> (ledger, None, game, None))
+        | Operation_noop { sender = _ } -> (ledger, None, game, None)
         | Operation_withdraw { sender; owner; amount; ticket_id } -> (
             match
               Ledger.withdraw ~sender ~destination:owner ~amount ~ticket_id
@@ -75,20 +120,32 @@ let apply_operation ~current_level protocol operation :
             | Ok (ledger, handle) ->
                 ( ledger,
                   Some (Withdraw_receipt { handle; operation = hash }),
-                  vm_state,
+                  game,
                   None )
-            | Error error -> (ledger, None, vm_state, Some error))
+            | Error error -> (ledger, None, game, Some error))
       in
       Some
         ( Protocol
-            { included_operations; included_tezos_operations; ledger; vm_state },
+            {
+              included_operations;
+              included_tezos_operations;
+              ledger;
+              vm_state;
+              game;
+            },
           receipt,
           error )
   | false -> None
 
 let apply_tezos_operation protocol tezos_operation =
   let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state }) =
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let Tezos_operation.{ hash; operations } = tezos_operation in
@@ -101,7 +158,13 @@ let apply_tezos_operation protocol tezos_operation =
       in
       let protocol =
         Protocol
-          { included_operations; included_tezos_operations; ledger; vm_state }
+          {
+            included_operations;
+            included_tezos_operations;
+            ledger;
+            vm_state;
+            game;
+          }
       in
       List.fold_left
         (fun protocol tezos_operation ->
@@ -113,6 +176,7 @@ let apply_tezos_operation protocol tezos_operation =
                       included_operations;
                       included_tezos_operations;
                       vm_state;
+                      game;
                     }) =
                 protocol
               in
@@ -127,6 +191,7 @@ let apply_tezos_operation protocol tezos_operation =
                   included_operations;
                   included_tezos_operations;
                   vm_state;
+                  game;
                 })
         protocol operations
   | false -> protocol
@@ -164,33 +229,68 @@ let apply_payload ~current_level ~payload protocol =
 
 let clean ~current_level protocol =
   let (Protocol
-        { included_operations; included_tezos_operations; ledger; vm_state }) =
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
     protocol
   in
   let included_operations =
     Included_operation_set.drop ~current_level included_operations
   in
-  Protocol { included_operations; included_tezos_operations; ledger; vm_state }
+  Protocol
+    { included_operations; included_tezos_operations; ledger; vm_state; game }
 
 let prepare ~parallel ~payload = parallel parse_operation payload
+let throw_away_frames = 4
+let blocks_in_voting_period = Z.of_int 10
 
-let advance_gameboy vm_state =
+let advance_gameboy ~current_level ~vm_state ~game =
   let () = Unix.sleepf 0.05 in
   let _ =
-    List.init 4 (fun _ ->
+    List.init throw_away_frames (fun _ ->
         let _ = Deku_gameboy.advance vm_state in
         ())
   in
   let data = Deku_gameboy.advance vm_state in
-  [ Gameboy_receipt { data } ]
+  let current_level = Level.to_n current_level |> N.to_z in
+  let modulus = Z.( mod ) current_level blocks_in_voting_period in
+  let game =
+    match Z.equal modulus Z.zero with
+    | true -> (
+        match Game.execute_decision game with
+        | Some input, game ->
+            Deku_gameboy.send_input input vm_state;
+            game
+        | None, game -> game)
+    | false -> game
+  in
+  ([ Gameboy_frame_receipt { data } ], game)
 
 let apply ~current_level ~payload ~tezos_operations protocol =
-  let gameboy_receipts =
-    let (Protocol { vm_state; _ }) = protocol in
-    advance_gameboy vm_state
-  in
   let protocol, receipts, errors =
     apply_payload ~current_level ~payload protocol
+  in
+  let (Protocol
+        {
+          included_operations;
+          included_tezos_operations;
+          ledger;
+          vm_state;
+          game;
+        }) =
+    protocol
+  in
+  let gameboy_receipts, game =
+    let (Protocol { vm_state; _ }) = protocol in
+    advance_gameboy ~current_level ~vm_state ~game
+  in
+  let protocol =
+    Protocol
+      { included_operations; included_tezos_operations; ledger; vm_state; game }
   in
   let receipts = gameboy_receipts @ receipts in
   let protocol = clean ~current_level protocol in

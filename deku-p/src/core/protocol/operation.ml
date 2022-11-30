@@ -2,6 +2,7 @@ open Deku_stdlib
 open Deku_crypto
 open Deku_concepts
 open Deku_ledger
+
 exception Invalid_signature
 exception Invalid_source
 
@@ -12,13 +13,20 @@ type operation =
       ticket_id : Ticket_id.t;
       amount : Amount.t;
     }
-  | Operation_vm_transaction of {
+  | Operation_attest_twitch_handle of {
       sender : Address.t;
-      operation : Ocaml_wasm_vm.Operation_payload.t;
+      twitch_handle : string;
     }
-  | Operation_gameboy_input of {
+  | Operation_attest_deku_address of {
       sender : Address.t;
-      input : Deku_gameboy.Joypad.t;
+      deku_address : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+    }
+  | Operation_vote of { sender : Address.t; vote : Game.Vote.t }
+  | Operation_delegated_vote of {
+      sender : Address.t;
+      twitch_handle : Game.Twitch_handle.t;
+      vote : Game.Vote.t;
     }
   | Operation_withdraw of {
       sender : Address.t;
@@ -48,27 +56,40 @@ let encoding =
           | _ -> None)
         (fun (sender, receiver, ticket_id, amount) ->
           Operation_ticket_transfer { sender; receiver; ticket_id; amount });
-      case ~title:"vm_transaction" (Tag 1)
+      case ~title:"attest_twitch_handle" (Tag 1)
         (tup2
            (Data_encoding.dynamic_size Address.encoding)
-           Ocaml_wasm_vm.Operation_payload.encoding)
+           Data_encoding.string)
         (fun operation ->
           match operation with
-          | Operation_vm_transaction { sender; operation } ->
-              Some (sender, operation)
+          | Operation_attest_twitch_handle { sender; twitch_handle } ->
+              Some (sender, twitch_handle)
           | _ -> None)
-        (fun (sender, operation) ->
-          Operation_vm_transaction { sender; operation });
-      case ~title:"gameboy_input" (Tag 2)
+        (fun (sender, twitch_handle) ->
+          Operation_attest_twitch_handle { sender; twitch_handle });
+      case ~title:"input_vote" (Tag 2)
         (tup2
            (Data_encoding.dynamic_size Address.encoding)
-           Deku_gameboy.Joypad.encoding)
+           Data_encoding.string)
         (fun operation ->
           match operation with
-          | Operation_gameboy_input { sender; input } -> Some (sender, input)
+          | Operation_attest_twitch_handle { sender; twitch_handle } ->
+              Some (sender, twitch_handle)
           | _ -> None)
-        (fun (sender, input) -> Operation_gameboy_input { sender; input });
-      case ~title:"withdraw" (Tag 3)
+        (fun (sender, twitch_handle) ->
+          Operation_attest_twitch_handle { sender; twitch_handle });
+      case ~title:"delegated_input_vote" (Tag 3)
+        (tup3
+           (Data_encoding.dynamic_size Address.encoding)
+           Data_encoding.string Game.Vote.encoding)
+        (fun operation ->
+          match operation with
+          | Operation_delegated_vote { sender; twitch_handle; vote } ->
+              Some (sender, twitch_handle, vote)
+          | _ -> None)
+        (fun (sender, twitch_handle, vote) ->
+          Operation_delegated_vote { sender; twitch_handle; vote });
+      case ~title:"withdraw" (Tag 4)
         (tup4
            (Data_encoding.dynamic_size Address.encoding)
            Ticket_id.encoding Amount.encoding Deku_tezos.Address.encoding)
@@ -79,7 +100,7 @@ let encoding =
           | _ -> None)
         (fun (sender, ticket_id, amount, owner) ->
           Operation_withdraw { sender; owner; ticket_id; amount });
-      case ~title:"noop" (Tag 4) Address.encoding
+      case ~title:"noop" (Tag 5) Address.encoding
         (fun operation ->
           match operation with
           | Operation_noop { sender } -> Some sender
@@ -169,10 +190,12 @@ module Signed = struct
         let sender =
           match operation with
           | Operation_ticket_transfer { sender; _ } -> sender
-          | Operation_vm_transaction { sender; _ } -> sender
+          | Operation_attest_twitch_handle { sender; _ } -> sender
+          | Operation_attest_deku_address { sender; _ } -> sender
+          | Operation_vote { sender; _ } -> sender
+          | Operation_delegated_vote { sender; _ } -> sender
           | Operation_withdraw { sender; _ } -> sender
           | Operation_noop { sender } -> sender
-          | Operation_gameboy_input { sender; _ } -> sender
         in
         let sender = Address.to_key_hash sender in
         let hash = Operation_hash.to_blake2b hash in
@@ -222,15 +245,9 @@ module Signed = struct
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 
-  let vm_transaction ~nonce ~level ~content ~identity =
+  let game_vote ~nonce ~level ~vote ~identity =
     let sender = Address.of_key_hash (Identity.key_hash identity) in
-    let operation = Operation_vm_transaction { sender; operation = content } in
-    let initial = Initial.make ~nonce ~level ~operation in
-    make ~identity ~initial
-
-  let joypad_input ~nonce ~level ~input ~identity =
-    let sender = Address.of_key_hash (Identity.key_hash identity) in
-    let operation = Operation_gameboy_input { sender; input } in
+    let operation = Operation_vote { sender; vote } in
     let initial = Initial.make ~nonce ~level ~operation in
     make ~identity ~initial
 end
