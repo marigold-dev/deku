@@ -122,7 +122,6 @@ deku-cli wallet contract_address contract_path expression
 ```
 
 where
-
 - `contract_path` is the path towards the contract source code, which is required to compile the
   expression
 - `expression` is the Ligo expression to compile
