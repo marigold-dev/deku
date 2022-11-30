@@ -1,4 +1,4 @@
 (executable
- (public_name ligo_deku_rpc)
- (name main)
+ (public_name ligo-deku-rpc)
+ (name ligo_deku_rpc)
  (libraries piaf logs logs.fmt fmt.tty routes mirage-crypto yojson))
