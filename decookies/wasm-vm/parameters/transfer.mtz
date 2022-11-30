@@ -1,3 +1,4 @@
-# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/src/index.jsligo "{operationType: Transfer(), operation: None() as option<actions>, amount: 1 as nat, recipient: Some(\"recipient\" as address) as option<address> }" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
+# ligo compile parameter /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm/src/index.jsligo "{operationType: Transfer(), operation: None() as option<actions>, amount: 1 as nat, recipient: Some(\"tz1dDZwoXUjPeaEEuhxr3Zb8q9ceQdipeazN\" as address) as option<address>, layerOneAddress: \"tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD\" as address }" --project-root /Users/gauthier/Documents/workspace/deku/decookies/wasm-vm
 
-(Pair (Pair 1 None) (Right Unit) (Some "recipient"))
+(Pair (Pair (Pair 1 "tz1YCm2e83y4fWJG2Enf1EZVf3mSQykQJYMD") None (Right Unit))
+      (Some "tz1dDZwoXUjPeaEEuhxr3Zb8q9ceQdipeazN"))
