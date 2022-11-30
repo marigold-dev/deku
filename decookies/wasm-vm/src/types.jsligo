@@ -17,7 +17,8 @@ type cookieBaker =
     factoryCost: nat,
     bankCost: nat,
     templeCost: nat,
-    eatenCookies: nat
+    eatenCookies: nat,
+    layerOneAddress: option<address>
   };
 
 type storage = map<address, cookieBaker>;
@@ -39,7 +40,8 @@ type parameter =
     operationType,
     operation: option<actions>,
     amount: nat,
-    recipient: option<address>
+    recipient: option<address>,
+    layerOneAddress: address
   };
 
 type return_ =
